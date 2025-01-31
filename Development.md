@@ -17,7 +17,7 @@ Setup
 =====
 
 To set up your system for development see [Code development and sharing your
-work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+work](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#running).
 
 
 Adding material to the LMFDB
@@ -40,7 +40,7 @@ Structural Conventions
 Below, we describe several of the structural conventions used in the LMFDB. Note
 that we also have styling conventions for the content of individual pages. These
 styling conventions are described in
-[StyleSheet.md](https://github.com/LMFDB/lmfdb/blob/master/StyleSheet.md).
+[StyleSheet.md](https://github.com/LMFDB/lmfdb/blob/main/StyleSheet.md).
 
 Pages in the LMFDB
 ------------------
@@ -85,6 +85,15 @@ Descriptions of the terminology on the home page for an object should be put in
 knowls. This allows nonexperts to find basic information without
 forcing experts to skim through documentation. The links to the knowls should
 be the words being defined. **Don't add extraneous words like "click here"**.
+
+For a given type of object, all of the home pages should have the same entries.
+If some piece of data is not known for an object, still list that entry and
+say "data not computed", or some similar phrase if that does not properly
+capture the situation.  The only exception is if some property only makes sense
+for certain objects in that class.  For example, number field pages only have
+a section for Reflection fields if the number field is a CM field.  But all
+number field pages have a place to show the regulator even though it has not
+been computed in all cases.
 
 When creating a new home page for an object, get feedback from both experts
 and nonexperts about the order in which the information appears on the
@@ -256,7 +265,7 @@ Here are some principles:
    - `/Character/Hecke/\<number_field>/\<modulus>/\<number>`
    - `/EllipticCurve/Q/\<label>`
    - `/GaloisGroup/\<label>`
-   - `/LocalNumberField/\<label>`
+   - `/padicField/\<label>`
    - `/ModularForm/GL2/Q/holomorphic/\<label>`
    - `/ModularForm/GL2/Q/Maass/\<label>`
    - `/Motive/Hypergeometric/Q/\<label>`
@@ -320,8 +329,8 @@ and knowledge/main.py. Also, templates and static files specific to the module
 should be in their respective "templates" and "static" folders, e.g.
 /knowledge/templates/.
 
-[1] http://docs.python.org/tutorial/modules.html
-[2] http://flask.pocoo.org/docs/blueprints/
+[1] https://docs.python.org/tutorial/modules.html
+[2] https://flask.pocoo.org/docs/blueprints/
 
 
 Code Attribution
@@ -334,7 +343,7 @@ who are mainly involved in coding this particular python file. In practice,
 Testing
 -------
 
-- Any contribution to the master LMFDB branch must *pass all the tests*. From the lmfdb folder:
+- Any contribution to the main LMFDB branch must *pass all the tests*. From the lmfdb folder:
   ```
   ./test.sh
   ```
@@ -456,7 +465,7 @@ This is in the `hooks/post-receive` in the bare Git repo:
 ```
 #!/bin/sh
 # update the lmfdb-git-beta or -prod server depending on the branch
-# this is based on http://stackoverflow.com/a/13057643/54236
+# this is based on https://stackoverflow.com/a/13057643/54236
 
 restart() {
     echo "updating $1"

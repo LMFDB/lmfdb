@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
 
@@ -44,7 +43,6 @@ class HMFTest(LmfdbTest):
     def test_search(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&deg=2..5&disc=60-200&level_norm=40-90&dimension=3..5&count=100')
         assert '70.1-o' in L.get_data(as_text=True)
-
 
     def test_search_CM(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?start=0&field_label=&deg=5&disc=&weight=2&level_norm=&dimension=&cm=only&bc=include&count=100')
@@ -161,3 +159,9 @@ class HMFTest(LmfdbTest):
             magma_code += 'assert(&and([iso(heckeEigenvalues[P]) eq HeckeEigenvalue(f,P): P in primes[1..10]]));\n'
             magma_code += 'f;\n'
             self.assert_if_magma('success', magma_code, mode='in')
+
+    def test_underlying_data(self):
+        data = self.tc.get('/ModularForm/GL2/TotallyReal/data/2.2.5.1-31.1-a').get_data(as_text=True)
+        assert ('hmf_forms' in data and 'level_bad_primes' in data
+                and 'hmf_hecke' in data and 'AL_eigenvalues' in data
+                and 'hmf_fields' in data and 'ideals' in data)

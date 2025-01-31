@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 TODO
@@ -19,13 +18,14 @@ from lmfdb import db
 from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR, ZZ
-from sage.plot.all import line, points, circle, Graphics
-from sage.misc import latex
+from sage.plot.all import line, points, circle, polygon, Graphics
+from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
+from sage.misc.lazy_attribute import lazy_attribute
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
-from lmfdb.galois_groups.transitive_group import group_display_knowl
+from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
 
 def maxq(g, p):
@@ -69,17 +69,18 @@ def validate_label(label):
     if not all(c.isalpha() and c == c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
-class AbvarFq_isoclass(object):
+class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
     """
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
+        if "hyp_count" not in dbdata:
+            dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
         self.__dict__.update(dbdata)
-        self.make_class()
 
     @classmethod
     def by_label(cls, label):
@@ -92,14 +93,28 @@ class AbvarFq_isoclass(object):
         except (AttributeError, TypeError):
             raise ValueError("Label not found in database")
 
-    def make_class(self):
-        self.decompositioninfo = decomposition_display(list(zip(self.simple_distinct, self.simple_multiplicities)))
-        self.basechangeinfo = self.basechange_display()
-        self.formatted_polynomial = list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+    @lazy_attribute
+    def decompositionraw(self):
+        return list(zip(self.simple_distinct, self.simple_multiplicities))
+
+    @lazy_attribute
+    def decompositioninfo(self):
+        return decomposition_display(self.decompositionraw)
+
+    @lazy_attribute
+    def basechangeinfo(self):
+        return self.basechange_display()
+
+    @lazy_attribute
+    def formatted_polynomial(self):
+        return list_to_factored_poly_otherorder(self.polynomial, galois=False, vari="x")
+
+    @lazy_attribute
+    def expanded_polynomial(self):
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
-            self.expanded_polynomial = ''
+            return ""
         else:
-            self.expanded_polynomial = latex.latex(QQ[['x']](self.polynomial))
+            return latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):
@@ -117,6 +132,10 @@ class AbvarFq_isoclass(object):
     def polygon_slopes(self):
         # Remove the multiset indicators
         return [s[:-1] for s in self.slopes]
+
+    @property
+    def pretty_slopes(self):
+        return "[" + ",".join(latex(QQ(s)) for s in self.polygon_slopes) + "]"
 
     @property
     def polynomial(self):
@@ -150,25 +169,18 @@ class AbvarFq_isoclass(object):
             y += c * s
             pts.append((x, y))
         L = Graphics()
-        L += line([(0, 0), (0, y + 0.2)], color="grey")
-        for i in range(1, y + 1):
-            L += line([(0, i), (0.06, i)], color="grey")
-        for i in range(1, C[0]):
-            L += line([(i, 0), (i, 0.06)], color="grey")
-        for i in range(len(pts) - 1):
-            P = pts[i]
-            Q = pts[i + 1]
-            for x in range(P[0], Q[0] + 1):
-                L += line(
-                    [(x, P[1]), (x, P[1] + (x - P[0]) * (Q[1] - P[1]) / (Q[0] - P[0]))],
-                    color="grey",
-                )
-            for y in range(P[1], Q[1]):
-                L += line(
-                    [(P[0] + (y - P[1]) * (Q[0] - P[0]) / (Q[1] - P[1]), y), (Q[0], y)],
-                    color="grey",
-                )
+        xmax = len(S)
+        ymax = ZZ(len(S)/2)
+        pts.append((xmax,0))
+        L += polygon(pts,alpha=0.1)
+        pts.remove((xmax,0))
+        for i in range(xmax+1):
+            L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
+        for j in range(ymax+1):
+            L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
         L += line(pts, thickness=2)
+        for v in pts:
+            L += circle(v, 0.06, fill=True)
         L.axes(False)
         L.set_aspect_ratio(1)
         return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
@@ -212,7 +224,7 @@ class AbvarFq_isoclass(object):
             ("$p$-rank", "$%s$" % (self.p_rank)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
             ("Ordinary", "yes" if self.is_ordinary() else "no"),
-            ("Supersingular", "yes" if self.is_supersingular() else "no"),
+            ("Supersingular", "yes" if self.is_supersingular else "no"),
             ("Simple", "yes" if self.is_simple else "no"),
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
@@ -235,6 +247,23 @@ class AbvarFq_isoclass(object):
     # ans += "\sqrt{" +str(q) + "}" + "\exp(-i \pi {0}\ldots)".format(angle)
     #    return ans
 
+    def friends(self):
+        friends = []
+        if self.g <= 3:
+            if self.p < 10:
+                dispcols = "1-10"
+            elif self.p < 50:
+                dispcols = "1-50"
+            else:
+                dispcols = f"1-10,{self.p}"
+            # When over a non-prime field, we need to
+            poly = coeff_to_poly(self.poly, "T")
+            if self.r > 1:
+                poly = poly.subs(poly.parent().gen()**self.r)
+            poly = str(poly).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
+            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g*self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
+        return friends
+
     def frob_angles(self):
         ans = ""
         eps = 0.00000001
@@ -252,8 +281,12 @@ class AbvarFq_isoclass(object):
     def is_ordinary(self):
         return self.p_rank == self.g
 
+    @property
     def is_supersingular(self):
         return all(slope == "1/2" for slope in self.polygon_slopes)
+
+    def is_almost_ordinary(self):
+        return self.newton_elevation == 1
 
     def display_slopes(self):
         return "[" + ", ".join(self.polygon_slopes) + "]"
@@ -278,8 +311,11 @@ class AbvarFq_isoclass(object):
             # the number field was not found in the database
             return "The Galois group of this isogeny class is not in the database."
         else:
-            group = (self.galois_groups[0]).split("T")
-            return group_display_knowl(group[0], group[1])
+            return transitive_group_display_knowl(self.galois_groups[0])
+
+    def galois_groups_pretty(self):
+        # Used in search result pages
+        return ", ".join(transitive_group_display_knowl(gal, cache=self.gal_cache) for gal in self.galois_groups)
 
     def decomposition_display_search(self):
         if self.is_simple:
@@ -294,7 +330,7 @@ class AbvarFq_isoclass(object):
                 ans += " "
             else:
                 ans += '<a href="{1}">{0}</a>'.format(simp, url) + "<sup> {0} </sup> ".format(e)
-        return ans
+        return '<span>' + ans + '</span>'
 
     def alg_clo_field(self):
         if self.r == 1:
@@ -314,7 +350,7 @@ class AbvarFq_isoclass(object):
         return list(db.av_fq_endalg_factors.search({"base_label": self.label}))
 
     def relevant_degs(self):
-        return Integer(self.geometric_extension_degree).divisors()[1:-1]
+        return integer_divisors(Integer(self.geometric_extension_degree))[1:-1]
 
     def endo_extension_by_deg(self, degree):
         return [
@@ -364,14 +400,14 @@ class AbvarFq_isoclass(object):
 
     def all_endo_info_display(self):
         do_describe = False
+        ans = "<p> All geometric endomorphisms are defined over ${0}$.</p> \n ".format(self.ext_field(self.geometric_extension_degree))
         base_endo_info, do_describe = self.display_endo_info(1)
-        ans = g2_table(self.field(), base_endo_info, True)
+        ans += g2_table(self.field(), base_endo_info, True)
         if self.geometric_extension_degree != 1:
             geometric_endo_info, do_describe = self.display_endo_info(self.geometric_extension_degree, do_describe)
             ans += g2_table(self.alg_clo_field(), geometric_endo_info, True)
-        ans += "All geometric endomorphisms are defined over ${0}$.\n".format(self.ext_field(self.geometric_extension_degree))
-        if self.relevant_degs() != []:
-            ans += "<br>\n<b>Remainder of endomorphism lattice by field</b>\n"
+        if self.relevant_degs():
+            ans += "\n <b>Remainder of endomorphism lattice by field</b>\n"
             ans += "<ul>\n"
             for deg in self.relevant_degs():
                 ans += "<li>"
@@ -397,11 +433,11 @@ class AbvarFq_isoclass(object):
 
     def twist_display(self, show_all):
         if not self.twists:
-            return "This isogeny class has no twists."
+            return "<p>This isogeny class has no twists.</p>"
         if show_all:
-            ans = "Below is a list of all twists of this isogeny class."
+            ans = "<p> Below is a list of all twists of this isogeny class.</p>"
         else:
-            ans = "Below are some of the twists of this isogeny class."
+            ans = "<p> Below are some of the twists of this isogeny class.</p>"
         ans += '<table class = "ntdata">\n'
         ans += "<thead><tr><th>Twist</th><th>Extension degree</th><th>Common base change</th></tr></thead><tbody>\n"
         i = 0
@@ -478,8 +514,9 @@ def describe_end_algebra(p, extension_label):
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += "</tr></table>\n"
         center_poly = db.nf_fields.lookup(center, 'coeffs')
-        center_poly = latex.latex(ZZ["x"](center_poly))
-        ans[1] += r"where $\pi$ is a root of ${0}$.\n".format(center_poly)
+        center_poly = latex(ZZ["x"](center_poly))
+        ans[1] += r"where $\pi$ is a root of ${0}$.".format(center_poly)
+        ans[1] += "\n"
     return ans
 
 def primeideal_display(p, prime_ideal):

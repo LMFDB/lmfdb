@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
@@ -21,10 +20,10 @@ logger = make_logger("bmf")
 # Schembri.  At some point we will want to list these abelian surfaces
 # as friends when there is no curve.
 
-# TO (after adding 31 more for 2.0.43.1): make this list into a table,
-# OR add a column to the bmf_forms table to indicate whether or not a
-# curve exists (which could be because we have not foud one, but is
-# normally because there really is not curve).
+# TODO: make this list into a table, OR add a column to the bmf_forms
+# table to indicate whether or not a curve exists (which could be
+# because we have not found one, but is normally because there really
+# is no curve).
 
 bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.4.1-34225.7-a',
@@ -78,14 +77,29 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.43.1-10609.1-a',
                       '2.0.43.1-10609.3-a',
                       '2.0.43.1-11449.1-a',
-                      '2.0.43.1-11449.3-a']
+                      '2.0.43.1-11449.3-a',
+                      '2.0.56.1-127.1-a',
+                      '2.0.56.1-127.1-b',
+                      '2.0.56.1-127.2-a',
+                      '2.0.56.1-127.2-b',
+                      # '2.0.59.1-675.5-b',
+                      # '2.0.59.1-675.8-b',
+                      '2.0.68.1-901.1-a',
+                      '2.0.68.1-901.1-b',
+                      '2.0.68.1-901.2-a',
+                      '2.0.68.1-901.2-b',
+                      '2.0.91.1-784.1-a',
+                      '2.0.91.1-784.1-b',
+                      # '2.0.95.1-624.5-c',
+                      # '2.0.95.1-624.5-d',
+]
 
 def cremona_label_to_lmfdb_label(lab):
     if "." in lab:
         return lab
     return db.ec_curvedata.lucky({"Clabel":lab}, projection='lmfdb_label')
 
-class WebBMF(object):
+class WebBMF():
     """
     Class for a Bianchi Newform
     """
@@ -116,7 +130,6 @@ class WebBMF(object):
         raise ValueError("Bianchi newform %s not found" % label)
         # caller must catch this and raise an error
 
-
     def make_form(self,nap0=50):
         # To start with the data fields of self are just those from
         # the database.  We need to reformat these and compute some
@@ -138,11 +151,12 @@ class WebBMF(object):
         # 'hecke_poly_obj' is the non-LaTeX version of hecke_poly
         self.hecke_poly_obj = self.hecke_poly
 
-        if self.dimension>1:
+        if self.dimension > 1:
             Qx = PolynomialRing(QQ,'x')
             self.hecke_poly = Qx(str(self.hecke_poly))
             F = NumberField(self.hecke_poly,'z')
             self.hecke_poly = web_latex(self.hecke_poly)
+
             def conv(ap):
                 if '?' in ap:
                     return 'not known'
@@ -162,7 +176,7 @@ class WebBMF(object):
                              ideal_label(p),
                              web_latex(p.gens_reduced()),
                              web_latex(ap)] for p,ap in zip(primes_iter(K), self.hecke_eigs[:self.neigs]) if p not in badp]
-        self.have_AL = self.AL_eigs[0]!='?'
+        self.have_AL = self.AL_eigs[0] != '?'
         if self.have_AL:
             self.AL_table = [[web_latex(p.norm()),
                              ideal_label(p),
@@ -185,7 +199,7 @@ class WebBMF(object):
             self.anrank = "not determined"
         else:
             self.Lratio = QQ(self.Lratio)
-            self.anrank = r"\(0\)" if self.Lratio!=0 else "odd" if self.sfe==-1 else r"\(\ge2\), even"
+            self.anrank = r"\(0\)" if self.Lratio != 0 else "odd" if self.sfe == -1 else r"\(\ge2\), even"
 
         self.properties = [('Label', self.label),
                             ('Base field', pretty_field),
@@ -201,7 +215,7 @@ class WebBMF(object):
             elif self.CM == 0:
                 self.CM = 'no'
             else:
-                if int(self.CM)%4 in [2,3]:
+                if int(self.CM) % 4 in [2,3]:
                     self.CM = 4*int(self.CM)
                 self.CM = "$%s$" % self.CM
         except AttributeError:
@@ -210,7 +224,7 @@ class WebBMF(object):
 
         self.bc_extra = ''
         self.bcd = 0
-        self.bct = self.bc!='?' and self.bc!=0
+        self.bct = self.bc != '?' and self.bc != 0
         if self.bc == '?':
             self.bc = 'not determined'
         elif self.bc == 0:
@@ -218,7 +232,7 @@ class WebBMF(object):
         elif self.bc == 1:
             self.bcd = self.bc
             self.bc = 'yes'
-        elif self.bc >1:
+        elif self.bc > 1:
             self.bcd = self.bc
             self.bc = 'yes'
             self.bc_extra = r', of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{' + str(self.bcd) + r'})\)'
@@ -263,7 +277,7 @@ class WebBMF(object):
 
             # This will also add the EC/G2C, as this how the Lfun was computed
             # and not add itself
-            self.friends = names_and_urls(instances, exclude = {url})
+            self.friends = names_and_urls(instances, exclude={url})
             self.friends.append(('L-function', '/L/'+url))
         else:
             # old code

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-import unittest2
+import unittest
+
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 import ssl
@@ -17,7 +17,7 @@ assert QQ
 assert NumberField
 
 
-class LmfdbTest(unittest2.TestCase):
+class LmfdbTest(unittest.TestCase):
     def setUp(self):
         app.config["TESTING"] = True
         self.app = app
@@ -36,9 +36,11 @@ class LmfdbTest(unittest2.TestCase):
         ), "%s not in the %s" % (text, path)
 
     def check_args(self, path, text):
-        assert text in self.tc.get(path, follow_redirects=True).get_data(
-            as_text=True
-        ), "%s not in the %s" % (text, path)
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            assert t in page, "%s not in the %s" % (t, path)
 
     def check_args_with_timeout(self, path, text):
         timeout_error = "The search query took longer than expected!"
@@ -49,9 +51,11 @@ class LmfdbTest(unittest2.TestCase):
         )
 
     def not_check_args(self, path, text):
-        assert not (
-            text in self.tc.get(path, follow_redirects=True).get_data(as_text=True)
-        ), "%s in the %s" % (text, path)
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            assert t not in page, "%s in the %s" % (t, path)
 
     def check_external(self, homepage, path, text):
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -75,18 +79,36 @@ class LmfdbTest(unittest2.TestCase):
         equality only if magma is installed; if it isn't, then the test
         passes."""
         from sage.all import magma
+        has_magma = False
         try:
+            has_magma = "2" == magma.eval("1 + 1")
+        except (RuntimeError, TypeError):
+            pass
+
+        if has_magma:
             if mode == 'equal':
                 assert expected == magma.eval(magma_code)
             elif mode == 'in':
                 assert expected in magma.eval(magma_code)
             else:
                 raise ValueError("mode must be either 'equal' or 'in")
-        except RuntimeError as the_error:
-            if str(the_error).startswith("unable to start magma"):
-                pass
-            else:
-                raise
+
+    def check_sage_compiles_and_extract_variables(self, sage_code):
+        """
+        Simulates a user downloading the sage code, and then loading it
+        into a sage session. This requires the sage imports at the top of
+        the file. It returns a desired variable for further checks.
+
+        INPUT:
+
+        - sage_code [Type: str] : the sage code to execute
+
+        - my_name [Type: str] : name of the variable to extract from the
+          sage code. This then allows the developer
+          to implement subsequent checks.
+        """
+        exec(sage_code, globals())
+        return globals()
 
     def check_sage_compiles_and_extract_var(self, sage_code, my_name):
         """
@@ -94,11 +116,12 @@ class LmfdbTest(unittest2.TestCase):
         into a sage session. This requires the sage imports at the top of
         the file. It returns a desired variable for further checks.
 
-        sage_code [Type: str] : the sage code to execute
-        my_name [Type: str] : name of the variable to extract from the
-                              sage code. This then allows the developer
-                              to implement subsequent checks.
-        """
+        INPUT:
 
-        exec(sage_code, globals())
-        return globals()[my_name]
+        - sage_code [Type: str] : the sage code to execute
+
+        - my_name [Type: str] : name of the variable to extract from the
+          sage code. This then allows the developer
+          to implement subsequent checks.
+        """
+        return self.check_sage_compiles_and_extract_variables(sage_code)[my_name]

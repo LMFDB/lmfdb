@@ -1,0 +1,51 @@
+prompt:
+    magma:  'magma'
+
+logo:
+    magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+
+gg:
+    magma: G := TransitiveGroup(%s, %s);
+
+n:
+    magma: t, n := TransitiveGroupIdentification(G); n;
+
+t:
+    magma: t, n := TransitiveGroupIdentification(G); t;
+
+primitive:
+    magma: IsPrimitive(G);
+
+even:
+    magma: IsEven(G);
+
+nilpotent:
+    magma: NilpotencyClass(G);
+
+auts:
+    magma: Order(Centralizer(SymmetricGroup(n), G));
+
+gens:
+    magma: Generators(G);
+
+ccs:
+    magma: ConjugacyClasses(G);
+
+order:
+    magma: Order(G);
+
+cyclic:
+    magma: IsCyclic(G);
+
+abelian:
+    magma: IsAbelian(G);
+
+solvable:
+    magma: IsSolvable(G);
+
+id:
+    magma: IdentifyGroup(G);
+
+char_table:
+    magma: CharacterTable(G);
+

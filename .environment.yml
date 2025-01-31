@@ -11,9 +11,9 @@ safety_checks: disabled
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
-  - sage=9.2
+  - python=3.10.5
+  - sage=9.7
   - tox
-  - flask<=1.1.4
-  - werkzeug<=1.0.1
+  - flask
+  - werkzeug
   - parallel

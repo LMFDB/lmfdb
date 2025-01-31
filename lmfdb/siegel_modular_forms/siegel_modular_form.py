@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 from io import BytesIO
@@ -35,7 +34,7 @@ def download_sample(name):
     strIO = BytesIO()
     strIO.write(s.encode('utf-8'))
     strIO.seek(0)
-    return send_file(strIO, attachment_filename = name + '.json', as_attachment = True, add_etags=False)
+    return send_file(strIO, download_name=name + '.json', as_attachment=True)
 
 
 ###############################################################################
@@ -64,7 +63,7 @@ def by_label(label):
     bread = [("Modular forms", url_for('modular_forms')),
              ('Siegel', url_for('.index'))]
     slabel = label.split('.')
-    family = get_smf_family (slabel[0])
+    family = get_smf_family(slabel[0])
     if family:
         if len(slabel) == 1:
             return render_family_page(family, request.args, bread)
@@ -82,15 +81,15 @@ def Sp4Z_j_space(k,j):
     bread = [("Modular forms", url_for('modular_forms')),
              ('Siegel', url_for('.index')),
              (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z})$', url_for('.Sp4Z_j')),
-             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k,j), '')]
-    if j%2:
+             (r'$M_{%s,%s}(\mathrm{Sp}(4, \mathbb{Z}))$' % (k,j), '')]
+    if j % 2:
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     info = { 'args':{'k':str(k),'j':str(j)} }
     try:
         if j in [0,2]:
             headers, table = dimensions._dimension_Sp4Z([k])
-            info['samples'] = find_samples('Sp4Z' if j==0 else 'Sp4Z_2', k)
+            info['samples'] = find_samples('Sp4Z' if j == 0 else 'Sp4Z_2', k)
         else:
             headers, table = dimensions._dimension_Gamma_2([k], j, group='Sp4(Z)')
         info['headers'] = headers
@@ -99,7 +98,7 @@ def Sp4Z_j_space(k,j):
         # redirect to general page for Sp4Z_j which will display an error message
         return redirect(url_for(".Sp4Z_j",k=str(k),j=str(j)))
     return render_template('ModularForm_GSp4_Q_full_level_space.html',
-                           title = r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$'%(k, j),
+                           title=r'$M_{%s, %s}(\mathrm{Sp}(4, \mathbb{Z}))$' % (k, j),
                            bread=bread,
                            info=info)
 
@@ -127,7 +126,7 @@ def Sp4Z_j():
     bread = [("Modular forms", url_for('modular_forms')),
              ('Siegel', url_for('.index')),
              (r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$', '')]
-    info={'args': request.args}
+    info = {'args': request.args}
     try:
         dim_args = dimensions.parse_dim_args(request.args, {'k':'10-20','j':'0-30'})
     except ValueError:
@@ -142,8 +141,8 @@ def Sp4Z_j():
             info['error'] = True
     return render_template('ModularForm_GSp4_Q_Sp4Zj.html',
                            title=r'$M_{k,j}(\mathrm{Sp}(4, \mathbb{Z}))$',
-                           bread = bread,
-                           info = info
+                           bread=bread,
+                           info=info
                            )
 
 ##########################################################
@@ -164,7 +163,7 @@ def build_dimension_table(info, fam, args):
         info['error'] = True
     if not info.get('error'):
         info['dim_args'] = dim_args
-        kwargs={}
+        kwargs = {}
         try:
             for arg in fam.dimension_desc()['args']:
                 if (arg == 'wt_range' or arg == 'k_range') and 'k_range' in dim_args:
@@ -198,7 +197,7 @@ def render_family_page(family, args, bread):
     forms = [ (k, [(f.name(), f.degree_of_field()) for f in sams if k == f.weight()]) for k in Set(f.weight() for f in sams)]
     info = { 'family': family, 'forms': forms, 'args': to_dict(args) }
     if family.computes_dimensions():
-        build_dimension_table (info, family, args)
+        build_dimension_table(info, family, args)
     bread.append(('$'+family.latex_name+'$', ''))
     return render_template("ModularForm_GSp4_Q_family.html", title='Siegel modular forms for $'+family.latex_name+'$', bread=bread, info=info)
 
@@ -210,9 +209,9 @@ def render_search_results_page(args, bread):
     info = { 'args': to_dict(args) }
     query = {}
     try:
-        parse_ints (info['args'], query, 'deg', 'degree', qfield="degree")
-        parse_ints (info['args'], query, 'wt', '$k$', qfield="weight")
-        parse_ints (info['args'], query, 'fdeg', 'field degree')
+        parse_ints(info['args'], query, 'deg', 'degree', qfield="degree")
+        parse_ints(info['args'], query, 'wt', '$k$', qfield="weight")
+        parse_ints(info['args'], query, 'fdeg', 'field degree')
     except ValueError:
         info['error'] = True
     if not info.get('error'):
@@ -238,7 +237,7 @@ def render_dimension_table_page(args, bread):
         if 'j' not in family.latex_name and 'j' in info['args'] and info['args']['j'] != '0':
             flash_error("$j$ = %s should not be specified for the selected space %s", info['args']['j'], '$'+family.latex_name+'$')
         else:
-            build_dimension_table (info, family, info['args'])
+            build_dimension_table(info, family, info['args'])
     bread.append(('Dimensions', 'dimensions'))
     return render_template("ModularForm_GSp4_Q_dimensions.html", title='Siegel modular forms dimension tables', bread=bread, info=info)
 
@@ -254,7 +253,7 @@ def render_sample_page(family, sam, args, bread):
     info['space'] = '$'+family.latex_name.replace('k', '{' + str(sam.weight()) + '}')+'$'
     if 'space_url' in info:
         bread.append((info['space'], info['space_url']))
-    info['space_href'] = '<a href="%s">%s</d>'%(info['space_url'],info['space']) if 'space_url' in info else info['space']
+    info['space_href'] = '<a href="%s">%s</d>' % (info['space_url'],info['space']) if 'space_url' in info else info['space']
     if info['field_poly'].disc() < 10**10:
         label = poly_to_field_label(info['field_poly'])
         if label:
@@ -276,10 +275,12 @@ def render_sample_page(family, sam, args, bread):
     except ValueError:
         evs_to_show = []
         fcs_to_show = []
-    info['evs_to_show'] = sorted([n for n in (evs_to_show if len(evs_to_show) else sam.available_eigenvalues()[:10])])
-    info['fcs_to_show'] = sorted([n for n in (fcs_to_show if len(fcs_to_show) else sam.available_Fourier_coefficients()[1:6])])
-    info['evs_avail'] = [n for n in sam.available_eigenvalues()]
-    info['fcs_avail'] = [n for n in sam.available_Fourier_coefficients()]
+    info['evs_to_show'] = sorted(evs_to_show if len(evs_to_show)
+                                 else sam.available_eigenvalues()[:10])
+    info['fcs_to_show'] = sorted(fcs_to_show if len(fcs_to_show)
+                                 else sam.available_Fourier_coefficients()[1:6])
+    info['evs_avail'] = list(sam.available_eigenvalues())
+    info['fcs_avail'] = list(sam.available_Fourier_coefficients())
 
     # Do not attempt to construct a modulus ideal unless the field has a reasonably small discriminant
     # otherwise sage may not even be able to factor the discriminant
@@ -302,11 +303,14 @@ def render_sample_page(family, sam, args, bread):
                 m = 0
         info['modulus'] = m
         # Hack to reduce polynomials and to handle non integral stuff
+
         def redc(c):
-            return m.reduce(c*c.denominator())/m.reduce(c.denominator())
+            return m.reduce(c * c.denominator()) / m.reduce(c.denominator())
+
         def redp(f):
             c = f.dict()
-            return f.parent()(dict((e,redc(c[e])) for e in c))
+            return f.parent()({e: redc(ce) for e, ce in c.items()})
+
         def safe_reduce(f):
             if not m:
                 return latex(f)
@@ -320,11 +324,11 @@ def render_sample_page(family, sam, args, bread):
         info['reduce'] = safe_reduce
     else:
         info['reduce'] = latex
-        
+
     # check that explicit formula is not ridiculously big
     if sam.explicit_formula():
         info['explicit_formula_bytes'] = len(sam.explicit_formula())
         if len(sam.explicit_formula()) < 100000:
             info['explicit_formula'] = sam.explicit_formula()
-        
+
     return render_template("ModularForm_GSp4_Q_sample.html", title=title, bread=bread, properties=properties, info=info)

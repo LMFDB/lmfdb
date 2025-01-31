@@ -33,7 +33,7 @@
     - title: Classical
       url_for: "cmf.index"
     - title: Maass
-      url_for: "maass.index"
+      url_for: "maass_forms.index"
     - title: Hilbert
       url_for: "hmf.hilbert_modular_form_render_webpage"
     - title: Bianchi
@@ -93,6 +93,10 @@
       colspan: onecolumn
     - title: Shimura curves
       status: future
+      colspan: onecolumn
+    - title: Modular curves
+      status: beta
+      url_for: "modcurve.index"
       colspan: onecolumn
     - title: Higher genus families
       url_for:  "higher_genus_w_automorphisms.index"
@@ -221,10 +225,9 @@
 
 9API:
   type: single
-  status: beta
   heading:
     title: Database
-    url_for: "API.index"
+    url_for: "API.options"
     type: knowl
 
 ...

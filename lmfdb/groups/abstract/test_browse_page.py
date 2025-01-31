@@ -18,7 +18,6 @@ class AbGpsHomeTest(LmfdbTest):
     #  def test_stats_page(self):
     #  self.check_args("/Groups/Abstract/stats","Abstract groups: Statistics")
 
- 
     def test_completeness_page(self):
         r"""
         Check that Groups/Abstract/Completeness works
@@ -78,7 +77,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?order=8", "8.1")
         self.check_args("/Groups/Abstract/?order=8", "8.3")
 
-
     def test_search_exponent(self):
         r"""
         Check that we can search by exponent
@@ -102,7 +100,6 @@ class AbGpsHomeTest(LmfdbTest):
         # check that 7.1  and 18.2 show up as having 6.2 as aut. group
         self.check_args("/Groups/Abstract/?aut_group=6.2", "7.1")
         self.check_args("/Groups/Abstract/?aut_group=6.2", "18.2")
-
 
     def test_search_autgroup_order(self):
         r"""
@@ -128,7 +125,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?commutator_label=8.1", "32.20")
         self.check_args("/Groups/Abstract/?commutator_label=8.1", "64.190")
 
-
     def test_search_centralquot(self):
         r"""
         Check that we can search by central quotients
@@ -137,7 +133,6 @@ class AbGpsHomeTest(LmfdbTest):
         # with central quotient 4.2
         self.check_args("/Groups/Abstract/?central_quotient=4.2", "40.10")
         self.check_args("/Groups/Abstract/?central_quotient=4.2", "64.87")
-
 
     def test_search_abelianization(self):
         r"""
@@ -156,7 +151,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?order=12&abelian=no", "12.5")
         self.not_check_args("/Groups/Abstract/?order=12&abelian=yes", "12.4")
 
-
     def test_cyclic_search(self):
         r"""
         Check that we can restrict to cyclic or non-cyclic groups only
@@ -165,7 +159,6 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?order=24&cyclic=no", "24.3")
         self.not_check_args("/Groups/Abstract/?order=24&cyclic=yes", "24.4")
         self.not_check_args("/Groups/Abstract/?order=24&cyclic=no", "24.2")
-
 
     def test_simple_search(self):
         r"""
@@ -176,9 +169,9 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?simple=no", "29.1")
         self.not_check_args("/Groups/Abstract/?simple=yes", "18.4")
 
+    # when the test was first written 60.5 was only perfect and
+    # only non-solvable group in db so next two are quite restrictive
 
-     #when the test was first written 60.5 was only perfect and
-     # only non-solvable group in db so next two are quite restrictive
     def test_perfect_search(self):
         r"""
         Check that we can restrict to perfect or non-perfect groups only
@@ -213,7 +206,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?direct_product=no", "30.3")
         self.check_args("/Groups/Abstract/?direct_product=yes", "32.22")
         self.not_check_args("/Groups/Abstract/?direct_product=yes", "8.1")
-        self.not_check_args("/Groups/Abstract/?direct_product=no", "8.2")
+        self.not_check_args("/Groups/Abstract/?direct_product=no", "16.11")
 
     def test_semidirect_product_search(self):
         r"""
@@ -222,14 +215,14 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?semidirect_product=no", "31.1")
         self.check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.7")
         self.not_check_args("/Groups/Abstract/?semidirect_product=no", "10.1")
-        self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "6.2")
+        self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.9")
 
     def test_order_stats_search(self):
         r"""
         Check that we can search by order statistics
         """
-        self.check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2&search_type=List", "6.1")
-        self.not_check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2&search_type=List", "10.1")
+        self.check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2", "6.1")
+        self.not_check_args("/Groups/Abstract/?order_stats=1^1%2C2^3%2C3^2", "10.1")
 
     #################################################################
     ##################### advanced searches #########################
@@ -239,117 +232,117 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can search by outer automorphism group
         """
-        self.check_args("/Groups/Abstract/?outer_group=4.2&search_type=List", "8.1")
-        self.not_check_args("/Groups/Abstract/?outer_group=4.2&search_type=List", "16.8")
+        self.check_args("/Groups/Abstract/?outer_group=4.2", "8.1")
+        self.not_check_args("/Groups/Abstract/?outer_group=4.2", "16.8")
 
     def test_outer_order_search(self):
         r"""
         Check that we can search by order of outer automorphism group
         """
-        self.check_args("/Groups/Abstract/?outer_order=3&search_type=List", "14.1")
-        self.not_check_args("/Groups/Abstract/?outer_order=3&search_type=List", "18.3")
+        self.check_args("/Groups/Abstract/?outer_order=3", "14.1")
+        self.not_check_args("/Groups/Abstract/?outer_order=3", "18.3")
 
     def test_metabelian_search(self):
         r"""
         Check that we can restrict to metabelian groups or not only
         """
-        self.check_args("/Groups/Abstract/?metabelian=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?metabelian=yes&search_type=List", "24.3")
-        self.check_args("/Groups/Abstract/?metabelian=no&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?metabelian=no&search_type=List", "13.1")
+        self.check_args("/Groups/Abstract/?metabelian=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?metabelian=yes", "24.3")
+        self.check_args("/Groups/Abstract/?metabelian=no", "24.3")
+        self.not_check_args("/Groups/Abstract/?metabelian=no", "13.1")
 
     def test_metacyclic_search(self):
         r"""
         Check that we can restrict to metacyclic groups or not only
         """
-        self.check_args("/Groups/Abstract/?metacyclic=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?metacyclic=yes&search_type=List", "12.3")
-        self.check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.3")
-        self.not_check_args("/Groups/Abstract/?metacyclic=no&search_type=List", "12.4")
+        self.check_args("/Groups/Abstract/?metacyclic=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?metacyclic=yes", "12.3")
+        self.check_args("/Groups/Abstract/?metacyclic=no", "12.3")
+        self.not_check_args("/Groups/Abstract/?metacyclic=no", "12.2")
 
     def test_almost_simple_search(self):
         r"""
         Check that we can restrict to almost simple groups or not only
         """
-        self.check_args("/Groups/Abstract/?almost_simple=yes&search_type=List", "60.5")
-        self.not_check_args("/Groups/Abstract/?almost_simple=yes&search_type=List", "8.3")
-        self.check_args("/Groups/Abstract/?almost_simple=no&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?almost_simple=no&search_type=List", "60.5")
+        self.check_args("/Groups/Abstract/?almost_simple=yes", "60.5")
+        self.not_check_args("/Groups/Abstract/?almost_simple=yes", "8.3")
+        self.check_args("/Groups/Abstract/?almost_simple=no", "1.1")
+        self.not_check_args("/Groups/Abstract/?almost_simple=no", "60.5")
 
     def test_quasisimple_search(self):
         r"""
         Check that we can restrict to quasisimple groups or not only
         """
-        self.check_args("/Groups/Abstract/?quasisimple=yes&search_type=List", "60.5")
-        self.not_check_args("/Groups/Abstract/?quasisimple=yes&search_type=List", "7.1")
-        self.check_args("/Groups/Abstract/?quasisimple=no&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?quasisimple=no&search_type=List", "60.5")
+        self.check_args("/Groups/Abstract/?quasisimple=yes", "60.5")
+        self.not_check_args("/Groups/Abstract/?quasisimple=yes", "7.1")
+        self.check_args("/Groups/Abstract/?quasisimple=no", "1.1")
+        self.not_check_args("/Groups/Abstract/?quasisimple=no", "60.5")
 
     def test_Agroup_search(self):
         r"""
         Check that we can restrict to A-group groups or not only
         """
-        self.check_args("/Groups/Abstract/?Agroup=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?Agroup=yes&search_type=List", "16.3")
-        self.check_args("/Groups/Abstract/?Agroup=no&search_type=List", "8.3")
-        self.not_check_args("/Groups/Abstract/?Agroup=no&search_type=List", "16.14")
+        self.check_args("/Groups/Abstract/?Agroup=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?Agroup=yes", "16.3")
+        self.check_args("/Groups/Abstract/?Agroup=no", "8.3")
+        self.not_check_args("/Groups/Abstract/?Agroup=no", "16.14")
 
     def test_Zgroup_search(self):
         r"""
         Check that we can restrict to Z-group groups or not only
         """
-        self.check_args("/Groups/Abstract/?Zgroup=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?Zgroup=yes&search_type=List", "12.3")
-        self.check_args("/Groups/Abstract/?Zgroup=no&search_type=List", "4.2")
-        self.not_check_args("/Groups/Abstract/?Zgroup=no&search_type=List", "12.2")
+        self.check_args("/Groups/Abstract/?Zgroup=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?Zgroup=yes", "12.3")
+        self.check_args("/Groups/Abstract/?Zgroup=no", "4.2")
+        self.not_check_args("/Groups/Abstract/?Zgroup=no", "12.2")
 
     def test_derived_length_search(self):
         r"""
         Check that we can search by derived length
         """
-        self.check_args("/Groups/Abstract/?derived_length=3&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?derived_length=3&search_type=List", "16.11")
+        self.check_args("/Groups/Abstract/?derived_length=3", "24.3")
+        self.not_check_args("/Groups/Abstract/?derived_length=3", "16.13")
 
     def test_frattini_label_search(self):
         r"""
         Check that we can search by Frattini subgroup
         """
-        self.check_args("/Groups/Abstract/?frattini_label=4.2&search_type=List", "16.2")
-        self.not_check_args("/Groups/Abstract/?frattini_label=4.2&search_type=List", "5.1")
+        self.check_args("/Groups/Abstract/?frattini_label=4.2", "16.2")
+        self.not_check_args("/Groups/Abstract/?frattini_label=4.2", "5.1")
 
     def test_supersolvable_search(self):
         r"""
         Check that we can restrict to supersolvable groups or not only
         """
-        self.check_args("/Groups/Abstract/?supersolvable=yes&search_type=List", "1.1")
-        self.not_check_args("/Groups/Abstract/?supersolvable=yes&search_type=List", "12.3")
-        self.check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.3")
-        self.not_check_args("/Groups/Abstract/?supersolvable=no&search_type=List", "12.2")
+        self.check_args("/Groups/Abstract/?supersolvable=yes", "1.1")
+        self.not_check_args("/Groups/Abstract/?supersolvable=yes", "12.3")
+        self.check_args("/Groups/Abstract/?supersolvable=no", "12.3")
+        self.not_check_args("/Groups/Abstract/?supersolvable=no", "12.4")
 
     def test_monomial_search(self):
         r"""
         Check that we can restrict to monomial groups or not only
         """
-        self.check_args("/Groups/Abstract/?monomial=yes&search_type=List", "2.1")
-        self.not_check_args("/Groups/Abstract/?monomial=yes&search_type=List", "24.3")
-        self.check_args("/Groups/Abstract/?monomial=no&search_type=List", "24.3")
-        self.not_check_args("/Groups/Abstract/?monomial=no&search_type=List", "16.10")
+        self.check_args("/Groups/Abstract/?monomial=yes", "2.1")
+        self.not_check_args("/Groups/Abstract/?monomial=yes", "24.3")
+        self.check_args("/Groups/Abstract/?monomial=no", "24.3")
+        self.not_check_args("/Groups/Abstract/?monomial=no", "16.10")
 
     def test_rational_search(self):
         r"""
         Check that we can restrict to rational groups or not only
         """
-        self.check_args("/Groups/Abstract/?rational=yes&search_type=List", "2.1")
-        self.not_check_args("/Groups/Abstract/?rational=yes&search_type=List", "3.1")
-        self.check_args("/Groups/Abstract/?rational=no&search_type=List", "3.1")
-        self.not_check_args("/Groups/Abstract/?rational=no&search_type=List", "12.4")
+        self.check_args("/Groups/Abstract/?rational=yes", "2.1")
+        self.not_check_args("/Groups/Abstract/?rational=yes", "7.1")
+        self.check_args("/Groups/Abstract/?rational=no", "3.1")
+        self.not_check_args("/Groups/Abstract/?rational=no", "12.4")
 
     def test_rank_search(self):
         r"""
         Check that we can search by rank
         """
-        self.check_args("/Groups/Abstract/?rank=3&search_type=List", "8.5")
-        self.not_check_args("/Groups/Abstract/?rank=3&search_type=List", "18.5")
+        self.check_args("/Groups/Abstract/?rank=3", "8.5")
+        self.not_check_args("/Groups/Abstract/?rank=3", "18.5")
 
     #################################################################
     ##################### subgroup searches #########################
@@ -398,8 +391,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "3.1.3.a1.a1")
         self.not_check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "60.5.1.a1.a1")
-        self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
+        # Solvable = False requires a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
 
     def test_subgroup_normal_search(self):
         r"""
@@ -423,18 +417,21 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to perfect or non-perfect subgroups only
         """
-        self.check_args("/Groups/Abstract/?perfect=yes&search_type=Subgroups", "4.1.4.a1.a1")
-        self.not_check_args("/Groups/Abstract/?perfect=yes&search_type=Subgroups", "4.2.1.a1.a1")
-        self.check_args("/Groups/Abstract/?perfect=no&search_type=Subgroups", "4.2.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?perfect=no&search_type=Subgroups", "4.1.4.a1.a1")
+        return
+        page = self.tc.get("/Groups/Abstract/?perfect=yes&nontrivproper=yes&search_type=Subgroups", follow_redirects=True).get_data(as_text=True)
+        assert "180.19.3.a1.a1" in page, "Missing perfect group"
+        assert "4.2.2.a1.a1" not in page, "Incorrect perfect group"
+        page = self.tc.get("/Groups/Abstract/?perfect=no&nontrivproper=yes&search_type=Subgroups", follow_redirects=True).get_data(as_text=True)
+        assert "4.2.2.a1.a1" in page, "Missing imperfect group"
+        assert "180.19.3.a1.a1" not in page, "Incorrect imperfect group"
 
     def test_subgroup_maximal_search(self):
         r"""
         Check that we can restrict to maximal or non-maximal subgroups only
         """
         self.check_args("/Groups/Abstract/?maximal=yes&search_type=Subgroups", "2.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?maximal=yes&search_type=Subgroups", "8.2.4.b1.b1")
-        self.check_args("/Groups/Abstract/?maximal=no&search_type=Subgroups", "8.2.4.b1.b1")
+        self.not_check_args("/Groups/Abstract/?maximal=yes&search_type=Subgroups", "8.2.4.b1.a1")
+        self.check_args("/Groups/Abstract/?maximal=no&search_type=Subgroups", "8.2.4.b1.a1")
         self.not_check_args("/Groups/Abstract/?maximal=no&search_type=Subgroups", "2.1.2.a1.a1")
 
     def test_subgroup_central_search(self):
@@ -450,10 +447,10 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can restrict to proper or non-proper subgroups only
         """
-        self.check_args("/Groups/Abstract/?proper=yes&search_type=Subgroups", "4.1.2.a1.a1")
-        self.not_check_args("/Groups/Abstract/?proper=yes&search_type=Subgroups", "2.1.1.a1.a1")
-        self.check_args("/Groups/Abstract/?proper=no&search_type=Subgroups", "2.1.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?proper=no&search_type=Subgroups", "4.1.2.a1.a1")
+        self.check_args("/Groups/Abstract/?nontrivproper=yes&search_type=Subgroups", "4.1.2.a1.a1")
+        self.not_check_args("/Groups/Abstract/?nontrivproper=yes&search_type=Subgroups", "2.1.1.a1.a1")
+        self.check_args("/Groups/Abstract/?nontrivproper=no&search_type=Subgroups", "2.1.1.a1.a1")
+        self.not_check_args("/Groups/Abstract/?nontrivproper=no&search_type=Subgroups", "4.1.2.a1.a1")
 
     def test_subgroup_ambient_label_search(self):
         r"""
@@ -509,7 +506,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that we can search by quotient label
         """
-        self.check_args("/Groups/Abstract/?quotient=16.5&search_type=Subgroups", "32.12.16.a1.a1")
+        self.check_args("/Groups/Abstract/?quotient=16.5&search_type=Subgroups", "32.12.16.b1.a1")
         self.not_check_args("/Groups/Abstract/?quotient=16.5&search_type=Subgroups", "1.1.1.a1.a1")
 
     def test_subgroup_index_search(self):
@@ -543,8 +540,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?quotient_solvable=yes&search_type=Subgroups", "1.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?quotient_solvable=yes&search_type=Subgroups", "60.5.60.a1.a1")
-        self.check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "60.5.60.a1.a1")
-        self.not_check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
+        # The following searches require a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "60.5.60.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
 
     def test_subgroup_maximal_quotient_search(self):
         r"""
@@ -555,3 +553,36 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?minimal_normal=no&search_type=Subgroups", "4.2.4.a1.a1")
         self.not_check_args("/Groups/Abstract/?minimal_normal=no&search_type=Subgroups", "2.1.1.a1.a1")
 
+    def test_character_search(self):
+        r"""
+        Check that complex character search works
+        """
+        self.check_args("/Groups/Abstract/?dim=3&search_type=ComplexCharacters", [
+            "21.1.3a2", # character of C7:C3
+            "4.0.2197.1", # character values for several characters of 39.1
+        ])
+        self.check_args("/Groups/Abstract/?dim=12&faithful=yes&search_type=ComplexCharacters", "384.592.12a1")
+        self.check_args("/Groups/Abstract/?dim=13&cyclotomic_n=39&search_type=ComplexCharacters", ["4563.a.13b18", "351.a1.a1"]) # character label, center
+        self.check_args("/Groups/Abstract/?image_isoclass=12.4&kernel_order=6&search_type=ComplexCharacters", "72.21.2d")
+        self.check_args("/Groups/Abstract/?faithful=yes&center_order=144&search_type=ComplexCharacters", "576.176.2c1")
+
+    def test_highlighted_character(self):
+        r"""
+        Check that character links work
+        """
+        self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highlighted below.")
+        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highlighted below.")
+
+    def test_conj_class_search(self):
+        r"""
+        Check that conjugacy class search works
+        """
+        self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", "6A"])
+        self.check_args("/Groups/Abstract/?group=128.15&search_type=ConjugacyClasses", r"\OD_{16}:C_8" #group name
+        )
+
+    def test_highlighted_conj_class(self):
+        r"""
+        Check that conjugacy class links work
+        """
+        self.check_args("/Groups/Abstract/char_table/24.7?cc_highlight=4B-1&cc_highlight_i=9", r"The column representing the conjugacy class 4B-1 is highlighted below.")

@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 This script is used to run verification jobs in parallel.
 For more options (such as verifying only a single check or a single object)
-see the verify method of PosgresTable in lmfdb/backend/database.py.
+see the verify method of PosgresTable in lmfdb/lmfdb_database.py.
 """
 
 import argparse
@@ -27,7 +26,14 @@ def directory(path):
 
 def find_validated_tables():
     curdir = os.path.dirname(os.path.abspath(__file__))
-    return [tablename for tablename in db.tablenames if os.path.exists(os.path.join(curdir, tablename + '.py'))]
+    validated_tables = []
+
+    for _, _, filenames in os.walk(curdir):
+        for f in filenames:
+            root_name = os.path.splitext(f)[0]
+            if root_name in db.tablenames:
+                validated_tables.append(root_name)
+    return validated_tables
 
 if __name__ == '__main__':
     validated_tables = find_validated_tables()
@@ -59,15 +65,15 @@ if __name__ == '__main__':
         'tablename',
         metavar='TABLENAME',
         type=str,
-        help=('the table name to run the verification tests.' +
-              ' Allowed values are: ' + ', '.join(['all'] + validated_tables)),
+        help=('the table name to run the verification tests.'
+              + ' Allowed values are: ' + ', '.join(['all'] + validated_tables)),
         choices=['all'] + validated_tables)
     parser.add_argument(
         'speedtype',
         metavar='TYPE',
         type=str,
-        help=('the type of test to run on the chosen table.' +
-              ' Allowed values are: ' + ', '.join(['all'] + speedtypes)),
+        help=('the type of test to run on the chosen table.'
+              + ' Allowed values are: ' + ', '.join(['all'] + speedtypes)),
         choices=['all'] + speedtypes + ['over', 'long'])
 
     args, parallel_args = parser.parse_known_args()
@@ -81,10 +87,10 @@ if __name__ == '__main__':
         tables = validated_tables if tablename == 'all' else [tablename]
         types = speedtypes if options['speedtype'] == 'all' else [options['speedtype']]
 
-        with tempfile.NamedTemporaryFile() as tables_file:
+        with tempfile.NamedTemporaryFile(mode="w") as tables_file:
             tables_file.write('\n'.join(tables) + '\n')
             tables_file.flush()
-            with tempfile.NamedTemporaryFile() as types_file:
+            with tempfile.NamedTemporaryFile(mode="w") as types_file:
                 types_file.write('\n'.join(types) + '\n')
                 types_file.flush()
                 cmd = ['parallel'] + parallel_args

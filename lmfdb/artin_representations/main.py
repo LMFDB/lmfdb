@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Artin representations
 # Authors: Paul-Olivier Dehaye, John Jones
 
 import re
 import random
 
-from flask import render_template, request, url_for, redirect
+from flask import render_template, request, url_for, redirect, abort
 from sage.all import ZZ, cached_function
 
 from lmfdb import db
@@ -13,11 +12,13 @@ from lmfdb.utils import (
     parse_primes, parse_restricted, parse_galgrp,
     parse_ints, parse_container, parse_bool, clean_input, flash_error,
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
-    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg,
+    SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg, Downloader,
     display_knowl, search_wrap, to_dict, comma, prop_int_pretty, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol
+from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import (
     complete_group_code, knowl_cache, galdata, galunformatter,
@@ -43,8 +44,7 @@ def cycle_string(lis):
 
 def get_bread(breads=[]):
     bc = [("Artin representations", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(b for b in breads)
     return bc
 
 def learnmore_list():
@@ -125,6 +125,7 @@ def add_lfunction_friends(friends, label):
                     cmf_label = '.'.join(s[4:])
                     url = r['url'] if r['url'][0] == '/' else '/' + r['url']
                     friends.append(("Modular form " + cmf_label, url))
+            friends.append(("L-function", url_for('l_functions.by_full_label', label=rec["label"])))
     return friends
 
 @artin_representations_page.route("/")
@@ -149,7 +150,7 @@ def artin_representation_jump(info):
             return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-dihedrals =[ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
+dihedrals = [ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
   [ 18, 1 ], [ 20, 4 ], [ 22, 1 ], [ 24, 6 ], [ 26, 1 ], [ 28, 3 ], [ 30, 3 ],
   [ 32, 18 ], [ 34, 1 ], [ 36, 4 ], [ 38, 1 ], [ 40, 6 ], [ 42, 5 ], [ 44, 3 ],
   [ 46, 1 ], [ 48, 7 ], [ 50, 1 ], [ 52, 4 ], [ 54, 1 ], [ 56, 5 ], [ 58, 1 ],
@@ -182,9 +183,9 @@ def parse_projective_group(inp, query, qfield):
         query[qfield] = [24,12]
     elif Dn_RE.match(inp):
         n = int(inp.replace('d',''))-2
-        if n>=0 and n<len(dihedrals):
+        if n >= 0 and n < len(dihedrals):
             query[qfield] = dihedrals[n]
-        elif n>=0:
+        elif n >= 0:
             query[qfield] = [-1,-2] # we don't have it
     else:
         try:
@@ -222,18 +223,50 @@ def parse_projective_type(inp, query, qfield):
             query[qfield] = current
 
 def url_for_label(label):
-    return url_for(".render_artin_representation_webpage", label=label)
+    return url_for("artin_representations.render_artin_representation_webpage", label=label)
 
-@search_wrap(template="artin-representation-search.html",
-             table=db.artin_reps,
+artin_columns = SearchColumns([
+    SearchCol("galois_links", "artin.label", "Label", download_col="baselabel"),
+    MathCol("dimension", "artin.dimension", "Dimension"),
+    MathCol("factored_conductor_latex", "artin.conductor", "Conductor", download_col="conductor"),
+    MathCol("num_ramps", "artin.ramified_primes", "Ramified prime count", default=False),
+    SearchCol("field_knowl", "artin.stem_field", "Artin stem field", short_title="Artin stem field", download_col="NFGal"),
+    SearchCol("pretty_galois_knowl", "artin.gg_quotient", "$G$", align="center", short_title="image", download_col="GaloisLabel"),
+    SearchCol("projective_group", "artin.projective_image", "Projective image", align="center", download_col="ProjBoth", default=False),
+    SearchCol("container", "artin.permutation_container", "Container", align="center", download_col="smallest_gal_t", default=False),
+    MathCol("indicator", "artin.frobenius_schur_indicator", "Ind", short_title="indicator"),
+    MathCol("trace_complex_conjugation", "artin.trace_of_complex_conj", r"$\chi(c)$", short_title="trace of complex conj.")],
+    db_cols=["Baselabel", "GaloisConjugates", "Dim", "Conductor", "BadPrimes", "NFGal", "GaloisLabel", "Indicator", "Is_Even", "Container", "NumBadPrimes", "Proj_GAP", "Proj_nTj"])
+
+artin_columns.above_table = "<div>Galois conjugate representations are grouped into single lines.</div>"
+
+def artin_postprocess(res, info, query):
+    gp_labels = list(set([rec["GaloisLabel"] for rec in res] + [rec["Container"].upper() for rec in res] + ["T".join(str(c) for c in rec["Proj_nTj"]) for rec in res]))
+    cache = knowl_cache(gp_labels)
+    return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
+
+class ArtinDownload(Downloader):
+    table = db.artin_reps
+    title = "Artin representations"
+    def modify_query(self, info, query):
+        query['Hide'] = 0
+
+    def postprocess(self, rec, info, query):
+        # We don't use the cache here since it requires all gp_labels in advance
+        # Fortunately, the download columns override the three places where it would be needed
+        # (pretty_galois_knowl, projective_group and container)
+        return ArtinRepresentation(data=rec)
+
+@search_wrap(table=db.artin_reps,
              title='Artin representation search results',
              err_title='Artin representation search error',
              per_page=50,
+             columns=artin_columns,
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             shortcuts={'jump':artin_representation_jump},
-             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')],
-             initfunc=lambda:ArtinRepresentation)
+             shortcuts={'jump':artin_representation_jump, 'download': ArtinDownload()},
+             postprocess=artin_postprocess,
+             bread=lambda:[('Artin representations', url_for(".index")), ('Search results', ' ')])
 def artin_representation_search(info, query):
     query['Hide'] = 0
     info['sign_code'] = 0
@@ -255,9 +288,6 @@ def artin_representation_search(info, query):
     if 'Is_Even' in info:
         info['parity'] = info.pop('Is_Even')
     parse_bool(info,query,'parity',qfield='Is_Even')
-
-def search_input_error(info, bread):
-    return render_template("artin-representation-search.html", req=info, title='Artin representation search error', bread=bread)
 
 @artin_representations_page.route("/<dim>/<conductor>/")
 def by_partial_data(dim, conductor):
@@ -309,7 +339,7 @@ def render_artin_representation_webpage(label):
 
     #artin_logger.info("Found %s" % (the_rep._data))
 
-    if case=='rep':
+    if case == 'rep':
         title = "Artin representation %s" % label
     else:
         title = "Galois orbit of Artin representations %s" % label
@@ -337,12 +367,12 @@ def render_artin_representation_webpage(label):
     if proj_wnf.is_in_db():
         proj_coefs = [int(z) for z in proj_wnf.coeffs()]
         if proj_coefs != the_nf.polynomial():
-            friends.append(("Field {}".format(proj_wnf.get_label()), 
+            friends.append(("Field {}".format(proj_wnf.get_label()),
                 str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
-    if case == 'rep':
+    if case == 'rep' or the_rep.galois_conjugacy_size() == 1:
         cc = the_rep.central_character()
         if cc is not None:
-            if the_rep.dimension()==1:
+            if the_rep.dimension() == 1:
                 if cc.order == 2:
                     cc_name = cc.symbol
                 else:
@@ -357,31 +387,30 @@ def render_artin_representation_webpage(label):
         #if the_rep.dimension() <= 6:
         if the_rep.dimension() == 1:
             # Zeta is loaded differently
-            if cc.modulus == 1 and cc.number == 1:
-                friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
+            if the_rep.conductor == 1:
+                friends.append(("L-function", url_for('l_functions.by_full_label', label='1-1-1.1-r0-0-0')))
             else:
                 # looking for Lhash dirichlet_L_modulus.number
-                mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
+                mylhash = 'dirichlet_L_%d.%d' % (cc.modulus,cc.number)
                 lres = db.lfunc_instances.lucky({'Lhash': mylhash})
                 if lres is not None:
-                    friends.append(("L-function", url_for("l_functions.l_function_dirichlet_page", modulus=cc.modulus, number=cc.number)))
-
-        # Dimension > 1
-        elif int(the_rep.conductor())**the_rep.dimension() <= 729000000000000:
-            friends.append(("L-function", url_for("l_functions.l_function_artin_page",
-                                              label=the_rep.label())))
-        orblabel = re.sub(r'\.[a-z]+$', '', label)
-        friends.append(("Galois orbit " + artin_label_pretty(orblabel),
-            url_for(".render_artin_representation_webpage", label=orblabel)))
+                    friends.append(("L-function", url_for('l_functions.by_full_label', label=lres["label"])))
+        if case == 'rep':
+            orblabel = re.sub(r'\.[a-z]+$', '', label)
+            friends.append(("Galois orbit " + artin_label_pretty(orblabel),
+                url_for(".render_artin_representation_webpage", label=orblabel)))
+        else:
+            newlabel = label+'.'+num2letters(1)
+            friends.append(("Artin representation " + artin_label_pretty(newlabel),
+                url_for(".render_artin_representation_webpage", label=newlabel)))
     else:
         add_lfunction_friends(friends,label)
-        friends.append(("L-function", url_for("l_functions.l_function_artin_page", label=the_rep.label())))
         for j in range(1,1+the_rep.galois_conjugacy_size()):
             newlabel = label+'.'+num2letters(j)
             friends.append(("Artin representation " + artin_label_pretty(newlabel),
                 url_for(".render_artin_representation_webpage", label=newlabel)))
 
-    info={} # for testing
+    info = {} # for testing
 
     if case == 'rep':
         return render_template(
@@ -394,6 +423,7 @@ def render_artin_representation_webpage(label):
             wnf=wnf,
             proj_wnf=proj_wnf,
             properties=properties,
+            downloads=[("Underlying data", url_for(".artin_data", label=orblabel))],
             info=info,
             learnmore=learnmore_list(),
             KNOWL_ID="artin.%s" % label,
@@ -410,10 +440,19 @@ def render_artin_representation_webpage(label):
         wnf=wnf,
         proj_wnf=proj_wnf,
         properties=properties,
+        downloads=[("Underlying data", url_for(".artin_data", label=label))],
         info=info,
         learnmore=learnmore_list(),
         KNOWL_ID="artin.%s" % label,
     )
+
+@artin_representations_page.route("/data/<label>")
+def artin_data(label):
+    poly = db.artin_reps.lookup(label, "NFGal")
+    if poly is None:
+        return abort(404, f"Invalid label {label}")
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage([label, poly], ["artin_reps", "artin_field_data"], bread=bread, title=f"Artin representation data - {label}", label_cols=["Baselabel", "Polynomial"])
 
 @artin_representations_page.route("/random")
 @redirect_no_cache
@@ -453,9 +492,11 @@ def source():
     t = 'Source and acknowledgments for Artin representation pages'
     bread = get_bread([("Source", '')])
     learnmore = learnmore_list_remove('Source')
-    return render_template("double.html", kid='rcs.source.artin',
-                           kid2='rcs.ack.artin',
-                           title=t, bread=bread, 
+    return render_template("multi.html",
+                           kids=['rcs.source.artin',
+                                 'rcs.ack.artin',
+                                 'rcs.cite.artin'],
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Reliability")
@@ -464,7 +505,7 @@ def reliability():
     bread = get_bread([("Reliability", '')])
     learnmore = learnmore_list_remove('Reliability')
     return render_template("single.html", kid='rcs.rigor.artin',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 @artin_representations_page.route("/Completeness")
@@ -473,16 +514,22 @@ def cande():
     bread = get_bread([("Completeness", '')])
     learnmore = learnmore_list_remove('Completeness')
     return render_template("single.html", kid='rcs.cande.artin',
-                           title=t, bread=bread, 
+                           title=t, bread=bread,
                            learnmore=learnmore)
 
 class ArtinSearchArray(SearchArray):
     noun = "representation"
-    plural_noun = "representations"
+    sorts = [("", "dimension", ["Dim", "Conductor", "Galn", "Galt", "Baselabel"]),
+             ("con", "conductor", ["Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
+             ("group", "group", ["Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
+             #("container", "container", ["Container", "Galn", "Galt", "Dim", "Conductor", "Baselabel"]),
+             ("num_ramps", "ramified prime count", ["NumBadPrimes", "Conductor", "Dim", "Galn", "Galt", "Baselabel"]),
+             ("projective_group", "projective image", ["Proj_nTj", "Proj_Polynomial", "Dim", "Conductor", "Galn", "Galt", "Baselabel"])]
     jump_example = "4.5648.6t13.b.a"
     jump_egspan = "e.g. 4.5648.6t13.b.a"
     jump_knowl = "artin.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         dimension = TextBox(
             name="dimension",

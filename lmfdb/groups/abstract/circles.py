@@ -8,24 +8,28 @@ from sage.misc.cachefunc import cached_function
 from itertools import combinations
 import heapq
 
-eps = RR(0.00001) # tolerance
+eps = RR(0.00001)  # tolerance
 pi = RR.pi()
+
 
 def distxy(P, Q):
     return ((P[0] - Q[0])**2 + (P[1] - Q[1])**2).sqrt()
 
+
 def distrt(P, Q):
     return (P[0]**2 + Q[0]**2 - 2*P[0]*Q[0]*(P[1] - Q[1]).cos()).sqrt()
+
 
 def distray(P, Q):
     # Distance to the ray starting at Q and going out
     R0, theta = Q
     if P[0] * (P[1] - theta).cos() >= R0:
-        # The minimum distance to the theta line occurs on the ray, so we can just use the right triangle
+        # The minimum distance to the theta line occurs on the ray, so
+        # we can just use the right triangle
         return P[0] * (P[1] - theta).sin().abs()
-    else:
     # The minimum distance occurs at the inner radius
-        return distrt(P, Q)
+    return distrt(P, Q)
+
 
 class ThetaRay:
     def __init__(self, R0, R1, theta):
@@ -38,6 +42,7 @@ class ThetaRay:
         # This is the largest difference between thetas for two touching circles in the annulus
         R0, R1 = self.R0, self.R1
         return (1 - 2*(R0 - R1)**2 / (R0 + R1)**2).arccos()
+
 
 class Outside:
     def __init__(self, r):
@@ -56,10 +61,14 @@ class Circle:
         self.o = o # order of corresponding conjugacy classe (for eventually determining color)
         self.touching = touching # the touching objects used to construct the center
         assert (x is not None and y is not None) or (R is not None and theta is not None)
-        if x is not None: self.x = x
-        if y is not None: self.y = y
-        if R is not None: self.R = R # distance of center from origin
-        if theta is not None: self.theta = theta
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if R is not None:
+            self.R = R  # distance of center from origin
+        if theta is not None:
+            self.theta = theta
 
     @lazy_attribute
     def x(self):
@@ -152,7 +161,7 @@ class Circle:
 
 # Most common orders below 512: 4 (2384226 ccs), 2, 8, 12, 6, 24, 1, 16, 20, 28, 3, 10, 14, 56, 30, 18, 40, 9, 48, 60, 5, 36, 15, 7, 26, 52, 32, 22, 44, 42, 21, 120, 27 (5046 ccs)
 # We color based on 2-adic valuation and odd part.  Generally, a higher valuation is coded as darker, and we use the odd part to select a hue.
-# The HSV color coordiantes are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
+# The HSV color coordinates are obtained from the following dictionary: the odd part gives the key, and the valuation is used to index into each list.
 hsv = {
     1: (0, 95, [None, 100, 82, 66, 52, 40, 30, 22, 16]), # red; 1 is handled separately
     3: (220, 90, [90, 80, 70, 60, 50, 40, 30, 20]), # blue
@@ -179,11 +188,13 @@ def get_color(order):
         h = (43*odd) % 360
         s = 60 + ((odd * 17) % 31)
         v = [90, 80, 70, 60, 50, 40, 30]
+
     def delist(comp):
         if isinstance(comp, list):
             i = k if k < len(comp) else -1
             comp = comp[i]
         return comp
+
     h, s, v = delist(h), delist(s), delist(v)
     rgb = hsv_to_rgb(h / 360.0, s / 100.0, v / 100.0)
     return round(255*rgb[0]), round(255*rgb[1]), round(255*rgb[2])
@@ -260,7 +271,8 @@ def find_touching_centers(C1, C2, r, o):
         c = E**2 - (r2S*yD)**2
         D = b**2 - 4*a*c
         assert D > -eps
-        if D < 0: D = RR(0)
+        if D < 0:
+            D = RR(0)
         D = D.sqrt()
         xprimeA = -(b+D)/(2*a)
         xprimeB = -(b-D)/(2*a)
@@ -273,7 +285,8 @@ def find_touching_centers(C1, C2, r, o):
         c = E**2 - (r2S*xD)**2
         D = b**2 - 4*a*c
         assert D > -eps
-        if D < 0: D = RR(0)
+        if D < 0:
+            D = RR(0)
         D = D.sqrt()
         yprimeA = -(b+D)/(2*a)
         yprimeB = -(b-D)/(2*a)
@@ -412,7 +425,8 @@ def pack(rdata, R0, rmax):
         thetamin = RR(0)
         for sctr, segment in enumerate(segments):
             ok, placements = place_segment(segment, R0, R1, thetamin, placed, sctr == len(segments) - 1)
-            if not ok: break
+            if not ok:
+                break
             thetamin = max(C.theta for C in placements)
             placed.extend(placements)
         else:
@@ -486,13 +500,13 @@ def arrange_ring(radii, colors, R0, rmax):
     else:
         equal_centers = True
         for i in range(len(placed)):
-            if placed[i] + placed[(i+1)%len(placed)] > dist + eps:
+            if placed[i] + placed[(i+1) % len(placed)] > dist + eps:
                 equal_centers = False
                 break
     if not equal_centers:
         theta_diffs = []
         for i, r in enumerate(placed):
-            nextr = placed[(i+1)%len(placed)]
+            nextr = placed[(i+1) % len(placed)]
             theta_diffs.append((1 - (r + nextr)**2 / (2*Rc**2)).arccos())
         thetasum = sum(theta_diffs)
         if thetasum > 2*pi + eps:
@@ -588,7 +602,7 @@ def arrange_rings(radii, colors, R0, rmax):
 
 def arrange(rdata, R0, rmax):
     radii = Counter([r for (r, o) in rdata])
-    colors = {r : Counter() for r in radii}
+    colors = {r: Counter() for r in radii}
     for (r, o) in rdata:
         colors[r][get_color(o)] += 1
     circles, R1 = arrange_ring(radii, colors, R0, rmax)
@@ -627,4 +641,9 @@ def find_packing(ccdata):
         r0 = r1
         new_circles, R = arrange(annulus, R, r0)
         circles.extend(new_circles)
+    # SVG can't handle x and y coordinates that are large
+    if R > 10000000:
+        scale = RR(10000000) / R
+        R = RR(10000000)
+        circles = [(x*scale, y*scale, rad*scale, (r, g, b)) for (x, y, rad, (r, g, b)) in circles]
     return circles, R

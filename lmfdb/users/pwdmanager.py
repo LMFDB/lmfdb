@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- encoding: utf-8 -*-
 # store passwords, check users, ...
 # password hashing is done with fixed and variable salting
 # Author: Harald Schilly <harald.schilly@univie.ac.at>
@@ -9,13 +8,12 @@
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
 from lmfdb import db
-from lmfdb.backend.base import PostgresBase
-from lmfdb.backend.encoding import Array
+from psycodict.base import PostgresBase
+from psycodict.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
 
-from .main import logger, FLASK_LOGIN_VERSION, FLASK_LOGIN_LIMIT
-from distutils.version import StrictVersion
+from .main import logger
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask_login import UserMixin, AnonymousUserMixin
@@ -63,7 +61,7 @@ class PostgresUserTable(PostgresBase):
         hashed.update(fixed_salt)  # fixed salt must come last!
         return hashed.hexdigest()
 
-    def bchash(self, pwd, existing_hash = None):
+    def bchash(self, pwd, existing_hash=None):
         """
         Generate a bcrypt based password hash. Intended to replace
         Schilly's original hashing algorithm
@@ -96,9 +94,8 @@ class PostgresUserTable(PostgresBase):
                 raise Exception("ERROR: Passwords do not match!")
             pwd = pwd_input
         password = self.bchash(pwd)
-        from datetime import datetime
         #TODO: use identifiers
-        insertor = SQL(u"INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
+        insertor = SQL("INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
         self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
@@ -140,14 +137,14 @@ class PostgresUserTable(PostgresBase):
             raise ValueError("User not present in database!")
         bcpass, oldpass = cur.fetchone()
         if bcpass:
-            if bcpass == self.bchash(pwd, existing_hash = bcpass):
+            if bcpass == self.bchash(pwd, existing_hash=bcpass):
                 return True
         else:
             for i in range(self.rmin, self.rmax + 1):
                 if oldpass == self.hashpwd(pwd, str(i)):
                     bcpass = self.bchash(pwd)
                     if bcpass:
-                        logger.info("user " + uid  +  " logged in with old style password, trying to update")
+                        logger.info("user " + uid + " logged in with old style password, trying to update")
                         try:
                             #TODO: use identifiers
                             updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
@@ -193,7 +190,7 @@ class PostgresUserTable(PostgresBase):
         #TODO: use identifiers
         selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
-        return [{k:v for k,v in zip(["username","full_name"], rec)} for rec in cur]
+        return [dict(zip(["username","full_name"], rec)) for rec in cur]
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
@@ -249,7 +246,7 @@ class LmfdbUser(UserMixin):
         self._uid = uid
         self._authenticated = False
         self._dirty = False  # flag if we have to save
-        self._data = dict([(_, None) for _ in LmfdbUser.properties])
+        self._data = {_: None for _ in LmfdbUser.properties}
 
         self.exists = userdb.user_exists(uid)
         if self.exists:
@@ -302,8 +299,6 @@ class LmfdbUser(UserMixin):
 
     def is_anonymous(self):
         """required by flask-login user class"""
-        if StrictVersion(FLASK_LOGIN_VERSION) < StrictVersion(FLASK_LOGIN_LIMIT):
-            return not self.is_authenticated()
         return not self.is_authenticated
 
     def is_admin(self):

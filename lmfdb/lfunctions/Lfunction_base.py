@@ -15,7 +15,7 @@ from lmfdb.utils import display_float
 # Please do not pollute with flask, postgres, logger or similar
 #############################################################################
 
-class Lfunction(object):
+class Lfunction():
     """
     Class representing a general L-function
     """
@@ -42,7 +42,7 @@ class Lfunction(object):
             from math import pi
             self.Q_fe = float(Integer(self.level).sqrt() / 2.**len(self.nu_fe) / pi**(len(self.mu_fe) / 2. + len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe]
-            self.lambda_fe = [m / 2. for m in self.mu_fe] + [n for n in self.nu_fe]
+            self.lambda_fe = [m / 2. for m in self.mu_fe] + list(self.nu_fe)
         except Exception as e:
             raise Exception("Expecting a mu and a nu to be defined" + str(e))
 
@@ -74,9 +74,9 @@ class Lfunction(object):
         # Do not pass 0 to either lower bound or step_size
         # Not dependent on time actually
         # Manual tuning required
-        if (self.degree > 2 or self.Ltype() == "maass" or
-                self.Ltype() == "hgmQ" or
-                self.Ltype() == "artin"):
+        if (self.degree > 2 or self.Ltype() == "maass"
+                or self.Ltype() == "hgmQ"
+                or self.Ltype() == "artin"):
             allZeros = self.compute_heuristic_zeros(**kwargs)
         else:
             allZeros = self.compute_checked_zeros(**kwargs)
@@ -218,9 +218,14 @@ class Lfunction(object):
             info['chi'] = ''
             if self.charactermodulus != self.level:
                 info['chi'] += "induced by "
+
             info['chi'] += '<a href="' + url_for('characters.render_Dirichletwebpage',
                                                  modulus=self.charactermodulus, number=self.characternumber)
             info['chi'] += '">' + chilatex + '</a>'
+            if self.characternumber == 1:
+                info['chi'] = '<a href="' + url_for('characters.render_Dirichletwebpage',
+                                                 modulus=self.charactermodulus, number=self.characternumber)
+                info['chi'] += '">Trivial'+'</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link

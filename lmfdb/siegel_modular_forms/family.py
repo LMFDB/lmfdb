@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file provides the class Collection whose instances
 # represent the respective collections of Siegel modular forms.
 #
@@ -20,6 +19,7 @@ def get_smf_family(name):
     except ValueError:
         return None
 
+
 class SiegelFamily (SageObject):
     """
     Represents a family of spaces of Siegel modular forms.
@@ -29,14 +29,14 @@ class SiegelFamily (SageObject):
         if doc is None:
             doc = db.smf_families.lucky({ 'name': name })
             if not doc:
-                raise ValueError ('Siegel modular form family "%s" not found in database' % (name))
+                raise ValueError('Siegel modular form family "%s" not found in database' % (name))
         self.name = name
         self.latex_name = doc.get('latex_name')
         if not self.latex_name:
-            self.latex_name =  Latex(self.name)
+            self.latex_name = Latex(self.name)
         self.plain_name = doc.get('plain_name')
         if not self.plain_name:
-            self.plain_name =  Latex(self.name)
+            self.plain_name = Latex(self.name)
         self.degree = doc.get('degree')
         self.dim_args_default = doc.get('dim_args_default')
         module = importlib.import_module('lmfdb.siegel_modular_forms.dimensions')
@@ -52,10 +52,10 @@ class SiegelFamily (SageObject):
             self.__dimension_glossary = None
         self.__samples = None
         self.order = doc.get('order')
-        
+
     def computes_dimensions(self):
-        return True if self.__dimension else False
-    
+        return bool(self.__dimension)
+
     def dimension(self, *args, **kwargs):
         return self.__dimension(*args, **kwargs) if self.__dimension else None
 

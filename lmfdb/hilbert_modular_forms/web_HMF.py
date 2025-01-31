@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # Class created to aid in uploading HMF data from the Magma output data files.
 # Incomplete, and currently not used for real work.
@@ -13,17 +12,18 @@ from lmfdb.logger import make_logger
 
 logger = make_logger("hmf")
 
+
 def construct_full_label(field_label, weight, level_label, label_suffix):
-    if all([w==2 for w in weight]):           # Parellel weight 2
+    if all(w == 2 for w in weight):            # Parallel weight 2
         weight_label = ''
-    elif all([w==weight[0] for w in weight]): # Parellel weight
+    elif all(w == weight[0] for w in weight):  # Parallel weight
         weight_label = str(weight[0]) + '-'
-    else:                                     # non-parallel weight
+    else:                                      # non-parallel weight
         weight_label = str(weight) + '-'
     return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
 
 
-class WebHMF(object):
+class WebHMF():
     """
     Class for an Hilbert Modular Newform
     """
@@ -91,7 +91,7 @@ class WebHMF(object):
         j = L.find(']')
         data['level_ideal'] = L[i:j+1]
         #print("data['level_ideal'] = %s" % data['level_ideal'])
-        N, n, alpha = data['level_ideal'][1:-1].split(',')
+        N, _, _ = data['level_ideal'][1:-1].split(',')
         data['level_norm'] = int(N)
         #print("data['level_norm'] = %s" % data['level_norm'])
         level = F.ideal_from_str(data['level_ideal'])[2]
@@ -101,7 +101,7 @@ class WebHMF(object):
 
         # The weight
 
-        data['parallel_weight'] = int(2)
+        data['parallel_weight'] = 2
         data['weight'] = str([data['parallel_weight']] * F.degree())
         weight = [2] * F.degree()
 
@@ -126,14 +126,14 @@ class WebHMF(object):
             i = L.find("x")
             j = L.find(i+1,",")
             data['hecke_polynomial'] = pol = L[i:j]
-            data['dimension'] = int(1)
+            data['dimension'] = 1
             x = polygen(QQ)
             hpol = x.parent()(str(pol))
             data['dimension'] = int(hpol.degree())
         else:
             # rational
             data['hecke_polynomial'] = 'x'
-            data['dimension'] = int(1)
+            data['dimension'] = 1
 
         i = L.rfind("[")
         j = L.rfind("]")
@@ -150,8 +150,8 @@ class WebHMF(object):
         #print("BP_exponents = %s" % BP_exponents)
         AL_eigs = [int(data['hecke_eigenvalues'][k]) for k in BP_indices]
         #print("AL_eigs      = %s" % AL_eigs)
-        if not all([(e==1 and eig in [-1,1]) or (eig==0)
-                    for e,eig in zip(BP_exponents,AL_eigs)]):
+        if not all((e == 1 and eig in [-1, 1]) or (eig == 0)
+                   for e, eig in zip(BP_exponents, AL_eigs)):
             print("Some bad AL-eigenvalues found")
         # NB the following will put 0 for the eigenvalue for primes
         # whose quare divides the level; this will need fixing later.
@@ -169,27 +169,27 @@ class WebHMF(object):
         if field is None:
             field = HilbertNumberField(self.dbdata['field_label'])
         agree = True
-        for key in self.dbdata.keys():
+        for key in self.dbdata:
             if key in ['is_base_change', 'is_CM']:
                 continue
-            if key=='hecke_eigenvalues':
-                if self.dbdata[key]!=f.dbdata[key]:
+            if key == 'hecke_eigenvalues':
+                if self.dbdata[key] != f.dbdata[key]:
                     agree = False
                     print("Inconsistent data for HMF %s in field %s" % (lab,key))
                     print("self has %s entries, \ndb   has %s entries" % (len(self.dbdata[key]),len(f.dbdata[key])))
-                    print("Entries differ at indices %s" % [i for i in range(len(self.dbdata[key])) if self.dbdata[key][i]!=f.dbdata[key][i]])
-            elif key=='level_ideal':
-                if self.dbdata[key]!=f.dbdata[key]:
+                    print("Entries differ at indices %s" % [i for i in range(len(self.dbdata[key])) if self.dbdata[key][i] != f.dbdata[key][i]])
+            elif key == 'level_ideal':
+                if self.dbdata[key] != f.dbdata[key]:
                     I = field.ideal_from_str(f.dbdata['level_ideal'])[2]
                     J = field.ideal_from_str(self.dbdata['level_ideal'])[2]
-                    if I==J:
+                    if I == J:
                         print("OK, these are the same ideal")
                     else:
                         agree = False
                         print("These are different ideals!")
 
             else:
-                if self.dbdata[key]!=f.dbdata[key]:
+                if self.dbdata[key] != f.dbdata[key]:
                     agree = False
                     print("Inconsistent data for HMF %s in field %s" % (lab,key))
         return agree

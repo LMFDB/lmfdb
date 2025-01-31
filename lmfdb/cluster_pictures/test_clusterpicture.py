@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
+
 
 class ClusterPictureTest(LmfdbTest):
     # All tests should pass

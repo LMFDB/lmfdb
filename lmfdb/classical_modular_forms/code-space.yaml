@@ -1,0 +1,49 @@
+prompt:
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
+
+logo:
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+
+comment:
+  sage: |
+    #
+  pari: |
+    \\
+  magma: |
+    //
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+dimension-full-space:
+  comment: dimension of the space M_{k}(Gamma_1({N}))
+  pari: |
+    mfdim([{N},{k},-1],4)
+dimension-eisenstein:
+  comment: dimension of the Eisenstein subspace
+  pari: |
+    mfdim([{N},{k},-1],3)
+dimension-cuspidal:
+  comment: dimension of the cuspidal space S_{k}(Gamma_1({N}))
+  pari: |
+    mfdim([{N},{k},-1],1)
+dimension-new:
+  comment: dimension of the newspace S_{k}^new(Gamma_1({N}))
+  pari: |
+    mfdim([{N},{k},-1],0)
+
+decomposition-new:
+  comment: decomposition of the newspace
+  pari: |
+    Snew = mfinit([{N},{k},0],0);
+    #Snew \\ number of char spaces
+    \\ each contain [N,k,conray char, new, image]

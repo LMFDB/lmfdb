@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 
-import re #, StringIO, yaml, ast, os
+import re
 
 from flask import render_template, request, url_for, redirect #, send_file, abort
-#from sage.all import ZZ, latex, Permutation
+# from sage.all import ZZ, latex, Permutation
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -11,8 +10,9 @@ from lmfdb.utils import (
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints,
     search_wrap)
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 from lmfdb.groups.glnC import glnC_page
 
@@ -21,26 +21,31 @@ credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran K
 glnq_label_regex = re.compile(r'^(\d+)\.(\d+).*$')
 abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
 
+
 def learnmore_list():
-    return [ ('Completeness of the data', url_for(".completeness_page")),
-             ('Source of the data', url_for(".how_computed_page")),
-             ('Reliability of the data', url_for(".reliability_page")),
-             ('Labeling convention', url_for(".labels_page")) ]
+    return [('Completeness of the data', url_for(".completeness_page")),
+            ('Source of the data', url_for(".how_computed_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Labeling convention', url_for(".labels_page"))]
+
 
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t: t[0].find(matchstring) < 0, learnmore_list())
+
 
 def sub_label_is_valid(lab):
-    return abstract_subgroup_label_regex.match(lab)
+    return abstract_subgroup_label_regex.fullmatch(lab)
+
 
 def label_is_valid(lab):
-    return glnq_label_regex.match(lab)
+    return glnq_label_regex.fullmatch(lab)
+
 
 def get_bread(breads=[]):
-    bc = [("Groups", url_for(".index")),("GLnC", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc = [("Groups", url_for(".index")), ("GLnC", url_for(".index"))]
+    bc.extend(b for b in breads)
     return bc
+
 
 @glnC_page.route("/")
 def index():
@@ -48,10 +53,9 @@ def index():
     bread = get_bread()
     if request.args:
         return group_search(info)
-    info['order_list']= ['1-10', '20-100', '101-200']
+    info['order_list'] = ['1-10', '20-100', '101-200']
 
     return render_template("glnC-index.html", title=r'Finite subgroups of $\GL(n,\C)$', bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
-
 
 
 @glnC_page.route("/random")
@@ -65,22 +69,25 @@ def by_label(label):
     if label_is_valid(label):
         return render_glnC_group({'label': label})
     else:
-        flash_error( "No group with label %s was found in the database.", label)
+        flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
-#Should this be "Bad label instead?"
+# Should this be "Bad label instead?"
+
 
 # Take a list of list of integers and make a latex matrix
-def dispmat(n,mat):
+def dispmat(n, mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join([sparse_cyclotomic_to_latex(n, z) for z in row])
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
 
-#### Searching
+
+# Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
+
 
 def group_download(info):
     t = 'Stub'
@@ -90,51 +97,69 @@ def group_download(info):
                            learnmore=learnmore_list_remove('Source'),
                            credit=credit_string)
 
+
 def url_for_label(label):
     if label == "random":
         return url_for(".random_abstract_group")
     return url_for(".by_label", label=label)
 
-@search_wrap(template="glnC-search.html",
-             table=db.gps_crep,
-             title=r'$\GL(n,\C)$ subgroup search results',
-             err_title=r'$\GL(n,\C)$ subgroup search input error',
-             shortcuts={'jump':group_jump,
-                        'download':group_download},
-             projection=['label','order','dim','group'],
-             #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
-             #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
-             #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
-             bread=lambda:get_bread([('Search Results', '')]),
-             learnmore=learnmore_list,
-             credit=lambda:credit_string,
-             url_for_label=url_for_label)
-def group_search(info, query):
-    info['group_url'] = get_url
-    info['getname'] = lambda xx: '$'+group_names_pretty(xx)+'$'
-    parse_ints(info, query, 'order', 'order')
-    parse_ints(info, query, 'dim', 'dim')
-    parse_bool(info, query, 'irreducible', 'irreducible')
 
 def get_url(label):
     return url_for(".by_label", label=label)
 
-#Writes individual pages
+
+glnC_columns = SearchColumns([
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    MathCol("order", "group.order", "Order"),
+    MathCol("dim", "group.dimension", "Dimension")],
+    db_cols=["label", "group", "order", "dim"])
+
+
+glnC_columns.dummy_download = True
+
+
+def glnC_postprocess(res, info, query):
+    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
+    for gp in res:
+        gp["tex_name"] = tex_names[gp["group"]]
+    return res
+
+
+@search_wrap(table=db.gps_crep,
+             title=r'$\GL(n,\C)$ subgroup search results',
+             err_title=r'$\GL(n,\C)$ subgroup search input error',
+             columns=glnC_columns,
+             shortcuts={'jump': group_jump,
+                        'download': group_download},
+             postprocess=glnC_postprocess,
+             bread=lambda: get_bread([('Search Results', '')]),
+             learnmore=learnmore_list,
+             credit=lambda: credit_string,
+             url_for_label=url_for_label)
+def group_search(info, query):
+    info['group_url'] = get_url
+    parse_ints(info, query, 'order', 'order')
+    parse_ints(info, query, 'dim', 'dim')
+    parse_bool(info, query, 'irreducible', 'irreducible')
+
+
+# Writes individual pages
 def render_glnC_group(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
         info = db.gps_crep.lucky({'label': label})
         info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
-        info['groupknowl'] = group_display_knowl(info['group'], info['group'])
-        N=info['cyc_order_mat']
-        info['dispmat'] = lambda z: dispmat(N,z)
+        info['groupknowl'] = abstract_group_display_knowl(info['group'], info['groupname'])
+        N = info['cyc_order_mat']
+        info['dispmat'] = lambda z: dispmat(N, z)
 
-        title = r'$\GL('+str(info['dim'])+',\C)$ subgroup '  + label
+        title = fr'$\GL({info["dim"]},\C)$ subgroup {label}'
 
-        prop = [('Label', '%s' %  label),
+        prop = [('Label', '%s' % label),
                 ('Order', '$%s$' % info['order']),
-                ('Dimension', '%s' % info['dim']) ]
+                ('Dimension', '%s' % info['dim'])]
 
         bread = get_bread([(label, )])
 
@@ -144,22 +169,24 @@ def render_glnC_group(args):
         return render_template("glnC-show-group.html",
                                title=title, bread=bread, info=info,
                                properties=prop,
-                               #friends=friends,
+                               # friends=friends,
                                learnmore=learnmore_list(),
-                               #downloads=downloads,
+                               # downloads=downloads,
                                credit=credit_string)
 
+
 def make_knowl(title, knowlid):
-    return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
+    return '<a title="%s" knowl="%s">%s</a>' % (title, knowlid, title)
+
 
 @glnC_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of the $\GL(n,\C)$ subgroup data'
     bread = get_bread([("Completeness", '')])
     return render_template("single.html", kid='rcs.groups.glnC.extent',
-                            title=t, bread=bread,
-                            learnmore=learnmore_list_remove('Complete'),
-                            credit=credit_string)
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Complete'),
+                           credit=credit_string)
 
 
 @glnC_page.route("/Labels")
@@ -193,9 +220,9 @@ def how_computed_page():
 
 class GLnCSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
+
     def __init__(self):
         order = TextBox(
             name="order",
@@ -222,4 +249,3 @@ class GLnCSearchArray(SearchArray):
             [count]]
         self.refine_array = [
             [order, dim, irreducible]]
-

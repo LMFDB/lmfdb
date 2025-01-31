@@ -31,9 +31,15 @@
 <div style='overflow:auto'>
   <table class="values">
     <thead>
-      <tr>{% for a in groupelts %}<td style="text-align:center">\({{a}}\)</td>{%endfor%}</tr>
+      <tr>
+        <td style="text-align:center">\(a\)</td>
+        {% for a in groupelts %}<td style="text-align:center">\({{a}}\)</td>{%endfor%}
+      </tr>
     </thead>
-    <tr>{% for v in values %}<td style="text-align:center">{{v}}</td>{%endfor%}</tr>
+    <tr>
+      <td style="text-align:center">\( \chi_{ {{modulus}} }({{number}}, a) \)</td>
+      {% for v in values %}<td style="text-align:center">{{v}}</td>{%endfor%}
+    </tr>
   </table>
 </div>
 {{ place_code('jacobi') }}
@@ -100,7 +106,7 @@
 function value_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-value-input").val();
-    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', modulus = modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
         {# render the output #}
         renderMathInElement($("#calc-value-output").get(0), katexOpts);

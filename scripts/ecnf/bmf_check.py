@@ -16,17 +16,23 @@ nfcurves = db.ec_nfcurves
 print("setting bmf forms")
 forms = db.bmf_forms
 
-fields = ['2.0.{}.1'.format(d) for d in [4,8,3,7,11]]
+abs_discs = [4,8,3,7,11,18,43,67,163,23,31,47, 59, 71, 79, 83, 20, 24, 15, 35, 52,
+                                         40, 51, 88, 84, 91, 56, 55, 68, 39, 87,95]
+fields = ['2.0.{}.1'.format(d) for d in abs_discs]
+
 x = polygen(QQ)
+def poly(d):
+    return x**2+(d//4) if d%4==0 else x**2-x+(d+1)//4
 
-polys = {'2.0.4.1': x**2+1, '2.0.8.1': x**2+2, '2.0.3.1': x**2-x+1,
-         '2.0.7.1': x**2-x+2, '2.0.11.1': x**2-x+3, }
+polys = dict([(field,poly(d)) for field,d in zip(fields, abs_discs)])
 
-gen_names = {'2.0.4.1': 'i', '2.0.8.1': 't', '2.0.3.1': 'w',
-             '2.0.7.1': 'a', '2.0.11.1': 'a', }
+def gen_name(d):
+    return 'i' if d==4 else 't' if d==8 else 'w' if d==3 else 'a'
+
+gen_names = dict([(field,gen_name(d)) for field,d in zip(fields, abs_discs)])
 
 false_curves = {'2.0.4.1': ['34225.7-a', '34225.7-b', '34225.3-a', '34225.3-b'],
-                
+
                 '2.0.8.1': ['5625.1-b', '5625.3-b', '6561.5-a', '6561.5-d',
                             '21609.1-b', '21609.1-c', '21609.3-b', '21609.3-c'],
 
@@ -39,7 +45,10 @@ false_curves = {'2.0.4.1': ['34225.7-a', '34225.7-b', '34225.3-a', '34225.3-b'],
                             '40000.1-b', '40000.7-b'],
 
                 '2.0.11.1': [] }
-                
+
+for fld in fields:
+    if fld not in false_curves:
+        false_curves[fld] = []
 
 def field_from_label(lab):
     r"""
@@ -63,7 +72,7 @@ def field_from_label(lab):
 # database.  Here 'matching' means same label, conductor=label and ap
 # agree.  This must allow for the valid non-existence of curves for
 # some newforms.
-    
+
 def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, check_ap = False, verbose=False):
     r"""Go through all Bianchi Modular Forms with the given field label,
     assumed imaginary quadratic (i.e. '2.0.d.1' with d in
@@ -71,7 +80,7 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
     same label.  If so, and if check_ap is True, check that the a_P agree.
 
     """
-    if not field_label in fields:
+    if field_label not in fields:
         print("No BMF data available for field {}".format(field_label))
         return
     else:
@@ -91,7 +100,7 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
     labels = [f['short_label'] for f in cursor]
     nforms = len(labels)
     print("found {} newforms".format(nforms))
-    labels = [lab for lab in labels if not lab in false_curves[field_label]]
+    labels = [lab for lab in labels if lab not in false_curves[field_label]]
     nforms = len(labels)
     print("  of which {} should have associated curves (not false ones)".format(nforms))
     nfound = 0
@@ -99,7 +108,7 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
     nok = 0
     missing_curves = []
     mismatches = []
-    
+
     primes = list(primes_iter(K,maxnorm=1000)) if check_ap else []
     curve_ap = {}  # curve_ap[conductor_label] will be a dict iso -> ap
     form_ap = {}  # form_ap[conductor_label]  will be a dict iso -> ap
@@ -196,4 +205,4 @@ def check_curves(field_label='2.0.4.1', min_norm=0, max_norm=None, label=None, c
         print("{} form-curve pairs had inconsistent ap:".format(len(mismatches)))
         print(mismatches)
 
-    
+

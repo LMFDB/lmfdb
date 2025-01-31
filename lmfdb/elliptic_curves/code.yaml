@@ -2,11 +2,23 @@ prompt:
   sage:   'sage'
   pari:   'gp'
   magma:  'magma'
+  oscar:  'oscar'
 
 logo:
-  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
+
+comment:
+  sage: |
+    #
+  pari: |
+    \\
+  magma: |
+    //
+  oscar: |
+    #
 
 not-implemented:
   sage: |
@@ -15,105 +27,204 @@ not-implemented:
     \\\\ (not yet implemented)
   magma: |
     // (not yet implemented)
+  oscar: |
+    # (not yet implemented)
 
 curve:
-  sage:  E = EllipticCurve(%s)
-  pari:  E = ellinit(%s)
-  magma: E := EllipticCurve(%s);
+  comment: Define the curve
+  sage:  E = EllipticCurve({ainvs})
+  pari:  E = ellinit({ainvs})
+  magma: E := EllipticCurve({ainvs});
+  oscar: E = elliptic_curve({ainvs})
+
+simple_curve:
+  sage: E.short_weierstrass_model()
+  magma: WeierstrassModel(E);
+  oscar: short_weierstrass_model(E)
+
+mwgroup:
+  magma: MordellWeilGroup(E);
 
 gens:
   sage:  E.gens()
   magma: Generators(E);
+  pari: E.gen
 
 tors:
+  comment: Torsion subgroup
   sage:  E.torsion_subgroup().gens()
   pari:  elltors(E)
   magma: TorsionSubgroup(E);
+  oscar: torsion_structure(E)
 
 intpts:
+  comment: Integral points
   sage:  E.integral_points()
   magma: IntegralPoints(E);
 
 cond:
+  comment: Conductor
   sage:  E.conductor().factor()
   pari:  ellglobalred(E)[1]
   magma: Conductor(E);
+  oscar: conductor(E)
 
 disc:
+  comment: Discriminant
   sage:  E.discriminant().factor()
   pari:  E.disc
   magma: Discriminant(E);
+  oscar: discriminant(E)
 
 jinv:
+  comment: j-invariant
   sage:  E.j_invariant().factor()
   pari:  E.j
   magma: jInvariant(E);
+  oscar: j_invariant(E)
+
+cm:
+  sage: E.has_cm()
+  magma: HasComplexMultiplication(E);
+
+faltings:
+  pari: ellheight(E)
+  magma: FaltingsHeight(E);
+  oscar: faltings_height(E)
+
+stable_faltings:
+  magma: StableFaltingsHeight(E);
+  oscar: stable_faltings_height(E)
 
 rank:
+  comment: Rank
   sage:  E.rank()
+  pari: |
+    [lower,upper] = ellrank(E)
   magma: Rank(E);
 
+analytic_rank:
+  sage: E.analytic_rank()
+  pari: ellanalyticrank(E)
+  magma: AnalyticRank(E);
+
 reg:
+  comment: Regulator
   sage:  E.regulator()
+  pari: |
+    G = E.gen \\ if available
+    matdet(ellheightmatrix(E,G))
   magma: Regulator(E);
 
 real_period:
+  comment: Real Period
   sage:  E.period_lattice().omega()
-  pari:  E.omega[1]
-  magma: RealPeriod(E);
+  pari:  if(E.disc>0,2,1)*E.omega[1]
+  magma: (Discriminant(E) gt 0 select 2 else 1) * RealPeriod(E);
 
 cp:
+  comment: Tamagawa numbers
   sage:  E.tamagawa_numbers()
   pari:  gr=ellglobalred(E); [[gr[4][i,1],gr[5][i][4]] | i<-[1..#gr[4][,1]]]
   magma: TamagawaNumbers(E);
-
+  oscar: tamagawa_numbers(E)
 
 ntors:
+  comment: Torsion order
   sage:  E.torsion_order()
   pari:  elltors(E)[1]
   magma: Order(TorsionSubgroup(E));
+  oscar: prod(torsion_structure(E)[1])
 
 sha:
+  comment: Order of Sha
   sage:  E.sha().an_numerical()
   magma: MordellWeilShaInformation(E);
 
+L1:
+  sage:  |
+    r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()
+  pari:  |
+    ar = ellanalyticrank(E); ar[2]/factorial(ar[1])
+  magma: |
+    Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
+
+bsd_formula:
+  sage: |
+    # self-contained SageMath code snippet for the BSD formula (checks rank, computes analytic sha)
+    E = EllipticCurve(%s); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
+    Lr1 = E.lseries().dokchitser().derivative(1,r)/r.factorial(); sha = E.sha().an_numerical();
+    omega = E.period_lattice().omega(); reg = E.regulator(); tam = E.tamagawa_product(); tor = E.torsion_order();
+    assert r == ar; print("analytic sha: " + str(RR(Lr1) * tor^2 / (omega * reg * tam)))
+  magma: |
+    /* self-contained Magma code snippet for the BSD formula (checks rank, computes analytic sha) */
+    E := EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
+    sha := MordellWeilShaInformation(E); omega := RealPeriod(E) * (Discriminant(E) gt 0 select 2 else 1);
+    reg := Regulator(E); tam := &*TamagawaNumbers(E); tor := #TorsionSubgroup(E);
+    assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
+
 qexp:
+  comment: q-expansion of modular form
   sage:  E.q_eigenform(20)
   pari:  |
-    xy = elltaniyama(E);
-    x*deriv(xy[1])/(2*xy[2]+E.a1*xy[1]+E.a3)
+    \\ actual modular form, use for small N
+    [mf,F] = mffromell(E)
+    Ser(mfcoefs(mf,20),q)
+    \\ or just the series
+    Ser(ellan(E,20),q)*q
   magma: ModularForm(E);
 
 moddeg:
+  comment: Modular degree
   sage:  E.modular_degree()
+  pari:  ellmoddegree(E)
   magma: ModularDegree(E);
 
+manin:
+  comment: Manin constant
+  magma: ManinConstant(E);
+
 L1:
+  comment: Special L-value
   sage:  |
     r = E.rank();
     E.lseries().dokchitser().derivative(1,r)/r.factorial()
   pari:  |
-    ar = ellanalyticrank(E);
-    ar[2]/factorial(ar[1])
+    [r,L1r] = ellanalyticrank(E); L1r/r!
   magma: |
     Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
 
 localdata:
-  sage:
-    E.local_data()
-  pari:
-    ellglobalred(E)[5]
+  comment: Local data
+  sage: E.local_data()
+  pari: ellglobalred(E)[5]
   magma: |
     [LocalInformation(E,p) : p in BadPrimes(E)];
+  oscar: |
+    [(p,tamagawa_number(E,p), kodaira_symbol(E,p), reduction_type(E,p)) for p in bad_primes(E)]
 
 galrep:
+  comment: mod p Galois image
   sage:  |
-    rho = E.galois_representation();
-    [rho.image_type(p) for p in rho.non_surjective()]
+    rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
+adelicimage:
+  sage:   |
+    gens = {adelic_gens}
+    GL(2,Integers({level})).subgroup(gens)
+  magma:   |
+    Gens := {adelic_gens};
+    sub<GL(2,Integers({level}))|Gens>;
+
 padicreg:
+  comment: p-adic regulator
   sage: |
     [E.padic_regulator(p) for p in primes(5,20) if E.conductor().valuation(p)<2]
+  pari: |
+    G = E.gen \\ if available
+    [ellpadicregulator(E,p,10,G) | p <- primes([5,20])]
 
+isogenies:
+  pari: ellisomat(E)

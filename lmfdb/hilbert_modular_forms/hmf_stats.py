@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma
@@ -63,22 +62,21 @@ class HMFstats(StatsDisplay):
     def counts(self):
         counts = {}
 
-
-        counts['nforms']  = self.nforms
-        counts['nforms_c']  = comma(self.nforms)
+        counts['nforms'] = self.nforms
+        counts['nforms_c'] = comma(self.nforms)
 
         attrs = ["degree", "discriminant", "label"]
         fields = list(db.hmf_fields.search({}, attrs, sort=attrs))
-        degrees = sorted(set(F["degree"] for F in fields))
+        degrees = sorted({F["degree"] for F in fields})
         by_deg = {d: [F for F in fields if F["degree"] == d] for d in degrees}
         counts["degrees"] = degrees
         counts["nfields"] = len(fields)
         counts["nfields_c"] = comma(len(fields))
         counts["maxdeg"] = max(degrees)
         counts["max_deg_c"] = comma(max(degrees))
-        counts["fields_by_degree"] = {d : [F["label"] for F in by_deg[d]] for d in degrees}
-        counts["nfields_by_degree"] = {d : len(by_deg[d]) for d in degrees}
-        counts["max_disc_by_degree"] = {d : max(F["discriminant"] for F in by_deg[d]) for d in degrees}
+        counts["fields_by_degree"] = {d: [F["label"] for F in by_deg[d]] for d in degrees}
+        counts["nfields_by_degree"] = {d: len(by_deg[d]) for d in degrees}
+        counts["max_disc_by_degree"] = {d: max(F["discriminant"] for F in by_deg[d]) for d in degrees}
         return counts
 
     @cached_method

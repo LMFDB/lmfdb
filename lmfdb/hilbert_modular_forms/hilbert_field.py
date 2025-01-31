@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r""" Class for interface with the 'field' component of the Hilbert modular forms database.
 
 Initial version (University of Warwick 2015) Aurel Page and John Cremona
@@ -76,8 +75,7 @@ def niceideals(F, ideals): #HNF + sage ideal + label
 def conjideals(ideals, auts): #(label,g) -> label
     cideals = {}
     from copy import copy
-    ideals = copy(ideals)
-    ideals.sort()
+    ideals = sorted(copy(ideals))
     for ig,g in enumerate(auts):
         gideals = copy(ideals)
         for I in gideals:
@@ -86,7 +84,6 @@ def conjideals(ideals, auts): #(label,g) -> label
         for I,J in zip(ideals,gideals):
             cideals[(J[2],ig)] = I[2]
     return cideals
-
 
 
 class HilbertNumberField(WebNumberField):
@@ -103,8 +100,8 @@ class HilbertNumberField(WebNumberField):
         self.ideal_dict = {}
         self.label_dict = {}
         for I in self.ideals_iter():
-            self.ideal_dict[I['label']]=I['ideal']
-            self.label_dict[I['ideal']]=I['label']
+            self.ideal_dict[I['label']] = I['ideal']
+            self.label_dict[I['ideal']] = I['label']
 
     def _iter_ideals(self, primes=False, number=None):
         """
@@ -127,7 +124,7 @@ class HilbertNumberField(WebNumberField):
             yield {'label':label, 'ideal':idl}
             ilabel += 1
             count += 1
-            if count==number:
+            if count == number:
                 raise StopIteration
 
     def primes_iter(self, number=None):
@@ -161,5 +158,3 @@ class HilbertNumberField(WebNumberField):
         #     if I['label']==lab:
         #         return I['ideal']
         # return None
-
-

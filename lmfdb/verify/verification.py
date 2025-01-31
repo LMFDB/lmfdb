@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import traceback
 import time
 import os
@@ -12,7 +11,8 @@ from sage.all import Integer, vector, ZZ
 
 from lmfdb.lmfdb_database import db
 from psycopg2.sql import SQL, Composable, Literal
-from lmfdb.backend.utils import IdentifierWrapper as Identifier
+from lmfdb.utils import pluralize
+from psycodict.utils import IdentifierWrapper as Identifier
 
 integer_types = (int, Integer)
 
@@ -29,22 +29,17 @@ def accumulate_failures(L):
             ans.extend(a)
     return ans
 
-def pluralize(n, noun):
-    if n == 1:
-        return "1 %s"%(noun)
-    else:
-        return "%d %ss"%(n, noun)
-
 class TooManyFailures(AssertionError):
     pass
 
-class speed_decorator(object):
+class speed_decorator():
     """
     Transparently wraps a function, so that functions can be classified by "isinstance".  Allow keyword arguments
     """
     disabled = False # set to True to skip this check
     max_failures = 1 # maximum number of failures to show
     ratio = 1 # ratio of rows to run this test on
+
     def __init__(self, f=None, **kwds):
         self._kwds = kwds
         if f is not None:
@@ -58,11 +53,13 @@ class speed_decorator(object):
                 self.f = timeout(self.timeout)(f)
         else:
             self.f = None
+
     def __call__(self, *args, **kwds):
         if self.f is None:
             assert len(args) == 1 and len(kwds) == 0
             return self.__class__(args[0], **self._kwds)
         return self.f(*args, **kwds)
+
 
 class per_row(speed_decorator):
     """
@@ -75,6 +72,7 @@ class per_row(speed_decorator):
     projection = 1 # default projection; override in order to not fetch large columns.  label_col is appended
     report_slow = 0.1
     max_slow = 100
+
 
 class one_query(speed_decorator):
     """
@@ -113,7 +111,7 @@ class overall_long(one_query):
     shortname = "long"
     timeout = 3600
 
-class TableChecker(object):
+class TableChecker():
     label_col = 'label' # default
 
     @staticmethod
@@ -129,7 +127,7 @@ class TableChecker(object):
         elif isinstance(typ, type) and issubclass(typ, speed_decorator):
             return typ
         else:
-            raise ValueError("Unrecognized speed type %s"%typ)
+            raise ValueError("Unrecognized speed type %s" % typ)
 
     @staticmethod
     def all_types():
@@ -140,7 +138,7 @@ class TableChecker(object):
         return len([f for fname, f in inspect.getmembers(cls) if isinstance(f, typ)])
 
     def get_checks(self, typ):
-        return [MethodType(f, self, self.__class__) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
+        return [MethodType(f, self) for fname, f in inspect.getmembers(self.__class__) if isinstance(f, typ)]
 
     def get_check(self, check):
         check = getattr(self.__class__, check)
@@ -149,11 +147,13 @@ class TableChecker(object):
         return MethodType(check, self), check.__class__
 
     def get_total(self, check, ratio):
-        if ratio is None: ratio=check.ratio
+        if ratio is None:
+            ratio = check.ratio
         return int(self.table.count(check.constraint) * ratio)
 
     def get_iter(self, check, label, ratio):
-        if ratio is None: ratio = check.ratio
+        if ratio is None:
+            ratio = check.ratio
         projection = check.projection
         if self.label_col not in projection:
             projection = [self.label_col] + projection
@@ -187,7 +187,7 @@ class TableChecker(object):
     def _run_check(self, check, typ, label, file_handles, ratio=None):
         start = time.time()
         prog, log, err = file_handles
-        name = "%s.%s"%(self.__class__.__name__, check.__name__)
+        name = "%s.%s" % (self.__class__.__name__, check.__name__)
         if label is not None:
             name += "[%s]" % label
         self._cur_label = label
@@ -210,18 +210,18 @@ class TableChecker(object):
                 else:
                     for rec_no, rec in enumerate(search_iter, 1):
                         if rec_no % progress_interval == 0:
-                            prog.write('%d/%d in %.2fs\n'%(rec_no, total, time.time() - start))
+                            prog.write('%d/%d in %.2fs\n' % (rec_no, total, time.time() - start))
                             prog.flush()
                         row_start = time.time()
                         check_success = check(rec)
                         row_time = time.time() - row_start
                         if not check_success:
-                            log.write('%s: %s failed test\n'%(name, rec[self.label_col]))
+                            log.write('%s: %s failed test\n' % (name, rec[self.label_col]))
                             check_failures += 1
                             if check_failures >= check.max_failures:
                                 raise TooManyFailures
                         if row_time >= check.report_slow:
-                            log.write('%s: %s (%d/%d) ok but took %.2fs\n'%(name, rec[self.label_col], rec_no, total, row_time))
+                            log.write('%s: %s (%d/%d) ok but took %.2fs\n' % (name, rec[self.label_col], rec_no, total, row_time))
                             check_slow += 1
                             if check_slow >= check.max_slow:
                                 raise TimeoutError
@@ -233,28 +233,28 @@ class TableChecker(object):
                 bad_labels = check()
                 if bad_labels:
                     for label in bad_labels:
-                        log.write('%s: %s failed test\n'%(name, label))
+                        log.write('%s: %s failed test\n' % (name, label))
                     check_failures = len(bad_labels)
         except TimeoutError:
             check_timeouts += 1
-            msg = '%s timed out after %.2fs\n'%(name, time.time() - start)
+            msg = '%s timed out after %.2fs\n' % (name, time.time() - start)
             log.write(msg)
             if log != prog:
                 prog.write(msg)
         except TooManyFailures:
             check_aborts += 1
-            msg = '%s aborted after %.2fs (too many failures)\n'%(name, time.time() - start)
+            msg = '%s aborted after %.2fs (too many failures)\n' % (name, time.time() - start)
             log.write(msg)
             if log != prog:
                 prog.write(msg)
         except Exception:
             if issubclass(typ, per_row):
-                msg = 'Exception in %s (%s):\n'%(name, rec.get(self.label_col, ''))
+                msg = 'Exception in %s (%s):\n' % (name, rec.get(self.label_col, ''))
             else:
-                msg = 'Exception in %s\n'%(name)
+                msg = 'Exception in %s\n' % (name)
             check_errors = self._report_error(msg, log, prog, err)
         else:
-            prog.write('%s finished after %.2fs\n'%(name, time.time() - start))
+            prog.write('%s finished after %.2fs\n' % (name, time.time() - start))
         finally:
             log.flush()
             prog.flush()
@@ -283,18 +283,18 @@ class TableChecker(object):
         status = vector(ZZ, 4) # excludes disabled
         disabled = 0
         with open(startfile, 'w') as startf:
-            startf.write("%s.%s started (pid %s)\n"%(self.__class__.__name__, typ.__name__, os.getpid()))
+            startf.write("%s.%s started (pid %s)\n" % (self.__class__.__name__, typ.__name__, os.getpid()))
         with open(logfile, 'a') as log:
             with open(progfile, 'a') as prog:
                 with open(errfile, 'a') as err:
                     start = time.time()
                     for check_num, check in enumerate(checks, 1):
-                        name = "%s.%s"%(self.__class__.__name__, check.__name__)
+                        name = "%s.%s" % (self.__class__.__name__, check.__name__)
                         if check.disabled:
-                            prog.write('%s (check %s/%s) disabled\n'%(name, check_num, len(checks)))
+                            prog.write('%s (check %s/%s) disabled\n' % (name, check_num, len(checks)))
                             disabled += 1
                             continue
-                        prog.write('%s (check %s/%s) started at %s\n'%(name, check_num, len(checks), datetime.now()))
+                        prog.write('%s (check %s/%s) started at %s\n' % (name, check_num, len(checks), datetime.now()))
                         prog.flush()
                         status += self._run_check(check, typ, label, (prog, log, err))
         with open(donefile, 'a') as done:
@@ -303,9 +303,9 @@ class TableChecker(object):
                 if scount:
                     reports.append(pluralize(scount, sname))
             if disabled:
-                reports.append("%s disabled"%disabled)
+                reports.append("%s disabled" % disabled)
             status = "FAILED with " + ", ".join(reports) if reports else "PASSED"
-            done.write("%s.%s %s in %.2fs\n"%(self.__class__.__name__, typ.__name__, status, time.time() - start))
+            done.write("%s.%s %s in %.2fs\n" % (self.__class__.__name__, typ.__name__, status, time.time() - start))
             os.remove(startfile)
 
     #####################
@@ -452,8 +452,8 @@ class TableChecker(object):
         if isinstance(b_columns, str):
             b_columns = [b_columns]
         return self._run_query(SQL(" != ").join([
-            SQL(" %s "%op).join(map(Identifier, a_columns)),
-            SQL(" %s "%op).join(map(Identifier, b_columns))]), constraint)
+            SQL(" %s " % op).join(map(Identifier, a_columns)),
+            SQL(" %s " % op).join(map(Identifier, b_columns))]), constraint)
 
     def check_sum(self, a_columns, b_columns, constraint={}):
         return self._check_arith(a_columns, b_columns, constraint, '+')
@@ -474,6 +474,13 @@ class TableChecker(object):
         """
         return self._run_query(SQL("(SELECT PROD(s) FROM UNNEST({0}) s) != {1}").format(
             Identifier(array_column), Identifier(value_column)), constraint)
+
+    def check_array_dotproduct(self, array_column1, array_column2, value_column, constraint={}):
+        """
+        Checks that sum(a * b for (a, b) in zip(array_column1, array_column2)) == value_column
+        """
+        return self._run_query(SQL("(SELECT SUM(a*b) FROM UNNEST({0}, {1}) as t(a,b)) != {2}").format(
+            Identifier(array_column1), Identifier(array_column2), Identifier(value_column)), constraint)
 
     def check_divisible(self, numerator, denominator, constraint={}):
         numerator = self._make_sql(numerator)
@@ -510,8 +517,8 @@ class TableChecker(object):
         return self.check_values({col: None for col in columns}, constraint)
 
     def check_iff(self, condition1, condition2):
-        return (self.check_values(condition1, condition2) +
-                self.check_values(condition2, condition1))
+        return (self.check_values(condition1, condition2)
+                + self.check_values(condition2, condition1))
 
     def check_array_len_gte_constant(self, column, limit, constraint={}):
         """
@@ -520,7 +527,7 @@ class TableChecker(object):
         return self._run_query(SQL("array_length({0}, 1) < %s").format(Identifier(column)),
                                constraint, [limit])
 
-    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim = 1):
+    def check_array_len_eq_constant(self, column, limit, constraint={}, array_dim=1):
         """
         Length of array equal to constant
         """
@@ -531,7 +538,7 @@ class TableChecker(object):
             ),
             constraint)
 
-    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim = 1):
+    def check_array_len_col(self, array_column, len_column, constraint={}, shift=0, array_dim=1):
         """
         Length of array_column matches len_column
         """
@@ -564,7 +571,7 @@ class TableChecker(object):
             other_columns,
             constraint={},
             sep='.',
-            convert_to_base26 = {}):
+            convert_to_base26={}):
         """
         Check that the label_column is the concatenation of the other columns with the given separator
 
@@ -580,13 +587,15 @@ class TableChecker(object):
                 if col in convert_to_base26
                 else Identifier(col) for col in other_columns]
         #intertwine the separator
-        oc = [oc_converted[i//2] if i%2 == 0 else Literal(sep) for i in range(2*len(oc_converted)-1)]
+        if isinstance(sep, str):
+            sep = [sep] * (len(oc_converted) - 1)
+        oc = [oc_converted[i//2] if i % 2 == 0 else Literal(sep[i//2]) for i in range(2*len(oc_converted)-1)]
 
         return self._run_query(SQL(" != ").join([SQL(" || ").join(oc), Identifier(label_col)]), constraint)
 
     def check_string_startswith(self, col, head, constraint={}):
         value = head.replace('_',r'\_').replace('%',r'\%') + '%'
-        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values = [value])
+        return self._run_query(SQL("NOT ({0} LIKE %s)").format(Identifier(col)), constraint=constraint, values=[value])
 
     def check_sorted(self, column):
         return self._run_query(SQL("{0} != sort({0})").format(Identifier(column)))
@@ -625,7 +634,6 @@ class TableChecker(object):
         """
         Check that col1 is the sum of the product of the values in the columns of col2 over rows of other_table with self.table.join1 = other_table.join2.
 
-        There are some peculiarities of this method, resulting from its application to mf_subspaces.
         col1 is allowed to be a pair, in which case the difference col1[0] - col1[1] will be compared.
 
         col2 does not take value col1 as a default, since they are playing different roles.
@@ -648,31 +656,33 @@ class TableChecker(object):
         if col2 is None:
             col2 = col1
         if truncate is not None:
-            col1 = SQL("t1.{0}[:%s]"%(int(truncate))).format(Identifier(col1))
+            col1 = SQL("t1.{0}[:%s]" % (int(truncate))).format(Identifier(col1))
         if sort is None:
             sort = SQL(" ORDER BY t2.{0}").format(Identifier(col2))
         else:
             sort = SQL(" ORDER BY {0}").format(SQL(", ").join(SQL("t2.{0}").format(Identifier(col)) for col in sort))
         return self._run_crosstable(col2, other_table, col1, join1, join2, constraint, subselect_wrapper="ARRAY", extra=sort)
 
-    def check_letter_code(self, index_column, letter_code_column, constraint = {}):
+    def check_letter_code(self, index_column, letter_code_column, constraint={}):
         return self._run_query(SQL("{0} != to_base26({1} - 1)").format(Identifier(letter_code_column), Identifier(index_column)), constraint)
 
     label = None
     label_conversion = {}
+
     @overall
     def check_label(self):
         """
         check that label matches self.label
         """
         if self.label is not None:
-            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26 = self.label_conversion)
+            return self.check_string_concatenation(self.label_col, self.label, convert_to_base26=self.label_conversion)
 
     uniqueness_constraints = []
+
     @overall
     def check_uniqueness_constraints(self):
         """
         check that the uniqueness constraints are satisfied
         """
-        constraints = set(tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE')
+        constraints = {tuple(sorted(D['columns'])) for D in self.table.list_constraints().values() if D['type'] == 'UNIQUE'}
         return [constraint for constraint in self.uniqueness_constraints if tuple(sorted(constraint)) not in constraints]

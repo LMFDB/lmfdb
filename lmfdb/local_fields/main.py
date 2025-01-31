@@ -1,30 +1,34 @@
-#-*- coding: utf-8 -*-
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
-from flask import render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, QQ, RR, latex, cached_function, Integers)
+    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers)
+from sage.plot.all import line, points, text, Graphics
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    web_latex, coeff_to_poly, pol_to_html, display_multiset, display_knowl,
-    parse_inertia,
+    web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints,
     parse_galgrp, parse_ints, clean_input, parse_rats, flash_error,
-    SearchArray, TextBox, TextBoxNoEg, CountBox, to_dict, comma,
-    search_wrap, Downloader, StatsDisplay, totaler, proportioners, 
+    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, TextBoxNoEg, CountBox, to_dict, comma,
+    search_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, PolynomialCol, eval_rational_list
+from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
-    group_display_knowl, group_display_inertia,
-    knowl_cache, galdata, galunformatter, small_group_display_knowl,
-    group_pretty_and_nTj, small_group_data, WebGaloisGroup)
+    transitive_group_display_knowl, group_display_inertia,
+    knowl_cache, galdata, galunformatter,
+    group_pretty_and_nTj, WebGaloisGroup)
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
 import re
+LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
@@ -47,7 +51,7 @@ def display_poly(coeffs):
     return web_latex(coeff_to_poly(coeffs))
 
 def format_coeffs(coeffs):
-    return pol_to_html(str(coeff_to_poly(coeffs)))
+    return latex(coeff_to_poly(coeffs))
 
 def lf_formatfield(coef):
     coef = string2list(coef)
@@ -63,38 +67,40 @@ def local_algebra_data(labels):
     f1 = labs[0].split('.')
     labs = sorted(labs, key=lambda u: (int(j) for j in u.split('.')), reverse=True)
     ans = '<div align="center">'
-    ans += '$%s$-adic algebra'%str(f1[0])
+    ans += '$%s$-adic algebra' % str(f1[0])
     ans += '</div>'
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Slopes"
     fall = [db.lf_fields.lookup(label) for label in labs]
     for f in fall:
         l = str(f['label'])
-        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
+        ans += '<tr><td><a href="%s">%s</a><td>' % (url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
-        ans += '<td>%d<td>%d<td>%d<td>'%(f['e'],f['f'],f['c'])
-        galnt = [int(z) for z in f['galois_label'].split('T')]
-        ans += group_display_knowl(galnt[0],galnt[1])
-        ans += '<td>$'+ show_slope_content(f['slopes'],f['t'],f['u'])+'$'
+        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'],f['f'],f['c'])
+        ans += transitive_group_display_knowl(f['galois_label'])
+        ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
-        ans +='<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
+        ans += '<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
     return ans
 
 def local_field_data(label):
     f = db.lf_fields.lookup(label)
     nicename = ''
     if f['n'] < 3:
-        nicename = ' = '+ prettyname(f)
-    ans = '$p$-adic field %s%s<br><br>'% (label, nicename)
-    ans += r'Extension of $\Q_{%s}$ defined by %s<br>'%(str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
-    gt = int(f['galois_label'].split('T')[1])
+        nicename = ' = ' + prettyname(f)
+    ans = '$p$-adic field %s%s<br><br>' % (label, nicename)
+    ans += r'Extension of $\Q_{%s}$ defined by %s<br>' % (str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gn = f['n']
     ans += 'Degree: %s<br>' % str(gn)
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    ans += 'Galois group $G$: %s<br>' % group_pretty_and_nTj(gn, gt, True)
+    if 'galois_label' in f:
+        gt = int(f['galois_label'].split('T')[1])
+        ans += 'Galois group $G$: %s<br>' % group_pretty_and_nTj(gn, gt, True)
+    else:
+        ans += 'Galois group $G$: not computed<br>'
     ans += '<div align="right">'
     ans += '<a href="%s">%s home page</a>' % (str(url_for("local_fields.by_label", label=label)),label)
     ans += '</div>'
@@ -106,30 +112,108 @@ def lf_display_knowl(label, name=None):
         name = label
     return '<a title = "%s [lf.field.data]" knowl="lf.field.data" kwargs="label=%s">%s</a>' % (label, label, name)
 
+
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
+
+
+def plot_polygon(verts, polys, inds, p):
+    verts = [tuple(pt) for pt in verts]
+    if not verts:
+        # Unramified, so we won't be displaying the plot
+        return
+    # Extract the coefficients to be associated to x
+    ymax = verts[0][1]
+    xmax = verts[-1][0]
+    # How far we need to shift text depends on the scale
+    txshift = xmax / 60
+    tyshift = xmax / 48
+    tick = xmax / 160
+    nextq = p
+    L = Graphics()
+    if ymax > 0:
+        asp_ratio = (xmax + 2*txshift) / (2 * (ymax + 2*tyshift)) # 2 comes from the fact that the actual image has width 500 and height 250.
+    else:
+        # Add in silly white dot
+        L += points([(0,1)], color="white")
+        asp_ratio = (xmax + 2*txshift) / (8 + 16*tyshift)
+    L += line([(0,0), (0, ymax)], color="grey")
+    L += line([(0,0), (xmax, 0)], color="grey")
+    for i in range(1, ymax + 1):
+        L += line([(0, i), (tick, i)], color="grey")
+    for i in range(xmax + 1):
+        L += line([(i, 0), (i, tick/asp_ratio)], color="grey")
+    for P in verts:
+        L += text(
+            f"${P[0]}$", (P[0], -tyshift/asp_ratio),
+            color="black")
+        L += text(
+            f"${P[1]}$", (-txshift, P[1]),
+            horizontal_alignment="right",
+            color="black")
+    R = ZZ["t"]["z"]
+    polys = [R(poly) for poly in polys]
+
+    def restag(c, a, b):
+        return text(f"${latex(c)}$", (a + txshift, b + tyshift/asp_ratio),
+                    horizontal_alignment="left",
+                    color="black")
+    L += restag(polys[0][0], 1, ymax)
+    for i in range(len(verts) - 1):
+        P = verts[i]
+        Q = verts[i+1]
+        slope = ZZ(P[1] - Q[1]) / ZZ(Q[0] - P[0]) # actually the negative of the slope
+        d = slope.denominator()
+        poly = polys[i]
+        if slope != 0:
+            while nextq <= Q[0]:
+                i = (nextq - P[0]) / d
+                if i in ZZ and poly[i]:
+                    L += restag(poly[i], nextq, P[1] - (nextq - P[0]) * slope)
+                nextq *= p
+            L += text(
+                f"${slope}$", (P[0] - txshift, (P[1] + Q[1]) / 2),
+                horizontal_alignment="right",
+                color="blue")
+            for x in range(P[0], Q[0] + 1):
+                L += line(
+                    [(x, Q[1]), (x, P[1] - (x - P[0]) * slope)],
+                    color="grey",
+                )
+            for y in range(Q[1], P[1]):
+                L += line(
+                    [(P[0] - (y - P[1]) / slope, y), (P[0], y)],
+                    color="grey",
+                )
+        else:
+            # For tame inertia, the coefficients can occur at locations other than powers of p
+            for i, c in enumerate(poly):
+                if i and c:
+                    L += restag(c, P[0] + i, P[1])
+    L += line(verts, thickness=2)
+    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+    L.axes(False)
+    L.set_aspect_ratio(asp_ratio)
+    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
+
 
 @app.context_processor
 def ctx_local_fields():
     return {'local_field_data': local_field_data,
-            'small_group_data': small_group_data,
             'local_algebra_data': local_algebra_data}
 
+
 # Utilities for subfield display
-def format_lfield(coefmult,p):
-    coefmult = [int(c) for c in coefmult.split(",")]
-    data = db.lf_fields.lucky({'coeffs':coefmult, 'p': p}, projection=1)
-    if data is None:
-        # This should not happen, what do we do?
-        # This is wrong
-        return ''
-    return lf_display_knowl(data['label'], name = prettyname(data))
+def format_lfield(label, p):
+    data = db.lf_fields.lookup(label)
+    return lf_display_knowl(label, name=prettyname(data))
 
 
 # Input is a list of pairs, coeffs of field as string and multiplicity
-def format_subfields(subdata, p):
-    if not subdata:
+def format_subfields(sublist, multdata, p):
+    if not sublist:
         return ''
+    subdata = zip(sublist, multdata)
     return display_multiset(subdata, format_lfield, p)
 
 
@@ -145,6 +229,29 @@ def ratproc(inp):
     sstring = sstring[0:12]
     sstring += str(qs)
     return sstring
+
+def show_slopes(sl):
+    if str(sl) == "[]":
+        return "None"
+    return('$' + sl + '$')
+
+def show_slopes2(sl):
+    # uses empty brackets with a space instead of None
+    if str(sl) == "[]":
+        return r'[\ ]'
+    return(sl)
+
+def show_slope_content(sl,t,u):
+    if sl is None or t is None or u is None:
+        return ' $not computed$ ' # actually killing math mode
+    sc = str(sl)
+    if sc == '[]':
+        sc = r'[\ ]'
+    if t > 1:
+        sc += '_{%d}' % t
+    if u > 1:
+        sc += '^{%d}' % u
+    return(sc)
 
 @local_fields_page.route("/")
 def index():
@@ -170,26 +277,86 @@ def url_for_label(label):
 def local_field_jump(info):
     return redirect(url_for_label(info['jump']), 301)
 
+def unpack_slopes(slopes, t, u):
+    return eval_rational_list(slopes), t, u
+
+def format_eisen(eisstr):
+    Pt = PolynomialRing(QQ, 't')
+    Ptx = PolynomialRing(Pt, 'x')
+    return latex(Ptx(str(eisstr).replace('y','x')))
+
 class LF_download(Downloader):
     table = db.lf_fields
     title = '$p$-adic fields'
-    columns = ['p', 'coeffs']
-    data_format = ['p', '[coeffs]']
-    data_description = 'defining the $p$-adic field over Qp by adjoining a root of f(x).'
-    function_body = {'magma':['Prec := 100; // Default precision of 100',
-                              'return [LocalField( pAdicField(r[1], Prec) , PolynomialRing(pAdicField(r[1], Prec))![c : c in r[2]] ) : r in data];'],
-                     'sage':['Prec = 100 # Default precision of 100',
-                             "return [pAdicExtension(Qp(r[0], Prec), PolynomialRing(Qp(r[0], Prec),'x')(r[1]), var_name='x') for r in data]"],
-                     'gp':['[[c[1], Polrev(c[2])]|c<-data];']}
+    inclusions = {
+        'field': (
+            ["p", "coeffs"],
+            {
+                "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
+                "gp": 'field = Polrev(mapget(out, "coeffs"));',
+            }
+        ),
+    }
 
+def galcolresponse(n,t,cache):
+    if t is None:
+        return 'not computed'
+    return group_pretty_and_nTj(n, t, cache=cache)
 
-@search_wrap(template="lf-search.html",
-             table=db.lf_fields,
+def formatbracketcol(blist):
+    if blist == []:
+        return r'$[\ ]$'
+    if blist == '':
+        return 'not computed'
+    return f'${blist}$'
+
+def intcol(j):
+    if j == '':
+        return 'not computed'
+    return f'${j}$'
+
+lf_columns = SearchColumns([
+    LinkCol("label", "lf.field.label", "Label", url_for_label),
+    MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
+    ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True),
+    MathCol("p", "lf.qp", "$p$", short_title="prime"),
+    MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index"),
+    MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree"),
+    MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent"),
+    MultiProcessedCol("gal", "nf.galois_group", "Galois group",
+                      ["n", "gal", "cache"],
+                      galcolresponse,
+                      apply_download=lambda n, t, cache: [n, t]),
+    ProcessedCol("u", "lf.unramified_degree", "$u$", intcol, short_title="unramified degree", default=False),
+    ProcessedCol("t", "lf.tame_degree", "$t$", intcol, short_title="tame degree", default=False),
+    ListCol("visible", "lf.visible_slopes", "Visible slopes",
+                    show_slopes2, default=lambda info: info.get("visible"), mathmode=True),
+    MultiProcessedCol("slopes", "lf.slope_content", "Slope content",
+                      ["slopes", "t", "u"],
+                      show_slope_content,
+                      mathmode=True, apply_download=unpack_slopes),
+    # want apply_download for download conversion
+    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
+    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
+    ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", formatbracketcol, default=lambda info: info.get("ind_of_insep")),
+    ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=lambda info: info.get("associated_inertia"))],
+    db_cols=["c", "coeffs", "e", "f", "gal", "label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia","unram","eisen"])
+
+def lf_postprocess(res, info, query):
+    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res if 'gal' in rec}))
+    for rec in res:
+        rec["cache"] = cache
+    return res
+
+@search_wrap(table=db.lf_fields,
              title='$p$-adic field search results',
              titletag=lambda:'p-adic field search results',
              err_title='Local field search input error',
+             columns=lf_columns,
              per_page=50,
              shortcuts={'jump': local_field_jump, 'download': LF_download()},
+             postprocess=lf_postprocess,
              bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
              url_for_label=url_for_label)
@@ -201,12 +368,14 @@ def local_field_search(info,query):
     parse_galgrp(info,query,'gal',qfield=('galois_label','n'))
     parse_ints(info,query,'c',name='Discriminant exponent c')
     parse_ints(info,query,'e',name='Ramification index e')
+    parse_ints(info,query,'f',name='Residue field degree f')
     parse_rats(info,query,'topslope',qfield='top_slope',name='Top slope', process=ratproc)
+    parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
+    parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
+    parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
+    parse_bracketed_posints(info,query,"associated_inertia")
     parse_inertia(info,query,qfield=('inertia_gap','inertia'))
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
-    info['group_display'] = group_pretty_and_nTj
-    info['display_poly'] = format_coeffs
-    info['slopedisp'] = show_slope_content
     info['search_array'] = LFSearchArray()
 
 def render_field_webpage(args):
@@ -216,7 +385,7 @@ def render_field_webpage(args):
         label = clean_input(args['label'])
         data = db.lf_fields.lookup(label)
         if data is None:
-            if re.match(r'^\d+\.\d+\.\d+\.\d+$', label):
+            if LF_RE.fullmatch(label):
                 flash_error("Field %s was not found in the database.", label)
             else:
                 flash_error("%s is not a valid label for a $p$-adic field.", label)
@@ -229,13 +398,16 @@ def render_field_webpage(args):
         e = data['e']
         f = data['f']
         cc = data['c']
-        gt = int(data['galois_label'].split('T')[1])
         gn = data['n']
-        the_gal = WebGaloisGroup.from_nt(gn,gt)
-        isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
-        abelian = ' and abelian' if the_gal.is_abelian() else ''
-        galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$'%p
-        autstring = r'\Gal' if the_gal.order() == gn else r'\Aut'
+        autstring = r'\Aut'
+        if 'galois_label' in data:
+            gt = int(data['galois_label'].split('T')[1])
+            the_gal = WebGaloisGroup.from_nt(gn,gt)
+            isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
+            abelian = ' and abelian' if the_gal.is_abelian() else ''
+            galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
+            if the_gal.order() == gn:
+                autstring = r'\Gal'
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
@@ -243,16 +415,15 @@ def render_field_webpage(args):
             ('e', r'\(%s\)' % e),
             ('f', r'\(%s\)' % f),
             ('c', r'\(%s\)' % cc),
-            ('Galois group', group_pretty_and_nTj(gn, gt)),
+            ('Galois group', group_pretty_and_nTj(gn, gt) if 'galois_label' in data else 'not computed'),
         ]
         # Look up the unram poly so we can link to it
-        unramlabel = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0}, projection=0)
-        if unramlabel is None:
+        unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
+        if unramdata is None:
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = url_for_label(unramlabel)
-            unramdata = db.lf_fields.lookup(unramlabel)
+            unramfriend = url_for_label(unramdata['label'])
 
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
@@ -263,12 +434,12 @@ def render_field_webpage(args):
             eisenp = raw_typeset(eisenp, web_latex(eisenp))
 
         else:
-            unramp = data['unram'].replace('t','x')
+            unramp = coeff_to_poly(unramdata['coeffs'])
+            #unramp = data['unram'].replace('t','x')
             unramp = raw_typeset(unramp, web_latex(Px(str(unramp))))
             unramp = prettyname(unramdata)+' $\\cong '+Qp+'(t)$ where $t$ is a root of '+unramp
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra=r'$\ \in'+Qp+'(t)[x]$')
-
 
         rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=0)
         if rflabel is None:
@@ -284,11 +455,10 @@ def render_field_webpage(args):
         else:
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
-        if 'wild_gap' in data:
-            wild_inertia = small_group_display_knowl(data['wild_gap'][0],
-                data['wild_gap'][1])
+        if 'wild_gap' in data and data['wild_gap'] != [0,0]:
+            wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
-            wild_inertia = 'data not computed'
+            wild_inertia = 'Not computed'
 
         info.update({
                     'polynomial': raw_typeset(polynomial),
@@ -297,33 +467,46 @@ def render_field_webpage(args):
                     'c': data['c'],
                     'e': data['e'],
                     'f': data['f'],
-                    't': data['t'],
-                    'u': data['u'],
                     'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
-                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$'%Qp),
+                    'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
                     'hw': data['hw'],
-                    'slopes': show_slopes(data['slopes']),
-                    'gal': group_pretty_and_nTj(gn, gt, True),
-                    'gt': gt,
-                    'inertia': group_display_inertia(data['inertia']),
+                    'visible': show_slopes(data['visible']),
                     'wild_inertia': wild_inertia,
                     'unram': unramp,
+                    'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
-                    'gms': data['gms'],
                     'gsm': gsm,
-                    'galphrase': galphrase,
                     'autstring': autstring,
-                    'subfields': format_subfields(data['subfields'],p),
+                    'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     })
-        friends = [('Galois group', "/GaloisGroup/%dT%d" % (gn, gt))]
+        friends = []
+        if 'slopes' in data:
+            info.update({'slopes': show_slopes(data['slopes'])})
+        if 'inertia' in data:
+            info.update({'inertia': group_display_inertia(data['inertia'])})
+        for k in ['gms', 't', 'u']:
+            if k in data:
+                info.update({k: data[k]})
+        if 'ram_poly_vert' in data:
+            info.update({'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p)})
+        if 'residual_polynomials' in data:
+            info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
+        if 'associated_inertia' in data:
+            info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
+        if 'galois_label' in data:
+            info.update({'gal': group_pretty_and_nTj(gn, gt, True),
+                         'galphrase': galphrase,
+                         'gt': gt})
+            friends.append(('Galois group', "/GaloisGroup/%dT%d" % (gn, gt)))
         if unramfriend != '':
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
-        if db.nf_fields.exists({'local_algs': {'$contains': label}}):
-            friends.append(('Number fields with this completion', 
+        if data['is_completion']:
+            friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
+        downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
         bread = get_bread([(label, ' ')])
         return render_template(
@@ -334,25 +517,10 @@ def render_field_webpage(args):
             info=info,
             properties=prop2,
             friends=friends,
+            downloads=downloads,
             learnmore=learnmore_list(),
             KNOWL_ID="lf.%s" % label,
         )
-
-
-def show_slopes(sl):
-    if str(sl) == "[]":
-        return "None"
-    return(sl)
-
-def show_slope_content(sl,t,u):
-    sc = str(sl)
-    if sc == '[]':
-        sc = r'[\ ]'
-    if t>1:
-        sc += '_{%d}'%t
-    if u>1:
-        sc += '^{%d}'%u
-    return(sc)
 
 def prettyname(ent):
     if ent['n'] <= 2:
@@ -378,9 +546,13 @@ def printquad(code, p):
         s = str(s) + r'\cdot '+str(u)
     return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
-
-def search_input_error(info, bread):
-    return render_template("lf-search.html", info=info, title='$p$-adic field search input error', titletag='p-adic field search input error', bread=bread)
+@local_fields_page.route("/data/<label>")
+def lf_data(label):
+    if not LF_RE.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
+    title = f"Local field data - {label}"
+    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    return datapage(label, "lf_fields", title=title, bread=bread)
 
 @local_fields_page.route("/random")
 @redirect_no_cache
@@ -391,7 +563,7 @@ def random_field():
 @local_fields_page.route("/interesting")
 def interesting():
     return interesting_knowls(
-        "lf.padic_field",
+        "lf",
         db.lf_fields,
         url_for_label,
         title=r"Some interesting $p$-adic fields",
@@ -428,8 +600,9 @@ def source():
     t = 'Source and acknowledgments for $p$-adic field pages'
     ttag = 'Source and acknowledgments for p-adic field pages'
     bread = get_bread([("Source", '')])
-    return render_template("double.html", kid='rcs.source.lf',
-                           kid2='rcs.ack.lf', title=t,
+    return render_template("multi.html", kids=['rcs.source.lf',
+                           'rcs.ack.lf','rcs.cite.lf'],
+                           title=t,
                            titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
 
@@ -442,13 +615,23 @@ def reliability():
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+
 class LFSearchArray(SearchArray):
     noun = "field"
-    plural_noun = "fields"
+    sorts = [("", "prime", ['p', 'n', 'c', 'num']),
+             ("n", "degree", ['n', 'p', 'c', 'num']),
+             ("c", "discriminant exponent", ['c', 'p', 'n', 'num']),
+             ("e", "ramification index", ['e', 'n', 'p', 'c', 'num']),
+             ("f", "residue degree", ['f', 'n', 'p', 'c', 'num']),
+             ("gal", "Galois group", ['n', 'galT', 'p', 'c', 'num']),
+             ("u", "Galois unramified degree", ['u', 'n', 'p', 'c', 'num']),
+             ("t", "Galois tame degree", ['t', 'n', 'p', 'c', 'num']),
+             ("s", "top slope", ['top_slope', 'p', 'n', 'c', 'num'])]
     jump_example = "2.4.6.7"
     jump_egspan = "e.g. 2.4.6.7"
     jump_knowl = "lf.search_input"
     jump_prompt = "Label"
+
     def __init__(self):
         degree = TextBox(
             name='n',
@@ -486,17 +669,53 @@ class LFSearchArray(SearchArray):
             label='Top slope',
             knowl='lf.top_slope',
             example='4/3',
-            example_span='0, 1, 2, 4/3, 3.5, or a range like 3..5')
+            example_span='4/3, or a range like 3..5')
+        slopes_quantifier = SubsetBox(
+            name="slopes_quantifier",
+        )
+        slopes = TextBoxWithSelect(
+            name='slopes',
+            label='Wild slopes',
+            short_label='Wild',
+            knowl='lf.wild_slopes',
+            select_box=slopes_quantifier,
+            example='[2,2,3]',
+            example_span='[2,2,3] or [3,7/2,4]')
+        visible_quantifier = SubsetBox(
+            name="visible_quantifier",
+        )
+        visible = TextBoxWithSelect(
+            name='visible',
+            label='Visible slopes',
+            short_label='Visible',
+            knowl='lf.visible_slopes',
+            select_box=visible_quantifier,
+            example='[2,2,3]',
+            example_span='[2,2,3] or [2,3,17/4]')
+        insep_quantifier = SubsetBox(
+            name="insep_quantifier",
+        )
+        ind_insep = TextBoxWithSelect(
+            name='ind_of_insep',
+            label='Ind. of insep.',
+            short_label='Indices',
+            knowl='lf.indices_of_inseparability',
+            select_box=insep_quantifier,
+            example='[1,1,0]',
+            example_span='[1,1,0] or [18,10,4,0]')
+        associated_inertia = TextBox(
+            name='associated_inertia',
+            label='Assoc. Inertia',
+            knowl='lf.associated_inertia',
+            example='[1,2,1]',
+            example_span='[1,2,1] or [1,1,1,1]')
         gal = TextBoxNoEg(
             name='gal',
             label='Galois group',
             short_label='Galois group',
-            knowl='nf.galois_group',
+            knowl='nf.galois_search',
             example='5T3',
-            example_span='list of %s, e.g. [8,3] or [16,7], group names from the %s, e.g. C5 or S12, and %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id's"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group labels')))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2')
         u = TextBox(
             name='u',
             label='Galois unramified degree',
@@ -516,28 +735,22 @@ class LFSearchArray(SearchArray):
             label='Inertia subgroup',
             knowl='lf.inertia_group_search',
             example='[3,1]',
-            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group label'))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2',
             )
         wild = TextBox(
             name='wild_gap',
             label='Wild inertia subgroup',
             knowl='lf.wild_inertia_group_search',
             example='[4,1]',
-            example_span='a %s, e.g. [8,3] or [16,7], a group name from the %s, e.g. C5 or S12, or a %s, e.g., 7T2 or 11T5' % (
-                display_knowl('group.small_group_label', "GAP id"),
-                display_knowl('nf.galois_group.name', 'list of group labels'),
-                display_knowl('gg.label', 'transitive group label'))
+            example_span='e.g. [8,3], 8.3, C5 or 7T2',
             )
         results = CountBox()
 
-        self.browse_array = [[degree], [qp], [c], [e], [f], [topslope], [u], 
-            [t], [gal], [inertia], [wild], [results]]
-        self.refine_array = [[degree, qp, gal, u], 
-            [e, c, inertia, t], 
-            [f, topslope, wild]]
+        self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
+                             [slopes, visible], [ind_insep, associated_inertia], [gal, inertia], [wild], [results]]
+        self.refine_array = [[degree, qp, gal, u, associated_inertia],
+            [e, c, inertia, t, ind_insep],
+            [f, topslope, slopes, visible, wild]]
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
@@ -545,7 +758,7 @@ def ramdisp(p):
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('ramification index', 'lf.ramification_index'),
-                         ('for %s-adic fields'%p, None)],
+                         ('for %s-adic fields' % p, None)],
             'totaler': totaler(col_counts=False),
             'proportioner': proportioners.per_row_total}
 
@@ -555,7 +768,7 @@ def discdisp(p):
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('discriminant exponent', 'lf.discriminant_exponent'),
-                         ('for %s-adic fields'%p, None)],
+                         ('for %s-adic fields' % p, None)],
             'totaler': totaler(col_counts=False),
             'proportioner': proportioners.per_row_query(lambda n: {'n':int(n)})}
 
@@ -563,7 +776,7 @@ def galdisp(p, n):
     return {'cols': ['galois_label'],
             'constraint': {'p': p, 'n': n},
             'top_title':[('Galois groups', 'nf.galois_group'),
-                         ('for %s-adic fields of'%p, None),
+                         ('for %s-adic fields of' % p, None),
                          ('degree', 'lf.degree'),
                          (str(n), None)]}
 

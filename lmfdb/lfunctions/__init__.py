@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.app import app
 from lmfdb.logger import make_logger
@@ -16,4 +15,3 @@ from . import main
 assert main # silence pyflakes
 
 app.register_blueprint(l_function_page, url_prefix="/L")
-

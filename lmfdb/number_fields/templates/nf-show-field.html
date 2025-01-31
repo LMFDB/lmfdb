@@ -28,8 +28,10 @@ table.ntdata a {
       <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
        <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant|safe}}<td>{{ place_code('discriminant') }}
        <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
-      <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>${{info.ram_primes}}$<td>{{ place_code('ramified_primes') }}
-      <tr><td> $|{{ info.autstring|safe }}(K/\Q)|$:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td></tr>
+       <tr><td>{{ KNOWL('nf.galois_root_discriminant', title="Galois root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.grd}}
+      <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>{{info.ram_primes|safe}}<td>{{ place_code('ramified_primes') }}
+      <tr><td>{{ KNOWL('nf.discriminant_root_field', title="Discriminant root field") }}:<td>&nbsp;&nbsp;<td>{{nf.discrootfield()|safe}}
+      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>${{info.auts}}$<td>{{ place_code('automorphisms') }}
 {% if info.is_abelian %}
     <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
         <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
@@ -48,6 +50,7 @@ table.ntdata a {
   {% endif %}
   {% if nf.is_cm_field() %}
     <tr><td colspan="3">This is a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+    <tr><td>{{ KNOWL('nf.reflex_field', title='Reflex fields') }}:<td>&nbsp;&nbsp;<td>{{ info.reflex_fields | safe }}</tr>
   {% else %}
     <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
   {% endif %}
@@ -65,6 +68,13 @@ table.ntdata a {
             {{ info.integral_basis | safe }}
             {{ place_code('integral_basis') }}
         </p>
+        <p>
+          <table>
+            <tr><td>{{ KNOWL('nf.monogenic', title='Monogenic')}}:<td>&nbsp;&nbsp;<td>{{info.monogenic}}
+            <tr><td>{{ KNOWL('nf.zk_index', title='Index')}}:<td>&nbsp;&nbsp;<td>{{info.index}}
+            <tr><td>{{ KNOWL('nf.inessential_prime', title='Inessential primes')}}:<td>&nbsp;&nbsp;<td>{{info.inessential}}
+           </table>
+           </p>
 
         <h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
         <p>
@@ -72,6 +82,12 @@ table.ntdata a {
           {{ info.grh_label|safe }}
           {{ place_code('class_group') }}
         </p>
+          {% if nf.is_cm_field() %}
+        <p>
+          {{KNOWL('nf.relative_class_number','Relative class number')}}: {{ nf.relh() }}
+          {{ info.grh_label|safe }}
+        </p>
+          {% endif %}
 
 
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
@@ -102,8 +118,14 @@ table.ntdata a {
         </p>
 
         <h2> {{ KNOWL('nf.class_number_formula', title='Class number formula') }}</h2>
+<p style="margin:10px 280px;">
+\[
+\begin{aligned}\lim_{s\to 1} (s-1)\zeta_K(s) =\mathstrut &amp; \frac{2^{r_1}\cdot (2\pi)^{r_2}\cdot R\cdot  h}{w\cdot\sqrt{|D|}}\cr {{ info.cnf|safe }}
+\end{aligned}\]
+<span style="float: right;">{{ info.grh_label|safe }}</span>
+</p>
 <center>
-$\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_label|safe }}
+{{ place_code('class_number_formula') }}
 </center>
 
         <h2> {{ KNOWL('nf.galois_group', title='Galois group') }}</h2>
@@ -137,6 +159,7 @@ $\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_labe
         Fields in the database are given up to isomorphism.  Isomorphic 
         intermediate fields are shown with their multiplicities.
         {% endif %}
+        {{ place_code('intermediate_fields') }}
 
         {% if info.resinfo !=[] %}
            {% if info.degree == 6 %}
@@ -178,6 +201,8 @@ $\displaystyle\lim_{s\to 1} (s-1)\zeta_K(s) {{ info.cnf|safe }} {{ info.grh_labe
                 {% endfor %}
             {% endif %}
         {% endfor %}
+            <tr><td>
+            {{KNOWL('nf.minimal_sibling', title='Minimal sibling')}}: <td>{{ nf.minimal_sibling() | safe }}</tr>
         </table>
         </div>
         {% endif %}

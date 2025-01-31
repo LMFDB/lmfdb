@@ -72,4 +72,3 @@ def AlgebraicNumberPolynomialString(pol_as_string_convention):
     class ParametrizedAlgebraicNumberPolynomialString(String):
         pass
     return ParametrizedAlgebraicNumberPolynomialString
-

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re #, StringIO, yaml, ast, os
 
@@ -11,8 +10,9 @@ from lmfdb.utils import (
     parse_ints, clean_input, to_dict,
     # parse_gap_id, parse_bracketed_posints,
     search_wrap)
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 
 from lmfdb.groups.glnQ import glnQ_page
 
@@ -28,13 +28,13 @@ def learnmore_list():
              ('Labeling convention', url_for(".labels_page")) ]
 
 def learnmore_list_remove(matchstring):
-    return filter(lambda t:t[0].find(matchstring) <0, learnmore_list())
+    return filter(lambda t:t[0].find(matchstring) < 0, learnmore_list())
 
 def sub_label_is_valid(lab):
-    return abstract_subgroup_label_regex.match(lab)
+    return abstract_subgroup_label_regex.fullmatch(lab)
 
 def label_is_valid(lab):
-    return glnq_label_regex.match(lab)
+    return glnq_label_regex.fullmatch(lab)
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")),("GLnQ", url_for(".index"))]
@@ -48,10 +48,9 @@ def index():
     bread = get_bread()
     if request.args:
         return group_search(info)
-    info['order_list']= ['1-10', '20-100', '101-200']
+    info['order_list'] = ['1-10', '20-100', '101-200']
 
     return render_template("glnQ-index.html", title=r"Finite subgroups of $\GL(n,\Q)$", bread=bread, info=info, learnmore=learnmore_list(), credit=credit_string)
-
 
 
 @glnQ_page.route("/random")
@@ -69,18 +68,21 @@ def by_label(label):
         return redirect(url_for(".index"))
 #Should this be "Bad label instead?"
 
+
 # Take a list of list of integers and make a latex matrix
 def dispmat(mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-      rw = '& '.join([str(z) for z in row])
-      s += rw + '\\\\'
+        rw = '& '.join([str(z) for z in row])
+        s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
+
 
 #### Searching
 def group_jump(info):
     return redirect(url_for('.by_label', label=info['jump']))
+
 
 def group_download(info):
     t = 'Stub'
@@ -95,16 +97,30 @@ def url_for_label(label):
         return url_for(".random_abstract_group")
     return url_for(".by_label", label=label)
 
-@search_wrap(template="glnQ-search.html",
-             table=db.gps_qrep,
+def get_url(label):
+    return url_for(".by_label", label=label)
+
+glnQ_columns = SearchColumns([
+    LinkCol("label", "group.label", "Label", get_url),
+    MathCol("tex_name", "group.name", "Name"),
+    MathCol("order", "group.order", "Order"),
+    MathCol("dim", "group.dimension", "Dimension")],
+    db_cols=["label", "group", "order", "dim"])
+glnQ_columns.dummy_download = True
+
+def glnQ_postprocess(res, info, query):
+    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
+    for gp in res:
+        gp["tex_name"] = tex_names[gp["group"]]
+    return res
+
+@search_wrap(table=db.gps_qrep,
              title=r'$\GL(n,\Q)$ subgroup search results',
              err_title=r'$\GL(n,\Q)$ subgroup search input error',
+             columns=glnQ_columns,
              shortcuts={'jump':group_jump,
                         'download':group_download},
-             projection=['label','order','dim','group'],
-             #cleaners={"class": lambda v: class_from_curve_label(v["label"]),
-             #          "equation_formatted": lambda v: list_to_min_eqn(literal_eval(v.pop("eqn"))),
-             #          "st_group_link": lambda v: st_link_by_name(1,4,v.pop('st_group'))},
+             postprocess=glnQ_postprocess,
              bread=lambda:get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
              credit=lambda:credit_string,
@@ -115,8 +131,6 @@ def group_search(info, query):
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
 
-def get_url(label):
-    return url_for(".by_label", label=label)
 
 #Writes individual pages
 def render_glnQ_group(args):
@@ -126,11 +140,11 @@ def render_glnQ_group(args):
         info = db.gps_qrep.lucky({'label': label})
         info['dispmat'] = dispmat
         info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
-        info['groupknowl'] = group_display_knowl(info['group'], info['group'])
+        info['groupknowl'] = abstract_group_display_knowl(info['group'], info['groupname'])
 
-        title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
+        title = r'$\GL('+str(info['dim']) + r',\Q)$ subgroup ' + label
 
-        prop = [('Label', '%s' %  label),
+        prop = [('Label', '%s' % label),
                 ('Order', r'\(%s\)' % info['order']),
                 ('Dimension', '%s' % info['dim']) ]
 
@@ -148,7 +162,7 @@ def render_glnQ_group(args):
                                credit=credit_string)
 
 def make_knowl(title, knowlid):
-    return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
+    return '<a title="%s" knowl="%s">%s</a>' % (title, knowlid, title)
 
 @glnQ_page.route("/Completeness")
 def completeness_page():
@@ -191,9 +205,9 @@ def how_computed_page():
 
 class GLnQSearchArray(SearchArray):
     noun = "group"
-    plural_noun = "groups"
     jump_example = "??"
     jump_egspan = "e.g. ??"
+
     def __init__(self):
         order = TextBox(
             name="order",
@@ -214,4 +228,3 @@ class GLnQSearchArray(SearchArray):
             [count]]
         self.refine_array = [
             [order, dim]]
-

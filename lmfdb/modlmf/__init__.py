@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.app import app
 from lmfdb.logger import make_logger
@@ -16,4 +15,3 @@ from . import main
 assert main
 
 app.register_blueprint(modlmf_page, url_prefix="/ModularForm/GL2/ModL")
-

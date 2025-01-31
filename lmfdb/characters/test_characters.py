@@ -1,18 +1,25 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
+from lmfdb.utils import comma
+
 
 class WebCharacterTest(LmfdbTest):
 
-  def test_Dirichletmethods(self):
-      modlabel, numlabel = 14, 5
-      mod = WebDirichlet.label2ideal(modlabel)
-      assert WebDirichlet.ideal2label(mod) == modlabel
-      num = WebDirichlet.label2number(numlabel)
-      assert WebDirichlet.number2label(num) == numlabel
+    def test_Dirichletmethods(self):
+        modlabel, numlabel = 14, 5
+        mod = WebDirichlet.label2ideal(modlabel)
+        assert WebDirichlet.ideal2label(mod) == modlabel
+        num = WebDirichlet.label2number(numlabel)
+        assert WebDirichlet.number2label(num) == numlabel
+
 
 class DirichletSearchTest(LmfdbTest):
+    def test_nchars(self):
+        from lmfdb import db
+        nchars = db.char_dirichlet.sum('degree')
+        W = self.tc.get('/Character/Dirichlet/')
+        assert comma(nchars) in W.get_data(as_text=True)
 
     def test_order(self):
         W = self.tc.get('/Character/Dirichlet/?order=19-23')
@@ -20,8 +27,8 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_even_odd(self):
         W = self.tc.get('/Character/Dirichlet/?modulus=35')
-        assert '>%s</t'%(parity_string(1)) in W.get_data(as_text=True)
-        assert '>%s</t'%(parity_string(-1)) in W.get_data(as_text=True)
+        assert '>%s</t' % (parity_string(1)) in W.get_data(as_text=True)
+        assert '>%s</t' % (parity_string(-1)) in W.get_data(as_text=True)
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=41-60')
@@ -54,8 +61,8 @@ class DirichletSearchTest(LmfdbTest):
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
-        get= r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
-        W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
+        get = r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        W = self.tc.get('/Character/Dirichlet/grouptable?%s' % get)
         assert '35 }(29' in W.get_data(as_text=True)
 
 class DirichletCharactersTest(LmfdbTest):
@@ -74,7 +81,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'DirichletGroup(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
-        assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
+        assert '\\chi_{23}(10,\\cdot)' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
@@ -91,8 +98,8 @@ class DirichletCharactersTest(LmfdbTest):
         assert r'\chi_{999999999}(234567902,' in W.get_data(as_text=True) and r'\chi_{999999999}(432432433,' in W.get_data(as_text=True) and r'\chi_{999999999}(332999668,' in W.get_data(as_text=True)
 
     def test_dirichletgalorbs(self):
-        W = self.tc.get('/Character/Dirichlet/289/j')
-        assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W.get_data(as_text=True)
+        W = self.tc.get('/Character/Dirichlet/289/j').get_data(as_text=True)
+        assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W
         table_row = (r'<td class="center">\(-1\)</td>  '
                     r'<td class="center">\(1\)</td>  '
                     r'<td class="center">\(e\left(\frac{57}{136}\right)\)</td>  '
@@ -105,7 +112,8 @@ class DirichletCharactersTest(LmfdbTest):
                     r'<td class="center">\(e\left(\frac{55}{136}\right)\)</td>  '
                     r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
                     r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
-        assert table_row in W.get_data(as_text=True)
+        assert table_row in W
+        assert "Underlying data" in W and "data/289.j" in W
 
         W = self.tc.get('/Character/Dirichlet/7145/da')
         assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(as_text=True)
@@ -126,7 +134,6 @@ class DirichletCharactersTest(LmfdbTest):
         # Tests for URL behaviour of characters
 
         W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
-        #import pdb; pdb.set_trace()
         assert bool_string(True) in W.get_data(as_text=True)
         assert r"The URL has been duly corrected." in W.get_data(as_text=True)
 
@@ -134,13 +141,20 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Error: No Galois orbit of Dirichlet characters with' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
-        assert r'labels have not been computed for this modulus' in W.get_data(as_text=True)
+        assert r'10001.i' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
-        assert 'Error: Galois orbits have only been computed for modulus up to 10,000' in W.get_data(as_text=True)
+        assert 'Error: Galois orbits have only been computed for modulus up to 100,000' in W.get_data(as_text=True)
+
+        W = self.tc.get('/Character/Dirichlet/58589/50021', follow_redirects=True)
+        assert 'Number field defined by a degree 1428 polynomial' in W.get_data(as_text=True)
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
+        assert '/NumberField/1.1.1.1' in W.get_data(as_text=True)
+
+    def test_dirichletchar21(self):
+        W = self.tc.get('/Character/Dirichlet/2/1')
         assert '/NumberField/1.1.1.1' in W.get_data(as_text=True)
 
     def test_valuefield(self):
@@ -194,8 +208,8 @@ class DirichletCharactersTest(LmfdbTest):
         """ Check Sato-Tate group and L-function link for 6000/11  """
         W = self.tc.get('/Character/Dirichlet/6000/11')
         assert '/SatoTateGroup/0.1.100' in W.get_data(as_text=True)
-        assert 'L/Character/Dirichlet/6000/11' in W.get_data(as_text=True)
-        W = self.tc.get('/L/Character/Dirichlet/6000/11', follow_redirects=True)
+        assert 'L/1-6000-6000.11-r0-0-0' in W.get_data(as_text=True)
+        W = self.tc.get('L/1-6000-6000.11-r0-0-0', follow_redirects=True)
         assert '1.076603021' in W.get_data(as_text=True)
 
     def test_dirichletchar9999lfunc(self):
@@ -231,3 +245,9 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/91/3')
         assert 'H = DirichletGroup(91, base_ring=CyclotomicField(6))' in W.get_data(as_text=True), "sage code group is wrong"
         assert 'chi = DirichletCharacter(H, M([1,2]))' in W.get_data(as_text=True), "sage code generator is wrong"
+
+    def test_underlying_data(self):
+        W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
+        assert 'is_minimal' in W and 'last' in W
+        W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
+        assert 'is_minimal' in W

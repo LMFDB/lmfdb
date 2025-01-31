@@ -1,6 +1,5 @@
 
-
-class StandardColors(object):
+class StandardColors():
     white = 'white'
     black = 'black'
     purple = 'purple'
@@ -41,16 +40,20 @@ class StandardColors(object):
 
     def __contains__(self, color):
         return color in self.__class__.__dict__
+
     def __getitem__(self, color):
         return self.__class__.__dict__[color]
+
     def __iter__(self):
         return iter(self.__class__.__dict__)
 
+
 c = StandardColors()
 
-class ColorScheme(object):
+
+class ColorScheme():
     colors = {
-        'col_main_d':  None, # Header and footer
+        'col_main_d': None, # Header and footer
         'col_main_dl': None, # Header and footer text
         'col_a_knowl': '#292', # Links
         'col_main': None,      # Links
@@ -90,7 +93,7 @@ class ColorScheme(object):
         'knowl_db': '#66d', # knowl-qm.active
         'knowl_border_links': 'knowl_hyper_text',
         'knowl_border_hover': 'knowl_hyper_text',
-        'knowl_border_text' : c.grey,
+        'knowl_border_text': c.grey,
         # td.sorting
         'knowl_ld_1': '#c4c4ff',
         'knowl_l_1': '#D3D6FF',
@@ -247,6 +250,7 @@ class ColorScheme(object):
         'lf_ar_button_bkg': c.light_grey_1,
         'lf_ar_button_brd': c.col_light_red_1,
     }
+
     def dict(self):
         def get(key):
             val = getattr(self, key, None)
@@ -261,8 +265,8 @@ class ColorScheme(object):
                 elif default in self.colors:
                     return get(default)
                 else:
-                    raise ValueError("Unrecognized color %s"%default)
-            raise ValueError("No value for %s specified"%key)
+                    raise ValueError("Unrecognized color %s" % default)
+            raise ValueError("No value for %s specified" % key)
         scheme = {}
         for std_color in c:
             val = getattr(self, std_color, None)
@@ -280,8 +284,8 @@ class ColorScheme(object):
             if hasattr(subcls, 'code'):
                 yield subcls
             else:
-                for subsub in subcls.__allsubclasses__():
-                    yield subsub
+                yield from subcls.__allsubclasses__()
+
 
 class YellowKnowls(ColorScheme):
     # Subclasses need to set knowl_hyper_text and knowl_shadow
@@ -291,8 +295,10 @@ class YellowKnowls(ColorScheme):
     knowl_hover_text = c.black
     knowl_thin_border = '#FFEE58' # P2-400
     body_background = c.almost_white
+
     def __init__(self):
         self.knowl_underline = self.knowl_hyper_text
+
 
 class GreyKnowls(ColorScheme):
     # Subclasses need to set knowl_hyper_text and knowl_shadow
@@ -302,8 +308,10 @@ class GreyKnowls(ColorScheme):
     knowl_hover_text = c.black
     knowl_thin_border = '#CDCDCD'
     body_background = c.white
+
     def __init__(self):
         self.knowl_underline = self.knowl_hyper_text
+
 
 class Original(ColorScheme):
     code = 0
@@ -316,6 +324,7 @@ class Original(ColorScheme):
     col_main_lg = '#8b8'
     col_main_ld = '#dfd'
     col_main_ll = '#efe'
+
 
 class CarribeanSea(YellowKnowls):
     code = 15
@@ -336,6 +345,7 @@ class CarribeanSea(YellowKnowls):
     knowl_hyper_text = '#00695C' # P1-800
     knowl_shadow = '#004D40' # P1-900
 
+
 class NiceGreen(YellowKnowls):
     code = 16
     col_main_ld = '#81C784' # P1-300
@@ -354,6 +364,7 @@ class NiceGreen(YellowKnowls):
     col_main_d  = c.black # ?00
     knowl_hyper_text = '#2E7D32' # P1-800
     knowl_shadow = '#1B5E20' # P1-900
+
 
 class JohnBlue(YellowKnowls):
     code = 17
@@ -376,6 +387,7 @@ class JohnBlue(YellowKnowls):
     knowl_hyper_text = '#1565C0' # P1-800
     knowl_shadow = '#0D47A1' # P1-900
     table_ntdata_background = c.white
+
 
 class SteelBlue(GreyKnowls):
     code = 19
@@ -412,6 +424,7 @@ class SteelBlue(GreyKnowls):
     chitable_imprimitive = c.black
     table_ntdata_background = c.white
 
+
 class IndigoHair(YellowKnowls):
     code = 18
     col_main_ld = '#7986CB' # P1-300
@@ -431,6 +444,7 @@ class IndigoHair(YellowKnowls):
     knowl_hyper_text = '#283593'
     knowl_shadow = '#1A237E'
 
+
 class SadGreen(YellowKnowls):
     code = 14
     col_main_ld = '#8EBC9A'
@@ -449,8 +463,10 @@ class SadGreen(YellowKnowls):
     knowl_shadow = '#004D40' # P1-900
     knowl_hover_text = '#FF1744' # ?A-400
     knowl_underline = '#FF1744'
+
     def __init__(self):
         pass # Don't set underline to hyper_text
+
 
 class Green1(ColorScheme):
     code = 1
@@ -463,6 +479,7 @@ class Green1(ColorScheme):
     col_main_ld = '#97DF97'
     col_main_ll = '#C6F0C6'
     col_main_g  = '#43AD43'
+
 
 class RuddyBrowns(ColorScheme):
     code = 2
@@ -477,6 +494,7 @@ class RuddyBrowns(ColorScheme):
     col_main_g  = '#474' # Not very visible
     grey        = '#771307'
 
+
 class Green2(ColorScheme):
     code = 3
     col_main_d  = '#284928'
@@ -488,6 +506,7 @@ class Green2(ColorScheme):
     col_main_ld = '#83c583'
     col_main_ll = '#c1e2c1'
     col_main_g  = '#b1dbb1'
+
 
 class Tans(ColorScheme):
     code = 4
@@ -502,6 +521,7 @@ class Tans(ColorScheme):
     col_main_g  = '#474' # Not very visible
     grey        = '#5c4a7f'
 
+
 class Pink(ColorScheme):
     code = 5
     col_main_d  = '#7f365e'
@@ -513,6 +533,7 @@ class Pink(ColorScheme):
     col_main_ld = '#fe98d0'
     col_main_ll = '#fed3ea'
     col_main_g  = '#fec4e4'
+
 
 class Blues(ColorScheme):
     code = 6
@@ -527,6 +548,7 @@ class Blues(ColorScheme):
     col_main_g  = '#474' # Not very visible
     grey        = '#5c4a7f'
 
+
 class Mint(ColorScheme):
     code = 7
     col_main_d  = '#00c69d'
@@ -538,6 +560,7 @@ class Mint(ColorScheme):
     col_main_ld = '#777777'
     col_main_ll = '#808080'
     col_main_g  = '#f5f5f5'
+
 
 class TealAndOrange(ColorScheme):
     code = 8
@@ -555,6 +578,7 @@ class TealAndOrange(ColorScheme):
     body_text = '#512809'
     box_tab_text = '#e2ddd9'
 
+
 class GreyAndGreen(ColorScheme):
     code = 10
     col_main_d  = '#cccccc'
@@ -566,6 +590,7 @@ class GreyAndGreen(ColorScheme):
     col_main_ld = '#dddddd'
     col_main_ll = '#e0e0e0'
     body_text = '#444444'
+
 
 class BlueAndOrange(ColorScheme):
     code = 11
@@ -579,6 +604,7 @@ class BlueAndOrange(ColorScheme):
     col_main_ll = '#E0E4CC'
     body_text = '#555555'
 
+
 class Blue(ColorScheme):
     code = 12
     col_main_d  = '#3E6066'
@@ -590,6 +616,7 @@ class Blue(ColorScheme):
     col_main_ld = '#95E4F3'
     col_main_ll = '#CDF5FC'
     body_text = '#555555'
+
 
 class Mint2(ColorScheme):
     code = 13
@@ -603,5 +630,6 @@ class Mint2(ColorScheme):
     col_main_ll = '#b6b6b6'
     body_background = '#2b2d30'
     body_text = '#d10a92'
+
 
 all_color_schemes = {CS.code: CS() for CS in ColorScheme.__allsubclasses__()}

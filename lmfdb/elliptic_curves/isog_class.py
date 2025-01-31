@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
@@ -8,7 +7,8 @@ from lmfdb import db
 
 from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
 
-class ECisog_class(object):
+
+class ECisog_class():
     """
     Class for an isogeny class of elliptic curves over Q
     """
@@ -34,7 +34,7 @@ class ECisog_class(object):
             N, iso, number = split_lmfdb_label(label)
             if number:
                 return "Invalid label"
-            data = db.ec_curvedata.lucky({"lmfdb_iso" : label, 'lmfdb_number':1})
+            data = db.ec_curvedata.lucky({"lmfdb_iso": label, 'lmfdb_number':1})
             if data is None:
                 return "Class not found"
             data['label_type'] = 'LMFDB'
@@ -45,7 +45,7 @@ class ECisog_class(object):
                 N, iso, number = split_cremona_label(label)
                 if number:
                     label = "".join([N,iso])
-                data = db.ec_curvedata.lucky({"Ciso" : label, 'Cnumber':1})
+                data = db.ec_curvedata.lucky({"Ciso": label, 'Cnumber':1})
                 data['label_type'] = 'Cremona'
                 data['iso_label'] = iso
                 data['class_label'] = label
@@ -60,9 +60,9 @@ class ECisog_class(object):
         # Extract the size of the isogeny class from the database
         classdata = db.ec_classdata.lucky({'lmfdb_iso': self.lmfdb_iso})
         self.class_size = ncurves = classdata['class_size']
-        
+
         # Create a list of the curves in the class from the database
-        number_key = 'Cnumber' if self.label_type=='Cremona' else 'lmfdb_number'
+        number_key = 'Cnumber' if self.label_type == 'Cremona' else 'lmfdb_number'
         self.curves = [db.ec_curvedata.lucky({'lmfdb_iso':self.lmfdb_iso, number_key: i+1})
                           for i in range(ncurves)]
 
@@ -77,19 +77,19 @@ class ECisog_class(object):
         # changing one line in this file (defining OPTIMALITY_BOUND)
         # without changing the data.
 
-        self.cremona_bound    = CREMONA_BOUND
+        self.cremona_bound = CREMONA_BOUND
         self.optimality_bound = OPTIMALITY_BOUND
-        self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or ((self.conductor < CREMONA_BOUND) and ((self.optimality==1) or (self.Ciso=='990h')))
+        self.optimality_known = (self.conductor < OPTIMALITY_BOUND) or ((self.conductor < CREMONA_BOUND) and ((self.optimality == 1) or (self.Ciso == '990h')))
         self.optimal_label = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
 
         if self.conductor < OPTIMALITY_BOUND:
             for c in self.curves:
-                c['optimal'] = (c['Cnumber'] == (3 if self.Ciso=='990h' else 1))
+                c['optimal'] = (c['Cnumber'] == (3 if self.Ciso == '990h' else 1))
                 c['optimality_known'] = True
         elif self.conductor < CREMONA_BOUND:
             for c in self.curves:
-                c['optimal'] = (c['optimality']>0) # this curve possibly optimal
-                c['optimality_known'] = (c['optimality']==1) # this curve certainly optimal
+                c['optimal'] = (c['optimality'] > 0) # this curve possibly optimal
+                c['optimality_known'] = (c['optimality'] == 1) # this curve certainly optimal
         else:
             for c in self.curves:
                 c['optimal'] = None
@@ -108,14 +108,14 @@ class ECisog_class(object):
             c['FH'] = RealField(20)(c['faltings_height'])
             c['j_inv'] = QQ(tuple(c['jinv'])) # convert [num,den] to rational for display
             c['disc'] = c['signD'] * c['absD']
-            
+
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
 
         # permute rows/cols to match labelling: the rows/cols in the
         # ec_classdata table are with respect to LMFDB ordering.
         if self.label_type == 'Cremona':
-            perm = lambda i: next(c for c in self.curves if c['Cnumber']==i+1)['lmfdb_number']-1
+            def perm(i): return next(c for c in self.curves if c['Cnumber'] == i+1)['lmfdb_number']-1
             M = [[M[perm(i)][perm(j)] for i in range(ncurves)] for j in range(ncurves)]
 
         M = Matrix(M)
@@ -123,38 +123,37 @@ class ECisog_class(object):
         self.isogeny_matrix_str = latex(M)
 
         # Create isogeny graph with appropriate vertex labels:
-        
+
         self.graph = make_graph(M, [c['short_label'] for c in self.curves])
         P = self.graph.plot(edge_labels=True, vertex_size=1000)
-        self.graph_img = encode_plot(P)
+        self.graph_img = encode_plot(P, transparent=True)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
 
-
-        self.newform =  raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
+        self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         if self.newform_exists_in_db:
             char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
             self.newform_link = url_for("cmf.by_url_newform_label", level=self.conductor, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)
 
-        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label = self.conductor, isogeny_class_label = self.iso_label)
+        self.lfunction_link = url_for("l_functions.l_function_ec_page", conductor_label=self.conductor, isogeny_class_label=self.iso_label)
 
-        self.friends =  [('L-function', self.lfunction_link)]
+        self.friends = [('L-function', self.lfunction_link)]
 
         if self.cm:
             # set CM field for Properties box.
-            D = ZZ(self.cm).squarefree_part()
-            coeffs = [(1-D)//4,-1,1] if D%4==1 else [-D,0,1]
+            D = integer_squarefree_part(ZZ(self.cm))
+            coeffs = [(1-D)//4,-1,1] if D % 4 == 1 else [-D,0,1]
             lab = db.nf_fields.lucky({'coeffs': coeffs}, projection='label')
             self.CMfield = field_pretty(lab)
         else:
             self.CMfield = "no"
             if self.conductor <= 300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor = self.conductor, isogeny = self.iso_label))]
+                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=self.conductor, isogeny=self.iso_label))]
             if self.conductor <= 50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor = self.conductor, isogeny = self.iso_label))]
+                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
         if self.newform_exists_in_db:
-            self.friends +=  [('Modular form ' + self.newform_label, self.newform_link)]
+            self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
         if self.label_type == 'Cremona':
             self.title = "Elliptic curve isogeny class with Cremona label {} (LMFDB label {})".format(self.Ciso, self.lmfdb_iso)
@@ -163,18 +162,18 @@ class ECisog_class(object):
         else:
             self.title = "Elliptic curve isogeny class with LMFDB label {}".format(self.lmfdb_iso)
 
-        self.properties = [('Label', self.Ciso if self.label_type=='Cremona' else self.lmfdb_iso),
+        self.properties = [('Label', self.Ciso if self.label_type == 'Cremona' else self.lmfdb_iso),
                            ('Number of curves', prop_int_pretty(ncurves)),
                            ('Conductor', prop_int_pretty(self.conductor)),
                            ('CM', '%s' % self.CMfield),
                            ('Rank', prop_int_pretty(self.rank))
                            ]
-        if ncurves>1:
+        if ncurves > 1:
             self.properties += [('Graph', ''),(None, self.graph_link)]
 
-        self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.iso_label, limit=1000)),
-                         ('All stored data to text', url_for(".download_EC_all", label=self.iso_label))]
-
+        self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
+                          ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_iso)),
+                          ('Underlying data', url_for(".EC_data", label=self.lmfdb_iso))]
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                       (r'$\Q$', url_for(".rational_elliptic_curves")),
@@ -182,12 +181,13 @@ class ECisog_class(object):
                       ('%s' % self.iso_label, ' ')]
         self.code = {}
         self.code['show'] = {'sage':''} # use default show names
-        self.code['class'] = {'sage':'E = EllipticCurve("%s1")\n'%(self.iso_label) + 'E.isogeny_class()\n'}
+        self.code['class'] = {'sage':'E = EllipticCurve("%s1")\n' % (self.iso_label) + 'E.isogeny_class()\n'}
         self.code['curves'] = {'sage':'E.isogeny_class().curves'}
         self.code['rank'] = {'sage':'E.rank()'}
         self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}
         self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
         self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
+
 
 def make_graph(M, vertex_labels=None):
     """
@@ -266,7 +266,6 @@ def make_graph(M, vertex_labels=None):
                            left[0]:[-0.14,0.15], right[0]:[0.14,0.15],
                            left[1]:[-0.14,-0.15],right[1]:[0.14,-0.15],
                            left[2]:[-0.14,-0.3],right[2]:[0.14,-0.3]})
-
 
     if vertex_labels:
         G.relabel(vertex_labels)

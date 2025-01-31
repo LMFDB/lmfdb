@@ -23,7 +23,7 @@ def hodge_structure(wt, gamma):  # gamma is motivic, max is 1
         n = gamma.count(t-1)
         if n < m:
             raise ValueError('Gamma factors are not Hodge')
-        for i in range(1, m+1):
+        for _ in range(1, m + 1):
             gamma.remove(t)
             gamma.remove(t-1)
             H.append([wt-1+t, 1-t, 2])  # eps is 2 when p!=q
@@ -33,12 +33,12 @@ def hodge_structure(wt, gamma):  # gamma is motivic, max is 1
         wt2 = wt//2
         e = 1-wt2
         m = gamma.count(e)
-        for i in range(1, m+1):
+        for _ in range(1, m+1):
             gamma.remove(e)
             H.append([wt2, wt2, 1])
         e = -wt2
         m = gamma.count(e)
-        for i in range(1, m+1):
+        for _ in range(1, m+1):
             gamma.remove(e)
             H.append([wt2, wt2, 0])
     if len(gamma) != 0:
@@ -109,9 +109,9 @@ def selberg_to_hodge(wt, R, C):
     """
     inverse of the above
     """
-    S = []
-    for r in R:  # weight must be even in any case
-        S.append(r-ZZ(wt)/2)
+    S = [r - ZZ(wt) / 2 for r in R]
+    # weight must be even in any case
+
     for c in C:
         S.append(c-ZZ(wt)/2)
         S.append(c-ZZ(wt)/2+1)

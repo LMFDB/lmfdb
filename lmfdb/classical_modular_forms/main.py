@@ -1,28 +1,28 @@
-# -*- coding: utf-8 -*-
 from collections import defaultdict
 import re
 import os
 import yaml
 
-from flask import render_template, url_for, redirect, abort, request
-from sage.all import ZZ, next_prime, cartesian_product_iterator,\
-                     cached_function, prime_range, prod, gcd
+from flask import render_template, url_for, redirect, abort, request, make_response
+from sage.all import ZZ, next_prime, cached_function, prime_range, prod, gcd, nth_prime, lazy_attribute
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
 from lmfdb import db
 from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
-    search_wrap, display_float,
-    flash_error, to_dict, comma, display_knowl, bigint_knowl,
+    search_wrap, display_float, factor_base_factorization_latex,
+    flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
-    SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
-    StatsDisplay, proportioners, totaler,
+    DoubleSelectBox, RowSpacer, HiddenBox, SearchButtonWithSelect,
+    SubsetBox, ParityMod, CountBox,
+    StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
-from lmfdb.backend.utils import range_formatter
+from psycodict.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
+from lmfdb.api import datapage
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
     WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
@@ -32,6 +32,9 @@ from lmfdb.classical_modular_forms.web_space import (
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
+from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.main import ORBIT_MAX_MOD
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -52,11 +55,16 @@ def learnmore_list():
             ('Classical modular form labels', url_for(".labels_page"))]
 
 
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
+
 def learnmore_list_remove(matchstring):
     """
     Return the learnmore list with the matchstring entry removed
     """
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
 
 @cached_function
 def Nk2_bound(nontriv=None):
@@ -78,99 +86,77 @@ def level_bound(nontriv=None):
     else:
         return db.mf_newforms.max('level')
 
+#############################################################################
+# The following functions are used for processing columns in search results #
+#############################################################################
+
 def ALdims_knowl(al_dims, level, weight):
-    dim_dict = {}
-    for vec, dim, cnt in al_dims:
-        dim_dict[tuple(ev for (p, ev) in vec)] = dim
-    short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
-    # We erase plus_dim and minus_dim if they're obvious
+    short = "+".join(["$%s$" % (d) for d in al_dims])
     AL_table = ALdim_table(al_dims, level, weight)
-    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
+    return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>' % (AL_table, short)
+
+def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
+    # args: ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"]
+    if m and d != 2:
+        return cyc_display(m, d, is_real_cyc)
+    else:
+        return field_display_gen(nf_label, poly, disc, truncate=16)
+
+def display_AL(info):
+    results = info["results"]
+    if not results:
+        return False
+    N = results[0]['level']
+    if not all(mf['level'] == N for mf in results):
+        return False
+    if N == 1:
+        return False
+    return all(mf['char_order'] == 1 for mf in results)
+
+def display_Fricke(info):
+    return any(mf['char_order'] == 1 for mf in info["results"])
+
+# For spaces
+def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
+    # input: ['level', 'weight', 'char_orbit_label', 'hecke_orbit_dims']
+    if hecke_orbit_dims is None: # shouldn't happen
+        return 'unknown'
+    dim_dict = defaultdict(int)
+    terms = []
+    for dim in hecke_orbit_dims:
+        dim_dict[dim] += 1
+    for dim in sorted(dim_dict.keys()):
+        count = dim_dict[dim]
+        query = {'weight':weight,
+                 'char_label':'%s.%s' % (level,char_orbit_label),
+                 'dim':dim}
+        if count > 3:
+            short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
+            title = '%s newforms' % count
+        else:
+            short = '+'.join([r'\(%s\)' % dim]*count)
+            title = None
+        if count == 1:
+            query['jump'] = 'yes'
+        link = newform_search_link(short, title=title, **query)
+        terms.append(link)
+    return r'+'.join(terms)
+
+def show_ALdims_col(info):
+    return any(space.get('ALdims') for space in info["results"])
+
+def display_ALdims(level, weight, al_dims):
+    if al_dims:
+        return ALdims_knowl(al_dims, level, weight)
+    else:
+        return ''
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
-    def nf_link(mf):
-        m = mf.get('field_poly_root_of_unity')
-        d = mf.get('dim')
-        if m and d != 2:
-            return cyc_display(m, d, mf.get('field_poly_is_real_cyclotomic'))
-        else:
-            return field_display_gen(mf.get('nf_label'), mf.get('field_poly'), mf.get('field_disc_factorization'), truncate=16)
-
-    info["nf_link"] = nf_link
-
-    def quad_links(mf, is_field, disc_field):
-        if mf[is_field]:
-            return ', '.join( map(quad_field_knowl, mf[disc_field]) )
-        else:
-            return "None"
-    info["cm_link"] = lambda mf: quad_links(mf, 'is_cm', 'cm_discs')
-    info["rm_link"] = lambda mf: quad_links(mf, 'is_rm', 'rm_discs')
 
     info["space_type"] = {'M':'Modular forms',
                           'S':'Cusp forms',
                           'E':'Eisenstein series'}
-    def display_AL(results):
-        if not results:
-            return False
-        N = results[0]['level']
-        if not all(mf['level'] == N for mf in results):
-            return False
-        if N == 1:
-            return False
-        return all(mf['char_order'] == 1 for mf in results)
-    info["display_AL"] = display_AL
-
-    def display_Fricke(results):
-        # only called if display_AL has returned False
-        return any(mf['char_order'] == 1 for mf in results)
-    info["display_Fricke"] = display_Fricke
-
-    def all_weight1(results):
-        return all(mf.get('weight') == 1 for mf in results)
-    info["all_weight1"] = all_weight1
-    def any_weight1(results):
-        return any(mf.get('weight') == 1 for mf in results)
-    info["any_weight1"] = any_weight1
-
-    # assumes the format Dn A4 S4 S5
-    info["display_projective_image"] = lambda mf: ('%s_{%s}' % (mf['projective_image'][:1], mf['projective_image'][1:])) if 'projective_image' in mf else ''
-
-    # For spaces
-    def display_decomp(space):
-        hecke_orbit_dims = space.get('hecke_orbit_dims')
-        if hecke_orbit_dims is None: # shouldn't happen
-            return 'unknown'
-        dim_dict = defaultdict(int)
-        terms = []
-        for dim in hecke_orbit_dims:
-            dim_dict[dim] += 1
-        for dim in sorted(dim_dict.keys()):
-            count = dim_dict[dim]
-            query = {'weight':space['weight'],
-                     'char_label':'%s.%s'%(space['level'],space['char_orbit_label']),
-                     'dim':dim}
-            if count > 3:
-                short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
-                title = '%s newforms' % count
-            else:
-                short = '+'.join([r'\(%s\)'%dim]*count)
-                title=None
-            if count == 1:
-                query['jump'] = 'yes'
-            link = newform_search_link(short, title=title, **query)
-            terms.append(link)
-        return r'+'.join(terms)
-    info['display_decomp'] = display_decomp
-
-    info['show_ALdims_col'] = lambda spaces: any(space.get('AL_dims') for space in spaces)
-    def display_ALdims(space):
-        al_dims = space.get('AL_dims')
-        if al_dims:
-            return ALdims_knowl(al_dims, space['level'], space['weight'])
-        else:
-            return ''
-    info['display_ALdims'] = display_ALdims
 
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
     info['bigint_knowl'] = bigint_knowl
@@ -180,9 +166,9 @@ def index():
     info = to_dict(request.args, search_array=CMFSearchArray())
     if len(request.args) > 0:
         # hidden_search_type for prev/next buttons
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', 'List'))
+        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
 
-        if search_type in ['List', 'Random']:
+        if search_type in ['List', '', 'Random']:
             return newform_search(info)
         elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
@@ -195,13 +181,11 @@ def index():
             return dimension_space_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
-        elif search_type == 'SpaceTraces':
-            return space_trace_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     info["stats"] = CMF_stats()
     info["weight_list"] = ('1', '2', '3', '4', '5-8', '9-16', '17-32', '33-64', '65-%d' % weight_bound() )
-    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-2000', '2001-4000', '4001-6000', '6001-8000', '8001-%d' % level_bound() )
+    info["level_list"] = ('1', '2-10', '11-100', '101-1000', '1001-5000', '5001-10000', '10001-50000', '50001-100000', '100001-1000000')
     return render_template("cmf_browse.html",
                            info=info,
                            title="Classical modular forms",
@@ -265,12 +249,13 @@ def parse_n(info, newform, primes_only):
             errs.append(r"Only \(a_n\) up to %s are available" % (newform.an_cc_bound))
         else:
             errs.append("<span style='color:black'>n</span> must be an integer, range of integers or comma separated list of integers")
-    if min(info['CC_n']) < 1:
+    if info['CC_n'] and min(info['CC_n']) < 1:
         errs.append(r"We only show \(a_n\) with n at least 1")
         info['CC_n'] = [n for n in info['CC_n'] if n >= 1]
-    if max(info['CC_n']) > newform.an_cc_bound:
+    if info['CC_n'] and max(info['CC_n']) > newform.an_cc_bound:
         errs.append(r"Only \(a_n\) up to %s are available; limiting to \(n \le %d\)" % (newform.an_cc_bound, newform.an_cc_bound))
         info['CC_n'] = [n for n in info['CC_n'] if n <= newform.an_cc_bound]
+
     if primes_only:
         info['CC_n'] = [n for n in info['CC_n'] if ZZ(n).is_prime() and newform.level % n != 0]
         if len(info['CC_n']) == 0:
@@ -284,8 +269,8 @@ def parse_n(info, newform, primes_only):
 def parse_m(info, newform):
     errs = []
     maxm = min(newform.dim, 20)
-    info['default_mrange'] = '1-%s'%maxm
-    mrange = info.get('m', '1-%s'%maxm)
+    info['default_mrange'] = '1-%s' % maxm
+    mrange = info.get('m', '1-%s' % maxm)
     if '.' in mrange:
         # replace embedding codes with the corresponding integers
         # If error, need to replace 'm' by default
@@ -293,7 +278,7 @@ def parse_m(info, newform):
             mrange = re.sub(r'\d+\.\d+', newform.embedding_from_embedding_label, mrange)
         except ValueError:
             errs.append("Invalid embedding label")
-            mrange = info['m'] = '1-%s'%maxm
+            mrange = info['m'] = '1-%s' % maxm
     try:
         info['CC_m'] = integer_options(mrange, 1000)
     except (ValueError, TypeError) as err:
@@ -382,16 +367,19 @@ def render_newform_webpage(label):
     errs.extend(parse_prec(info))
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.title,
                            friends=newform.friends,
+                           code=newform.code,
                            KNOWL_ID="cmf.%s" % label)
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
@@ -414,16 +402,19 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     errs = parse_prec(info)
     newform.setup_cc_data(info)
     if errs:
-        flash_error("%s", "<br>".join(errs))
+        for e in errs:
+            flash_error("%s", e)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_embedded_newform.html",
                            info=info,
                            newform=newform,
                            properties=newform.properties,
                            downloads=newform.downloads,
                            bread=newform.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=newform.embedded_title(m),
                            friends=newform.friends,
+                           code=newform.code,
                            KNOWL_ID="cmf.%s" % label)
 
 def render_space_webpage(label):
@@ -431,15 +422,17 @@ def render_space_webpage(label):
         space = WebNewformSpace.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
-    info = {'results':space.newforms} # so we can reuse search result code
+    info = {'results':space.newforms, # so we can reuse search result code
+            'columns':newform_columns}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends,
                            KNOWL_ID="cmf.%s" % label)
@@ -449,17 +442,61 @@ def render_full_gamma1_space_webpage(label):
         space = WebGamma1Space.by_label(label)
     except (TypeError,KeyError,ValueError) as err:
         return abort(404, err.args)
-    info={}
+    info = {}
     set_info_funcs(info)
+    learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
     return render_template("cmf_full_gamma1_space.html",
                            info=info,
                            space=space,
                            properties=space.properties,
                            downloads=space.downloads,
                            bread=space.bread,
-                           learnmore=learnmore_list(),
+                           learnmore=learnmore_list_add(*learnmore_cmf_picture),
                            title=space.title,
                            friends=space.friends)
+
+@cmf.route("/data/<label>")
+def mf_data(label):
+    slabel = label.split(".")
+    if len(slabel) == 6:
+        emb_label = label
+        form_label = ".".join(slabel[:4])
+        space_label = ".".join(slabel[:3])
+        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Embedded newform data - {label}"
+    elif len(slabel) == 4:
+        form_label = label
+        space_label = ".".join(slabel[:3])
+        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms", "mf_hecke_nf", "mf_newspaces", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Newform data - {label}"
+    elif len(slabel) == 3:
+        ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newspaces", "mf_newspace_portraits"]
+        labels = [label, label]
+        label_cols = ["label", "label"]
+        title = f"Newspace data - {label}"
+    elif len(slabel) == 2:
+        tables = ["mf_gamma1", "mf_gamma1_portraits"]
+        labels = label
+        label_cols = None
+        title = fr"$\Gamma_1$ data - {label}"
+    else:
+        return abort(404, f"Invalid label {label}")
+    bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
+    return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
+
 
 @cmf.route("/<level>/")
 def by_url_level(level):
@@ -490,6 +527,8 @@ def by_url_space_label(level, weight, char_orbit_label):
 @cmf.route("/<int:level>/<int:weight>/<int:conrey_index>/")
 def by_url_space_conreylabel(level, weight, conrey_index):
     label = convert_spacelabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_index))
+    if label is None:
+        return abort(404, "Invalid space label: not relatively prime")
     return redirect(url_for_label(label), code=301)
 
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
@@ -543,7 +582,7 @@ def url_for_label(label):
         return abort(404, "Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
-    for i in range (len(slabel)):
+    for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
@@ -553,7 +592,11 @@ def jump_box(info):
     jump = info.pop("jump").strip()
     errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
-        jump = convert_spacelabel_from_conrey(jump)
+        newjump = convert_spacelabel_from_conrey(jump)
+        if newjump is None:
+            errmsg = "%s is not a valid space label"
+        else:
+            jump = newjump
     #handle direct trace_hash search
     if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
         label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
@@ -564,7 +607,7 @@ def jump_box(info):
     elif jump == 'yes':
         query = {}
         newform_parse(info, query)
-        jump = db.mf_newforms.lucky(query, 'label', sort = None)
+        jump = db.mf_newforms.lucky(query, 'label', sort=None)
         if jump is None:
             errmsg = "There are no newforms specified by the query %s"
             jump = query
@@ -613,6 +656,13 @@ def download_newspace(label):
 def download_full_space(label):
     return CMF_download().download_full_space(label)
 
+@cmf.route('/download_code_newform/<label>/<download_type>')
+def cmf_code_download(label,download_type):
+    response = make_response(CMF_download().download_code(label, download_type))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
 @search_parser # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield, prim=False):
     # qfield will be set to something by the logic in SearchParser.__call__, but we want it determined by prim
@@ -627,6 +677,7 @@ def parse_character(inp, query, qfield, prim=False):
         raise ValueError("It must be of the form N.i")
     level, orbit = pair
     level = int(level)
+
     def contains_level(D):
         if D == level:
             return True
@@ -647,10 +698,10 @@ def parse_character(inp, query, qfield, prim=False):
     if orbit.isalpha():
         orbit = class_to_int(orbit) + 1 # we don't store the prim_orbit_label
         if prim:
-            if level > 10000:
+            if level > ORBIT_MAX_MOD:
                 raise ValueError("The level is too large.")
             # Check that this character is actually primitive
-            conductor = db.char_dir_orbits.lucky({'modulus':level, 'orbit_index': orbit}, 'conductor')
+            conductor = db.char_dirichlet.lucky({'modulus':level, 'orbit': orbit}, 'conductor')
             if conductor is None:
                 raise ValueError("No character orbit with this label exists.")
             if conductor != level:
@@ -659,7 +710,7 @@ def parse_character(inp, query, qfield, prim=False):
     else:
         if prim:
             raise ValueError("You must use the orbit label when searching by primitive character")
-        query['conrey_indexes'] = {'$contains': int(orbit)}
+        query['conrey_index'] = ConreyCharacter(modulus=level,number=orbit).min_conrey_conj
 
 newform_only_fields = {
     'nf_label': 'Coefficient field',
@@ -677,23 +728,25 @@ def common_parse(info, query, na_check=False):
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     parse_ints(info, query, 'weight', name="Weight")
     if 'weight_parity' in info:
-        parity=info['weight_parity']
+        parity = info['weight_parity']
         if parity == 'even':
             query['weight_parity'] = 1
         elif parity == 'odd':
             query['weight_parity'] = -1
     if 'char_parity' in info:
-        parity=info['char_parity']
+        parity = info['char_parity']
         if parity == 'even':
             query['char_parity'] = 1
         elif parity == 'odd':
             query['char_parity'] = -1
     if info.get('level_type'):
-        if info['level_type'] == 'divides':
+        if info['level_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('level'), int):
                 raise ValueError("You must specify a single level")
+            elif info['level_type'] == 'divides':
+                query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
-                query['level'] = {'$in': ZZ(query['level']).divisors()}
+                query['level'] = {'$mod': [0, ZZ(query['level'])]}
         else:
             query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
@@ -707,7 +760,7 @@ def common_parse(info, query, na_check=False):
             parse_ints(info, query, 'dim', name="Dimension")
 
 
-def parse_discriminant(d, sign = 0):
+def parse_discriminant(d, sign=0):
     d = int(d)
     if d*sign < 0:
         raise ValueError('%d %s 0' % (d, '<' if sign > 0 else '>'))
@@ -715,25 +768,6 @@ def parse_discriminant(d, sign = 0):
         raise ValueError('%d != 0 or 1 mod 4' % d)
     return d
 
-def parse_sort(info, query, spaces=False):
-    if info.get('sort_order') == '':
-        query['__sort__'] = ['analytic_conductor', 'level']
-    elif info.get('sort_order') == 'Nk2':
-        query['__sort__'] = ['Nk2', 'level']
-    elif info.get('sort_order') == 'dim':
-        query['__sort__'] = ['dim', 'level', 'weight']
-    elif info.get('sort_order') == 'reldim':
-        query['__sort__'] = ['relative_dim', 'level', 'weight']
-    elif info.get('sort_order') == 'N':
-        query['__sort__'] = ['level', 'weight']
-    elif info.get('sort_order') == 'k':
-        query['__sort__'] = ['weight', 'level']
-    else:
-        return
-    if spaces:
-        query['__sort__'].append('char_orbit_index')
-    else:
-        query['__sort__'].extend(['char_orbit_index', 'hecke_orbit'])
 
 def newform_parse(info, query):
     common_parse(info, query)
@@ -747,19 +781,30 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool(info, query, 'is_self_dual')
+    if info.get('is_maximal_largest'):
+        if info['is_maximal_largest'] == 'maximal':
+            query['is_maximal'] = True
+        elif info['is_maximal_largest'] == 'largest':
+            query['is_largest'] = True
+        elif info['is_maximal_largest'] == 'notlargest':
+            query['is_largest'] = False
     parse_ints(info, query, 'hecke_ring_index')
     parse_ints(info, query, 'hecke_ring_generator_nbound')
-    parse_noop(info, query, 'projective_image', func=str.upper)
-    parse_noop(info, query, 'projective_image_type')
+    if 'projective_image_type' in info and 'projective_image' not in info:
+        query['projective_image_type'] = info['projective_image_type']
+    elif info.get('projective_image','').lower() in ["dn","dihedral"]:
+        query["projective_image_type"] = "Dn"
+    else:
+        parse_noop(info, query, 'projective_image', func=str.upper)
     parse_ints(info, query, 'artin_degree', name="Artin degree")
-    parse_sort(info, query)
+
 
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
         if key in info:
             msg = "%s not valid when searching for spaces"
             flash_error(msg, display)
-            raise ValueError(msg  % display)
+            raise ValueError(msg % display)
     if 'dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'
@@ -771,21 +816,87 @@ def newspace_parse(info, query):
     if info['search_type'] != 'SpaceDimensions':
         parse_ints(info, query, 'num_forms', name='Number of newforms')
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
-            # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
+            # Don't show spaces that only include dimension data but no newforms
             query['num_forms'] = {'$exists':True}
-    parse_sort(info, query, spaces=True)
 
+def _trace_col(i):
+    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right")
 
-@search_wrap(template="cmf_newform_search_results.html",
-             table=db.mf_newforms,
+def _AL_col(i, p):
+    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True)
+
+newform_columns = SearchColumns([
+    LinkCol("label", "cmf.label", "Label", url_for_label),
+    MathCol("level", "cmf.level", "Level", default=False),
+    MathCol("weight", "cmf.weight", "Weight", default=False),
+    MultiProcessedCol("character", "cmf.character", "Char",
+                      ["level", "char_orbit_label"],
+                      lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
+                      short_title="character",
+                      apply_download=False,
+                      default=False),
+    MultiProcessedCol("prim", "character.dirichlet.primitive", "Prim",
+                      ["char_conductor", "prim_orbit_index"],
+                      lambda cond, ind: display_knowl('character.dirichlet.orbit_data', title=f"{cond}.{num2letters(ind)}", kwargs={"label":f"{cond}.{num2letters(ind)}"}),
+                      short_title="primitive character",
+                      apply_download=False,
+                      default=False),
+    MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order", default=False),
+    MathCol("dim", "cmf.dimension", "Dim", align="right", short_title="dimension"),
+    MathCol("relative_dim", "cmf.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension", default=False),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", align="center", short_title="analytic conductor"),
+    MultiProcessedCol("field", "cmf.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, download_col="nf_label"),
+    ProcessedCol("projective_image", "cmf.projective_image", "Image",
+                 lambda img: ('' if img == '?' else '$%s_{%s}$' % (img[:1], img[1:])),
+                 contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
+                 default=lambda info: all(mf.get('weight') == 1 for mf in info["results"]),
+                 align="center", short_title="projective image"),
+    MultiProcessedCol("cm", "cmf.self_twist", "CM",
+                      ["is_cm", "cm_discs"],
+                      lambda is_cm, cm_discs: ", ".join(map(quad_field_knowl, cm_discs)) if is_cm else ("None" if is_cm is False else "not computed"),
+                      short_title="CM",
+                      download_col="cm_discs"),
+    MultiProcessedCol("rm", "cmf.self_twist", "RM",
+                      ["is_rm", "rm_discs"],
+                      lambda is_rm, rm_discs: ", ".join(map(quad_field_knowl, rm_discs)) if is_rm else "None",
+                      contingent=lambda info: any(mf.get('weight') == 1 for mf in info["results"]),
+                      short_title="RM",
+                      download_col="rm_discs"),
+    CheckCol("is_self_dual", "cmf.selfdual", "Self-dual", default=False),
+    CheckCol("is_twist_minimal", "cmf.twist_minimal", "Twist minimal", default=False),
+    CheckCol("is_largest", "cmf.maximal", "Largest", default=False),
+    CheckCol("is_maximal", "cmf.maximal", "Maximal", default=False),
+    LinkCol("minimal_twist", "cmf.minimal_twist", "Minimal twist", url_for_label, default=False),
+    MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists", default=False),
+    MathCol("analytic_rank", "cmf.analytic_rank", "Rank*", default=False),
+    ColGroup("traces", "cmf.trace_form", "Traces",
+             [_trace_col(i) for i in range(4)],
+             download_col="trace_display"), # download_col needed since ColGroup by default passes control to subcolumns, which create a bigint knowl in this case
+    SpacerCol("atkin_lehner", contingent=display_AL),
+    ColGroup("atkin_lehner", "cmf.atkin-lehner", "A-L signs",
+             lambda info: [_AL_col(i, pair[0]) for i, pair in enumerate(info["results"][0]["atkin_lehner_eigenvals"])],
+             contingent=display_AL, orig=["atkin_lehner_eigenvals"], download_col="atkin_lehner_eigenvals"),
+    ProcessedCol("fricke_eigenval", "cmf.fricke", "Fricke sign",
+                 lambda ev: "$+$" if ev == 1 else ("$-$" if ev else ""),
+                 contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
+    ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
+                 lambda fac: "" if fac == "" else factor_base_factorization_latex(fac), mathmode=True, align="center", default=False),
+    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group", default=False),
+    MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
+                      lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
+                      download_col="qexp_display")],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_largest', 'is_maximal', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
+    tr_class=["middle bottomlined", ""])
+
+@search_wrap(table=db.mf_newforms,
              title='Newform search results',
              err_title='Newform Search Input Error',
+             columns=newform_columns,
              shortcuts={'jump':jump_box,
                         'download':CMF_download(),
                         #'download_exact':download_exact,
                         #'download_complex':download_complex
              },
-             projection=['label', 'level', 'weight', 'dim', 'analytic_conductor', 'trace_display', 'atkin_lehner_eigenvals', 'qexp_display', 'char_order', 'hecke_orbit_code', 'projective_image', 'field_poly', 'nf_label', 'is_cm', 'is_rm', 'cm_discs', 'rm_discs', 'field_poly_root_of_unity', 'field_poly_is_real_cyclotomic', 'field_disc', 'field_disc_factorization', 'fricke_eigenval', 'is_self_twist', 'self_twist_discs'],
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list)
@@ -793,7 +904,7 @@ def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
 
-def trace_postprocess(res, info, query, spaces=False):
+def trace_postprocess(res, info, query):
     if res:
         if info.get('view_modp') == 'reductions':
             q = int(info['an_modulo'])
@@ -801,7 +912,7 @@ def trace_postprocess(res, info, query, spaces=False):
             q = None
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
-        table = db.mf_hecke_newspace_traces if spaces else db.mf_hecke_traces
+        table = db.mf_hecke_traces
         for rec in table.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             if q:
                 trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
@@ -847,7 +958,6 @@ def set_Trn(info, query, limit=1000):
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn
-    info['download_limit'] = limit
 
 @search_wrap(template="cmf_trace_search_results.html",
              table=db.mf_newforms,
@@ -865,22 +975,6 @@ def trace_search(info, query):
     process_an_constraints(info, query)
     set_info_funcs(info)
 
-@search_wrap(template="cmf_space_trace_search_results.html",
-             table=db.mf_newspaces,
-             title='Newspace search results',
-             err_title='Newspace search input error',
-             shortcuts={'jump':jump_box,
-                        'download':CMF_download().download_multiple_space_traces},
-             projection=['label', 'dim', 'hecke_orbit_code', 'weight'],
-             postprocess=space_trace_postprocess,
-             bread=get_search_bread,
-             learnmore=learnmore_list)
-def space_trace_search(info, query):
-    set_Trn(info, query)
-    newspace_parse(info, query)
-    process_an_constraints(info, query)
-    set_info_funcs(info)
-
 def set_rows_cols(info, query):
     """
     Sets weight_list and level_list, which are the row and column headers
@@ -891,9 +985,9 @@ def set_rows_cols(info, query):
         raise ValueError("Table too large: at most 200 options for weight")
     if 'weight_parity' in query:
         if query['weight_parity'] == -1:
-            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 1]
+            info['weight_list'] = [k for k in info['weight_list'] if k % 2 == 1]
         else:
-            info['weight_list'] = [k for k in info['weight_list'] if k%2 == 0]
+            info['weight_list'] = [k for k in info['weight_list'] if k % 2 == 0]
     if 'char_orbit_index' in query:
         # Character was set, consistent with level
         info['level_list'] = [query['level']]
@@ -954,8 +1048,8 @@ def delete_false(D):
 
 def dimension_space_postprocess(res, info, query):
     if ((query.get('weight_parity') == -1 and query.get('char_parity') == 1)
-            or
-        (query.get('weight_parity') == 1 and query.get('char_parity') == -1)):
+
+        or (query.get('weight_parity') == 1 and query.get('char_parity') == -1)):
         raise ValueError("Inconsistent parity for character and weight")
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
@@ -965,6 +1059,7 @@ def dimension_space_postprocess(res, info, query):
     urlgen_info.pop('numforms', None)
     urlgen_info.pop('dim', None)
     urlgen_info.pop('search_array', None)
+
     def url_generator_list(N, k):
         info_copy = dict(urlgen_info)
         info_copy['search_type'] = 'Spaces'
@@ -981,13 +1076,16 @@ def dimension_space_postprocess(res, info, query):
     else:
         def url_generator(N, k):
             return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+
     def pick_table(entry, X, typ):
         return entry[X][typ]
+
     def switch_text(X, typ):
-        space_type = {'M':' modular forms',
-                      'S':' cusp forms',
-                      'E':' Eisenstein series'}
+        space_type = {'M': ' modular forms',
+                      'S': ' cusp forms',
+                      'E': ' Eisenstein series'}
         return typ.capitalize() + space_type[X]
+
     dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
                                  url_generator, pick_table, switch_text)
     dim_dict = {}
@@ -1011,15 +1109,18 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info.pop('hidden_search_type', None)
     urlgen_info.pop('number', None)
     urlgen_info.pop('search_array', None)
+
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
-        info_copy['search_type'] = 'List'
+        info_copy.pop('search_type', None)
         info_copy['level'] = str(N)
         info_copy['weight'] = str(k)
         return url_for(".index", **info_copy)
+
     def pick_table(entry, X, typ):
         # Only support one table
         return entry
+
     dimension_common_postprocess(info, query, ['S'], ['new'], url_generator, pick_table)
     # Determine which entries should have an "n/a"
     na_query = {}
@@ -1064,7 +1165,7 @@ def dimension_form_search(info, query):
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
-             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
+             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_index', 'dim', 'hecke_orbit_dims', 'ALdims', 'char_conductor','eis_dim','eis_new_dim','cusp_dim', 'mf_dim', 'mf_new_dim', 'plus_dim', 'num_forms'],
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1078,13 +1179,24 @@ def dimension_space_search(info, query):
     # We don't need to sort, since the dimensions are just getting added up
     query['__sort__'] = []
 
-@search_wrap(template="cmf_space_search_results.html",
-             table=db.mf_newspaces,
+space_columns = SearchColumns([
+    LinkCol("label", "cmf.label", "Label", url_for_label),
+    FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", short_title="analytic conductor", align="left"),
+    MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
+                      lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
+                      short_title="character"),
+    MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order"),
+    MathCol("dim", "cmf.display_dim", "Dim.", short_title="dimension"),
+    MathCol("num_forms", "cmf.galois_orbit", "Orbits", short_title="Galois orbits"),
+    MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomposition", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-decomposition.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="AL-decomposition", align="center", td_class=" nowrap")])
+
+@search_wrap(table=db.mf_newspaces,
              title='Newspace search results',
              err_title='Newspace search input error',
+             columns=space_columns,
              shortcuts={'jump':jump_box,
                         'download':CMF_download().download_spaces},
-             projection=['label', 'analytic_conductor', 'level', 'weight', 'conrey_indexes', 'dim', 'hecke_orbit_dims', 'AL_dims', 'char_order', 'char_orbit_label'],
              url_for_label=url_for_label,
              bread=get_search_bread,
              learnmore=learnmore_list)
@@ -1095,8 +1207,9 @@ def space_search(info, query):
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("double.html", kid='rcs.source.cmf',
-                           kid2='rcs.ack.cmf', title=t,
+    return render_template("multi.html", kids=['rcs.source.cmf',
+                           'rcs.ack.cmf',
+                           'rcs.cite.cmf'], title=t,
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 
@@ -1121,6 +1234,16 @@ def reliability_page():
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
+@cmf.route("/FormPictures")
+def picture_page():
+    t = "Pictures for classical modular forms"
+    return render_template(
+        "single.html",
+        kid='portrait.cmf',
+        title=t,
+        bread=get_bread(other="Form Pictures"),
+        learnmore=learnmore_list(),
+    )
 
 def projective_image_sort_key(im_type):
     if im_type == 'A4':
@@ -1129,6 +1252,8 @@ def projective_image_sort_key(im_type):
         return -2
     elif im_type == 'A5':
         return -1
+    elif im_type is None:
+        return 10000
     else:
         return int(im_type[1:])
 
@@ -1175,32 +1300,43 @@ class CMF_stats(StatsDisplay):
     Class for creating and displaying statistics for classical modular forms
     """
     def __init__(self):
-        self.nforms = comma(db.mf_newforms.count())
-        self.nspaces = comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
-        self.ndim = comma(db.mf_hecke_cc.count())
-        #self.weight_knowl = display_knowl('cmf.weight', title='weight')
-        #self.level_knowl = display_knowl('cmf.level', title='level')
         self.newform_knowl = display_knowl('cmf.newform', title='newforms')
+        self.galois_orbit_knowl = display_knowl('cmf.galois_orbit', title='Galois orbits')
         self.newspace_knowl = display_knowl('cmf.newspace', title='newspaces')
         #stats_url = url_for(".statistics")
 
-    @property
-    def short_summary(self):
-        return r'The database currently contains %s (Galois orbits of) %s, corresponding to %s modular forms over the complex numbers.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
+    @lazy_attribute
+    def nforms(self):
+        return comma(db.mf_newforms.count())
 
-    @property
+    @lazy_attribute
+    def nspaces(self):
+        return comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
+
+    @lazy_attribute
+    def ndim(self):
+        return comma(db.mf_hecke_cc.count())
+
+    @lazy_attribute
+    def short_summary(self):
+        return r'The database currently contains %s (%s of) %s, and %s of their embeddings into the complex numbers. You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.ndim, url_for(".statistics"), url_for(".dynamic_statistics"))
+
+    @lazy_attribute
     def summary(self):
-        return r"The database currently contains %s (Galois orbits of) %s and %s nonzero %s, corresponding to %s modular forms over the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+        return r"The database currently contains %s (%s of) %s in %s %s, and %s of their embeddings into the complex numbers.  In addition to the statistics below, you can also <a href='%s'>create your own</a>." % (self.nforms, self.galois_orbit_knowl, self.newform_knowl, self.nspaces, self.newspace_knowl, self.ndim, url_for(".dynamic_statistics"))
+
+    @lazy_attribute
+    def buckets(self):
+        return {'level':['1','2-10','11-100','101-1000','1001-5000', '5001-10000','10001-50000','50001-100000','100001-1000000'],
+                'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d' % weight_bound()],
+                'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
+                'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
+                'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
 
     extent_knowl = 'cmf.statistics_extent'
     table = db.mf_newforms
     baseurl_func = ".index"
-    buckets = {'level':['1','2-10','11-100','101-1000','1001-2000', '2001-4000','4001-6000','6001-8000','8001-%d'%level_bound()],
-               'weight':['1','2','3','4','5-8','9-16','17-32','33-64','65-%d'%weight_bound()],
-               'dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000','1001-10000','10001-100000'],
-               'relative_dim':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-               'char_order':['1','2','3','4','5','6-10','11-20','21-100','101-1000'],
-               'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
     knowls = {'level': 'cmf.level',
@@ -1229,7 +1365,7 @@ class CMF_stats(StatsDisplay):
                      'rm_discs': 'RM disc',
                      'dim': 'abs. dimension',
                      'relative_dim': 'rel. dimension'}
-    formatters = {'projective_image': (lambda t: r'\(%s_{%s}\)' % (t[0], t[1:])),
+    formatters = {'projective_image': (lambda t: 'Unknown' if t is None else r'\(%s_{%s}\)' % (t[0], t[1:])),
                   'char_parity': (lambda t: 'odd' if t in [-1,'-1'] else 'even'),
                   'inner_twist_count': (lambda x: ('Unknown' if x == -1 else str(x))),
                   'self_twist_type': self_twist_type_formatter}
@@ -1258,7 +1394,8 @@ class CMF_stats(StatsDisplay):
          'totaler':{'avg':True}},
         {'cols':'projective_image',
          'top_title':[('projective images', 'cmf.projective_image'),
-                      ('for weight 1 forms', None)]},
+                      ('for weight 1 forms', None)],
+         'constraint':{'weight': 1}},
         {'cols':'num_forms',
          'table':db.mf_newspaces,
          'top_title': [('number of newforms', 'cmf.galois_orbit'), (r'in \(S_k(N, \chi)\)', None)],
@@ -1291,19 +1428,58 @@ def dynamic_statistics():
     return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 class CMFSearchArray(SearchArray):
-    jump_example="3.6.a.a"
-    jump_egspan="e.g. 3.6.a.a, 55.3.d or 20.5"
-    jump_knowl="cmf.search_input"
-    jump_prompt="Label"
+    sort_knowl = 'cmf.sort_order'
+    _sort = [
+        ('', 'analytic conductor', ['analytic_conductor', 'level']),
+        ('level', 'level', ['level', 'weight']),
+        ('weight', 'weight', ['weight', 'level']),
+        ('character', 'character', ['level', 'char_orbit_index', 'weight']),
+        ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
+        ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
+        ('Nk2', 'Nk^2', ['Nk2', 'level']),
+        ('dim', 'dimension', ['dim', 'level', 'weight']),
+        ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
+        ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
+        ('inner_twist_count', 'inner twist count', ['inner_twist_count', 'level', 'weight']),
+        ('hecke_ring_index_factorization', 'coeff ring index', ['hecke_ring_index', 'level', 'weight']),
+    ]
+    for name, disp, sord in _sort:
+        if 'char_orbit_index' not in sord:
+            sord.append('char_orbit_index')
+    _sort_spaces = _sort[:-3]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    sorts = {'': _sort_forms,
+             'Traces': _sort_forms,
+             'Spaces': _sort_spaces}
+    jump_example = "3.6.a.a"
+    jump_egspan = "e.g. 3.6.a.a, 55.3.d or 20.5"
+    jump_knowl = "cmf.search_input"
+    jump_prompt = "Label"
+    null_column_explanations = { # No need to display warnings for these
+        'is_polredabs': False,
+        'projective_image': False,
+        'projective_image_type': False,
+        'a4_dim': False,
+        'a5_dim': False,
+        's4_dim': False,
+        'dihedral_dim': False,
+        'hecke_ring_index': "coefficient ring index not computed when dimension larger than 20",
+        'hecke_ring_generator_nbound': "coefficient ring generators not computed when dimension larger than 20",
+        'nf_label': "coefficient field not computed when dimension larger than 20",
+    }
+
     def __init__(self):
         level_quantifier = SelectBox(
             name='level_type',
             options=[('', ''),
                      ('prime', 'prime'),
+                     ('prime_square', 'prime squared'),
                      ('prime_power', 'prime power'),
                      ('square', 'square'),
                      ('squarefree', 'squarefree'),
+                     ('powerful', 'powerful'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             min_width=110)
         level = TextBoxWithSelect(
@@ -1342,6 +1518,7 @@ class CMFSearchArray(SearchArray):
         prime_quantifier = SubsetBox(
             name="prime_quantifier",
             min_width=110)
+
         level_primes = TextBoxWithSelect(
             name='level_primes',
             knowl='cmf.bad_prime',
@@ -1370,7 +1547,8 @@ class CMFSearchArray(SearchArray):
 
         dim = TextBoxWithSelect(
             name='dim',
-            label='Dim.',
+            label='Dimension',
+            short_label="Dim.",
             knowl='cmf.dimension',
             example='1',
             example_span='2, 1-6',
@@ -1384,7 +1562,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.coefficient_field',
             label='Coefficient field',
             example='1.1.1.1',
-            example_span='4.0.144.1, Qsqrt5')
+            example_span='2.0.5.1, Qsqrt5')
 
         analytic_conductor = TextBox(
             name='analytic_conductor',
@@ -1392,13 +1570,6 @@ class CMFSearchArray(SearchArray):
             label='Analytic conductor',
             example='1-10',
             example_span='1-10')
-
-        Nk2 = TextBox(
-            name='Nk2',
-            knowl='cmf.nk2',
-            label=r'\(Nk^2\)',
-            example='40-100',
-            example_span='40-100')
 
         cm = SelectBox(
             name='cm',
@@ -1429,10 +1600,21 @@ class CMFSearchArray(SearchArray):
             example='1-',
             example_span='0, 1-, 2-3')
 
+        is_twist_minimal = YesNoBox(
+            name='is_twist_minimal',
+            knowl='cmf.twist_minimal',
+            label='Is twist minimal')
+
         is_self_dual = YesNoBox(
             name='is_self_dual',
             knowl='cmf.selfdual',
             label='Is self-dual')
+
+        is_maximal_largest = SelectBox(
+            name='is_maximal_largest',
+            knowl='cmf.maximal',
+            label='Is maximal/largest',
+            options=[('',''),('maximal','maximal'),('largest','largest'),('notlargest','not largest')])
 
         coefficient_ring_index = TextBox(
             name='hecke_ring_index',
@@ -1448,7 +1630,7 @@ class CMFSearchArray(SearchArray):
             example='20',
             example_span='7, 1-10')
 
-        analytic_rank= TextBox(
+        analytic_rank = TextBox(
             name='analytic_rank',
             label='Analytic rank',
             knowl='cmf.analytic_rank',
@@ -1459,23 +1641,13 @@ class CMFSearchArray(SearchArray):
             name='projective_image',
             label='Projective image',
             knowl='cmf.projective_image',
-            example='D15',
-            example_span='wt. 1 only')
-
-        projective_image_type = SelectBoxNoEg(
-            name='projective_image_type',
-            knowl='cmf.projective_image',
-            label='Projective image type',
-            options=[('', ''),
-                     ('Dn', 'Dn'),
-                     ('A4', 'A4'),
-                     ('S4', 'S4'),
-                     ('A5','A5')],
-            example_span='wt. 1 only')
+            example='Dn',
+            example_span='A5, D7, or Dn; weight 1 only')
 
         num_newforms = TextBox(
             name='num_forms',
-            label='Num. ' + display_knowl("cmf.newform", "newforms"),
+            label='Newform orbits',
+            knowl='cmf.galois_orbit',
             width=160,
             example='3')
         hnum_newforms = HiddenBox(
@@ -1483,8 +1655,6 @@ class CMFSearchArray(SearchArray):
             label='')
 
         results = CountBox()
-
-        wt1only = BasicSpacer("Only for weight 1:")
 
         trace_coldisplay = TextBox(
             name='n',
@@ -1520,51 +1690,34 @@ class CMFSearchArray(SearchArray):
             [level, weight],
             [level_primes, character],
             [char_order, char_primitive],
-            [dim, coefficient_field],
-            [analytic_conductor, Nk2],
-            [self_twist, self_twist_discs],
-            [inner_twist_count, is_self_dual],
+            [dim, is_maximal_largest],
+            [analytic_conductor, analytic_rank],
+            [coefficient_field, is_self_dual],
             [coefficient_ring_index, hecke_ring_generator_nbound],
-            [analytic_rank, projective_image],
-            [results, projective_image_type]]
+            [self_twist_discs, self_twist],
+            [inner_twist_count, is_twist_minimal],
+            [results, projective_image]]
 
         self.refine_array = [
-            [level, weight, analytic_conductor, Nk2, dim],
-            [level_primes, character, char_primitive, char_order, coefficient_field],
-            [self_twist, self_twist_discs, inner_twist_count, is_self_dual, analytic_rank],
-            [coefficient_ring_index, hecke_ring_generator_nbound, wt1only, projective_image, projective_image_type]]
+            [level, weight, analytic_conductor, analytic_rank, dim],
+            [level_primes, character, char_primitive, char_order, is_maximal_largest],
+            [coefficient_field, self_twist, self_twist_discs, inner_twist_count, is_self_dual],
+            [coefficient_ring_index, hecke_ring_generator_nbound, is_twist_minimal, projective_image]]
 
         self.space_array = [
-            [level, weight, analytic_conductor, Nk2, dim],
-            [level_primes, character, char_primitive, char_order, num_newforms]
+            [level, weight, analytic_conductor, dim, num_newforms],
+            [level_primes, character, char_primitive, char_order]
         ]
 
         self.sd_array = [
-            [level, weight, analytic_conductor, Nk2, hdim],
-            [level_primes, character, char_primitive, char_order, hnum_newforms]
+            [level, weight, analytic_conductor, hdim, hnum_newforms],
+            [level_primes, character, char_primitive, char_order]
         ]
 
         self.traces_array = [
             RowSpacer(22),
             [trace_coldisplay, trace_primality],
             [trace_an_constraints, trace_an_moduli, trace_view]]
-
-    sort_knowl = 'cmf.sort_order'
-    def sort_order(self, info):
-        st = self._st(info)
-        X = [
-            ('', 'analytic conductor'),
-            ('Nk2', 'Nk^2'),
-            ('dim', 'dimension'),
-            ('reldim', 'relative dimension'),
-            ('N', 'level'),
-            ('k', 'weight')
-        ]
-        if st in ['List', 'Traces']:
-            return X
-        elif st in ['Spaces', 'SpaceTraces']:
-            del X[3]
-            return X
 
     def hidden(self, info):
         ans = [("start", "start"), ("count", "count"), ("hst", "search_type")]
@@ -1575,28 +1728,27 @@ class CMFSearchArray(SearchArray):
     def main_array(self, info):
         if info is None:
             return self.browse_array
-        search_type = info.get('search_type', info.get('hst', 'List'))
-        if search_type in ['Spaces', 'SpaceTraces']:
+        search_type = info.get('search_type', info.get('hst', ''))
+        if search_type == 'Spaces':
             return self.space_array
         elif search_type == 'SpaceDimensions':
             return self.sd_array
         else:
-            # search_type in ['List', 'Dimensions', 'Traces', 'DynStats']:
+            # search_type in ['List', '', 'Dimensions', 'Traces', 'DynStats']:
             return self.refine_array
 
     def search_types(self, info):
-        basic = [('List', 'List of forms'),
+        basic = [('', 'List of forms'),
                  ('Dimensions', 'Dimension table'),
                  ('Traces', 'Traces table'),
                  ('Random', 'Random form')]
         spaces = [('Spaces', 'List of spaces'),
                   ('SpaceDimensions', 'Dimension table'),
-                  ('SpaceTraces', 'Traces table'),
                   ('RandomSpace', 'Random')]
         if info is None:
             return basic
         st = self._st(info)
-        if st in ["List", "Dimensions", "Traces"]:
+        if st in ["List", "", "Dimensions", "Traces"]:
             return self._search_again(info, basic)
         elif st == "SpaceDimensions":
             return self._search_again(info, spaces)
@@ -1605,7 +1757,7 @@ class CMFSearchArray(SearchArray):
                 name="all_spaces",
                 options=[("", "split spaces"),
                          ("yes", "all spaces")],
-                width=None)
+                width=110)
             search_again = SearchButtonWithSelect(
                 value=st,
                 description="Search again",
@@ -1618,7 +1770,7 @@ class CMFSearchArray(SearchArray):
         # We need to override html to add the trace inputs
         layout = [self.hidden_inputs(info), self.main_table(info), self.buttons(info)]
         st = self._st(info)
-        if st in ["Traces", "SpaceTraces"]:
+        if st in ["Traces"]:
             trace_table = self._print_table(self.traces_array, info, layout_type="box")
             layout.append(trace_table)
         return "\n".join(layout)

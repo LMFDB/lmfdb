@@ -8,17 +8,20 @@ from sage.all import PolynomialRing, QQ, preparse, gp, NumberField, matrix, vect
 #P = subprocess.Popen(["ssh","mongo","-N"])
 _C = None
 
+
 def makeDBconnection():
     global _C
-    _C = pymongo.MongoClient("localhost:37010");
-    #_C = pymongo.MongoClient("m0.lmfdb.xyz:27017");
-    #_C = pymongo.MongoClient("readonly.lmfdb.xyz:27017");
-    _C.admin.authenticate("lmfdb","lmfdb")
+    _C = pymongo.MongoClient("localhost:37010")
+    # _C = pymongo.MongoClient("m0.lmfdb.xyz:27017")
+    # _C = pymongo.MongoClient("readonly.lmfdb.xyz:27017")
+    _C.admin.authenticate("lmfdb", "lmfdb")
+
 
 def getDBconnection():
     if _C is None:
         makeDBconnection()
     return _C
+
 
 def get_hmfs_hecke_field_and_eigenvals(label):
     """Get the Hecke field and eigenvalues for the Hilbert modular form with given label.
@@ -49,7 +52,7 @@ def polredabs_coeffs(poly):
         poly -- polynomial, a polynomial with coefficients in QQ
 
     OUTPUT:
-        cs_string -- string, the coefficients of the normalized polynomial (the output of gp.polredabs(poly)), given as a comma-separated string with no spaces 
+        cs_string -- string, the coefficients of the normalized polynomial (the output of gp.polredabs(poly)), given as a comma-separated string with no spaces
     """
     R = poly.parent()
     (x,) = R._first_ngens(1)
@@ -94,7 +97,7 @@ def get_number_field_integral_basis(c_string):
         fld_bool -- bool, True if the number field has a page in the LMFDB, False otherwise
         K_new -- number field, the number field with defining polynomial that is the normalized version (given by gp.polredabs) of the one with coefficients specified by c_string
         a -- number field element, generator for K_new
-        the integral basis for K_new recorded on its LMFDB page 
+        the integral basis for K_new recorded on its LMFDB page
     """
     C = getDBconnection()
     c_hash = field_coeffs_string_to_hash(c_string)
@@ -146,7 +149,7 @@ def convert_hecke_eigenvalues(K_old, eigenvals, K_new, int_basis):
         int_basis -- list, a list containing the integral basis for K_new
     """
     if not K_old.is_isomorphic(K_new):
-        return "Error! Fields not isomorphic!"
+        raise RuntimeError("Fields not isomorphic!")
     iota = K_old.embeddings(K_new)[0]
     (a,) = K_new._first_ngens(1)
 
@@ -173,7 +176,7 @@ def convert_hecke_eigenvalues(K_old, eigenvals, K_new, int_basis):
 
     eigen_strings = []
     for c in eigenvals_new:
-        eigen_strings.append(vector_to_string(c))   
+        eigen_strings.append(vector_to_string(c))
     return eigen_strings, K_new, a, int_basis
 
 # Wrapper for above functions

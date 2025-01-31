@@ -22,10 +22,24 @@ function set_buckets(col_selecter, bucket_id) {
   {% endif %}
 </h2>
 
-<form id='re-search' onsubmit="cleanSubmit(this.id)">
+<form class='re-search'>
   {{ info.search_array.html(info) | safe }}
+  <input type="hidden" name="showcol" value="{{info.showcol}}" />
+  <input type="hidden" name="hidecol" value="{{info.hidecol}}" />
+  <input type="hidden" name="sort_order" value="{{info.sort_order}}" />
+  <input type="hidden" name="sort_dir" value="{{info.sort_dir}}" />
 </form>
 
+<script>
 {% if info.search_array.has_advanced_inputs(info) %}
-<script> show_advancedQ(); </script>
+show_advancedQ();
 {% endif %}
+
+function set_fresh() {
+  $(".search_stale").removeClass("search_stale").addClass("search_fresh");
+}
+
+$("input").on("input", set_fresh);
+$("select").on("change", set_fresh);
+</script>
+

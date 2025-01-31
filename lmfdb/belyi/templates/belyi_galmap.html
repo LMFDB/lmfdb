@@ -1,6 +1,21 @@
 {% extends 'belyi_base.html' %}
 {% block subcontent %}
 
+<style>
+  .toggle {margin-top:5px; margin-left:20px;}
+  div.properties-body table tr td.label { vertical-align: top    ; }
+  #content > h2.subhead { color:{{color.black}};}
+</style>
+
+<script>
+var cur_style = null;
+function show_eqns(eqnstyle) {
+    $('.std_eqn').css("display", "none");
+    $('.plane_eqn').css("display", "none");
+    $('.'+eqnstyle).css("display", "inline");
+  }
+</script>
+
 <h2>{{ KNOWL('belyi.base_field', title='Base field')}}</h2>
   <p>
     {% if data['in_LMFDB'] %}
@@ -15,23 +30,73 @@
   </p>
 </h2>
 
+{% if data["plane_model"] %}
+<h2>Curve</h2>
+
+<table>
+  <tr class='std_eqn nodisplay'>
+    <td>
+      {{ data.curve|safe }}
+      {%- if data.g == 0 -%}
+        , with affine coordinate $x$
+      {% endif %}
+    </td>
+    <td>
+    </td>
+  </tr>
+  <tr class='plane_eqn'>
+    <td>
+      {{ data.plane_model|safe }}
+    <td>
+    </td>
+  </tr>
+</table>
+
+<div class="toggle">
+  <span class='plane_eqn'>
+    (<a onclick="show_eqns('std_eqn'); return false" href='#'>smooth</a>)
+  </span>
+</div>
+<div class="toggle">
+  <span class='std_eqn nodisplay'>
+    (<a onclick="show_eqns('plane_eqn'); return false" href='#'>planar</a>)
+  </span>
+</div>
+
+
+<h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
+<div class='std_eqn nodisplay'>
+  {% if data.g == 0 %}
+    <p> \(\displaystyle \phi(x) =\) {{data.map|safe}} </p>
+  {% else %}
+    <p> \(\displaystyle \phi(x,y) =\) {{data.map|safe}} </p>
+  {% endif %}
+</div>
+<div class='plane_eqn'>
+  <p>
+    {% if data.plane_constant == '1' %}
+      \(\displaystyle \phi(t,x) = t\)
+    {% else %}
+      \(\displaystyle \phi(t,x) = {{data.plane_map_constant_factored}} \, t\)
+    {% endif %}
+  </p>
+</div>
+{% else %}
 <h2>Curve</h2>
   <p>
-    \(\displaystyle {{data.curve}}\)
-    {% if data.g == 0 %}
+    {{data.curve|safe}}
+    {%- if data.g == 0 -%}
       , with affine coordinate $x$
-    {% endif %}
-    {% if data["curve_label"] %}
-      , isomorphic to curve with label <a href={{data["curve_url"]}}>{{data["curve_label"]}} </a>
     {% endif %}
   </p>
 
 <h2>{{ KNOWL('belyi.galmap', 'Map') }}</h2>
   {% if data.g == 0 %}
-    <p> \(\displaystyle \phi(x) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x) =\) {{data.map|safe}} </p>
   {% else %}
-    <p> \(\displaystyle \phi(x,y) = {{data.map}}\) </p>
+    <p> \(\displaystyle \phi(x,y) =\) {{data.map|safe}} </p>
   {% endif %}
+{% endif %}
 
 <h2>{{ KNOWL('nf.embedding', title="Embeddings") }}</h2>
   <p>

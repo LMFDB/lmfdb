@@ -2,7 +2,7 @@
 ==============
 
 This is the code for the 
-[L-functions and modular forms database website](http://www.lmfdb.org/).
+[L-functions and modular forms database website](https://www.lmfdb.org/).
 
 Wiki
 ----
@@ -12,8 +12,9 @@ Wiki
 Development
 -----------
 
-* [Getting Started](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md) -- cheat sheet for setting up lmfdb
-* [Development Guide](https://github.com/LMFDB/lmfdb/blob/master/Development.md) -- organizing development
+* [Getting Started](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md) -- cheat sheet for setting up lmfdb
+* [Development Guide](https://github.com/LMFDB/lmfdb/blob/main/Development.md) -- organizing development
+* [Style Guide](https://github.com/LMFDB/lmfdb/blob/main/StyleGuide.md) -- how things on LMFDB pages should be styled to give the web site a coherent look
 
 Guidelines
 ----------
@@ -41,5 +42,5 @@ in a browser without scrolling the browse-and-search page.
 of both experts and non-experts in the subject, in order to ensure
 that the pages are useful to a broad mathematical audience.
 
-[logo]: https://github.com/LMFDB/lmfdb/raw/master/lmfdb/static/images/lmfdb-logo.png "LMFDB"
+[logo]: https://github.com/LMFDB/lmfdb/raw/main/lmfdb/static/images/lmfdb-logo.png "LMFDB"
 

@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 from lmfdb.app import app
 from lmfdb.utils import comma
 from lmfdb.logger import make_logger
 from lmfdb import db
 
 logger = make_logger("hecke_algebras")
+
 
 def hecke_algebras_summary():
     hecke_knowl = '<a knowl="hecke_algebra.definition">Hecke algebras</a>'
@@ -15,8 +15,9 @@ def hecke_algebras_summary():
     max_level = db.hecke_algebras.max('level')
     max_weight = db.hecke_algebras.max('weight')
     return ''.join([r'The database currently contains {} '.format(comma(number)),
-                    hecke_knowl,'. The largest ', level_knowl, ' for ' , gamma0_knowl , ' is {}, '.format(comma(max_level)),
+                    hecke_knowl,'. The largest ', level_knowl, ' for ', gamma0_knowl, ' is {}, '.format(comma(max_level)),
                     'the largest ', weight_knowl, ' is {}.'.format(comma(max_weight))])
+
 
 @app.context_processor
 def ctx_hecke_algebras_summary():

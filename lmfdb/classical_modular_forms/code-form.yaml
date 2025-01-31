@@ -1,0 +1,105 @@
+show:
+  - pari
+  - sage
+  - magma
+
+prompt:
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
+
+logo:
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+
+comment:
+  sage: |
+    #
+  pari: |
+    \\
+  magma: |
+    //
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\\\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+header:
+  pari: |
+    \\ Warning: in Pari all modular forms belong
+    \\ to a space which has to be computed
+
+dimensions-spaces:
+  comment: Dimensions subspaces of M_{k}({N},chi)
+  pari: |
+    [N,k,chi] = [{N},{k},Mod({conrey_index},{N})]
+    mfdim([N,k,chi],4) \\ all space
+    mfdim([N,k,chi],3) \\ Eisenstein
+    mfdim([N,k,chi],1) \\ Cusps
+    mfdim([N,k,chi],0) \\ New
+
+initialize-newspace:
+  comment: Compute space of new eigenforms
+  pari: |
+    [N,k,chi] = [{N},{k},Mod({conrey_index},{N})]
+    mf = mfinit([N,k,chi],0)
+    lf = mfeigenbasis(mf)
+  sage: |
+    from sage.modular.dirichlet import DirichletCharacter
+    H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
+    chi = DirichletCharacter(H, H._module({sage_genvalues}))
+    N = Newforms(chi, {k}, names="a")
+  magma: |
+    //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    chi := DirichletCharacter("{N}.{conrey_index}");
+    S:= CuspForms(chi, {k});
+    N := Newforms(S);
+
+coeff-field:
+  comment: Coefficient field, relative polynomial
+  pari: |
+    f.mod \\ as an extension of the cyclotomic field Q(t)/Phi
+
+relative_polynomial:
+  sage: K.relative_polynomial()
+
+newform:
+  comment: select newform
+  sage: "f = N[0] # Warning: the index may be different"
+  pari: |
+    f = lf[1] \\ Warning: the index may be different
+
+coefficient_field:
+  sage: |
+    K = f.hecke_eigenvalue_field() # note that sage often uses an isomorphic number field
+
+defining-polynomial:
+  comment: defining polynomial
+  pari: |
+    f.mod \\ as an extension of the character field
+
+qexp:
+  comment: q-expansion
+  sage: |
+    f.q_expansion() # note that sage often uses an isomorphic number field
+  pari: |
+    mfcoefs(f, 20)
+
+embeddings:
+  comment: embeddings in the coefficient field
+  pari: |
+    mfembed(f)
+
+absolute_polynomial:
+  sage: K.absolute_polynomial()
+
+l-function:
+  comment: L function, special value at s=1
+  pari: |
+    L = lfunmf(mf,f);
+    lfun(L,1)

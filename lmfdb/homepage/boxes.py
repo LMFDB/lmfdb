@@ -4,12 +4,12 @@ from flask import url_for
 from sage.all import cached_function
 
 
-class Box(object):
+class Box():
     def __init__(self, title):
         self.title = title
         self.content = None
         self.links = []
-        self.target = "/"
+        self.target = url_for('index')
         self.img = None
 
     def add_link(self, title, href):

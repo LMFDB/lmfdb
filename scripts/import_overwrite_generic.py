@@ -24,9 +24,9 @@ def main(argv):
     print("I have it")
 
     C = base.getDBConnection()
-    
+
     collection = C[database_name][collection_name]
-    print("Got a collectiopn: ", collection)
+    print("Got a collection: ", collection)
     with open(file_name, "r") as f:
         print("Loading data in memory")
         data = json.load(f)

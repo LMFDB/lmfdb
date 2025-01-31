@@ -1,0 +1,48 @@
+{%- include "knowl-defs.html" -%}
+{%- from "knowl-defs.html" import KNOWL with context -%}
+{%- set dummy = gp.conjclasses -%}
+{%- set ccs = gp.conjugacy_classes -%}
+{%- if info.char_highlight -%}
+  <p>The row representing the character {{info.char_highlight}} is highlighted below.</p>
+{%- endif -%}
+<table class="nowrap">
+  <tr>
+    <td></td><td></td>
+    {% for c in ccs %}
+      <td class="right">{{ c.display_knowl() | safe }}</td>
+    {% endfor %}
+    <tr>
+    <td></td><td>Size</td>
+    {% for c in ccs %}
+      <td class="right">{{ c.size }}</td>
+    {% endfor %}
+  </tr>
+  {% for p in gp.factors_of_order %}
+    {% set ploop = loop %}
+    <tr>
+      <td></td><td class="right">{{KNOWL('group.conjugacy_class.power_classes',"{} P".format(p))}}</td>
+      {% for c in ccs %}
+        <td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  <tr>
+    <td></td><td>{{KNOWL('group.representation.type', 'Type')}}</td>
+  </tr>
+  {% set dispv = info.dispv %}
+
+  {% for chtr in gp.characters %}
+    {% if chtr.label == info.char_highlight %}
+      <tr class="highlighted">
+    {% else %}
+      <tr>
+    {% endif %}
+    <td> {{ chtr.display_knowl() | safe }}</td>
+    <td class="center">{{chtr.type()}}</td>
+    {% set cond = chtr.cyclotomic_n %}
+    {% for val in chtr.values %}
+      <td class="right">{{ dispv(cond, val) | safe }}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+</table>

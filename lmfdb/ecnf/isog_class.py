@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import encode_plot, names_and_urls, web_latex 
+from lmfdb.utils import encode_plot, names_and_urls, web_latex
 from lmfdb.logger import make_logger
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
@@ -11,8 +10,14 @@ from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
 
 logger = make_logger("ecnf")
 
+def curve_url(c):
+    return url_for(".show_ecnf",
+                   nf=c['field_label'],
+                   conductor_label=c['conductor_label'],
+                   class_label=c['iso_label'],
+                   number=c['number'])
 
-class ECNF_isoclass(object):
+class ECNF_isoclass():
 
     """
     Class for an isogeny class of elliptic curves over Q
@@ -70,7 +75,6 @@ class ECNF_isoclass(object):
             self.rank_bounds = [0, Infinity]
             self.rk_bnds = "not recorded"
 
-
         # Extract the isogeny degree matrix from the database
         if not hasattr(self, 'isogeny_matrix'):
             # this would happen if the class is initiated with a curve
@@ -82,19 +86,13 @@ class ECNF_isoclass(object):
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
         P = self.graph.plot(edge_labels=True)
-        self.graph_img = encode_plot(P)
+        self.graph_img = encode_plot(P, transparent=True)
         self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
         self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 
         self.field = FIELD(self.field_label)
         self.field_name = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, self.field_name)
-        def curve_url(c):
-            return url_for(".show_ecnf",
-                           nf=c['field_label'],
-                           conductor_label=c['conductor_label'],
-                           class_label=c['iso_label'],
-                           number=c['number'])
 
         self.curves = [[c['short_label'], curve_url(c), web_ainvs(self.field_label,c['ainvs'])] for c in self.db_curves]
 
@@ -145,14 +143,13 @@ class ECNF_isoclass(object):
                     Lfun['Lhash'],
                     Lfun['degree'],
                     Lfun.get('trace_hash'))
-            exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+            exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
                      if elt[1]}
             exclude.add(lfun_url.lstrip('/L/').rstrip('/'))
             self.friends += names_and_urls(instances, exclude=exclude)
             self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]
-
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),
@@ -206,7 +203,7 @@ def make_graph(M):
             centervert = [i for i in range(4) if max(MM.row(i)) < maxdegree][0]
             other = [i for i in range(4) if i != centervert]
             G.set_pos(pos={centervert: [0, 0], other[0]: [0, 1], other[1]: [-0.8660254, -0.5], other[2]: [0.8660254, -0.5]})
-        elif maxdegree == 27 and n==4:
+        elif maxdegree == 27 and n == 4:
             # o--o--o--o
             centers = [i for i in range(4) if list(MM.row(i)).count(3) == 2]
             left = [j for j in range(4) if MM[centers[0], j] == 3 and j not in centers][0]
@@ -223,14 +220,14 @@ def make_graph(M):
             left = [j for j in range(6) if MM[centers[0], j] == 2 and j not in centers]
             right = [j for j in range(6) if MM[centers[1], j] == 2 and j not in centers]
             G.set_pos(pos={centers[0]: [-0.5, 0], left[0]: [-1, 0.8660254], left[1]: [-1, -0.8660254], centers[1]: [0.5, 0], right[0]: [1, 0.8660254], right[1]: [1, -0.8660254]})
-        elif maxdegree == 18 and n==6:
+        elif maxdegree == 18 and n == 6:
             # two squares joined on an edge
             centers = [i for i in range(6) if list(MM.row(i)).count(3) == 2]
             top = [j for j in range(6) if MM[centers[0], j] == 3]
             bl = [j for j in range(6) if MM[top[0], j] == 2][0]
             br = [j for j in range(6) if MM[top[1], j] == 2][0]
             G.set_pos(pos={centers[0]: [0, 0.5], centers[1]: [0, -0.5], top[0]: [-1, 0.5], top[1]: [1, 0.5], bl: [-1, -0.5], br: [1, -0.5]})
-        elif maxdegree == 16 and n==8:
+        elif maxdegree == 16 and n == 8:
             # tree from bottom, 3 regular except for the leaves.
             centers = [i for i in range(8) if list(MM.row(i)).count(2) == 3]
             center = [i for i in centers if len([j for j in centers if MM[i, j] == 2]) == 2][0]
@@ -258,7 +255,7 @@ def make_graph(M):
 def make_iso_matrix(clist):  # clist is a list of ECNFs
     Elist = [E.E for E in clist]
     cl = Elist[0].isogeny_class()
-    perm = dict([(i, cl.index(E)) for i, E in enumerate(Elist)])
+    perm = {i: cl.index(E) for i, E in enumerate(Elist)}
     return permute_mat(cl.matrix(), perm, True)
 
 

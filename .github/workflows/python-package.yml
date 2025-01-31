@@ -4,7 +4,7 @@ on:
   push:
     branches: [ '**' ]
   pull_request:
-    branches: [ master, dev, web ]
+    branches: [ main, dev, web ]
 
 jobs:
   matrix_prep:
@@ -14,11 +14,11 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       # Required as the JSON input file needs to be read
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Conditional Build Matrix
         id: set-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
+        uses: JoshuaTheMiller/conditional-build-matrix@main
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
@@ -33,7 +33,7 @@ jobs:
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: conda-incubator/setup-miniconda@v2
       with:
@@ -45,7 +45,7 @@ jobs:
         use-only-tar-bz2: true
 
     - name: Cache conda
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
@@ -71,7 +71,7 @@ jobs:
         conda list
 
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
@@ -90,7 +90,7 @@ jobs:
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
       # If this fails you need to update the file list above and file count
-      run: test $(find lmfdb -name 'test_*.py' -or -name '*_test.py' | wc -l) -eq 39
+      run: test $(find lmfdb -name 'test_*.py' -or -name '*_test.py' | wc -l) -eq 41
 
     - name: Config LMFDB to run tests against proddb
       if: matrix.files != 'lint' && matrix.server == 'proddb'

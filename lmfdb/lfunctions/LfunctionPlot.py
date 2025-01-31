@@ -8,11 +8,12 @@ from sage.all import prod
 from sage.arith.srange import srange
 from lmfdb.utils import signtocolour
 from sage.databases.cremona import cremona_letter_code
+from lmfdb.characters.TinyConrey import ConreyCharacter
 
 
 def svgBegin():
-    return ("<svg  xmlns='http://www.w3.org/2000/svg'"
-            " xmlns:xlink='http://www.w3.org/1999/xlink'>\n")
+    return ("<svg  xmlns='https://www.w3.org/2000/svg'"
+            " xmlns:xlink='https://www.w3.org/1999/xlink'>\n")
 
 
 def svgEnd():
@@ -24,7 +25,7 @@ def svgEnd():
 
 # ============
 # url to add all degree-3, level-4 dots on one plot
-#   http://localhost:37777/L/browseGraph?group=GL3&level=4
+#   https://localhost:37777/L/browseGraph?group=GL3&level=4
 # =========
 
 
@@ -57,10 +58,10 @@ def getAllMaassGraphHtml(degree, signature=""):
 
 #        else:
 #            ans += getGroupHtml(g)
-    for i in range(0, len(groups)):
+    for i in range(len(groups)):
         g = groups[i][0]
         ans += getGroupHtml(g)
-        for j in range(0, len(groups[i][1])):
+        for j in range(len(groups[i][1])):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
@@ -182,11 +183,11 @@ def getOneGraphHtml(gls):
     ans += "Click on any of the dots for detailed information about "
     ans += "the L-function.</div>\n<br />"
     graphInfo = getGraphInfo(gls)
-    ans += ("<embed src='" + graphInfo['src'] + "' width='" +
-            str(graphInfo['width']) +
-            "' height='" + str(graphInfo['height']) +
-            "' type='image/svg+xml' " +
-            "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+    ans += ("<embed src='" + graphInfo['src'] + "' width='"
+            + str(graphInfo['width'])
+            + "' height='" + str(graphInfo['height'])
+            + "' type='image/svg+xml' "
+            + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
@@ -233,10 +234,8 @@ def getWidthAndHeight(gls):
     for origin in db.lfunc_lfunctions.search({'group': gls[0], 'conductor': gls[1]}, 'origin'):
         splitId = origin.split('/')[6].split('_')
 
-        if float(splitId[0]) > xMax:
-            xMax = float(splitId[0])
-        if float(splitId[1]) > yMax:
-            yMax = float(splitId[1])
+        xMax = max(float(splitId[0]), xMax)
+        yMax = max(float(splitId[1]), yMax)
 
     xMax = math.ceil(xMax)
     yMax = math.ceil(yMax)
@@ -276,10 +275,8 @@ def paintSvgFileAll(glslist):  # list of group and level
             splitId = R.split('_')
             paralist.append((splitId[0], splitId[1], l['origin'], group, level,
                              char, R, ap_id, l['root_number']))
-            if float(splitId[0]) > xMax:
-                xMax = float(splitId[0])
-            if float(splitId[1]) > yMax:
-                yMax = float(splitId[1])
+            xMax = max(float(splitId[0]), xMax)
+            yMax = max(float(splitId[1]), yMax)
 
     xMax = int(math.ceil(xMax))
     yMax = int(math.ceil(yMax))
@@ -318,45 +315,45 @@ def paintSvgFileAll(glslist):  # list of group and level
 
 
 def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height)
+                         + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
     for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='"
+                             + str(height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(5, xMax + 1, 5):
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - 6) + "' y='"
+                             + str(height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
-                             "' y2='" + str(height) + "' x2='" +
-                             str(i * xfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor)
+                             + "' y2='" + str(height) + "' x2='"
+                             + str(i * xfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(5, yMax + 1, 5):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+        xmlText = xmlText + ("<text x='5' y='"
+                             + str(height - i * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" + str(width) +
-                             "' y2='" + str(height - i * yfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='" + str(width)
+                             + "' y2='" + str(height - i * yfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
 
@@ -372,48 +369,48 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 # ============================================
 
 
-def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin = 5, yMin = 1, xoffset = 1, dashedx = 5, dashedy = 5):
+def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, yMin=1, xoffset=1, dashedx=5, dashedy=5):
     # x-axis
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")
     xsign = 1 if xMax >= 0 else -1
     ysign = 1 if yMax >= 0 else -1
     for i in srange(xMin, xMax, xsign * dashedx):
-        xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='" +
-                             str(xsign * height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xsign * xfactor - 6) + "' y='"
+                             + str(xsign * height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + "{:.5g}".format(i + xoffset) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor) +
-                             "' y2='" + str(ysign * height) + "' x2='" +
-                             str(i * xsign * xfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xsign * xfactor)
+                             + "' y2='" + str(ysign * height) + "' x2='"
+                             + str(i * xsign * xfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in srange(xMin, xMax, xsign * dashedx):
-        xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='" +
-                             str(ysign*height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(ysign * height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='"
+                             + str(ysign*height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(ysign * height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     # y-axis
     xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
     for i in srange(yMin, yMax + 1, ysign*dashedy):
-        xmlText = xmlText + ("<text x='-10' y='" +
-                             str(ysign*height - i * ysign * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             "{:.5g}".format(float(i)) + "</text>\n")
+        xmlText = xmlText + ("<text x='-10' y='"
+                             + str(ysign*height - i * ysign * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + "{:.5g}".format(float(i)) + "</text>\n")
 
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width) +
-                             "' y2='" + str(height - i * ysign * yfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width)
+                             + "' y2='" + str(height - i * ysign * yfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
     for i in srange(yMin, yMax + 1, ysign*dashedy):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * ysign * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * ysign * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * ysign * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * ysign * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     return(xmlText)
 
@@ -436,8 +433,8 @@ def getOneGraphHtmlHolo(condmax):
         logger.debug("Warning: image is generated on the fly, not from static, this is slow!")
         pic = (url_for('.browseGraphHoloNew', **{'condmax': condmax}), 1010, 600)
     logger.debug(pic[0])
-    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic +
-           "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+    ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic
+           + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
     return(ans)
@@ -488,11 +485,10 @@ def paintSvgHoloNew(condmax):
     max_k = 0  # the largest weight we see
 
     for nf in db.mf_newforms.search({'analytic_conductor': {'$lte': condmax}},
-                                    projection=['analytic_conductor', 'label', 'weight', 'conrey_indexes', 'dim', 'char_degree'],
+                                    projection=['analytic_conductor', 'label', 'level', 'weight', 'conrey_index', 'dim', 'char_degree'],
                                     sort=[('analytic_conductor', 1)]):
-        level, k, _, hecke_letter = nf['label'].split('.')
-        if int(k) > max_k:
-            max_k = int(k)
+        _, k, _, hecke_letter = nf['label'].split('.')
+        max_k = max(int(k), max_k)
         if nf['weight'] not in values:
             values[nf['weight']] = []
         if nf['dim'] == 1:
@@ -501,7 +497,8 @@ def paintSvgHoloNew(condmax):
             if z1 is not None:
                 values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
-            for character in nf['conrey_indexes']:
+            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit(100)
+            for character in conrey_orbit:
                 for j in range(nf['dim'] // nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
                     lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
@@ -517,13 +514,11 @@ def paintSvgHoloNew(condmax):
     x_offset = 0
     for wei in sorted(values.keys()):
         for label, z1, lfun_url, Nk2 in values[wei]:
-            N, k = label[:2]
+            k = label[1]
             x = x_scale*float(Nk2)
             y = y_scale*z1
-            if y > y_max:
-                y_max = y
-            if x > x_max:
-                x_max = x
+            y_max = max(y, y_max)
+            x_max = max(x, x_max)
             points.append((x, y, lfun_url, ".".join(map(str, label)), k))
 
     # Begin drawing
@@ -546,17 +541,15 @@ def paintSvgHoloNew(condmax):
 
     # axes on top of dots
     ans += paintCSNew(x_max - x_offset*x_scale,
-            y_max + y_scale/2,
-            x_max/x_scale,
-            y_max/y_scale,
-            x_scale,
-            y_scale,
-            7, xoffset = x_offset, dashedx = 0.05, dashedy = 1, xMin = 0)
+                      y_max + y_scale/2,
+                      x_max/x_scale,
+                      y_max/y_scale,
+                      x_scale,
+                      y_scale,
+                      7, xoffset=x_offset, dashedx=0.05, dashedy=1, xMin=0)
 
     ans += "</g>"
-
     ans += svgEnd()
-
     return ans
 
 
@@ -634,9 +627,9 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 
     #  TODO: Implement when there is more than maxdots forms
 
-                        ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='" +
-                                str(height - float(ybase) * yfactor)[0:7] +
-                                "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
+                        ans += ("<text x='" + str(float(xbase) * xfactor)[0:7] + "' y='"
+                                + str(height - float(ybase) * yfactor)[0:7]
+                                + "' style='fill:" + thiscolour + ";font-size:14px;font-weight:bold;'>"
                                 + str(numberwithlabel) + "</text>\n")
                         ans += "</a>\n"
                         if self_dual < 0:
@@ -655,7 +648,7 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                             ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
                             ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
                             ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
-                        for number in range(0, numberwithlabel):
+                        for number in range(numberwithlabel):
                             xbase += self_dual * xdotspacing
                             ans += "<a xlink:href='" + linkurl + str(number + 1) + "/' target='_top'>\n"
                             ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
@@ -681,49 +674,49 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
 # ticlength = the length of the tickmarks
 # ============================================
 def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")
-    xmlText = xmlText + ("<line x1='0' y1='" + str(height) +
-                         "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")
+    xmlText = xmlText + ("<line x1='0' y1='" + str(height)
+                         + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")
     for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='"
+                             + str(height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(1, xMax + 1, 1):
         digitoffset = 6
         if i < 10:
             digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='"
+                             + str(height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
-        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor) +
-                             "' y2='" + str(height) + "' x2='" +
-                             str(i * xfactor) +
-                             "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+        xmlText = xmlText + ("<line y1='0' x1='" + str(i * xfactor)
+                             + "' y2='" + str(height) + "' x2='"
+                             + str(i * xfactor)
+                             + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(2, yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+        xmlText = xmlText + ("<text x='5' y='"
+                             + str(height - i * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
 
         if i % 4 == 0:  # put dashes every four units
-            xmlText = xmlText + ("<line x1='0' y1='" +
-                                 str(height - i * yfactor) + "' x2='" + str(width) +
-                                 "' y2='" + str(height - i * yfactor) +
-                                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
+            xmlText = xmlText + ("<line x1='0' y1='"
+                                 + str(height - i * yfactor) + "' x2='" + str(width)
+                                 + "' y2='" + str(height - i * yfactor)
+                                 + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     return(xmlText)
 
@@ -772,7 +765,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
             # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebGamma1Space(level = x, weight = y)  # space of modular forms of weight y, level x
+            WS = WebGamma1Space(level=x, weight=y)  # space of modular forms of weight y, level x
             galois_orbits = WS.decomp  # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
             thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
@@ -796,7 +789,6 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             dimensioninfo['dotradius'] = radius
             dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
             dimensioninfo['firstdotoffset'] = [0.0, 0.0]
-#
             appearanceinfo = {}
             # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
             appearanceinfo['edgewidth'] = [0, 0]  # remove the sector edges
@@ -804,12 +796,10 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
             appearanceinfo['fontsize'] = 'font-size:11px'
             appearanceinfo['fontweight'] = ""
-#
             urlinfo = {'base': '/L/ModularForm/GL2/Q/holomorphic?'}
             urlinfo['space'] = {'weight': y}
             urlinfo['space']['level'] = x
             urlinfo['space']['character'] = 0
-#
             # scale = 1 # not used
             # Symmetry types: +1 or -1
             symmetrytype = [1, -1]
@@ -819,7 +809,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewform.by_label(label = label)   # one of the Galois orbits for weight y, level x
+                    MF = WebNewform.by_label(label=label)   # one of the Galois orbits for weight y, level x
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1
@@ -840,16 +830,17 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                         dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
                         signcolour = signtocolour(signfe)
                         appearanceinfo['edgecolor'] = signcolour
-                        orbitdescriptionlist = []
-                        for n in range(numberwithlabel):
-                            orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
+                        orbitdescriptionlist = [{'label': label,
+                                                 'number': n,
+                                                 'color': signcolour}
+                                                for n in range(numberwithlabel)]
                         urlinfo['space']['orbits'].append(orbitdescriptionlist)
                 # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
                 # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
                     ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
     ans += svgEnd()
-    return(ans)
+    return ans
 
 # =====================
 
@@ -870,15 +861,14 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
 
 
 def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
-    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='" +
-               str(width) + "' y2='" + str(height) +
-               "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
+    xmlText = ("<line x1='-50' y1='" + str(height) + "' x2='"
+               + str(width) + "' y2='" + str(height)
+               + "' style='stroke:rgb(0,0,0);'/>\n")   # draw horizontal axis
 #     xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.4, 0.7], "", "", "", 'rgb(0,0,0)')
 #    xmlText += '<text x="18" y="395" style="stroke:none" font-style = "italic";>level</text>'
     xmlText = xmlText + ("<line x1='0' y1='" + str(
         height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
     xmlText += "<text x='50.0' y='491.0' font-style='italic'>level</text>"
-#
     # xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7],
     # "", 'font-size:11px', "", 'rgb(0,0,0)')
     xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
@@ -886,18 +876,18 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     # xmlText += '<text x="118"  y="365" transform="rotate(-90 118, 365)"
     # style="stroke:none" font-style = "italic";>weight</text>'
     for i in range(1, xMax + 1):
-        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='" +
-                             str(height - ticlength) + "' x2='" +
-                             str(i * xfactor) + "' y2='" + str(height) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='" + str(i * xfactor) + "' y1='"
+                             + str(height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" + str(height)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(1, xMax + 1, 1):
         digitoffset = 6
         if i < 10:
             digitoffset = 3
-        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='" +
-                             str(height - 2 * ticlength) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>"
+        xmlText = xmlText + ("<text x='" + str(i * xfactor - digitoffset) + "' y='"
+                             + str(height - 2 * ticlength)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + str(i) + "</text>\n")
 
         # xmlText = xmlText + ("<line y1='0' x1='" + str(i*xfactor) +
@@ -906,17 +896,17 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
         #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
     for i in range(1, yMax + 1):
-        xmlText = xmlText + ("<line x1='0' y1='" +
-                             str(height - i * yfactor) + "' x2='" +
-                             str(ticlength) + "' y2='" +
-                             str(height - i * yfactor) +
-                             "' style='stroke:rgb(0,0,0);'/>\n")
+        xmlText = xmlText + ("<line x1='0' y1='"
+                             + str(height - i * yfactor) + "' x2='"
+                             + str(ticlength) + "' y2='"
+                             + str(height - i * yfactor)
+                             + "' style='stroke:rgb(0,0,0);'/>\n")
 
     for i in range(2, yMax + 1, 2):
-        xmlText = xmlText + ("<text x='5' y='" +
-                             str(height - i * yfactor + 3) +
-                             "' style='fill:rgb(102,102,102);font-size:11px;'>" +
-                             str(i) + "</text>\n")
+        xmlText = xmlText + ("<text x='5' y='"
+                             + str(height - i * yfactor + 3)
+                             + "' style='fill:rgb(102,102,102);font-size:11px;'>"
+                             + str(i) + "</text>\n")
 
         # if i%4==0 :  #  put dahes every four units
         #   xmlText = xmlText + ("<line x1='0' y1='" +

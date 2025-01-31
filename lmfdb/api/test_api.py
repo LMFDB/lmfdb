@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
 class ApiTest(LmfdbTest):
@@ -58,7 +57,6 @@ class ApiTest(LmfdbTest):
         query = 'nf_fields/?degree=i12&r2=i5&_format=json'
         data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
         assert '"label": "12.2.167630295667.1",' in data
-
 
     def test_api_usage(self):
         r"""

@@ -10,19 +10,19 @@ from sage.all import ZZ, GF, Set, prod, srange, flatten, cartesian_product_itera
 # list of the coefficients in terms of the power basis, constant
 # first.
 
-nf_key = lambda a: a.list()
+def nf_key(a): return a.list()
 
 # Elements of GF(p) already have a good cmp function
 
 # Sort key for GF(p)[X]
 
-FpX_key = lambda a: a.list()
+def FpX_key(a): return a.list()
 
 # Sort key for Z_p.  The start_val=0 is needed for elements whose
 # parent is Qp rather than Zp since over Qp the first entry is the
-# coefficient of p^v with v the the valuation
+# coefficient of p^v with v the valuation
 
-Zp_key = lambda a: a.list(start_val=0)
+def Zp_key(a): return a.list(start_val=0)
 
 # Sort key for Zp[X].  For example the key for
 # (7 + 8*37 + 9*37^2 + O(37^3))*x^2 + (4 + 5*37 + 6*37^2 + O(37^3))*x
@@ -44,7 +44,7 @@ def padded_list(c,k):
         a = list(c.expansion(start_val=0))
     except AttributeError:
         a = c.list(start_val=0)
-    return a[:k] + [ZZ(0)]* (k-len(a))
+    return a[:k] + [ZZ(0)] * (k-len(a))
 
 
 def ZpX_key(k):
@@ -85,8 +85,8 @@ def make_keys(K,p):
             hh = [QQx(h) for h in gfact]
             for P in PP:
                 # exactly one mod-p factor h will be such that P|h(a).
-                i = 1 + next((i for i,h in enumerate(hh) if h(a).valuation(P)>0), -1)
-                assert i>0
+                i = 1 + next((i for i,h in enumerate(hh) if h(a).valuation(P) > 0), -1)
+                assert i > 0
                 key_dict[P] = (P.norm(),P.ramification_index(),i)
         else:
             # the general ramified case factor g over Z_p to precision
@@ -115,7 +115,7 @@ def make_keys(K,p):
             hh = [h.lift() % p**k1 for h in gfact]
             #print("p-adic factors mod {}^{}: {}".format(p,k1,hh))
             degs = list(Set([h.degree() for h in gfact]))
-            hd = dict([(d,[h for h in hh if h.degree()==d]) for d in degs])
+            hd = {d: [h for h in hh if h.degree() == d] for d in degs}
 
             # Finally we find the index of each prime above p
             for P in PP:
@@ -124,8 +124,8 @@ def make_keys(K,p):
                 hs = hd[e*f]
                 # work out which h in hs matches P
                 m = max([h(a).valuation(P) for h in hs])
-                i = 1 + next((i for i,h in enumerate(hs) if h(a).valuation(P)==m), -1)
-                assert i>0
+                i = 1 + next((i for i,h in enumerate(hs) if h(a).valuation(P) == m), -1)
+                assert i > 0
                 key_dict[P] = (P.norm(),e,i)
 
         # Lastly we add a field j to each key (n,e,i) -> (n,j,e,i)
@@ -136,7 +136,7 @@ def make_keys(K,p):
         new_key_dict = {}
         for P in key_dict:
             k = key_dict[P]
-            j = 1 + sorted([v for v in vals if v[0]==k[0]]).index(k)
+            j = 1 + sorted([v for v in vals if v[0] == k[0]]).index(k)
             new_key_dict[P] = (k[0],j,k[1],k[2])
 
         #print("Setting psort_dict and primes_dict for p={} for K={}".format(p,K))
@@ -175,7 +175,7 @@ def prime_from_label(K, lab):
     make_keys(K,p)
     d = K.psort_dict[p]
     try:
-        return next((P for P in d if d[P][:2]==(n,j)))
+        return next(P for P in d if d[P][:2] == (n,j))
     except StopIteration:
         return 0
 
@@ -193,7 +193,7 @@ def primes_of_degree_iter(K, deg, condition=None, sort_key=prime_label, maxnorm=
         if condition is None or condition(p):
             make_keys(K, p)
             for P in K.primes_dict[p]:
-                if P.residue_class_degree()==deg and P.norm()<=maxnorm:
+                if P.residue_class_degree() == deg and P.norm() <= maxnorm:
                     yield P
 
 
@@ -253,6 +253,7 @@ def primes_iter(K, condition=None, sort_key=prime_label, maxnorm=Infinity):
 #
 ########################################################
 
+
 # First some utility functions for working with weighted exponent
 # vectors:
 
@@ -261,23 +262,26 @@ def exp_vec_wt_iter(w, wts):
     length len(wts) and weight w = sum(v[i](wts[i]).
     """
     #print("w=%s, wts=%s" % (w,wts))
-    if w==0:
+    if w == 0:
         yield [0 for _ in wts]
     elif len(wts):
         for v0 in range(1+w//wts[-1]):
             w1 = w-wts[-1]*v0
-            if w1==0:
-                yield [0]* (len(wts)-1) + [v0]
-            elif len(wts)>1:
+            if w1 == 0:
+                yield [0] * (len(wts)-1) + [v0]
+            elif len(wts) > 1:
                 for v1 in exp_vec_wt_iter(w1,wts[:-1]):
                     yield v1+[v0]
+
 
 def exp_vec_wt(w, wts):
     r""" Sorted list of all non-negative integer tuples v of length
     len(wts) and weight w = sum(v[i](wts[i]).  Sorting is first by
     unweighted weight sum(v[i]) the reverse lex.
     """
-    return sorted(list(exp_vec_wt_iter(w,wts)), key = lambda v: (sum(v),[-c for c in v]))
+    return sorted(exp_vec_wt_iter(w, wts),
+                  key=lambda v: (sum(v), [-c for c in v]))
+
 
 def ppower_norm_ideals(K,p,f):
     r""" Return a sorted list of ideals of K of norm p^f with p prime
@@ -285,7 +289,7 @@ def ppower_norm_ideals(K,p,f):
     make_keys(K,p)
     if not hasattr(K,'ppower_dict'):
         K.ppower_dict = {}
-    if not (p,f) in K.ppower_dict:
+    if (p,f) not in K.ppower_dict:
         PP = K.primes_dict[p]
         # These vectors are sorted, first by unweighted weight (sum of
         # values) then lexicographically with the reverse ordering on Z:
@@ -341,7 +345,7 @@ def ideals_of_norm(K,n):
     if not hasattr(K,'ideal_norm_dict'):
         K.ideal_norm_dict = {}
     if n not in K.ideal_norm_dict:
-        if n==1:
+        if n == 1:
             K.ideal_norm_dict[n] = [K.ideal(1)]
         else:
             K.ideal_norm_dict[n] = [prod(Q) for Q in cartesian_product_iterator([ppower_norm_ideals(K,p,e) for p,e in n.factor()])]
@@ -356,7 +360,7 @@ def ideal_norm_index(I):
     r""" Return the index of this ideal among all ideals of the same norm.
     """
     for i,J in enumerate(ideals_of_norm(I.number_field(),I.norm())):
-        if I==J:
+        if I == J:
             return i+1
     return 0
 
@@ -375,5 +379,4 @@ def ideals_iterator(K,minnorm=1,maxnorm=Infinity):
     r""" Return an iterator over all ideals of norm n up to maxnorm (sorted).
     """
     for n in srange(minnorm,maxnorm+1):
-        for I in ideals_of_norm(K,n):
-            yield I
+        yield from ideals_of_norm(K,n)

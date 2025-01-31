@@ -1,4 +1,3 @@
-#-*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -8,10 +7,9 @@
 # version 2 of the License, or (at your option) any later version.
 """
 start this via $ sage -python website.py --port <portnumber>
-add --debug if you are developing (auto-restart, full stacktrace in browser, ...)
+add --debug if you are developing (full stacktrace in browser, ...)
 """
 
-import os
 # Needs to be done first so that other modules and gunicorn can use logging
 from .logger import info
 from .app import app, set_running  # So that we can set it running below
@@ -83,8 +81,8 @@ from .abvar import fq
 assert fq
 from . import modlmf
 assert modlmf
-from . import rep_galois_modl
-assert rep_galois_modl
+from . import modl_galois_representations
+assert modl_galois_representations
 from . import hecke_algebras
 assert hecke_algebras
 from . import cluster_pictures
@@ -99,6 +97,8 @@ from .groups import glnC
 assert glnC
 from . import maass_forms
 assert maass_forms
+from . import modular_curves
+assert modular_curves
 from .homepage import random
 assert random
 
@@ -110,8 +110,10 @@ def main():
     info("main: ...done.")
     from .utils.config import Configuration
 
-    flask_options = Configuration().get_flask()
+    C = Configuration()
+    flask_options = C.get_flask()
     flask_options['threaded'] = False
+    cocalc_options = C.get_cocalc()
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
@@ -122,21 +124,10 @@ def main():
         )
         del flask_options["profiler"]
 
-    if "COCALC_PROJECT_ID" in os.environ:
+    if cocalc_options:
         from .utils.cocalcwrap import CocalcWrap
-        # we must accept external connections
-        flask_options["host"] = "0.0.0.0"
         app.wsgi_app = CocalcWrap(app.wsgi_app)
-        stars = "\n" + "*" * 80
-        info(stars +
-             "\n\033[1mCocalc\033[0m environment detected!\n" +
-             "Visit" +
-             "\n  \033[1m https://cocalc.com" +
-             app.wsgi_app.app_root +
-             " \033[0m" +
-             "\nto access this LMFDB instance" +
-             stars
-             )
+        info(cocalc_options["message"])
 
     set_running()
     app.run(**flask_options)

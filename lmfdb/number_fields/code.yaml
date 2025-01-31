@@ -2,11 +2,13 @@ prompt:
   sage:   'sage'
   pari:   'gp'
   magma:  'magma'
+  oscar:  'oscar'
 
 logo:
-  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 not-implemented:
   sage: |
@@ -15,94 +17,149 @@ not-implemented:
     \\ (not yet implemented)
   magma: |
     // (not yet implemented)
+  oscar: |
+    # (not yet implemented)
 
 field:
   sage: x = polygen(QQ);  K.<a> = NumberField(%s)
   pari: K = bnfinit(%s, 1)
-  magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
+  magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
 
 poly:
   sage:  K.defining_polynomial()
   pari:  K.pol
   magma: DefiningPolynomial(K);
+  oscar: defining_polynomial(K)
 
 degree:
   sage:  K.degree()
   pari:  poldegree(K.pol)
   magma: Degree(K);
+  oscar: degree(K)
 
 signature:
   sage:  K.signature()
   pari:  K.sign
   magma: Signature(K);
+  oscar: signature(K)
 
 discriminant:
   sage:  K.disc()
   pari:  K.disc
-  magma: Discriminant(Integers(K));
+  magma: OK := Integers(K); Discriminant(OK);
+  oscar: OK = ring_of_integers(K); discriminant(OK)
 
 rd:
   sage: (K.disc().abs())^(1./K.degree())
   pari: abs(K.disc)^(1/poldegree(K.pol))
-  magma: Abs(Discriminant(Integers(K)))^(1/Degree(K));
+  magma: Abs(Discriminant(OK))^(1/Degree(K));
+  oscar: (1.0 * dK)^(1/degree(K))
+
+automorphisms:
+  sage: K.automorphisms()
+  magma: Automorphisms(K);
+  oscar: automorphisms(K)
 
 ramified_primes:
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~
-  magma: PrimeDivisors(Discriminant(Integers(K)));
+  magma: PrimeDivisors(Discriminant(OK));
+  oscar: prime_divisors(discriminant((OK)))
 
 integral_basis:
   sage:  K.integral_basis()
   pari:  K.zk
   magma: IntegralBasis(K);
+  oscar: basis(OK)
 
 class_group:
   sage:  K.class_group().invariants()
   pari:  K.clgp
-  magma: ClassGroup(K);
+  magma: ClassGroup(K); 
+  oscar: class_group(K)
 
 unit_group:
   sage:  UK = K.unit_group()
-  magma: |
-    UK, f := UnitGroup(K);
+  magma: UK, fUK := UnitGroup(K);
+  oscar: UK, fUK = unit_group(OK)
 
 unit_rank:
   sage:  UK.rank()
-  pari:  |
-    K.fu
+  pari:  K.fu
   magma: UnitRank(K);
+  oscar: rank(UK)
 
 unit_torsion_gen:
   sage:  UK.torsion_generator()
   pari:  K.tu[2]
   magma: K!f(TU.1) where TU,f is TorsionUnitGroup(K);
+  oscar: torsion_units_generator(OK)
 
 fundamental_units:
   sage:  UK.fundamental_units()
   pari:  K.fu
   magma: |
-    [K!f(g): g in Generators(UK)];
+    [K|fUK(g): g in Generators(UK)];
+  oscar: |
+    [K(fUK(a)) for a in gens(UK)]
 
 regulator:
   sage:  K.regulator()
   pari:  K.reg
   magma: Regulator(K);
+  oscar: regulator(K)
+
+class_number_formula:
+  sage: |
+    # self-contained SageMath code snippet to compute the analytic class number formula
+    x = polygen(QQ);  K.<a> = NumberField(%s)
+    DK = K.disc(); r1,r2 = K.signature(); RK = K.regulator();  RR = RK.parent()
+    hK = K.class_number(); wK = K.unit_group().torsion_generator().order();
+    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))  
+  pari: |
+    # self-contained Pari/GP code snippet to compute the analytic class number formula
+    K = bnfinit(%s, 1);
+    [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
+  magma: |
+    /* self-contained Magma code snippet to compute the analytic class number formula */
+    Qx<x> := PolynomialRing(QQ); K<a> := NumberField(%s);
+    OK := Integers(K); DK := Discriminant(OK);
+    UK, fUK := UnitGroup(OK); clK, fclK := ClassGroup(OK);
+    r1,r2 := Signature(K); RK := Regulator(K); RR := Parent(RK);
+    hK := #clK; wK := #TorsionSubgroup(UK);
+    2^r1 * (2*Pi(RR))^r2 * RK * hK / (wK * Sqrt(RR!Abs(DK)));
+  oscar: |
+    # self-contained Oscar code snippet to compute the analytic class number formula
+    Qx, x = PolynomialRing(QQ); K, a = NumberField(%s);
+    OK = ring_of_integers(K); DK = discriminant(OK);
+    UK, fUK = unit_group(OK); clK, fclK = class_group(OK);
+    r1,r2 = signature(K); RK = regulator(K); RR = parent(RK);
+    hK = order(clK); wK = torsion_units_order(K);
+    2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 
 galois_group:
-  sage: |
-    K.galois_group(type='pari')
-  pari: polgalois(K.pol)
-  magma: GaloisGroup(K);
+  sage:  K.galois_group(type='pari')
+  pari:  polgalois(K.pol)
+  magma: G = GaloisGroup(K);
+  oscar: G, Gtx = galois_group(K); G, transitive_group_identification(G)
+
+intermediate_fields:
+  sage: K.subfields()[1:-1]
+  pari: L = nfsubfields(K); L[2..length(b)]
+  magma: L := Subfields(K); L[2..#L];
+  oscar: subfields(K)[2:end-1]
 
 prime_cycle_types:
   sage: |
-    p = 7;  # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
-    [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
+    # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Sage:
+    p = 7; [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
   pari: |
-    p = 7;  \\ to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
-    idealfactors = idealprimedec(K, p); \\ get the data
-    vector(length(idealfactors), j, [idealfactors[j][3], idealfactors[j][4]])
+    \\ to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Pari:
+    p = 7; pfac = idealprimedec(K, p); vector(length(pfac), j, [pfac[j][3], pfac[j][4]])
   magma: |
-    p := 7;  // to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$:
-    idealfactors := Factorization(p*Integers(K));  // get the data
-    [<primefactor[2], Valuation(Norm(primefactor[1]), p)> : primefactor in idealfactors];
+    // to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7 in Magma:
+    p := 7; [<pr[2], Valuation(Norm(pr[1]), p)> : pr in Factorization(p*Integers(K))];
+  oscar: |
+    # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Oscar:
+    p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]

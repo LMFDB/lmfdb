@@ -26,6 +26,11 @@
           integrity="sha384-Nlo8b0yiGl7Dn+BgLn4mxhIIBU6We7aeeiulNCjHdUv/eKHx59s3anfSUjExbDxn"
           crossorigin="anonymous">
 
+    {% if not BETA %}
+      <!--reCAPTCHA-->
+      <script src="https://www.google.com/recaptcha/enterprise.js?render=6LchHWwpAAAAACFe52hZNEkUP5Bn5_0FfLiEuF3i&waf=session" async defer></script>
+    {% endif %}
+
 
 
 
@@ -34,11 +39,8 @@
     <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script>
-
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='raw_typeset.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='notify.min.js') }}"></script>
 
 
     <link rel="stylesheet"
@@ -61,6 +63,7 @@ katexOpts = {
   {left: "$", right: "$", display: false},
   {left: "\\(", right: "\\)", display: false}
 ],
+  maxExpand: Infinity,
   macros: {
   "\\C": '{\\mathbb{C}}',
   "\\R": '{\\mathbb{R}}',
@@ -74,24 +77,76 @@ katexOpts = {
   "\\GL": '{\\textrm{GL}}',
   "\\PSL": '{\\textrm{PSL}}',
   "\\PGL": '{\\textrm{PGL}}',
+  "\\ASL": '{\\textrm{ASL}}',
   "\\AGL": '{\\textrm{AGL}}',
+  "\\ASp": '{\\textrm{ASp}}',
   "\\Sp": '{\\textrm{Sp}}',
   "\\GSp": '{\\textrm{GSp}}',
   "\\PSp": '{\\textrm{PSp}}',
+  "\\SO": '{\\textrm{SO}}',
+  "\\PSO": '{\\textrm{PSO}}',
+  "\\PGO": '{\\textrm{PGO}}',
+  "\\SU": '{\\textrm{SU}}',
   "\\PSU": '{\\textrm{PSU}}',
-  "\\Gal": '{\\mathop{\\rm Gal}}',
-  "\\Aut": '{\\mathop{\\rm Aut}}',
-  "\\Sym": '{\\mathop{\\rm Sym}}',
-  "\\End": '{\\mathop{\\rm End}}',
-  "\\Reg": '{\\mathop{\\rm Reg}}',
-  "\\Ord": '{\\mathop{\\rm Ord}}',
-  "\\sgn": '{\\mathop{\\rm sgn}}',
-  "\\trace": '{\\mathop{\\rm trace}}',
-  "\\Res": '{\\mathop{\\rm Res}}',
+  "\\SOPlus": '{\\textrm{SO}^+}',
+  "\\SOMinus": '{\\textrm{SO}^-}',
+  "\\GO": '{\\textrm{O}}',
+  "\\GOPlus": '{\\textrm{O}^+}',
+  "\\GOMinus": '{\\textrm{O}^-}',
+  "\\GU": '{\\textrm{U}}',
+  "\\CSp": '{\\textrm{GSp}}',
+  "\\CSO": '{\\textrm{CSO}}',
+  "\\CSOPlus": '{\\textrm{CSO}^+}',
+  "\\CSOMinus": '{\\textrm{CSO}^-}',
+  "\\CSU": '{\\textrm{CSU}}',
+  "\\CO": '{\\textrm{CO}}',
+  "\\COPlus": '{\\textrm{CO}^+}',
+  "\\COMinus": '{\\textrm{CO}^-}',
+  "\\CU": '{\\textrm{CU}}',
+  "\\OmegaPlus": '{\\Omega^+}',
+  "\\OmegaMinus": '{\\Omega^-}',
+  "\\Spin": '{\\textrm{Spin}}',
+  "\\SpinPlus": '{\\textrm{Spin}^+}',
+  "\\SpinMinus": '{\\textrm{Spin}^-}',
+  "\\PSOPlus": '{\\textrm{PSO}^+}',
+  "\\PGOPlus": '{\\textrm{PGO}^+}',
+  "\\PGU": '{\\textrm{PGU}}',
+  "\\PSOMinus": '{\\textrm{PSO}^-}',
+  "\\PGOMinus": '{\\textrm{PGO}^-}',
+  "\\POmega": '{\\textrm{P}\\Omega}',
+  "\\POmegaPlus": '{\\textrm{P}\\Omega^+}',
+  "\\POmegaMinus": '{\\textrm{P}\\Omega^-}',
+  "\\PGammaL": '{\\textrm{P}\\Gamma\\textrm{L}}',
+  "\\PSigmaL": '{\\textrm{P}\\Sigma\\textrm{L}}',
+  "\\PSigmaSp": '{\\textrm{P}\\Sigma\\textrm{Sp}}',
+  "\\PGammaU": '{\\textrm{P}\\Gamma\\textrm{U}}',
+  "\\AGammaL": '{\\textrm{A}\\Gamma\\textrm{L}}',
+  "\\ASigmaL": '{\\textrm{A}\\Sigma\\textrm{L}}',
+  "\\ASigmaSp": '{\\textrm{A}\\Sigma\\textrm{Sp}}',
+  "\\SD": '{\\textrm{SD}}',
+  "\\OD": '{\\textrm{OD}}',
+  "\\He": '{\\textrm{He}}',
+  "\\HS": '{\\textrm{HS}}',
+  "\\McL": '{\\textrm{McL}}',
+  "\\Ru": '{\\textrm{Ru}}',
+  "\\Co": '{\\textrm{Co}}',
+  "\\Aut": '\\operatorname{Aut}',
+  "\\End": '\\operatorname{End}',
+  "\\Gal": '\\operatorname{Gal}',
+  "\\Hom": '\\operatorname{Hom}',
+  "\\Ord": '\\operatorname{Ord}',
+  "\\Pic": '\\operatorname{Pic}',
+  "\\Reg": '\\operatorname{Reg}',
+  "\\Res": '\\operatorname{Res}',
+  "\\sgn": '\\operatorname{sgn}',
+  "\\Spec": '\\operatorname{Spec}',
+  "\\Sym": '\\operatorname{Sym}',
+  "\\trace": '\\operatorname{tr}',
   "\\mathstrut": '\\vphantom(',
   "\\ideal": '{\\mathfrak{ #1 }}',
   "\\classgroup": '{Cl(#1)}',
   "\\modstar": '{\\left( #1/#2 \\right)^\\times}',
+  "\\card": '{\\# #1}',
 },
 };
   document.addEventListener("DOMContentLoaded", function() {
@@ -109,19 +164,14 @@ katexOpts = {
     {%- from "knowl-defs.html" import TEXT_DATA with context -%}
     {%- from "knowl-defs.html" import LINK_EXT with context -%}
 
-    <script type="text/javascript">
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-19138192-1']);
-_gaq.push(['_setDomainName', 'lmfdb.org']);
-_gaq.push(['_setAllowLinker', true]);
-_gaq.push(['_trackPageview']);
-_gaq.push(['_trackPageLoadTime']);
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YVBFDNX374"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-(function() {
-var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
+      gtag('config', 'G-YVBFDNX374');
     </script>
 
     {% if body_class == "checklist" -%}
@@ -131,10 +181,10 @@ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga
 
   {%- if BETA -%}
   <body class="beta {{ body_class }}">
-    {%- else -%}
-    <body class="{{ body_class }}">
-      {%- endif -%}
+  {%- else -%}
+  <body class="{{ body_class }}">
+  {%- endif -%}
 
-      {% block body -%}{%- endblock body %}
-      </body>
+  {% block body -%}{%- endblock body %}
+  </body>
 </html>

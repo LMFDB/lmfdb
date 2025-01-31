@@ -1,19 +1,20 @@
-# -*- coding: utf-8 -*-
 from collections import Counter
 import os
 import yaml
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt,
+    Set, ZZ, RR, pi, euler_phi, CyclotomicField, gap, RealField, sqrt, prod,
     QQ, NumberField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
-from lmfdb.utils import (web_latex, coeff_to_poly, pol_to_html, 
-        raw_typeset, display_multiset, factor_base_factor, 
+from lmfdb.utils import (web_latex, coeff_to_poly,
+        raw_typeset_poly, display_multiset, factor_base_factor,
+        integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
+from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
-from lmfdb.galois_groups.transitive_group import WebGaloisGroup, group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 
 wnflog = make_logger("WNF")
 
@@ -178,7 +179,7 @@ rcyclolookup = {n:label for label,n in rcycloinfo.items()}
 for n in [1,3,4]:
     rcyclolookup[n] = '1.1.1.1'
 for n in [5,8,12]:
-    rcyclolookup[n] = '2.2.%s.1'%n
+    rcyclolookup[n] = '2.2.%s.1' % n
 for n, label in list(rcyclolookup.items()):
     if n % 2:
         rcyclolookup[2 * n] = label
@@ -189,8 +190,8 @@ def na_text():
 ## Turn a list into a string (without brackets)
 
 def list2string(li):
-    li2 = [str(x) for x in li]
-    return ','.join(li2)
+    return ','.join(str(x) for x in li)
+
 
 def string2list(s):
     s = str(s)
@@ -201,15 +202,15 @@ def string2list(s):
 def is_fundamental_discriminant(d):
     if d in [0, 1]:
         return False
-    if d.is_squarefree():
+    if integer_is_squarefree(d):
         return d % 4 == 1
     else:
-        return d % 16 in [8, 12] and (d // 4).is_squarefree()
+        return d % 16 in [8, 12] and integer_is_squarefree(d // 4)
 
 
 @cached_function
 def field_pretty(label):
-    d, r, D, i = label.split('.')
+    d, r, D, _ = label.split('.')
     if d == '1':  # Q
         return r'\(\Q\)'
     if d == '2':  # quadratic field
@@ -219,31 +220,30 @@ def field_pretty(label):
         # Don't prettify invalid quadratic field labels
         if not is_fundamental_discriminant(D):
             return label
-        return r'\(\Q(\sqrt{' + str(D if D%4 else D/4) + r'}) \)'
+        return r'\(\Q(\sqrt{' + str(D if D % 4 else D/4) + r'}) \)'
     if label in cycloinfo:
         return r'\(\Q(\zeta_{%d})\)' % cycloinfo[label]
     if d == '4':
         wnf = WebNumberField(label)
         subs = wnf.subfields()
-        if len(subs)==3: # only for V_4 fields
+        if len(subs) == 3: # only for V_4 fields
             subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
             # Abort if we don't know one of these fields
             if not any(z._data is None for z in subs):
                 labels = [str(z.get_label()) for z in subs]
                 labels = [z.split('.') for z in labels]
                 # extract abs disc and signature to be good for sorting
-                labels = [[ZZ(z[2]).squarefree_part(), - int(z[1])] for z in labels]
-                labels.sort()
+                labels = sorted([[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels])
                 # put in +/- sign
                 labels = [z[0]*(-1)**(1+z[1]/2) for z in labels]
-                labels = ['i' if z == -1 else r'\sqrt{%d}'% z for z in labels]
-                return r'\(\Q(%s, %s)\)'%(labels[0],labels[1])
+                labels = ['i' if z == -1 else r'\sqrt{%d}' % z for z in labels]
+                return r'\(\Q(%s, %s)\)' % (labels[0],labels[1])
     if label in rcycloinfo:
         return r'\(\Q(\zeta_{%d})^+\)' % rcycloinfo[label]
     return label
 
 def psum(val, li):
-    tot=0
+    tot = 0
     for j in range(len(li)):
         tot += li[j]*val**j
     return tot
@@ -251,8 +251,13 @@ def psum(val, li):
 def decodedisc(ads, s):
     return ZZ(ads[3:]) * s
 
+def fake_label(label, coef):
+    if label != "N/A":
+        return [int(x) for x in label.split('.')]
+    poly = coeff_to_poly(coef)
+    return [poly.degree(), poly.degree()+1, poly.discriminant(), 0]
 
-def formatfield(coef, show_poly=False, missing_text=None):
+def formatfield(coef, show_poly=False, missing_text=None, data=None, link=False):
     r"""
       Take a list of coefficients (which can be a string like '1,3,1'
       and either produce a number field knowl if the polynomial matches
@@ -265,8 +270,14 @@ def formatfield(coef, show_poly=False, missing_text=None):
     """
     if isinstance(coef, str):
         coef = string2list(coef)
-    thefield = WebNumberField.from_coeffs(coef)
-    if thefield._data is None:
+    if data is None:
+        thefield = WebNumberField.from_coeffs(coef)
+    else:
+        if data['label'] == "N/A":
+            thefield = None
+        else:
+            thefield = WebNumberField(data['label'], data=data)
+    if thefield is None or thefield._data is None:
         deg = len(coef) - 1
         mypolraw = coeff_to_poly(coef)
         mypol = latex(mypolraw)
@@ -276,11 +287,19 @@ def formatfield(coef, show_poly=False, missing_text=None):
         mypol = mypol.replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         mypolraw = str(mypolraw).replace(' ','').replace('+','%2B').replace('{', '%7B').replace('}','%7d')
         if missing_text is None:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">Deg %d</a>' % (mypol,mypolraw,deg)
+            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s&raw=%s">deg %d</a>' % (mypol,mypolraw,deg)
         else:
-            mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
+            if link:
+                jump_link = str(url_for("number_fields.number_field_render_webpage")+'?jump=%s' % mypol)
+                mypol = '<a title = "Field with link to db" knowl="nf.field.link" kwargs="poly=%s&link=%s">%s</a>' % (mypol,jump_link,missing_text)
+            else:
+                mypol = '<a title = "Field missing" knowl="nf.field.missing" kwargs="poly=%s">%s</a>' % (mypol,missing_text)
         return mypol
-    return nf_display_knowl(thefield.get_label(),thefield.field_pretty())
+    if data is None:
+        label = thefield.get_label()
+    else:
+        label = data['label']
+    return nf_display_knowl(label,thefield.field_pretty())
 
 # input is a list of pairs, module and multiplicity
 def modules2string(n, t, modlist):
@@ -288,7 +307,7 @@ def modules2string(n, t, modlist):
     ans = modlist[0][0]
     modlist[0][1] -= 1
     for j in range(len(modlist)):
-        while modlist[j][1]>0:
+        while modlist[j][1] > 0:
             ans += r' $\oplus$ '+modlist[j][0]
             modlist[j][1] -= 1
     return ans
@@ -307,7 +326,7 @@ def nf_knowl_guts(label):
     out += "Number field %s" % label
     out += '<div>'
     out += 'Defining polynomial: '
-    out += raw_typeset(wnf.poly(), r"\(%s\)" % latex(wnf.poly()))
+    out += raw_typeset_poly(wnf.poly())
     D = wnf.disc()
     Dfact = wnf.disc_factored_latex()
     if D.abs().is_prime() or D == 1:
@@ -322,6 +341,16 @@ def nf_knowl_guts(label):
     out += '<br>Class number: %s ' % str(wnf.class_number_latex())
     if wnf.can_class_number():
         out += wnf.short_grh_string()
+    if wnf.is_galois():
+        galstring = r'this field is Galois over $\Q$'
+    else:
+        res = wnf.resolvents()
+        if 'gal' in res:
+            galstring = formatfield(string2list(res['gal'][0]))
+        else:
+            galord = db.gps_transitive.lookup('%dT%d' % (wnf.degree(), wnf.galois_t()), 'order')
+            galstring = r'degree %d extension of $\Q$ is not in the database' % galord
+    out += '<br>Galois closure: ' + galstring
     out += '</div>'
     out += '<div align="right">'
     out += '<a href="%s">%s home page</a>' % (str(url_for("number_fields.by_label", label=label)),label)
@@ -362,7 +391,7 @@ class WebNumberField:
         coefstr = string2list(coeffs)
         n = len(coefstr)-1
         data = {'coeffs': coeffs, 'degree': n}
-        return cls('Degree %d field'%n, data)
+        return cls('Degree %d field' % n, data)
 
     @classmethod
     def from_polredabs(cls, pol):
@@ -421,13 +450,18 @@ class WebNumberField:
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
 
+    def minimal_sibling(self):
+        if 'is_minimal_sibling' in self._data:
+            if self._data['is_minimal_sibling']:
+                return 'This field is its own minimal sibling'
+            return formatfield(self._data['minimal_sibling'], show_poly=True)
+        return na_text()
+
     # Is the polynomial polredabs'ed
     def is_reduced(self):
         if not self.haskey('reduced'):
             return True
-        if self._data['reduced'] == 0:
-            return False
-        return True
+        return self._data['reduced'] != 0
 
     # Return discriminant as a sage int
     def disc(self):
@@ -440,13 +474,34 @@ class WebNumberField:
     def rd(self):
         return RealField(300)(ZZ(self._data['disc_abs'])).nth_root(self.degree())
 
+    def grd(self):
+        if 'grd' not in self._data:
+            return 'not computed'
+        if self.degree() == 1:
+            return '$1$'
+        ramps = self._data['ramps']
+        exps = self._data['galois_disc_exponents']
+        grd = self._data['grd']
+        grd = str(grd)
+        galord = int(self.gg().order())
+        exps = [str(QQ(z/galord)) for z in exps]
+        exact = '$'
+        for j in range(len(ramps)):
+            exact += str(ramps[j])
+            if exps[j] != '1':
+                exact += f'^{{{exps[j]}}}'
+            else:
+                if j != len(ramps)-1:
+                    exact += r'\cdot '
+        return exact+r'\approx '+grd+'$'
+
     # Return a nice string for the Galois group
-    def galois_string(self):
+    def galois_string(self, cache=None):
         if not self.haskey('galois_label'):
             return 'Not computed'
         n = self._data['degree']
         t = int(self._data['galois_label'].split('T')[1])
-        return group_pretty_and_nTj(n, t)
+        return group_pretty_and_nTj(n, t, cache=cache)
 
     # Just return the t-number of the Galois group
     def galois_t(self):
@@ -482,16 +537,33 @@ class WebNumberField:
         return self._data['degree']
 
     def is_real_quadratic(self):
-        return self.signature()==[2,0]
+        return self.signature() == [2,0]
 
     def is_imag_quadratic(self):
-        return self.signature()==[0,1]
+        return self.signature() == [0,1]
 
     def poly(self, var="x"):
         return coeff_to_poly(self._data['coeffs'], var=var)
 
     def haskey(self, key):
         return self._data and self._data.get(key) is not None
+
+    def discrootfieldcoeffs(self):
+        factored = factor_base_factor(self.disc(),self.ramified_primes())
+        if self.disc() < 0:
+            factored += [[-1,1]]
+        factored = [[z[0], z[1] % 2] for z in factored]
+        newd = prod([z[0]**z[1] for z in factored])
+        if newd == 1:
+            return ([0,1], 1)
+        if (newd % 4) == 1:
+            return ([(1-newd)//4, -1, 1], newd)
+        else:
+            return ([-newd, 0, 1], newd)
+
+    def discrootfield(self):
+        (rfcoeffs, newd) = self.discrootfieldcoeffs()
+        return formatfield(rfcoeffs, missing_text=r'$\Q(\sqrt{%s}$)' % compress_int(newd, sides=5)[0])
 
     # Warning, this produces our preferred integral basis
     # But, if you have the sage number field do computations,
@@ -501,6 +573,27 @@ class WebNumberField:
             zkstrings = self._data['zk']
             return [str(u) for u in zkstrings]
         return list(pari(self.poly()).nfbasis())
+
+    def monogenic(self):
+        if self.haskey('monogenic'):
+            if self._data['monogenic'] == 1:
+                return 'Yes'
+            if self._data['monogenic'] == 0:
+                return 'Not computed'
+            if self._data['monogenic'] == -1:
+                return 'No'
+        return 'Not computed'
+
+    def index(self):
+        if self.haskey('index'):
+            return r'$%d$' % self._data['index']
+        return 'Not computed'
+
+    def inessentialp(self):
+        if self.haskey('inessentialp'):
+            inep = self._data['inessentialp']
+            return ', '.join(r'$%s$' % z for z in inep) if inep else 'None'
+        return 'Not computed'
 
     # 2018-4-1: is this actually used?  grep -r doesn't find anywhere it's called....
     # Used by subfields and resolvent functions to
@@ -537,11 +630,11 @@ class WebNumberField:
             for s in sibcnts:
                 repcounts[s[0][0]] += s[1]
             gc = 0
-            if galord<48:
+            if galord < 48:
                 del repcounts[galord]
                 if self.degree() < galord:
                     gc = 1
-            if numae>0:
+            if numae > 0:
                 repcounts[self.degree()] -= numae
             if repcounts[self.degree()] == 0:
                 del repcounts[self.degree()]
@@ -563,7 +656,7 @@ class WebNumberField:
             helpout = [[len(string2list(a))-1,formatfield(a)] for a in resall['sib']]
         else:
             helpout = []
-        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0]==d] ] for d in sorted(cnts)]
+        degsiblist = [[d, cnts[d], [dd[1] for dd in helpout if dd[0] == d] ] for d in sorted(cnts)]
         return [degsiblist, self.sibling_labels()]
 
     def sextic_twin(self):
@@ -584,7 +677,7 @@ class WebNumberField:
         resall = self.resolvents()
         cnt = self.galois_sib_data()[2]
         if 'gal' in resall:
-            knowls= [formatfield(a) for a in resall['gal']]
+            knowls = [formatfield(a) for a in resall['gal']]
             gal = [self.from_coeffs(str(a)) for a in resall['gal']]
             labs = [a.label for a in gal if a._data is not None]
             return [cnt, knowls, labs]
@@ -616,7 +709,7 @@ class WebNumberField:
 
     def unit_galois_action(self):
         if not self.haskey('unitsGmodule'):
-            if self.signature()==[0,2] and self.galois_t() ==2:
+            if self.signature() == [0,2] and self.galois_t() == 2:
                 return [[1,1]]
             # We don't have C_4 classification yet
             #if self.signature()==[2,0] or self.signature()==[0,2]:
@@ -663,7 +756,7 @@ class WebNumberField:
 
     def generator_name(self):
         #Add special case code for the generator if desired:
-        if self.gen_name=='phi':
+        if self.gen_name == 'phi':
             return r'\phi'
         else:
             return web_latex(self.gen_name)
@@ -691,44 +784,37 @@ class WebNumberField:
             return 1
         return na_text()
 
-    def units_safe(self):  # fundamental units, if they are not too long
-        units = self.units()
-        if len(units) > 500:
-            return "Units are too long to display, but can be downloaded with other data for this field from 'Stored data to gp' link to the right"
-        return units
-
     def units(self):  # fundamental units
         res = None
         if self.haskey('units'):
-            res = ',&nbsp; '.join(self._data['units'])
+            return self._data['units']
         elif self.unit_rank() == 0:
-            res = ''
-        elif self.haskey('class_number'):
-            K = self.K()
-            units = [web_latex(u) for u in K.unit_group().fundamental_units()]
-            units = ',&nbsp; '.join(units)
-            res = units
+            res = []
         if res:
             res = res.replace('\\\\', '\\')
             return res
         return na_text()
 
     def cnf(self):
-        if self.degree()==1:
-            return r'=\frac{2^1\cdot (2\pi)^0 \cdot 1\cdot 1}{2\sqrt 1}=1$'
-        if not self.haskey('class_group'):
-            return r'$<td>  '+na_text()
-        # Otherwise we should have what we need
+        if self.degree() == 1:
+            return r'=\mathstrut &amp \frac{2^1 (2\pi)^0 \cdot 1\cdot 1}{2\cdot\sqrt 1}' + r'\cr' + r'= \mathstrut &amp; 1'
         [r1,r2] = self.signature()
+        w = self.root_of_1_order()
+        r1term = r'2^{%s}\cdot' % r1
+        r2term = r'(2\pi)^{%s}\cdot' % r2
+        disc = ZZ(self._data['disc_abs'])
+        approx1 = r'= \mathstrut &amp;'
+        if not self.haskey('class_group'):
+            ltx = r'%s\frac{%s%s %s \cdot %s}{%s\cdot\sqrt{%s}}' % (approx1,r1term,r2term,'R','h',w,disc)
+            return ltx+r'\cr\mathstrut &amp; \text{<td> some values not computed }'
+        # Otherwise we should have what we need
         reg = self.regulator()
         h = self.class_number()
-        w = self.root_of_1_order()
-        r1term= r'2^{%s}\cdot'% r1
-        r2term= r'(2\pi)^{%s}\cdot'% r2
-        disc = ZZ(self._data['disc_abs'])
-        approx1 = r'\approx' if self.unit_rank()>0 else r'='
-        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\sqrt{%s}}'%(approx1,r1term,r2term,str(reg),h,w,disc)
-        ltx += r'\approx %s$'%(2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
+        approx1 = r'\approx' if self.unit_rank() > 0 else r'='
+        approx1 += r"\mathstrut &amp;"
+        ltx = r'%s\frac{%s%s %s \cdot %s}{%s\cdot\sqrt{%s}}' % (approx1,r1term,r2term,str(reg),h,w,disc)
+        ltx += "\\cr"
+        ltx += r'\approx \mathstrut &amp; %s' % (2**r1*(2*RR(pi))**r2*reg*h/(w*sqrt(RR(disc))))
         return ltx
 
     def is_cm_field(self):
@@ -739,18 +825,19 @@ class WebNumberField:
         s = ''
         if D < 0:
             s = r'-\,'
-        return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()))
+        return s + factor_base_factorization_latex(factor_base_factor(D,self.ramified_primes()), cutoff=30)
 
-    def web_poly(self):
-        return pol_to_html(str(coeff_to_poly(self.coeffs())))
-
-    def class_group_invariants(self):
+    def class_group_invariants(self, in_search_results=False):
         if not self.haskey('class_group'):
-            return na_text()
+            return "n/a" if in_search_results else na_text()
         cg_list = self._data['class_group']
         if not cg_list:
-            return 'trivial'
-        return '$%s$'%str(cg_list)
+            invs = 'trivial'
+        else:
+            invs = cg_list
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
 
     def class_group_invariants_raw(self):
         if not self.haskey('class_group'):
@@ -764,7 +851,7 @@ class WebNumberField:
                 return 'Trivial group, which has order $1$'
             cg_list = [r'C_{%s}' % z for z in cg_list]
             cg_string = r'\times '.join(cg_list)
-            return '$%s$, which has order %s'%(cg_string, self.class_number_latex())
+            return '$%s$, which has order %s' % (cg_string, self.class_number_latex())
         return na_text()
 
     def class_number(self):
@@ -774,13 +861,18 @@ class WebNumberField:
 
     def class_number_latex(self):
         if self.haskey('class_number'):
-            return '$%s$'%str(self._data['class_number'])
+            return '$%s$' % str(self._data['class_number'])
         return na_text()
 
     def can_class_number(self):
         if self.haskey('class_number'):
             return True
         return False
+
+    def relh(self):
+        if self.haskey('relative_class_number'):
+            return f"${self._data['relative_class_number']}$"
+        return dnc
 
     def is_null(self):
         return self._data is None
@@ -889,8 +981,8 @@ class WebNumberField:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
-                thisdat = [lab, f, LF['e'], LF['f'], LF['c'], 
-                    group_display_knowl(LF['n'], int(LF['galois_label'].split('T')[1])),
+                thisdat = [lab, f, LF['e'], LF['f'], LF['c'],
+                    transitive_group_display_knowl(LF['galois_label']),
                     LF['t'], LF['u'], LF['slopes']]
                 if str(p) not in local_algebra_dict:
                     local_algebra_dict[str(p)] = [thisdat]
@@ -905,12 +997,15 @@ class WebNumberField:
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
     def make_code_snippets(self):
-         # read in code.yaml from numberfields directory:
+        # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        self.code['show'] = {'sage':'','pari':'', 'magma':''} # use default show names
-
-        # Fill in placeholders for this specific field:
-        for lang in ['sage', 'pari']:
-            self.code['field'][lang] = self.code['field'][lang] % self.poly()
-        self.code['field']['magma'] = self.code['field']['magma'] % self.coeffs()
+        for lang in self.code['field']:
+            f = self.poly()
+            if lang == "pari":
+                # In pari, x is the highest priority variable, so it's impossible to create an extension on top of this field if we use x.
+                f = f.change_variable_name("y")
+            self.code['field'][lang] = self.code['field'][lang] % f
+        for lang in self.code['class_number_formula']:
+            self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
+        self.code['show'] = { lang:'' for lang in self.code['prompt'] }

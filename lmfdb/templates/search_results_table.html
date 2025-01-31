@@ -1,0 +1,21 @@
+{% set C = info.columns %}
+{{ C.above_table | safe }}
+
+<table class="ntdata">
+  <thead>
+    {% for rank in range(C.maxheight) %}
+      <tr{% if C.tr_class %} class="{{C.tr_class[rank]}}"{% endif %}>
+        {% for col in C.columns_shown(info, rank) %}
+          <th class="{{col.th_class}}" style="{{col.th_style}}{% if not col.default(info) %} display:none;{% endif %}"{{col.th_content}}>{{ col.display_knowl() | safe }}</th>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </thead>
+  {% for rec in info.results %}
+    <tr>
+      {% for col in C.columns_shown(info) %}
+        <td class="{{col.td_class}}" style="{{col.td_style}}{% if not col.default(info) %} display:none;{% endif %}"{{col.td_content}}>{{ col.display(rec) | safe }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2017 by the LMFDB authors
 #
@@ -7,7 +6,7 @@
 # License as published by the Free Software Foundation; either
 # version 2 of the License, or (at your option) any later version.
 
-import unittest2
+import unittest
 
 from sage.all import var
 
@@ -23,7 +22,6 @@ from lmfdb.utils import (
     format_percentage,
     signtocolour,
     rgbtohex,
-    pol_to_html,
     web_latex,
     web_latex_split_on,
     web_latex_split_on_pm,
@@ -33,7 +31,7 @@ from lmfdb.utils import (
 )
 
 
-class UtilsTest(unittest2.TestCase):
+class UtilsTest(unittest.TestCase):
     """
     An example of unit tests that are not based on the website itself.
     """
@@ -43,13 +41,13 @@ class UtilsTest(unittest2.TestCase):
         Checking utility: an_list
         """
         # (1 - 2^{-s})^{-1} (1 - 3^{-s})^{-1}
-        euler1 = lambda p: [1, -1] if p <= 3 else [1,0]
+        def euler1(p): return [1, -1] if p <= 3 else [1,0]
         t1 = an_list(euler1, upperbound=20)
         expect1 = [1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0]
         self.assertEqual(t1, expect1)
 
         # (1 + 2^{-s})^{-1} (1 + 3^{-s})^{-1}
-        euler2 = lambda p: [1, 1] if p <= 3 else [1,0]
+        def euler2(p): return [1, 1] if p <= 3 else [1,0]
         t2 = an_list(euler2, upperbound=20)
         expect2 = [1, -1, -1, 1, 0, 1, 0, -1, 1, 0, 0, -1, 0, 0, 0, 1, 0, -1, 0, 0]
         self.assertEqual(t2, expect2)
@@ -122,7 +120,7 @@ class UtilsTest(unittest2.TestCase):
         Checking utility: signtocolour
         """
         self.assertEqual(signtocolour(0), 'rgb(63,63,255)')
-        self.assertEqual(signtocolour(1+2j), 'rgb(197,0,184)')
+        self.assertEqual(signtocolour("1+2*I"), 'rgb(197,0,184)')
 
     def test_rgbtohex(self):
         r"""
@@ -130,18 +128,6 @@ class UtilsTest(unittest2.TestCase):
         """
         self.assertEqual(rgbtohex('rgb(63,255,100)'), '#3fff64')
         self.assertEqual(rgbtohex('rbg(63,63,255)'), '#3f3fff')
-
-    def test_pol_to_html(self):
-        r"""
-        Checking utility: pol_to_html
-        """
-        x = var('x')
-        f1 = x**2 + 2*x + 1
-        self.assertEqual(pol_to_html(f1),
-                         '<i>x</i><sup>2</sup> + 2<i>x</i> + 1')
-        f2 = 'x^3 + 1'
-        self.assertEqual(pol_to_html(f2),
-                         '<i>x</i><sup>3</sup> + 1')
 
     ################################################################################
     #  latex/math rendering utilities

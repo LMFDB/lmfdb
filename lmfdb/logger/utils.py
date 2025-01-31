@@ -54,9 +54,11 @@ def make_logger(bp_or_name, hl=False, fmt=None, extraHandlers=[]):
     to true, the corresponding lines will be bold.
     """
     import flask
-    from .start import get_logfocus
-    logfocus = get_logfocus()
-    if type(bp_or_name) == flask.Blueprint:
+    from lmfdb.utils.config import Configuration
+    config = Configuration()
+    logging_options = config.get_logging()
+    logfocus = logging_options.get('logfocus')
+    if isinstance(bp_or_name, flask.Blueprint):
         name = bp_or_name.name
     else:
         assert isinstance(bp_or_name, str)
@@ -64,7 +66,7 @@ def make_logger(bp_or_name, hl=False, fmt=None, extraHandlers=[]):
     l = logging.getLogger(name)
     l.propagate = False
     if logfocus is None:
-        l.setLevel(logging.INFO)
+        l.setLevel(logging_options.get('loglevel', logging.INFO))
     elif logfocus == name:
         # this will NEVER BE TRUE, because logfocus is set AFTER
         # we have created all of the loggers. This is ok for now,

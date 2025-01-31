@@ -13,7 +13,7 @@
   {% for rnge in info.order_list %}
     <a href="?order={{rnge}}">{{rnge}}</a>&nbsp;
   {% endfor %}
-<p>
+</p>
 <p>
   By {{KNOWL('group.nilpotent', 'nilpotency class')}}:
   {% for rnge in info.nilp_list %}
@@ -28,11 +28,11 @@
 </p>
 <p>Some <a href="{{url_for('.interesting')}}">interesting groups</a> or a <a href="{{url_for('.random_abstract_group')}}">random group</a></p>
 
-<p>Search for <a href="{{url_for('.index', search_type='Subgroups')}}">subgroups</a></p>
+<p>Search for <a href="{{url_for('.index', search_type='Subgroups')}}">subgroups</a> or  <a href="{{url_for('.index', search_type='ComplexCharacters')}}">complex characters</a></p>
 
 <h2 id='search_h2'> Search <button id="advancedtoggle" href="#">Advanced search options</button></h2>
-<!--<h2>Search</h2>-->
-<form id="re-search" name="search" method = "get" action={{url_for('.index')}} onsubmit="cleanSubmit(this.id)">
+
+<form class="re-search" name="search" method = "get" action={{url_for('.index')}}>
   {{ info.search_array.html() | safe }}
 </form>
 

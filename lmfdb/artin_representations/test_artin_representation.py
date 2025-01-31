@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
-#import unittest2
 
 class ArtinRepTest(LmfdbTest):
 
     # All tests should pass
-    # 
+    #
     def test_search_deg_condrange(self):
         L = self.tc.get('/ArtinRepresentation/?dimension=3&conductor=1988-2015&group=&ramified=&unramified=&root_number=&frobenius_schur_indicator=&count=15')
         assert '41' in L.get_data(as_text=True) # Only 1 result at the time this test was written, which has conductor 2009 = 7^2.41
@@ -28,3 +26,7 @@ class ArtinRepTest(LmfdbTest):
     def test_big_degree_new(self):
         L = self.tc.get('/ArtinRepresentation/2.3806401.120.b.a')
         assert '24T201' in L.get_data(as_text=True) # Galois group
+
+    def test_underlying_data(self):
+        data = self.tc.get('/ArtinRepresentation/data/2.3806401.120.b').get_data(as_text=True)
+        assert 'ArtinReps' in data and 'GalConjSigns' in data

@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import cmath
 import math
 import datetime
@@ -10,20 +9,63 @@ import time
 from copy import copy
 from itertools import islice
 from types import GeneratorType
-from urllib.parse import urlencode
 
 from flask import make_response, flash, url_for, current_app
 from markupsafe import Markup, escape
 from werkzeug.utils import cached_property
-from sage.all import (CC, CBF, CDF,
-                      Factorization, NumberField,
-                      PolynomialRing, PowerSeriesRing, QQ,
-                      RealField, RR, RIF, TermOrder, ZZ)
+from sage.all import (
+    CBF,
+    CC,
+    CDF,
+    NumberField,
+    PolynomialRing,
+    PowerSeriesRing,
+    QQ,
+    RIF,
+    RealField,
+    TermOrder,
+    ZZ,
+    floor,
+    latex,
+    log,
+    prime_range,
+    prod,
+    sign,
+    valuation,
+)
 from sage.misc.functional import round
-from sage.all import floor, latex, prime_range, valuation, factor, log
 from sage.structure.element import Element
 
 from lmfdb.app import app, is_beta, is_debug_mode, _url_source
+
+
+def integer_divisors(n):
+    """ returns sorted list of positive divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    if not n:
+        raise ValueError("n must be nonzero")
+
+    def _divisors(a):
+        if len(a) == 0:
+            return [1]
+        q = a[0]
+        return sum([[q[0]**e*n for n in _divisors(a[1:])] for e in range(q[1]+1)],[])
+
+    return sorted(_divisors(ZZ(n).factor()))
+
+def integer_prime_divisors(n):
+    """ returns sorted list of prime divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    if not n:
+        raise ValueError("n must be nonzero")
+    return [p for p, _ in ZZ(n).factor()]
+
+def integer_squarefree_part(n):
+    """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    return sign(n)*prod([p**(e % 2) for p, e in ZZ(n).factor()])
+
+
+def integer_is_squarefree(n):
+    """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
+    return all(e == 1 for _, e in ZZ(n).factor())
 
 
 def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
@@ -76,8 +118,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
             this_poly = ZZT(list(reversed(g)))
             this_degree = this_poly.degree()
             this_number_field = NumberField(this_poly, "a")
-            this_gal = this_number_field.galois_group(type='pari')
-            this_t_number = this_gal.group().__pari__()[2].sage()
+            this_t_number = this_number_field.galois_group().group().transitive_number()
             gal_list.append([this_degree, this_t_number])
 
         # casting from ZZT -> ZZpT
@@ -210,6 +251,24 @@ def coeff_to_poly(c, var=None):
         var = 'x'
     return PolynomialRing(QQ, var)(c)
 
+
+def coeff_to_poly_multi(c, var=None):
+    """
+    Convert a list or string representation of a polynomial to a sage polynomial.
+    Handles multivariate polynomials.
+    """
+    if isinstance(c, str):
+        # accept latex
+        c = c.replace("{", "").replace("}", "")
+        while re.search("[A-Za-z]{2}", c):
+            c = re.sub("([A-Za-z])([A-Za-z])", r"\1*\2", c)
+        while re.search("[0-9]+[A-Za-z]", c):
+            c = re.sub("([0-9]+)([A-Za-z])", r"\1*\2", c)
+        # autodetect variable name
+        if var is None:
+            varposs = set(re.findall(r"[A-Za-z_]+", c))
+    return PolynomialRing(QQ, list(varposs))(c)
+
 def coeff_to_power_series(c, var='q', prec=None):
     """
     Convert a list or dictionary giving coefficients to a sage power series.
@@ -219,16 +278,18 @@ def coeff_to_power_series(c, var='q', prec=None):
 def display_multiset(mset, formatter=str, *args):
     """
     Input mset is a list of pairs [item, multiplicity]
+
     Return a string for display of the multi-set.  The
     function formatter is a function whose first argument
-    is the item, and *args are the other arguments
+    is the item, and ``*args`` are the other arguments
     and is applied to each item.
 
     Example:
+
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+    return ', '.join([formatter(pair[0], *args)+(' x%d' % pair[1] if pair[1] > 1 else '') for pair in mset])
 
 
 def pair2complex(pair):
@@ -311,8 +372,9 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  +=  sign * CBF(b)* CBF.gens()[0]
+            res += sign * CBF(b) * CBF.gens()[0]
         return res
+
 
 # Conversion from numbers to letters and back
 def letters2num(s):
@@ -325,6 +387,7 @@ def letters2num(s):
         ssum = ssum*26+letters[j]
     return ssum
 
+
 def num2letters(n):
     r"""
     Convert a number into a string of letters
@@ -332,10 +395,10 @@ def num2letters(n):
     if n <= 26:
         return chr(96+n)
     else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
+        return num2letters(int((n-1)/26))+chr(97+(n-1) % 26)
 
 
-def to_dict(args, exclude = [], **kwds):
+def to_dict(args, exclude=[], **kwds):
     r"""
     Input a dictionary `args` whose values may be lists.
     Output a dictionary whose values are not lists, by choosing the last
@@ -367,7 +430,7 @@ def is_exact(x):
     return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
 
 
-def display_float(x, digits, method = "truncate",
+def display_float(x, digits, method="truncate",
                              extra_truncation_digits=3,
                              try_halfinteger=True,
                              no_sci=None,
@@ -381,7 +444,7 @@ def display_float(x, digits, method = "truncate",
             if len(s) < digits + 2: # 2 = '/' + '-'
                 return str(x)
         k = round_to_half_int(x)
-        if k == x :
+        if k == x:
             k2 = None
             try:
                 k2 = ZZ(2*x)
@@ -401,10 +464,10 @@ def display_float(x, digits, method = "truncate",
     if no_sci is None:
         no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
+        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:
         # older versions of Sage don't support the digits keyword
-        s = RealField(max(53,4*digits),  rnd=rnd)(x).str(no_sci=no_sci)
+        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(no_sci=no_sci)
         point = s.find('.')
         if point != -1:
             if point < digits:
@@ -415,8 +478,9 @@ def display_float(x, digits, method = "truncate",
         s = s.replace("e", r"\times 10^{") + "}"
     return s
 
-def display_complex(x, y, digits, method = "truncate",
-                                  parenthesis = False,
+
+def display_complex(x, y, digits, method="truncate",
+                                  parenthesis=False,
                                   extra_truncation_digits=3,
                                   try_halfinteger=True):
     """
@@ -464,8 +528,8 @@ def display_complex(x, y, digits, method = "truncate",
             sign = ""
         else:
             sign = " + "
-    y = display_float(y, digits, method = method,
-                                 extra_truncation_digits = extra_truncation_digits,
+    y = display_float(y, digits, method=method,
+                                 extra_truncation_digits=extra_truncation_digits,
                                  try_halfinteger=try_halfinteger)
     if y == "1":
         y = ""
@@ -491,39 +555,37 @@ def round_to_half_int(num, fraction=2):
     """
     return round(num * 1.0 * fraction) / fraction
 
+
 def splitcoeff(coeff):
-    """
+    r"""
     Return a list of list-represented complex numbers given a string of the
     form "r0 i0 \n r1 i1 \n r2 i2", where r0 is the real part of the 0th number
     and i0 is the imaginary part of the 0th number, and so on.
 
     Example:
+
     >>> splitcoeff("1 1 \n -1 2")
     [[1.0, 1.0], [-1.0, 2.0]]
     """
-    local = coeff.split("\n")
-    answer = []
-    for s in local:
-        if s:
-            answer.append(pair2complex(s))
-    return answer
-
+    return [pair2complex(s) for s in coeff.split("\n") if s]
 
 
 ################################################################################
 #  display and formatting utilities
 ################################################################################
 
-def comma(x):
+def comma(x, sep=","):
     """
     Input is an integer. Output is a string of that integer with commas.
     CAUTION: this misbehaves if the input is not an integer.
+
+    sep is an optional separator other than a comma
 
     Example:
     >>> comma("12345")
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s,%03d' % (comma(x // 1000), (x % 1000)))
+    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000, sep), sep, (x % 1000)))
 
 def latex_comma(x):
     """
@@ -534,7 +596,7 @@ def latex_comma(x):
 def format_percentage(num, denom):
     if denom == 0:
         return 'NaN'
-    return "%10.2f"%((100.0*num)/denom)
+    return "%10.2f" % ((100.0*num)/denom)
 
 
 def signtocolour(sign):
@@ -559,318 +621,9 @@ def rgbtohex(rgb):
     b = int(b)
     return "#{:02x}{:02x}{:02x}".format(r,g,b)
 
-def pol_to_html(p):
-    r"""
-    Convert polynomial p with variable x to html.
-
-    Example:
-    >>> pol_to_html("x^2 + 2*x + 1")
-    '<i>x</i><sup>2</sup> + 2<i>x</i> + 1'
-    """
-    s = str(p)
-    s = re.sub(r"\^(\d*)", r"<sup>\1</sup>", s)
-    s = re.sub(r"\_(\d*)", r"<sub>\1</sub>", s)
-    s = re.sub(r"\*", r"", s)
-    s = re.sub(r"x", r"<i>x</i>", s)
-    return s
-
-
-
-################################################################################
-#  latex/math rendering utilities
-################################################################################
-
-def web_latex(x, enclose=True):
-    r"""
-    Convert input to latex string unless it's a string or unicode. The key word
-    argument `enclose` indicates whether to surround the string with
-    `\(` and `\)` to tag it as an equation in html.
-
-    Note:
-    if input is a factored ideal, use web_latex_ideal_fact instead.
-
-    Example:
-    >>> x = var('x')
-    >>> web_latex(x**23 + 2*x + 1)
-    '\\( x^{23} + 2 \\, x + 1 \\)'
-    """
-    if isinstance(x, str):
-        return x
-    return r"\( %s \)" % latex(x) if enclose else " %s " % latex(x)
-
-def web_latex_factored_integer(x, enclose=True, equals=False):
-    r"""
-    Given any x that can be converted to a ZZ, creates latex string representing x in factored form
-    Returns 0 for 0, replaces -1\cdot with -.
-
-    If equals=true returns latex string for x = factorization but omits "= factorization" if abs(x)=0,1,prime
-    """
-    x = ZZ(x)
-    if abs(x) in [0,1] or abs(x).is_prime():
-        return web_latex(x, enclose=enclose)
-    if equals:
-        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
-        s = " %s = %s " % (x, s)
-    else:
-        s = web_latex(factor(x), enclose=False).replace(r"-1 \cdot","-")
-    return r"\( %s \)" % s if enclose else s
-
-def web_latex_ideal_fact(x, enclose=True):
-    r"""
-    Convert input factored ideal to latex string.  The key word argument
-    `enclose` indicates whether to surround the string with `\(` and
-    `\)` to tag it as an equation in html.
-
-    sage puts many parentheses around latex representations of factored ideals.
-    This function removes excessive parentheses.
-
-    Example:
-    >>> x = var('x')
-    >>> K = NumberField(x**2 - 5, 'a')
-    >>> a = K.gen()
-    >>> I = K.ideal(2/(5+a)).factor()
-    >>> print(latex(I))
-    (\left(-a\right))^{-1}
-    >>> web_latex_ideal_fact(I)
-    '\\( \\left(-a\\right)^{-1} \\)'
-    """
-    y = web_latex(x, enclose=enclose)
-    y = y.replace(r"(\left(", r"\left(")
-    y = y.replace(r"\right))", r"\right)")
-    return y
-
-
-def web_latex_split_on(x, on=['+', '-']):
-    r"""
-    Convert input into a latex string. A different latex surround `\(` `\)` is
-    used, with splits occurring at `on` (+ - by default).
-
-    Example:
-    >>> x = var('x')
-    >>> web_latex_split_on(x**2 + 1)
-    '\\( x^{2} \\) + \\(  1 \\)'
-    """
-    if isinstance(x, str):
-        return x
-    else:
-        A = r"\( %s \)" % latex(x)
-        for s in on:
-            A = A.replace(s, r'\) ' + s + r' \( ')
-    return A
-
-
-# web_latex_split_on was not splitting polynomials, so we make an expanded version
-def web_latex_split_on_pm(x):
-    r"""
-    Convert input into a latex string, with specific handling of expressions
-    including `+` and `-`.
-
-    Example:
-    >>> x = var('x')
-    >>> web_latex_split_on_pm(x**2 + 1)
-    '\\(x^{2} \\) \\(\\mathstrut +\\mathstrut  1 \\)'
-    """
-    on = ['+', '-']
- #   A = "\( %s \)" % latex(x)
-    try:
-        A = r"\(" + x + r"\)"  # assume we are given LaTeX to split on
-    except Exception:
-        A = r"\( %s \)" % latex(x)
-
-       # need a more clever split_on_pm that inserts left and right properly
-    A = A.replace(r"\left","")
-    A = A.replace(r"\right","")
-    for s in on:
-  #      A = A.replace(s, r'\) ' + s + r' \( ')
-   #     A = A.replace(s, r'\) ' + r' \( \mathstrut ' + s )
-        A = A.replace(s, r'\)' + r' \(\mathstrut ' + s + r'\mathstrut ')
-    # the above will be re-done using a more sophisticated method involving
-    # regular expressions.  Below fixes bad spacing when the current approach
-    # encounters terms like (-3+x)
-    for s in on:
-        A = A.replace(r'(\) \(\mathstrut ' + s, '(' + s)
-    A = A.replace(r'( {}', r'(')
-    A = A.replace(r'(\) \(', r'(')
-    A = A.replace(r'\(+', r'\(\mathstrut+')
-    A = A.replace(r'\(-', r'\(\mathstrut-')
-    A = A.replace(r'(  ', r'(')
-    A = A.replace(r'( ', r'(')
-
-    return A
-    # return web_latex_split_on(x)
-
-def web_latex_split_on_re(x, r = '(q[^+-]*[+-])'):
-    r"""
-    Convert input into a latex string, with splits into separate latex strings
-    occurring on given regex `r`.
-    CAUTION: this gives a different result than web_latex_split_on_pm
-
-    Example:
-    >>> x = var('x')
-    >>> web_latex_split_on_re(x**2 + 1)
-    '\\(x^{2} \\) \\(\\mathstrut+  1 \\)'
-    """
-
-    def insert_latex(s):
-        return s.group(1) + r'\) \('
-
-    if isinstance(x, str):
-        return x
-    else:
-        A = r"\( %s \)" % latex(x)
-        c = re.compile(r)
-        A = A.replace(r'+', r'\) \( {}+ ')
-        A = A.replace(r'-', r'\) \( {}- ')
-#        A = A.replace('\left(','\left( {}\\right.') # parentheses needs to be balanced
-#        A = A.replace('\\right)','\left.\\right)')
-        A = A.replace(r'\left(',r'\bigl(')
-        A = A.replace(r'\right)',r'\bigr)')
-        A = c.sub(insert_latex, A)
-
-    # the above will be re-done using a more sophisticated method involving
-    # regular expressions.  Below fixes bad spacing when the current approach
-    # encounters terms like (-3+x)
-    A = A.replace(r'( {}', r'(')
-    A = A.replace(r'(\) \(', r'(')
-    A = A.replace(r'\(+', r'\(\mathstrut+')
-    A = A.replace(r'\(-', r'\(\mathstrut-')
-    A = A.replace(r'(  ', r'(')
-    A = A.replace(r'( ', r'(')
-    A = A.replace(r'+\) \(O', r'+O')
-    return A
-
-def display_knowl(kid, title=None, kwargs={}):
-    """
-    Allows for the construction of knowls from python code
-    (to be displayed using the ``safe`` flag in jinja);
-    the only difference with the KNOWL macro is that
-    there will be no edit link for authenticated users.
-    """
-    from lmfdb.knowledge.knowl import knowl_title
-    ktitle = knowl_title(kid)
-    if ktitle is None:
-        # Knowl not found
-        if title is None:
-            return """<span class="knowl knowl-error">'%s'</span>""" % kid
-        else:
-            return title
-    else:
-        if title is None:
-            if len(ktitle) == 0:
-                title = kid
-            else:
-                title = ktitle
-        if len(title) > 0:
-            return '<a title="{0} [{1}]" knowl="{1}" kwargs="{2}">{3}</a>'.format(ktitle, kid, urlencode(kwargs), title)
-        else:
-            return ''
-
-def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
-    if abs(n) >= 10**cutoff:
-        short = str(n)
-        short = short[:sides] + r'\!\cdots\!' + short[-sides:]
-        lng = r"<div style='word-break: break-all'>%s</div>" % n
-        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
-    else:
-        return r'\(%s\)'%n
-def too_big(L, threshold):
-    r"""
-    INPUT:
-
-    - ``L`` -- nested lists of integers
-    - ``threshold`` -- an integer
-
-    OUTPUT:
-
-    Whether any integer in ``L`` is at least ``threshold``
-    """
-    if isinstance(L, (list, tuple)):
-        return any(too_big(x, threshold) for x in L)
-    return L >= threshold
-
-def make_bigint(s, cutoff=20, max_width=70):
-    r"""
-    INPUT:
-
-    - ``s`` -- A string, the latex representation of an integer or polynomial.
-      It should include outer \( and \).
-    - ``cutoff`` -- an integer
-
-    OUTPUT:
-
-    The string ``s`` with integers at least 10^cutoff replaced by bigint_knowls.
-    """
-    Zmatcher = re.compile(r'([0-9]{%s,})' % (cutoff+1))
-    def knowl_replacer(M):
-        a = bigint_knowl(int(M.group(1)), cutoff, max_width=max_width)
-        if a[0:2] == r'<a':
-            return r'\)' + a + r'\('
-        else:
-            return a
-    return Zmatcher.sub(knowl_replacer, s)
-
-
-def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
-    lng = web_latex(coeff_to_poly(f, var))
-    if bigint_cutoff:
-        lng = make_bigint(lng, bigint_cutoff, max_width=70)
-    if len([c for c in f if c != 0]) > nterms_cutoff:
-        short = "%s^{%s}" % (latex(coeff_to_poly([0,1], var)), len(f) - 1)
-        i = len(f) - 2
-        while i >= 0 and f[i] == 0:
-            i -= 1
-        if i >= 0: # nonzero terms
-            if f[i] > 0:
-                short += r" + \cdots"
-            else:
-                short += r" - \cdots"
-#        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
-        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>'%(lng,short)
-    else:
-        return lng
-
 def factor_base_factor(n, fb):
     return [[p, valuation(n,p)] for p in fb]
 
-def factor_base_factorization_latex(fbf):
-    if len(fbf) == 0:
-        return '1'
-    ans = ''
-    sign = 1
-    for p, e in fbf:
-        if p == -1:
-            if (e % 2) == 1:
-                sign *= -1
-        elif e == 1:
-            ans += r'\cdot %d' % p
-        elif e != 0:
-            ans += r'\cdot %d^{%d}' % (p, e)
-    # get rid of the initial '\cdot '
-    ans = ans[6:]
-    return '- ' + ans if sign == -1 else ans
-
-
-
-def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
-    quo = "x^{%s}" % (len(f) - 1)
-    i = len(f) - 2
-    while i >= 0 and f[i] == 0:
-        i -= 1
-    if i >= 0: # nonzero terms
-        if f[i] > 0:
-            quo += r" + \cdots"
-        else:
-            quo += r" - \cdots"
-    short = r'\mathbb{Q}[x]/(%s)'%(quo)
-    long = r'Defining polynomial: %s' % (web_latex(coeff_to_poly(f)))
-    if cutoff:
-        long = make_bigint(long, cutoff, max_width=70).replace('"',"'")
-    if disc is not None:
-        if isinstance(disc, list):
-            long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
-        else:
-            long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
-    return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
 
 def code_snippet_knowl(D, full=True):
     r"""
@@ -887,7 +640,7 @@ def code_snippet_knowl(D, full=True):
     lines = D.get('lines')
     code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
     if is_debug_mode():
-        branch = "master"
+        branch = "main"
     elif is_beta():
         branch = "dev"
     else:
@@ -905,112 +658,30 @@ def code_snippet_knowl(D, full=True):
         url += "#L%s" % lines[0]
     else:
         label = filename
-    inner = u"<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
+    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return u'<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+    return '<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
 
-
-def web_latex_poly(coeffs, var='x', superscript=True, bigint_cutoff=20,  bigint_overallmin=400):
-    """
-    Generate a web latex string for a given integral polynomial, or a linear combination
-    (using subscripts instead of exponents).  In either case, the constant term is printed
-    without a variable and bigint knowls are used if the coefficients are large enough.
-
-    INPUT:
-
-    - ``coeffs`` -- a list of integers
-    - ``var`` -- a variable name
-    - ``superscript`` -- whether to use superscripts (as opposed to subscripts)
-    - ``bigint_cutoff`` -- the string length above which a knowl is used for a coefficient
-    - ``bigint_overallmin`` -- the number of characters by which we would need to reduce the output to replace the large ints by knowls
-    """
-    plus = r" + "
-    minus = r" - "
-    m = len(coeffs)
-    while m and coeffs[m-1] == 0:
-        m -= 1
-    if m == 0:
-        return r"\(0\)"
-    s = ""
-    # we will have under/overflows if we try to use floats
-    def cutout_digits(elt):
-        digits = 1 if elt == 0 else floor(RR(abs(elt)).log(10)) + 1
-        if digits > bigint_cutoff:
-            # a large number would be replaced by ab...cd
-            return digits - 7
-        else:
-            return 0
-
-    if sum(cutout_digits(elt) for elt in coeffs) < bigint_overallmin:
-        # this effectively disables the bigint
-        bigint_cutoff = bigint_overallmin + 7
-
-    for n in reversed(range(m)):
-        c = coeffs[n]
-        if n == 1:
-            if superscript:
-                varpow = "" + var
-            else:
-                varpow = r"%s_{1}"%var
-        elif n > 1:
-            if superscript:
-                varpow = r"%s^{%s}"%(var, n)
-            else:
-                varpow = r"%s_{%s}"%(var, n)
-        else:
-            if c > 0:
-                s += plus + str(c)
-            elif c < 0:
-                s += minus + str(-c)
-            break
-        if c > 0:
-            s += plus
-        elif c < 0:
-            s += minus
-        else:
-            continue
-        if abs(c) != 1:
-            s += str(abs(c)) + " "
-        s += varpow
-    s += r"\)"
-    if s.startswith(plus):
-        return r"\(" + make_bigint(s[len(plus):], bigint_cutoff)
-    else:
-        return r"\(-" + make_bigint(s[len(minus):], bigint_cutoff)
-
-# make latex matrix from list of lists
-def list_to_latex_matrix(li):
-    """
-    Given a list of lists representing a matrix, output a latex representation
-    of that matrix as a string.
-
-    Example:
-    >>> list_to_latex_matrix([[1,0],[0,1]])
-    '\\left(\\begin{array}{rr}1 & 0\\\\0 & 1\\end{array}\\right)'
-    """
-    dim = len(li[0])
-    mm = r"\left(\begin{array}{"+dim*"r" +"}"
-    mm += r"\\".join([" & ".join([str(a) for a in row]) for row in li])
-    mm += r'\end{array}\right)'
-    return mm
 
 ################################################################################
 #  pagination utilities
 ################################################################################
 
-class ValueSaver(object):
+class ValueSaver():
     """
     Takes a generator and saves values as they are generated so that values can be retrieved multiple times.
     """
     def __init__(self, source):
         self.source = source
         self.store = []
+
     def fill(self, stop):
         """
         Consumes values from the source until there are at least ``stop`` entries in the store.
         """
         if stop > len(self.store):
             self.store.extend(islice(self.source, stop - len(self.store)))
+
     def __getitem__(self, i):
         if isinstance(i, slice):
             if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (i.step is not None and i.step < 0):
@@ -1020,10 +691,12 @@ class ValueSaver(object):
         else:
             self.fill(i+1)
             return self.store[i]
+
     def __len__(self):
         raise TypeError("Unknown length")
 
-class Pagination(object):
+
+class Pagination():
     """
     INPUT:
 
@@ -1049,7 +722,7 @@ class Pagination(object):
 
     @cached_property
     def entries(self):
-        return self.source[self.start : self.start+self.per_page]
+        return self.source[self.start: self.start+self.per_page]
 
     @cached_property
     def has_next(self):
@@ -1063,7 +736,6 @@ class Pagination(object):
     has_previous = property(lambda x: x.page > 1)
     pages = property(lambda x: max(0, x.count - 1) // x.per_page + 1)
     start = property(lambda x: (x.page - 1) * x.per_page)
-    end = property(lambda x: min(x.start + x.per_page - 1, x.count - 1))
 
     @property
     def end(self):
@@ -1110,17 +782,18 @@ def flash_info(errmsg, *args):
     """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
     flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
 
+
 ################################################################################
 #  Ajax utilities
 ################################################################################
 
 # LinkedList is used in Ajax below
-class LinkedList(object):
+class LinkedList():
     __slots__ = ('value', 'next', 'timestamp')
 
-    def __init__(self, value, next):
+    def __init__(self, value, nxt):
         self.value = value
-        self.next = next
+        self.next = nxt
         self.timestamp = time.time()
 
     def append(self, value):
@@ -1128,7 +801,7 @@ class LinkedList(object):
         return self.next
 
 
-class AjaxPool(object):
+class AjaxPool():
     def __init__(self, size=1e4, expiration=3600):
         self._size = size
         self._key_list = self._head = LinkedList(None, None)
@@ -1201,6 +874,7 @@ def ajax_result(id):
 
 
 def ajax_more(callback, *arg_list, **kwds):
+    from .web_display import web_latex
     inline = kwds.get('inline', True)
     text = kwds.get('text', 'more')
     nonce = hex(random.randint(0, 1 << 128))
@@ -1222,8 +896,10 @@ def ajax_more(callback, *arg_list, **kwds):
     else:
         return res
 
+
 def image_src(G):
     return ajax_url(image_callback, G, _ajax_sticky=True)
+
 
 def image_callback(G):
     P = G.plot()
@@ -1235,7 +911,8 @@ def image_callback(G):
     response.headers['Content-type'] = 'image/png'
     return response
 
-def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = False, transparent=False, axes_pad=None):
+
+def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, figsize=None, **kwds):
     """
     Convert a plot object to base64-encoded png format.
 
@@ -1251,14 +928,14 @@ def encode_plot(P, pad=None, pad_inches=0.1, bbox_inches=None, remove_axes = Fal
     from urllib.parse import quote
 
     virtual_file = IO()
-    fig = P.matplotlib(axes_pad=axes_pad)
+    fig = P.matplotlib(axes_pad=axes_pad, figsize=figsize)
     fig.set_canvas(FigureCanvasAgg(fig))
     if remove_axes:
         for a in fig.axes:
             a.axis('off')
     if pad is not None:
         fig.tight_layout(pad=pad)
-    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, bbox_inches=bbox_inches, transparent=transparent)
+    fig.savefig(virtual_file, format='png', pad_inches=pad_inches, **kwds)
     virtual_file.seek(0)
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
@@ -1271,144 +948,42 @@ def datetime_to_timestamp_in_ms(dt):
 def timestamp_in_ms_to_datetime(ts):
     return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 
-# copied here from hilbert_modular_forms.hilbert_modular_form as it
-# started to cause circular imports:
+class WebObj:
+    def __init__(self, label, data=None):
+        self.label = label
+        if data is None:
+            data = self._get_dbdata()
+        self._data = data
+        if isinstance(data, dict):
+            for key, val in self._data.items():
+                setattr(self, key, val)
 
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
-    if not isinstance(pol_str, str):
-        pol_str = str(pol_str)
-    o_str = pol_str.replace('*', '')
-    ind_mid = o_str.find('/')
-    while ind_mid != -1:
-        ind_start = ind_mid - 1
-        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_start -= 1
-        ind_end = ind_mid + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
-            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_mid = o_str.find('/')
+    @classmethod
+    def from_data(cls, data):
+        return cls(data["label"], data)
 
-    ind_start = o_str.find('^')
-    while ind_start != -1:
-        ind_end = ind_start + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_start = o_str.find('^', ind_end)
+    def _get_dbdata(self):
+        # self.table must be defined in subclasses
+        return self.table.lookup(self.label)
 
-    return o_str
+    def is_null(self):
+        return self._data is None
 
-def add_space_if_positive(texified_pol):
-    r"""
-    Add a space if texified_pol is positive to match alignment of positive and
-    negative coefficients.
+def plural_form(noun):
+    if noun and noun[-1] != "s":
+        noun += "s"
+    return noun
 
-    Examples:
-    >>> add_space_if_positive('1')
-    '\phantom{-}1'
-    >>> add_space_if_positive('-1')
-    '-1'
-    """
-    if texified_pol[0] == '-':
-        return texified_pol
-    return r"\phantom{-}" + texified_pol
-
-
-def sparse_cyclotomic_to_latex(n, dat):
-    r"""
-    Take an element of Q(zeta_n) given in the form [[c1,e1],[c2,e2],...]
-    and return sum_{j=1}^k cj zeta_n^ej in latex form as it is given
-    (converting to sage will rewrite the element in terms of a basis)
-    """
-
-    dat.sort(key=lambda p: p[1])
-    ans=''
-    z = r'\zeta_{%d}' % n
-    for p in dat:
-        if p[0] == 0:
-            continue
-        if p[1]==0:
-            if p[0] == 1 or p[0] == -1:
-                zpart = '1'
-            else:
-                zpart = ''
-        elif p[1]==1:
-            zpart = z
-        else:
-            zpart = z+r'^{'+str(p[1])+'}'
-        # Now the coefficient
-
-        if p[0] == 1:
-            ans += '+'  + zpart
-        elif p[0] == -1:
-            ans += '-'  + zpart
-        else:
-            ans += '{:+d}'.format(p[0])  + zpart
-    ans= re.compile(r'^\+').sub('', ans)
-    if ans == '':
-        return '0'
-    return ans
-raw_count = 0
-
-def raw_typeset(raw, tset='', extra=''):
-    r"""
-    Return a span with typeset material which will toggle to raw material 
-    when an icon is clicked on.
-
-    The raw version can be a string, or a sage object which will stringify
-    properly.
-
-    If the typeset version can be gotten by just applying latex to the raw
-    version, the typeset version can be omitted.
-
-    If there is a string to appear between the toggled text and the icon,
-    it can be given in the argument extra
-
-    If one of these appear on a page, then the icon to toggle all of them
-    on the page will appear in the upper right corner of the body of the
-    page.
-    """
-    global raw_count
-    raw_count += 1
-    if not tset:
-        tset = r'\({}\)'.format(latex(raw))
-    srcloc = url_for('static', filename='images/t2r.png') 
-    out = '<span class="tset-container"><span class="tset-raw" id="tset-raw-{}" raw="{}" israw="0" ondblclick="ondouble({})">{}</span>'.format(raw_count, raw, raw_count, tset)
-    out += extra
-    out += '&nbsp;&nbsp;<span onclick="iconrawtset({})"><img alt="Toggle raw display" src="{}" class="tset-icon" id="tset-raw-icon-{}" style="position:relative;top: 2px"></span></span>'.format(raw_count, srcloc, raw_count)
-    return out
-
-def to_ordinal(n):
-    a = (n % 100) // 10
-    if a == 1:
-        return '%sth' % n
-    b = n % 10
-    if b == 1:
-        return '%sst' % n
-    elif b == 2:
-        return '%snd' % n
-    elif b == 3:
-        return '%srd' % n
+def pluralize(n, noun, omit_n=False, denom=None, offset=0):
+    if denom is not None:
+        if offset != 0:
+            return f"{n}/{denom} {plural_form(noun)} (starting at row {offset+1})"
+        return f"{n}/{denom} {plural_form(noun)}"
+    if n == 1:
+        if omit_n:
+            return noun
+        return f"1 {noun}"
+    elif omit_n:
+        return plural_form(noun)
     else:
-        return '%sth' % n
-
-def dispZmat(mat):
-    r""" Display a matrix with integer entries
-    """
-    s = r'\begin{pmatrix}'
-    for row in mat:
-      rw = '& '.join([str(z) for z in row])
-      s += rw + '\\\\'
-    s += r'\end{pmatrix}'
-    return s
-
-def dispcyclomat(n,mat):
-    s = r'\begin{pmatrix}'
-    for row in mat:
-      rw = '& '.join([sparse_cyclotomic_to_latex(n,z) for z in row])
-      s += rw + '\\\\'
-    s += r'\end{pmatrix}'
-    return s
-
+        return f"{n} {plural_form(noun)}"

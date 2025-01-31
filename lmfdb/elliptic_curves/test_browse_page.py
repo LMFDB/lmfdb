@@ -1,5 +1,6 @@
 from lmfdb.tests import LmfdbTest
 
+
 class HomePageTest(LmfdbTest):
     # All tests should pass
     #
@@ -59,9 +60,20 @@ class HomePageTest(LmfdbTest):
         """
         self.check_args("/EllipticCurve/Q/?jump=11.a2", r'y^2+y=x^3-x^2-10x-20')
         self.check_args("/EllipticCurve/Q/?jump=389.a", 'Elliptic curves in class 389.a')
-        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", r'\Z^2')
-        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+", r'\Z^2')
+        self.check_args("/EllipticCurve/Q/?jump=%5B0%2C1%2C1%2C-2%2C0%5D", '0.15246')
+        self.check_args("/EllipticCurve/Q/?jump=%5B-3024%2C+46224%5D+", '0.15246')
 
+        # Check that giving defining polynomials for f,h works
+        self.check_args("/EllipticCurve/Q/?jump=x%5E3+%2B+10*x+%2B+17%2C+x", r"\frac{109902239}{176525}")
+
+        # Check that giving a Weierstrass equation works, even without explicit multiplication '*'
+        self.check_args("/EllipticCurve/Q/?jump=b%5E2+%2B+ab+%3D+a%5E3+%2B+2a+%2B+1", "-0.756030189082")
+
+        # Check that variables are only single characters
+        self.check_args("/EllipticCurve/Q/?jump=%28banana%29%5E2%3Dx%5E3%2B1", "does not define an elliptic curve")
+
+        # Check that the coefficient of x^3 does not need to be 1
+        self.check_args("/EllipticCurve/Q/?jump=4x%5E3+%2B+4x+%2B+1", '91a1')
     #
     # Various search combinations
     def test_search(self):
@@ -74,14 +86,18 @@ class HomePageTest(LmfdbTest):
                         '[0, -1, 0, -10560, -414180]')
         self.check_args("/EllipticCurve/Q/?conductor=&jinv=-4096%2F11&count=100",
                         '169136.i3')
-        self.check_args("/EllipticCurve/Q/?torsion_structure=%5B2%2C4%5D&sha=&count=100",
+        self.check_args("/EllipticCurve/Q/?torsion=%5B2%2C4%5D&sha=&count=100",
                         '[0, 1, 0, -1664, -9804]')
-        self.check_args_with_timeout("/EllipticCurve/Q/?&surj_primes=&surj_quantifier=include&nonsurj_primes=2%2C3&count=100",
+        self.check_args_with_timeout("/EllipticCurve/Q/?nonmax_quantifier=include&nonmax_primes=2,3&count=100",
                         '[1, -1, 1, -24575, 1488935]')
-        self.check_args_with_timeout("/EllipticCurve/Q/?&surj_primes=&surj_quantifier=exactly&nonsurj_primes=5&optimal=on&count=100",
+        self.check_args_with_timeout("/EllipticCurve/Q/?nonmax_quantifier=exactly&nonmax_primes=5&optimal=on&count=100",
                         '[0, 0, 1, -75, 256]')
-        self.check_args("EllipticCurve/Q/?conductor=990&surj_quantifier=include&optimal=on",
+        self.check_args("EllipticCurve/Q/?conductor=990&optimal=on",
                         '990h1')
-        L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13&search_type=List")
+        L = self.tc.get("EllipticCurve/Q/?isogeny_degrees=13")
         assert '[0, 0, 1, -849658625, 9532675710156]' in L.get_data(as_text=True)
         assert '[0, -1, 1, -10, -20]' not in L.get_data(as_text=True)
+
+        # Test error handling
+        L = self.tc.get("EllipticCurve/Q/?conductor=162&jinv=-1159088625%2F097152")
+        assert ' is not a valid input' in L.get_data(as_text=True)

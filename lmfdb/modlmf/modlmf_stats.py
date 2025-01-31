@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.app import app
 from lmfdb import db
 from lmfdb.utils import comma
@@ -9,10 +8,11 @@ logger = make_logger("modlmfs")
 
 the_modlmf_stats = None
 
+
 def get_stats():
     global the_modlmf_stats
     if the_modlmf_stats is None:
-       the_modlmf_stats = modlmf_stats()
+        the_modlmf_stats = modlmf_stats()
     return the_modlmf_stats
 
 
@@ -25,7 +25,8 @@ def modlmf_summary():
 def ctx_modlmf_summary():
     return {'modlmf_summary': modlmf_summary}
 
-class modlmf_stats(object):
+
+class modlmf_stats():
     """
     Class for creating and displaying statistics for integral modlmfs
     """
@@ -34,8 +35,8 @@ class modlmf_stats(object):
         logger.debug("Computing modlmf counts...")
         counts = {}
         nmodlmf = db.modlmf_forms.count()
-        counts['nmodlmf']  = nmodlmf
-        counts['nmodlmf_c']  = comma(nmodlmf)
+        counts['nmodlmf'] = nmodlmf
+        counts['nmodlmf_c'] = comma(nmodlmf)
         max_level = db.modlmf_forms.max('level')
         counts['max_level'] = max_level
         counts['max_level_c'] = comma(max_level)

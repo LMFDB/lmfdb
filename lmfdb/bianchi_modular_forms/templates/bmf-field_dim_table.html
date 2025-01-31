@@ -8,7 +8,7 @@
 
 <p>
 Table of the dimensions of the spaces of {{
-KNOWL('mf.bianchi.bianchimodularforms', title='Bianchi cusp forms') }}
+KNOWL('mf.bianchi', title='Bianchi cusp forms') }}
 for \(\Gamma_0(\mathfrak{n})\subseteq {{info.bgroup}}\) for {{
 KNOWL('mf.bianchi.level', title='levels') }} \(\mathfrak{n}\) ordered
 by norm, over \(K=\) {{info.field_pretty}}.
@@ -32,7 +32,7 @@ by norm, over \(K=\) {{info.field_pretty}}.
 
 {% if info.number %}
 
-<form id='level_flag' onsubmit="cleanSubmit(this.id)">
+<form class="search">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="level_norm" value="{{info.level_norm}}"/>
@@ -77,7 +77,7 @@ by norm, over \(K=\) {{info.field_pretty}}.
 </p>
 </form>
 
-<form id='re-search' onsubmit="cleanSubmit(this.id)">
+<form class="re-search">
 <input type="hidden" name="start" value="{{info.start}}"/>
 <input type="hidden" name="count" value="{{info.count}}"/>
 <input type="hidden" name="level_flag" value="{{info.level_flag}}"/>

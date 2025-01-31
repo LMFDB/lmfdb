@@ -35,7 +35,7 @@ def ImmutableExtensionFactory(t, t_name):
     class ImmutableExtensionClass(t):
         @staticmethod
         def __new__(cls, x):
-            return super(ImmutableExtensionClass, cls).__new__(cls, x)
+            return super().__new__(cls, x)
 
     return ImmutableExtensionClass
 
@@ -43,24 +43,29 @@ Int = ImmutableExtensionFactory(int, "Int")
 Str = String = ImmutableExtensionFactory(str, "Str")
 Float = ImmutableExtensionFactory(float, "Float")
 
-Anything = lambda x: x
+def Anything(x): return x
 
-id = lambda x: x
+def id(x): return x
 
 
 def Array(*f, **kwargs):
-    # Cases:
-        # Array(f, n=3)
-        # Array(f)
-        # Array(id, n=3)
+    """
+    Cases:
 
-        # Use initOneFunction
-    # Cases:
-        # Array(f1,f2,f3)
-        # Redundant: Array(f1,f2,f3,n=3)
-        # Bad: Array(f1,f2,f3, n = 4)
+        Array(f, n=3)
+        Array(f)
+        Array(id, n=3)
 
-        # Use initMultipleFunctions
+        Use initOneFunction
+
+    Cases:
+
+        Array(f1,f2,f3)
+        Redundant: Array(f1,f2,f3, n=3)
+        Bad: Array(f1,f2,f3, n=4)
+
+        Use initMultipleFunctions
+    """
     class SmartArray(list):
         pass
 
@@ -88,29 +93,33 @@ def Array(*f, **kwargs):
 
 
 def Dict(*f, **kwargs):
-    # Cases:
-        # Dict(f) Not allowed (or syntax would be confusing)
-        # Use instead Dict(Str, g)
-        # Not valid JSON, but should be handled: Dict(f,g)
+    """
+    Cases:
 
-        # Use ConstantValueTypes
+        Dict(f) Not allowed (or syntax would be confusing)
+        Use instead Dict(Str, g)
+        Not valid JSON, but should be handled: Dict(f,g)
 
-    # Cases:
-        # Dict({key1 : f1, key2 : f2, ...})
+        Use ConstantValueTypes
 
-        # Use VariableValueTypes
+    Cases:
+
+        Dict({key1 : f1, key2 : f2, ...})
+
+        Use VariableValueTypes
+    """
 
     class SmartDict(dict):
         pass
 
     def initConstantValueTypes(self, x):
-        tmp = dict([((f[0])(k), (f[1])(v)) for (k, v) in x.items()])
+        tmp = {(f[0])(k): (f[1])(v) for (k, v) in x.items()}
         # tmp = dict([(wrapper(f[0])(k), wrapper(f[1])(v)) for (k,v) in x.items()])
         dict.__init__(self, tmp)
 
     def initVariableValueTypes(self, x):
         # tmp = dict([(k,wrapper(f[0][k])(v)) for (k,v) in x.items()])
-        tmp = dict([(k, (f[0][k])(v)) for (k, v) in x.items()])
+        tmp = {k: (f[0][k])(v) for (k, v) in x.items()}
         dict.__init__(self, tmp)
 
     if len(f) == 2:

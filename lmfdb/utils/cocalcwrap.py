@@ -1,7 +1,6 @@
-#-*- coding: utf-8 -*-
 import os
 
-class CocalcWrap(object):
+class CocalcWrap():
     """Wrap the application in this middleware
         if you are running Flask in Cocalc
 

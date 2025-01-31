@@ -27,7 +27,7 @@ function show_eqns(invstyle) {
 </script>
 
 {#
-<script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+<script src="https://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
 
 <h2 class='min_eqn' style='margin-top:0px;'>            {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
@@ -45,7 +45,7 @@ function show_eqns(invstyle) {
 <tr>
 <tr class='simp_eqn nodisplay'>
     <td>${{ data.min_eqn_display[2] }}$</td>
-    <td>(<a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>, <a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>)</td>
+    <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>, <a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>)</td>
 <tr>
 </table>
 <p>{{place_code('curve')}}{{place_code('simple_curve')}}</p>
@@ -126,7 +126,7 @@ function show_eqns(invstyle) {
     <tr>
         <td>\(\mathrm{Aut}(X)\)</td><td>\(\simeq\)</td>
         <td>{{ data['aut_grp'] | safe }}</td>
-        <!-- a hack so that that the table doesn't expand with code blurbls -->
+        <!-- a hack so that the table doesn't expand with code blurbls -->
         <!-- TODO: use javascript to adapt the width -->
         <td>{{place_code('aut')}}</td>
     </tr>
@@ -175,9 +175,9 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.hasse_weil_conjecture', 'Hasse-Weil conjecture') }}:</td>
         <td>{% if data.hasse_weil_proved  %} verified {%else %} unverified {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.analytic_rank', 'Analytic rank') }}:</td>
-        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr> 
+        <td>\({{data.analytic_rank}}\) {% if data.analytic_rank > 2 and data.analytic_rank_proved != True %}&nbsp;&nbsp;(upper bound){% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.mordell_weil_rank', 'Mordell-Weil rank') }}:</td>
-        <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>    
+        <td>\({{data.mw_rank}}\) {% if not data.mw_rank_proved %}&nbsp;&nbsp;(lower bound){% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.two_selmer_rank', '2-Selmer rank') }}:</td><td>\({{data.two_selmer_rank}}\)</td></tr>
     <tr><td>{{ KNOWL('g2c.regulator', 'Regulator') }}:</td>
         <td>{% if data.regulator == 'unknown' %} unknown {% else %} \( {{data.regulator}} \) {% endif %}</td></tr>
@@ -197,6 +197,30 @@ function show_eqns(invstyle) {
 
 <p>{{ data.local_table | safe }}</p>
 
+<h2> {{KNOWL('g2c.galois_rep', 'Galois representations')}} </h2>
+
+<p>
+    {% if data.exists_nonsurj_data %}
+        The {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}}
+        has {{KNOWL('g2c.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
+        for all primes \( \ell \)
+    
+        {% if data.nonmax_primes %} {# there are non-maximal primes #}
+            except those listed.
+            </p>
+            <p>
+            <p>{{ data.galrep_table | safe }}
+        {% else %}
+            .
+        {% endif %}
+    {% else %}
+        For primes $\ell \ge 5$ the Galois representation data has not been computed for this curve since it is not generic.
+
+        <p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not all of $\GSp(4,\F_\ell)$. </p>
+        <p>{{ data.galrep_table | safe }}</p>
+    {% endif %}
+</p>
+
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 
 <p>
@@ -213,6 +237,9 @@ function show_eqns(invstyle) {
 
 <!-- Description of the splittings themselves. -->
 <p>{{data.split_statement|safe}}</p>
+
+<!-- Code snippet -->
+<p>{{place_code('decomp')}}</p>
 
 <h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2>
 
@@ -232,5 +259,10 @@ function show_eqns(invstyle) {
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', 'endomorphism lattice') }} by field</h3>
 <p>{{data.end_lattice_statement|safe}}</p>
 {% endif %}
+
+<!-- Code snippet -->
+<p>{{place_code('endos0')}}</p>
+<p>{{place_code('endos1')}}</p>
+<p>{{place_code('endos2')}}</p>
 
 {% endblock %}
