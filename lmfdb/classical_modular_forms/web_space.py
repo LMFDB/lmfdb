@@ -481,7 +481,7 @@ class WebGamma1Space():
         self.has_trace_form = (data.get('traces') is not None)
         # By default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
-        self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level)]
+        self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level) if sublevel != level]
         self.oldspaces.sort()
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []
