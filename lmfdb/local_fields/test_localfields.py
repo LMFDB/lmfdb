@@ -38,7 +38,7 @@ class LocalFieldTest(LmfdbTest):
 
     def test_underlying_data(self):
         page = self.tc.get('/padicField/11.6.4.2').get_data(as_text=True)
-        assert 'Underlying data' in page and 'data/11.6.4.2' in page
+        assert 'Underlying data' in page and 'data/11.2.3.4a1.2' in page
 
     def test_search_download(self):
         page = self.tc.get('/padicField/?Submit=gp&download=1&query=%7B%27p%27%3A+2%2C+%27n%27%3A+2%7D&n=2&p=2').get_data(as_text=True)

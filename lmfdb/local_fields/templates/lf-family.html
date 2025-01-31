@@ -22,7 +22,8 @@
   <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> ${{family.rams}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.all_stored %} (complete) {% else %} (incomplete) {% endif %}</td></tr>
   <tr><td>{{ KNOWL('lf.family_ambiguity', 'Ambiguity') }}:</td><td> ${{family.ambiguity}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass_relative_display}}$</td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Absolute Mass') }}:</td><td> ${{family.mass_absolute_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
 </table>
 
 {% if family.field_count > 0 %}

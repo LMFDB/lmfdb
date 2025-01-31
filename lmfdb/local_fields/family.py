@@ -22,7 +22,7 @@ class pAdicSlopeFamily:
             data = db.lf_families.lookup(label)
             if data:
                 self.__dict__.update(data)
-                for col in ["visible", "slopes", "rams", "means", "scaled_rams", "types"]:
+                for col in ["visible", "slopes", "rams", "means", "tiny_rams", "small_rams"]:
                     setattr(self, col, str_to_QQlist(getattr(self, col)))
                 self.p, self.e = ZZ(self.p), ZZ(self.e)
                 self.artin_slopes = self.visible
@@ -50,7 +50,7 @@ class pAdicSlopeFamily:
         # It's convenient to add 0 at the beginning; this transforms our indexing into 1-based and helps with cases below the first band
         means = [0] + self.means
         slopes = [0] + self.slopes
-        types = [0] + self.types
+        small_rams = [0] + self.small_rams
         maxslope = slopes[-1]
         slopes.append(maxslope+1) # convenient since the last band is the final one in its sequence
         while True:
@@ -68,7 +68,7 @@ class pAdicSlopeFamily:
                 continue
             if height in means:
                 band = means.index(height)
-                if types[band] != self.e0 and slopes[band] < slopes[band+1]:
+                if small_rams[band] != self.e0 and slopes[band] < slopes[band+1]:
                     # A-point: green square
                     dots.append(("a", i, j, True))
                     continue
@@ -170,7 +170,7 @@ class pAdicSlopeFamily:
                 P += text(f"${u}$", (u, -vscale), vertical_alignment="top", color="black", zorder=-2)
                 P += text(f"${u}$", (u, maxslope+vscale), vertical_alignment="bottom", color="black", zorder=-2)
             # Right hand lines for arithmetic bands
-            for (m, s, t) in zip(self.means, self.slopes, self.types):
+            for (m, s, t) in zip(self.means, self.slopes, self.small_rams):
                 if t == self.e0:
                     P += line([(self.e, m), (self.e, s)], color="black", zorder=-2, thickness=2)
             # Ram labels

@@ -498,7 +498,8 @@ families_columns = SearchColumns([
     ProcessedCol("poly", "lf.family_polynomial", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Field count"),
-    MathCol("mass", "lf.family_mass", "Mass", orig=["mass_display"]),
+    MathCol("mass_relative", "lf.family_mass", "Mass", orig=["mass_relative_display"]),
+    MathCol("mass_absolute", "lf.family_mass", "Mass (absolute)", orig=["mass_absolute_display"], default=False),
     MathCol("mass_stored", "lf.family_mass", "Mass stored", default=False),
     PercentCol("mass_found", "lf.family_mass", "Mass found", default=False),
     MathCol("wild_segments", "lf.wild_segments", "Wild segments", default=False),
@@ -1022,7 +1023,8 @@ def common_family_parse(info, query):
     parse_ints(info,query,'w',name='Wild ramification exponent')
     parse_noop(info,query,'base',name='Base')
     parse_noop(info,query,'label_absolute',name='Absolute label')
-    parse_floats(info,query,'mass',name='Mass')
+    parse_floats(info,query,'mass_relative',name='Mass', qfield='mass_relative')
+    parse_floats(info,query,'mass_absolute',name='Mass', qfield='mass_absolute')
     parse_floats(info,query,'mass_found',name='Mass found')
     parse_ints(info,query,'ambiguity',name='Ambiguity')
     parse_ints(info,query,'field_count',name='Field count')
@@ -1297,18 +1299,24 @@ class FamiliesSearchArray(SearchArray):
             label='Base',
             knowl='lf.family_base',
             example='2.2.1.0a1.1')
-        mass = TextBox(
-            name='mass',
+        mass_relative = TextBox(
+            name='mass_relative',
             label='Mass',
             knowl='lf.family_mass',
             example='255/8',
             example_span='9/2, or a range like 1-10')
-        mass_found = TextBox(
-            name='mass_found',
-            label='Mass found',
+        mass_absolute = TextBox(
+            name='mass_absolute',
+            label='Absolute mass',
             knowl='lf.family_mass',
-            example='0.5-',
-            example_span='0, or a range like 0.1-0.4')
+            example='255/8',
+            example_span='9/2, or a range like 1-10')
+        #mass_found = TextBox(
+        #    name='mass_found',
+        #    label='Mass found',
+        #    knowl='lf.family_mass',
+        #    example='0.5-',
+        #    example_span='0, or a range like 0.1-0.4')
         ambiguity = TextBox(
             name='ambiguity',
             label='Ambiguity',
@@ -1337,26 +1345,26 @@ class FamiliesSearchArray(SearchArray):
                                  [base, n0, e0, f0, c0],
                                  [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
                                  #[visible, slopes, rams, means, slope_multiplicities],
-                                 [mass, mass_found, ambiguity, field_count, wild_segments]]
+                                 [mass_relative, mass_absolute, ambiguity, field_count, wild_segments]]
             self.sorts = [
                 ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
                 ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),
                 ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
                 ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
                 ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
-                ("mass", "mass", ['mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-                ("mass_found", "mass found", ['mass_found', 'mass', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+                ("mass", "mass", ['mass_relative', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+                #("mass_found", "mass found", ['mass_found', 'mass_relative', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
             ]
         else:
             self.refine_array = [[qp, degree, e, f, c],
-                                 [mass, mass_found, ambiguity, field_count, wild_segments]]
+                                 [mass_relative, ambiguity, field_count, wild_segments]]
             self.sorts = [
                 ("", "discriminant exponent", ['p', 'n', 'e', 'c', 'ctr']),
                 ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n', 'e', 'c', 'ctr']),
                 ("ambiguity", "ambiguity", ['p', 'n', 'ambiguity', 'e', 'c', 'ctr']),
                 ("field_count", "num fields", ['p', 'n', 'field_count', 'e', 'c', 'ctr']),
-                ("mass", "mass", ['mass', 'p', 'n', 'e', 'c', 'ctr']),
-                ("mass_found", "mass found", ['mass_found', 'mass', 'p', 'n', 'e', 'c', 'ctr']),
+                ("mass", "mass", ['mass_relative', 'p', 'n', 'e', 'c', 'ctr']),
+                #("mass_found", "mass found", ['mass_found', 'mass_relative', 'p', 'n', 'e', 'c', 'ctr']),
             ]
 
 
