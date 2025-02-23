@@ -42,9 +42,11 @@
   #}
 </table>
 
+
+{% if family.hypell_description or family.biell_description %}
 <h2> Remarks </h2>
 <p>{{KNOWL('ag.hyperelliptic_curve', 'Hyperelliptic curves')}}: {{ family.hypell_description|safe }}</p>
 <p>Bielliptic curves: {{ family.biell_description|safe }}</p>
-
+{% endif %}
 
 {% endblock %}
