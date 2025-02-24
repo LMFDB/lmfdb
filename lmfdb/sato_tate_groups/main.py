@@ -859,7 +859,7 @@ def render_by_label(label):
     data, in_database = st_lookup(label)
     info = {}
     if data is None:
-        flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
+        flash_error("%s is not the label of a Sato-Tate group currently in the database.", label)
         return redirect(url_for(".index"))
     for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
@@ -868,7 +868,7 @@ def render_by_label(label):
     info['rational'] = boolean_name(info.get('rational',True))
     st0 = db.gps_st0.lucky({'name':data['identity_component']})
     if not st0:
-        flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
+        flash_error("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['symplectic_form'] = st0.get('symplectic_form')
     info['hodge_circle'] = st0.get('hodge_circle')
@@ -883,7 +883,7 @@ def render_by_label(label):
     else:
         G = db.gps_groups.lookup(data['component_group'])
         if not G:
-            flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
+            flash_error("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
             return redirect(url_for(".index"))
         info['component_group'] = G['tex_name']
         info['cyclic'] = boolean_name(G['cyclic'])
