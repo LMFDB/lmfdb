@@ -365,9 +365,9 @@ def parse_family(inp, query, qfield):
     elif inp == "Xsp": #add X(1),X(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     elif inp == "Xarith1": # X_{arith,1}(m,mn); add X(2)
-        query[qfield] = {"$or":[{"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
+        query[qfield] = {"$or":[{"$like": inp + "(%,%"}, {"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
     elif inp == "Xarithpm1": # X_{\pm1}(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
+        query[qfield] = {"$or":[{"$like": inp + "(%,%"}, {"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
     elif inp == "Xpm1": # Add X(1) and X0(N) for N=2,3,4,6
         query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
     elif inp == "X1":
