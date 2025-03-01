@@ -1092,7 +1092,7 @@ class WebModCurve(WebObj):
         parents = {}
         names = {}
         for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
-            if rec["name"]:
+            if rec["name"] and db.modcurve_teximages.count({"label":rec["name"]}):
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]
         texlabels = []
