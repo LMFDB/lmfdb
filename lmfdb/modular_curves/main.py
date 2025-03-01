@@ -374,7 +374,7 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
     elif inp == "Xarith": # add X(1), X(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
-    elif inp == "Xarith": 
+    elif inp == "Xarith":
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
@@ -974,7 +974,6 @@ class ModCurveSearchArray(SearchArray):
             [covered_by, contains_negative_one, points, obstructions, family],
             [CPlabel],
         ]
-
 
     sorts = modcurve_sorts
 
