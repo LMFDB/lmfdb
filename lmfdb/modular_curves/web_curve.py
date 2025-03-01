@@ -127,6 +127,7 @@ def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
+    # Temporary measure until we update data with Xarith1 and Xarithpm1 families
     if "+" in name:
         name = name.replace("+", "^+")
     if "ns" in name:
@@ -135,6 +136,10 @@ def name_to_latex(name):
         name = name.replace("sp", r"{\mathrm{sp}}")
     elif "S4" in name:
         name = name.replace("S4", "{S_4}")
+    elif name.startswith("Xarith1"):
+        name = r"X{\mathrm{arith},1}" + name[7:]
+    elif name.startswith("Xarithpm1"):
+        name = r"X{\mathrm{arith},\pm 1}" + name[9:]
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
     elif "arith" in name:
