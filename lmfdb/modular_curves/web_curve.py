@@ -136,10 +136,10 @@ def name_to_latex(name):
         name = name.replace("sp", r"{\mathrm{sp}}")
     elif "S4" in name:
         name = name.replace("S4", "{S_4}")
-    elif name.startswith("X1(2,"):
-        name = r"X{\mathrm{arith},1}" + name[2:]
-    elif name.startswith("Xpm1(2,"):
-        name = r"X{\mathrm{arith},\pm 1}" + name[4:]
+    elif name.startswith("Xarith1"):
+        name = r"X{\mathrm{arith},1}" + name[7:]
+    elif name.startswith("Xarithpm1"):
+        name = r"X{\mathrm{arith},\pm 1}" + name[9:]
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
     elif "arith" in name:
