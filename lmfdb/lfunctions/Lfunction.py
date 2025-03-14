@@ -258,6 +258,7 @@ def makeLfromdata(L):
 
     # Note: a better name would be L.dirichlet_coefficients_analytic, but that
     # would require more global changes.
+    # Note: this is always set fot Dirichlet L-functions
     if data.get('dirichlet_coefficients', None) is not None:
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     elif data.get('euler_factors', None) is not None:
@@ -397,15 +398,15 @@ def apply_coeff_info(L, coeff_info):
         return res[0], CDF(res[1])
 
     base_power_int = int(coeff_info[0][2:-3])
-    fix = False
+    fix = None
     for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
         L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] = convert_coefficient(an, base_power_int)
         # checks if we need to fix the Euler factors
-        if is_prime(n) and L.dirichlet_coefficients_arithmetic[n] != 0:
-            if fix:
-                assert L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
-            else:
-                fix = L.dirichlet_coefficients_arithmetic[n] == L.localfactors[prime_pi(n)-1]
+        if is_prime(n+1) and L.dirichlet_coefficients_arithmetic[n] != 0:
+            p = n + 1
+            if fix is None:
+                fix = L.dirichlet_coefficients_arithmetic[p-1] == L.localfactors[prime_pi(p)-1][1]
+            assert L.dirichlet_coefficients_arithmetic[p-1] == (1 if fix else -1)*L.localfactors[prime_pi(p)-1][1]
 
     def convert_euler_Lpoly(poly_coeffs):
         Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
