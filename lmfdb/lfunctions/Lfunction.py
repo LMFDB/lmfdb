@@ -364,7 +364,8 @@ def apply_coeff_info(L, coeff_info):
         the format in the database to algebraic and analytic form
     """
 
-    def convert_coefficient(an, base_power_int):
+    base_power_int = int(coeff_info[0][2:-3])
+    def convert_coefficient(an):
         """
         this is only meant for dirichlet L-functions, and
         converts the format in the database to algebraic and analytic form
@@ -397,19 +398,21 @@ def apply_coeff_info(L, coeff_info):
                 res = arithmetic, analytic
         return res[0], CDF(res[1])
 
-    base_power_int = int(coeff_info[0][2:-3])
     fix = None
-    for n, an in enumerate(L.dirichlet_coefficients_arithmetic):
-        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] = convert_coefficient(an, base_power_int)
+    for n, an in enumerate(L.dirichlet_coefficients_arithmetic[:]):
+        L.dirichlet_coefficients_arithmetic[n], L.dirichlet_coefficients[n] = convert_coefficient(an)
         # checks if we need to fix the Euler factors
         if is_prime(n+1) and L.dirichlet_coefficients_arithmetic[n] != 0:
             p = n + 1
+            idx = prime_pi(p)-1
+            ap = L.dirichlet_coefficients[p-1]
+            ef_ap = -convert_coefficient(L.localfactors[idx][1])[1]
             if fix is None:
-                fix = L.dirichlet_coefficients_arithmetic[p-1] == L.localfactors[prime_pi(p)-1][1]
-            assert L.dirichlet_coefficients_arithmetic[p-1] == (1 if fix else -1)*L.localfactors[prime_pi(p)-1][1]
+                fix = (ap - ef_ap).abs() > 1e-5
+            assert (ap - (-1 if fix else 1)*ef_ap).abs() < 1e-5
 
     def convert_euler_Lpoly(poly_coeffs):
-        Fp = [convert_coefficient(c, base_power_int)[1] for c in poly_coeffs]
+        Fp = [convert_coefficient(c)[1] for c in poly_coeffs]
         # WARNING: the data in the database is wrong!
         # it lists Fp(-T) instead of Fp(T)
         # this is a temporary fix
