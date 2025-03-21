@@ -419,7 +419,8 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              table=db.lfunc_search,
              title="L-function Euler product search",
              err_title="L-function search input error",
-             shortcuts={'jump':jump_box},
+             columns=lfunc_columns,
+             shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              postprocess=process_euler,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
