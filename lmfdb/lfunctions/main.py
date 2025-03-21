@@ -349,6 +349,15 @@ lfunc_columns = SearchColumns([
                  download_col="instance_urls")],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
 
+euler_factor_columns = SearchColumns([
+    MultiProcessedCol("label", "lfunction.label", "Label",
+                         ["label", "url"],
+                         lambda label, url: '<a href="%s">%s</a>' % (url, label),
+                         download_col="label"),
+    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", short_title="root analytic conductor")],
+    db_cols = 1)
+    #db_cols = ['root_analytic_conductor', 'euler_factor', 'instance_urls', 'label', 'motivic_weight', 'degree'])
+
 class LfuncDownload(Downloader):
     table = db.lfunc_search
     def postprocess(self, rec, info, query):
@@ -390,6 +399,7 @@ def trace_search(info, query):
 
 @search_parser
 def parse_euler(inp, query, qfield, p=None, d=None):
+    raise RuntimeError("in parse_euler")
     seen = False
     for piece in inp.split(','):
         piece = piece.strip().split('=')
@@ -419,7 +429,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              table=db.lfunc_search,
              title="L-function Euler product search",
              err_title="L-function search input error",
-             columns=lfunc_columns,
+             columns=euler_factor_columns,
              shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              postprocess=process_euler,
              learnmore=learnmore_list,
