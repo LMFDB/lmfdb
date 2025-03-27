@@ -125,9 +125,9 @@ def eisensteinformlatex(pol, unram):
     pol=R(pol)
     l=[]
     while pol != 0:
-      qr=pol.quo_rem(unram2)
-      l.append(qr[1])
-      pol=qr[0]
+        qr=pol.quo_rem(unram2)
+        l.append(qr[1])
+        pol=qr[0]
     newpol=latex(Rx(l))
     newpol=newpol.replace('x','('+unram+')')
     newpol=newpol.replace('y','x')
