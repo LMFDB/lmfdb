@@ -170,7 +170,7 @@ def prime_label(P):
 def prime_from_label(K, lab):
     """Return the prime of K from a label, or 0 is there is no such prime
     """
-    n, j = [ZZ(c) for c in lab.split(".")]
+    n, j = (ZZ(c) for c in lab.split("."))
     p, f = n.factor()[0]
     make_keys(K,p)
     d = K.psort_dict[p]
@@ -316,15 +316,17 @@ def ppower_norm_ideal_key(Q):
     """
     return (Q.norm(), ppower_norm_ideal_index(Q))
 
+
 def ppower_norm_ideal_label(Q):
     r""" return the label of an ideal of prime-power norm.
     """
     return "{}.{}".format(Q.norm(),ppower_norm_ideal_index(Q))
 
+
 def ppower_norm_ideal_from_label(K,lab):
     r""" return the ideal of prime-power norm from its label.
     """
-    n, i = [int(c) for c in lab.split(".")]
+    n, i = (int(c) for c in lab.split("."))
     p, f = ZZ(n).factor()[0]
     make_keys(K,p)
     PP = K.primes_dict[p]
@@ -369,11 +371,13 @@ def ideal_label(I):
     """
     return "{}.{}".format(I.norm(),ideal_norm_index(I))
 
+
 def ideal_from_label(K,lab):
     r""" Return the ideal with a given label.
     """
-    n, j = [int(c) for c in lab.split(".")]
+    n, j = (int(c) for c in lab.split("."))
     return ideals_of_norm(K,ZZ(n))[j-1]
+
 
 def ideals_iterator(K,minnorm=1,maxnorm=Infinity):
     r""" Return an iterator over all ideals of norm n up to maxnorm (sorted).
