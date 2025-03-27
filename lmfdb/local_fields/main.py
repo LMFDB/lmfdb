@@ -116,6 +116,22 @@ def lf_display_knowl(label, name=None):
 def local_algebra_display_knowl(labels):
     return '<a title = "{0} [lf.algebra.data]" knowl="lf.algebra.data" kwargs="labels={0}">{0}</a>' % (labels)
 
+def eisensteinformlatex(pol, unram):
+    # pol=coeffs,  unram =string
+    R=PolynomialRing(QQ, 'y')
+    Rx=PolynomialRing(R, 'x')
+    unram2=R(unram.replace('t','y'))
+    unram=latex(Rx(unram.replace('t','x')))
+    pol=R(pol)
+    l=[]
+    while pol != 0:
+        qr=pol.quo_rem(unram2)
+        l.append(qr[1])
+        pol=qr[0]
+    newpol=latex(Rx(l))
+    newpol=newpol.replace('x','('+unram+')')
+    newpol=newpol.replace('y','x')
+    return newpol
 
 def plot_polygon(verts, polys, inds, p):
     verts = [tuple(pt) for pt in verts]
@@ -460,8 +476,13 @@ def render_field_webpage(args):
         else:
             wild_inertia = 'Not computed'
 
+        if data['f']==1 or data['e']==1:
+            thepolynomial=raw_typeset(polynomial)
+        else:
+            eform='$'+eisensteinformlatex(data['coeffs'],data['unram'])+'$'
+            thepolynomial=raw_typeset(polynomial, eform)
         info.update({
-                    'polynomial': raw_typeset(polynomial),
+                    'polynomial': thepolynomial,
                     'n': data['n'],
                     'p': p,
                     'c': data['c'],
