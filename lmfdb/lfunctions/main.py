@@ -367,23 +367,6 @@ class LfuncDownload(Downloader):
             rec['root_number'] = 1 - int(4*rec['root_angle'])
         return rec
 
-class EulerFactorDownload(Downloader):
-    table = db.lfunc_search
-    def postprocess(self, rec, info, query):
-        p_range = parse_ints_to_list(info['n'])
-        pop_primes = [p for p in prime_range(100) if p not in p_range]
-        download_primes = [p for p in prime_range(100) if p in p_range]
-        for p in pop_primes:
-            rec.pop("euler%s" % p)
-        info["columns"] = SearchColumns([
-            MultiProcessedCol("label", "lfunction.label", "Label",
-                         ["label", "url"],
-                         lambda label, url: '<a href="%s">%s</a>' % (url, label),
-                      download_col="label")] +
-                    [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p)
-                     for p in download_primes], db_cols = 1)
-        return rec
-
 @search_wrap(table=db.lfunc_search,
              postprocess=process_search,
              title="L-function search results",
@@ -445,7 +428,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              title="L-function Euler product search",
              err_title="L-function search input error",
              columns=euler_factor_columns,
-             shortcuts={'jump':jump_box, 'download': EulerFactorDownload()},
+             shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              postprocess=process_euler,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
