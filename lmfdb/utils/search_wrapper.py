@@ -230,8 +230,6 @@ class SearchWrapper(Wrapper):
                 else:
                     return redirect(self.url_for_label(label), 307)
             else:
-                print("query=", query)
-                print("info=", info)
                 res = table.search(
                     query,
                     proj,
