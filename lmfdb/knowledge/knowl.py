@@ -1,10 +1,10 @@
 # the basic knowledge object, with database awareness, …
 
-from datetime import datetime, timedelta
 from collections import defaultdict
-import time
+from datetime import datetime, timedelta
+import re
 import subprocess
-import sys
+import time
 
 from psycodict.base import PostgresBase
 from psycodict import DelayCommit
@@ -17,7 +17,7 @@ from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
 from sage.all import cached_function
 
-import re
+
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")

@@ -319,7 +319,6 @@ def admin():
 @app.route("/restartserver")
 @admin_required
 def restart():
-    import sys
     from subprocess import Popen, PIPE
     from urllib.parse import urlparse
     urlparts = urlparse(request.url)
@@ -343,6 +342,7 @@ class Reviewer(Uploader):
     def __init__(self):
         from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC, MultiKnowl
         super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
+
 
 @login_page.route("/uploads", methods=["GET", "POST"])
 @login_required
