@@ -118,19 +118,19 @@ def local_algebra_display_knowl(labels):
 
 def eisensteinformlatex(pol, unram):
     # pol=coeffs,  unram =string
-    R=PolynomialRing(QQ, 'y')
-    Rx=PolynomialRing(R, 'x')
-    unram2=R(unram.replace('t','y'))
-    unram=latex(Rx(unram.replace('t','x')))
-    pol=R(pol)
-    l=[]
+    R = PolynomialRing(QQ, 'y')
+    Rx = PolynomialRing(R, 'x')
+    unram2 = R(unram.replace('t', 'y'))
+    unram = latex(Rx(unram.replace('t', 'x')))
+    pol = R(pol)
+    l = []
     while pol != 0:
-        qr=pol.quo_rem(unram2)
+        qr = pol.quo_rem(unram2)
         l.append(qr[1])
-        pol=qr[0]
-    newpol=latex(Rx(l))
-    newpol=newpol.replace('x','('+unram+')')
-    newpol=newpol.replace('y','x')
+        pol = qr[0]
+    newpol = latex(Rx(l))
+    newpol = newpol.replace('x', '(' + unram + ')')
+    newpol = newpol.replace('y', 'x')
     return newpol
 
 def plot_polygon(verts, polys, inds, p):
@@ -332,6 +332,7 @@ def intcol(j):
         return 'not computed'
     return f'${j}$'
 
+
 lf_columns = SearchColumns([
     LinkCol("label", "lf.field.label", "Label", url_for_label),
     MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
@@ -476,11 +477,11 @@ def render_field_webpage(args):
         else:
             wild_inertia = 'Not computed'
 
-        if data['f']==1 or data['e']==1:
-            thepolynomial=raw_typeset(polynomial)
+        if data['f'] == 1 or data['e'] == 1:
+            thepolynomial = raw_typeset(polynomial)
         else:
-            eform='$'+eisensteinformlatex(data['coeffs'],data['unram'])+'$'
-            thepolynomial=raw_typeset(polynomial, eform)
+            eform = '$' + eisensteinformlatex(data['coeffs'], data['unram']) + '$'
+            thepolynomial = raw_typeset(polynomial, eform)
         info.update({
                     'polynomial': thepolynomial,
                     'n': data['n'],
@@ -488,7 +489,7 @@ def render_field_webpage(args):
                     'c': data['c'],
                     'e': data['e'],
                     'f': data['f'],
-                    'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
+                    'rf': lf_display_knowl(rflabel, name=printquad(data['rf'], p)),
                     'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
                     'hw': data['hw'],
                     'visible': show_slopes(data['visible']),
@@ -526,7 +527,7 @@ def render_field_webpage(args):
             friends.append(('Discriminant root field', rffriend))
         if data['is_completion']:
             friends.append(('Number fields with this completion',
-                url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label) ))
+                url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label)))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
         bread = get_bread([(label, ' ')])
