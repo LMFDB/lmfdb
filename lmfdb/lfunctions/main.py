@@ -44,7 +44,7 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
-    parse_bool, parse_ints, parse_floats, parse_noop, parse_mod1,
+    parse_bool, parse_ints, parse_ints_to_list, parse_floats, parse_noop, parse_mod1,
     parse_element_of, parse_not_element_of, search_parser)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
@@ -353,10 +353,9 @@ euler_factor_columns = SearchColumns([
     MultiProcessedCol("label", "lfunction.label", "Label",
                          ["label", "url"],
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
-                         download_col="label"),
-    MathCol("root_analytic_conductor", "lfunction.root_analytic_conductor", r"$\alpha$", short_title="root analytic conductor")],
+                      download_col="label")] +
+    [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
     db_cols = 1)
-    #db_cols = ['root_analytic_conductor', 'euler_factor', 'instance_urls', 'label', 'motivic_weight', 'degree'])
 
 class LfuncDownload(Downloader):
     table = db.lfunc_search
@@ -366,6 +365,23 @@ class LfuncDownload(Downloader):
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
             rec['root_number'] = 1 - int(4*rec['root_angle'])
+        return rec
+
+class EulerFactorDownload(Downloader):
+    table = db.lfunc_search
+    def postprocess(self, rec, info, query):
+        p_range = parse_ints_to_list(info['n'])
+        pop_primes = [p for p in prime_range(100) if p not in p_range]
+        download_primes = [p for p in prime_range(100) if p in p_range]
+        for p in pop_primes:
+            rec.pop("euler%s" % p)
+        info["columns"] = SearchColumns([
+            MultiProcessedCol("label", "lfunction.label", "Label",
+                         ["label", "url"],
+                         lambda label, url: '<a href="%s">%s</a>' % (url, label),
+                      download_col="label")] +
+                    [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p)
+                     for p in download_primes], db_cols = 1)
         return rec
 
 @search_wrap(table=db.lfunc_search,
@@ -399,7 +415,6 @@ def trace_search(info, query):
 
 @search_parser
 def parse_euler(inp, query, qfield, p=None, d=None):
-    raise RuntimeError("in parse_euler")
     seen = False
     for piece in inp.split(','):
         piece = piece.strip().split('=')
@@ -430,7 +445,7 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              title="L-function Euler product search",
              err_title="L-function search input error",
              columns=euler_factor_columns,
-             shortcuts={'jump':jump_box, 'download': LfuncDownload()},
+             shortcuts={'jump':jump_box, 'download': EulerFactorDownload()},
              postprocess=process_euler,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
@@ -446,6 +461,8 @@ def euler_search(info, query):
         flash_error("To search on <span style='color:black'>Euler factors</span>, you must specify one <span style='color:black'>degree</span>.")
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
+    p_range = parse_ints_to_list(info['n'])
+    info["showcol"] = ".".join(["euler%s" % p for p in prime_range(100) if p in p_range])
     for p in prime_range(100):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 
