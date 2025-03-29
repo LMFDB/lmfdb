@@ -355,7 +355,7 @@ euler_factor_columns = SearchColumns([
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
                       download_col="label")] +
     [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
-    db_cols = 1)
+    db_cols=1)
 
 class LfuncDownload(Downloader):
     table = db.lfunc_search
