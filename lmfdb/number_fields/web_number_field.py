@@ -15,7 +15,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly,
 from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
-from lmfdb.number_fields.draw_spectrum import draw_spec
+from lmfdb.number_fields.draw_spectrum import draw_spec, draw_barcode, draw_gaga, draw_gaga_spiral
 
 wnflog = make_logger("WNF")
 
@@ -997,8 +997,62 @@ class WebNumberField:
         loc_alg_dict = self.get_local_algebras()
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
 
-    def draw_spectrum(self):
-        return draw_spec(self.K(), nprimes=15).as_str()
+    def draw_spectrum(self,num_primes=20):
+        # extract ramified data:
+        local_algs = self._data.get('local_algs', None)
+        if local_algs is None:
+            return None
+        local_algebra_dict = {}
+        R = PolynomialRing(QQ, 'x')
+        for lab in local_algs:
+            if lab[0] == 'm': # signals data about field not in lf db
+                lab1 = lab[1:] # deletes marker m
+                p, e, f, c = [int(z) for z in lab1.split('.')]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [[e,f]]
+                else:
+                    local_algebra_dict[str(p)].append([e,f])
+            else:
+                LF = db.lf_fields.lookup(lab)
+                p = LF['p']
+                thisdat = [LF['e'], LF['f']]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [thisdat]
+                else:
+                    local_algebra_dict[str(p)].append(thisdat)
+        
+        return draw_spec(self.frobs()[:num_primes],
+                         local_algebra_dict,
+                         colors=True).as_str()
+
+    def draw_barcode(self):
+        # extract ramified data:
+        local_algs = self._data.get('local_algs', None)
+        if local_algs is None:
+            return None
+        local_algebra_dict = {}
+        R = PolynomialRing(QQ, 'x')
+        for lab in local_algs:
+            if lab[0] == 'm': # signals data about field not in lf db
+                lab1 = lab[1:] # deletes marker m
+                p, e, f, c = [int(z) for z in lab1.split('.')]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [[e,f]]
+                else:
+                    local_algebra_dict[str(p)].append([e,f])
+            else:
+                LF = db.lf_fields.lookup(lab)
+                p = LF['p']
+                thisdat = [LF['e'], LF['f']]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [thisdat]
+                else:
+                    local_algebra_dict[str(p)].append(thisdat)
+
+        # return draw_gaga(self.frobs(), local_algebra_dict, self.signature())
+        # return draw_barcode(self.frobs(), local_algebra_dict, self.signature())
+        return draw_gaga_spiral(self.frobs()[:10], local_algebra_dict)
+        
     
     def make_code_snippets(self):
         # read in code.yaml from numberfields directory:
