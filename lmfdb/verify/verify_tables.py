@@ -18,11 +18,15 @@ except NameError:
     pass
 from lmfdb.verify import db
 
-def directory(path):
-    if not os.path.isdir(path):
-        raise TypeError('Not a directory')
-    else:
-        return path
+def prepare_logdir(path):
+    if os.path.exists(path):
+        if not os.path.isdir(path):
+            raise TypeError(f"{path} exists and is not a directory")
+        # Delete old directory
+        import shutil
+        shutil.rmtree(path)
+    os.makedirs(path)
+    return path
 
 def find_validated_tables():
     curdir = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +62,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'logdir',
         metavar='LOGDIR',
-        type=directory,
+        type=prepare_logdir,
         help='log directory')
 
     parser.add_argument(
@@ -79,24 +83,26 @@ if __name__ == '__main__':
     args, parallel_args = parser.parse_known_args()
     options = vars(args)
     tablename = options.pop('tablename')
-    if not (tablename == 'all' or options['speedtype'] == 'all'):
-        options['parallel'] = False
-        db[tablename].verify(**options)
-    else:
-        #use parallel to loop over all options
-        tables = validated_tables if tablename == 'all' else [tablename]
-        types = speedtypes if options['speedtype'] == 'all' else [options['speedtype']]
+    options['parallel'] = False
+    db[tablename].verify(**options)
+    # if not (tablename == 'all' or options['speedtype'] == 'all'):
+    #     options['parallel'] = False
+    #     db[tablename].verify(**options)
+    # else:
+    #     #use parallel to loop over all options
+    #     tables = validated_tables if tablename == 'all' else [tablename]
+    #     types = speedtypes if options['speedtype'] == 'all' else [options['speedtype']]
 
-        with tempfile.NamedTemporaryFile(mode="w") as tables_file:
-            tables_file.write('\n'.join(tables) + '\n')
-            tables_file.flush()
-            with tempfile.NamedTemporaryFile(mode="w") as types_file:
-                types_file.write('\n'.join(types) + '\n')
-                types_file.flush()
-                cmd = ['parallel'] + parallel_args
-                cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
-                cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
-                print("Running: {0}".format(subprocess.list2cmdline(cmd)))
-                exitcode = subprocess.call(cmd)
+    #     with tempfile.NamedTemporaryFile(mode="w") as tables_file:
+    #         tables_file.write('\n'.join(tables) + '\n')
+    #         tables_file.flush()
+    #         with tempfile.NamedTemporaryFile(mode="w") as types_file:
+    #             types_file.write('\n'.join(types) + '\n')
+    #             types_file.flush()
+    #             cmd = ['parallel'] + parallel_args
+    #             cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
+    #             cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
+    #             print("Running: {0}".format(subprocess.list2cmdline(cmd)))
+    #             exitcode = subprocess.call(cmd)
 
-        sys.exit(exitcode)
+    #     sys.exit(exitcode)
