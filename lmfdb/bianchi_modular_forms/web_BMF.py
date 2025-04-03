@@ -264,23 +264,23 @@ class WebBMF():
         if self.ec_status not in [0,-1]: # so it is +1 (curve does exist) or None (curve_status not set)
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
             curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
+            self.bc_forms = []
             if curve_bc is not None:
                 self.ec_status = 1 # curve does exist in ec_nfcurves, now see if it is base-change
                 curve_bc = [lab for lab in curve_bc if '?' not in lab]
                 if curve_bc and "." not in curve_bc[0]:
                     curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
                 curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
-                bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso) for cond, iso, num in curve_bc_parts]
+                bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
+                           for cond, iso, num in curve_bc_parts]
                 bc_labels = [".".join( [str(cond), str(2), 'a', iso] ) for cond,iso,_ in curve_bc_parts]
                 bc_exists = [db.mf_newforms.label_exists(lab) for lab in bc_labels]
                 self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
-        else: # ec_status is 0 or -1, we have no matching curve
-            self.bc_forms = []
-            if self.ec_status is None:
-                if self.bct or self.label in bmfs_with_no_curve:
-                    self.ec_status = -1 # there is certainly no curve
-                else:
-                    self.ec_status = 0 # there should be a curve but we do not have one
+        if self.ec_status is None:
+            if self.bct or self.label in bmfs_with_no_curve:
+                self.ec_status = -1 # there is certainly no curve
+            else:
+                self.ec_status = 0 # there should be a curve but we do not have one
 
         self.properties.append(('Sign', self.sign))
         self.properties.append(('Analytic rank', self.anrank))
