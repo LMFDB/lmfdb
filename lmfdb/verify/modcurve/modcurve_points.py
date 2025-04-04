@@ -1,28 +1,28 @@
-
-from sage.all import ProjectiveSpace, PolynomialRing, QQ, lazy_attribute
-from collections import defaultdict
-
+from sage.all import lazy_attribute
 from lmfdb.lmfdb_database import db
-from lmfdb.modular_curves.upload import VARORDER
 from ..verification import TableChecker, slow
 
 class modcurve_points(TableChecker):
     table = db.modcurve_points
+
+    # The following column isn't the label column, but it's the
+    # closest one we have to it. This gets used for reporting
+    # on failed tests.
     label_col = 'coordinates'
 
     @lazy_attribute
     def relevant_cusp_orbits(self):
         # Get all curve_labels needed (distinct values only)
         curve_labels = list({x for x in db.modcurve_points.search({'degree': {"$lte": 6}, 'cusp': True}, projection="curve_label")})
-        
-        # Batch fetch from gps_gl2zhat_fine
+
+        # Batch fetch from gps_gl2zhat
         records = db.gps_gl2zhat.search({'curve_label': {'$in': curve_labels}}, projection=["curve_label", "cusp_orbits"])
 
         # Build the mapping
         return {rec["curve_label"]: rec["cusp_orbits"] for rec in records}
 
 
-    @slow(ratio=1, projection=['cusp', 'degree', 'cardinality', 'curve_label', 'coordinates'],
+    @slow(ratio=1, projection=['cusp', 'degree', 'cardinality', 'curve_label'],
           constraint={'cusp': True, 'degree':{"$lte":6}})
     def check_cusp_data_matches_orbits(self, rec):
         """

@@ -2,6 +2,15 @@
 This script is used to run verification jobs in parallel.
 For more options (such as verifying only a single check or a single object)
 see the verify method of PosgresTable in lmfdb/lmfdb_database.py.
+
+In general, however, the script is run from the top level directory as follows:
+
+sage -python lmfdb/verify/verify_tables.py LOGDIR TABLENAME TYPE -j 8
+
+where LOGDIR is the directory to store the log files, TABLENAME is the name of the
+table to verify, and TYPE is the type of verification to run.
+
+The -j 8 option is optional and specifies the number of parallel jobs to run.
 """
 
 import argparse
@@ -22,10 +31,10 @@ def prepare_logdir(path):
     if os.path.exists(path):
         if not os.path.isdir(path):
             raise TypeError(f"{path} exists and is not a directory")
-        # Delete old directory
-        import shutil
-        shutil.rmtree(path)
-    os.makedirs(path)
+        # Leave existing directory as is
+    else:
+        # Create directory only if it doesn't exist
+        os.makedirs(path)
     return path
 
 def find_validated_tables():
@@ -83,26 +92,24 @@ if __name__ == '__main__':
     args, parallel_args = parser.parse_known_args()
     options = vars(args)
     tablename = options.pop('tablename')
-    options['parallel'] = False
-    db[tablename].verify(**options)
-    # if not (tablename == 'all' or options['speedtype'] == 'all'):
-    #     options['parallel'] = False
-    #     db[tablename].verify(**options)
-    # else:
-    #     #use parallel to loop over all options
-    #     tables = validated_tables if tablename == 'all' else [tablename]
-    #     types = speedtypes if options['speedtype'] == 'all' else [options['speedtype']]
+    if not (tablename == 'all' or options['speedtype'] == 'all'):
+        options['parallel'] = False
+        db[tablename].verify(**options)
+    else:
+        #use parallel to loop over all options
+        tables = validated_tables if tablename == 'all' else [tablename]
+        types = speedtypes if options['speedtype'] == 'all' else [options['speedtype']]
 
-    #     with tempfile.NamedTemporaryFile(mode="w") as tables_file:
-    #         tables_file.write('\n'.join(tables) + '\n')
-    #         tables_file.flush()
-    #         with tempfile.NamedTemporaryFile(mode="w") as types_file:
-    #             types_file.write('\n'.join(types) + '\n')
-    #             types_file.flush()
-    #             cmd = ['parallel'] + parallel_args
-    #             cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
-    #             cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
-    #             print("Running: {0}".format(subprocess.list2cmdline(cmd)))
-    #             exitcode = subprocess.call(cmd)
+        with tempfile.NamedTemporaryFile(mode="w") as tables_file:
+            tables_file.write('\n'.join(tables) + '\n')
+            tables_file.flush()
+            with tempfile.NamedTemporaryFile(mode="w") as types_file:
+                types_file.write('\n'.join(types) + '\n')
+                types_file.flush()
+                cmd = ['parallel'] + parallel_args
+                cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
+                cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
+                print("Running: {0}".format(subprocess.list2cmdline(cmd)))
+                exitcode = subprocess.call(cmd)
 
-    #     sys.exit(exitcode)
+        sys.exit(exitcode)
