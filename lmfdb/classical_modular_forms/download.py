@@ -492,13 +492,13 @@ class CMF_download(Downloader):
             self.explain.append(explain)
             out += [
                 explain,
-                'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
+                'function MakeCharacter_%d_%s_Hecke( : Kf := None)' % (newform.level, newform.char_orbit_label),
                     '    ' + magma.assign('N', level).rstrip('\n'), # level
                     '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
                     '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
                     '    ' + magma.assign('char_values', char_values).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
                     '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
-                    '    values := ConvertToHeckeField(char_values : pass_field := true, Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
+                    '    values := ConvertToHeckeField(char_values : pass_field := ISA(Type(Kf), Fld), Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
                     '    F := Universe(values);// the Hecke field',
                     '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),values);',
                     '    return chi;',
@@ -557,7 +557,7 @@ class CMF_download(Downloader):
             '    ' + magma.assign('weight', newform.weight).rstrip('\n'),
             '    ' + magma.assign('raw_aps', hecke_nf['ap']).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
-            '    chi := MakeCharacter_%d_%s_Hecke(Universe(aps));' % (newform.level, newform.char_orbit_label),
+            '    chi := MakeCharacter_%d_%s_Hecke( : Kf := Universe(aps));' % (newform.level, newform.char_orbit_label),
             '    return ExtendMultiplicatively(weight, aps, chi);',
             'end function;',
             ]

@@ -424,7 +424,7 @@ class ArtinRepresentation():
         return self._data['GaloisLabel']
 
     def group(self):
-        n, t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        n, t = (int(z) for z in self._data['GaloisLabel'].split("T"))
         return group_display_short(n, t)
 
     def pretty_galois_knowl(self):

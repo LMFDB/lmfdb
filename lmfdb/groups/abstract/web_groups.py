@@ -1977,7 +1977,7 @@ class WebAbstractGroup(WebObj):
                         st_latex += "1"
                     else:
                         st_latex += "0"
-                    if (i+1)%d == 0:
+                    if (i + 1) % d == 0:
                         st_latex += r' \\ '
                     else:
                         st_latex += ' & '

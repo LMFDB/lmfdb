@@ -319,7 +319,6 @@ def admin():
 @app.route("/restartserver")
 @admin_required
 def restart():
-    import sys
     from subprocess import Popen, PIPE
     from urllib.parse import urlparse
     urlparts = urlparse(request.url)
@@ -330,13 +329,11 @@ def restart():
     else:
         command = None
     if command:
-        if sys.version_info[0] == 3:
-            out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
-        else:
-            out = Popen(command, stdout=PIPE).communicate()[0]
+        out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
         return out.replace('\n', '<br>')
     else:
         return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
+
 
 class Reviewer(Uploader):
     """
@@ -345,6 +342,7 @@ class Reviewer(Uploader):
     def __init__(self):
         from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC, MultiKnowl
         super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
+
 
 @login_page.route("/uploads", methods=["GET", "POST"])
 @login_required

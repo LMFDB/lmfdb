@@ -913,6 +913,10 @@ def number_field_search(info, query):
             opts = multiquad
         if "degree" in info:
             opts = {n: opts[n] for n in integer_options(info["degree"], contained_in=list(opts), lower_bound=1, upper_bound=47) if n in opts}
+        # Catch if signature is specified
+        # We already parsed it, which sets degree to a single value
+        if "signature" in info:
+            opts = {n: opts[n] for n in integer_options(str(query["degree"]), contained_in=list(opts), lower_bound=1, upper_bound=47) if n in opts}
         if "galois_label" in query:
             # Added by parse_galgrp, so we intersect with opts
             if isinstance(query["galois_label"], dict):
