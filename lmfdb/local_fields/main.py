@@ -12,7 +12,8 @@ from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
     parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
-    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox, TextBoxNoEg, CountBox, to_dict, comma,
+    SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox,
+    HiddenBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
@@ -955,9 +956,16 @@ def family_page(label):
     family = pAdicSlopeFamily(label)
     info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family, stats=LFStats())
     p, n = family.p, family.n
-    info['bread'] = get_bread([(str(p), url_for(".index", search_type="Families", p=p)),
-                       (str(family.n), url_for(".index", search_type="Families", p=p, n=n)),
-                       (label, "")])
+    if family.n0 == 1:
+        info['bread'] = get_bread([("Families", url_for(".index", search_type="Families")),
+                                   (str(p), url_for(".index", search_type="Families", p=p)),
+                                   (str(family.n), url_for(".index", search_type="Families", p=p, n=n)),
+                                   (label, "")])
+    else:
+        info['bread'] = get_bread([("Families", url_for(".index", search_type="Families", relative=1)),
+                                   (family.base, url_for(".index", search_type="Families", relative=1, base=family.base)),
+                                   (str(family.n), url_for(".index", search_type="Families", relative=1, base=family.base, n=n)),
+                                   (label, "")])
     info['title'] = f"$p$-adic family {label}"
     info['show_count'] = True
     info['properties'] = [
@@ -1341,11 +1349,12 @@ class FamiliesSearchArray(SearchArray):
             knowl='lf.family_label',
             example='2.1.4.6a')
         if relative:
+            relbox = HiddenBox("relative", "")
             self.refine_array = [[qp, degree, e, f, c],
                                  [base, n0, e0, f0, c0],
                                  [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
                                  #[visible, slopes, rams, means, slope_multiplicities],
-                                 [mass_relative, mass_absolute, ambiguity, field_count, wild_segments]]
+                                 [mass_relative, mass_absolute, ambiguity, field_count, wild_segments, relbox]]
             self.sorts = [
                 ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
                 ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),

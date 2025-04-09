@@ -85,101 +85,100 @@ class pAdicSlopeFamily:
         return f'<a href="{url_for(".family_page", label=self.label)}">{self.label}</a>'
 
     @lazy_attribute
+    def spread_ticks(self):
+        slopeset = set(self.slopes)
+        meanset = set(self.means)
+        ticks = sorted(slopeset.union(meanset))
+        rectangles = {(a,b): 0 for (a,b) in zip(ticks[:-1], ticks[1:])}
+        rkeys = sorted(rectangles)
+        mindiff = min((b-a) for (a,b) in rkeys)
+        ticklook = {a: a for a in ticks} # adjust values below when too close
+        if mindiff < 0.1 and len(ticks) >= 3:
+            pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
+            if pairdiff >= 0.25:
+                # We can just spread out pairs of ticks from their center
+                for a,b in rkeys:
+                    if b - a < 0.1:
+                        ticklook[a] = a - 1/30
+                        ticklook[b] = b + 1/30
+            else:
+                pass # Should do something here
+                # We move if there's enough space
+                #for i, (a,b,c) in enumerate(zip(ticks[:-2], ticks[1:-1], ticks[2:])):
+                #    la, lb, lc = ticklook[a], ticklook[b], ticklook[c]
+                #    if lb - la < 0.1:
+                #        # Want to adjust a downward
+                #        if la > a or (i > 0 and a - ticklook[ticks[i-1]] < 0.15:
+                #            # We've already moved a up, or it's pretty close to the tick below
+                #            # So we set la to the average of the term below and the term above.
+                #            ticklook[a] = (ticklook[ticks[i-1]] + b) / 2
+                #        elif a - ticks[-1] >= 0.15:
+                #            # We can move it down, but we need to be careful not to move it down too much
+                #            ticklook[a] = (
+        # We determine the overlaps of the bands
+        for m, s in zip(self.means, self.slopes):
+            # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice
+            for (a,b) in rkeys:
+                if a >= m and b <= s:
+                    rectangles[a,b] += 1
+                elif a >= s:
+                    break
+        return ticklook, ticks, slopeset, meanset, rectangles
+
+    @lazy_attribute
     def picture(self):
         P = Graphics()
         # We want to draw a green horizontal line at each mean, a black at each slope (except when they overlap, in which case it should be dashed), and a grey rectangle between, with shading increased based on overlaps.
-        if self.w > 0:
-            maxslope = self.slopes[-1]
-            # Draw boundaries
-            P += line([(0, maxslope), (0,0), (self.e, 0), (self.e, maxslope)], rgbcolor=(0.2, 0.2, 0.2), zorder=-1, thickness=1)
+        maxslope = self.slopes[-1]
+        # Draw boundaries
+        P += line([(0, maxslope), (0,0), (self.e, 0), (self.e, maxslope)], rgbcolor=(0.2, 0.2, 0.2), zorder=-1, thickness=1)
+        ticklook, ticks, slopeset, meanset, rectangles = self.spread_ticks
+        hscale = self.e / 12
+        mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rectangles)
+        aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
 
-            slopeset = set(self.slopes)
-            meanset = set(self.means)
-            ticks = sorted(slopeset.union(meanset))
-            rectangles = {(a,b): 0 for (a,b) in zip(ticks[:-1], ticks[1:])}
-            rkeys = sorted(rectangles)
-            hscale = self.e / 12
-            #for a,b in rkeys:
-                #
-            mindiff = min((b-a) for (a,b) in rkeys)
-            aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
-            ticklook = {a: a for a in ticks} # adjust values below when too close
-            if mindiff < 0.1 and len(ticks) >= 3:
-                pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
-                if pairdiff >= 0.25:
-                    # We can just spread out pairs of ticks from their center
-                    for a,b in rkeys:
-                        if b - a < 0.1:
-                            ticklook[a] = a - 1/30
-                            ticklook[b] = b + 1/30
-                    # We decreased
-                    mindiff += 1/10
-                else:
-                    pass # Should do something here
-                    # We move if there's enough space
-                    #for i, (a,b,c) in enumerate(zip(ticks[:-2], ticks[1:-1], ticks[2:])):
-                    #    la, lb, lc = ticklook[a], ticklook[b], ticklook[c]
-                    #    if lb - la < 0.1:
-                    #        # Want to adjust a downward
-                    #        if la > a or (i > 0 and a - ticklook[ticks[i-1]] < 0.15:
-                    #            # We've already moved a up, or it's pretty close to the tick below
-                    #            # So we set la to the average of the term below and the term above.
-                    #            ticklook[a] = (ticklook[ticks[i-1]] + b) / 2
-                    #        elif a - ticks[-1] >= 0.15:
-                    #            # We can move it down, but we need to be careful not to move it down too much
-                    #            ticklook[a] = (
-                mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rkeys)
-                aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
-            # We determine the colors of the bands, then print them
-            for m, s in zip(self.means, self.slopes):
-                # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice
-                for (a,b) in rkeys:
-                    if a >= m and b <= s:
-                        rectangles[a,b] += 1
-                    elif a >= s:
-                        break
-            for (a,b), cnt in rectangles.items():
-                col = 1 - 0.1*cnt
-                P += polygon([(0, a), (self.e, a), (self.e, b), (0, b)], fill=True, rgbcolor=(col,col,col), zorder=-4)
-            # Horizontal green and black lines
-            for y in ticks:
-                if y in slopeset and y in meanset:
-                    # green and black dashed line
-                    ndashes = 11
-                    scale = self.e / ndashes
-                    for x in range(1, ndashes, 2):
-                        P += line([(x*scale, y), ((x+1)*scale, y)], color="green", zorder=-2, thickness=2)
-                    color = "black" # Behind the green dashes
-                elif y in slopeset:
-                    color = "black"
-                else:
-                    color = "green"
-                # Mean and slope labels
-                P += line([(0, y), (self.e, y)], color=color, zorder=-3, thickness=2)
-                P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
-                P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color)
-            # The spiral
-            for y in srange(maxslope):
-                y1 = min(y+1, maxslope)
-                x1 = (y1 - y) * self.e
-                P += line([(0, y), (x1, y1)], color="black", zorder=-1, thickness=1)
-            # x-axis Labels
-            vscale = maxslope / 100
-            for u in range(self.e+1):
-                P += text(f"${u}$", (u, -vscale), vertical_alignment="top", color="black", zorder=-2)
-                P += text(f"${u}$", (u, maxslope+vscale), vertical_alignment="bottom", color="black", zorder=-2)
-            # Right hand lines for arithmetic bands
-            for (m, s, t) in zip(self.means, self.slopes, self.small_rams):
-                if t == self.e0:
-                    P += line([(self.e, m), (self.e, s)], color="black", zorder=-2, thickness=2)
-            # Ram labels
-            seen = set()
-            for i, (s, t) in enumerate(zip(self.slopes, self.rams)):
-                if s not in seen:
-                    P += text(f"${t}$", (self.e + hscale/2, s), color="blue")
-                seen.add(s)
-        else:
-            aspect = 1
+        # Print the bands
+        for (a,b), cnt in rectangles.items():
+            col = 1 - 0.1*cnt
+            P += polygon([(0, a), (self.e, a), (self.e, b), (0, b)], fill=True, rgbcolor=(col,col,col), zorder=-4)
+        # Horizontal green and black lines
+        for y in ticks:
+            if y in slopeset and y in meanset:
+                # green and black dashed line
+                ndashes = 11
+                scale = self.e / ndashes
+                for x in range(1, ndashes, 2):
+                    P += line([(x*scale, y), ((x+1)*scale, y)], color="green", zorder=-2, thickness=2)
+                color = "black" # Behind the green dashes
+            elif y in slopeset:
+                color = "black"
+            else:
+                color = "green"
+            # Mean and slope labels
+            P += line([(0, y), (self.e, y)], color=color, zorder=-3, thickness=2)
+            P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
+            P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color)
+        # The spiral
+        for y in srange(maxslope):
+            y1 = min(y+1, maxslope)
+            x1 = (y1 - y) * self.e
+            P += line([(0, y), (x1, y1)], color="black", zorder=-1, thickness=1)
+        # x-axis Labels
+        vscale = maxslope / 100
+        tickskip = (self.e+1)//24 + 1
+        for u in range(0,self.e+1,tickskip):
+            P += text(f"${u}$", (u, -vscale), vertical_alignment="top", color="black", zorder=-2)
+            P += text(f"${u}$", (u, maxslope+vscale), vertical_alignment="bottom", color="black", zorder=-2)
+        # Right hand lines for arithmetic bands
+        for (m, s, t) in zip(self.means, self.slopes, self.small_rams):
+            if t == self.e0:
+                P += line([(self.e, m), (self.e, s)], color="black", zorder=-2, thickness=2)
+        # Ram labels
+        seen = set()
+        for i, (s, t) in enumerate(zip(self.slopes, self.rams)):
+            if s not in seen:
+                P += text(f"${t}$", (self.e + hscale/2, s), color="blue")
+            seen.add(s)
         P.set_aspect_ratio(aspect)
         colmark = {"a": ("green", "s"), "b": ("blue", "o"), "c": ("red", "D"), "d": ("olive", "p")}
         for code, i, j, big in self.dots:
@@ -213,6 +212,44 @@ class pAdicSlopeFamily:
                 L.append(cur)
         L.reverse()
         return plot_ramification_polygon(L, p)
+
+    @lazy_attribute
+    def herbrand_function_plot(self):
+        # Fix duplicates
+        ticklook, ticks, slopeset, meanset, rectangles = self.spread_ticks
+        mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rectangles)
+        maxram, maxslope, maxmean = self.rams[-1], self.slopes[-1], self.means[-1]
+        if maxram < 2:
+            maxx = maxram * 1.5
+        else:
+            maxx = maxram + 1
+        maxy = (maxslope - maxmean)/maxram * maxx + maxmean
+        tickx = float(maxx/160)
+        axistop = max(maxy, maxslope + 2*tickx)
+        hscale = maxx / 12
+        aspect = max(0.6 * (maxx + 3*hscale) / axistop, maxx/(32*mindiff))
+        w = self.w
+        #inds = [i for i in range(w) if i==w-1 or self.slopes[i] != self.slopes[i+1]]
+        pts = list(zip(self.rams, self.slopes)) #[(self.rams[i],self.slopes[i]) for i in inds]
+        P = line([(-2*tickx,0), (maxx,0)], color="black", thickness=1) + line([(0,0),(0,axistop)], color="black", thickness=1)
+        P += line([(0,0)] + pts + [(maxx, maxy)], color="black", thickness=2)
+        P += point(pts, color="black", size=20)
+        # Mean and slope labels
+        for y in ticks:
+            if y in slopeset:
+                color = "black"
+            else:
+                color = "green"
+            P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
+            P += text(f"${y}$", (-2*hscale, ticklook[y]), color=color)
+        for m, r, s in zip(self.means, self.rams, self.slopes): #i in inds:
+            #m, r, s = self.means[i], self.rams[i], self.slopes[i]
+            P += line([(0, m), (r, s)], color="green", linestyle="--", thickness=1)
+            P += text(f"${str(r)}$", (r, -2*tickx), color="blue", vertical_alignment="top")
+            P += line([(0, s), (tickx, s)], color="black")
+        P.set_aspect_ratio(aspect)
+        P.axes(False)
+        return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight", dpi=300)
 
     @lazy_attribute
     def polynomial(self):

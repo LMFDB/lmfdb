@@ -45,16 +45,19 @@
 
 {% endif %}
 
-{% if family.e > 1 %}
+{% if family.w > 1 %}
 <h2> {{ KNOWL('lf.eisenstein_diagram', 'Eisenstein diagram') }} </h2>
 
 <img src="{{ family.picture }}" width="1000">
 
-{% endif %}
-
 <h2> {{ KNOWL('lf.ramification_polygon', 'Ramification polygon') }} </h2>
 
 <img src="{{ family.ramification_polygon_plot }}" width="1000">
+
+<h2> {{ KNOWL('lf.herbrand_function', 'Herbrand function') }} </h2>
+
+<img src="{{ family.herbrand_function_plot }}" width="1000">
+{% endif %}
 
 {% if family.field_count > 0 %}
 
@@ -67,7 +70,7 @@
 
 {% endif %} {# family.n0 == 1 #}
 
-<h2> {{ KNOWL('lf.fields_in_family', 'Fields') }} </h2>
+<h2> {{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
 
 {% else %} {# family.field_cout = 0 #}
 
