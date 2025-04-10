@@ -717,7 +717,7 @@ def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a pol
     if subscript_vars:
         subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
         pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
-    o_str = pol_str.replace('*', '')
+    o_str = pol_str.replace('*', ' ')
     ind_mid = o_str.find('/')
     while ind_mid != -1:
         ind_start = ind_mid - 1

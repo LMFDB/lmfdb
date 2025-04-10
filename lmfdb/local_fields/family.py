@@ -228,7 +228,7 @@ class pAdicSlopeFamily:
         axistop = max(maxy, maxslope + 2*tickx)
         hscale = maxx / 12
         aspect = max(0.6 * (maxx + 3*hscale) / axistop, maxx/(32*mindiff))
-        w = self.w
+        #w = self.w
         #inds = [i for i in range(w) if i==w-1 or self.slopes[i] != self.slopes[i+1]]
         pts = list(zip(self.rams, self.slopes)) #[(self.rams[i],self.slopes[i]) for i in inds]
         P = line([(-2*tickx,0), (maxx,0)], color="black", thickness=1) + line([(0,0),(0,axistop)], color="black", thickness=1)

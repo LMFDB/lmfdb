@@ -73,7 +73,6 @@ def register_search_function(name, human_name, description, auto_search=None, fu
     Only populate if you want to have full control over the search return
 
     """
-    global searchers
     searchers[name] = searcher(human_name, description, auto_search=auto_search, full_info=full_info, full_inventory=full_inventory, full_search=full_search, inv=inv)
 
 
@@ -89,7 +88,5 @@ def register_singleton(url, table, key=None, simple_search=None, full_search=Non
     simple_search -- A function that modifies a query object to make it search for the requested object
     full_search -- A function that performs a search itself and returns the results
     """
-
-    global singletons
     singletons[url] = {'table':table, 'key':key,
         'simple_search':simple_search, 'full_search':full_search}
