@@ -335,7 +335,7 @@ $(function() {
 
 function update_start_by_count_and_submit_form(sign) {
   var startelem = $('form.re-search input[name=start]');
-  var count = parseInt($('form.re-search input[name=count]').val());
+  var count = parseInt($('form.re-search input[name=count]').val());;
   var newstart = parseInt(startelem.val())+sign*count;
   if(newstart<0)
     newstart = 0;

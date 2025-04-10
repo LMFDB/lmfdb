@@ -264,6 +264,12 @@ class CmfTest(LmfdbTest):
             assert elt + '.a' in page.get_data(as_text=True)
         for elt in ['Decomposition', r"S_{9}^{\mathrm{old}}(\Gamma_1(38))", "lower level spaces"]:
             assert elt in page.get_data(as_text=True)
+        decomposition = r"""
+<div class="center">
+  \( S_{9}^{\mathrm{old}}(\Gamma_1(38)) \cong \) <a href=/ModularForm/GL2/Q/holomorphic/1/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(1))\)</a>\(^{\oplus 4}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/2/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(2))\)</a>\(^{\oplus 2}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/19/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(19))\)</a>\(^{\oplus 2}\)
+</div>
+"""
+        assert decomposition in page.get_data(as_text=True)
 
     def test_convert_conreylabels(self):
         for c in [27, 31]:

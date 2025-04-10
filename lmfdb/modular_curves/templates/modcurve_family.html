@@ -1,0 +1,52 @@
+{% extends 'embedded_results.html' %}
+{% block embedding_content %}
+
+<p>{{ family.moduli_description | safe }}</p>
+
+<h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
+<table>
+    <tr>
+      {% if family.notation %}
+         <p>Some of the invariants below will use the following notation:
+         <br>{{ family.notation|safe }}</br></p>
+      {% endif %}
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:</td>
+      <td>${{ family.psl2index }}$</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 2:</td>
+      <td>{{ family.nu2 | safe }}</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 3:</td>
+      <td>{{ family.nu3 | safe }}</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
+      <td> {{ family.cusps_display }}</td><td style="width:20px;"></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td>{{ family.genus_formula }}</td>
+    </tr>
+  {# Need to think about what should go here.  List of references?
+  <tr>
+    <td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td>
+    <td> ${{ family.q_gonality if family.q_gonality else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$ </td>
+  </tr>
+  <tr>
+    <td>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}:</td>
+    <td> ${{ family.qbar_gonality if family.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$ </td>
+  </tr>
+  #}
+</table>
+
+
+{% if family.hypell_description or family.biell_description %}
+<h2> Remarks </h2>
+<p>{{KNOWL('ag.hyperelliptic_curve', 'Hyperelliptic curves')}}: {{ family.hypell_description|safe }}</p>
+<p>{{KNOWL('ag.bielliptic_curve', 'Bielliptic curves')}}: {{ family.biell_description|safe }}</p>
+{% endif %}
+
+{% endblock %}

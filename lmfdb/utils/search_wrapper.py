@@ -377,6 +377,7 @@ class CountWrapper(Wrapper):
 class EmbedWrapper(Wrapper):
     """
     A variant on search wrapper that is intended for embedding a fixed set of search results in a page.
+
     For an example, see families of modular curves.
     """
     def __init__(
