@@ -2,11 +2,13 @@
 
 {% block embedding_content %}
 
-<h2> {{ KNOWL('lf.family_polynomial', 'Defining polynomial') }} </h2>
+{% if family.e > 1 %}
+<h2> {{ KNOWL('lf.family_polynomial', 'Defining polynomial') }}{% if family.f > 1 %} over unramified subextension{% endif %}</h2>
 
 <table>
   <tr><td> ${{ family.polynomial._latex_() }}$ </td></tr>
 </table>
+{% endif %}
 
 <h2> {{ KNOWL('lf.family_invariants', 'Invariants') }} </h2>
 <table>
@@ -70,7 +72,7 @@
 
 {% endif %} {# family.n0 == 1 #}
 
-<h2> {{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
+<h2><a id="fields"></a>{{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
 
 {% else %} {# family.field_cout = 0 #}
 

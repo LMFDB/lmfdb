@@ -147,7 +147,7 @@ class pAdicSlopeFamily:
         # Draw boundaries
         P += line([(0, maxslope), (0,0), (self.e, 0), (self.e, maxslope)], rgbcolor=(0.2, 0.2, 0.2), zorder=-1, thickness=1)
         ticklook, ticks, slopeset, meanset, rectangles = self.spread_ticks
-        hscale = self.e / 12
+        hscale = self.e / 18
         mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rectangles)
         aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
 
@@ -171,7 +171,7 @@ class pAdicSlopeFamily:
             # Mean and slope labels
             P += line([(0, y), (self.e, y)], color=color, zorder=-3, thickness=2)
             P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
-            P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color)
+            P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color, horizontal_alignment="right")
         # The spiral
         for y in srange(maxslope):
             y1 = min(y+1, maxslope)
@@ -191,7 +191,7 @@ class pAdicSlopeFamily:
         seen = set()
         for i, (s, t) in enumerate(zip(self.slopes, self.rams)):
             if s not in seen:
-                P += text(f"${t}$", (self.e + hscale/2, s), color="blue")
+                P += text(f"${t}$", (self.e + hscale/2, s), color="blue", horizontal_alignment="left")
             seen.add(s)
         P.set_aspect_ratio(aspect)
         colmark = {"a": ("green", "s"), "b": ("blue", "o"), "c": ("red", "D"), "d": ("olive", "p")}
@@ -211,16 +211,16 @@ class pAdicSlopeFamily:
     def ramification_polygon_plot(self):
         from .main import plot_ramification_polygon
         p = self.p
-        L = [(self.n, 0)]
-        if self.f != 1:
-            L.append((self.e, 0))
-        tame_shift = self.e - self.pw
-        if tame_shift:
-            L.append((self.pw, tame_shift))
-        cur = (self.pw, tame_shift)
+        #L = [(self.n, self.n - self.e)]
+        #if self.f != 1:
+        #    L.append((self.e, 0))
+        L = [(self.e, 0)]
+        if self.e != self.pw:
+            L.append((self.pw, 0))
+        cur = (self.pw, 0)
         for r, nextr in zip(self.rams, self.rams[1:] + [None]):
             x = cur[0] // p
-            y = cur[1] + x * (p - 1) * (r + 1)
+            y = cur[1] + x * (p - 1) * r
             cur = (x, y)
             if r != nextr:
                 L.append(cur)
@@ -240,7 +240,8 @@ class pAdicSlopeFamily:
         maxy = (maxslope - maxmean)/maxram * maxx + maxmean
         tickx = float(maxx/160)
         axistop = max(maxy, maxslope + 2*tickx)
-        hscale = maxx / 12
+        ticky = maxy / 100
+        hscale = maxx / 18
         aspect = max(0.6 * (maxx + 3*hscale) / axistop, maxx/(32*mindiff))
         #w = self.w
         #inds = [i for i in range(w) if i==w-1 or self.slopes[i] != self.slopes[i+1]]
@@ -255,11 +256,11 @@ class pAdicSlopeFamily:
             else:
                 color = "green"
             P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
-            P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color)
+            P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color, horizontal_alignment="right")
         for m, r, s in zip(self.means, self.rams, self.slopes): #i in inds:
             #m, r, s = self.means[i], self.rams[i], self.slopes[i]
             P += line([(0, m), (r, s)], color="green", linestyle="--", thickness=1)
-            P += text(f"${str(r)}$", (r, -2*tickx), color="blue", vertical_alignment="top")
+            P += text(f"${str(r)}$", (r, -ticky), color="blue", vertical_alignment="top")
             P += line([(0, s), (tickx, s)], color="black")
         P.set_aspect_ratio(aspect)
         P.axes(False)
@@ -358,7 +359,7 @@ class pAdicSlopeFamily:
             if len(opts) == 1:
                 return kwl
             url = url_for(".family_page", label=self.label, gal=label)
-            return f'{kwl} (<a href="{url}">show {cnt}</a>)'
+            return f'{kwl} (<a href="{url}#fields">show {cnt}</a>)'
         s = ", ".join(show_gal(label, cnt) for ((t, label), cnt) in opts)
         if not self.all_hidden_data_available:
             s += " (incomplete)"
@@ -383,7 +384,7 @@ class pAdicSlopeFamily:
             if len(hidden) == 1:
                 return disp
             url = url_for(".family_page", label=self.label, hidden=x)
-            return f'{disp} (<a href="{url}">show {cnt}</a>)'
+            return f'{disp} (<a href="{url}#fields">show {cnt}</a>)'
         s = ", ".join(show_hidden(x, cnt) for (x, cnt) in hidden.items())
         if not self.all_hidden_data_available:
             s += " (incomplete)"
@@ -398,7 +399,7 @@ class pAdicSlopeFamily:
             if len(ii) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, ind_of_insep=disp, insep_quantifier="exactly")
-            return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
+            return f'${disp}$ (<a href="{url}#fields">show {cnt}</a>)'
         return ", ".join(show_ii(list(x), cnt) for (x,cnt) in ii)
 
     @lazy_attribute
@@ -410,7 +411,7 @@ class pAdicSlopeFamily:
             if len(ai) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, associated_inertia=disp)
-            return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
+            return f'${disp}$ (<a href="{url}#fields">show {cnt}</a>)'
         return ", ".join(show_ai(list(x), cnt) for (x,cnt) in ai)
 
     @lazy_attribute
@@ -422,7 +423,7 @@ class pAdicSlopeFamily:
             if len(js) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, jump_set=disp)
-            return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
+            return f'${disp}$ (<a href="{url}#fields">show {cnt}</a>)'
         s = ", ".join(show_js(list(x), cnt) for (x,cnt) in js)
         if any("jump_set" not in rec for rec in fields):
             s += " (incomplete)"

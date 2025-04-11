@@ -432,6 +432,16 @@ def slopes_col(default=True, relative=False):
                              ["slopes", "t", "u"],
                              show_slope_content, short_title="slope content",
                              apply_download=unpack_slopes, default=default)
+def hidden_col(default=True, relative=False):
+    if relative:
+        title = lambda info: "Hidden Artin slopes" if info['family'].n0 == 1 else r"Hidden Artin slopes $/ \Q_p$"
+    else:
+        title = "Hidden Artin slopes"
+    return ProcessedCol("hidden", "lf.visible_slopes",
+                        title,
+                        latex_content, short_title="hidden slopes",
+                        apply_download=False, default=default)
+
 def insep_col(default=True, relative=False):
     if relative:
         title = lambda info: "Ind. of Insep." if info['family'].n0 == 1 else r"Ind. of Insep. $/ \Q_p$"
@@ -461,6 +471,7 @@ lf_columns = SearchColumns([
     RationalListCol("visible", "lf.visible_slopes", "Visible Artin slopes",
                     show_slopes2, default=lambda info: info.get("visible")),
     slopes_col(),
+    hidden_col(default=False),
     aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
@@ -469,7 +480,7 @@ lf_columns = SearchColumns([
     assoc_col(default=lambda info: info.get("associated_inertia")),
     ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
     jump_col(default=lambda info: info.get("jump_set"))],
-    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram", "eisen", "family", "residual_polynomials"])
+    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "hidden", "ind_of_insep", "associated_inertia", "jump_set", "unram", "eisen", "family", "residual_polynomials"])
 
 family_columns = SearchColumns([
     label_col,
@@ -479,10 +490,7 @@ family_columns = SearchColumns([
     MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else "Galois degree $/ \Q_p$", short_title="Galois degree"),
     aut_col(True),
     slopes_col(default=False, relative=True),
-    ProcessedCol("hidden", "lf.visible_slopes",
-                 lambda info: "Hidden Artin slopes" if info['family'].n0 == 1 else r"Hidden Artin slopes $/ \Q_p$",
-                 latex_content, short_title="hidden slopes",
-                 apply_download=False),
+    hidden_col(relative=True),
     insep_col(relative=True),
     assoc_col(relative=True),
     jump_col()])
@@ -778,10 +786,10 @@ def render_field_webpage(args):
             'rf': lf_display_knowl( rflabel, name=printquad(data['rf'], p)),
             'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
             'hw': data['hw'],
-            'visible': show_slopes(data['visible']),
+            'visible': latex_content(data['visible']),
             'wild_inertia': wild_inertia,
             'unram': unramp,
-            'ind_insep': show_slopes(str(data['ind_of_insep'])),
+            'ind_insep': latex_content(str(data['ind_of_insep'])),
             'eisen': eisenp,
             'gsm': gsm,
             'autstring': autstring,
@@ -815,7 +823,7 @@ def render_field_webpage(args):
         if n < 16:
             friends.append(('Families of extensions', url_for(".index", relative=1, search_type="Families", base=label)))
         if 'slopes' in data:
-            info['slopes'] = show_slopes(data['slopes'])
+            info['slopes'] = latex_content(data['slopes'])
         if 'inertia' in data:
             info['inertia'] = group_display_inertia(data['inertia'])
         for k in ['gms', 't', 'u']:
