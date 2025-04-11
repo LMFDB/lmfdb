@@ -291,7 +291,7 @@ class totaler():
                         # Make the sums available for the column proportions
                         stats._total_grid[i].append({'count':overall})
                 proportion = _format_percentage(total, overall) if col_proportions else ''
-                D = {'count':total, 'query':query, 'proportion':proportion}
+                D = {'count':total, 'query':query, 'proportion':proportion, 'extraclass':'totalcol', 'propclass':'totalcol'}
                 row.append(D)
         if col_counts:
             row_headers.append(col_total_label)
@@ -300,8 +300,12 @@ class totaler():
             row = []
             for i, col in enumerate(zip(*grid)):
                 # We've already totaled rows, so have to skip if we don't want the corner
-                if not corner_count and i == num_cols:
-                    break
+                if i == num_cols:
+                    if not corner_count:
+                        break
+                    extraclasses = {'extraclass': 'totalcorner', 'propclass': 'totalcol'}
+                else:
+                    extraclasses = {'extraclass': 'totalrow'}
                 total = sum(elt['count'] for elt in col)
                 if total == 0:
                     query = None
@@ -313,6 +317,7 @@ class totaler():
                     overall = sum(D['count'] for D in total_grid_cols[i])
                 proportion = _format_percentage(total, overall) if (col_proportions and i != num_cols or corner_prop and i == num_cols) else ''
                 D = {'count':total, 'query':query, 'proportion':proportion}
+                D.update(extraclasses)
                 row.append(D)
             grid.append(row)
         #if corner_count and row_counts and not col_counts:
@@ -629,8 +634,9 @@ class StatsDisplay(UniqueRepresentation):
         data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
-        if len(cols) == 1:
+        if 'row_title' not in attr:
             attr['row_title'] = self._short_display[cols[0]]
+        if len(cols) == 1:
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
             rows = [counts[i:i+10] for i in range(0, len(counts), 10)]
@@ -641,8 +647,8 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 data['divs'] = [(rows, "short_table", "none")]
         elif len(cols) == 2:
-            attr['row_title'] = self._short_display[cols[0]]
-            attr['col_title'] = self._short_display[cols[1]]
+            if 'col_title' not in attr:
+                attr['col_title'] = self._short_display[cols[1]]
         return data
 
     @lazy_attribute

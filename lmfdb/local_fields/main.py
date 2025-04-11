@@ -21,7 +21,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
-from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE
+from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE, latex_content, content_unformatter
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
     transitive_group_display_knowl, group_display_inertia,
@@ -147,8 +147,10 @@ def eisensteinformlatex(pol, unram):
     R = PolynomialRing(QQ, 'y')
     Rx = PolynomialRing(R, 'x')
     unram2 = R(unram.replace('t', 'y'))
-    unram = latex(Rx(unram.replace('t', 'x')))
     pol = R(pol)
+    if unram2.degree() == 1 or unram2.degree() == pol.degree():
+        return latex(pol).replace('y', 'x')
+    unram = latex(Rx(unram.replace('t', 'x')))
     l = []
     while pol != 0:
         qr = pol.quo_rem(unram2)
@@ -295,23 +297,13 @@ def show_slopes2(sl):
 
 def show_slope_content(sl,t,u):
     if sl is None or t is None or u is None:
-        return ' $not computed$ ' # actually killing math mode
+        return 'not computed'
     sc = str(sl)
-    if sc == '[]':
-        sc = r'[\ ]'
     if t > 1:
         sc += '_{%d}' % t
     if u > 1:
         sc += '^{%d}' % u
-    return(sc)
-
-def show_hidden_slopes(sl, vis):
-    if sl is None:
-        return " $not computed$ " # actually killing math mode
-    hidden = sorted((Counter(eval_rational_list(sl)) - Counter(eval_rational_list(vis))).elements())
-    if not hidden:
-        return r'[\ ]'
-    return str(hidden)
+    return latex_content(sc)
 
 @local_fields_page.route("/")
 def index():
@@ -371,9 +363,6 @@ def local_field_jump(info):
 def unpack_slopes(slopes, t, u):
     return eval_rational_list(slopes), t, u
 
-def unpack_hidden(slopes, visible):
-    return sorted((Counter(eval_rational_list(slopes)) - Counter(eval_rational_list(visible))).elements())
-
 def format_eisen(eisstr):
     Pt = PolynomialRing(QQ, 't')
     Ptx = PolynomialRing(Pt, 'x')
@@ -413,68 +402,90 @@ def intcol(j):
 #label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
 label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(label)}">{label}</a>'), apply_download=lambda label, new_label: new_label)
 
-def packet_col(default):
-    return MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=default)
-def degree_col(default):
-    return MathCol("n", "lf.degree", "$n$", short_title="degree", default=default)
-poly_col = ProcessedCol("coeffs", "lf.defining_polynomial", "Polynomial", format_coeffs, mathmode=True)
+def poly_col(relative=False):
+    if relative:
+        title = lambda info: "Polynomial" if info['family'].n0 == 1 else r"Polynomial $/ \Q_p$"
+    else:
+        title = "Polynomial"
+    return MultiProcessedCol("coeffs", "lf.defining_polynomial", title, ["coeffs", "unram"], eisensteinformlatex, mathmode=True, short_title="polynomial", apply_download=False)
 p_col = MathCol("p", "lf.qp", "$p$", short_title="prime")
 c_col = MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent")
 e_col = MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index")
 f_col = MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree")
-gal_col = MultiProcessedCol("gal", "nf.galois_group", "Galois group",
-                            ["n", "gal", "cache"],
-                            galcolresponse,
-                            apply_download=lambda n, t, cache: [n, t])
+def gal_col(relative=False):
+    if relative:
+        title = lambda info: "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"
+    else:
+        title = "Galois group"
+    return MultiProcessedCol("gal", "nf.galois_group", title,
+                             ["n", "gal", "cache"],
+                             galcolresponse, short_title="Galois group",
+                             apply_download=lambda n, t, cache: [n, t])
 def aut_col(default):
     return MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=default)
-def visible_col(default):
-    return RationalListCol("visible", "lf.visible_slopes", "Visible Artin slopes",
-                   show_slopes2, default=default)
-def slopes_col(default):
-    return MultiProcessedCol("slopes", "lf.slope_content", "Artin slope content",
+def slopes_col(default=True, relative=False):
+    if relative:
+        title = lambda info: "Artin slope content" if info['family'].n0 == 1 else r"Artin slope content $/ \Q_p$"
+    else:
+        title = "Artin slope content"
+    return MultiProcessedCol("slopes", "lf.slope_content", title,
                              ["slopes", "t", "u"],
-                             show_slope_content,
-                             mathmode=True, apply_download=unpack_slopes, default=default)
+                             show_slope_content, short_title="slope content",
+                             apply_download=unpack_slopes, default=default)
+def insep_col(default=True, relative=False):
+    if relative:
+        title = lambda info: "Ind. of Insep." if info['family'].n0 == 1 else r"Ind. of Insep. $/ \Q_p$"
+    else:
+        title = "Ind. of Insep."
+    return ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", title, formatbracketcol, default=default, short_title="ind. of insep.")
+def assoc_col(default=True, relative=False):
+    if relative:
+        title = lambda info: "Assoc. Inertia" if info['family'].n0 == 1 else r"Assoc. Inertia $/ \Q_p$"
+    else:
+        title = "Assoc. Inertia"
+    return ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=default)
+def jump_col(default=True):
+    return ListCol("jump_set", "lf.jump_set", "Jump Set", default=default, mathmode=True)
 
 lf_columns = SearchColumns([
     label_col,
-    degree_col(False),
-    poly_col,
+    MathCol("n", "lf.degree", "$n$", short_title="degree", default=False),
+    poly_col(),
     p_col,
     e_col,
     f_col,
     c_col,
-    gal_col,
+    gal_col(False),
     ProcessedCol("u", "lf.unramified_degree", "$u$", intcol, short_title="unramified degree", default=False),
     ProcessedCol("t", "lf.tame_degree", "$t$", intcol, short_title="tame degree", default=False),
-    visible_col(lambda info: info.get("visible")),
-    slopes_col(True),
+    RationalListCol("visible", "lf.visible_slopes", "Visible Artin slopes",
+                    show_slopes2, default=lambda info: info.get("visible")),
+    slopes_col(),
     aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
-    ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep.", formatbracketcol, default=lambda info: info.get("ind_of_insep")),
-    ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=lambda info: info.get("associated_inertia")),
+    insep_col(default=lambda info: info.get("ind_of_insep")),
+    assoc_col(default=lambda info: info.get("associated_inertia")),
     ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
-    ListCol("jump_set", "lf.jump_set", "Jump Set", default=lambda info: info.get("jump_set"), mathmode=True)],
-    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram","eisen", "family", "residual_polynomials"])
+    jump_col(default=lambda info: info.get("jump_set"))],
+    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "ind_of_insep", "associated_inertia", "jump_set", "unram", "eisen", "family", "residual_polynomials"])
 
 family_columns = SearchColumns([
     label_col,
-    packet_col(lambda info: info.get("one_per") == "packet"),
-    poly_col,
-    gal_col,
-    MathCol("galsize", "nf.galois_group", "Galois degree"),
+    MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=lambda info: info.get("one_per") == "packet", contingent=lambda info: info['family'].n0 == 1),
+    poly_col(relative=True),
+    gal_col(lambda info: "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"),
+    MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else "Galois degree $/ \Q_p$", short_title="Galois degree"),
     aut_col(True),
-    slopes_col(False),
-    MultiProcessedCol("hidden", "lf.visible_slopes", "Hidden Artin slopes",
-                      ["slopes", "visible"],
-                      show_hidden_slopes,
-                      mathmode=True, apply_download=unpack_hidden),
-    MathCol("ind_of_insep", "lf.indices_of_inseparability", "Ind. of Insep."),
-    MathCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia"),
-    MathCol("jump_set", "lf.jump_set", "Jump Set")])
+    slopes_col(default=False, relative=True),
+    ProcessedCol("hidden", "lf.visible_slopes",
+                 lambda info: "Hidden Artin slopes" if info['family'].n0 == 1 else r"Hidden Artin slopes $/ \Q_p$",
+                 latex_content, short_title="hidden slopes",
+                 apply_download=False),
+    insep_col(relative=True),
+    assoc_col(relative=True),
+    jump_col()])
 
 class PercentCol(MathCol):
     def display(self, rec):
@@ -567,6 +578,7 @@ def common_parse(info, query):
     parse_inertia(info,query,qfield=('wild_gap','wild_gap'), field='wild_gap')
     parse_noop(info,query,'packet')
     parse_noop(info,query,'family')
+    parse_noop(info,query,'hidden')
 
 def fix_top_slope(s):
     if isinstance(s, float):
@@ -885,12 +897,17 @@ def printquad(code, p):
 
 @local_fields_page.route("/data/<label>")
 def lf_data(label):
-    if not NEW_LF_RE.fullmatch(label):
+    if NEW_LF_RE.fullmatch(label):
+        title = f"Local field data - {label}"
+        bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+        sorts = [["p", "n", "e", "c", "ctr_family", "ctr_subfamily", "ctr"]]
+        return datapage(label, "lf_fields", title=title, bread=bread, label_cols=["new_label"], sorts=sorts)
+    elif FAMILY_RE.fullmatch(label):
+        title = f"Local field family data - {label}"
+        bread = get_bread([(label, url_for_family(label)), ("DATA", " ")])
+        return datapage(label, "lf_families", title=title, bread=bread)
+    else:
         return abort(404, f"Invalid label {label}")
-    title = f"Local field data - {label}"
-    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
-    sorts = [["p", "n", "e", "c", "ctr_family", "ctr_subfamily", "ctr"]]
-    return datapage(label, "lf_fields", title=title, bread=bread, label_cols=["new_label"], sorts=sorts)
 
 @local_fields_page.route("/random")
 @redirect_no_cache
@@ -996,10 +1013,12 @@ def family_page(label):
         ('f', rf'\({family.f}\)'),
         ('c', rf'\({family.c}\)'),
     ]
+    info['downloads'] = [('Underlying data', url_for('.lf_data', label=label))]
     if family.n0 == 1:
         info['friends'] = [('Relative constituents', url_for(".index", relative=1, search_type="Families", label_absolute=family.label))]
     else:
         info['friends'] = [('Absolute family', url_for(".family_page", label=family.label_absolute))]
+    info['latex_content'] = latex_content
     return render_family(info)
 
 @embed_wrap(
@@ -1015,6 +1034,7 @@ def family_page(label):
     properties=lambda:None,
     family=lambda:None,
     friends=lambda:None,
+    downloads=lambda:None,
 )
 def render_family(info, query):
     family = info["family"]
@@ -1033,6 +1053,7 @@ def render_family(info, query):
     parse_bracketed_posints(info,query,"associated_inertia")
     if 'one_per' in info and info['one_per'] == 'packet':
         query["__one_per__"] = "packet"
+    parse_noop(info,query,"hidden")
 
 def common_family_parse(info, query):
     parse_ints(info,query,'p',name='Prime p')
@@ -1216,7 +1237,11 @@ def common_boxes():
         label='Packet',
         knowl='lf.packet',
     )
-    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet
+    hidden = SneakyTextBox(
+        name="hidden",
+        label="Hidden content",
+        knowl="lf.visible_slopes")
+    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
@@ -1226,14 +1251,14 @@ class FamilySearchArray(EmbeddedSearchArray):
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr']),
     ]
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
         one_per = SelectBox(
             name="one_per",
             label="Fields per packet",
             knowl="lf.packet",
             options=[("", "all"),
                      ("packet", "one")])
-        self.refine_array = [[gal, slopes, ind_insep], [associated_inertia, jump_set, one_per]]
+        self.refine_array = [[gal, slopes, ind_insep, hidden], [associated_inertia, jump_set, one_per]]
 
 class FamiliesSearchArray(SearchArray):
     def __init__(self, relative=False):
@@ -1427,7 +1452,7 @@ class LFSearchArray(SearchArray):
     jump_prompt = "Label"
 
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
         results = CountBox()
 
         self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
@@ -1437,7 +1462,7 @@ class LFSearchArray(SearchArray):
                              [e, f, t, u],
                              [aut, inertia, ind_insep, associated_inertia, jump_set],
                              [topslope, slopes, visible, wild],
-                             [family, packet]]
+                             [family, packet, hidden]]
 
     def search_types(self, info):
         return self._search_again(info, [
@@ -1452,7 +1477,7 @@ class LFSearchArray(SearchArray):
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
-            'constraint': {'p': p, 'n': {'$lte': 15}},
+            'constraint': {'p': p, 'n': {'$lte': 16}},
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('ramification index', 'lf.ramification_index'),
@@ -1462,7 +1487,7 @@ def ramdisp(p):
 
 def discdisp(p):
     return {'cols': ['n', 'c'],
-            'constraint': {'p': p, 'n': {'$lte': 15}},
+            'constraint': {'p': p, 'n': {'$lte': 16}},
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('discriminant exponent', 'lf.discriminant_exponent'),
@@ -1491,13 +1516,16 @@ class LFStats(StatsDisplay):
     short_display = {'galois_label': 'Galois group',
                      'n': 'degree',
                      'e': 'ramification index',
-                     'c': 'discriminant exponent'}
+                     'c': 'discriminant exponent',
+                     'hidden': 'hidden slopes'}
     sort_keys = {'galois_label': galdata}
     formatters = {
-        'galois_label': galformatter
+        'galois_label': galformatter,
+        'hidden': latex_content,
     }
     query_formatters = {
-        'galois_label': (lambda gal: r'gal=%s' % (galunformatter(gal)))
+        'galois_label': (lambda gal: r'gal=%s' % (galunformatter(gal))),
+        'hidden': (lambda hid: r'hidden=%s' % (content_unformatter(hid))),
     }
 
     stat_list = [
@@ -1511,6 +1539,7 @@ class LFStats(StatsDisplay):
         galdisp(2, 10),
         galdisp(2, 12),
         galdisp(2, 14),
+        galdisp(2, 16),
         galdisp(3, 6),
         galdisp(3, 9),
         galdisp(3, 12),

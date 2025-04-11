@@ -59,7 +59,7 @@ class SearchCol:
       and the default key used when extracting data from a database record.
     - ``knowl`` -- a knowl identifier, for displaying the column header as a knowl
     - ``title`` -- the string shown for the column header, also included when describing the column
-      in a download file.
+      in a download file.  Alternatively, you can provide a function of info that produces such a string.
     - ``default`` -- either a boolean or a function taking an info dictionary as input and returning
       a boolean.  In either case, this determines whether the column is displayed initially.  See
       the ``get_default_func`` above.
@@ -99,7 +99,12 @@ class SearchCol:
         self.knowl = knowl
         self.title = title
         if short_title is None:
-            short_title = None if title is None else title.lower()
+            if title is None:
+                short_title = None
+            elif isinstance(title, str):
+                short_title = title.lower()
+            else:
+                short_title = lambda info: title(info).lower()
         self.short_title = short_title
         self.default = get_default_func(default, name)
         self.mathmode = mathmode
@@ -179,13 +184,17 @@ class SearchCol:
             s = f"${s}$"
         return s
 
-    def display_knowl(self):
+    def display_knowl(self, info):
         """
         Displays the column header contents.
         """
+        if isinstance(self.title, str):
+            title = self.title
+        else:
+            title = self.title(info)
         if self.knowl:
-            return display_knowl(self.knowl, self.title)
-        return self.title
+            return display_knowl(self.knowl, title)
+        return title
 
     def show(self, info, rank=None):
         """
@@ -230,7 +239,7 @@ class SpacerCol(SearchCol):
     def display(self, rec):
         return ""
 
-    def display_knowl(self):
+    def display_knowl(self, info):
         return ""
 
     def show(self, info, rank=None):

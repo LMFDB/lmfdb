@@ -1128,6 +1128,16 @@ table.statgrid th.chead {
     border: 1px solid #ccc;
     border-bottom: 2px solid {{color.table_ntdata_border}};
 }
+table.statgrid .totalrow {
+    border-top: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid .totalcol {
+    border-left: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid .totalcorner {
+    border-top: 2px solid {{color.table_ntdata_border}};
+    border-left: 2px solid {{color.table_ntdata_border}};
+}
 table.statgrid td.prop {
     border-bottom: 1px solid #ccc;
     border-right: 1px solid #ccc;

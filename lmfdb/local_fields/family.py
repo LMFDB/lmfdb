@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-from sage.all import lazy_attribute, point, line, polygon, cartesian_product, ZZ, QQ, PolynomialRing, srange, gcd, text, Graphics
+from sage.all import lazy_attribute, point, line, polygon, cartesian_product, ZZ, QQ, PolynomialRing, srange, gcd, text, Graphics, latex
 from lmfdb import db
 from lmfdb.utils import encode_plot, totaler
 from lmfdb.galois_groups.transitive_group import knowl_cache, transitive_group_display_knowl
@@ -14,6 +14,20 @@ def str_to_QQlist(s):
     if s == "[]":
         return []
     return [QQ(x) for x in s[1:-1].split(", ")]
+
+def latex_content(s):
+    # Input should be a content string, [s1, s2, ..., sm]^t_u.  This converts the s_i (which might be rational numbers) to their latex form
+    if s is None:
+        return "not computed"
+    elif isinstance(s, list):
+        return '$[' + ','.join(latex(x) for x in s) + ']$'
+    else:
+        return '$' + re.sub(r"(\d+)/(\d+)", r"\\frac{\1}{\2}", s).replace("[]", r"[\ ]") + '$'
+
+def content_unformatter(s):
+    # Convert latex back to plain string
+    s = s.replace('$','')
+    return re.sub(r"\\frac\{(\d+)\}\{(\d+)\}", r"\1/\2", s)
 
 class pAdicSlopeFamily:
     def __init__(self, label=None, base=None, slopes=[], means=[], rams=[], field_cache=None):
@@ -241,7 +255,7 @@ class pAdicSlopeFamily:
             else:
                 color = "green"
             P += text(f"${float(y):.3f}$", (-hscale, ticklook[y]), color=color)
-            P += text(f"${y}$", (-2*hscale, ticklook[y]), color=color)
+            P += text(f"${self.e*y}$", (-2*hscale, ticklook[y]), color=color)
         for m, r, s in zip(self.means, self.rams, self.slopes): #i in inds:
             #m, r, s = self.means[i], self.rams[i], self.slopes[i]
             P += line([(0, m), (r, s)], color="green", linestyle="--", thickness=1)
@@ -329,7 +343,7 @@ class pAdicSlopeFamily:
             return False
         fields, cache = self.fields
         for rec in fields:
-            if not all(rec.get(col) for col in ["galT", "galois_label"]):
+            if not all(rec.get(col) for col in ["galT", "galois_label", "hidden"]):
                 return False
         return True
 
@@ -352,29 +366,25 @@ class pAdicSlopeFamily:
 
     @lazy_attribute
     def means_display(self):
-        return str(self.means).replace("[", r"\langle").replace("]", r"\rangle")
+        return latex_content(self.means).replace("[", r"\langle").replace("]", r"\rangle")
 
     @lazy_attribute
     def rams_display(self):
-        return str(self.rams).replace("[", "(").replace("]", ")")
+        return latex_content(self.rams).replace("[", "(").replace("]", ")")
 
     @lazy_attribute
     def hidden_slopes(self):
-        # TODO: Update this to use hidden column from lf_fields
         fields, cache = self.fields
-        full_slopes = [Counter(QQ(s) for s in rec["slopes"][1:-1].split(",")) if rec["slopes"] != "[]" else Counter() for rec in fields if "slopes" in rec]
-        visible = Counter(self.artin_slopes)
-        hidden = sorted(Counter(tuple(sorted((full - visible).elements())) for full in full_slopes).items())
+        hidden = Counter(rec["hidden"] for rec in fields if "hidden" in rec)
         if not hidden:
             return "No hidden slopes in this family have been computed"
         def show_hidden(x, cnt):
-            disp = str(x).replace(" ","")
-            full = str(sorted((Counter(x) + visible).elements())).replace(" ","")
+            disp = latex_content(x)
             if len(hidden) == 1:
-                return f"${disp}$"
-            url = url_for(".family_page", label=self.label, slopes=full, slopes_quantifier="exactly")
-            return f'${disp}$ (<a href="{url}">show {cnt}</a>)'
-        s = ", ".join(show_hidden(list(x), cnt) for (x,cnt) in hidden)
+                return disp
+            url = url_for(".family_page", label=self.label, hidden=x)
+            return f'{disp} (<a href="{url}">show {cnt}</a>)'
+        s = ", ".join(show_hidden(x, cnt) for (x, cnt) in hidden.items())
         if not self.all_hidden_data_available:
             s += " (incomplete)"
         return s
@@ -432,37 +442,39 @@ class pAdicSlopeFamily:
         dyns = []
         def add_grid(Ns, rowcount, colcount):
             if len(Ns) == 1:
-                Nconstraint = list(Ns)[0]
+                Nsummary = Nconstraint = list(Ns)[0]
             else:
-                Nconstraint = {"$gte": min(Ns), "$lte": max(Ns)}
+                N0, N1 = min(Ns), max(Ns)
+                Nconstraint = {"$gte": N0, "$lte": N1}
+                Nsummary = f"{N0}-{N1}"
             constraint = {
                 'family': self.label,
                 'galois_degree': Nconstraint,
             }
             attr = {
-                'cols': ['slopes', 'galois_label'],
+                'cols': ['hidden', 'galois_label'],
                 'constraint': constraint,
-                'totaler': totaler(row_counts=(colcount > 1), col_counts=(rowcount > 1), row_proportions=False, col_proportions=False)
+                'totaler': totaler(row_counts=(colcount > 1), col_counts=(rowcount > 1), row_proportions=False, col_proportions=False),
+                'col_title': f'Galois groups of order {Nsummary}',
             }
             dyns.append(stats.prep(attr))
 
-        cur_rows = set()
-        cur_cols = set()
         max_rows = 8
         max_cols = 8
-        curN = set()
         Ns = sorted(gps)
-        for N in Ns:
-            rowcount = len(cur_rows)
-            colcount = len(cur_cols)
-            cur_rows = cur_rows.union(slopes[N])
-            cur_cols = cur_cols.union(gps[N])
-            if curN and (len(cur_cols) > max_cols or len(cur_rows) > max_rows):
-                add_grid(curN, rowcount, colcount)
+        cur_rows = set(slopes[Ns[0]])
+        cur_cols = set(gps[Ns[0]])
+        curN = set([Ns[0]])
+        for N in Ns[1:]:
+            next_rows = cur_rows.union(slopes[N])
+            next_cols = cur_cols.union(gps[N])
+            if len(next_rows) > max_rows or len(next_cols) > max_cols:
+                add_grid(curN, len(cur_rows), len(cur_cols))
                 cur_rows = set()
                 cur_cols = set()
                 curN = set()
-            if N == Ns[-1]:
-                add_grid(curN.union(set([N])), len(cur_rows), len(cur_cols))
+            cur_rows.update(slopes[N])
+            cur_cols.update(gps[N])
             curN.add(N)
+        add_grid(curN, len(cur_rows), len(cur_cols))
         return dyns

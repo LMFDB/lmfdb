@@ -537,7 +537,11 @@ class ColumnController(SelectBox):
         for col in C.columns_shown(info, use_rank):
             if col.short_title is None: # probably a spacer column:
                 continue
-            title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
+            if isinstance(col.short_title, str):
+                short_title = col.short_title
+            else:
+                short_title = col.short_title(info)
+            title = short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
             if col.default(info):
                 disp = "✓ " + title # The space is a unicode space the size of an emdash
             else:
