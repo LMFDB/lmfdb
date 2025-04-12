@@ -48,33 +48,72 @@
 {% endif %}
 
 {% if family.w > 1 %}
-<h2> {{ KNOWL('lf.eisenstein_diagram', 'Eisenstein diagram') }} </h2>
+<h2> {{ KNOWL('lf.family_diagrams', 'Diagrams') }} </h2>
 
-<img src="{{ family.picture }}" width="1000">
-
-<h2> {{ KNOWL('lf.ramification_polygon', 'Ramification polygon') }} </h2>
-
-<img src="{{ family.ramification_polygon_plot }}" width="1000">
-
-<h2> {{ KNOWL('lf.herbrand_function', 'Herbrand function') }} </h2>
-
-<img src="{{ family.herbrand_function_plot }}" width="1000">
+<div>
+  <button class='dia_eisenstein dia_active' onclick="select_diagram_mode('eisenstein'); return false;">Eisenstein diagram</button>
+  <button class='dia_rampoly dia_inactive' onclick="select_diagram_mode('rampoly'); return false;">Ramification polygon</button>
+  <button class='dia_herbrand dia_inactive' onclick="select_diagram_mode('herbrand'); return false;">Herbrand function</button>
+</div>
+<div id="diagram_eisenstein" class="diagram">
+  <img src="{{ family.picture }}" width="1000">
+</div>
+<div id="diagram_rampoly" class="diagram" style="display: none;">
+  <img src="{{ family.ramification_polygon_plot }}" width="1000">
+</div>
+<div id="diagram_herbrand" class="diagram" style="display: none;">
+  <img src="{{ family.herbrand_function_plot }}" width="1000">
+</div>
 {% endif %}
 
 {% if family.field_count > 0 %}
 
-{% if family.n0 == 1 %}
+{% if family.n0 == 1 and family.some_hidden_data_available %}
 <h2> {{ KNOWL('lf.packet', 'Galois groups and Hidden Artin slopes') }} </h2>
 
-{% for d in family.gal_slope_tables %}
-  {% include 'stat_2d.html' %}
+{% if (family.gal_slope_tables|length) > 1 %}
+  <p>Select desired size of Galois group.{% if not family.all_hidden_data_available %}  Note that the following data has not all been computed for fields in this family, so the tables below are incomplete.{% endif %}</p>
+  <div>
+    {% for N, d in family.gal_slope_tables %}
+      <button class="gs_{{N}} gs_inactive" onclick="select_gs_mode('{{N}}'); return false;">{{N}}</button>
+    {% endfor %}
+    <button class="gs_all gs_inactive" onclick="select_gs_mode('all'); return false;">all</button>
+  </div>
+{% elif not family.all_hidden_data_available %}
+  <p>Note that the following data has not all been computed for fields in this family, so the table below is incomplete.</p>
+{% endif %}
+
+{% for N, d in family.gal_slope_tables %}
+  <div id="gsstats_{{N}}" class="gsstats" style="display:none;">
+    {% include 'stat_2d.html' %}
+  </div>
 {% endfor %}
+
+<script type="text/javascript">
+  function select_diagram_mode(mode) {
+    $("button.dia_active").addClass("dia_inactive").removeClass("dia_active");
+    $("button.dia_"+mode).removeClass("dia_inactive").addClass("dia_active");
+    $("div.diagram").hide();
+    $("#diagram_"+mode).show();
+  }
+  function select_gs_mode(mode) {
+    $("button.gs_active").addClass("gs_inactive").removeClass("gs_active");
+    $("button.gs_"+mode).removeClass("gs_inactive").addClass("gs_active");
+    if (mode == "all") {
+      $("div.gsstats").show();
+    } else {
+      $("div.gsstats").hide();
+      $("#gsstats_"+mode).show();
+    }
+  }
+  select_gs_mode('{{family.gal_slope_tables[0][0]}}');
+</script>
 
 {% endif %} {# family.n0 == 1 #}
 
 <h2><a id="fields"></a>{{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
 
-{% else %} {# family.field_cout = 0 #}
+{% else %} {# family.field_count = 0 #}
 
 <p>
   The LMFDB does not contain any fields from this family.

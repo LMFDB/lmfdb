@@ -817,7 +817,7 @@ def render_field_webpage(args):
             else:
                 info["roots_of_unity"] = f"${rou} = {rou_expr}$"
         else:
-            info["roots_of_unity"] = "Not computed"
+            info["roots_of_unity"] = "not computed"
         if "family" in data:
             friends.append(('Family', url_for(".family_page", label=data["family"])))
         if n < 16:

@@ -18,7 +18,7 @@ def str_to_QQlist(s):
 def latex_content(s):
     # Input should be a content string, [s1, s2, ..., sm]^t_u.  This converts the s_i (which might be rational numbers) to their latex form
     if s is None:
-        return "not computed"
+        return "Not computed"
     elif isinstance(s, list):
         return '$[' + ','.join(latex(x) for x in s) + ']$'
     else:
@@ -349,6 +349,19 @@ class pAdicSlopeFamily:
         return True
 
     @lazy_attribute
+    def some_hidden_data_available(self):
+        """
+        Whether there is some field in this family where the Galois group and hidden slopes are both known.
+        """
+        if self.mass_found == 0:
+            return False
+        fields, cache = self.fields
+        for rec in fields:
+            if all(rec.get(col) for col in ["galT", "galois_label", "hidden"]):
+                return True
+        return False
+
+    @lazy_attribute
     def galois_groups(self):
         fields, cache = self.fields
         opts = sorted(Counter((rec["galT"], rec["galois_label"]) for rec in fields if "galT" in rec and "galois_label" in rec).items())
@@ -440,42 +453,14 @@ class pAdicSlopeFamily:
             if "galois_degree" in rec and "galois_label" in rec and "slopes" in rec:
                 gps[rec["galois_degree"]].add(rec["galois_label"])
                 slopes[rec["galois_degree"]].add(rec["slopes"])
+        Ns = sorted(gps)
         dyns = []
-        def add_grid(Ns, rowcount, colcount):
-            if len(Ns) == 1:
-                Nsummary = Nconstraint = list(Ns)[0]
-            else:
-                N0, N1 = min(Ns), max(Ns)
-                Nconstraint = {"$gte": N0, "$lte": N1}
-                Nsummary = f"{N0}-{N1}"
-            constraint = {
-                'family': self.label,
-                'galois_degree': Nconstraint,
-            }
+        for N in Ns:
             attr = {
                 'cols': ['hidden', 'galois_label'],
-                'constraint': constraint,
-                'totaler': totaler(row_counts=(colcount > 1), col_counts=(rowcount > 1), row_proportions=False, col_proportions=False),
-                'col_title': f'Galois groups of order {Nsummary}',
+                'constraint': {'family': self.label, 'galois_degree': N},
+                'totaler': totaler(row_counts=(len(gps[N]) > 1), col_counts=(len(slopes[N]) > 1), row_proportions=False, col_proportions=False),
+                'col_title': f'Galois groups of order {N}' if len(Ns) > 1 else 'Galois groups',
             }
-            dyns.append(stats.prep(attr))
-
-        max_rows = 8
-        max_cols = 8
-        Ns = sorted(gps)
-        cur_rows = set(slopes[Ns[0]])
-        cur_cols = set(gps[Ns[0]])
-        curN = set([Ns[0]])
-        for N in Ns[1:]:
-            next_rows = cur_rows.union(slopes[N])
-            next_cols = cur_cols.union(gps[N])
-            if len(next_rows) > max_rows or len(next_cols) > max_cols:
-                add_grid(curN, len(cur_rows), len(cur_cols))
-                cur_rows = set()
-                cur_cols = set()
-                curN = set()
-            cur_rows.update(slopes[N])
-            cur_cols.update(gps[N])
-            curN.add(N)
-        add_grid(curN, len(cur_rows), len(cur_cols))
+            dyns.append((N, stats.prep(attr)))
         return dyns

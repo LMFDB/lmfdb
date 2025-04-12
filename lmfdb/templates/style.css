@@ -2151,13 +2151,13 @@ div.sub_divider {
   margin-right: 20px;
 }
 
-button.sub_active {
+button.sub_active, button.dia_active, button.gs_active {
   background: {{color.lf_an_button_bkg}};
   border: 2px solid {{color.lf_an_button_brd}};
   cursor: pointer;
 }
 
-button.sub_inactive {
+button.sub_inactive, button.dia_inactive, button.gs_inactive {
   background: {{color.lf_ar_button_bkg}};
   border: 1px solid {{color.lf_ar_button_brd}};
 }
