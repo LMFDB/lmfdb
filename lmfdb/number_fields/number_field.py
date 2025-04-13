@@ -685,7 +685,7 @@ def render_field_webpage(args):
     properties = [('Label', nf_label_pretty(label)),
                   ('Degree', prop_int_pretty(data['degree'])),
                   ('Signature', '$%s$' % data['signature']),
-                  (None, '<a> %s <a/>' % nf.draw_barcode()),
+                  (None, '<a> %s <a/>' % nf.draw_gaga()),
                   ('Discriminant', prop_int_pretty(D)),
                   ('Root discriminant', data['rd']),
                   ('Ramified ' + primes + '', ram_primes),
