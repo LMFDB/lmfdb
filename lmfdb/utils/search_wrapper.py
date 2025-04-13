@@ -368,11 +368,73 @@ class CountWrapper(Wrapper):
             return render_template(template, info=info, title=title, **template_kwds)
 
 
+class EmbedWrapper(Wrapper):
+    """
+    A variant on search wrapper that is intended for embedding a fixed set of search results in a page.
+
+    For an example, see families of modular curves.
+    """
+    def __init__(
+        self,
+            f,
+            template,
+            table,
+            title=None,
+            err_title=None,
+            per_page=50,
+            columns=None,
+            projection=1,
+            **kwds,
+    ):
+        super().__init__(f, template, table, title, err_title, **kwds)
+        self.per_page = per_page
+        self.columns = columns
+        if columns is None:
+            self.projection = projection
+        else:
+            self.projection = columns.db_cols
+
+    def __call__(self, info):
+        info["columns"] = self.columns
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        data = self.make_query(info, False)
+        if not isinstance(data, tuple):
+            return data
+        query, sort, table, title, err_title, template, one_per = data
+        proj = query.pop("__projection__", self.projection)
+        if isinstance(proj, list):
+            proj = [col for col in proj if col in table.search_cols]
+        count = parse_count(info, self.per_page)
+        start = parse_start(info)
+        try:
+            res = table.search(
+                query,
+                proj,
+                limit=count,
+                offset=start,
+                sort=sort,
+                info=info,
+            )
+        except QueryCanceledError as err:
+            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+        except SearchParsingError as err:
+            # These can be raised when the query includes $raw keys.
+            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+        except NumericValueOutOfRange as err:
+            # This is caused when a user inputs a number that's too large for a column search type
+            return self.oob_error(info, query, err, err_title, template, template_kwds)
+        else:
+            info["results"] = res
+            return render_template(template, info=info, title=title, **template_kwds)
+
 @decorator_keywords
 def search_wrap(f, **kwds):
     return SearchWrapper(f, **kwds)
 
-
 @decorator_keywords
 def count_wrap(f, **kwds):
     return CountWrapper(f, **kwds)
+
+@decorator_keywords
+def embed_wrap(f, **kwds):
+    return EmbedWrapper(f, **kwds)

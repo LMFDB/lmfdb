@@ -680,6 +680,9 @@ def save_form():
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
+    if not new_title.strip():
+        flash_error("Title required.")
+        return redirect(url_for(".show", ID=ID))
     new_content = request.form['content']
     who = current_user.get_id()
     if new_title != k.title or new_content != k.content:
@@ -689,7 +692,7 @@ def save_form():
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
-        k.timestamp = datetime.now()
+        k.timestamp = datetime.utcnow()
         k.status = 0
         k.save(who=who)
     if NEWID:

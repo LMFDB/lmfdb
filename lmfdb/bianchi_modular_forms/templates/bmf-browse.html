@@ -10,13 +10,13 @@
 <table class="browse">
   <tr>
     <td>{{ KNOWL('mf.bianchi.newform', 'Newforms')}} by base field:</td>
-    <td>{% for f in info.field_forms %} <a href={{f.url}}>{{f.name}}</a>&nbsp;&nbsp; {%-endfor %} ...</td>
+    <td>{% for f in info.field_forms %} <a href={{f.url}}>{{f.name}}</a>&nbsp; {%-endfor %} ... <a href={{info.last_field_forms.url}}>{{info.last_field_forms.name}}</a></td>
   </tr><tr>
     <td>{{ KNOWL('mf.bianchi.level', '\(\GL_2\)')}} {{ KNOWL('mf.bianchi.spaces', 'newform spaces')}} by base field:</td>
-    <td>{% for f in info.gl2_field_list %} <a href={{f.url}}>{{f.name}}</a>&nbsp;&nbsp; {% endfor %} ...</td>
+    <td>{% for f in info.gl2_field_list %} <a href={{f.url}}>{{f.name}}</a>&nbsp; {% endfor %} ... <a href={{info.last_field_dims.url}}>{{info.last_field_dims.name}}</a></td>
   </tr><tr>
     <td>{{ KNOWL('mf.bianchi.level', '\(\SL_2\)')}}  {{ KNOWL('mf.bianchi.spaces', 'newform spaces')}} by base field:</td>
-    <td>{% for f in info.sl2_field_list %} <a href={{f.url}}>{{f.name}}</a>&nbsp;&nbsp; {% endfor %}</td>
+    <td>{% for f in info.sl2_field_list %} <a href={{f.url}}>{{f.name}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Bianchi modular forms</a> or a <a href={{url_for('.random_bmf')}}>random Bianchi modular form</a></td>
   </tr>

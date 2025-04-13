@@ -185,6 +185,9 @@ class WebNewform():
             if self.dim == 1:
                 # avoid using mf_hecke_nf when the dimension is 1
                 vals = ConreyCharacter(self.level, db.char_dirichlet.lookup("%s.%s" % (self.level,self.char_orbit_label),projection="first")).values_gens
+                # ConreyCharacter.values_gens returns the exponent of character values,
+                # But we need the character values themselves here when hecke_ring_cyclotomic_generator is unspecified.
+                vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
                 eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces }
             else:
                 eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
@@ -614,6 +617,15 @@ class WebNewform():
 
     def artin_image_knowl(self):
         return abstract_group_display_knowl(self.artin_image)
+
+    @property
+    def stark_minpoly(self):
+        # For now, the only data is for m = b = 1, so we just use lucky.
+        f = db.mf_stark.lucky({"mf_label": self.label}, "stark_minpoly")
+        if f is not None:
+            R = PolynomialRing(ZZ, 'x')
+            f = R(f)
+            return latex(f)
 
     def rm_and_cm_field_knowl(self, sign=1):
         if self.self_twist_discs:

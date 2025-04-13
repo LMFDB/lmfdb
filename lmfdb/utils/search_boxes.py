@@ -482,6 +482,8 @@ class CountBox(TextBox):
             example_span="")
 
 class ColumnController(SelectBox):
+    wrap_mixins = {'width': '170px'}
+
     def __init__(self):
         super().__init__(
             name="column_control",
@@ -610,11 +612,16 @@ class SearchButton(SearchBox):
             onclick = ""
         else:
             onclick = " onclick='resetStart()'"
-        btext = "<button type='submit' name='search_type' value='{val}' style='width: {width}px;'{onclick}>{desc}</button>"
+        if self.description in ["Search again", "Generate statistics"]:
+            cls = " class='search_stale'"
+        else:
+            cls = " class='search_fresh'"
+        btext = "<button type='submit' name='search_type' value='{val}'{cls} style='width: {width}px;'{onclick}>{desc}</button>"
         return btext.format(
             width=self.width,
             val=self.value,
             desc=self.description,
+            cls=cls,
             onclick=onclick)
 
 class SearchButtonWithSelect(SearchButton):
@@ -807,6 +814,26 @@ class SearchArray(UniqueRepresentation):
                     return True
         return False
 
+    def _buttons(self, info=None):
+        buttons = []
+        sort = self.sort_order(info)
+        if sort:
+            #spacer = RowSpacer(6)
+            cur_sort = info.get('sort_order', '')
+            cur_dir = info.get('sort_dir', '')
+            options = []
+            for name, disp in sort:
+                if name == cur_sort:
+                    if cur_dir == 'op':
+                        options.append((name, '▼ ' + disp)) # the space is U+2006, a 1/6 em space
+                    else:
+                        options.append((name, '▲ ' + disp)) # the space is U+2006, a 1/6 em space
+                else:
+                    options.append((name, '  ' + disp)) # the spaces are U+2006 and U+2003, totaling 7/6 em
+            buttons.append(SortController(options, self.sort_knowl))
+        buttons.append(ColumnController())
+        return buttons
+
     def buttons(self, info=None):
         st = self._st(info)
         buttons = []
@@ -822,22 +849,7 @@ class SearchArray(UniqueRepresentation):
                 else:
                     buttons.append(SearchButton(*but))
             if st is not None:
-                sort = self.sort_order(info)
-                if sort:
-                    spacer = RowSpacer(6)
-                    cur_sort = info.get('sort_order', '')
-                    cur_dir = info.get('sort_dir', '')
-                    options = []
-                    for name, disp in sort:
-                        if name == cur_sort:
-                            if cur_dir == 'op':
-                                options.append((name, '▼ ' + disp)) # the space is U+2006, a 1/6 em space
-                            else:
-                                options.append((name, '▲ ' + disp)) # the space is U+2006, a 1/6 em space
-                        else:
-                            options.append((name, '  ' + disp)) # the spaces are U+2006 and U+2003, totaling 7/6 em
-                    buttons.append(SortController(options, self.sort_knowl))
-                buttons.append(ColumnController())
+                buttons.extend(self._buttons(info))
         return self._print_table([spacer,buttons], info, layout_type="vertical")
 
     def html(self, info=None):
@@ -853,3 +865,17 @@ class SearchArray(UniqueRepresentation):
         return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
 <button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
 """ % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
+
+class EmbeddedSearchArray(SearchArray):
+    """
+    For holding the controls for selecting the sort order and columns to display
+    on an embedded page (modular curve families are an example).
+    """
+    def __init__(self):
+        self.refine_array = []
+
+    def buttons(self, info=None):
+        # We want to put a refresh button after the sort order and column selectors
+        spacer = RowSpacer(8)
+        buttons = self._buttons(info) + [SearchButton("", "Refresh")]
+        return self._print_table([spacer, buttons], info, layout_type="vertical")

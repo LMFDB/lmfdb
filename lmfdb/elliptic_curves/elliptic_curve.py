@@ -67,7 +67,9 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
-            ('Congruent number curves', url_for(".render_congruent_number_data"))]
+            ('Congruent number curves', url_for(".render_congruent_number_data")),
+            ('Stein-Watkins dataset', url_for(".render_sw_ecdb")),
+            ('BHKSSW dataset', url_for(".render_bhkssw"))]
 
 
 def learnmore_list_add(learnmore_label, learnmore_url):
@@ -250,7 +252,7 @@ def by_conductor(conductor):
     if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
-            return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
+            return redirect(url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['conductor'] = conductor
@@ -398,21 +400,6 @@ modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
 modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
 modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
-class EC_download(Downloader):
-    table = db.ec_curvedata
-    title = "Elliptic curves"
-    inclusions = {
-        "curve": (
-            ["ainvs"],
-            {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
-                "magma": 'curve := EllipticCurve(out`ainvs);',
-                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
-            }
-        )
-    }
-
 def ec_postprocess(res, info, query):
     labels = [rec["lmfdb_label"] for rec in res]
     mwgens = {rec["lmfdb_label"]: rec["gens"] for rec in db.ec_mwbsd.search({"lmfdb_label":{"$in":labels}}, ["lmfdb_label", "gens"])}
@@ -493,6 +480,28 @@ class ECDownloader(Downloader):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
 
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
+                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+            }
+        )
+    }
+
+    def postprocess(self, row, info, query):
+        # Unfortunately, I don't see a good way to batch these database calls
+        # given how the download iterator works
+        if "mwgens" in info.get("showcol", "").split("."):
+            gens = db.ec_mwbsd.lucky({"lmfdb_label": row["lmfdb_label"]}, "gens")
+            if gens is not None:
+                gens = [(ZZ(a)/c, ZZ(b)/c) for (a,b,c) in gens]
+            row["mwgens"] = gens
+        return row
+
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
@@ -515,13 +524,15 @@ def elliptic_curve_search(info, query):
             query['num_bad_primes'] = 1
         elif info['conductor_type'] == 'squarefree':
             query['semistable'] = True
-        elif info['conductor_type'] == 'divides':
+        elif info['conductor_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('conductor'), int):
                 err = "You must specify a single conductor"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
+            else:
+                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
     parse_ints(info,query,'adelic_level')
@@ -734,10 +745,8 @@ def modular_form_display(label, number):
         number = int(number)
     except ValueError:
         number = 10
-    if number < 10:
-        number = 10
-    if number > 1000:
-        number = 1000
+    number = max(number, 10)
+    number = min(number, 1000)
     ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
@@ -922,14 +931,14 @@ def render_congruent_number_data():
         return redirect(url_for(".render_single_congruent_number", n=info['lookup']))
     learnmore = learnmore_list_remove('Congruent numbers and curves')
     t = 'Congruent numbers and congruent number curves'
-    bread = get_bread(t)
+    bread = [("Datasets", url_for("datasets")), (t, " ")]
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
             return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
-            return redirect(url_for(".rational_elliptic_curves"))
+            return redirect(url_for(".render_congruent_number_data"))
 
     return render_template("congruent_number_data.html", info=info, title=t, bread=bread, learnmore=learnmore)
 
@@ -942,6 +951,111 @@ def render_single_congruent_number(n):
     t = "Is {} a congruent number?".format(n)
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
+
+@ec_page.route("/stein-watkins")
+def render_sw_ecdb():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('Stein-Watkins dataset')
+    t = 'Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("Stein-Watkins dataset", " ")]
+    if 'Fetch' in info:
+        errors = []
+        if info.get("ctype") == "all":
+            fname = "a.{:03d}"
+            kmax = 999
+        elif info.get("ctype") == "prime":
+            fname = "p.{:02d}"
+            kmax = 99
+        else:
+            errors.append("Invalid conductor type")
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a nonnegative integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/stein_watkins_ecdb/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("sw_ecdb.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
+
+@ec_page.route("/BHKSSW")
+def render_bhkssw():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('BHKSSW dataset')
+    t = 'Balakrishnan-Ho-Kaplan-Spicer-Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("BHKSSW dataset", " ")]
+    #if 'filename' in info:
+    #    filepath = os.path.join(os.path.expanduser('~/data/bhkssw_ecdb/' + info['filename']))
+    #    if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+    #        return send_file(filepath, as_attachment=True)
+    #    else:
+    #        flash_error('File {} not found'.format(info['filename']))
+    #        return redirect(url_for(".render_bhkssw"))
+    # This format was nice, but not possible with the 30-second timeout limitation
+    #info['files'] = [ # number of curves, size in MB, lower bound, upper bound, filename
+    #    (2249362, 151, "0", r"1 \cdot 10^8", "1e8db.txt"),
+    #    (1758056, 123, r"1 \cdot 10^8", r"2 \cdot 10^8", "2e8db.txt"),
+    #    (11300506, 798, r"2 \cdot 10^8", r"1 \cdot 10^9", "1e9db.txt"),
+    #    (11982016, 866, r"1 \cdot 10^9", r"2 \cdot 10^9", "2e9db.txt"),
+    #    (10976368, 800, r"2 \cdot 10^9", r"3 \cdot 10^9", "3e9db.txt"),
+    #    (10395560, 768, r"3 \cdot 10^9", r"4 \cdot 10^9", "4e9db.txt"),
+    #    (9932368, 744, r"4 \cdot 10^9", r"5 \cdot 10^9", "5e9db.txt"),
+    #    (9584588, 720, r"5 \cdot 10^9", r"6 \cdot 10^9", "6e9db.txt"),
+    #    (9385318, 707, r"6 \cdot 10^9", r"7 \cdot 10^9", "7e9db.txt"),
+    #    (9071666, 685, r"7 \cdot 10^9", r"8 \cdot 10^9", "8e9db.txt"),
+    #    (8975214, 679, r"8 \cdot 10^9", r"9 \cdot 10^9", "9e9db.txt"),
+    #    (8788686, 666, r"9 \cdot 10^9", r"1.0 \cdot 10^{10}", "10e9db.txt"),
+    #    (8642210, 664, r"1.0 \cdot 10^{10}", r"1.1 \cdot 10^{10}", "11e9db.txt"),
+    #    (8477024, 652, r"1.1 \cdot 10^{10}", r"1.2 \cdot 10^{10}", "12e9db.txt"),
+    #    (8383290, 645, r"1.2 \cdot 10^{10}", r"1.3 \cdot 10^{10}", "13e9db.txt"),
+    #    (8275108, 638, r"1.3 \cdot 10^{10}", r"1.4 \cdot 10^{10}", "14e9db.txt"),
+    #    (8143456, 628, r"1.4 \cdot 10^{10}", r"1.5 \cdot 10^{10}", "15e9db.txt"),
+    #    (8106334, 626, r"1.5 \cdot 10^{10}", r"1.6 \cdot 10^{10}", "16e9db.txt"),
+    #    (7959996, 615, r"1.6 \cdot 10^{10}", r"1.7 \cdot 10^{10}", "17e9db.txt"),
+    #    (7903210, 611, r"1.7 \cdot 10^{10}", r"1.8 \cdot 10^{10}", "18e9db.txt"),
+    #    (7849564, 607, r"1.8 \cdot 10^{10}", r"1.9 \cdot 10^{10}", "19e9db.txt"),
+    #    (7781996, 602, r"1.9 \cdot 10^{10}", r"2.0 \cdot 10^{10}", "20e9db.txt"),
+    #    (7822372, 605, r"2.0 \cdot 10^{10}", r"2.1 \cdot 10^{10}", "21e9db.txt"),
+    #    (7636198, 591, r"2.1 \cdot 10^{10}", r"2.2 \cdot 10^{10}", "22e9db.txt"),
+    #    (7562706, 586, r"2.2 \cdot 10^{10}", r"2.3 \cdot 10^{10}", "23e9db.txt"),
+    #    (7593218, 588, r"2.3 \cdot 10^{10}", r"2.4 \cdot 10^{10}", "24e9db.txt"),
+    #    (7505566, 582, r"2.4 \cdot 10^{10}", r"2.5 \cdot 10^{10}", "25e9db.txt"),
+    #    (7409408, 575, r"2.5 \cdot 10^{10}", r"2.6 \cdot 10^{10}", "26e9db.txt"),
+    #    (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
+    #]
+    if 'Fetch' in info:
+        fname = "{}.txt"
+        kmax = 2699
+        errors = []
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a positive integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/bhkssw_split/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("bhkssw.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
 
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
@@ -1170,6 +1284,7 @@ class ECSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             min_width=85)
         cond = TextBoxWithSelect(

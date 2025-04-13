@@ -33,9 +33,9 @@
 <tr><td> {{ KNOWL('mf.bianchi.spaces', title='Newspace')}}:</td><td><a href={{data.newspace_url}}>{{data.newspace_label}}</a> (dimension {{ data.newspace_dimension }}) </td></tr>
 <tr><td> {{ KNOWL('mf.bianchi.sign',title="Sign of functional equation") }}:</td><td> {{data.sign}} </tr>
 <tr><td> {{ KNOWL('mf.bianchi.anr',title="Analytic rank")}}:</td><td> {{data.anrank}}</td> </tr>
-{% if data.Lratio %}
-<tr><td> {{ KNOWL('mf.bianchi.anr',title="L-ratio")}}:</td><td> {{data.Lratio}} </td></tr>
-{% endif %}
+{# See issue #6288
+<tr><td> {{ KNOWL('mf.bianchi.L-ratio',title="L-ratio")}}:</td><td> {{data.Lratio}} </td></tr>
+#}
 </table>
 </p>
 

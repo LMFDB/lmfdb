@@ -64,13 +64,19 @@ def index():
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,7,11,19,43,67,163]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
+        gl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]
+        gl2_forms_max = "2.0.2491.1"
+        gl2_forms_max_name = r"\(\Q(\sqrt{-2491})\)"
+        gl2_dims_max = "2.0.2495.1"
+        gl2_dims_max_name = r"\(\Q(\sqrt{-2495})\)"
+        sl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,7,11,19,43,67,163]]
+        gl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]
+        sl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
+        info['last_field_forms'] = {'url':url_for("bmf.index", field_label=gl2_forms_max), 'name':gl2_forms_max_name}
+        info['last_field_dims'] = {'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=gl2_dims_max), 'name':gl2_dims_max_name}
 
         t = 'Bianchi modular forms'
         bread = get_bread()
@@ -410,7 +416,7 @@ def download_bmf_magma(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -452,7 +458,7 @@ def download_bmf_magma(**args):
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += '\nALEigenvalues := AssociativeArray();\n'
         for s in AL_eigs:
             outstr += 'ALEigenvalues[ideal<ZF | {}>] := {};\n'.format(set(s[0]), s[1])
@@ -540,7 +546,7 @@ def download_bmf_sage(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -580,10 +586,10 @@ def download_bmf_sage(**args):
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += 'AL_eigenvalues = {}\n'
         for s in AL_eigs:
-            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0], s[1])
     else:
         outstr += 'AL_eigenvalues ="not known"\n'
 

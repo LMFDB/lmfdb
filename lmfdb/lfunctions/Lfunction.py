@@ -388,7 +388,7 @@ def apply_coeff_info(L, coeff_info):
                     res = -I, -I
             else:
                 # an = e^(2 pi i an_power_int / this_base_power_int)
-                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + r"}\right)$"
+                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int) + r"}\right)$"
                 #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
@@ -497,7 +497,7 @@ class Lfunction_from_db(Lfunction):
         _, conductor, character, cr, imag, index = self.label.split('-')
         spectral_label = cr + '-' + imag
         degree = self.degree
-        conductor  = conductor.replace('e', '^')
+        conductor = conductor.replace('e', '^')
         bread = [('L-functions', url_for('.index'))]
         if self.rational:
             bread.append(('Rational', url_for('.rational')))
@@ -596,10 +596,11 @@ class Lfunction_from_db(Lfunction):
 
     def download_euler_factors(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
-        data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
+        data['first_lfactors'] = [[ps[i], l]
+                                  for i, l in enumerate(self.localfactors)]
         return Downloader()._wrap(Json.dumps(data),
                                   filename + '.euler_factors',
                                   lang='text',
@@ -717,10 +718,10 @@ class Lfunction_Maass(Lfunction):
 
         # Check for compulsory arguments
         if self.fromDB:
-            validate_required_args ('Unable to construct L-function of Maass form.',
+            validate_required_args('Unable to construct L-function of Maass form.',
                                     args, 'group', 'level', 'char', 'R', 'ap_id')
         else:
-            validate_required_args ('Unable to construct L-function of Maass form.',
+            validate_required_args('Unable to construct L-function of Maass form.',
                                     args, 'maass_id')
 
         self._Ltype = "maass"
@@ -847,9 +848,9 @@ class Lfunction_HMF(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Hilbert modular form '
+        validate_required_args('Unable to construct Hilbert modular form '
                                 + 'L-function.', args, 'label', 'number', 'character')
-        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+        validate_integer_args('Unable to construct Hilbert modular form L-function.',
                                args, 'character','number')
 
         self._Ltype = "hilbertmodularform"
@@ -1124,7 +1125,7 @@ class DedekindZeta(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Dedekind zeta function.', args, 'label')
+        validate_required_args('Unable to construct Dedekind zeta function.', args, 'label')
         self._Ltype = "dedekindzeta"
 
         # Put the arguments into the object dictionary
@@ -1433,7 +1434,7 @@ class SymmetricPowerLfunction(Lfunction):
         validate_required_args('Unable to construct symmetric power L-function.',
                                args, 'power', 'underlying_type', 'field',
                                'conductor', 'isogeny')
-        validate_integer_args ('The power has to be an integer.',
+        validate_integer_args('The power has to be an integer.',
                                args, 'power', 'conductor')
         self._Ltype = "SymmetricPower"
 

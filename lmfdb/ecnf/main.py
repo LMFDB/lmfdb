@@ -200,7 +200,7 @@ def show_ecnf1(nf):
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -223,7 +223,7 @@ def show_ecnf_conductor(nf, conductor_label):
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -386,7 +386,7 @@ ecnf_columns = SearchColumns([
                  short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
-                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
+                 short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш", default=False),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", default=False),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left", default=False),

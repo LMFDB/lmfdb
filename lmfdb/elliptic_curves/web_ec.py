@@ -19,7 +19,7 @@ RZB_URL_PREFIX = "https://users.wfu.edu/rouseja/2adic/" # Needs to be changed wh
 CP_URL_PREFIX = "https://mathstats.uncg.edu/sites/pauli/congruence/" # Needs tto be changed whenever Cummins and Pauli move their data
 
 OPTIMALITY_BOUND = 400000 # optimality of curve no. 1 in class (except class 990h) only proved in all cases for conductor less than this
-CREMONA_BOUND    = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
+CREMONA_BOUND = 500000 # above this bound we have nor Cremona labels (no Clabel, Ciso, Cnumber), no Manin constant or optimality info.
 
 cremona_label_regex = re.compile(r'(\d+)([a-z]+)(\d*)')
 lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d*)')
@@ -438,7 +438,7 @@ class WebEC():
         # Isogeny degrees:
 
         cond, iso, num = split_lmfdb_label(lmfdb_label)
-        self.class_deg  = classdata['class_deg']
+        self.class_deg = classdata['class_deg']
         self.one_deg = ZZ(self.class_deg).is_prime()
         isodegs = [str(d) for d in self.isogeny_degrees if d > 1]
         if len(isodegs) < 3:
@@ -497,7 +497,7 @@ class WebEC():
                     data['manin_known'] = False
                     data['optimal_label'] = self.Clabel if self.label_type == 'Cremona' else self.lmfdb_label
                 else:
-                    # find curve #1 in this class and its optimailty code:
+                    # find curve #1 in this class and its optimality code:
                     opt_curve = db.ec_curvedata.lucky({'Ciso': self.Ciso, 'Cnumber': 1},
                                                    projection=['Clabel','lmfdb_label','optimality'])
                     data['manin_known'] = (opt_curve['optimality'] == 1)
@@ -511,7 +511,7 @@ class WebEC():
 
         # p-adic data:
 
-        data['p_adic_primes'] = [p for i,p in enumerate(prime_range(5, 100))
+        data['p_adic_primes'] = [p for i, p in enumerate(prime_range(5, 100))
                                  if (N*data['ap'][i]) % p != 0]
 
         data['p_adic_data_exists'] = False
@@ -625,16 +625,16 @@ class WebEC():
 
         try:
             mwbsd['rank'] = self.rank
-            mwbsd['reg']  = self.regulator
-            mwbsd['sha']  = self.sha
+            mwbsd['reg'] = self.regulator
+            mwbsd['sha'] = self.sha
             mwbsd['sha2'] = latex_sha(self.sha)
             mwbsd['sha_is_exact'] = self.rank == 0 # see Issue #5872
             for num in ['reg', 'special_value', 'real_period', 'area']:
-                mwbsd[num]  = RR(mwbsd[num])
+                mwbsd[num] = RR(mwbsd[num])
         except AttributeError:
             mwbsd['rank'] = '?'
-            mwbsd['reg']  = '?'
-            mwbsd['sha']  = '?'
+            mwbsd['reg'] = '?'
+            mwbsd['sha'] = '?'
             mwbsd['sha2'] = '?'
             mwbsd['regsha'] = ( mwbsd['special_value'] * self.torsion**2 ) / ( mwbsd['tamagawa_product'] * mwbsd['real_period'] )
             if r <= 1:
@@ -657,8 +657,10 @@ class WebEC():
             mwbsd['int_points'] = "None"
 
         # Generators (mod torsion) and heights:
-        mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else ''
+        #mwbsd['generators'] = [raw_typeset(weighted_proj_to_affine_point(P)) for P in mwbsd['gens']] if mwbsd['ngens'] else []
+        mwbsd['generators'] = [weighted_proj_to_affine_point(P) for P in mwbsd['gens']] if mwbsd['ngens'] else []
         mwbsd['heights'] = [RR(h) for h in mwbsd['heights']]
+        mwbsd['gens_and_heights'] = list(zip(mwbsd['generators'], mwbsd['heights']))
 
         # Mordell-Weil group
         invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
@@ -668,11 +670,13 @@ class WebEC():
         if mwbsd['torsion'] == 1:
             mwbsd['tor_struct'] = ''
             mwbsd['tor_gens'] = ''
+            mwbsd['tor_gens_and_orders'] = []
         else:
             mwbsd['tor_struct'] = r' \oplus '.join(r'\Z/{%s}\Z' % n for n in self.torsion_structure)
             tor_gens_tmp = [weighted_proj_to_affine_point(P) for P in mwbsd['torsion_generators']]
             mwbsd['tor_gens'] = raw_typeset(', '.join(str(P) for P in tor_gens_tmp),
                 ', '.join(web_latex(P) for P in tor_gens_tmp))
+            mwbsd['tor_gens_and_orders'] = list(zip(tor_gens_tmp, self.torsion_structure))
 
         # BSD invariants
         if r >= 2:

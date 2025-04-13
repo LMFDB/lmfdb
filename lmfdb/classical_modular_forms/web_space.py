@@ -8,7 +8,7 @@ from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import (
-    display_knowl, web_latex, coeff_to_power_series,
+    display_knowl, raw_typeset_qexp,
     web_latex_factored_integer, prop_int_pretty)
 from flask import url_for
 import re
@@ -156,7 +156,8 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
 
 def trace_expansion_generic(space, prec_max=10):
     prec = min(len(space.traces)+1, prec_max)
-    return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
+    return raw_typeset_qexp([0] + space.traces[:prec-1])
+    # return web_latex(coeff_to_power_series([0] + space.traces[:prec-1],prec=prec),enclose=True)
 
 
 class DimGrid():
@@ -294,8 +295,9 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
     sub_level_list = [sub_level for sub_level in divisors(level) if (sub_level % char_conductor == 0) and sub_level != level]
-    sub_chars = list(db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index}))
-    sub_chars = {char['modulus'] : char for char in sub_chars}
+    sub_chars = {char['modulus'] : char for char in db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index})}
+    if weight == 1:
+        newspace_dims = {rec['level']: rec['dim'] for rec in db.mf_newspaces.search({'weight': weight, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', 'dim'])}
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -303,10 +305,13 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_char_orbit_index'] = sub_chars[sub_level]['orbit']
         entry['sub_conrey_index'] = sub_chars[sub_level]['first']
         entry['sub_mult'] = number_of_divisors(level/sub_level)
-        if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 1)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
-            # only include subspaces with cusp forms
-            # https://pari.math.u-bordeaux.fr/pub/pari/manuals/2.15.4/users.pdf  p.595
-            oldspaces.append(entry)
+        # only include subspaces with positive dimension (computed on the fly unless with weight is 1)
+        if weight == 1:
+            if newspace_dims[sub_level] > 0:
+                oldspaces.append(entry)
+        else:
+            if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
+                oldspaces.append(entry)
     return oldspaces
 
 class WebNewformSpace():
@@ -476,7 +481,7 @@ class WebGamma1Space():
         self.has_trace_form = (data.get('traces') is not None)
         # By default we sort on char_orbit_index
         newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
-        self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level)]
+        self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level) if sublevel != level]
         self.oldspaces.sort()
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []

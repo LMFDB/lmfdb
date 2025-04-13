@@ -2,7 +2,7 @@ import re
 from flask import url_for
 from urllib.parse import quote
 from markupsafe import Markup, escape
-from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
+from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, RR, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
@@ -84,7 +84,7 @@ def get_nf_info(lab):
     r""" extract number field label from string and pretty"""
     try:
         label = nf_string_to_label(lab)
-        pretty = field_pretty (label)
+        pretty = field_pretty(label)
     except ValueError as err:
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % (escape(lab),err)))
     return label, pretty
@@ -359,6 +359,9 @@ class ECNF():
         self.cond_norm = web_latex(self.conductor_norm)
 
         Dnorm = self.normdisc
+        self.model_disc = self.disc.replace('w', Kgen).replace("*","").replace("(","").replace(")","")
+        if Kgen == 'phi':
+            self.model_disc = self.model_disc.replace(Kgen, r"\phi")
         self.disc = pretty_ideal(Kgen, self.disc)
 
         local_data = self.local_data
@@ -399,7 +402,7 @@ class ECNF():
             self.fact_disc = self.disc
             self.fact_disc_norm = str(Dnorm)
         else:
-            self.fact_disc      = latex_factorization(badprimes, disc_ords)
+            self.fact_disc = latex_factorization(badprimes, disc_ords)
             self.fact_disc_norm = latex_factorization(badnorms, disc_ords, sign=signDnorm)
 
         if self.is_minimal:
@@ -411,10 +414,10 @@ class ECNF():
 
         self.mindisc_norm = web_latex(Dmin_norm)
         if Dmin_norm in [1,-1]:  # since the factorization of (1) displays as "1"
-            self.fact_mindisc      = self.mindisc
+            self.fact_mindisc = self.mindisc
             self.fact_mindisc_norm = self.mindisc_norm
         else:
-            self.fact_mindisc      = latex_factorization(badprimes, mindisc_ords)
+            self.fact_mindisc = latex_factorization(badprimes, mindisc_ords)
             self.fact_mindisc_norm = latex_factorization(badnorms, mindisc_ords, sign=signDnorm)
 
         j = self.field.parse_NFelt(self.jinv)
@@ -483,17 +486,26 @@ class ECNF():
         except AttributeError:
             self.qc = "not determined"
 
+        # Mordell-Weil group
+        try:
+            invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
+            self.mw_struct = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+        except AttributeError: # if self.rank not set
+            self.mw_struct = "unknown"
+
         # Torsion
-        self.ntors = web_latex(self.torsion_order)
+        BSDntors = self.torsion_order
+        self.ntors = web_latex(BSDntors)
         self.tr = len(self.torsion_structure)
         if self.tr == 0:
-            self.tor_struct_pretty = "trivial"
+            self.tor_struct_pretty = "$0$"
         if self.tr == 1:
             self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\oplus\Z/%s\Z\)" % tuple(self.torsion_structure)
 
         self.torsion_gens = [web_point(parse_point(K,P)) for P in self.torsion_gens]
+        self.tor_gens_and_orders = list(zip(self.torsion_gens, self.torsion_structure))
 
         # BSD data
         #
@@ -552,36 +564,63 @@ class ECNF():
                 self.bsd_status = "missing_gens"
 
         # Regulator only in conditional/unconditional cases, or when we know the rank:
+        BSDReg = None
         if self.bsd_status in ["conditional", "unconditional"]:
-            if self.ar == 0:
-                self.reg = web_latex(1)  # otherwise we only get 1.00000...
+            if self.analytic_rank == 0:
+                BSDReg = 1
+                self.reg = self.NTreg = web_latex(BSDReg)  # otherwise we only get 1.00000...
             else:
                 try:
-                    self.reg = web_latex(self.reg)
-                except AttributeError:
+                    R = self.reg
+                    BSDReg = R * K.degree()**self.rank
+                    self.reg = web_latex(R)
+                    self.NTreg = web_latex(BSDReg)
+                except Exception:
                     self.reg = "not available"
+                    self.NTreg = "not available"
         elif self.rk != "not available":
-            self.reg = web_latex(self.reg) if self.rank else web_latex(1)
+            R = self.reg
+            BSDReg = R * K.degree()**self.rank
+            self.reg = web_latex(R) if self.rank else web_latex(1)
+            self.NTreg = web_latex(BSDReg) if self.rank else web_latex(1)
         else:
             self.reg = "not available"
+            self.NTreg = "not available"
 
         # Generators
         try:
             self.gens = [web_point(parse_point(K, P)) for P in self.gens]
+            self.gens_and_heights = list(zip(self.gens,self.heights))
+            self.gens_and_heights.sort(key=lambda Ph: Ph[1])
         except AttributeError:
             self.gens = []
+            self.gens_and_heights = []
 
-        # Global period
+        # Global period -- see issue #5409 for why we multiply by
+        # 2**nc in most cases.  However, data computed after
+        # 2024-07-09 (including all data for imaginary quadratic
+        # fields of absolute discriminant > 600 as well as some larger
+        # conductors for other IQFs) already has the extra factor of
+        # 2.  As a fail-safe until we fix the data in all cases, we
+        # will test (using the BSD formula) whether to remove the
+        # factor of 2 added here.
+        BSDomega = None
         try:
-            self.omega = web_latex(self.omega)
+            BSDomega = self.omega
+            nc = self.signature[1] # number of complex places
+            if nc:
+                BSDomega *= 2**nc
+            self.omega = web_latex(BSDomega)
         except AttributeError:
             self.omega = "not available"
 
         # L-value
+        BSDLvalue = None
         try:
             r = int(self.analytic_rank)
             # lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
-            self.Lvalue = web_latex(self.Lvalue)
+            BSDLvalue = self.Lvalue
+            self.Lvalue = web_latex(BSDLvalue)
         except (TypeError, AttributeError):
             self.Lvalue = "not available"
 
@@ -593,13 +632,78 @@ class ECNF():
             self.tamagawa_factors = r'\cdot'.join(cp_fac)
         else:
             self.tamagawa_factors = None
-        self.tamagawa_product = web_latex(prod(tamagawa_numbers,1))
+        BSDprodcp = prod(tamagawa_numbers,1)
+        self.tamagawa_product = web_latex(BSDprodcp)
 
         # Analytic Sha
+        BSDsha = None
         try:
-            self.sha = web_latex(self.sha) + " (rounded)"
+            BSDsha = self.sha
+            self.sha = web_latex(BSDsha) + " (rounded)"
         except AttributeError:
             self.sha = "not available"
+
+        # Check analytic Sha value compatible with formula in the knowl (see issue #5409)
+
+        BSDrootdisc = RR(K.discriminant().abs()).sqrt()
+        BSDok = True
+        if BSDLvalue and BSDsha and BSDReg and (self.rank is not None):
+            BSDsha_numerator = BSDrootdisc * BSDntors**2
+            BSDsha_denominator = BSDReg * BSDomega * BSDprodcp
+            BSDsha_from_formula = BSDLvalue * BSDsha_numerator / BSDsha_denominator
+            BSDsha_from_formula_rounded = BSDsha_from_formula.round()
+            BSDok = (BSDsha_from_formula_rounded == BSDsha) and ((BSDsha_from_formula_rounded - BSDsha_from_formula).abs() < 0.001)
+            #print(f"{BSDsha_from_formula=}")
+            #print(f"{BSDsha_from_formula_rounded=}")
+            #print(f"{BSDsha=}")
+            #print(f"{BSDok=}")
+            if not BSDok:
+                # this means that we doubled BSDomega when we should
+                # not have, so BSDsha_denominator is doubled and
+                # BSDsha_from formula is halved
+                print(f"BSD normalization: adjusting Omega for {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
+                BSDok = ((BSDsha/BSDsha_from_formula)-2).abs() < 0.01
+                if not BSDok:
+                    print(f"BSD normalization issue with {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
+                BSDomega /= 2
+                BSDsha_denominator /= 2
+                BSDsha_from_formula *= 2
+                BSDsha_from_formula_rounded = BSDsha_from_formula.round()
+            BSDLvalue_from_formula = BSDsha * BSDsha_denominator / BSDsha_numerator
+            self.BSDsha = web_latex(BSDsha_from_formula)
+            self.BSDLvalue = web_latex(BSDLvalue_from_formula)
+
+            # The BSD formula for display
+
+            dot = '\\cdot'
+            approx = '\\approx'
+            eq_query = '\\overset{?}{=}'
+            frac = '\\frac'
+            Sha = '\\# &#1064;(E/K)'
+            Om = '\\Omega(E/K)'
+            Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
+            prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
+            tors2 = '\\#E(K)_{\\mathrm{tor}}^2'
+            rootD = '\\left|d_K\\right|^{1/2}'
+
+            lder_name  = rf"L^{{({r})}}(E/K,1)/{r}!" if r >= 2 else "L'(E/K,1)" if r else "L(E/K,1)"
+            lhs_num    = rf'{Sha} {dot} {Om} {dot} {Reg} {dot} {prodcp}'
+            lhs_den    = rf'{tors2} {dot} {rootD}'
+            lhs        = rf'{frac}{{ {lhs_num} }} {{ {lhs_den} }}'
+            rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg} {dot} {BSDprodcp}'
+            if r:
+                rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
+            rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
+            rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
+            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} {eq_query} {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+
+        else:
+            self.BSDsha = "not available"
+            self.BSDLvalue = "not available"
+            self.bsd_formula = None
+
+        if not BSDok: # don't display the formula if it is not correct
+            self.bsd_formula = None
 
         # Local data
 

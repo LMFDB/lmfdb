@@ -127,6 +127,7 @@ def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
+    # Temporary measure until we update data with Xarith1 and Xarithpm1 families
     if "+" in name:
         name = name.replace("+", "^+")
     if "ns" in name:
@@ -135,6 +136,10 @@ def name_to_latex(name):
         name = name.replace("sp", r"{\mathrm{sp}}")
     elif "S4" in name:
         name = name.replace("S4", "{S_4}")
+    elif name.startswith("Xarith1"):
+        name = r"X{\mathrm{arith},1}" + name[7:]
+    elif name.startswith("Xarithpm1"):
+        name = r"X{\mathrm{arith},\pm 1}" + name[9:]
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
     elif "arith" in name:
@@ -181,35 +186,27 @@ def formatted_model_html(self, m):
 
     def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
-            title = display_knowl('ag.canonical_model', 'Canonical model') +\
-             r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
+            title = display_knowl('ag.canonical_model', 'Canonical model') + r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
             if len(lines) > eqn_threshold:
                 title += " defined by %d equations" % (len(lines) - 1,)
             return title
         elif typ == 2:
             #smooth is true, false, or none
             if smooth is True:
-                return display_knowl('modcurve.plane_model', 'Smooth plane model') +\
-                " Smooth plane model"
+                return display_knowl('modcurve.plane_model', 'Smooth plane model')
             elif smooth is False:
-                return display_knowl('modcurve.plane_model', 'Singular plane model') +\
-                " Singular plane model"
+                return display_knowl('modcurve.plane_model', 'Singular plane model')
             else:
-                return display_knowl('modcurve.plane_model', 'Plane model') +\
-                    " Plane model"
+                return display_knowl('modcurve.plane_model', 'Plane model')
         elif typ == 5:
             if self.genus == 1:
-                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model') +\
-                " Weierstrass model"
+                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
             else:
-                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model') +\
-                " Weierstrass model"
+                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
         elif typ == 7:
-            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model') +\
-            " Geometric Weierstrass model"
+            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
         elif typ == 8:
-            return display_knowl('modcurve.embedded_model', 'Embedded model') +\
-             r" Embedded model in $\mathbb{P}^{%d}$" % (nb_var-1,)
+            return display_knowl('modcurve.embedded_model', 'Embedded model') + r" in $\mathbb{P}^{%d}$" % (nb_var-1,)
 
     def equation_of_model(lines, typ):
         table = '<table valign="center">' +\
@@ -1095,7 +1092,7 @@ class WebModCurve(WebObj):
         parents = {}
         names = {}
         for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
-            if rec["name"]:
+            if rec["name"] and db.modcurve_teximages.count({"label":rec["name"]}):
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]
         texlabels = []

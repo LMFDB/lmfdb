@@ -1830,7 +1830,9 @@ class WebAbstractGroup(WebObj):
     def pcgs_expos_to_str(self, vec):
         w = []
         e = 0
-        for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
+        # We need to shift the relative orders by 1, since we're multiplying on the previous pass of the for loop
+        relords = [1] + self.pcgs_relative_orders[:-1]
+        for i, (c, m) in reversed(list(enumerate(zip(vec, relords)))):
             e += c
             if i + 1 in self.gens_used:
                 w.append(e)
@@ -1923,7 +1925,9 @@ class WebAbstractGroup(WebObj):
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm=False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm=False, GLFq_logs=None):
+        if GLFq_logs is None:
+            GLFq_logs = as_str or ListForm
         # ListForm is for code snippet
         if rep_type == "GLZ" and not isinstance(code, int):  # decimal here represents an integer encoding b
             a, b = str(code).split(".")
@@ -1946,13 +1950,14 @@ class WebAbstractGroup(WebObj):
         L = pad(L, k * d**2)
         if rep_type == "GLFq":
             L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
-            L = [l.log(a) if l != 0 else -1 for l in L]  #-1 represents 0, to distinguish from  a^0
+            if GLFq_logs:
+                L = [l.log(a) if l != 0 else -1 for l in L]  #-1 represents 0, to distinguish from  a^0
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
         if ListForm:
             return L  #as ints representing powers of primitive element if GLFq
-        if rep_type == "GLFq":
+        if rep_type == "GLFq" and GLFq_logs:
             x = matrix(ZZ, d, d, L)  #giving powers of alpha (primitive element)
         else:
             x = matrix(R, d, d, L)
@@ -1961,21 +1966,22 @@ class WebAbstractGroup(WebObj):
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
                 return r"\left[" + latex(x) + r"\right]"
             if rep_type == "GLFq":  #need to customize latex command for GLFq
-                rs = 'r'*d
-                st_latex = r'\left(\begin{array}{'+rs+'}'
-                for i in range(d):
-                    for j in range(d):
-                        if j < d-1:
-                            endstr = ' & '
-                        else:
-                            endstr = r' \\ '
-                        if L[d*i+j] > 0:
-                            st_latex = st_latex + r'\alpha^{' + str(L[d*i+j]) + '}' + endstr
-                        elif L[d*i+j] == 0:
-                            st_latex = st_latex + str(1) + endstr
-                        else:
-                            st_latex = st_latex + str(0) + endstr
-                st_latex = st_latex + r'\end{array}\right)'
+                ls = 'l'*d
+                st_latex = r'\left(\begin{array}{'+ls+'}'
+                for i, entrylog in enumerate(L):
+                    if entrylog > 1:
+                        st_latex += rf'\alpha^{{{entrylog}}}'
+                    elif entrylog == 1:
+                        st_latex += r'\alpha'
+                    elif entrylog == 0:
+                        st_latex += "1"
+                    else:
+                        st_latex += "0"
+                    if (i + 1) % d == 0:
+                        st_latex += r' \\ '
+                    else:
+                        st_latex += ' & '
+                st_latex += r'\end{array}\right)'
                 return st_latex
             return latex(x)
         return x
@@ -2113,7 +2119,7 @@ class WebAbstractGroup(WebObj):
                 if j == u:
                     if e == 1:
                         if first_pass:
-                            s = var_name(i)  + s
+                            s = var_name(i) + s
                             first_pass = False
                         else:
                             s = var_name(i) + '*' + s
@@ -2234,7 +2240,12 @@ class WebAbstractGroup(WebObj):
             # Matrix group
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
-            gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
+            ambient = fr"\GL_{{{d}}}({R})"
+            if rep_type == "GLFq":
+                Fq = GF(N**k, "alpha")
+                poly = latex(Fq.polynomial())
+                ambient += fr" = \GL_{{{d}}}(\F_{{{N}}}[\alpha]/({poly}))"
+            gens = fr"$\left\langle {gens} \right\rangle \subseteq {ambient}$"
             code_cmd = self.create_snippet(rep_type)
             if skip_head:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
@@ -2733,7 +2744,7 @@ class WebAbstractGroup(WebObj):
             nZN = self.representations["GLZN"]["d"]
             N = self.representations["GLZN"]["p"]
             LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
-            LZNsplit = "[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZN", ListForm=True) , nZN, N) for g in self.representations["GLZN"]["gens"]]) + "]"
+            LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
         else:
             nZN, N, LZN, LZNsplit = None, None, None, None
         if "GLZq" in self.representations:
@@ -2747,8 +2758,9 @@ class WebAbstractGroup(WebObj):
         if "GLFq" in self.representations:
             nFq = self.representations["GLFq"]["d"]
             Fq = self.representations["GLFq"]["q"]
-            LFq = ",".join([split_matrix_Fq_add_al(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq ) for g in self.representations["GLFq"]["gens"]])
-            LFqsplit = "[" + ",".join([split_matrix_list_Fq(self.decode_as_matrix(g, "GLFq", ListForm=True), nFq, Fq) for g in self.representations["GLFq"]["gens"]]) + "]"
+            mats = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
+            LFq = ",".join(split_matrix_Fq_add_al(mat, nFq ) for mat in mats)
+            LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nFq, Fq) for mat in mats) + "]"
         else:
             nFq, Fq, LFq, LFqsplit = None, None, None, None
 
