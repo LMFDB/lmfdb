@@ -81,7 +81,7 @@ def hidden2swan(hid):
     a=parts[0].replace('[','')
     a=a.replace(' ','')
     if a=='':
-        return '[]'
+        return hid
     return '['+','.join([str(QQ(z)-1) for z in a.split(',')])+']'+parts[1]
 
 def local_algebra_data(labels):
