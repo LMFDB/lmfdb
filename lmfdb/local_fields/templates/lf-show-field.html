@@ -20,6 +20,7 @@
       <tr><td> {{KNOWL('lf.automorphism_group', info.autstring)}} :</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
       <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible Artin slopes')}}:</td><td>{{info.visible}}</td></tr>
+      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible Swan slopes')}}:</td><td>{{info.visible_swan}}</td></tr>
       <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>${{info.jump_set}}$</td></tr>
       <tr><td>{{ KNOWL('lf.roots_of_unity', title='Roots of unity') }}:</td><td>{{info.roots_of_unity}}</td></tr>
 </table>
@@ -44,7 +45,7 @@
 </p>
 {% endif %}
 
-<h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
+<h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Canonical tower') }}</h2>
 <table>
   <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
   <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
@@ -114,6 +115,12 @@
   <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild Artin slopes')}}:</td><td>
   {% if info.slopes %}
   {{info.slopes}}
+  {% else %}
+    not computed
+  {% endif %}
+  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild Swan slopes')}}:</td><td>
+  {% if info.slopes %}
+  {{info.swanslopes}}
   {% else %}
     not computed
   {% endif %}

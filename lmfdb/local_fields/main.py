@@ -67,6 +67,23 @@ def lf_formatfield(coef):
         return raw_typeset(thepoly, thepolylatex)
     return nf_display_knowl(thefield.get_label(),thepolylatex)
 
+# Takes a string '[2,5/2]'
+def artin2swan(li):
+    l1=li.replace('[','')
+    l1=l1.replace(']','')
+    l1=l1.replace(' ','')
+    if l1=='':
+        return []
+    return '['+','.join([str(QQ(z)-1) for z in l1.split(',')])+']'
+
+def hidden2swan(hid):
+    parts=hid.split(']')
+    a=parts[0].replace('[','')
+    a=a.replace(' ','')
+    if a=='':
+        return '[]'
+    return '['+','.join([str(QQ(z)-1) for z in a.split(',')])+']'+parts[1]
+
 def local_algebra_data(labels):
     labs = labels.split(',')
     f1 = labs[0].split('.')
@@ -430,7 +447,7 @@ def slopes_col(default=True, relative=False):
         title = "Artin slope content"
     return MultiProcessedCol("slopes", "lf.slope_content", title,
                              ["slopes", "t", "u"],
-                             show_slope_content, short_title="slope content",
+                             show_slope_content, short_title="Artin slope content",
                              apply_download=unpack_slopes, default=default)
 def hidden_col(default=True, relative=False):
     if relative:
@@ -470,8 +487,26 @@ lf_columns = SearchColumns([
     ProcessedCol("t", "lf.tame_degree", "$t$", intcol, short_title="tame degree", default=False),
     RationalListCol("visible", "lf.visible_slopes", "Visible Artin slopes",
                     show_slopes2, default=lambda info: info.get("visible")),
+    # throw in c as a trick to differentiate it from just visible
+    MultiProcessedCol("visibleswan", "lf.visible_slopes", "Visible Swan slopes",
+                    ["visible","c"], 
+                    (lambda visible, c: latex_content(show_slopes2(artin2swan(visible)))), 
+                    mathmode=False, default=False,
+                    apply_download=(lambda slopes: eval_rational_list(artin2swan(slopes)))),
     slopes_col(),
+    MultiProcessedCol("swanslopes", "lf.slope_content", "Swan slope content",
+                     ["slopes", "t", "u", "c"],
+                     (lambda slopes, t, u, c: show_slope_content(artin2swan(slopes), t, u)), 
+                     short_title="Swan slope content",
+                     apply_download=(lambda slopes, t, u: unpack_slopes(artin2swan(slopes), t, u)), 
+                     default=False),
     hidden_col(default=False),
+    MultiProcessedCol("hiddenswan", "lf.visible_slopes",
+                        "Hidden Swan slopes",
+                        ["hidden", "c"],
+                        (lambda hidden, c: latex_content(hidden2swan(hidden))),
+                        short_title="hidden Swan slopes",
+                        apply_download=False, default=False),
     aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
@@ -487,7 +522,7 @@ family_columns = SearchColumns([
     MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=lambda info: info.get("one_per") == "packet", contingent=lambda info: info['family'].n0 == 1),
     poly_col(relative=True),
     gal_col(lambda info: "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"),
-    MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else "Galois degree $/ \Q_p$", short_title="Galois degree"),
+    MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else r"Galois degree $/ \Q_p$", short_title="Galois degree"),
     aut_col(True),
     slopes_col(default=False, relative=True),
     hidden_col(relative=True),
@@ -709,15 +744,14 @@ def render_field_webpage(args):
         f = data['f']
         n = data['n']
         cc = data['c']
-        gn = data['n']
         autstring = fr'$\#\Aut(K/\Q_{{{p}}})$'
         if 'galois_label' in data:
             gt = int(data['galois_label'].split('T')[1])
-            the_gal = WebGaloisGroup.from_nt(gn,gt)
-            isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
+            the_gal = WebGaloisGroup.from_nt(n,gt)
+            isgal = ' Galois' if the_gal.order() == n else ' not Galois'
             abelian = ' and abelian' if the_gal.is_abelian() else ''
             galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
-            if the_gal.order() == gn:
+            if the_gal.order() == n:
                 autstring = fr'$\#\Gal(K/\Q_{{{p}}})$'
         prop2 = [
             ('Label', label),
@@ -726,7 +760,7 @@ def render_field_webpage(args):
             ('e', r'\(%s\)' % e),
             ('f', r'\(%s\)' % f),
             ('c', r'\(%s\)' % cc),
-            ('Galois group', group_pretty_and_nTj(gn, gt) if 'galois_label' in data else 'not computed'),
+            ('Galois group', group_pretty_and_nTj(n, gt) if 'galois_label' in data else 'not computed'),
         ]
         # Look up the unram poly so we can link to it
         unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
@@ -787,6 +821,7 @@ def render_field_webpage(args):
             'base': lf_display_knowl(str(p)+'.1.0.1', name='$%s$' % Qp),
             'hw': data['hw'],
             'visible': latex_content(data['visible']),
+            'visible_swan': latex_content(artin2swan(data['visible'])),
             'wild_inertia': wild_inertia,
             'unram': unramp,
             'ind_insep': latex_content(str(data['ind_of_insep'])),
@@ -824,6 +859,7 @@ def render_field_webpage(args):
             friends.append(('Families of extensions', url_for(".index", relative=1, search_type="Families", base=label)))
         if 'slopes' in data:
             info['slopes'] = latex_content(data['slopes'])
+            info['swanslopes'] = latex_content(artin2swan(data['slopes']))
         if 'inertia' in data:
             info['inertia'] = group_display_inertia(data['inertia'])
         for k in ['gms', 't', 'u']:
@@ -836,10 +872,10 @@ def render_field_webpage(args):
         if 'associated_inertia' in data:
             info['associated_inertia'] = ",".join(f"${ai}$" for ai in data['associated_inertia'])
         if 'galois_label' in data:
-            info.update({'gal': group_pretty_and_nTj(gn, gt, True),
+            info.update({'gal': group_pretty_and_nTj(n, gt, True),
                          'galphrase': galphrase,
                          'gt': gt})
-            friends.append(('Galois group', "/GaloisGroup/%dT%d" % (gn, gt)))
+            friends.append(('Galois group', "/GaloisGroup/%dT%d" % (n, gt)))
         if 'jump_set' in data:
             info['jump_set'] = data['jump_set']
             if info['jump_set'] == []:
@@ -1166,7 +1202,7 @@ def common_boxes():
     visible = TextBoxWithSelect(
         name='visible',
         label='Visible Artin slopes',
-        short_label='Visible',
+        short_label='Visible Artin',
         knowl='lf.visible_slopes',
         select_box=visible_quantifier,
         example='[2,2,3]',
