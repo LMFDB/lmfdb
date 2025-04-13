@@ -993,12 +993,15 @@ def reliability():
 
 @local_fields_page.route("/family/<label>")
 def family_page(label):
-    m = FAMILY_RE.match(label)
+    m = FAMILY_RE.fullmatch(label)
     if m is None:
         flash_error("Invalid label %s", label)
         return redirect(url_for(".index"))
-
-    family = pAdicSlopeFamily(label)
+    try:
+        family = pAdicSlopeFamily(label)
+    except NotImplementedError:
+        flash_error("No famly with label %s in the database", label)
+        return redirect(url_for(".index"))
     info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family, stats=LFStats())
     p, n = family.p, family.n
     if family.n0 == 1:
