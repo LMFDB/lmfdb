@@ -686,6 +686,7 @@ def local_field_count(info, query):
     query["__groupby__"] = groupby
     if info["search_type"] == "FamilyCounts":
         query["__table__"] = table
+        query["__title__"] = "Family count results"
 
     urlgen_info = dict(info)
     urlgen_info.pop("hst", None)
@@ -856,6 +857,9 @@ def render_field_webpage(args):
             info["roots_of_unity"] = "not computed"
         if "family" in data:
             friends.append(('Family', url_for(".family_page", label=data["family"])))
+            rec = db.lf_families.lucky({"label":data["family"]}, ["means", "rams"])
+            info["means"] = latex_content(rec["means"]).replace("[", r"\langle").replace("]", r"\rangle")
+            info["rams"] = latex_content(rec["rams"]).replace("[", "(").replace("]", ")")
         if n < 16:
             friends.append(('Families of extensions', url_for(".index", relative=1, search_type="Families", base=label)))
         if 'slopes' in data:
@@ -1052,6 +1056,7 @@ def family_page(label):
                                    (str(family.n), url_for(".index", search_type="Families", relative=1, base=family.base, n=n)),
                                    (label, "")])
     info['title'] = f"$p$-adic family {label}"
+    info['titletag'] = f"p-adic family {label}"
     info['show_count'] = True
     info['properties'] = [
         ('Label', label),
