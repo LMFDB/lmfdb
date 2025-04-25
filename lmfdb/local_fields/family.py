@@ -17,8 +17,8 @@ def str_to_QQlist(s):
 
 def latex_content(s):
     # Input should be a content string, [s1, s2, ..., sm]^t_u.  This converts the s_i (which might be rational numbers) to their latex form
-    if s is None:
-        return "Not computed"
+    if s is None or s == "":
+        return "not computed"
     elif isinstance(s, list):
         return '$[' + ','.join(latex(x) for x in s) + ']$'
     else:
@@ -408,7 +408,7 @@ class pAdicSlopeFamily:
         fields, cache = self.fields
         ii = sorted(Counter(tuple(rec["ind_of_insep"]) for rec in fields).items())
         def show_ii(x, cnt):
-            disp = str(x).replace(" ","")
+            disp = str(x).replace(" ","").replace("[]", r"[\ ]")
             if len(ii) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, ind_of_insep=disp, insep_quantifier="exactly")
@@ -420,7 +420,7 @@ class pAdicSlopeFamily:
         fields, cache = self.fields
         ai = sorted(Counter(tuple(rec["associated_inertia"]) for rec in fields).items())
         def show_ai(x, cnt):
-            disp = str(x).replace(" ","")
+            disp = str(x).replace(" ","").replace("[]", r"[\ ]")
             if len(ai) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, associated_inertia=disp)
@@ -432,7 +432,7 @@ class pAdicSlopeFamily:
         fields, cache = self.fields
         js = sorted(Counter(tuple(rec["jump_set"]) for rec in fields if "jump_set" in rec).items())
         def show_js(x, cnt):
-            disp = str(x).replace(" ","")
+            disp = str(x).replace(" ","").replace("[]", r"[\ ]")
             if len(js) == 1:
                 return f"${disp}$"
             url = url_for(".family_page", label=self.label, jump_set=disp)

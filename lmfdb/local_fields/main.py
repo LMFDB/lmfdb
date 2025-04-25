@@ -69,20 +69,22 @@ def lf_formatfield(coef):
 
 # Takes a string '[2,5/2]'
 def artin2swan(li):
-    l1=li.replace('[','')
-    l1=l1.replace(']','')
-    l1=l1.replace(' ','')
-    if l1=='':
-        return []
-    return '['+','.join([str(QQ(z)-1) for z in l1.split(',')])+']'
+    if li is not None:
+        l1=li.replace('[','')
+        l1=l1.replace(']','')
+        l1=l1.replace(' ','')
+        if l1=='':
+            return []
+        return '['+','.join([str(QQ(z)-1) for z in l1.split(',')])+']'
 
 def hidden2swan(hid):
-    parts=hid.split(']')
-    a=parts[0].replace('[','')
-    a=a.replace(' ','')
-    if a=='':
-        return hid
-    return '['+','.join([str(QQ(z)-1) for z in a.split(',')])+']'+parts[1]
+    if hid is not None:
+        parts=hid.split(']')
+        a=parts[0].replace('[','')
+        a=a.replace(' ','')
+        if a=='':
+            return hid
+        return '['+','.join([str(QQ(z)-1) for z in a.split(',')])+']'+parts[1]
 
 def local_algebra_data(labels):
     labs = labels.split(',')
@@ -459,6 +461,31 @@ def hidden_col(default=True, relative=False):
                         latex_content, short_title="hidden Artin slopes",
                         apply_download=False, default=default)
 
+def swanslopes_col(default=False, relative=False):
+    if relative:
+        title = lambda info: "Swan slope content" if info['family'].n0 == 1 else r"Swan slope content $/ \Q_p$"
+    else:
+        title = "Swan slope content"
+    return MultiProcessedCol("swanslopes", "lf.slope_content", "Swan slope content",
+                             ["slopes", "t", "u", "c"],
+                             (lambda slopes, t, u, c: show_slope_content(artin2swan(slopes), t, u)),
+                             short_title="Swan slope content",
+                             apply_download=(lambda slopes, t, u: unpack_slopes(artin2swan(slopes), t, u)),
+                             default=default)
+
+def hiddenswan_col(default=False, relative=False):
+    if relative:
+        title = lambda info: "Hidden Swan slopes" if info['family'].n0 == 1 else r"Hidden Swan slopes $/ \Q_p$"
+    else:
+        title = "Hidden Swan slopes"
+    return MultiProcessedCol("hiddenswan", "lf.visible_slopes",
+                             "Hidden Swan slopes",
+                             ["hidden", "c"],
+                             (lambda hidden, c: latex_content(hidden2swan(hidden))),
+                             short_title="hidden Swan slopes",
+                             apply_download=False,
+                             default=default)
+
 def insep_col(default=True, relative=False):
     if relative:
         title = lambda info: "Ind. of Insep." if info['family'].n0 == 1 else r"Ind. of Insep. $/ \Q_p$"
@@ -495,19 +522,9 @@ lf_columns = SearchColumns([
                       short_title="visible Swan slopes",
                       apply_download=(lambda slopes: eval_rational_list(artin2swan(slopes)))),
     slopes_col(),
-    MultiProcessedCol("swanslopes", "lf.slope_content", "Swan slope content",
-                     ["slopes", "t", "u", "c"],
-                     (lambda slopes, t, u, c: show_slope_content(artin2swan(slopes), t, u)),
-                     short_title="Swan slope content",
-                     apply_download=(lambda slopes, t, u: unpack_slopes(artin2swan(slopes), t, u)),
-                     default=False),
+    swanslopes_col(),
     hidden_col(default=False),
-    MultiProcessedCol("hiddenswan", "lf.visible_slopes",
-                        "Hidden Swan slopes",
-                        ["hidden", "c"],
-                        (lambda hidden, c: latex_content(hidden2swan(hidden))),
-                        short_title="hidden Swan slopes",
-                        apply_download=False, default=False),
+    hiddenswan_col(),
     aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
@@ -526,10 +543,13 @@ family_columns = SearchColumns([
     MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else r"Galois degree $/ \Q_p$", short_title="Galois degree"),
     aut_col(True),
     slopes_col(default=False, relative=True),
+    swanslopes_col(relative=True),
     hidden_col(relative=True),
+    hiddenswan_col(relative=True),
     insep_col(relative=True),
     assoc_col(relative=True),
-    jump_col()])
+    jump_col()],
+    db_cols=["label", "new_label", "packet", "packet_size", "coeffs", "unram", "n", "gal", "aut", "slopes", "t", "u", "c", "hidden", "ind_of_insep", "associated_inertia", "jump_set"])
 
 class PercentCol(MathCol):
     def display(self, rec):
@@ -861,7 +881,7 @@ def render_field_webpage(args):
             info["means"] = latex_content(rec["means"]).replace("[", r"\langle").replace("]", r"\rangle")
             info["rams"] = latex_content(rec["rams"]).replace("[", "(").replace("]", ")")
         if n < 16:
-            friends.append(('Families of extensions', url_for(".index", relative=1, search_type="Families", base=label)))
+            friends.append(('Families with this base', url_for(".index", relative=1, search_type="Families", base=label)))
         if 'slopes' in data:
             info['slopes'] = latex_content(data['slopes'])
             info['swanslopes'] = latex_content(artin2swan(data['slopes']))
