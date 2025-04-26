@@ -704,8 +704,11 @@ def count_postprocess(res, info, query):
     if info["search_type"] == "Counts" and set(query).issubset("pne"):
         groupby = info["groupby"]
         if groupby == ["p", "n"]:
-            # We need to handle the possibility that there are constraints on e
-            eopts = integer_options(info["e"], upper_bound=47)
+            if "e" in info:
+                # We need to handle the possibility that there are constraints on e
+                eopts = integer_options(info["e"], upper_bound=47)
+            else:
+                eopts = None
             func = lambda p, n: count_fields(p, n=n, eopts=eopts)
         elif groupby == ["p", "e"]:
             n = db.lf_fields.distinct("n", query)
