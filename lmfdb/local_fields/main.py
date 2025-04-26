@@ -3,14 +3,14 @@
 
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers)
+    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi)
 from sage.plot.all import line, points, text, Graphics
 
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
-    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats, parse_regex_restricted,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox,
     HiddenBox, TextBoxNoEg, CountBox, to_dict, comma,
@@ -141,7 +141,7 @@ def local_field_data(label):
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    if 'galois_label' in f:
+    if f.get('galois_label') is not None:
         gt = int(f['galois_label'].split('T')[1])
         ans += 'Galois group $G$: %s<br>' % group_pretty_and_nTj(gn, gt, True)
     else:
@@ -537,7 +537,7 @@ lf_columns = SearchColumns([
 
 family_columns = SearchColumns([
     label_col,
-    MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: f'<a href="{url_for_packet(packet)}">{size}</a>'), default=lambda info: info.get("one_per") == "packet", contingent=lambda info: info['family'].n0 == 1),
+    MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: '' if size is None else f'<a href="{url_for_packet(packet)}">{size}</a>'), default=lambda info: info.get("one_per") == "packet", contingent=lambda info: info['family'].n0 == 1),
     poly_col(relative=True),
     gal_col(lambda info: "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"),
     MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else r"Galois degree $/ \Q_p$", short_title="Galois degree"),
@@ -599,10 +599,10 @@ families_columns = SearchColumns([
 ])
 
 def lf_postprocess(res, info, query):
-    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res if 'gal' in rec}))
+    cache = knowl_cache(list({f"{rec['n']}T{rec['gal']}" for rec in res if rec.get('gal') is not None}))
     for rec in res:
         rec["cache"] = cache
-        if 'gal' in rec:
+        if rec.get('gal') is not None:
             gglabel = f"{rec['n']}T{rec['gal']}"
             rec["galsize"] = cache[gglabel]["order"]
         else:
@@ -644,6 +644,51 @@ def common_parse(info, query):
     parse_noop(info,query,'family')
     parse_noop(info,query,'hidden')
 
+def count_fields(p, n=None, f=None, e=None, eopts=None):
+    # Implement a formula due to Monge for the number of fields with given n or e,f
+    if n is None and (f is None or e is None):
+        raise ValueError("Must specify n or (f and e)")
+    if f is None:
+        if e is None:
+            if eopts is None:
+                return sum(count_fields(p, e=e, f=n//e) for e in n.divisors())
+            return sum(count_fields(p, e=e, f=n//e) for e in n.divisors() if e in eopts)
+        elif n % e != 0:
+            return 0
+        f = n // e
+    elif e is None:
+        if n % f != 0:
+            return 0
+        e = n // f
+    def eps(i):
+        return sum(p**(-j) for j in range(1, i+1))
+    def ee(i):
+        return euler_phi(p**i)
+    def sig(n0, e, f, s):
+        nn = n0 * e * f
+        return 1 + sum(p**i * (p**(eps(i) * nn) - p**(eps(i-1) * nn)) for i in range(1,s+1))
+    def delta(m, s, i):
+        if s == i == 0:
+            return 1
+        if s > i == 0:
+            return (p**m - 1) * p**(m * (s-1))
+        if s > i > 0:
+            return (p - 1) * (p**m - 1) * p**(m * (s - 1) + i - 1)
+        if s == i > 0:
+            return (p - 1) * p**(m * s + s - 1)
+        return 0
+    def term(i, fp, ep):
+        ep_val = ep.valuation(p)
+        epp = e / (ee(i) * ep)
+        if not epp.is_integer():
+            return 0
+        epp_val, epp_unit = epp.val_unit(p)
+        fpp = f / fp
+        a = 1 if ((p**fp - 1) / epp_unit).is_integer() else 0
+        return a * euler_phi(epp_unit) * euler_phi(fpp) / ee(i) * sig(ee(i), ep, fp, ep_val) * delta(ee(i) * ep * fp, epp_val, i)
+
+    return 1/f * sum(term(i, fp, ep) for i in range(e.valuation(p)+1) for fp in f.divisors() for ep in e.divisors())
+
 def fix_top_slope(s):
     if isinstance(s, float):
         return QQ(s)
@@ -655,6 +700,36 @@ def count_postprocess(res, info, query):
     # We account for two possible ways of encoding top_slope
     for key, val in list(res.items()):
         res[key[0],fix_top_slope(key[1])] = res.pop(key)
+    # Fill in entries using field_count
+    if info["search_type"] == "Counts" and set(query).issubset("pne"):
+        groupby = info["groupby"]
+        if groupby == ["p", "n"]:
+            # We need to handle the possibility that there are constraints on e
+            eopts = integer_options(info["e"], upper_bound=47)
+            func = lambda p, n: count_fields(p, n=n, eopts=eopts)
+        elif groupby == ["p", "e"]:
+            n = db.lf_fields.distinct("n", query)
+            if len(n) != 1:
+                # There were no results...
+                return res
+            n = ZZ(n[0])
+            func = lambda p, e: count_fields(p, n=n, e=e)
+        elif groupby == ["n", "e"]:
+            p = db.lf_fields.distinct("p", query)
+            if len(p) != 1:
+                # No results...
+                return res
+            p = ZZ(p[0])
+            func = lambda n, e: count_fields(p, n=n, e=e)
+        else:
+            return res
+        for a in info["row_heads"]:
+            for b in info["col_heads"]:
+                if (a,b) not in res:
+                    cnt = func(ZZ(a),ZZ(b))
+                    if cnt:
+                        info["nolink"].add((a,b))
+                        res[a,b] = cnt
     return res
 
 @count_wrap(
@@ -692,8 +767,21 @@ def local_field_count(info, query):
             info["n"] = ",".join(query["n"]["$in"])
     groupby = []
     heads = []
+    maxval = {"p": 200, "n": 47, "e": 47}
     for col in ["p", "n", "e", "c", "top_slope"]:
-        tmp = table.distinct(col, query)
+        if col in "pne" and info["search_type"] == "Counts" and col in info:
+            # Allow user to get virtual counts outside the specified range
+            tmp = integer_options(info[col], upper_bound=maxval[col])
+            if col == "n" and "e" in info:
+                # Constrain degrees to b only multiples of some e
+                eopts = integer_options(info["e"], upper_bound=47)
+                if 1 not in eopts:
+                    emuls = set()
+                    for e in eopts:
+                        emuls.update([e*j for j in range(1, 47//e + 1)])
+                    tmp = sorted(set(tmp).intersection(emuls))
+        else:
+            tmp = table.distinct(col, query)
         if len(tmp) > 1:
             if col == "top_slope":
                 tmp = sorted(fix_top_slope(s) for s in tmp)
@@ -703,17 +791,20 @@ def local_field_count(info, query):
             break
     else:
         raise ValueError("To generate count table, you must not specify all of p, n, e, and c")
-    query["__groupby__"] = groupby
+    query["__groupby__"] = info["groupby"] = groupby
     if info["search_type"] == "FamilyCounts":
         query["__table__"] = table
         query["__title__"] = "Family count results"
 
+    info["nolink"] = set()
     urlgen_info = dict(info)
     urlgen_info.pop("hst", None)
     urlgen_info.pop("stats", None)
     if info["search_type"] == "FamilyCounts":
         urlgen_info["search_type"] = "Families"
     def url_generator(a, b):
+        if (a,b) in info["nolink"]:
+            return
         info_copy = dict(urlgen_info)
         info_copy.pop("search_array", None)
         info_copy.pop("search_type", None)
@@ -767,7 +858,7 @@ def render_field_webpage(args):
         n = data['n']
         cc = data['c']
         autstring = fr'$\#\Aut(K/\Q_{{{p}}})$'
-        if 'galois_label' in data:
+        if data.get('galois_label') is not None:
             gt = int(data['galois_label'].split('T')[1])
             the_gal = WebGaloisGroup.from_nt(n,gt)
             isgal = ' Galois' if the_gal.order() == n else ' not Galois'
@@ -782,7 +873,7 @@ def render_field_webpage(args):
             ('e', r'\(%s\)' % e),
             ('f', r'\(%s\)' % f),
             ('c', r'\(%s\)' % cc),
-            ('Galois group', group_pretty_and_nTj(n, gt) if 'galois_label' in data else 'not computed'),
+            ('Galois group', group_pretty_and_nTj(n, gt) if data.get('galois_label') is not None else 'not computed'),
         ]
         # Look up the unram poly so we can link to it
         unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
@@ -822,7 +913,7 @@ def render_field_webpage(args):
         else:
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
-        if 'wild_gap' in data and data['wild_gap'] != [0,0]:
+        if data['wild_gap'] is not None and data['wild_gap'] != [0,0]:
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
             wild_inertia = 'not computed'
@@ -855,7 +946,7 @@ def render_field_webpage(args):
             'ppow_roots_of_unity': data.get('ppow_roots_of_unity'),
         })
         friends = []
-        if "ppow_roots_of_unity" in data:
+        if data.get("ppow_roots_of_unity") is not None:
             prou = data["ppow_roots_of_unity"]
             rou = (p**f - 1) * p**prou
             if f > 1:
@@ -875,33 +966,35 @@ def render_field_webpage(args):
                 info["roots_of_unity"] = f"${rou} = {rou_expr}$"
         else:
             info["roots_of_unity"] = "not computed"
-        if "family" in data:
-            friends.append(('Family', url_for(".family_page", label=data["family"])))
+        if data.get("family") is not None:
+            friends.append(('Absolute family', url_for(".family_page", label=data["family"])))
+            subfields = [f"{p}.1.1.0a1.1"] + list(db.lf_fields.search({"label":{"$in":data["subfield"]}}, "new_label"))
+            friends.append(('Families containing this field', url_for(".index", relative=1, search_type="Families", label_absolute=data["family"],base=",".join(subfields))))
             rec = db.lf_families.lucky({"label":data["family"]}, ["means", "rams"])
             info["means"] = latex_content(rec["means"]).replace("[", r"\langle").replace("]", r"\rangle")
             info["rams"] = latex_content(rec["rams"]).replace("[", "(").replace("]", ")")
         if n < 16:
             friends.append(('Families with this base', url_for(".index", relative=1, search_type="Families", base=label)))
-        if 'slopes' in data:
+        if data.get('slopes') is not None:
             info['slopes'] = latex_content(data['slopes'])
             info['swanslopes'] = latex_content(artin2swan(data['slopes']))
-        if 'inertia' in data:
+        if data.get('inertia') is not None:
             info['inertia'] = group_display_inertia(data['inertia'])
         for k in ['gms', 't', 'u']:
-            if k in data:
+            if data.get(k) is not None:
                 info[k] = data[k]
-        if 'ram_poly_vert' in data:
+        if data.get('ram_poly_vert') is not None:
             info['ram_polygon_plot'] = plot_ramification_polygon(data['ram_poly_vert'], p, data['residual_polynomials'], data['ind_of_insep'])
-        if 'residual_polynomials' in data:
+        if data.get('residual_polynomials') is not None:
             info['residual_polynomials'] = ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])
-        if 'associated_inertia' in data:
+        if data.get('associated_inertia') is not None:
             info['associated_inertia'] = ",".join(f"${ai}$" for ai in data['associated_inertia'])
-        if 'galois_label' in data:
+        if data.get('galois_label') is not None:
             info.update({'gal': group_pretty_and_nTj(n, gt, True),
                          'galphrase': galphrase,
                          'gt': gt})
             friends.append(('Galois group', "/GaloisGroup/%dT%d" % (n, gt)))
-        if 'jump_set' in data:
+        if data.get('jump_set') is not None:
             info['jump_set'] = data['jump_set']
             if info['jump_set'] == []:
                 info['jump_set'] = r"[\ ]"
@@ -1143,7 +1236,7 @@ def common_family_parse(info, query):
     parse_ints(info,query,'c0',name='Base discriminant exponent c')
     parse_ints(info,query,'c_absolute',name='Absolute discriminant exponent c')
     parse_ints(info,query,'w',name='Wild ramification exponent')
-    parse_noop(info,query,'base',name='Base')
+    parse_regex_restricted(info,query,'base',regex=NEW_LF_RE,errknowl='lf.field.label',errtitle='label')
     parse_noop(info,query,'label_absolute',name='Absolute label')
     parse_floats(info,query,'mass_relative',name='Mass', qfield='mass_relative')
     parse_floats(info,query,'mass_absolute',name='Mass', qfield='mass_absolute')
