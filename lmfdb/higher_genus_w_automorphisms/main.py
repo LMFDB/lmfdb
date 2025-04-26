@@ -292,7 +292,7 @@ def expr_error(err):
     return err_msg
 
 def expr_getc():
-    global cur_expr, cur_index
+    global cur_index
     while cur_index < len(cur_expr):
         result = cur_expr[cur_index]
         cur_index += 1
