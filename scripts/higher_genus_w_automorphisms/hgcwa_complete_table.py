@@ -23,7 +23,7 @@ def compute_values():
 
     data = []
     hgcwa = db.hgcwa_passports
-    
+
     for genus in range(2, hgcwa.max('genus')+1):
 
         # hgcwa_complete has exactly one row for each genus
@@ -31,7 +31,7 @@ def compute_values():
 
         row = [genus]
 
-        if table_entry is not None: 
+        if table_entry is not None:
             # retrieve some of the previous values
             row.extend([table_entry['g0_gt0_compute'], table_entry['top_braid_compute'], table_entry['top_braid_g0_gt0']])
         else: # a new genus is being added
@@ -61,5 +61,5 @@ def compute_values():
 
         row.extend([num_families, num_refined_pp, num_gen_vectors, num_unique_groups])
         data.append(row)
-    
+
     return data

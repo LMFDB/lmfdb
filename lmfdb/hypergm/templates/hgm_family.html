@@ -2,89 +2,107 @@
 
 {% block content %}
 
-<p><h2> {{ KNOWL('hgm.defining_parameters', title='Defining parameters') }}</h2>
+<h2> {{ KNOWL('hgm.defining_parameters', title='Defining parameters') }}</h2>
 
-<p>
-  <p>
-    <table>
-      <tr><td> $A$: </td> <td> ${{ family.A }}$ </td>
-        <td> $\alpha$: </td> <td> {{ family.alpha_latex }} </td></tr>
-      <tr><td> $B$: </td> <td> ${{ family.B }}$ </td>
-        <td> $\beta$: </td> <td> {{ family.beta_latex }} </td></tr>
-      <tr><td>$\gamma$: </td><td colspan="3"> ${{ family.gammas }}$ </td></tr>
-    </table>
-  </p>
-  <p>
-    <table>
-    </table>
-  </p>
-</p>
-
-<p><h2> {{ KNOWL('hgm.invariants', title='Invariants') }}</h2>
-  <p>
-    <table>
-      <tr><td>{{KNOWL('hgm.degree', title="Degree")}}:<td>${{family.degree}}$
-      <tr><td>{{KNOWL('hgm.weight', title="Weight")}}:<td>${{family.weight}}$
-      <tr><td>{{KNOWL('hgm.type', title="Type")}}:<td>{{family.type}}
-      <tr><td>{{KNOWL('hgm.wild', title="Wild primes")}}:<td>{{family.wild_primes}}
-      <tr><td>{{KNOWL('mot.hodgevector', title="Hodge vector")}}:<td>${{family.hodge}}$
-      <tr><td>{{KNOWL('hgm.rotation_number', title="Rotation number")}}:<td>${{family.rotation_number}}$
-      <tr><td>{{KNOWL('hgm.determinant', title="Motive determinant character")}}:<td>${{family.motivic_det_char}}$
-      <tr><td>{{KNOWL('hgm.bezout_matrix', title="Bezout matrix")}}:<td>${{family.bezout_latex}}$
-      <tr><td>{{KNOWL('hgm.bezout_determinant', title="Bezout determinant")}}:<td>${{family.bezout_det}}$
-      <tr><td>{{KNOWL('hgm.bezout_module', title="Bezout module")}}:<td>${{family.bezout_module}}$
-      <!--Levelt matrices purposefully tex'd slightly oddly for better viewing on narrow screens-->
-      <tr><td>{{KNOWL('hgm.levelt_matrices', title="Levelt matrices")}}:<td>${h_{\infty}={{family.hinf_latex}},\;}$ ${h_0={{family.h0_latex}},\;}$ $ {h_1={{family.h1_latex}}}$ 
-    </table>
-  <p>
-<p><h2> $p$-parts of defining parameters</h2>
-<p>
 <table>
-<tr> <th> $p$ <th> $A_p$ <th> $B_p$ <th> $C_p$
- {% for p, Ap, Bp, Cp  in family.ppart %}
- <tr>
-   <td> ${{p}}$
-   <td> ${{Ap}}$
-   <td> ${{Bp}}$
-   <td> ${{Cp}}$
- {% endfor %}
-
+  <tr><td> $A$: </td> <td> ${{ family.A }}$ </td>
+    <td> $\alpha$: </td> <td> {{ family.alpha_latex }} </td></tr>
+  <tr><td> $B$: </td> <td> ${{ family.B }}$ </td>
+    <td> $\beta$: </td> <td> {{ family.beta_latex }} </td></tr>
+  <tr><td>$\gamma$: </td><td colspan="3"> ${{ family.gammas }}$ </td></tr>
 </table>
 
-<p>
-<p>
-<h2> {{ KNOWL('hgm.monodromy', title='Monodromy groups') }} modulo $\ell$</h2>
+<h2> {{ KNOWL('hgm.invariants', title='Invariants') }}</h2>
+
 <table>
-  <tr>
-    <th> $\ell$ </th>
-    <th> Index </th>
-    <th> Subimage</th>
-    <th> Image  </th>
-    <th> $A^{\perp} _\ell$ </th>
-    <th> $B^{\perp} _\ell$ </th>
-    <th> $C^{\perp} _\ell$ </th>
-    <th> Imprimitivity </th>
+  <tr><td>{{KNOWL('hgm.degree', title="Degree")}}:</td><td>${{family.degree}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.weight', title="Weight")}}:</td><td>${{family.weight}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.type', title="Type")}}:</td><td>{{family.type}}</td></tr>
+  <tr><td>{{KNOWL('hgm.wild', title="Wild primes")}}:</td><td>{{family.wild_primes_string | safe}}</td></tr>
+  <tr><td>{{KNOWL('hgm.hodge_vector', title="Hodge vector")}}:</td><td>${{family.hodge}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.rotation_number', title="Rotation number")}}:</td><td>${{family.rotation_number}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.determinant', title="Determinant character")}}:</td><td>${{family.motivic_det_char}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.bezout_matrix', title="Bezout matrix")}}:</td><td>${{family.bezout_latex}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.bezout_determinant', title="Bezout determinant")}}:</td><td>${{family.bezout_det}}$</td></tr>
+  <tr><td>{{KNOWL('hgm.bezout_module', title="Bezout module")}}:</td><td>${{family.bezout_module}}$</td></tr>
+  <!--Levelt matrices purposefully tex'd slightly oddly for better viewing on narrow screens-->
+  <tr><td>{{KNOWL('hgm.levelt_matrices', title="Levelt matrices")}}:</td><td>${h_{\infty}={{family.hinf_latex}},\;}$ ${h_0={{family.h0_latex}},\;}$ $ {h_1={{family.h1_latex}}}$</td></tr>
+</table>
+
+<h2> {{ KNOWL('hgm.zigzagplot', title='Zigzag plot') }} </h2>
+<img src="{{ family.zigzag_plot() }}" width="500">
+
+<h2> {{ KNOWL('hgm.defining_parameter_ppart', title='$p$-parts of defining parameters') }} </h2>
+
+<table style="margin-left:1%;" border="0" class="ntdata">
+  <thead>
+    <tr>
+      <th> $p$ </th>
+      <th> {{ KNOWL('hgm.defining_parameter_ppart', title='$A_p$') }} </th>
+      <th> {{ KNOWL('hgm.defining_parameter_ppart', title='$B_p$') }} </th>
+      <th> {{ KNOWL('hgm.defining_parameter_ppart', title='$C_p$') }} </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p, Ap, Bp, Cp, U  in family.ppart %}
+      <tr>
+        <td> ${{p}}$ </td>
+        {% if U %}
+          <td> <a href={{U}}>${{Ap}}$</a> </td>
+          <td> <a href={{U}}>${{Bp}}$</a> </td>
+        {% else %}
+          <td> ${{Ap}}$ </td>
+          <td> ${{Bp}}$ </td>
+        {% endif %}
+        <td> ${{Cp}}$ </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2> {{ KNOWL('hgm.monodromy', title='Monodromy groups') }} modulo $\ell$ </h2>
+
+<table style="margin-left:1%;" border="0" class="ntdata">
+  <thead>
+    <tr>
+      <th> $\ell$ </th>
+      <th> {{ KNOWL('hgm.monodromy_index', title='Index') }} </th>
+      <th> {{ KNOWL('hgm.monodromy_subimage', title='Subimage') }}</th>
+      <th> {{ KNOWL('hgm.monodromy_image', title='Image') }}</th>
+      <th> {{ KNOWL('hgm.defining_parameter_primetoppart', title='$A^{\perp} _\ell$') }} </th>
+      <th> {{ KNOWL('hgm.defining_parameter_primetoppart', title='$B^{\perp} _\ell$') }} </th>
+      <th> {{ KNOWL('hgm.defining_parameter_primetoppart', title='$C^{\perp} _\ell$') }} </th>
+      <th> {{ KNOWL('hgm.rotation_number', title='Imprimitivity') }}  </th>
+    </tr>
+  </thead>
+  <tbody>
     {% for m in family.monodromy %}
       {% if m[1]!=0 %}
         <tr>
-          <td> ${{m[0]}}$ </td>
-          <td> ${{m[3]}}$</td>
-          <td> {{m[2] | safe}}</td>
-          <td> {{m[1][2] | safe}}</td>
-          {% for i in range(3) %}
+          <td> ${{m[0]}}$ </td> <!-- ell -->
+          <td> ${{m[3]}}$</td> <!-- Index -->
+          <td> {{m[2] | safe}}</td> <!-- Subimage -->
+          <td> {{m[1][2] | safe}}</td> <!-- Image -->
+          {% for i in range(3) %} <!-- A_ell^perp,... -->
             {% if m[1][3][i] %}
-              <td> ${{m[1][3][i]}}$ </td>
+              {% if m[5] and i in range(2) %} <!-- if URL exists -->
+                <td> <a href={{m[5]}}>${{m[1][3][i]}}$</a> </td>
+              {% else %}
+                <td> ${{m[1][3][i]}}$ </td>
+              {% endif %}
             {% else %}
               <td> $[\ ]$ </td>
             {% endif %}
           {% endfor %}
-          <td> ${{m[1][3][3]}}$</td>
-        {% endif %}
-      {% endfor %}
+          <td> ${{m[1][3][3]}}$</td> <!-- Imprimitiviy -->
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </tbody>
 </table>
 {% if family.defaultp %}
 <p>
-<h2>Good Euler factors</h2>
+<h2>{{KNOWL('hgm.good_prime', title="Good")}} {{KNOWL('lfunction.euler_product', title="Euler factors")}} </h2>
 <form id='euler_factors'>
   <table>
     <tr>
@@ -113,7 +131,7 @@
       {% else %}
         {% set colspan = 2 %}
       {% endif %}
-      <th class='weight'> $F_p(T)$ </th>
+      <th class='weight'> {{ KNOWL('modlgal.frobenius_charpoly', '$F_p(T)$') }} </th>
       {% if family.weight > 0 %}
         {% set colspan = colspan + 1 %}
         <th class='weight'> Ordinary? </th>

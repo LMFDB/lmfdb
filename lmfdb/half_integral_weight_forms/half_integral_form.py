@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 
@@ -111,9 +110,8 @@ def render_hiwf_webpage(**args):
     for n in data['newpart']:
         v = {}
         v['dim'] = n['dim_image']
-        s = []
-        for h in n['half_forms']:
-            s.append(my_latex_from_qexp(print_q_expansion(h)))
+        s = [my_latex_from_qexp(print_q_expansion(h))
+             for h in n['half_forms']]
         v['hiwf'] = s
         v['mf'] = n['mf_label']
         v['nf'] = n['nf_label']

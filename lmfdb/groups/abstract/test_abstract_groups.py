@@ -1,9 +1,5 @@
 from lmfdb.tests import LmfdbTest
 
-def no_groups():
-    from lmfdb import db
-    return db.gps_subgroups.count() == 0
-
 class AbGpsTest(LmfdbTest):
     # All tests should pass
 
@@ -11,8 +7,6 @@ class AbGpsTest(LmfdbTest):
         r"""
         Check that solvable is computed correctly
         """
-        if no_groups():
-            return
         self.check_args("/Groups/Abstract/60.5", "nonsolvable")
         self.check_args("/Groups/Abstract/32.51", "solvable")
 
@@ -22,8 +16,6 @@ class AbGpsTest(LmfdbTest):
         r"""
         Check that the property box displays.
         """
-        if no_groups():
-            return
         page = self.tc.get("/Groups/Abstract/256.14916").get_data(as_text=True).replace("\n", "").replace(" ", "")
         assert r'<divclass="properties-body"><table><tr><tdclass="label">Label</td><td>256.14916</td></tr><tr>' in page
  #       assert r'<tdclass="label">Order</td><td>${2^{8}}$</td></tr>' in page
@@ -32,8 +24,6 @@ class AbGpsTest(LmfdbTest):
     def test_abstract_group_download(self):
 #        r"""
 #        Test downloading on search results page.
-        if no_groups():
-            return
         response = self.tc.get("/Groups/Abstract/384.5458/download/gap")
         self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
         self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
@@ -41,16 +31,17 @@ class AbGpsTest(LmfdbTest):
         self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
         self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
 
+    def test_conj_decode(self):
+        from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+        G = WebAbstractGroup("18.2")
+        self.assertTrue(all(G.decode_as_pcgs(i, True) == f"a^{{{i}}}" for i in range(2,18)))
+
     def character_counts(self):
         # There was a bug in showing all dimensions of irreducible characters when we don't store the complex character table
-        if no_groups():
-            return
         page = self.tc.get("/Groups/Abstract/1800.328").get_data(as_text=True).replace(" ","").replace("\n","")
         self.assertTrue("<td>30</td><td>30</td><td>30</td>" in page)
 
     def test_live_pages(self):
-        if no_groups():
-            return
         self.check_args("/Groups/Abstract/1920.240463", [
             "nonsolvable",
             "10 subgroups in one conjugacy class",
@@ -81,11 +72,9 @@ class AbGpsTest(LmfdbTest):
         ])
 
     def test_underlying_data(self):
-        if no_groups():
-            return
-        self.check_args("/Groups/Abstract/data/256.33517", [
+        self.check_args("/Groups/Abstract/data/2520.a", [
             "gps_groups", "number_normal_subgroups",
-            "gps_groups_cc", "representative",
+            "gps_conj_classes", "representative",
             "gps_qchar", "cdim",
             "gps_char", "indicator",
             "gps_subgroups", "mobius_sub"])

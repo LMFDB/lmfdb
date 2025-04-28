@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 from ast import literal_eval
@@ -8,7 +7,7 @@ from sage.all import ZZ, QQ, PolynomialRing, magma, prod, factor, latex
 
 from lmfdb import db
 from lmfdb.app import app
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     CountBox,
     Downloader,
@@ -568,7 +567,7 @@ class G2C_download(Downloader):
             {
                 "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
                 "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
-                "gp": 'curve = apply(Polrev, mapget(out, "eqn"))',
+                "gp": 'curve = apply(Polrev, mapget(out, "eqn"));',
             }
         ),
     }
@@ -583,11 +582,11 @@ g2c_columns = SearchColumns([
     MathCol("analytic_rank", "g2c.analytic_rank", "Rank*"),
     MathCol("two_selmer_rank", "g2c.two_selmer_rank", "2-Selmer rank", default=False),
     ListCol("torsion_subgroup", "g2c.torsion", "Torsion",
-                 lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}",
+                 lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in literal_eval(tors)]) if tors != "[]" else r"\mathsf{trivial}",
                  mathmode=True, align="center"),
-    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)"%geom_end_alg_name(v),
+    ProcessedCol("geom_end_alg", "g2c.geom_end_alg", r"$\textrm{End}^0(J_{\overline\Q})$", lambda v: r"\(%s\)" % geom_end_alg_name(v),
                  short_title="Qbar-end algebra", align="center"),
-    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)"%end_alg_name(v), short_title="Q-end algebra", align="center", default=False),
+    ProcessedCol("end_alg", "g2c.end_alg", r"$\textrm{End}^0(J)$", lambda v: r"\(%s\)" % end_alg_name(v), short_title="Q-end algebra", align="center", default=False),
     CheckCol("is_gl2_type", "g2c.gl2type", r"$\GL_2\textsf{-type}$", short_title="GL2-type", default=False),
     ProcessedCol("st_label", "g2c.st_group", "Sato-Tate", st_display_knowl, short_title='Sato-Tate group', align="center", default=False),
     ProcessedCol("non_maximal_primes", "g2c.galois_rep.non_maximal_primes", "Nonmaximal primes",
@@ -606,9 +605,9 @@ g2c_columns = SearchColumns([
     CheckCol("has_square_sha", "g2c.analytic_sha", "Square Ш*", default=False),
     MathCol("analytic_sha", "g2c.analytic_sha", "Analytic Ш*", default=False),
     ProcessedCol("tamagawa_product", "g2c.tamagawa", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", default=False),
-    ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)"%v, align="right", default=False),
-    ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)"%v, align="right", default=False),
-    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)"%v, align="right", default=False),
+    ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)" % v, align="right", default=False),
+    ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)" % v, align="right", default=False),
+    ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)" % v, align="right", default=False),
     ListCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True, default=False),
     ListCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True, default=False),
     ListCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True, default=False),
@@ -925,7 +924,7 @@ def g2c_code(**args):
     Ccode = C.get_code()
     lang = args['download_type']
     code = "%s %s code for working with genus 2 curve %s\n\n" % (Comment[lang],Fullname[lang],label)
-    if lang=='gp':
+    if lang == 'gp':
         lang = 'pari'
     for k in sorted_code_names:
         if lang in Ccode[k]:

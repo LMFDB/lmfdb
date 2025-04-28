@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # HeckeCharacters.py
 from sage.all import gp, xmrange, Integer, pari, gcd, LCM, prod
 from sage.misc.cachefunc import cached_method
@@ -98,7 +97,7 @@ class HeckeCharGroup(DualAbelianGroup_class):
         return HeckeChar(self, x)
 
     def __repr__(self):
-        return "Group of Hecke characters on %s"%self.group()
+        return "Group of Hecke characters on %s" % self.group()
 
     #def list(self):
     #    return [ HeckeChar(self, c.list()) for c in DualAbelianGroup_class.list(self) ]
@@ -148,7 +147,7 @@ class HeckeChar(DualAbelianGroupElement):
         if isinstance(r, (int,Integer)):
             return 0
         n,d = r.numerator(), r.denominator()
-        return n%d/d
+        return n % d/d
 
     def logvalues_on_gens(self):
         F = self.exponents()

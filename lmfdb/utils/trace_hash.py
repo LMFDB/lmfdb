@@ -118,7 +118,7 @@ def TraceHash(E):
         return TraceHash_from_ap([E_pari.ellap(p) for p in TH_P])
 
     if K not in TH_P_cache:
-        TH_P_cache[K] = {p: [P for P in K.primes_above(p) if P.norm()==p] for p in TH_P}
+        TH_P_cache[K] = {p: [P for P in K.primes_above(p) if P.norm() == p] for p in TH_P}
 
     def ap(p):
         return sum([E.reduction(P).trace_of_frobenius() for P in TH_P_cache[K][p]], 0)
@@ -139,9 +139,6 @@ def TraceHashClass(iso, E):
     For curves over number fields the iso label should include the
     field label.
     """
-    global TH_dict
-    if iso in TH_dict:
-        return TH_dict[iso]
-    else:
-        th = TH_dict[iso] = TraceHash(E)
-        return th
+    if iso not in TH_dict:
+        TH_dict[iso] = TraceHash(E)
+    return TH_dict[iso]

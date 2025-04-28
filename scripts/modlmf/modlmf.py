@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-r""" Import mod l modular forms.  
+r""" Import mod l modular forms.
 
-Note: This code can be run on all files in any order. Even if you 
-rerun this code on previously entered files, it should have no affect.  
-This code checks if the entry exists, if so returns that and updates 
-with new information. If the entry does not exist then it creates it 
+Note: This code can be run on all files in any order. Even if you
+rerun this code on previously entered files, it should have no affect.
+This code checks if the entry exists, if so returns that and updates
+with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
@@ -25,7 +25,7 @@ password = pw_dict['data']['password']
 C['mod_l_eigenvalues'].authenticate('editor', password)
 modlmf = C['mod_l_eigenvalues'].modlmf
 
-saving = True 
+saving = True
 
 def sd(f):
   for k in f.keys():
@@ -52,7 +52,7 @@ def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
 
 # The following create_index command checks if there is an index on
-# label, dimension, determinant and level. 
+# label, dimension, determinant and level.
 
 
 modlmf.create_index('characteristic')
@@ -88,7 +88,7 @@ def do_import(ll):
     data['index'] = label_lookup(blabel)
     label= last_label(blabel, data['index'])
     data['label'] = label
-# we need still to organize this better with respect to tie breaks 
+# we need still to organize this better with respect to tie breaks
 
     modl_mf = modlmf.find_one({'label': label})
 

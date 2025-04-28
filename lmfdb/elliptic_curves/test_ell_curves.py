@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
 
@@ -90,20 +89,20 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=include&bad_primes=3%2C5')
         assert '15.a1' in L.get_data(as_text=True)
         assert '30.a1' in L.get_data(as_text=True)
-        assert not('11.a1' in L.get_data(as_text=True))
+        assert '11.a1' not in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=exclude&bad_primes=3%2C5')
-        assert not('15.a1' in L.get_data(as_text=True))
-        assert not('30.a1' in L.get_data(as_text=True))
+        assert '15.a1' not in L.get_data(as_text=True)
+        assert '30.a1' not in L.get_data(as_text=True)
         assert '11.a1' in L.get_data(as_text=True)
         L = self.tc.get('/EllipticCurve/Q/?bad_quantifier=exactly&bad_primes=3%2C5')
         assert '15.a1' in L.get_data(as_text=True)
-        assert not('30.a1' in L.get_data(as_text=True))
-        assert not('11.a1' in L.get_data(as_text=True))
+        assert '30.a1' not in L.get_data(as_text=True)
+        assert '11.a1' not in L.get_data(as_text=True)
 
     def test_num_int_pts_search(self):
         L = self.tc.get('/EllipticCurve/Q/?num_int_pts=1')
         assert '14.a2' in L.get_data(as_text=True)
-        assert not('11.a1' in L.get_data(as_text=True))
+        assert '11.a1' not in L.get_data(as_text=True)
 
     def test_cm_disc_search(self):
         self.check_args('EllipticCurve/Q/?cm=-4', '32.a3')

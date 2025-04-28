@@ -3,8 +3,9 @@ from flask import render_template, jsonify, redirect
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
+from sage.misc.cachefunc import cached_function
 
-from lmfdb.app import ctx_proc_userdata
+from lmfdb.app import ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
 from lmfdb.utils.utilities import flash_error, flash_info, to_dict
 
@@ -64,6 +65,8 @@ class Wrapper():
             errpage = self.f(info, query)
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
+            if is_debug_mode():
+                raise
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
             return render_template(self.template, info=info, title=err_title, **template_kwds)
@@ -164,6 +167,8 @@ class SearchWrapper(Wrapper):
                     # Errors raised in jump box, for example
                     # Using the search results is an okay default, though some
                     # jump boxes will use their own error processing
+                    if is_debug_mode():
+                        raise
                     if "%s" in str(err):
                         flash_error(str(err), info[key])
                     else:
@@ -317,7 +322,9 @@ class CountWrapper(Wrapper):
         )
         self.groupby = groupby
         if postprocess is None and overall is None:
-            overall = table.stats.column_counts(groupby)
+            @cached_function
+            def overall():
+                return table.stats.column_counts(groupby)
         self.overall = overall
 
     def __call__(self, info):
@@ -344,7 +351,7 @@ class CountWrapper(Wrapper):
                     for row in info["row_heads"]:
                         for col in info["col_heads"]:
                             if (row, col) not in res:
-                                if (row, col) in self.overall:
+                                if (row, col) in self.overall():
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
@@ -361,11 +368,73 @@ class CountWrapper(Wrapper):
             return render_template(template, info=info, title=title, **template_kwds)
 
 
+class EmbedWrapper(Wrapper):
+    """
+    A variant on search wrapper that is intended for embedding a fixed set of search results in a page.
+
+    For an example, see families of modular curves.
+    """
+    def __init__(
+        self,
+            f,
+            template,
+            table,
+            title=None,
+            err_title=None,
+            per_page=50,
+            columns=None,
+            projection=1,
+            **kwds,
+    ):
+        super().__init__(f, template, table, title, err_title, **kwds)
+        self.per_page = per_page
+        self.columns = columns
+        if columns is None:
+            self.projection = projection
+        else:
+            self.projection = columns.db_cols
+
+    def __call__(self, info):
+        info["columns"] = self.columns
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        data = self.make_query(info, False)
+        if not isinstance(data, tuple):
+            return data
+        query, sort, table, title, err_title, template, one_per = data
+        proj = query.pop("__projection__", self.projection)
+        if isinstance(proj, list):
+            proj = [col for col in proj if col in table.search_cols]
+        count = parse_count(info, self.per_page)
+        start = parse_start(info)
+        try:
+            res = table.search(
+                query,
+                proj,
+                limit=count,
+                offset=start,
+                sort=sort,
+                info=info,
+            )
+        except QueryCanceledError as err:
+            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+        except SearchParsingError as err:
+            # These can be raised when the query includes $raw keys.
+            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+        except NumericValueOutOfRange as err:
+            # This is caused when a user inputs a number that's too large for a column search type
+            return self.oob_error(info, query, err, err_title, template, template_kwds)
+        else:
+            info["results"] = res
+            return render_template(template, info=info, title=title, **template_kwds)
+
 @decorator_keywords
 def search_wrap(f, **kwds):
     return SearchWrapper(f, **kwds)
 
-
 @decorator_keywords
 def count_wrap(f, **kwds):
     return CountWrapper(f, **kwds)
+
+@decorator_keywords
+def embed_wrap(f, **kwds):
+    return EmbedWrapper(f, **kwds)

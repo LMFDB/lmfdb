@@ -5,9 +5,9 @@ prompt:
   oscar:  'oscar'
 
 logo:
-  sage: <img src ="http://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "http://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "http://i.stack.imgur.com/0468s.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 comment:
@@ -35,7 +35,7 @@ curve:
   sage:  E = EllipticCurve({ainvs})
   pari:  E = ellinit({ainvs})
   magma: E := EllipticCurve({ainvs});
-  oscar: E = EllipticCurve({ainvs})
+  oscar: E = elliptic_curve({ainvs})
 
 simple_curve:
   sage: E.short_weierstrass_model()
@@ -157,7 +157,7 @@ bsd_formula:
     omega = E.period_lattice().omega(); reg = E.regulator(); tam = E.tamagawa_product(); tor = E.torsion_order();
     assert r == ar; print("analytic sha: " + str(RR(Lr1) * tor^2 / (omega * reg * tam)))
   magma: |
-    /* self-contained Magma code snippet for the BSD formula (checks rank, computes analyiic sha) */
+    /* self-contained Magma code snippet for the BSD formula (checks rank, computes analytic sha) */
     E := EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
     sha := MordellWeilShaInformation(E); omega := RealPeriod(E) * (Discriminant(E) gt 0 select 2 else 1);
     reg := Regulator(E); tam := &*TamagawaNumbers(E); tor := #TorsionSubgroup(E);

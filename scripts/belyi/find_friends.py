@@ -16,7 +16,9 @@ def base_field_label(rec):
 
 def genus2_lookup_equation(rec):
     f,h = curve_string_parser(rec)
-    return genus2_lookup_equation_polys(str([f,h]))
+    lab, _ = genus2_lookup_equation_polys(str([f,h]))
+    if lab:
+        return lab
 
 def genus1_lookup_equation_QQ(rec):
     assert rec['g'] == 1

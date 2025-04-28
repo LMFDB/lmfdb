@@ -60,13 +60,13 @@
         "server": "devmirror"
     },
     {
-        "files": "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py",
-        "folders": "belyi higher_genus_w_automorphisms lattice maass_forms tests users",
+        "files": "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/hypergm/test_hgm.py lmfdb/tests/test_utils.py",
+        "folders": "belyi higher_genus_w_automorphisms hypergm lattice maass_forms tests users",
         "server": "proddb"
     },
     {
-        "files": "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/tests/test_utils.py",
-        "folders": "belyi higher_genus_w_automorphisms lattice maass_forms tests users",
+        "files": "lmfdb/users/test_users.py lmfdb/lattice/test_lattice.py lmfdb/maass_forms/test_maass.py lmfdb/higher_genus_w_automorphisms/test_hgcwa.py lmfdb/belyi/test_belyi.py lmfdb/hypergm/test_hgm.py lmfdb/tests/test_utils.py",
+        "folders": "belyi higher_genus_w_automorphisms hypergm lattice maass_forms tests users",
         "server": "devmirror"
     },
     {
@@ -103,11 +103,6 @@
         "files": "lmfdb/groups/abstract/test_browse_page.py lmfdb/groups/abstract/test_abstract_groups.py",
         "folders": "groups/abstract",
         "server": "devmirror"
-    },
-    {
-        "files": "lmfdb/modular_curves/test_modular_curves.py",
-        "folders": "modular_curves",
-        "server": "proddb"
     },
     {
         "files": "lmfdb/modular_curves/test_modular_curves.py",

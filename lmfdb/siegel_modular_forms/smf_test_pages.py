@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
+
 class SMFPageTest(LmfdbTest):
 
-    def runTest():
+    def runTest(self):
         pass
 
     def test_all_pages(self):
@@ -28,6 +28,6 @@ class SMFPageTest(LmfdbTest):
         if not errors:
             print("Tested %s pages with no errors" % n)
         else:
-            print("Tested %d pages with %d errors occurring on the following pages:" %(n,len(errors)))
+            print("Tested %d pages with %d errors occurring on the following pages:" % (n,len(errors)))
             for url in errors:
                 print(url)

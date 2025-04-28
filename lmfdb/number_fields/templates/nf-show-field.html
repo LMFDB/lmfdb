@@ -28,6 +28,7 @@ table.ntdata a {
       <tr><td>{{ KNOWL('nf.signature', title="Signature") }}:<td>&nbsp;&nbsp;<td>${{info.signature}}$<td>{{ place_code('signature') }}
        <tr><td>{{ KNOWL('nf.discriminant', title="Discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.discriminant|safe}}<td>{{ place_code('discriminant') }}
        <tr><td>{{ KNOWL('nf.root_discriminant', title="Root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.rd}}<td>{{ place_code('rd') }}
+       <tr><td>{{ KNOWL('nf.galois_root_discriminant', title="Galois root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.grd}}
       <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>{{info.ram_primes|safe}}<td>{{ place_code('ramified_primes') }}
       <tr><td>{{ KNOWL('nf.discriminant_root_field', title="Discriminant root field") }}:<td>&nbsp;&nbsp;<td>{{nf.discrootfield()|safe}}
       <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>${{info.auts}}$<td>{{ place_code('automorphisms') }}
@@ -81,6 +82,12 @@ table.ntdata a {
           {{ info.grh_label|safe }}
           {{ place_code('class_group') }}
         </p>
+          {% if nf.is_cm_field() %}
+        <p>
+          {{KNOWL('nf.relative_class_number','Relative class number')}}: {{ nf.relh() }}
+          {{ info.grh_label|safe }}
+        </p>
+          {% endif %}
 
 
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>

@@ -4,10 +4,12 @@ from lmfdb.utils.search_parsing import (
     _parse_subset,
 )
 
+
 @search_parser  # see SearchParser.__call__ for actual arguments when calling
 def parse_nf_string(inp, query, qfield):
     fields = [nf_string_to_label(field) for field in inp.split(",")]
     _parse_subset(fields, query, qfield, mode=None, radical=None, product=None, cardinality=None)
+
 
 @search_parser  # (clean_info=True, default_field='galois_group', default_name='Galois group', default_qfield='galois') # see SearchParser.__call__ for actual arguments when calling
 def parse_galgrp(inp, query, qfield):
