@@ -10,9 +10,10 @@ table.reptable td, table.reptable th {
 }
 </style>
 
-<p> {{ place_code('gg') }}</p> 
+<p> {{ place_code('gg') }}</p>
   <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
+      <tr><td>{{KNOWL('group.order','Order')}}:<td>&nbsp;&nbsp;<td>{{info.ordermsg }}</td>
       <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:<td>&nbsp;&nbsp;<td>${{info.n}}$</td>
       <td>{{ place_code('n') }}</td></tr>
       <tr><td class="nowrap">{{KNOWL('gg.tnumber', 'Transitive number')}} $t$:<td>&nbsp;&nbsp;<td>${{info.t}}$</td>
@@ -85,9 +86,9 @@ table.reptable td, table.reptable th {
       </tbody>
       </table>
    <p>
-   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp; 
+   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp;
    {% if info.malle_a is not none %}
-   ${{info.malle_a}}$ 
+   ${{info.malle_a}}$
    {% else %}
    not computed
    {% endif %}
@@ -139,9 +140,9 @@ table.reptable td, table.reptable th {
 <p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
 </p>
 <table>
-<tr><td> 
+<tr><td>
 {% if info['int_reps_complete'] > 0 %}
-Complete 
+Complete
 {% else %}
 Partial
 {% endif %}
@@ -149,14 +150,14 @@ list of indecomposable integral representations:
   <p>
   <div>
     <table class="ntdata reptable">
-        <tr><th>{{ KNOWL('gg.int_modules.names', title='Name') }}</th> <th>Dim</th> 
+        <tr><th>{{ KNOWL('gg.int_modules.names', title='Name') }}</th> <th>Dim</th>
         {% for gen in info['int_rep_classes'] %}
           <th> ${{ gen | safe  }} \mapsto $ </th>
         {% endfor %}
         </tr>
     {% for rep in info['int_reps'] %}
       <tr>
-          <td> {{ rep['name'] | safe }} </td> <td> ${{rep['dim'] }}$ </td> 
+          <td> {{ rep['name'] | safe }} </td> <td> ${{rep['dim'] }}$ </td>
         {% for gen in rep['gens'] %}
           <td> ${{ gen | safe  }}$ </td>
         {% endfor %}
