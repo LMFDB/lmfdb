@@ -150,7 +150,7 @@ class WebGaloisGroup:
         if str(self.n()) == "1":
             return "None needed"
         gens = self.gens()
-        gens = [cyclestrings(g) for g in gens]
+        gens = ['$'+cyclestrings(g)+'$' for g in gens]
         gens = ', '.join(gens)
         return gens
 
