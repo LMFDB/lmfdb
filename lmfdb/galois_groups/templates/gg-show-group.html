@@ -32,7 +32,9 @@ table.reptable td, table.reptable th {
   <h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
     <table>
       <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:</td><td>&nbsp;&nbsp;</td><td>${{info.n}}$</td>
-      <td>{{ place_code('n') }}</td></tr>
+        <td>{{ place_code('n') }}</td></tr>
+      <tr><td class="nowrap">{{KNOWL('gg.tnumber', 'Transitive number')}} $t$:<td>&nbsp;&nbsp;<td>${{info.t}}$</td>
+        <td>{{ place_code('t') }}</td></tr>
       {% if info.n < 16 %}
       <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:</td><td>&nbsp;&nbsp;</td><td>
       {% if info.n == 1 %}
