@@ -1261,7 +1261,7 @@ def common_family_parse(info, query):
 @search_wrap(
     table=db.lf_families,
     columns=families_columns,
-    title='absolute $p$-adic families search results',
+    title='Absolute $p$-adic families search results',
     titletag=lambda:'p-adic families search results',
     err_title='p-adic families search input error',
     learnmore=learnmore_list,
@@ -1271,7 +1271,7 @@ def common_family_parse(info, query):
 )
 def families_search(info, query):
     if "relative" in info:
-        query["__title__"] = "relative $p$-adic families search results"
+        query["__title__"] = "Relative $p$-adic families search results"
     else:
         query["n0"] = 1
     common_family_parse(info, query)
