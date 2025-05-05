@@ -786,7 +786,9 @@ def local_field_count(info, query):
         if col in "pne" and info["search_type"] == "Counts":
             # Allow user to get virtual counts outside the specified range
             tmp = integer_options(info.get(col, f"1-{maxval[col]}"), upper_bound=maxval[col])
-            if col == "n" and "e" in info:
+            if col == "p":
+                tmp = [p for p in tmp if ZZ(p).is_prime()]
+            elif col == "n" and "e" in info:
                 # Constrain degrees to b only multiples of some e
                 eopts = integer_options(info["e"], upper_bound=47)
                 if 1 not in eopts:
