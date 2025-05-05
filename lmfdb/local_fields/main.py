@@ -324,10 +324,14 @@ def show_slope_content(sl,t,u):
         sc += '^{%d}' % u
     return latex_content(sc)
 
+relative_columns = ["base", "n0", "e0", "f0", "c0", "label_absolute", "n_absolute", "e_absolute", "f_absolute", "c_absolute"]
+
 @local_fields_page.route("/")
 def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=LFSearchArray(), stats=LFStats())
+    if any(col in info for col in relative_columns):
+        info["relative"] = 1
     if len(request.args) != 0:
         info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
         if search_type in ['Families', 'FamilyCounts']:
@@ -350,7 +354,7 @@ def family_redirect():
     info["search_type"] = "Families"
     if "relative" not in info:
         # Check for the presence of any relative-only arguments
-        if any(x in info for x in ["base", "n0", "e0", "f0", "c0", "label_absolute", "n_absolute", "e_absolute", "f_absolute", "c_absolute"]):
+        if any(x in info for x in relative_columns):
             info["relative"] = 1
     return redirect(url_for(".index", **info))
 
@@ -762,6 +766,8 @@ def local_field_count(info, query):
                     raise ValueError("Base prime not compatible with constraints on p")
             info["p"] = str(p)
             query["p"] = p
+        if "relative" not in info:
+            query["n0"] = 1
     if "gal" in info and "n" not in info:
         # parse_galgrp adds restrictions on n
         if type(query["n"]) == int:
@@ -810,7 +816,10 @@ def local_field_count(info, query):
             return
         info_copy = dict(urlgen_info)
         info_copy.pop("search_array", None)
-        info_copy.pop("search_type", None)
+        if info["search_type"] == "Counts":
+            info_copy.pop("search_type", None)
+        info_copy.pop("nolink", None)
+        info_copy.pop("groupby", None)
         info_copy[groupby[0]] = a
         info_copy[groupby[1]] = b
         return url_for(".index", **info_copy)
@@ -1252,7 +1261,7 @@ def common_family_parse(info, query):
 @search_wrap(
     table=db.lf_families,
     columns=families_columns,
-    title='$p$-adic families search results',
+    title='absolute $p$-adic families search results',
     titletag=lambda:'p-adic families search results',
     err_title='p-adic families search input error',
     learnmore=learnmore_list,
@@ -1261,7 +1270,9 @@ def common_family_parse(info, query):
     url_for_label=url_for_family,
 )
 def families_search(info, query):
-    if "relative" not in info:
+    if "relative" in info:
+        query["__title__"] = "relative $p$-adic families search results"
+    else:
         query["n0"] = 1
     common_family_parse(info, query)
 
