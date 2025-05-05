@@ -4,7 +4,7 @@
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi)
-from sage.plot.all import line, points, text, Graphics
+from sage.plot.all import line, points, text, Graphics, polygon
 
 from lmfdb import db
 from lmfdb.app import app
@@ -201,12 +201,16 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
         # Add in silly white dot
         L += points([(0,1)], color="white")
         asp_ratio = (xmax + 2*txshift) / (8 + 16*tyshift)
-    L += line([(0,0), (0, ymax)], color="grey")
-    L += line([(0,0), (-xmax, 0)], color="grey")
-    for i in range(1, ymax + 1):
-        L += line([(0, i), (-tick, i)], color="grey")
-    for i in range(0, xmax + 1):
-        L += line([(-i, 0), (-i, tick/asp_ratio)], color="grey")
+    for i in range(xmax+1):
+        L += line([(-i, 0), (-i, ymax)], color="grey", thickness=0.5)
+    for j in range(ymax+1):
+        L += line([(0,j), (-xmax, j)], color="grey", thickness=0.5)
+    #L += line([(0,0), (0, ymax)], color="grey")
+    #L += line([(0,0), (-xmax, 0)], color="grey")
+    #for i in range(1, ymax + 1):
+    #    L += line([(0, i), (-tick, i)], color="grey")
+    #for i in range(0, xmax + 1):
+    #    L += line([(-i, 0), (-i, tick/asp_ratio)], color="grey")
     for P in verts:
         L += text(
             f"${-P[0]}$", (-P[0], -tyshift/asp_ratio),
@@ -243,22 +247,23 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
                 f"${slope}$", (-P[0] + txshift, (P[1] + Q[1]) / 2),
                 horizontal_alignment="left",
                 color="blue")
-            for x in range(P[0], Q[0] + 1):
-                L += line(
-                    [(-x, Q[1]), (-x, P[1] - (x - P[0]) * slope)],
-                    color="grey",
-                )
-            for y in range(Q[1], P[1]):
-                L += line(
-                    [(-P[0] + (y - P[1]) / slope, y), (-P[0], y)],
-                    color="grey",
-                )
+            #for x in range(P[0], Q[0] + 1):
+            #    L += line(
+            #        [(-x, Q[1]), (-x, P[1] - (x - P[0]) * slope)],
+            #        color="grey",
+            #    )
+            #for y in range(Q[1], P[1]):
+            #    L += line(
+            #        [(-P[0] + (y - P[1]) / slope, y), (-P[0], y)],
+            #        color="grey",
+            #    )
         elif polys:
             # For tame inertia, the coefficients can occur at locations other than powers of p
             for j, c in enumerate(polys[i]):
                 if j and c:
                     L += restag(c, P[0] + j, P[1])
     L += line([(-x,y) for (x,y) in verts], thickness=2)
+    L += polygon([(-x,y) for (x,y) in verts] + [(-xmax, ymax)], alpha=0.1)
     if inds is not None:
         # print("INDS", inds)
         L += points([(-p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
