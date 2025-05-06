@@ -89,6 +89,18 @@
   </div>
 {% endfor %}
 
+{% endif %} {# family.n0 == 1 #}
+
+<h2><a id="fields"></a>{{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
+
+{% else %} {# family.field_count = 0 #}
+
+<p>
+  The LMFDB does not contain any fields from this family.
+</p>
+
+{% endif %}
+
 <script type="text/javascript">
   function select_diagram_mode(mode) {
     $("button.dia_active").addClass("dia_inactive").removeClass("dia_active");
@@ -106,20 +118,10 @@
       $("#gsstats_"+mode).show();
     }
   }
+  {% if (family.gal_slope_tables | length) > 0 %}
   select_gs_mode('{{family.gal_slope_tables[0][0]}}');
+  {% endif %}
 </script>
-
-{% endif %} {# family.n0 == 1 #}
-
-<h2><a id="fields"></a>{{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
-
-{% else %} {# family.field_count = 0 #}
-
-<p>
-  The LMFDB does not contain any fields from this family.
-</p>
-
-{% endif %}
 
 {% endblock %}
 

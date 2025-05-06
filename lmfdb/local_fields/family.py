@@ -103,32 +103,37 @@ class pAdicSlopeFamily:
         slopeset = set(self.slopes)
         meanset = set(self.means)
         ticks = sorted(slopeset.union(meanset))
+        scale = ticks[-1] / 20
         rectangles = {(a,b): 0 for (a,b) in zip(ticks[:-1], ticks[1:])}
         rkeys = sorted(rectangles)
         mindiff = min((b-a) for (a,b) in rkeys)
         ticklook = {a: a for a in ticks} # adjust values below when too close
-        if mindiff < 0.1 and len(ticks) >= 3:
-            pairdiff = min(max(c-b, b-a) for (a,b,c) in zip(ticks[:-2], ticks[1:-1], ticks[2:]))
-            if pairdiff >= 0.25:
-                # We can just spread out pairs of ticks from their center
-                for a,b in rkeys:
-                    if b - a < 0.1:
-                        ticklook[a] = a - 1/30
-                        ticklook[b] = b + 1/30
-            else:
-                pass # Should do something here
-                # We move if there's enough space
-                #for i, (a,b,c) in enumerate(zip(ticks[:-2], ticks[1:-1], ticks[2:])):
-                #    la, lb, lc = ticklook[a], ticklook[b], ticklook[c]
-                #    if lb - la < 0.1:
-                #        # Want to adjust a downward
-                #        if la > a or (i > 0 and a - ticklook[ticks[i-1]] < 0.15:
-                #            # We've already moved a up, or it's pretty close to the tick below
-                #            # So we set la to the average of the term below and the term above.
-                #            ticklook[a] = (ticklook[ticks[i-1]] + b) / 2
-                #        elif a - ticks[-1] >= 0.15:
-                #            # We can move it down, but we need to be careful not to move it down too much
-                #            ticklook[a] = (
+        if mindiff < scale and len(ticks) >= 3:
+            # Group into clusters
+            clusters = [[ticks[0]]]
+            for tick in ticks[1:]:
+                if tick - clusters[-1][-1] < 2*scale:
+                    clusters[-1].append(tick)
+                else:
+                    clusters.append([tick])
+            # Spread from the center in each cluster, staying away from midpoint between cluster centers
+            centers = [sum(C) / len(C) for C in clusters]
+            if len(clusters) > 1:
+                maxspread = [(centers[1] - centers[0]) / 2]
+                for i in range(1, len(clusters) - 1):
+                    maxspread.append(min(centers[i] - centers[i-1], centers[i+1] - centers[i]) / 2)
+                maxspread.append((centers[-1] - centers[-2]) / 2)
+                # Can't actually use the full maxspread, since that would lead to different clusters combining
+                maxspread = [m - scale/2 for m in maxspread]
+                spread = [0 if len(C) == 1 else min(scale, 2 * m / (len(C) - 1)) for (m,C) in zip(maxspread, clusters)]
+                for s, c, C in zip(spread, centers, clusters):
+                    n = float(len(C))
+                    for i, a in enumerate(C):
+                        delta = (i - (n - 1)/2) * s
+                        if delta > 0:
+                            ticklook[a] = max(c + delta, a)
+                        else:
+                            ticklook[a] = min(c + delta, a)
         # We determine the overlaps of the bands
         for m, s in zip(self.means, self.slopes):
             # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice

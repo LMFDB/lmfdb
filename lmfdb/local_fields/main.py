@@ -244,7 +244,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
                         L += restag(polys[i][j], nextq, P[1] - (nextq - P[0]) * slope)
                     nextq *= p
             L += text(
-                f"${slope}$", (-P[0] + txshift, (P[1] + Q[1]) / 2),
+                f"${slope}$", (-(P[0] + Q[0]) / 2 + txshift, (P[1] + Q[1]) / 2 - tyshift),
                 horizontal_alignment="left",
                 color="blue")
             #for x in range(P[0], Q[0] + 1):
