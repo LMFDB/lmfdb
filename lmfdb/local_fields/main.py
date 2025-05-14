@@ -96,7 +96,7 @@ def local_field_data(label):
     ans += 'Ramification index $e$: %s<br>' % str(f['e'])
     ans += 'Residue field degree $f$: %s<br>' % str(f['f'])
     ans += 'Discriminant ideal:  $(p^{%s})$ <br>' % str(f['c'])
-    if f.get('galois_label',None):
+    if f.get('galois_label'):
         gt = int(f['galois_label'].split('T')[1])
         ans += 'Galois group $G$: %s<br>' % group_pretty_and_nTj(gn, gt, True)
     else:
@@ -417,7 +417,7 @@ def render_field_webpage(args):
         cc = data['c']
         gn = data['n']
         autstring = r'\Aut'
-        if data.get('galois_label', None):
+        if data.get('galois_label'):
             gt = int(data['galois_label'].split('T')[1])
             the_gal = WebGaloisGroup.from_nt(gn,gt)
             isgal = ' Galois' if the_gal.order() == gn else ' not Galois'
@@ -432,7 +432,7 @@ def render_field_webpage(args):
             ('e', r'\(%s\)' % e),
             ('f', r'\(%s\)' % f),
             ('c', r'\(%s\)' % cc),
-            ('Galois group', group_pretty_and_nTj(gn, gt) if data.get('galois_label',None) else 'not computed'),
+            ('Galois group', group_pretty_and_nTj(gn, gt) if data.get('galois_label') else 'not computed'),
         ]
         # Look up the unram poly so we can link to it
         unramdata = db.lf_fields.lucky({'p': p, 'n': f, 'c': 0})
@@ -472,7 +472,7 @@ def render_field_webpage(args):
         else:
             gsm = lf_formatfield(','.join(str(b) for b in gsm))
 
-        if data.get('wild_gap', None) and data['wild_gap'] != [0,0]:
+        if data.get('wild_gap') and data['wild_gap'] != [0,0]:
             wild_inertia = abstract_group_display_knowl(f"{data['wild_gap'][0]}.{data['wild_gap'][1]}")
         else:
             wild_inertia = 'Not computed'
@@ -503,20 +503,20 @@ def render_field_webpage(args):
                     'aut': data['aut'],
                     })
         friends = []
-        if data.get('slopes', None):
+        if data.get('slopes'):
             info.update({'slopes': show_slopes(data['slopes'])})
-        if data.get('inertia',None):
+        if data.get('inertia'):
             info.update({'inertia': group_display_inertia(data['inertia'])})
         for k in ['gms', 't', 'u']:
-            if data.get(k, None):
+            if data.get(k):
                 info.update({k: data[k]})
-        if data.get('ram_poly_vert', None):
+        if data.get('ram_poly_vert'):
             info.update({'ram_polygon_plot': plot_polygon(data['ram_poly_vert'], data['residual_polynomials'], data['ind_of_insep'], p)})
-        if data.get('residual_polynomials', None):
+        if data.get('residual_polynomials'):
             info.update({'residual_polynomials': ",".join(f"${teXify_pol(poly)}$" for poly in data['residual_polynomials'])})
-        if data.get('associated_inertia', None):
+        if data.get('associated_inertia'):
             info.update({'associated_inertia': ",".join(f"${ai}$" for ai in data['associated_inertia'])})
-        if data.get('galois_label', None):
+        if data.get('galois_label'):
             info.update({'gal': group_pretty_and_nTj(gn, gt, True),
                          'galphrase': galphrase,
                          'gt': gt})
