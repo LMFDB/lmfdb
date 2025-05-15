@@ -1,11 +1,12 @@
 
 import re
 from collections import Counter
+from itertools import combinations
 from lmfdb import db
 
 from flask import render_template, url_for, request, redirect, abort
 
-from sage.all import ZZ
+from sage.all import ZZ, gcd
 
 from lmfdb.utils import (
     SearchArray,
@@ -78,6 +79,15 @@ def learnmore_list_remove(matchstring):
 def learnmore_list_add(learnmore_label, learnmore_url):
     return learnmore_list() + [(learnmore_label, learnmore_url)]
 
+def is_pairwise_coprime(numbers):
+
+    if len(numbers) < 2:
+        raise ValueError("At least two numbers are required to check for pairwise coprimality.")
+
+    for a, b in combinations(numbers, 2):
+        if gcd(a, b) != 1:
+            return False
+    return True
 
 @modcurve_page.route("/")
 def index():
@@ -104,14 +114,14 @@ def index_Q():
 @modcurve_page.route("/Q/random/")
 @redirect_no_cache
 def random_curve():
-    label = db.gps_gl2zhat_fine.random()
+    label = db.gps_gl2zhat.random()
     return url_for_modcurve_label(label)
 
 @modcurve_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "modcurve",
-        db.gps_gl2zhat_fine,
+        db.gps_gl2zhat,
         url_for_modcurve_label,
         title="Some interesting modular curves",
         bread=get_bread("Interesting"),
@@ -127,7 +137,7 @@ def modcurve_link(label):
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if RSZB_LABEL_RE.fullmatch(label):
-        label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
+        label = db.gps_gl2zhat.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
         if not ISO_CLASS_RE.fullmatch(label):
             flash_error("Invalid label %s", label)
@@ -251,22 +261,22 @@ def modcurve_lmfdb_label(label):
         lmfdb_label = label
     elif RSZB_LABEL_RE.fullmatch(label):
         label_type = "RSZB label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RSZBlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"RSZBlabel": label}, "label")
     elif CP_LABEL_RE.fullmatch(label):
         label_type = "CP label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"CPlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"CPlabel": label}, "label")
     elif SZ_LABEL_RE.fullmatch(label):
         label_type = "SZ label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"SZlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"SZlabel": label}, "label")
     elif RZB_LABEL_RE.fullmatch(label):
         label_type = "RZB label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RZBlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"RZBlabel": label}, "label")
     elif S_LABEL_RE.fullmatch(label):
         label_type = "S label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"Slabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"Slabel": label}, "label")
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"name": canonicalize_name(label)}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"name": canonicalize_name(label)}, "label")
     else:
         label_type = "label"
         lmfdb_label = None
@@ -282,15 +292,19 @@ def modcurve_jump(info):
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
     lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.a.1"]
+    levels_not_X1 = [ZZ(x.split('.')[0]) for x in lmfdb_labels_not_X1]
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
     elif len(lmfdb_labels_not_X1) == 1:
         label = lmfdb_labels_not_X1[0]
         return redirect(url_for_modcurve_label(label))
+    elif not is_pairwise_coprime(levels_not_X1):
+        flash_error("The levels of the modular curves in the fiber product decomposition are not pairwise coprime")
+        return redirect(url_for(".index"))
     else:
         # Get factorization for each label
-        factors = list(db.gps_gl2zhat_fine.search({"label": {"$in": lmfdb_labels_not_X1}},
+        factors = list(db.gps_gl2zhat.search({"label": {"$in": lmfdb_labels_not_X1}},
                                                   ["label","factorization"]))
         factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
                    for f in factors]
@@ -298,9 +312,17 @@ def modcurve_jump(info):
         if len(factors) != len(lmfdb_labels_not_X1):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
-        # Get list of all factors, lexicographically sorted
-        factors = sorted(sum(factors, []), key=key_for_numerically_sort)
-        label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
+
+        # The new factorization scheme contains X1 as a factor
+        # so this needs to be handled carefully. The following
+        # effectively dedupes 1.1.0.a.1.
+        factors = sum(factors, [])
+        factors = [f for f in factors if f != '1.1.0.a.1']
+        factors = ['1.1.0.a.1'] + factors
+
+        # Sort lexicographically
+        factors = sorted(factors, key=key_for_numerically_sort)
+        label = db.gps_gl2zhat.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
