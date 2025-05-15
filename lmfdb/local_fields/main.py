@@ -211,18 +211,24 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
     #    L += line([(0, i), (-tick, i)], color="grey")
     #for i in range(0, xmax + 1):
     #    L += line([(-i, 0), (-i, tick/asp_ratio)], color="grey")
-    for P in verts:
+    xticks = set(P[0] for P in verts)
+    yticks = set(P[1] for P in verts)
+    if inds is not None:
+        xticks = xticks.union(p**i for i in range(len(inds)))
+        yticks = yticks.union(ind for ind in inds)
+    for x in xticks:
         L += text(
-            f"${-P[0]}$", (-P[0], -tyshift/asp_ratio),
+            f"${-x}$", (-x, -tyshift/asp_ratio),
             color="black")
+    for y in yticks:
         L += text(
-            f"${P[1]}$", (txshift, P[1]),
+            f"${y}$", (txshift, y),
             horizontal_alignment="left",
             color="black")
 
     if polys is not None:
         R = ZZ["t"]["z"]
-        polys = [R(poly) for poly in polys]
+        polys = [R(poly) for poly in reversed(polys)]
         # print("POLYS", polys)
 
         def restag(c, a, b):
