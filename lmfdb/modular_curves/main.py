@@ -442,7 +442,7 @@ def parse_family(inp, query, qfield):
     #'factored'
 
 class ModCurve_download(Downloader):
-    table = db.gps_gl2zhat_fine
+    table = db.gps_gl2zhat
     title = "Modular curves"
     inclusions = {
         "subgroup": (
@@ -660,8 +660,8 @@ def modcurve_text_download(label):
 # !!! TODO : currently there is a lot of overlapping with code creating the Gassmann class. Should solve this more generally by refactoring the search and download
 def modcurve_Gassmann_download(request, lang):
     query_dict = to_dict(request.args)
-    print("query_dict", query_dict)
-    ncurves = db.gps_gl2zhat_fine.count(query_dict)
+    print("BINGOOOO query_dict", query_dict)
+    ncurves = db.gps_gl2zhat.count(query_dict)
     info = {}
     info["Submit"] = lang
     info["query"] = str(query_dict)
@@ -669,8 +669,8 @@ def modcurve_Gassmann_download(request, lang):
     info["results"] = []
     for i in range(ncurves):
         query_dict.update({'coarse_num' : i+1})
-        info["results"].append(db.gps_gl2zhat_fine.lucky(query_dict))
-    info["search_table"] = db.gps_gl2zhat_fine
+        info["results"].append(db.gps_gl2zhat.lucky(query_dict))
+    info["search_table"] = db.gps_gl2zhat
     info["columns"] = modcurve_columns
     info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
     return ModCurve_download()(info)
@@ -688,7 +688,7 @@ def modcurve_Gassmann_text_download():
     return modcurve_Gassmann_download(request, lang="text")
 
 @search_wrap(
-    table=db.gps_gl2zhat_fine,
+    table=db.gps_gl2zhat,
     title="Modular curve search results",
     err_title="Modular curves search input error",
     shortcuts={"jump": modcurve_jump, "download": ModCurve_download()},
@@ -753,17 +753,20 @@ def modcurve_search(info, query):
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     if "covered_by" in info:
         # sort of hacky
-        lmfdb_label, label_type = modcurve_lmfdb_label(info["covered_by"])
+        lmfdb_label, label_type = modcurve_lmfdb_label(info["covered_by"].strip())
         if lmfdb_label is None:
             parents = None
         else:
             if "-" in lmfdb_label:
                 # fine label
-                rec = db.gps_gl2zhat_fine.lookup(lmfdb_label, ["parents", "coarse_label"])
-                parents = [rec["coarse_label"]] + rec["parents"]
+                rec = db.gps_gl2zhat.lookup(lmfdb_label, ["parents", "coarse_label"])
+                if rec is None:
+                    parents = None
+                else:
+                    parents = [rec["coarse_label"]] + rec["parents"]
             else:
                 # coarse label
-                parents = db.gps_gl2zhat_fine.lookup(lmfdb_label, "parents")
+                parents = db.gps_gl2zhat.lookup(lmfdb_label, "parents")
         if parents is None:
             msg = "%s not the label of a modular curve in the database"
             flash_error(msg, info["covered_by"])
@@ -1024,7 +1027,7 @@ def family_page(name):
     return render_family(info)
 
 @embed_wrap(
-    table=db.gps_gl2zhat_fine,
+    table=db.gps_gl2zhat,
     template="modcurve_family.html",
     err_title="Modular curve family error",
     columns=modcurve_columns,
@@ -1062,7 +1065,7 @@ ratpoint_columns = SearchColumns([
 
 def ratpoint_postprocess(res, info, query):
     labels = list({rec["curve_label"] for rec in res})
-    RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat_fine.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
+    RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
     for rec in res:
         rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
     return res
@@ -1216,8 +1219,8 @@ class RatPointSearchArray(SearchArray):
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
-        self.ncurves = comma(db.gps_gl2zhat_fine.count())
-        self.max_level = db.gps_gl2zhat_fine.max("level")
+        self.ncurves = comma(db.gps_gl2zhat.count())
+        self.max_level = db.gps_gl2zhat.max("level")
 
     @property
     def short_summary(self):
@@ -1233,7 +1236,7 @@ class ModCurve_stats(StatsDisplay):
             fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
         )
 
-    table = db.gps_gl2zhat_fine
+    table = db.gps_gl2zhat
     baseurl_func = ".index"
     buckets = {'level': ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
                'genus': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
@@ -1308,25 +1311,25 @@ def labels_page():
 # !! TODO - overlapping code between the two options coming from different merges
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
-    coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
+    coarse_label = db.gps_gl2zhat.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         if not ISO_CLASS_RE.fullmatch(label):
             return abort(404)
         N, i, g, iso = label.split(".")
         iso_num = class_to_int(iso)+1
-        labels = db.gps_gl2zhat_fine.search({"coarse_level" : N,
+        labels = db.gps_gl2zhat.search({"coarse_level" : N,
                                              "coarse_index" : i,
                                              "genus" : g,
                                              "coarse_class_num" : iso_num,
                                              "contains_negative_one" : "yes"},
                                             "label")
         labels = list(labels)
-        label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
+        label_tables_cols = [(label, "gps_gl2zhat", "label") for label in labels]
     else:
-        label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
+        label_tables_cols = [(label, "gps_gl2zhat", "label")]
         if label != coarse_label:
-            label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
+            label_tables_cols.append((coarse_label, "gps_gl2zhat", "label"))
         # modcurve_models
         label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
         # modcurve_modelmaps

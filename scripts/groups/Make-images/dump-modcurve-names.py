@@ -6,7 +6,7 @@ from lmfdb import db
 
 myhash = defaultdict(list)
 
-triples = set((rec["level"], rec["index"], rec["genus"]) for rec in db.gps_gl2zhat_fine.search({"contains_negative_one":True}, ["level", "index", "genus"]))
+triples = set((rec["level"], rec["index"], rec["genus"]) for rec in db.gps_gl2zhat.search({"contains_negative_one":True}, ["level", "index", "genus"]))
 
 FAM_RE = re.compile(r"X([^\(]*)\((\d+(,\d+)?)\)")
 
@@ -20,7 +20,7 @@ with open("eqguts.tex", "w") as eqguts:
             eqguts.write(f'${pp}$\n')
             count += 1
             prettyindex.write('[%d, "%s"]\n'%(count, pp))
-        for name in db.gps_gl2zhat_fine.search({"name":{"$ne":""}}, "name"):
+        for name in db.gps_gl2zhat.search({"name":{"$ne":""}}, "name"):
             fam, n, _ = FAM_RE.fullmatch(name).groups()
             if fam == "0":
                 fam = "_0"
