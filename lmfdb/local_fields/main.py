@@ -3,7 +3,7 @@
 
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers)
+    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, is_prime)
 from sage.plot.all import line, points, text, Graphics
 
 from lmfdb import db
@@ -425,6 +425,12 @@ def render_field_webpage(args):
             galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
             if the_gal.order() == gn:
                 autstring = r'\Gal'
+            info['aut_gp_knowl']= the_gal.aut_knowl()
+        # we don't know the Galois group, but maybe the Aut group is obvious
+        elif data['aut']==1:
+            info['aut_gp_knowl']=abstract_group_display_knowl('1.1')
+        elif is_prime(data['aut']):
+            info['aut_gp_knowl']=abstract_group_display_knowl(f"{data['aut']}.1")
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
