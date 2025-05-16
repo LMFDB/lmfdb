@@ -1,3 +1,4 @@
+
 {% extends "homepage.html" %}
 
 {% block content %}
@@ -18,7 +19,7 @@ fields of $\Q_p$ up to isomorphism.  Here are <a href="?search_type=Counts">more
   <thead>
     <tr>
       <th>$p$ \ $n$</th>
-      {% for n in range(2,17) %}
+      {% for n in range(2,24) %}
       <th>{{n}}</th>
       {% endfor %}
     </tr>
@@ -27,7 +28,7 @@ fields of $\Q_p$ up to isomorphism.  Here are <a href="?search_type=Counts">more
     {% for p in [2,3,5,7] %}
     <tr>
       <th>{{p}}</th>
-      {% for n in range(2,17) %}
+      {% for n in range(2,24) %}
       <td><a href="?p={{p}}&n={{n}}">{{info.field_count[n,p]}}</a></td>
       {% endfor %}
     </tr>
@@ -43,7 +44,7 @@ This table gives, for each $p$ and $n$ shown, the number of degree $n$ {{KNOWL('
   <thead>
     <tr>
       <th>$p$ \ $n$</th>
-      {% for n in range(2,17) %}
+      {% for n in range(2,24) %}
       <th>{{n}}</th>
       {% endfor %}
     </tr>
@@ -52,7 +53,7 @@ This table gives, for each $p$ and $n$ shown, the number of degree $n$ {{KNOWL('
     {% for p in [2,3,5,7] %}
     <tr>
       <th>{{p}}</th>
-      {% for n in range(2,17) %}
+      {% for n in range(2,24) %}
       <td><a href="?search_type=Families&p={{p}}&n={{n}}">{{info.family_count[n,p]}}</a></td>
       {% endfor %}
     </tr>
