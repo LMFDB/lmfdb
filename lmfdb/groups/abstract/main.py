@@ -1889,8 +1889,30 @@ def sgp_data(label):
         return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
+# create preable for downloading individual group
+def download_preable(com1, com2, dltype):
+    if dltype == "gap":
+        f = "#"
+    else:
+        f = ""
 
-#create construction of group for downloading, G is WebAbstractGroup
+    s = com1
+
+    s += f + " Various presentations of this group are stored in this file: \n"
+    s += f + "\t GPC is polycyclic presentation GPerm is permutation group \n"
+    s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
+    s += f + " Many characteristics of the group are stored as booleans: \n"
+    s += f + "\t is_cyclic \n"
+    s += f + "\t is_abelian \n"
+    s += f + "\t is_nilpotent \n"
+
+    s +=com2
+
+    return s
+
+
+
+# create construction of group for downloading, G is WebAbstractGroup
 def download_construction_string(G,dltype):
     # add Lie groups?
 #    s = str(G.code_snippets()) + "\n"
@@ -1925,7 +1947,7 @@ def download_construction_string(G,dltype):
 
 
 
-#create boolean string for downloading, G is WebAbstractGroup
+# create boolean string for downloading, G is WebAbstractGroup
 def download_boolean_string(G,dltype):
     s = "is_cyclic := " + str(G.cyclic).lower() + "; \n"
     s += "is_abelian := " + str(G.abelian).lower() + "; \n"
@@ -1936,7 +1958,6 @@ def download_boolean_string(G,dltype):
     return s
 
 
-#JP FIXING
 @abstract_page.route("/<label>/download/<download_type>")
 def download_group(**args):
     dltype = args["download_type"]
@@ -1967,6 +1988,11 @@ def download_group(**args):
         com2 = "=#"
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
+
+    s += download_preable(com1, com2,dltype)
+
+    s += "\n \n"
+
     s += com1 + " Constructions " + com2 +  "\n"
 
 
