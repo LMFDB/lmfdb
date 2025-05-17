@@ -1891,22 +1891,49 @@ def sgp_data(label):
 
 
 #create construction of group for downloading, G is WebAbstractGroup
-def create_construction_string(G,dltype):
-	s = " "
-	return s
+def download_construction_string(G,dltype):
+    # add Lie groups?
+#    s = str(G.code_snippets()) + "\n"
+    s = ""
+    snippet = G.code_snippets()
+    if "PC" in G.representations:
+        gp_str =  str(snippet['presentation'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,",  "GPC,")
+    if "Perm" in G.representations:
+        gp_str =  str(snippet['permutation'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GPerm :=")
+    if "GLZ" in G.representations:
+        gp_str = str(snippet['GLZ'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLZ :=")
+    if "GLFp" in G.representations:
+        gp_str = str(snippet['GLFp'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLFp :=")
+    if "GLZN" in G.representations:
+        gp_str = str(snippet['GLZN'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLZN :=")
+    if "GLZq" in G.representations:
+        gp_str = str(snippet['GLZq'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLZq :=")
+    if "GLFq" in G.representations:
+        gp_str = str(snippet['GLFq'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLFq :=")
 
+    #fix up transitive case?
+#    s += (str(snippet['transitive'][dltype]) + "\n").replace("G :=", "Gtr :=")
+
+    return str(s)
 
 
 
 #create boolean string for downloading, G is WebAbstractGroup
-def create_boolean_string(G,dltype):
-	s = "is_cyclic := " + cyclic(G) + "; \n"
-	s += "is_abelian := " + abelian(G) + "; \n "
-	s += "is_nilpotent := " + nilpotent(G) + "; \n";
+def download_boolean_string(G,dltype):
+    s = "is_cyclic := " + str(G.cyclic).lower() + "; \n"
+    s += "is_abelian := " + str(G.abelian).lower() + "; \n"
+    s += "is_nilpotent := " + str(G.nilpotent).lower() + "; \n"
 
-	#TO DO write oscar
-	if dltype == "oscar":
-		return " "
+    if dltype == "oscar":
+        s = s.replace(":=", "=")
+    return s
 
 
 #JP FIXING
@@ -1926,9 +1953,9 @@ def download_group(**args):
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
         filename += ".g"
-		com = ""
-		com1 = "#"
-		com2 = ""
+        com = ""
+        com1 = "#"
+        com2 = ""
     elif dltype == "magma":
         com = ""
         com1 = "/*"
@@ -1938,22 +1965,17 @@ def download_group(**args):
         com = ""
         com1 = "#="
         com2 = "=#"
-    s = com1 + "\n"
-    s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
+    s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
+    s += "\n \n"
+    s += com1 + " Constructions " + com2 +  "\n"
 
 
-	s += "\n \n"
-	s += com1 + " Construction \n"
-
-#JP WRITE
-	s += create_construction_string(wag,dltype)
+    s += download_construction_string(wag,dltype)
+    s += "\n \n"
+    s += com1 + " Booleans " + com2 +  "\n"
 
 
-	s += "\n \n"
-	s += com1 + " Booleans \n"
-
-#JP WRITE
-	s += create_boolean_string(wag,dltype)
+    s += download_boolean_string(wag,dltype)
 
     response = make_response(s)
     response.headers['Content-type'] = 'text/plain'
