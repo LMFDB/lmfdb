@@ -859,7 +859,7 @@ class LFStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.' % (
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 24$.' % (
             comma(self.numfields),
             display_knowl("lf.padic_field", r"$p$-adic fields"),
             display_knowl("lf.degree", "degree")
