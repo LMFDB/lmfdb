@@ -154,6 +154,9 @@ class WebGaloisGroup:
         gens = ', '.join(gens)
         return gens
 
+    def aut_knowl(self):
+        return abstract_group_display_knowl(self._data['aut_label'])
+
     def gapgroupnt(self):
         if int(self.n()) == 1:
             G = libgap.SmallGroup(1, 1)
