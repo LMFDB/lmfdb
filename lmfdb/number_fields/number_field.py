@@ -429,7 +429,6 @@ def render_field_webpage(args):
     t = nf.galois_t()
     n = nf.degree()
     data['is_galois'] = nf.is_galois()
-    data['autstring'] = r'\Gal' if data['is_galois'] else r'\Aut'
     data['is_abelian'] = nf.is_abelian()
     if nf.is_abelian():
         conductor = nf.conductor()
@@ -448,8 +447,7 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factorization_latex(factored_conductor, cutoff=30)
             data['conductor'] = r"\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_pretty_and_nTj(n,t,True)
-    ggdata = db.gps_transitive.lookup(rf'{n}T{t}')
-    data['aut_gp_knowl'] = abstract_group_display_knowl(f"{ggdata['auts']}.{ggdata['aut_sg_no']}")
+    data['aut_gp_knowl'] = abstract_group_display_knowl(db.gps_transitive.lookup(f'{n}T{t}', 'aut_label'))
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()

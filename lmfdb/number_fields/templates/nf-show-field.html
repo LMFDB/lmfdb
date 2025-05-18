@@ -31,7 +31,18 @@ table.ntdata a {
        <tr><td>{{ KNOWL('nf.galois_root_discriminant', title="Galois root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.grd}}
       <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>{{info.ram_primes|safe}}<td>{{ place_code('ramified_primes') }}
       <tr><td>{{ KNOWL('nf.discriminant_root_field', title="Discriminant root field") }}:<td>&nbsp;&nbsp;<td>{{nf.discrootfield()|safe}}
-      <tr><td> ${ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>{{info.aut_gp_knowl|safe}}<td>{{ place_code('automorphisms') }}
+
+      <tr><td> 
+        {% if info.is_galois %}
+          {{ KNOWL('lf.automorphism_group', title='$\Aut(K/\Q)$') }}
+          $=$
+          {{ KNOWL('nf.galois_group', title='$\Gal(K/\Q)$') }}:
+          <td>&nbsp;&nbsp;<td>{{info.aut_gp_knowl|safe}}<td>{{ place_code('automorphisms') }}
+        {% else %}
+          {{ KNOWL('lf.automorphism_group', title='$\Aut(K/\Q)$') }}:
+          <td>&nbsp;&nbsp;<td>{{info.aut_gp_knowl|safe}}<td>{{ place_code('automorphisms') }}
+        {% endif %}
+
 {% if info.is_abelian %}
     <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
         <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>

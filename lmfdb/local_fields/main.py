@@ -416,7 +416,7 @@ def render_field_webpage(args):
         f = data['f']
         cc = data['c']
         gn = data['n']
-        autstring = r'\Aut'
+        auttype = 'aut'
         if data.get('galois_label'):
             gt = int(data['galois_label'].split('T')[1])
             the_gal = WebGaloisGroup.from_nt(gn,gt)
@@ -424,7 +424,7 @@ def render_field_webpage(args):
             abelian = ' and abelian' if the_gal.is_abelian() else ''
             galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
             if the_gal.order() == gn:
-                autstring = r'\Gal'
+                auttype = 'gal'
             info['aut_gp_knowl']= the_gal.aut_knowl()
         # we don't know the Galois group, but maybe the Aut group is obvious
         elif data['aut']==1:
@@ -504,7 +504,7 @@ def render_field_webpage(args):
                     'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
                     'gsm': gsm,
-                    'autstring': autstring,
+                    'auttype': auttype,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     })
