@@ -364,6 +364,7 @@ modcurve_columns = SearchColumns(
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True, default=False),
         CheckCol("simple", "modcurve.simple", "Simple", default=False),
         CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
+        CheckCol("agreeable", "modcurve.agreeable", "Agreeable", default=False),
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
@@ -371,7 +372,7 @@ modcurve_columns = SearchColumns(
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "agreeable", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -660,7 +661,7 @@ def modcurve_text_download(label):
 # !!! TODO : currently there is a lot of overlapping with code creating the Gassmann class. Should solve this more generally by refactoring the search and download
 def modcurve_Gassmann_download(request, lang):
     query_dict = to_dict(request.args)
-    print("BINGOOOO query_dict", query_dict)
+    print("query_dict", query_dict)
     ncurves = db.gps_gl2zhat.count(query_dict)
     info = {}
     info["Submit"] = lang
@@ -734,6 +735,7 @@ def modcurve_search(info, query):
     parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
+    parse_bool(info, query, "agreeable")
     parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
@@ -809,7 +811,7 @@ class ModCurveSearchArray(SearchArray):
         index = TextBox(
             name="index",
             knowl="modcurve.index",
-            label="Index",
+            label="Index&emsp;",
             example="6",
             example_span="6, 12-100",
         )
@@ -885,18 +887,21 @@ class ModCurveSearchArray(SearchArray):
             knowl="modcurve.fiber_product",
             label="Fiber product with",
             example="3.4.0.a.1",
+            advanced=True
         )
         covers = TextBox(
             name="covers",
             knowl="modcurve.modular_cover",
             label="Minimally covers",
             example="1.1.0.a.1",
+            advanced=True
         )
         covered_by = TextBox(
             name="covered_by",
             knowl="modcurve.modular_cover",
             label="Minimally covered by",
             example="6.12.0.a.1",
+            advanced=True
         )
         simple = YesNoBox(
             name="simple",
@@ -918,7 +923,8 @@ class ModCurveSearchArray(SearchArray):
             options=cm_opts,
             knowl="modcurve.cm_discriminants",
             label="CM points",
-            example="yes, no, CM discriminant -3"
+            example="yes, no, CM discriminant -3",
+            advanced=True
         )
         contains_negative_one = YesNoBox(
             name="contains_negative_one",
@@ -942,6 +948,7 @@ class ModCurveSearchArray(SearchArray):
             label="Points",
             example="0, 3-5",
             select_box=points_type,
+            advanced=True,
         )
         obstructions = SelectBox(
             name="has_obstruction",
@@ -950,7 +957,15 @@ class ModCurveSearchArray(SearchArray):
                      ("not_yes", "No known obstruction"),
                      ("no", "No obstruction")],
             knowl="modcurve.local_obstruction",
-            label="Obstructions")
+            label="Obstructions",
+            advanced=True)
+        agreeable = YesNoBox(
+            name="agreeable",
+            knowl="modcurve.agreeable",
+            label="Agreeable",
+            example_col=True,
+            advanced=True
+        )
         family = SelectBox(
             name="family",
             options=[("", ""),
@@ -985,17 +1000,18 @@ class ModCurveSearchArray(SearchArray):
             [cusps, rational_cusps],
             [nu2, nu3],
             [simple, squarefree],
+            [contains_negative_one, family],
             [cm_discriminants, factor],
             [covers, covered_by],
-            [contains_negative_one, family],
             [points, obstructions],
+            [agreeable],
             [count],
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, nu2, nu3],
-            [simple, squarefree, cm_discriminants, factor, covers],
+            [simple, squarefree, cm_discriminants, factor, covers, agreeable],
             [covered_by, contains_negative_one, points, obstructions, family],
             [CPlabel],
         ]
