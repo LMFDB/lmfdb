@@ -70,6 +70,7 @@ SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+[a-z]*")
 S_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
 NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|ARITH)?\(\d+\)")
+LIST_OF_AB_GP_STRUCT_INTS_RE = re.compile(r"^([2-9]\d*|[1-9]\d{2,})(,\s*([2-9]\d*|[1-9]\d{2,}))*$")
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -365,6 +366,9 @@ modcurve_columns = SearchColumns(
         CheckCol("simple", "modcurve.simple", "Simple", default=False),
         CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
         CheckCol("agreeable", "modcurve.agreeable", "Agreeable", default=False),
+        LinkCol("agreeable_closure", "modcurve.agreeable", "Agreeable Closure", url_for_modcurve_label),
+        ProcessedCol("agreeable_quotient", "modcurve.agreeable", "Agreeable Quotient",
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
@@ -372,7 +376,7 @@ modcurve_columns = SearchColumns(
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "agreeable", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "agreeable", "agreeable_closure", "agreeable_quotient", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -711,7 +715,7 @@ def modcurve_search(info, query):
             if not isinstance(query.get('level'), int):
                 err = "You must specify a single level"
                 flash_error(err)
-                raise ValueError(err)
+                return redirect(url_for(".index"))
             elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
@@ -755,7 +759,7 @@ def modcurve_search(info, query):
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     if "covered_by" in info:
         # sort of hacky
-        lmfdb_label, label_type = modcurve_lmfdb_label(info["covered_by"].strip())
+        lmfdb_label, _ = modcurve_lmfdb_label(info["covered_by"].strip())
         if lmfdb_label is None:
             parents = None
         else:
@@ -772,8 +776,23 @@ def modcurve_search(info, query):
         if parents is None:
             msg = "%s not the label of a modular curve in the database"
             flash_error(msg, info["covered_by"])
-            raise ValueError(msg % info["covered_by"])
+            return redirect(url_for(".index"))
         query["label"] = {"$in": parents}
+    if "agreeable_closure" in info:
+        lmfdb_label, _ = modcurve_lmfdb_label(info["agreeable_closure"].strip())
+        if lmfdb_label is None:
+            msg = "%s not the label of a modular curve in the database"
+            flash_error(msg, info["agreeable_closure"])
+            return redirect(url_for(".index"))
+        query["agreeable_closure"] = lmfdb_label
+    if "agreeable_quotient" in info:
+        if LIST_OF_AB_GP_STRUCT_INTS_RE.match(info["agreeable_quotient"]):
+            tors = [int(x) for x in info["agreeable_quotient"].split(",")]
+            query["agreeable_quotient"] = tors
+        else:
+            msg = "%s not a valid list of integers"
+            flash_error(msg, info["agreeable_quotient"])
+            return redirect(url_for(".index"))
 
 modcurve_sorts = [
     ("", "level", ["level", "index", "genus", "label"]),
@@ -926,7 +945,6 @@ class ModCurveSearchArray(SearchArray):
             knowl="modcurve.cm_discriminants",
             label="CM points",
             example_col=True,
-            #example="yes, no, CM discriminant -3",
             advanced=True
         )
         contains_negative_one = YesNoBox(
@@ -969,6 +987,20 @@ class ModCurveSearchArray(SearchArray):
             example_col=True,
             advanced=True
         )
+        agreeable_closure = TextBox(
+            name="agreeable_closure",
+            knowl="modcurve.agreeable",
+            label="Agreeable closure",
+            example="6.12.0.a.1",
+            advanced=True
+        )
+        agreeable_quotient = TextBox(
+            name="agreeable_quotient",
+            knowl="modcurve.agreeable",
+            label="Agreeable quotient",
+            example="2",
+            advanced=True
+        )
         family = SelectBox(
             name="family",
             options=[("", ""),
@@ -1004,19 +1036,21 @@ class ModCurveSearchArray(SearchArray):
             [nu2, nu3],
             [simple, squarefree],
             [contains_negative_one, family],
+            # below this are the advanced options
             [cm_discriminants, factor],
             [covers, covered_by],
             [points, obstructions],
-            [agreeable],
+            [agreeable, agreeable_closure],
+            [agreeable_quotient],
             [count],
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, nu2, nu3],
-            [simple, squarefree, cm_discriminants, factor, covers, agreeable],
-            [covered_by, contains_negative_one, points, obstructions, family],
-            [CPlabel],
+            [simple, squarefree, contains_negative_one, family, cm_discriminants],
+            [covers, covered_by, points, obstructions, factor],
+            [agreeable, agreeable_closure, agreeable_quotient, CPlabel]
         ]
 
     sorts = modcurve_sorts
