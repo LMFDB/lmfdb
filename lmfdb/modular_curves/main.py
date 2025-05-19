@@ -806,6 +806,8 @@ class ModCurveSearchArray(SearchArray):
             label="Level",
             example="11",
             example_span="2, 11-23",
+            example_style={"min-width": "91px"},
+            label_style={"min-width": "191px"},
             select_box=level_quantifier,
         )
         index = TextBox(
@@ -923,7 +925,8 @@ class ModCurveSearchArray(SearchArray):
             options=cm_opts,
             knowl="modcurve.cm_discriminants",
             label="CM points",
-            example="yes, no, CM discriminant -3",
+            example_col=True,
+            #example="yes, no, CM discriminant -3",
             advanced=True
         )
         contains_negative_one = YesNoBox(
