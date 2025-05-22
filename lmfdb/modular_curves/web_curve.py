@@ -755,6 +755,16 @@ class WebModCurve(WebObj):
             return abstract_group_display_knowl(self.Glabel)
         return ""
 
+    def show_entanglement_quotient(self):
+        if self.entanglement_quotient:
+            return abstract_group_display_knowl(self.entanglement_quotient)
+        return ""
+
+    def format_agreeable_quotient(self):
+        if self.agreeable_quotient:
+            return r" \oplus ".join(r"$\Z/{%s}\Z$" % n for n in self.agreeable_quotient)
+        return ""
+
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
         curves = self.table.search(query, ["label", "coarse_label", "level", "index", "psl2index", "genus", "name", "rank", "newforms", "dims", "mults"])

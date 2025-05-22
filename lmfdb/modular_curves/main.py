@@ -30,6 +30,7 @@ from lmfdb.utils import (
     parse_floats,
     parse_interval,
     parse_element_of,
+    parse_group_label_or_order,
     parse_bool_unknown,
     parse_nf_string,
     parse_nf_jinv,
@@ -61,6 +62,8 @@ from lmfdb.modular_curves.family import ModCurveFamily
 from lmfdb.modular_curves.upload import ModularCurveUploader
 from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
+from lmfdb.groups.abstract.main import abstract_group_label_regex
+
 from sage.databases.cremona import class_to_int
 
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
@@ -70,7 +73,7 @@ SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+[a-z]*")
 S_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
 NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|ARITH)?\(\d+\)")
-LIST_OF_AB_GP_STRUCT_INTS_RE = re.compile(r"^([2-9]\d*|[1-9]\d{2,})(,\s*([2-9]\d*|[1-9]\d{2,}))*$")
+LIST_OF_AB_GP_STRUCT_INTS_RE = re.compile(r"^\[\s*([2-9]\d*|[1-9]\d{2,})(\s*,\s*([2-9]\d*|[1-9]\d{2,}))*\s*\]$")
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -87,6 +90,15 @@ def is_pairwise_coprime(numbers):
 
     for a, b in combinations(numbers, 2):
         if gcd(a, b) != 1:
+            return False
+    return True
+
+def check_increasing_divisibility(L):
+    """
+    Check if the list L is increasing in divisibility.
+    """
+    for i in range(len(L) - 1):
+        if L[i] % L[i + 1] != 0:
             return False
     return True
 
@@ -246,6 +258,9 @@ def curveinfo(label):
     ans += "</table>"
     return ans
 
+def url_for_group_label(label):
+    return url_for("abstract.by_label", label=label)
+
 def url_for_modcurve_label(label):
     return url_for("modcurve.by_label", label=label)
 
@@ -366,18 +381,26 @@ modcurve_columns = SearchColumns(
         CheckCol("simple", "modcurve.simple", "Simple", default=False),
         CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
         CheckCol("agreeable", "modcurve.agreeable", "Agreeable", default=False),
-        LinkCol("agreeable_closure", "modcurve.agreeable", "Agreeable Closure", url_for_modcurve_label),
+        CheckCol("refinable", "modcurve.quadratic_refinements", "Refinable", default=False),
+        CheckCol("twist_minimal", "modcurve.minimal_twist", "Twist minimal", default=False),
+        LinkCol("agreeable_closure", "modcurve.agreeable", "Agreeable Closure", url_for_modcurve_label, default=False),
         ProcessedCol("agreeable_quotient", "modcurve.agreeable", "Agreeable Quotient",
-                  lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
-        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
-        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center", default=lambda info: info.get("agreeable_quotient")),
+        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=lambda info: info.get("contains_negative_one")),
+        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=lambda info: info.get("dims")),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
         MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", default=False),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
+        MathCol("entanglement_index", "modcurve.entanglement", "Entanglement Index", default=lambda info: info.get("entanglement_index")),
+        LinkCol("entanglement_quotient", "modcurve.entanglement", "Entanglement Quotient", url_for_group_label, default=lambda info: info.get("entanglement_quotient")),
+        LinkCol("minimal_twist", "modcurve.minimal_twist", "Minimal twist", url_for_modcurve_label, default=False),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "agreeable", "agreeable_closure", "agreeable_quotient", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
-
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps",
+             "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "agreeable", "agreeable_closure", "agreeable_quotient",
+             "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators", "entanglement_index",
+             "entanglement_quotient", "minimal_twist", "refinable", "twist_minimal"]
+    )
 @search_parser
 def parse_family(inp, query, qfield):
     if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "Xarith1", "Xarithpm1", "Xsym", "Xarith", "any"]:
@@ -740,6 +763,8 @@ def modcurve_search(info, query):
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
     parse_bool(info, query, "agreeable")
+    parse_bool(info, query, "refinable")
+    parse_bool(info, query, "twist_minimal")
     parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
@@ -785,14 +810,40 @@ def modcurve_search(info, query):
             flash_error(msg, info["agreeable_closure"])
             return redirect(url_for(".index"))
         query["agreeable_closure"] = lmfdb_label
+    if "minimal_twist" in info:
+        lmfdb_label, _ = modcurve_lmfdb_label(info["minimal_twist"].strip())
+        if lmfdb_label is None:
+            msg = "%s not the label of a modular curve in the database"
+            flash_error(msg, info["minimal_twist"])
+            return redirect(url_for(".index"))
+        query["minimal_twist"] = lmfdb_label
     if "agreeable_quotient" in info:
-        if LIST_OF_AB_GP_STRUCT_INTS_RE.match(info["agreeable_quotient"]):
-            tors = [int(x) for x in info["agreeable_quotient"].split(",")]
-            query["agreeable_quotient"] = tors
+        possible_demanded_agreeable_quotients = re.findall(r"\[[^\[\]]*\]", info["agreeable_quotient"].replace(" ", ""))
+        if not possible_demanded_agreeable_quotients:  # means this is the empty list
+            msg = "%s not a valid input. It must either be a list of integers (if you only want to search for one) " \
+            "or a list of list of integers (if you want to search for one of several). They also have to be increasingly " \
+            "divisible. For example, '[[2,4], [6]]' is a valid input."
+            flash_error(msg, info["agreeable_quotient"])
+            return redirect(url_for(".index"))
+        print(f"possible_demanded_agreeable_quotients = {possible_demanded_agreeable_quotients}")
+        if all(LIST_OF_AB_GP_STRUCT_INTS_RE.match(x) for x in possible_demanded_agreeable_quotients):
+            if all(check_increasing_divisibility([int(a) for a in poss[1:-1].split(",")]) for poss in possible_demanded_agreeable_quotients):
+                # possible_demanded_agreeable_quotients = [[2,2], [6]]
+                if len(possible_demanded_agreeable_quotients) == 1:
+                    query["agreeable_quotient"] = [int(x) for x in possible_demanded_agreeable_quotients[0][1:-1].split(",")]
+                else:
+                    possible_quotients_list = [[int(a) for a in poss[1:-1].split(",")] for poss in possible_demanded_agreeable_quotients]
+                    query["agreeable_quotient"] = {"$in": possible_quotients_list}
+            else:
+                msg = "One of your lists ain't increasingly divisible. Your input was: %s"
+                flash_error(msg, info["agreeable_quotient"])
+                return redirect(url_for(".index"))
         else:
             msg = "%s not a valid list of integers"
             flash_error(msg, info["agreeable_quotient"])
             return redirect(url_for(".index"))
+    parse_ints(info, query, "entanglement_index")
+    parse_group_label_or_order(info, query, "entanglement_quotient", regex=abstract_group_label_regex)
 
 modcurve_sorts = [
     ("", "level", ["level", "index", "genus", "label"]),
@@ -987,6 +1038,20 @@ class ModCurveSearchArray(SearchArray):
             example_col=True,
             advanced=True
         )
+        refinable = YesNoBox(
+            name="refinable",
+            knowl="modcurve.quadratic_refinements",
+            label="Refinable",
+            example_col=True,
+            advanced=True
+        )
+        twist_minimal = YesNoBox(
+            name="twist_minimal",
+            knowl="modcurve.minimal_twist",
+            label="Twist minimal",
+            example_col=True,
+            advanced=True
+        )
         agreeable_closure = TextBox(
             name="agreeable_closure",
             knowl="modcurve.agreeable",
@@ -999,6 +1064,27 @@ class ModCurveSearchArray(SearchArray):
             knowl="modcurve.agreeable",
             label="Agreeable quotient",
             example="2",
+            advanced=True
+        )
+        entanglement_index = TextBox(
+            name="entanglement_index",
+            knowl="modcurve.entanglement",
+            label="Entanglement index",
+            example="12",
+            advanced=True
+        )
+        entanglement_quotient = TextBox(
+            name="entanglement_quotient",
+            knowl="modcurve.entanglement",
+            label="Entanglement quotient",
+            example="18.5",
+            advanced=True
+        )
+        minimal_twist = TextBox(
+            name="minimal_twist",
+            knowl="modcurve.minimal_twist",
+            label="Minimal twist",
+            example="6.12.0.a.1",
             advanced=True
         )
         family = SelectBox(
@@ -1041,7 +1127,9 @@ class ModCurveSearchArray(SearchArray):
             [covers, covered_by],
             [points, obstructions],
             [agreeable, agreeable_closure],
-            [agreeable_quotient],
+            [agreeable_quotient, entanglement_index],
+            [entanglement_quotient, minimal_twist],
+            [refinable, twist_minimal],
             [count],
         ]
 
@@ -1050,7 +1138,8 @@ class ModCurveSearchArray(SearchArray):
             [gonality, cusps, rational_cusps, nu2, nu3],
             [simple, squarefree, contains_negative_one, family, cm_discriminants],
             [covers, covered_by, points, obstructions, factor],
-            [agreeable, agreeable_closure, agreeable_quotient, CPlabel]
+            [agreeable, agreeable_closure, agreeable_quotient, entanglement_index, entanglement_quotient],
+            [CPlabel, minimal_twist, refinable, twist_minimal]
         ]
 
     sorts = modcurve_sorts

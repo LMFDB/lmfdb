@@ -120,6 +120,40 @@
         <td> {{ curve.quadratic_refinements | safe }}</td>
       </tr>
     {% endif %}
+    {% if curve.twist_minimal %}
+      <tr>
+        <td>{{ KNOWL('modcurve.minimal_twist', 'Twist minimal') }}:</td>
+        <td> {{ 'yes' }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td>{{ KNOWL('modcurve.minimal_twist', 'Twist minimal') }}:</td>
+        <td> {{ 'no' }}</td>
+      </tr>
+      <tr>
+        <td>{{ KNOWL('modcurve.minimal_twist', 'Minimal twist') }}:</td>
+        <td><a href="/ModularCurve/Q/{{curve.minimal_twist}}">{{curve.minimal_twist}}</a></td>
+      </tr>
+    {% endif %}
+    {% if curve.agreeable %}
+      <tr>
+        <td>{{ KNOWL('modcurve.agreeable', 'Agreeable') }}:</td>
+        <td> {{ 'yes' }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td>{{ KNOWL('modcurve.agreeable', 'Agreeable') }}:</td>
+        <td> {{ 'no' }}</td>
+      </tr>
+      <tr>
+        <td>{{ KNOWL('modcurve.agreeable', 'Agreeable closure') }}:</td>
+        <td><a href="/ModularCurve/Q/{{curve.agreeable_closure}}">{{curve.agreeable_closure}}</a></td>
+      </tr>
+      <tr>
+        <td>{{ KNOWL('modcurve.agreeable', 'Agreeable quotient') }}:</td>
+        <td>{{ curve.format_agreeable_quotient()}}</td>
+      </tr>
+    {% endif %}
     <tr>
       <td>{{ KNOWL('modcurve.level_structure', 'Cyclic '+(curve.level|string)+'-isogeny field degree') }}:</td>
       <td>${{ curve.cyclic_isogeny_field_degree() }}$</td>
@@ -132,6 +166,20 @@
       <td>{{ KNOWL('modcurve.level_structure', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td>
       <td>${{ curve.full_torsion_field_degree() }}$</td>
     </tr>
+    <tr>
+      <td>{{ KNOWL('modcurve.agreeable', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td>
+      <td>${{ curve.full_torsion_field_degree() }}$</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL('modcurve.entanglement', 'Entanglement index') }}:</td>
+      <td>${{ curve.entanglement_index }}$</td>
+    </tr>
+    {% if curve.entanglement_quotient %}
+    <tr>
+      <td>{{ KNOWL('modcurve.entanglement', 'Entanglement quotient') }}:</td>
+      <td>{{ curve.show_entanglement_quotient() | safe}}</td>
+    </tr>
+    {% endif %}
   </table>
 {% endif %}
 
@@ -226,7 +274,7 @@
 {% endif %}
 
 {#
-We are removing this section until we have more sources of non-rational points.  You can still search for them 
+We are removing this section until we have more sources of non-rational points.  You can still search for them
 
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
 
@@ -399,7 +447,7 @@ We are removing this section until we have more sources of non-rational points. 
       <div class="subgroup_diagram">
         <a href="{{url_for('.lat_diagram', label=curve.label)}}">See a full page version of the diagram</a>
       </div>
-    {% endif %} 
+    {% endif %}
     {# wide #}
 
     <script type="text/javascript">
@@ -408,7 +456,7 @@ We are removing this section until we have more sources of non-rational points. 
       sdiagram.draw();
     </script>
 
-  {% endif %} 
+  {% endif %}
   {# curve.lattice_labels #}
 
   {% if curve.fiber_product_of %}
