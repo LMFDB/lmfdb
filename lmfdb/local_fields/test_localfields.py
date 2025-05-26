@@ -24,20 +24,20 @@ class LocalFieldTest(LmfdbTest):
         assert '2.1.4.9a1.1' in L.get_data(as_text=True) # number of matches
 
     def test_field_page(self):
-        L = self.tc.get('/padicField/11.6.4.2')
+        L = self.tc.get('/padicField/11.6.4.2', follow_redirects=True)
         assert '11.2.3.4a1.2' in L.get_data(as_text=True)
         #assert 'x^{2} - x + 7' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
         #assert 'x^{3} - 11 t' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
 
     def test_global_splitting_models(self):
         # The first one will have to change if we compute a GSM for it
-        L = self.tc.get('/padicField/163.8.7.2')
+        L = self.tc.get('/padicField/163.1.8.7a1.2')
         assert 'not computed' in L.get_data(as_text=True)
-        L = self.tc.get('/padicField/2.8.0.1')
+        L = self.tc.get('/padicField/2.8.1.0a1.1')
         assert 'Does not exist' in L.get_data(as_text=True)
 
     def test_underlying_data(self):
-        page = self.tc.get('/padicField/11.6.4.2').get_data(as_text=True)
+        page = self.tc.get('/padicField/11.2.3.4a1.2').get_data(as_text=True)
         assert 'Underlying data' in page and 'data/11.2.3.4a1.2' in page
 
     def test_search_download(self):
