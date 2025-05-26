@@ -30,7 +30,6 @@ from lmfdb.galois_groups.transitive_group import (
 from lmfdb.number_fields.web_number_field import (
     WebNumberField, string2list, nf_display_knowl)
 
-from collections import Counter
 import re
 OLD_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+$')
 NEW_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+\d+\.\d+$')
@@ -196,7 +195,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
     # How far we need to shift text depends on the scale
     txshift = xmax / 80
     tyshift = xmax / 48
-    tick = xmax / 160
+    #tick = xmax / 160
     nextq = p
     L = Graphics()
     if ymax > 0:
@@ -438,7 +437,7 @@ def intcol(j):
     return f'${j}$'
 
 #label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
-label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["old_label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(old_label)}">{old_label}</a>'), apply_download=lambda old_label, new_label: (new_label if new_label else old_label))
+label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["old_label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(old_label)}">{old_label}</a>'), apply_download=(lambda old_label, new_label: (new_label if new_label else old_label)))
 
 def poly_col(relative=False):
     if relative:
@@ -485,7 +484,7 @@ def swanslopes_col(default=False, relative=False):
         title = lambda info: "Swan slope content" if info['family'].n0 == 1 else r"Swan slope content $/ \Q_p$"
     else:
         title = "Swan slope content"
-    return MultiProcessedCol("swanslopes", "lf.slope_content", "Swan slope content",
+    return MultiProcessedCol("swanslopes", "lf.slope_content", title,
                              ["slopes", "t", "u", "c"],
                              (lambda slopes, t, u, c: show_slope_content(artin2swan(slopes), t, u)),
                              short_title="Swan slope content",
@@ -498,7 +497,7 @@ def hiddenswan_col(default=False, relative=False):
     else:
         title = "Hidden Swan slopes"
     return MultiProcessedCol("hiddenswan", "lf.visible_slopes",
-                             "Hidden Swan slopes",
+                             title,
                              ["hidden", "c"],
                              (lambda hidden, c: latex_content(hidden2swan(hidden))),
                              short_title="hidden Swan slopes",
@@ -516,7 +515,7 @@ def assoc_col(default=True, relative=False):
         title = lambda info: "Assoc. Inertia" if info['family'].n0 == 1 else r"Assoc. Inertia $/ \Q_p$"
     else:
         title = "Assoc. Inertia"
-    return ProcessedCol("associated_inertia", "lf.associated_inertia", "Assoc. Inertia", formatbracketcol, default=default)
+    return ProcessedCol("associated_inertia", "lf.associated_inertia", title, formatbracketcol, default=default)
 def jump_col(default=True):
     return ListCol("jump_set", "lf.jump_set", "Jump Set", default=default, mathmode=True)
 
