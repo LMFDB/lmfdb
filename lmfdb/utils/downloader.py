@@ -745,7 +745,7 @@ class Downloader():
                     seen.add(name)
             cols = [cols[i] for i in include]
             column_names = [column_names[i] for i in include]
-        data_format = [(col.title if isinstance(col, str) else col.title(info)) for col in cols]
+        data_format = [(col.title if isinstance(col.title, str) else col.title(info)) for col in cols]
         first50 = [[col.download(rec) for col in cols] for rec in first50]
         if num_results > 10000:
             # Estimate the size of the download file.  This won't necessarily be a great estimate
