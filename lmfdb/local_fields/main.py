@@ -437,7 +437,7 @@ def intcol(j):
     return f'${j}$'
 
 #label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
-label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["old_label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(old_label)}">{old_label}</a>'), apply_download=(lambda old_label, new_label: (new_label if new_label else old_label)))
+label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["old_label", "new_label"], (lambda old_label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(old_label)}">{old_label}</a>'), apply_download=(lambda old_label, new_label: (new_label if new_label else old_label)))
 
 def poly_col(relative=False):
     if relative:
