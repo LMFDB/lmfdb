@@ -37,7 +37,6 @@ SIGNED_LIST_RE = re.compile(r"^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$")
 FLOAT_RE = re.compile("^" + FLOAT_STR + "$")
 BRACKETING_RE = re.compile(r"(\[[^\]]*\])")  # won't work for iterated brackets [[a,b],[c,d]]
 PREC_RE = re.compile(r"^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$")
-LF_LABEL_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 MULTISET_RE = re.compile(r"^(\d+)(\^(\d+))?(,(\d+)(\^(\d+))?)*$")
 
 class PowMulNodeVisitor(ast.NodeTransformer):
@@ -1188,13 +1187,15 @@ def parse_inertia(inp, query, qfield, err_msg=None):
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, error_is_safe=True)
 def parse_padicfields(inp, query, qfield, flag_unramified=False):
+    from lmfdb.local_fields.main import NEW_LF_RE, OLD_LF_RE
     labellist = inp.split(",")
     doflash = False
     for label in labellist:
-        if not LF_LABEL_RE.match(label):
+        if not NEW_LF_RE.fullmatch(label) and not OLD_LF_RE.fullmatch(label):
             raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
         splitlab = label.split('.')
-        if splitlab[2] == '0':
+        if (OLD_LF_RE.fullmatch(label) and splitlab[2] == '0' or
+            NEW_LF_RE.fullmatch(label) and splitlab[3][0] == '0'):
             doflash = True
     if flag_unramified and doflash:
         flash_info("Search results may be incomplete.  Given $p$-adic completions contain an <a title='unramified' knowl='nf.unramified_prime'>unramified</a> field and completions are only searched for <a title='ramified' knowl='nf.ramified_primes'>ramified primes</a>.")

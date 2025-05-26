@@ -327,15 +327,16 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def oldbase(self):
         # Temporary until we update subfield to use new labels
-        return db.lf_fields.lucky({"new_label":self.base}, "label")
+        return db.lf_fields.lucky({"new_label":self.base}, "old_label")
 
     @lazy_attribute
     def fields(self):
+        from lmfdb.local_fields.main import OLD_LF_RE
         fields = list(db.lf_fields.search(
             {"family": self.label_absolute},
             ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield", "jump_set"]))
         if self.n0 > 1:
-            fields = [rec for rec in fields if self.oldbase in rec["subfield"]]
+            fields = [rec for rec in fields if self.base in rec["subfield"] or self.oldbase in rec["subfield"]]
         glabels = list(set(rec["galois_label"] for rec in fields if rec.get("galois_label")))
         if glabels:
             cache = knowl_cache(glabels)

@@ -96,14 +96,14 @@ def local_algebra_data(labels):
     ans += '<p>'
     ans += "<table class='ntdata'><th>Label<th>Polynomial<th>$e$<th>$f$<th>$c$<th>$G$<th>Artin slopes"
     if all(OLD_LF_RE.fullmatch(lab) for lab in labs):
-        fall = {rec["label"]: rec for rec in db.lf_fields.search({"label":{"$in": labs}})}
+        fall = {rec["old_label"]: rec for rec in db.lf_fields.search({"old_label":{"$in": labs}})}
     elif all(NEW_LF_RE.fullmatch(lab) for lab in labs):
         fall = {rec["new_label"]: rec for rec in db.lf_fields.search({"new_label":{"$in": labs}})}
     else:
         fall = {}
         for lab in labs:
             if OLD_LF_RE.fullmatch(lab):
-                fall[lab] = db.lf_fields.lucky({"label":lab})
+                fall[lab] = db.lf_fields.lucky({"old_label":lab})
             elif NEW_LF_RE.fullmatch(lab):
                 fall[lab] = db.lf_fields.lucky({"new_label":lab})
             else:
@@ -113,12 +113,16 @@ def local_algebra_data(labels):
         if f is None:
             ans += '<tr><td>Invalid label %s</td></tr>' % lab
             continue
-        l = str(f['new_label'])
+        if f.get('new_label'):
+            l = str(f['new_label'])
+        else:
+            l = str(f['old_label'])
         ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
         ans += format_coeffs(f['coeffs'])
         ans += '<td>%d<td>%d<td>%d<td>' % (f['e'],f['f'],f['c'])
         ans += transitive_group_display_knowl(f['galois_label'])
-        ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
+        if f.get('slopes') and f.get('t') and f.get('u'):
+            ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
     ans += '</table>'
     if len(labs) != len(set(labs)):
         ans += '<p>Fields which appear more than once occur according to their given multiplicities in the algebra'
@@ -126,7 +130,7 @@ def local_algebra_data(labels):
 
 def local_field_data(label):
     if OLD_LF_RE.fullmatch(label):
-        f = db.lf_fields.lookup(label)
+        f = db.lf_fields.lucky({"old_label": label})
     elif NEW_LF_RE.fullmatch(label):
         f = db.lf_fields.lucky({"new_label": label})
     else:
@@ -287,9 +291,9 @@ def ctx_local_fields():
 # Utilities for subfield display
 def format_lfield(label, p):
     if OLD_LF_RE.fullmatch(label):
-        data = db.lf_fields.lookup(label, ["n", "p", "rf", "new_label"])
+        data = db.lf_fields.lucky({"old_label": label}, ["n", "p", "rf", "old_label", "new_label"])
     else:
-        data = db.lf_fields.lucky({"new_label": label}, ["n", "p", "rf", "new_label"])
+        data = db.lf_fields.lucky({"new_label": label}, ["n", "p", "rf", "old_label", "new_label"])
     return lf_display_knowl(label, name=prettyname(data))
 
 
@@ -434,7 +438,7 @@ def intcol(j):
     return f'${j}$'
 
 #label_col = LinkCol("new_label", "lf.field.label", "Label", url_for_label)
-label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(label)}">{label}</a>'), apply_download=lambda label, new_label: new_label)
+label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["old_label", "new_label"], (lambda label, new_label: f'<a href="{url_for_label(new_label)}">{new_label}</a>' if new_label else f'<a href="{url_for_label(old_label)}">{old_label}</a>'), apply_download=lambda old_label, new_label: (new_label if new_label else old_label))
 
 def poly_col(relative=False):
     if relative:
@@ -548,7 +552,7 @@ lf_columns = SearchColumns([
     assoc_col(default=lambda info: info.get("associated_inertia")),
     ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
     jump_col(default=lambda info: info.get("jump_set"))],
-    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "label", "new_label", "n", "p", "slopes", "t", "u", "visible", "hidden", "ind_of_insep", "associated_inertia", "jump_set", "unram", "eisen", "family", "residual_polynomials"])
+    db_cols=["aut", "c", "coeffs", "e", "f", "gal", "old_label", "new_label", "n", "p", "slopes", "t", "u", "visible", "hidden", "ind_of_insep", "associated_inertia", "jump_set", "unram", "eisen", "family", "residual_polynomials"])
 
 family_columns = SearchColumns([
     label_col,
@@ -564,7 +568,7 @@ family_columns = SearchColumns([
     insep_col(relative=True),
     assoc_col(relative=True),
     jump_col()],
-    db_cols=["label", "new_label", "packet", "packet_size", "coeffs", "unram", "n", "gal", "aut", "slopes", "t", "u", "c", "hidden", "ind_of_insep", "associated_inertia", "jump_set"])
+    db_cols=["old_label", "new_label", "packet", "packet_size", "coeffs", "unram", "n", "gal", "aut", "slopes", "t", "u", "c", "hidden", "ind_of_insep", "associated_inertia", "jump_set"])
 
 class PercentCol(MathCol):
     def display(self, rec):
@@ -576,7 +580,12 @@ class PercentCol(MathCol):
         return fr"${100*x:.2f}\%$"
 
 def pretty_link(label, p, n, rf):
-    name = prettyname({"p": p, "n": n, "rf": rf, "new_label": label})
+    if OLD_LF_RE.fullmatch(label):
+        name = {"old_label": label}
+    else:
+        name = {"new_label": label}
+    name.update({"p": p, "n": n, "rf": rf})
+    name = prettyname(name)
     return f'<a href="{url_for_label(label)}">{name}</a>'
 
 families_columns = SearchColumns([
@@ -861,18 +870,22 @@ def render_field_webpage(args):
     info = {}
     if 'label' in args:
         label = clean_input(args['label'])
-        data = db.lf_fields.lucky({"new_label":label})
-        if data is None:
-            data = db.lf_fields.lookup(label)
+        if NEW_LF_RE.fullmatch(label):
+            data = db.lf_fields.lucky({"new_label":label})
             if data is None:
-                if NEW_LF_RE.fullmatch(label) or OLD_LF_RE.fullmatch(label):
-                    flash_error("Field %s was not found in the database.", label)
-                else:
-                    flash_error("%s is not a valid label for a $p$-adic field.", label)
+                flash_error("Field %s was not found in the database.", label)
+                return redirect(url_for(".index"))
+        elif OLD_LF_RE.fullmatch(label):
+            data = db.lf_fields.lucky({"old_label": label})
+            if data is None:
+                flash_error("Field %s was not found in the database.", label)
                 return redirect(url_for(".index"))
             new_label = data.get("new_label")
             if new_label is not None:
                 return redirect(url_for_label(label=new_label), 301)
+        else:
+            flash_error("%s is not a valid label for a $p$-adic field.", label)
+            return redirect(url_for(".index"))
         title = '$p$-adic field ' + prettyname(data)
         titletag = 'p-adic field ' + prettyname(data)
         polynomial = coeff_to_poly(data['coeffs'])
@@ -906,7 +919,10 @@ def render_field_webpage(args):
             logger.fatal("Cannot find unramified field!")
             unramfriend = ''
         else:
-            unramfriend = url_for_label(unramdata['new_label'])
+            ulabel = unramdata.get('new_label')
+            if ulabel is None:
+                ulabel = unramdata.get('old_label')
+            unramfriend = url_for_label(ulabel)
 
         Px = PolynomialRing(QQ, 'x')
         Pt = PolynomialRing(QQ, 't')
@@ -924,11 +940,15 @@ def render_field_webpage(args):
             eisenp = Ptx(str(data['eisen']).replace('y','x'))
             eisenp = raw_typeset(str(eisenp), web_latex(eisenp), extra=r'$\ \in'+Qp+'(t)[x]$')
 
-        rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection="new_label")
+        rflabel = db.lf_fields.lucky({'p': p, 'n': {'$in': [1, 2]}, 'rf': data['rf']}, projection=["new_label", "old_label"])
         if rflabel is None:
             logger.fatal("Cannot find discriminant root field!")
             rffriend = ''
         else:
+            if rflabel.get("new_label"):
+                rflabel = rflabel["new_label"]
+            else:
+                rflabel = rflabel["old_label"]
             rffriend = url_for_label(rflabel)
         gsm = data['gsm']
         if gsm == [0]:
@@ -993,12 +1013,21 @@ def render_field_webpage(args):
             info["roots_of_unity"] = "not computed"
         if data.get("family") is not None:
             friends.append(('Absolute family', url_for(".family_page", label=data["family"])))
-            subfields = [f"{p}.1.1.0a1.1"] + list(db.lf_fields.search({"label":{"$in":data["subfield"]}}, "new_label"))
+            subfields = [f"{p}.1.1.0a1.1"]
+            if data["subfield"]:
+                if all(OLD_LF_RE.fullmatch(slabel) for slabel in data["subfield"]):
+                    new_labels = list(db.lf_fields.search({"old_label":{"$in": data["subfield"]}}, "new_label"))
+                    if all(slabel is not None for slabel in new_labels):
+                        subfields.extend(new_labels)
+                    else:
+                        subfields.extend(data["subfield"])
+                elif all(NEW_LF_RE.fullmatch(slabel) for slabel in data["subfield"]):
+                    subfields.extend(data["subfield"])
             friends.append(('Families containing this field', url_for(".index", relative=1, search_type="Families", label_absolute=data["family"],base=",".join(subfields))))
             rec = db.lf_families.lucky({"label":data["family"]}, ["means", "rams"])
             info["means"] = latex_content(rec["means"]).replace("[", r"\langle").replace("]", r"\rangle")
             info["rams"] = latex_content(rec["rams"]).replace("[", "(").replace("]", ")")
-        if n < 16:
+        if n < 16 and NEW_LF_RE.fullmatch(label):
             friends.append(('Families with this base', url_for(".index", relative=1, search_type="Families", base=label)))
         if data.get('slopes') is not None:
             info['slopes'] = latex_content(data['slopes'])
@@ -1028,8 +1057,21 @@ def render_field_webpage(args):
         if rffriend != '':
             friends.append(('Discriminant root field', rffriend))
         if data['is_completion']:
+            # Need to check whether number fields are storing completions using new labels or old labels
+            zeta3loc = db.nf_fields.lookup("2.0.3.1", "local_algs")
+            if zeta3loc == ["3.2.1.2"]:
+                # Old labels
+                lstr = data["old_label"]
+            elif zeta3loc == ["3.1.2.1a1.2"]:
+                # New labels
+                lstr = data["new_label"]
+            else:
+                # Error; fall back on old label
+                print("ZETALOC", zeta3loc)
+                flash_error("Incorrect local algebra for Q(zeta3)")
+                lstr = data["old_label"]
             friends.append(('Number fields with this completion',
-                url_for('number_fields.number_field_render_webpage')+"?completions={}".format(label)))
+                url_for('number_fields.number_field_render_webpage')+f"?completions={lstr}"))
         downloads = [('Underlying data', url_for('.lf_data', label=label))]
 
         if data.get('new_label'):
@@ -1061,7 +1103,9 @@ def render_field_webpage(args):
 def prettyname(ent):
     if ent['n'] <= 2:
         return printquad(ent['rf'], ent['p'])
-    return ent.get('new_label', ent.get('label'))
+    if ent.get('new_label'):
+        return ent['new_label']
+    return ent['old_label']
 
 @cached_function
 def getu(p):
@@ -1089,6 +1133,11 @@ def lf_data(label):
         bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
         sorts = [["p", "n", "e", "c", "ctr_family", "ctr_subfamily", "ctr"]]
         return datapage(label, "lf_fields", title=title, bread=bread, label_cols=["new_label"], sorts=sorts)
+    elif OLD_LF_RE.fullmatch(label):
+        title = f"Local field data - {label}"
+        bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+        sorts = [["p", "n", "c", "label"]]
+        return datapage(label, "lf_fields", title=title, bread=bread, label_cols=["old_label"], sorts=sorts)
     elif FAMILY_RE.fullmatch(label):
         title = f"Local field family data - {label}"
         bread = get_bread([(label, url_for_family(label)), ("DATA", " ")])
@@ -1262,7 +1311,7 @@ def common_family_parse(info, query):
     parse_ints(info,query,'c_absolute',name='Absolute discriminant exponent c')
     parse_ints(info,query,'w',name='Wild ramification exponent')
     parse_regex_restricted(info,query,'base',regex=NEW_LF_RE,errknowl='lf.field.label',errtitle='label')
-    parse_noop(info,query,'label_absolute',name='Absolute label')
+    parse_noop(info,query,'label_absolute',name='Absolute label') # TODO: Add a regex here
     parse_floats(info,query,'mass_relative',name='Mass', qfield='mass_relative')
     parse_floats(info,query,'mass_absolute',name='Mass', qfield='mass_absolute')
     parse_floats(info,query,'mass_found',name='Mass found')
