@@ -444,7 +444,7 @@ def poly_col(relative=False):
         title = lambda info: "Polynomial" if info['family'].n0 == 1 else r"Polynomial $/ \Q_p$"
     else:
         title = "Polynomial"
-    return MultiProcessedCol("coeffs", "lf.defining_polynomial", title, ["coeffs", "unram"], eisensteinformlatex, mathmode=True, short_title="polynomial", apply_download=False)
+    return MultiProcessedCol("coeffs", "lf.defining_polynomial", title, ["coeffs", "unram"], eisensteinformlatex, mathmode=True, short_title="polynomial", apply_download=lambda coeffs, unram: coeffs)
 p_col = MathCol("p", "lf.qp", "$p$", short_title="prime")
 c_col = MathCol("c", "lf.discriminant_exponent", "$c$", short_title="discriminant exponent")
 e_col = MathCol("e", "lf.ramification_index", "$e$", short_title="ramification index")
