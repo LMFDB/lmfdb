@@ -1809,7 +1809,7 @@ class LFStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 18$.  It also contains all %s absolute %s with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 24$.  It also contains all %s absolute %s with $p < 200$ and degree $n < 48$, as well as all %s relative families with $p < 200$, base degree $n_0 < 16$ and absolute degree $n_{\mathrm{absolute}} < 48$.' % (
             comma(self.numfields),
             display_knowl("lf.padic_field", r"$p$-adic fields"),
             display_knowl("lf.degree", "degree"),
