@@ -9,13 +9,13 @@
 
 <h2>Browse</h2>
 
-<p>
+<p style="margin-bottom: 10px;">
 This table gives, for each $p$ and $n$ shown, the number of degree $n$ extension
 fields of $\Q_p$ up to isomorphism.  Here are <a href="?search_type=Counts">more counts</a> for larger $p$ and $n$.
 </p>
 
 
-<table class="number_table">
+<table class="number_table" style="min-width: 1087px; margin-top: 0px;">
   <thead>
     <tr>
       <th>$p$ \ $n$</th>
@@ -27,29 +27,23 @@ fields of $\Q_p$ up to isomorphism.  Here are <a href="?search_type=Counts">more
   <tbody>
     {% for p in [2,3,5,7] %}
     <tr>
-      <th>{{p}}</th>
+      <th style="text-align: right;">{{p}}</th>
       {% for n in range(2,24) %}
       <td><a href="?p={{p}}&n={{n}}">{{info.field_count[n,p]}}</a></td>
       {% endfor %}
     </tr>
     {% endfor %}
-  </tbody>
-</table>
-
-<p>
-This table gives, for each $p$ and $n$ shown, the number of degree $n$ {{KNOWL('lf.family_polynomial', 'families')}} over $\Q_p$.  Here are <a href="?search_type=FamilyCounts">more counts</a> for larger $p$ and $n$, and search pages for <a href="?search_type=Families">absolute families</a> and <a href="?search_type=Families&relative=1">relative families</a>.
-</p>
-
-<table class="number_table">
-  <thead>
     <tr>
-      <th>$p$ \ $n$</th>
+      <td colspan="23" style="text-align:left; padding-top: 15px; padding-bottom:10px;">
+        This table gives the number of degree $n$ {{KNOWL('lf.family_polynomial', 'families')}} over $\Q_p$.  Here are <a href="?search_type=FamilyCounts">more counts</a> for larger $p$ and $n$, and search pages for <a href="?search_type=Families">absolute families</a> and <a href="?search_type=Families&relative=1">relative families</a>.
+      </td>
+    </tr>
+    <tr>
+      <th style="background:#fff; border-bottom: 2px solid {{color.table_table_ntdata_background_cn}};">$p$ \ $n$</th>
       {% for n in range(2,24) %}
-      <th>{{n}}</th>
+      <th style="background:#fff; text-align: right; border-right: 0; border-bottom: 2px solid {{color.table_table_ntdata_background_cn}};">{{n}}</th>
       {% endfor %}
     </tr>
-  </thead>
-  <tbody>
     {% for p in [2,3,5,7] %}
     <tr>
       <th>{{p}}</th>
