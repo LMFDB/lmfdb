@@ -19,8 +19,8 @@
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
       <tr><td> {{KNOWL('lf.automorphism_group', info.autstring)}} :</td> <td>${{info.aut}}$</td></tr>
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
-      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible Artin slopes')}}:</td><td>{{info.visible}}</td></tr>
-      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible Swan slopes')}}:</td><td>{{info.visible_swan}}</td></tr>
+      <tr><td>{{ KNOWL('lf.slopes', title='Visible Artin slopes')}}:</td><td>{{info.visible}}</td></tr>
+      <tr><td>{{ KNOWL('lf.slopes', title='Visible Swan slopes')}}:</td><td>{{info.visible_swan}}</td></tr>
       <tr><td>{{ KNOWL('lf.means', title='Means')}}:</td><td>{{info.means}}</td></tr>
       <tr><td>{{ KNOWL('lf.rams', title='Rams')}}:</td><td>{{info.rams}}</td></tr>
       <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>${{info.jump_set}}$</td></tr>
@@ -77,11 +77,18 @@
 
 {% endif %}
 
-<h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
+<h2>{{ KNOWL('lf.galois_closure_invariants', title='Invariants of the Galois closure') }}</h2>
 <table>
   <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>
   {% if info.gal %}
-  {{info.gal|safe}}
+    {{info.gal|safe}}
+  {% else %}
+    not computed
+  {% endif %}
+  </td></tr>
+  <tr><td>{{ KNOWL('nf.galois_group', title='Galois degree')}}:</td><td>
+  {% if info.galois_degree %}
+    ${{info.galois_degree}}$
   {% else %}
     not computed
   {% endif %}
@@ -100,27 +107,27 @@
     not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.unramified_degree', title='Galois unramified degree')}}:</td><td>
   {% if info.u %}
   ${{info.u}}$
   {% else %}
     not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.tame_degree', title='Galois tame degree')}}:</td><td>
   {% if info.t %}
   ${{info.t}}$
   {% else %}
     not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild Artin slopes')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.slopes', title='Galois Artin slopes')}}:</td><td>
   {% if info.slopes %}
   {{info.slopes}}
   {% else %}
     not computed
   {% endif %}
-  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild Swan slopes')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.slopes', title='Galois Swan slopes')}}:</td><td>
   {% if info.slopes %}
   {{info.swanslopes}}
   {% else %}

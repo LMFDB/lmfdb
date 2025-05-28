@@ -465,7 +465,7 @@ def slopes_col(default=True, relative=False):
         title = lambda info: "Artin slope content" if info['family'].n0 == 1 else r"Artin slope content $/ \Q_p$"
     else:
         title = "Artin slope content"
-    return MultiProcessedCol("slopes", "lf.slope_content", title,
+    return MultiProcessedCol("slopes", "lf.slopes", title,
                              ["slopes", "t", "u"],
                              show_slope_content, short_title="Artin slope content",
                              apply_download=unpack_slopes, default=default)
@@ -474,7 +474,7 @@ def hidden_col(default=True, relative=False):
         title = lambda info: "Hidden Artin slopes" if info['family'].n0 == 1 else r"Hidden Artin slopes $/ \Q_p$"
     else:
         title = "Hidden Artin slopes"
-    return ProcessedCol("hidden", "lf.visible_slopes",
+    return ProcessedCol("hidden", "lf.slopes",
                         title,
                         latex_content, short_title="hidden Artin slopes",
                         apply_download=False, default=default)
@@ -484,7 +484,7 @@ def swanslopes_col(default=False, relative=False):
         title = lambda info: "Swan slope content" if info['family'].n0 == 1 else r"Swan slope content $/ \Q_p$"
     else:
         title = "Swan slope content"
-    return MultiProcessedCol("swanslopes", "lf.slope_content", title,
+    return MultiProcessedCol("swanslopes", "lf.slopes", title,
                              ["slopes", "t", "u", "c"],
                              (lambda slopes, t, u, c: show_slope_content(artin2swan(slopes), t, u)),
                              short_title="Swan slope content",
@@ -496,7 +496,7 @@ def hiddenswan_col(default=False, relative=False):
         title = lambda info: "Hidden Swan slopes" if info['family'].n0 == 1 else r"Hidden Swan slopes $/ \Q_p$"
     else:
         title = "Hidden Swan slopes"
-    return MultiProcessedCol("hiddenswan", "lf.visible_slopes",
+    return MultiProcessedCol("hiddenswan", "lf.slopes",
                              title,
                              ["hidden", "c"],
                              (lambda hidden, c: latex_content(hidden2swan(hidden))),
@@ -530,10 +530,10 @@ lf_columns = SearchColumns([
     gal_col(False),
     ProcessedCol("u", "lf.unramified_degree", "$u$", intcol, short_title="unramified degree", default=False),
     ProcessedCol("t", "lf.tame_degree", "$t$", intcol, short_title="tame degree", default=False),
-    RationalListCol("visible", "lf.visible_slopes", "Visible Artin slopes",
+    RationalListCol("visible", "lf.slopes", "Visible Artin slopes",
                     show_slopes2, default=lambda info: info.get("visible"), short_title="visible Artin slopes"),
     # throw in c as a trick to differentiate it from just visible
-    MultiProcessedCol("visibleswan", "lf.visible_slopes", "Visible Swan slopes",
+    MultiProcessedCol("visibleswan", "lf.slopes", "Visible Swan slopes",
                       ["visible","c"],
                       (lambda visible, c: latex_content(show_slopes2(artin2swan(visible)))),
                       mathmode=False, default=False,
@@ -605,9 +605,9 @@ families_columns = SearchColumns([
     MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
                       pretty_link, contingent=lambda info: "relative" in info),
-    RationalListCol("visible", "lf.visible_slopes", "Abs. Artin slopes",
+    RationalListCol("visible", "lf.slopes", "Abs. Artin slopes",
                     show_slopes2, default=False, short_title="abs. Artin slopes"),
-    RationalListCol("slopes", "lf.swan_slopes", "Swan slopes", short_title="Swan slopes"),
+    RationalListCol("slopes", "lf.slopes", "Swan slopes", short_title="Swan slopes"),
     RationalListCol("means", "lf.means", "Means", delim=[r"\langle", r"\rangle"]),
     RationalListCol("rams", "lf.rams", "Rams", delim = "()"),
     ProcessedCol("poly", "lf.family_polynomial", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
@@ -1010,6 +1010,10 @@ def render_field_webpage(args):
                 info["roots_of_unity"] = f"${rou} = {rou_expr}$"
         else:
             info["roots_of_unity"] = "not computed"
+        if data.get("galois_degree") is not None:
+            info["galois_degree"] = data["galois_degree"]
+        else:
+            info["galois_degree"] = "not computed"
         if data.get("family") is not None:
             friends.append(('Absolute family', url_for(".family_page", label=data["family"])))
             subfields = [f"{p}.1.1.0a1.1"]
@@ -1135,7 +1139,7 @@ def lf_data(label):
     elif OLD_LF_RE.fullmatch(label):
         title = f"Local field data - {label}"
         bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
-        sorts = [["p", "n", "c", "label"]]
+        sorts = [["p", "n", "c", "old_label"]]
         return datapage(label, "lf_fields", title=title, bread=bread, label_cols=["old_label"], sorts=sorts)
     elif FAMILY_RE.fullmatch(label):
         title = f"Local field family data - {label}"
@@ -1384,9 +1388,9 @@ def common_boxes():
     )
     slopes = TextBoxWithSelect(
         name='slopes',
-        label='Wild Artin slopes',
-        short_label='Wild Artin',
-        knowl='lf.wild_slopes',
+        label='Galois Artin slopes',
+        short_label='Galois Artin',
+        knowl='lf.hidden_slopes',
         select_box=slopes_quantifier,
         example='[2,2,3]',
         example_span='[2,2,3] or [3,7/2,4]')
@@ -1397,7 +1401,7 @@ def common_boxes():
         name='visible',
         label='Visible Artin slopes',
         short_label='Visible Artin',
-        knowl='lf.visible_slopes',
+        knowl='lf.slopes',
         select_box=visible_quantifier,
         example='[2,2,3]',
         example_span='[2,2,3] or [2,3,17/4]')
@@ -1481,15 +1485,15 @@ def common_boxes():
     hidden = SneakyTextBox(
         name="hidden",
         label="Hidden content",
-        knowl="lf.visible_slopes")
+        knowl="lf.slopes")
     return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
-        ("", "Label", ['ctr']),
-        ("gal", "Galois group", ['galT', 'ctr']),
-        ("s", "top slope", ['top_slope', 'ctr']),
-        ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr']),
+        ("", "Label", ['ctr_subfamily', 'ctr']),
+        ("gal", "Galois group", ['galT', 'ctr_subfamily', 'ctr']),
+        ("s", "top slope", ['top_slope', 'ctr_subfamily', 'ctr']),
+        ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr_subfamily', 'ctr']),
     ]
     def __init__(self):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
@@ -1642,12 +1646,12 @@ class FamiliesSearchArray(SearchArray):
                                  #[visible, slopes, rams, means, slope_multiplicities],
                                  [mass_relative, mass_absolute, ambiguity, field_count, wild_segments, relbox]]
             self.sorts = [
-                ("", "base", ['p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-                ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr']),
-                ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
-                ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
-                ("field_count", "num fields", ['p', 'n0', 'e0', 'c0', 'n', 'field_count', 'e', 'c', 'ctr']),
-                ("mass", "mass", ['mass_relative', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
+                ("", "base", ['p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
+                ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'ctr']),
+                ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
+                ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
+                ("field_count", "num fields", ['field_count', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
+                ("mass", "mass", ['mass_relative', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
                 #("mass_found", "mass found", ['mass_found', 'mass_relative', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
             ]
         else:
@@ -1718,7 +1722,7 @@ class LFSearchArray(SearchArray):
 
 def ramdisp(p):
     return {'cols': ['n', 'e'],
-            'constraint': {'p': p, 'n': {'$lte': 16}},
+            'constraint': {'p': p, 'n': {'$lte': 23}},
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('ramification index', 'lf.ramification_index'),
@@ -1728,7 +1732,7 @@ def ramdisp(p):
 
 def discdisp(p):
     return {'cols': ['n', 'c'],
-            'constraint': {'p': p, 'n': {'$lte': 16}},
+            'constraint': {'p': p, 'n': {'$lte': 23}},
             'top_title':[('degree', 'lf.degree'),
                          ('and', None),
                          ('discriminant exponent', 'lf.discriminant_exponent'),
