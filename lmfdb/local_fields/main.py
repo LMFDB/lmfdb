@@ -1809,7 +1809,14 @@ class LFStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return self.summary + '  Here are some <a href="%s">further statistics</a>.' % (url_for(".statistics"))
+        return 'The database currently contains %s %s, %s absolute %s, and %s relative families.  Here are some <a href="%s">further statistics</a>.' % (
+            comma(self.numfields),
+            display_knowl("lf.padic_field", r"$p$-adic fields"),
+            comma(self.num_abs_families),
+            display_knowl("lf.family_polynomial", "families"),
+            comma(self.num_rel_families),
+            url_for(".statistics"),
+        )
 
     @property
     def summary(self):
