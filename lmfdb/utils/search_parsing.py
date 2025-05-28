@@ -1169,12 +1169,16 @@ def parse_inertia(inp, query, qfield, err_msg=None):
                 nt = aliases[inp2][0]
                 query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
-                # Check for Gap code
-                rematch = re.match(r"^\[(\d+),(\d+)\]$", inp)
+                # Check for Gap code using [a,b] or a.b notation
+                rematch = re.fullmatch(r"\[(\d+),(\d+)\]", inp)
                 if rematch:
                     query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
                 else:
-                    raise NameError
+                    rematch = re.fullmatch(r"(\d+)\.(\d+)", inp)
+                    if rematch:
+                        query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
+                    else:
+                        raise NameError
 
     except NameError:
         if re.match(r"^[ACDFMQS]\d+$", inp):
@@ -1182,7 +1186,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
-            raise SearchParsingError("It needs to be a GAP id, such as [4,1] or [12,5], ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
+            raise SearchParsingError("It needs to be a small group id, such as [4,1] or 12.5, ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
 
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, error_is_safe=True)

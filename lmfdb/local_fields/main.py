@@ -1434,7 +1434,7 @@ def common_boxes():
         short_label='Galois group',
         knowl='nf.galois_search',
         example='5T3',
-        example_span='e.g. [8,3], 8.3, C5 or 7T2')
+        example_span='e.g. 8.3, C5 or 7T2')
     aut = TextBox(
         name='aut',
         label='Num. automorphisms',
@@ -1462,15 +1462,15 @@ def common_boxes():
         name='inertia_gap',
         label='Inertia subgroup',
         knowl='lf.inertia_group_search',
-        example='[3,1]',
-        example_span='e.g. [8,3], 8.3, C5 or 7T2',
+        example='3.1',
+        example_span='8.3, C5 or 7T2',
     )
     wild = TextBox(
         name='wild_gap',
         label='Wild inertia subgroup',
         knowl='lf.wild_inertia_group_search',
-        example='[4,1]',
-        example_span='e.g. [8,3], 8.3, C5 or 7T2',
+        example='4.1',
+        example_span='8.3, C5 or 7T2',
     )
     family = SneakyTextBox(
         name='family',
