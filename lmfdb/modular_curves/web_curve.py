@@ -761,9 +761,11 @@ class WebModCurve(WebObj):
         return ""
 
     def format_agreeable_quotient(self):
-        if self.agreeable_quotient:
-            return r" \oplus ".join(r"$\Z/{%s}\Z$" % n for n in self.agreeable_quotient)
-        return ""
+        if self.agreeable_quotient is None:
+            return "not computed"
+        if self.agreeable_quotient:  # non-empty list
+            return r" $\oplus$ ".join(r"$\Z/{%s}\Z$" % n for n in self.agreeable_quotient)
+        return "trivial"
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
