@@ -39,6 +39,19 @@
 </table>
 </p>
 
+{% if data.dimension == 1 %}
+<h2>  Associated elliptic curves </h2>
+{% if data.ec_status == 1 %}
+This Bianchi newform is associated to the isogeny class <a href={{data.ec_url}}>{{data.label}}</a> of elliptic curves.
+{% endif %}
+{% if data.ec_status == 0 %}
+This Bianchi newform is conjectured to be associated to an isogeny class of elliptic curves, but no matching elliptic curve is currently known.
+{% endif %}
+{% if data.ec_status == -1 %}
+This Bianchi newform is not associated to any elliptic curves.
+{% endif %}
+{% endif %}
+
 <h2>  Atkin-Lehner eigenvalues  </h2>
 
 {% if data.have_AL %} 
