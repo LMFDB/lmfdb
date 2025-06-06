@@ -1,9 +1,5 @@
 import svg
-
 from sage.all import (sin, cos, arctan2, floor, round)
-# DONE: bound dot size absolutely and distribute radii evenly
-# DONE: increase height of gaga box
-# DONE: refactor into single function
 
 class Point:
     """
