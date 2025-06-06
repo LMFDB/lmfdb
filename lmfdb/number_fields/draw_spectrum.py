@@ -1,5 +1,5 @@
 import svg
-from sage.all import (sin, cos, arctan2, floor, round)
+from sage.all import (floor, round)
 
 class Point:
     """
@@ -42,7 +42,6 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     """
     num_primes = min(len(frobs), num_primes)
     frobs = frobs[:num_primes]
-    num_colors = max(len(l) for _, l in frobs)
     if colors:
         col_max = max(i[0] for [p,l] in frobs for i in l if l != [0])
     else:
@@ -78,7 +77,6 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
 
     # increase or decrease girth of inert primes based on size of residue field
     residue_factor = .7
-    ram_idx_factor = 2.5
 
     # radius of (unramified) points
     dot_radius = 2.5
@@ -254,11 +252,9 @@ def test_drawspec(n=1, gaga=False):
     if n == 1: 
         frobs = [[2, [[3, 2], [1, 1]]], [3, [[6, 1], [1, 1]]], [5, [[6, 1], [1, 1]]], [7, [0]], [11, [[3, 2], [1, 1]]], [13, [[2, 3], [1, 1]]], [17, [[6, 1], [1, 1]]], [19, [[6, 1], [1, 1]]], [23, [[3, 2], [1, 1]]], [29, [[1, 7]]], [31, [[6, 1], [1, 1]]], [37, [[3, 2], [1, 1]]], [41, [0]], [43, [[7, 1]]], [47, [[6, 1], [1, 1]]], [53, [[3, 2], [1, 1]]], [59, [[6, 1], [1, 1]]]]
 
-        signature = [1,3]
         local_algs = {"7": [[7,1]], "41": [[7,1]]}
     elif n == 2:
         frobs = [[2, [[3, 1]]], [3, [[3, 1]]], [5, [[3, 1]]], [7, [0]], [11, [[3, 1]]], [13, [[1, 3]]], [17, [[3, 1]]], [19, [[3, 1]]], [23, [[3, 1]]], [29, [[1, 3]]], [31, [[3, 1]]], [37, [[3, 1]]], [41, [[1, 3]]], [43, [[1, 3]]], [47, [[3, 1]]], [53, [[3, 1]]], [59, [[3, 1]]]]
-        signature = [3,0]
         local_algs = {"7": [[3,1]]}
 
     num_primes = 7 if gaga else 100
