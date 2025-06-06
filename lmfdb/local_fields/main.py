@@ -1218,7 +1218,7 @@ def reliability():
     t = 'Reliability of $p$-adic field data'
     ttag = 'Reliability of p-adic field data'
     bread = get_bread([("Reliability", '')])
-    return render_template("single.html", kid='rcs.source.lf',
+    return render_template("single.html", kid='rcs.rigor.lf',
                            title=t, titletag=ttag, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
