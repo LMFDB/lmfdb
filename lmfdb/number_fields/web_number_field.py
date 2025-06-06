@@ -1003,7 +1003,6 @@ class WebNumberField:
         if local_algs is None:
             return None
         local_algebra_dict = {}
-        R = PolynomialRing(QQ, 'x')
         for lab in local_algs:
             if lab[0] == 'm': # signals data about field not in lf db
                 lab1 = lab[1:] # deletes marker m
