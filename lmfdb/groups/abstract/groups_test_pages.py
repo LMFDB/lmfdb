@@ -71,11 +71,11 @@ class GroupsTest(LmfdbTest):
             numchunks = ceil(numgps / chunksize)
             for i in range(numchunks):
                 inputs.append((n, 1 + floor(i / numchunks * numgps), floor((i+1) / numchunks * numgps)))
-        res = sum((outp for (inp, outp) in self.abstract_groups_of_order(inputs)), [])
-        errors = [url for (t, url) in res if t is None]
+        res = sum((outp for inp, outp in self.abstract_groups_of_order(inputs)), [])
+        errors = [url for t, url in res if t is None]
         errors
-        working_urls = sorted([(t, url) for (t, url) in res if t is not None])
-        times = [t for (t, url) in working_urls]
+        working_urls = sorted([(t, url) for t, url in res if t is not None])
+        times = [t for t, url in working_urls]
         total = len(times)
         if errors:
             print(f"Tested {total + len(errors)} pages with {len(errors)} errors occurring on the following pages:")

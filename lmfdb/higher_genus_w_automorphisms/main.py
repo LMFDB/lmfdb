@@ -550,10 +550,12 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
 
                 queries.append((group_order, g))
 
-            if instance == 1: #If there is only one linear function
-                return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
+            if instance == 1:  # If there is only one linear function
+                return ['$or', [{key: gp_ord, 'genus': g}
+                                for gp_ord, g in queries]]
             else:
-                return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
+                return [[key, gp_ord, g]
+                        for gp_ord, g in queries]  # Nested list
 
         else:
             raise ValueError("It needs to be an integer (such as 25), \

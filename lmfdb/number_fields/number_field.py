@@ -269,7 +269,8 @@ def statistics():
             for deg in range(23)]
     # Galois groups
     nt_stats = nfstatdb.column_counts(['degree', 'galois_label'])
-    nt_stats = {(key[0],int(key[1].split('T')[1])): value for (key,value) in nt_stats.items()}
+    nt_stats = {(key[0], int(key[1].split('T')[1])): value
+                for key, value in nt_stats.items()}
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
@@ -923,7 +924,7 @@ def number_field_search(info, query):
                 ggopt = set(query["galois_label"]["$in"])
             else:
                 ggopt = {query["galois_label"]}
-            opts = {n: gg for (n, gg) in opts.items() if gg in ggopt}
+            opts = {n: gg for n, gg in opts.items() if gg in ggopt}
         if len(opts) == 0:
             # Incompatible with specified degree or galois labels, so we add an impossible condition
             query["degree"] = -1

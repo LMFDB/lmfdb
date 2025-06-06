@@ -207,7 +207,7 @@ def plot_polygon(verts, polys, inds, p):
                 if i and c:
                     L += restag(c, P[0] + i, P[1])
     L += line(verts, thickness=2)
-    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+    L += points([(p**i, ind) for i, ind in enumerate(inds)], size=30, color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
     return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))

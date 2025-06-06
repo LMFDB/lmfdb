@@ -238,7 +238,8 @@ def pos_int_and_factor(n, factor_base=None):
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        latexfactors = r" \cdot ".join(power_prime(p, val) for (p, val) in factors)
+        latexfactors = r" \cdot ".join(power_prime(p, val)
+                                       for p, val in factors)
     else:
         factors = n.factor()
         latexfactors = latex(factors)
