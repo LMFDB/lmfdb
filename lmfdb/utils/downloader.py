@@ -745,7 +745,7 @@ class Downloader():
                     seen.add(name)
             cols = [cols[i] for i in include]
             column_names = [column_names[i] for i in include]
-        data_format = [col.title for col in cols]
+        data_format = [(col.title if isinstance(col.title, str) else col.title(info)) for col in cols]
         first50 = [[col.download(rec) for col in cols] for rec in first50]
         if num_results > 10000:
             # Estimate the size of the download file.  This won't necessarily be a great estimate
@@ -820,10 +820,14 @@ class Downloader():
                 else:
                     knowl = col.download_desc
                 if knowl:
-                    if name.lower() == col.title.lower():
-                        yield lang.comment(f" {col.title} --\n")
+                    if isinstance(col.title, str):
+                        title = col.title
                     else:
-                        yield lang.comment(f"{col.title} ({name}) --\n")
+                        title = col.title(info)
+                    if name.lower() == title.lower():
+                        yield lang.comment(f" {title} --\n")
+                    else:
+                        yield lang.comment(f"{title} ({name}) --\n")
                     for line in knowl.split("\n"):
                         if line.strip():
                             yield lang.comment("    " + line.rstrip() + "\n")

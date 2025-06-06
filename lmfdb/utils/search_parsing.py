@@ -37,7 +37,6 @@ SIGNED_LIST_RE = re.compile(r"^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$")
 FLOAT_RE = re.compile("^" + FLOAT_STR + "$")
 BRACKETING_RE = re.compile(r"(\[[^\]]*\])")  # won't work for iterated brackets [[a,b],[c,d]]
 PREC_RE = re.compile(r"^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$")
-LF_LABEL_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 MULTISET_RE = re.compile(r"^(\d+)(\^(\d+))?(,(\d+)(\^(\d+))?)*$")
 
 class PowMulNodeVisitor(ast.NodeTransformer):
@@ -354,6 +353,21 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus
         return [key, q]
     else:
         return [key, parse_singleton(arg)]
+
+def unparse_range(query_part, col_name=None):
+    """
+    Given the output of parse_ints or other parser based on parse_range2,
+    return a lower and upper bound for the result.  Either being None indicates no limit.
+    $or is not supported
+    """
+    if isinstance(query_part, dict):
+        if "$or" in query_part:
+            msg = "Multiple ranges not supported"
+            if col_name:
+                msg += f" for {col_name}"
+            raise ValueError(msg)
+        return query_part.get("$gte"), query_part.get("$lte")
+    return query_part, query_part
 
 # Like parse_range2, but to deal with strings which could be rational numbers
 # process is a function to apply to arguments after they have been parsed
@@ -1155,12 +1169,16 @@ def parse_inertia(inp, query, qfield, err_msg=None):
                 nt = aliases[inp2][0]
                 query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
-                # Check for Gap code
-                rematch = re.match(r"^\[(\d+),(\d+)\]$", inp)
+                # Check for Gap code using [a,b] or a.b notation
+                rematch = re.fullmatch(r"\[(\d+),(\d+)\]", inp)
                 if rematch:
                     query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
                 else:
-                    raise NameError
+                    rematch = re.fullmatch(r"(\d+)\.(\d+)", inp)
+                    if rematch:
+                        query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
+                    else:
+                        raise NameError
 
     except NameError:
         if re.match(r"^[ACDFMQS]\d+$", inp):
@@ -1168,18 +1186,20 @@ def parse_inertia(inp, query, qfield, err_msg=None):
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
-            raise SearchParsingError("It needs to be a GAP id, such as [4,1] or [12,5], ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
+            raise SearchParsingError("It needs to be a small group id, such as [4,1] or 12.5, ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
 
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, error_is_safe=True)
 def parse_padicfields(inp, query, qfield, flag_unramified=False):
+    from lmfdb.local_fields.main import NEW_LF_RE, OLD_LF_RE
     labellist = inp.split(",")
     doflash = False
     for label in labellist:
-        if not LF_LABEL_RE.match(label):
+        if not NEW_LF_RE.fullmatch(label) and not OLD_LF_RE.fullmatch(label):
             raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
         splitlab = label.split('.')
-        if splitlab[2] == '0':
+        if (OLD_LF_RE.fullmatch(label) and splitlab[2] == '0' or
+            NEW_LF_RE.fullmatch(label) and splitlab[3][0] == '0'):
             doflash = True
     if flag_unramified and doflash:
         flash_info("Search results may be incomplete.  Given $p$-adic completions contain an <a title='unramified' knowl='nf.unramified_prime'>unramified</a> field and completions are only searched for <a title='ramified' knowl='nf.ramified_primes'>ramified primes</a>.")

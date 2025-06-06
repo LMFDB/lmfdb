@@ -1,0 +1,13 @@
+{% extends 'padic-refine-search.html' %}
+
+{% block top_matter %}
+<p>
+  Fields with $n>16$ and $p \mid n$ have not yet been added, except $n=p$ and $(p,n) = (2,18)$.  Not all Galois groups and hidden slope information has been computed for $(p,n) = (2,16)$.
+</p>
+{% endblock %}
+
+{% block show_results %}
+
+{% include 'count_results.html' %}
+
+{% endblock %}

@@ -171,9 +171,7 @@ class AbvarFq_isoclass():
         L = Graphics()
         xmax = len(S)
         ymax = ZZ(len(S)/2)
-        pts.append((xmax,0))
-        L += polygon(pts,alpha=0.1)
-        pts.remove((xmax,0))
+        L += polygon(pts+[(0,ymax)],alpha=0.1)
         for i in range(xmax+1):
             L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
         for j in range(ymax+1):
