@@ -53,7 +53,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     # as optional arguments; feel free to change this
 
     # (absolute) height of svg
-    height = 150 if gaga else 200 
+    height = 80 if gaga else 150
 
     # (absolute) width of svg
     width = 200 if gaga else (num_primes+3)*50
@@ -67,10 +67,10 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
 
 
     # y-coordinate of Spec Z
-    bottom_line = round((7/8)*height)
+    bottom_line = round((3/4)*height)
 
     # fraction of height of centre line around which the primes in spec are centred
-    centre_ratio = 1/2 if gaga else 3.5/8
+    centre_ratio = 1/2 if gaga else 1/4
     # y-coordinate of Spec O_K
     y_centre = round(centre_ratio*height)
     
