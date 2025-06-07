@@ -333,6 +333,9 @@ table.ntdata a {
         which appear with multiplicity greater than one are indicated
         by exponents on the *.
     </div>
-    {% endif %}
-
+	{% endif %}
+<h2> {{ KNOWL('nf.spectrum_ring_of_integers', title='Spectrum of ring of integers') }}</h2>
+	<img>
+	  {{ nf.draw_spectrum() | safe}}
+	  </img>
 {% endblock %}
