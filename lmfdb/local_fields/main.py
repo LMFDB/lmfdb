@@ -518,6 +518,8 @@ def assoc_col(default=True, relative=False):
     return ProcessedCol("associated_inertia", "lf.associated_inertia", title, formatbracketcol, default=default)
 def jump_col(default=True):
     return ListCol("jump_set", "lf.jump_set", "Jump Set", default=default, mathmode=True)
+def respoly_col():
+    return ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp))
 
 lf_columns = SearchColumns([
     label_col,
@@ -549,13 +551,13 @@ lf_columns = SearchColumns([
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
     insep_col(default=lambda info: info.get("ind_of_insep")),
     assoc_col(default=lambda info: info.get("associated_inertia")),
-    ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp)),
+    respoly_col(),
     jump_col(default=lambda info: info.get("jump_set"))],
     db_cols=["aut", "c", "coeffs", "e", "f", "gal", "old_label", "new_label", "n", "p", "slopes", "t", "u", "visible", "hidden", "ind_of_insep", "associated_inertia", "jump_set", "unram", "eisen", "family", "residual_polynomials"])
 
 family_columns = SearchColumns([
     label_col,
-    MultiProcessedCol("packet_link", "lf.packet", "Packet", ["packet", "packet_size"], (lambda packet, size: '' if size is None else f'<a href="{url_for_packet(packet)}">{size}</a>'), default=lambda info: info.get("one_per") == "packet", contingent=lambda info: info['family'].n0 == 1),
+    MultiProcessedCol("packet_link", "lf.packet", "Packet size", ["packet", "packet_size"], (lambda packet, size: '' if size is None else f'<a href="{url_for_packet(packet)}">{size}</a>'), default=lambda info: info.get("one_per") == "packet", contingent=lambda info: info['family'].n0 == 1),
     poly_col(relative=True),
     gal_col(lambda info: "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"),
     MathCol("galsize", "nf.galois_group", lambda info: "Galois degree" if info['family'].n0 == 1 else r"Galois degree $/ \Q_p$", short_title="Galois degree"),
@@ -566,8 +568,9 @@ family_columns = SearchColumns([
     hiddenswan_col(relative=True),
     insep_col(relative=True),
     assoc_col(relative=True),
+    respoly_col(),
     jump_col()],
-    db_cols=["old_label", "new_label", "packet", "packet_size", "coeffs", "unram", "n", "gal", "aut", "slopes", "t", "u", "c", "hidden", "ind_of_insep", "associated_inertia", "jump_set"])
+    db_cols=["old_label", "new_label", "packet", "packet_size", "coeffs", "unram", "n", "gal", "aut", "slopes", "t", "u", "c", "hidden", "ind_of_insep", "associated_inertia", "residual_polynomials", "jump_set"])
 
 class PercentCol(MathCol):
     def display(self, rec):
@@ -1410,7 +1413,7 @@ def common_boxes():
     )
     ind_insep = TextBoxWithSelect(
         name='ind_of_insep',
-        label='Ind. of insep.',
+        label='Indices of insep.',
         short_label='Indices',
         knowl='lf.indices_of_inseparability',
         select_box=insep_quantifier,

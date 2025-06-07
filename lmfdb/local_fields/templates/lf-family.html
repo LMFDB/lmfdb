@@ -28,25 +28,6 @@
   <tr><td>{{ KNOWL('lf.family_mass', 'Absolute Mass') }}:</td><td> ${{family.mass_absolute_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
 </table>
 
-{% if family.field_count > 0 %}
-
-<h2> {{ KNOWL('lf.family_varying', 'Varying') }} </h2>
-{% if not family.all_stored %}
-<p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
-{% endif %}
-{% if family.n0 > 1 %}
-<p>These invariants are all associated to absolute extensions of $\Q_{ {{family.p}} }$ within this relative family, not the relative extension.</p>
-{% endif %}
-<table>
-  <tr><td>{{ KNOWL('nf.galois_group', 'Galois group') }}:</td><td> {{ family.galois_groups | safe }} </td></tr>
-  <tr><td>{{ KNOWL('lf.hidden_slopes', 'Hidden Artin slopes') }}:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
-  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability') }}:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
-  <tr><td>{{ KNOWL('lf.associated_inertia', 'Associated inertia') }}:</td><td> {{ family.associated_inertia | safe }} </td></tr>
-  <tr><td>{{ KNOWL('lf.jump_set', 'Jump Set') }}:</td><td> {{ family.jump_set | safe }} </td></tr>
-</table>
-
-{% endif %}
-
 {% if family.w > 0 %}
 <h2> {{ KNOWL('lf.family_diagrams', 'Diagrams') }} </h2>
 
@@ -68,8 +49,25 @@
 
 {% if family.field_count > 0 %}
 
+<h2> {{ KNOWL('lf.family_varying', 'Varying') }} </h2>
+{% if not family.all_stored %}
+<p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
+{% endif %}
+{% if family.n0 > 1 %}
+<p>These invariants are all associated to absolute extensions of $\Q_{ {{family.p}} }$ within this relative family, not the relative extension.</p>
+{% endif %}
+<table>
+  {% if family.n0 > 1 and family.some_hidden_data_available %}
+  <tr><td>{{ KNOWL('nf.galois_group', 'Galois group') }}:</td><td> {{ family.galois_groups | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.hidden_slopes', 'Hidden Artin slopes') }}:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
+  {% endif %}
+  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability') }}:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.associated_inertia', 'Associated inertia') }}:</td><td> {{ family.associated_inertia | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.jump_set', 'Jump Set') }}:</td><td> {{ family.jump_set | safe }} </td></tr>
+</table>
+
 {% if family.n0 == 1 and family.some_hidden_data_available %}
-<h2> {{ KNOWL('lf.packet', 'Galois groups and Hidden Artin slopes') }} </h2>
+<h3> {{ KNOWL('lf.packet', 'Galois groups and Hidden Artin slopes') }} </h3>
 
 {% if (family.gal_slope_tables|length) > 1 %}
   <p>Select desired size of Galois group.{% if not family.all_hidden_data_available %}  Note that the following data has not all been computed for fields in this family, so the tables below are incomplete.{% endif %}</p>
