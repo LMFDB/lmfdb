@@ -256,7 +256,8 @@ def test_drawspec(n=1, gaga=False):
     num_primes = 7 if gaga else 100
     canvas = draw_spec(frobs, local_algs, True,
                        gaga=gaga,num_primes=num_primes)
-    filename = f"/tmp/{'gaga' if gaga else 'test'}.svg"
+    import tempfile
+    filename =  tempfile.gettempdir() + ('/gaga' if gaga else '/spec') + ".svg"
     with open(filename, mode='w') as f:
         f.write(canvas.as_str())
 
