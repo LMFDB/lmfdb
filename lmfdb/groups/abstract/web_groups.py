@@ -237,7 +237,7 @@ def abelian_gp_display(invs):
         return "C_1"
     return r" \times ".join(
         ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
-        for (q, e) in Counter(invs).items()
+        for q, e in Counter(invs).items()
     )
 
 def product_sort_key(sub):
@@ -1109,7 +1109,7 @@ class WebAbstractGroup(WebObj):
             # Python 3 won't compare None with strings
             return sum(([c is None, c] for c in x), [])
         for order, subs in by_order.items():
-            by_order[order] = sorted(((cnt,) + k for (k, cnt) in subs.items()), key=sort_key, reverse=True)
+            by_order[order] = sorted(((cnt,) + k for k, cnt in subs.items()), key=sort_key, reverse=True)
         return sorted(by_order.items(), key=lambda z: -z[0]) # largest order first
 
     @lazy_attribute
@@ -1185,7 +1185,7 @@ class WebAbstractGroup(WebObj):
             return sep.join(l)
 
         if profile is not None:
-            return [(order, display_profile_line(order, subs)) for (order, subs) in profile]
+            return [(order, display_profile_line(order, subs)) for order, subs in profile]
 
     @cached_method
     def _normal_summary(self):
@@ -1593,7 +1593,7 @@ class WebAbstractGroup(WebObj):
             df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
             s = r" $\, \times\, $ ".join(
                 "%s%s" % (latex_lookup[label], r" ${}^%s$ " % e if e > 1 else "")
-                for (label, e) in df
+                for label, e in df
             )
         return s
 
@@ -1744,13 +1744,13 @@ class WebAbstractGroup(WebObj):
     def rep_dims(self):
         # Dimensions that occur for either a rational or complex irreducible character
         return sorted(
-            set([d for (d,cnt) in self.irrep_stats]
-                + [d for (d,cnt) in self.ratrep_stats]))
+            set([d for d, cnt in self.irrep_stats]
+                + [d for d, cnt in self.ratrep_stats]))
 
     @lazy_attribute
     def irrep_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
-        return [(ZZ(d), ZZ(cnt)) for (d, cnt) in self.G.CharacterDegrees()]
+        return [(ZZ(d), ZZ(cnt)) for d, cnt in self.G.CharacterDegrees()]
 
     @lazy_attribute
     def irrep_statistics(self):
@@ -1776,14 +1776,14 @@ class WebAbstractGroup(WebObj):
     def cc_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
         if self.abelian:
-            return [[o, 1, cnt] for (o, cnt) in self.order_stats]
+            return [[o, 1, cnt] for o, cnt in self.order_stats]
         D = Counter([(cc.order, cc.size) for cc in self.conjugacy_classes])
-        return sorted((o, s, m) for ((o, s), m) in D.items())
+        return sorted((o, s, m) for (o, s), m in D.items())
 
     @lazy_attribute
     def cc_statistics(self):
         D = Counter()
-        for (o, s, m) in self.cc_stats:
+        for o, s, m in self.cc_stats:
             D[o] += m
         return sorted(D.items())
 
@@ -1793,12 +1793,12 @@ class WebAbstractGroup(WebObj):
         D = Counter()
         for div in self.conjugacy_class_divisions:
             D[div.order, len(div.classes), div.classes[0].size] += 1
-        return sorted((o, s, k, m) for ((o, s, k), m) in D.items())
+        return sorted((o, s, k, m) for (o, s, k), m in D.items())
 
     @lazy_attribute
     def div_statistics(self):
         D = Counter()
-        for (o, s, k, m) in self.div_stats:
+        for o, s, k, m in self.div_stats:
             D[o] += m
         return sorted(D.items())
 
@@ -1808,7 +1808,7 @@ class WebAbstractGroup(WebObj):
         D = Counter()
         for c in self.autjugacy_classes:
             D[c.order, len(c.classes), c.classes[0].size] += 1
-        return sorted((o, s, k, m) for ((o, s, k), m) in D.items())
+        return sorted((o, s, k, m) for (o, s, k), m in D.items())
 
     @lazy_attribute
     def aut_statistics(self):
@@ -2527,7 +2527,7 @@ class WebAbstractGroup(WebObj):
 
         return ", ".join(
             f'<a href="{url_for_label(label)}">{display.get(label,label)}</a>{exp(e)}'
-            for (label, e) in CF.items()
+            for label, e in CF.items()
         )
 
     # special subgroups
@@ -2577,7 +2577,7 @@ class WebAbstractGroup(WebObj):
         return abelian_gp_display(self.primary_abelian_invariants)
         return r" \times ".join(
             ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
-            for (q, e) in Counter(self.primary_abelian_invariants).items()
+            for q, e in Counter(self.primary_abelian_invariants).items()
         )
 
     def abelianization_label(self):
@@ -2666,7 +2666,7 @@ class WebAbstractGroup(WebObj):
             R = R.ceiling()
             circles = "\n".join(
                 f'<circle cx="{x}" cy="{y}" r="{rad}" fill="rgb({r},{g},{b})" />'
-                for (x, y, rad, (r, g, b)) in circles
+                for x, y, rad, (r, g, b) in circles
             )
         else:
             R = 1

@@ -284,7 +284,7 @@ def paintSvgFileAll(glslist):  # list of group and level
     height = yfactor * yMax + extraSpace
 
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-    for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
+    for x, y, lid, group, level, char, R, ap_id, sign in paralist:
         if float(x) > 0 and float(y) > 0:  # Only one of dual pair
             try:
                 linkurl = url_for('.l_function_maass_gln_page', group=group,
