@@ -269,8 +269,7 @@ def statistics():
             for deg in range(23)]
     # Galois groups
     nt_stats = nfstatdb.column_counts(['degree', 'galois_label'])
-    nt_stats = {(key[0], int(key[1].split('T')[1])): value
-                for key, value in nt_stats.items()}
+    nt_stats = {(key[0], int(key[1].split('T')[1])): value for key, value in nt_stats.items()}
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]

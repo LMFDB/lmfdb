@@ -240,10 +240,10 @@ def get_group_prop_display(gp):
     elementaryp = ''
     hyperelementaryp = ''
     if hasattr(gp, 'elementary'):
-        elementaryp = ",".join(str(p) for p, _ in ZZ(gp.elementary).factor())
+        elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
         hyperelementaryp = ",".join(
             str(p)
-            for p, _ in ZZ(gp.hyperelementary).factor()
+            for p, e in ZZ(gp.hyperelementary).factor()
             if not p.divides(gp.elementary)
         )
     if (
@@ -1512,7 +1512,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     Omega = {}
     by_Omega = defaultdict(list)
     for n in orders:
-        W = sum(e for _, e in n.factor())
+        W = sum(e for p, e in n.factor())
         Omega[n] = W
         by_Omega[W].append(n)
     # We would normally make order_lookup a dictionary, but we're passing it to the horrible language known as javascript

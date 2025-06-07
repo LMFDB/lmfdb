@@ -154,10 +154,11 @@ def factored_conductor(conductor):
 
 
 def remove_leading_coeff(jfac):
-    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ',''):
+    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ', ''):
         return "*".join(str(jfac).split("*")[1:])
     else:
         return str(jfac)
+
 
 def formatted_dims(dims, mults):
     if dims is None:
@@ -169,8 +170,7 @@ def formatted_dims(dims, mults):
     for d, c in zip(dims, mults):
         collapsed[d] += c
     dims, mults = zip(*(sorted(collapsed.items())))
-    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}"
-                               for d, c in zip(dims, mults)) + "$"
+    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for d, c in zip(dims, mults)) + "$"
 
 
 def formatted_newforms(newforms, mults):
@@ -559,15 +559,13 @@ class WebModCurve(WebObj):
     def cusp_widths_display(self):
         if not self.cusp_widths:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}"
-                                   for w, n in self.cusp_widths) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_widths) + "$"
 
     @lazy_attribute
     def cusp_orbits_display(self):
         if not self.cusp_orbits:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}"
-                                   for w, n in self.cusp_orbits) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):
@@ -1092,10 +1090,10 @@ class WebModCurve(WebObj):
                     level, index, genus = get_lig(label)
                     self.tex = "%s_{%s}^{%s}" % (self.level, self.index, self.genus)
                 self.img = texlabels[self.tex]
-                self.rank = sum(e for _, e in self.index.factor())
+                self.rank = sum(e for p, e in self.index.factor())
                 self.x = x
         if "-" in self.label or not self.lattice_labels:
-            return [],[]
+            return [], []
         parents = {}
         names = {}
         for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):

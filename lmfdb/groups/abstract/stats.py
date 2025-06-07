@@ -110,14 +110,14 @@ group_knowls = {
     "rank": "group.rank",
 }
 
+
 def stype_insert_knowls(s):
     L = re.split("(,? ?(?:(?:and)|(?:or)|(?:not))? )", s)
     for i in range(len(L)):
         if i % 2 == 0 and L[i] in group_knowls:
             L[i] = display_knowl(group_knowls[L[i]], L[i])
     return "".join(L)
-stype_klookup = {stype: stype_insert_knowls(desc)
-                 for stype, desc in stype_lookup.items()}
+stype_klookup = {stype: stype_insert_knowls(desc) for stype, desc in stype_lookup.items()}
 
 
 def stype_formatter(stype):

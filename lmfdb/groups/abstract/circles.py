@@ -395,8 +395,8 @@ def pack(rdata, R0, rmax):
     # If there are few enough circles, we space them out around the annulus with uniform gaps
     # We approximate the intersections as happening at radius R0+rmax, then check that this doesn't cause problems
     rdata = sorted(rdata, key=lambda pair: (-pair[1].valuation(2), -pair[1].valuation(3), pair[1], -pair[0]))
-    #print("Packing", R0, rmax, rdata)
-    radii = [r for r, _ in rdata]
+    # print("Packing", R0, rmax, rdata)
+    radii = [r for r, o in rdata]
     Rc = R0 + rmax
     thetasum = sum(2*r / Rc for r in radii)
     if thetasum < 2*pi:
@@ -601,15 +601,15 @@ def arrange_rings(radii, colors, R0, rmax):
             utilization += 0.1
 
 def arrange(rdata, R0, rmax):
-    radii = Counter([r for r, _ in rdata])
+    radii = Counter([r for r, o in rdata])
     colors = {r: Counter() for r in radii}
     for r, o in rdata:
         colors[r][get_color(o)] += 1
     circles, R1 = arrange_ring(radii, colors, R0, rmax)
     if circles:
         return circles, R1
-    #rmin = min(radii)
-    if True: #rmax < 3 * rmin:
+    # rmin = min(radii)
+    if True:  # rmax < 3 * rmin:
         # the circles are close to the same size.  We divide them up into concentric rings greedily
         return arrange_rings(radii, colors, R0, rmax)
     # Fall back for now; look at 310.4 for an example
@@ -645,6 +645,5 @@ def find_packing(ccdata):
     if R > 10000000:
         scale = RR(10000000) / R
         R = RR(10000000)
-        circles = [(x*scale, y*scale, rad*scale, (r, g, b))
-                   for x, y, rad, (r, g, b) in circles]
+        circles = [(x*scale, y*scale, rad*scale, (r, g, b)) for x, y, rad, (r, g, b) in circles]
     return circles, R

@@ -672,7 +672,7 @@ class SearchArray(UniqueRepresentation):
                 #for name, display, prefix in self.sorts:
                 #    yield (name, display + " &#9650;")
                 #    yield (name + "op", display + " &#9660;")
-                return [(name, display) for name, display, _ in sorts]
+                return [(name, display) for name, display, sort_order in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:

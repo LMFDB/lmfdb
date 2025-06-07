@@ -1185,8 +1185,7 @@ class WebAbstractGroup(WebObj):
             return sep.join(l)
 
         if profile is not None:
-            return [(order, display_profile_line(order, subs))
-                    for order, subs in profile]
+            return [(order, display_profile_line(order, subs)) for order, subs in profile]
 
     @cached_method
     def _normal_summary(self):
