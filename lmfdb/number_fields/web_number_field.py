@@ -1020,7 +1020,7 @@ class WebNumberField:
                 else:
                     local_algebra_dict[str(p)].append(thisdat)
         return self.frobs(), local_algebra_dict
-        
+
     def draw_spectrum(self, num_primes=20):
         frobs, local_algebra_dict = self.spec_data()
         return draw_spec(frobs[:num_primes], local_algebra_dict).as_str()
@@ -1028,8 +1028,7 @@ class WebNumberField:
     def draw_gaga(self, num_primes=7):
         frobs, local_algebra_dict = self.spec_data()
         return draw_gaga(frobs[:num_primes], local_algebra_dict).as_str()
-        
-    
+
     def make_code_snippets(self):
         # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
