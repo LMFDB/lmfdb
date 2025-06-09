@@ -233,9 +233,9 @@ def _dimension_Gamma_2(wt_range, j, group='Gamma(2)'):
     cusp = {}
     for p in partitions:
         f = Qt(str(db_total[p]))
-        total[p] = P(f)
+        total[p] = P(f.numerator()) / P(f.denominator())
         f = Qt(str(db_cusp[p]))
-        cusp[p] = P(f)
+        cusp[p] = P(f.numerator()) / P(f.denominator())
 
     if 'Gamma(2)' == group:
         dct = {k: {p: [total[p][k], total[p][k] - cusp[p][k], cusp[p][k]]
