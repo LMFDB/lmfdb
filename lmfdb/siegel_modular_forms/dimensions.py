@@ -163,7 +163,7 @@ def _dimension_Sp4Z(wt_range):
     """
     headers = ['Total', 'Eisenstein', 'Klingen', 'Maass', 'Interesting']
 
-    x = LazyPowerSeriesRing(ZZ, 'x')
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     H_Kl = x ** 12 / (1 - x ** 4) / (1 - x ** 6)
     H_MS = (x ** 10 + x ** 12) / (1 - x ** 4) / (1 - x ** 6)
@@ -439,7 +439,7 @@ def _dimension_Gamma0_4_half(k):
     """
     if k < 1:
         raise ValueError("$k$ must be a positive integer")
-    x = LazyPowerSeriesRing(ZZ, 'x')
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = 1 / (1 - x) / (1 - x ** 2) ** 2 / (1 - x ** 3)
     H_cusp = (2 * x ** 5 + x ** 7 + x ** 9 - 2 * x ** 11 + 4 * x ** 6 - x ** 8 + x ** 10 - 3
               * x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
@@ -476,7 +476,7 @@ def _dimension_Gamma0_3_psi_3(wt):
 
     Not completely implemented
     """
-    x = LazyPowerSeriesRing(ZZ, 'x')
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     B = 1 / (1 - x ** 1) / (1 - x ** 3) / (1 - x ** 4) / (1 - x ** 3)
     H_all_odd = B
     H_all_even = B * x ** 14
