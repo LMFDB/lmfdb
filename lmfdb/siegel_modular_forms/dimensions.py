@@ -4,8 +4,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from sage.all import (ZZ, QQ, FunctionField,
-                      PowerSeriesRing, LazyPowerSeriesRing)
+from sage.all import (ZZ, PolynomialRing, LazyPowerSeriesRing)
 
 from lmfdb.utils import flash_error
 from lmfdb import db
@@ -228,15 +227,15 @@ def _dimension_Gamma_2(wt_range, j, group='Gamma(2)'):
     if not db_cusp:
         raise NotImplementedError(r'Dimensions of \(M_{k,j}\) for \(j=%d\) not implemented' % j)
 
-    P = PowerSeriesRing(ZZ, default_prec=wt_range[-1] + 1, names=('t'))
-    Qt = FunctionField(QQ, names=('t'))
+    P = LazyPowerSeriesRing(ZZ, 't')
+    Qt = PolynomialRing(ZZ, 't').fraction_field()
     total = {}
     cusp = {}
     for p in partitions:
         f = Qt(str(db_total[p]))
-        total[p] = P(f.numerator()) / P(f.denominator())
+        total[p] = P(f)
         f = Qt(str(db_cusp[p]))
-        cusp[p] = P(f.numerator()) / P(f.denominator())
+        cusp[p] = P(f)
 
     if 'Gamma(2)' == group:
         dct = {k: {p: [total[p][k], total[p][k] - cusp[p][k], cusp[p][k]]
