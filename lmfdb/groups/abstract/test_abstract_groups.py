@@ -22,8 +22,8 @@ class AbGpsTest(LmfdbTest):
        # self.check_args("/Variety/Abelian/Fq/2/79/ar_go", "Principally polarizable")
 
     def test_abstract_group_download(self):
-#        r"""
-#        Test downloading on search results page.
+        #        r"""
+        #        Test downloading on search results page.
         response = self.tc.get("/Groups/Abstract/384.5458/download/gap")
         self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
         self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))

@@ -140,13 +140,13 @@ def split_matrix_list_Fp(longList,d,e):
 
 
 def split_matrix_list_Fq(longList,d, Fqfld):
-# for gap definition of Fq
+    # for gap definition of Fq
     longList = [f"0*Z({Fqfld})" if x == -1 else f"Z({Fqfld})^{x}" for x in longList]  #-1 distinguishes 0 from z^0
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
 
 def split_matrix_Fq_add_al(longList,d):
-# for magma definition of Fq
+    # for magma definition of Fq
     longList = [0 if x == -1 else 1 if x == 0 else f"al^{x}" for x in longList]
     return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
 
@@ -662,8 +662,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def cc_known(self):
-#        if self.representations.get("Lie") and self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000:
-#            return False   # problem with PGL, PSL, etc.
+        # if self.representations.get("Lie") and self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000:
+        #     return False   # problem with PGL, PSL, etc.
         return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     @lazy_attribute
