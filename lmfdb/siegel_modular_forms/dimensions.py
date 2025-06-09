@@ -4,7 +4,8 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from sage.all import ZZ, QQ, FunctionField, PowerSeriesRing
+from sage.all import (ZZ, QQ, FunctionField,
+                      PowerSeriesRing, LazyPowerSeriesRing)
 
 from lmfdb.utils import flash_error
 from lmfdb import db
@@ -162,8 +163,7 @@ def _dimension_Sp4Z(wt_range):
     """
     headers = ['Total', 'Eisenstein', 'Klingen', 'Maass', 'Interesting']
 
-    R = PowerSeriesRing(ZZ, default_prec=wt_range[-1] + 1, names=('x',))
-    (x,) = R._first_ngens(1)
+    x = LazyPowerSeriesRing(ZZ, 'x')
     H_all = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     H_Kl = x ** 12 / (1 - x ** 4) / (1 - x ** 6)
     H_MS = (x ** 10 + x ** 12) / (1 - x ** 4) / (1 - x ** 6)
@@ -317,12 +317,11 @@ def __dimension_Sp6Z(wt):
     """
     if wt % 2:
         return (0, 0, 0, 0)
-    R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
-    S = PowerSeriesRing(ZZ, default_prec=max(2 * wt - 1, 1), names=('y',))
-    (y,) = S._first_ngens(1)
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
+    y = LazyPowerSeriesRing(ZZ, 'y').gen()
+
     H_all = 1 / ((1 - x ** 4) * (1 - x ** 12) ** 2 * (1 - x ** 14) * (1 - x ** 18) *
-                (1 - x ** 20) * (1 - x ** 30)) * (
+                 (1 - x ** 20) * (1 - x ** 30)) * (
                     1 + x ** 6 + x ** 10 + x ** 12 + 3 * x ** 16 + 2 * x ** 18 + 2 * x ** 20
                     + 5 * x ** 22 + 4 * x ** 24 + 5 * x ** 26 + 7 * x ** 28 + 6 * x ** 30 + 9 * x ** 32
                     + 10 * x ** 34 + 10 * x ** 36 + 12 * x ** 38 + 14 * x ** 40 + 15 * x ** 42 + 16 * x ** 44
@@ -440,8 +439,7 @@ def _dimension_Gamma0_4_half(k):
     """
     if k < 1:
         raise ValueError("$k$ must be a positive integer")
-    R = PowerSeriesRing(ZZ, default_prec=k, names=('x',))
-    (x,) = R._first_ngens(1)
+    x = LazyPowerSeriesRing(ZZ, 'x')
     H_all = 1 / (1 - x) / (1 - x ** 2) ** 2 / (1 - x ** 3)
     H_cusp = (2 * x ** 5 + x ** 7 + x ** 9 - 2 * x ** 11 + 4 * x ** 6 - x ** 8 + x ** 10 - 3
               * x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
@@ -478,8 +476,7 @@ def _dimension_Gamma0_3_psi_3(wt):
 
     Not completely implemented
     """
-    R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
+    x = LazyPowerSeriesRing(ZZ, 'x')
     B = 1 / (1 - x ** 1) / (1 - x ** 3) / (1 - x ** 4) / (1 - x ** 3)
     H_all_odd = B
     H_all_even = B * x ** 14
@@ -523,8 +520,7 @@ def _dimension_Gamma0_4_psi_4(wt):
 
     The formula for odd weights is unknown or not obvious from the paper.
     """
-    R = PowerSeriesRing(ZZ, default_prec=wt + 1, names=('x',))
-    (x,) = R._first_ngens(1)
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all_even = (x ** 12 + x ** 14) / (1 - x ** 2) ** 3 / (1 - x ** 6)
     if not wt % 2:
         return (H_all_even[wt],)
@@ -559,8 +555,7 @@ def _dimension_Gamma0_4(wt):
 
     Not completely implemented
     """
-    R = PowerSeriesRing(ZZ, 'x')
-    x = R.gen().O(wt + 1)
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = (1 + x**4) * (1 + x**11) / (1 - x**2)**3 / (1 - x**6)
     return (H_all[wt],)
 
@@ -593,8 +588,7 @@ def _dimension_Gamma0_3(wt):
 
     Only total dimension implemented.
     """
-    R = PowerSeriesRing(ZZ, 'x')
-    x = R.gen().O(wt + 1)
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = (1 + 2 * x**4 + x**6 + x**15 * (1 + 2 * x**2 + x**6)) / (1 - x**2) / (1 - x**4) / (1 - x**6)**2
     return (H_all[wt],)
 
