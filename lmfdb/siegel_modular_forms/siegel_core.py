@@ -4,7 +4,7 @@
 #
 # Author: Nils Skoruppa <nils.skoruppa@gmail.com>
 
-from sage.all import (QQ, ZZ, PowerSeriesRing, is_even, is_prime,
+from sage.all import (QQ, ZZ, is_even, is_prime,
                       LazyPowerSeriesRing)
 from lmfdb.utils import integer_divisors
 
@@ -19,7 +19,7 @@ def _dimension_Sp4Z(wt):
     OUTPUT
         ("Total", "Eisenstein", "Klingen", "Maass", "Interesting")
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     H_Kl = x ** 12 / (1 - x ** 4) / (1 - x ** 6)
     H_MS = (x ** 10 + x ** 12) / (1 - x ** 4) / (1 - x ** 6)
@@ -44,7 +44,7 @@ def _dimension_Sp4Z_2(wt):
     """
     if not is_even(wt):
         return (uk, uk, uk)
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H = 1 / (1 - x ** 4) / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     V = 1 / (1 - x ** 6) / (1 - x ** 10) / (1 - x ** 12)
     # W = 1 / (1 - x ** 10) / (1 - x ** 12)
@@ -62,8 +62,8 @@ def _dimension_Sp6Z(wt):
     """
     if not is_even(wt):
         return (0, 0, 0, 0)
-    x = PowerSeriesRing(ZZ, 'x').gen()
-    y = PowerSeriesRing(ZZ, 'y').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
+    y = LazyPowerSeriesRing(ZZ, 'y').gen()
     H_all = 1 / ((1 - x ** 4) * (1 - x ** 12) ** 2 * (1 - x ** 14) * (1 - x ** 18) *
                 (1 - x ** 20) * (1 - x ** 30)) * (
         1 + x ** 6 + x ** 10 + x ** 12 + 3 * x ** 16 + 2 * x ** 18 + 2 * x ** 20
@@ -176,7 +176,7 @@ def _dimension_Gamma0_2(wt):
     REMARK
         Only total dimension implemented.
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = 1 / (1 - x ** 2) / (1 - x ** 4) / (1 - x ** 4) / (1 - x ** 6)
     # H_cusp  = ??
     # H_Kl   = ??
@@ -199,7 +199,7 @@ def _dimension_Gamma0_3(wt):
     REMARK
         Only total dimension implemented.
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = (1 + 2 * x ** 4 + x ** 6 + x ** 15 * (1 + 2 * x ** 2 + x ** 6)) / (1 - x ** 2) / (1
                                                                                               - x ** 4) / (1 - x ** 6) ** 2
     # H_cusp  = ??
@@ -224,7 +224,7 @@ def _dimension_Gamma0_3_psi_3(wt):
     REMARK
         Not completely implemented
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     B = 1 / (1 - x ** 1) / (1 - x ** 3) / (1 - x ** 4) / (1 - x ** 3)
     H_all_odd = B
     H_all_even = B * x ** 14
@@ -249,7 +249,7 @@ def _dimension_Gamma0_4(wt):
     REMARK
         Not completely implemented
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = (1 + x ** 4)(1 + x ** 11) / (1 - x ** 2) ** 3 / (1 - x ** 6)
     # H_cusp  = ??
     # H_Kl   = ??
@@ -273,7 +273,7 @@ def _dimension_Gamma0_4_psi_4(wt):
     REMARK
         The formula for odd weights is unknown or not obvious from the paper.
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all_even = (x ** 12 + x ** 14) / (1 - x ** 2) ** 3 / (1 - x ** 6)
     # H_cusp  = ??
     # H_Kl   = ??
@@ -300,7 +300,7 @@ def _dimension_Gamma0_4_half(k):
         Note that formula from Hayashida's and Ibukiyama's paper has formula
         that coefficient of x^w is for weight (w+1/2). So here w=k-1.
     """
-    x = PowerSeriesRing(ZZ, 'x').gen()
+    x = LazyPowerSeriesRing(ZZ, 'x').gen()
     H_all = 1 / (1 - x) / (1 - x ** 2) ** 2 / (1 - x ** 3)
     H_cusp = (2 * x ** 5 + x ** 7 + x ** 9 - 2 * x ** 11 + 4 * x ** 6 - x ** 8 + x ** 10 - 3
               * x ** 12 + x ** 14) / (1 - x ** 2) ** 2 / (1 - x ** 6)
