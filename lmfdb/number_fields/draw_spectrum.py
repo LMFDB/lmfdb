@@ -197,7 +197,7 @@ def unram_coords(frob_cycle_list, x_coord, y_centre, spread, col_max):
     point_index = 0         # total index of point
     for cyc_len, num_repeats in frob_cycle_list:
         for _ in range(num_repeats):
-            y_offset = round(spread*(2*point_index /(N-1) -1))
+            y_offset = round(spread * (2 * point_index / (N - 1) - 1))
             point = Point(x_coord, y_centre - y_offset, cyc_len)
             point_list.append(point)
             point_index += 1
@@ -213,13 +213,13 @@ def ram_coords(local_alg_dict, p, x_coord, y_centre, spread, deg=1):
     N = len(algs)
     assert algs != [], f"Ramified prime {p} has no local data!"
 
-    max_ram_index = max(e for e,_ in algs)
+    max_ram_index = max(e for e, _ in algs)
     point_list = []
 
     for i, alg in enumerate(algs):
         ram_index, residue_deg = alg
         if N != 1:
-            y_offset = round(spread*(2*i /(N-1) -1))
+            y_offset = round(spread * (2 * i / (N - 1) - 1))
         else:
             y_offset = 0
         point = Point(x_coord, y_centre - y_offset, residue_deg, hsl_color(ram_index, max_ram_index))
@@ -257,7 +257,7 @@ def test_drawspec(n=1, gaga=False):
     canvas = draw_spec(frobs, local_algs, True,
                        gaga=gaga,num_primes=num_primes)
     import tempfile
-    filename =  tempfile.gettempdir() + ('/gaga' if gaga else '/spec') + ".svg"
+    filename = tempfile.gettempdir() + ('/gaga' if gaga else '/spec') + ".svg"
     with open(filename, mode='w') as f:
         f.write(canvas.as_str())
 
