@@ -310,7 +310,7 @@ class ModCrvTest(LmfdbTest):
             ('Xarith','4.48.0-4.b.1.1'),
             ('any','1.1.0.a.1')
         ]
-        for (family,crv) in family_set:
+        for family, crv in family_set:
             url = '/ModularCurve/Q/?family=' + family
             L = self.tc.get(url)
             assert crv in L.get_data(as_text=True)

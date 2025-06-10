@@ -1447,7 +1447,7 @@ class CMFSearchArray(SearchArray):
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
-    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for name, disp, sord in _sort]
     sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces}

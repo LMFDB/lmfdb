@@ -723,7 +723,7 @@ def compute_dirichlet_series(p_list, PREC):
     # p_list is a list of pairs (p,y) where p is a prime and y is the list of roots of the Euler factor at x
     LL = [0] * PREC
     # create an empty list of the right size and now populate it with the powers of p
-    for (p, y) in p_list:
+    for p, y in p_list:
         # FIXME p_prec is never used, but perhaps it should be?
         # p_prec = log(PREC) / log(p) + 1
         ep = euler_p_factor(y, PREC)
@@ -733,7 +733,7 @@ def compute_dirichlet_series(p_list, PREC):
     for i in range(1, PREC):
         f = factor(i)
         if len(f) > 1:  # not a prime power
-            LL[i] = prod([LL[p ** e] for (p, e) in f])
+            LL[i] = prod([LL[p ** e] for p, e in f])
     return LL[1:]
 
 

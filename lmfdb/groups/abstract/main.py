@@ -240,10 +240,10 @@ def get_group_prop_display(gp):
     elementaryp = ''
     hyperelementaryp = ''
     if hasattr(gp, 'elementary'):
-        elementaryp = ",".join(str(p) for (p, e) in ZZ(gp.elementary).factor())
+        elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
         hyperelementaryp = ",".join(
             str(p)
-            for (p, e) in ZZ(gp.hyperelementary).factor()
+            for p, e in ZZ(gp.hyperelementary).factor()
             if not p.divides(gp.elementary)
         )
     if (
@@ -1422,7 +1422,7 @@ def cc_postprocess(res, info, query):
         else:
             highlight_col[(group, label)] = None
     if missing:
-        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for ((group_order,group_counter), counters) in missing.items()]}, ["group_order", "group_counter", "counter", "label"]):
+        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for (group_order, group_counter), counters in missing.items()]}, ["group_order", "group_counter", "counter", "label"]):
             gp_ord = rec.get("group_order")
             gp_counter = rec.get("group_counter")
             group = cc_data_to_gp_label(gp_ord,gp_counter)
@@ -1512,7 +1512,7 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     Omega = {}
     by_Omega = defaultdict(list)
     for n in orders:
-        W = sum(e for (p,e) in n.factor())
+        W = sum(e for p, e in n.factor())
         Omega[n] = W
         by_Omega[W].append(n)
     # We would normally make order_lookup a dictionary, but we're passing it to the horrible language known as javascript
@@ -2976,7 +2976,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                     return H.subgroup == label
                 if len(profiledata) == 7 and label != "None" and quotient_label != "None":
                     return H.subgroup == label and H.quotient == quotient_label
-                return all(a == b for (a, b) in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
+                return all(a == b for a, b in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
 
             subs = [H for H in ambient.subgroups.values() if sub_matches(H)]
             if aut == "True" and not ambient.outer_equivalence:

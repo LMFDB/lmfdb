@@ -27,6 +27,7 @@ from lmfdb.galois_groups.transitive_group import (
     group_cclasses_knowl_guts, group_pretty_and_nTj, knowl_cache,
     group_character_table_knowl_guts, group_alias_table,
     dihedral_gal, dihedral_ngal, multiquad)
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
@@ -269,7 +270,7 @@ def statistics():
             for deg in range(23)]
     # Galois groups
     nt_stats = nfstatdb.column_counts(['degree', 'galois_label'])
-    nt_stats = {(key[0],int(key[1].split('T')[1])): value for (key,value) in nt_stats.items()}
+    nt_stats = {(key[0], int(key[1].split('T')[1])): value for key, value in nt_stats.items()}
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
@@ -428,7 +429,6 @@ def render_field_webpage(args):
     t = nf.galois_t()
     n = nf.degree()
     data['is_galois'] = nf.is_galois()
-    data['autstring'] = r'\Gal' if data['is_galois'] else r'\Aut'
     data['is_abelian'] = nf.is_abelian()
     if nf.is_abelian():
         conductor = nf.conductor()
@@ -447,7 +447,7 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factorization_latex(factored_conductor, cutoff=30)
             data['conductor'] = r"\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_pretty_and_nTj(n,t,True)
-    data['auts'] = db.gps_transitive.lookup(r'{}T{}'.format(n,t))['auts']
+    data['aut_gp_knowl'] = abstract_group_display_knowl(db.gps_transitive.lookup(f'{n}T{t}', 'aut_label'))
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
@@ -684,6 +684,7 @@ def render_field_webpage(args):
         ram_primes = '$%s$' % ram_primes
 
     properties = [('Label', nf_label_pretty(label)),
+                  (None, '<a> %s <a/>' % nf.draw_gaga()),
                   ('Degree', prop_int_pretty(data['degree'])),
                   ('Signature', '$%s$' % data['signature']),
                   ('Discriminant', prop_int_pretty(D)),
@@ -923,7 +924,7 @@ def number_field_search(info, query):
                 ggopt = set(query["galois_label"]["$in"])
             else:
                 ggopt = {query["galois_label"]}
-            opts = {n: gg for (n, gg) in opts.items() if gg in ggopt}
+            opts = {n: gg for n, gg in opts.items() if gg in ggopt}
         if len(opts) == 0:
             # Incompatible with specified degree or galois labels, so we add an impossible condition
             query["degree"] = -1

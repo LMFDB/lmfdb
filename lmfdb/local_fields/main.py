@@ -3,7 +3,7 @@
 
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
-    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers)
+    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, is_prime)
 from sage.plot.all import line, points, text, Graphics
 
 from lmfdb import db
@@ -207,7 +207,7 @@ def plot_polygon(verts, polys, inds, p):
                 if i and c:
                     L += restag(c, P[0] + i, P[1])
     L += line(verts, thickness=2)
-    L += points([(p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+    L += points([(p**i, ind) for i, ind in enumerate(inds)], size=30, color="black")
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
     return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
@@ -416,7 +416,7 @@ def render_field_webpage(args):
         f = data['f']
         cc = data['c']
         gn = data['n']
-        autstring = r'\Aut'
+        auttype = 'aut'
         if data.get('galois_label'):
             gt = int(data['galois_label'].split('T')[1])
             the_gal = WebGaloisGroup.from_nt(gn,gt)
@@ -424,7 +424,13 @@ def render_field_webpage(args):
             abelian = ' and abelian' if the_gal.is_abelian() else ''
             galphrase = 'This field is'+isgal+abelian+r' over $\Q_{%d}.$' % p
             if the_gal.order() == gn:
-                autstring = r'\Gal'
+                auttype = 'gal'
+            info['aut_gp_knowl'] = the_gal.aut_knowl()
+        # we don't know the Galois group, but maybe the Aut group is obvious
+        elif data['aut'] == 1:
+            info['aut_gp_knowl'] = abstract_group_display_knowl('1.1')
+        elif is_prime(data['aut']):
+            info['aut_gp_knowl'] = abstract_group_display_knowl(f"{data['aut']}.1")
         prop2 = [
             ('Label', label),
             ('Base', r'\(%s\)' % Qp),
@@ -498,7 +504,7 @@ def render_field_webpage(args):
                     'ind_insep': show_slopes(str(data['ind_of_insep'])),
                     'eisen': eisenp,
                     'gsm': gsm,
-                    'autstring': autstring,
+                    'auttype': auttype,
                     'subfields': format_subfields(data['subfield'],data['subfield_mult'],p),
                     'aut': data['aut'],
                     })
@@ -853,7 +859,7 @@ class LFStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 16$.' % (
+        return r'The database currently contains %s %s, including all with $p < 200$ and %s $n < 24$.' % (
             comma(self.numfields),
             display_knowl("lf.padic_field", r"$p$-adic fields"),
             display_knowl("lf.degree", "degree")
