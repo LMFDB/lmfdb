@@ -83,6 +83,47 @@ def cyc_display(m, d, real_sub):
     else:
         return name
 
+# This function is for backward compatibility when we do not have all the data
+def ALdim_new_cusp_table(al_dims, level, weight):
+    def sign_char(x): return "-" if x else "+"
+    def url_sign_char(x): return "-" if x else "%2B"
+    primes = ZZ(level).prime_divisors()
+    num_primes = len(primes)
+    header = [r"<th class='center'>\(%s\)</th>" % p for p in primes]
+    if num_primes > 1:
+        header.append(r"<th class='center'>%s</th>" % (display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
+    header.append('<th>Dim</th>')
+    rows = []
+    fricke = [0,0]
+    for i, dim in enumerate(al_dims):
+        if dim == 0:
+            continue
+        b = list(reversed(ZZ(i).bits()))
+        b = [0 for j in range(num_primes-len(b))] + b
+        row = [r"<td class='center'>\(%s\)</td>" % sign_char(x) for x in b]
+        sign = sum(b) % 2
+        if num_primes > 1:
+            row.append(r"<td class='center'>\(%s\)</td>" % sign_char(sign))
+        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
+        link = newform_search_link(r'\(%s\)' % dim, **query)
+        row.append(r'<td>%s</td>' % (link))
+        fricke[sign] += dim
+        if i == len(al_dims) - 1 and num_primes > 1:
+            tr = "<tr class='endsection'>"
+        else:
+            tr = "<tr>"
+        rows.append(tr + ''.join(row) + '</tr>')
+    if num_primes > 1:
+        plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
+        plus_link = newform_search_link(r'\(%s\)' % fricke[0], level=level, weight=weight, char_order=1, fricke_eigenval=1)
+        minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
+        minus_link = newform_search_link(r'\(%s\)' % fricke[1], level=level, weight=weight, char_order=1, fricke_eigenval=-1)
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(+\)</td><td>%s</td></tr>" % (num_primes, plus_knowl, plus_link))
+        rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(-\)</td><td>%s</td></tr>" % (num_primes, minus_knowl, minus_link))
+    return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
+            (''.join(header), ''.join(rows)))
+
+
 def ALdim_table(al_dims, level, weight):
     def sign_char(x): return "-" if x else "+"
     def url_sign_char(x): return "-" if x else "%2B"
@@ -489,6 +530,8 @@ class WebNewformSpace():
                                   for N, i, conrey, mult in self.oldspaces)
 
     def ALdim_table(self):
+        if not hasattr(self,'ALdims_old'):
+            return ALdim_new_cusp_table(self.ALdims, self.level, self.weight)
         aldims_data = {'dim' : vector(self.ALdims), 'cusp_dim' : vector(self.ALdims) + vector(self.ALdims_old), 
                        'eis_new_dim' : vector(self.ALdims_eis_new), 'eis_dim' : vector(self.ALdims_eis_new) + vector(self.ALdims_eis_old)}
         aldims_data['mf_dim'] = aldims_data['cusp_dim'] + aldims_data['eis_dim']
