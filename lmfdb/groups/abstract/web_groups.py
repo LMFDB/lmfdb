@@ -2205,7 +2205,7 @@ class WebAbstractGroup(WebObj):
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
-            reps = ", ".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
+            reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
@@ -3167,7 +3167,7 @@ class WebAbstractSubgroup(WebObj):
         elif hasattr(self, 'quotient_tex') and self.quotient_tex:
             return prefix + '$'+self.quotient_tex+'$'
         if ab_invs:
-            ablabel = '.'.join([str(z) for z in ab_invs])
+            ablabel = '.'.join(str(z) for z in ab_invs)
             url = url_for(".by_abelian_label", label=ablabel)
             return prefix + f'<a href="{url}">$' + abelian_gp_display(ab_invs) + '$</a>'
         if self.quotient_tex is None:
