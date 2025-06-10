@@ -69,21 +69,21 @@ def lf_formatfield(coef):
 # Takes a string '[2,5/2]'
 def artin2swan(li):
     if li is not None:
-        l1=li.replace('[','')
-        l1=l1.replace(']','')
-        l1=l1.replace(' ','')
-        if l1=='':
+        l1 = li.replace('[', '')
+        l1 = l1.replace(']', '')
+        l1 = l1.replace(' ', '')
+        if l1 == '':
             return []
-        return '['+','.join([str(QQ(z)-1) for z in l1.split(',')])+']'
+        return '[' + ','.join([str(QQ(z)-1) for z in l1.split(',')]) + ']'
 
 def hidden2swan(hid):
     if hid is not None:
-        parts=hid.split(']')
-        a=parts[0].replace('[','')
-        a=a.replace(' ','')
-        if a=='':
+        parts = hid.split(']')
+        a = parts[0].replace('[', '')
+        a = a.replace(' ', '')
+        if a == '':
             return hid
-        return '['+','.join([str(QQ(z)-1) for z in a.split(',')])+']'+parts[1]
+        return '[' + ','.join([str(QQ(z)-1) for z in a.split(',')]) + ']' + parts[1]
 
 def local_algebra_data(labels):
     labs = labels.split(',')
