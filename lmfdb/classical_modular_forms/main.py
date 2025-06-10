@@ -1456,6 +1456,7 @@ class CMFSearchArray(SearchArray):
     jump_knowl = "cmf.search_input"
     jump_prompt = "Label"
     null_column_explanations = { # No need to display warnings for these
+        'atkin_lehner_string': False,
         'is_polredabs': False,
         'projective_image': False,
         'projective_image_type': False,
