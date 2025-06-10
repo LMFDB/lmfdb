@@ -372,7 +372,7 @@ class CSVLanguage(DownloadLanguage):
             query="",
             fragment="")) for col in columns]
         return self.write([f'=HYPERLINK("{url}", "{name}")'
-                           for (url, name) in zip(urls, column_names)])
+                           for url, name in zip(urls, column_names)])
 
     def assign_iter(self, name, inp):
         # For CSV downloads, we only output data rows since CSV does not support comments
@@ -615,7 +615,7 @@ class Downloader():
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"out := rec<RecFormat|{','.join(pairs)}>;"]
         elif lang.name == "gap":
-            local_vars = ["out"] + [var for (var, (require, bylang)) in self.inclusions.items() if "gap" in bylang]
+            local_vars = ["out"] + [var for var, (require, bylang) in self.inclusions.items() if "gap" in bylang]
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"local {', '.join(local_vars)};", f"out := rec({','.join(pairs)});"]
         elif lang.name == "gp":

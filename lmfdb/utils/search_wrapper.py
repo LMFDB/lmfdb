@@ -272,7 +272,7 @@ class SearchWrapper(Wrapper):
                 nulls = table.stats.null_counts()
                 if nulls:
                     search_columns = table._columns_searched(query)
-                    nulls = {col: cnt for (col, cnt) in nulls.items() if col in search_columns}
+                    nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
                     col_display = {}
                     if "search_array" in info:
                         for row in info["search_array"].refine_array:

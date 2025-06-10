@@ -13,4 +13,5 @@ pytest
 pytest-cov
 pytest-xdist
 pyyaml
+svg.py
 timeout_decorator

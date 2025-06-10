@@ -606,7 +606,7 @@ def columns():
         else:
             bad_cat.append(k)
     missing_tables = {tbl: sorted(db[tbl].search_cols) + sorted(db[tbl].extra_cols) for tbl in db.tablenames if tbl not in knowls}
-    bad_tables = {tbl: klist for (tbl, klist) in knowls.items() if tbl not in db.tablenames}
+    bad_tables = {tbl: klist for tbl, klist in knowls.items() if tbl not in db.tablenames}
     for tbl in bad_tables:
         del knowls[tbl]
     missing_knowls = defaultdict(list)

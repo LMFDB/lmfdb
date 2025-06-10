@@ -91,7 +91,7 @@ def level_bound(nontriv=None):
 #############################################################################
 
 def ALdims_knowl(al_dims, level, weight):
-    short = "+".join(["$%s$" % (d) for d in al_dims])
+    short = "+".join(f"${d}$" for d in al_dims)
     AL_table = ALdim_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>' % (AL_table, short)
 
@@ -1447,7 +1447,7 @@ class CMFSearchArray(SearchArray):
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
-    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for name, disp, sord in _sort]
     sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces}
