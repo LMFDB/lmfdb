@@ -455,7 +455,7 @@ class pAdicSlopeFamily:
         gps = defaultdict(set)
         slopes = defaultdict(set)
         for rec in fields:
-            if "galois_degree" in rec and "galois_label" in rec and "slopes" in rec:
+            if rec.get("galois_degree") is not None and rec.get("galois_label") is not None and rec.get("slopes") is not None:
                 gps[rec["galois_degree"]].add(rec["galois_label"])
                 slopes[rec["galois_degree"]].add(rec["slopes"])
         Ns = sorted(gps)
