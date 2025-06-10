@@ -744,7 +744,7 @@ def by_abelian_label(label):
         )
     if dblabel is None:
         snf = primary_to_smith(primary)
-        canonical_label = '.'.join([str(z) for z in snf])
+        canonical_label = '.'.join(str(z) for z in snf)
         if canonical_label != label:
             return redirect(url_for(".by_abelian_label", label=canonical_label))
         else:
@@ -3008,7 +3008,7 @@ def semidirect_data(label):
         if cnt > 1:
             ans += f" in {cnt} ways"
         ans += ' via '
-        ans += ", ".join([f'<a href="{url_for("abstract.by_subgroup_label", label=label+"."+sublabel)}">{sublabel}</a>' for sublabel in labels])
+        ans += ", ".join(f'<a href="{url_for("abstract.by_subgroup_label", label=label+"."+sublabel)}">{sublabel}</a>' for sublabel in labels)
         ans += "<br />\n"
     return Markup(ans)
 
