@@ -31,7 +31,7 @@ def interesting_knowls(category, table, url_for_label, label_col="label", regex=
     else:
         # Otherwise, some labels might not appear (e.g. if an isogeny class knowl was included)
         # and others might appear multiple times (higher genus families, where the "label" is for a family and isn't unique)
-        sorted_labels = {lab: i for (i, lab) in enumerate(table.search({label_col: {"$in": labels}}, label_col))}
+        sorted_labels = {lab: i for i, lab in enumerate(table.search({label_col: {"$in": labels}}, label_col))}
         if sorted_labels:
             M = max(sorted_labels.values()) + 1
         else:

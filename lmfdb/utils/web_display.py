@@ -231,14 +231,14 @@ def pos_int_and_factor(n, factor_base=None):
     n = ZZ(n)
     if factor_base:
         factors = [(p, ZZ(n).valuation(p)) for p in factor_base]
-        factors = [(z[0],z[1]) for z in factors if z[1] > 0]
+        factors = [(z[0], z[1]) for z in factors if z[1] > 0]
 
         def power_prime(p, exponent):
             if exponent == 1:
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        latexfactors = r" \cdot ".join(power_prime(p, val) for (p, val) in factors)
+        latexfactors = r" \cdot ".join(power_prime(p, val) for p, val in factors)
     else:
         factors = n.factor()
         latexfactors = latex(factors)

@@ -477,7 +477,7 @@ class TableChecker():
 
     def check_array_dotproduct(self, array_column1, array_column2, value_column, constraint={}):
         """
-        Checks that sum(a * b for (a, b) in zip(array_column1, array_column2)) == value_column
+        Checks that sum(a * b for a, b in zip(array_column1, array_column2)) == value_column
         """
         return self._run_query(SQL("(SELECT SUM(a*b) FROM UNNEST({0}, {1}) as t(a,b)) != {2}").format(
             Identifier(array_column1), Identifier(array_column2), Identifier(value_column)), constraint)

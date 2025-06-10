@@ -534,7 +534,7 @@ class KnowlBackend(PostgresBase):
             by_category[categories[kid]].append((titles[kid], kid))
         for cat in by_category:
             L = sorted(by_category[cat])
-            by_category[cat] = [kid for (title, kid) in L]
+            by_category[cat] = [kid for title, kid in L]
         return by_category
 
     @staticmethod
