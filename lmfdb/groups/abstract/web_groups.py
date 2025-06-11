@@ -46,6 +46,7 @@ nc = "not computed"
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 perm_re = re.compile(r"^\(\d+(,\d+)*\)(,?\(\d+(,\d+)*\))*$")
 
+
 def label_sortkey(label):
     L = []
     for piece in label.split("."):
@@ -58,11 +59,14 @@ def label_sortkey(label):
                 L.append(x)
     return L
 
+
 def is_atomic(s):
     return not any(sym in s for sym in [".", ":", r"\times", r"\rtimes", r"\wr"])
 
+
 def sub_paren(s):
     return s if is_atomic(s) else "(%s)" % s
+
 
 def group_names_pretty(label):
     # Avoid using this function if you have the tex_name available without a database lookup
@@ -85,6 +89,7 @@ def group_names_pretty(label):
     else:
         return label
 
+
 def group_pretty_image(label):
     # Avoid using this function if you have the tex_name available without a database lookup
     pretty = group_names_pretty(label)
@@ -97,14 +102,17 @@ def group_pretty_image(label):
         return str(img)
     # we should not get here
 
+
 def create_gens_list(genslist):
     # For Magma
     gens_list = [f"G.{i}" for i in genslist]
     return str(gens_list).replace("'", "")
 
+
 def create_gap_assignment(genslist):
     # For GAP
     return " ".join(f"{var_name(j)} := G.{i};" for j, i in enumerate(genslist))
+
 
 def create_magma_assignment(G):
     used = [u - 1 for u in sorted(G.gens_used)]
@@ -126,36 +134,38 @@ def create_magma_assignment(G):
             power *= rel_ords[i0]
     return str(names).replace("'", '"')
 
-def split_matrix_list(longList,d):
+
+def split_matrix_list(longList, d):
     # for code snippets, turns d^2 list into d lists of length d for Gap matrices
-    return [longList[i:i+d] for i in range(0,d**2,d)]
+    return [longList[i:i+d] for i in range(0, d**2, d)]
 
-def split_matrix_list_ZN(longList,d, Znfld):
+
+def split_matrix_list_ZN(longList, d, Znfld):
     longList = [f"ZmodnZObj({x},{Znfld})" for x in longList]
-    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
+    return str([longList[i:i+d] for i in range(0, d**2, d)]).replace("'", "")
 
 
-def split_matrix_list_Fp(longList,d,e):
-    return [longList[i:i+d]*e for i in range(0,d**2,d)]
+def split_matrix_list_Fp(longList, d, e):
+    return [longList[i:i+d]*e for i in range(0, d**2, d)]
 
 
-def split_matrix_list_Fq(longList,d, Fqfld):
+def split_matrix_list_Fq(longList, d, Fqfld):
     # for gap definition of Fq
     longList = [f"0*Z({Fqfld})" if x == -1 else f"Z({Fqfld})^{x}" for x in longList]  #-1 distinguishes 0 from z^0
-    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
+    return str([longList[i:i+d] for i in range(0, d**2, d)]).replace("'", "")
 
 
-def split_matrix_Fq_add_al(longList,d):
+def split_matrix_Fq_add_al(longList, d):
     # for magma definition of Fq
     longList = [0 if x == -1 else 1 if x == 0 else f"al^{x}" for x in longList]
-    return str([longList[i:i+d] for i in range(0,d**2,d)]).replace("'", "")
+    return str([longList[i:i+d] for i in range(0, d**2, d)]).replace("'", "")
 
 
 # Functions below are for conjugacy class searches
 def gp_label_to_cc_data(gp):
     gp_ord, gp_counter = gp.split(".")
     gp_order = int(gp_ord)
-    if re.fullmatch(r'\d+',gp_counter):
+    if re.fullmatch(r'\d+', gp_counter):
         return gp_order, int(gp_counter)
     return gp_order, class_to_int(gp_counter) + 1
 
@@ -1918,7 +1928,6 @@ class WebAbstractGroup(WebObj):
                 R = rf"\F_{{{q}}}"
             else:
                 R = GF(q, modulus="primitive", names=('a',))
-                (a,) = R._first_ngens(1)
             N, k = q.is_prime_power(get_data=True)
             if k == 1:
                 # Might happen for Lie
@@ -1942,7 +1951,7 @@ class WebAbstractGroup(WebObj):
             if rep_type == "GLFq":
                 q = N**k
                 R = GF(q, modulus="primitive", names=('a',))
-                (a,) = R._first_ngens(1) #need a for powers
+                a = R.gen()  # need a for powers
         L = ZZ(code).digits(N)
 
         def pad(X, m):

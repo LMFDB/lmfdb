@@ -917,14 +917,14 @@ class Lfunction_HMF(Lfunction):
         self.numcoeff = PP  # The number of coefficients is given by the
                             # norm of the last prime
 
-        Fhmfprimes = [st.replace(' ','') for st in F_hmf['primes']]
+        Fhmfprimes = [st.replace(' ', '') for st in F_hmf['primes']]
 
-        ppmidNN = [c[0].replace(' ','') for c in f['AL_eigenvalues']]
+        ppmidNN = [c[0].replace(' ', '') for c in f['AL_eigenvalues']]
 
         ratl_primes = [p for p in range(primes[-1][0] + 1) if is_prime(p)]
         RCC = CC['T']
-        (T,) = RCC._first_ngens(1)
-        heckepols = [RCC(1) for p in ratl_primes]
+        T = RCC.gen()
+        heckepols = [RCC.one() for p in ratl_primes]
         for l in range(len(hecke_eigenvalues)):
             if Fhmfprimes[l] in ppmidNN:
                 heckepols[ratl_primes.index(primes[l][1])] *= (
