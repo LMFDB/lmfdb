@@ -517,7 +517,7 @@ def assoc_col(default=True, relative=False):
         title = "Assoc. Inertia"
     return ProcessedCol("associated_inertia", "lf.associated_inertia", title, formatbracketcol, default=default)
 def jump_col(default=True):
-    return ListCol("jump_set", "lf.jump_set", "Jump Set", default=default, mathmode=True)
+    return ProcessedCol("jump_set", "lf.jump_set", "Jump Set", func=lambda js: f"${js}$" if js else "undefined", default=default, mathmode=False)
 def respoly_col():
     return ProcessedCol("residual_polynomials", "lf.residual_polynomials", "Resid. Poly", default=False, mathmode=True, func=lambda rp: ','.join(teXify_pol(f) for f in rp))
 
@@ -1019,10 +1019,6 @@ def render_field_webpage(args):
                 info["roots_of_unity"] = f"${rou} = {rou_expr}$"
         else:
             info["roots_of_unity"] = "not computed"
-        if data.get("galois_degree") is not None:
-            info["galois_degree"] = data["galois_degree"]
-        else:
-            info["galois_degree"] = "not computed"
         if data.get("family") is not None:
             friends.append(('Absolute family', url_for(".family_page", label=data["family"])))
             subfields = [f"{p}.1.1.0a1.1"]
@@ -1046,7 +1042,7 @@ def render_field_webpage(args):
             info['swanslopes'] = latex_content(artin2swan(data['slopes']))
         if data.get('inertia') is not None:
             info['inertia'] = group_display_inertia(data['inertia'])
-        for k in ['gms', 't', 'u']:
+        for k in ['gms', 't', 'u', 'galois_degree']:
             if data.get(k) is not None:
                 info[k] = data[k]
         if data.get('ram_poly_vert') is not None:
@@ -1063,7 +1059,9 @@ def render_field_webpage(args):
         if data.get('jump_set') is not None:
             info['jump_set'] = data['jump_set']
             if info['jump_set'] == []:
-                info['jump_set'] = r"[\ ]"
+                info['jump_set'] = "undefined"
+            else:
+                info['jump_set'] = f"${info['jump_set']}$"
         if unramfriend != '':
             friends.append(('Unramified subfield', unramfriend))
         if rffriend != '':

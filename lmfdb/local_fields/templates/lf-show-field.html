@@ -41,7 +41,7 @@
       <tr><td>{{ KNOWL('lf.slopes', title='Visible Swan slopes')}}:</td><td>{{info.visible_swan}}</td></tr>
       <tr><td>{{ KNOWL('lf.means', title='Means')}}:</td><td>{{info.means}}</td></tr>
       <tr><td>{{ KNOWL('lf.rams', title='Rams')}}:</td><td>{{info.rams}}</td></tr>
-      <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>${{info.jump_set}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>{{info.jump_set}}</td></tr>
       <tr><td>{{ KNOWL('lf.roots_of_unity', title='Roots of unity') }}:</td><td>{{info.roots_of_unity}}</td></tr>
 </table>
 
@@ -97,16 +97,16 @@
 
 <h2>{{ KNOWL('lf.galois_closure_invariants', title='Invariants of the Galois closure') }}</h2>
 <table>
-  <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>
-  {% if info.gal %}
-    {{info.gal|safe}}
+  <tr><td>{{ KNOWL('nf.galois_group', title='Galois degree')}}:</td><td>
+  {% if info.galois_degree %}
+    ${{info.galois_degree}}$
   {% else %}
     not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('nf.galois_group', title='Galois degree')}}:</td><td>
-  {% if info.galois_degree %}
-    ${{info.galois_degree}}$
+  <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>
+  {% if info.gal %}
+    {{info.gal|safe}}
   {% else %}
     not computed
   {% endif %}
