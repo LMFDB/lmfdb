@@ -28,6 +28,7 @@ from lmfdb.utils import (
     TextBox,
     SneakyTextBox,
     SneakySelectBox,
+    SelectBox,
     CountBox,
     YesNoBox,
     parse_ints,
@@ -158,6 +159,16 @@ def parse_group(inp, query, qfield):
         query["group_order"] = int(inp)
     else:
         raise ValueError("It must be a valid group label or order of the group. ")
+
+# SAM
+@search_parser
+def parse_family(inp, query, qfield):
+    if inp not in ['A', 'C', 'D', 'GL', 'PSL', 'Q', 'S', 'SL', 'any']:
+        raise ValueError("Not a valid family label.")
+    if inp == 'any':
+        query['label'] = {'$in':list(db.gps_special_names.search(projection='label'))}
+    else:
+        query['label'] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -1157,6 +1168,7 @@ def group_parse(info, query):
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
     parse_ints(info, query, "order_factorization_type")
+    parse_family(info, query, "family") # SAM
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
@@ -2181,14 +2193,14 @@ class GroupsSearchArray(SearchArray):
         )
         permutation_degree = TextBox(
             name="permutation_degree",
-            label="Permutation degree",
+            label="Minimal permutation degree",
             knowl="group.permutation_degree",
             example="3",
             example_span="4, or a range like 3..5",
         )
         transitive_degree = TextBox(
             name="transitive_degree",
-            label="Transitive degree",
+            label="Minimal transitive degree",
             knowl="group.transitive_degree",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2389,6 +2401,23 @@ class GroupsSearchArray(SearchArray):
             example_span="4, or a range like 3..5",
             advanced=True
         )
+# SAM
+        family = SelectBox(
+            name="family",
+            options=[("", ""),
+                     ("A", "An"),
+                     ("C", "Cn"),
+                     ("D", "Dn"),
+                     ("GL", "GLn"),
+                     ("PSL", "PSLn"),
+                     ("Q", "Qn"),
+                     ("S", "Sn"),
+                     ("SL", "SLn"),
+                     ("any", "any")],
+            knowl="",
+            label="Family",
+            example="Cn, Sn")
+
 
         count = CountBox()
 
@@ -2417,7 +2446,7 @@ class GroupsSearchArray(SearchArray):
             [number_conjugacy_classes, number_autjugacy_classes],
             [order_stats, rank],
             [exponents_of_order, commutator_count],
-            [count],
+            [count, family],
         ]
 
         self.refine_array = [
@@ -2430,7 +2459,7 @@ class GroupsSearchArray(SearchArray):
             [outer_group, outer_order, metabelian, metacyclic],
             [almost_simple, quasisimple, Agroup, Zgroup],
             [frattini_label, derived_length, rank, schur_multiplier],
-            [supersolvable, monomial, rational],
+            [supersolvable, monomial, rational, family],
 
             [number_subgroups, number_normal_subgroups, number_conjugacy_classes],
             [number_characteristic_subgroups, number_autjugacy_classes, number_divisions],
