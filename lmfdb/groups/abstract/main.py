@@ -1895,9 +1895,7 @@ def download_preable(com1, com2, dltype):
         f = "#"
     else:
         f = ""
-
     s = com1
-
     s += f + " Various presentations of this group are stored in this file: \n"
     s += f + "\t GPC is polycyclic presentation GPerm is permutation group \n"
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
@@ -1905,9 +1903,7 @@ def download_preable(com1, com2, dltype):
     s += f + "\t is_cyclic \n"
     s += f + "\t is_abelian \n"
     s += f + "\t is_nilpotent \n"
-
     s +=com2
-
     return s
 
 
@@ -1939,23 +1935,101 @@ def download_construction_string(G,dltype):
     if "GLFq" in G.representations:
         gp_str = str(snippet['GLFq'][dltype]) + "\n"
         s += gp_str.replace("G :=", "GLFq :=")
-
     #fix up transitive case?
 #    s += (str(snippet['transitive'][dltype]) + "\n").replace("G :=", "Gtr :=")
-
     return str(s)
 
 
 
 # create boolean string for downloading, G is WebAbstractGroup
-def download_boolean_string(G,dltype):
-    s = "is_cyclic := " + str(G.cyclic).lower() + "; \n"
-    s += "is_abelian := " + str(G.abelian).lower() + "; \n"
-    s += "is_nilpotent := " + str(G.nilpotent).lower() + "; \n"
+def download_boolean_string(G,dltype,ul_label):
+    if dltype == "magma":
+        s = "RF := recformat< Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, metacyclic, monomial, nilpotent, perfect, quasisimple, rational, solvable, supersolvable  : BoolElt >; \n"
+        s += "booleans_" + ul_label + " := rec< RF |  "
+    elif dltype == "gap":
+        s = "booleans_" + ul_label + " := rec( "
+    else:
+        return ""
 
-    if dltype == "oscar":
-        s = s.replace(":=", "=")
+    s += "Agroup := " + str(G.Agroup).lower() + ", \n"
+    s += "Zgroup := " +	str(G.Zgroup).lower() + ", \n"
+    s += "abelian := " + str(G.abelian).lower() +", \n"
+    s += "almost_simple := " + str(G.almost_simple).lower() +", \n"
+    s += "cyclic := " + str(G.cyclic).lower() +", \n"
+    s += "metabelian := " + str(G.metabelian).lower() +", \n"
+    s += "metacyclic := " + str(G.metacyclic).lower() +", \n"
+    s += "monomial := " + str(G.monomial).lower() +", \n"
+    s += "nilpotent := " + str(G.nilpotent).lower() +", \n"
+    s += "perfect := " + str(G.perfect).lower() +", \n"
+    s += "quasisimple := " + str(G.quasisimple).lower() +", \n"
+    s += "rational := " + str(G.rational).lower() +", \n"
+    s += "solvable := " + str(G.solvable).lower() +", \n"
+    s += "supersolvable := " + str(G.supersolvable).lower() +" \n" # no comma since last one
+
+
+    # close record
+    if dltype == "gap":
+        s += "); \n"
+    if dltype == "magma":
+        s += ">; \n"
     return s
+
+
+#JP TO DO
+def download_char_table_magma(G, ul_label):
+    return ""
+
+
+def download_char_table_gap(G,ul_label):
+    tbl = "chartbl_" + G.label.replace(".","_") 
+    s = "chartblGAP:= function() \n"
+    s += "local " + tbl +", i; \n"
+    s += tbl + ":=rec(); \n"
+
+    s += tbl + ".IsFinite:= true; \n"
+    s += tbl +".UnderlyingCharacteristic:= 0; \n"
+
+    s += tbl + ".Size:= " + str(G.order) + ";\n"
+    s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB.;" \n'
+    s += tbl + '.Identifier:= " ' + G.name + ' "; \n'
+    s += tbl + ".NrConjugacyClasses:= " + str(G.number_conjugacy_classes) + "; \n"
+
+
+
+
+
+    for char in G.characters:
+        s += char.label +"\n"
+
+
+
+#tbl.UnderlyingGroup:=
+#tbl.ConjugacyClasses:=
+#tbl.IdentificationOfConjugacyClasses:=    ORder should be [1..k]
+#tbl.ClassNames
+#tbl.OrdersClassRepresentatives:=
+#tbl.SizesCentralizers:=
+
+#tbl.ComputedPowerMaps:=
+#tbl.Irr
+
+
+
+
+    s += "ConvertToLibraryCharacterTableNC("+ tbl+ "); \n"
+    s += "return" + tbl + "; \n"
+    s += "end; \n"
+    s += "chartblGAP:= chartblGAP(); \n"
+    return s
+
+
+def download_char_table(G,dltype,ul_label):  # G is web abstract group
+    if dltype == "gap":
+        return download_char_table_gap(G,ul_label)
+    elif dltype == "magma":
+        return download_char_table_magma(G,ul_label)
+    else:
+        return ""
 
 
 @abstract_page.route("/<label>/download/<download_type>")
@@ -1970,7 +2044,8 @@ def download_group(**args):
     wag = WebAbstractGroup(label)
     gp_data = wag._data
 
-    filename = "group" + label
+    ul_label = wag.label.replace(".","_")
+    filename = "group" + ul_label
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
         filename += ".g"
@@ -1990,97 +2065,29 @@ def download_group(**args):
     s += "\n \n"
 
     s += download_preable(com1, com2,dltype)
-
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 +  "\n"
-
-
     s += download_construction_string(wag,dltype)
     s += "\n \n"
+
     s += com1 + " Booleans " + com2 +  "\n"
+    s += download_boolean_string(wag,dltype, ul_label)
+    s += "\n \n"
 
-
-    s += download_boolean_string(wag,dltype)
+    s += com1 + " Character Table " + com2 +  "\n"
+    s += download_char_table(wag,dltype, ul_label)
 
     response = make_response(s)
     response.headers['Content-type'] = 'text/plain'
     return response
-
-
-
-
-#	  if dltype == "oscar":
-        # This needs to change for larger groups
-#        if gp_data["solvable"]:
-#            s += com + " The group will be created as a polycyclic group (not necessarily matching the presentation in the LMFDB).\n"
-#            s += com + ' You can turn it into a permutation group using "PermGroup(G)".\n'
-#        else:
-#            s += com + " The group will be created as a permutation group (not necessarily using the generators used in the LMFDB).\n"
-#        s += com2 + "\n"
-#        s += "\n"
-#        s += "G = small_group(%s,%s)" % tuple(label.split("."))
-#    else:
-#        s += (
-#            com
-#            + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
-#        )
-#        s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
-#        s += (
-#            com
-#            + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
-#        )
-#        s += com + "\n"
-#        s += com2 + "\n"
-#        s += "\n"
-
-        ### This all needs to change
-#        reps = gp_data["representations"]
-#        rep_type = gp_data["element_repr_type"]
-#        if rep_type == "PC":
-#            s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-#            s += "encd:= " + str(reps["PC"]["code"]) + "; \n"
-
-#            if dltype == "magma":
-#                s += "G:=SmallGroupDecoding(encd,gpsize); \n"
-#            elif dltype == "gap":
-#                s += "G:=PcGroupCode(encd, gpsize); \n"
-
-#            gen_index = reps["PC"]["gens"]
-#            num_gens = len(gen_index)
-#            for i in range(num_gens):
-#                s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
-
-        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
-#        elif rep_type == "Perm":
-#            d = reps["Perm"]["d"]
-#            s += "d:=" + str(d) + "; \n"
-#            s += "Sd:=SymmetricGroup(d); \n"
-
-            # Turn Lehmer code into permutations
-#            list_gens = []
-#            for perm in reps["Perm"]["gens"]:
-#                perm_decode = Permutations(d).unrank(perm)
-#                list_gens.append(perm_decode)
-#            if gp_data["solvable"]:
-#                s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-#                s += "encd:= " + str(wag.pc_code) + "; \n"
-
-#            if dltype == "magma":
-#                s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
-#            elif dltype == "gap":
-                #          MAKE LIST2#
-#                s += "List_Gens:=" + str(list_gens) + "; \n \n"
-#                s += "LGens:=[]; \n"
-#                s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
-#                s += "G:=Subgroup(Sd,LGens);"
-
 
     #strIO = BytesIO()
     #strIO.write(s.encode("utf-8"))
     #strIO.seek(0)
     #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
+    
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
