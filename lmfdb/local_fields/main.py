@@ -18,7 +18,7 @@ from lmfdb.utils import (
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ListCol, RationalListCol, PolynomialCol, eval_rational_list
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE, latex_content, content_unformatter
