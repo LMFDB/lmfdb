@@ -1734,6 +1734,8 @@ class WebAbstractGroup(WebObj):
         return data
 
     def schur_multiplier_text(self):
+        if self.schur_multiplier is None:
+            return "not computed"
         if not self.schur_multiplier:
             return "C_1"
         entries = []
@@ -1745,10 +1747,11 @@ class WebAbstractGroup(WebObj):
         return r" \times ".join(entries)
 
     def schur_multiplier_label(self):
-        if self.schur_multiplier:
-            return ".".join(str(e) for e in self.schur_multiplier)
-        else:  # trivial group has to be handled separately
-            return "1"
+        if self.schur_multiplier is not None:
+            if self.schur_multiplier:
+                return ".".join(str(e) for e in self.schur_multiplier)
+            else:  # trivial group has to be handled separately
+                return "1"
 
     @lazy_attribute
     def rep_dims(self):
