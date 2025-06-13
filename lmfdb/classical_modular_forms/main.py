@@ -30,7 +30,7 @@ from lmfdb.classical_modular_forms.web_newform import (
 from lmfdb.classical_modular_forms.web_space import (
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_new_cusp_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -92,7 +92,7 @@ def level_bound(nontriv=None):
 
 def ALdims_knowl(al_dims, level, weight):
     short = "+".join(f"${d}$" for d in al_dims)
-    AL_table = ALdim_table(al_dims, level, weight)
+    AL_table = ALdim_new_cusp_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>' % (AL_table, short)
 
 def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
