@@ -147,7 +147,7 @@ def ALdim_table(al_dims, level, weight):
         for typ in ['all', 'new', 'old']:
             fricke[X][typ] = [0,0]
             subheader.append("<th class='center'>" + typ.capitalize() + "</th>")
-    
+
     rows = []
     for i, dim in enumerate(al_dims['M']['all']):
         if dim == 0:
@@ -532,7 +532,7 @@ class WebNewformSpace():
     def ALdim_table(self):
         if not hasattr(self,'ALdims_old'):
             return ALdim_new_cusp_table(self.ALdims, self.level, self.weight)
-        aldims_data = {'dim' : vector(self.ALdims), 'cusp_dim' : vector(self.ALdims) + vector(self.ALdims_old), 
+        aldims_data = {'dim' : vector(self.ALdims), 'cusp_dim' : vector(self.ALdims) + vector(self.ALdims_old),
                        'eis_new_dim' : vector(self.ALdims_eis_new), 'eis_dim' : vector(self.ALdims_eis_new) + vector(self.ALdims_eis_old)}
         aldims_data['mf_dim'] = aldims_data['cusp_dim'] + aldims_data['eis_dim']
         aldims = DimGrid.from_db(aldims_data)
