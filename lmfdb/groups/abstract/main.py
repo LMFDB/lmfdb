@@ -175,7 +175,6 @@ def parse_group(inp, query, qfield):
     else:
         raise ValueError("It must be a valid group label or order of the group. ")
 
-# SAM
 @search_parser
 def parse_family(inp, query, qfield):
     if inp not in ([el[0] for el in group_families()] + ['any']):
@@ -664,7 +663,6 @@ def index():
         ("rational=yes", "rational"),
     ]
     info["maxgrp"] = db.gps_groups.max("order")
-    #SAM TODO
     info["families"] = group_families()
 
     return render_template(
@@ -1185,7 +1183,7 @@ def group_parse(info, query):
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
     parse_ints(info, query, "order_factorization_type")
-    parse_family(info, query, "family", qfield="label") # SAM
+    parse_family(info, query, "family", qfield="label")
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
@@ -2418,7 +2416,6 @@ class GroupsSearchArray(SearchArray):
             example_span="4, or a range like 3..5",
             advanced=True
         )
-# SAM
         family = SelectBox(
             name="family",
             options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
@@ -3063,7 +3060,6 @@ def nonsplit_data(label):
     ans += "</table>"
     return Markup(ans)
 
-# SAM
 def possibly_nonsplit_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Possibly nonsplit product expressions for ${gp.tex_name}$:<br />\n"
