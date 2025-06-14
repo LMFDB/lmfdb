@@ -217,6 +217,30 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?semidirect_product=no", "10.1")
         self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.9")
 
+    def test_famly_search(self):
+        r"""
+        Check that we can search by family
+        """
+        self.check_args("/Groups/Abstract/?family=A", ["12.3","60.5"])
+        self.check_args("/Groups/Abstract/?family=C", ["6.2","27.1"])
+        self.check_args("/Groups/Abstract/?family=D", ["30.3","48.7"])
+        self.check_args("/Groups/Abstract/?family=GL", ["168.42","480.218"])
+        self.check_args("/Groups/Abstract/?family=PSL", ["60.5","660.13"])
+        self.check_args("/Groups/Abstract/?family=Q", ["4.1","64.54"])
+        self.check_args("/Groups/Abstract/?family=S", ["1.1","120.34"])
+        self.check_args("/Groups/Abstract/?family=SL", ["6.1","720.409"])
+        self.check_args("/Groups/Abstract/?family=any", ["6.1", "18.1", "18.2", "24.3"])
+        # not checks
+        self.not_check_args("/Groups/Abstract/?family=A", "2.1")
+        self.not_check_args("/Groups/Abstract/?family=C", "4.2")
+        self.not_check_args("/Groups/Abstract/?family=D", "1.1")
+        self.not_check_args("/Groups/Abstract/?family=GL", "1.1")
+        self.not_check_args("/Groups/Abstract/?family=PSL", "1.1")
+        self.not_check_args("/Groups/Abstract/?family=Q", "3.1")
+        self.not_check_args("/Groups/Abstract/?family=S", "3.1")
+        self.not_check_args("/Groups/Abstract/?family=SL", "1.1")
+        self.not_check_args("/Groups/Abstract/?family=any", "20.3")
+
     def test_order_stats_search(self):
         r"""
         Check that we can search by order statistics
