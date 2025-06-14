@@ -1562,8 +1562,8 @@ class WebAbstractGroup(WebObj):
         ]
 
     def most_product_expressions(self):
-        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.as_aut_gp))
-# SAM TODO
+        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.possibly_nonsplit_products), len(self.as_aut_gp))
+# SAM 
 
     @lazy_attribute
     def display_direct_product(self):
@@ -1682,7 +1682,7 @@ class WebAbstractGroup(WebObj):
         possibly = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
-            if sub.normal and (sub.split is None)
+            if sub.normal and (sub.split is None):
                 pair = (sub.subgroup, sub.quotient)
                 if pair not in subs:
                     possibly.append(sub)
@@ -1691,8 +1691,6 @@ class WebAbstractGroup(WebObj):
         for V in subs.values():
             V.sort(key=label_sortkey)
         return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in possibly]
-
-
 
     @lazy_attribute
     def as_aut_gp(self):
@@ -2346,9 +2344,16 @@ class WebAbstractGroup(WebObj):
                 return f"\n<tr>\n  <td>{display_knowl(head_knowl, head_text)}:</td>\n  {content}\n</tr>"
             return ""
 
-# SAM TODO add display_possibly_nonsplit
+# SAM
 
         def display_nonsplit(trip):
+            sub, count, labels = trip
+            out = fr"{sub.knowl(paren=True)}&nbsp;.&nbsp;{sub.quotient_knowl(paren=True)}"
+            if count > 1:
+                out += f" ({count})"
+            return out
+
+        def display_possibly_nonsplit(trip):
             sub, count, labels = trip
             out = fr"{sub.knowl(paren=True)}&nbsp;.&nbsp;{sub.quotient_knowl(paren=True)}"
             if count > 1:
@@ -2413,7 +2418,16 @@ class WebAbstractGroup(WebObj):
                                       False, # hide if no expressions
                                       display_nonsplit,
                                       nonsplit_expressions_knowl))
-# SAM TODO possibly nonsplit?
+# SAM
+            elif rtype == "possibly_nonsplit":
+                return rep_line(
+                    "group.nonsplit_product",
+                    "Possibly non-split product",
+                    content_from_opts(self.possibly_nonsplit_products,
+                                      self.possibly_nonsplit_products,
+                                      False, # hide if no expressions
+                                      display_nonsplit,
+                                      nonsplit_expressions_knowl))
             elif rtype == "aut":
                 return rep_line(
                     "group.automorphism",
@@ -2442,7 +2456,8 @@ class WebAbstractGroup(WebObj):
             output_strg += show_reps("semidirect")
             output_strg += show_reps("wreath")
             output_strg += show_reps("nonsplit")
-# SAM TODO
+            output_strg += show_reps("possibly_nonsplit")
+# SAM
         output_strg += show_reps("aut")
         if output_strg == "":  #some live groups have no constructions
             return "data not computed"

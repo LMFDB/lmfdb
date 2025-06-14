@@ -26,6 +26,11 @@
     <a href="?{{searchstr}}">{{display}}</a>&nbsp;
   {% endfor %}
 </p>
+<p>By {{KNOWL('group.families', 'family')}}:
+  {% for family, tex_name in info.families%}
+    <a href="?{{family}}">${{tex_name}}$</a>&nbsp;
+  {% endfor %}
+</p>
 <p>Some <a href="{{url_for('.interesting')}}">interesting groups</a> or a <a href="{{url_for('.random_abstract_group')}}">random group</a></p>
 
 <p>Search for <a href="{{url_for('.index', search_type='Subgroups')}}">subgroups</a> or  <a href="{{url_for('.index', search_type='ComplexCharacters')}}">complex characters</a></p>
