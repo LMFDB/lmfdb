@@ -106,7 +106,7 @@ class CmfTest(LmfdbTest):
                     'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
                     ],
                 ['87.2.a.a',
-                    'Modular symbols space of level 87, weight 2 and dimension 2 over Rational Field'
+                    'Modular symbols space for Gamma_0(87) of weight 2 and dimension 2 over Rational Field'
                     ],
                 ['212.2.k.a',
                     'Modular symbols space of level 212, weight 2, character $.1*$.2^17, and dimension 1 over Cyclotomic Field of order 52 and degree 24'
