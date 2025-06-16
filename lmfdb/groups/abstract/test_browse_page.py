@@ -231,15 +231,15 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?family=SL", ["6.1","720.409"])
         self.check_args("/Groups/Abstract/?family=any", ["6.1", "18.1", "18.2", "24.3"])
         # not checks
-        self.not_check_args("/Groups/Abstract/?family=A", "2.1")
-        self.not_check_args("/Groups/Abstract/?family=C", "4.2")
-        self.not_check_args("/Groups/Abstract/?family=D", "1.1")
-        self.not_check_args("/Groups/Abstract/?family=GL", "1.1")
-        self.not_check_args("/Groups/Abstract/?family=PSL", "1.1")
-        self.not_check_args("/Groups/Abstract/?family=Q", "3.1")
-        self.not_check_args("/Groups/Abstract/?family=S", "3.1")
-        self.not_check_args("/Groups/Abstract/?family=SL", "1.1")
-        self.not_check_args("/Groups/Abstract/?family=any", "20.3")
+        self.not_check_args("/Groups/Abstract/?family=A", "6.1")
+        self.not_check_args("/Groups/Abstract/?family=C", "8.3")
+        self.not_check_args("/Groups/Abstract/?family=D", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=GL", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=PSL", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=Q", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=S", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=SL", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=any", "16.11")
 
     def test_order_stats_search(self):
         r"""
