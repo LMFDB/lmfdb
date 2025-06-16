@@ -87,6 +87,8 @@ class CmfTest(LmfdbTest):
                     'q - 2*q^2 + 3*q^3 + 4*q^4 + 2*q^5 - 6*q^6 - 10*q^7 - 8*q^8 + 9*q^9 - 4*q^10 - 10*q^11 + O(q^12)'],
                 ['24.3.h.c',
                     'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + nu^2*q^4 + (nu^3 + 2*nu)*q^5 + (-nu^3 + nu^2 - 3*nu + 4)*q^6 + 4*q^7 + nu^3*q^8 + 1/2*(-nu^3 - 10*nu - 10)*q^9 + (-4*nu^2 - 16)*q^10 + 1/2*(-3*nu^3 - 6*nu)*q^11 + O(q^12)'],
+                ['87.2.a.a',
+                    'q + nu*q^2 + q^3 + (nu - 1)*q^4 + (-2*nu + 2)*q^5 + nu*q^6 + (-2*nu - 1)*q^7 + (-2*nu + 1)*q^8 + q^9 - 2*q^10 + (2*nu + 1)*q^11 + O(q^12)'],
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
@@ -103,9 +105,12 @@ class CmfTest(LmfdbTest):
                 ['54.2.e.b',
                     'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
                     ],
+                ['87.2.a.a',
+                    'Modular symbols space for Gamma_0(87) of weight 2 and dimension 2 over Rational Field'
+                    ],
                 ['212.2.k.a',
                     'Modular symbols space of level 212, weight 2, character $.1*$.2^17, and dimension 1 over Cyclotomic Field of order 52 and degree 24'
-                    ]
+                    ],
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
