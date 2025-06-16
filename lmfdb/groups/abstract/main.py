@@ -99,9 +99,7 @@ def yesno(val):
     return "yes" if val else "no"
 
 def deTeX_name(s):
-    s = s.replace("{","")
-    s = s.replace("}","")
-    s = s.replace("\\","")
+    s = re.sub(r"[{}\\]", "", s)
     return s
 
 @cached_function
