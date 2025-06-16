@@ -741,7 +741,7 @@ class WebCharGroup(WebCharObject):
         for v in parts.values():
             v.sort()
         primary = sum((parts[p] for p in sorted(parts)), [])
-        dblabel = db.gps_groups.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
+        dblabel = db.gps_groups2.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
         if dblabel is None:
             abgp_url = url_for('abstract.by_abelian_label', label=label)
             return f'<a href= %s >{self.structure}</a>' % abgp_url

@@ -346,7 +346,7 @@ def st0_pretty(st0_name):
     return st0_dict.get(st0_name,st0_name)
 
 def sg_pretty(sg_label):
-    data = db.gps_groups.lookup(sg_label)
+    data = db.gps_groups2.lookup(sg_label)
     if data and data.get('tex_name'):
         return data['tex_name']
     return sg_label
@@ -881,7 +881,7 @@ def render_by_label(label):
         info['abelian'] = boolean_name(True)
         info['solvable'] = boolean_name(True)
     else:
-        G = db.gps_groups.lookup(data['component_group'])
+        G = db.gps_groups2.lookup(data['component_group'])
         if not G:
             flash_error("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
             return redirect(url_for(".index"))
