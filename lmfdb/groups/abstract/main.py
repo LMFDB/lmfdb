@@ -1196,10 +1196,10 @@ subgroup_columns = SearchColumns([
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
-    table = db.gps_subgroups
+    table = db.gps_subgroup_search
 
 @search_wrap(
-    table=db.gps_subgroups,
+    table=db.gps_subgroup_search,
     title="Subgroup search results",
     err_title="Subgroup search input error",
     columns=subgroup_columns,
@@ -1405,7 +1405,7 @@ def cc_postprocess(res, info, query):
         info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
     info["group_factors"] = common_support if common_support else []
     complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
-    centralizer_data = {(rec["ambient"], rec["short_label"]): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["ambient","short_label","subgroup_tex"])}
+    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
     highlight_col = {}
     for rec in res:
         label = rec.get("label")
@@ -1881,7 +1881,7 @@ def sgp_data(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread([(label, url_for_subgroup_label(label)), ("Data", " ")])
     title = f"Abstract subgroup data - {label}"
-    data = db.gps_subgroups.lookup(label, ["ambient", "subgroup", "quotient"])
+    data = db.gps_subgroup_search.lookup(label, ["ambient", "subgroup", "quotient"])
     if data is None:
         return abort(404)
     if data["quotient"] is None:

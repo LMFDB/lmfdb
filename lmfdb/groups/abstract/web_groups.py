@@ -1026,9 +1026,13 @@ class WebAbstractGroup(WebObj):
     def subgroups(self):
         if not self.has_subgroups:
             return None
+        subs = {subdata["label"]: subdata
+                for subdata in db.gps_subgroup_search.search({"ambient": self.label})}
+        for rec in db.gps_subgroup_data.search({"label": {"$in": list(subs)}}):
+            subs[rec["label"]].update(rec)
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
-            for subdata in db.gps_subgroups.search({"ambient": self.label})
+            for subdata in subs.values()
         }
         if self.subgroup_inclusions_known:
             self.add_layers(subs)
@@ -1535,31 +1539,6 @@ class WebAbstractGroup(WebObj):
 {table}
 </table>"""
         return table
-
-    @lazy_attribute
-    def maximal_subgroup_of(self):
-        # Could show up multiple times as non-conjugate maximal subgroups in the same ambient group
-        # So we should eliminate duplicates from the following list
-        return [
-            WebAbstractSupergroup(self, "sub", supdata["label"], supdata)
-            for supdata in db.gps_subgroups.search(
-                {"subgroup": self.label, "maximal": True},
-                sort=["ambient_order", "ambient"],
-                limit=10,
-            )
-        ]
-
-    @lazy_attribute
-    def maximal_quotient_of(self):
-        # Could show up multiple times as a quotient of different normal subgroups in the same ambient group
-        # So we should eliminate duplicates from the following list
-        return [
-            WebAbstractSupergroup(self, "quo", supdata["label"], supdata)
-            for supdata in db.gps_subgroups.search(
-                {"quotient": self.label, "minimal_normal": True},
-                sort=["ambient_order", "ambient"],
-            )
-        ]
 
     def most_product_expressions(self):
         return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.as_aut_gp))
@@ -2659,13 +2638,13 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def max_sub_cnt(self):
-        return db.gps_subgroups.count_distinct(
+        return db.gps_subgroup_search.count_distinct(
             "ambient", {"subgroup": self.label, "maximal": True}, record=False
         )
 
     @lazy_attribute
     def max_quo_cnt(self):
-        return db.gps_subgroups.count_distinct(
+        return db.gps_subgroup_search.count_distinct(
             "ambient", {"quotient": self.label, "minimal_normal": True}, record=False
         )
 
@@ -2951,10 +2930,16 @@ class LiveAbelianGroup():
 
 
 class WebAbstractSubgroup(WebObj):
-    table = db.gps_subgroups
+    table = db.gps_subgroup_search
 
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
+        if isinstance(self._data, dict):
+            more_data = db.gps_subgroup_data.lookup(label)
+            self._data.update(more_data)
+            for key, val in more_data.items():
+                setattr(self, key, val)
+
         s = self.subgroup_tex
         if s is None:
             self.subgroup_tex = "?"
@@ -3209,7 +3194,10 @@ class WebAbstractSubgroup(WebObj):
         for llist in [self.complements, self.contained_in, self.contains]:
             if llist:
                 labels.extend([make_full(label) for label in llist])
-        return list(db.gps_subgroups.search({"label": {"$in": labels}}))
+        subs = {rec["label"]: rec for rec in db.gps_subgroup_search.search({"label": {"$in": labels}})}
+        for rec in db.gps_subgroup_data.search({"label": {"$in": labels}}):
+            subs[rec["label"]].update(rec)
+        return list(subs.values())
 
     def autjugate_subgroups(self):
         if self.amb.outer_equivalence is False and self.amb.complements_known is False and self.amb.subgroup_inclusions_known is False:
@@ -3373,11 +3361,3 @@ class WebAbstractRationalCharacter(WebObj):
             '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=rchar_data&args=%s">%s</a>'
             % (name, label, name)
         )
-
-class WebAbstractSupergroup(WebObj):
-    table = db.gps_subgroups
-
-    def __init__(self, sub_or_quo, typ, label, data=None):
-        self.sub_or_quo_gp = sub_or_quo
-        self.typ = typ
-        WebObj.__init__(self, label, data)
