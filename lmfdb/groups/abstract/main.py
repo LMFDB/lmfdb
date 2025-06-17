@@ -70,27 +70,28 @@ from .stats import GroupStats
 
 
 abstract_group_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)$")
-
-
 abstract_subgroup_label_regex = re.compile(
-    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+\d+)(?:\.([a-z]+\d+))?(?:\.(N|M|NC\d+))?$"
+    r"^(\d+)\.([a-z]+|\d+)\.(\d+)\.([a-z]+\d+|[a-z]+\d+\.[a-z]+\d+|[A-Z]+|_\.[A-Z]+)$"
 )
 
-abstract_subgroup_partial_regex = re.compile(
-    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+[A-Z]+)(?:\.([a-z]+[A-Z]+))?(?:\.(N|M|NC\d+|CF\d+))?$"
-)
+#abstract_subgroup_label_regex = re.compile(
+#    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+\d+)(?:\.([a-z]+\d+))?(?:\.(N|M|NC\d+))?$"
+#)
 
-abstract_subgroup_CFlabel_regex = re.compile(
-    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.(CF\d+)$"
-)
+#abstract_subgroup_partial_regex = re.compile(
+#    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+[A-Z]+)(?:\.([a-z]+[A-Z]+))?(?:\.(N|M|NC\d+|CF\d+))?$"
+#)
 
-abstract_noncanonical_subgroup_label_regex = re.compile(
-    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([A-Z]+)(?:\.(N|M|NC\d+))?$"
-)
+#abstract_subgroup_CFlabel_regex = re.compile(
+#    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.(CF\d+)$"
+#)
+
+#abstract_noncanonical_subgroup_label_regex = re.compile(
+#    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([A-Z]+)(?:\.(N|M|NC\d+))?$"
+#)
 
 
 gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
-abstract_group_label_regex = re.compile(r"^(\d+)\.((\d+)|[a-z]+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
 def yesno(val):
@@ -131,16 +132,9 @@ def learnmore_list_remove(matchstring):
 
 
 def subgroup_label_is_valid(lab):
-    if abstract_subgroup_label_regex.fullmatch(lab):
-        return abstract_subgroup_label_regex.fullmatch(lab)
-    elif abstract_noncanonical_subgroup_label_regex.fullmatch(lab):
-        return abstract_noncanonical_subgroup_label_regex.fullmatch(lab)
-    elif abstract_subgroup_partial_regex.fullmatch(lab):
-        return abstract_subgroup_partial_regex.fullmatch(lab)
-    elif abstract_subgroup_CFlabel_regex.fullmatch(lab):
-        return abstract_subgroup_CFlabel_regex.fullmatch(lab)
-    else:
-        return None
+    m = abstract_subgroup_label_regex.fullmatch(lab)
+    if m:
+        return m
 
 
 def label_is_valid(lab):
