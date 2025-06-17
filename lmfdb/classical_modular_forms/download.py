@@ -476,7 +476,7 @@ class CMF_download(Downloader):
                 ]
         if hecke_nf is None or hecke_nf['hecke_ring_character_values'] is None:
             return out + [
-                    'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
+                    'function MakeCharacter_%d_%s_Hecke( : Kf := Kf)' % (newform.level, newform.char_orbit_label),
                     '    return MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                     'end function;'
                     ]
