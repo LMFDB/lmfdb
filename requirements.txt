@@ -4,7 +4,7 @@ flask
 flask-cache
 flask-login
 flask-markdown
-markupsafe==2.0.1
+markupsafe
 itsdangerous
 psycopg2-binary
 git+https://github.com/roed314/psycodict.git
