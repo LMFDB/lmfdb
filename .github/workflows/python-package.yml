@@ -85,7 +85,7 @@ jobs:
     - name: pip stuff
       shell: bash -l {0}
       run: |
-        sage -pip install -r requirements.txt
+        sage -pip install -r requirements.txt -U
         pip install pyflakes pylint pycodestyle ruff
 
     - name: checking that we didn't miss any test files
