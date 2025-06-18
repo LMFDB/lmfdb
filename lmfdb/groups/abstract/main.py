@@ -2423,7 +2423,6 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
 
-
         count = CountBox()
 
         self.browse_array = [
