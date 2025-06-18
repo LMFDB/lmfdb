@@ -1889,6 +1889,48 @@ def sgp_data(label):
         return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
+
+# need to write characters in GAP
+def cyclotomic_gap(n,vals):
+    print(n,vals)
+    s = ""
+    val = vals[0]
+    c = val[0]  # coefficient
+    if c == 0:   # JP DOES THIS ONLY HAPPEN WITH 0?
+        return 0
+    e = val[1]  # exponent
+    if c == 1 and e == 0:  # special case of 1
+        s += str(1)
+    elif c != 1:   #don't put leading 1s
+        s += str(c)
+    if e != 0:
+        if c != 1:
+            s += "*"
+        s +="E(" + str(n) + ")"
+        if e != 1:
+            s += "^" + str(e)
+
+    for i in range(1,len(vals)):
+        val = vals[i]
+        c = val[0]  # coefficient
+        e = val[1]  # exponent
+        if c > 0:
+            s += "+"
+        if c == 1 and e == 0:  # special case of 1
+            s += str(1)
+        if c == -1 and e != 0:
+            s += "-"   # we don't want -1E
+        elif c != 1:
+            s += str(c)
+        if e != 0:
+            if abs(c) != 1:
+                s+= "*"
+            s += "E(" + str(n) + ")"
+            if e != 1:
+                s += "^" + str(e)
+    return s
+
+
 # create preable for downloading individual group
 def download_preable(com1, com2, dltype):
     if dltype == "gap":
@@ -1900,9 +1942,10 @@ def download_preable(com1, com2, dltype):
     s += f + "\t GPC is polycyclic presentation GPerm is permutation group \n"
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
     s += f + " Many characteristics of the group are stored as booleans: \n"
-    s += f + "\t is_cyclic \n"
-    s += f + "\t is_abelian \n"
+    s += f + "\t cyclic \n"
+    s += f + "\t abelian \n"
     s += f + "\t is_nilpotent \n"
+    s += f + "The character table is stored as \n"
     s +=com2
     return s
 
@@ -1981,45 +2024,89 @@ def download_char_table_magma(G, ul_label):
 
 
 def download_char_table_gap(G,ul_label):
-    tbl = "chartbl_" + G.label.replace(".","_") 
-    s = "chartblGAP:= function() \n"
-    s += "local " + tbl +", i; \n"
-    s += tbl + ":=rec(); \n"
+    tbl = "chartbl_" + G.label.replace(".","_")
+#    s = "chartblGAP:= function() \n"
+#    s += "local " + tbl +", i; \n"
+    s = tbl + ":=rec(); \n"
 
     s += tbl + ".IsFinite:= true; \n"
     s += tbl +".UnderlyingCharacteristic:= 0; \n"
 
+    gp_type = G.element_repr_type
+
+    #JP DONT HAVE TO REDO SNIPPET PARTS SINCE ABOVE -- commented out below
+    snippet = G.code_snippets()
+    if gp_type == "PC":
+#        gp_str =  str(snippet['presentation']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,",  "GPC,")
+        s += tbl + ".UnderlyingGroup:= GPC;\n"
+    if gp_type == "Perm":
+#        gp_str =  str(snippet['permutation']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GPerm :=")
+        s += tbl + ".UnderlyingGroup:= GPerm;\n"
+    if gp_type == "GLZ":
+#        gp_str = str(snippet['GLZ']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLZ :=")
+        s += tbl + ".UnderlyingGroup:= GLZ;\n"
+    if gp_type == "GLFp":
+#        gp_str = str(snippet['GLFp']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLFp :=")
+        s += tbl + ".UnderlyingGroup:= GLFp;\n"
+    if gp_type == "GLZN":
+#        gp_str = str(snippet['GLZN']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLZN :=")
+        s += tbl + ".UnderlyingGroup:= GLZN;\n"
+    if gp_type == "GLZq":
+#        gp_str = str(snippet['GLZq']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLZq :=")
+        s += tbl + ".UnderlyingGroup:= GLZq;\n"
+    if gp_type == "GLFq":
+#        gp_str = str(snippet['GLFq']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLFq :=")
+        s += tbl + ".UnderlyingGroup:= GLFq;\n"
+
+
     s += tbl + ".Size:= " + str(G.order) + ";\n"
-    s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB.;" \n'
+    s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB."; \n'
     s += tbl + '.Identifier:= " ' + G.name + ' "; \n'
     s += tbl + ".NrConjugacyClasses:= " + str(G.number_conjugacy_classes) + "; \n"
 
+    # process info from each conjugacy class
+    size_centralizers, class_names,order_class_reps, cc_reps = ([] for i in range(4))
+    num_primes = G.num_primes_for_power_maps
+    power_maps = [[ ] for i in range(num_primes)]
+    for conj in G.conjugacy_classes:
+        for i in range(num_primes):
+            power_maps[i].append(conj.powers[i])
+        #power_maps.append(conj.powers)
+        size_centralizers.append(int(conj.centralizer.split(".")[0]))
+        class_names.append(conj.label)
+        order_class_reps.append(conj.order)
+        cc_reps.append(G.decode(conj.representative,rep_type = gp_type))  #JP TESTING
 
+    cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
+    pwr_maps = "[ , "
+    for i in range(len(power_maps)-1):
+        pwr_maps += str(power_maps[i]) + ", "
+    pwr_maps += str(power_maps[len(power_maps)-1]) +"]"  # PowerMaps needs a blank entry in front
 
+    s += tbl + ".ConjugacyClasses:= " + str(cc_reps) + ";\n"
+    s += tbl + ".IdentificationOfConjugacyClasses:= " + str(list(range(1,G.number_conjugacy_classes+1))) +";\n"
+    s += tbl + ".ComputedPowerMaps:= "  + str(pwr_maps) + ";\n"
+    s += tbl + ".SizesCentralizers:= "  + str(size_centralizers) + ";\n"
+    s += tbl + ".ClassNames:= "  + str(cl_names) + ";\n"
+    s += tbl + ".OrderClassRepresentatives:= "  + str(order_class_reps) + ";\n"
 
-
+    irr_values = []
     for char in G.characters:
-        s += char.label +"\n"
+        irr_values_individual =[cyclotomic_gap(char.cyclotomic_n,char.values[i]) for i in range(len(char.values))]
+        irr_values.append(irr_values_individual)
+    irr = str(irr_values).replace("'","")
+    s += tbl + ".Irr:= " +str(irr) + ";\n"
 
 
-
-#tbl.UnderlyingGroup:=
-#tbl.ConjugacyClasses:=
-#tbl.IdentificationOfConjugacyClasses:=    ORder should be [1..k]
-#tbl.ClassNames
-#tbl.OrdersClassRepresentatives:=
-#tbl.SizesCentralizers:=
-
-#tbl.ComputedPowerMaps:=
-#tbl.Irr
-
-
-
-
+    # end material
     s += "ConvertToLibraryCharacterTableNC("+ tbl+ "); \n"
-    s += "return" + tbl + "; \n"
-    s += "end; \n"
-    s += "chartblGAP:= chartblGAP(); \n"
     return s
 
 
@@ -2075,8 +2162,9 @@ def download_group(**args):
     s += download_boolean_string(wag,dltype, ul_label)
     s += "\n \n"
 
-    s += com1 + " Character Table " + com2 +  "\n"
-    s += download_char_table(wag,dltype, ul_label)
+    if wag.complex_characters_known:
+        s += com1 + " Character Table " + com2 +  "\n"
+        s += download_char_table(wag,dltype, ul_label)
 
     response = make_response(s)
     response.headers['Content-type'] = 'text/plain'
@@ -2087,7 +2175,6 @@ def download_group(**args):
     #strIO.seek(0)
     #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
-    
 
 class GroupsSearchArray(SearchArray):
     noun = "group"

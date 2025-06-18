@@ -420,6 +420,9 @@ class WebAbstractGroup(WebObj):
             return G
         return G.IsomorphismPcGroup().Image()
 
+
+
+
     # The following are used for live groups to emulate database groups
     # by computing relevant quantities in GAP
     @lazy_attribute
@@ -653,6 +656,11 @@ class WebAbstractGroup(WebObj):
     def outer_group(self):
         self._set_aut_data()
         return self.outer_group
+
+    @lazy_attribute
+    def num_primes_for_power_maps(self):
+#        self._set_aut_data()
+        return len(self.factors_of_order)
 
     @lazy_attribute
     def number_conjugacy_classes(self):
