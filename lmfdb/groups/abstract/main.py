@@ -100,12 +100,13 @@ def yesno(val):
     return "yes" if val else "no"
 
 def deTeX_name(s):
-    s = re.sub(r"[{}\\_]", "", s)
+    s = re.sub(r"[{}\\$]", "", s)
     return s
 
 @cached_function
 def group_families(deTeX=False):
-    L = [(el["family"], el["tex_name"]) for el in db.gps_families.search(projection=["family", "tex_name"], sort=["priority"])]
+    L = [(el["family"], el["tex_name"], el["name"]) for el in db.gps_families.search(projection=["family", "tex_name", "name"], sort=["priority"])]
+    L = [(fam, name if "fam" in tex else f"${tex}$") for (fam, tex, name) in L]
     if deTeX:
         L = [(fam, deTeX_name(name)) for (fam, name) in L]
     return L

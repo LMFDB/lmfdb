@@ -28,7 +28,7 @@
 </p>
 <p>By {{KNOWL('group.families', 'family')}}:
   {% for family, tex_name in info.families%}
-    <a href="?family={{family}}">${{tex_name}}$</a>&nbsp;
+    <a href="?family={{family}}">{{tex_name}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>Some <a href="{{url_for('.interesting')}}">interesting groups</a> or a <a href="{{url_for('.random_abstract_group')}}">random group</a></p>
