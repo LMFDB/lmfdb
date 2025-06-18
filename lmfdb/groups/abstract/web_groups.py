@@ -1562,7 +1562,7 @@ class WebAbstractGroup(WebObj):
         ]
 
     def most_product_expressions(self):
-        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.possibly_nonsplit_products), len(self.as_aut_gp))
+        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.possibly_split_products), len(self.as_aut_gp))
 
     @lazy_attribute
     def display_direct_product(self):
@@ -1674,7 +1674,7 @@ class WebAbstractGroup(WebObj):
         return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in nonsplit]
 
     @lazy_attribute
-    def possibly_nonsplit_products(self):
+    def possibly_split_products(self):
         if not self.has_subgroups:
             return None
         possibly = []
@@ -2352,7 +2352,7 @@ class WebAbstractGroup(WebObj):
                 out += f" ({count})"
             return out
 
-        def display_possibly_nonsplit(trip):
+        def display_possibly_split(trip):
             sub, count, labels = trip
             out = fr"{sub.knowl(paren=True)}&nbsp;.&nbsp;{sub.quotient_knowl(paren=True)}"
             if count > 1:
@@ -2417,12 +2417,12 @@ class WebAbstractGroup(WebObj):
                                       False, # hide if no expressions
                                       display_nonsplit,
                                       nonsplit_expressions_knowl))
-            elif rtype == "possibly_nonsplit":
+            elif rtype == "possibly_split":
                 return rep_line(
                     "group.nonsplit_product",
-                    "Possibly non-split product",
-                    content_from_opts(self.possibly_nonsplit_products,
-                                      self.possibly_nonsplit_products,
+                    "Possibly split product",
+                    content_from_opts(self.possibly_split_products,
+                                      self.possibly_split_products,
                                       False, # hide if no expressions
                                       display_nonsplit,
                                       nonsplit_expressions_knowl))
@@ -2454,7 +2454,7 @@ class WebAbstractGroup(WebObj):
             output_strg += show_reps("semidirect")
             output_strg += show_reps("wreath")
             output_strg += show_reps("nonsplit")
-            output_strg += show_reps("possibly_nonsplit")
+            output_strg += show_reps("possibly_split")
         output_strg += show_reps("aut")
         if output_strg == "":  #some live groups have no constructions
             return "data not computed"

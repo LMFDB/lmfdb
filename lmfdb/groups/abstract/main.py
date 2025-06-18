@@ -99,15 +99,14 @@ def yesno(val):
     return "yes" if val else "no"
 
 def deTeX_name(s):
-    s = re.sub(r"[{}\\]", "", s)
+    s = re.sub(r"[{}\\_]", "", s)
     return s
 
 @cached_function
 def group_families(deTeX=False):
-    L = [[el[k] for k in el.keys()] for el in list(db.gps_families.search(projection=["family", "tex_name"]))]
-    L.sort()
+    L = [(el["family"], el["tex_name"]) for el in db.gps_families.search(projection=["family", "tex_name"], sort=["priority"])]
     if deTeX:
-        L = [[pair[0], deTeX_name(pair[1])] for pair in L]
+        L = [(fam, deTeX_name(name)) for (fam, name) in L]
     return L
 
 # For dynamic knowls
@@ -121,7 +120,7 @@ def ctx_abstract_groups():
         "dyn_gen": dyn_gen,
         "semidirect_data": semidirect_data,
         "nonsplit_data": nonsplit_data,
-        "possibly_nonsplit_data": possibly_nonsplit_data,
+        "possibly_split_data": possibly_split_data,
         "aut_data": aut_data,
         "trans_expr_data": trans_expr_data,
     }
@@ -179,6 +178,8 @@ def parse_family(inp, query, qfield):
         raise ValueError("Not a valid family label.")
     if inp == 'any':
         query[qfield] = {'$in':list(db.gps_special_names.search(projection='label'))}
+    elif inp == 'C':
+        query["cyclic"] = True
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
 
@@ -2206,37 +2207,37 @@ class GroupsSearchArray(SearchArray):
         )
         permutation_degree = TextBox(
             name="permutation_degree",
-            label="Minimal permutation degree",
+            label="Min. permutation degree",
             knowl="group.permutation_degree",
             example="3",
             example_span="4, or a range like 3..5",
         )
         transitive_degree = TextBox(
             name="transitive_degree",
-            label="Minimal transitive degree",
+            label="Min. transitive degree",
             knowl="group.transitive_degree",
             example="3",
             example_span="4, or a range like 3..5",
         )
         irrC_degree = TextBox(
             name="irrC_degree",
-            label=r"Minimal degree of $\C$-irrep",
+            label=r"Min. degree of $\C$-irrep",
             knowl="group.min_faithful_linear",
             example="3",
-            example_span="-1, 4, or a range like 3..5",
+            example_span="-1, or a range like 3..5",
             advanced=True,
         )
         irrQ_degree = TextBox(
             name="irrQ_degree",
-            label=r"Minimal degree of $\Q$-irrep",
+            label=r"Min. degree of $\Q$-irrep",
             knowl="group.min_faithful_linear",
             example="3",
-            example_span="-1, 4, or a range like 3..5",
+            example_span="-1, or a range like 3..5",
             advanced=True,
         )
         linC_degree = TextBox(
             name="linC_degree",
-            label=r"Minimal degree of $\C$-rep",
+            label=r"Min. degree of $\C$-rep",
             knowl="group.min_faithful_linear",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2244,7 +2245,7 @@ class GroupsSearchArray(SearchArray):
         )
         linQ_degree = TextBox(
             name="linQ_degree",
-            label=r"Minimal degree of $\Q$-rep",
+            label=r"Min. degree of $\Q$-rep",
             knowl="group.min_faithful_linear",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2378,21 +2379,21 @@ class GroupsSearchArray(SearchArray):
         )
         number_normal_subgroups = TextBox(
             name="number_normal_subgroups",
-            label="Number of normal subgroups",
+            label="Num. of normal subs",
             knowl="group.subgroup.normal",
             example="3",
             example_span="4, or a range like 3..5",
         )
         number_conjugacy_classes = TextBox(
             name="number_conjugacy_classes",
-            label="Number of conjugacy classes",
+            label="Num. of conj. classes",
             knowl="group.conjugacy_class",
             example="3",
             example_span="4, or a range like 3..5",
         )
         number_autjugacy_classes = TextBox(
             name="number_autjugacy_classes ",
-            label="Number of autjugacy classes",
+            label="Num. of aut. classes",
             knowl="group.autjugacy_class",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2400,7 +2401,7 @@ class GroupsSearchArray(SearchArray):
         )
         number_characteristic_subgroups = TextBox(
             name="number_characteristic_subgroups ",
-            label="Number of characteristic subgroups",
+            label="Num. of char. subgroups",
             knowl="group.characteristic_subgroup",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2419,7 +2420,8 @@ class GroupsSearchArray(SearchArray):
             options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
             knowl="group.families",
             label="Family",
-            example="C_n, S_n")
+            advanced=True
+        )
 
 
         count = CountBox()
@@ -2435,6 +2437,9 @@ class GroupsSearchArray(SearchArray):
             [nilpotent, perfect],
             [simple, solvable],
             [transitive_degree, permutation_degree],
+            [number_subgroups, number_normal_subgroups],
+            [number_conjugacy_classes, number_autjugacy_classes],
+            [order_stats, rank],
             [irrC_degree, irrQ_degree],
             [linC_degree, linQ_degree],
             [almost_simple, derived_length],
@@ -2444,10 +2449,7 @@ class GroupsSearchArray(SearchArray):
             [Agroup, monomial],
             [Zgroup, rational],
             [schur_multiplier, wreath_product],
-            [number_subgroups, number_normal_subgroups],
             [number_characteristic_subgroups, number_divisions],
-            [number_conjugacy_classes, number_autjugacy_classes],
-            [order_stats, rank],
             [exponents_of_order, commutator_count],
             [count, family],
         ]
@@ -2458,16 +2460,14 @@ class GroupsSearchArray(SearchArray):
             [abelian, cyclic, solvable, simple],
             [perfect, direct_product, semidirect_product, wreath_product],
             [aut_group, aut_order, transitive_degree, permutation_degree],
+            [number_subgroups, number_normal_subgroups, number_conjugacy_classes],
+            [order_stats, family, exponents_of_order, commutator_count],
             [irrC_degree, irrQ_degree, linC_degree, linQ_degree],
             [outer_group, outer_order, metabelian, metacyclic],
             [almost_simple, quasisimple, Agroup, Zgroup],
             [frattini_label, derived_length, rank, schur_multiplier],
-            [supersolvable, monomial, rational ],
-
-            [number_subgroups, number_normal_subgroups, number_conjugacy_classes],
+            [supersolvable, monomial, rational],
             [number_characteristic_subgroups, number_autjugacy_classes, number_divisions],
-
-            [order_stats, exponents_of_order, commutator_count, family],
             [name],
         ]
 
@@ -3058,11 +3058,11 @@ def nonsplit_data(label):
     ans += "</table>"
     return Markup(ans)
 
-def possibly_nonsplit_data(label):
+def possibly_split_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Possibly nonsplit product expressions for ${gp.tex_name}$:<br />\n"
     ans += "<table>\n"
-    for sub, cnt, labels in gp.possibly_nonsplit_products:
+    for sub, cnt, labels in gp.possibly_split_products:
         ans += fr"<tr><td>{sub.knowl(paren=True)} $\,.\,$ {sub.quotient_knowl(paren=True)}</td><td>"
         if cnt > 1:
             ans += f" in {cnt} ways"
@@ -3116,7 +3116,7 @@ flist = {
     "qrep_data": qrep_data,
     "semidirect_data": semidirect_data,
     "nonsplit_data": nonsplit_data,
-    "possibly_nonsplit_data": possibly_nonsplit_data,
+    "possibly_split_data": possibly_split_data,
     "aut_data": aut_data,
     "trans_expr_data": trans_expr_data,
 }
