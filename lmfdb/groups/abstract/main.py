@@ -1042,6 +1042,7 @@ class Group_download(Downloader):
     table = db.gps_groups2
     title = "Abstract groups"
 
+
 def group_postprocess(res, info, query):
     # We want to get latex for all of the centers, central quotients, commutators and abelianizations in one query
     labels = set()
@@ -1592,14 +1593,12 @@ def render_abstract_group(label, data=None):
         title = f"Abstract group ${gp.tex_name}$"
 
         # disable until we can fix downloads
-        downloads = [
-           ("Underlying data", url_for(".gp_data", label=label)),
+        downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
+					 ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+		#            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+					 ("Underlying data", url_for(".gp_data", label=label)),
         ]
-#            ("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-#            ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-#            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
- #          ("Underlying data", url_for(".gp_data", label=label)),
-#       ]
+
 
         # "internal" friends
         sbgp_of_url = (
@@ -1909,6 +1908,237 @@ def sgp_data(label):
     else:
         return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
+
+
+# need to write characters in GAP
+def cyclotomic_gap(n,vals):
+    print(n,vals)
+    s = ""
+    val = vals[0]
+    c = val[0]  # coefficient
+    if c == 0:   # JP DOES THIS ONLY HAPPEN WITH 0?
+        return 0
+    e = val[1]  # exponent
+    if c == 1 and e == 0:  # special case of 1
+        s += str(1)
+    elif c != 1:   #don't put leading 1s
+        s += str(c)
+    if e != 0:
+        if c != 1:
+            s += "*"
+        s +="E(" + str(n) + ")"
+        if e != 1:
+            s += "^" + str(e)
+
+    for i in range(1,len(vals)):
+        val = vals[i]
+        c = val[0]  # coefficient
+        e = val[1]  # exponent
+        if c > 0:
+            s += "+"
+        if c == 1 and e == 0:  # special case of 1
+            s += str(1)
+        if c == -1 and e != 0:
+            s += "-"   # we don't want -1E
+        elif c != 1:
+            s += str(c)
+        if e != 0:
+            if abs(c) != 1:
+                s+= "*"
+            s += "E(" + str(n) + ")"
+            if e != 1:
+                s += "^" + str(e)
+    return s
+
+
+# create preable for downloading individual group
+def download_preable(com1, com2, dltype):
+    if dltype == "gap":
+        f = "#"
+    else:
+        f = ""
+    s = com1
+    s += f + " Various presentations of this group are stored in this file: \n"
+    s += f + "\t GPC is polycyclic presentation GPerm is permutation group \n"
+    s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
+    s += f + " Many characteristics of the group are stored as booleans: \n"
+    s += f + "\t cyclic \n"
+    s += f + "\t abelian \n"
+    s += f + "\t is_nilpotent \n"
+    s += f + "The character table is stored as \n"
+    s +=com2
+    return s
+
+
+
+# create construction of group for downloading, G is WebAbstractGroup
+def download_construction_string(G,dltype):
+    # add Lie groups?
+#    s = str(G.code_snippets()) + "\n"
+    s = ""
+    snippet = G.code_snippets()
+    if "PC" in G.representations:
+        gp_str =  str(snippet['presentation'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,",  "GPC,")
+    if "Perm" in G.representations:
+        gp_str =  str(snippet['permutation'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GPerm :=")
+    if "GLZ" in G.representations:
+        gp_str = str(snippet['GLZ'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLZ :=")
+    if "GLFp" in G.representations:
+        gp_str = str(snippet['GLFp'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLFp :=")
+    if "GLZN" in G.representations:
+        gp_str = str(snippet['GLZN'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLZN :=")
+    if "GLZq" in G.representations:
+        gp_str = str(snippet['GLZq'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLZq :=")
+    if "GLFq" in G.representations:
+        gp_str = str(snippet['GLFq'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GLFq :=")
+    #fix up transitive case?
+#    s += (str(snippet['transitive'][dltype]) + "\n").replace("G :=", "Gtr :=")
+    return str(s)
+
+
+
+# create boolean string for downloading, G is WebAbstractGroup
+def download_boolean_string(G,dltype,ul_label):
+    if dltype == "magma":
+        s = "RF := recformat< Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, metacyclic, monomial, nilpotent, perfect, quasisimple, rational, solvable, supersolvable  : BoolElt >; \n"
+        s += "booleans_" + ul_label + " := rec< RF |  "
+    elif dltype == "gap":
+        s = "booleans_" + ul_label + " := rec( "
+    else:
+        return ""
+
+    s += "Agroup := " + str(G.Agroup).lower() + ", \n"
+    s += "Zgroup := " +	str(G.Zgroup).lower() + ", \n"
+    s += "abelian := " + str(G.abelian).lower() +", \n"
+    s += "almost_simple := " + str(G.almost_simple).lower() +", \n"
+    s += "cyclic := " + str(G.cyclic).lower() +", \n"
+    s += "metabelian := " + str(G.metabelian).lower() +", \n"
+    s += "metacyclic := " + str(G.metacyclic).lower() +", \n"
+    s += "monomial := " + str(G.monomial).lower() +", \n"
+    s += "nilpotent := " + str(G.nilpotent).lower() +", \n"
+    s += "perfect := " + str(G.perfect).lower() +", \n"
+    s += "quasisimple := " + str(G.quasisimple).lower() +", \n"
+    s += "rational := " + str(G.rational).lower() +", \n"
+    s += "solvable := " + str(G.solvable).lower() +", \n"
+    s += "supersolvable := " + str(G.supersolvable).lower() +" \n" # no comma since last one
+
+
+    # close record
+    if dltype == "gap":
+        s += "); \n"
+    if dltype == "magma":
+        s += ">; \n"
+    return s
+
+
+#JP TO DO
+def download_char_table_magma(G, ul_label):
+    return ""
+
+
+def download_char_table_gap(G,ul_label):
+    tbl = "chartbl_" + G.label.replace(".","_")
+#    s = "chartblGAP:= function() \n"
+#    s += "local " + tbl +", i; \n"
+    s = tbl + ":=rec(); \n"
+
+    s += tbl + ".IsFinite:= true; \n"
+    s += tbl +".UnderlyingCharacteristic:= 0; \n"
+
+    gp_type = G.element_repr_type
+
+    #JP DONT HAVE TO REDO SNIPPET PARTS SINCE ABOVE -- commented out below
+    snippet = G.code_snippets()
+    if gp_type == "PC":
+#        gp_str =  str(snippet['presentation']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,",  "GPC,")
+        s += tbl + ".UnderlyingGroup:= GPC;\n"
+    if gp_type == "Perm":
+#        gp_str =  str(snippet['permutation']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GPerm :=")
+        s += tbl + ".UnderlyingGroup:= GPerm;\n"
+    if gp_type == "GLZ":
+#        gp_str = str(snippet['GLZ']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLZ :=")
+        s += tbl + ".UnderlyingGroup:= GLZ;\n"
+    if gp_type == "GLFp":
+#        gp_str = str(snippet['GLFp']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLFp :=")
+        s += tbl + ".UnderlyingGroup:= GLFp;\n"
+    if gp_type == "GLZN":
+#        gp_str = str(snippet['GLZN']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLZN :=")
+        s += tbl + ".UnderlyingGroup:= GLZN;\n"
+    if gp_type == "GLZq":
+#        gp_str = str(snippet['GLZq']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLZq :=")
+        s += tbl + ".UnderlyingGroup:= GLZq;\n"
+    if gp_type == "GLFq":
+#        gp_str = str(snippet['GLFq']['gap']) + "\n"
+#        s += gp_str.replace("G :=", "GLFq :=")
+        s += tbl + ".UnderlyingGroup:= GLFq;\n"
+
+
+    s += tbl + ".Size:= " + str(G.order) + ";\n"
+    s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB."; \n'
+    s += tbl + '.Identifier:= " ' + G.name + ' "; \n'
+    s += tbl + ".NrConjugacyClasses:= " + str(G.number_conjugacy_classes) + "; \n"
+
+    # process info from each conjugacy class
+    size_centralizers, class_names,order_class_reps, cc_reps = ([] for i in range(4))
+    num_primes = G.num_primes_for_power_maps
+    power_maps = [[ ] for i in range(num_primes)]
+    for conj in G.conjugacy_classes:
+        for i in range(num_primes):
+            power_maps[i].append(conj.powers[i])
+        #power_maps.append(conj.powers)
+        size_centralizers.append(int(conj.centralizer.split(".")[0]))
+        class_names.append(conj.label)
+        order_class_reps.append(conj.order)
+        cc_reps.append(G.decode(conj.representative,rep_type = gp_type))  #JP TESTING
+
+    cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
+    pwr_maps = "[ , "
+    for i in range(len(power_maps)-1):
+        pwr_maps += str(power_maps[i]) + ", "
+    pwr_maps += str(power_maps[len(power_maps)-1]) +"]"  # PowerMaps needs a blank entry in front
+
+    s += tbl + ".ConjugacyClasses:= " + str(cc_reps) + ";\n"
+    s += tbl + ".IdentificationOfConjugacyClasses:= " + str(list(range(1,G.number_conjugacy_classes+1))) +";\n"
+    s += tbl + ".ComputedPowerMaps:= "  + str(pwr_maps) + ";\n"
+    s += tbl + ".SizesCentralizers:= "  + str(size_centralizers) + ";\n"
+    s += tbl + ".ClassNames:= "  + str(cl_names) + ";\n"
+    s += tbl + ".OrderClassRepresentatives:= "  + str(order_class_reps) + ";\n"
+
+    irr_values = []
+    for char in G.characters:
+        irr_values_individual =[cyclotomic_gap(char.cyclotomic_n,char.values[i]) for i in range(len(char.values))]
+        irr_values.append(irr_values_individual)
+    irr = str(irr_values).replace("'","")
+    s += tbl + ".Irr:= " +str(irr) + ";\n"
+
+
+    # end material
+    s += "ConvertToLibraryCharacterTableNC("+ tbl+ "); \n"
+    return s
+
+
+def download_char_table(G,dltype,ul_label):  # G is web abstract group
+    if dltype == "gap":
+        return download_char_table_gap(G,ul_label)
+    elif dltype == "magma":
+        return download_char_table_magma(G,ul_label)
+    else:
+        return ""
+
+
 @abstract_page.route("/<label>/download/<download_type>")
 def download_group(**args):
     dltype = args["download_type"]
@@ -1921,10 +2151,14 @@ def download_group(**args):
     wag = WebAbstractGroup(label)
     gp_data = wag._data
 
-    filename = "group" + label
+    ul_label = wag.label.replace(".","_")
+    filename = "group" + ul_label
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
         filename += ".g"
+        com = ""
+        com1 = "#"
+        com2 = ""
     elif dltype == "magma":
         com = ""
         com1 = "/*"
@@ -1934,72 +2168,23 @@ def download_group(**args):
         com = ""
         com1 = "#="
         com2 = "=#"
-    s = com1 + "\n"
-    s += com + " Group " + label + " downloaded from the LMFDB on %s.\n" % (mydate)
-    if dltype == "oscar":
-        # This needs to change for larger groups
-        if gp_data["solvable"]:
-            s += com + " The group will be created as a polycyclic group (not necessarily matching the presentation in the LMFDB).\n"
-            s += com + ' You can turn it into a permutation group using "PermGroup(G)".\n'
-        else:
-            s += com + " The group will be created as a permutation group (not necessarily using the generators used in the LMFDB).\n"
-        s += com2 + "\n"
-        s += "\n"
-        s += "G = small_group(%s,%s)" % tuple(label.split("."))
-    else:
-        s += (
-            com
-            + " If the group is solvable, G is the  polycyclic group  matching the one presented in LMFDB."
-        )
-        s += com + " Generators will be stored as a, b, c,... to match LMFDB.  \n"
-        s += (
-            com
-            + " If the group is nonsolvable, G is a permutation group giving with generators as in LMFDB."
-        )
-        s += com + "\n"
-        s += com2 + "\n"
-        s += "\n"
+    s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
+    s += "\n \n"
 
-        ### This all needs to change
-        reps = gp_data["representations"]
-        rep_type = gp_data["element_repr_type"]
-        if rep_type == "PC":
-            s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-            s += "encd:= " + str(reps["PC"]["code"]) + "; \n"
+    s += download_preable(com1, com2,dltype)
+    s += "\n \n"
 
-            if dltype == "magma":
-                s += "G:=SmallGroupDecoding(encd,gpsize); \n"
-            elif dltype == "gap":
-                s += "G:=PcGroupCode(encd, gpsize); \n"
+    s += com1 + " Constructions " + com2 +  "\n"
+    s += download_construction_string(wag,dltype)
+    s += "\n \n"
 
-            gen_index = reps["PC"]["gens"]
-            num_gens = len(gen_index)
-            for i in range(num_gens):
-                s += ascii_lowercase[i] + ":= G." + str(gen_index[i]) + "; \n"
+    s += com1 + " Booleans " + com2 +  "\n"
+    s += download_boolean_string(wag,dltype, ul_label)
+    s += "\n \n"
 
-        # otherwise nonsolvable MAY NEED TO CHANGE WITH MATRIX GROUPS??
-        elif rep_type == "Perm":
-            d = reps["Perm"]["d"]
-            s += "d:=" + str(d) + "; \n"
-            s += "Sd:=SymmetricGroup(d); \n"
-
-            # Turn Lehmer code into permutations
-            list_gens = []
-            for perm in reps["Perm"]["gens"]:
-                perm_decode = Permutations(d).unrank(perm)
-                list_gens.append(perm_decode)
-            if gp_data["solvable"]:
-                s += "gpsize:=  " + str(gp_data["order"]) + "; \n"
-                s += "encd:= " + str(wag.pc_code) + "; \n"
-
-            if dltype == "magma":
-                s += "G:=sub<Sd | " + str(list_gens) + ">; \n"
-            elif dltype == "gap":
-                #          MAKE LIST2
-                s += "List_Gens:=" + str(list_gens) + "; \n \n"
-                s += "LGens:=[]; \n"
-                s += "for gens in List_Gens do AddSet(LGens,PermList(gens)); od;\n"
-                s += "G:=Subgroup(Sd,LGens);"
+    if wag.complex_characters_known:
+        s += com1 + " Character Table " + com2 +  "\n"
+        s += download_char_table(wag,dltype, ul_label)
 
     response = make_response(s)
     response.headers['Content-type'] = 'text/plain'
