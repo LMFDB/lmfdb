@@ -255,7 +255,11 @@ Statistics about orders of elements in this group have not been computed.
   {% if not gp.live() %}
   <tr>
     <td>{{KNOWL('group.schur_multiplier', 'Schur multiplier')}}:</td>
-    <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td>
+    {% if gp.schur_multiplier is none %}
+      <td>not computed</td>
+    {% else %}
+      <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text() | safe}}$</a></td>
+    {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
