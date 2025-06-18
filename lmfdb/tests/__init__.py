@@ -19,7 +19,7 @@ assert NumberField
 
 class LmfdbTest(unittest.TestCase):
     @classmethod
-    def setUp(cls):
+    def setUpClass(cls):
         app.config["TESTING"] = True
         cls.app = app
         cls.tc = app.test_client()
