@@ -2960,17 +2960,17 @@ class WebAbstractSubgroup(WebObj):
             else:
                 self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
         # Temp fix for a bug in sylow data
-        p, k = self.subgroup_order.is_prime_power(get_data=True)
-        if self.subgroup_order == 1:
-            self.sylow = self.hall = 1
-        elif self.subgroup_order.gcd(self.quotient_order) == 1:
-            self.hall = self.subgroup_order.radical()
-            if k > 0:
-                self.sylow = p
-            else:
-                self.sylow = p
-        else:
-            self.sylow = self.hall = 0
+        #p, k = self.subgroup_order.is_prime_power(get_data=True)
+        #if self.subgroup_order == 1:
+        #    self.sylow = self.hall = 1
+        #elif self.subgroup_order.gcd(self.quotient_order) == 1:
+        #    self.hall = self.subgroup_order.radical()
+        #    if k > 0:
+        #        self.sylow = p
+        #    else:
+        #        self.sylow = p
+        #else:
+        #    self.sylow = self.hall = 0
 
     def spanclass(self):
         s = "subgp"
