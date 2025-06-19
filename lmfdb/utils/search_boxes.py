@@ -672,7 +672,7 @@ class SearchArray(UniqueRepresentation):
                 #for name, display, prefix in self.sorts:
                 #    yield (name, display + " &#9650;")
                 #    yield (name + "op", display + " &#9660;")
-                return [(name, display) for (name, display, sort_order) in sorts]
+                return [(name, display) for name, display, sort_order in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:
@@ -795,7 +795,7 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return ""
         else:
-            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for (name, val) in self.hidden(info))
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for name, val in self.hidden(info))
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"

@@ -17,7 +17,25 @@
       <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$:</td> <td>${{info.c}}$</td></tr>
       <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf|safe}}</td></tr>
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
-      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q_{ {{info.p}} }) }$:</td> <td>${{info.aut}}$</td></tr>
+
+  {% if info.aut_gp_knowl %}
+      <tr><td> 
+      {%- set ktitle = '$\Aut(K/\Q_{' ~ info.p ~ '})$' -%}
+      {{ KNOWL('lf.automorphism_group', title=ktitle) -}}
+      {%- if info.auttype=='aut' -%}
+      :
+      {% else %}
+      $=$
+      {%- set ktitle = '$\Gal(K/\Q_{' ~ info.p ~ '})$' -%}
+      {{ KNOWL('nf.galois_group', title=ktitle) }}:
+      {% endif %}
+      </td> 
+      <td>{{info.aut_gp_knowl|safe}}</td></tr>
+    {% else %}
+      {%- set ktitle = '$\Aut(K/\Q_{' ~ info.p ~ '})$' -%}
+      <tr><td> $\#$ {{ KNOWL('lf.automorphism_group', title=ktitle) }}:</td> <td>${{info.aut}}$</td></tr>
+  {% endif %}
+
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
       <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
 </table>

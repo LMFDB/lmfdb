@@ -11,6 +11,21 @@ from sage.all import QQ, PolynomialRing, NumberField
 
 logger = make_logger("bmf")
 
+# BMFs which have no elliptic curve: since 2025-03-31 there is a
+# column 'curve_status' in table bmf_forms containing
+# +1 if there is a matching curve in ec_nfcurves
+#  0 if there is no matching curve in the database but one should (conjecturally) exist
+# -1 if there is no matching curve in the database and no matching curve exists (based on theory or on Magma's
+#    EllipticCurveSearch() returning "no elliptic curves have the given traces")
+
+# Prior to the creation and filling of this column, the following was
+# used, based on the fact that in some, but not all, cases, it was
+# possible to tell that no curve exists from other data:
+
+################################################################################################################
+# The next block can be removed once the table bmf_forms with the extra column and this code change are on prod
+################################################################################################################
+
 # Labels of BMFs which have no elliptic curve but are not twists of
 # base change.  Those which have no curve but are twists of base
 # change are detectable automatically in the code below, but these are
@@ -19,11 +34,6 @@ logger = make_logger("bmf")
 # curve over the base field; these curves were found by Ciaran
 # Schembri.  At some point we will want to list these abelian surfaces
 # as friends when there is no curve.
-
-# TODO: make this list into a table, OR add a column to the bmf_forms
-# table to indicate whether or not a curve exists (which could be
-# because we have not found one, but is normally because there really
-# is no curve).
 
 bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.4.1-34225.7-a',
@@ -82,17 +92,16 @@ bmfs_with_no_curve = ['2.0.4.1-34225.7-b',
                       '2.0.56.1-127.1-b',
                       '2.0.56.1-127.2-a',
                       '2.0.56.1-127.2-b',
-                      # '2.0.59.1-675.5-b',
-                      # '2.0.59.1-675.8-b',
                       '2.0.68.1-901.1-a',
                       '2.0.68.1-901.1-b',
                       '2.0.68.1-901.2-a',
                       '2.0.68.1-901.2-b',
                       '2.0.91.1-784.1-a',
                       '2.0.91.1-784.1-b',
-                      # '2.0.95.1-624.5-c',
-                      # '2.0.95.1-624.5-d',
 ]
+################################################################################################################
+# The preceding block can be removed once the table bmf_forms with the extra column and this code change are on prod
+################################################################################################################
 
 def cremona_label_to_lmfdb_label(lab):
     if "." in lab:
@@ -245,24 +254,33 @@ class WebBMF():
             self.bc_extra = r', but is a twist of the base change of a form over \(\mathbb{Q}\) with coefficients in \(\mathbb{Q}(\sqrt{'+str(self.bcd)+r'})\)'
         self.properties.append(('Base change', str(self.bc)))
 
-        curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
-        if curve_bc is not None:
-            curve_bc = [lab for lab in curve_bc if '?' not in lab]
-            if curve_bc and "." not in curve_bc[0]:
-                curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
-            self.ec_status = 'exists'
+        # Look at the 'curve_status' column to see if a matching
+        # elliptic curve exists, or if that column is missing, look
+        # for the label in the ec_nfcurves table:
+        try:
+            self.ec_status = self.curve_status
+        except AttributeError:
+            self.ec_status = None
+        if self.ec_status not in [0,-1]: # so it is +1 (curve does exist) or None (curve_status not set)
             self.ec_url = url_for("ecnf.show_ecnf_isoclass", nf=self.field_label, conductor_label=self.level_label, class_label=self.label_suffix)
-            curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
-            bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso) for cond, iso, num in curve_bc_parts]
-            bc_labels = [".".join( [str(cond), str(2), 'a', iso] ) for cond,iso,_ in curve_bc_parts]
-            bc_exists = [db.mf_newforms.label_exists(lab) for lab in bc_labels]
-            self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
-        else:
+            curve_bc = db.ec_nfcurves.lucky({'class_label':self.label}, projection="base_change")
             self.bc_forms = []
+            if curve_bc is not None:
+                self.ec_status = 1 # curve does exist in ec_nfcurves, now see if it is base-change
+                curve_bc = [lab for lab in curve_bc if '?' not in lab]
+                if curve_bc and "." not in curve_bc[0]:
+                    curve_bc = [cremona_label_to_lmfdb_label(lab) for lab in curve_bc]
+                curve_bc_parts = [split_lmfdb_label(lab) for lab in curve_bc]
+                bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
+                           for cond, iso, num in curve_bc_parts]
+                bc_labels = [".".join( [str(cond), str(2), 'a', iso] ) for cond,iso,_ in curve_bc_parts]
+                bc_exists = [db.mf_newforms.label_exists(lab) for lab in bc_labels]
+                self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
+        if self.ec_status is None:
             if self.bct or self.label in bmfs_with_no_curve:
-                self.ec_status = 'none'
+                self.ec_status = -1 # there is certainly no curve
             else:
-                self.ec_status = 'missing'
+                self.ec_status = 0 # there should be a curve but we do not have one
 
         self.properties.append(('Sign', self.sign))
         self.properties.append(('Analytic rank', self.anrank))
@@ -282,11 +300,11 @@ class WebBMF():
         else:
             # old code
             if self.dimension == 1:
-                if self.ec_status == 'exists':
+                if self.ec_status == 1:
                     self.friends += [('Isogeny class {}'.format(self.label), self.ec_url)]
-                elif self.ec_status == 'missing':
+                elif self.ec_status == 0:
                     self.friends += [('Isogeny class {} missing'.format(self.label), "")]
-                else:
+                else: # self.ec_status == -1
                     self.friends += [('No elliptic curve', "")]
 
             self.friends += [ ('L-function not available','')]

@@ -841,7 +841,7 @@ class ECNF():
         # we want to use split_full_label but that will fail if the class code + number are '?'
         self.base_change_NFsplit = [(lab,)+split_full_label(lab.replace('?','a1')) for lab in self.base_change_NF]
         self.bcNFtext = [] # for the Base change section of the home page
-        for (lab,nf,cond,cl,num) in self.base_change_NFsplit:
+        for lab, nf, cond, cl, num in self.base_change_NFsplit:
             field_knowl = FIELD(nf).knowl()
             if '?' in lab:
                 cond_norm = cond.split(".")[0]

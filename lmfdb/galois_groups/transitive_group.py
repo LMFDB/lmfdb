@@ -68,7 +68,7 @@ def list_with_mult(lis, names=True, cache=None):
 
 # Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
 def cyclestrings(perm):
-    a = ['('+','.join([str(u) for u in v])+')' for v in perm]
+    a = ('(' + ','.join(str(u) for u in v) + ')' for v in perm)
     return ''.join(a)
 
 def compress_cycle_type(ct):
@@ -150,9 +150,12 @@ class WebGaloisGroup:
         if str(self.n()) == "1":
             return "None needed"
         gens = self.gens()
-        gens = [cyclestrings(g) for g in gens]
+        gens = ['$'+cyclestrings(g)+'$' for g in gens]
         gens = ', '.join(gens)
         return gens
+
+    def aut_knowl(self):
+        return abstract_group_display_knowl(self._data['aut_label'])
 
     def gapgroupnt(self):
         if int(self.n()) == 1:

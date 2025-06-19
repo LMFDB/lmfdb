@@ -406,7 +406,7 @@ def ec_postprocess(res, info, query):
     for rec in res:
         gens = mwgens.get(rec["lmfdb_label"])
         if gens is not None:
-            gens = [(a/c, b/c) for (a,b,c) in gens]
+            gens = [(a / c, b / c) for a, b, c in gens]
         rec["mwgens"] = gens
     return res
 
@@ -498,7 +498,7 @@ class ECDownloader(Downloader):
         if "mwgens" in info.get("showcol", "").split("."):
             gens = db.ec_mwbsd.lucky({"lmfdb_label": row["lmfdb_label"]}, "gens")
             if gens is not None:
-                gens = [(ZZ(a)/c, ZZ(b)/c) for (a,b,c) in gens]
+                gens = [(ZZ(a) / c, ZZ(b) / c) for a, b, c in gens]
             row["mwgens"] = gens
         return row
 

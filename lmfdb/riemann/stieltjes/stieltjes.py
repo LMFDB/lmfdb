@@ -40,8 +40,8 @@ def list_constants(start=None,
 
     if fmt == 'plain':
         response = Response(
-                "%d %s %s\n" % (n, str(g), str(c))
-                for (n, g, c) in s_constants)
+            "%d %s %s\n" % (n, str(g), str(c))
+            for n, g, c in s_constants)
         response.headers['content-type'] = 'text/plain'
     else:
         response = str(list(s_constants))
@@ -56,7 +56,7 @@ def stieltjes_list(start, limit):
             'FROM stieltjes WHERE n >= ? LIMIT ?'
     c.execute(query, (start, limit))
     L = []
-    for (n, m, e) in c:
+    for n, m, e in c:
         g = RR(m)*RR(2)**e
         c = (-1)**n * g/RR(n+1).gamma()
         L.append((n, RR(m)*RR(2)**e, c))

@@ -653,8 +653,8 @@ def unsci(rng, first=False):
         return rng
     if "-" in rng:
         pieces = "-".split(rng)
-        fz = [True] + [False]*(len(pieces)-1)
-        return "-".join(unsci(piece, z) for (piece, z) in zip(pieces, fz))
+        fz = [True] + [False] * (len(pieces) - 1)
+        return "-".join(unsci(piece, z) for piece, z in zip(pieces, fz))
     e = tpow.findall(rng)
     if not e:
         return rng
@@ -759,7 +759,7 @@ class ArtinStats(StatsDisplay):
         "Indicator": (lambda ind: r"frobenius_schur_indicator=%s" % ind),
     }
     buckets = {
-        "Conductor": [trange(a, b) for (a,b) in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
+        "Conductor": [trange(a, b) for a, b in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
         "Dim": [str(x) for x in range(1,13)] + ["14-21", "24-30", "35", "40-70"]
     }
 

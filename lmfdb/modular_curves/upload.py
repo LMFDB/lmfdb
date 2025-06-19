@@ -66,7 +66,7 @@ class Points(UploadSection):
         edata = db.modcurve_models.search({"modcurve":rec["curve"], "model_type":model_type}, ["number_variables", "equation"])
         if edata is None:
             box = [x for x in self.inputs if x.name == "model_type"][0]
-            model_name = [name for (opt, name) in box.options if opt == str(model_type)][0]
+            model_name = [name for opt, name in box.options if opt == str(model_type)][0]
             raise ValueError(f"There is no {model_name} model for {rec['curve']} stored in the database")
         d = edata["number_variables"]
         equation = edata["equation"]
@@ -233,7 +233,7 @@ class GonalityBounds(UploadSection):
             status = 3
             comment = ""
         timestamp = datetime.utcnow().isoformat()
-        ids = {upid: (status, timestamp, comment) for (upid, data) in self.delayed}
+        ids = {upid: (status, timestamp, comment) for upid, data in self.delayed}
 
         # If other columns are added later, it's important that these be sorted (see lmfdb/uploads/process.py)
         columns = sorted(['label', 'q_gonality', 'q_gonality_bounds', 'qbar_gonality', 'qbar_gonality_bounds'])

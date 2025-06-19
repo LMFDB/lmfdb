@@ -53,7 +53,7 @@ class BMFTest(LmfdbTest):
         Check that various search combinations work.
         """
         self.check_args(base_url+"?field_label=2.0.7.1&level_norm=322&count=10", 'Results (4 matches)')
-        self.check_args(base_url+"?start=0&include_base_change=off&include_cm=only&count=100", 'ModularForm/GL2/ImaginaryQuadratic/2.0.119.1/9.1/a/')
+        self.check_args(base_url+"?start=0&include_base_change=off&include_cm=only&count=100", 'ModularForm/GL2/ImaginaryQuadratic/2.0.1007.1/9.1/a/')
 
     # tests for newspace pages
     def test_newspace(self):

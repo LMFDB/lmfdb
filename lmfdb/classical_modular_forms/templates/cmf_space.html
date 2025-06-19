@@ -132,7 +132,7 @@
 
 {% endif %}
 
-{% if space.trivial_character and space.level != 1  and space.dim > 0%}
+{% if space.trivial_character and space.level != 1  and space.mf_dim > 0%}
 <p>The following table gives the dimensions of the cuspidal new subspaces with specified eigenvalues for the {{ KNOWL('cmf.atkin-lehner',title='Atkin-Lehner operators') }}{% if space.factored_level %} and the {{ KNOWL('cmf.fricke',title='Fricke involution') }}{% endif %}.</p>
 
 {{ space.ALdim_table() | safe }}

@@ -9,7 +9,7 @@ def elist_formatter(elist):
     if not elist:
         return "1"
     edisp = ["^{%s}" % e if e != 1 else "" for e in elist]
-    return f"${''.join(p+e for (p,e) in zip('pqrsl', edisp))}$"
+    return f"${''.join(p + e for p, e in zip('pqrsl', edisp))}$"
 
 
 pqr_re = re.compile(r"^(1)|(p(\^\{(\d+)\})?)(q(\^\{(\d+)\})?)?(r(\^\{(\d+)\})?)?(s(\^\{(\d+)\})?)?(l(\^\{(\d+)\})?)?$")
@@ -110,13 +110,15 @@ group_knowls = {
     "rank": "group.rank",
 }
 
+
 def stype_insert_knowls(s):
     L = re.split("(,? ?(?:(?:and)|(?:or)|(?:not))? )", s)
     for i in range(len(L)):
         if i % 2 == 0 and L[i] in group_knowls:
             L[i] = display_knowl(group_knowls[L[i]], L[i])
     return "".join(L)
-stype_klookup = {stype: stype_insert_knowls(desc) for (stype, desc) in stype_lookup.items()}
+stype_klookup = {stype: stype_insert_knowls(desc) for stype, desc in stype_lookup.items()}
+
 
 def stype_formatter(stype):
     return stype_klookup[stype]
