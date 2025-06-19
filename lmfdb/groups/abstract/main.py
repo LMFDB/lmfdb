@@ -2425,7 +2425,6 @@ class GroupsSearchArray(SearchArray):
             options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
             knowl="group.families",
             label="Family",
-            advanced=True
         )
 
         count = CountBox()
