@@ -107,7 +107,11 @@ def group_families(deTeX=False):
     L = [(el["family"], el["tex_name"], el["name"]) for el in db.gps_families.search(projection=["family", "tex_name", "name"], sort=["priority"])]
     L = [(fam, name if "fam" in tex else f"${tex}$") for (fam, tex, name) in L]
     if deTeX:
-        L = [(fam, deTeX_name(name)) for (fam, name) in L]
+        # Used for constructing the dropdown
+        return [(fam, deTeX_name(name)) for (fam, name) in L]
+    def hidden(fam):
+        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic"]
+    L = [(fam, name, "fam_more" if hidden(fam) else "fam_always", hidden(fam)) for (fam, name) in L]
     return L
 
 # For dynamic knowls
@@ -175,7 +179,7 @@ def parse_group(inp, query, qfield):
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ([el[0] for el in group_families()] + ['any']):
+    if inp not in ([el[0] for el in group_families(deTeX=True)] + ['any']):
         raise ValueError("Not a valid family label.")
     if inp == 'any':
         query[qfield] = {'$in':list(db.gps_special_names.search(projection='label'))}
