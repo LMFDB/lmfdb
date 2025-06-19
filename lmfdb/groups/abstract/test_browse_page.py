@@ -239,7 +239,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?family=Q", "16.11")
         self.not_check_args("/Groups/Abstract/?family=S", "16.11")
         self.not_check_args("/Groups/Abstract/?family=SL", "16.11")
-        self.not_check_args("/Groups/Abstract/?family=any", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=any", "D_4:C_2")
 
     def test_order_stats_search(self):
         r"""
