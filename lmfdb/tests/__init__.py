@@ -18,16 +18,23 @@ assert NumberField
 
 
 class LmfdbTest(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         app.config["TESTING"] = True
-        self.app = app
-        self.tc = app.test_client()
+        cls.app = app
+        cls.tc = app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
         import lmfdb.website
 
         assert lmfdb.website
         from lmfdb import db
 
-        self.db = db
+        cls.db = db
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
 
     def check(self, homepage, path, text):
         assert path in homepage, "%s not in the homepage" % path
