@@ -68,7 +68,7 @@ def list_with_mult(lis, names=True, cache=None):
 
 # Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
 def cyclestrings(perm):
-    a = ['('+','.join([str(u) for u in v])+')' for v in perm]
+    a = ('(' + ','.join(str(u) for u in v) + ')' for v in perm)
     return ''.join(a)
 
 def compress_cycle_type(ct):

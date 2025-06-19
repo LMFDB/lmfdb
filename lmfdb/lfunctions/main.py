@@ -445,7 +445,7 @@ def euler_search(info, query):
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
     p_range = parse_ints_to_list(info['n'])
-    info["showcol"] = ".".join(["euler%s" % p for p in prime_range(100) if p in p_range])
+    info["showcol"] = ".".join("euler%s" % p for p in prime_range(100) if p in p_range)
     for p in prime_range(100):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 

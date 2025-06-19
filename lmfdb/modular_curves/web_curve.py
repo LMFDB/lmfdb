@@ -536,7 +536,7 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s" % (', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
+                return r"%s" % (', '.join(modcurve_link(label) for label in qtwists if label != self.label))
             else:
                 return r"none in database"
         else:
