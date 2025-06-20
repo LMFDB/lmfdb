@@ -5,6 +5,13 @@ from .utilities import plural_form
 class TdElt():
     _wrap_type = 'td'
 
+    def _merge_style(self, *styles):
+        output = {}
+        for style in styles:
+            output.update(style)
+        output = " ".join(f"{k}: {v};" for (k,v) in output.items())
+        return {"style": output} if output else {}
+
     def _add_class(self, D, clsname):
         if 'class' in D:
             D['class'] = D['class'] + ' ' + clsname
@@ -39,7 +46,7 @@ class Spacer(TdElt):
         return self.td(self.colspan) + "</td>"
 
     def label_html(self, info=None):
-        return self.td(self.colspan) + "</td>"
+        return self.td(self.colspan, **self._merge_style(self.label_style)) + "</td>"
 
     def example_html(self, info=None):
         return self.td() + "</td>"
@@ -108,6 +115,8 @@ class SearchBox(TdElt):
         example_col=False,
         id=None,
         qfield=None,
+        label_style={},
+        example_style={},
     ):
         self.name = name
         self.id = id
@@ -116,6 +125,8 @@ class SearchBox(TdElt):
         self.example = example
         self.example_span = example if example_span is None else example_span
         self.example_span_colspan = example_span_colspan
+        self.example_style = example_style
+        self.label_style = label_style
         if example_col is None:
             example_col = bool(self.example_span)
         self.example_col = example_col
@@ -145,7 +156,7 @@ class SearchBox(TdElt):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True) + self._label(info) + "</td>"
+        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True, **self._merge_style(self.label_style)) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
@@ -154,8 +165,8 @@ class SearchBox(TdElt):
     def example_html(self, info=None):
         if self.example_span:
             return (
-                self.td(self.example_span_colspan)
-                + '<span class="formexample">e.g. %s</span></td>' % self.example_span
+                self.td(self.example_span_colspan, **self._merge_style(self.example_style))
+                + f'<span class="formexample">e.g. {self.example_span}</span></td>'
             )
         elif self.example_col:
             return "<td></td>"
@@ -196,6 +207,8 @@ class TextBox(SearchBox):
         example_col=None,
         id=None,
         qfield=None,
+        example_style={},
+        label_style={},
         extra=[],
     ):
         SearchBox.__init__(
@@ -206,6 +219,8 @@ class TextBox(SearchBox):
             example=example,
             example_span=example_span,
             example_span_colspan=example_span_colspan,
+            example_style=example_style,
+            label_style=label_style,
             colspan=colspan,
             rowspan=rowspan,
             width=width,
@@ -279,6 +294,8 @@ class SelectBox(SearchBox):
         example_value=False,
         id=None,
         qfield=None,
+        label_style={},
+        example_style={},
         extra=[],
     ):
         SearchBox.__init__(
@@ -298,6 +315,8 @@ class SelectBox(SearchBox):
             example_col=example_col,
             id=id,
             qfield=qfield,
+            label_style=label_style,
+            example_style=example_style,
         )
         if options is None:
             options = self._options
@@ -404,7 +423,7 @@ class TextBoxWithSelect(TextBox):
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
         return (
-                self.td(colspan, nowrap=True, style="text-align-last: justify;")
+                self.td(colspan, nowrap=True, **self._merge_style({"text-align-last": "justify"}, self.label_style))
             + self._label(info)
             + '<span style="margin-left: 10px;"></span>'
             + self.select_box._input(info)
@@ -632,7 +651,7 @@ class SearchButtonWithSelect(SearchButton):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return (self.td(colspan)
+        return (self.td(colspan, **self._merge_style(self.label_style))
                 + '<div style="display: flex; justify-content: space-between;">'
                 + self._label(info)
                 + '<span style="margin-left: 5px;"></span>'
