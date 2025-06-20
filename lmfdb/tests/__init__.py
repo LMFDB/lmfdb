@@ -21,6 +21,9 @@ class LmfdbTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         app.config["TESTING"] = True
+        # Ensure secret key is set for testing (required for session functionality like flash messages)
+        if not app.secret_key:
+            app.secret_key = "test_secret_key_for_testing_only"
         cls.app = app
         cls.tc = app.test_client()
         cls.app_context = cls.app.app_context()
