@@ -19,7 +19,9 @@ assert NumberField
 
 class CustomRedirectHandler(HTTPRedirectHandler):
     def http_error_308(self, req, fp, code, msg, headers):
-        return self.http_error_301(req, fp, code, msg, headers)
+        # Treat 308 like 307 to bypass the check in redirect_request in older Python versions
+        # by passing the code 307.
+        return self.http_error_307(req, fp, 307, msg, headers)
 
 class LmfdbTest(unittest.TestCase):
     @classmethod
