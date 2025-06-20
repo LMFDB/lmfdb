@@ -68,9 +68,10 @@ class LmfdbTest(unittest.TestCase):
         headers = {"User-Agent": "Mozilla/5.0"}
         context = ssl._create_unverified_context()
         request = Request(path, headers=headers)
-        assert path in homepage
+        assert path in homepage, f"Path {path} not found in homepage"
         try:
-            assert text in urlopen(request, context=context).read().decode("utf-8")
+            response_text = urlopen(request, context=context).read().decode("utf-8")
+            assert text in response_text, f"Text '{text}' not found in response from {path}"
         except URLError as e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
                 pass
@@ -94,11 +95,13 @@ class LmfdbTest(unittest.TestCase):
 
         if has_magma:
             if mode == 'equal':
-                assert expected == magma.eval(magma_code)
+                magma_result = magma.eval(magma_code)
+                assert expected == magma_result, f"Expected '{expected}', but magma.eval('{magma_code}') returned '{magma_result}'"
             elif mode == 'in':
-                assert expected in magma.eval(magma_code)
+                magma_result = magma.eval(magma_code)
+                assert expected in magma_result, f"Expected '{expected}' to be in magma.eval('{magma_code}') result '{magma_result}'"
             else:
-                raise ValueError("mode must be either 'equal' or 'in")
+                raise ValueError("mode must be either 'equal' or 'in'")
 
     def check_sage_compiles_and_extract_variables(self, sage_code):
         """
