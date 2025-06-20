@@ -943,6 +943,8 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 def datetime_to_timestamp_in_ms(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
     return int((dt - epoch).total_seconds() * 1000000)
 
 def timestamp_in_ms_to_datetime(ts):
