@@ -1,6 +1,6 @@
 import unittest
 
-from urllib.request import Request
+from urllib.request import Request, HTTPRedirectHandler, HTTPSHandler, HTTPHandler, build_opener
 from urllib.error import URLError
 import ssl
 import errno
@@ -16,6 +16,10 @@ assert PolynomialRing
 assert QQ
 assert NumberField
 
+
+class CustomRedirectHandler(HTTPRedirectHandler):
+    def http_error_308(self, req, fp, code, msg, headers):
+        return self.http_error_301(req, fp, code, msg, headers)
 
 class LmfdbTest(unittest.TestCase):
     @classmethod
@@ -68,14 +72,13 @@ class LmfdbTest(unittest.TestCase):
             assert t not in page, "%s in the %s" % (t, path)
 
     def check_external(self, homepage, path, text):
-        from urllib.request import HTTPRedirectHandler, HTTPSHandler, HTTPHandler, build_opener
         headers = {"User-Agent": "Mozilla/5.0"}
         context = ssl._create_unverified_context()
         request = Request(path, headers=headers)
         assert path in homepage, f"Path {path} not found in homepage"
         try:
-            # Create opener that follows redirects for both HTTP and HTTPS
-            redirect_handler = HTTPRedirectHandler()
+            # Create opener that follows redirects for both HTTP and HTTPS, including 308
+            redirect_handler = CustomRedirectHandler()
             http_handler = HTTPHandler()
             https_handler = HTTPSHandler(context=context)
             opener = build_opener(redirect_handler, http_handler, https_handler)
