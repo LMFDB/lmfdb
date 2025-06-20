@@ -1,6 +1,6 @@
 import unittest
 
-from urllib.request import Request, urlopen
+from urllib.request import Request
 from urllib.error import URLError
 import ssl
 import errno
@@ -68,13 +68,27 @@ class LmfdbTest(unittest.TestCase):
             assert t not in page, "%s in the %s" % (t, path)
 
     def check_external(self, homepage, path, text):
+        from urllib.request import HTTPRedirectHandler, HTTPSHandler, HTTPHandler, build_opener
         headers = {"User-Agent": "Mozilla/5.0"}
         context = ssl._create_unverified_context()
         request = Request(path, headers=headers)
         assert path in homepage, f"Path {path} not found in homepage"
         try:
-            response_text = urlopen(request, context=context).read().decode("utf-8")
-            assert text in response_text, f"Text '{text}' not found in response from {path}"
+            # Create opener that follows redirects for both HTTP and HTTPS
+            redirect_handler = HTTPRedirectHandler()
+            http_handler = HTTPHandler()
+            https_handler = HTTPSHandler(context=context)
+            opener = build_opener(redirect_handler, http_handler, https_handler)
+            response = opener.open(request)
+            
+            # Check if we were redirected
+            final_url = response.geturl()
+            if final_url != path:
+                print(f"Redirected from {path} to {final_url}")
+                
+            response_text = response.read().decode("utf-8")
+            
+            assert text in response_text, f"Text '{text}' not found in response from {path} (final URL: {final_url})"
         except URLError as e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
                 pass
