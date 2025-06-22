@@ -85,14 +85,14 @@ class LmfdbTest(unittest.TestCase):
             https_handler = HTTPSHandler(context=context)
             opener = build_opener(redirect_handler, http_handler, https_handler)
             response = opener.open(request)
-            
+
             # Check if we were redirected
             final_url = response.geturl()
             if final_url != path:
                 print(f"Redirected from {path} to {final_url}")
-                
+
             response_text = response.read().decode("utf-8")
-            
+
             assert text in response_text, f"Text '{text}' not found in response from {path} (final URL: {final_url})"
         except URLError as e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
