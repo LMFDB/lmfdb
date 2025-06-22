@@ -109,6 +109,7 @@ def group_families(deTeX=False):
     if deTeX:
         # Used for constructing the dropdown
         return [(fam, deTeX_name(name)) for (fam, name) in L]
+
     def hidden(fam):
         return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic"]
     L = [(fam, name, "fam_more" if hidden(fam) else "fam_always", hidden(fam)) for (fam, name) in L]
