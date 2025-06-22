@@ -361,7 +361,7 @@ class LfuncDownload(Downloader):
     table = db.lfunc_search
     def postprocess(self, rec, info, query):
         rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
-        rec['nus'] = [(0.5*r,i) for (r,i) in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        rec['nus'] = [(0.5*r, i) for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
             rec['root_number'] = 1 - int(4*rec['root_angle'])
@@ -445,7 +445,7 @@ def euler_search(info, query):
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
     p_range = parse_ints_to_list(info['n'])
-    info["showcol"] = ".".join(["euler%s" % p for p in prime_range(100) if p in p_range])
+    info["showcol"] = ".".join("euler%s" % p for p in prime_range(100) if p in p_range)
     for p in prime_range(100):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 

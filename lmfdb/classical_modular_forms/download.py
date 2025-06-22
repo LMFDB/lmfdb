@@ -476,7 +476,7 @@ class CMF_download(Downloader):
                 ]
         if hecke_nf is None or hecke_nf['hecke_ring_character_values'] is None:
             return out + [
-                    'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
+                    'function MakeCharacter_%d_%s_Hecke( : Kf := Kf)' % (newform.level, newform.char_orbit_label),
                     '    return MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                     'end function;'
                     ]
@@ -492,7 +492,7 @@ class CMF_download(Downloader):
             self.explain.append(explain)
             out += [
                 explain,
-                'function MakeCharacter_%d_%s_Hecke( : Kf := None)' % (newform.level, newform.char_orbit_label),
+                'function MakeCharacter_%d_%s_Hecke( : Kf := false)' % (newform.level, newform.char_orbit_label),
                     '    ' + magma.assign('N', level).rstrip('\n'), # level
                     '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
                     '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators

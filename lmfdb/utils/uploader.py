@@ -132,7 +132,7 @@ class USelectBox(UploadBox):
         )
 
     def validate(self, value):
-        opts = [val for (val, display) in self.options]
+        opts = [val for val, display in self.options]
         if value in opts:
             if getattr(self, "no_empty", None) and not value:
                 raise ValueError(f"Must specify {self.name}")
@@ -312,7 +312,7 @@ class UploadSection():
                 if any(x for x in row):
                     if len(row) != len(header):
                         raise ValueError(f"Row {i} of CSV file has {len(row)} entries but header has {len(header)}")
-                    yield self.validate({box.name: val for (box, val) in zip(header, row)})
+                    yield self.validate({box.name: val for box, val in zip(header, row)})
 
     def parse_form(self, form):
         form = dict(form)
@@ -467,10 +467,10 @@ class Uploader():
         # Construct the query, specifying a submitter and/or upload status
         results = {}
         has_unexpected = False
-        if any(c for (a,b,c) in statuses):
+        if any(c for a, b, c in statuses):
             query = {}
             query["section"] = {"$in": list(self.section_lookup)}
-            query["status"] = {"$in": [int(a) for (a,b,c) in statuses if c]}
+            query["status"] = {"$in": [int(a) for a, b, c in statuses if c]}
             if user_shown:
                 query["submitter"] = user_shown
 
