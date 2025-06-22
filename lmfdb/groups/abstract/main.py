@@ -67,6 +67,7 @@ from .web_groups import (
     abstract_group_display_knowl,
     cc_data_to_gp_label,
     gp_label_to_cc_data,
+    missing_subs,
 )
 from .stats import GroupStats
 
@@ -2932,9 +2933,10 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        #GAP doesn't have groups of order 3^8 so if not in db, can't be live
-        if label.startswith("6561.") and gp.source == "Missing":
-            return Markup("No additional information for this group of order 6561 is available.")
+        # dealing with groups identified in magma but not in gap so can't do live pages˚
+        ord = label.split(".")[0]
+        if missing_subs(int(ord)) and gp.source == "Missing":
+            return Markup("No additional information for this group of order " + ord + " is available.")
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"

@@ -195,6 +195,19 @@ def in_small_gp_db(order):
     return False
 
 
+# determine groups which are identified in Magma but not Gap
+def missing_subs(n):
+    if n == 6561:
+        return True
+    f = factor(n)
+    if n > 2000:
+        if sum(f[i][1] for i in range(len(f))) == 4:
+            return True
+        if len(f) == 1 and f[0][1] == 7 and f[0][0] > 11:
+            return True
+    return False
+
+
 def cc_data_to_gp_label(order,counter):
     if in_small_gp_db(order):
         return str(order) + '.' + str(counter)
@@ -3133,7 +3146,8 @@ class WebAbstractSubgroup(WebObj):
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor()) == 1})
             return newgroup
-        if self.subgroup_order == 6561:
+         # issue with groups identifiable in magma but not gap
+        if missing_subs(self.subgroup_order):
             gp = WebAbstractGroup(self.subgroup, None)
             if gp.source == "Missing":
                 order = self.subgroup_order
