@@ -563,7 +563,7 @@ class WebNumberField:
             return ([-newd, 0, 1], newd)
 
     def discrootfield(self):
-        (rfcoeffs, newd) = self.discrootfieldcoeffs()
+        rfcoeffs, newd = self.discrootfieldcoeffs()
         return formatfield(rfcoeffs, missing_text=r'$\Q(\sqrt{%s}$)' % compress_int(newd, sides=5)[0])
 
     # Warning, this produces our preferred integral basis

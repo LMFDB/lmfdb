@@ -94,9 +94,9 @@ class LfunctionTest(LmfdbTest):
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-176e2-1.1-c1e2-0-4' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/', follow_redirects=True)
+        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.1/a/', follow_redirects=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-        assert 'Elliptic curve 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.1879.1-1.1-a' in L.get_data(as_text=True)
         assert '4-1879e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/', follow_redirects=True)
