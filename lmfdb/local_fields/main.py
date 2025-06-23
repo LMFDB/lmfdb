@@ -1301,6 +1301,7 @@ def render_family(info, query):
     parse_newton_polygon(info,query,"slopes", qfield="slopes_tmp", mode=info.get('slopes_quantifier'))
     parse_newton_polygon(info,query,"ind_of_insep", qfield="ind_of_insep_tmp", mode=info.get('insep_quantifier'), reversed=True)
     parse_bracketed_posints(info,query,"associated_inertia")
+    parse_bracketed_posints(info,query,"jump_set")
     if 'one_per' in info and info['one_per'] == 'packet':
         query["__one_per__"] = "packet"
     parse_noop(info,query,"hidden")

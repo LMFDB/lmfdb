@@ -437,11 +437,16 @@ class pAdicSlopeFamily:
         fields, cache = self.fields
         js = sorted(Counter(tuple(rec["jump_set"]) for rec in fields if "jump_set" in rec).items())
         def show_js(x, cnt):
-            disp = str(x).replace(" ","").replace("[]", r"[\ ]")
+            if not x:
+                srch = "[]"
+                disp = "undefined"
+            else:
+                srch = str(x).replace(" ","")
+                disp = f"${srch}$"
             if len(js) == 1:
-                return f"${disp}$"
-            url = url_for(".family_page", label=self.label, jump_set=disp)
-            return f'${disp}$ (<a href="{url}#fields">show {cnt}</a>)'
+                return disp
+            url = url_for(".family_page", label=self.label, jump_set=srch)
+            return f'{disp} (<a href="{url}#fields">show {cnt}</a>)'
         s = ", ".join(show_js(list(x), cnt) for (x,cnt) in js)
         if any("jump_set" not in rec for rec in fields):
             s += " (incomplete)"
