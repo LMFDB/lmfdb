@@ -995,7 +995,7 @@ def get_trans_url(label):
     return url_for("galois_groups.by_label", label=trans_gp(label))
 
 def display_url(label, tex):
-    if label is None:
+    if label is None or missing_subs(label):
         if tex is None:
             return ''
         return f'${tex}$'
@@ -2935,7 +2935,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         gp = WebAbstractGroup(label, data=data)
         # dealing with groups identified in magma but not in gap so can't do live pages˚
         ord = label.split(".")[0]
-        if missing_subs(int(ord)) and gp.source == "Missing":
+        if missing_subs(label) and gp.source == "Missing":
             ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
                 label,
                 f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
