@@ -207,7 +207,7 @@ def missing_subs(n_or_label):
     if isinstance(n_or_label, str):
         if n_or_label in groups_from_missing_orders():
             return False
-        n = ZZ(label.split(".")[0])
+        n = ZZ(n_or_label.split(".")[0])
     else:
         n = ZZ(n_or_label)
     if n == 6561:
