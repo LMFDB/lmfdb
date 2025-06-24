@@ -2922,8 +2922,8 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[1] is None:
             ans += "Isomorphism class has not been identified<br />"
         else:
-            # TODO: add hash knowl and search link to groups with this order and hash
-            ans += f"Hash: {profiledata[1]}<br />"
+            # TODO: add search link to groups with this order and hash
+            ans += f"{display_knowl('group.hash', 'Hash')} : {profiledata[1]}<br />"
         isomorphism_label = "Subgroups with this data:"
     else:
         if label.startswith("ab/"):
