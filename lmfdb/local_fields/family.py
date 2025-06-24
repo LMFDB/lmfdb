@@ -98,43 +98,56 @@ class pAdicSlopeFamily:
     def link(self):
         return f'<a href="{url_for(".family_page", label=self.label)}">{self.label}</a>'
 
+    def _spread_ticks(self, ticks):
+        scale = ticks[-1] / 20
+        cscale = 2*scale
+        mindiff = min((b-a) for (a,b) in zip(ticks[:-1], ticks[1:]))
+        ticklook0 = {a: a for a in ticks} # adjust values below when too close
+        if mindiff < scale and len(ticks) >= 2:
+            by_mindiff = {}
+            for cscale in [2.0*scale, 1.5*scale, 1.0*scale, 0.8*scale, 0.6*scale, 0.4*scale, 0.2*scale]:
+                # Try different scales for building clusters
+                ticklook = dict(ticklook0)
+                # Group into clusters
+                clusters = [[ticks[0]]]
+                for tick in ticks[1:]:
+                    if tick - clusters[-1][-1] < cscale:
+                        clusters[-1].append(tick)
+                    else:
+                        clusters.append([tick])
+                # Spread from the center in each cluster, staying away from midpoint between cluster centers
+                centers = [sum(C) / len(C) for C in clusters]
+                if len(clusters) > 1:
+                    maxspread = [(centers[1] - centers[0]) / 2]
+                    for i in range(1, len(clusters) - 1):
+                        maxspread.append(min(centers[i] - centers[i-1], centers[i+1] - centers[i]) / 2)
+                    maxspread.append((centers[-1] - centers[-2]) / 2)
+                    # Can't actually use the full maxspread, since that would lead to different clusters combining
+                    maxspread = [m - cscale/4 for m in maxspread]
+                    spread = [0 if len(C) == 1 else min(cscale/2, 2 * m / (len(C) - 1)) for (m,C) in zip(maxspread, clusters)]
+                    for s, c, C in zip(spread, centers, clusters):
+                        n = float(len(C))
+                        for i, a in enumerate(C):
+                            delta = (i - (n - 1)/2) * s
+                            if delta > 0:
+                                ticklook[a] = max(c + delta, a)
+                            else:
+                                ticklook[a] = min(c + delta, a)
+                adjusted = sorted(ticklook.values())
+                mindiff = min((b-a) for (a,b) in zip(adjusted[:-1], adjusted[1:]))
+                by_mindiff[mindiff] = ticklook
+            ticklook0 = by_mindiff[max(by_mindiff)]
+        return ticklook0
+
     @lazy_attribute
     def spread_ticks(self):
         slopeset = set(self.slopes)
         meanset = set(self.means)
         ticks = sorted(slopeset.union(meanset))
-        scale = ticks[-1] / 20
+        ticklook = self._spread_ticks(ticks)
+        # We determine the overlaps of the bands
         rectangles = {(a,b): 0 for (a,b) in zip(ticks[:-1], ticks[1:])}
         rkeys = sorted(rectangles)
-        mindiff = min((b-a) for (a,b) in rkeys)
-        ticklook = {a: a for a in ticks} # adjust values below when too close
-        if mindiff < scale and len(ticks) >= 3:
-            # Group into clusters
-            clusters = [[ticks[0]]]
-            for tick in ticks[1:]:
-                if tick - clusters[-1][-1] < 2*scale:
-                    clusters[-1].append(tick)
-                else:
-                    clusters.append([tick])
-            # Spread from the center in each cluster, staying away from midpoint between cluster centers
-            centers = [sum(C) / len(C) for C in clusters]
-            if len(clusters) > 1:
-                maxspread = [(centers[1] - centers[0]) / 2]
-                for i in range(1, len(clusters) - 1):
-                    maxspread.append(min(centers[i] - centers[i-1], centers[i+1] - centers[i]) / 2)
-                maxspread.append((centers[-1] - centers[-2]) / 2)
-                # Can't actually use the full maxspread, since that would lead to different clusters combining
-                maxspread = [m - scale/2 for m in maxspread]
-                spread = [0 if len(C) == 1 else min(scale, 2 * m / (len(C) - 1)) for (m,C) in zip(maxspread, clusters)]
-                for s, c, C in zip(spread, centers, clusters):
-                    n = float(len(C))
-                    for i, a in enumerate(C):
-                        delta = (i - (n - 1)/2) * s
-                        if delta > 0:
-                            ticklook[a] = max(c + delta, a)
-                        else:
-                            ticklook[a] = min(c + delta, a)
-        # We determine the overlaps of the bands
         for m, s in zip(self.means, self.slopes):
             # Don't worry about doing this in any fancy way, since there won't be many rectangles in practice
             for (a,b) in rkeys:
@@ -143,6 +156,11 @@ class pAdicSlopeFamily:
                 elif a >= s:
                     break
         return ticklook, ticks, slopeset, meanset, rectangles
+
+    @lazy_attribute
+    def spread_rams(self):
+        # Analogue of spread_ticks for x-axis of Herbrand plot
+        return self._spread_ticks(sorted(set(self.rams)))
 
     @lazy_attribute
     def picture(self):
@@ -154,7 +172,7 @@ class pAdicSlopeFamily:
         ticklook, ticks, slopeset, meanset, rectangles = self.spread_ticks
         hscale = self.e / 18
         mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rectangles)
-        aspect = max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff))
+        aspect = min(8, max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff)))
 
         # Print the bands
         for (a,b), cnt in rectangles.items():
@@ -236,6 +254,7 @@ class pAdicSlopeFamily:
     def herbrand_function_plot(self):
         # Fix duplicates
         ticklook, ticks, slopeset, meanset, rectangles = self.spread_ticks
+        ramlook = self.spread_rams
         mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rectangles)
         maxram, maxslope, maxmean = self.rams[-1], self.slopes[-1], self.means[-1]
         if maxram < 2:
@@ -247,7 +266,7 @@ class pAdicSlopeFamily:
         axistop = max(maxy, maxslope + 2*tickx)
         ticky = maxy / 100
         hscale = maxx / 18
-        aspect = max(0.6 * (maxx + 3*hscale) / axistop, maxx/(32*mindiff))
+        aspect = min(8, max(0.6 * (maxx + 3*hscale) / axistop, maxx/(32*mindiff)))
         #w = self.w
         #inds = [i for i in range(w) if i==w-1 or self.slopes[i] != self.slopes[i+1]]
         pts = list(zip(self.rams, self.slopes)) #[(self.rams[i],self.slopes[i]) for i in inds]
@@ -265,8 +284,9 @@ class pAdicSlopeFamily:
         for m, r, s in zip(self.means, self.rams, self.slopes): #i in inds:
             #m, r, s = self.means[i], self.rams[i], self.slopes[i]
             P += line([(0, m), (r, s)], color="green", linestyle="--", thickness=1)
-            P += text(f"${str(r)}$", (r, -ticky), color="blue", vertical_alignment="top")
+            P += text(f"${str(r)}$", (ramlook[r], -ticky), color="blue", vertical_alignment="top")
             P += line([(0, s), (tickx, s)], color="black")
+            P += line([(r, 0), (r, ticky)], color="black")
         P.set_aspect_ratio(aspect)
         P.axes(False)
         return encode_plot(P, pad=0, pad_inches=0, bbox_inches="tight", dpi=300)

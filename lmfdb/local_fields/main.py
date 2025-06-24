@@ -205,9 +205,9 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
         L += points([(0,1)], color="white")
         asp_ratio = (xmax + 2*txshift) / (8 + 16*tyshift)
     for i in range(xmax+1):
-        L += line([(-i, 0), (-i, ymax)], color="grey", thickness=0.5)
+        L += line([(-i, 0), (-i, ymax)], color=(0.85,0.85,0.85), thickness=0.5)
     for j in range(ymax+1):
-        L += line([(0,j), (-xmax, j)], color="grey", thickness=0.5)
+        L += line([(0,j), (-xmax, j)], color=(0.85,0.85,0.85), thickness=0.5)
     #L += line([(0,0), (0, ymax)], color="grey")
     #L += line([(0,0), (-xmax, 0)], color="grey")
     #for i in range(1, ymax + 1):
@@ -253,7 +253,7 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
                         L += restag(polys[i][j], nextq, P[1] - (nextq - P[0]) * slope)
                     nextq *= p
             L += text(
-                f"${slope}$", (-(P[0] + Q[0]) / 2 + txshift, (P[1] + Q[1]) / 2 - tyshift),
+                f"${slope}$", (-(P[0] + Q[0]) / 2 + txshift, (P[1] + Q[1]) / 2 - tyshift/(2*asp_ratio)),
                 horizontal_alignment="left",
                 color="blue")
             #for x in range(P[0], Q[0] + 1):
@@ -272,13 +272,13 @@ def plot_ramification_polygon(verts, p, polys=None, inds=None):
                 if j and c:
                     L += restag(c, P[0] + j, P[1])
     L += line([(-x,y) for (x,y) in verts], thickness=2)
-    L += polygon([(-x,y) for (x,y) in verts] + [(-xmax, ymax)], alpha=0.1)
+    L += polygon([(-x,y) for (x,y) in verts] + [(-xmax, ymax)], alpha=0.08)
     if inds is not None:
         # print("INDS", inds)
-        L += points([(-p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black")
+        L += points([(-p**i, ind) for (i, ind) in enumerate(inds)], size=30, color="black", zorder=5)
     L.axes(False)
     L.set_aspect_ratio(asp_ratio)
-    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4))
+    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8,4), dpi=300)
 
 
 @app.context_processor
@@ -1655,9 +1655,9 @@ class FamiliesSearchArray(SearchArray):
                                  [mass_relative, mass_absolute, ambiguity, field_count, wild_segments, relbox]]
             self.sorts = [
                 ("", "base", ['p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
-                ("c", "discriminant exponent", ['p', 'n', 'e', 'c', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'ctr']),
+                ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'ctr']),
                 ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
-                ("ambiguity", "ambiguity", ['p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'ambiguity', 'e', 'c', 'ctr']),
+                ("ambiguity", "ambiguity", ['ambiguity', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
                 ("field_count", "num fields", ['field_count', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
                 ("mass", "mass", ['mass_relative', 'p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
                 #("mass_found", "mass found", ['mass_found', 'mass_relative', 'p', 'n0', 'e0', 'c0', 'n', 'e', 'c', 'ctr']),
@@ -1666,7 +1666,8 @@ class FamiliesSearchArray(SearchArray):
             self.refine_array = [[qp, degree, e, f, c],
                                  [mass_relative, ambiguity, field_count, wild_segments]]
             self.sorts = [
-                ("", "discriminant exponent", ['p', 'n', 'e', 'c', 'ctr']),
+                ("", "label", ['p', 'n', 'e', 'c', 'ctr']),
+                ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'ctr']),
                 ("top_slope", "top slope", ['top_slope', 'slopes', 'visible', 'p', 'n', 'e', 'c', 'ctr']),
                 ("ambiguity", "ambiguity", ['p', 'n', 'ambiguity', 'e', 'c', 'ctr']),
                 ("field_count", "num fields", ['p', 'n', 'field_count', 'e', 'c', 'ctr']),
