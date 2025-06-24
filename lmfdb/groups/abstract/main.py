@@ -1048,6 +1048,10 @@ def field_knowl(fld):
 
 # This function returns a label for the conjugacy class search page for a group
 def display_cc_url(numb,gp):
+    if numb == None:    # for cases where we didn't compute number
+        return 'not computed'
+    elif numb > 512:    # remove url if conjugacy classes are not stored
+        return numb
     return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
 class Group_download(Downloader):
