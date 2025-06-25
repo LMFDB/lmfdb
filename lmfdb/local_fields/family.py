@@ -99,11 +99,13 @@ class pAdicSlopeFamily:
         return f'<a href="{url_for(".family_page", label=self.label)}">{self.label}</a>'
 
     def _spread_ticks(self, ticks):
+        ticklook0 = {a: a for a in ticks} # adjust values below when too close
+        if len(ticks) <= 1:
+            return ticklook0
         scale = ticks[-1] / 20
         cscale = 2*scale
         mindiff = min((b-a) for (a,b) in zip(ticks[:-1], ticks[1:]))
-        ticklook0 = {a: a for a in ticks} # adjust values below when too close
-        if mindiff < scale and len(ticks) >= 2:
+        if mindiff < scale:
             by_mindiff = {}
             for cscale in [2.0*scale, 1.5*scale, 1.0*scale, 0.8*scale, 0.6*scale, 0.4*scale, 0.2*scale]:
                 # Try different scales for building clusters
