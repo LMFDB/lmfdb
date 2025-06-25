@@ -67,6 +67,7 @@ from .web_groups import (
     abstract_group_display_knowl,
     cc_data_to_gp_label,
     gp_label_to_cc_data,
+    missing_subs,
 )
 from .stats import GroupStats
 
@@ -994,7 +995,7 @@ def get_trans_url(label):
     return url_for("galois_groups.by_label", label=trans_gp(label))
 
 def display_url(label, tex):
-    if label is None:
+    if label is None or missing_subs(label):
         if tex is None:
             return ''
         return f'${tex}$'
@@ -1396,7 +1397,7 @@ conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
-    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
+    MultiProcessedCol("center", "group.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
     ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
              lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
              contingent=lambda info: info.get("group_factors",True), # group_factors not present when downloading
@@ -1786,7 +1787,7 @@ def shortsubinfo(ambient, short_label):
     ans += subinfo_getsub(
         "Normal closure", "group.subgroup.normal_closure", wsg.normal_closure
     )
-    ans += subinfo_getsub("Centralizer", "group.subgroup.centralizer", wsg.centralizer)
+    ans += subinfo_getsub("Centralizer", "group.centralizer", wsg.centralizer)
     ans += subinfo_getsub("Core", "group.core", wsg.core)
     # ans += '<tr><td>Coset action</td><td>%s</td></tr>\n' % wsg.coset_action_label
     ## There was a bug in the Magma code computing generators, so we disable this for the moment
@@ -2925,8 +2926,8 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[1] is None:
             ans += "Isomorphism class has not been identified<br />"
         else:
-            # TODO: add hash knowl and search link to groups with this order and hash
-            ans += f"Hash: {profiledata[1]}<br />"
+            # TODO: add search link to groups with this order and hash
+            ans += f"{display_knowl('group.hash', 'Hash')} : {profiledata[1]}<br />"
         isomorphism_label = "Subgroups with this data:"
     else:
         if label.startswith("ab/"):
@@ -2936,9 +2937,14 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        #GAP doesn't have groups of order 3^8 so if not in db, can't be live
-        if label.startswith("6561.") and gp.source == "Missing":
-            return Markup("No additional information for this group of order 6561 is available.")
+        # dealing with groups identified in magma but not in gap so can't do live pages˚
+        ord = label.split(".")[0]
+        if missing_subs(label) and gp.source == "Missing":
+            ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
+                label,
+                f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
+                "subgroups with this order")
+            return Markup(ans)
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"
