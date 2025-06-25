@@ -96,6 +96,8 @@ gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 abstract_group_label_regex = re.compile(r"^(\d+)\.((\d+)|[a-z]+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
+abstract_group_hash_regex = re.compile(r"^(\d+)#(\d+)$")
+
 def yesno(val):
     return "yes" if val else "no"
 
@@ -189,6 +191,25 @@ def parse_family(inp, query, qfield):
         query["cyclic"] = True
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
+
+@search_parser
+def parse_hashes(inp, query, qfield, order_field):
+    if inp.count("#") == 0:
+        opts = [ZZ(opt) for opt in inp.split(",")]
+        if len(opts) == 1:
+            query[qfield] = opts[0]
+        else:
+            query[qfield] = {"$or": opts}
+    elif inp.count("#") == 1:
+        N, hsh = inp.split("#")
+        N, hsh = ZZ(N), ZZ(hsh)
+        if order_field not in query:
+            query[order_field] = N
+        elif query[order_field] != N:
+            raise ValueError(f"You cannot specify order both in the {order_field} input and the {qfield} input")
+        query[qfield] = hsh
+    else:
+        raise ValueError("To specify multiple hash values, all must have the same order; provide the order in the order input and then just give hashes separated by commas")
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -940,6 +961,16 @@ def group_jump(info):
             flash_error(f"Transitive group {jump} is not in the database")
             return redirect(url_for(".index"))
         return redirect(url_for(".by_label", label=label))
+    #hash
+    hre = abstract_group_hash_regex.fullmatch(jump)
+    if hre:
+        N, hsh = [ZZ(c) for c in hre.groups()]
+        if N <= 2000 and (N < 512 or N.valuation(2) < 7):
+            # Less useful here, since we mostly have group ids in this regime, but we include it for completeness
+            possible_labels = list(db.gps_groups.search({"order":N, "hash": hsh}, "label"))
+            if len(possible_labels) == 1:
+                return redirect(url_for(".by_label", label=possible_labels[0]))
+        return redirect(url_for(".index", hash=jump))
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
@@ -1194,6 +1225,7 @@ def group_parse(info, query):
     parse_noop(info, query, "name")
     parse_ints(info, query, "order_factorization_type")
     parse_family(info, query, "family", qfield="label")
+    parse_hashes(info, query, "hash", order_field="order")
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
@@ -2054,7 +2086,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, or 12.4.2.b1.a1"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
@@ -2360,7 +2392,7 @@ class GroupsSearchArray(SearchArray):
             knowl="group.find_input",
             example="C16.D4",
         )
-        name = SneakySelectBox(
+        order_factorization_type = SneakySelectBox(
             name="order_factorization_type",
             label="Order",
             knowl="group.order_factorization_type",
@@ -2403,7 +2435,7 @@ class GroupsSearchArray(SearchArray):
             example_span="4, or a range like 3..5",
         )
         number_autjugacy_classes = TextBox(
-            name="number_autjugacy_classes ",
+            name="number_autjugacy_classes",
             label="Num. of aut. classes",
             knowl="group.autjugacy_class",
             example="3",
@@ -2411,7 +2443,7 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
         number_characteristic_subgroups = TextBox(
-            name="number_characteristic_subgroups ",
+            name="number_characteristic_subgroups",
             label="Num. of char. subgroups",
             knowl="group.characteristic_subgroup",
             example="3",
@@ -2431,6 +2463,12 @@ class GroupsSearchArray(SearchArray):
             options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
             knowl="group.families",
             label="Family",
+        )
+        hsh = SneakyTextBox(
+            name="hash",
+            label="Hash",
+            knowl="group.hash",
+            example="5120#4714647875464396655",
         )
 
         count = CountBox()
@@ -2477,7 +2515,7 @@ class GroupsSearchArray(SearchArray):
             [frattini_label, derived_length, rank, schur_multiplier],
             [supersolvable, monomial, rational],
             [number_characteristic_subgroups, number_autjugacy_classes, number_divisions],
-            [name],
+            [name, order_factorization_type, hsh],
         ]
 
     sort_knowl = "group.sort_order"
