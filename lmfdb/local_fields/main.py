@@ -19,6 +19,7 @@ from lmfdb.utils import (
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
+from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
 from lmfdb.local_fields import local_fields_page, logger
 from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE, latex_content, content_unformatter
@@ -647,6 +648,22 @@ def families_postprocess(res, info, query):
         else:
             rec["rf0"] = None
     return res
+
+slopes_re = re.compile(r"\[(\d+(/\d+)?)?(,\d+(/\d+)?)*\]")
+rams_re = re.compile(r"\((\d+(/\d+)?)?(,\d+(/\d+)?)*\)")
+means_re = re.compile(r"\{(\d+(/\d+)?)?(,\d+(/\d+)?)*\}") # clean_info changed "<>" to "{}" for html safety
+@search_parser(default_field='herbrand', angle_to_curly=True)
+def parse_herbrand(inp, query, qfield):
+    # We ignore qfield, since it is determined from the delimiters of the input
+    if slopes_re.fullmatch(inp):
+        query["slopes"] = inp.replace(",", ", ")
+    elif rams_re.fullmatch(inp):
+        query["rams"] = "[" + inp[1:-1].replace(",", ", ") + "]"
+    elif means_re.fullmatch(inp):
+        query["means"] = "[" + inp[1:-1].replace(",", ", ") + "]"
+    else:
+        print("INPINPINPINP", inp, len(inp))
+        raise ValueError("Improperly formatted Herbrand invariant")
 
 def common_parse(info, query):
     parse_ints(info,query,'p',name='Prime p')
@@ -1330,6 +1347,7 @@ def common_family_parse(info, query):
     parse_ints(info,query,'field_count',name='Field count')
     parse_ints(info,query,'wild_segments',name='Wild segments')
     #parse_newton_polygon(info,query,"visible", qfield="visible_tmp", mode=info.get('visible_quantifier'))
+    parse_herbrand(info,query)
 
 @search_wrap(
     table=db.lf_families,
@@ -1609,7 +1627,7 @@ class FamiliesSearchArray(SearchArray):
             name='mass_relative',
             label='Mass',
             knowl='lf.family_mass',
-            example='255/8',
+            example='255',
             example_span='9/2, or a range like 1-10')
         mass_absolute = TextBox(
             name='mass_absolute',
@@ -1641,18 +1659,24 @@ class FamiliesSearchArray(SearchArray):
             knowl='lf.wild_segments',
             example='1',
             example_span='2, or a range like 2-4')
-        label_absolute = TextBox(
+        label_absolute = SneakyTextBox(
             name='label_absolute',
             label='Absolute label',
             knowl='lf.family_label',
             example='2.1.4.6a')
+        herbrand = TextBox(
+            name='herbrand',
+            label='Herbrand invariant',
+            knowl='lf.herbrand_input',
+            example='[1/3,1/3]')
         if relative:
             relbox = HiddenBox("relative", "")
             self.refine_array = [[qp, degree, e, f, c],
                                  [base, n0, e0, f0, c0],
-                                 [label_absolute, n_absolute, e_absolute, f_absolute, c_absolute],
+                                 [herbrand, n_absolute, e_absolute, f_absolute, c_absolute],
                                  #[visible, slopes, rams, means, slope_multiplicities],
-                                 [mass_relative, mass_absolute, ambiguity, field_count, wild_segments, relbox]]
+                                 [mass_relative, mass_absolute, ambiguity, field_count, wild_segments, relbox],
+                                 [label_absolute]]
             self.sorts = [
                 ("", "base", ['p', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'n', 'e', 'c', 'ctr']),
                 ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'n0', 'e0', 'c0', 'ctr0_family', 'ctr0_subfamily', 'ctr0', 'ctr']),
@@ -1664,7 +1688,7 @@ class FamiliesSearchArray(SearchArray):
             ]
         else:
             self.refine_array = [[qp, degree, e, f, c],
-                                 [mass_relative, ambiguity, field_count, wild_segments]]
+                                 [mass_relative, ambiguity, field_count, wild_segments, herbrand]]
             self.sorts = [
                 ("", "label", ['p', 'n', 'e', 'c', 'ctr']),
                 ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'ctr']),

@@ -69,6 +69,7 @@ class SearchParser():
         default_qfield,
         error_is_safe,
         clean_spaces,
+        angle_to_curly,
     ):
         self.f = f
         self.clean_info = clean_info
@@ -80,6 +81,7 @@ class SearchParser():
         self.default_qfield = default_qfield
         self.error_is_safe = error_is_safe  # Indicates that the message in raised exception contains no user input, so it is not escaped
         self.clean_spaces = clean_spaces
+        self.angle_to_curly = angle_to_curly
 
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
@@ -96,7 +98,7 @@ class SearchParser():
             inp = str(inp)
             if SPACES_RE.search(inp):
                 raise SearchParsingError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
-            inp = clean_input(inp, self.clean_spaces)
+            inp = clean_input(inp, self.clean_spaces, self.angle_to_curly)
             if qfield is None:
                 if field is None:
                     qfield = self.default_qfield
@@ -146,6 +148,7 @@ def search_parser(
     default_qfield=None,
     error_is_safe=False,
     clean_spaces=True,
+    angle_to_curly=False,
 ):
     return SearchParser(
         f,
@@ -158,15 +161,19 @@ def search_parser(
         default_qfield,
         error_is_safe,
         clean_spaces,
+        angle_to_curly,
     )
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
-def clean_input(inp, clean_spaces=True):
+def clean_input(inp, clean_spaces=True, angle_to_curly=False):
     if inp is None:
         return None
     if clean_spaces:
-        return re.sub(r"[\s<>]", "", str(inp))
+        inp = re.sub(r"\s", "", str(inp))
+    if angle_to_curly:
+        inp = re.sub("<", "{", inp)
+        return re.sub(">", "}", inp)
     else:
         return re.sub(r"[<>]", "", str(inp))
 
