@@ -219,7 +219,7 @@ class ArtinRepresentation():
         if groupid[0]:
             label = f"{groupid[0]}.{groupid[1]}"
             if self._knowl_cache is None:
-                name = db.gps_groups.lookup(label, "tex_name")
+                name = db.gps_groups2.lookup(label, "tex_name")
             else:
                 name = self._knowl_cache.get(label, {}).get("tex_name")
             if name:

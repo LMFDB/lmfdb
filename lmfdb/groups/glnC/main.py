@@ -12,14 +12,13 @@ from lmfdb.utils import (
     search_wrap)
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_subgroup_label_regex
 
 from lmfdb.groups.glnC import glnC_page
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 glnq_label_regex = re.compile(r'^(\d+)\.(\d+).*$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
 
 
 def learnmore_list():
@@ -120,7 +119,7 @@ glnC_columns.dummy_download = True
 
 
 def glnC_postprocess(res, info, query):
-    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
+    tex_names = {rec["label"]: rec["tex_name"] for rec in db.gps_groups2.search({"label": {"$in": [gp["group"] for gp in res]}}, ["label", "tex_name"])}
     for gp in res:
         gp["tex_name"] = tex_names[gp["group"]]
     return res
