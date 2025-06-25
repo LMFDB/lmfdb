@@ -5,6 +5,7 @@ import yaml
 from lmfdb import db
 from flask import url_for
 from urllib.parse import quote_plus
+from psycopg2.sql import SQL, Identifier
 
 from sage.all import (
     Permutations,
@@ -192,6 +193,30 @@ def in_small_gp_db(order):
         return True
     if len(f) == 1 and f[0][1] <= 7:
         return True
+    return False
+
+@cached_function
+def groups_from_missing_orders():
+    # There was a casting problem comparing smallint[] and the arrays
+    return set(x[0] for x in db._execute(SQL("SELECT label, factors_of_order, exponents_of_order FROM gps_groups WHERE {0} > 2000 AND (exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint [] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[])").format(Identifier("order")), [[8],[7],[4],[3,1],[2,2],[2,1,1],[1,1,1,1]]) if (x[1] == [3] and x[2] == [8] or x[1][0] > 11 and x[2] == [7] or x[2] == [4] or len(x[2]) > 1))
+
+# determine groups which are identified in Magma but not Gap
+@cached_function
+def missing_subs(n_or_label):
+    if isinstance(n_or_label, str):
+        if n_or_label in groups_from_missing_orders():
+            return False
+        n = ZZ(n_or_label.split(".")[0])
+    else:
+        n = ZZ(n_or_label)
+    if n == 6561:
+        return True
+    f = factor(n)
+    if n > 2000:
+        if sum(e for p,e in f) == 4:
+            return True
+        if len(f) == 1 and f[0][1] == 7 and f[0][0] > 11:
+            return True
     return False
 
 
@@ -389,7 +414,7 @@ class WebAbstractGroup(WebObj):
             elif isinstance(self._data, GapElement):
                 return self._data
         # Reconstruct the group from the stored data
-        if self.order == 1 or self.element_repr_type == "PC":  # trvial
+        if self.order == 1 or self.element_repr_type == "PC":  # trivial
             return self.PCG
         else:
             if self.element_repr_type == "Lie":   #need to take first entry of Lie type
@@ -1225,11 +1250,11 @@ class WebAbstractGroup(WebObj):
     def _subgroup_summary(self, in_profile):
         if self.subgroup_index_bound != 0:
             if self.normal_index_bound is None or self.normal_index_bound == 0:
-                return f"All subgroup of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as all normal subgroups of any index. <br>"
+                return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as all normal subgroups of any index. <br>"
             elif self.normal_order_bound != 0:
-                return f"All subgroup of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound} or of order up to {self.normal_order_bound}. <br>"
+                return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound} or of order up to {self.normal_order_bound}. <br>"
             else:
-                return f"All subgroup of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound}. <br>"
+                return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound}. <br>"
             # TODO: add more verbiage here about Sylow subgroups, maximal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
         return ""
 
@@ -3126,7 +3151,8 @@ class WebAbstractSubgroup(WebObj):
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor()) == 1})
             return newgroup
-        if self.subgroup_order == 6561:
+         # issue with groups identifiable in magma but not gap
+        if missing_subs(self.subgroup):
             gp = WebAbstractGroup(self.subgroup, None)
             if gp.source == "Missing":
                 order = self.subgroup_order
