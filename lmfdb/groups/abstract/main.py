@@ -2085,7 +2085,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, or 12.4.2.b1.a1"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
