@@ -982,7 +982,7 @@ class WebNumberField:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
-                gglabel=LF.get('galois_label')
+                gglabel = LF.get('galois_label')
                 if gglabel:
                     gglabel = transitive_group_display_knowl(gglabel)
                 else:

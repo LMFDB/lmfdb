@@ -353,8 +353,8 @@ euler_factor_columns = SearchColumns([
     MultiProcessedCol("label", "lfunction.label", "Label",
                          ["label", "url"],
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
-                      download_col="label")] +
-    [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
+                      download_col="label")]
+    + [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
     db_cols=1)
 
 class LfuncDownload(Downloader):
