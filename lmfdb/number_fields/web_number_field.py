@@ -982,11 +982,11 @@ class WebNumberField:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
-                gglabel=LF.get('galois_label', None)
+                gglabel = LF.get('galois_label', None)
                 if gglabel:
-                    gglabel=transitive_group_display_knowl(gglabel)
+                    gglabel = transitive_group_display_knowl(gglabel)
                 else:
-                    gglabel='not computed'
+                    gglabel = 'not computed'
                 thisdat = [lab, f, LF['e'], LF['f'], LF['c'],
                     gglabel,
                     LF.get('t',None), LF.get('u',None), LF.get('slopes',None)]
