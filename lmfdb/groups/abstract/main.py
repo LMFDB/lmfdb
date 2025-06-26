@@ -67,6 +67,7 @@ from .web_groups import (
     abstract_group_display_knowl,
     cc_data_to_gp_label,
     gp_label_to_cc_data,
+    missing_subs,
 )
 from .stats import GroupStats
 
@@ -94,6 +95,8 @@ abstract_noncanonical_subgroup_label_regex = re.compile(
 gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 abstract_group_label_regex = re.compile(r"^(\d+)\.((\d+)|[a-z]+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
+
+abstract_group_hash_regex = re.compile(r"^(\d+)#(\d+)$")
 
 def yesno(val):
     return "yes" if val else "no"
@@ -188,6 +191,25 @@ def parse_family(inp, query, qfield):
         query["cyclic"] = True
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
+
+@search_parser
+def parse_hashes(inp, query, qfield, order_field):
+    if inp.count("#") == 0:
+        opts = [ZZ(opt) for opt in inp.split(",")]
+        if len(opts) == 1:
+            query[qfield] = opts[0]
+        else:
+            query[qfield] = {"$or": opts}
+    elif inp.count("#") == 1:
+        N, hsh = inp.split("#")
+        N, hsh = ZZ(N), ZZ(hsh)
+        if order_field not in query:
+            query[order_field] = N
+        elif query[order_field] != N:
+            raise ValueError(f"You cannot specify order both in the {order_field} input and the {qfield} input")
+        query[qfield] = hsh
+    else:
+        raise ValueError("To specify multiple hash values, all must have the same order; provide the order in the order input and then just give hashes separated by commas")
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -939,6 +961,16 @@ def group_jump(info):
             flash_error(f"Transitive group {jump} is not in the database")
             return redirect(url_for(".index"))
         return redirect(url_for(".by_label", label=label))
+    #hash
+    hre = abstract_group_hash_regex.fullmatch(jump)
+    if hre:
+        N, hsh = [ZZ(c) for c in hre.groups()]
+        if N <= 2000 and (N < 512 or N.valuation(2) < 7):
+            # Less useful here, since we mostly have group ids in this regime, but we include it for completeness
+            possible_labels = list(db.gps_groups.search({"order":N, "hash": hsh}, "label"))
+            if len(possible_labels) == 1:
+                return redirect(url_for(".by_label", label=possible_labels[0]))
+        return redirect(url_for(".index", hash=jump))
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
@@ -994,7 +1026,7 @@ def get_trans_url(label):
     return url_for("galois_groups.by_label", label=trans_gp(label))
 
 def display_url(label, tex):
-    if label is None:
+    if label is None or missing_subs(label):
         if tex is None:
             return ''
         return f'${tex}$'
@@ -1069,11 +1101,35 @@ def group_postprocess(res, info, query):
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
+    if "family" in info:
+        if info["family"] == "any":
+            fquery = {}
+        else:
+            fquery = {"family": info["family"]}
+        fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
+        fquery["label"] = {"$in":[rec["label"] for rec in res]}
+        special_names = defaultdict(list)
+        for rec in db.gps_special_names.search(fquery, ["label", "family", "parameters"]):
+            fam, params = rec["family"], rec["parameters"]
+            name = fams[fam][1].format(**params)
+            if fam == "Sporadic":
+                name = re.sub(r"(\d+)", r"_{\1}", name)
+                if not re.match(r"[MJ]_", name):
+                    name = "\\" + name
+            special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
+        for rec in res:
+            names = [x[-1] for x in sorted(special_names[rec["label"]])]
+            if len(names) > 4:
+                names = ", ".join(names[:4]) + ",\\dots"
+            else:
+                names = ", ".join(names)
+            rec["family_name"] = names
     return res
 
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url),
     MathCol("tex_name", "group.name", "Name"),
+    MathCol("family_name", "group.families", "Family name", contingent=lambda info: "family" in info, default=lambda info: "family" in info and info["family"] not in ["C", "S", "D", "A", "Q", "He", "Sporadic"]),
     ProcessedCol("order", "group.order", "Order", show_factor, align="center"),
     ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, align="center"),
     MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class", default=False),
@@ -1193,6 +1249,7 @@ def group_parse(info, query):
     parse_noop(info, query, "name")
     parse_ints(info, query, "order_factorization_type")
     parse_family(info, query, "family", qfield="label")
+    parse_hashes(info, query, "hash", order_field="order")
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
@@ -1396,7 +1453,7 @@ conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
-    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
+    MultiProcessedCol("center", "group.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
     ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
              lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
              contingent=lambda info: info.get("group_factors",True), # group_factors not present when downloading
@@ -1786,7 +1843,7 @@ def shortsubinfo(ambient, short_label):
     ans += subinfo_getsub(
         "Normal closure", "group.subgroup.normal_closure", wsg.normal_closure
     )
-    ans += subinfo_getsub("Centralizer", "group.subgroup.centralizer", wsg.centralizer)
+    ans += subinfo_getsub("Centralizer", "group.centralizer", wsg.centralizer)
     ans += subinfo_getsub("Core", "group.core", wsg.core)
     # ans += '<tr><td>Coset action</td><td>%s</td></tr>\n' % wsg.coset_action_label
     ## There was a bug in the Magma code computing generators, so we disable this for the moment
@@ -2053,7 +2110,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, or 12.4.2.b1.a1"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
@@ -2359,7 +2416,7 @@ class GroupsSearchArray(SearchArray):
             knowl="group.find_input",
             example="C16.D4",
         )
-        name = SneakySelectBox(
+        order_factorization_type = SneakySelectBox(
             name="order_factorization_type",
             label="Order",
             knowl="group.order_factorization_type",
@@ -2402,7 +2459,7 @@ class GroupsSearchArray(SearchArray):
             example_span="4, or a range like 3..5",
         )
         number_autjugacy_classes = TextBox(
-            name="number_autjugacy_classes ",
+            name="number_autjugacy_classes",
             label="Num. of aut. classes",
             knowl="group.autjugacy_class",
             example="3",
@@ -2410,7 +2467,7 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
         number_characteristic_subgroups = TextBox(
-            name="number_characteristic_subgroups ",
+            name="number_characteristic_subgroups",
             label="Num. of char. subgroups",
             knowl="group.characteristic_subgroup",
             example="3",
@@ -2430,6 +2487,12 @@ class GroupsSearchArray(SearchArray):
             options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
             knowl="group.families",
             label="Family",
+        )
+        hsh = SneakyTextBox(
+            name="hash",
+            label="Hash",
+            knowl="group.hash",
+            example="5120#4714647875464396655",
         )
 
         count = CountBox()
@@ -2476,7 +2539,7 @@ class GroupsSearchArray(SearchArray):
             [frattini_label, derived_length, rank, schur_multiplier],
             [supersolvable, monomial, rational],
             [number_characteristic_subgroups, number_autjugacy_classes, number_divisions],
-            [name],
+            [name, order_factorization_type, hsh],
         ]
 
     sort_knowl = "group.sort_order"
@@ -2925,8 +2988,8 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[1] is None:
             ans += "Isomorphism class has not been identified<br />"
         else:
-            # TODO: add hash knowl and search link to groups with this order and hash
-            ans += f"Hash: {profiledata[1]}<br />"
+            # TODO: add search link to groups with this order and hash
+            ans += f"{display_knowl('group.hash', 'Hash')} : {profiledata[1]}<br />"
         isomorphism_label = "Subgroups with this data:"
     else:
         if label.startswith("ab/"):
@@ -2936,9 +2999,14 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        #GAP doesn't have groups of order 3^8 so if not in db, can't be live
-        if label.startswith("6561.") and gp.source == "Missing":
-            return Markup("No additional information for this group of order 6561 is available.")
+        # dealing with groups identified in magma but not in gap so can't do live pages˚
+        ord = label.split(".")[0]
+        if missing_subs(label) and gp.source == "Missing":
+            ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
+                label,
+                f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
+                "subgroups with this order")
+            return Markup(ans)
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"

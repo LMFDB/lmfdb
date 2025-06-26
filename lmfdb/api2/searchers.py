@@ -18,7 +18,7 @@ class searcher:
         return utils.get_filtered_fields(self._inv)
 
     def get_inventory(self):
-        if(self._full_inventory):
+        if (self._full_inventory):
             return self._full_inventory()
         return utils.get_filtered_fields(self._inv)
 
@@ -39,7 +39,7 @@ class searcher:
         return self.get_search(sd, proj)
 
     def get_search(self, query, projection):
-        if(self._full_search):
+        if (self._full_search):
             return self._full_search(query, projection)
         return utils.simple_search(query, projection)
 
