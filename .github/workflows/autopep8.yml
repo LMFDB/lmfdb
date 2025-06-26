@@ -27,7 +27,6 @@ jobs:
           # E242 - Remove extraneous whitespace around operator.
           # E251 - Remove whitespace around parameter '=' sign.
           # E252 - Missing whitespace around parameter equals.
-          # E266 - Fix too many leading '#' for block comments.
           # E27 - Fix extraneous whitespace around keywords.
           # 
           # E3 - Blank line
@@ -44,6 +43,7 @@ jobs:
           # E7 - Statement
           # E70 - Put semicolon-separated compound statement on separate lines.
           # E701 - Put colon-separated compound statement on separate lines.
+          # E702 - Put semicolon-separated compound statement on separate lines.
           # E711 - Fix comparison with None.
           # E712 - Fix comparison with boolean.
           # E713 - Use 'not in' for test for membership.
@@ -73,11 +73,11 @@ jobs:
           args: >
             --recursive --in-place --aggressive --select=
             E111,E115,
-            E211,E222,E225,E241,E242,E251,E252,E266,E27,
+            E211,E222,E225,E241,E242,E251,E252,E27,
             E303,E304,E306,
             E401,
             E502,
-            E70,E701,E711,E712,E713,E714,E721,E731,
+            E70,E701,E702,E711,E712,E713,E714,E721,E731,
             W291,W292,W293,
             W391,
             W504,
