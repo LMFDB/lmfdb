@@ -1096,11 +1096,35 @@ def group_postprocess(res, info, query):
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups2.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
+    if "family" in info:
+        if info["family"] == "any":
+            fquery = {}
+        else:
+            fquery = {"family": info["family"]}
+        fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
+        fquery["label"] = {"$in":[rec["label"] for rec in res]}
+        special_names = defaultdict(list)
+        for rec in db.gps_special_names.search(fquery, ["label", "family", "parameters"]):
+            fam, params = rec["family"], rec["parameters"]
+            name = fams[fam][1].format(**params)
+            if fam == "Sporadic":
+                name = re.sub(r"(\d+)", r"_{\1}", name)
+                if not re.match(r"[MJ]_", name):
+                    name = "\\" + name
+            special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
+        for rec in res:
+            names = [x[-1] for x in sorted(special_names[rec["label"]])]
+            if len(names) > 4:
+                names = ", ".join(names[:4]) + ",\\dots"
+            else:
+                names = ", ".join(names)
+            rec["family_name"] = names
     return res
 
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url),
     MathCol("tex_name", "group.name", "Name"),
+    MathCol("family_name", "group.families", "Family name", contingent=lambda info: "family" in info, default=lambda info: "family" in info and info["family"] not in ["C", "S", "D", "A", "Q", "He", "Sporadic"]),
     ProcessedCol("order", "group.order", "Order", show_factor, align="center"),
     ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, align="center"),
     MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class", default=False),
