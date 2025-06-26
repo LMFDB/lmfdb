@@ -2028,11 +2028,13 @@ def download_preable(com1, com2, dltype):
     s += f + " Various presentations of this group are stored in this file: \n"
     s += f + "\t GPC is polycyclic presentation GPerm is permutation group \n"
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
-    s += f + " Many characteristics of the group are stored as booleans: \n"
-    s += f + "\t cyclic \n"
-    s += f + "\t abelian \n"
-    s += f + "\t is_nilpotent \n"
-    s += f + "The character table is stored as \n"
+    s += f + " Many characteristics of the group are stored as booleans in a record: \n"
+    s += f + "\t Agroup, Zgroup, abelian, almost_simple,cyclic, metabelian, \n"
+    s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n" 
+    s += f + "\t solvable, supersolvable \n \n"
+    if dltype == "gap":
+        s += f + "The character table is stored as a record which is converted to a  \n"
+        s += f + "character table using the command ConvertToLibraryCharacterTableNC \n"
     s +=com2
     return s
 
@@ -2112,10 +2114,7 @@ def download_char_table_magma(G, ul_label):
 
 def download_char_table_gap(G,ul_label):
     tbl = "chartbl_" + G.label.replace(".","_")
-#    s = "chartblGAP:= function() \n"
-#    s += "local " + tbl +", i; \n"
     s = tbl + ":=rec(); \n"
-
     s += tbl + ".IsFinite:= true; \n"
     s += tbl +".UnderlyingCharacteristic:= 0; \n"
 
@@ -2166,10 +2165,10 @@ def download_char_table_gap(G,ul_label):
         for i in range(num_primes):
             power_maps[i].append(conj.powers[i])
         #power_maps.append(conj.powers)
-        size_centralizers.append(int(conj.centralizer.split(".")[0]))
+        size_centralizers.append(int(conj.group_order/conj.size))
         class_names.append(conj.label)
         order_class_reps.append(conj.order)
-        cc_reps.append(G.decode(conj.representative,rep_type = gp_type))  #JP TESTING
+        cc_reps.append(G.decode(conj.representative,rep_type = gp_type))  
 
     cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
     pwr_maps = "[ , "
