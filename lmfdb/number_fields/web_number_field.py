@@ -964,7 +964,7 @@ class WebNumberField:
 
     # Helper for ramified algebras table
     def get_local_algebras(self):
-        local_algs = self._data.get('local_algs', None)
+        local_algs = self._data.get('local_algs')
         if local_algs is None:
             return None
         local_algebra_dict = {}
@@ -982,14 +982,14 @@ class WebNumberField:
                 LF = db.lf_fields.lookup(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
-                gglabel = LF.get('galois_label', None)
+                gglabel=LF.get('galois_label')
                 if gglabel:
                     gglabel = transitive_group_display_knowl(gglabel)
                 else:
                     gglabel = 'not computed'
                 thisdat = [lab, f, LF['e'], LF['f'], LF['c'],
                     gglabel,
-                    LF.get('t',None), LF.get('u',None), LF.get('slopes',None)]
+                    LF.get('t'), LF.get('u'), LF.get('slopes')]
                 if str(p) not in local_algebra_dict:
                     local_algebra_dict[str(p)] = [thisdat]
                 else:
