@@ -249,13 +249,13 @@ def ratproc(inp):
 def show_slopes(sl):
     if str(sl) == "[]":
         return "None"
-    return('$' + sl + '$')
+    return ('$' + sl + '$')
 
 def show_slopes2(sl):
     # uses empty brackets with a space instead of None
     if str(sl) == "[]":
         return r'[\ ]'
-    return(sl)
+    return (sl)
 
 def show_slope_content(sl,t,u):
     if sl is None or t is None or u is None:
@@ -267,7 +267,7 @@ def show_slope_content(sl,t,u):
         sc += '_{%d}' % t
     if u > 1:
         sc += '^{%d}' % u
-    return(sc)
+    return (sc)
 
 @local_fields_page.route("/")
 def index():
@@ -563,16 +563,16 @@ def getu(p):
 
 def printquad(code, p):
     if code == [1, 0]:
-        return(r'$\Q_{%s}$' % p)
+        return (r'$\Q_{%s}$' % p)
     u = getu(p)
     if code == [1, 1]:
-        return(r'$\Q_{%s}(\sqrt{%s})$' % (p,u))
+        return (r'$\Q_{%s}(\sqrt{%s})$' % (p,u))
     if code == [-1, 1]:
-        return(r'$\Q_{%s}(\sqrt{-%s})$' % (p,u))
+        return (r'$\Q_{%s}(\sqrt{-%s})$' % (p,u))
     s = code[0]
     if code[1] == 1:
         s = str(s) + r'\cdot '+str(u)
-    return(r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
+    return (r'$\Q_{' + str(p) + r'}(\sqrt{' + str(s) + '})$')
 
 @local_fields_page.route("/data/<label>")
 def lf_data(label):

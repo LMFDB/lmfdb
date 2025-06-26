@@ -243,7 +243,7 @@ def coeff_to_poly(c, var=None):
             varposs = set(re.findall(r"[A-Za-z_]+", c))
             if len(varposs) == 1:
                 var = varposs.pop()
-            elif not(varposs):
+            elif not (varposs):
                 var = 'x'
             else:
                 raise ValueError("Polynomial must be univariate")
@@ -607,7 +607,7 @@ def signtocolour(sign):
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
-    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+    return ("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
 
 
 def rgbtohex(rgb):
