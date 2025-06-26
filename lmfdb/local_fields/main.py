@@ -1824,13 +1824,21 @@ class LFStats(StatsDisplay):
         galdisp(2, 12),
         galdisp(2, 14),
         galdisp(2, 16),
+        galdisp(2, 18),
+        galdisp(2, 20),
+        galdisp(2, 22),
         galdisp(3, 6),
         galdisp(3, 9),
         galdisp(3, 12),
         galdisp(3, 15),
+        galdisp(3, 18),
+        galdisp(3, 21),
         galdisp(5, 10),
         galdisp(5, 15),
-        galdisp(7, 14)
+        galdisp(5, 20),
+        galdisp(7, 14),
+        galdisp(7, 21),
+        galdisp(11, 22),
     ]
 
     def __init__(self):
