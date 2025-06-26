@@ -65,7 +65,7 @@ def getAllMaassGraphHtml(degree, signature=""):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
-    return (ans)
+    return ans
 
 # ============================================
 # Returns the header and information about the Gamma-factors for the
@@ -164,7 +164,7 @@ def getGroupHtml(group):
     else:
         ans = ""
 
-    return (ans)
+    return ans
 
 
 # ============================================
@@ -190,7 +190,7 @@ def getOneGraphHtml(gls):
             + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
-    return (ans)
+    return ans
 
 # ============================================
 # Returns the url and width and height of the svg-file for
@@ -212,7 +212,7 @@ def getGraphInfo(gls):
     ans['width'] = width
     ans['height'] = height
 
-    return (ans)
+    return ans
 
 # ============================================
 # Returns the width and height of the svg-file for
@@ -300,7 +300,7 @@ def paintSvgFileAll(glslist):  # list of group and level
             ans += "</circle></a>\n"
 
     ans += svgEnd()
-    return (ans)
+    return ans
 
 # ============================================
 # Returns the svg-code for a simple coordinate system.
@@ -437,7 +437,7 @@ def getOneGraphHtmlHolo(condmax):
            + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
-    return (ans)
+    return ans
 
 
 # TODO cleanup here
@@ -983,7 +983,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
         orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
-    return (ans)
+    return ans
 
 # ==================
 # addlists:  adds two lists as if they were vectors
@@ -1015,7 +1015,7 @@ def mydot(offset, scale, startpt, radius, color, shape, title):
     ans += ">"
     ans += "<title>" + str(title) + "</title>"
     ans += "</circle>"
-    return (ans)
+    return ans
 
 
 # ============================================
@@ -1035,7 +1035,7 @@ def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcol
     ans += ">"
     ans += str(thetext)
     ans += "</text>"
-    return (ans)
+    return ans
 
 
 # ============================================
@@ -1061,7 +1061,7 @@ def myline(offset, scale, startpt, endpt, width, style, color):
         ans += style + "; "
     ans += "'"
     ans += "/>"
-    return (ans)
+    return ans
 
 
 # =================
