@@ -24,11 +24,14 @@ FINE_LABEL_RE = re.compile(fine_label_re)
 COARSE_LABEL_RE = re.compile(coarse_label_re)
 ISO_CLASS_RE = re.compile(f"{iso_class_re}")
 
+
 def get_bread(tail=[]):
-    base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
+    base = [("Modular curves", url_for(".index")),
+            (r"$\Q$", url_for(".index_Q"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
+
 
 def showexp(c, wrap=True):
     if c == 1:
@@ -38,11 +41,13 @@ def showexp(c, wrap=True):
     else:
         return f"^{{{c}}}"
 
+
 def my_field_pretty(nflabel):
     # We use Q(i) to make coordinates shorter
     if nflabel == "2.0.4.1":
         return r"\(\Q(i)\)"
     return field_pretty(nflabel)
+
 
 def showj(j):
     if j is None:
@@ -52,12 +57,14 @@ def showj(j):
     else:
         return f"${j}$"
 
+
 def showj_fac(j):
     j = QQ(j)
     if j == 0 or j.denominator() == 1 and j.numerator().is_prime():
         return ""
     else:
         return "$= %s$" % latex(j.factor())
+
 
 def showj_nf(j, jfield, jorig, resfield):
     if j is None:
@@ -72,9 +79,9 @@ def showj_nf(j, jfield, jorig, resfield):
                 D = -D
             x = Ra.gen()
             if D % 4 == 1:
-                K = NumberField(x**2 - x - (D - 1)//4, 'a')
+                K = NumberField(x**2 - x - (D - 1) // 4, 'a')
             else:
-                K = NumberField(x**2 - D//4, 'a')
+                K = NumberField(x**2 - D // 4, 'a')
             if K.class_number() == 1:
                 jj = K((f).padded_list(K.degree()))
                 jfac = latex(jj.factor())
@@ -105,6 +112,7 @@ def showj_nf(j, jfield, jorig, resfield):
         url = url_for("ecnf.index", jinv=j, field=resfield, showcol="jinv")
     return '<a href="%s">%s</a>' % (url, s)
 
+
 def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
     if cname[:4] == "Xs4(":
@@ -123,11 +131,13 @@ def canonicalize_name(name):
         cname = "X0(6)"
     return cname
 
+
 def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
-    # Temporary measure until we update data with Xarith1 and Xarithpm1 families
+    # Temporary measure until we update data with Xarith1 and Xarithpm1
+    # families
     if "+" in name:
         name = name.replace("+", "^+")
     if "ns" in name:
@@ -150,7 +160,8 @@ def name_to_latex(name):
 
 
 def factored_conductor(conductor):
-    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for p, e in conductor) if conductor else ("1" if conductor == [] else r"?")
+    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for p, e in conductor) if conductor else (
+        "1" if conductor == [] else r"?")
 
 
 def remove_leading_coeff(jfac):
@@ -170,7 +181,12 @@ def formatted_dims(dims, mults):
     for d, c in zip(dims, mults):
         collapsed[d] += c
     dims, mults = zip(*(sorted(collapsed.items())))
-    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for d, c in zip(dims, mults)) + "$"
+    return "$" + \
+        r"\cdot".join(
+            f"{d}{showexp(c, wrap=False)}" for d,
+            c in zip(
+                dims,
+                mults)) + "$"
 
 
 def formatted_newforms(newforms, mults):
@@ -178,7 +194,8 @@ def formatted_newforms(newforms, mults):
         return "not computed"
     if not newforms:
         return ""
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
+    return ", ".join(
+        f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
 
 
 def formatted_model_html(self, m):
@@ -186,69 +203,78 @@ def formatted_model_html(self, m):
     # but not curves with self.has_more_models
     # and also not for genus 0 curves with points
     # we need to somehow give this info
-    eqn_threshold = 3 #this displays threshold - 1 lines to start
+    eqn_threshold = 3  # this displays threshold - 1 lines to start
     eqns, lines, nb_var, typ, smooth = formatted_model_data(m)
 
     def title_of_model(self, lines, nb_var, typ, smooth):
         if typ == 0:
-            title = display_knowl('ag.canonical_model', 'Canonical model') + r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
+            title = display_knowl(
+                'ag.canonical_model',
+                'Canonical model') + r" in $\mathbb{P}^{ %d }$ " % (nb_var - 1,
+                                                                    )
             if len(lines) > eqn_threshold:
                 title += " defined by %d equations" % (len(lines) - 1,)
             return title
         elif typ == 2:
-            #smooth is true, false, or none
+            # smooth is true, false, or none
             if smooth is True:
-                return display_knowl('modcurve.plane_model', 'Smooth plane model')
+                return display_knowl(
+                    'modcurve.plane_model', 'Smooth plane model')
             elif smooth is False:
-                return display_knowl('modcurve.plane_model', 'Singular plane model')
+                return display_knowl('modcurve.plane_model',
+                                     'Singular plane model')
             else:
                 return display_knowl('modcurve.plane_model', 'Plane model')
         elif typ == 5:
             if self.genus == 1:
-                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
+                return display_knowl(
+                    'ec.weierstrass_coeffs', 'Weierstrass model')
             else:
-                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
+                return display_knowl(
+                    'ag.hyperelliptic_curve', 'Weierstrass model')
         elif typ == 7:
-            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
+            return display_knowl('ag.hyperelliptic_curve',
+                                 'Geometric Weierstrass model')
         elif typ == 8:
-            return display_knowl('modcurve.embedded_model', 'Embedded model') + r" in $\mathbb{P}^{%d}$" % (nb_var-1,)
+            return display_knowl('modcurve.embedded_model', 'Embedded model') + \
+                r" in $\mathbb{P}^{%d}$" % (nb_var - 1,)
 
     def equation_of_model(lines, typ):
         table = '<table valign="center">' +\
-        '<tr>' +\
-        f'<td> $ {lines[0]} $ </td>' +\
-        '<td style="padding: 5px 0px;">$=$</td>' +\
-        f'<td> $ {lines[1]} $</td>' +\
-        '</tr>'
-        if typ == 2 or typ == 5: #plane or weierstrass, 1 eqn
+            '<tr>' +\
+            f'<td> $ {lines[0]} $ </td>' +\
+            '<td style="padding: 5px 0px;">$=$</td>' +\
+            f'<td> $ {lines[1]} $</td>' +\
+            '</tr>'
+        if typ == 2 or typ == 5:  # plane or weierstrass, 1 eqn
             pass
-        elif typ == 0 or typ == 8: #canonical or embedded, many equations = 0
+        elif typ == 0 or typ == 8:  # canonical or embedded, many equations = 0
             if len(lines) < 7:
                 for line in lines[2:]:
                     table += '<tr><td></td><td style="padding: 5px 0px;">$=$</td>' +\
-                    f'<td> ${line}$</td>' +\
-                    '</tr>'
+                        f'<td> ${line}$</td>' +\
+                        '</tr>'
             else:
                 for line in lines[2:5]:
                     table += '<tr><td></td><td style="padding: 5px 0px;">$=$</td>' +\
-                    f'<td> ${line}$</td>' +\
-                    '</tr>'
+                        f'<td> ${line}$</td>' +\
+                        '</tr>'
                 table += r'<tr><td></td><td style="padding: 5px 0px;">$=$</td><td>$\cdots$</td> </tr>'
-        elif typ == 7: #geometric weierstrass, 2 eqns
+        elif typ == 7:  # geometric weierstrass, 2 eqns
             table += '<tr>' +\
-            f'<td> ${lines[2]}$</td>' +\
-            '<td style="padding: 5px 0px;">$=$</td>' +\
-            f'<td> ${lines[3]}$</td>' +\
-            '</tr>'
+                f'<td> ${lines[2]}$</td>' +\
+                '<td style="padding: 5px 0px;">$=$</td>' +\
+                f'<td> ${lines[3]}$</td>' +\
+                '</tr>'
         return table + '</table>'
     title = title_of_model(self, lines, nb_var, typ, smooth)
     table = equation_of_model(lines, typ)
-    table = raw_typeset(eqns,table)
+    table = raw_typeset(eqns, table)
     return "<p>" + title + "</p>" + "\n" + table
 
 
 def formatted_model_data(m):
-    if m["model_type"] == 5: #Weierstrass equation
+    if m["model_type"] == 5:  # Weierstrass equation
         assert m["number_variables"] == 3
         R1 = PolynomialRing(ZZ, "x")
         R2 = PolynomialRing(R1, "y")
@@ -265,12 +291,12 @@ def formatted_model_data(m):
         lines = [
             latex(elt)
             for elt in [
-               -sum(F2.monomial_coefficient(elt) * elt for elt in [y, y**2]),
-               F2.constant_coefficient(),
+                -sum(F2.monomial_coefficient(elt) * elt for elt in [y, y**2]),
+                F2.constant_coefficient(),
             ]
         ]
 
-    elif m["model_type"] == 7: #geometric weierstrass
+    elif m["model_type"] == 7:  # geometric weierstrass
         assert m["number_variables"] == 4
         assert len(m["equation"]) == 2
         R3 = PolynomialRing(ZZ, 3, "x,y,z", order="lex")
@@ -283,20 +309,20 @@ def formatted_model_data(m):
         if F.monomial_coefficient(w**2).constant_coefficient() > 0:
             F *= -1
         lines = [
-           latex(elt)
-           for elt in [
-               -sum(F.monomial_coefficient(elt) * elt for elt in [w, w**2]),
-               F.constant_coefficient(),
-           ]
+            latex(elt)
+            for elt in [
+                -sum(F.monomial_coefficient(elt) * elt for elt in [w, w**2]),
+                F.constant_coefficient(),
+            ]
         ]
         lines += ["0", latex(C)]
         eqns = [F, C]
-    elif m["model_type"] == 2: #plane model
+    elif m["model_type"] == 2:  # plane model
 
         assert m["number_variables"] == 3
         assert len(m["equation"]) == 1
         fqq = PolynomialRing(QQ, 3, "x,y,z", order="lex")(m["equation"][0])
-        eqns = [(fqq*fqq.denominator()).change_ring(ZZ)]
+        eqns = [(fqq * fqq.denominator()).change_ring(ZZ)]
         f = compress_multipolynomial(eqns[0])
         lines = ["0"] + [f.lower()]
 
@@ -314,15 +340,17 @@ def formatted_model_data(m):
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
     f = {}
-    for key in ["degree", "domain_model_type", "codomain_label", "codomain_model_type"]:
+    for key in ["degree", "domain_model_type",
+                "codomain_label", "codomain_model_type"]:
         f[key] = m[key]
     nb_coords = len(m["coordinates"])
     f["codomain_name"] = codomain_name
     varhigh = "XYZWTUVRSABCDEFGHIKLMNOPQJ"
-    f["codomain_equation"] = ["0"] + [teXify_pol(l).upper() for l in codomain_equation]
+    f["codomain_equation"] = ["0"] + \
+        [teXify_pol(l).upper() for l in codomain_equation]
     lead = m["leading_coefficients"]
     if lead is None:
-        lead = ["1"]*nb_coords
+        lead = ["1"] * nb_coords
     else:
         # Need to fix exponents without curly braces
         def fix_exp(x):
@@ -332,24 +360,26 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
                     e = "{" + e + "}"
                 return f"{b}^{e}"
             return x
-        lead = [r"\cdot".join(fix_exp(pp) for pp in c.split("*")) for c in lead]
+        lead = [r"\cdot".join(fix_exp(pp)
+                              for pp in c.split("*")) for c in lead]
     eqs = [teXify_pol(p).lower() for p in m["coordinates"]]
-    if nb_coords == 2 and not (f["codomain_label"] == "1.1.0.a.1" and f["codomain_model_type"] == 4):
+    if nb_coords == 2 and not (
+            f["codomain_label"] == "1.1.0.a.1" and f["codomain_model_type"] == 4):
         nb_coords = 1
         f["coord_names"] = ["f"]
     elif nb_coords <= 26:
         f["coord_names"] = varhigh[:nb_coords]
-    else: #x0,...,xn
+    else:  # x0,...,xn
         f["coord_names"] = ["x_{%s}" % i for i in range(nb_coords)]
     f["nb_coords"] = nb_coords
 
-    if nb_coords == 1: #display only one coordinate as a quotient
+    if nb_coords == 1:  # display only one coordinate as a quotient
         if lead[0][0] == "-":
             sgn = "-"
             lead[0] = lead[0][1:]
         else:
             sgn = ""
-        if eqs[1] == "1" and lead == ["1","1"]:
+        if eqs[1] == "1" and lead == ["1", "1"]:
             equations = [eqs[0]]
         elif eqs[1] == "1" and lead[1] == "1" and m["factored"] and eqs[0].count("(") > 0:
             equations = ["{}{}".format(lead[0], eqs[0])]
@@ -357,14 +387,16 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
             equations = ["{}({})".format(lead[0], eqs[0])]
         elif eqs[1] == "1":
             equations = [r"\frac{%s}{%s}" % (eqs[0], lead[0])]
-        elif lead == ["1","1"]:
+        elif lead == ["1", "1"]:
             equations = [r"\frac{%s}{%s}" % (eqs[0], eqs[1])]
         elif lead[1] == "1":
             equations = [r"%s\,\frac{%s}{%s}" % (lead[0], eqs[0], eqs[1])]
         else:
-            equations = [r"\frac{%s}{%s}\cdot\frac{%s}{%s}" % (lead[0], lead[1], eqs[0], eqs[1])]
+            equations = [
+                r"\frac{%s}{%s}\cdot\frac{%s}{%s}" %
+                (lead[0], lead[1], eqs[0], eqs[1])]
         equations[0] = sgn + equations[0]
-    else: #2 or more coordinates, do not display as quotients
+    else:  # 2 or more coordinates, do not display as quotients
         equations = []
         for j in range(len(eqs)):
             if lead[j] == "1":
@@ -394,18 +426,24 @@ def difference(Ad, Bd, Am, Bm):
         return [], []
     return tuple(zip(*(sorted(C.items()))))
 
+
 def modcurve_link(label):
-    return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",label=label),label)
+    return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",
+                                            label=label), label)
+
 
 def combined_data(label):
     data = db.gps_gl2zhat_fine.lookup(label)
     if data is None:
         return
     if not data["contains_negative_one"]:
-        coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
+        coarse = db.gps_gl2zhat_fine.lookup(
+            data["coarse_label"], [
+                "parents", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
     return data
+
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -413,10 +451,12 @@ def learnmore_list():
             ('Reliability of the data', url_for(".reliability_page")),
             ('Modular curve labels', url_for(".labels_page"))]
 
+
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_fine
 
-    # We have to modify _get_dbdata, since we need to also include information from the coarse modular curve
+    # We have to modify _get_dbdata, since we need to also include information
+    # from the coarse modular curve
     def _get_dbdata(self):
         return combined_data(self.label)
 
@@ -430,7 +470,7 @@ class WebModCurve(WebObj):
         ]
         if self.image is not None:
             props.append((None, self.image))
-        if hasattr(self,"rank") and self.rank is not None:
+        if hasattr(self, "rank") and self.rank is not None:
             props.append(("Analytic rank", prop_int_pretty(self.rank)))
         props.extend([("Cusps", prop_int_pretty(self.cusps)),
                       (r"$\Q$-cusps", prop_int_pretty(self.rational_cusps))])
@@ -445,34 +485,61 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def friends(self):
         if self.coarse_label == self.label:
-            friends = [("Gassmann class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+            friends = [
+                ("Gassmann class " +
+                 self.coarse_class,
+                 url_for(
+                     ".by_label",
+                     label=self.coarse_class))]
         else:
             friends = []
         if self.simple and self.newforms:
-            friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
+            friends.append(
+                ("Modular form " +
+                 self.newforms[0],
+                 url_for_mf_label(
+                     self.newforms[0])))
             if self.curve_label:
-                assert self.genus in [1,2]
+                assert self.genus in [1, 2]
                 route = "ec.by_ec_label" if self.genus == 1 else "g2c.by_label"
-                name = ("Elliptic" if self.genus == 1 else "Genus 2") + " curve " + self.curve_label
+                name = ("Elliptic" if self.genus == 1 else "Genus 2") + \
+                    " curve " + self.curve_label
                 friends.append((name, url_for(route, label=self.curve_label)))
-            else: # the best we can do is to point to the isogeny class
+            else:  # the best we can do is to point to the isogeny class
                 if self.genus == 1:
                     s = self.newforms[0].split(".")
                     label = s[0] + "." + s[3]
-                    friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
+                    friends.append(
+                        ("Isogeny class " + label,
+                         url_for(
+                             "ec.by_ec_label",
+                             label=label)))
                 if self.genus == 2:
-                    g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
+                    g2c_url = db.lfunc_instances.lucky(
+                        {'Lhash': str(self.trace_hash), 'type': 'G2Q'}, 'url')
                     if g2c_url:
                         s = g2c_url.split("/")
                         label = s[2] + "." + s[3]
-                        friends.append(("Isogeny class " + label, url_for("g2c.by_label", label=label)))
-            friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
+                        friends.append(
+                            ("Isogeny class " + label,
+                             url_for(
+                                 "g2c.by_label",
+                                 label=label)))
+            friends.append(
+                ("L-function",
+                 "/L" +
+                 url_for_mf_label(
+                     self.newforms[0])))
         else:
-            friends.append(("L-function not available",""))
+            friends.append(("L-function not available", ""))
         if self.genus > 0 and self.trace_hash is not None:
-            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
+            for r in self.table.search({'trace_hash': self.trace_hash}, [
+                                       'label', 'name', 'newforms']):
                 if r['newforms'] == self.newforms and r['label'] != self.label:
-                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
+                    friends.append(
+                        ("Modular curve " + (
+                            r['name'] if r['name'] else r['label']), url_for(
+                            "modcurve.by_label", label=r['label'])))
         return friends
 
     @lazy_attribute
@@ -492,10 +559,23 @@ class WebModCurve(WebObj):
             tail.append(
                 (str(D["level"]), url_for(".index_Q", **D))
             )
-        tail.append((cremona_letter_code(self.coarse_class_num-1), url_for(".by_label", label=self.coarse_class))),
-        tail.append((self.coarse_num, url_for(".by_label", label=self.coarse_label)))
+        tail.append(
+            (cremona_letter_code(
+                self.coarse_class_num - 1),
+                url_for(
+                ".by_label",
+                label=self.coarse_class))),
+        tail.append(
+            (self.coarse_num,
+             url_for(
+                 ".by_label",
+                 label=self.coarse_label)))
         if not self.contains_negative_one:
-            tail.append((self.fine_num, url_for(".by_label", label=self.label)))
+            tail.append(
+                (self.fine_num,
+                 url_for(
+                     ".by_label",
+                     label=self.label)))
         return get_bread(tail)
 
     @lazy_attribute
@@ -522,21 +602,25 @@ class WebModCurve(WebObj):
         if len(self.obstructions) < 10:
             return ",".join(str(p) for p in self.obstructions if p != 0)
         else:
-            return ",".join(str(p) for p in self.obstructions[:3] if p != 0) + r",\ldots," + str(self.obstructions[-1])
+            return ",".join(str(
+                p) for p in self.obstructions[:3] if p != 0) + r",\ldots," + str(self.obstructions[-1])
 
     @lazy_attribute
     def coarse_description(self):
         if self.contains_negative_one:
             return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)" % (modcurve_link(self.coarse_label))
+            return r"no $\quad$ (see %s for the level structure with $-I$)" % (
+                modcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
-            qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
+            qtwists = list(self.table.search(
+                {'coarse_label': self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s" % (', '.join(modcurve_link(label) for label in qtwists if label != self.label))
+                return r"%s" % (', '.join(modcurve_link(label)
+                                          for label in qtwists if label != self.label))
             else:
                 return r"none in database"
         else:
@@ -559,13 +643,19 @@ class WebModCurve(WebObj):
     def cusp_widths_display(self):
         if not self.cusp_widths:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_widths) + "$"
+        return "$" + \
+            r"\cdot".join(
+                f"{w}{showexp(n, wrap=False)}" for w,
+                n in self.cusp_widths) + "$"
 
     @lazy_attribute
     def cusp_orbits_display(self):
         if not self.cusp_orbits:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_orbits) + "$"
+        return "$" + \
+            r"\cdot".join(
+                f"{w}{showexp(n, wrap=False)}" for w,
+                n in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):
@@ -577,7 +667,8 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def models_to_display(self):
-        return list(db.modcurve_models.search({"modcurve": self.coarse_label, "dont_display": False}, ["equation", "number_variables", "model_type", "smooth"]))
+        return list(db.modcurve_models.search({"modcurve": self.coarse_label, "dont_display": False}, [
+                    "equation", "number_variables", "model_type", "smooth"]))
 
     @lazy_attribute
     def formatted_models(self):
@@ -598,16 +689,18 @@ class WebModCurve(WebObj):
         return list(db.modcurve_modelmaps.search(
             {"domain_label": self.coarse_label,
              "dont_display": False,
-             "domain_model_type":{"$in": domain_types}},
+             "domain_model_type": {"$in": domain_types}},
             ["degree", "domain_model_type", "codomain_label", "codomain_model_type",
              "coordinates", "leading_coefficients", "factored"]))
 
     def display_j(self, domain_model_type):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"]
+                 == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
 
     def display_E4E6(self, domain_model_type):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] ==
+                 "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type]
         return len(jmaps) >= 1
 
     def model_type_str(self, model_type):
@@ -631,11 +724,14 @@ class WebModCurve(WebObj):
             return display_knowl('modcurve.plane_model', 'Plane model')
         elif model_type == 5:
             if self.genus == 1:
-                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
+                return display_knowl(
+                    'ec.weierstrass_coeffs', 'Weierstrass model')
             else:
-                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
+                return display_knowl(
+                    'ag.hyperelliptic_curve', 'Weierstrass model')
         elif model_type == 7:
-            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
+            return display_knowl('ag.hyperelliptic_curve',
+                                 'Geometric Weierstrass model')
         elif model_type == 8:
             return display_knowl('modcurve.embedded_model', 'Embedded model')
         return ""
@@ -653,7 +749,8 @@ class WebModCurve(WebObj):
         return s
 
     def formatted_jmap(self, domain_model_type):
-        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
+        jmaps = [m for m in self.modelmaps_to_display if m["codomain_label"]
+                 == "1.1.0.a.1" and m["domain_model_type"] == domain_model_type]
         jmap = [m for m in jmaps if m["codomain_model_type"] == 1]
         f1 = formatted_map(jmap[0]) if jmap else {}
         f = {}
@@ -673,26 +770,31 @@ class WebModCurve(WebObj):
             nb_coords += 1
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
         f["nb_coords"] = nb_coords
-        f["coord_names"] = ["j"] + [""]*(nb_coords-1)
+        f["coord_names"] = ["j"] + [""] * (nb_coords - 1)
         return f
 
     def formatted_E4E6(self, domain_model_type):
-        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
+        E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] ==
+                "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
         return f
 
     @lazy_attribute
     def formatted_modelisos(self):
-        maps = [m for m in self.modelmaps_to_display if m["codomain_label"] == self.label]
-        models = {rec["model_type"]: rec["equation"] for rec in self.models_to_display}
-        maps = [formatted_map(m, codomain_name=self.name, codomain_equation=models[m["codomain_model_type"]]) for m in maps]
-        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equations"]) for m in maps]
+        maps = [
+            m for m in self.modelmaps_to_display if m["codomain_label"] == self.label]
+        models = {rec["model_type"]: rec["equation"]
+                  for rec in self.models_to_display}
+        maps = [formatted_map(m, codomain_name=self.name,
+                              codomain_equation=models[m["codomain_model_type"]]) for m in maps]
+        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"],
+                 m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equations"]) for m in maps]
 
     @lazy_attribute
     def formatted_jmaps(self):
         maps = []
-        for domain_model_type in [0,8,1,5,-2]:
+        for domain_model_type in [0, 8, 1, 5, -2]:
             if self.display_j(domain_model_type):
                 maps.append(self.formatted_jmap(domain_model_type))
             if self.display_E4E6(domain_model_type):
@@ -701,20 +803,24 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def other_formatted_maps(self):
-        maps = [m for m in self.modelmaps_to_display if m["codomain_label"] not in [self.label, "1.1.0.a.1"]]
+        maps = [
+            m for m in self.modelmaps_to_display if m["codomain_label"] not in [
+                self.label, "1.1.0.a.1"]]
         res = []
         if maps:
             codomain_labels = [m["codomain_label"] for m in maps]
             codomains = list(db.gps_gl2zhat_fine.search(
                 {"label": {"$in": codomain_labels}},
-                ["label","name"]))
-            # Do not display maps for which the codomain model has dont_display = False
+                ["label", "name"]))
+            # Do not display maps for which the codomain model has dont_display
+            # = False
             image_eqs = list(db.modcurve_models.search(
                 {"modcurve": {"$in": codomain_labels},
                  "dont_display": False},
                 ["modcurve", "model_type", "equation"]))
             for m in maps:
-                codomain = [crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
+                codomain = [
+                    crv for crv in codomains if crv["label"] == m["codomain_label"]][0]
                 codomain_name = codomain["name"]
                 image_eq = [model for model in image_eqs
                             if model["modcurve"] == m["codomain_label"]
@@ -728,7 +834,8 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def all_formatted_maps(self):
         maps = self.formatted_jmaps + self.other_formatted_maps
-        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"], m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equations"]) for m in maps]
+        return [(m["degree"], m["domain_model_type"], m["codomain_label"], m["codomain_model_type"],
+                 m["codomain_name"], m["codomain_equation"], m["coord_names"], m["equations"]) for m in maps]
 
     @lazy_attribute
     def modelmaps_count(self):
@@ -747,13 +854,15 @@ class WebModCurve(WebObj):
     def full_torsion_field_degree(self):
         N = self.level
         P = integer_prime_divisors(N)
-        GL2size = euler_phi(N) * N * (N // prod(P))**2 * prod(p**2 - 1 for p in P)
+        GL2size = euler_phi(N) * N * (N // prod(P))**2 * \
+            prod(p**2 - 1 for p in P)
         return GL2size // self.index
 
     def show_generators(self):
-        if not self.generators: # 2.6.0.a.1
+        if not self.generators:  # 2.6.0.a.1
             return "trivial subgroup"
-        return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in self.generators)
+        return ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(
+            g) for g in self.generators)
 
     def show_subgroup(self):
         if self.Glabel:
@@ -762,13 +871,26 @@ class WebModCurve(WebObj):
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
-        curves = self.table.search(query, ["label", "coarse_label", "level", "index", "psl2index", "genus", "name", "rank", "newforms", "dims", "mults"])
+        curves = self.table.search(query,
+                                   ["label",
+                                    "coarse_label",
+                                    "level",
+                                    "index",
+                                    "psl2index",
+                                    "genus",
+                                    "name",
+                                    "rank",
+                                    "newforms",
+                                    "dims",
+                                    "mults"])
         return [(
             C["label"],
             name_to_latex(C["name"]) if C.get("name") else C["label"],
             C["level"],
-            C["index"] // self.index if flip else self.index // C["index"], # relative index
-            C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"], # relative degree
+            # relative index
+            C["index"] // self.index if flip else self.index // C["index"],
+            # relative degree
+            C["psl2index"] // self.psl2index if flip else self.psl2index // C["psl2index"],
             C["genus"],
             "?" if C["rank"] is None else C["rank"],
             "not computed" if C["dims"] is None or self.dims is None else
@@ -776,19 +898,21 @@ class WebModCurve(WebObj):
                                         C["mults"], self.mults)) if flip else
              formatted_dims(*difference(self.dims, C["dims"],
                                         self.mults, C["mults"]))))
-                for C in curves]
+            for C in curves]
 
     @lazy_attribute
     def modular_covers(self):
-        return self._curvedata({"label":{"$in": self.parents}})
+        return self._curvedata({"label": {"$in": self.parents}})
 
     @lazy_attribute
     def modular_covered_by(self):
-        return self._curvedata({"parents":{"$contains": self.label}}, flip=True)
+        return self._curvedata(
+            {"parents": {"$contains": self.label}}, flip=True)
 
     @lazy_attribute
     def fiber_product_of(self):
-        return self._curvedata({"label": {"$in": self.factorization, "$not": self.label}})
+        return self._curvedata(
+            {"label": {"$in": self.factorization, "$not": self.label}})
 
     @lazy_attribute
     def newform_level(self):
@@ -822,15 +946,18 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def known_degree1_points(self):
-        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cusp": False})
+        return db.modcurve_points.count(
+            {"curve_label": self.coarse_label, "degree": 1, "cusp": False})
 
     @lazy_attribute
     def known_degree1_noncm_points(self):
-        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
+        return db.modcurve_points.count(
+            {"curve_label": self.coarse_label, "degree": 1, "cm": 0, "cusp": False})
 
     @lazy_attribute
     def known_low_degree_points(self):
-        return db.modcurve_points.count({"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
+        return db.modcurve_points.count(
+            {"curve_label": self.coarse_label, "degree": {"$gt": 1}, "cusp": False})
 
     @lazy_attribute
     def low_degree_cusps(self):
@@ -841,26 +968,32 @@ class WebModCurve(WebObj):
         return list(db.modcurve_points.search(
             {"curve_label": self.coarse_label},
             sort=["degree", "j_height"],
-            projection=["Elabel","cm","isolated","jinv","j_field","j_height",
-                        "jorig","residue_field","degree","coordinates"]))
+            projection=["Elabel", "cm", "isolated", "jinv", "j_field", "j_height",
+                        "jorig", "residue_field", "degree", "coordinates"]))
 
     @lazy_attribute
     def rational_point_coord_types(self):
-        pts = [pt["coordinates"] for pt in self.db_points if pt["degree"] == 1 and pt["coordinates"] is not None]
-        return sorted(set(sum([[int(model_type) for model_type in pt] for pt in pts], [])))
+        pts = [pt["coordinates"] for pt in self.db_points if pt["degree"]
+               == 1 and pt["coordinates"] is not None]
+        return sorted(
+            set(sum([[int(model_type) for model_type in pt] for pt in pts], [])))
 
     @lazy_attribute
     def rational_point_coord_headers(self):
-        return "".join(f"<th>{self.model_type_knowl(t)}</th>" for t in self.rational_point_coord_types)
+        return "".join(
+            f"<th>{self.model_type_knowl(t)}</th>" for t in self.rational_point_coord_types)
 
     @lazy_attribute
     def nf_point_coord_types(self):
-        pts = [pt["coordinates"] for pt in self.db_points if pt["degree"] != 1 and pt["coordinates"] is not None]
-        return sorted(set(sum([[int(model_type) for model_type in pt] for pt in pts], [])))
+        pts = [pt["coordinates"] for pt in self.db_points if pt["degree"]
+               != 1 and pt["coordinates"] is not None]
+        return sorted(
+            set(sum([[int(model_type) for model_type in pt] for pt in pts], [])))
 
     @lazy_attribute
     def nf_point_coord_headers(self):
-        return "".join(f"<th>{self.model_type_knowl(t)}</th>" for t in self.nf_point_coord_types)
+        return "".join(
+            f"<th>{self.model_type_knowl(t)}</th>" for t in self.nf_point_coord_types)
 
     def get_coordstr(self, rec):
         if rec.get("coordinates") is None:
@@ -870,7 +1003,8 @@ class WebModCurve(WebObj):
             if rec["degree"] != 1:
                 R = PolynomialRing(QQ, name="w")
                 # Use w since \frac contains a
-                coord = [latex(R([QQ(t) for t in c.split(",")])) for c in coord.replace("a", "w").split(":")]
+                coord = [latex(R([QQ(t) for t in c.split(",")]))
+                         for c in coord.replace("a", "w").split(":")]
                 coord = ":".join(coord)
                 d, r, D, _ = rec["residue_field"].split(".")
                 D = int(D)
@@ -911,7 +1045,8 @@ class WebModCurve(WebObj):
                 (rec["Elabel"],
                  url_for_EC_label(rec["Elabel"]) if rec["Elabel"] else "",
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                 r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj(rec["jinv"]),
+                 r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj(
+                     rec["jinv"]),
                  showj_fac(rec["jinv"]),
                  rec["j_height"],
                  coordstr))
@@ -929,13 +1064,20 @@ class WebModCurve(WebObj):
                 (rec["Elabel"],
                  url_for_ECNF_label(rec["Elabel"]) if rec["Elabel"] else "",
                  "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                 "yes" if rec["isolated"] == 4 else ("no" if rec["isolated"] in [2,-1,-2,-3,-4] else ""),
-                 r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj_nf(rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
-                 nf_display_knowl(rec["residue_field"], my_field_pretty(rec["residue_field"])),
-                 nf_display_knowl(rec["j_field"], my_field_pretty(rec["j_field"])),
-                 rec["degree"],
-                 rec["j_height"],
-                 coordstr))
+                 "yes" if rec["isolated"] == 4 else (
+                    "no" if rec["isolated"] in [
+                        2, -1, -2, -3, -4] else ""),
+                    r"$\infty$" if not rec["jinv"] and not rec["j_height"] else showj_nf(
+                     rec["jinv"], rec["j_field"], rec["jorig"], rec["residue_field"]),
+                    nf_display_knowl(
+                    rec["residue_field"], my_field_pretty(
+                        rec["residue_field"])),
+                    nf_display_knowl(
+                    rec["j_field"], my_field_pretty(
+                        rec["j_field"])),
+                    rec["degree"],
+                    rec["j_height"],
+                    coordstr))
         return pts
 
     @lazy_attribute
@@ -948,13 +1090,17 @@ class WebModCurve(WebObj):
                  "degree": {"$lte": self.genus}},
                 one_per=["jinv"],
                 projection=["label", "degree", "equation", "jinv", "cm"]))
-            Ra = PolynomialRing(QQ,'a')
+            Ra = PolynomialRing(QQ, 'a')
             return [(rec["label"],
                      url_for_ECNF_label(rec["label"]),
                      rec["equation"],
                      "no" if rec["cm"] == 0 else f'${rec["cm"]}$',
-                     "yes" if (rec["degree"] < ZZ(self.q_gonality_bounds[0]) / 2 or rec["degree"] < self.q_gonality_bounds[0] and (self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "",
-                     web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
+                     "yes" if (
+                rec["degree"] < ZZ(
+                    self.q_gonality_bounds[0]) /
+                2 or rec["degree"] < self.q_gonality_bounds[0] and (
+                    self.rank == 0 or self.simple and rec["degree"] < self.genus)) else "",
+                web_latex(Ra([QQ(s) for s in rec["jinv"].split(',')]))) for rec in curves]
         else:
             return []
 
@@ -966,19 +1112,29 @@ class WebModCurve(WebObj):
                 desc = r'This modular curve is an elliptic curve, but the rank has not been computed'
             elif curve.genus == 0 or (curve.genus == 1 and curve.rank > 0):
                 if curve.level == 1:
-                    desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    desc = r'This modular curve has infinitely many rational points, corresponding to <a href="%s&all=1">elliptic curves over $\Q$</a>.' % url_for(
+                        'ec.rational_elliptic_curves')
                 elif curve.known_degree1_points > 0:
                     desc = 'This modular curve has infinitely many rational points, including <a href="%s">%s</a>.' % (
-                        url_for('.low_degree_points', curve=curve.label, degree=1),
+                        url_for(
+                            '.low_degree_points',
+                            curve=curve.label,
+                            degree=1),
                         pluralize(curve.known_degree1_points, "stored non-cuspidal point"))
                 else:
-                    desc = r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
+                    desc = r'This modular curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for(
+                        'ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.rational_cusps and curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     desc = 'This modular curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational cusp"),
-                        pluralize(len(curve.cm_discriminants), "rational CM point"),
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
+                        pluralize(len(curve.cm_discriminants),
+                                  "rational CM point"),
+                        url_for(
+                            '.low_degree_points',
+                            curve=curve.label,
+                            degree=1,
+                            cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.rational_cusps and curve.cm_discriminants:
                     desc = 'This modular curve has %s and %s, but no other known rational points.' % (
@@ -987,12 +1143,21 @@ class WebModCurve(WebObj):
                 elif curve.rational_cusps and curve.known_degree1_noncm_points > 0:
                     desc = 'This modular curve has rational points, including %s and <a href="%s">%s</a>.' % (
                         pluralize(curve.rational_cusps, "rational_cusp"),
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
+                        url_for(
+                            '.low_degree_points',
+                            curve=curve.label,
+                            degree=1,
+                            cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     desc = 'This modular curve has rational points, including %s and <a href="%s">%s</a>, but no rational cusps.' % (
-                        pluralize(len(curve.cm_discriminants), "rational CM point"),
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
+                        pluralize(len(curve.cm_discriminants),
+                                  "rational CM point"),
+                        url_for(
+                            '.low_degree_points',
+                            curve=curve.label,
+                            degree=1,
+                            cm='noCM'),
                         pluralize(curve.known_degree1_noncm_points, "known non-cuspidal non-CM point"))
                 elif curve.rational_cusps:
                     desc = 'This modular curve has %s but no known non-cuspidal rational points.' % (
@@ -1002,7 +1167,10 @@ class WebModCurve(WebObj):
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
                 elif curve.known_degree1_points > 0:
                     desc = 'This modular curve has <a href="%s">%s</a> but no rational cusps or CM points.' % (
-                        url_for('.low_degree_points', curve=curve.label, degree=1),
+                        url_for(
+                            '.low_degree_points',
+                            curve=curve.label,
+                            degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
             if curve.obstructions == [0]:
@@ -1019,7 +1187,8 @@ class WebModCurve(WebObj):
                 desc = fr'This modular curve has real points and $\Q_p$ points for {pexp}, but no known rational points.'
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 desc = "This modular curve has finitely many rational points, none of which are cusps."
-        if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
+        if (self.genus > 1 or self.genus ==
+                1 and self.rank == 0) and self.db_rational_points:
             if self.only_cuspidal():
                 desc += "  The following are the coordinates of the rational cusps on this modular curve."
             else:
@@ -1043,15 +1212,24 @@ class WebModCurve(WebObj):
         else:
             desc = "This modular curve has "
         if noncusp or cusps:
-            url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="no")
+            url = url_for(
+                '.low_degree_points',
+                curve=self.label,
+                degree="2-",
+                cusp="no")
             if not noncusp:
                 link = "no"
             elif infinite:
                 link = f'<a href="{url}">{noncusp}</a>'
             else:
                 link = str(noncusp)
-            desc += '%s stored non-cuspidal point%s of degree at least 2, ' % (link, "s" if (noncusp != 1) else "")
-            url = url_for('.low_degree_points', curve=self.label, degree="2-", cusp="yes")
+            desc += '%s stored non-cuspidal point%s of degree at least 2, ' % (
+                link, "s" if (noncusp != 1) else "")
+            url = url_for(
+                '.low_degree_points',
+                curve=self.label,
+                degree="2-",
+                cusp="yes")
             desc += "and "
             if not cusps:
                 link = "no"
@@ -1059,10 +1237,12 @@ class WebModCurve(WebObj):
                 link = f'<a href="{url}">{cusps}</a>'
             else:
                 link = str(cusps)
-            desc += '%s cuspidal point%s of degree between 2 and 6.' % (link, "s" if (cusps != 1) else "")
+            desc += '%s cuspidal point%s of degree between 2 and 6.' % (
+                link, "s" if (cusps != 1) else "")
         else:
             desc += "no stored points of degree at least 2."
-        if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_nf_points:
+        if (self.genus > 1 or self.genus ==
+                1 and self.rank == 0) and self.db_nf_points:
             if noncusp:
                 desc += "</p><p>The following are the known low degree points on this modular curve (one row per residue field and $j$-invariant):"
             elif cusps:
@@ -1081,14 +1261,15 @@ class WebModCurve(WebObj):
             def __init__(self, label, x):
                 self.label = label
                 self.level, self.index, self.genus = get_lig(label)
-                #if label == self.label:
+                # if label == self.label:
                 #    self.tex = self.label #r"\text{%s}" % self.label
-                #else:
+                # else:
                 if label in names:
                     self.tex = names[label]
                 else:
                     level, index, genus = get_lig(label)
-                    self.tex = "%s_{%s}^{%s}" % (self.level, self.index, self.genus)
+                    self.tex = "%s_{%s}^{%s}" % (
+                        self.level, self.index, self.genus)
                 self.img = texlabels[self.tex]
                 self.rank = sum(e for p, e in self.index.factor())
                 self.x = x
@@ -1096,8 +1277,10 @@ class WebModCurve(WebObj):
             return [], []
         parents = {}
         names = {}
-        for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
-            if rec["name"] and db.modcurve_teximages.count({"label":rec["name"]}):
+        for rec in db.gps_gl2zhat_fine.search(
+                {"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
+            if rec["name"] and db.modcurve_teximages.count(
+                    {"label": rec["name"]}):
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]
         texlabels = []
@@ -1106,18 +1289,25 @@ class WebModCurve(WebObj):
             texlabels.append("%s_{%s}^{%s}" % (level, index, genus))
         texlabels = list(set(texlabels))
         texlabels.extend(names.values())
-        texlabels = {rec["label"]: rec["image"] for rec in db.modcurve_teximages.search({"label": {"$in": list(texlabels)}})}
+        texlabels = {rec["label"]: rec["image"] for rec in db.modcurve_teximages.search(
+            {"label": {"$in": list(texlabels)}})}
         nodes, edges = [], []
         for lab, x in zip(self.lattice_labels, self.lattice_x):
             nodes.append(LatNode(lab, x))
-        nodes, edges = [LatNode(lab, x) for lab, x in zip(self.lattice_labels, self.lattice_x)], []
+        nodes, edges = [
+            LatNode(
+                lab, x) for lab, x in zip(
+                self.lattice_labels, self.lattice_x)], []
         if nodes:
             minrank = min(node.rank for node in nodes)
             for node in nodes:
                 node.rank -= minrank
-            # below = [node.label for node in nodes if node.index < self.index] -- why is this not used?
+            # below = [node.label for node in nodes if node.index < self.index]
+            # -- why is this not used?
             above = [node.label for node in nodes if node.index > self.index]
-            edges = [[lab, self.label] for lab in above] + [[self.label, lab] for lab in self.parents if lab in self.lattice_labels]
+            edges = [[lab, self.label] for lab in above] + [[self.label, lab]
+                                                            for lab in self.parents if lab in self.lattice_labels]
             for label, P in parents.items():
-                edges.extend([[label, lab] for lab in P if lab in self.lattice_labels])
+                edges.extend([[label, lab]
+                              for lab in P if lab in self.lattice_labels])
         return nodes, edges

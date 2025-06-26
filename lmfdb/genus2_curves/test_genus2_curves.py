@@ -23,13 +23,17 @@ class Genus2Test(LmfdbTest):
         assert "square of" in L.get_data(as_text=True) and "E_6" in L.get_data(
             as_text=True
         )
-        L = self.tc.get("/Genus2Curve/Q/1152.a.147456.1", follow_redirects=True)
+        L = self.tc.get(
+            "/Genus2Curve/Q/1152.a.147456.1",
+            follow_redirects=True)
         assert (
             "non-isogenous elliptic curve" in L.get_data(as_text=True)
             and "24.a" in L.get_data(as_text=True)
             and "48.a" in L.get_data(as_text=True)
         )
-        L = self.tc.get("/Genus2Curve/Q/15360.f.983040.2", follow_redirects=True)
+        L = self.tc.get(
+            "/Genus2Curve/Q/15360.f.983040.2",
+            follow_redirects=True)
         assert (
             r"N(\mathrm{U}(1)\times\mathrm{SU}(2))" in L.get_data(as_text=True)
             and "480.b" in L.get_data(as_text=True)
@@ -49,7 +53,8 @@ class Genus2Test(LmfdbTest):
         assert "Motivic weight" in L.get_data(as_text=True)
 
     def test_twist_link(self):
-        L = self.tc.get("/Genus2Curve/Q/?g22=1016576&g20=5071050752/9&g21=195344320/9")
+        L = self.tc.get(
+            "/Genus2Curve/Q/?g22=1016576&g20=5071050752/9&g21=195344320/9")
         for label in [
             "576.b.147456.1",
             "1152.a.147456.1",
@@ -79,7 +84,9 @@ class Genus2Test(LmfdbTest):
         # RM curve:
         L = self.tc.get("/Genus2Curve/Q/17689/e/866761/1")
         assert (
-            "simple" in L.get_data(as_text=True) or "Simple" in L.get_data(as_text=True)
+            "simple" in L.get_data(
+                as_text=True) or "Simple" in L.get_data(
+                as_text=True)
         ) and r"\mathrm{SU}(2)\times\mathrm{SU}(2)" in L.get_data(as_text=True)
         # QM curve:
         L = self.tc.get("Genus2Curve/Q/262144/d/524288/1")
@@ -88,7 +95,8 @@ class Genus2Test(LmfdbTest):
         ) and "J(E_2)" in L.get_data(as_text=True)
         L = self.tc.get("Genus2Curve/Q/4096/b/65536/1")
         # Square over a quadratic extension that is CM over one extension and
-        # multiplication by a quaternion algebra ramifying at infinity over another
+        # multiplication by a quaternion algebra ramifying at infinity over
+        # another
         assert (
             "square of" in L.get_data(as_text=True)
             and "2.2.8.1-64.1-a3" in L.get_data(as_text=True)
@@ -159,8 +167,12 @@ class Genus2Test(LmfdbTest):
         self.check_args('/Genus2Curve/Q/?aut_grp_id=%5B2,1%5D', '295.a.295.2')
 
     def test_geometric_automorphism_group_search(self):
-        self.check_args('/Genus2Curve/Q/?geom_aut_grp_label=48.29', '4096.b.65536.1')
-        self.check_args('/Genus2Curve/Q/?geom_aut_grp_id=%5B2,1%5D', '363.a.43923.1')
+        self.check_args(
+            '/Genus2Curve/Q/?geom_aut_grp_label=48.29',
+            '4096.b.65536.1')
+        self.check_args(
+            '/Genus2Curve/Q/?geom_aut_grp_id=%5B2,1%5D',
+            '363.a.43923.1')
 
     def test_locally_solvable_serach(self):
         L = self.tc.get("/Genus2Curve/Q/?locally_solvable=False")
@@ -175,7 +187,8 @@ class Genus2Test(LmfdbTest):
         assert "336.a.172032.1" in L.get_data(
             as_text=True
         ) and "169.a.169.1" not in L.get_data(as_text=True)
-        L = self.tc.get("/Genus2Curve/Q/?locally_solvable=True&has_square_sha=False")
+        L = self.tc.get(
+            "/Genus2Curve/Q/?locally_solvable=True&has_square_sha=False")
         assert "No matches" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/?analytic_sha=2&has_square_sha=True")
         assert "No matches" in L.get_data(as_text=True)
@@ -194,8 +207,10 @@ class Genus2Test(LmfdbTest):
         assert "\\infty" in L.get_data(as_text=True)
         assert "6.2.1658432.2" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/969306/a/969306/1")
-        assert "\\Z \\oplus \\Z \\oplus \\Z \\oplus \\Z/{2}\\Z" in L.get_data(as_text=True)
-        assert "16y" in L.get_data(as_text=True) and "2xz^2 + 11z^3" in L.get_data(as_text=True)
+        assert "\\Z \\oplus \\Z \\oplus \\Z \\oplus \\Z/{2}\\Z" in L.get_data(
+            as_text=True)
+        assert "16y" in L.get_data(
+            as_text=True) and "2xz^2 + 11z^3" in L.get_data(as_text=True)
         assert "3.259671" in L.get_data(as_text=True)
         assert "\\infty" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/461/a/461/2")
@@ -282,15 +297,18 @@ class Genus2Test(LmfdbTest):
         assert "169.a.169.1" not in L.get_data(as_text=True)
 
     def test_badprimes_search(self):
-        L = self.tc.get("/Genus2Curve/Q/?bad_quantifier=exactly&bad_primes=2%2C3")
+        L = self.tc.get(
+            "/Genus2Curve/Q/?bad_quantifier=exactly&bad_primes=2%2C3")
         assert "324.a.648.1" in L.get_data(as_text=True)
         assert "450.a.2700.1" not in L.get_data(as_text=True)
         assert "169.a.169.1" not in L.get_data(as_text=True)
-        L = self.tc.get("/Genus2Curve/Q/?bad_quantifier=exclude&bad_primes=2%2C3")
+        L = self.tc.get(
+            "/Genus2Curve/Q/?bad_quantifier=exclude&bad_primes=2%2C3")
         assert "324.a.648.1" not in L.get_data(as_text=True)
         assert "450.a.2700.1" not in L.get_data(as_text=True)
         assert "169.a.169.1" in L.get_data(as_text=True)
-        L = self.tc.get("/Genus2Curve/Q/?bad_quantifier=include&bad_primes=2%2C3")
+        L = self.tc.get(
+            "/Genus2Curve/Q/?bad_quantifier=include&bad_primes=2%2C3")
         assert "324.a.648.1" in L.get_data(as_text=True)
         assert "450.a.2700.1" in L.get_data(as_text=True)
         assert "169.a.169.1" not in L.get_data(as_text=True)
@@ -346,7 +364,8 @@ class Genus2Test(LmfdbTest):
                 assert friend in data
 
     def test_underlying_data(self):
-        data = self.tc.get("/Genus2Curve/Q/data/576.a.576.1").get_data(as_text=True)
+        data = self.tc.get(
+            "/Genus2Curve/Q/data/576.a.576.1").get_data(as_text=True)
         assert ('g2c_curves' in data and 'bad_lfactors' in data and
                 'g2c_endomorphisms' in data and 'factorsQQ_base' in data
                 and 'g2c_ratpts' in data and 'mw_gens_v' in data
@@ -359,23 +378,34 @@ class Genus2Test(LmfdbTest):
         try:
             magma('1+1')
             # Check that giving defining polynomials for f,h works
-            L = self.tc.get('/Genus2Curve/Q/?jump=x%5E5%2Bx%2B1%2Cx', follow_redirects=True)
+            L = self.tc.get(
+                '/Genus2Curve/Q/?jump=x%5E5%2Bx%2B1%2Cx',
+                follow_redirects=True)
             assert "y^2 + xy = x^5 + x + 1" in L.get_data(as_text=True)
 
-            # Check that giving a Weierstrass equation works, even without explicit multiplication '*'
-            L = self.tc.get("/Genus2Curve/Q/?jump=b%5E2%3Da%5E5-2a%5E2%2B1", follow_redirects=True)
+            # Check that giving a Weierstrass equation works, even without
+            # explicit multiplication '*'
+            L = self.tc.get(
+                "/Genus2Curve/Q/?jump=b%5E2%3Da%5E5-2a%5E2%2B1",
+                follow_redirects=True)
             assert "$y^2 = x^5 - 2x^2 + 1$" in L.get_data(as_text=True)
 
             # Check that variables are only single characters
-            L = self.tc.get("/Genus2Curve/Q/?jump=(banana)%5E2%3Dx%5E5%2B1", follow_redirects=True)
+            L = self.tc.get(
+                "/Genus2Curve/Q/?jump=(banana)%5E2%3Dx%5E5%2B1",
+                follow_redirects=True)
             assert "is not in two variables" in L.get_data(as_text=True)
 
             # Check that curves not of genus 2 fail
-            L = self.tc.get("/Genus2Curve/Q/?jump=y^2+%3D+x^10+-+1", follow_redirects=True)
+            L = self.tc.get(
+                "/Genus2Curve/Q/?jump=y^2+%3D+x^10+-+1",
+                follow_redirects=True)
             assert "invalid genus 2 curve" in L.get_data(as_text=True)
 
             # Check that there are only two variables present
-            L = self.tc.get("/Genus2Curve/Q/?jump=y%5E2+%3D+x+%2B+a", follow_redirects=True)
+            L = self.tc.get(
+                "/Genus2Curve/Q/?jump=y%5E2+%3D+x+%2B+a",
+                follow_redirects=True)
             assert "is not in two variables" in L.get_data(as_text=True)
         except (RuntimeError, TypeError) as the_error:
             if str(the_error).startswith("unable to start magma"):
@@ -391,4 +421,5 @@ class Genus2Test(LmfdbTest):
         # A nongeneric example
         L = self.tc.get("/Genus2Curve/Q/961/a/961/1")
         assert "3.72.2" in L.get_data(as_text=True)
-        assert "Galois representation data has not been computed for this curve" in L.get_data(as_text=True)
+        assert "Galois representation data has not been computed for this curve" in L.get_data(
+            as_text=True)

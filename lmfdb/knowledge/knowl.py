@@ -25,35 +25,73 @@ coldesc_knowl_re = re.compile(r"columns.([A-Za-z0-9_]+)\.([A-Za-z0-9_]+)")
 tabledesc_knowl_re = re.compile(r"tables.([A-Za-z0-9_]+)")
 bottom_knowl_re = re.compile(r"(.*)\.bottom$")
 url_from_knowl = [
-    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'), 'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
-    (re.compile(r'g2c\.(\d+\.[a-z]+)'), 'Genus2Curve/Q/{0}', 'Genus 2 isogeny class {0}'),
-    (re.compile(r'gg\.(\d+)t(\d+)'), 'GaloisGroup/{0}t{1}', 'Galois group {0}T{1}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+\.\d+\.\d+)'),
+     'Genus2Curve/Q/{0}', 'Genus 2 curve {0}'),
+    (re.compile(r'g2c\.(\d+\.[a-z]+)'),
+     'Genus2Curve/Q/{0}',
+     'Genus 2 isogeny class {0}'),
+    (re.compile(r'gg\.(\d+)t(\d+)'),
+     'GaloisGroup/{0}t{1}',
+     'Galois group {0}T{1}'),
     (re.compile(r'lattice\.(.*)'), 'Lattice/{0}', 'Lattice {0}'),
-    (re.compile(r'cmf\.(.*)'), 'ModularForm/GL2/Q/holomorphic/{0}', 'Newform {0}'),
+    (re.compile(r'cmf\.(.*)'),
+     'ModularForm/GL2/Q/holomorphic/{0}',
+     'Newform {0}'),
     (re.compile(r'nf\.(.*)'), 'NumberField/{0}', 'Number field {0}'),
     (re.compile(r'ec\.q\.(.*)'), 'EllipticCurve/Q/{0}', 'Elliptic curve {0}'),
-    (re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'), 'EllipticCurve/{0}/{1}/{2}/{3}', 'Elliptic curve {0}-{1}-{2}{3}'),
-    (re.compile(r'av\.fq\.(.*)'), 'Variety/Abelian/Fq/{0}', 'Abelian variety isogeny class {0}'),
-    (re.compile(r'st_group\.(.*)'), 'SatoTateGroup/{0}', 'Sato-Tate group {0}'),
+    (
+        re.compile(r'ec\.(\d+\.\d+\.\d+\.\d+)-(\d+\.\d+)-([a-z]+)(\d+)'),
+        'EllipticCurve/{0}/{1}/{2}/{3}',
+        'Elliptic curve {0}-{1}-{2}{3}'),
+    (re.compile(r'av\.fq\.(.*)'),
+     'Variety/Abelian/Fq/{0}',
+     'Abelian variety isogeny class {0}'),
+    (re.compile(r'st_group\.(.*)'),
+     'SatoTateGroup/{0}',
+     'Sato-Tate group {0}'),
     (re.compile(r'belyi\.(.*)'), 'Belyi/{0}', 'Belyi Map {0}'),
-    (re.compile(r'hecke_algebra\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}', 'Hecke algebra {0}'),
-    (re.compile(r'hecke_algebra_l_adic\.(.*)'), 'ModularForm/GL2/Q/HeckeAlgebra/{0}/2', 'l-adic Hecke algebra {0}'),
-    (re.compile(r'gal\.modl\.(.*)'), 'Representation/Galois/ModL/{0}', 'Mod-l Galois representation {0}'),
-    (re.compile(r'modlmf\.(.*)'), 'ModularForm/GL2/ModL/{0}', 'Mod-l modular form {0}'),
-    (re.compile(r'group\.abstract\.(.*)'), 'Groups/Abstract/{0}', 'Abstract group {0}'),
+    (re.compile(r'hecke_algebra\.(.*)'),
+     'ModularForm/GL2/Q/HeckeAlgebra/{0}',
+     'Hecke algebra {0}'),
+    (re.compile(r'hecke_algebra_l_adic\.(.*)'),
+     'ModularForm/GL2/Q/HeckeAlgebra/{0}/2',
+     'l-adic Hecke algebra {0}'),
+    (re.compile(r'gal\.modl\.(.*)'),
+     'Representation/Galois/ModL/{0}',
+     'Mod-l Galois representation {0}'),
+    (re.compile(r'modlmf\.(.*)'),
+     'ModularForm/GL2/ModL/{0}',
+     'Mod-l modular form {0}'),
+    (re.compile(r'group\.abstract\.(.*)'),
+     'Groups/Abstract/{0}', 'Abstract group {0}'),
 ]
 grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
-link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
-define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
+link_finder_re = re.compile(
+    r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
+define_fixer = re.compile(
+    r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
 defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
-common_words = {'and', 'an', 'or', 'some', 'many', 'has', 'have', 'not', 'too', 'mathbb', 'title', 'for'}
+common_words = {
+    'and',
+    'an',
+    'or',
+    'some',
+    'many',
+    'has',
+    'have',
+    'not',
+    'too',
+    'mathbb',
+    'title',
+    'for'}
 
 # categories, level 0, never change this id
 #CAT_ID = 'categories'
+
 
 def make_keywords(content, kid, title):
     """
@@ -76,6 +114,7 @@ def extract_cat(kid):
     if not hasattr(kid, 'split'):
         return None
     return kid.split(".")[0]
+
 
 def extract_typ(kid):
     m = comment_knowl_re.match(kid)
@@ -131,7 +170,19 @@ def extract_defines(content):
 
 
 class KnowlBackend(PostgresBase):
-    _default_fields = ['authors', 'cat', 'content', 'last_author', 'timestamp', 'title', 'status', 'type', 'links', 'defines', 'source', 'source_name'] # doesn't include id, _keywords, reviewer or review_timestamp
+    _default_fields = [
+        'authors',
+        'cat',
+        'content',
+        'last_author',
+        'timestamp',
+        'title',
+        'status',
+        'type',
+        'links',
+        'defines',
+        'source',
+        'source_name']  # doesn't include id, _keywords, reviewer or review_timestamp
 
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
@@ -159,7 +210,8 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
+            self.cached_titles = {elt['id']: elt['title']
+                                  for elt in self.get_all_knowls(['id', 'title'])}
         return self.cached_titles
 
     @property
@@ -177,11 +229,12 @@ class KnowlBackend(PostgresBase):
         return self._rw_knowldb
 
     def get_knowl(self, ID,
-            fields=None, beta=None, allow_deleted=False, timestamp=None):
+                  fields=None, beta=None, allow_deleted=False, timestamp=None):
         if fields is None:
             fields = ['id'] + self._default_fields
         if timestamp is not None:
-            selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+            selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(
+                SQL(", ").join(map(Identifier, fields)))
             L = self._safe_execute(selecter, [ID, timestamp])
             if L:
                 return dict(zip(fields, L[0]))
@@ -190,7 +243,8 @@ class KnowlBackend(PostgresBase):
 
         if beta is None:
             beta = is_beta()
-        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND status >= %s ORDER BY timestamp DESC LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND status >= %s ORDER BY timestamp DESC LIMIT 1").format(
+            SQL(", ").join(map(Identifier, fields)))
         if not beta:
             L = self._safe_execute(selecter, [ID, 1])
             if L:
@@ -199,22 +253,25 @@ class KnowlBackend(PostgresBase):
         if L:
             return dict(zip(fields, L[0]))
 
-    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2]):
+    def get_all_knowls(self, fields=None, types=[2, 1, 0, -1, -2]):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(
+            SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [0, types])
         return [dict(zip(fields, res)) for res in L]
 
     def get_all_defines(self):
-        selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
+        selecter = SQL(
+            "SELECT DISTINCT ON (id) id, defines FROM kwl_knowls WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
         L = self._safe_execute(selecter)
         # This should be fixed in the data
         return [{k: (v if k == 'id' else [normalize_define(t) for t in v])
                  for k, v in zip(['id', 'defines'], res)} for res in L]
 
-    #FIXME shouldn't I be allowed to search on id? or something?
-    def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False):
+    # FIXME shouldn't I be allowed to search on id? or something?
+    def search(self, category="", filters=[], types=[], keywords="",
+               author=None, sort=[], projection=['id', 'title'], regex=False):
         """
         INPUT:
 
@@ -234,7 +291,8 @@ class KnowlBackend(PostgresBase):
             restrictions.append(SQL("status != %s"))
             values.append(-1)
         # In order to be able to sort by arbitrary columns, we have to select everything here.
-        # We therefore do the projection in Python, which is fine for the knowls table since it's tiny
+        # We therefore do the projection in Python, which is fine for the
+        # knowls table since it's tiny
         fields = ['id', '_keywords'] + self._default_fields
         sqlfields = SQL(", ").join(map(Identifier, fields))
         projfields = [(col, fields.index(col)) for col in projection]
@@ -242,11 +300,15 @@ class KnowlBackend(PostgresBase):
             restrictions = SQL(" WHERE ") + SQL(" AND ").join(restrictions)
         else:
             restrictions = SQL("")
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls{1} ORDER BY id, timestamp DESC").format(sqlfields, restrictions)
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls{1} ORDER BY id, timestamp DESC").format(
+            sqlfields, restrictions)
         secondary_restrictions = []
         if filters:
-            secondary_restrictions.append(SQL("knowls.{0} = ANY(%s)").format(Identifier("status")))
-            values.append([knowl_status_code[q] for q in filters if q in knowl_status_code])
+            secondary_restrictions.append(
+                SQL("knowls.{0} = ANY(%s)").format(
+                    Identifier("status")))
+            values.append([knowl_status_code[q]
+                           for q in filters if q in knowl_status_code])
         else:
             secondary_restrictions.append(SQL("status >= %s"))
             values.append(0)
@@ -255,7 +317,8 @@ class KnowlBackend(PostgresBase):
             values.append(category)
         if keywords:
             if regex:
-                secondary_restrictions.append(SQL("content ~ %s OR title ~ %s OR id ~ %s"))
+                secondary_restrictions.append(
+                    SQL("content ~ %s OR title ~ %s OR id ~ %s"))
                 values.extend([keywords, keywords, keywords])
             else:
                 keywords = [w for w in keywords.split(" ") if len(w) >= 3]
@@ -279,14 +342,18 @@ class KnowlBackend(PostgresBase):
             sort = SQL(" ORDER BY ") + self._sort_str(sort)
         else:
             sort = SQL("")
-        selecter = SQL("SELECT {0} FROM ({1}) knowls WHERE {2}{3}").format(sqlfields, selecter, secondary_restrictions, sort)
+        selecter = SQL("SELECT {0} FROM ({1}) knowls WHERE {2}{3}").format(
+            sqlfields, selecter, secondary_restrictions, sort)
         L = self._safe_execute(selecter, values)
-        return [{k:res[i] for k,i in projfields} for res in L]
+        return [{k: res[i] for k, i in projfields} for res in L]
 
     def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
         if most_recent is None:
-            most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
+            most_recent = self.get_knowl(
+                knowl.id,
+                ['id'] + self._default_fields,
+                allow_deleted=False)
         new_knowl = most_recent is None
         if new_knowl:
             authors = []
@@ -304,15 +371,31 @@ class KnowlBackend(PostgresBase):
         else:
             typ, source, name = extract_typ(knowl.id)
         links = extract_links(knowl.content)
-        if typ == 2: # column or table description
+        if typ == 2:  # column or table description
             defines = [name]
         else:
             defines = extract_defines(knowl.content)
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
-        values = (knowl.id, authors, cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, search_keywords)
+        values = (
+            knowl.id,
+            authors,
+            cat,
+            knowl.content,
+            who,
+            knowl.timestamp,
+            knowl.title,
+            knowl.status,
+            typ,
+            links,
+            defines,
+            source,
+            name,
+            search_keywords)
         with DelayCommit(self):
-            inserter = SQL("INSERT INTO kwl_knowls (id, {0}, _keywords) VALUES ({1})")
-            inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
+            inserter = SQL(
+                "INSERT INTO kwl_knowls (id, {0}, _keywords) VALUES ({1})")
+            inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(
+                ", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
 
@@ -321,7 +404,8 @@ class KnowlBackend(PostgresBase):
         returns the last @limit history items
         """
         cols = ("id", "title", "timestamp", "last_author")
-        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
+        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(
+            SQL(", ").join(map(Identifier, cols)))
         L = self._safe_execute(selecter, [0, -2, limit])
         return [dict(zip(cols, res)) for res in L]
 
@@ -329,15 +413,19 @@ class KnowlBackend(PostgresBase):
         """
         returns the last @limit knowls that have been commented on
         """
-        # We want to select the oldest version of each comment but the newest version of each knowl
+        # We want to select the oldest version of each comment but the newest
+        # version of each knowl
         selecter = SQL("WITH k AS (SELECT DISTINCT ON (id) id, title, timestamp, last_author FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC), c AS (SELECT id, timestamp, last_author, source FROM (SELECT DISTINCT ON (id) id, timestamp, last_author, source FROM kwl_knowls WHERE status >= %s AND type = %s ORDER BY id, timestamp) ci ORDER BY timestamp DESC LIMIT %s) SELECT k.id, k.title, k.timestamp, k.last_author, c.id, c.timestamp, c.last_author FROM k, c WHERE k.id = c.source ORDER BY c.timestamp DESC")
         L = self._safe_execute(selecter, [0, -2, 0, -2, limit])
-        return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in L]
+        return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author",
+                          "comment_id", "comment_timestamp", "comment_author"], res)) for res in L]
 
     def get_edit_history(self, ID):
-        selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls WHERE status >= %s AND id = %s ORDER BY timestamp")
+        selecter = SQL(
+            "SELECT timestamp, last_author, content, status FROM kwl_knowls WHERE status >= %s AND id = %s ORDER BY timestamp")
         L = self._safe_execute(selecter, [0, ID])
-        return [dict(zip(["timestamp", "last_author", "content", "status"], rec)) for rec in L]
+        return [
+            dict(zip(["timestamp", "last_author", "content", "status"], rec)) for rec in L]
 
     def get_comments(self, ID):
         # Note that the subselect is sorted in ascending order by timestamp
@@ -346,9 +434,11 @@ class KnowlBackend(PostgresBase):
 
     def get_column_descriptions(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(
+            SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"columns.{table}.%", 2, 0])
-        return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L}
+        return {rec[0].split(".")[-1]: Knowl(rec[0],
+                                             data=dict(zip(fields, rec))) for rec in L}
 
     def set_column_description(self, table, col, description):
         uid = db.login()
@@ -370,7 +460,8 @@ class KnowlBackend(PostgresBase):
 
     def get_table_description(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(
+            SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"tables.{table}", 2, 0])
         if L:
             return Knowl(L[0][0], data=dict(zip(fields, L[0])))
@@ -402,13 +493,20 @@ class KnowlBackend(PostgresBase):
 
     def resurrect(self, knowl):
         """Sets the status for all deleted copies of the knowl to beta"""
-        updator = SQL("UPDATE kwl_knowls SET status=%s WHERE status=%s AND id=%s")
+        updator = SQL(
+            "UPDATE kwl_knowls SET status=%s WHERE status=%s AND id=%s")
         self._execute(updator, [0, -2, knowl.id])
         self.cached_titles[knowl.id] = knowl.title
 
     def review(self, knowl, who, set_beta=False):
-        updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
-        self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
+        updator = SQL(
+            "UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
+        self._execute(updator,
+                      [0 if set_beta else 1,
+                       who,
+                       datetime.utcnow(),
+                          knowl.id,
+                          knowl.timestamp])
 
     def _set_referrers(self, knowls):
         kids = [k.id for k in knowls]
@@ -422,22 +520,24 @@ class KnowlBackend(PostgresBase):
         for k in knowls:
             k.referrers = referrers[k.id]
             k.code_referrers = [
-                    code_snippet_knowl(D, full=False)
-                    for D in self.code_references(k)]
+                code_snippet_knowl(D, full=False)
+                for D in self.code_references(k)]
 
     def needs_review(self, days):
         now = datetime.utcnow()
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type >= -1 AND type <= 1 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type >= -1 AND type <= 1 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(
+            SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [time, 0])
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L]
 
         kids = [k.id for k in knowls]
-        selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
+        selecter = SQL(
+            "SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
         L = self._safe_execute(selecter, [kids])
-        reviewed = {rec[0]:rec[1] for rec in L}
+        reviewed = {rec[0]: rec[1] for rec in L}
 
         for k in knowls:
             k.reviewed_content = reviewed.get(k.id)
@@ -447,8 +547,12 @@ class KnowlBackend(PostgresBase):
     def stale_knowls(self):
         fields = ['id'] + self._default_fields
         selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
-            SQL(", ").join(SQL("a.{0}").format(Identifier(col)) for col in fields),
-            SQL(", ").join(SQL("b.{0}").format(Identifier(col)) for col in fields),
+            SQL(", ").join(
+                SQL("a.{0}").format(
+                    Identifier(col)) for col in fields),
+            SQL(", ").join(
+                SQL("b.{0}").format(
+                    Identifier(col)) for col in fields),
             SQL(", ").join(map(Identifier, fields)))
         data = self._safe_execute(selecter)
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in data]
@@ -474,21 +578,29 @@ class KnowlBackend(PostgresBase):
         """
         values = [0, -2, [knowlid]]
         if old:
-            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s AND links @> %s")
+            selecter = SQL(
+                "SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s AND links @> %s")
         else:
             if beta is None:
                 beta = is_beta()
             if not beta:
-                # Have to make sure we do display references where the most recent positively reviewed knowl does reference this, but the most recent beta does not.
-                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+                # Have to make sure we do display references where the most
+                # recent positively reviewed knowl does reference this, but the
+                # most recent beta does not.
+                selecter = SQL(
+                    "SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
                 L = self._safe_execute(selecter, values)
                 good_ids = [rec[0] for rec in L]
-                # Have to make sure that we don't display knowls as referencing this one when the most recent positively reviewed knowl doesn't but the most recent beta knowl does.
-                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE NOT (links @> %s)")
+                # Have to make sure that we don't display knowls as referencing
+                # this one when the most recent positively reviewed knowl
+                # doesn't but the most recent beta knowl does.
+                selecter = SQL(
+                    "SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE NOT (links @> %s)")
                 L = self._safe_execute(selecter, values)
                 bad_ids = [rec[0] for rec in L]
             # We also need new knowls that have never been reviewed
-            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+            selecter = SQL(
+                "SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
         L = self._safe_execute(selecter, values)
         if not beta and not old:
             new_ids = [rec[0] for rec in L if rec[0] not in bad_ids]
@@ -500,22 +612,36 @@ class KnowlBackend(PostgresBase):
         """
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
         """
-        kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
+        kids = {
+            k['id'] for k in self.get_all_knowls(
+                ['id'], types=[0]) if not any(
+                k['id'].startswith(x) for x in [
+                    "users.", "test."])}
 
         def filter_from_matches(pattern):
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
+            matches = subprocess.check_output(['git',
+                                               'grep',
+                                               '-E',
+                                               '--full-name',
+                                               '--line-number',
+                                               '--context',
+                                               '2',
+                                               pattern],
+                                              encoding='utf-8').split('\n--\n')
             for match in matches:
                 lines = match.split('\n')
                 for line in lines:
                     m = grep_extractor.match(line)
-                    if m and m.group(2) == ':': # active match rather than context
+                    if m and m.group(
+                            2) == ':':  # active match rather than context
                         for kid in extract_links(line):
                             if kid in kids:
                                 kids.remove(kid)
 
         # Find references in the codebase
         filter_from_matches(link_finder_re.pattern)
-        selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
+        selecter = SQL(
+            "SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
         L = self._safe_execute(selecter, [0])
         categories = {}
         titles = {}
@@ -525,7 +651,8 @@ class KnowlBackend(PostgresBase):
             for link in rec[1]:
                 if link in kids:
                     kids.remove(link)
-        # Some of these might be spurious since they may occur in the code in strange ways, so we do a grep for all of the ids.
+        # Some of these might be spurious since they may occur in the code in
+        # strange ways, so we do a grep for all of the ids.
         pattern = "|".join(kid.replace(".", r"\.") for kid in kids)
         filter_from_matches(pattern)
         # Now group by category
@@ -554,7 +681,8 @@ class KnowlBackend(PostgresBase):
             if con1 != con2:
                 raise ValueError("Unexpected grep output (context marker)")
             if filename != F:
-                raise ValueError("Unexpected grep output (mismatched filename)")
+                raise ValueError(
+                    "Unexpected grep output (mismatched filename)")
             if con1 == ':':
                 # If multiple lines match close by, we may have multiple line numbers.
                 # This should be rare, so we just show the last one
@@ -582,7 +710,20 @@ class KnowlBackend(PostgresBase):
         matches = []
         for kid in kids:
             try:
-                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
+                matches.extend(
+                    subprocess.check_output(
+                        [
+                            'git',
+                            'grep',
+                            '--full-name',
+                            '--line-number',
+                            '--context',
+                            '2',
+                            """['"]%s['"]""" %
+                            (kid.replace(
+                                '.',
+                                r'\.'))],
+                        encoding='utf-8').split('\n--\n'))
             except subprocess.CalledProcessError:  # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
@@ -597,11 +738,13 @@ class KnowlBackend(PostgresBase):
         - -1 if the knowl is referenced but cannot be safely replaced.
         """
         try:
-            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
+            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (
+                knowlid.replace('.', r'\.'))], encoding='utf-8').split('\n')
         except subprocess.CalledProcessError:  # no matches
             return 0
 
-        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')],encoding='utf-8').split('\n')
+        easy_matches = subprocess.check_output(
+            ['git', 'grep', knowlid.replace('.', r'\.')], encoding='utf-8').split('\n')
         return 1 if (len(matches) == len(easy_matches)) else -1
 
     def start_rename(self, knowl, new_name, who):
@@ -616,14 +759,21 @@ class KnowlBackend(PostgresBase):
         if knowl.type != 0:
             raise ValueError("Only normal knowls can be renamed.")
         if knowl.source is not None or knowl.source_name is not None:
-            raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead.")
+            raise ValueError(
+                "This knowl is already involved in a rename.  Use undo_rename or actually_rename instead.")
         if self.knowl_exists(new_name):
             raise ValueError("A knowl with id %s already exists." % new_name)
-        updater = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
+        updater = SQL(
+            "UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
         old_name = knowl.id
         with DelayCommit(self):
-            self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
-            new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
+            self._execute(
+                updater, [
+                    old_name, new_name, old_name, knowl.timestamp])
+            new_knowl = knowl.copy(
+                ID=new_name,
+                timestamp=datetime.utcnow(),
+                source=knowl.id)
             new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
@@ -641,30 +791,45 @@ class KnowlBackend(PostgresBase):
         if new_name is None:
             new_name = knowl.source_name
             if new_name is None:
-                raise ValueError("You must either call start_rename or provide the new name")
+                raise ValueError(
+                    "You must either call start_rename or provide the new name")
         with DelayCommit(self):
             new_cat = extract_cat(new_name)
-            updator = SQL("UPDATE kwl_knowls SET (id, cat) = (%s, %s) WHERE id = %s")
+            updator = SQL(
+                "UPDATE kwl_knowls SET (id, cat) = (%s, %s) WHERE id = %s")
             self._execute(updator, [new_name, new_cat, knowl.id])
             # Remove source and source_name from all versions
-            updator = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s")
+            updator = SQL(
+                "UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s")
             self._execute(updator, [None, None, new_name])
-            # Only have to update keywords for most recent version and most recent reviewed version
-            updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
-            self._execute(updator, [make_keywords(knowl.content, new_name, knowl.title), new_name, knowl.timestamp])
+            # Only have to update keywords for most recent version and most
+            # recent reviewed version
+            updator = SQL(
+                "UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
+            self._execute(
+                updator, [
+                    make_keywords(
+                        knowl.content, new_name, knowl.title), new_name, knowl.timestamp])
             if knowl.reviewed_timestamp and knowl.reviewed_timestamp != knowl.timestamp:
-                self._execute(updator, [make_keywords(knowl.reviewed_content, new_name, knowl.reviewed_title), new_name, knowl.reviewed_timestamp])
+                self._execute(updator,
+                              [make_keywords(knowl.reviewed_content,
+                                             new_name,
+                                             knowl.reviewed_title),
+                               new_name,
+                               knowl.reviewed_timestamp])
             referrers = self.ids_referencing(knowl.id, old=True)
-            updator = SQL("UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
+            updator = SQL(
+                "UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
             values = [r"""['"]\s*{0}\s*['"]""".format(knowl.id.replace('.', r'\.')),
-                      "'{0}'".format(new_name), 'g', knowl.id, new_name, referrers] # g means replace all
+                      "'{0}'".format(new_name), 'g', knowl.id, new_name, referrers]  # g means replace all
             self._execute(updator, values)
             if knowl.id in self.cached_titles:
                 self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
             knowl.id = new_name
 
     def rename_hyphens(self, execute=False):
-        selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE id LIKE %s")
+        selecter = SQL(
+            "SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE id LIKE %s")
         bad_names = [rec[0] for rec in db._safe_execute(selecter, ['%-%'])]
         if execute:
             for kid in bad_names:
@@ -699,7 +864,15 @@ class KnowlBackend(PostgresBase):
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
         all_kids = {k['id'] for k in self.get_all_knowls(['id'])}
-        matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
+        matches = subprocess.check_output(['git',
+                                           'grep',
+                                           '-E',
+                                           '--full-name',
+                                           '--line-number',
+                                           '--context',
+                                           '2',
+                                           link_finder_re.pattern],
+                                          encoding='utf-8').split('\n--\n')
         results = []
         for match in matches:
             lines = match.split('\n')
@@ -707,15 +880,19 @@ class KnowlBackend(PostgresBase):
             bad_lines = []
             for line in lines:
                 m = grep_extractor.match(line)
-                if m and m.group(2) == ':': # active match rather than context
-                    bad_kids.extend([kid for kid in extract_links(line) if kid not in all_kids])
+                if m and m.group(2) == ':':  # active match rather than context
+                    bad_kids.extend(
+                        [kid for kid in extract_links(line) if kid not in all_kids])
                     bad_lines.append(int(m.group(3)))
             if bad_kids:
                 # make unique in order preserving way
                 seen = set()
-                bad_kids = [kid for kid in bad_kids if not (kid in seen or seen.add(kid))]
+                bad_kids = [
+                    kid for kid in bad_kids if not (
+                        kid in seen or seen.add(kid))]
                 processed = self._process_git_grep(match)
-                # override the default line numbers, which just test which lines matched the grep
+                # override the default line numbers, which just test which
+                # lines matched the grep
                 processed['lines'] = sorted(bad_lines)
                 results.append((processed, bad_kids))
         return results
@@ -728,7 +905,8 @@ class KnowlBackend(PostgresBase):
         now = datetime.utcnow()
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
-        selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
+        selecter = SQL(
+            "SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
         L = self._safe_execute(selecter, (knowlid, time))
         if L:
             return dict(zip(["username", "timestamp"], L[0]))
@@ -737,7 +915,8 @@ class KnowlBackend(PostgresBase):
         """
         when a knowl is edited, a lock is created. username is the user id.
         """
-        inserter = SQL("INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
+        inserter = SQL(
+            "INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
         now = datetime.utcnow()
         self._execute(inserter, [knowl.id, now, username])
 
@@ -762,7 +941,8 @@ class KnowlBackend(PostgresBase):
         """
         Returns a dictionary giving the count of (not deleted) knowls within each category.
         """
-        selecter = SQL("SELECT cat, COUNT(*) FROM (SELECT DISTINCT ON (id) cat FROM kwl_knowls WHERE type = %s AND status >= 0) knowls GROUP BY cat")
+        selecter = SQL(
+            "SELECT cat, COUNT(*) FROM (SELECT DISTINCT ON (id) cat FROM kwl_knowls WHERE type = %s AND status >= 0) knowls GROUP BY cat")
         L = self._safe_execute(selecter, [0])
         return {res[0]: res[1] for res in L}
 
@@ -770,16 +950,21 @@ class KnowlBackend(PostgresBase):
         """
         Remove an author from all versions of a knowl.
         """
-        updater = SQL("UPDATE kwl_knowls SET authors = array_remove(authors, %s) WHERE id = %s")
+        updater = SQL(
+            "UPDATE kwl_knowls SET authors = array_remove(authors, %s) WHERE id = %s")
         self._execute(updater, [uid, kid])
 
+
 knowldb = KnowlBackend()
+
 
 def knowl_title(kid):
     return knowldb.knowl_title(kid)
 
+
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
 
 @cached_function
 def knowl_url_prefix():
@@ -788,10 +973,16 @@ def knowl_url_prefix():
     """
     return Configuration().get_url_prefix()
 
+
 # allowed qualities for knowls
-knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
-reverse_status_code = {v:k for k,v in knowl_status_code.items()}
+knowl_status_code = {
+    'reviewed': 1,
+    'beta': 0,
+    'in progress': -1,
+    'deleted': -2}
+reverse_status_code = {v: k for k, v in knowl_status_code.items()}
 knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2}
+
 
 class Knowl():
     """
@@ -808,19 +999,21 @@ class Knowl():
     - ``allow_deleted`` -- whether the knowl database should return data from deleted knowls with this ID.
     - ``timestamp`` -- desired version of knowl at the given timestamp
     """
+
     def __init__(self, ID, template_kwargs=None, data=None, editing=False, showing=False,
                  saving=False, renaming=False, allow_deleted=False, timestamp=None):
         self.template_kwargs = template_kwargs or {}
 
         self.id = ID
-        #given that we cache it's existence it is quicker to check for existence
+        # given that we cache it's existence it is quicker to check for
+        # existence
         if data is None:
             if self.exists(allow_deleted=allow_deleted):
                 if editing:
                     # as we want to make edits on the most recent version
                     timestamp = None
                 data = knowldb.get_knowl(ID,
-                        allow_deleted=allow_deleted, timestamp=timestamp)
+                                         allow_deleted=allow_deleted, timestamp=timestamp)
             else:
                 data = {}
         self.title = data.get('title', '')
@@ -828,9 +1021,12 @@ class Knowl():
         self.status = data.get('status', 0)
         self.quality = reverse_status_code.get(self.status)
         self.authors = data.get('authors', [])
-        # Because category is different from cat, the category will be recomputed when copying knowls.
+        # Because category is different from cat, the category will be
+        # recomputed when copying knowls.
         self.category = data.get('cat', extract_cat(ID))
-        self._last_author = data.get('last_author', data.get('_last_author', ''))
+        self._last_author = data.get(
+            'last_author', data.get(
+                '_last_author', ''))
         self.timestamp = data.get('timestamp', datetime.utcnow())
         self.ms_timestamp = datetime_to_timestamp_in_ms(self.timestamp)
         self.links = data.get('links', [])
@@ -849,7 +1045,8 @@ class Knowl():
                 # Column
                 self.title = f"Column {pieces[2]} of table {pieces[1]}"
                 if pieces[1] in db.tablenames:
-                    self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+                    self.coltype = db[pieces[1]].col_type.get(
+                        pieces[2], "DEFUNCT")
                 else:
                     self.coltype = "DEFUNCT"
             elif len(pieces) == 2:
@@ -858,46 +1055,55 @@ class Knowl():
                 self.coltype = None
                 if pieces[1] not in db.tablenames:
                     self.title += " (DEFUNCT)"
-        #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
-        #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
+        # self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
+        # self.review_timestamp = data.get('review_timestamp') # Not returned
+        # by get_knowl by default
 
         if showing:
             self.comments = knowldb.get_comments(ID)
             if self.type == 0:
                 self.referrers = knowldb.ids_referencing(ID)
-                self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(self)]
+                self.code_referrers = [code_snippet_knowl(
+                    D) for D in knowldb.code_references(self)]
         if saving:
             self.sed_safety = knowldb.check_sed_safety(ID)
         self.reviewed_content = self.reviewed_title = self.reviewed_timestamp = None
         if renaming:
-            # This should only occur on beta, so we get the most recent reviewed version
-            reviewed_data = knowldb.get_knowl(ID, ['content', 'title', 'timestamp', 'status'], beta=False)
+            # This should only occur on beta, so we get the most recent
+            # reviewed version
+            reviewed_data = knowldb.get_knowl(
+                ID, ['content', 'title', 'timestamp', 'status'], beta=False)
             if reviewed_data and reviewed_data['status'] == 1:
                 self.reviewed_content = reviewed_data['content']
                 self.reviewed_title = reviewed_data['title']
                 self.reviewed_timestamp = reviewed_data['timestamp']
         if editing:
-            self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
+            self.all_defines = {k: v for k, v in knowldb.all_defines.items() if len(
+                k) > 3 and k not in common_words and ID not in v}
 
         if showing or editing:
             self.edit_history = knowldb.get_edit_history(ID)
-            # Use to determine whether this is the most recent version of this knowl.
+            # Use to determine whether this is the most recent version of this
+            # knowl.
             self.most_recent = not self.edit_history or self.edit_history[-1]['timestamp'] == self.timestamp
-            #if not self.edit_history:
+            # if not self.edit_history:
             #    # New knowl.  This block should be edited according to the desired behavior for diffs
             #    self.edit_history = [{"timestamp":datetime.utcnow(),
             #                          "last_author":"__nobody__",
             #                          "content":"",
             #                          "status":0}]
-            uids = [ elt['last_author'] for elt in self.edit_history]
+            uids = [elt['last_author'] for elt in self.edit_history]
             if uids:
-                full_names = {elt['username']: elt['full_name'] for elt in userdb.full_names(uids)}
+                full_names = {elt['username']: elt['full_name']
+                              for elt in userdb.full_names(uids)}
             else:
                 full_names = {}
             self.previous_review_spot = None
             for i, elt in enumerate(self.edit_history):
-                elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
-                elt['author_full_name'] = full_names.get(elt['last_author'], "")
+                elt['ms_timestamp'] = datetime_to_timestamp_in_ms(
+                    elt['timestamp'])
+                elt['author_full_name'] = full_names.get(
+                    elt['last_author'], "")
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                     self.previous_review_spot = elt['ms_timestamp']
 
@@ -911,7 +1117,7 @@ class Knowl():
         - ``minor`` -- if True, don't add the current user to the list of authors.
         """
         if most_recent is not None:
-            most_recent = {'authors':most_recent.authors}
+            most_recent = {'authors': most_recent.authors}
         knowldb.save(self, who, most_recent=most_recent, minor=minor)
 
     def delete(self):

@@ -40,14 +40,24 @@ def create_search_dict(table='', query=None, view_start=0, request=None):
     else:
         query_alpha = query
 
-    search = {'table':table, 'query':query_alpha, 'view_start':view_start,
-        'max_count':100, 'correct_count':False, 'count_only':False}
+    search = {'table': table, 'query': query_alpha, 'view_start': view_start,
+              'max_count': 100, 'correct_count': False, 'count_only': False}
 
     if request:
-        search['view_start'] = int(request.args.get('_view_start', search['view_start']))
-        search['max_count'] = min(int(request.args.get('_max_count', search['max_count'])), 100)
-        search['correct_count'] = bool(request.args.get('_correct_count', search['correct_count']))
-        search['count_only'] = bool(request.args.get('_count_only', search['count_only']))
+        search['view_start'] = int(
+            request.args.get(
+                '_view_start',
+                search['view_start']))
+        search['max_count'] = min(
+            int(request.args.get('_max_count', search['max_count'])), 100)
+        search['correct_count'] = bool(
+            request.args.get(
+                '_correct_count',
+                search['correct_count']))
+        search['count_only'] = bool(
+            request.args.get(
+                '_count_only',
+                search['count_only']))
     return search
 
 
@@ -62,8 +72,8 @@ def build_api_wrapper(api_key, api_type, data, request=None):
     request -- Flask request object to query for needed data
     """
     return json.dumps({"key": api_key, 'built_at': str(datetime.datetime.now()),
-        'api_version': api_version, 'type': api_type, 'data': data},
-        indent=4, sort_keys=False, cls=APIEncoder)
+                       'api_version': api_version, 'type': api_type, 'data': data},
+                      indent=4, sort_keys=False, cls=APIEncoder)
 
 
 def build_api_records(api_key, record_count, r_c_e, view_start,
@@ -90,7 +100,9 @@ def build_api_records(api_key, record_count, r_c_e, view_start,
 
     """
     view_count = min(view_count, record_count - view_start)
-    next_block = view_start + view_count if (view_start + view_count < record_count or not r_c_e) else -1
+    next_block = view_start + \
+        view_count if (view_start + view_count <
+                       record_count or not r_c_e) else -1
     if view_count == 0:
         next_block = -1
         view_start = -1
@@ -127,7 +139,7 @@ def build_api_search(api_key, mddtuple, max_count=None, request=None):
     if metadata.get('error_string', None):
         return build_api_error(metadata['error_string'], request=request)
     return build_api_records(api_key, metadata['record_count'], metadata['correct_count'],
-        search_dict['view_start'], metadata['view_count'], data, max_count=max_count, request=request)
+                             search_dict['view_start'], metadata['view_count'], data, max_count=max_count, request=request)
 
 
 def build_api_searchers(names, human_names, descriptions, request=None):
@@ -138,7 +150,8 @@ def build_api_searchers(names, human_names, descriptions, request=None):
     descriptions -- List of descriptions for searchers
     request -- Flask request object to query for needed data
     """
-    item_list = [{n:{ 'human_name':h, 'desc':d}} for n, h, d in zip(names, human_names, descriptions)]
+    item_list = [{n: {'human_name': h, 'desc': d}}
+                 for n, h, d in zip(names, human_names, descriptions)]
 
     return build_api_wrapper('GLOBAL', api_type_searchers, item_list, request)
 
@@ -150,7 +163,8 @@ def build_api_descriptions(api_key, description_object, request=None):
     description_object -- Description object
     request -- Flask request object to query for needed data
     """
-    return build_api_wrapper(api_key, api_type_descriptions, description_object, request)
+    return build_api_wrapper(
+        api_key, api_type_descriptions, description_object, request)
 
 
 def build_api_inventory(api_key, description_object, request=None):
@@ -160,7 +174,8 @@ def build_api_inventory(api_key, description_object, request=None):
     description_object -- Description object
     request -- Flask request object to query for needed data
     """
-    return build_api_wrapper(api_key, api_type_inventory, description_object, request)
+    return build_api_wrapper(api_key, api_type_inventory,
+                             description_object, request)
 
 
 def build_api_error(string, request=None):
@@ -211,9 +226,10 @@ def get_filtered_fields(coll_pair):
 
     #data = inventory.retrieve_description(coll_pair[0], coll_pair[1])
     #field_list = data['data']
-    #if not field_list : return None
+    # if not field_list : return None
 
-    #return field_list
+    # return field_list
+
 
 def get_cname_list(info):
     """
@@ -245,6 +261,7 @@ def patch_up_old_inventory(data, table_name):
             result[el] = "Missing"
     return result
 
+
 def default_projection(request, cnames=None):
     """
     Build a projection from an request dictionary as returned by flask. _id always excluded
@@ -257,7 +274,7 @@ def default_projection(request, cnames=None):
     try:
         fields = request.args.get('_fields').split(',')
         if cnames:
-            fields = [cnames.get(el,el) for el in fields]
+            fields = [cnames.get(el, el) for el in fields]
         exclude = False
         try:
             if request.args.get('_exclude'):
@@ -281,13 +298,14 @@ def build_query_projection(field_list, exclude=False):
     exclude -- logical for whether to build an inclusive or exclusive projection (default False)
 
     """
-    keys = {"_id":0}
+    keys = {"_id": 0}
     val = 1
     if exclude:
         val = 0
     for el in field_list:
         keys[el] = val
     return keys
+
 
 def compare_db_strings(str1, str2):
     """
@@ -302,6 +320,7 @@ def compare_db_strings(str1, str2):
     if (len(splt1) < 3 or len(splt2) < 3):
         return False
     return (splt1[0] == splt2[0]) and (splt1[1] == splt2[1])
+
 
 def trim_comparator(value, comparators):
     """
@@ -319,6 +338,7 @@ def trim_comparator(value, comparators):
             break
     return value_new, result
 
+
 def interpret(query, qkey, qval, type_info):
     """
     Try to interpret a user supplied value into a mongo query
@@ -332,18 +352,19 @@ def interpret(query, qkey, qval, type_info):
 
     from ast import literal_eval
 
-    qkey = qkey.replace('"','')
-    qval = qval.replace('"','')
+    qkey = qkey.replace('"', '')
+    qval = qval.replace('"', '')
 
     user_infer = True
 
     if type_info and not qval.startswith("|"):
         user_infer = False
-        qval, comparator = trim_comparator(qval, [(">","$gt"),("<","$lt"), ("%","$in"), ("<=","$le"), (">=","$ge")])
+        qval, comparator = trim_comparator(
+            qval, [(">", "$gt"), ("<", "$lt"), ("%", "$in"), ("<=", "$le"), (">=", "$ge")])
 
         try:
             if type_info == 'string':
-                pass #Already a string
+                pass  # Already a string
             elif type_info == 'integer':
                 try:
                     qval = int(qval)
@@ -383,7 +404,8 @@ def interpret(query, qkey, qval, type_info):
                 qval = float(qval[1:])
 #            elif qval.startswith("o"):
 #                qval = ObjectId(qval[1:])
-            elif qval.startswith("ls"):      # indicator, that it might be a list of strings
+            # indicator, that it might be a list of strings
+            elif qval.startswith("ls"):
                 qval = qval[2:].split(DELIM)
             elif qval.startswith("li"):
                 qval = [int(_) for _ in qval[2:].split(DELIM)]
@@ -392,13 +414,13 @@ def interpret(query, qkey, qval, type_info):
             elif qval.startswith("py"):     # literal evaluation
                 qval = literal_eval(qval[2:])
             elif qval.startswith("cs"):     # containing string in list
-                qval = { "$in": [qval[2:]] }
+                qval = {"$in": [qval[2:]]}
             elif qval.startswith("ci"):
-                qval = { "$in": [int(qval[2:])] }
+                qval = {"$in": [int(qval[2:])]}
             elif qval.startswith("cf"):
-                qval = { "$in": [float(qval[2:])] }
+                qval = {"$in": [float(qval[2:])]}
             elif qval.startswith("cpy"):
-                qval = { "$in": [literal_eval(qval[3:])] }
+                qval = {"$in": [literal_eval(qval[3:])]}
         except Exception:
             # no suitable conversion for the value, keep it as string
             return
@@ -410,6 +432,7 @@ def simple_search(search_dict, projection=None):
     Perform a simple search from a request
     """
     return simple_search_postgres(search_dict, projection)
+
 
 def simple_search_postgres(search_dict, projection=None):
     """

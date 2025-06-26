@@ -25,6 +25,7 @@ from lmfdb.utils import flash_error, flash_info, pluralize
 from psycodict.encoding import copy_dumps
 from lmfdb import db
 
+
 class UploadBox():
     def __init__(self, name, label, knowl, **kwds):
         self.name = name
@@ -46,12 +47,14 @@ class UploadBox():
                 a, b = value.split("-")
                 if a and a.isdigit() and b and b.isdigit():
                     return value
-            raise ValueError(rf"{self.name} must be a positive integer or range like 2-4; '{value}' is invalid")
+            raise ValueError(
+                rf"{self.name} must be a positive integer or range like 2-4; '{value}' is invalid")
         table = getattr(self, "label_for", None)
         if table:
             if db[table].label_exists(value):
                 return value
-            raise ValueError(f"There is no {self.name} with label {value} in {table}")
+            raise ValueError(
+                f"There is no {self.name} with label {value} in {table}")
         table = getattr(self, "name_or_label_for", None)
         if table:
             if db[table].label_exists(value):
@@ -59,7 +62,8 @@ class UploadBox():
             label = db[table].lucky({"name": value}, "label")
             if label is not None:
                 return label
-            raise ValueError(f"There is no {self.name} with name or label {value} in {table}")
+            raise ValueError(
+                f"There is no {self.name} with name or label {value} in {table}")
         matcher = getattr(self, "re", None)
         if matcher:
             if isinstance(matcher, tuple):
@@ -70,7 +74,8 @@ class UploadBox():
             match = matcher.fullmatch(value)
             if match:
                 return value
-            raise ValueError(f"{self.name} {value} does not match regular expression {matcher.pattern}{description}")
+            raise ValueError(
+                f"{self.name} {value} does not match regular expression {matcher.pattern}{description}")
 
     def display(self, value):
         # Used in reviewing uploads
@@ -83,6 +88,7 @@ class UploadBox():
         # default is to just display the provided value as is.
         return value
 
+
 class UTextBox(UploadBox):
     def html(self):
         if hasattr(self, "width"):
@@ -91,12 +97,17 @@ class UTextBox(UploadBox):
             width = ""
         return f'<input type="text" name="{self.name}" {width}/>'
 
-reference_re = re.compile(r"arXiv:(?P<arxiv>([a-z\-]+/\d+)|(\d{4}\.\d+(v\d+)?))|MR:(?P<mr>\d+)|doi:(?P<doi>.+)")
+
+reference_re = re.compile(
+    r"arXiv:(?P<arxiv>([a-z\-]+/\d+)|(\d{4}\.\d+(v\d+)?))|MR:(?P<mr>\d+)|doi:(?P<doi>.+)")
+
+
 class UReferenceBox(UTextBox):
     def validate(self, value):
         if reference_re.fullmatch(value):
             return value
-        raise ValueError("Reference not in required format (arXiv:, MR: or doi:)")
+        raise ValueError(
+            "Reference not in required format (arXiv:, MR: or doi:)")
 
     def display(self, value):
         m = reference_re.fullmatch(value)
@@ -109,6 +120,7 @@ class UReferenceBox(UTextBox):
         elif m.group("doi"):
             url = "https://doi.org/" + m.group("doi")
         return f'<a href="{url}">{value}</a>'
+
 
 class USelectBox(UploadBox):
     def __init__(self, name, label, knowl, options, **kwds):
@@ -139,7 +151,8 @@ class USelectBox(UploadBox):
             if getattr(self, "integer", False):
                 return ZZ(value)
             return value
-        raise ValueError(f"{value} is not a legal option for {self.name} (must be one of {','.join(opts)})")
+        raise ValueError(
+            f"{value} is not a legal option for {self.name} (must be one of {','.join(opts)})")
 
     def display(self, value):
         # Option names are all strings
@@ -148,6 +161,7 @@ class USelectBox(UploadBox):
             if val == value:
                 return display
         return "Invalid option"
+
 
 class UTextArea(UploadBox):
     def __init__(self, name, label, knowl, cols=30, rows=3, **kwds):
@@ -165,7 +179,10 @@ class UTextArea(UploadBox):
             value = []
         return [super().validate(x) for x in value]
 
-# The following boxes are used for displaying information for reviewing potential uploads
+# The following boxes are used for displaying information for reviewing
+# potential uploads
+
+
 class StatusBox(UploadBox):
     def __init__(self):
         self.statuses = {
@@ -185,9 +202,11 @@ class StatusBox(UploadBox):
     def display(self, value):
         return self.statuses.get(value, "Invalid status")
 
+
 class SubmitterBox(UploadBox):
     def __init__(self):
         super().__init__("submitter", "Submitter", "upload.submitter")
+
 
 class UpdatedBox(UploadBox):
     def __init__(self):
@@ -196,12 +215,14 @@ class UpdatedBox(UploadBox):
     def display(self, value):
         return '{d:%b} {d.day}, {d.hour}:{d.minute:02}'.format(d=value)
 
+
 class CommentBox(UploadBox):
     def __init__(self):
         super().__init__("comment", "Comment", "upload.comment")
 
+
 class UploadSection():
-    version = 0 # Increment if there is a data format change
+    version = 0  # Increment if there is a data format change
     # Override the following in subclass, or set in __init__
     name = None
     title = None
@@ -241,7 +262,8 @@ class UploadSection():
         No output, but an error is raised if verification fails; the error message will be
         stored in the ``comment`` column.
         """
-        raise NotImplementedError(f"verify method not implemented for {self.name}")
+        raise NotImplementedError(
+            f"verify method not implemented for {self.name}")
 
     def process(self, rec):
         """
@@ -265,7 +287,8 @@ class UploadSection():
             by copy_dumps.  IMPORTANT: the set of columns must depend only on the
             pair ``(table, newrow)``.
         """
-        raise NotImplementedError(f"process method not implemented for {self.name}")
+        raise NotImplementedError(
+            f"process method not implemented for {self.name}")
 
     def final_process(self, ids, F, by_table=None, cols=None):
         """
@@ -294,7 +317,8 @@ class UploadSection():
 
     @lazy_attribute
     def header(self):
-        return [re.sub('[^0-9a-zA-Z ]+', '', box.label).replace("mathbb", "") for box in self.inputs]
+        return [re.sub('[^0-9a-zA-Z ]+', '', box.label).replace("mathbb", "")
+                for box in self.inputs]
 
     @lazy_attribute
     def header_dict(self):
@@ -306,26 +330,52 @@ class UploadSection():
             if i == 0:
                 # Header row
                 if set(row) != set(self.header):
-                    raise ValueError(f"First row of CSV file must match: {', '.join(self.header)}")
+                    raise ValueError(
+                        f"First row of CSV file must match: {', '.join(self.header)}")
                 header = [self.header_dict[x] for x in row]
             else:
                 if any(x for x in row):
                     if len(row) != len(header):
-                        raise ValueError(f"Row {i} of CSV file has {len(row)} entries but header has {len(header)}")
+                        raise ValueError(
+                            f"Row {i} of CSV file has {len(row)} entries but header has {len(header)}")
                     yield self.validate({box.name: val for box, val in zip(header, row)})
 
     def parse_form(self, form):
         form = dict(form)
-        return [self.validate({box.name: form[box.name] for box in self.inputs})]
+        return [self.validate({box.name: form[box.name]
+                               for box in self.inputs})]
 
     def save(self, data):
         with tempfile.NamedTemporaryFile("w", delete=False) as F:
-            columns = ["section", "status", "submitter", "data", "submitted", "verified", "reviewed", "processed", "updated", "version", "comment"]
-            types = ["text", "smallint", "text", "jsonb", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "smallint", "text"]
+            columns = [
+                "section",
+                "status",
+                "submitter",
+                "data",
+                "submitted",
+                "verified",
+                "reviewed",
+                "processed",
+                "updated",
+                "version",
+                "comment"]
+            types = [
+                "text",
+                "smallint",
+                "text",
+                "jsonb",
+                "timestamp without time zone",
+                "timestamp without time zone",
+                "timestamp without time zone",
+                "timestamp without time zone",
+                "timestamp without time zone",
+                "smallint",
+                "text"]
             _ = F.write("|".join(columns) + "\n" + "|".join(types) + "\n\n")
             timestamp = datetime.utcnow().isoformat()
             for rec in data:
-                _ = F.write(f"{self.name}|0|{current_user.id}|{copy_dumps(rec, 'jsonb')}|{timestamp}|\\N|\\N|\\N|{timestamp}|{self.version}|\n")
+                _ = F.write(
+                    f"{self.name}|0|{current_user.id}|{copy_dumps(rec, 'jsonb')}|{timestamp}|\\N|\\N|\\N|{timestamp}|{self.version}|\n")
             F.close()
             db.data_uploads.copy_from(F.name)
             os.unlink(F.name)
@@ -340,10 +390,13 @@ class UploadSection():
         bIO.write(sIO.getvalue().encode("utf-8"))
         bIO.seek(0)
         sIO.close()
-        return send_file(bIO, download_name=filename, as_attachment=True, mimetype="text/csv")
+        return send_file(bIO, download_name=filename,
+                         as_attachment=True, mimetype="text/csv")
 
     def review_cols(self, user_shown, statuses):
-        # By default, we include the status (if there is more than one status) and submitter at the beginning and the timestamp when the upload was most recently changed at the end.
+        # By default, we include the status (if there is more than one status)
+        # and submitter at the beginning and the timestamp when the upload was
+        # most recently changed at the end.
         cols = self.inputs + [UpdatedBox(), CommentBox()]
         if user_shown != current_user.id:
             cols.insert(0, SubmitterBox())
@@ -351,11 +404,13 @@ class UploadSection():
             cols.insert(0, StatusBox())
         return cols
 
+
 class Uploader():
     # Override in subclass
     title = None
     bread = None
     learnmore = None
+
     def __init__(self, sections):
         self.sections = sections
         self.section_lookup = {section.name: section for section in sections}
@@ -375,7 +430,8 @@ class Uploader():
                         # empty file without a filename.
                         if not F.filename:
                             raise ValueError("No file selected")
-                        data = list(section.parse_csv(codecs.getreader("utf-8")(F.stream)))
+                        data = list(section.parse_csv(
+                            codecs.getreader("utf-8")(F.stream)))
                     else:
                         section = self.section_lookup[submit]
                         data = section.parse_form(request.form)
@@ -417,21 +473,29 @@ class Uploader():
         comment = info.get("comment", "").strip().replace("\n", "    ")
         if (reviewer and new_status != -10) or new_status == -5:
             # Modification allowed
-            ids = [int(x[7:]) for x in info if x.startswith("select_") and x[7:].isdigit()]
+            ids = [int(x[7:]) for x in info if x.startswith(
+                "select_") and x[7:].isdigit()]
             if ids:
-                if new_status == -5 and not all(rec["submitter"] == userid and (0 <= rec["status"] < 3) for rec in db.data_uploads.search({"id":{"$in":ids}}, "submitter")):
-                    flash_error("You can only withdraw your own uploads, and only before final processing")
-                elif new_status in [2, -2] and not all(status == 1 for status in db.data_uploads.search({"id":{"$in":ids}}, "status")):
+                if new_status == -5 and not all(rec["submitter"] == userid and (
+                        0 <= rec["status"] < 3) for rec in db.data_uploads.search({"id": {"$in": ids}}, "submitter")):
+                    flash_error(
+                        "You can only withdraw your own uploads, and only before final processing")
+                elif new_status in [2, -2] and not all(status == 1 for status in db.data_uploads.search({"id": {"$in": ids}}, "status")):
                     flash_error("You must select only rows that need review")
                 else:
                     t0 = datetime.utcnow()
-                    payload = {"status": new_status, "reviewed": t0, "updated": t0}
+                    payload = {
+                        "status": new_status,
+                        "reviewed": t0,
+                        "updated": t0}
                     if comment:
                         payload["comment"] = comment
-                    db.data_uploads.update({"id":{"$in":ids}}, payload)
-                    flash_info(f"{pluralize(len(ids), 'upload')} successfully {desc}")
+                    db.data_uploads.update({"id": {"$in": ids}}, payload)
+                    flash_info(
+                        f"{pluralize(len(ids), 'upload')} successfully {desc}")
         else:
-            flash_error("Invalid submit value (you may not have sufficient permissions)")
+            flash_error(
+                "Invalid submit value (you may not have sufficient permissions)")
 
     def show_uploads(self, info, reviewing, user_shown):
         """
@@ -460,8 +524,9 @@ class Uploader():
             (4, "Upload finished", False),
         ]
         if "submit" in info:
-            # The user had a chance to change the selection boxes, so we use the provided values for which statuses to display
-            for i, (a,b,c) in enumerate(statuses):
+            # The user had a chance to change the selection boxes, so we use
+            # the provided values for which statuses to display
+            for i, (a, b, c) in enumerate(statuses):
                 statuses[i] = (a, b, info.get(str(a)) == "on")
 
         # Construct the query, specifying a submitter and/or upload status
@@ -474,7 +539,8 @@ class Uploader():
             if user_shown:
                 query["submitter"] = user_shown
 
-            for rec in db.data_uploads.search(query, ["id", "section", "status", "submitter", "data", "updated", "comment"]):
+            for rec in db.data_uploads.search(
+                    query, ["id", "section", "status", "submitter", "data", "updated", "comment"]):
                 section = rec["section"]
                 if section not in results:
                     results[section] = []
@@ -490,7 +556,8 @@ class Uploader():
         return results, statuses
 
     def needs_review(self):
-        n = db.data_uploads.stats._slow_count({"section":{"$in":[section.name for section in self.sections]}, "status": 0}, record=False)
+        n = db.data_uploads.stats._slow_count({"section": {
+                                              "$in": [section.name for section in self.sections]}, "status": 0}, record=False)
         if n:
             return str(n)
         else:

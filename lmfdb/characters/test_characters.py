@@ -39,13 +39,17 @@ class DirichletSearchTest(LmfdbTest):
         assert r'15.e' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7')
         assert r'25.d' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=Yes')
+        W = self.tc.get(
+            '/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=Yes')
         assert r'25.d' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No')
+        W = self.tc.get(
+            '/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No')
         assert r'50.d' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Odd')
+        W = self.tc.get(
+            '/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Odd')
         assert r'56.n' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Even')
+        W = self.tc.get(
+            '/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Even')
         assert r'50.d' in W.get_data(as_text=True)
 
     def test_condsearch(self):
@@ -58,6 +62,7 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/?start=100&count=25&order=3')
         assert r'169.c' in W.get_data(as_text=True)
 
+
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
@@ -65,11 +70,14 @@ class DirichletTableTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/grouptable?%s' % get)
         assert '35 }(29' in W.get_data(as_text=True)
 
+
 class DirichletCharactersTest(LmfdbTest):
 
     def test_navig(self):
         W = self.tc.get('/Character/', follow_redirects=True)
-        assert 'Browse' in W.get_data(as_text=True) and 'search' in W.get_data(as_text=True)
+        assert 'Browse' in W.get_data(
+            as_text=True) and 'search' in W.get_data(
+            as_text=True)
 
     def test_dirichletfamily(self):
         W = self.tc.get('/Character/Dirichlet/')
@@ -86,68 +94,92 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'Properties' in W.get_data(as_text=True), "properties box"
-        assert 'DirichletGroup(91)' in W.get_data(as_text=True), "sage code example"
-        assert r'\chi_{91}(15,' in W.get_data(as_text=True) and r'\chi_{91}(66' in W.get_data(as_text=True), "generators"
-        assert r'e\left(\frac{7}{12}\right)' in W.get_data(as_text=True), "contents table"
-        assert '/Character/Dirichlet/91/6' in W.get_data(as_text=True), "link in contents table"
+        assert 'DirichletGroup(91)' in W.get_data(
+            as_text=True), "sage code example"
+        assert r'\chi_{91}(15,' in W.get_data(
+            as_text=True) and r'\chi_{91}(66' in W.get_data(
+            as_text=True), "generators"
+        assert r'e\left(\frac{7}{12}\right)' in W.get_data(
+            as_text=True), "contents table"
+        assert '/Character/Dirichlet/91/6' in W.get_data(
+            as_text=True), "link in contents table"
 
-        W = self.tc.get('/Character/Dirichlet/999999999', follow_redirects=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/999999999',
+            follow_redirects=True)
         assert 'Properties' in W.get_data(as_text=True), "properties box"
         assert '648646704' in W.get_data(as_text=True), "order"
         assert 'C_{333666}' in W.get_data(as_text=True), "structure"
-        assert r'\chi_{999999999}(234567902,' in W.get_data(as_text=True) and r'\chi_{999999999}(432432433,' in W.get_data(as_text=True) and r'\chi_{999999999}(332999668,' in W.get_data(as_text=True)
+        assert r'\chi_{999999999}(234567902,' in W.get_data(
+            as_text=True) and r'\chi_{999999999}(432432433,' in W.get_data(
+            as_text=True) and r'\chi_{999999999}(332999668,' in W.get_data(
+            as_text=True)
 
     def test_dirichletgalorbs(self):
         W = self.tc.get('/Character/Dirichlet/289/j').get_data(as_text=True)
         assert r'&rarr; <a href="/Character/Dirichlet/289/j"> j</a>' in W
         table_row = (r'<td class="center">\(-1\)</td>  '
-                    r'<td class="center">\(1\)</td>  '
-                    r'<td class="center">\(e\left(\frac{57}{136}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{191}{272}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{57}{68}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{219}{272}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{33}{272}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{229}{272}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{35}{136}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{55}{136}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
+                     r'<td class="center">\(1\)</td>  '
+                     r'<td class="center">\(e\left(\frac{57}{136}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{191}{272}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{57}{68}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{219}{272}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{33}{272}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{229}{272}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{35}{136}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{55}{136}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{61}{272}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{41}{272}\right)\)</td>')
         assert table_row in W
         assert "Underlying data" in W and "data/289.j" in W
 
         W = self.tc.get('/Character/Dirichlet/7145/da')
-        assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(as_text=True)
+        assert r'&rarr; <a href="/Character/Dirichlet/7145/da"> da</a>' in W.get_data(
+            as_text=True)
         table_row = (r'<td class="center">\(-1\)</td>  '
-                    r'<td class="center">\(1\)</td>  '
-                    r'<td class="center">\(e\left(\frac{19}{84}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{481}{714}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{19}{42}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{1285}{1428}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{341}{357}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{19}{28}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{124}{357}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{779}{1428}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{15}{119}\right)\)</td>  '
-                    r'<td class="center">\(e\left(\frac{115}{714}\right)\)</td>')
+                     r'<td class="center">\(1\)</td>  '
+                     r'<td class="center">\(e\left(\frac{19}{84}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{481}{714}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{19}{42}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{1285}{1428}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{341}{357}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{19}{28}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{124}{357}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{779}{1428}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{15}{119}\right)\)</td>  '
+                     r'<td class="center">\(e\left(\frac{115}{714}\right)\)</td>')
         assert table_row in W.get_data(as_text=True)
 
         # Tests for URL behaviour of characters
 
-        W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/5489/banana/100',
+            follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
         assert r"The URL has been duly corrected." in W.get_data(as_text=True)
 
-        W = self.tc.get('/Character/Dirichlet/254/banana', follow_redirects=True)
-        assert 'Error: No Galois orbit of Dirichlet characters with' in W.get_data(as_text=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/254/banana',
+            follow_redirects=True)
+        assert 'Error: No Galois orbit of Dirichlet characters with' in W.get_data(
+            as_text=True)
 
-        W = self.tc.get('/Character/Dirichlet/10001/banana/100', follow_redirects=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/10001/banana/100',
+            follow_redirects=True)
         assert r'10001.i' in W.get_data(as_text=True)
 
-        W = self.tc.get('/Character/Dirichlet/9999999999/banana', follow_redirects=True)
-        assert 'Error: Galois orbits have only been computed for modulus up to 100,000' in W.get_data(as_text=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/9999999999/banana',
+            follow_redirects=True)
+        assert 'Error: Galois orbits have only been computed for modulus up to 100,000' in W.get_data(
+            as_text=True)
 
-        W = self.tc.get('/Character/Dirichlet/58589/50021', follow_redirects=True)
-        assert 'Number field defined by a degree 1428 polynomial' in W.get_data(as_text=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/58589/50021',
+            follow_redirects=True)
+        assert 'Number field defined by a degree 1428 polynomial' in W.get_data(
+            as_text=True)
 
     def test_dirichletchar11(self):
         W = self.tc.get('/Character/Dirichlet/1/1')
@@ -217,15 +249,20 @@ class DirichletCharactersTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/9999/2')
         assert '/SatoTateGroup/0.1.300' in W.get_data(as_text=True)
         b = get_lfunction_by_url('Character/Dirichlet/9999/2')
-        assert bool(b) == ('L/Character/Dirichlet/9999/2' in W.get_data(as_text=True))
+        assert bool(b) == (
+            'L/Character/Dirichlet/9999/2' in W.get_data(as_text=True))
 
     def test_dirichletchar99999999999999999lfunc(self):
         """ Check Dirichlet character with very large modulus"""
         W = self.tc.get('/Character/Dirichlet/99999999999999999999/2')
-        assert r'e\left(\frac{881}{1818}\right)' in W.get_data(as_text=True), "value on a generator is wrong"
-        assert r'\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(as_text=True), "one of the first values is wrong"
-        assert r'$\Q(\zeta_{3748806900})$' in W.get_data(as_text=True), "field of values is wrong"
-        assert r'/SatoTateGroup/0.1.3748806900' in W.get_data(as_text=True), "Sato-Tate related object link is wrong"
+        assert r'e\left(\frac{881}{1818}\right)' in W.get_data(
+            as_text=True), "value on a generator is wrong"
+        assert r'\(e\left(\frac{782530507}{937201725}\right)\)' in W.get_data(
+            as_text=True), "one of the first values is wrong"
+        assert r'$\Q(\zeta_{3748806900})$' in W.get_data(
+            as_text=True), "field of values is wrong"
+        assert r'/SatoTateGroup/0.1.3748806900' in W.get_data(
+            as_text=True), "Sato-Tate related object link is wrong"
 
     def test_sage_code_gens(self):
         """Test that the sage code stubs generate the correct character. This
@@ -235,19 +272,27 @@ class DirichletCharactersTest(LmfdbTest):
            identified with previous versions of the sage generating code.
         """
         W = self.tc.get('/Character/Dirichlet/163/4')
-        assert 'H = DirichletGroup(163, base_ring=CyclotomicField(162))' in W.get_data(as_text=True), "sage code group is wrong"
-        assert 'chi = DirichletCharacter(H, M([2]))' in W.get_data(as_text=True), "sage code generator is wrong"
+        assert 'H = DirichletGroup(163, base_ring=CyclotomicField(162))' in W.get_data(
+            as_text=True), "sage code group is wrong"
+        assert 'chi = DirichletCharacter(H, M([2]))' in W.get_data(
+            as_text=True), "sage code generator is wrong"
 
         W = self.tc.get('/Character/Dirichlet/16/15')
-        assert 'H = DirichletGroup(16, base_ring=CyclotomicField(2))' in W.get_data(as_text=True), "sage code group is wrong"
-        assert 'chi = DirichletCharacter(H, M([1,0]))' in W.get_data(as_text=True), "sage code generator is wrong"
+        assert 'H = DirichletGroup(16, base_ring=CyclotomicField(2))' in W.get_data(
+            as_text=True), "sage code group is wrong"
+        assert 'chi = DirichletCharacter(H, M([1,0]))' in W.get_data(
+            as_text=True), "sage code generator is wrong"
 
         W = self.tc.get('/Character/Dirichlet/91/3')
-        assert 'H = DirichletGroup(91, base_ring=CyclotomicField(6))' in W.get_data(as_text=True), "sage code group is wrong"
-        assert 'chi = DirichletCharacter(H, M([1,2]))' in W.get_data(as_text=True), "sage code generator is wrong"
+        assert 'H = DirichletGroup(91, base_ring=CyclotomicField(6))' in W.get_data(
+            as_text=True), "sage code group is wrong"
+        assert 'chi = DirichletCharacter(H, M([1,2]))' in W.get_data(
+            as_text=True), "sage code generator is wrong"
 
     def test_underlying_data(self):
-        W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
         assert 'is_minimal' in W and 'last' in W
-        W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
+        W = self.tc.get(
+            '/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W

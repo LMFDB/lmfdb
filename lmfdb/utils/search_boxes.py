@@ -2,6 +2,7 @@ from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form
 
+
 class TdElt():
     _wrap_type = 'td'
 
@@ -30,6 +31,7 @@ class TdElt():
             self._add_class(kwds, 'nowrap')
         return self._wrap("td", **kwds)
 
+
 class Spacer(TdElt):
     def __init__(self, colspan=None, advanced=False):
         self.colspan = colspan
@@ -47,12 +49,13 @@ class Spacer(TdElt):
     def has_label(self, info=None):
         return False
 
+
 class RowSpacer(Spacer):
     def __init__(self, rowheight, advanced=False):
         self.rowheight = rowheight
         self.advanced = advanced
 
-    def tr(self, rowspan=0, **kwds): # used for row spacers
+    def tr(self, rowspan=0, **kwds):  # used for row spacers
         if rowspan is not None:
             kwds['style'] = "height:%spx" % rowspan
         return self._wrap("tr", **kwds)
@@ -145,11 +148,13 @@ class SearchBox(TdElt):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True) + self._label(info) + "</td>"
+        return self.td(colspan, rowspan=self.label_rowspan,
+                       nowrap=True) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.input_rowspan) + self._input(info) + "</td>"
+        return self.td(colspan, rowspan=self.input_rowspan) + \
+            self._input(info) + "</td>"
 
     def example_html(self, info=None):
         if self.example_span:
@@ -240,6 +245,7 @@ class TextBox(SearchBox):
                 keys.append('value="%s"' % info[self.name])
         return '<input ' + " ".join(keys) + "/>"
 
+
 class SelectBox(SearchBox):
     """
     A select box for user input.
@@ -315,7 +321,7 @@ class SelectBox(SearchBox):
         if self.advanced:
             keys.append('class="advanced"')
         if self.example_value and info is None:
-            info = {self.name:self.example}
+            info = {self.name: self.example}
         if info is None:
             if self.width is not None:
                 keys.append('style="width: %spx"' % self.width)
@@ -337,11 +343,14 @@ class SelectBox(SearchBox):
                 value = ""
             else:
                 value = 'value="%s"' % value
-            opts.append("<option %s%s>%s</option>" % (value, selected, display))
+            opts.append(
+                "<option %s%s>%s</option>" %
+                (value, selected, display))
         return "        <select %s>\n%s\n        </select>" % (
             " ".join(keys),
             "".join("\n" + " " * 10 + opt for opt in opts),
         )
+
 
 class NoEg(SearchBox):
     def example_html(self, info=None):
@@ -350,11 +359,14 @@ class NoEg(SearchBox):
             + '<span class="formexample">%s</span></td>' % self.example_span
         )
 
+
 class TextBoxNoEg(NoEg, TextBox):
     pass
 
+
 class SelectBoxNoEg(NoEg, SelectBox):
     pass
+
 
 class HiddenBox(SearchBox):
     def _input(self, info=None):
@@ -365,6 +377,7 @@ class HiddenBox(SearchBox):
             keys.append('value="%s"' % info.get(self.name))
         return '<input type="hidden" %s>' % (" ".join(keys),)
 
+
 class CheckBox(SearchBox):
     def _input(self, info=None):
         keys = ['name="%s"' % self.name, 'value="yes"']
@@ -374,17 +387,21 @@ class CheckBox(SearchBox):
             keys.append("checked")
         return '<input type="checkbox" %s>' % (" ".join(keys),)
 
+
 class SneakyBox(SearchBox):
     """
     Only displayed in result refinement if the corresponding input is present.
     Intended for use in displaying statistics and jump boxes
     """
 
+
 class SneakyTextBox(TextBox, SneakyBox):
     pass
 
+
 class SneakySelectBox(SelectBox, SneakyBox):
     pass
+
 
 class SkipBox(TextBox):
     def _input(self, info=None):
@@ -404,7 +421,7 @@ class TextBoxWithSelect(TextBox):
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
         return (
-                self.td(colspan, nowrap=True, style="text-align-last: justify;")
+            self.td(colspan, nowrap=True, style="text-align-last: justify;")
             + self._label(info)
             + '<span style="margin-left: 10px;"></span>'
             + self.select_box._input(info)
@@ -428,15 +445,18 @@ class DoubleSelectBox(SearchBox):
             + "</div>"
         )
 
+
 class ExcludeOnlyBox(SelectBox):
     _options = [("", ""),
                 ("exclude", "exclude"),
                 ("only", "only")]
 
+
 class YesNoBox(SelectBox):
     _options = [("", ""),
                 ("yes", "yes"),
                 ("no", "no")]
+
 
 class YesNoMaybeBox(SelectBox):
     _default_min_width = 130
@@ -447,10 +467,12 @@ class YesNoMaybeBox(SelectBox):
                 ("no", "no"),
                 ("unknown", "unknown")]
 
+
 class ParityBox(SelectBox):
     _options = [('', ''),
                 ('even', 'even'),
                 ('odd', 'odd')]
+
 
 class ParityMod(SelectBox):
     _default_min_width = 95
@@ -465,10 +487,12 @@ class SubsetBox(SelectBox):
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
 
+
 class SubsetNoExcludeBox(SelectBox):
     _options = [('', 'include'),
                 ('exactly', 'exactly'),
                 ('subset', 'subset')]
+
 
 class CountBox(TextBox):
     def __init__(self):
@@ -480,6 +504,7 @@ class CountBox(TextBox):
             example_col=True,
             example_value=True,
             example_span="")
+
 
 class ColumnController(SelectBox):
     wrap_mixins = {'width': '170px'}
@@ -508,7 +533,8 @@ class ColumnController(SelectBox):
             return ""
         C = info.get("columns")
         if C is None:
-            print("WARNING: Column controller included but no columns specified in @search_wrap")
+            print(
+                "WARNING: Column controller included but no columns specified in @search_wrap")
             return ""
         R = info.get("results")
         if R is None:
@@ -527,26 +553,43 @@ class ColumnController(SelectBox):
             style += f'width: {self.short_width}px;'
         keys.append(f'style="{style}"')
         options = [("none", " selected", "columns to display")]
-        use_rank = 0 # which rank to iterate over in determining the columns listed in the select
+        use_rank = 0  # which rank to iterate over in determining the columns listed in the select
         for col in C.columns_shown(info, 0):
-            if col.height > 1 and any(sub.name != col.name for sub in col.show(info, 1)):
-                # A ColGroup with columns that should be shown/hidden individually
+            if col.height > 1 and any(
+                    sub.name != col.name for sub in col.show(info, 1)):
+                # A ColGroup with columns that should be shown/hidden
+                # individually
                 use_rank = 1
                 break
         allshown = True
         for col in C.columns_shown(info, use_rank):
-            if col.short_title is None: # probably a spacer column:
+            if col.short_title is None:  # probably a spacer column:
                 continue
-            title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
+            title = col.short_title.replace(
+                "$",
+                "").replace(
+                r"\(",
+                "").replace(
+                r"\)",
+                "").replace(
+                "\\",
+                "")
             if col.default(info):
-                disp = "✓ " + title # The space is a unicode space the size of an emdash
+                disp = "✓ " + title  # The space is a unicode space the size of an emdash
             else:
-                disp = "  " + title # The spaces are unicode, the sizes of an endash and a thinspace
+                disp = "  " + title  # The spaces are unicode, the sizes of an endash and a thinspace
                 allshown = False
             options.append((col.name, "", disp))
-        options.append(("toggleall", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;" + ("hide all" if allshown else "show all")))
+        options.append(
+            ("toggleall",
+             "",
+             "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;" + (
+                 "hide all" if allshown else "show all")))
         # options.append(("done", "", "&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;done"))
-        options = [f'<option value="{name}"{selected}>{disp}</option>' for name,selected,disp in options]
+        options = [
+            f'<option value="{name}"{selected}>{disp}</option>' for name,
+            selected,
+            disp in options]
         return "        <select %s>\n%s\n        </select>" % (
             " ".join(keys),
             "".join("\n" + " " * 10 + opt for opt in options),
@@ -575,17 +618,17 @@ class SortController(SelectBox):
             extra=extra,
         )
 
-    #sort_box = SelectBox(
+    # sort_box = SelectBox(
     #    name='sort_order',
     #    options=list(sort),
     #    width=130)
-    #sort_dir = SelectBox(
+    # sort_dir = SelectBox(
     #    name='sort_dir',
     #    options=[('', '&#9650;'), ('op', '&#9660;')],
     #    width=None,
     #    extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
-    #)
-    #sort_ord = DoubleSelectBox(
+    # )
+    # sort_ord = DoubleSelectBox(
     #    name='sort_combo',
     #    label='Sort order',
     #    knowl=self.sort_knowl,
@@ -624,6 +667,7 @@ class SearchButton(SearchBox):
             cls=cls,
             onclick=onclick)
 
+
 class SearchButtonWithSelect(SearchButton):
     def __init__(self, value, description, select_box, **kwds):
         self.select_box = select_box
@@ -639,6 +683,7 @@ class SearchButtonWithSelect(SearchButton):
                 + self.select_box._input(info)
                 + "</div>"
                 + "</td>")
+
 
 class SearchArray(UniqueRepresentation):
     """
@@ -657,19 +702,27 @@ class SearchArray(UniqueRepresentation):
         for the search buttons
     - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
     """
-    _ex_col_width = 170 # only used for box layout
+    _ex_col_width = 170  # only used for box layout
     sort_knowl = None
-    sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
-    null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
+    # Provides an easy way to implement sort_order: a list of triples (name,
+    # display, sort -- as a list of columns or pairs (col, +-1)), or a
+    # dictionary indexed on the value of self._st()
+    sorts = None
+    # Can override the null warnings for a column by including False as a
+    # value, or customize the error message by giving a formatting string (see
+    # search_wrapper.py)
+    null_column_explanations = {}
     noun = "result"
     plural_noun = "results"
 
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
         if self.sorts is not None:
-            sorts = self.sorts if isinstance(self.sorts, list) else self.sorts.get(self._st(info))
+            sorts = self.sorts if isinstance(
+                self.sorts, list) else self.sorts.get(
+                self._st(info))
             if sorts is not None:
-                #for name, display, prefix in self.sorts:
+                # for name, display, prefix in self.sorts:
                 #    yield (name, display + " &#9650;")
                 #    yield (name + "op", display + " &#9660;")
                 return [(name, display) for name, display, sort_order in sorts]
@@ -678,12 +731,14 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return search_types
         st = self._st(info)
-        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != st]
+        return [(st, "Search again")] + [(v, d)
+                                         for v, d in search_types if v != st]
 
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         if info is None:
-            return [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
+            return [("", f"List of {plural_form(self.noun)}"),
+                    ("Random", f"Random {self.noun}")]
         else:
             return [("", "Search again"), ("Random", "Random %s" % self.noun)]
 
@@ -706,14 +761,24 @@ class SearchArray(UniqueRepresentation):
                 lines.append("\n      " + row.html(info))
             elif layout_type == 'vertical':
                 if any(box.has_label(info) for box in row):
-                    labels = [box.label_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
-                    lines.append("".join("\n      " + label for label in labels))
-                inputs = [box.input_html(info) for box in row if (not isinstance(box, SneakyBox) or info is None or box.name in info)]
+                    labels = [
+                        box.label_html(info) for box in row if (
+                            not isinstance(
+                                box, SneakyBox) or info is None or box.name in info)]
+                    lines.append(
+                        "".join(
+                            "\n      " +
+                            label for label in labels))
+                inputs = [
+                    box.input_html(info) for box in row if (
+                        not isinstance(
+                            box, SneakyBox) or info is None or box.name in info)]
                 lines.append("".join("\n      " + inp for inp in inputs))
             elif layout_type == 'horizontal':
                 cols = []
                 for box in row:
-                    if isinstance(box, SneakyBox) and info is not None and box.name not in info:
+                    if isinstance(
+                            box, SneakyBox) and info is not None and box.name not in info:
                         continue
                     cols.append(box.label_html(info))
                     cols.append(box.input_html(info))
@@ -725,13 +790,16 @@ class SearchArray(UniqueRepresentation):
                 top_cols = []
                 bot_cols = []
                 for box in row:
-                    if isinstance(box, SneakyBox) and info is not None and box.name not in info:
+                    if isinstance(
+                            box, SneakyBox) and info is not None and box.name not in info:
                         continue
                     top_cols.append(box.label_html(info))
                     bot_cols.append(box.input_html(info))
                     ex = box.example_html(info)
                     if ex:
-                        top_cols.append('<td width="%s"></td>' % self._ex_col_width)
+                        top_cols.append(
+                            '<td width="%s"></td>' %
+                            self._ex_col_width)
                         bot_cols.append(ex)
                 lines.append("".join("\n      " + col for col in top_cols))
                 lines.append("".join("\n      " + col for col in bot_cols))
@@ -755,7 +823,7 @@ class SearchArray(UniqueRepresentation):
             vheader = BasicSpacer("Variables")
             vheader.wrap_mixins = {"class": "table_h2"}
             array.append([vheader])
-            for i in [1,2]:
+            for i in [1, 2]:
                 cols = SelectBox(
                     name="col%s" % i,
                     id="col%s_select" % i,
@@ -795,14 +863,19 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return ""
         else:
-            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for name, val in self.hidden(info))
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' %
+                             (name, info.get(val)) for name, val in self.hidden(info))
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"
-        s = self._print_table(self.main_array(info), info, layout_type=layout_type)
+        s = self._print_table(
+            self.main_array(info),
+            info,
+            layout_type=layout_type)
         dstats = self.dynstats_array(info)
         if dstats:
-            s += "\n" + self._print_table(dstats, info, layout_type=layout_type)
+            s += "\n" + self._print_table(dstats,
+                                          info, layout_type=layout_type)
         return s
 
     def has_advanced_inputs(self, info=None):
@@ -825,11 +898,14 @@ class SearchArray(UniqueRepresentation):
             for name, disp in sort:
                 if name == cur_sort:
                     if cur_dir == 'op':
-                        options.append((name, '▼ ' + disp)) # the space is U+2006, a 1/6 em space
+                        # the space is U+2006, a 1/6 em space
+                        options.append((name, '▼ ' + disp))
                     else:
-                        options.append((name, '▲ ' + disp)) # the space is U+2006, a 1/6 em space
+                        # the space is U+2006, a 1/6 em space
+                        options.append((name, '▲ ' + disp))
                 else:
-                    options.append((name, '  ' + disp)) # the spaces are U+2006 and U+2003, totaling 7/6 em
+                    # the spaces are U+2006 and U+2003, totaling 7/6 em
+                    options.append((name, '  ' + disp))
             buttons.append(SortController(options, self.sort_knowl))
         buttons.append(ColumnController())
         return buttons
@@ -850,32 +926,44 @@ class SearchArray(UniqueRepresentation):
                     buttons.append(SearchButton(*but))
             if st is not None:
                 buttons.extend(self._buttons(info))
-        return self._print_table([spacer,buttons], info, layout_type="vertical")
+        return self._print_table(
+            [spacer, buttons], info, layout_type="vertical")
 
     def html(self, info=None):
-        return "\n".join([self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
+        return "\n".join(
+            [self.hidden_inputs(info), self.main_table(info), self.buttons(info)])
 
     def jump_box(self, info):
-        jump_example = info.get("jump_example", getattr(self, "jump_example", ""))
+        jump_example = info.get(
+            "jump_example", getattr(
+                self, "jump_example", ""))
         jump_width = info.get("jump_width", getattr(self, "jump_width", 320))
         jump_egspan = info.get("jump_egspan", getattr(self, "jump_egspan", ""))
-        jump_prompt = info.get("jump_prompt", getattr(self, "jump_prompt", "Label"))
+        jump_prompt = info.get(
+            "jump_prompt", getattr(
+                self, "jump_prompt", "Label"))
         jump_knowl = info.get("jump_knowl", getattr(self, "jump_knowl", ""))
-        # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
+        # We don't use SearchBoxes since we want the example to be below, and
+        # the button directly to the right of the input (regardless of how big
+        # the example is)
         return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
 <button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
-""" % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
+""" % (display_knowl(jump_knowl, jump_prompt), jump_example, jump_width, info.get("jump", ""), jump_egspan)
+
 
 class EmbeddedSearchArray(SearchArray):
     """
     For holding the controls for selecting the sort order and columns to display
     on an embedded page (modular curve families are an example).
     """
+
     def __init__(self):
         self.refine_array = []
 
     def buttons(self, info=None):
-        # We want to put a refresh button after the sort order and column selectors
+        # We want to put a refresh button after the sort order and column
+        # selectors
         spacer = RowSpacer(8)
         buttons = self._buttons(info) + [SearchButton("", "Refresh")]
-        return self._print_table([spacer, buttons], info, layout_type="vertical")
+        return self._print_table(
+            [spacer, buttons], info, layout_type="vertical")

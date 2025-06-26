@@ -13,7 +13,8 @@ from sage.all import RR, ZZ, factor, sign, prod
 
 def character_link(level, conrey_index):
     label = "%d.%d" % (level, conrey_index)
-    return display_knowl('character.dirichlet.data', title=label, kwargs={'label': label})
+    return display_knowl('character.dirichlet.data',
+                         title=label, kwargs={'label': label})
 
 
 def fricke_pretty(fricke_eigenvalue):
@@ -74,8 +75,8 @@ def rational_coeff_error_notation(factored_n):
     if not factored_n:  # n = 1
         return "1"
     for p, e in factored_n:
-        res *= p**(e//2)
-    res = 1./res
+        res *= p**(e // 2)
+    res = 1. / res
     res = str(res).rstrip('0')
     return res
 
@@ -95,7 +96,8 @@ def coeff_error_notation(coeff, error, pm=False):
         if negexponent > 8:
             negexponent = 8
             base = 1
-        errorpart = r" \pm " + exponential_form(base, negexponent, digits_to_show=3)
+        errorpart = r" \pm " + \
+            exponential_form(base, negexponent, digits_to_show=3)
     return coeffpart + errorpart
 
 
@@ -118,7 +120,8 @@ def exponential_form(mantissa, negative_exponent, digits_to_show=9):
     mantissa = str(mantissa)
     if negative_exponent == 0:
         return mantissa[:digits_to_show]
-    return mantissa[:digits_to_show] + r" \cdot 10^{-" + str(negative_exponent) + "}"
+    return mantissa[:digits_to_show] + \
+        r" \cdot 10^{-" + str(negative_exponent) + "}"
 
 
 def parity_text(val):
@@ -130,7 +133,8 @@ def short_label(label):
     # Maass forms in the initial draft of the database had the same values for
     # the second, third and fifth part of the label)
     pieces = label.split(".")
-    if len(pieces) == 5 and pieces[1] == '0' and pieces[2] == '1' and pieces[4] == '1':
+    if len(
+            pieces) == 5 and pieces[1] == '0' and pieces[2] == '1' and pieces[4] == '1':
         return f"{pieces[0]}.{pieces[3]}"
     return label
 
@@ -147,7 +151,8 @@ class WebMaassForm():
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data
-        self.portrait = db.maass_rigor_portraits.lookup(self.label, projection="portrait")
+        self.portrait = db.maass_rigor_portraits.lookup(
+            self.label, projection="portrait")
 
     @staticmethod
     def by_label(label):
@@ -184,7 +189,8 @@ class WebMaassForm():
         else:
             short_spectral = str(self.spectral_parameter)[:35]
             return raw_typeset(
-                str(self.spectral_parameter) + " +- " + str(self.spectral_error),
+                str(self.spectral_parameter) +
+                " +- " + str(self.spectral_error),
                 rf"\( {short_spectral}\ldots \pm {self.web_spectral_error} \)",
                 extra="(toggle for full precision)"
             )
@@ -198,7 +204,8 @@ class WebMaassForm():
     @property
     def properties(self):
         props = [
-          (None, '<img src="{0}" width="200" height="200" style="margin:10px;"/>'.format(self.portrait))
+            (None,
+             '<img src="{0}" width="200" height="200" style="margin:10px;"/>'.format(self.portrait))
         ] if self.portrait is not None else []
         props += [('Label', short_label(self.label)),
                   ('Level', prop_int_pretty(self.level)),
@@ -235,15 +242,22 @@ class WebMaassForm():
     def bread(self):
         return [('Modular forms', url_for('modular_forms')),
                 ('Maass', url_for(".index")),
-                ("Level %d" % (self.level), url_for(".by_level", level=self.level)),
-                ("Weight %d" % (self.weight), url_for(".by_level_weight", level=self.level, weight=self.weight)),
-                ("Character %s" % (self.character_label), url_for(".by_level_weight_character", weight=self.weight, level=self.level, conrey_index=self.conrey_index)),
+                ("Level %d" % (self.level), url_for(
+                    ".by_level", level=self.level)),
+                ("Weight %d" % (self.weight), url_for(
+                    ".by_level_weight", level=self.level, weight=self.weight)),
+                ("Character %s" % (self.character_label),
+                 url_for(".by_level_weight_character",
+                         weight=self.weight,
+                         level=self.level,
+                         conrey_index=self.conrey_index)),
                 ]
 
     @property
     def downloads(self):
         return [("Coefficients to text", url_for(".download_coefficients", label=self.label)),
-                ("All stored data to text", url_for(".download", label=self.label)),
+                ("All stored data to text", url_for(
+                    ".download", label=self.label)),
                 ("Underlying data", url_for(".maass_data", label=self.label)),
                 ]
 
@@ -252,18 +266,20 @@ class WebMaassForm():
         friendlist = []
         if self.nspec > 1:
             prevlabel = f"{self.level}.{self.weight}.{self.conrey_index}.{self.nspec - 1}.1"
-            friendlist += [("Previous Maass form", url_for(".by_label", label=prevlabel))]
-        if self.nspec < db.maass_rigor.count(query={'level':self.level}):
+            friendlist += [("Previous Maass form",
+                            url_for(".by_label", label=prevlabel))]
+        if self.nspec < db.maass_rigor.count(query={'level': self.level}):
             nextlabel = f"{self.level}.{self.weight}.{self.conrey_index}.{self.nspec + 1}.1"
-            friendlist += [("Next Maass form", url_for(".by_label", label=nextlabel))]
+            friendlist += [("Next Maass form",
+                            url_for(".by_label", label=nextlabel))]
         friendlist += [("L-function not computed", '')]
         return friendlist
 
-    def coefficient_table(self, rows=20, cols=3, row_opts=[20,60,334]):
+    def coefficient_table(self, rows=20, cols=3, row_opts=[20, 60, 334]):
         # This logic applies to squarefree level.
         has_finite_rational_coeffs = False
         level_primes = ZZ(self.level).prime_divisors()
-        level_10_primes = [p for p in level_primes if p in [2,5]]
+        level_10_primes = [p for p in level_primes if p in [2, 5]]
         has_finite_rational_coeffs = bool(level_10_primes)
 
         n = len(self.coefficients)
@@ -280,7 +296,8 @@ class WebMaassForm():
         if (rows - 1) * cols >= n:
             rows = (n // cols) + (1 if (n % cols) else 0)
         for i in range(rows):
-            maassrow = "maassrow " + " ".join(f"maassrow{m}" for m in row_opts if i < m)
+            maassrow = "maassrow " + \
+                " ".join(f"maassrow{m}" for m in row_opts if i < m)
             display = "" if i < default_rows else ' style="display: none;"'
             table.append(f'<tr class="{maassrow}"{display}>')
             for j in range(cols):
@@ -294,31 +311,42 @@ class WebMaassForm():
                     continue
                 f = factor(m)
                 if has_finite_rational_coeffs:
-                    level_part = prod(p**e for p, e in f if p in level_10_primes)
-                    other_part = prod(p**e for p, e in f if p not in level_10_primes)
-                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for p, e in f))
+                    level_part = prod(
+                        p**e for p, e in f if p in level_10_primes)
+                    other_part = prod(
+                        p**e for p, e in f if p not in level_10_primes)
+                    m_is_finite_rational = (
+                        other_part == 1 and all(
+                            e %
+                            2 == 0 for p, e in f))
                     if m_is_finite_rational:
                         # determine sign
-                        sgn = sign(self.coefficients[m - 1])  # if fricke_unknown, this is 0
+                        # if fricke_unknown, this is 0
+                        sgn = sign(self.coefficients[m - 1])
                         sign_str = sgn_to_tex(sgn)
                         table.append(
-                            td_wrapl(rf"\(a_{{{m}}}= {sign_str}{rational_coeff_error_notation(f)} \)")
+                            td_wrapl(
+                                rf"\(a_{{{m}}}= {sign_str}{rational_coeff_error_notation(f)} \)")
                         )
                         continue
                 coeff = self.coefficients[i * cols + j]
                 error = self.coefficient_errors[i * cols + j]
                 pm = False
                 if self.fricke_eigenvalue == 0:
-                    # Work out the coefficient from one that's prime to the level
+                    # Work out the coefficient from one that's prime to the
+                    # level
                     level_part = prod(p**e for p, e in f if p in level_primes)
-                    other_part = prod(p**e for p, e in f if p not in level_primes)
+                    other_part = prod(
+                        p**e for p, e in f if p not in level_primes)
                     if level_part > 1:
-                        coeff = abs(self.coefficients[other_part - 1] / RR(level_part).sqrt())
+                        coeff = abs(
+                            self.coefficients[other_part - 1] / RR(level_part).sqrt())
                         pm = True
                         if other_part == 1:
                             error = RR(1e-8)
                         else:
-                            error = max(RR(1e-8),self.coefficient_errors[other_part - 1] / RR(level_part.sqrt()))
+                            error = max(
+                                RR(1e-8), self.coefficient_errors[other_part - 1] / RR(level_part.sqrt()))
                 # otherwise: m is not special, and print as normal
                 table.append(
                     td_wrapl(r"\(a_{%d}= %s \)"
@@ -330,7 +358,8 @@ class WebMaassForm():
                                 ))))
             table.append('</tr>')
         table.append('</tbody></table>')
-        buttons = " ".join(f'<a onclick="return maass_switch({r});" href="#">{min(n, r*cols)}</a>' for r in row_opts)
+        buttons = " ".join(
+            f'<a onclick="return maass_switch({r});" href="#">{min(n, r*cols)}</a>' for r in row_opts)
         table.append(f'<p>Displaying $a_n$ with $n$ up to: {buttons}</p>')
         return '\n'.join(table)
 
@@ -343,7 +372,8 @@ class MaassFormDownloader(Downloader):
         table = db.maass_rigor
         data = table.lookup(label)
         if data is None:
-            return abort(404, "Maass form %s not found in the database" % label)
+            return abort(
+                404, "Maass form %s not found in the database" % label)
         for col in table.col_type:
             if table.col_type[col] == "numeric" and data.get(col):
                 data[col] = str(data[col])
@@ -356,12 +386,18 @@ class MaassFormDownloader(Downloader):
 
     def download_coefficients(self, label, lang='text'):
         table = db.maass_rigor
-        data = table.lookup(label, projection=["coefficients", "coefficient_errors"])
+        data = table.lookup(
+            label,
+            projection=[
+                "coefficients",
+                "coefficient_errors"])
         if data is None:
-            return abort(404, "Coefficient data for Maass form %s not found in the database" % label)
+            return abort(
+                404, "Coefficient data for Maass form %s not found in the database" % label)
         coeffs = data["coefficients"]
         errors = data["coefficient_errors"]
-        retdata = [str(coeffs[n]) + " +- " + str(errors[n]) for n in range(len(coeffs))]
+        retdata = [str(coeffs[n]) + " +- " + str(errors[n])
+                   for n in range(len(coeffs))]
         return self._wrap(Json.dumps(retdata).replace('"', ''),
                           "maass." + label + '.coefficients',
                           lang=lang,

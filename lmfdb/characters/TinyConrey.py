@@ -1,9 +1,10 @@
 from sage.all import (gcd, Mod, Integer, Integers, Rational, Rationals, PolynomialRing,
-                      pari,DirichletGroup, CyclotomicField, euler_phi, lcm)
+                      pari, DirichletGroup, CyclotomicField, euler_phi, lcm)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
 from lmfdb.logger import make_logger
 logger = make_logger("TinyConrey")
+
 
 def symbol_numerator(cond, parity):
     # Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007).
@@ -78,7 +79,8 @@ class PariConreyGroup():
         if self.modulus == 1:
             return [1]
         r = []
-        for i,c in enumerate(Integers(self.modulus).list_of_elements_of_multiplicative_group()):
+        for i, c in enumerate(
+                Integers(self.modulus).list_of_elements_of_multiplicative_group()):
             r.append(c)
             if i > limit:
                 self.rowtruncate = True
@@ -101,12 +103,13 @@ class ConreyCharacter():
 
     def __init__(self, modulus, number):
         if gcd(modulus, number) != 1:
-            raise ValueError(f"Conrey number ({number}) must be coprime to the modulus ({modulus})")
+            raise ValueError(
+                f"Conrey number ({number}) must be coprime to the modulus ({modulus})")
         self.modulus = Integer(modulus)
         self.number = Integer(number)
-        self.conrey = Mod(number,modulus)
+        self.conrey = Mod(number, modulus)
         self.G = pari("znstar({},1)".format(modulus))
-        self.G_gens = Integers(self.modulus).unit_gens() # use sage generators
+        self.G_gens = Integers(self.modulus).unit_gens()  # use sage generators
         self.chi_pari = self.G.znconreylog(self.number)
         self.chi_0 = None
         self.indlabel = None
@@ -171,8 +174,8 @@ class ConreyCharacter():
         p = self.parity()
         return kronecker_symbol(symbol_numerator(c, p))
 
-    def conreyangle(self,x):
-        return Rational(self.G.chareval(self.chi_pari,x))
+    def conreyangle(self, x):
+        return Rational(self.G.chareval(self.chi_pari, x))
 
     def gauss_sum_numerical(self, a):
         # There seems to be a bug in pari when a is a multiple of the modulus,
@@ -183,10 +186,10 @@ class ConreyCharacter():
             else:
                 return Integer(0)
         else:
-            return self.G.znchargauss(self.chi_pari,a)
+            return self.G.znchargauss(self.chi_pari, a)
 
     def sage_zeta_order(self, order):
-        return 1 if self.modulus <= 2 else lcm(2,order)
+        return 1 if self.modulus <= 2 else lcm(2, order)
 
     def sage_character(self, order=None, genvalues=None):
 
@@ -196,10 +199,13 @@ class ConreyCharacter():
         if genvalues is None:
             genvalues = self.genvalues
 
-        H = DirichletGroup(self.modulus, base_ring=CyclotomicField(self.sage_zeta_order(order)))
+        H = DirichletGroup(
+            self.modulus, base_ring=CyclotomicField(
+                self.sage_zeta_order(order)))
         M = H._module
-        order_corrected_genvalues = get_sage_genvalues(self.modulus, order, genvalues, self.sage_zeta_order(order))
-        return DirichletCharacter(H,M(order_corrected_genvalues))
+        order_corrected_genvalues = get_sage_genvalues(
+            self.modulus, order, genvalues, self.sage_zeta_order(order))
+        return DirichletCharacter(H, M(order_corrected_genvalues))
 
     @cached_method
     def galois_orbit(self, limit=31):
@@ -212,13 +218,15 @@ class ConreyCharacter():
         if order == 1:
             return [1]
         elif order < limit or order * order < limit * self.modulus:
-            logger.debug(f"compute all conjugate characters and return first {limit}")
+            logger.debug(
+                f"compute all conjugate characters and return first {limit}")
             return self.galois_orbit_all(limit)
         elif limit == 1 or self.modulus <= 1000000:
             logger.debug(f"compute {limit} first conjugate characters")
             return self.galois_orbit_search(limit)
         else:
-            logger.debug(f"galois orbit of size {order} too expansive, give up")
+            logger.debug(
+                f"galois orbit of size {order} too expansive, give up")
             return []
 
     def galois_orbit_all(self, limit=31):
@@ -226,8 +234,8 @@ class ConreyCharacter():
         order = self.order
         chik = self.conrey
         output = []
-        for k in range(1,order):
-            if gcd(k,order) == 1:
+        for k in range(1, order):
+            if gcd(k, order) == 1:
                 output.append(Integer(chik))
             chik *= self.conrey
         output.sort()
@@ -239,7 +247,7 @@ class ConreyCharacter():
         num = self.number
         mod = self.modulus
         kmin = 1
-        width = kmax = min(mod,limit * 50)
+        width = kmax = min(mod, limit * 50)
         while True:
             cmd = f"a=Mod({num},{mod});my(valid(k)=my(l=znlog(k,a,{order}));l&&gcd(l,{order})==1);[ k | k <- [{kmin}..{kmax}], gcd(k,{mod})==1 && valid(k) ]"
             ans = [Integer(m) for m in pari(cmd)[:limit]]
@@ -255,7 +263,7 @@ class ConreyCharacter():
     @cached_method
     def kernel_field_poly(self):
         if self.order == 1:
-            return PolynomialRing(Rationals(),'x')([0,1])
+            return PolynomialRing(Rationals(), 'x')([0, 1])
         pol = self.G.galoissubcyclo(self.G.charker(self.chi_pari))
         if self.order <= 12:
             pol = pol.polredabs()

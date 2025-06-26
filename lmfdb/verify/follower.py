@@ -6,6 +6,7 @@ from collections import defaultdict
 
 redline = re.compile(r"An exception in|Exception in|failed test|FAILED with")
 
+
 class Follower():
     """
     A class for printing the output of a verification run while it's being generated in parallel.
@@ -69,7 +70,8 @@ class Follower():
     def update_file_lists(self):
         # There may be race condition problems here since the verification script will be writing
         # to these same files, but it's not a disaster if something
-        # goes wrong since we produce a final report and the files will exist on the filesystem
+        # goes wrong since we produce a final report and the files will exist
+        # on the filesystem
         for filename in os.listdir(self.logdir):
             if filename.endswith('.done'):
                 basename = filename[:-5]
@@ -96,7 +98,8 @@ class Follower():
                 self.read(basename, suffix)
 
     def final_report(self):
-        for donefile in sorted(self.done_files, key=lambda x: ("FAILED" in x, x)):
+        for donefile in sorted(
+                self.done_files, key=lambda x: ("FAILED" in x, x)):
             with open(os.path.join(self.logdir, donefile)) as F:
                 for line in F:
                     # Make failures red

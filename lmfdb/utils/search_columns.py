@@ -22,6 +22,7 @@ from .web_display import display_knowl
 from lmfdb.utils import coeff_to_poly
 from sage.all import Rational, latex
 
+
 def get_default_func(default, name):
     """
     This utility function takes the default value provided when creating
@@ -83,6 +84,7 @@ class SearchCol:
     Name, knowl and title can be passed either positionally or as a keyword argument; other values should be
     provided as keywords so that subclasses don't need to worry about passing positional arguments appropriately.
     """
+
     def __init__(self, name, knowl, title, default=True, align="left",
                  mathmode=False, contingent=None, short_title=None, orig=None,
                  download_desc=None, download_col=None, **kwds):
@@ -119,7 +121,8 @@ class SearchCol:
         self.download_col = download_col
 
         for key, val in kwds.items():
-            assert hasattr(self, key) and key.startswith("th_") or key.startswith("td_")
+            assert hasattr(self, key) and key.startswith(
+                "th_") or key.startswith("td_")
             setattr(self, key, getattr(self, key) + val)
 
     def _get(self, rec, name=None, downloading=False):
@@ -200,7 +203,8 @@ class SearchCol:
         A generator, containing columns to be shown.  Usually contains one column (this one).
         """
         # rank = 0 indicates the header row, rank = -1 indicates downloading
-        if (self.contingent is None or self.contingent(info)) and (rank is None or rank <= 0):
+        if (self.contingent is None or self.contingent(
+                info)) and (rank is None or rank <= 0):
             yield self
 
     def download(self, rec):
@@ -223,6 +227,7 @@ class SpacerCol(SearchCol):
     """
     Spacer columns have empty content, but can have CSS added through ``td_*`` and ``th_*`` keywords.
     """
+
     def __init__(self, name, **kwds):
         super().__init__(name, None, None, orig=[], **kwds)
 
@@ -242,6 +247,7 @@ class MathCol(SearchCol):
     """
     Math columns display their contents in math mode and use center alignment by default.
     """
+
     def __init__(self, name, knowl, title, align="center", **kwds):
         kwds["mathmode"] = True
         super().__init__(name, knowl, title, align=align, **kwds)
@@ -251,6 +257,7 @@ class FloatCol(MathCol):
     """
     Float columns allow specifying a precision (defaulting to 3)
     """
+
     def __init__(self, name, knowl, title, prec=3, **kwds):
         super().__init__(name, knowl, title, **kwds)
         self.prec = prec
@@ -260,7 +267,8 @@ class FloatCol(MathCol):
         if val == "":
             # null value
             return ""
-        # We mix string processing directives so that we can use variable precision
+        # We mix string processing directives so that we can use variable
+        # precision
         return f"%.{self.prec}f" % val
 
 
@@ -270,13 +278,16 @@ class CheckCol(SearchCol):
     to represent a True value, and question mark for unknown, and blank for False.
     They are also centered by default.
     """
-    def __init__(self, name, knowl, title, align="center", unknown="?", no="", **kwds):
+
+    def __init__(self, name, knowl, title, align="center",
+                 unknown="?", no="", **kwds):
         super().__init__(name, knowl, title, align=align, **kwds)
         self.unknown = unknown
         self.no = no
 
     def display(self, rec):
-        val = self._get(rec, downloading=True) # We emulate downloading so that we can determine if the value is None
+        # We emulate downloading so that we can determine if the value is None
+        val = self._get(rec, downloading=True)
         if val:
             return "&#x2713;"
         elif val is None:
@@ -291,7 +302,9 @@ class CheckMaybeCol(SearchCol):
     They explicitly show "not computed" rather than "?" for unknown values.
     They are also centered by default.
     """
-    def __init__(self, name, knowl, title, align="center", unknown="?", no="", **kwds):
+
+    def __init__(self, name, knowl, title, align="center",
+                 unknown="?", no="", **kwds):
         super().__init__(name, knowl, title, align=align, **kwds)
         self.unknown = unknown
         self.no = no
@@ -319,6 +332,7 @@ class LinkCol(SearchCol):
     a function which takes the contents to be displayed
     (usually the label of an LMFDB object) and produces a url.
     """
+
     def __init__(self, name, knowl, title, url_for, **kwds):
         super().__init__(name, knowl, title, **kwds)
         self.url_for = url_for
@@ -341,10 +355,13 @@ class ProcessedCol(SearchCol):
     - ``apply_download`` -- either a boolean (determining whether the function should be applied when
       downloading), or a function that is applied instead while downloading.
     """
-    def __init__(self, name, knowl, title, func=None, apply_download=False, **kwds):
+
+    def __init__(self, name, knowl, title, func=None,
+                 apply_download=False, **kwds):
         super().__init__(name, knowl, title, **kwds)
         if func is None:
-            # Some other column types like RationalCol inherit from ProcessedCol
+            # Some other column types like RationalCol inherit from
+            # ProcessedCol
             def func(x): return x
         self.func = func
         self.apply_download = apply_download
@@ -365,6 +382,7 @@ class ProcessedCol(SearchCol):
             s = self.func(s)
         return s
 
+
 class ProcessedLinkCol(ProcessedCol):
     """
     These columns allow for functions to be applied to the contents retrieved from the database before generating
@@ -375,6 +393,7 @@ class ProcessedLinkCol(ProcessedCol):
     - ``apply_download`` -- either a boolean (determining whether the display function should be applied when
       downloading), or a function that is applied instead while downloading.
     """
+
     def __init__(self, name, knowl, title, url_func, disp_func, **kwds):
         super().__init__(name, knowl, title, disp_func, **kwds)
         self.url_func = url_func
@@ -400,7 +419,9 @@ class MultiProcessedCol(SearchCol):
     Unlike SearchCols, these columns only support dictionaries rather than custom postprocess classes,
     since a custom class can just define a method for use instead.
     """
-    def __init__(self, name, knowl, title, inputs, func, apply_download=True, **kwds):
+
+    def __init__(self, name, knowl, title, inputs,
+                 func, apply_download=True, **kwds):
         super().__init__(name, knowl, title, orig=inputs, **kwds)
         self.func = func
         self.apply_download = apply_download
@@ -421,6 +442,7 @@ class MultiProcessedCol(SearchCol):
         else:
             data = self._get(rec, name=self.download_col, downloading=True)
         return data
+
 
 class ColGroup(SearchCol):
     """
@@ -459,10 +481,18 @@ class ColGroup(SearchCol):
                  align="center", download_together=False, **kwds):
         if orig is None:
             orig = sum([sub.orig for sub in subcols], [])
-        super().__init__(name, knowl, title, align=align, orig=orig, contingent=contingent, **kwds)
+        super().__init__(
+            name,
+            knowl,
+            title,
+            align=align,
+            orig=orig,
+            contingent=contingent,
+            **kwds)
         self.subcols = subcols
         self.download_together = download_together
-        # A more complicated grouping could add more header rows, but the examples we have only need 2
+        # A more complicated grouping could add more header rows, but the
+        # examples we have only need 2
         self.height = 2
 
     def show(self, info, rank=None):
@@ -508,7 +538,9 @@ class SearchColumns:
     """
     above_results = ""  # Can add text above the Results (1-50 of ...) if desired
     above_table = ""  # Can add text above the results table if desired
-    dummy_download = False  # change this to include dummy_download_search_results.html instead of download_search_results.html
+    # change this to include dummy_download_search_results.html instead of
+    # download_search_results.html
+    dummy_download = False
     below_download = ""  # Can add text above the bottom download links
 
     def __init__(self, columns, db_cols=None, tr_class=None):
@@ -538,7 +570,8 @@ class SearchColumns:
           0 (indicating the top row of the header) or a positive integer (indicating a lower row in the header).
         """
         # By default, this doesn't depend on info
-        # rank is None in the body of the table, 0..(maxrank-1) in the header, and -1 when downloading
+        # rank is None in the body of the table, 0..(maxrank-1) in the header,
+        # and -1 when downloading
         for C in self.columns:
             yield from C.show(info, rank)
 
@@ -549,8 +582,10 @@ class PolynomialCol(SearchCol):
     """
     These columns display their contents as polynomials in x.
     """
+
     def display(self, rec):
         return f"${latex(coeff_to_poly(self.get(rec)))}$"
+
 
 def eval_rational_list(s):
     """
@@ -576,18 +611,22 @@ def eval_rational_list(s):
             return [[Rational(y) for y in split(x)] for x in s.split(obreak)]
     return [Rational(x) for x in split(s)]
 
+
 class ListCol(ProcessedCol):
     """
     Uses the ``eval_rational_list`` function to process the column for downloading.
     """
+
     def download(self, rec):
         s = super().download(rec)
         return eval_rational_list(s)
+
 
 class RationalCol(ProcessedCol):
     """
     For rational numbers stored as strings; parses them appropriately for downloading.
     """
+
     def download(self, rec):
         s = super().download(rec)
         return Rational(s)

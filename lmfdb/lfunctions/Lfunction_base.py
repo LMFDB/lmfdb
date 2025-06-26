@@ -31,7 +31,8 @@ class Lfunction():
         if not hasattr(self, 'selfdual'):
             self.selfdual = True
             for n in range(1, min(8, len(self.dirichlet_coefficients))):
-                if abs(imag_part(self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
+                if abs(imag_part(
+                        self.dirichlet_coefficients[n] / self.dirichlet_coefficients[0])) > 0.00001:
                     self.selfdual = False
 
     def compute_kappa_lambda_Q_from_mu_nu(self):
@@ -40,7 +41,8 @@ class Lfunction():
         try:
             from sage.rings.all import Integer
             from math import pi
-            self.Q_fe = float(Integer(self.level).sqrt() / 2.**len(self.nu_fe) / pi**(len(self.mu_fe) / 2. + len(self.nu_fe)))
+            self.Q_fe = float(Integer(self.level).sqrt(
+            ) / 2.**len(self.nu_fe) / pi**(len(self.mu_fe) / 2. + len(self.nu_fe)))
             self.kappa_fe = [.5 for m in self.mu_fe] + [1. for n in self.nu_fe]
             self.lambda_fe = [m / 2. for m in self.mu_fe] + list(self.nu_fe)
         except Exception as e:
@@ -65,9 +67,9 @@ class Lfunction():
     def rational(self):
         return None
 
-    ############################################################################
+    ##########################################################################
     #   other useful methods not implemented universally yet
-    ############################################################################
+    ##########################################################################
 
     def compute_web_zeros(self, time_allowed=10, **kwargs):
         """ A function that dispatches web computations to the correct tool"""
@@ -91,9 +93,11 @@ class Lfunction():
             count = count or 6
         else:
             count = count or 8
-        return self.compute_lcalc_zeros(via_N=True, count=count, do_negative=do_negative or not self.selfdual)
+        return self.compute_lcalc_zeros(
+            via_N=True, count=count, do_negative=do_negative or not self.selfdual)
 
-    def compute_heuristic_zeros(self, step_size=0.02, upper_bound=20, lower_bound=None):
+    def compute_heuristic_zeros(
+            self, step_size=0.02, upper_bound=20, lower_bound=None):
         #   if self.Ltype() == "hilbertmodularform":
         if self.Ltype() not in ["riemann", "maass"]:
             upper_bound = 10
@@ -101,7 +105,8 @@ class Lfunction():
             lower_bound = lower_bound or - step_size / 2
         else:
             lower_bound = lower_bound or -20
-        return self.compute_lcalc_zeros(via_N=False, step_size=step_size, upper_bound=upper_bound, lower_bound=lower_bound)
+        return self.compute_lcalc_zeros(
+            via_N=False, step_size=step_size, upper_bound=upper_bound, lower_bound=lower_bound)
 
     def compute_lcalc_zeros(self, via_N=True, **kwargs):
 
@@ -153,8 +158,10 @@ class Lfunction():
             else:
                 info['conductor_factored'] = latex(self.level_factored)
         if self.analytic_conductor:
-            info['analytic_conductor'] = display_float(self.analytic_conductor, 6, extra_truncation_digits=40, latex=True)
-            info['root_analytic_conductor'] = display_float(self.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)
+            info['analytic_conductor'] = display_float(
+                self.analytic_conductor, 6, extra_truncation_digits=40, latex=True)
+            info['root_analytic_conductor'] = display_float(
+                self.root_analytic_conductor, 6, extra_truncation_digits=40, latex=True)
         else:
             info['analytic_conductor'] = self.analytic_conductor
             info['root_analytic_conductor'] = self.root_analytic_conductor
@@ -193,16 +200,20 @@ class Lfunction():
         if self.fromDB and self.algebraic:
             info['dirichlet_arithmetic'] = lfuncDShtml(self, "arithmetic")
             info['eulerproduct_arithmetic'] = lfuncEPtex(self, "arithmetic")
-            info['functionalequation_arithmetic'] = lfuncFEtex(self, "arithmetic")
+            info['functionalequation_arithmetic'] = lfuncFEtex(
+                self, "arithmetic")
 
             if self.motivic_weight % 2 == 0:
-                arith_center = "\\frac{" + str(1 + self.motivic_weight) + "}{2}"
+                arith_center = "\\frac{" + \
+                    str(1 + self.motivic_weight) + "}{2}"
             else:
                 arith_center = str(ZZ(1) / 2 + self.motivic_weight / 2)
             svt_crit = specialValueTriple(self, 0.5, '\\frac12', arith_center)
             info['sv_critical'] = svt_crit[0] + "\\ =\\ " + svt_crit[2]
-            info['sv_critical_analytic'] = [svt_crit[0], scientific_notation_helper(svt_crit[2])]
-            info['sv_critical_arithmetic'] = [svt_crit[1], scientific_notation_helper(svt_crit[2])]
+            info['sv_critical_analytic'] = [svt_crit[0],
+                                            scientific_notation_helper(svt_crit[2])]
+            info['sv_critical_arithmetic'] = [svt_crit[1],
+                                              scientific_notation_helper(svt_crit[2])]
 
             if self.motivic_weight % 2 == 1:
                 arith_edge = "\\frac{" + str(2 + self.motivic_weight) + "}{2}"
@@ -211,10 +222,16 @@ class Lfunction():
 
             svt_edge = specialValueTriple(self, 1, '1', arith_edge)
             info['sv_edge'] = svt_edge[0] + "\\ =\\ " + svt_edge[2]
-            info['sv_edge_analytic'] = [svt_edge[0], scientific_notation_helper(svt_edge[2])]
-            info['sv_edge_arithmetic'] = [svt_edge[1], scientific_notation_helper(svt_edge[2])]
+            info['sv_edge_analytic'] = [
+                svt_edge[0],
+                scientific_notation_helper(
+                    svt_edge[2])]
+            info['sv_edge_arithmetic'] = [
+                svt_edge[1], scientific_notation_helper(
+                    svt_edge[2])]
 
-            chilatex = r"$\chi_{" + str(self.charactermodulus) + "} (" + str(self.characternumber) + r", \cdot )$"
+            chilatex = r"$\chi_{" + str(self.charactermodulus) + \
+                "} (" + str(self.characternumber) + r", \cdot )$"
             info['chi'] = ''
             if self.charactermodulus != self.level:
                 info['chi'] += "induced by "
@@ -224,8 +241,8 @@ class Lfunction():
             info['chi'] += '">' + chilatex + '</a>'
             if self.characternumber == 1:
                 info['chi'] = '<a href="' + url_for('characters.render_Dirichletwebpage',
-                                                 modulus=self.charactermodulus, number=self.characternumber)
-                info['chi'] += '">Trivial'+'</a>'
+                                                    modulus=self.charactermodulus, number=self.characternumber)
+                info['chi'] += '">Trivial' + '</a>'
 
             info['st_group'] = self.st_group
             info['st_link'] = self.st_link

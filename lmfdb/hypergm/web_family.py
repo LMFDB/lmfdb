@@ -35,11 +35,12 @@ def cyc_to_QZ(A):
 
 
 # Given A, B, return URL for family
-def AB_to_url(A,B):
+def AB_to_url(A, B):
     from lmfdb.hypergm.main import normalize_family, ab_label, url_for_label
     if len(A) != 0 and len(B) != 0:
-        return url_for_label(normalize_family(ab_label(A,B)))
+        return url_for_label(normalize_family(ab_label(A, B)))
     return ""
+
 
 class WebHyperGeometricFamily():
     def __init__(self, data):
@@ -115,7 +116,8 @@ class WebHyperGeometricFamily():
     @lazy_attribute
     def wild_primes_string(self):
         ps = self.wild_primes
-        return raw_typeset(', '.join(str(p) for p in ps), ', '.join(web_latex(p) for p in ps))
+        return raw_typeset(', '.join(str(p)
+                                     for p in ps), ', '.join(web_latex(p) for p in ps))
 
     @lazy_attribute
     def motivic_det_char(self):
@@ -175,12 +177,13 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def ppart(self):
-        p_data = [[p, getattr(self, f"A{p}"), getattr(self, f"B{p}"), getattr(self, f"C{p}")] for p in [2,3,5,7]]
+        p_data = [[p, getattr(self, f"A{p}"), getattr(
+            self, f"B{p}"), getattr(self, f"C{p}")] for p in [2, 3, 5, 7]]
         # make URLs
         for row in p_data:
             A = row[1]
             B = row[2]
-            row.append(AB_to_url(A,B))
+            row.append(AB_to_url(A, B))
         return p_data
 
     @cached_method
@@ -191,22 +194,24 @@ class WebHyperGeometricFamily():
         beta_counter = dict(Counter(beta))
         G = Graphics()
         G += circle((0, 0), 1, color='gray', thickness=2, zorder=3)
-        G += circle((0, 0), 1.4, color='black', alpha=0, zorder=2)  # Adds invisible framing circle, which protects the aspect ratio from being skewed.
+        # Adds invisible framing circle, which protects the aspect ratio from
+        # being skewed.
+        G += circle((0, 0), 1.4, color='black', alpha=0, zorder=2)
         C = ComplexField()
         for a in alpha_counter.keys():
-            P = exp(C(2*3.14159*I*a))
-            P1 = exp(C(2*3.14159*(a + 0.007)*I))
-            P2 = exp(C(2*3.14159*(a - 0.007)*I))
-            P3 = (1+alpha_counter[a]/30)*exp(C(2*3.14159*I*a))
-            G += polygon([P1,P2,P3], color="red", thickness=1)
-            G += line([P,1.3*P], color="red", zorder=1)
+            P = exp(C(2 * 3.14159 * I * a))
+            P1 = exp(C(2 * 3.14159 * (a + 0.007) * I))
+            P2 = exp(C(2 * 3.14159 * (a - 0.007) * I))
+            P3 = (1 + alpha_counter[a] / 30) * exp(C(2 * 3.14159 * I * a))
+            G += polygon([P1, P2, P3], color="red", thickness=1)
+            G += line([P, 1.3 * P], color="red", zorder=1)
         for b in beta_counter.keys():
-            P = exp(C(2*3.14159*I*b))
-            P1 = exp(C(2*3.14159*(b + 0.007)*I))
-            P2 = exp(C(2*3.14159*(b - 0.007)*I))
-            P3 = (1-beta_counter[b]/30)*exp(C(2*3.14159*I*b))
-            G += polygon([P1,P2,P3], color="blue", thickness=1)
-            G += line([P,0.7*P], color="blue", zorder=1)
+            P = exp(C(2 * 3.14159 * I * b))
+            P1 = exp(C(2 * 3.14159 * (b + 0.007) * I))
+            P2 = exp(C(2 * 3.14159 * (b - 0.007) * I))
+            P3 = (1 - beta_counter[b] / 30) * exp(C(2 * 3.14159 * I * b))
+            G += polygon([P1, P2, P3], color="blue", thickness=1)
+            G += line([P, 0.7 * P], color="blue", zorder=1)
         return G
 
     @cached_method
@@ -223,7 +228,8 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def plot_link(self):
-        return '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(self.plot())
+        return '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(
+            self.plot())
 
     @lazy_attribute
     def zigzag(self):
@@ -231,11 +237,13 @@ class WebHyperGeometricFamily():
         # beta is color blue
         alpha = self.alpha
         beta = self.beta
-        alpha_dicts = [dict(value=entry,color="red") for entry in alpha]
-        beta_dicts = [dict(value=entry,color="blue") for entry in beta]
-        zigzag_dicts = sorted(alpha_dicts + beta_dicts, key=lambda d: d["value"])
+        alpha_dicts = [dict(value=entry, color="red") for entry in alpha]
+        beta_dicts = [dict(value=entry, color="blue") for entry in beta]
+        zigzag_dicts = sorted(
+            alpha_dicts + beta_dicts,
+            key=lambda d: d["value"])
         y = 0
-        y_values = [y] # zigzag graph will start at (0,0)
+        y_values = [y]  # zigzag graph will start at (0,0)
         colors = [entry["color"] for entry in zigzag_dicts]
         for entry in zigzag_dicts:
             if entry["color"] == "red":
@@ -260,23 +268,32 @@ class WebHyperGeometricFamily():
         L = Graphics()
         # grid
         for x in x_values:
-            L += line([(x, y_min), (x, y_max)], color="grey", zorder=1, thickness=0.4)
+            L += line([(x, y_min), (x, y_max)],
+                      color="grey", zorder=1, thickness=0.4)
         for y in y_values:
-            L += line([(0, y), (x_max-1, y)], color="grey", zorder=1, thickness=0.4)
+            L += line([(0, y), (x_max - 1, y)],
+                      color="grey", zorder=1, thickness=0.4)
         # zigzag
         L += line(pts, thickness=1, color="black", zorder=2)
         # points
         x_values.pop()
         for x in x_values:
-            L += point((x, y_values[x]), marker='o', size=36, color=colors[x], zorder=3)
+            L += point((x, y_values[x]), marker='o',
+                       size=36, color=colors[x], zorder=3)
 
         j = 0
         for label in x_labels:
             if label["color"] == "red":
-                L += text("$"+latex(QQ(label["value"]))+"$", (j,y_max + 0.4), color=label["color"])
+                L += text("$" +
+                          latex(QQ(label["value"])) +
+                          "$", (j, y_max +
+                                0.4), color=label["color"])
                 j += 1
             else:
-                L += text("$"+latex(QQ(label["value"]))+"$", (j,y_min - 0.4), color=label["color"])
+                L += text("$" +
+                          latex(QQ(label["value"])) +
+                          "$", (j, y_min -
+                                0.4), color=label["color"])
                 j += 1
         L.axes(False)
         L.set_aspect_ratio(1)
@@ -284,7 +301,8 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def zigzag_plot_link(self):
-        return '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(self.zigzag_plot())
+        return '<a href="{0}"><img src="{0}" width="150" height="150"/></a>'.format(
+            self.zigzag_plot())
 
     @lazy_attribute
     def properties(self):
@@ -324,7 +342,8 @@ class WebHyperGeometricFamily():
             myB = m1[3][1]
             if not myA and not myB:  # myA = myB = []
                 return [abstract_group_display_knowl("1.1", "$C_1$"), 1]
-            mono = db.hgm_families.lucky({'A': myA, 'B': myB}, projection="mono")
+            mono = db.hgm_families.lucky(
+                {'A': myA, 'B': myB}, projection="mono")
             if mono is None:
                 return ['??', 1]
             newthing = mono[pind[ell]]
@@ -355,12 +374,13 @@ class WebHyperGeometricFamily():
                  getgroup(m[1], m[0]),
                  latex(ZZ(m[1][0]).factor())] for m in mono]
 
-        mono = [[m0, m1, m2[0], splitint(ZZ(m1[0]) / m2[1], m0), m3] for m0, m1, m2, m3 in mono]
+        mono = [[m0, m1, m2[0], splitint(ZZ(m1[0]) / m2[1], m0), m3]
+                for m0, m1, m2, m3 in mono]
         # make URLs
         for row in mono:
             A = row[1][3][0]
             B = row[1][3][1]
-            row.append(AB_to_url(A,B))
+            row.append(AB_to_url(A, B))
 
         return mono
 
@@ -405,7 +425,8 @@ class WebHyperGeometricFamily():
 
     @lazy_attribute
     def maxp(self):
-        return -1 if not self.euler_factors else max(self.euler_factors)  # max of keys
+        # max of keys
+        return -1 if not self.euler_factors else max(self.euler_factors)
 
     @lazy_attribute
     def hodge_polygon(self):
@@ -447,7 +468,8 @@ class WebHyperGeometricFamily():
                     gal_groups = ""
                 else:
                     gal_groups = r"$\times$".join(
-                        transitive_group_display_knowl_C1_as_trivial(f"{n}T{t}")
+                        transitive_group_display_knowl_C1_as_trivial(
+                            f"{n}T{t}")
                         for n, t in gal_groups)
             return [gal_groups, factors, self.ordinary(f, p)]
         return process_euler
@@ -478,6 +500,8 @@ class WebHyperGeometricFamily():
         if tlist is None:
             if plist is None:
                 plist = self.defaultp
-            return [('p', p, 't', self.table_euler_factors_p(p)) for p in plist]
+            return [('p', p, 't', self.table_euler_factors_p(p))
+                    for p in plist]
         else:
-            return [('t', t, 'p', self.table_euler_factors_t(t, plist)) for t in tlist]
+            return [('t', t, 'p', self.table_euler_factors_t(t, plist))
+                    for t in tlist]

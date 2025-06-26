@@ -162,7 +162,8 @@ def zeros_starting_at_t(t, number_of_zeros=1000):
     c = sqlite3.connect(db_location).cursor()
     c.execute(query, (float(t),))
     t0, N0, filename, offset, block_number = c.fetchone()
-    return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, t_start=t)
+    return list_zeros(filename, offset, block_number,
+                      number_of_zeros=number_of_zeros, t_start=t)
 
 
 def zeros_starting_at_N(N, number_of_zeros=1000):
@@ -173,7 +174,8 @@ def zeros_starting_at_N(N, number_of_zeros=1000):
     c = sqlite3.connect(db_location).cursor()
     c.execute(query, (N,))
     t0, N0, filename, offset, block_number = c.fetchone()
-    return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, N_start=N)
+    return list_zeros(filename, offset, block_number,
+                      number_of_zeros=number_of_zeros, N_start=N)
 
 
 if __name__ == "__main__":

@@ -45,14 +45,16 @@ def piecewise_linear_image(A, B):
     G = Graphics()
     w = [(Rational(i) / len(v), j) for i, j in enumerate(v)]
     for pt in w:
-        G += line([(pt[0], pt[1]), (pt[0]+Rational(1)/len(w), pt[1])])
+        G += line([(pt[0], pt[1]), (pt[0] + Rational(1) / len(w), pt[1])])
     return G
 
 
 def circle_image(A, B):
     G = Graphics()
     G += circle((0, 0), 1, color='black', thickness=3)
-    G += circle((0, 0), 1.4, color='black', alpha=0)  # This adds an invisible framing circle to the plot, which protects the aspect ratio from being skewed.
+    # This adds an invisible framing circle to the plot, which protects the
+    # aspect ratio from being skewed.
+    G += circle((0, 0), 1.4, color='black', alpha=0)
     from collections import defaultdict
     tmp = defaultdict(int)
     for a in A:
@@ -67,11 +69,19 @@ def circle_image(A, B):
                 rational = Rational(j) / Rational(b)
                 tmp[(rational.numerator(), rational.denominator())] -= 1
     C = ComplexField()
-    color1 = (41/255, 95/255, 45/255)
-    color2 = (0/255, 0/255, 150/255)
+    color1 = (41 / 255, 95 / 255, 45 / 255)
+    color2 = (0 / 255, 0 / 255, 150 / 255)
     for val in tmp:
         if tmp[val] > 0:
-            G += text(str(tmp[val]), exp(C(-.2+2*3.14159*I*val[0]/val[1])), fontsize=30, axes=False, color=color1)
+            G += text(str(tmp[val]),
+                      exp(C(-.2 + 2 * 3.14159 * I * val[0] / val[1])),
+                      fontsize=30,
+                      axes=False,
+                      color=color1)
         if tmp[val] < 0:
-            G += text(str(abs(tmp[val])), exp(C(.2+2*3.14159*I*val[0]/val[1])), fontsize=30, axes=False, color=color2)
+            G += text(str(abs(tmp[val])),
+                      exp(C(.2 + 2 * 3.14159 * I * val[0] / val[1])),
+                      fontsize=30,
+                      axes=False,
+                      color=color2)
     return G

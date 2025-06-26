@@ -18,7 +18,9 @@ class HomePageTest(LmfdbTest):
     def _get_links_data(cls):
         """Parse YAML file once and return all links with metadata."""
         if cls._links_data is None:
-            lmfdb_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            lmfdb_dir = os.path.dirname(
+                os.path.dirname(
+                    os.path.abspath(__file__)))
             yaml_path = os.path.join(lmfdb_dir, "homepage", "index_boxes.yaml")
 
             with open(yaml_path, "r") as f:
@@ -55,7 +57,7 @@ class HomePageTest(LmfdbTest):
 
         # Check that link appears in homepage
         self.assertIn(url, homepage,
-                     f"Link {url} from {box_title} not found in homepage")
+                      f"Link {url} from {box_title} not found in homepage")
 
         if link_info["is_external"]:
             # Test external links
@@ -67,7 +69,7 @@ class HomePageTest(LmfdbTest):
             # Test internal links
             response = self.tc.get(url, follow_redirects=True)
             self.assertEqual(response.status_code, 200,
-                           f"Internal link {url} from {box_title} returned status {response.status_code}")
+                             f"Internal link {url} from {box_title} returned status {response.status_code}")
 
     def test_all_internal_links(self):
         """Test all internal links found in index_boxes.yaml."""
@@ -114,6 +116,7 @@ class HomePageTest(LmfdbTest):
 # Dynamic test generation for individual boxes
 def _create_box_test(box_title, box_links):
     """Create a test method for a specific box."""
+
     def test_method(self):
         for link_info in box_links:
             with self.subTest(url=link_info["url"]):
@@ -139,7 +142,12 @@ try:
     for box_title, box_links in boxes.items():
         safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', box_title.lower())
         method_name = f"test_box_{safe_name}"
-        setattr(HomePageTest, method_name, _create_box_test(box_title, box_links))
+        setattr(
+            HomePageTest,
+            method_name,
+            _create_box_test(
+                box_title,
+                box_links))
 
 except Exception:
     # Graceful fallback if YAML can't be read

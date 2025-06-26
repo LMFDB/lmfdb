@@ -1,5 +1,7 @@
 
 
+from lmfdb.logger import make_logger
+from lmfdb.app import app
 from .main import (
     login_page,
     login_manager,
@@ -11,9 +13,6 @@ from .main import (
 assert admin_required  # silence pyflakes
 assert knowl_reviewer_required  # silence pyflakes
 assert housekeeping  # silence pyflakes
-
-from lmfdb.app import app
-from lmfdb.logger import make_logger
 
 
 login_manager.init_app(app)

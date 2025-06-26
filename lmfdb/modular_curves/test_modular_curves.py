@@ -1,5 +1,6 @@
 from lmfdb.tests import LmfdbTest
 
+
 class ModCrvTest(LmfdbTest):
     def test_home(self):
         L = self.tc.get('/ModularCurve/Q/')
@@ -72,7 +73,8 @@ class ModCrvTest(LmfdbTest):
         assert "10.360.13.b.1" in L.get_data(as_text=True)
         L = self.tc.get("/ModularCurve/Q/?gonality_type=atleast&q_gonality=7")
         assert "11.660.26.a.1" in L.get_data(as_text=True)
-        L = self.tc.get("/ModularCurve/Q/?count=None&gonality_type=atmost&q_gonality=3")
+        L = self.tc.get(
+            "/ModularCurve/Q/?count=None&gonality_type=atmost&q_gonality=3")
         assert "1.1.0.a.1" in L.get_data(as_text=True)
         L = self.tc.get("/ModularCurve/Q/?gonality_type=atmost&q_gonality=3-4")
         assert "is not a valid input for" in L.get_data(as_text=True)
@@ -110,39 +112,54 @@ class ModCrvTest(LmfdbTest):
         assert "25.100.4.a.1" in L.get_data(as_text=True)
 
     def test_SL2_level(self):
-        L = self.tc.get("/ModularCurve/Q/252.432.10-126.dk.1.10",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/252.432.10-126.dk.1.10",
+            follow_redirects=True)
         assert r"$\SL_2$-level" in L.get_data(as_text=True)
         assert "$36$" in L.get_data(as_text=True)
 
     def test_PSL2_index(self):
-        L = self.tc.get("/ModularCurve/Q/60.1152.25-60.dh.4.24",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/60.1152.25-60.dh.4.24",
+            follow_redirects=True)
         assert r"$\PSL_2$-index" in L.get_data(as_text=True)
         assert "$576$" in L.get_data(as_text=True)
 
     def test_cusp_widths(self):
-        L = self.tc.get("/ModularCurve/Q/252.432.10-126.dk.1.10",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/252.432.10-126.dk.1.10",
+            follow_redirects=True)
         assert "Cusp widths" in L.get_data(as_text=True)
         assert r"$6^{9}\cdot18^{9}$" in L.get_data(as_text=True)
 
     def test_newform_level(self):
-        L = self.tc.get("/ModularCurve/Q/48.9216.321-48.fnp.1.1",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/48.9216.321-48.fnp.1.1",
+            follow_redirects=True)
         assert "Newform level" in L.get_data(as_text=True)
         assert "$2304$" in L.get_data(as_text=True)
 
     def test_cusp_orbits(self):
-        L = self.tc.get("/ModularCurve/Q/60.8640.313-60.eqq.1.4",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/60.8640.313-60.eqq.1.4",
+            follow_redirects=True)
         assert "Cusp orbits" in L.get_data(as_text=True)
         assert r"$8^{6}\cdot16^{3}$" in L.get_data(as_text=True)
 
     def test_modcrv_label(self):
-        L = self.tc.get("/ModularCurve/Q/48.576.21-48.bqz.1.2",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/48.576.21-48.bqz.1.2",
+            follow_redirects=True)
         assert "Cummins and Pauli (CP) label" in L.get_data(as_text=True)
         assert "48P21" in L.get_data(as_text=True)
-        assert "Rouse, Sutherland, and Zureick-Brown (RSZB) label" in L.get_data(as_text=True)
+        assert "Rouse, Sutherland, and Zureick-Brown (RSZB) label" in L.get_data(
+            as_text=True)
         assert "48.576.21.26699" in L.get_data(as_text=True)
 
     def test_GL2ZNZ_gens(self):
-        L = self.tc.get("/ModularCurve/Q/240.288.8-48.jt.2.31",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/240.288.8-48.jt.2.31",
+            follow_redirects=True)
         for matrix_gens in [
             r"$\GL_2(\Z/240\Z)$-generators",
             r"$\begin{bmatrix}31&amp;54\\156&amp;217\end{bmatrix}$",
@@ -151,11 +168,13 @@ class ModCrvTest(LmfdbTest):
             r"$\begin{bmatrix}164&amp;137\\171&amp;10\end{bmatrix}$",
             r"$\begin{bmatrix}181&amp;150\\154&amp;113\end{bmatrix}$",
             r"$\begin{bmatrix}191&amp;226\\34&amp;151\end{bmatrix}$"
-            ]:
+        ]:
             assert matrix_gens in L.get_data(as_text=True)
 
     def test_GL2ZNZ_subgroup(self):
-        L = self.tc.get("/ModularCurve/Q/40.2880.97-40.blq.2.11",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/40.2880.97-40.blq.2.11",
+            follow_redirects=True)
         assert r"$\GL_2(\Z/40\Z)$-subgroup" in L.get_data(as_text=True)
         assert "$C_2^5.D_4$" in L.get_data(as_text=True)
 
@@ -166,59 +185,89 @@ class ModCrvTest(LmfdbTest):
         assert "3.24.0-3.a.1.1" in L.get_data(as_text=True)
 
     def test_cyclic_isogeny_field_degree(self):
-        L = self.tc.get("/ModularCurve/Q/252.432.10-126.dk.1.10",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/252.432.10-126.dk.1.10",
+            follow_redirects=True)
         assert "Cyclic 252-isogeny field degree" in L.get_data(as_text=True)
         assert "$48$" in L.get_data(as_text=True)
 
     def test_cyclic_torsion_field_degree(self):
-        L = self.tc.get("/ModularCurve/Q/168.144.4-168.lh.1.28",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/168.144.4-168.lh.1.28",
+            follow_redirects=True)
         assert "Cyclic 168-torsion field degree" in L.get_data(as_text=True)
         assert "$1536$" in L.get_data(as_text=True)
 
     def test_full_torsion_field_degree(self):
-        L = self.tc.get("/ModularCurve/Q/60.2304.81-60.hp.2.4",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/60.2304.81-60.hp.2.4",
+            follow_redirects=True)
         assert "Full 60-torsion field degree" in L.get_data(as_text=True)
         assert "$960$" in L.get_data(as_text=True)
 
     def test_conductor(self):
-        L = self.tc.get("/ModularCurve/Q/48.4608.161-48.blz.2.8",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/48.4608.161-48.blz.2.8",
+            follow_redirects=True)
         assert "Conductor" in L.get_data(as_text=True)
         assert r"$2^{981}\cdot3^{256}$" in L.get_data(as_text=True)
 
     def test_is_simple(self):
-        L = self.tc.get("/ModularCurve/Q/48.3072.97-48.bmv.8.32",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/48.3072.97-48.bmv.8.32",
+            follow_redirects=True)
         assert "Simple" in L.get_data(as_text=True)
 
     def test_is_squarefree(self):
-        L = self.tc.get("/ModularCurve/Q/120.192.1-120.sp.4.13",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/120.192.1-120.sp.4.13",
+            follow_redirects=True)
         assert "Squarefree" in L.get_data(as_text=True)
 
     def test_isogeny_decomposition(self):
-        L = self.tc.get("/ModularCurve/Q/48.6144.193-48.td.4.12",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/48.6144.193-48.td.4.12",
+            follow_redirects=True)
         assert "Decomposition" in L.get_data(as_text=True)
         assert r"$1^{49}\cdot2^{32}\cdot4^{20}$" in L.get_data(as_text=True)
 
     def test_newforms(self):
-        L = self.tc.get("/ModularCurve/Q/64.3072.113-64.do.2.4",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/64.3072.113-64.do.2.4",
+            follow_redirects=True)
         assert "Newforms" in L.get_data(as_text=True)
-        assert r'href="/ModularForm/GL2/Q/holomorphic/16/2/e/a/">16.2.e.a</a>$^{2}$' in L.get_data(as_text=True)
+        assert r'href="/ModularForm/GL2/Q/holomorphic/16/2/e/a/">16.2.e.a</a>$^{2}$' in L.get_data(
+            as_text=True)
 
     def test_modcrv_model(self):
-        L = self.tc.get("/ModularCurve/Q/180.216.4-18.e.2.8",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/180.216.4-18.e.2.8",
+            follow_redirects=True)
         assert "Canonical model" in L.get_data(as_text=True)
-        assert "$ 12 x^{2} + 3 x y + 3 y^{2} - z^{2} + z w - w^{2} $" in L.get_data(as_text=True)
+        assert "$ 12 x^{2} + 3 x y + 3 y^{2} - z^{2} + z w - w^{2} $" in L.get_data(
+            as_text=True)
         assert "Singular plane model" in L.get_data(as_text=True)
-        assert r"$  - 2008 x^{6} + 456 x^{5} y + 192 x^{5} z + 408 x^{4} y^{2} - 564 x^{4} y z + 324 x^{4} z^{2} + \cdots  + 9 y^{2} z^{4} $" in L.get_data(as_text=True)
+        assert r"$  - 2008 x^{6} + 456 x^{5} y + 192 x^{5} z + 408 x^{4} y^{2} - 564 x^{4} y z + 324 x^{4} z^{2} + \cdots  + 9 y^{2} z^{4} $" in L.get_data(
+            as_text=True)
 
     def test_rational_points(self):
-        data = self.tc.get("/ModularCurve/Q/48.1152.81.mov.1/",follow_redirects=True).get_data(as_text=True)
+        data = self.tc.get(
+            "/ModularCurve/Q/48.1152.81.mov.1/",
+            follow_redirects=True).get_data(
+            as_text=True)
         assert "Rational points" in data
         assert r"This modular curve has 2 rational cusps but no known non-cuspidal rational points." in data
-        data = self.tc.get("/ModularCurve/Q/168.144.3-12.i.1.3",follow_redirects=True).get_data(as_text=True)
+        data = self.tc.get(
+            "/ModularCurve/Q/168.144.3-12.i.1.3",
+            follow_redirects=True).get_data(
+            as_text=True)
         assert "Rational points" in data
         assert "Embedded model" in data
         assert r"$(1:1:0:0:0)$, $(0:0:0:-1:1)$, $(0:0:1:1:0)$, $(0:0:1/2:1:0)$" in data
-        data = self.tc.get("/ModularCurve/Q/37.38.2.a.1",follow_redirects=True).get_data(as_text=True)
+        data = self.tc.get(
+            "/ModularCurve/Q/37.38.2.a.1",
+            follow_redirects=True).get_data(
+            as_text=True)
         assert "Elliptic curve" in data
         assert "CM" in data
         assert "$j$-invariant" in data
@@ -254,7 +303,7 @@ class ModCrvTest(LmfdbTest):
         assert "6.16.0-6.a.1.1" in L.get_data(as_text=True)
 
     def test_fiber_product_of(self):
-        L = self.tc.get("/ModularCurve/Q/10.15.1.a.1",follow_redirects=True)
+        L = self.tc.get("/ModularCurve/Q/10.15.1.a.1", follow_redirects=True)
         assert "Fiber product" in L.get_data(as_text=True)
         assert "$X_0(2)$" in L.get_data(as_text=True)
         assert "$X_{S_4}(5)$" in L.get_data(as_text=True)
@@ -265,7 +314,9 @@ class ModCrvTest(LmfdbTest):
     #     assert "39.28.0.a.2" in L.get_data(as_text=True)
 
     def test_minimally_covers(self):
-        L = self.tc.get("/ModularCurve/Q/31.192.6-31.a.1.1",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/31.192.6-31.a.1.1",
+            follow_redirects=True)
         assert "minimally covers" in L.get_data(as_text=True)
         assert "31.64.2-31.a.1.2" in L.get_data(as_text=True)
 
@@ -277,7 +328,9 @@ class ModCrvTest(LmfdbTest):
         # assert "not the label of a modular curve in the database" in L.get_data(as_text=True)
 
     def test_minimally_covered_by(self):
-        L = self.tc.get("/ModularCurve/Q/40.2304.65-40.mm.4.13",follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/40.2304.65-40.mm.4.13",
+            follow_redirects=True)
         covering_curve_urls_set = [
             '/ModularCurve/Q/40.4608.129-40.cf.3.6',
             '/ModularCurve/Q/40.4608.129-40.cl.1.7',
@@ -296,19 +349,19 @@ class ModCrvTest(LmfdbTest):
 
     def test_family_search(self):
         family_set = [
-            ('X0','2.3.0.a.1'),
-            ('X1','4.12.0-4.c.1.1'),
-            ('Xpm1','5.12.0.a.1'),
-            ('X','2.6.0.a.1'),
-            ('Xarith1','4.24.0-4.b.1.3'),
-            ('Xarithpm1','6.24.0.a.1'),
-            ('Xsp','3.12.0.a.1'),
-            ('Xns','3.6.0.a.1'),
-            ('Xspplus','3.6.0.b.1'),
-            ('Xnsplus','3.3.0.a.1'),
-            ('XS4','5.5.0.a.1'),
-            ('Xarith','4.48.0-4.b.1.1'),
-            ('any','1.1.0.a.1')
+            ('X0', '2.3.0.a.1'),
+            ('X1', '4.12.0-4.c.1.1'),
+            ('Xpm1', '5.12.0.a.1'),
+            ('X', '2.6.0.a.1'),
+            ('Xarith1', '4.24.0-4.b.1.3'),
+            ('Xarithpm1', '6.24.0.a.1'),
+            ('Xsp', '3.12.0.a.1'),
+            ('Xns', '3.6.0.a.1'),
+            ('Xspplus', '3.6.0.b.1'),
+            ('Xnsplus', '3.3.0.a.1'),
+            ('XS4', '5.5.0.a.1'),
+            ('Xarith', '4.48.0-4.b.1.1'),
+            ('any', '1.1.0.a.1')
         ]
         for family, crv in family_set:
             url = '/ModularCurve/Q/?family=' + family
@@ -316,7 +369,9 @@ class ModCrvTest(LmfdbTest):
             assert crv in L.get_data(as_text=True)
 
     def test_image(self):
-        L = self.tc.get("/ModularCurve/Q/280.288.17.cdv.1", follow_redirects=True)
+        L = self.tc.get(
+            "/ModularCurve/Q/280.288.17.cdv.1",
+            follow_redirects=True)
         assert "image/png" in L.get_data(as_text=True)
         assert "Picture description" in L.get_data(as_text=True)
 
@@ -331,16 +386,18 @@ class ModCrvTest(LmfdbTest):
 
     def test_jump(self):
         jump_set = [
-            ('60.34560.1297-60.bwg.1.1','60.34560.1297-60.bwg.1.1'),
-            ('XSP(3)','3.12.0.a.1'),
-            ('Xsp%2B%2811%29','11.66.2.a.1'),
-            ('32.1536.41.1175','32.1536.41-32.bz.3.6'),
-            ('7B.6.2','7.24.0.b.1'),
-            ('4E0-8b','8.12.0.a.1'),
-            ('banana','Error: There is no modular curve in the database')
+            ('60.34560.1297-60.bwg.1.1', '60.34560.1297-60.bwg.1.1'),
+            ('XSP(3)', '3.12.0.a.1'),
+            ('Xsp%2B%2811%29', '11.66.2.a.1'),
+            ('32.1536.41.1175', '32.1536.41-32.bz.3.6'),
+            ('7B.6.2', '7.24.0.b.1'),
+            ('4E0-8b', '8.12.0.a.1'),
+            ('banana', 'Error: There is no modular curve in the database')
         ]
-        for j,l in jump_set:
-            L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
+        for j, l in jump_set:
+            L = self.tc.get(
+                "/ModularCurve/Q/?jump=%s" %
+                j, follow_redirects=True)
             assert l in L.get_data(as_text=True)
 
     def test_related_objects(self):
@@ -394,8 +451,10 @@ class ModCrvTest(LmfdbTest):
                     'Modular form 23.2.a.a'
                 )
             )
-            ]:
-            data = self.tc.get(url,follow_redirects=True).get_data(as_text=True)
+        ]:
+            data = self.tc.get(
+                url, follow_redirects=True).get_data(
+                as_text=True)
             for friend in friends:
                 assert friend in data
 
@@ -405,7 +464,10 @@ class ModCrvTest(LmfdbTest):
         self.tc.get("/ModularCurve/download_to_text/60.11520.409-60.bwm.1.10")
 
     def test_underlying_data(self):
-        data = self.tc.get("/ModularCurve/data/56.4032.139-56.fq.1.17",follow_redirects=True).get_data(as_text=True)
+        data = self.tc.get(
+            "/ModularCurve/data/56.4032.139-56.fq.1.17",
+            follow_redirects=True).get_data(
+            as_text=True)
         for underlying_data in [
             'CPlabel',
             'Glabel',
@@ -482,11 +544,14 @@ class ModCrvTest(LmfdbTest):
             'squarefree',
             'trace_hash',
             'traces'
-            ]:
+        ]:
             assert underlying_data in data
 
     def test_gassmann_class(self):
-        data = self.tc.get("/ModularCurve/Q/40.720.49.df", follow_redirects=True).get_data(as_text=True)
+        data = self.tc.get(
+            "/ModularCurve/Q/40.720.49.df",
+            follow_redirects=True).get_data(
+            as_text=True)
         for gassmann_data in [
             'Cusp orbits',
             'Level',
@@ -495,5 +560,5 @@ class ModCrvTest(LmfdbTest):
             'Genus',
             '20.2.a.a',
             '40.720.49.1139'
-            ]:
+        ]:
             assert gassmann_data in data

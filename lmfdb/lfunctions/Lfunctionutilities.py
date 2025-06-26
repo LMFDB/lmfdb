@@ -50,13 +50,16 @@ def string2number(s):
     strs = str(s).replace(' ', '')
     try:
         if 'e' in strs:
-            # check for e(m/n) := exp(2*pi*i*m/n), used by Dirichlet characters, for example
-            r = re.match(r'^\$?e\\left\(\\frac\{(?P<num>\d+)\}\{(?P<den>\d+)\}\\right\)\$?$', strs)
+            # check for e(m/n) := exp(2*pi*i*m/n), used by Dirichlet
+            # characters, for example
+            r = re.match(
+                r'^\$?e\\left\(\\frac\{(?P<num>\d+)\}\{(?P<den>\d+)\}\\right\)\$?$', strs)
             if not r:
                 r = re.match(r'^e\((?P<num>\d+)/(?P<den>\d+)\)$', strs)
             if r:
-                q = Rational(r.groupdict()['num'])/Rational(r.groupdict()['den'])
-                return CDF(exp(2*pi*I*q))
+                q = Rational(r.groupdict()['num']) / \
+                    Rational(r.groupdict()['den'])
+                return CDF(exp(2 * pi * I * q))
         if 'I' in strs:
             return CDF(strs)
         elif (isinstance(s, (list, tuple))) and len(s) == 2:
@@ -116,7 +119,12 @@ def seriescoeff(coeff, index, seriescoefftype, seriestype, digits):
         parenthesis = True
     else:
         parenthesis = False
-    coeff_display = display_complex(rp, ip, digits, method="truncate", parenthesis=parenthesis)
+    coeff_display = display_complex(
+        rp,
+        ip,
+        digits,
+        method="truncate",
+        parenthesis=parenthesis)
 
     # deal with the zero case
     if coeff_display == "0":
@@ -224,7 +232,7 @@ def lfuncDShtml(L, fmt):
             ans += "</span>"
         else:
             ans += "<span class='term'>"
-            ans += '$'+L.texname+'$'
+            ans += '$' + L.texname + '$'
             ans += "&thinsp;"
             ans += "&nbsp;=&nbsp;"
             ans += "1<sup></sup>" + "&nbsp;"
@@ -262,7 +270,8 @@ def lfuncDShtml(L, fmt):
 
         elif L.Ltype() == "dirichlet":
             ans = r"\begin{equation}\begin{aligned} L(s,\chi) = \sum_{n=1}^{\infty} \chi(n) n^{-s} \end{aligned}\end{equation}\]"
-            ans = ans + r"where $\chi$ is the character modulo " + str(L.charactermodulus)
+            ans = ans + r"where $\chi$ is the character modulo " + \
+                str(L.charactermodulus)
             ans = ans + ", number " + str(L.characternumber) + "."
 
         else:
@@ -277,7 +286,8 @@ def lfuncEPtex(L, fmt):
         fmt could be any of the values: "abstract"
     """
     from .Lfunction import Lfunction_from_db
-    if (L.Ltype() in ["genus2curveQ"] or isinstance(L, Lfunction_from_db)) and fmt == "arithmetic":
+    if (L.Ltype() in ["genus2curveQ"] or isinstance(
+            L, Lfunction_from_db)) and fmt == "arithmetic":
         try:
             return lfuncEPhtml(L, fmt)
         except Exception:
@@ -392,24 +402,30 @@ def lfuncEPhtml(L, fmt):
                 factors = r'\( %s \)' % pretty_poly(poly)
                 gal_groups = [[0, 0]]
             elif not display_galois:
-                factors = galois_pretty_factors(poly, galois=display_galois, p=p)
+                factors = galois_pretty_factors(
+                    poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
             else:
-                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
+                factors, gal_groups = galois_pretty_factors(
+                    poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
+            out += "<tr" + trclass + "><td>" + \
+                goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
                 if gal_groups[0] == [0, 0]:
                     pass   # do nothing, because the local factor is 1
                 else:
-                    out += r"$\times$".join(transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups)
+                    out += r"$\times$".join(
+                        transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n,
+                        k in gal_groups)
                 out += "</td>"
             out += "<td> %s </td>" % factors
             out += "</tr>"
 
         except IndexError:
-            out += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>"
+            out += "<tr><td></td><td>" + \
+                str(j) + "</td><td>" + "not available" + "</td></tr>"
         return out
     goodorbad = "bad"
     trclass = ""
@@ -686,14 +702,17 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
             val = "not computed"
         else:
             val = L.sageLfunction.value(s)
-            logger.warning("a value of an L-function has been computed on the fly")
+            logger.warning(
+                "a value of an L-function has been computed on the fly")
 
     if sLatex_arithmetic:
-        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace('s)', sLatex_arithmetic + ')')
+        lfunction_value_tex_arithmetic = L.texname_arithmetic.replace(
+            's)', sLatex_arithmetic + ')')
     else:
         lfunction_value_tex_arithmetic = ''
     if sLatex_analytic:
-        lfunction_value_tex_analytic = L.texname.replace('(s', '(' + sLatex_analytic)
+        lfunction_value_tex_analytic = L.texname.replace(
+            '(s', '(' + sLatex_analytic)
     else:
         lfunction_value_tex_analytic = ''
 
@@ -706,7 +725,8 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
         if ccval.real().is_NaN():
             Lval = r"$\infty$"
         else:
-            Lval = display_complex(ccval.real(), ccval.imag(), number_of_decimals)
+            Lval = display_complex(
+                ccval.real(), ccval.imag(), number_of_decimals)
 
     return [lfunction_value_tex_analytic, lfunction_value_tex_arithmetic, Lval]
 
@@ -729,9 +749,11 @@ CF = ComplexField(NN)
 def compute_dirichlet_series(p_list, PREC):
     ''' computes the Dirichlet series for a Lfunction_SMF2_scalar_valued
     '''
-    # p_list is a list of pairs (p,y) where p is a prime and y is the list of roots of the Euler factor at x
+    # p_list is a list of pairs (p,y) where p is a prime and y is the list of
+    # roots of the Euler factor at x
     LL = [0] * PREC
-    # create an empty list of the right size and now populate it with the powers of p
+    # create an empty list of the right size and now populate it with the
+    # powers of p
     for p, y in p_list:
         # FIXME p_prec is never used, but perhaps it should be?
         # p_prec = log(PREC) / log(p) + 1
@@ -784,7 +806,8 @@ def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
         fnum = Rnum.zero()
         if K != QQ:
             for i in range(int(f.degree()) + 1):
-                fnum += f[i].complex_embeddings(NN)[embedding] * (x / p**(k - 1.5)) ** i
+                fnum += f[i].complex_embeddings(NN)[embedding] * \
+                    (x / p**(k - 1.5)) ** i
         else:
             for i in range(int(f.degree()) + 1):
                 fnum += f[i] * (x / CF(p**(k - 1.5)))**i
@@ -825,7 +848,8 @@ def signOfEmfLfunction(level, weight, coefs, tol=10 ** (-7), num=1.3):
         logger.debug("Sum2: {0}".format(sum2))
     sign = sum1 / sum2
     if abs(abs(sign) - 1) > tol:
-        logger.critical("Not enough coefficients to compute the sign of the L-function.")
+        logger.critical(
+            "Not enough coefficients to compute the sign of the L-function.")
         sign = "Not able to compute."
         sign = 1  # wrong, but we need some type of error handling here.
     return sign

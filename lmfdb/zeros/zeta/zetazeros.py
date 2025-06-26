@@ -1,4 +1,5 @@
 
+from .platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 from mpmath import nstr, inf
 from sage.all import floor, log
 from lmfdb.logger import make_logger
@@ -7,7 +8,6 @@ from flask import render_template, request, url_for, Blueprint, Response
 ZetaZeros = Blueprint("zeta zeros", __name__, template_folder="templates")
 logger = make_logger(ZetaZeros)
 
-from .platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 
 credit_string = "David Platt"
 
@@ -17,13 +17,17 @@ def learnmore_list():
             ('Source of the data', url_for(".source")),
             ('Reliability of the data', url_for(".reliability"))]
 
+
 def friends_list():
     return [('L-function', url_for("l_functions.l_function_riemann_page"))]
+
 
 def downloads():
     return [('Bulk download', "https://beta.lmfdb.org/riemann-zeta-zeros/")]
 
 # Return the learnmore list with the matchstring entry removed
+
+
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
@@ -37,27 +41,38 @@ def zetazeros():
         return list_zeros(N=N, t=t, limit=limit)
     else:
         title = r"Zeros of $\zeta(s)$"
-        bread = [("Datasets", url_for("datasets")), (r'Zeros of $\zeta(s)$', ' ')]
-        return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore_list(), friends=friends_list(), downloads=downloads())
+        bread = [("Datasets", url_for("datasets")),
+                 (r'Zeros of $\zeta(s)$', ' ')]
+        return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread,
+                               learnmore=learnmore_list(), friends=friends_list(), downloads=downloads())
 
 
 @ZetaZeros.route("/Completeness")
 def completeness():
     t = 'Completeness of Riemann zeta zeros data'
-    bread = [("L-functions", url_for("l_functions.index")),(r"Zeros of $\zeta(s)$", url_for(".zetazeros")),('Completeness', ' ')]
-    return render_template("single.html", kid='rcs.cande.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+    bread = [("L-functions", url_for("l_functions.index")),
+             (r"Zeros of $\zeta(s)$", url_for(".zetazeros")), ('Completeness', ' ')]
+    return render_template("single.html", kid='rcs.cande.zeros.zeta', credit=credit_string,
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
 
 @ZetaZeros.route("/Source")
 def source():
     t = 'Source of Riemann zeta zeros data'
-    bread = [("L-functions", url_for("l_functions.index")),(r"Zeros of $\zeta(s)$", url_for(".zetazeros")),('Source', ' ')]
-    return render_template("single.html", kid='rcs.source.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+    bread = [("L-functions", url_for("l_functions.index")),
+             (r"Zeros of $\zeta(s)$", url_for(".zetazeros")), ('Source', ' ')]
+    return render_template("single.html", kid='rcs.source.zeros.zeta', credit=credit_string,
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
 
 @ZetaZeros.route("/Reliability")
 def reliability():
     t = 'Reliability of Riemann zeta zeros data'
-    bread = [("L-functions", url_for("l_functions.index")),(r"Zeros of $\zeta(s)$", url_for(".zetazeros")),('Reliability', ' ')]
-    return render_template("single.html", kid='rcs.rigor.zeros.zeta', credit=credit_string, title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+    bread = [("L-functions", url_for("l_functions.index")),
+             (r"Zeros of $\zeta(s)$", url_for(".zetazeros")), ('Reliability', ' ')]
+    return render_template("single.html", kid='rcs.rigor.zeros.zeta', credit=credit_string,
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
 
 @ZetaZeros.route("/list")
 def list_zeros(N=None,
@@ -85,7 +100,8 @@ def list_zeros(N=None,
     if limit > 100000:
         # limit = 100000
         #
-        bread = [("L-functions", url_for("l_functions.index")),(r"Zeros of $\zeta(s)$", url_for(".zetazeros"))]
+        bread = [("L-functions", url_for("l_functions.index")),
+                 (r"Zeros of $\zeta(s)$", url_for(".zetazeros"))]
         return render_template('single.html', title="Too many zeros",
                                bread=bread, kid="dq.zeros.zeta.toomany")
 
@@ -95,7 +111,12 @@ def list_zeros(N=None,
         zeros = zeros_starting_at_t(t, limit)
 
     if fmt == 'plain':
-        response = Response("%d %s\n" % (n, nstr(z,31+floor(log(z,10))+1,strip_zeros=False,min_fixed=-inf,max_fixed=+inf)) for n, z in zeros)
+        response = Response("%d %s\n" %
+                            (n, nstr(z, 31 +
+                                     floor(log(z, 10)) +
+                                     1, strip_zeros=False, min_fixed=-
+                                     inf, max_fixed=+
+                                     inf)) for n, z in zeros)
         response.headers['content-type'] = 'text/plain'
         if download == "yes":
             response.headers['content-disposition'] = 'attachment; filename=zetazeros'

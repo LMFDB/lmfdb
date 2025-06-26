@@ -5,15 +5,21 @@ from lmfdb.logger import make_logger
 
 logger = make_logger("lattice")
 
+
 class Lattice_stats(StatsDisplay):
     def __init__(self):
         self.nlats = comma(db.lat_lattices.count())
         self.max_cn = db.lat_lattices.max("class_number")
         self.max_dim = db.lat_lattices.max("dim")
         self.max_det = db.lat_lattices.max("det")
-        self.kposdef = display_knowl('lattice.postive_definite', 'positive definite')
-        self.kintegral = display_knowl('lattice.definition', 'integral lattices')
-        self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
+        self.kposdef = display_knowl(
+            'lattice.postive_definite',
+            'positive definite')
+        self.kintegral = display_knowl(
+            'lattice.definition', 'integral lattices')
+        self.kcatalogue = display_knowl(
+            'lattice.catalogue_of_lattices',
+            'Catalogue of Lattices')
         self.kcn = display_knowl('lattice.class_number', 'class number')
         self.kdim = display_knowl('lattice.dimension', 'dimension')
         self.kdet = display_knowl('lattice.determinant', 'determinant')
@@ -37,11 +43,11 @@ class Lattice_stats(StatsDisplay):
 
     table = db.lat_lattices
     baseurl_func = ".lattice_render_webpage"
-    buckets = {"dim":["1","2","3","4","5","6","7","8-15","16-31"],
-               "det":["1","2-10","11-100","101-1000","1001-10000","10001-100000","100001-1000000"],
-               "minimum":["1","2","3","4-7","8-15","16-31","32-63","64-127","128-255"],
-               "class_number":["1","2","3","4-7","8-15","16-31","32-63"],
-               "aut":["2","4","8","12","16","24","32","33-128", "129-512","513-2048","2049-16384","16385-262144","262145-8388608","8388609-191102976"]}
+    buckets = {"dim": ["1", "2", "3", "4", "5", "6", "7", "8-15", "16-31"],
+               "det": ["1", "2-10", "11-100", "101-1000", "1001-10000", "10001-100000", "100001-1000000"],
+               "minimum": ["1", "2", "3", "4-7", "8-15", "16-31", "32-63", "64-127", "128-255"],
+               "class_number": ["1", "2", "3", "4-7", "8-15", "16-31", "32-63"],
+               "aut": ["2", "4", "8", "12", "16", "24", "32", "33-128", "129-512", "513-2048", "2049-16384", "16385-262144", "262145-8388608", "8388609-191102976"]}
     knowls = {'dim': 'lattice.dimension',
               'det': 'lattice.determinant',
               'minimum': 'lattice.minimal_vector',

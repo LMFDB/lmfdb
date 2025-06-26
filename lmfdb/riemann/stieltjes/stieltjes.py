@@ -7,7 +7,10 @@ RR = RealField(63)
 
 dbpath = os.path.expanduser('~/data/riemann/stieltjes.db')
 
-StieltjesConstants = Blueprint("stieltjes", __name__, template_folder="templates")
+StieltjesConstants = Blueprint(
+    "stieltjes",
+    __name__,
+    template_folder="templates")
 
 
 @StieltjesConstants.route("/")
@@ -57,9 +60,9 @@ def stieltjes_list(start, limit):
     c.execute(query, (start, limit))
     L = []
     for n, m, e in c:
-        g = RR(m)*RR(2)**e
-        c = (-1)**n * g/RR(n+1).gamma()
-        L.append((n, RR(m)*RR(2)**e, c))
+        g = RR(m) * RR(2)**e
+        c = (-1)**n * g / RR(n + 1).gamma()
+        L.append((n, RR(m) * RR(2)**e, c))
 
     return L
 
@@ -108,8 +111,9 @@ def getone(n=None, digits=None, plain=False):
                                n=n,
                                digits=digits,
                                gamma=g,
-                               title=r"Stieltjes Constant $\gamma_{{{}}}$".format(n),
+                               title=r"Stieltjes Constant $\gamma_{{{}}}$".format(
+                                   n),
                                bread=[
-                                    ('Stieltjes Constants',
-                                     url_for('.stieltjes_constants')),
-                                    (r'$\gamma_{{{}}}$'.format(n), ' '), ])
+                                   ('Stieltjes Constants',
+                                    url_for('.stieltjes_constants')),
+                                   (r'$\gamma_{{{}}}$'.format(n), ' '), ])

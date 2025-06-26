@@ -15,7 +15,8 @@ from urllib.parse import urlencode
 pubkey = ""
 
 # Private Key:
-# Use this when communicating between your server and our server. Be sure to keep it a secret.
+# Use this when communicating between your server and our server. Be sure
+# to keep it a secret.
 privkey = ""
 
 

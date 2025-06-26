@@ -35,6 +35,8 @@ except Exception:
     logger.fatal("It looks like the SPKGes gap_packages and database_gap are not installed on the server.  Please install them via 'sage -i ...' and try again.")
 
 # convert [0,5,21,0,1] to [[1,5],[2,21],[4,1]]
+
+
 def mult2mult(li):
     return [[j, li_j] for j, li_j in enumerate(li) if li_j > 0]
 
@@ -46,6 +48,8 @@ def learnmore_list():
             ('Galois group labels', url_for(".labels_page"))]
 
 # Return the learnmore list with the matchstring entry removed
+
+
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
@@ -72,7 +76,9 @@ def ctx_galois_groups():
     return {'group_alias_table': group_alias_table,
             'galois_module_data': galois_module_knowl_guts}
 
+
 LIST_RE = re.compile(r'^(\d+|(\d+-\d+))(,(\d+|(\d+-\d+)))*$')
+
 
 @galois_groups_page.route("/<label>")
 def by_label(label):
@@ -81,25 +87,32 @@ def by_label(label):
         return redirect(url_for_label(clean_label), 301)
     return render_group_webpage({'label': label})
 
+
 def url_for_label(label):
     return url_for(".by_label", label=label)
+
 
 @galois_groups_page.route("/")
 def index():
     bread = get_bread()
-    info = to_dict(request.args, search_array=GalSearchArray(), stats=GaloisStats())
+    info = to_dict(
+        request.args,
+        search_array=GalSearchArray(),
+        stats=GaloisStats())
     if request.args:
         return galois_group_search(info)
     info['degree_list'] = list(range(1, 48))
-    return render_template("gg-index.html", title="Galois groups", bread=bread, info=info, learnmore=learnmore_list())
+    return render_template("gg-index.html", title="Galois groups",
+                           bread=bread, info=info, learnmore=learnmore_list())
+
 
 def _set_show_subs(info):
     def includes_composite(s):
-        s = s.replace(' ','').replace('..','-')
+        s = s.replace(' ', '').replace('..', '-')
         for interval in s.split(','):
             if '-' in interval[1:]:
-                ix = interval.index('-',1)
-                a,b = int(interval[:ix]), int(interval[ix+1:])
+                ix = interval.index('-', 1)
+                a, b = int(interval[:ix]), int(interval[ix + 1:])
                 if b == a:
                     if a != 1 and not a.is_prime():
                         return True
@@ -110,7 +123,9 @@ def _set_show_subs(info):
                 if a != 1 and not a.is_prime():
                     return True
     degree_str = prep_ranges(info.get('n'))
-    info['show_subs'] = degree_str is None or (LIST_RE.match(degree_str) and includes_composite(degree_str))
+    info['show_subs'] = degree_str is None or (
+        LIST_RE.match(degree_str) and includes_composite(degree_str))
+
 
 class GG_download(Downloader):
     table = db.gps_transitive
@@ -125,13 +140,17 @@ class GG_download(Downloader):
             }
         ),
     }
+
     def modify_query(self, info, query):
         _set_show_subs(info)
 
 # For the search order-parsing
+
+
 def make_order_key(order):
     order1 = int(ZZ(order).log(10))
-    return '%03d%s' % (order1,str(order))
+    return '%03d%s' % (order1, str(order))
+
 
 gg_columns = SearchColumns([
     LinkCol("label", "gg.label", "Label", url_for_label),
@@ -139,29 +158,50 @@ gg_columns = SearchColumns([
     MathCol("order", "group.order", "Order", align="right"),
     MathCol("parity", "gg.parity", "Parity", align="right"),
     CheckCol("solv", "group.solvable", "Solvable"),
-    MathCol("nilpotency", "group.nilpotent", "Nil. class", short_title="nilpotency class", default=False),
-    MathCol("num_conj_classes", "gg.conjugacy_classes", "Conj. classes", short_title="conjugacy classes", default=False),
+    MathCol(
+        "nilpotency",
+        "group.nilpotent",
+        "Nil. class",
+        short_title="nilpotency class",
+        default=False),
+    MathCol(
+        "num_conj_classes",
+        "gg.conjugacy_classes",
+        "Conj. classes",
+        short_title="conjugacy classes",
+        default=False),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
-                      lambda subs, cache: WebGaloisGroup(None, {"subfields": subs}).subfields(cache=cache),
+                      lambda subs, cache: WebGaloisGroup(
+                          None, {
+                              "subfields": subs}).subfields(
+                          cache=cache),
                       default=lambda info: info["show_subs"], download_col="subfields"),
     MultiProcessedCol("siblings", "gg.other_representations", "Low Degree Siblings",
                       ["siblings", "bound_siblings", "cache"],
-                      lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
+                      lambda sibs, bnd, cache: WebGaloisGroup(
+                          None, {
+                              "siblings": sibs, "bound_siblings": bnd}).otherrep_list(
+                          givebound=False, cache=cache),
                       apply_download=lambda s, b, c: [s, b])
 ],
     db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
 gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
+
 def gg_postprocess(res, info, query):
-    # We want to cache latex forms both for the results and for any groups that show up as siblings or subfields
-    others = sum([[tuple(pair[0]) for pair in rec["siblings"]] for rec in res], [])
+    # We want to cache latex forms both for the results and for any groups
+    # that show up as siblings or subfields
+    others = sum([[tuple(pair[0]) for pair in rec["siblings"]]
+                  for rec in res], [])
     if info["show_subs"]:
-        others += sum([[tuple(pair[0]) for pair in rec["subfields"]] for rec in res], [])
+        others += sum([[tuple(pair[0]) for pair in rec["subfields"]]
+                       for rec in res], [])
     others = sorted(set(others))
     others = ["T".join(str(c) for c in nt) for nt in others]
-    others = list(db.gps_transitive.search({"label": {"$in": others}}, ["label", "order", "abstract_label", "pretty"]))
-    cache = knowl_cache(results=res+others)
+    others = list(db.gps_transitive.search({"label": {"$in": others}}, [
+                  "label", "order", "abstract_label", "pretty"]))
+    cache = knowl_cache(results=res + others)
     for rec in res:
         pretty = cache[rec["label"]].get("pretty")
         if not pretty:
@@ -169,6 +209,7 @@ def gg_postprocess(res, info, query):
         rec["pretty"] = pretty
         rec["cache"] = cache
     return res
+
 
 @search_wrap(table=db.gps_transitive,
              title='Galois group search results',
@@ -180,52 +221,60 @@ def gg_postprocess(res, info, query):
              learnmore=learnmore_list,
              bread=lambda: get_bread([("Search results", ' ')]))
 def galois_group_search(info, query):
-    if info.get('jump','').strip():
+    if info.get('jump', '').strip():
         jump_list = ["1T1", "2T1", "3T1", "4T1", "4T2", "5T1", "6T1", "7T1",
-          "8T1", "8T2", "8T3", "8T5", "9T1", "9T2", "10T1", "11T1", "12T1",
-          "12T2", "12T5", "13T1", "14T1", "15T1", "16T1", "16T2", "16T3",
-          "16T4", "16T5", "16T7", "16T8", "16T14", "17T1", "18T1", "18T2",
-          "19T1", "20T1", "20T2", "20T3", "21T1", "22T1", "23T1", "24T1",
-          "24T2", "24T3", "24T4", "24T5", "24T6", "24T8", "25T1", "25T2",
-          "26T1", "27T1", "27T2", "27T4", "28T1", "28T2", "28T3", "29T1",
-          "30T1", "31T1", "32T32", "32T33", "32T34", "32T35", "32T36",
-          "32T37", "32T38", "32T39", "32T40", "32T41", "32T42", "32T43",
-          "32T44", "32T45", "32T46", "32T47", "32T48", "32T49", "32T50",
-          "32T51", "33T1", "34T1", "35T1", "36T1", "36T2", "36T3", "36T4",
-          "36T7", "36T9", "37T1", "38T1", "39T1", "40T1", "40T2", "40T3",
-          "40T4", "40T5", "40T7", "40T8", "40T13", "41T1", "42T1", "43T1",
-          "44T1", "44T2", "44T3", "45T1", "45T2", "46T1", "47T1"]
-        strip_label = info.get('jump','').strip().upper()
+                     "8T1", "8T2", "8T3", "8T5", "9T1", "9T2", "10T1", "11T1", "12T1",
+                     "12T2", "12T5", "13T1", "14T1", "15T1", "16T1", "16T2", "16T3",
+                     "16T4", "16T5", "16T7", "16T8", "16T14", "17T1", "18T1", "18T2",
+                     "19T1", "20T1", "20T2", "20T3", "21T1", "22T1", "23T1", "24T1",
+                     "24T2", "24T3", "24T4", "24T5", "24T6", "24T8", "25T1", "25T2",
+                     "26T1", "27T1", "27T2", "27T4", "28T1", "28T2", "28T3", "29T1",
+                     "30T1", "31T1", "32T32", "32T33", "32T34", "32T35", "32T36",
+                     "32T37", "32T38", "32T39", "32T40", "32T41", "32T42", "32T43",
+                     "32T44", "32T45", "32T46", "32T47", "32T48", "32T49", "32T50",
+                     "32T51", "33T1", "34T1", "35T1", "36T1", "36T2", "36T3", "36T4",
+                     "36T7", "36T9", "37T1", "38T1", "39T1", "40T1", "40T2", "40T3",
+                     "40T4", "40T5", "40T7", "40T8", "40T13", "41T1", "42T1", "43T1",
+                     "44T1", "44T2", "44T3", "45T1", "45T2", "46T1", "47T1"]
+        strip_label = info.get('jump', '').strip().upper()
         # If the user entered a simple label
-        if re.match(r'^\d+T\d+$',strip_label):
+        if re.match(r'^\d+T\d+$', strip_label):
             return redirect(url_for_label(strip_label), 301)
         try:
-            parse_galgrp(info, query, qfield=['label','n'],
-                name='a Galois group label', field='jump', list_ok=False,
-                err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
+            parse_galgrp(info, query, qfield=['label', 'n'],
+                         name='a Galois group label', field='jump', list_ok=False,
+                         err_msg="It needs to be a transitive group in nTj notation, such as 5T1, a GAP id, such as [4,1], or a <a title = 'Galois group labels' knowl='nf.galois_group.name'>group label</a>")
         except ValueError:
             return redirect(url_for('.index'))
 
         if query.get('label', '') in jump_list:
             return redirect(url_for_label(query['label']), 301)
 
-        else: # convert this to a regular search
+        else:  # convert this to a regular search
             info['gal'] = info['jump']
-    parse_ints(info,query,'n','degree')
-    parse_ints(info,query,'t')
-    parse_ints(info,query,'order')
-    parse_ints(info,query,'arith_equiv')
-    parse_ints(info,query,'nilpotency')
-    parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
+    parse_ints(info, query, 'n', 'degree')
+    parse_ints(info, query, 't')
+    parse_ints(info, query, 'order')
+    parse_ints(info, query, 'arith_equiv')
+    parse_ints(info, query, 'nilpotency')
+    parse_galgrp(
+        info,
+        query,
+        qfield=[
+            'label',
+            'n'],
+        name='Galois group',
+        field='gal')
     for param in ('cyc', 'solv', 'prim'):
-        parse_bool(info, query, param, process=int, blank=['0','Any'])
+        parse_bool(info, query, param, process=int, blank=['0', 'Any'])
     if info.get("parity") == "even":
         query["parity"] = 1
     elif info.get("parity") == "odd":
         query["parity"] = -1
-    #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
+    # parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
 
     _set_show_subs(info)
+
 
 def yesno(val):
     if val:
@@ -243,7 +292,8 @@ def render_group_webpage(args):
             if re.match(r'^\d+T\d+$', label):
                 flash_error("Group %s was not found in the database.", label)
             else:
-                flash_error("%s is not a valid label for a Galois group.", label)
+                flash_error(
+                    "%s is not a valid label for a Galois group.", label)
             return redirect(url_for(".index"))
         title = 'Galois group: ' + label
         wgg = WebGaloisGroup.from_nt(data['n'], data['t'])
@@ -264,12 +314,12 @@ def render_group_webpage(args):
         if wgg.num_conjclasses() < 51:
             data['cclasses'] = wgg.conjclasses
         else:
-            data['cclass_knowl'] = cclasses_display_knowl(n,t)
+            data['cclass_knowl'] = cclasses_display_knowl(n, t)
         if wgg.num_conjclasses() < 31:
             data['chartable'] = chartable(n, t)
         else:
-            data['chartable_knowl'] = character_table_display_knowl(n,t,
-                name="%d x %d character table" % (wgg.num_conjclasses(),wgg.num_conjclasses()))
+            data['chartable_knowl'] = character_table_display_knowl(n, t,
+                                                                    name="%d x %d character table" % (wgg.num_conjclasses(), wgg.num_conjclasses()))
         data['gens'] = wgg.generator_string()
         if n == 1 and t == 1:
             data['gens'] = 'None needed'
@@ -292,7 +342,9 @@ def render_group_webpage(args):
         if intreps:
             data['int_rep_classes'] = [str(z[0]) for z in intreps[0]['gens']]
             for onerep in intreps:
-                onerep['gens'] = [list_to_latex_matrix(z[1]) for z in onerep['gens']]
+                onerep['gens'] = [
+                    list_to_latex_matrix(
+                        z[1]) for z in onerep['gens']]
             data['int_reps'] = intreps
             data['int_reps_complete'] = int_reps_are_complete(intreps)
             dcq = data['moddecompuniq']
@@ -300,33 +352,42 @@ def render_group_webpage(args):
                 data['decompunique'] = 0
             else:
                 data['decompunique'] = dcq[0]
-                data['isoms'] = [[mult2mult(z[0]), mult2mult(z[1])] for z in dcq[1]]
-                data['isoms'] = [[modules2string(n,t,z[0]), modules2string(n,t,z[1])] for z in data['isoms']]
-                #print dcq[1]
-                #print data['isoms']
+                data['isoms'] = [
+                    [mult2mult(z[0]), mult2mult(z[1])] for z in dcq[1]]
+                data['isoms'] = [[modules2string(n, t, z[0]), modules2string(
+                    n, t, z[1])] for z in data['isoms']]
+                # print dcq[1]
+                # print data['isoms']
 
         friends = []
         if db.nf_fields.exists({'degree': n, 'galt': t}):
-            friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
+            friends.append(('Number fields with this Galois group', url_for(
+                'number_fields.number_field_render_webpage') + "?galois_group=%dT%d" % (n, t)))
         if db.lf_fields.exists({'n': n, 'galT': t}):
-            friends.append(('$p$-adic fields with this Galois group', url_for('local_fields.index')+"?gal=%dT%d" % (n, t) ))
+            friends.append(
+                ('$p$-adic fields with this Galois group',
+                 url_for('local_fields.index') +
+                    "?gal=%dT%d" %
+                    (n,
+                     t)))
         prop2 = [('Label', label),
-            ('Degree', prop_int_pretty(data['n'])),
-            ('Order', prop_int_pretty(order)),
-            ('Cyclic', yesno(data['cyc'])),
-            ('Abelian', yesno(data['ab'])),
-            ('Solvable', yesno(data['solv'])),
-            ('Primitive', yesno(data['prim'])),
-            ('$p$-group', yesno(pgroup)),
-        ]
-        pretty = group_display_short(n,t, emptyifnotpretty=True)
+                 ('Degree', prop_int_pretty(data['n'])),
+                 ('Order', prop_int_pretty(order)),
+                 ('Cyclic', yesno(data['cyc'])),
+                 ('Abelian', yesno(data['ab'])),
+                 ('Solvable', yesno(data['solv'])),
+                 ('Primitive', yesno(data['prim'])),
+                 ('$p$-group', yesno(pgroup)),
+                 ]
+        pretty = group_display_short(n, t, emptyifnotpretty=True)
         if len(pretty) > 0:
             prop2.extend([('Group:', pretty)])
             data['pretty_name'] = pretty
         gp_label = data['abstract_label']
-        data['groupid'] = abstract_group_display_knowl(gp_label, pretty if pretty else gp_label)
-        data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
-        data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
+        data['groupid'] = abstract_group_display_knowl(
+            gp_label, pretty if pretty else gp_label)
+        data['name'] = re.sub(r'_(\d+)', r'_{\1}', data['name'])
+        data['name'] = re.sub(r'\^(\d+)', r'^{\1}', data['name'])
         data['nilpotency'] = '$%s$' % data['nilpotency']
         data['have_isom'] = wgg.have_isomorphism
         if data['nilpotency'] == '$-1$':
@@ -334,8 +395,12 @@ def render_group_webpage(args):
         data['dispv'] = sparse_cyclotomic_to_mathml
         data['malle_a'] = wgg.malle_a
         downloads = []
-        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
-            downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+        for lang in [("Magma", "magma"), ("Oscar", "oscar"),
+                     ("SageMath", "sage")]:
+            downloads.append(
+                ('Code to {}'.format(
+                    lang[0]), url_for(
+                    ".gg_code", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         bread = get_bread([(label, ' ')])
         return render_template(
@@ -351,8 +416,9 @@ def render_group_webpage(args):
             KNOWL_ID="gg.%s" % label,
             learnmore=learnmore_list())
 
+
 @galois_groups_page.route('/<label>/download/<download_type>')
-def gg_code(label,download_type):
+def gg_code(label, download_type):
     if download_type == "magma":
         s = "// Magma code for creating transitive group " + label + "\n\n"
         s += "G := TransitiveGroup(%s,%s);\n" % tuple(label.split("T"))
@@ -368,6 +434,7 @@ def gg_code(label,download_type):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+
 @galois_groups_page.route("/data/<label>")
 def gg_data(label):
     if not re.fullmatch(r'\d+T\d+', label):
@@ -376,10 +443,12 @@ def gg_data(label):
     title = f"Transitive group data - {label}"
     return datapage(label, "gps_transitive", title=title, bread=bread)
 
+
 @galois_groups_page.route("/random")
 @redirect_no_cache
 def random_group():
     return url_for_label(db.gps_transitive.random())
+
 
 @galois_groups_page.route("/interesting")
 def interesting():
@@ -392,11 +461,14 @@ def interesting():
         learnmore=learnmore_list()
     )
 
+
 @galois_groups_page.route("/stats")
 def statistics():
     title = "Galois groups: statistics"
     bread = get_bread([("Statistics", " ")])
-    return render_template("display_stats.html", info=GaloisStats(), title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=GaloisStats(
+    ), title=title, bread=bread, learnmore=learnmore_list())
+
 
 @galois_groups_page.route("/Completeness")
 def cande():
@@ -407,13 +479,15 @@ def cande():
                            title=t, bread=bread,
                            learnmore=learnmore)
 
+
 @galois_groups_page.route("/Labels")
 def labels_page():
     t = 'Labels for Galois groups'
     bread = get_bread([("Labels", '')])
     return render_template("single.html", kid='gg.label',
-           learnmore=learnmore_list_remove('label'),
-           title=t, bread=bread)
+                           learnmore=learnmore_list_remove('label'),
+                           title=t, bread=bread)
+
 
 @galois_groups_page.route("/Source")
 def source():
@@ -424,6 +498,7 @@ def source():
                                                'rcs.cite.gg'],
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('Source'))
+
 
 @galois_groups_page.route("/Reliability")
 def reliability():
@@ -505,25 +580,32 @@ class GalSearchArray(SearchArray):
             example_span="1 or 2,3 or 1..5 or 1,3..10")
         count = CountBox()
 
-        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [arith_equiv], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [
+            nilpotency, prim], [gal], [arith_equiv], [count]]
 
-        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency]]
+        self.refine_array = [[parity, cyc, solv, prim,
+                              arith_equiv], [n, t, order, gal, nilpotency]]
+
 
 def yesone(s):
     return "yes" if s in ["yes", 1] else "no"
 
+
 def fixminus1(s):
     return "not computed" if s == -1 else s
+
 
 def eqyesone(col):
     def inner(s):
         return "%s=%s" % (col, yesone(s))
     return inner
 
+
 def undominus1(s):
-    if isinstance(s,int):
+    if isinstance(s, int):
         return "arith_equiv=%s" % s
     return "arith_equiv=-1"
+
 
 class GaloisStats(StatsDisplay):
     table = db.gps_transitive
@@ -539,7 +621,7 @@ class GaloisStats(StatsDisplay):
         {"cols": ["prim", "n"],
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
-        {"cols": ["arith_equiv","n"],
+        {"cols": ["arith_equiv", "n"],
          "totaler": totaler(),
          "proportioner": proportioners.per_col_total},
         {"cols": ["n", "nilpotency"],
@@ -552,7 +634,7 @@ class GaloisStats(StatsDisplay):
               "arith_equiv": "gg.arithmetically_equivalent",
               "solv": "group.solvable",
               "prim": "gg.primitive",
-    }
+              }
     top_titles = {"nilpotency": "nilpotency classes",
                   "solv": "solvability",
                   "arith_equiv": "number of arithmetic equivalent siblings",
@@ -562,7 +644,7 @@ class GaloisStats(StatsDisplay):
                      "solv": "solvable",
                      "arith_equiv": "arithmetic equivalent count",
                      "prim": "primitive",
-    }
+                     }
     formatters = {"solv": yesone,
                   "prim": yesone,
                   "arith_equiv": fixminus1}
@@ -579,8 +661,10 @@ class GaloisStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains $%s$ transitive subgroups of $S_n$, including all subgroups (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Among the $2{,}801{,}324$ groups in degree $32$, all those with order less than $512$ or greater than $40{,}000{,}000{,}000$ are included." % latex_comma(self.ngroups)
+        return r"The database currently contains $%s$ transitive subgroups of $S_n$, including all subgroups (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Among the $2{,}801{,}324$ groups in degree $32$, all those with order less than $512$ or greater than $40{,}000{,}000{,}000$ are included." % latex_comma(
+            self.ngroups)
 
     @property
     def short_summary(self):
-        return r'The database current contains $%s$ groups, including all transitive subgroups of $S_n$ (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Here are some <a href="%s">further statistics</a>.' % (latex_comma(self.ngroups), url_for(".statistics"))
+        return r'The database current contains $%s$ groups, including all transitive subgroups of $S_n$ (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Here are some <a href="%s">further statistics</a>.' % (
+            latex_comma(self.ngroups), url_for(".statistics"))

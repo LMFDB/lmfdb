@@ -3,6 +3,7 @@ from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb.modular_curves.web_curve import get_bread
 from lmfdb.utils import display_knowl
 
+
 def ModCurveFamily(name):
     if name == "X0":
         return X0N()
@@ -29,6 +30,7 @@ def ModCurveFamily(name):
     elif name == "Xarith":
         return XarithN()
     raise ValueError("Invalid name")
+
 
 class ModCurveFamily_base():
     @lazy_attribute
@@ -80,6 +82,7 @@ class X0N(ModCurveFamily_base):
                 ("Index", str(self.index)),
                 ("Genus", str(self.genus))]
 
+
 class X1N(ModCurveFamily_base):
     famname = "X1"
     name = "X_1(N)"
@@ -118,6 +121,7 @@ class X1N(ModCurveFamily_base):
                 (r"$SL_2$-level", str(self.sl2level)),
                 ("Index", str(self.index)),
                 ("Genus", str(self.genus))]
+
 
 class XN(ModCurveFamily_base):
     famname = "X"

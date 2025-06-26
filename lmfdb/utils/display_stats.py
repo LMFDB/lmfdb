@@ -7,6 +7,7 @@ from .utilities import format_percentage
 from .web_display import display_knowl
 from psycodict.utils import KeyedDefaultDict, range_formatter
 
+
 class formatters():
     @classmethod
     def boolean(cls, value):
@@ -25,6 +26,7 @@ class formatters():
         else:
             return 'Unknown'
 
+
 def _format_percentage(cnt, total, show_zero=False):
     """
     Variant of format_percentage that returns blanks for 0 and includes the % sign.
@@ -33,6 +35,7 @@ def _format_percentage(cnt, total, show_zero=False):
         return ""
     else:
         return format_percentage(cnt, total) + '%'
+
 
 class proportioners():
     ##################################################################
@@ -114,7 +117,8 @@ class proportioners():
         A function for use as a proportioner.
         """
         def inner(grid, row_headers, col_headers, stats):
-            cls.per_row_query(query)(list(zip(*grid)), col_headers, row_headers, stats)
+            cls.per_row_query(query)(list(zip(*grid)),
+                                     col_headers, row_headers, stats)
         return inner
 
     @classmethod
@@ -155,7 +159,7 @@ class proportioners():
         A function for use as a proportioner.
         """
         attr = dict(attr)
-        attr['base_url'] = '' # urls aren't used below
+        attr['base_url'] = ''  # urls aren't used below
         attr['constraint'] = {}
         attr['proportioner'] = False
         attr['totaler'] = False
@@ -170,12 +174,14 @@ class proportioners():
             # Align the total_grid with our grid
             col_positions = [total_cols.index(col) for col in col_headers]
             row_positions = [total_rows.index(row) for row in row_headers]
-            total_grid = [[total_grid[i][j] for j in col_positions] for i in row_positions]
+            total_grid = [[total_grid[i][j] for j in col_positions]
+                          for i in row_positions]
             # make the total_grid available to totalers
             stats._total_grid = total_grid
             for row, trow in zip(grid, total_grid):
                 for D, tD in zip(row, trow):
-                    D['proportion'] = _format_percentage(D['count'], tD['count'])
+                    D['proportion'] = _format_percentage(
+                        D['count'], tD['count'])
         return inner
 
     ##################################################################
@@ -196,7 +202,8 @@ class proportioners():
         def inner(counts, headers, stats):
             total_counts = stats.display_data(**attr)['counts']
             for D, tD in zip(counts, total_counts):
-                D['proportion'] = _format_percentage(D['count'], tD['count'], show_zero=True)
+                D['proportion'] = _format_percentage(
+                    D['count'], tD['count'], show_zero=True)
         return inner
 
     @classmethod
@@ -207,8 +214,10 @@ class proportioners():
             # Otherwise stats._overall was set by display_data()
             overall = stats._overall
             for D in counts:
-                D['proportion'] = _format_percentage(D['count'], overall, show_zero=True)
+                D['proportion'] = _format_percentage(
+                    D['count'], overall, show_zero=True)
         return inner
+
 
 class totaler():
     ##################################################################
@@ -244,7 +253,8 @@ class totaler():
             tails.intersection_update(T)
         return head + '?' + '&'.join(tails)
 
-    def __init__(self, row_counts=True, row_proportions=True, col_counts=True, col_proportions=True, corner_count=None, corner_proportion=None, include_links=True, row_total_label='Total', col_total_label='Total'):
+    def __init__(self, row_counts=True, row_proportions=True, col_counts=True, col_proportions=True, corner_count=None,
+                 corner_proportion=None, include_links=True, row_total_label='Total', col_total_label='Total'):
         if corner_count and not (row_counts and col_counts):
             raise ValueError
         if corner_count is None:
@@ -278,20 +288,23 @@ class totaler():
             corner_prop = recursive_prop
         else:
             corner_prop = corner_proportion
-        if corner_count or (row_proportions or col_proportions) and not recursive_prop:
+        if corner_count or (
+                row_proportions or col_proportions) and not recursive_prop:
             overall = sum(D['count'] for row in grid for D in row)
         if row_counts:
             col_headers.append(row_total_label)
             for i, row in enumerate(grid):
                 total = sum(D['count'] for D in row)
-                query = self.common_link([D['query'] for D in row]) if include_links else None
+                query = self.common_link(
+                    [D['query'] for D in row]) if include_links else None
                 if recursive_prop:
                     overall = sum(D['count'] for D in stats._total_grid[i])
                     if corner_count:
                         # Make the sums available for the column proportions
-                        stats._total_grid[i].append({'count':overall})
-                proportion = _format_percentage(total, overall) if col_proportions else ''
-                D = {'count':total, 'query':query, 'proportion':proportion}
+                        stats._total_grid[i].append({'count': overall})
+                proportion = _format_percentage(
+                    total, overall) if col_proportions else ''
+                D = {'count': total, 'query': query, 'proportion': proportion}
                 row.append(D)
         if col_counts:
             row_headers.append(col_total_label)
@@ -299,23 +312,26 @@ class totaler():
                 total_grid_cols = list(zip(*stats._total_grid))
             row = []
             for i, col in enumerate(zip(*grid)):
-                # We've already totaled rows, so have to skip if we don't want the corner
+                # We've already totaled rows, so have to skip if we don't want
+                # the corner
                 if not corner_count and i == num_cols:
                     break
                 total = sum(elt['count'] for elt in col)
                 if total == 0:
                     query = None
                 else:
-                    query = self.common_link([elt['query'] for elt in col if elt['count'] > 0]) if include_links else '?'
-                    if query[-1] == '?': # no common search queries
+                    query = self.common_link(
+                        [elt['query'] for elt in col if elt['count'] > 0]) if include_links else '?'
+                    if query[-1] == '?':  # no common search queries
                         query = None
                 if recursive_prop:
                     overall = sum(D['count'] for D in total_grid_cols[i])
-                proportion = _format_percentage(total, overall) if (col_proportions and i != num_cols or corner_prop and i == num_cols) else ''
-                D = {'count':total, 'query':query, 'proportion':proportion}
+                proportion = _format_percentage(total, overall) if (
+                    col_proportions and i != num_cols or corner_prop and i == num_cols) else ''
+                D = {'count': total, 'query': query, 'proportion': proportion}
                 row.append(D)
             grid.append(row)
-        #if corner_count and row_counts and not col_counts:
+        # if corner_count and row_counts and not col_counts:
         #    # Have to add the corner specially
         #    row_headers.append(col_total_label)
         #    row = [{'count':'', 'query':None, 'proportion':''} for _ in range(num_cols)]
@@ -334,10 +350,12 @@ class totaler():
         #    row.append(D)
         #    grid.append(row)
 
+
 def default_sort_key(val):
     if val is None:
         return -infinity
     return val
+
 
 class StatsDisplay(UniqueRepresentation):
     """
@@ -410,11 +428,13 @@ class StatsDisplay(UniqueRepresentation):
 
     @property
     def _dynamic_cols(self):
-        return [('none', 'None')] + [(col, self._short_display[col]) for col in self.dynamic_cols]
+        return [('none', 'None')] + [(col, self._short_display[col])
+                                     for col in self.dynamic_cols]
 
     @property
     def _default_buckets(self):
-        return [(col, ','.join(self._buckets.get(col, []))) for col, label in self._dynamic_cols]
+        return [(col, ','.join(self._buckets.get(col, [])))
+                for col, label in self._dynamic_cols]
 
     @property
     def _sort_keys(self):
@@ -459,7 +479,8 @@ class StatsDisplay(UniqueRepresentation):
         A.update(getattr(self, 'split_lists', {}))
         return A
 
-    # It's useful to have info.stats access this object for both dynamic and static stats
+    # It's useful to have info.stats access this object for both dynamic and
+    # static stats
     @property
     def stats(self):
         return self
@@ -510,12 +531,14 @@ class StatsDisplay(UniqueRepresentation):
         if isinstance(cols, str):
             cols = [cols]
         if buckets is None:
-            buckets = {col: self._buckets[col] for col in cols if self._buckets[col]}
+            buckets = {col: self._buckets[col]
+                       for col in cols if self._buckets[col]}
         elif isinstance(buckets, list):
             if len(cols) == 1:
                 buckets = {cols[0]: buckets}
             else:
-                raise ValueError("buckets should be a dictionary with columns as keys")
+                raise ValueError(
+                    "buckets should be a dictionary with columns as keys")
         else:
             buckets = {col: buckets[col] for col in cols if col in buckets}
         formatter = self._formatters
@@ -528,7 +551,10 @@ class StatsDisplay(UniqueRepresentation):
         if url_extras:
             base_url += url_extras
         if constraint:
-            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items() if col not in cols)
+            base_url += "".join(
+                "%s&" %
+                query_formatter[col](val) for col,
+                val in constraint.items() if col not in cols)
         if table is None:
             table = self.table
         self._tmp_table = table = table.stats
@@ -538,11 +564,17 @@ class StatsDisplay(UniqueRepresentation):
             show_total = bool(totaler)
             col = cols[0]
             split_list = self._split_lists[col]
-            headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
+            headers, counts = table._get_values_counts(
+                cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
             if not buckets:
                 if show_total or proportioner is None:
-                    total, avg = table._get_total_avg(cols, constraint, avg, split_list)
-                headers = [formatter[col](val) for val in sorted(headers, key=sort_key[col], reverse=reverse[col])]
+                    total, avg = table._get_total_avg(
+                        cols, constraint, avg, split_list)
+                headers = [
+                    formatter[col](val) for val in sorted(
+                        headers,
+                        key=sort_key[col],
+                        reverse=reverse[col])]
             elif cols == list(buckets):
                 if split_list or avg or sort_key[col] is not default_sort_key:
                     raise ValueError("Unsupported option")
@@ -565,9 +597,9 @@ class StatsDisplay(UniqueRepresentation):
                     D['proportion'] = ''
             if show_total:
                 total = {'count': total,
-                         'query':"{0}{1}".format(base_url, cols[0]),
-                         'proportion':_format_percentage(total, self._overall, show_zero=True)}
-                if avg is False: # Want to show avg even if 0
+                         'query': "{0}{1}".format(base_url, cols[0]),
+                         'proportion': _format_percentage(total, self._overall, show_zero=True)}
+                if avg is False:  # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
                     total['value'] = r'\(\mathrm{avg}\ %.2f\)' % avg
@@ -579,10 +611,12 @@ class StatsDisplay(UniqueRepresentation):
             non_buckets = [col for col in cols if col not in buckets]
             if len(buckets) + len(non_buckets) != 2:
                 raise ValueError("Bucket keys must be a subset of columns")
-            headers, grid = table._get_values_counts(cols, constraint, split_list=False, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
+            headers, grid = table._get_values_counts(
+                cols, constraint, split_list=False, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
             for i, col in enumerate(cols):
                 if col in buckets:
-                    headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
+                    headers[i] = [formatter[col](bucket)
+                                  for bucket in buckets[col]]
                 else:
                     try:
                         dup_free = set(headers[i])
@@ -595,7 +629,8 @@ class StatsDisplay(UniqueRepresentation):
                     headers[i] = [formatter[col](val) for val in
                                   sorted(dup_free, key=sort_key[col], reverse=reverse[col])]
             row_headers, col_headers = headers
-            grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
+            grid = [[grid[(rw, cl)] for cl in col_headers]
+                    for rw in row_headers]
             # _total_grid is used for recursive proportions; such proportioners
             # will set it for use in a totaler.  Otherwise, we set it to None
             # here to signal that unrecursive totaling should be used.
@@ -617,23 +652,26 @@ class StatsDisplay(UniqueRepresentation):
         cols = attr['cols']
         # default value for top_title from row_title/columns
         if 'top_title' not in attr:
-            top_title = [(self._top_titles[col], self._knowls[col]) for col in cols]
+            top_title = [(self._top_titles[col], self._knowls[col])
+                         for col in cols]
         else:
             top_title = attr['top_title']
         if not isinstance(top_title, str):
             missing_knowl = any(knowl is None for text, knowl in top_title)
-            joiner = attr.get('title_joiner', ' ' if missing_knowl else ' and ')
+            joiner = attr.get(
+                'title_joiner',
+                ' ' if missing_knowl else ' and ')
             attr['top_title'] = joiner.join((display_knowl(knowl, title=title) if knowl else title)
                                             for title, knowl in top_title)
         attr['hash'] = hsh = hex(abs(hash(attr['top_title'])))[2:]
         data = self.display_data(**attr)
-        attr['intro'] = attr.get('intro',[])
+        attr['intro'] = attr.get('intro', [])
         data['attribute'] = attr
         if len(cols) == 1:
             attr['row_title'] = self._short_display[cols[0]]
-            max_rows = attr.get('max_rows',6)
+            max_rows = attr.get('max_rows', 6)
             counts = data['counts']
-            rows = [counts[i:i+10] for i in range(0, len(counts), 10)]
+            rows = [counts[i:i + 10] for i in range(0, len(counts), 10)]
             if len(rows) > max_rows:
                 short_rows = rows[:max_rows]
                 data['divs'] = [(short_rows, "short_table_" + hsh, "short"),
@@ -670,7 +708,9 @@ class StatsDisplay(UniqueRepresentation):
                 continue
             if isinstance(cols, str):
                 cols = [cols]
-            buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
+            buckets = attr.get(
+                'buckets', {
+                    col: self._buckets[col] for col in cols if self._buckets[col]})
             if isinstance(buckets, list) and len(cols) == 1:
                 buckets = {cols[0]: buckets}
             constraint = attr.get("constraint")
@@ -691,14 +731,15 @@ class StatsDisplay(UniqueRepresentation):
         cols = []
         buckets = {}
         totals = []
-        for cname, bname, tname in [('col1', 'buckets1', 'totals1'), ('col2', 'buckets2', 'totals2')]:
+        for cname, bname, tname in [
+                ('col1', 'buckets1', 'totals1'), ('col2', 'buckets2', 'totals2')]:
             if cname in info and info[cname] != 'none':
                 col = info[cname]
                 if col in cols:
                     raise ValueError("Cannot repeat")
                 cols.append(col)
                 if bname in info:
-                    cur_buckets = info[bname].replace(' ','')
+                    cur_buckets = info[bname].replace(' ', '')
                     if cur_buckets:
                         buckets[col] = cur_buckets.split(',')
                 totals.append(info.get(tname, False))
@@ -707,13 +748,16 @@ class StatsDisplay(UniqueRepresentation):
         prop = info.get('proportions')
         if len(cols) == 1:
             if totals[0]:
-                attributes['totaler'] = {'avg':False}
+                attributes['totaler'] = {'avg': False}
             if prop == 'recurse':
-                attributes['proportioner'] = proportioners.recurse_1d(attributes)
+                attributes['proportioner'] = proportioners.recurse_1d(
+                    attributes)
         elif len(cols) == 2:
-            attributes['totaler'] = totaler(row_counts=totals[0], col_counts=totals[1])
+            attributes['totaler'] = totaler(
+                row_counts=totals[0], col_counts=totals[1])
             if prop == 'recurse':
-                attributes['proportioner'] = proportioners.per_grid_recurse(attributes)
+                attributes['proportioner'] = proportioners.per_grid_recurse(
+                    attributes)
             elif prop == 'rows':
                 attributes['proportioner'] = proportioners.per_row_total
             elif prop == 'cols':
@@ -723,7 +767,7 @@ class StatsDisplay(UniqueRepresentation):
 
     def dynamic_setup(self, info):
         if not info:
-            attr = {'cols':[], 'buckets':{}}
+            attr = {'cols': [], 'buckets': {}}
         else:
             constraint = {}
             try:

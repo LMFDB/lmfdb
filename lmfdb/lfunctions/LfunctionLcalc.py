@@ -113,8 +113,11 @@ def createLcalcfile_ver2(L, url):
 
     thefile += "\n\n"
 
-    thefile += "name = \"" + url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
-    # kind = url.partition('/L/')[2].partition('?download')[0].partition('/')[0] -- not used
+    thefile += "name = \"" + \
+        url.partition('/L/')[2].partition('?download')[0].strip('/') + "\"\n"
+    # kind =
+    # url.partition('/L/')[2].partition('?download')[0].partition('/')[0] --
+    # not used
     kind_of_L = url.partition('/L/')[2].partition('?download')[0].split('/')
     # thefile += str(kind_of_L) + "\n\n\n\n"
     if len(kind_of_L) > 2:
@@ -174,7 +177,8 @@ def createLcalcfile_ver2(L, url):
     thefile += "\n\n"
 
     if hasattr(L, 'normalize_by'):
-        thefile += "normalize_by = " + str(L.normalize_by) + "    ### floating point is also okay.\n"
+        thefile += "normalize_by = " + \
+            str(L.normalize_by) + "    ### floating point is also okay.\n"
         thefile += "### Normalize, below, the n-th Dirichlet coefficient by n^(" + str(
             L.normalize_by) + ")\n\n"
     else:
@@ -212,11 +216,13 @@ def createLcalcfile_ver2(L, url):
                 if L.selfdual:
                     thefile += str(L.dirichlet_coefficients_arithmetic[n])
                 else:
-                    thefile += parse_complex_number(L.dirichlet_coefficients_arithmetic[n])
+                    thefile += parse_complex_number(
+                        L.dirichlet_coefficients_arithmetic[n])
                 if n < total - 1:           # We will be back
                     thefile += ","
                 if n < 2:
-                    thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n + 1) + "] \n"
+                    thefile += "\t\t\t### set Dirichlet_coefficient[" + str(
+                        n + 1) + "] \n"
                 else:
                     thefile += "\n"
         else:
@@ -225,11 +231,13 @@ def createLcalcfile_ver2(L, url):
                 if L.selfdual:
                     thefile += str(L.dirichlet_coefficients[n])
                 else:
-                    thefile += parse_complex_number(L.dirichlet_coefficients[n])
+                    thefile += parse_complex_number(
+                        L.dirichlet_coefficients[n])
                 if n < total - 1:           # We will be back
                     thefile += ","
                 if n < 2:
-                    thefile += "\t\t\t### set Dirichlet_coefficient[" + str(n + 1) + "] \n"
+                    thefile += "\t\t\t### set Dirichlet_coefficient[" + str(
+                        n + 1) + "] \n"
                 else:
                     thefile += "\n"
         # thefile = thefile[:-2]
@@ -277,7 +285,8 @@ def parseLcalcfile_ver1(L, filecontents):
 
     L.degree = int(round(2 * sum(L.kappa_fe)))
 
-    L.level = int(round(math.pi ** float(L.degree) * 4 ** len(L.nu_fe) * L.Q_fe ** 2))
+    L.level = int(round(math.pi ** float(L.degree)
+                        * 4 ** len(L.nu_fe) * L.Q_fe ** 2))
     # note:  math.pi was not compatible with the sage type of degree
 
     L.dirichlet_coefficients = splitcoeff(lines[-1])
@@ -303,7 +312,9 @@ def createLcalcfile_ver1(L):
 
     for n in range(L.quasidegree):
         thefile = thefile + str(L.kappa_fe[n]) + "\n"
-        thefile = thefile + str(real_part(L.lambda_fe[n])) + " " + str(imag_part(L.lambda_fe[n])) + "\n"
+        thefile = thefile + \
+            str(real_part(L.lambda_fe[n])) + " " + \
+            str(imag_part(L.lambda_fe[n])) + "\n"
 
     thefile += str(real_part(L.Q_fe)) + "\n"
 
@@ -312,12 +323,15 @@ def createLcalcfile_ver1(L):
     thefile += str(len(L.poles)) + "\n"  # counts number of poles
 
     for n in range(len(L.poles)):
-        thefile += str(real_part(L.poles[n])) + " " + str(imag_part(L.poles[n])) + "\n"  # pole location
+        # pole location
+        thefile += str(real_part(L.poles[n])) + \
+            " " + str(imag_part(L.poles[n])) + "\n"
         thefile += str(
             real_part(L.residues[n])) + " " + str(imag_part(L.residues[n])) + "\n"  # residue at pole
 
     for n in range(len(L.dirichlet_coefficients)):
-        thefile += str(real_part(L.dirichlet_coefficients[n]))   # add real part of Dirichlet coefficient
+        # add real part of Dirichlet coefficient
+        thefile += str(real_part(L.dirichlet_coefficients[n]))
         if not L.selfdual:  # if not selfdual
             thefile += " " + str(imag_part(L.dirichlet_coefficients[n]))
             # add imaginary part of Dirichlet coefficient

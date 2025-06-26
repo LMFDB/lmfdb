@@ -6,4 +6,10 @@ from .utils import make_logger
 
 start_logging()
 
-__all__ = ['info', 'warning', 'debug', 'critical', 'make_logger', 'logger_file_handler']
+__all__ = [
+    'info',
+    'warning',
+    'debug',
+    'critical',
+    'make_logger',
+    'logger_file_handler']

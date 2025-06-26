@@ -12,21 +12,67 @@ from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Sp
 class CMF_download(Downloader):
     table = db.mf_newforms
     title = 'Classical modular forms'
-    data_format = ['N=level', 'k=weight', 'dim', 'analytic conductor', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces - a2,a3,a5,a7']
-    columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
+    data_format = [
+        'N=level',
+        'k=weight',
+        'dim',
+        'analytic conductor',
+        'defining polynomial',
+        'number field label',
+        'CM discriminants',
+        'RM discriminants',
+        'first few traces - a2,a3,a5,a7']
+    columns = [
+        'level',
+        'weight',
+        'dim',
+        'analytic_conductor',
+        'field_poly',
+        'nf_label',
+        'cm_discs',
+        'rm_discs',
+        'trace_display']
 
     def _get_hecke_nf(self, label):
-        proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
+        proj = [
+            'ap',
+            'hecke_ring_rank',
+            'hecke_ring_power_basis',
+            'hecke_ring_numerators',
+            'hecke_ring_denominators',
+            'field_poly',
+            'hecke_ring_cyclotomic_generator',
+            'hecke_ring_character_values',
+            'maxp']
         print(label)
-        data = db.mf_hecke_nf.lucky({'label':label}, proj)
+        data = db.mf_hecke_nf.lucky({'label': label}, proj)
         print(data)
         if data is None:
-            f = db.mf_newforms.lookup(label,projection=["level","char_orbit_label","dim","traces"])
+            f = db.mf_newforms.lookup(
+                label,
+                projection=[
+                    "level",
+                    "char_orbit_label",
+                    "dim",
+                    "traces"])
             if f["dim"] == 1:
-                vals = ConreyCharacter(f["level"], db.char_dirichlet.lookup("%s.%s" % (f["level"],f["char_orbit_label"]),projection="first")).values_gens
-                vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
-                aps = [[f["traces"][p-1]] for p in prime_range(len(f["traces"])+1)]
-                data = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'field_poly': [0,1], 'maxp': previous_prime(len(f["traces"])), 'ap': aps }
+                vals = ConreyCharacter(
+                    f["level"],
+                    db.char_dirichlet.lookup(
+                        "%s.%s" %
+                        (f["level"],
+                         f["char_orbit_label"]),
+                        projection="first")).values_gens
+                vals = [[v[0], [1] if v[1] == 0 else [-1]] for v in vals]
+                aps = [[f["traces"][p - 1]]
+                       for p in prime_range(len(f["traces"]) + 1)]
+                data = {'hecke_ring_cyclotomic_generator': 0,
+                        'hecke_ring_character_values': vals,
+                        'hecke_ring_power_basis': True,
+                        'field_poly': [0,
+                                       1],
+                        'maxp': previous_prime(len(f["traces"])),
+                        'ap': aps}
             else:
                 return None
         # Make up for db_backend currently deleting Nones
@@ -53,106 +99,111 @@ class CMF_download(Downloader):
 
     # Sage functions to generate everything
     discrete_log_sage = [
-            'def discrete_log(elts, gens, mod):',
-            '    # algorithm 2.2, page 16 of https://arxiv.org/abs/0903.2785',
-            '    def table_gens(gens, mod):',
-            '        T = [1]',
-            '        n = len(gens)',
-            '        r = [None]*n',
-            '        s = [None]*n',
-            '        for i in range(n):',
-            '            beta = gens[i]',
-            '            r[i] = 1',
-            '            N = len(T)',
-            '            while beta not in T:',
-            '                for Tj in T[:N]:',
-            '                    T.append((beta*Tj) % mod)',
-            '                beta = (beta*gens[i]) % mod',
-            '                r[i] += 1',
-            '            s[i] = T.index(beta)',
-            '        return T, r, s',
-            '    T, r, s = table_gens(gens, mod)',
-            '    n = len(gens)',
-            '    N = [ prod(r[:j]) for j in range(n) ]',
-            '    Z = lambda s: [ (floor(s/N[j]) % r[j]) for j in range(n)]',
-            '    return [Z(T.index(elt % mod)) for elt in elts]']
+        'def discrete_log(elts, gens, mod):',
+        '    # algorithm 2.2, page 16 of https://arxiv.org/abs/0903.2785',
+        '    def table_gens(gens, mod):',
+        '        T = [1]',
+        '        n = len(gens)',
+        '        r = [None]*n',
+        '        s = [None]*n',
+        '        for i in range(n):',
+        '            beta = gens[i]',
+        '            r[i] = 1',
+        '            N = len(T)',
+        '            while beta not in T:',
+        '                for Tj in T[:N]:',
+        '                    T.append((beta*Tj) % mod)',
+        '                beta = (beta*gens[i]) % mod',
+        '                r[i] += 1',
+        '            s[i] = T.index(beta)',
+        '        return T, r, s',
+        '    T, r, s = table_gens(gens, mod)',
+        '    n = len(gens)',
+        '    N = [ prod(r[:j]) for j in range(n) ]',
+        '    Z = lambda s: [ (floor(s/N[j]) % r[j]) for j in range(n)]',
+        '    return [Z(T.index(elt % mod)) for elt in elts]']
 
     extend_multiplicatively_sage = [
-            'def extend_multiplicatively(an):',
-            '    for pp in prime_powers(len(an)-1):',
-            '        for k in range(1, (len(an) - 1)//pp + 1):',
-            '            if gcd(k, pp) == 1:',
-            '                an[pp*k] = an[pp]*an[k]']
+        'def extend_multiplicatively(an):',
+        '    for pp in prime_powers(len(an)-1):',
+        '        for k in range(1, (len(an) - 1)//pp + 1):',
+        '            if gcd(k, pp) == 1:',
+        '                an[pp*k] = an[pp]*an[k]']
 
     field_and_convert_sage_powbasis = [
-            'from sage.all import PolynomialRing, NumberField',
-            'R = PolynomialRing(QQ, "x")',
-            'f = R(poly_data)',
-            'K = NumberField(f, "a")',
-            'betas = [K.gens()[0]**i for i in range(len(poly_data))]',
-            'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
+        'from sage.all import PolynomialRing, NumberField',
+        'R = PolynomialRing(QQ, "x")',
+        'f = R(poly_data)',
+        'K = NumberField(f, "a")',
+        'betas = [K.gens()[0]**i for i in range(len(poly_data))]',
+        'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
 
     field_and_convert_sage_generic = [
-            'from sage.all import PolynomialRing, NumberField, ZZ',
-            'R = PolynomialRing(QQ, "x")',
-            'f = R(poly_data)',
-            'K = NumberField(f, "a")',
-            'betas = [K([c/ZZ(den) for c in num]) for num, den in basis_data]',
-            'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
+        'from sage.all import PolynomialRing, NumberField, ZZ',
+        'R = PolynomialRing(QQ, "x")',
+        'f = R(poly_data)',
+        'K = NumberField(f, "a")',
+        'betas = [K([c/ZZ(den) for c in num]) for num, den in basis_data]',
+        'convert_elt_to_field = lambda elt: sum(c*beta for c, beta in zip(elt, betas))']
 
     field_and_convert_sage_sparse_cyclotomic = [
-            'from sage.all import CyclotomicField',
-            'K = CyclotomicField(poly_data, "z")',
-            'convert_elt_to_field = lambda elt: sum(c * K.gens()[0]**e for c,e in elt)']
+        'from sage.all import CyclotomicField',
+        'K = CyclotomicField(poly_data, "z")',
+        'convert_elt_to_field = lambda elt: sum(c * K.gens()[0]**e for c,e in elt)']
 
     convert_aps = ['# convert aps to K elements',
-            'primes = primes_first_n(len(aps_data))',
-            'good_primes = [p for p in primes if not p.divides(level)]',
-            'aps = map(convert_elt_to_field, aps_data)'
-            ]
+                   'primes = primes_first_n(len(aps_data))',
+                   'good_primes = [p for p in primes if not p.divides(level)]',
+                   'aps = map(convert_elt_to_field, aps_data)'
+                   ]
 
     char_values_sage_generic = [
-            'if not hecke_ring_character_values:',
-            '    # trivial character',
-            '    char_values = dict(zip(good_primes, [1]*len(good_primes)))',
-            'else:',
-            '    gens = [elt[0] for elt in hecke_ring_character_values]',
-            '    gens_values = [convert_elt_to_field(elt[1]) for elt in hecke_ring_character_values]',
-            '    char_values = dict([(',
-            '        p,prod(g**k for g, k in zip(gens_values, elt)))',
-            '        for p, elt in zip(good_primes, discrete_log(good_primes, gens, level))',
-            '        ])']
+        'if not hecke_ring_character_values:',
+        '    # trivial character',
+        '    char_values = dict(zip(good_primes, [1]*len(good_primes)))',
+        'else:',
+        '    gens = [elt[0] for elt in hecke_ring_character_values]',
+        '    gens_values = [convert_elt_to_field(elt[1]) for elt in hecke_ring_character_values]',
+        '    char_values = dict([(',
+        '        p,prod(g**k for g, k in zip(gens_values, elt)))',
+        '        for p, elt in zip(good_primes, discrete_log(good_primes, gens, level))',
+        '        ])']
 
     an_code_sage = [
-            'an_list_bound = next_prime(primes[-1])',
-            'an = [0]*an_list_bound',
-            'an[1] = 1',
-            '',
-            'from sage.all import PowerSeriesRing',
-            'PS = PowerSeriesRing(K, "q")',
-            'for p, ap in zip(primes, aps):',
-            '    if p.divides(level):',
-            '        euler_factor = [1, -ap]',
-            '    else:',
-            '        euler_factor = [1, -ap, p**(weight - 1) * char_values[p]]',
-            '    k = RR(an_list_bound).log(p).floor() + 1',
-            '    foo = (1/PS(euler_factor)).padded_list(k)',
-            '    for i in range(1, k):',
-            '        an[p**i] = foo[i]',
-            'extend_multiplicatively(an)',
-            'return PS(an)']
+        'an_list_bound = next_prime(primes[-1])',
+        'an = [0]*an_list_bound',
+        'an[1] = 1',
+        '',
+        'from sage.all import PowerSeriesRing',
+        'PS = PowerSeriesRing(K, "q")',
+        'for p, ap in zip(primes, aps):',
+        '    if p.divides(level):',
+        '        euler_factor = [1, -ap]',
+        '    else:',
+        '        euler_factor = [1, -ap, p**(weight - 1) * char_values[p]]',
+        '    k = RR(an_list_bound).log(p).floor() + 1',
+        '    foo = (1/PS(euler_factor)).padded_list(k)',
+        '    for i in range(1, k):',
+        '        an[p**i] = foo[i]',
+        'extend_multiplicatively(an)',
+        'return PS(an)']
 
-    header = ["from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
-    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_powbasis = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
-    qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
+    header = [
+        "from sage.all import prod, floor, prime_powers, gcd, QQ, primes_first_n, next_prime, RR\n"]
+    qexp_function_body_generic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +
+                                  field_and_convert_sage_generic + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_powbasis = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +
+                                   field_and_convert_sage_powbasis + convert_aps + char_values_sage_generic + an_code_sage}
+    qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage +
+                                            field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
         if isinstance(lang, str):
             lang = self.languages.get(lang, self.languages['sage'])
         hecke_nf = self._get_hecke_nf(label)
         if hecke_nf is None:
-            return abort(404, "q-expansion not available for newform %s" % label)
+            return abort(
+                404, "q-expansion not available for newform %s" % label)
 
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
@@ -167,14 +218,19 @@ class CMF_download(Downloader):
         explain += c + ' We generate the q-expansion using the Hecke eigenvalues a_p at the primes.\n'
         aps_data = lang.assign('aps_data', aps)
         code = ''
-        hecke_ring_character_values = lang.assign('hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
+        hecke_ring_character_values = lang.assign(
+            'hecke_ring_character_values',
+            hecke_nf['hecke_ring_character_values'])
 
         if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            func_body = self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang.name,[])
+            func_body = self.get(
+                'qexp_function_body_sparse_cyclotomic', {}).get(
+                lang.name, [])
             explain += c + ' Each a_p is given as list of pairs\n'
             explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
             basis_data = ''
-            poly_data = lang.assign('poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+            poly_data = lang.assign(
+                'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
         else:
             explain += c + ' Each a_p is given as a linear combination\n'
             explain += c + ' of the following basis for the coefficient ring.\n'
@@ -184,17 +240,25 @@ class CMF_download(Downloader):
             if hecke_nf['hecke_ring_power_basis']:
                 basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
                 basis_data += c + ' in the root of the defining polynomial above.\n'
-                func_body = self.get('qexp_function_body_powbasis',{}).get(lang.name,[])
+                func_body = self.get(
+                    'qexp_function_body_powbasis', {}).get(
+                    lang.name, [])
             else:
                 basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
                 basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
-                basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-                basis_data += lang.assign('basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
+                basis_data += c + \
+                    ' Each line consists of the coefficients of the numerator, and a denominator.\n'
+                basis_data += lang.assign('basis_data ',
+                                          list(zip(hecke_nf['hecke_ring_numerators'],
+                                                   hecke_nf['hecke_ring_denominators'])))
                 basis_data += '\n'
-                func_body = self.get('qexp_function_body_generic',{}).get(lang.name,[])
+                func_body = self.get(
+                    'qexp_function_body_generic', {}).get(
+                    lang.name, [])
 
         if lang in ['sage']:
-            explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (lang.assignment_defn, lang.line_end)
+            explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (lang.assignment_defn,
+                                                                                                           lang.line_end)
 
         if lang.name in ['sage']:
             code = '\n' + func_start + '\n'
@@ -209,7 +273,7 @@ class CMF_download(Downloader):
     def download_traces(self, label, lang='text'):
         data = self._get_traces(label)
         # to return errors
-        if not isinstance(data,list):
+        if not isinstance(data, list):
             return data
         return self._wrap(Json.dumps(data),
                           label + '.traces',
@@ -217,7 +281,7 @@ class CMF_download(Downloader):
                           title='Trace form for %s,' % (label))
 
     def download_multiple_traces(self, info, spaces=False):
-        lang = info.get(self.lang_key,'text').strip()
+        lang = info.get(self.lang_key, 'text').strip()
         lang = self.languages.get(lang, self.languages['sage'])
         query = literal_eval(info.get('query', '{}'))
         if spaces:
@@ -229,19 +293,29 @@ class CMF_download(Downloader):
             flash_error("We limit downloads of traces to %s forms", limit)
             return redirect(url_for('.index'))
         if spaces:
-            res = list(db.mf_newspaces.search(query, projection=['label', 'traces']))
+            res = list(
+                db.mf_newspaces.search(
+                    query, projection=[
+                        'label', 'traces']))
         else:
-            res = list(db.mf_newforms.search(query, projection=['label', 'traces']))
+            res = list(
+                db.mf_newforms.search(
+                    query, projection=[
+                        'label', 'traces']))
         s = ""
         c = lang.comment_prefix
-        s += c + ' Query "%s" returned %d %s.\n\n' % (str(info.get('query')), len(res), 'spaces' if spaces else 'forms')
-        s += c + ' Below are two lists, one called labels, and one called traces (in matching order).\n'
-        s += c + ' Each list of traces starts with a_1 (giving the dimension).\n\n'
+        s += c + ' Query "%s" returned %d %s.\n\n' % (
+            str(info.get('query')), len(res), 'spaces' if spaces else 'forms')
+        s += c + \
+            ' Below are two lists, one called labels, and one called traces (in matching order).\n'
+        s += c + \
+            ' Each list of traces starts with a_1 (giving the dimension).\n\n'
         s += 'labels ' + lang.assignment_defn + lang.start_and_end[0] + '\\\n'
         s += ',\n'.join(rec['label'] for rec in res)
         s += lang.start_and_end[1] + '\n\n'
         s += 'traces ' + lang.assignment_defn + lang.start_and_end[0] + '\\\n'
-        s += ',\n'.join('[' + ', '.join(str(t) for t in rec['traces']) for rec in res)
+        s += ',\n'.join('[' + ', '.join(str(t)
+                                        for t in rec['traces']) for rec in res)
         s += lang.start_and_end[1]
         return self._wrap(s, 'mf_newforms_traces', lang=lang)
 
@@ -283,10 +357,11 @@ class CMF_download(Downloader):
 #        return self._download_cc(label, lang, 'an_normalized', '.cplx', 'Complex embeddings')
 #
 #    def download_satake_angles(self, label, lang='text'):
-#        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
+# return self._download_cc(label, lang, 'angles', '.angles', 'Satake
+# angles')
 
     def download_embedding(self, label, lang='text'):
-        data = db.mf_hecke_cc.lucky({'label':label},
+        data = db.mf_hecke_cc.lucky({'label': label},
                                     ['label',
                                      'embedding_root_real',
                                      'embedding_root_imag',
@@ -321,19 +396,21 @@ class CMF_download(Downloader):
             lang = 'pari'
         Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
         if lang not in Fullname:
-            abort(404,"Invalid code language specified: " + lang)
+            abort(404, "Invalid code language specified: " + lang)
         data = db.mf_newforms.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         code = form.code
         comment = code.pop('comment').get(lang).strip()
-        script = "%s %s code for working with modular form %s\n\n" % (comment,Fullname[lang],label)
+        script = "%s %s code for working with modular form %s\n\n" % (
+            comment, Fullname[lang], label)
         for k in code:
             if 'comment' not in code[k] or lang not in code[k]:
                 continue
-            script += "\n%s %s: \n" % (comment,code[k]['comment'])
-            script += code[k][lang] + ('\n' if '\n' not in code[k][lang] else '')
+            script += "\n%s %s: \n" % (comment, code[k]['comment'])
+            script += code[k][lang] + \
+                ('\n' if '\n' not in code[k][lang] else '')
         return script
 
     def download_newspace(self, label, lang='text'):
@@ -357,7 +434,8 @@ class CMF_download(Downloader):
         for attr in ['level', 'weight', 'label', 'oldspaces']:
             data[attr] = getattr(space, attr)
         data['newspaces'] = [spc['label'] for spc, forms in space.decomp]
-        data['newforms'] = sum([[form['label'] for form in forms] if spc.get('num_forms') is not None else [None] for spc, forms in space.decomp], [])
+        data['newforms'] = sum([[form['label'] for form in forms] if spc.get(
+            'num_forms') is not None else [None] for spc, forms in space.decomp], [])
         if None in data['newforms']:
             data.pop('newforms')
         data['dimgrid'] = space.dim_grid._grid
@@ -367,19 +445,22 @@ class CMF_download(Downloader):
                           title='Stored data for newspace %s,' % (label))
 
     def download_spaces(self, info):
-        lang = info.get(self.lang_key,'text').strip()
+        lang = info.get(self.lang_key, 'text').strip()
         lang = self.languages.get(lang, self.languages['sage'])
         query = literal_eval(info.get('query', '{}'))
         proj = ['label', 'analytic_conductor', 'conrey_index', 'char_order']
         spaces = list(db.mf_newspaces.search(query, projection=proj))
         s = ""
         c = lang.comment_prefix
-        s += c + ' Query "%s" returned %d spaces.\n\n' % (str(info.get('query')), len(spaces))
+        s += c + \
+            ' Query "%s" returned %d spaces.\n\n' % (
+                str(info.get('query')), len(spaces))
         s += c + ' Below one list called data.\n'
         s += c + ' Each entry in the list has the form:\n'
         s += c + " %s\n" % proj
         s += 'data ' + lang.assignment_defn + lang.start_and_end[0] + '\\\n'
-        s += ',\n'.join('[' + ', '.join(str(spc[col]) for col in proj) + ']' for spc in spaces)
+        s += ',\n'.join('[' + ', '.join(str(spc[col])
+                                        for col in proj) + ']' for spc in spaces)
         s += lang.start_and_end[1]
         return self._wrap(s, 'mf_newspaces', lang=lang)
 
@@ -402,49 +483,56 @@ class CMF_download(Downloader):
       return N;
     end function;
     """
+
     def _magma_ConvertToHeckeField(self, newform, hecke_nf):
         begin = ['function ConvertToHeckeField(input: pass_field := false, Kf := [])',
                  '    if not pass_field then']
         magma = self.languages['magma']
         if newform.dim == 1:
             return begin + [
-                    '        Kf := Rationals();',
-                    '    end if;',
-                    '    return [Kf!elt[1] : elt in input];',
-                    'end function;',
-                    ]
+                '        Kf := Rationals();',
+                '    end if;',
+                '    return [Kf!elt[1] : elt in input];',
+                'end function;',
+            ]
         elif hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
             return begin + [
-                    '        Kf := CyclotomicField(%d);' % hecke_nf['hecke_ring_cyclotomic_generator'],
-                    '    end if;',
-                    '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
-                    'end function;',
-                    ]
+                '        Kf := CyclotomicField(%d);' % hecke_nf['hecke_ring_cyclotomic_generator'],
+                '    end if;',
+                '    return [ #coeff eq Kf!0 select 0 else &+[ elt[1]*Kf.1^elt[2] : elt in coeff]  : coeff in input];',
+                'end function;',
+            ]
         elif hecke_nf['hecke_ring_power_basis']:
             return begin + [
-                    '        ' + magma.assign('poly', newform.field_poly).rstrip('\n'),
-                    '        Kf := NumberField(Polynomial([elt : elt in poly]));',
-                    '        AssignNames(~Kf, ["nu"]);',
-                    '    end if;',
-                    '    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];',
-                    '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
-                    '    return Eltseq(inp_vec);',
-                    'end function;',
-                    ]
+                '        ' + magma.assign('poly',
+                                          newform.field_poly).rstrip('\n'),
+                '        Kf := NumberField(Polynomial([elt : elt in poly]));',
+                '        AssignNames(~Kf, ["nu"]);',
+                '    end if;',
+                '    Rfbasis := [Kf.1^i : i in [0..Degree(Kf)-1]];',
+                '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
+                '    return Eltseq(inp_vec);',
+                'end function;',
+            ]
         else:
             return begin + [
-                    '        ' + magma.assign('poly', newform.field_poly).rstrip('\n'),
-                    '        Kf := NumberField(Polynomial([elt : elt in poly]));',
-                    '        AssignNames(~Kf, ["nu"]);',
-                    '    end if;',
-                    '    ' + magma.assign('Rf_num', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
-                    '    ' + magma.assign('Rf_basisdens', hecke_nf['hecke_ring_denominators']).rstrip('\n'),
-                    '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
-                    '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
-                    '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
-                    '    return Eltseq(inp_vec);',
-                    'end function;',
-                    ]
+                '        ' + magma.assign('poly',
+                                          newform.field_poly).rstrip('\n'),
+                '        Kf := NumberField(Polynomial([elt : elt in poly]));',
+                '        AssignNames(~Kf, ["nu"]);',
+                '    end if;',
+                '    ' +
+                magma.assign(
+                    'Rf_num', hecke_nf['hecke_ring_numerators']).rstrip('\n'),
+                '    ' +
+                magma.assign('Rf_basisdens',
+                             hecke_nf['hecke_ring_denominators']).rstrip('\n'),
+                '    Rf_basisnums := ChangeUniverse([[z : z in elt] : elt in Rf_num], Kf);',
+                '    Rfbasis := [Rf_basisnums[i]/Rf_basisdens[i] : i in [1..Degree(Kf)]];',
+                '    inp_vec := Vector(Rfbasis)*ChangeRing(Transpose(Matrix([[elt : elt in row] : row in input])),Kf);',
+                '    return Eltseq(inp_vec);',
+                'end function;',
+            ]
 
     def _magma_MakeCharacters(self, newform, hecke_nf):
         """
@@ -457,95 +545,108 @@ class CMF_download(Downloader):
         level = newform.level
         order = newform.char_values[1]
         char_gens = newform.char_values[2]
-        explain = '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"' % (newform.level, newform.char_orbit_label)
+        explain = '// To make the character of type GrpDrchElt, type "MakeCharacter_%d_%s();"' % (newform.level,
+                                                                                                  newform.char_orbit_label)
         self.explain.append(explain)
         out = [
-                explain,
-                'function MakeCharacter_%d_%s()' % (newform.level, newform.char_orbit_label),
-                '    ' + magma.assign('N', level).rstrip('\n'), # level
-                '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
-                '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
-                '    ' + magma.assign('v', newform.char_values[3]).rstrip('\n'),
-                '    // chi(gens[i]) = zeta^v[i]',
-                '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
-                '    F := CyclotomicField(order);',
-                '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),[F|F.1^e:e in v]);',
-                '    return MinimalBaseRingCharacter(chi);',
-                'end function;',
-                '',
-                ]
+            explain,
+            'function MakeCharacter_%d_%s()' % (newform.level, newform.char_orbit_label),
+            '    ' + magma.assign('N', level).rstrip('\n'),  # level
+            # order of the character
+            '    ' + magma.assign('order', order).rstrip('\n'),
+            '    ' + magma.assign('char_gens',
+                                  char_gens).rstrip('\n'),  # generators
+            '    ' + magma.assign('v',
+                                      newform.char_values[3]).rstrip('\n'),
+            '    // chi(gens[i]) = zeta^v[i]',
+            '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
+            '    F := CyclotomicField(order);',
+            '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),[F|F.1^e:e in v]);',
+            '    return MinimalBaseRingCharacter(chi);',
+            'end function;',
+            '',
+        ]
         if hecke_nf is None or hecke_nf['hecke_ring_character_values'] is None:
             return out + [
-                    'function MakeCharacter_%d_%s_Hecke( : Kf := Kf)' % (newform.level, newform.char_orbit_label),
-                    '    return MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
-                    'end function;'
-                    ]
+                'function MakeCharacter_%d_%s_Hecke( : Kf := Kf)' % (
+                    newform.level, newform.char_orbit_label),
+                '    return MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
+                'end function;'
+            ]
         else:
             # hecke_nf['hecke_ring_character_values'] = list of pairs
             #   [[m1,[a11,...a1n]],[m2,[a12,...,a2n]],...] where [m1,m2,...,mr]
             #   are generators for Z/NZ and [ai1,...,ain] is the value of chi(mi)
             #   expressed in terms of the Hecke ring basis or in cyclotomic representation
             #   [[c,e]] encoding c x zeta_m^e where m is hecke_ring_cyclotomic_generator
-            assert char_gens == [elt[0] for elt in hecke_nf['hecke_ring_character_values']]
-            char_values = [elt[1] for elt in hecke_nf['hecke_ring_character_values']]
-            explain = '// To make the character of type GrpDrchElt with Codomain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level, newform.char_orbit_label)
+            assert char_gens == [elt[0]
+                                 for elt in hecke_nf['hecke_ring_character_values']]
+            char_values = [elt[1]
+                           for elt in hecke_nf['hecke_ring_character_values']]
+            explain = '// To make the character of type GrpDrchElt with Codomain the HeckeField, type "MakeCharacter_%d_%s_Hecke();"' % (newform.level,
+                                                                                                                                         newform.char_orbit_label)
             self.explain.append(explain)
             out += [
                 explain,
-                'function MakeCharacter_%d_%s_Hecke( : Kf := false)' % (newform.level, newform.char_orbit_label),
-                    '    ' + magma.assign('N', level).rstrip('\n'), # level
-                    '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
-                    '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
-                    '    ' + magma.assign('char_values', char_values).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
-                    '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
-                    '    values := ConvertToHeckeField(char_values : pass_field := ISA(Type(Kf), Fld), Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
-                    '    F := Universe(values);// the Hecke field',
-                    '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),values);',
-                    '    return chi;',
-                    'end function;'
-                    ]
+                'function MakeCharacter_%d_%s_Hecke( : Kf := false)' % (
+                    newform.level, newform.char_orbit_label),
+                '    ' + magma.assign('N', level).rstrip('\n'),  # level
+                # order of the character
+                '    ' + magma.assign('order', order).rstrip('\n'),
+                # generators
+                '    ' + magma.assign('char_gens', char_gens).rstrip('\n'),
+                # chi(gens[i]) = zeta_n^exp[i]
+                '    ' + magma.assign('char_values',
+                                      char_values).rstrip('\n'),
+                '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
+                '    values := ConvertToHeckeField(char_values : pass_field := ISA(Type(Kf), Fld), Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
+                '    F := Universe(values);// the Hecke field',
+                '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),values);',
+                '    return chi;',
+                'end function;'
+            ]
             return out
 
     def _magma_ExtendMultiplicatively(self):
         return [
-                'function ExtendMultiplicatively(weight, aps, character)',
-                '    prec := NextPrime(NthPrime(#aps)) - 1; // we will able to figure out a_0 ... a_prec',
-                '    primes := PrimesUpTo(prec);',
-                '    prime_powers := primes;',
-                '    assert #primes eq #aps;',
-                '    log_prec := Floor(Log(prec)/Log(2)); // prec < 2^(log_prec+1)',
-                '    F := Universe(aps);',
-                '    FXY<X, Y> := PolynomialRing(F, 2);',
-                '    // 1/(1 - a_p T + p^(weight - 1) * char(p) T^2) = 1 + a_p T + a_{p^2} T^2 + ...',
-                '    R<T> := PowerSeriesRing(FXY : Precision := log_prec + 1);',
-                '    recursion := Coefficients(1/(1 - X*T + Y*T^2));',
-                '    coeffs := [F!0: i in [1..prec]];',
-                '    coeffs[1] := 1; //a_1',
-                '    for i := 1 to #primes do',
-                '        p := primes[i];',
-                '        coeffs[p] := aps[i];',
-                '        b := p^(weight - 1) * F!character(p);',
-                '        r := 2;',
-                '        p_power := p * p;',
-                '        //deals with powers of p',
-                '        while p_power le prec do',
-                '            Append(~prime_powers, p_power);',
-                '            coeffs[p_power] := Evaluate(recursion[r + 1], [aps[i], b]);',
-                '            p_power *:= p;',
-                '            r +:= 1;',
-                '        end while;    ',
-                '    end for;',
-                '    Sort(~prime_powers);',
-                '    for pp in prime_powers do',
-                '        for k := 1 to Floor(prec/pp) do',
-                '            if GCD(k, pp) eq 1 then',
-                '                coeffs[pp*k] := coeffs[pp]*coeffs[k];',
-                '            end if;',
-                '        end for;',
-                '    end for;',
-                '    return coeffs;',
-                'end function;',
-                ]
+            'function ExtendMultiplicatively(weight, aps, character)',
+            '    prec := NextPrime(NthPrime(#aps)) - 1; // we will able to figure out a_0 ... a_prec',
+            '    primes := PrimesUpTo(prec);',
+            '    prime_powers := primes;',
+            '    assert #primes eq #aps;',
+            '    log_prec := Floor(Log(prec)/Log(2)); // prec < 2^(log_prec+1)',
+            '    F := Universe(aps);',
+            '    FXY<X, Y> := PolynomialRing(F, 2);',
+            '    // 1/(1 - a_p T + p^(weight - 1) * char(p) T^2) = 1 + a_p T + a_{p^2} T^2 + ...',
+            '    R<T> := PowerSeriesRing(FXY : Precision := log_prec + 1);',
+            '    recursion := Coefficients(1/(1 - X*T + Y*T^2));',
+            '    coeffs := [F!0: i in [1..prec]];',
+            '    coeffs[1] := 1; //a_1',
+            '    for i := 1 to #primes do',
+            '        p := primes[i];',
+            '        coeffs[p] := aps[i];',
+            '        b := p^(weight - 1) * F!character(p);',
+            '        r := 2;',
+            '        p_power := p * p;',
+            '        //deals with powers of p',
+            '        while p_power le prec do',
+            '            Append(~prime_powers, p_power);',
+            '            coeffs[p_power] := Evaluate(recursion[r + 1], [aps[i], b]);',
+            '            p_power *:= p;',
+            '            r +:= 1;',
+            '        end while;    ',
+            '    end for;',
+            '    Sort(~prime_powers);',
+            '    for pp in prime_powers do',
+            '        for k := 1 to Floor(prec/pp) do',
+            '            if GCD(k, pp) eq 1 then',
+            '                coeffs[pp*k] := coeffs[pp]*coeffs[k];',
+            '            end if;',
+            '        end for;',
+            '    end for;',
+            '    return coeffs;',
+            'end function;',
+        ]
 
     def _magma_qexpCoeffs(self, newform, hecke_nf):
         magma = self.languages['magma']
@@ -557,10 +658,11 @@ class CMF_download(Downloader):
             '    ' + magma.assign('weight', newform.weight).rstrip('\n'),
             '    ' + magma.assign('raw_aps', hecke_nf['ap']).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
-            '    chi := MakeCharacter_%d_%s_Hecke( : Kf := Universe(aps));' % (newform.level, newform.char_orbit_label),
+            '    chi := MakeCharacter_%d_%s_Hecke( : Kf := Universe(aps));' % (
+                newform.level, newform.char_orbit_label),
             '    return ExtendMultiplicatively(weight, aps, chi);',
             'end function;',
-            ]
+        ]
 
     def _magma_MakeNewformModSym(self, newform, hecke_nf):
         """
@@ -577,23 +679,26 @@ class CMF_download(Downloader):
 
         assert k >= 2   # modular symbols only in weight >= 2
 
-        cutters = "[" + ",".join("<%d,R!%s" % (c[0], c[1]) + ">" for c in newform.hecke_cutters) + "]"
-        explain = [ '// To make the Hecke irreducible modular symbols subspace (type ModSym)',
-                    '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".","_"), ),
-                    '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.',
-                    '// The default sign is -1.  You can change this with the optional parameter "sign".'
-        ]
+        cutters = "[" + ",".join("<%d,R!%s" % (c[0],
+                                               c[1]) + ">" for c in newform.hecke_cutters) + "]"
+        explain = ['// To make the Hecke irreducible modular symbols subspace (type ModSym)',
+                   '// containing the newform, type "MakeNewformModSym_%s();".' % (newform.label.replace(".", "_"), ),
+                   '// This may take a long time!  To see verbose output, uncomment the SetVerbose line below.',
+                   '// The default sign is -1.  You can change this with the optional parameter "sign".'
+                   ]
         self.explain += explain
         return explain + [
-                "function MakeNewformModSym_%s( : sign := -1)" % (newform.label.replace(".","_"), ),
-                "    R<x> := PolynomialRing(Rationals());",
-                "    chi := MakeCharacter_%d_%s();" % (N, o),
-                "    // SetVerbose(\"ModularSymbols\", true);",
-                "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,sign)));" % (k, ),
-                "    Vf := Kernel(%s,Snew);" % (cutters,),
-                "    return Vf;",
-                "end function;",
-                ]
+            "function MakeNewformModSym_%s( : sign := -1)" % (
+                newform.label.replace(".", "_"), ),
+            "    R<x> := PolynomialRing(Rationals());",
+            "    chi := MakeCharacter_%d_%s();" % (N, o),
+            "    // SetVerbose(\"ModularSymbols\", true);",
+            "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,sign)));" % (
+                k, ),
+            "    Vf := Kernel(%s,Snew);" % (cutters,),
+            "    return Vf;",
+            "end function;",
+        ]
 
     def _magma_MakeNewformModFrm(self, newform, hecke_nf):
         """
@@ -614,39 +719,41 @@ class CMF_download(Downloader):
         as a representative q-expansion (type ModFrm) in magma.
         """
         explain = [
-                '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (newform.label.replace(".", "_"), ),
-                '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.',
-                '// The precision argument determines an initial guess on how many Fourier coefficients to use.',
-                '// This guess is increased enough to uniquely determine the newform.'
+            '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (
+                newform.label.replace(".", "_"), ),
+            '// This may take a long time!  To see verbose output, uncomment the SetVerbose lines below.',
+            '// The precision argument determines an initial guess on how many Fourier coefficients to use.',
+            '// This guess is increased enough to uniquely determine the newform.'
         ]
         self.explain += explain
         return explain + [
-                'function MakeNewformModFrm_%s(:prec:=%d)' % (newform.label.replace(".","_"), newform.dim),
-                '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
-                '    f_vec := qexpCoeffs();',
-                '    Kf := Universe(f_vec);',
-                '    // SetVerbose("ModularForms", true);',
-                '    // SetVerbose("ModularSymbols", true);',
-                '    S := CuspidalSubspace(ModularForms(chi, %d));' % newform.weight,
-                '    S := BaseChange(S, Kf);',
-                '    maxprec := NextPrime(%d) - 1;' % hecke_nf['maxp'],
-                '    while true do',
-                '        trunc_vec := Vector(Kf, [0] cat [f_vec[i]: i in [1..prec]]);',
-                # weight 1 does not have NewSpace functionality, and anyway that
-                # would be an extra possibly expensive linear algebra step
-                '        B := Basis(S, prec + 1);',
-                '        S_basismat := Matrix([AbsEltseq(g): g in B]);',
-                '        if Rank(S_basismat) eq Min(NumberOfRows(S_basismat), NumberOfColumns(S_basismat)) then',
-                '            S_basismat := ChangeRing(S_basismat,Kf);',
-                '            f_lincom := Solution(S_basismat,trunc_vec);',
-                '            f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];',
-                '            return f;',
-                '        end if;',
-                '        error if prec eq maxprec, "Unable to distinguish newform within newspace";',
-                '        prec := Min(Ceiling(1.25 * prec), maxprec);',
-                '    end while;',
-                'end function;'
-                ]
+            'function MakeNewformModFrm_%s(:prec:=%d)' % (
+                newform.label.replace(".", "_"), newform.dim),
+            '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
+            '    f_vec := qexpCoeffs();',
+            '    Kf := Universe(f_vec);',
+            '    // SetVerbose("ModularForms", true);',
+            '    // SetVerbose("ModularSymbols", true);',
+            '    S := CuspidalSubspace(ModularForms(chi, %d));' % newform.weight,
+            '    S := BaseChange(S, Kf);',
+            '    maxprec := NextPrime(%d) - 1;' % hecke_nf['maxp'],
+            '    while true do',
+            '        trunc_vec := Vector(Kf, [0] cat [f_vec[i]: i in [1..prec]]);',
+            # weight 1 does not have NewSpace functionality, and anyway that
+            # would be an extra possibly expensive linear algebra step
+            '        B := Basis(S, prec + 1);',
+            '        S_basismat := Matrix([AbsEltseq(g): g in B]);',
+            '        if Rank(S_basismat) eq Min(NumberOfRows(S_basismat), NumberOfColumns(S_basismat)) then',
+            '            S_basismat := ChangeRing(S_basismat,Kf);',
+            '            f_lincom := Solution(S_basismat,trunc_vec);',
+            '            f := &+[f_lincom[i]*Basis(S)[i] : i in [1..#Basis(S)]];',
+            '            return f;',
+            '        end if;',
+            '        error if prec eq maxprec, "Unable to distinguish newform within newspace";',
+            '        prec := Min(Ceiling(1.25 * prec), maxprec);',
+            '    end while;',
+            'end function;'
+        ]
 
     def download_newform_to_magma(self, label, lang='magma'):
         data = db.mf_newforms.lookup(label)
@@ -659,7 +766,8 @@ class CMF_download(Downloader):
         out = []
         newlines = [''] * 2
         if newform.has_exact_qexp:
-            out += self._magma_ConvertToHeckeField(newform, hecke_nf) + newlines
+            out += self._magma_ConvertToHeckeField(
+                newform, hecke_nf) + newlines
 
         out += self._magma_MakeCharacters(newform, hecke_nf) + newlines
 

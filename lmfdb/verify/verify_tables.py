@@ -13,16 +13,22 @@ import textwrap
 
 try:
     # Make lmfdb available
-    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
+    sys.path.append(
+        os.path.join(
+            os.path.dirname(
+                os.path.realpath(__file__)),
+            "../.."))
 except NameError:
     pass
 from lmfdb.verify import db
+
 
 def directory(path):
     if not os.path.isdir(path):
         raise TypeError('Not a directory')
     else:
         return path
+
 
 def find_validated_tables():
     curdir = os.path.dirname(os.path.abspath(__file__))
@@ -35,25 +41,26 @@ def find_validated_tables():
                 validated_tables.append(root_name)
     return validated_tables
 
+
 if __name__ == '__main__':
     validated_tables = find_validated_tables()
     speedtypes = ['overall', 'overall_long', 'fast', 'slow']
 
     parser = argparse.ArgumentParser(
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description=textwrap.dedent('''\
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent('''\
                 LMFDB - The L-functions and modular forms database
                 Verification scripts for classical modular forms
                 '''),
-            epilog=textwrap.dedent('''\
+        epilog=textwrap.dedent('''\
                 You may ran multiple tests in parallel by running:
                  # parallel -j THREADS sage -python {0} LOGDIR ::: {{table names}} ::: {{types}}
                 For example:
                  # parallel -j 8 sage -python {0} /scratch/logs ::: {{{1}}} ::: {{{2}}}
                 '''.format(sys.argv[0],
-                    ' '.join(validated_tables[:2]),
-                    ' '.join(speedtypes))
-            ))
+                           ' '.join(validated_tables[:2]),
+                           ' '.join(speedtypes))
+        ))
 
     parser.add_argument(
         'logdir',
@@ -83,9 +90,10 @@ if __name__ == '__main__':
         options['parallel'] = False
         db[tablename].verify(**options)
     else:
-        #use parallel to loop over all options
+        # use parallel to loop over all options
         tables = validated_tables if tablename == 'all' else [tablename]
-        types = speedtypes if options['speedtype'] == 'all' else [options['speedtype']]
+        types = speedtypes if options['speedtype'] == 'all' else [
+            options['speedtype']]
 
         with tempfile.NamedTemporaryFile(mode="w") as tables_file:
             tables_file.write('\n'.join(tables) + '\n')
@@ -94,8 +102,12 @@ if __name__ == '__main__':
                 types_file.write('\n'.join(types) + '\n')
                 types_file.flush()
                 cmd = ['parallel'] + parallel_args
-                cmd += ['-a', tables_file.name, '-a', types_file.name] # inputs
-                cmd += ['sage', '-python', os.path.realpath(__file__), options['logdir'] ]
+                cmd += ['-a', tables_file.name,
+                        '-a', types_file.name]  # inputs
+                cmd += ['sage',
+                        '-python',
+                        os.path.realpath(__file__),
+                        options['logdir']]
                 print("Running: {0}".format(subprocess.list2cmdline(cmd)))
                 exitcode = subprocess.call(cmd)
 

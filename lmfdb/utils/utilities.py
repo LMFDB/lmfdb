@@ -48,9 +48,11 @@ def integer_divisors(n):
         if len(a) == 0:
             return [1]
         q = a[0]
-        return sum([[q[0]**e*n for n in _divisors(a[1:])] for e in range(q[1]+1)],[])
+        return sum([[q[0]**e * n for n in _divisors(a[1:])]
+                    for e in range(q[1] + 1)], [])
 
     return sorted(_divisors(ZZ(n).factor()))
+
 
 def integer_prime_divisors(n):
     """ returns sorted list of prime divisors of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
@@ -58,9 +60,10 @@ def integer_prime_divisors(n):
         raise ValueError("n must be nonzero")
     return [p for p, _ in ZZ(n).factor()]
 
+
 def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return sign(n)*prod([p**(e % 2) for p, e in ZZ(n).factor()])
+    return sign(n) * prod([p**(e % 2) for p, e in ZZ(n).factor()])
 
 
 def integer_is_squarefree(n):
@@ -83,10 +86,10 @@ def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
         j = len(s) - 1
         while j > 0 and s[j] == 0:
             j -= 1
-        s = s[:j+1]
+        s = s[:j + 1]
     if len(s) == 1:
         if galois:
-            return [str(s[0]), [[0,0]]]
+            return [str(s[0]), [[0, 0]]]
         return str(s[0])
     ZZT = PolynomialRing(ZZ, vari)
     f = ZZT(s)
@@ -96,10 +99,14 @@ def list_to_factored_poly_otherorder(s, galois=False, vari='T', p=None):
         sfacts_fc[0][0] *= -1
     # if the factor is -1+T^2, replace it by 1-T^2
     # this should happen an even number of times, mod powers
-    sfacts_fc_list = [[(-g).list() if g[0] == -1 else g.list(), e] for g, e in sfacts_fc]
-    return list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois, vari, p)
+    sfacts_fc_list = [[(-g).list() if g[0] == -1 else g.list(), e]
+                      for g, e in sfacts_fc]
+    return list_factored_to_factored_poly_otherorder(
+        sfacts_fc_list, galois, vari, p)
 
-def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari='T', p=None):
+
+def list_factored_to_factored_poly_otherorder(
+        sfacts_fc_list, galois=False, vari='T', p=None):
     """
         Either return the polynomial in a nice factored form,
         or return a pair, with first entry the factored polynomial
@@ -129,7 +136,7 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
             for i, elt in enumerate(g):
                 if elt != 0:
                     val = ZZ(elt).valuation(p)
-                    gtoprint[(val, i)] = elt/p**val
+                    gtoprint[(val, i)] = elt / p**val
         glatex = latex(ZZpT(gtoprint))
         if e > 1:
             if len(glatex) != 1:
@@ -144,16 +151,19 @@ def list_factored_to_factored_poly_otherorder(sfacts_fc_list, galois=False, vari
     if galois:
         # 2 factors of degree 2
         if len(sfacts_fc_list) == 2:
-            if len(sfacts_fc_list[0][0]) == 3 and len(sfacts_fc_list[1][0]) == 3:
-                troubletest = ZZT(sfacts_fc_list[0][0]).disc()*ZZT(sfacts_fc_list[1][0]).disc()
+            if len(sfacts_fc_list[0][0]) == 3 and len(
+                    sfacts_fc_list[1][0]) == 3:
+                troubletest = ZZT(sfacts_fc_list[0][0]).disc(
+                ) * ZZT(sfacts_fc_list[1][0]).disc()
                 if troubletest.is_square():
                     gal_list = [[2, 1]]
         return outstr, gal_list
     return outstr
 
-################################################################################
+##########################################################################
 #   number utilities
-################################################################################
+##########################################################################
+
 
 def prop_int_pretty(n):
     """
@@ -161,10 +171,11 @@ def prop_int_pretty(n):
     properties table so that we can keep the formatting consistent
     """
     if abs(n) >= 10**12:
-        e = floor(log(abs(n),10))
-        return r'$%.3f\times 10^{%d}$' % (n/10**e, e)
+        e = floor(log(abs(n), 10))
+        return r'$%.3f\times 10^{%d}$' % (n / 10**e, e)
     else:
         return '$%s$' % n
+
 
 def try_int(foo):
     try:
@@ -172,12 +183,14 @@ def try_int(foo):
     except Exception:
         return foo
 
+
 def type_key(typ):
     # For now we just use a simple mechanism: strings compare at the end.
     if isinstance(typ, str):
         return 1
     else:
         return 0
+
 
 def key_for_numerically_sort(elt, split=r"[\s\.\-]"):
     # In Python 3 we can no longer compare ints and strings.
@@ -225,6 +238,7 @@ def an_list(euler_factor_polynomial_fn,
             k += 1
     return result
 
+
 def coeff_to_poly(c, var=None):
     """
     Convert a list or string representation of a polynomial to a sage polynomial.
@@ -269,11 +283,13 @@ def coeff_to_poly_multi(c, var=None):
             varposs = set(re.findall(r"[A-Za-z_]+", c))
     return PolynomialRing(QQ, list(varposs))(c)
 
+
 def coeff_to_power_series(c, var='q', prec=None):
     """
     Convert a list or dictionary giving coefficients to a sage power series.
     """
     return PowerSeriesRing(QQ, var)(c, prec)
+
 
 def display_multiset(mset, formatter=str, *args):
     """
@@ -289,7 +305,8 @@ def display_multiset(mset, formatter=str, *args):
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
-    return ', '.join([formatter(pair[0], *args)+(' x%d' % pair[1] if pair[1] > 1 else '') for pair in mset])
+    return ', '.join([formatter(pair[0], *args) + (' x%d' %
+                                                   pair[1] if pair[1] > 1 else '') for pair in mset])
 
 
 def pair2complex(pair):
@@ -315,6 +332,7 @@ def pair2complex(pair):
         ip = 0
     return [float(rp), float(ip)]
 
+
 def round_RBF_to_half_int(x):
     x = RIF(x)
     try:
@@ -324,34 +342,44 @@ def round_RBF_to_half_int(x):
     except ValueError:
         pass
     try:
-        k = (2*x).unique_round()
-        if (2*x - k).contains_zero():
-            return float(k)/2
+        k = (2 * x).unique_round()
+        if (2 * x - k).contains_zero():
+            return float(k) / 2
     except ValueError:
         pass
     try:
         return float(x)
-    except TypeError: # old version of Sage
+    except TypeError:  # old version of Sage
         return float(x.n(x.prec()))
+
 
 def round_CBF_to_half_int(x):
     return CDF(tuple(map(round_RBF_to_half_int, [x.real(), x.imag()])))
 
+
 def str_to_CBF(s):
     # in sage 8.2 or earlier this is equivalent to CBF(s)
-    s = str(s) # to convert from unicode
+    s = str(s)  # to convert from unicode
     try:
         return CBF(s)
     except TypeError:
         # Need to deal with scientific notation
         # Replace e+ and e- with placeholders so that we can split on + and -
-        s = s.replace("e+", "P").replace("E+", "P").replace("e-", "M").replace("E-", "M")
+        s = s.replace(
+            "e+",
+            "P").replace(
+            "E+",
+            "P").replace(
+            "e-",
+            "M").replace(
+                "E-",
+            "M")
         sign = 1
         s = s.lstrip('+')
         if '+' in s:
             a, b = s.rsplit('+', 1)
         elif '-' in s:
-            a, b = s.rsplit('-',1)
+            a, b = s.rsplit('-', 1)
             sign = -1
         else:
             a = ''
@@ -381,10 +409,10 @@ def letters2num(s):
     r"""
     Convert a string into a number
     """
-    letters = [ord(z)-96 for z in list(s)]
+    letters = [ord(z) - 96 for z in list(s)]
     ssum = 0
     for j in range(len(letters)):
-        ssum = ssum*26+letters[j]
+        ssum = ssum * 26 + letters[j]
     return ssum
 
 
@@ -393,9 +421,9 @@ def num2letters(n):
     Convert a number into a string of letters
     """
     if n <= 26:
-        return chr(96+n)
+        return chr(96 + n)
     else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1) % 26)
+        return num2letters(int((n - 1) / 26)) + chr(97 + (n - 1) % 26)
 
 
 def to_dict(args, exclude=[], **kwds):
@@ -427,35 +455,36 @@ def to_dict(args, exclude=[], **kwds):
 
 
 def is_exact(x):
-    return isinstance(x, int) or (isinstance(x, Element) and x.parent().is_exact())
+    return isinstance(x, int) or (isinstance(
+        x, Element) and x.parent().is_exact())
 
 
 def display_float(x, digits, method="truncate",
-                             extra_truncation_digits=3,
-                             try_halfinteger=True,
-                             no_sci=None,
-                             latex=False):
+                  extra_truncation_digits=3,
+                  try_halfinteger=True,
+                  no_sci=None,
+                  latex=False):
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         return "0"
     # if small, try to display it as an exact or half integer
     if try_halfinteger and abs(x) < 10.**digits:
         if is_exact(x):
             s = str(x)
-            if len(s) < digits + 2: # 2 = '/' + '-'
+            if len(s) < digits + 2:  # 2 = '/' + '-'
                 return str(x)
         k = round_to_half_int(x)
         if k == x:
             k2 = None
             try:
-                k2 = ZZ(2*x)
+                k2 = ZZ(2 * x)
             except TypeError:
                 pass
             # the second statement checks for overflow
-            if k2 == 2*x and (2*x + 1) - k2 == 1:
+            if k2 == 2 * x and (2 * x + 1) - k2 == 1:
                 if k2 % 2 == 0:
-                    s = '%s' % (k2/2)
+                    s = '%s' % (k2 / 2)
                 else:
-                    s = '%s' % (float(k2)/2)
+                    s = '%s' % (float(k2) / 2)
                 return s
     if method == 'truncate':
         rnd = 'RNDZ'
@@ -464,14 +493,15 @@ def display_float(x, digits, method="truncate",
     if no_sci is None:
         no_sci = 'e' not in "%.{}g".format(digits) % float(x)
     try:
-        s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
+        s = RealField(max(53, 4 * digits),
+                      rnd=rnd)(x).str(digits=digits, no_sci=no_sci)
     except TypeError:
         # older versions of Sage don't support the digits keyword
         s = RealField(max(53, 4 * digits), rnd=rnd)(x).str(no_sci=no_sci)
         point = s.find('.')
         if point != -1:
             if point < digits:
-                s = s[:digits+1]
+                s = s[:digits + 1]
             else:
                 s = s[:point]
     if latex and "e" in s:
@@ -480,9 +510,9 @@ def display_float(x, digits, method="truncate",
 
 
 def display_complex(x, y, digits, method="truncate",
-                                  parenthesis=False,
-                                  extra_truncation_digits=3,
-                                  try_halfinteger=True):
+                    parenthesis=False,
+                    extra_truncation_digits=3,
+                    try_halfinteger=True):
     """
     Examples:
     >>> display_complex(1.0001, 0, 3, parenthesis = True)
@@ -506,17 +536,17 @@ def display_complex(x, y, digits, method="truncate",
     """
     if abs(y) < 10.**(- digits - extra_truncation_digits):
         return display_float(x, digits,
-                method=method,
-                extra_truncation_digits=extra_truncation_digits,
-                try_halfinteger=try_halfinteger)
+                             method=method,
+                             extra_truncation_digits=extra_truncation_digits,
+                             try_halfinteger=try_halfinteger)
 
     if abs(x) < 10.**(- digits - extra_truncation_digits):
         x = ""
     else:
         x = display_float(x, digits,
-                method=method,
-                extra_truncation_digits=extra_truncation_digits,
-                try_halfinteger=try_halfinteger)
+                          method=method,
+                          extra_truncation_digits=extra_truncation_digits,
+                          try_halfinteger=try_halfinteger)
     if y < 0:
         y = -y
         if x == "":
@@ -529,8 +559,8 @@ def display_complex(x, y, digits, method="truncate",
         else:
             sign = " + "
     y = display_float(y, digits, method=method,
-                                 extra_truncation_digits=extra_truncation_digits,
-                                 try_halfinteger=try_halfinteger)
+                      extra_truncation_digits=extra_truncation_digits,
+                      try_halfinteger=try_halfinteger)
     if y == "1":
         y = ""
     if len(y) > 0 and y[-1] == '.':
@@ -539,6 +569,7 @@ def display_complex(x, y, digits, method="truncate",
     if parenthesis and x != "":
         res = "(" + res + ")"
     return res
+
 
 def round_to_half_int(num, fraction=2):
     """
@@ -570,9 +601,9 @@ def splitcoeff(coeff):
     return [pair2complex(s) for s in coeff.split("\n") if s]
 
 
-################################################################################
+##########################################################################
 #  display and formatting utilities
-################################################################################
+##########################################################################
 
 def comma(x, sep=","):
     """
@@ -585,7 +616,9 @@ def comma(x, sep=","):
     >>> comma("12345")
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000, sep), sep, (x % 1000)))
+    return x < 1000 and str(x) or ('%s%s%03d' % (
+        comma(x // 1000, sep), sep, (x % 1000)))
+
 
 def latex_comma(x):
     """
@@ -593,10 +626,11 @@ def latex_comma(x):
     """
     return comma(x).replace(",", "{,}")
 
+
 def format_percentage(num, denom):
     if denom == 0:
         return 'NaN'
-    return "%10.2f" % ((100.0*num)/denom)
+    return "%10.2f" % ((100.0 * num) / denom)
 
 
 def signtocolour(sign):
@@ -615,14 +649,15 @@ def rgbtohex(rgb):
     Converts an rgb string color representation into a hex string color
     representation. For example, this converts rgb(63,255,100) to #3fff64
     """
-    r,g,b = rgb[4:-1].split(',')
+    r, g, b = rgb[4:-1].split(',')
     r = int(r)
     g = int(g)
     b = int(b)
-    return "#{:02x}{:02x}{:02x}".format(r,g,b)
+    return "#{:02x}{:02x}{:02x}".format(r, g, b)
+
 
 def factor_base_factor(n, fb):
-    return [[p, valuation(n,p)] for p in fb]
+    return [[p, valuation(n, p)] for p in fb]
 
 
 def code_snippet_knowl(D, full=True):
@@ -638,7 +673,13 @@ def code_snippet_knowl(D, full=True):
     filename = D['filename']
     code = D['code']
     lines = D.get('lines')
-    code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
+    code = '\n'.join(code).replace(
+        '<',
+        '&lt;').replace(
+        '>',
+        '&gt;').replace(
+            '"',
+        '&quot;')
     if is_debug_mode():
         branch = "main"
     elif is_beta():
@@ -660,17 +701,19 @@ def code_snippet_knowl(D, full=True):
         label = filename
     inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
     inner = inner % (url, link_text)
-    return '<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
+    return '<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (
+        code, inner, label)
 
 
-################################################################################
+##########################################################################
 #  pagination utilities
-################################################################################
+##########################################################################
 
 class ValueSaver():
     """
     Takes a generator and saves values as they are generated so that values can be retrieved multiple times.
     """
+
     def __init__(self, source):
         self.source = source
         self.store = []
@@ -684,12 +727,13 @@ class ValueSaver():
 
     def __getitem__(self, i):
         if isinstance(i, slice):
-            if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (i.step is not None and i.step < 0):
+            if (i.start is not None and i.start < 0) or i.stop is None or i.stop < 0 or (
+                    i.step is not None and i.step < 0):
                 raise ValueError("Only positive indexes supported")
             self.fill(i.stop)
             return self.store[i]
         else:
-            self.fill(i+1)
+            self.fill(i + 1)
             return self.store[i]
 
     def __len__(self):
@@ -707,6 +751,7 @@ class Pagination():
     - ``endpoint`` -- an argument for ``url_for`` to get more pages
     - ``endpoint_params`` -- keyword arguments for the ``url_for`` call
     """
+
     def __init__(self, source, per_page, page, endpoint, endpoint_params):
         if isinstance(source, GeneratorType):
             source = ValueSaver(source)
@@ -722,7 +767,7 @@ class Pagination():
 
     @cached_property
     def entries(self):
-        return self.source[self.start: self.start+self.per_page]
+        return self.source[self.start: self.start + self.per_page]
 
     @cached_property
     def has_next(self):
@@ -757,9 +802,10 @@ class Pagination():
         kwds['page'] = self.page + 1
         return url_for(self.endpoint, **kwds)
 
-################################################################################
+##########################################################################
 #  web development utilities
-################################################################################
+##########################################################################
+
 
 def debug():
     """
@@ -772,20 +818,28 @@ def debug():
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
+    flash(Markup("Error: " + (errmsg %
+                              tuple("<span style='color:black'>%s</span>" %
+                                    escape(x) for x in args))), "error")
+
 
 def flash_warning(errmsg, *args):
     """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
-    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
+    flash(Markup("Warning: " + (errmsg %
+                                tuple("<span style='color:red'>%s</span>" %
+                                      escape(x) for x in args))), "warning")
+
 
 def flash_info(errmsg, *args):
     """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
-    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
+    flash(Markup("Note: " + (errmsg %
+                             tuple("<span style='color:black'>%s</span>" %
+                                   escape(x) for x in args))), "info")
 
 
-################################################################################
+##########################################################################
 #  Ajax utilities
-################################################################################
+##########################################################################
 
 # LinkedList is used in Ajax below
 class LinkedList():
@@ -850,6 +904,8 @@ class AjaxPool():
 
 
 pending = AjaxPool()
+
+
 def ajax_url(callback, *args, **kwds):
     if '_ajax_sticky' in kwds:
         _ajax_sticky = kwds.pop('_ajax_sticky')
@@ -892,7 +948,8 @@ def ajax_more(callback, *arg_list, **kwds):
         res = ''
     if arg_list:
         url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
+        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals(
+        )
     else:
         return res
 
@@ -912,7 +969,8 @@ def image_callback(G):
     return response
 
 
-def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, figsize=None, **kwds):
+def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False,
+                axes_pad=None, figsize=None, **kwds):
     """
     Convert a plot object to base64-encoded png format.
 
@@ -940,15 +998,21 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
+
 # conversion tools between timestamp different kinds of timestamp
 epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
+
+
 def datetime_to_timestamp_in_ms(dt):
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=datetime.timezone.utc)
     return int((dt - epoch).total_seconds() * 1000000)
 
+
 def timestamp_in_ms_to_datetime(ts):
-    return datetime.datetime.fromtimestamp(float(int(ts)/1000000.0), datetime.timezone.utc)
+    return datetime.datetime.fromtimestamp(
+        float(int(ts) / 1000000.0), datetime.timezone.utc)
+
 
 class WebObj:
     def __init__(self, label, data=None):
@@ -971,10 +1035,12 @@ class WebObj:
     def is_null(self):
         return self._data is None
 
+
 def plural_form(noun):
     if noun and noun[-1] != "s":
         noun += "s"
     return noun
+
 
 def pluralize(n, noun, omit_n=False, denom=None, offset=0):
     if denom is not None:

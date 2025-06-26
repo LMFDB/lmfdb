@@ -11,7 +11,8 @@ def mu_nu(hodge, signature):
 
     assert len(hodge) == motivic_weight + 1
 
-    tmp = [[(q(p) - p) / 2.] * int(hodge_index(p)) for p in range((motivic_weight + 1) // 2)]
+    tmp = [[(q(p) - p) / 2.] * int(hodge_index(p))
+           for p in range((motivic_weight + 1) // 2)]
     nu = sum(tmp, [])
 
     if motivic_weight % 2 == 0:

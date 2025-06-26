@@ -18,27 +18,27 @@ def hodge_structure(wt, gamma):  # gamma is motivic, max is 1
     """
     t = 1
     H = []
-    while 2*t > 2-wt:
+    while 2 * t > 2 - wt:
         m = gamma.count(t)
-        n = gamma.count(t-1)
+        n = gamma.count(t - 1)
         if n < m:
             raise ValueError('Gamma factors are not Hodge')
         for _ in range(1, m + 1):
             gamma.remove(t)
-            gamma.remove(t-1)
-            H.append([wt-1+t, 1-t, 2])  # eps is 2 when p!=q
-            H.append([1-t, wt-1+t, 2])  # eps is 2 when p!=q
-        t = t-1
+            gamma.remove(t - 1)
+            H.append([wt - 1 + t, 1 - t, 2])  # eps is 2 when p!=q
+            H.append([1 - t, wt - 1 + t, 2])  # eps is 2 when p!=q
+        t = t - 1
     if wt % 2 == 0:
-        wt2 = wt//2
-        e = 1-wt2
+        wt2 = wt // 2
+        e = 1 - wt2
         m = gamma.count(e)
-        for _ in range(1, m+1):
+        for _ in range(1, m + 1):
             gamma.remove(e)
             H.append([wt2, wt2, 1])
         e = -wt2
         m = gamma.count(e)
-        for _ in range(1, m+1):
+        for _ in range(1, m + 1):
             gamma.remove(e)
             H.append([wt2, wt2, 0])
     if len(gamma) != 0:
@@ -52,14 +52,14 @@ def gamma_factors(hodge):
     inverse of HodgeStructure
     weight is just the sum, format is <p,q,eps>
     """
-    wt = hodge[0][0]+hodge[0][1]
+    wt = hodge[0][0] + hodge[0][1]
     G = []
     for h in hodge:
         if h[0] == h[1]:
-            G.append(-h[1]+h[2])
+            G.append(-h[1] + h[2])
         if h[0] > h[1]:
             G.append(-h[1])
-            G.append(-h[1]+1)
+            G.append(-h[1] + 1)
     G.sort()
     return wt, G  # also returns the weight, convention is it comes first
 
@@ -73,15 +73,15 @@ def tensor_hodge(H1, H2):
     for h1 in H1:
         for h2 in H2:
             e = 2
-            v1 = h1[0]+h2[0]
-            v2 = h1[1]+h2[1]
+            v1 = h1[0] + h2[0]
+            v2 = h1[1] + h2[1]
             if v1 == v2:
                 if h1[0] > h1[1]:
                     e = 1
                 if h1[0] < h1[1]:
                     e = 0
                 if h1[0] == h1[1]:
-                    e = (h1[2]+h2[2]) % 2
+                    e = (h1[2] + h2[2]) % 2
             H.append([v1, v2, e])
     H.sort()
     return H
@@ -94,10 +94,10 @@ def hodge_to_selberg(hodge):  # normalised for s->(1-s)
     """
     R = []
     C = []
-    wt = hodge[0][0]+hodge[0][1]
+    wt = hodge[0][0] + hodge[0][1]
     for h in hodge:
         if h[0] > h[1]:
-            C.append(-h[1]+ZZ(wt)/2)  # sage rational
+            C.append(-h[1] + ZZ(wt) / 2)  # sage rational
         if h[0] == h[1]:  # R-pairs could go in C, but LMFDB does not do this!
             R.append(h[2])  # either 0 or 1
     R.sort()
@@ -113,8 +113,8 @@ def selberg_to_hodge(wt, R, C):
     # weight must be even in any case
 
     for c in C:
-        S.append(c-ZZ(wt)/2)
-        S.append(c-ZZ(wt)/2+1)
+        S.append(c - ZZ(wt) / 2)
+        S.append(c - ZZ(wt) / 2 + 1)
     return hodge_structure(wt, S)
 
 
@@ -127,9 +127,9 @@ def root_number_at_oo(hodge):  # Table 5.3 of Deligne, page 17
     u = 0
     for h in hodge:
         if h[0] < h[1]:
-            u = u+(h[1]-h[0]+1)
+            u = u + (h[1] - h[0] + 1)
         if h[0] == h[1]:
-            u = u+h[2]  # h[2] is simply eps in Deligne's notation
+            u = u + h[2]  # h[2] is simply eps in Deligne's notation
     return u % 4
 
 # Some testing code
@@ -149,14 +149,14 @@ def test_me():
     assert gamma_factors([[0, 1, 2], [1, 0, 2]]) == (1, [0, 1])
 
     assert hodge_to_selberg(hodge_structure(3, [-1, 0, 0, 1]))\
-        == (3, [], [ZZ(1)/2, ZZ(3)/2])
+        == (3, [], [ZZ(1) / 2, ZZ(3) / 2])
     assert hodge_to_selberg(
         [[0, 0, 0], [0, 0, 1], [0, 0, 1]]) == (0, [0, 1, 1], [])
     assert hodge_to_selberg(
         [[0, 0, 0], [0, 0, 0], [0, 0, 1]]) == (0, [0, 0, 1], [])
-    assert selberg_to_hodge(3, [], [ZZ(1)/2, ZZ(3)/2])\
+    assert selberg_to_hodge(3, [], [ZZ(1) / 2, ZZ(3) / 2])\
         == [[0, 3, 2], [1, 2, 2], [2, 1, 2], [3, 0, 2]]
-    assert selberg_to_hodge(1, [], [ZZ(1)/2]) == [[0, 1, 2], [1, 0, 2]]
+    assert selberg_to_hodge(1, [], [ZZ(1) / 2]) == [[0, 1, 2], [1, 0, 2]]
 
     U = [[0, 1, 2], [1, 0, 2]]
     assert hodge_to_selberg(tensor_hodge(U, U)) == (2, [0, 1], [1])

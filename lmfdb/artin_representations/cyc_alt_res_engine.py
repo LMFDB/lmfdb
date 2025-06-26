@@ -17,7 +17,8 @@
 # The "HardPrimes" case is implemented in math_classes.py
 # This implements the "CYC", "ALT" and "RES" cases.
 
-# This is based on Tim Dokchitser's desc.pdf file, with title Algorithm to compute Frobenius elements
+# This is based on Tim Dokchitser's desc.pdf file, with title Algorithm to
+# compute Frobenius elements
 
 # The only function defined here useful to the outside is
 # from_cycle_type_to_conjugacy_class_index_dict
@@ -63,7 +64,9 @@ def polynomial_conjugacy_class_matcher_fn(inp):
         for pol_fn, conjugacy_class_index in fn_cc_pairs:
             if pol_fn(alpha) == 0:
                 return conjugacy_class_index
-        raise AssertionError("alpha = %s is supposed to be root of one of %s" % (alpha, inp))
+        raise AssertionError(
+            "alpha = %s is supposed to be root of one of %s" %
+            (alpha, inp))
     return polynomial_conjugacy_class_matcher
 
 
@@ -79,7 +82,8 @@ def alpha_res_fn(data):
     def alpha_res(roots, p):
         """ Computes invariant alpha in the 'RES' case
         """
-        return sum(gamma_polynomial(r) * powers_sum(r, powers, p) for r in roots)
+        return sum(gamma_polynomial(r) * powers_sum(r, powers, p)
+                   for r in roots)
     return alpha_res
 
 
@@ -118,7 +122,8 @@ def are_conjugate_in_alternating(rho, sigma):
 
     # Now we know we only have odd length cycles, all different
     rho_augmented_cycles = sorted([(len(x), x) for x in rho.cycle_tuples()])
-    sigma_augmented_cycles = sorted([(len(x), x) for x in sigma.cycle_tuples()])
+    sigma_augmented_cycles = sorted(
+        [(len(x), x) for x in sigma.cycle_tuples()])
     # Because sort bases itself first on the first argument of the tuple, the
     # cycles match up with their lengths
     tmp = [0 for i in range(sum(rho_cycle_type))]
@@ -139,17 +144,23 @@ def alpha_alt_fn(data):
         alternating_group = AlternatingGroup(len(data))
         data_perm = Permutation(alternating_group(data))
     except TypeError:
-        raise TypeError("The data element given is not an element of the alternating group")
+        raise TypeError(
+            "The data element given is not an element of the alternating group")
 
     def alpha_alt(roots, p):
         """ Computes invariant alpha in the 'ALT' case
         """
         from sage.all import prod
-        tmp = prod(roots[i] - roots[j] for i in range(len(roots)) for j in range(i))
+        tmp = prod(roots[i] - roots[j]
+                   for i in range(len(roots)) for j in range(i))
         try:
-            frob_perm = Permutation(alternating_group(frobenius_permutation(roots, p)))
+            frob_perm = Permutation(
+                alternating_group(
+                    frobenius_permutation(
+                        roots, p)))
         except TypeError:
-            raise TypeError("The Frobenius element does not generate an element of the alternating group")
+            raise TypeError(
+                "The Frobenius element does not generate an element of the alternating group")
 
         sign = -(-1) ** are_conjugate_in_alternating(frob_perm, data_perm)
         return tmp * sign
@@ -172,7 +183,8 @@ def roots_finite_field_fn(cycle_type, defining_polynomial):
     return roots_finite_field
 
 
-def RES_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomial):
+def RES_from_cycle_type_to_conjugacy_class_index_fn(
+        technique, defining_polynomial):
     cycle_type = tuple(map(Integer, technique["CycleType"]))
     data = technique["Data"]
     classes = technique["Classes"]
@@ -181,7 +193,8 @@ def RES_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomi
 
     roots_finite_field = roots_finite_field_fn(cycle_type, defining_polynomial)
     alpha_res = alpha_res_fn(data)
-    polynomial_conjugacy_class_matcher = polynomial_conjugacy_class_matcher_fn(classes)
+    polynomial_conjugacy_class_matcher = polynomial_conjugacy_class_matcher_fn(
+        classes)
 
     def RES_from_cycle_type_to_conjugacy_class_index(p):
         # print "RESp", cycle_type, data, technique, p
@@ -192,11 +205,13 @@ def RES_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomi
         alpha = alpha_res(roots, p)
         # print "alpha is ", alpha
         return polynomial_conjugacy_class_matcher(alpha)
-    # raise NotImplementedError, "Do not know how to construct the Euler polynomial when type is RES"
+    # raise NotImplementedError, "Do not know how to construct the Euler
+    # polynomial when type is RES"
     return RES_from_cycle_type_to_conjugacy_class_index
 
 
-def ALT_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomial):
+def ALT_from_cycle_type_to_conjugacy_class_index_fn(
+        technique, defining_polynomial):
     cycle_type = tuple(map(Integer, technique["CycleType"]))
     data = technique["Data"]
     classes = technique["Classes"]
@@ -205,14 +220,16 @@ def ALT_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomi
 
     roots_finite_field = roots_finite_field_fn(cycle_type, defining_polynomial)
     alpha_alt = alpha_alt_fn(data)
-    polynomial_conjugacy_class_matcher = polynomial_conjugacy_class_matcher_fn(classes)
+    polynomial_conjugacy_class_matcher = polynomial_conjugacy_class_matcher_fn(
+        classes)
 
     def ALT_from_cycle_type_to_conjugacy_class_index(p):
         # print "ALTp", cycle_type, data, technique, p
         roots = roots_finite_field(p)
         alpha = alpha_alt(roots, p)
         return polynomial_conjugacy_class_matcher(alpha)
-    # raise NotImplementedError, "Do not know how to construct the Euler polynomial when type is ALT"
+    # raise NotImplementedError, "Do not know how to construct the Euler
+    # polynomial when type is ALT"
     return ALT_from_cycle_type_to_conjugacy_class_index
 
 
@@ -220,7 +237,8 @@ def CYC_from_cycle_type_to_conjugacy_class_index_fn(technique):
     return lambda p: technique["Classes"]
 
 
-def from_cycle_type_to_conjugacy_class_index_dict(defining_polynomial, frobenius_resolvents):
+def from_cycle_type_to_conjugacy_class_index_dict(
+        defining_polynomial, frobenius_resolvents):
     """
         This function takes as input:
             - the defining polynomial of the number field (in the [c_0, c_1, ... c_d] format)
@@ -237,11 +255,14 @@ def from_cycle_type_to_conjugacy_class_index_dict(defining_polynomial, frobenius
             tmp = CYC_from_cycle_type_to_conjugacy_class_index_fn(
                 technique)   # a bit convoluted but nice to have the same structure, helps understand
         elif technique["Algorithm"] == "RES":
-            tmp = RES_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomial)
+            tmp = RES_from_cycle_type_to_conjugacy_class_index_fn(
+                technique, defining_polynomial)
         elif technique["Algorithm"] == "ALT":
-            tmp = ALT_from_cycle_type_to_conjugacy_class_index_fn(technique, defining_polynomial)
+            tmp = ALT_from_cycle_type_to_conjugacy_class_index_fn(
+                technique, defining_polynomial)
         else:
-            raise ValueError("Only three cases are possible: 'CYC', 'RES' and 'ALT'")
+            raise ValueError(
+                "Only three cases are possible: 'CYC', 'RES' and 'ALT'")
         cycle_type = tuple(map(Integer, technique["CycleType"]))
         output_dict[cycle_type] = tmp
     return output_dict

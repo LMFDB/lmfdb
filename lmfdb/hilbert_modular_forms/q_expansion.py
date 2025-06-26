@@ -44,20 +44,26 @@ def qexpansion(field_label=None):
             field_label = v["field_label"]
             print("...new field " + field_label)
 
-            coeffs = db.nf_fields.lookup(field_label, projection="coefficients")
-            F_hmf = db.hmf_fields.lookup(field_label, projection=["ideals", "primes", "narrow_class_number"])
+            coeffs = db.nf_fields.lookup(
+                field_label, projection="coefficients")
+            F_hmf = db.hmf_fields.lookup(
+                field_label, projection=[
+                    "ideals", "primes", "narrow_class_number"])
 
             magma.eval('P<x> := PolynomialRing(Rationals());')
             magma.eval('F<w> := NumberField(Polynomial(' + str(coeffs) + '));')
             magma.eval('ZF := Integers(F);')
             magma.eval('ideals_str := [' + ','.join(F_hmf["ideals"]) + '];')
-            magma.eval('ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
+            magma.eval(
+                'ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];')
 
             magma.eval('primes_str := [' + ','.join(F_hmf["primes"]) + '];')
-            magma.eval('primes := [ideal<ZF | {F!x : x in I}> : I in primes_str];')
+            magma.eval(
+                'primes := [ideal<ZF | {F!x : x in I}> : I in primes_str];')
 
             if F_hmf.get("narrow_class_number") is None:
-                F_hmf['narrow_class_number'] = eval(preparse(magma.eval('NarrowClassNumber(F);')))
+                F_hmf['narrow_class_number'] = eval(
+                    preparse(magma.eval('NarrowClassNumber(F);')))
 
         if v["hecke_polynomial"] != 'x':
             magma.eval('fpol := ' + v["hecke_polynomial"] + ';')
@@ -66,7 +72,11 @@ def qexpansion(field_label=None):
             magma.eval('fpol := x;')
             magma.eval('K := Rationals(); e := 1;')
 
-        magma.eval('hecke_eigenvalues := [' + ','.join(v["hecke_eigenvalues"]) + '];')
+        magma.eval(
+            'hecke_eigenvalues := [' +
+            ','.join(
+                v["hecke_eigenvalues"]) +
+            '];')
 
         magma.eval('mCl := ClassGroupPrimeRepresentatives(ZF, 1*ZF, RealPlaces(F)); '
                    'Cl := [mCl(x) : x in Domain(mCl)]; '
@@ -115,12 +125,19 @@ def qexpansion(field_label=None):
                                       ' '
                                       'print [* [* [* q[1][i], hecke_eigenvalues_forideals[q[2][i]] *] : i in [1..#q[1]] *] : q in q_expansions *];')
 
-        q_expansions = eval(preparse(q_expansions_str.replace('[*', '[').replace('*]', ']')))
-        q_expansions = [[[str(c) for c in q[0]], [str(c) for c in q[1]]] for q in q_expansions]
+        q_expansions = eval(
+            preparse(
+                q_expansions_str.replace(
+                    '[*',
+                    '[').replace(
+                    '*]',
+                    ']')))
+        q_expansions = [[[str(c) for c in q[0]], [str(c)
+                                                  for c in q[1]]] for q in q_expansions]
 
         v["q_expansions"] = q_expansions
 
         # UPDATES DON'T WORK
-        #db.hmf_forms.save(v)
+        # db.hmf_forms.save(v)
 
         v = next(S)

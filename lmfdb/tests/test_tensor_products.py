@@ -14,7 +14,8 @@ class TensorProductTest(LmfdbTest):
 
     @unittest.skip("Tests tensor product of elliptic curve and Dirchlet L-functions -- skipping all tensor product tests ")
     def test_ellcurve_dirichletchar(self):
-        L = self.tc.get("/TensorProducts/show/?obj1=Character%2FDirichlet%2F13%2F2&obj2=EllipticCurve%2FQ%2F11.a2")
+        L = self.tc.get(
+            "/TensorProducts/show/?obj1=Character%2FDirichlet%2F13%2F2&obj2=EllipticCurve%2FQ%2F11.a2")
         assert '1859' in L.get_data(as_text=True)
 
     @unittest.skip("Tests tensor product of artin rep and modular form L-functions -- skipping all tensor product tests ")
@@ -25,5 +26,6 @@ class TensorProductTest(LmfdbTest):
         # relabelling.  Perhaps "ArtinRepresentation/2.31.3t2.1c1"
         L2 = self.tc.get("ArtinRepresentation/2/31/1/")
         assert "(1,2,3)" in L2.get_data(as_text=True)
-        L = self.tc.get("TensorProducts/show/?obj1=ModularForm%2FGL2%2FQ%2Fholomorphic%2F1%2F12%2F0%2Fa%2F0&obj2=ArtinRepresentation%2F2%2F31%2F1%2F")
+        L = self.tc.get(
+            "TensorProducts/show/?obj1=ModularForm%2FGL2%2FQ%2Fholomorphic%2F1%2F12%2F0%2Fa%2F0&obj2=ArtinRepresentation%2F2%2F31%2F1%2F")
         assert '961' in L.get_data(as_text=True)

@@ -8,6 +8,7 @@ from psycopg2.sql import SQL, Literal
 from .mf import MfChecker
 from ..verification import overall, overall_long, slow
 
+
 class mf_hecke_cc(MfChecker):
     table = db.mf_hecke_cc
     label_col = 'label'
@@ -19,7 +20,8 @@ class mf_hecke_cc(MfChecker):
         check that hecke_orbit_code is present in mf_newforms
         """
         # TIME about 200s
-        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
+        return self.check_crosstable_count(
+            'mf_newforms', 1, 'hecke_orbit_code')
 
     @overall_long
     def check_dim(self):
@@ -34,7 +36,8 @@ class mf_hecke_cc(MfChecker):
         """
         check that label is consistent with hecke_orbit_code, conrey_label, and embedding_index
         """
-        query = SQL("SELECT t1.label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
+        query = SQL(
+            "SELECT t1.label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
         return self._run_query(query=query)
 
     @overall_long
@@ -75,7 +78,8 @@ class mf_hecke_cc(MfChecker):
         """
         check that label is consistent with hecke_orbit_code
         """
-        return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(Identifier('hecke_orbit_code'), Identifier('label')))
+        return self._run_query(SQL("{0} != from_newform_label_to_hecke_orbit_code({1})").format(
+            Identifier('hecke_orbit_code'), Identifier('label')))
 
     @overall
     def check_label_conrey(self):
@@ -83,15 +87,24 @@ class mf_hecke_cc(MfChecker):
         check that label is consistent with conrey_lebel, embedding_index
         """
         # TIME about 230s
-        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(Identifier('label'), Identifier('conrey_index'), Identifier('embedding_index')))
+        return self._run_query(SQL("(string_to_array({0},'.'))[5:6] != array[{1}::text,{2}::text]").format(
+            Identifier('label'), Identifier('conrey_index'), Identifier('embedding_index')))
 
     @overall_long(timeout=36000)
     def check_amn(self):
         """
         Check a_{mn} = a_m*a_n when (m,n) = 1 and m,n < some bound
         """
-        pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7), (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12)][:15]
-        query = SQL("NOT ({0})").format(SQL(" AND ").join(SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(Literal(int(m)), Literal(int(n)), Literal(int(m*n))) for m, n in pairs))
+        pairs = [(2, 3), (2, 5), (3, 4), (2, 7), (3, 5), (2, 9), (4, 5), (3, 7), (2, 11), (3, 8), (2, 13), (4, 7), (2, 15), (3, 10), (5, 6), (3, 11), (2, 17), (5, 7),
+                 (4, 9), (2, 19), (3, 13), (5, 8), (3, 14), (6, 7), (4, 11), (5, 9), (3, 16), (3, 17), (4, 13), (5, 11), (7, 8), (3, 19), (3, 20), (4, 15), (5, 12)][:15]
+        query = SQL("NOT ({0})").format(
+            SQL(" AND ").join(
+                SQL("check_cc_prod(an_normalized[{0}:{0}], an_normalized[{1}:{1}], an_normalized[{2}:{2}])").format(
+                    Literal(
+                        int(m)), Literal(
+                        int(n)), Literal(
+                        int(
+                            m * n))) for m, n in pairs))
         return self._run_query(query, ratio=0.1)
 
     @overall_long
@@ -113,7 +126,11 @@ class mf_hecke_cc(MfChecker):
         for p, angle in zip(prime_range(1000), rec['angles']):
             if (level % p == 0) != (angle is None):
                 if verbose:
-                    print("Angle presence failure", p, ZZ(level).factor(), angle)
+                    print(
+                        "Angle presence failure",
+                        p,
+                        ZZ(level).factor(),
+                        angle)
                 return False
         return True
 
@@ -126,15 +143,21 @@ class mf_hecke_cc(MfChecker):
         level, _, chi = map(int, [ls[0], ls[1], ls[-2]])
         char = ConreyCharacter(level, chi)
         Z = rec['an_normalized']
-        for p in prime_range(31+1):
+        for p in prime_range(31 + 1):
             if level % p != 0:
                 # a_{p^2} = a_p^2 - chi(p)
-                charval = CC(2*char.conreyangle(int(p)) * CC.pi()*CC.gens()[0]).exp()
+                charval = CC(
+                    2 *
+                    char.conreyangle(
+                        int(p)) *
+                    CC.pi() *
+                    CC.gens()[0]).exp()
             else:
                 charval = 0
-            if (CC(*Z[p**2 - 1]) - (CC(*Z[p-1])**2 - charval)).abs() > 1e-13:
+            if (CC(*Z[p**2 - 1]) - (CC(*Z[p - 1])**2 - charval)).abs() > 1e-13:
                 if verbose:
-                    print("ap2 failure", p, CC(*Z[p**2 - 1]), CC(*Z[p-1])**2 - charval)
+                    print("ap2 failure", p, CC(
+                        *Z[p**2 - 1]), CC(*Z[p - 1])**2 - charval)
                 return False
         return True
 
@@ -144,11 +167,12 @@ class mf_hecke_cc(MfChecker):
         Check that a_{pn} = a_p * a_n for p < 32 prime, n prime to p
         """
         Z = [0] + [CC(*elt) for elt in rec['an_normalized']]
-        for pp in prime_range(len(Z)-1):
-            for k in range(1, (len(Z) - 1)//pp + 1):
+        for pp in prime_range(len(Z) - 1):
+            for k in range(1, (len(Z) - 1) // pp + 1):
                 if gcd(k, pp) == 1:
-                    if (Z[pp*k] - Z[pp]*Z[k]).abs() > 1e-13:
+                    if (Z[pp * k] - Z[pp] * Z[k]).abs() > 1e-13:
                         if verbose:
-                            print("amn failure", k, pp, Z[pp*k], Z[pp]*Z[k])
+                            print("amn failure", k, pp,
+                                  Z[pp * k], Z[pp] * Z[k])
                         return False
         return True

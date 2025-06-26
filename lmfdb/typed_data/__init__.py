@@ -1,10 +1,10 @@
 
+import artin_types
+from . import standard_types
+from . import type_generation
 from lmfdb.logger import make_logger
 typed_data_logger = make_logger("typed_data_logger", hl=True)
 
-from . import type_generation
 assert type_generation
-from . import standard_types
 assert standard_types
-import artin_types
 assert artin_types

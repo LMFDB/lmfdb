@@ -5,6 +5,7 @@ from lmfdb.lmfdb_database import db, SQL
 from .mf import MfChecker
 from ..verification import overall, slow, integer_types
 
+
 class mf_hecke_nf(MfChecker):
     table = db.mf_hecke_nf
 
@@ -15,7 +16,7 @@ class mf_hecke_nf(MfChecker):
         """
         # TIME about 20s
         return (self.check_crosstable_count('mf_newforms', 1, 'label')
-                + self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
+                + self.check_count(db.mf_newforms.count({'field_poly': {'$exists': True}})))
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -23,7 +24,8 @@ class mf_hecke_nf(MfChecker):
         check that label matches hecke_orbit_code and is present in mf_newforms
         """
         # TIME about 1s
-        return self.check_crosstable('mf_newforms', 'hecke_orbit_code', 'label')
+        return self.check_crosstable(
+            'mf_newforms', 'hecke_orbit_code', 'label')
 
     @overall
     def check_field_poly(self):
@@ -38,31 +40,32 @@ class mf_hecke_nf(MfChecker):
         """
         check that hecke_ring_rank = deg(field_poly)
         """
-        return self.check_array_len_col('field_poly', 'hecke_ring_rank', shift=1)
+        return self.check_array_len_col(
+            'field_poly', 'hecke_ring_rank', shift=1)
 
     @overall
     def check_hecke_ring_power_basis_set(self):
         """
         if hecke_ring_power_basis is set, check that hecke_ring_cyclotomic_generator is 0 and hecke_ring_numerators, ... are null
         """
-        return self.check_values({'hecke_ring_cyclotomic_generator':0,
-                                  'hecke_ring_numerators':None,
-                                  'hecke_ring_denominators':None,
-                                  'hecke_ring_inverse_numerators':None,
-                                  'hecke_ring_inverse_denominators':None},
-                                 {'hecke_ring_power_basis':True})
+        return self.check_values({'hecke_ring_cyclotomic_generator': 0,
+                                  'hecke_ring_numerators': None,
+                                  'hecke_ring_denominators': None,
+                                  'hecke_ring_inverse_numerators': None,
+                                  'hecke_ring_inverse_denominators': None},
+                                 {'hecke_ring_power_basis': True})
 
     @overall
     def check_hecke_ring_cyclotomic_generator(self):
         """
         if hecke_ring_cyclotomic_generator is greater than 0 check that hecke_ring_power_basis is false and hecke_ring_numerators, ... are null, and that field_poly_is_cyclotomic is set in mf_newforms record.
         """
-        return self.check_values({'hecke_ring_power_basis':False,
-                                  'hecke_ring_numerators':None,
-                                  'hecke_ring_denominators':None,
-                                  'hecke_ring_inverse_numerators':None,
-                                  'hecke_ring_inverse_denominators':None},
-                                 {'hecke_ring_cyclotomic_generator':{'$gt':0}})
+        return self.check_values({'hecke_ring_power_basis': False,
+                                  'hecke_ring_numerators': None,
+                                  'hecke_ring_denominators': None,
+                                  'hecke_ring_inverse_numerators': None,
+                                  'hecke_ring_inverse_denominators': None},
+                                 {'hecke_ring_cyclotomic_generator': {'$gt': 0}})
 
     @overall
     def check_field_poly_is_cyclotomic(self):
@@ -81,7 +84,8 @@ class mf_hecke_nf(MfChecker):
         """
         return self._run_query(SQL('maxp < 997'))
 
-    @slow(projection=['label', 'level', 'char_orbit_index', 'an', 'ap', 'maxp', 'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values'])
+    @slow(projection=['label', 'level', 'char_orbit_index', 'an', 'ap', 'maxp',
+                      'hecke_ring_cyclotomic_generator', 'hecke_ring_rank', 'hecke_ring_character_values'])
     def check_hecke_ring_character_values_and_an(self, rec, verbose=False):
         """
         check that hecke_ring_character_values has the correct format, depending on whether hecke_ring_cyclotomic_generator is set or not
@@ -111,7 +115,8 @@ class mf_hecke_nf(MfChecker):
             if not isinstance(val, list):
                 return False
             if m == 0:
-                return len(val) == d and all(isinstance(c, integer_types) for c in val)
+                return len(val) == d and all(
+                    isinstance(c, integer_types) for c in val)
             else:
                 for pair in val:
                     if len(pair) != 2:
@@ -119,7 +124,7 @@ class mf_hecke_nf(MfChecker):
                     if not isinstance(pair[0], integer_types):
                         return False
                     e = pair[1]
-                    if not (isinstance(e, integer_types) and 0 <= 2*e < m):
+                    if not (isinstance(e, integer_types) and 0 <= 2 * e < m):
                         return False
                 return True
         if not all(check_val(a) for a in an):
@@ -135,9 +140,9 @@ class mf_hecke_nf(MfChecker):
                         print("Check ap failure (m=%s, d=%s)" % (m, d), p, a)
             return False
         for p, a in zip(prime_range(100), ap):
-            if a != an[p-1]:
+            if a != an[p - 1]:
                 if verbose:
-                    print("Match failure", p, a, an[p-1])
+                    print("Match failure", p, a, an[p - 1])
                 return False
         if rec['char_orbit_index'] != 1:
             if rec.get('hecke_ring_character_values') is None:
@@ -150,7 +155,9 @@ class mf_hecke_nf(MfChecker):
                 total_order *= mod(g, N).multiplicative_order()
                 if not check_val(val):
                     if verbose:
-                        print("Bad character val (m=%s, d=%s)" % (m, d), g, val)
+                        print(
+                            "Bad character val (m=%s, d=%s)" %
+                            (m, d), g, val)
                     return False
             success = (total_order == euler_phi(N))
             if not success and verbose:

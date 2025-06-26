@@ -20,13 +20,15 @@ def construct_full_label(field_label, weight, level_label, label_suffix):
         weight_label = str(weight[0]) + '-'
     else:                                      # non-parallel weight
         weight_label = str(weight) + '-'
-    return ''.join([field_label, '-', weight_label, level_label, '-', label_suffix])
+    return ''.join([field_label, '-', weight_label,
+                    level_label, '-', label_suffix])
 
 
 class WebHMF():
     """
     Class for an Hilbert Modular Newform
     """
+
     def __init__(self, dbdata=None, label_or_field=None, L=None):
         """Arguments:
 
@@ -43,11 +45,12 @@ class WebHMF():
 
         """
         if dbdata:
-            logger.debug("Constructing an instance of WebHMF class from database")
+            logger.debug(
+                "Constructing an instance of WebHMF class from database")
             self.__dict__.update(dbdata)
             self.dbdata = dbdata
         else:
-            self.create_from_data_string(label_or_field,L)
+            self.create_from_data_string(label_or_field, L)
         # All other fields are handled here
         self.make_form()
 
@@ -77,10 +80,12 @@ class WebHMF():
             data['field_label'] = label
             F = HilbertNumberField(label)
             if not F:
-                raise ValueError("No Hilbert number field with label %s is in the database" % label)
+                raise ValueError(
+                    "No Hilbert number field with label %s is in the database" %
+                    label)
         elif label_or_field is None:
             raise ValueError("Must specify a valid field label")
-        else: # we were passed a HilbertNumberField already
+        else:  # we were passed a HilbertNumberField already
             F = label_or_field
             data['field_label'] = F.label
         #print("data['field_label'] = %s" % data['field_label'])
@@ -89,7 +94,7 @@ class WebHMF():
 
         i = L.find('[')
         j = L.find(']')
-        data['level_ideal'] = L[i:j+1]
+        data['level_ideal'] = L[i:j + 1]
         #print("data['level_ideal'] = %s" % data['level_ideal'])
         N, _, _ = data['level_ideal'][1:-1].split(',')
         data['level_norm'] = int(N)
@@ -108,14 +113,15 @@ class WebHMF():
         # The label
 
         i = L.find('"')
-        j = L.find('"', i+1)
-        data['label_suffix'] = L[i+1:j].replace(" ","")
+        j = L.find('"', i + 1)
+        data['label_suffix'] = L[i + 1:j].replace(" ", "")
 
         data['label'] = construct_full_label(data['field_label'],
                                              weight,
                                              data['level_label'],
                                              data['label_suffix'])
-        data['short_label'] = '-'.join([data['level_label'], data['label_suffix']])
+        data['short_label'] = '-'.join([data['level_label'],
+                                        data['label_suffix']])
         #print("data['label'] = %s" % data['label'] )
         #print("data['short_label'] = %s" % data['short_label'] )
 
@@ -124,7 +130,7 @@ class WebHMF():
         if 'x' in L:
             # non-rational
             i = L.find("x")
-            j = L.find(i+1,",")
+            j = L.find(i + 1, ",")
             data['hecke_polynomial'] = pol = L[i:j]
             data['dimension'] = 1
             x = polygen(QQ)
@@ -137,7 +143,7 @@ class WebHMF():
 
         i = L.rfind("[")
         j = L.rfind("]")
-        data['hecke_eigenvalues'] = L[i+1:j].replace(" ","").split(",")
+        data['hecke_eigenvalues'] = L[i + 1:j].replace(" ", "").split(",")
         data['hecke_eigenvalues'] = [str(s) for s in data['hecke_eigenvalues']]
         #print("hecke_eigenvalues = %s..." % data['hecke_eigenvalues'][:20])
 
@@ -155,7 +161,8 @@ class WebHMF():
             print("Some bad AL-eigenvalues found")
         # NB the following will put 0 for the eigenvalue for primes
         # whose quare divides the level; this will need fixing later.
-        data['AL_eigenvalues'] = [[F.primes[k],data['hecke_eigenvalues'][k]] for k in BP_indices]
+        data['AL_eigenvalues'] = [[F.primes[k], data['hecke_eigenvalues'][k]]
+                                  for k in BP_indices]
 
         data['is_CM'] = '?'
         data['is_base_change'] = '?'
@@ -175,9 +182,13 @@ class WebHMF():
             if key == 'hecke_eigenvalues':
                 if self.dbdata[key] != f.dbdata[key]:
                     agree = False
-                    print("Inconsistent data for HMF %s in field %s" % (lab,key))
-                    print("self has %s entries, \ndb   has %s entries" % (len(self.dbdata[key]),len(f.dbdata[key])))
-                    print("Entries differ at indices %s" % [i for i in range(len(self.dbdata[key])) if self.dbdata[key][i] != f.dbdata[key][i]])
+                    print(
+                        "Inconsistent data for HMF %s in field %s" %
+                        (lab, key))
+                    print("self has %s entries, \ndb   has %s entries" %
+                          (len(self.dbdata[key]), len(f.dbdata[key])))
+                    print("Entries differ at indices %s" % [i for i in range(
+                        len(self.dbdata[key])) if self.dbdata[key][i] != f.dbdata[key][i]])
             elif key == 'level_ideal':
                 if self.dbdata[key] != f.dbdata[key]:
                     I = field.ideal_from_str(f.dbdata['level_ideal'])[2]
@@ -191,7 +202,9 @@ class WebHMF():
             else:
                 if self.dbdata[key] != f.dbdata[key]:
                     agree = False
-                    print("Inconsistent data for HMF %s in field %s" % (lab,key))
+                    print(
+                        "Inconsistent data for HMF %s in field %s" %
+                        (lab, key))
         return agree
 
     def make_form(self):

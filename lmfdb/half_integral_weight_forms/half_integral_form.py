@@ -18,9 +18,11 @@ def half_integral_weight_form_render_webpage():
         info = {}
         credit = 'Samuele Anni, Soma Purkait'
         t = 'Half integral weight cusp forms'
-        bread = [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage"))]
+        bread = [('Half integral weight cusp forms', url_for(
+            ".half_integral_weight_form_render_webpage"))]
         info['learnmore'] = []
-        return render_template("half_integral_weight_form_all.html", info=info, credit=credit, title=t, bread=bread)
+        return render_template("half_integral_weight_form_all.html",
+                               info=info, credit=credit, title=t, bread=bread)
     else:
         return half_integral_weight_form_search(args)
 
@@ -39,14 +41,18 @@ def half_integral_weight_form_render_webpage():
              table=db.halfmf_forms,
              title='Half integral weight cusp forms search results',
              err_title='Half integral weight cusp forms search input error',
-             # columns=hiwf_columns, # doesn't work since nobody has created a search_array for halfmf_forms....
+             # columns=hiwf_columns, # doesn't work since nobody has created a
+             # search_array for halfmf_forms....
              per_page=50,
-             shortcuts={'label': lambda info: render_hiwf_webpage(label=info['label'])},
+             shortcuts={
+                 'label': lambda info: render_hiwf_webpage(
+                     label=info['label'])},
              projection=['level', 'label', 'weight', 'character', 'dim'],
              cleaners={'char': lambda v: r"\chi_{" + v['character'].split(".")[0] + "}(" + v['character'].split(".")[1] + r",\cdot)",
                        'ch_lab': lambda v: v.pop('character').replace('.', '/'),
                        'dimension': lambda v: v.pop('dim')},
-             bread=lambda: [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")), ('Search results', ' ')],
+             bread=lambda: [('Half integral weight cusp forms', url_for(
+                 ".half_integral_weight_form_render_webpage")), ('Search results', ' ')],
              properties=lambda: [])
 def half_integral_weight_form_search(info, query):
     parse_ints(info, query, 'weight')
@@ -55,7 +61,9 @@ def half_integral_weight_form_search(info, query):
         if re.match(r'^\d+.\d+$', info['character'].strip()):
             query['character'] = info['character'].strip()
         else:
-            flash_error("%s is not a valid Dirichlet character label, it should be of the form q.n", info['character'])
+            flash_error(
+                "%s is not a valid Dirichlet character label, it should be of the form q.n",
+                info['character'])
             raise ValueError
 
 
@@ -90,7 +98,12 @@ def render_hiwf_webpage(**args):
 
     info['friends'] = []
 
-    bread = [('Half integral weight cusp forms', url_for(".half_integral_weight_form_render_webpage")), ('%s' % data['label'], ' ')]
+    bread = [
+        ('Half integral weight cusp forms',
+         url_for(".half_integral_weight_form_render_webpage")),
+        ('%s' %
+         data['label'],
+         ' ')]
     t = "Half integral weight cusp forms %s" % info['label']
     credit = 'Samuele Anni and Soma Purkait'
 
@@ -130,4 +143,5 @@ def render_hiwf_webpage(**args):
         info['theta'] = theta
     else:
         info['theta'] = data['thetas']
-    return render_template("half_integral_weight_form.html", info=info, credit=credit, title=t, bread=bread)
+    return render_template("half_integral_weight_form.html",
+                           info=info, credit=credit, title=t, bread=bread)

@@ -19,6 +19,7 @@ class Sample_class (SageObject):
     A wrapper around a database entry providing various
     properties as a sage object.
     """
+
     def __init__(self, doc):
 
         self.__collection = doc.get('collection')
@@ -28,7 +29,9 @@ class Sample_class (SageObject):
         self.__field_poly = PolynomialRing(QQ, 'x')(str(doc.get('field_poly')))
         self.__field = None  # created on demand
         self.__explicit_formula = None  # create on demand
-        self.__explicit_formula_set = False  # set to true once we try to get it to avoid repeatedly trying to fetch an explicit formula that is not there
+        # set to true once we try to get it to avoid repeatedly trying to fetch
+        # an explicit formula that is not there
+        self.__explicit_formula_set = False
         self.__type = doc.get('type')
         self.__is_eigenform = doc.get('is_eigenform')
         self.__is_integral = doc.get('is_integral')
@@ -61,7 +64,8 @@ class Sample_class (SageObject):
 
     def explicit_formula(self):
         if not self.__explicit_formula_set:
-            self.__explicit_formula = db.smf_samples.lucky({'id_link': self.__id}, 'explicit_formula')
+            self.__explicit_formula = db.smf_samples.lucky(
+                {'id_link': self.__id}, 'explicit_formula')
             self.__explicit_formula_set = True
         return self.__explicit_formula
 
@@ -108,7 +112,10 @@ def Sample(collection, name):
     Return a light instance of Sample_class, where 'light' means 'without eigenvalues, Fourier coefficients or explicit formula'.
     """
     query = {'collection': {'$contains': [collection]}, 'name': name}
-    doc = db.smf_samples.lucky(query, {'Fourier_coefficients': False, 'eigenvalues': False, 'explicit_formula': False})
+    doc = db.smf_samples.lucky(query,
+                               {'Fourier_coefficients': False,
+                                'eigenvalues': False,
+                                'explicit_formula': False})
     return Sample_class(doc) if doc else None
 
 
@@ -127,9 +134,12 @@ def export(collection, name):
     Return
     """
     query = {'collection': {'$contains': [collection]}, 'name': name}
-    doc = db.smf_samples.lucky(query, {'Fourier_coefficients': False, 'eigenvalues': False})
+    doc = db.smf_samples.lucky(
+        query, {'Fourier_coefficients': False, 'eigenvalues': False})
     if doc is None:
-        raise ValueError('Error: the item "%s.%s" was not found in the database.' % (collection, name))
+        raise ValueError(
+            'Error: the item "%s.%s" was not found in the database.' %
+            (collection, name))
     id_link = doc.pop('id_link')
 
     # Fourier coefficients and eigenvalues

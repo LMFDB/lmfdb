@@ -1,9 +1,14 @@
 
+from . import main
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
 
-crystals_page = Blueprint("crystals", __name__, template_folder='templates', static_folder="static")
+crystals_page = Blueprint(
+    "crystals",
+    __name__,
+    template_folder='templates',
+    static_folder="static")
 logger = make_logger(crystals_page)
 
 
@@ -11,7 +16,7 @@ logger = make_logger(crystals_page)
 def body_class():
     return {'body_class': 'Crystals'}
 
-from . import main
-assert main # silence pyflakes
+
+assert main  # silence pyflakes
 
 app.register_blueprint(crystals_page, url_prefix="/Crystals")

@@ -159,7 +159,7 @@ def cyc_to_QZ(A) -> list:
 
 def ab_label(A, B):
     return "A{}_B{}".format('.'.join(str(c) for c in A),
-                        '.'.join(str(c) for c in B))
+                            '.'.join(str(c) for c in B))
 
 
 def list2Cnstring(li):
@@ -217,7 +217,8 @@ def display_t(t):
 def factorint(inp):
     return latex(ZZ(inp).factor())
 
-# Returns a string of val if val = 0, 1, -1, or version with p factored out otherwise
+# Returns a string of val if val = 0, 1, -1, or version with p factored
+# out otherwise
 
 
 def factor_out_p(val, p):
@@ -347,7 +348,9 @@ def by_family_label(label):
     if HGM_FAMILY_LABEL_RE.match(label):
         return render_hgm_family_webpage(normalize_family(label))
     else:
-        flash_error('%s is not a valid label for a family of hypergeometric motives', label)
+        flash_error(
+            '%s is not a valid label for a family of hypergeometric motives',
+            label)
         return redirect(url_for(".index"))
 
 
@@ -357,7 +360,9 @@ def by_label(label, t):
         full_label = normalize_family(label) + "_" + t
         return render_hgm_webpage(full_label)
     else:
-        flash_error('%s is not a valid label for a family of hypergeometric motives', label)
+        flash_error(
+            '%s is not a valid label for a family of hypergeometric motives',
+            label)
         return redirect(url_for(".index"))
 
 
@@ -367,7 +372,9 @@ def hgm_jump(info):
         return redirect(url_for_label(normalize_motive(label)), 301)
     if HGM_FAMILY_LABEL_RE.match(label):
         return redirect(url_for_label(normalize_family(label)), 301)
-    flash_error('%s is not a valid label for a hypergeometric motive or family of hypergeometric motives', label)
+    flash_error(
+        '%s is not a valid label for a hypergeometric motive or family of hypergeometric motives',
+        label)
     return redirect(url_for(".index"))
 
 
@@ -384,14 +391,30 @@ hgm_columns = SearchColumns([
                       ["A", "B", "t"],
                       lambda A, B, t: '<a href="{}">{}</a>'.format(
                           url_for('.by_family_label', label=ab_label(A, B)) if t is None else
-                          url_for('.by_label', label=ab_label(A, B), t=make_t_label(t)),
+                          url_for(
+                              '.by_label', label=ab_label(
+                                  A, B), t=make_t_label(t)),
                           ab_label(A, B) if t is None else
                           make_abt_label(A, B, t)),
                       download_col="label"),
     MathCol("A", None, "$A$", short_title="A"),
     MathCol("B", None, "$B$", short_title="B"),
-    RationalCol("t", None, "$t$", display_t, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
-    ProcessedCol("cond", None, "Conductor", factorint, contingent=lambda info: info["search_type"] == "Motive", mathmode=True, align="center"),
+    RationalCol(
+        "t",
+        None,
+        "$t$",
+        display_t,
+        contingent=lambda info: info["search_type"] == "Motive",
+        mathmode=True,
+        align="center"),
+    ProcessedCol(
+        "cond",
+        None,
+        "Conductor",
+        factorint,
+        contingent=lambda info: info["search_type"] == "Motive",
+        mathmode=True,
+        align="center"),
     MathCol("degree", None, "Degree"),
     MathCol("weight", None, "Weight"),
     MathCol("famhodge", None, "Hodge")])
@@ -420,7 +443,8 @@ class HGMDownload(Downloader):
              bread=lambda: get_bread([("Search results", '')]),
              learnmore=learnmore_list)
 def hgm_search(info, query):
-    info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
+    info["search_type"] = search_type = info.get(
+        "search_type", info.get("hst", "Motive"))
     if search_type in ["Family", "RandomFamily"]:
         query['__title__'] = r'Hypergeometric family over $\Q$ search results'
         query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
@@ -454,16 +478,24 @@ def hgm_search(info, query):
     # generic, irreducible not in DB yet
     parse_ints(info, query, 'degree')
     parse_ints(info, query, 'weight')
-    parse_bracketed_posints(info, query, 'famhodge', 'family Hodge vector', split=True)
+    parse_bracketed_posints(
+        info,
+        query,
+        'famhodge',
+        'family Hodge vector',
+        split=True)
     # Make a version to search reversed way
     if search_type not in ["Family", "RandomFamily"]:
-        parse_restricted(info, query, 'sign', allowed=['+1', 1, -1], process=int)
+        parse_restricted(
+            info, query, 'sign', allowed=[
+                '+1', 1, -1], process=int)
         parse_ints(info, query, 'conductor', 'Conductor', 'cond')
         parse_rational(info, query, 't')
         parse_bracketed_posints(info, query, 'hodge', 'Hodge vector')
 
     # Should search on analytic conductor when available
-    # Sorts A and B first by length, then by the elements of the list; could go another way
+    # Sorts A and B first by length, then by the elements of the list; could
+    # go another way
 
     info['make_label'] = make_abt_label
     info['make_t_label'] = make_t_label
@@ -477,7 +509,11 @@ def render_hgm_webpage(label):
     info = {}
     data = db.hgm_motives.lookup(label)
     if data is None:
-        abort(404, "Hypergeometric motive " + label + " was not found in the database.")
+        abort(
+            404,
+            "Hypergeometric motive " +
+            label +
+            " was not found in the database.")
     title = 'Hypergeometric motive:' + label
     A = data['A']
     B = data['B']
@@ -501,12 +537,14 @@ def render_hgm_webpage(label):
     typee = 'Orthogonal'
     if data['weight'] % 2 and not data['degree'] % 2:
         typee = 'Symplectic'
-    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
+              31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
     locinfo = data['locinfo']
     for j in range(len(locinfo)):
         locinfo[j] = [primes[j]] + locinfo[j]
         # locinfo[j][2] = poly_with_factored_coeffs(locinfo[j][2], primes[j])
-        locinfo[j][2] = list_to_factored_poly_otherorder(locinfo[j][2], vari='T')
+        locinfo[j][2] = list_to_factored_poly_otherorder(
+            locinfo[j][2], vari='T')
     hodge = data['hodge']
     famhodge = data['famhodge']
     prop2 = [
@@ -544,16 +582,36 @@ def render_hgm_webpage(label):
                 'locinfo': locinfo
                 })
     AB_data, t_data = data["label"].split("_t")
-    friends = [("Motive family " + AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
-    friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t' + t_data)))
+    friends = [
+        ("Motive family " +
+         AB_data.replace(
+             "_",
+             " "),
+            url_for(
+             ".by_family_label",
+             label=AB_data))]
+    friends.append(
+        ('L-function',
+         url_for(
+             "l_functions.l_function_hgm_page",
+             label=AB_data,
+             t='t' + t_data)))
 #    if rffriend != '':
 #        friends.append(('Discriminant root field', rffriend))
-    downloads = [("Underlying data", url_for(".hgm_data", label=data["label"]))]
+    downloads = [
+        ("Underlying data",
+         url_for(
+             ".hgm_data",
+             label=data["label"]))]
 
     AB = 'A = ' + str(A) + ', B = ' + str(B)
     t_data = str(QQ(data['t']))
 
-    bread = get_bread([('family ' + str(AB), url_for(".by_family_label", label=AB_data)), ('t = ' + t_data, ' ')])
+    bread = get_bread([('family ' + str(AB),
+                        url_for(".by_family_label",
+                                label=AB_data)),
+                       ('t = ' + t_data,
+                        ' ')])
     return render_template(
         "hgm-show-motive.html",
         title=title,
@@ -573,7 +631,8 @@ def hgm_data(label):
     if HGM_LABEL_RE.match(label):
         title = f"Hypergeometric motive data - {label}"
         fam_label = label.split("_t")[0]
-        return datapage([label, fam_label], ["hgm_motives", "hgm_families"], bread=bread, title=title)
+        return datapage([label, fam_label], ["hgm_motives",
+                                             "hgm_families"], bread=bread, title=title)
     elif HGM_FAMILY_LABEL_RE.match(label):
         title = f"Hypergeometric motive family data - {label}"
         return datapage(label, "hgm_families", bread=bread, title=title)
@@ -586,14 +645,19 @@ def parse_pandt(info, family):
     if family.euler_factors.keys():
         try:
             info['ps'] = [elt for elt in
-                    integer_options(info.get('p', family.default_prange), family.maxp)
-                    if elt <= family.maxp and is_prime(elt) and elt not in family.wild_primes]
+                          integer_options(
+                              info.get(
+                                  'p',
+                                  family.default_prange),
+                              family.maxp)
+                          if elt <= family.maxp and is_prime(elt) and elt not in family.wild_primes]
         except (ValueError, TypeError) as err:
             info['ps'] = family.defaultp
             if err.args and err.args[0] == 'Too many options':
                 errs.append(r"Only p up to %s are available" % (family.maxp))
             else:
-                errs.append("<span style='color:black'>p</span> must be an integer, range of integers or comma separated list of integers")
+                errs.append(
+                    "<span style='color:black'>p</span> must be an integer, range of integers or comma separated list of integers")
 
         try:
             if info.get('t'):
@@ -603,7 +667,8 @@ def parse_pandt(info, family):
                 info['ts'] = None
         except (ValueError, TypeError):
             info['ts'] = None
-            errs.append("<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
+            errs.append(
+                "<span style='color:black'>t</span> must be a rational or comma separated list of rationals")
     return errs
 
 
@@ -679,8 +744,8 @@ def how_computed_page():
     return render_template("multi.html", kids=['rcs.source.hgm',
                                                'rcs.ack.hgm',
                                                'rcs.cite.hgm'],
-           title=t, bread=bread,
-           learnmore=learnmore_list_remove('Source'))
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Source'))
 
 
 @hypergm_page.route("/Completeness")
@@ -688,8 +753,8 @@ def completeness_page():
     t = r'Completeness of hypergeometric motive data over $\Q$'
     bread = get_bread(('Completeness', ''))
     return render_template("single.html", kid='rcs.cande.hgm',
-           title=t, bread=bread,
-           learnmore=learnmore_list_remove('Completeness'))
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Completeness'))
 
 
 @hypergm_page.route("/Reliability")
@@ -697,8 +762,8 @@ def reliability_page():
     t = r'Reliability of hypergeometric motive data over $\Q$'
     bread = get_bread(('Reliability', ''))
     return render_template("single.html", kid='rcs.rigor.hgm',
-           title=t, bread=bread,
-           learnmore=learnmore_list_remove('Reliability'))
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('Reliability'))
 
 
 @hypergm_page.route("/Labels")
@@ -706,15 +771,16 @@ def labels_page():
     t = r'Labels for hypergeometric motives over $\Q$'
     bread = get_bread(('Labels', ''))
     return render_template("single.html", kid='hgm.field.label',
-           title=t, bread=bread,
-           learnmore=learnmore_list_remove('labels'))
+                           title=t, bread=bread,
+                           learnmore=learnmore_list_remove('labels'))
 
 
 class HGMSearchArray(SearchArray):
     _sort = [('', 'degree', ['degree', 'weight', 'A', 'B', 'label']),
-            ('weight', 'weight', ['weight', 'degree', 'A', 'B', 'label']),
-            ('cond', 'conductor', ['cond', 'degree', 'weight', 'A', 'B', 'label']),
-            ('famhodge', 'Family Hodge vector', ['degree', 'famhodge', 'weight', 'A', 'B', 'label'])]
+             ('weight', 'weight', ['weight', 'degree', 'A', 'B', 'label']),
+             ('cond', 'conductor', [
+              'cond', 'degree', 'weight', 'A', 'B', 'label']),
+             ('famhodge', 'Family Hodge vector', ['degree', 'famhodge', 'weight', 'A', 'B', 'label'])]
     sorts = {
         "Family": _sort[:2] + _sort[3:],
         "Motive": _sort,
@@ -861,7 +927,8 @@ class HGMSearchArray(SearchArray):
                     ("Random", "Random motive")]
 
     def main_array(self, info):
-        # Unused for info=None, since the browse page uses family_html() and motive_html() instead
+        # Unused for info=None, since the browse page uses family_html() and
+        # motive_html() instead
         if self._st(info) == "Family":
             return self.refine_family_array
         else:
@@ -869,21 +936,26 @@ class HGMSearchArray(SearchArray):
 
     def _html_section(self, array, buttons):
         table = self._print_table(array, None, "horizontal")
-        buttons = self._print_table([RowSpacer(8), [BasicSpacer("Display:")] + buttons], None, "vertical")
+        buttons = self._print_table(
+            [RowSpacer(8), [BasicSpacer("Display:")] + buttons], None, "vertical")
         return "\n".join([table, buttons])
 
     def family_html(self):
-        # We need a custom button for the family search so that it can be clicked by javascript
+        # We need a custom button for the family search so that it can be
+        # clicked by javascript
         class FamilySearchButton(SearchButton):
             def _input(self, info):
                 btext = "<button type='submit' id='family' name='search_type' value='Family' style='width: {width}px;'>{desc}</button>"
                 return btext.format(width=self.width, desc=self.description)
-        return self._html_section(self.family_array, [FamilySearchButton("Family", "List of families"), SearchButton("RandomFamily", "Random family")])
+        return self._html_section(self.family_array, [FamilySearchButton(
+            "Family", "List of families"), SearchButton("RandomFamily", "Random family")])
 
     def motive_html(self):
-        # We need a custom button for the motive search so that it can be clicked by javascript
+        # We need a custom button for the motive search so that it can be
+        # clicked by javascript
         class MotiveSearchButton(SearchButton):
             def _input(self, info):
                 btext = "<button type='submit' id='motive' name='search_type' value='Motive' style='width: {width}px;'>{desc}</button>"
                 return btext.format(width=self.width, desc=self.description)
-        return self._html_section(self.motive_array, [MotiveSearchButton("Motive", "List of motives"), SearchButton("RandomMotive", "Random motive")])
+        return self._html_section(self.motive_array, [MotiveSearchButton(
+            "Motive", "List of motives"), SearchButton("RandomMotive", "Random motive")])

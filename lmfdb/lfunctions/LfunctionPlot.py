@@ -231,7 +231,8 @@ def getWidthAndHeight(gls):
 
     xMax = 0
     yMax = 0
-    for origin in db.lfunc_lfunctions.search({'group': gls[0], 'conductor': gls[1]}, 'origin'):
+    for origin in db.lfunc_lfunctions.search(
+            {'group': gls[0], 'conductor': gls[1]}, 'origin'):
         splitId = origin.split('/')[6].split('_')
 
         xMax = max(float(splitId[0]), xMax)
@@ -296,7 +297,8 @@ def paintSvgFileAll(glslist):  # list of group and level
             ans += "' cy='" + str(height - float(y) * yfactor)[0:7]
             ans += "' r='" + str(radius)
             ans += "' style='fill:" + signtocolour(sign) + "'>"
-            ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
+            ans += "<title>" + str((x, y)).replace("u",
+                                                   "").replace("'", "") + "</title>"
             ans += "</circle></a>\n"
 
     ans += svgEnd()
@@ -351,7 +353,8 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
                              + str(i) + "</text>\n")
 
         xmlText = xmlText + ("<line x1='0' y1='"
-                             + str(height - i * yfactor) + "' x2='" + str(width)
+                             + str(height - i * yfactor) +
+                             "' x2='" + str(width)
                              + "' y2='" + str(height - i * yfactor)
                              + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
@@ -369,7 +372,8 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 # ============================================
 
 
-def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, yMin=1, xoffset=1, dashedx=5, dashedy=5):
+def paintCSNew(width, height, xMax, yMax, xfactor, yfactor,
+               ticlength, xMin=5, yMin=1, xoffset=1, dashedx=5, dashedy=5):
     # x-axis
     xmlText = ("<line x1='0' y1='" + str(height) + "' x2='"
                + str(width) + "' y2='" + str(height)
@@ -389,23 +393,25 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, y
 
     for i in srange(xMin, xMax, xsign * dashedx):
         xmlText = xmlText + ("<line x1='" + str(i * xsign * xfactor) + "' y1='"
-                             + str(ysign*height - ticlength) + "' x2='"
-                             + str(i * xfactor) + "' y2='" + str(ysign * height)
+                             + str(ysign * height - ticlength) + "' x2='"
+                             + str(i * xfactor) + "' y2='" +
+                             str(ysign * height)
                              + "' style='stroke:rgb(0,0,0);'/>\n")
 
     # y-axis
     xmlText += "<line x1='0' y1='%d' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n" % height
-    for i in srange(yMin, yMax + 1, ysign*dashedy):
+    for i in srange(yMin, yMax + 1, ysign * dashedy):
         xmlText = xmlText + ("<text x='-10' y='"
-                             + str(ysign*height - i * ysign * yfactor + 3)
+                             + str(ysign * height - i * ysign * yfactor + 3)
                              + "' style='fill:rgb(102,102,102);font-size:11px;'>"
                              + "{:.5g}".format(float(i)) + "</text>\n")
 
         xmlText = xmlText + ("<line x1='0' y1='"
-                             + str(height - i * ysign * yfactor) + "' x2='" + str(xsign*width)
+                             + str(height - i * ysign * yfactor) +
+                             "' x2='" + str(xsign * width)
                              + "' y2='" + str(height - i * ysign * yfactor)
                              + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
-    for i in srange(yMin, yMax + 1, ysign*dashedy):
+    for i in srange(yMin, yMax + 1, ysign * dashedy):
         xmlText = xmlText + ("<line x1='0' y1='"
                              + str(height - i * ysign * yfactor) + "' x2='"
                              + str(ticlength) + "' y2='"
@@ -426,12 +432,24 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, y
 # ============================================
 def getOneGraphHtmlHolo(condmax):
     if condmax == 1:
-        pic = (url_for('static', filename='images/browseGraphHoloNew_1.svg'), 2023, 610)
+        pic = (
+            url_for(
+                'static',
+                filename='images/browseGraphHoloNew_1.svg'),
+            2023,
+            610)
     elif condmax == 0.501:
-        pic = (url_for('static', filename='images/browseGraphHoloNew_0.501.svg'), 1020, 550)
+        pic = (
+            url_for(
+                'static',
+                filename='images/browseGraphHoloNew_0.501.svg'),
+            1020,
+            550)
     else:
-        logger.debug("Warning: image is generated on the fly, not from static, this is slow!")
-        pic = (url_for('.browseGraphHoloNew', **{'condmax': condmax}), 1010, 600)
+        logger.debug(
+            "Warning: image is generated on the fly, not from static, this is slow!")
+        pic = (url_for('.browseGraphHoloNew', **
+                       {'condmax': condmax}), 1010, 600)
     logger.debug(pic[0])
     ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic
            + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
@@ -476,7 +494,7 @@ def paintSvgHoloNew(condmax):
         # do sage -pip install seaborn
         import seaborn
         # https://seaborn.pydata.org/tutorial/color_palettes.html#sequential-cubehelix-palettes
-        return ["("+str(100*r)+r"%, " + str(100*g)+r"%, " + str(100*b)+r"%"+")"
+        return ["(" + str(100 * r) + r"%, " + str(100 * g) + r"%, " + str(100 * b) + r"%" + ")"
                 for r, g, b in seaborn.cubehelix_palette(num_weights, start=0, light=.75, rot=3.8)]
 
     radius = 3
@@ -485,26 +503,42 @@ def paintSvgHoloNew(condmax):
     max_k = 0  # the largest weight we see
 
     for nf in db.mf_newforms.search({'analytic_conductor': {'$lte': condmax}},
-                                    projection=['analytic_conductor', 'label', 'level', 'weight', 'conrey_index', 'dim', 'char_degree'],
-                                    sort=[('analytic_conductor', 1)]):
+                                    projection=[
+            'analytic_conductor',
+            'label',
+            'level',
+            'weight',
+            'conrey_index',
+            'dim',
+            'char_degree'],
+            sort=[('analytic_conductor', 1)]):
         _, k, _, hecke_letter = nf['label'].split('.')
         max_k = max(int(k), max_k)
         if nf['weight'] not in values:
             values[nf['weight']] = []
         if nf['dim'] == 1:
-            lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(nf['label'].split('.'))
-            z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
+            lfun_url = 'ModularForm/GL2/Q/holomorphic/' + \
+                '/'.join(nf['label'].split('.'))
+            z1 = db.lfunc_lfunctions.lucky(
+                {'origin': lfun_url}, projection='z1')
             if z1 is not None:
-                values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
+                values[nf['weight']].append(
+                    [nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
-            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit(100)
+            conrey_orbit = ConreyCharacter(
+                modulus=nf['level'],
+                number=nf['conrey_index']).galois_orbit(100)
             for character in conrey_orbit:
                 for j in range(nf['dim'] // nf['char_degree']):
-                    label = nf['label'].split('.') + [str(character), str(j + 1)]
-                    lfun_url = 'ModularForm/GL2/Q/holomorphic/' + '/'.join(label)
-                    z1 = db.lfunc_lfunctions.lucky({'origin': lfun_url}, projection='z1')
+                    label = nf['label'].split(
+                        '.') + [str(character), str(j + 1)]
+                    lfun_url = 'ModularForm/GL2/Q/holomorphic/' + \
+                        '/'.join(label)
+                    z1 = db.lfunc_lfunctions.lucky(
+                        {'origin': lfun_url}, projection='z1')
                     if z1 is not None:
-                        values[nf['weight']].append([label, z1, lfun_url, nf["analytic_conductor"]])
+                        values[nf['weight']].append(
+                            [label, z1, lfun_url, nf["analytic_conductor"]])
 
     points = []
     y_max = 0.0
@@ -515,8 +549,8 @@ def paintSvgHoloNew(condmax):
     for wei in sorted(values.keys()):
         for label, z1, lfun_url, Nk2 in values[wei]:
             k = label[1]
-            x = x_scale*float(Nk2)
-            y = y_scale*z1
+            x = x_scale * float(Nk2)
+            y = y_scale * z1
             y_max = max(y, y_max)
             x_max = max(x, x_max)
             points.append((x, y, lfun_url, ".".join(map(str, label)), k))
@@ -526,11 +560,14 @@ def paintSvgHoloNew(condmax):
     ans = svgBegin()
     ans += "<g transform='translate(10 0)'>\n"  # give ourselves a little space
 
-    cfw = colorsForWeights(max_k)  # pick our colour palette we need colors for weights 1 (at some point) to max_k inclusive
+    # pick our colour palette we need colors for weights 1 (at some point) to
+    # max_k inclusive
+    cfw = colorsForWeights(max_k)
 
     for p in points:
         x = str(p[0])
-        y = str(y_max + y_scale/2 - p[1])  # flip the graph + a little space as the largest value is approx 9.2
+        # flip the graph + a little space as the largest value is approx 9.2
+        y = str(y_max + y_scale / 2 - p[1])
         ans += "<a xlink:href='" + "/L/" + p[2] + "/' target='_top'>\n"
         ans += "<circle cx='" + x
         ans += "' cy='" + y
@@ -540,10 +577,10 @@ def paintSvgHoloNew(condmax):
         ans += "</circle></a>\n"
 
     # axes on top of dots
-    ans += paintCSNew(x_max - x_offset*x_scale,
-                      y_max + y_scale/2,
-                      x_max/x_scale,
-                      y_max/y_scale,
+    ans += paintCSNew(x_max - x_offset * x_scale,
+                      y_max + y_scale / 2,
+                      x_max / x_scale,
+                      y_max / y_scale,
                       x_scale,
                       y_scale,
                       7, xoffset=x_offset, dashedx=0.05, dashedy=1, xMin=0)
@@ -582,7 +619,8 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
-            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(x) + "/" + str(y) + "/1/"
+            linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + \
+                str(x) + "/" + str(y) + "/1/"
             try:
                 WS = WebGamma1Space(level=x, weight=y)
             except ValueError:
@@ -591,7 +629,8 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             # numlabels = len(WS.decomp)  # one label per Galois orbit
             # thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) # not used
-            # countminus = 0   # count how many Galois orbits have sign Minus (- 1) # not used
+            # countminus = 0   # count how many Galois orbits have sign Minus
+            # (- 1) # not used
             ybaseplus = y  # baseline y-coord for plus cases
             ybaseminus = y  # baseline y-coord for minus cases
             numpluslabels = 0
@@ -599,10 +638,15 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
             for newsp in newspaces:  # looping over Galois orbit
                 for MF in newsp[1]:
                     print(MF)
-                    linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
-                    numberwithlabel = MF['dim']  # number of forms in the Galois orbit
-                    # frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
-                    self_dual = MF['char_is_real'] * (-1) ** float(y / 2)  # sign of functional equation
+                    linkurl = "/L/ModularForm/GL2/Q/holomorphic/%d/%d/%s/%s/" % (
+                        x, y, MF['char_orbit_label'], cremona_letter_code(MF['hecke_orbit'] - 1))
+                    # number of forms in the Galois orbit
+                    numberwithlabel = MF['dim']
+                    # frickeeigenvalue =
+                    # prod(MF.atkin_lehner_eigenvalues().values())  # gives
+                    # Fricke eigenvalue
+                    # sign of functional equation
+                    self_dual = MF['char_is_real'] * (-1) ** float(y / 2)
                     xbase = x - self_dual * (xdotspacing / 2.0)
 
                     if self_dual > 0:  # go to right in BLUE if plus
@@ -621,9 +665,12 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                         if self_dual < 0:   # move over more to position numbers on minus side.
                             xbase += self_dual * xdotspacing
                         ybase += -0.5 * ydotspacing
-                        if (self_dual > 0 and numpluslabels > 1) or (self_dual < 0 and numminuslabels > 1):
+                        if (self_dual > 0 and numpluslabels > 1) or (
+                                self_dual < 0 and numminuslabels > 1):
                             ybase += ydotspacing
-                        ans += "<a xlink:href='" + url_for('not_yet_implemented') + "' target='_top'>\n"
+                        ans += "<a xlink:href='" + \
+                            url_for('not_yet_implemented') + \
+                            "' target='_top'>\n"
 
     #  TODO: Implement when there is more than maxdots forms
 
@@ -638,24 +685,35 @@ def paintSvgHolo(Nmin, Nmax, kmin, kmax):
                             ybaseplus += 1.5 * ydotspacing
                     else:  # otherwise, use one dot per form in orbit, connected with a line
                         if numberwithlabel > 1:  # join dots if there are at least two
-                            # add lines first and then dots to prevent line from hiding link
+                            # add lines first and then dots to prevent line
+                            # from hiding link
                             firstcenterx = xbase + self_dual * xdotspacing
                             firstcentery = ybase
-                            lastcenterx = xbase + (numberwithlabel * self_dual * xdotspacing)
+                            lastcenterx = xbase + \
+                                (numberwithlabel * self_dual * xdotspacing)
                             lastcentery = ybase
-                            ans += "<line x1='%s' " % str(float(firstcenterx) * xfactor)[0:7]
-                            ans += "y1='%s' " % str(float(height - firstcentery * yfactor))[0:7]
-                            ans += "x2='%s' " % str(float(lastcenterx) * xfactor)[0:7]
-                            ans += "y2='%s' " % str(float(height - lastcentery * yfactor))[0:7]
+                            ans += "<line x1='%s' " % str(
+                                float(firstcenterx) * xfactor)[0:7]
+                            ans += "y1='%s' " % str(float(height -
+                                                          firstcentery * yfactor))[0:7]
+                            ans += "x2='%s' " % str(float(lastcenterx)
+                                                    * xfactor)[0:7]
+                            ans += "y2='%s' " % str(float(height -
+                                                          lastcentery * yfactor))[0:7]
                             ans += "style='stroke:%s;stroke-width:2.4'/>" % thiscolour
                         for number in range(numberwithlabel):
                             xbase += self_dual * xdotspacing
-                            ans += "<a xlink:href='" + linkurl + str(number + 1) + "/' target='_top'>\n"
-                            ans += "<circle cx='" + str(float(xbase) * xfactor)[0:7]
-                            ans += "' cy='" + str(height - float(ybase) * yfactor)[0:7]
+                            ans += "<a xlink:href='" + linkurl + \
+                                str(number + 1) + "/' target='_top'>\n"
+                            ans += "<circle cx='" + \
+                                str(float(xbase) * xfactor)[0:7]
+                            ans += "' cy='" + \
+                                str(height - float(ybase) * yfactor)[0:7]
                             ans += "' r='" + str(radius)
                             ans += "' style='fill:" + thiscolour + "'>"
-                            ans += "<title>" + str((x, y)).replace("u", "").replace("'", "") + "</title>"
+                            ans += "<title>" + \
+                                str((x, y)).replace("u", "").replace(
+                                    "'", "") + "</title>"
                             ans += "</circle></a>\n"
 
     ans += svgEnd()
@@ -714,7 +772,8 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
 
         if i % 4 == 0:  # put dashes every four units
             xmlText = xmlText + ("<line x1='0' y1='"
-                                 + str(height - i * yfactor) + "' x2='" + str(width)
+                                 + str(height - i * yfactor) +
+                                 "' x2='" + str(width)
                                  + "' y2='" + str(height - i * yfactor)
                                  + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
@@ -754,21 +813,26 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
     height = yfactor * yMax + extraSpace
 
     # make the coordinate system
-    ans += paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength)
+    ans += paintCSHoloTMP(width, height, xMax, yMax,
+                          xfactor, yfactor, ticlength)
     alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
 
 # create appearanceinfo, common to all points
     appearanceinfo = []
 
-# loop over levels and weights, using plotsector to put the appropriate dots at each lattice point
+# loop over levels and weights, using plotsector to put the appropriate
+# dots at each lattice point
     for x in range(int(Nmin), int(Nmax) + 1):  # x is the level
         for y in range(int(kmin), int(kmax) + 1, 2):  # y is the weight
             # lid = "(" + str(x) + "," + str(y) + ")" # not used
-            # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" + str(x) + "/1/" # not used
-            WS = WebGamma1Space(level=x, weight=y)  # space of modular forms of weight y, level x
+            # linkurl = "/L/ModularForm/GL2/Q/holomorphic/" + str(y) + "/" +
+            # str(x) + "/1/" # not used
+            # space of modular forms of weight y, level x
+            WS = WebGamma1Space(level=x, weight=y)
             galois_orbits = WS.decomp  # make a list of Galois orbits
             numlabels = len(galois_orbits)  # one label per Galois orbit
-            thelabels = alphabet[0:numlabels]    # list of labels for the Galois orbits for weight y, level x
+            # list of labels for the Galois orbits for weight y, level x
+            thelabels = alphabet[0:numlabels]
             # countplus = 0   # count how many Galois orbits have sign Plus (+ 1) (not used)
             # countminus = 0   # count how many Galois orbits have sign Minus (- 1) (not used)
             # ybaseplus = y  # baseline y-coord for plus cases (not used)
@@ -783,14 +847,18 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             dimensioninfo['vertexlocation'] = [x, y]
             dimensioninfo['maxdots'] = maxdots
             dimensioninfo['dotspacing'] = [xdotspacing, ydotspacing]
-            dimensioninfo['edge'] = [[0, 1], [1, 0]]     # unit vectors defining edges of sector
-            # dimensioninfo['edgelength'] = [float(dimensioninfo['scale'][0])/float(Nmax), float(dimensioninfo['scale'][1])/float(kmax)] #add comment
+            # unit vectors defining edges of sector
+            dimensioninfo['edge'] = [[0, 1], [1, 0]]
+            # dimensioninfo['edgelength'] =
+            # [float(dimensioninfo['scale'][0])/float(Nmax),
+            # float(dimensioninfo['scale'][1])/float(kmax)] #add comment
             dimensioninfo['edgelength'] = [0.5, 0.5]
             dimensioninfo['dotradius'] = radius
             dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
             dimensioninfo['firstdotoffset'] = [0.0, 0.0]
             appearanceinfo = {}
-            # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
+            # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0
+            # #just a guess
             appearanceinfo['edgewidth'] = [0, 0]  # remove the sector edges
             appearanceinfo['edgestyle'] = 'stroke-dasharray:3,3'
             appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
@@ -809,25 +877,35 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit
                     # do '+' case first
-                    MF = WebNewform.by_label(label=label)   # one of the Galois orbits for weight y, level x
+                    # one of the Galois orbits for weight y, level x
+                    MF = WebNewform.by_label(label=label)
                     numberwithlabel = MF.degree()  # number of forms in the Galois orbit
                     if x == 1:  # For level 1, the sign is always plus
                         signfe = 1
                     else:
                         # signfe = -1
-                        frickeeigenvalue = prod(MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
-                        signfe = frickeeigenvalue * (-1) ** float(y / 2)  # sign of functional equation
+                        frickeeigenvalue = prod(
+                            MF.atkin_lehner_eigenvalues().values())  # gives Fricke eigenvalue
+                        # sign of functional equation
+                        signfe = frickeeigenvalue * (-1) ** float(y / 2)
                     if signfe == signtmp:  # we find an orbit with sign of "signtmp"
                         if signfe == 1:
                             dimensioninfo['edge'] = [[0, 1], [1, 0]]
-                            # unit vectors defining edges of sector for signfe positive
+                            # unit vectors defining edges of sector for signfe
+                            # positive
                         else:
                             # dimensioninfo['edge'] = [[0,1],[-1,0]]     # unit vectors defining edges
                             # of sector for signfe negative
                             dimensioninfo['edge'] = [[0, -1], [-1, 0]]
-                            # unit vectors defining edges of sector for signfe negative
-                        dimensioninfo['dotspacing'] = [signfe * xdotspacing, ydotspacing]
-                        dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
+                            # unit vectors defining edges of sector for signfe
+                            # negative
+                        dimensioninfo['dotspacing'] = [
+                            signfe * xdotspacing, ydotspacing]
+                        dimensioninfo['firstdotoffset'] = [0.5 *
+                                                           (dimensioninfo['dotspacing'][0] *
+                                                            dimensioninfo['edge'][0][0] +
+                                                               dimensioninfo['dotspacing'][1] *
+                                                               dimensioninfo['edge'][1][0]), 0]
                         signcolour = signtocolour(signfe)
                         appearanceinfo['edgecolor'] = signcolour
                         orbitdescriptionlist = [{'label': label,
@@ -937,7 +1015,8 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
     edge = dimensioninfo['edge']
 
     urlbase = urlinfo['base']
-    for arg, val in urlinfo['space'].items():   # this does things like: level=4&weight=8&character=0
+    for arg, val in urlinfo['space'].items(
+    ):   # this does things like: level=4&weight=8&character=0
         if type(val).__name__ != 'dict' and type(val).__name__ != 'list':
             urlbase += arg + "=" + str(val) + "&amp;"
 
@@ -956,7 +1035,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
         # no line if 1 dot or >maxdots
         if len(orbit) > 1 and len(orbit) <= maxdots:
             ans += myline(offset, scale, orbitbase, lincomb(1, orbitbase, (len(orbit) - 1) * dotspacing[1],
-                          edge[1]), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
+                                                            edge[1]), dimensioninfo['connectinglinewidth'], "", appearanceinfo['edgecolor'])
             ans += "\n"
         elif len(orbit) > maxdots:
             orbitelem = orbit[0]
@@ -967,7 +1046,9 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
                           'fontsize'], appearanceinfo['fontweight'], orbitcolor)
             ans += "</a>"
             ans += "\n"
-            break   # we are done with this orbit if there are more than maxdots cuspforms in the orbit (re-check)***
+            # we are done with this orbit if there are more than maxdots
+            # cuspforms in the orbit (re-check)***
+            break
         dotlocation = orbitbase
         for orbitelem in orbit:  # loop through the elements in an orbit, drawing a dot and making a link
             orbitcolor = orbitelem['color']
@@ -978,7 +1059,8 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             # ans += mydot(vertexlocation, scale, dotlocation,
             # dimensioninfo['dotradius'], orbitcolor,"",orbitelem['title'])
             # ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor,"","test title")
-            ans += mydot(offset, scale, dotlocation, dimensioninfo['dotradius'], orbitcolor, "", "")
+            ans += mydot(offset, scale, dotlocation,
+                         dimensioninfo['dotradius'], orbitcolor, "", "")
             ans += "</a>"
             ans += "\n"
             dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
@@ -999,7 +1081,8 @@ def addlists(list1, list2):
 
 
 def lincomb(scalar1, list1, scalar2, list2):
-    return ([scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1))])
+    return ([scalar1 * list1[j] + scalar2 * list2[j]
+             for j in range(len(list1))])
 
 
 # ============================================
@@ -1023,7 +1106,8 @@ def mydot(offset, scale, startpt, radius, color, shape, title):
 #    of the output coordinates, and the local coordinates of the
 #    location of the text
 # ============================================
-def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcolor):
+def mytext(thetext, offset, scale, startpt, endpt,
+           fontsize, fontweight, fontcolor):
     ans = "<text "
     mystartpt = scoord(offset, scale, startpt)
     ans += "x='" + str(mystartpt[0]) + "' "

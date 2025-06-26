@@ -1,5 +1,6 @@
 # Functions for generating list of L-functions with certain origins
-# TODO: There should all be modified to use lfunc.instances rather than the origin tables
+# TODO: There should all be modified to use lfunc.instances rather than
+# the origin tables
 
 from lmfdb import db
 
@@ -51,7 +52,8 @@ def EC_from_modform(level, iso):
 #    if field_label == "1.1.1.1":
 #        return db.ec_curvedata.count({'lmfdb_iso':long_isogeny_class_label})
 #    else:
-#        return db.ec_nfcurves.count({'class_label':field_label + "." + long_isogeny_class_label})
+# return db.ec_nfcurves.count({'class_label':field_label + "." +
+# long_isogeny_class_label})
 
 # def modform_from_EC(label):
 #    ''' Returns the level and label for the cusp form corresponding

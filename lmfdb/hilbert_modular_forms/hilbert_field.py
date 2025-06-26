@@ -8,6 +8,7 @@ from sage.all import ZZ
 from lmfdb import db
 from lmfdb.number_fields.web_number_field import WebNumberField
 
+
 def findvar(L):
     """
     Return the variable name from a collection of objects
@@ -18,7 +19,8 @@ def findvar(L):
                 return c
     return None
 
-def str2fieldelt(F,strg):
+
+def str2fieldelt(F, strg):
     """Given a string strg representing an element of the number field F
     as a polynomial in its generator, return the number field element.
 
@@ -28,7 +30,8 @@ def str2fieldelt(F,strg):
     """
     return F(strg)
 
-def str2ideal(F,strg):
+
+def str2ideal(F, strg):
     """Given a string strg representing an ideal of the number field F,
     return (N,n,I,gen) where I is the ideal, N its norm, n the least
     positive integer in I and gen a second generator.
@@ -37,14 +40,15 @@ def str2ideal(F,strg):
 
     strg is a string representing an ideal of F in the form '[N,n,gen]'
     """
-    idlstr = strg[1:-1].replace(' ','').split(',')
-    N = ZZ(idlstr[0]) #norm
-    n = ZZ(idlstr[1]) #smallest integer
-    gen = str2fieldelt(F,idlstr[2]) #other generator
-    idl = F.ideal(n,gen)
-    return N,n,idl,gen
+    idlstr = strg[1:-1].replace(' ', '').split(',')
+    N = ZZ(idlstr[0])  # norm
+    n = ZZ(idlstr[1])  # smallest integer
+    gen = str2fieldelt(F, idlstr[2])  # other generator
+    idl = F.ideal(n, gen)
+    return N, n, idl, gen
 
-def niceideals(F, ideals): #HNF + sage ideal + label
+
+def niceideals(F, ideals):  # HNF + sage ideal + label
     """Convert a list of ideas from strongs to actual NumberField ideals
 
     F is a Sage NumberField
@@ -61,7 +65,7 @@ def niceideals(F, ideals): #HNF + sage ideal + label
     ilabel = 1
     norm = ZZ(0)
     for i in range(len(ideals)):
-        N,n,idl,_ = str2ideal(F,ideals[i])
+        N, n, idl, _ = str2ideal(F, ideals[i])
         assert idl.norm() == N and idl.smallest_integer() == n
         if N != norm:
             ilabel = ZZ(1)
@@ -72,17 +76,18 @@ def niceideals(F, ideals): #HNF + sage ideal + label
         ilabel += 1
     return nideals
 
-def conjideals(ideals, auts): #(label,g) -> label
+
+def conjideals(ideals, auts):  # (label,g) -> label
     cideals = {}
     from copy import copy
     ideals = sorted(copy(ideals))
-    for ig,g in enumerate(auts):
+    for ig, g in enumerate(auts):
         gideals = copy(ideals)
         for I in gideals:
             I[0] = g(I[1]).pari_hnf().python()
         gideals.sort()
-        for I,J in zip(ideals,gideals):
-            cideals[(J[2],ig)] = I[2]
+        for I, J in zip(ideals, gideals):
+            cideals[(J[2], ig)] = I[2]
     return cideals
 
 
@@ -91,12 +96,13 @@ class HilbertNumberField(WebNumberField):
     Subclass of WebNumberField which also facilitates extraction of
     the number field data stored in the Hilbert modular forms database.
     """
+
     def __init__(self, label):
         self.Fdata = db.hmf_fields.lookup(label)
         self.ideals = self.Fdata['ideals']
         self.primes = self.Fdata['primes']
         self.var = findvar(self.ideals)
-        WebNumberField.__init__(self,label,gen_name=self.var)
+        WebNumberField.__init__(self, label, gen_name=self.var)
         self.ideal_dict = {}
         self.label_dict = {}
         for I in self.ideals_iter():
@@ -115,23 +121,23 @@ class HilbertNumberField(WebNumberField):
         if primes:
             ideals = self.primes
         for idlstr in ideals:
-            N,n,idl,_ = str2ideal(self.K(),idlstr)
+            N, n, idl, _ = str2ideal(self.K(), idlstr)
             assert idl.norm() == N and idl.smallest_integer() == n
             if N != norm:
                 ilabel = ZZ(1)
                 norm = N
             label = N.str() + '.' + ilabel.str()
-            yield {'label':label, 'ideal':idl}
+            yield {'label': label, 'ideal': idl}
             ilabel += 1
             count += 1
             if count == number:
                 raise StopIteration
 
     def primes_iter(self, number=None):
-        return self._iter_ideals(True,number)
+        return self._iter_ideals(True, number)
 
     def ideals_iter(self, number=None):
-        return self._iter_ideals(False,number)
+        return self._iter_ideals(False, number)
 
     def ideal_label(self, idl):
         try:

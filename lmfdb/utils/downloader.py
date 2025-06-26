@@ -28,22 +28,28 @@ from sage.all import Integer, Rational, lazy_attribute
 
 from lmfdb.utils import plural_form, pluralize, flash_error
 
+
 class DownloadLanguage():
-    # We choose the most common values; override these if needed in each subclass
+    # We choose the most common values; override these if needed in each
+    # subclass
     comment_prefix = '#'
     assignment_defn = '='
-    line_end = '' # Semicolon also common
+    line_end = ''  # Semicolon also common
 
-    delim_start = '[' # These are default delimiters used when wrapping a list in the default to_lang function
-    delim_end = ']' # If the needed delimiter depends on context, a language can override the delim method instead
-    start_and_end = ['[',']'] # These are the delimiters used in a multiline list
-    iter_sep = ",\n" # These are used to separate rows
-    make_data_comment = '' # A formattable comment describing how to call the make_data() function,
+    # These are default delimiters used when wrapping a list in the default
+    # to_lang function
+    delim_start = '['
+    delim_end = ']'  # If the needed delimiter depends on context, a language can override the delim method instead
+    # These are the delimiters used in a multiline list
+    start_and_end = ['[', ']']
+    iter_sep = ",\n"  # These are used to separate rows
+    # A formattable comment describing how to call the make_data() function,
+    make_data_comment = ''
     #                        with placeholders `short_name` and `var_name`
     none = 'NULL'
     true = 'true'
     false = 'false'
-    offset = 0 # the offset for the first entry in a list; 0-based by default
+    offset = 0  # the offset for the first entry in a list; 0-based by default
     return_keyword = 'return '
     return_finish = ''
 
@@ -95,7 +101,8 @@ class DownloadLanguage():
         return ", "
 
     def comment(self, inp):
-        return "\n".join(self.comment_prefix + line if line else "" for line in inp.split("\n"))
+        return "\n".join(self.comment_prefix +
+                         line if line else "" for line in inp.split("\n"))
 
     def string_to_lang(self, inp):
         """
@@ -127,7 +134,9 @@ class DownloadLanguage():
             return str(inp)
         else:
             start, end = self.delim(inp, level)
-            return start + self.sep(level).join(self.to_lang(c, level=level + 1) for c in it) + end
+            return start + \
+                self.sep(level).join(self.to_lang(c, level=level + 1)
+                                     for c in it) + end
 
     def to_lang_iter(self, inp):
         """
@@ -165,7 +174,8 @@ class DownloadLanguage():
         return name + " " + self.assignment_defn + " " + inp + self.line_end + "\n"
 
     def assign_columns(self, columns, column_names):
-        # We have a special function for assigning columns, to support adding hyperlinks to knowls in CSV files
+        # We have a special function for assigning columns, to support adding
+        # hyperlinks to knowls in CSV files
         return self.assign("columns", column_names)
 
     def assign_iter(self, name, inp):
@@ -194,6 +204,7 @@ class DownloadLanguage():
         - ``fargs`` -- a string, giving the function arguments, already parsed into the needed format
         """
         return self.function_start.format(func_name=fname, func_args=fargs)
+
 
 class MagmaLanguage(DownloadLanguage):
     name = 'magma'
@@ -229,9 +240,11 @@ class MagmaLanguage(DownloadLanguage):
 
     def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
-        column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
+        column_names = [
+            (col.name if col.download_col is None else col.download_col) for col in cols]
         for var, (require, bylang) in downloader.inclusions.items():
-            if "magma" in bylang and all(col in column_names for col in require):
+            if "magma" in bylang and all(
+                    col in column_names for col in require):
                 column_names.append(var)
         s = f"RecFormat := recformat<{','.join(column_names)}>;\n"
         if any(isinstance(col, PolynomialCol) for col in cols):
@@ -240,6 +253,7 @@ class MagmaLanguage(DownloadLanguage):
 
     def record_assign(self, name, key, val):
         return f'{name}`{key} := {val};'
+
 
 class SageLanguage(DownloadLanguage):
     name = 'sage'
@@ -258,10 +272,11 @@ class SageLanguage(DownloadLanguage):
         else:
             return '\n'
 
+
 class GPLanguage(DownloadLanguage):
     name = 'gp'
     file_suffix = '.gp'
-    start_and_end = ['{[',']}']
+    start_and_end = ['{[', ']}']
     comment_prefix = '\\\\'
     line_end = ';'
     none = 'null'
@@ -269,13 +284,15 @@ class GPLanguage(DownloadLanguage):
     false = '0'
     offset = 1
     make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
-    function_start = '{func_name}({func_args}) =\n{{\n' # Need double bracket since we're formatting these
+    # Need double bracket since we're formatting these
+    function_start = '{func_name}({func_args}) =\n{{\n'
     function_end = '}\n'
     return_keyword = 'return('
     return_finish = ')'
 
     def record_assign(self, name, key, val):
         return f'mapput(~{name}, "{key}", {val});'
+
 
 class GAPLanguage(DownloadLanguage):
     name = 'gap'
@@ -293,6 +310,7 @@ class GAPLanguage(DownloadLanguage):
     def record_assign(self, name, key, val):
         return f'{name}.{key} := {val};'
 
+
 class OscarLanguage(DownloadLanguage):
     name = 'oscar'
     file_suffix = '.jl'
@@ -309,6 +327,7 @@ class OscarLanguage(DownloadLanguage):
         else:
             return '\n'
 
+
 class TextLanguage(DownloadLanguage):
     name = 'text'
     file_suffix = '.txt'
@@ -316,7 +335,8 @@ class TextLanguage(DownloadLanguage):
     iter_sep = "\n"
 
     def assign(self, name, inp):
-        # We don't want to include the column definition here, since it's already in comments
+        # We don't want to include the column definition here, since it's
+        # already in comments
         return ""
 
     def assign_iter(self, name, inp):
@@ -335,6 +355,7 @@ class TextLanguage(DownloadLanguage):
         else:
             return ", "
 
+
 class CSVLanguage(DownloadLanguage):
     name = "csv"
     file_suffix = ".csv"
@@ -347,7 +368,8 @@ class CSVLanguage(DownloadLanguage):
         return ""
 
     def string_to_lang(self, inp):
-        # The csv module deals with escaping backslashes, and we don't want extra quotes
+        # The csv module deals with escaping backslashes, and we don't want
+        # extra quotes
         return inp
 
     @lazy_attribute
@@ -375,7 +397,8 @@ class CSVLanguage(DownloadLanguage):
                            for url, name in zip(urls, column_names)])
 
     def assign_iter(self, name, inp):
-        # For CSV downloads, we only output data rows since CSV does not support comments
+        # For CSV downloads, we only output data rows since CSV does not
+        # support comments
         yield from inp
 
     def to_lang_iter(self, inp):
@@ -405,7 +428,7 @@ class Downloader():
     decorator on your search function.
     """
     # defaults, edit as desired in inherited class
-    lang_key = 'Submit' # name of the HTML button/link starting the download
+    lang_key = 'Submit'  # name of the HTML button/link starting the download
     languages = {
         'magma': MagmaLanguage(),
         'sage': SageLanguage(),
@@ -423,7 +446,8 @@ class Downloader():
     # See NFDownloader in lmfdb/number_fields/number_field.py for an example.
     inclusions = {}
 
-    def __init__(self, table=None, title=None, filebase=None, short_name=None, var_name=None, lang_key='Submit'):
+    def __init__(self, table=None, title=None, filebase=None,
+                 short_name=None, var_name=None, lang_key='Submit'):
         if table is None:
             if hasattr(self.__class__, "table"):
                 table = self.__class__.table
@@ -506,14 +530,16 @@ class Downloader():
         filename = filebase + lang.file_suffix
         mydate = time.strftime("%d %B %Y")
         s = '\n'
-        s += lang.comment(' %s downloaded from the LMFDB on %s.\n' % (title, mydate))
+        s += lang.comment(' %s downloaded from the LMFDB on %s.\n' %
+                          (title, mydate))
         s += result
         bIO = BytesIO()
         bIO.write(s.encode('utf-8'))
         bIO.seek(0)
         return send_file(bIO, download_name=filename, as_attachment=True)
 
-    def _wrap_generator(self, generator, filebase, lang='text', title=None, add_ext=True):
+    def _wrap_generator(self, generator, filebase,
+                        lang='text', title=None, add_ext=True):
         """
         As for _wrap, but uses a stream.  For use with (potentially) large files.
 
@@ -551,20 +577,23 @@ class Downloader():
             # changes to the underlying database interactions, so is not currently
             # implemented.
             buff = ""
-            threshold = 10240 # 10KB
+            threshold = 10240  # 10KB
             for i, line in enumerate(generator, 1):
                 if len(buff) > threshold:
                     yield buff
                     buff = ""
-                    #time.sleep(0.001)
+                    # time.sleep(0.001)
                 buff += line
-                #yield line
+                # yield line
             if buff:
                 yield buff
 
         headers = Headers()
         headers.add('Content-Disposition', 'attachment', filename=filename)
-        resp = Response(_generator(), mimetype='text/event-stream', headers=headers)
+        resp = Response(
+            _generator(),
+            mimetype='text/event-stream',
+            headers=headers)
         return resp
 
     def get_table(self, info):
@@ -592,13 +621,18 @@ class Downloader():
         """
         SA = self.search_array
         if SA is not None and SA.sorts is not None:
-            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            sorts = SA.sorts.get(
+                SA._st(info),
+                []) if isinstance(
+                SA.sorts,
+                dict) else SA.sorts
             sord = info.get("sort_order", "")
             sop = info.get("sort_dir", "")
             for name, display, S in sorts:
                 if name == sord:
                     if sop == "op":
-                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S], f"{display} (reversed)"
+                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1])
+                                for col in S], f"{display} (reversed)"
                     return S, display
         return None, None
 
@@ -612,14 +646,24 @@ class Downloader():
         if lang.name == "sage":
             lines = ["out = {col: val for col, val in zip(columns, row)}"]
         elif lang.name == "magma":
-            pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
+            pairs = [
+                f"{col}:=row[{i+1}]" for i,
+                col in enumerate(column_names)]
             lines = [f"out := rec<RecFormat|{','.join(pairs)}>;"]
         elif lang.name == "gap":
-            local_vars = ["out"] + [var for var, (require, bylang) in self.inclusions.items() if "gap" in bylang]
-            pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
-            lines = [f"local {', '.join(local_vars)};", f"out := rec({','.join(pairs)});"]
+            local_vars = ["out"] + [var for var,
+                                    (require,
+                                     bylang) in self.inclusions.items() if "gap" in bylang]
+            pairs = [
+                f"{col}:=row[{i+1}]" for i,
+                col in enumerate(column_names)]
+            lines = [
+                f"local {', '.join(local_vars)};",
+                f"out := rec({','.join(pairs)});"]
         elif lang.name == "gp":
-            pairs = [f'"{col}",row[{i+1}]' for i, col in enumerate(column_names)]
+            pairs = [
+                f'"{col}",row[{i+1}]' for i,
+                col in enumerate(column_names)]
             lines = [f"out = Map([{';'.join(pairs)}]);"]
         elif lang.name == "oscar":
             lines = ["out = Dict(zip(columns, row))"]
@@ -629,7 +673,11 @@ class Downloader():
             if all(col in column_names for col in require) and lang.name in bylang:
                 lines.append(bylang[lang.name])
                 lines.append(lang.record_assign("out", var, var))
-        lines.append(lang.return_keyword + "out" + lang.return_finish + lang.line_end)
+        lines.append(
+            lang.return_keyword +
+            "out" +
+            lang.return_finish +
+            lang.line_end)
         return "".join("    " + line + "\n" for line in lines)
 
     def makedata_code(self, lang):
@@ -667,25 +715,30 @@ class Downloader():
         filename = f"lmfdb_{filename}_{ts}"
         urlparts = urlparse(request.url)
         pieces = urlparts.query.split("&")
-        # We omit the download-specific parts that were added in lmfdb/templates/download_search_results.html
+        # We omit the download-specific parts that were added in
+        # lmfdb/templates/download_search_results.html
         omit = ["Submit=", "download=", "query=", "download_row_count="]
-        pieces = [piece for piece in pieces if not any(piece.startswith(bad) for bad in omit)]
+        pieces = [piece for piece in pieces if not any(
+            piece.startswith(bad) for bad in omit)]
         urlparts = urlparts._replace(query="&".join(pieces))
         url = urlunparse(urlparts)
 
-        # This comment is near the top of the file and describes how to call the make_data function defined below.
+        # This comment is near the top of the file and describes how to call
+        # the make_data function defined below.
         make_data_comment = lang.make_data_comment
         if make_data_comment:
-            make_data_comment = make_data_comment.format(short_name=plural_form(self.short_name), var_name=self.var_name)
+            make_data_comment = make_data_comment.format(
+                short_name=plural_form(self.short_name), var_name=self.var_name)
 
         # Determine which columns will be fetched from the database
         columns = info["columns"]
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
-        # These virtual columns are often only used in display code and won't be present in the database, so we just strip them out
+        # These virtual columns are often only used in display code and won't
+        # be present in the database, so we just strip them out
         if isinstance(columns.db_cols, list):
             proj = [col for col in columns.db_cols if col in table.search_cols]
         else:
-            proj = columns.db_cols # some tables use 1 for project-to-all
+            proj = columns.db_cols  # some tables use 1 for project-to-all
 
         # Extract the query and modify it
         try:
@@ -715,7 +768,8 @@ class Downloader():
                     offset = 0
                     limit = int(match.group(1))
                 else:
-                    flash_error('Row constraint (%s) must be "all", an integer, or a range of integers', limit)
+                    flash_error(
+                        'Row constraint (%s) must be "all", an integer, or a range of integers', limit)
                     return redirect(url)
         else:
             offset = 0
@@ -726,17 +780,34 @@ class Downloader():
         num_results = table.count(query)
 
         # Actually issue the query, and store the result in an iterator
-        data = iter(table.search(query, projection=proj, sort=sort, one_per=one_per, limit=limit, offset=offset))
+        data = iter(
+            table.search(
+                query,
+                projection=proj,
+                sort=sort,
+                one_per=one_per,
+                limit=limit,
+                offset=offset))
 
         # We get the first 50 results, in order to accommodate sections (like modular forms) where default and contingent columns rely on having access to info["results"]
-        # We don't get all the results, since we want to support downloading millions of records, where this would time out.
-        info["results"] = first50 = [self.postprocess(row, info, query) for row in itertools.islice(data, 50)]
-        cols = [col for col in columns.columns_shown(info, rank=-1) if col.default(info)]
-        column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
+        # We don't get all the results, since we want to support downloading
+        # millions of records, where this would time out.
+        info["results"] = first50 = [
+            self.postprocess(
+                row,
+                info,
+                query) for row in itertools.islice(
+                data,
+                50)]
+        cols = [col for col in columns.columns_shown(
+            info, rank=-1) if col.default(info)]
+        column_names = [
+            (col.name if col.download_col is None else col.download_col) for col in cols]
         if len(column_names) != len(set(column_names)):
             # There are some cases where multiple displayed columns correspond to the same underlying data
             # (Weirstrass coefficients and Weierstrass equation for elliptic curves for example).
-            # In such cases, we use the *name* to remove duplicates, and assume that we can choose either column
+            # In such cases, we use the *name* to remove duplicates, and assume
+            # that we can choose either column
             seen = set()
             include = []
             for i, name in enumerate(column_names):
@@ -750,28 +821,35 @@ class Downloader():
         if num_results > 10000:
             # Estimate the size of the download file.  This won't necessarily be a great estimate
             # since later rows are often larger, but it's something
-            size_estimate = sum([len(lang.to_lang(rec)) for rec in first50]) * num_results / 50
-            if size_estimate > 100 * 1024**2: # 100MB
-                # We need to delete the data iterator, otherwise it will try to go through all of the records when another connection to the database is opened.
+            size_estimate = sum([len(lang.to_lang(rec))
+                                 for rec in first50]) * num_results / 50
+            if size_estimate > 100 * 1024**2:  # 100MB
+                # We need to delete the data iterator, otherwise it will try to
+                # go through all of the records when another connection to the
+                # database is opened.
                 del data
-                raise ValueError("Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
+                raise ValueError(
+                    "Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
         #print("FIRST FIFTY", first50)
 
         # Create a generator that produces the lines of the download file
         def make_download():
-            # We start with a string describing the query, the number of results and the sort order
+            # We start with a string describing the query, the number of
+            # results and the sort order
             yield lang.comment(' Search link: %s\n' % url)
             if limit is None:
                 num_res_disp = pluralize(num_results, self.short_name)
             else:
-                num_res_disp = pluralize(limit, self.short_name, denom=num_results, offset=offset)
+                num_res_disp = pluralize(
+                    limit, self.short_name, denom=num_results, offset=offset)
             yield lang.comment(' Query "%s" %s %s%s.\n\n' % (
                 str(info.get('query')),
                 "returned" if limit is None else "was limited to",
                 num_res_disp,
                 "" if sort_desc is None else f", sorted by {sort_desc}"))
 
-            # We then describe the columns included, both in a comment and as a variable
+            # We then describe the columns included, both in a comment and as a
+            # variable
             yield lang.comment(' Each entry in the following data list has the form:\n')
             yield lang.comment('    [' + ', '.join(data_format) + ']\n')
             yield lang.comment(' For more details, see the definitions at the bottom of the file.\n')
@@ -780,7 +858,8 @@ class Downloader():
             yield lang.comment('\n\n')
             yield lang.assign_columns(cols, column_names)
 
-            # This is where the actual contents are included, applying postprocess and col.download to each
+            # This is where the actual contents are included, applying
+            # postprocess and col.download to each
             yield from lang.assign_iter("data", lang.to_lang_iter(
                 itertools.chain(
                     first50,
@@ -790,25 +869,39 @@ class Downloader():
                             lambda rec: self.postprocess(rec, info, query),
                             data)))))
 
-            # Here we allow language specific global initialization code, like defining polynomial rings
+            # Here we allow language specific global initialization code, like
+            # defining polynomial rings
             yield lang.initialize(cols, self)
 
-            # Now the two function definitions, create_record and make_data, that aim to make the data list more user friendly
+            # Now the two function definitions, create_record and make_data,
+            # that aim to make the data list more user friendly
             if make_data_comment:
                 yield "\n" + lang.func_start("create_record", "row") + self.createrecord_code(lang, column_names) + lang.function_end
                 yield "\n" + lang.func_start("make_data", "") + self.makedata_code(lang) + lang.function_end + "\n\n"
-            # We need to be able to look up knowls within knowls, so to reduce the number of database calls we just get them all.
+            # We need to be able to look up knowls within knowls, so to reduce
+            # the number of database calls we just get them all.
 
-            # We do some global preprocessing to get access to knowls that define the columns
+            # We do some global preprocessing to get access to knowls that
+            # define the columns
             if any(col.download_desc is None for col in cols):
                 from lmfdb.knowledge.knowl import knowldb
-                all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
-                knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
+                all_knowls = {
+                    rec["id"]: (
+                        rec["title"],
+                        rec["content"]) for rec in knowldb.get_all_knowls(
+                        fields=[
+                            "id",
+                            "title",
+                            "content"])}
+                knowl_re = re.compile(
+                    r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
 
                 def knowl_subber(match):
                     return match.group(1)
 
-            # If we haven't specified a more specific download_desc, we use the column knowl to get a string to add to the bottom of the file for each column
+            # If we haven't specified a more specific download_desc, we use the
+            # column knowl to get a string to add to the bottom of the file for
+            # each column
             for col, name in zip(cols, column_names):
                 if col.download_desc is None:
                     knowldata = all_knowls.get(col.knowl)

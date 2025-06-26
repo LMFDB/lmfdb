@@ -34,7 +34,10 @@ def parse_interval(arg, name):
         s = arg[1:-1].split('..')
         a, b = (int(s[0]), int(s[1]))
     if a <= 0 or b < a:
-        flash_error("%s is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)", arg, name)
+        flash_error(
+            "%s is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)",
+            arg,
+            name)
         raise ValueError("invalid " + name)
     return a, b
 
@@ -47,7 +50,9 @@ def parse_limit(arg):
     if re.match('^[0-9]+$', arg):
         limit = int(arg)
     if limit > 100:
-        flash_error("%s is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100.", arg)
+        flash_error(
+            "%s is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100.",
+            arg)
         raise ValueError("limit")
     return limit
 

@@ -1,6 +1,7 @@
 
 from .type_generation import String, Array, Int
 
+
 def PolynomialAsString(convention):
     class ParametrizedPolynomialAsString(String):
         def sage(self):

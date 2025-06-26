@@ -27,14 +27,15 @@ def use_split_ors(info, query, split_ors, offset, table):
         and len(query.get("$or", [])) > 1
         and any(field in opt for field in split_ors for opt in query["$or"])
 
- # We don't support large offsets since sorting in Python requires
- # fetching all records, starting from 0
+        # We don't support large offsets since sorting in Python requires
+        # fetching all records, starting from 0
         and offset < table._count_cutoff
     )
 
 
 class Wrapper():
-    def __init__(self, f, template, table, title, err_title, postprocess=None, one_per=None, **kwds):
+    def __init__(self, f, template, table, title, err_title,
+                 postprocess=None, one_per=None, **kwds):
         self.f = f
         self.template = template
         self.table = table
@@ -48,28 +49,36 @@ class Wrapper():
         sort = query.pop("__sort__", None)
         SA = info.get("search_array")
         if sort is None and SA is not None and SA.sorts is not None:
-            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
+            sorts = SA.sorts.get(
+                SA._st(info),
+                []) if isinstance(
+                SA.sorts,
+                dict) else SA.sorts
             sord = info.get('sort_order', '')
             sop = info.get('sort_dir', '')
             for name, display, S in sorts:
                 if name == sord:
                     if sop == 'op':
-                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
+                        return [(col, -1) if isinstance(col, str)
+                                else (col[0], -col[1]) for col in S]
                     return S
         return sort
 
     def make_query(self, info, random=False):
         query = {}
-        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val())
+                         for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
         except Exception as err:
-            # Errors raised in parsing; these should mostly be SearchParsingErrors
+            # Errors raised in parsing; these should mostly be
+            # SearchParsingErrors
             if is_debug_mode():
                 raise
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
-            return render_template(self.template, info=info, title=err_title, **template_kwds)
+            return render_template(
+                self.template, info=info, title=err_title, **template_kwds)
         else:
             err_title = query.pop("__err_title__", self.err_title)
         if errpage is not None:
@@ -99,18 +108,24 @@ class Wrapper():
             template, info=info, title=self.err_title, **template_kwds
         )
 
-    def raw_parsing_error(self, info, query, err, err_title, template, template_kwds):
+    def raw_parsing_error(self, info, query, err,
+                          err_title, template, template_kwds):
         flash_error('Error parsing %s.', str(err))
         info['err'] = str(err)
         info['query'] = dict(query)
-        return render_template(template, info=info, title=self.err_title, **template_kwds)
+        return render_template(template, info=info,
+                               title=self.err_title, **template_kwds)
 
     def oob_error(self, info, query, err, err_title, template, template_kwds):
-        # The error string is long and ugly, so we just describe the type of issue
-        flash_error('Input number larger than allowed by integer type in database.')
+        # The error string is long and ugly, so we just describe the type of
+        # issue
+        flash_error(
+            'Input number larger than allowed by integer type in database.')
         info['err'] = str(err)
         info['query'] = dict(query)
-        return render_template(template, info=info, title=self.err_title, **template_kwds)
+        return render_template(template, info=info,
+                               title=self.err_title, **template_kwds)
+
 
 class SearchWrapper(Wrapper):
     def __init__(
@@ -149,7 +164,8 @@ class SearchWrapper(Wrapper):
         self.random_projection = random_projection
 
     def __call__(self, info):
-        info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
+        # I'm not sure why this is required...
+        info = to_dict(info, exclude=["bread"])
         #  if search_type starts with 'Random' returns a random label
         search_type = info.get("search_type", info.get("hst", ""))
         if search_type == "List":
@@ -158,7 +174,8 @@ class SearchWrapper(Wrapper):
         info["search_type"] = search_type
         info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
-        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val())
+                         for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
             if info.get(key, "").strip():
                 try:
@@ -186,7 +203,8 @@ class SearchWrapper(Wrapper):
         proj = query.pop("__projection__", self.projection)
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
         # These virtual columns won't be present in the database, so we just strip them out
-        # We have to do this here since we didn't have access to the table in __init__
+        # We have to do this here since we didn't have access to the table in
+        # __init__
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
         if "result_count" in info:
@@ -198,7 +216,8 @@ class SearchWrapper(Wrapper):
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
-            split_ors = not one_per and use_split_ors(info, query, self.split_ors, start, table)
+            split_ors = not one_per and use_split_ors(
+                info, query, self.split_ors, start, table)
             if random:
                 # Ignore __projection__: it's intended for searches
                 if split_ors:
@@ -241,13 +260,17 @@ class SearchWrapper(Wrapper):
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+            return self.query_cancelled_error(
+                info, query, err, err_title, template, template_kwds)
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
-            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+            return self.raw_parsing_error(
+                info, query, err, err_title, template, template_kwds)
         except NumericValueOutOfRange as err:
-            # This is caused when a user inputs a number that's too large for a column search type
-            return self.oob_error(info, query, err, err_title, template, template_kwds)
+            # This is caused when a user inputs a number that's too large for a
+            # column search type
+            return self.oob_error(
+                info, query, err, err_title, template, template_kwds)
         else:
             try:
                 if self.cleaners:
@@ -267,21 +290,25 @@ class SearchWrapper(Wrapper):
                 if info.get(key, "").strip():
                     return func(res, info, query)
             info["results"] = res
-            # Display warning message if user searched on column(s) with null values
+            # Display warning message if user searched on column(s) with null
+            # values
             if query:
                 nulls = table.stats.null_counts()
                 if nulls:
                     search_columns = table._columns_searched(query)
-                    nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
+                    nulls = {col: cnt for col,
+                             cnt in nulls.items() if col in search_columns}
                     col_display = {}
                     if "search_array" in info:
                         for row in info["search_array"].refine_array:
                             if isinstance(row, (list, tuple)):
                                 for item in row:
-                                    if hasattr(item, "name") and hasattr(item, "label"):
+                                    if hasattr(item, "name") and hasattr(
+                                            item, "label"):
                                         col_display[item.name] = item.label
                         for col, cnt in list(nulls.items()):
-                            override = info["search_array"].null_column_explanations.get(col)
+                            override = info["search_array"].null_column_explanations.get(
+                                col)
                             if override is False:
                                 del nulls[col]
                             elif override:
@@ -295,7 +322,8 @@ class SearchWrapper(Wrapper):
                         msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
                         msg += ", ".join(nulls.values())
                         flash_info(msg)
-            return render_template(template, info=info, title=title, **template_kwds)
+            return render_template(template, info=info,
+                                   title=title, **template_kwds)
 
 
 class CountWrapper(Wrapper):
@@ -328,12 +356,14 @@ class CountWrapper(Wrapper):
         self.overall = overall
 
     def __call__(self, info):
-        info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
+        # I'm not sure why this is required...
+        info = to_dict(info, exclude=["bread"])
         data = self.make_query(info)
         if not isinstance(data, tuple):
             return data  # error page
         query, sort, table, title, err_title, template, one_per = data
-        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val())
+                         for key, val in self.kwds.items()}
         try:
             if query:
                 res = table.count(query, groupby=self.groupby)
@@ -355,7 +385,9 @@ class CountWrapper(Wrapper):
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
-                    info['count'] = 50 # put count back in so that it doesn't show up as none in url
+                    # put count back in so that it doesn't show up as none in
+                    # url
+                    info['count'] = 50
 
             except ValueError as err:
                 # Errors raised in postprocessing
@@ -365,7 +397,8 @@ class CountWrapper(Wrapper):
                     template, info=info, title=err_title, **template_kwds
                 )
             info["results"] = res
-            return render_template(template, info=info, title=title, **template_kwds)
+            return render_template(template, info=info,
+                                   title=title, **template_kwds)
 
 
 class EmbedWrapper(Wrapper):
@@ -374,6 +407,7 @@ class EmbedWrapper(Wrapper):
 
     For an example, see families of modular curves.
     """
+
     def __init__(
         self,
             f,
@@ -396,7 +430,8 @@ class EmbedWrapper(Wrapper):
 
     def __call__(self, info):
         info["columns"] = self.columns
-        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        template_kwds = {key: info.get(key, val())
+                         for key, val in self.kwds.items()}
         data = self.make_query(info, False)
         if not isinstance(data, tuple):
             return data
@@ -416,24 +451,32 @@ class EmbedWrapper(Wrapper):
                 info=info,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+            return self.query_cancelled_error(
+                info, query, err, err_title, template, template_kwds)
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
-            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+            return self.raw_parsing_error(
+                info, query, err, err_title, template, template_kwds)
         except NumericValueOutOfRange as err:
-            # This is caused when a user inputs a number that's too large for a column search type
-            return self.oob_error(info, query, err, err_title, template, template_kwds)
+            # This is caused when a user inputs a number that's too large for a
+            # column search type
+            return self.oob_error(
+                info, query, err, err_title, template, template_kwds)
         else:
             info["results"] = res
-            return render_template(template, info=info, title=title, **template_kwds)
+            return render_template(template, info=info,
+                                   title=title, **template_kwds)
+
 
 @decorator_keywords
 def search_wrap(f, **kwds):
     return SearchWrapper(f, **kwds)
 
+
 @decorator_keywords
 def count_wrap(f, **kwds):
     return CountWrapper(f, **kwds)
+
 
 @decorator_keywords
 def embed_wrap(f, **kwds):

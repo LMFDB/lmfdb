@@ -7,7 +7,8 @@
 #   def extra_func(self,...):
 #       pass
 
-# In addition, it automatically acquires a __init__ function, that ensures type conversions.
+# In addition, it automatically acquires a __init__ function, that ensures
+# type conversions.
 
 # In fact, we can also do Array(f1,f2,f3), which gives a class as well, but that is callable
 # Array(f1,f2,f3)([arg1,arg2,arg3]) gives [f1(arg1),f2(arg2),f3(arg3)]
@@ -20,11 +21,11 @@
 
 def wrapper(f):
     def g(*args, **kwargs):
-        #print f.__name__, " called with"
-        #print "     *args: ", args
-        #print "     **kwargs", kwargs
+        # print f.__name__, " called with"
+        # print "     *args: ", args
+        # print "     **kwargs", kwargs
         tmp = f(*args, **kwargs)
-        #print f.__name__, "      is returning      ", tmp
+        # print f.__name__, "      is returning      ", tmp
         return tmp
     return g
 
@@ -39,11 +40,14 @@ def ImmutableExtensionFactory(t, t_name):
 
     return ImmutableExtensionClass
 
+
 Int = ImmutableExtensionFactory(int, "Int")
 Str = String = ImmutableExtensionFactory(str, "Str")
 Float = ImmutableExtensionFactory(float, "Float")
 
+
 def Anything(x): return x
+
 
 def id(x): return x
 

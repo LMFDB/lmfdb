@@ -5,18 +5,18 @@
 # Modified : Chris Brady and Heather Ratcliffe
 
 # NEVER EVER change the fixed_salt!
+from flask_login import UserMixin, AnonymousUserMixin
+from .main import logger
+from datetime import datetime, timedelta
+from psycopg2.sql import SQL, Identifier, Placeholder
+from psycodict.encoding import Array
+from psycodict.base import PostgresBase
+from lmfdb import db
 fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02\x9e\x00\x05`\xbb\xb9\xa7\x98'
 
-from lmfdb import db
-from psycodict.base import PostgresBase
-from psycodict.encoding import Array
-from psycopg2.sql import SQL, Identifier, Placeholder
-from datetime import datetime, timedelta
-
-from .main import logger
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
-from flask_login import UserMixin, AnonymousUserMixin
+
 
 class PostgresUserTable(PostgresBase):
     def __init__(self):
@@ -24,11 +24,13 @@ class PostgresUserTable(PostgresBase):
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
         self._rw_userdb = db.can_read_write_userdb()
-        #TODO use this instead of hardcoded columns names
-        #with identifiers
+        # TODO use this instead of hardcoded columns names
+        # with identifiers
         self._username_full_name = ["username", "full_name"]
         if self._rw_userdb:
-            cur = self._execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
+            cur = self._execute(
+                SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), [
+                    'userdb', 'users'])
             self._cols = [rec[0] for rec in cur]
         else:
             self._cols = self._username_full_name
@@ -70,9 +72,11 @@ class PostgresUserTable(PostgresBase):
             import bcrypt
             if not existing_hash:
                 existing_hash = bcrypt.gensalt().decode('utf-8')
-            return bcrypt.hashpw(pwd.encode('utf-8'), existing_hash.encode('utf-8')).decode('utf-8')
+            return bcrypt.hashpw(pwd.encode('utf-8'),
+                                 existing_hash.encode('utf-8')).decode('utf-8')
         except Exception:
-            logger.warning("Failed to return bchash, perhaps bcrypt is not installed")
+            logger.warning(
+                "Failed to return bchash, perhaps bcrypt is not installed")
             return None
 
     def new_user(self, uid, pwd=None, full_name=None, about=None, url=None):
@@ -94,17 +98,21 @@ class PostgresUserTable(PostgresBase):
                 raise Exception("ERROR: Passwords do not match!")
             pwd = pwd_input
         password = self.bchash(pwd)
-        #TODO: use identifiers
-        insertor = SQL("INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
-        self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
+        # TODO: use identifiers
+        insertor = SQL(
+            "INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
+        self._execute(
+            insertor, [
+                uid, password, datetime.utcnow(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
 
     def change_password(self, uid, newpwd):
         if self._rw_userdb:
             bcpass = self.bchash(newpwd)
-            #TODO: use identifiers
-            updater = SQL("UPDATE userdb.users SET bcpassword = %s WHERE username = %s")
+            # TODO: use identifiers
+            updater = SQL(
+                "UPDATE userdb.users SET bcpassword = %s WHERE username = %s")
             self._execute(updater, [bcpass, uid])
             logger.info("password for %s changed!" % uid)
         else:
@@ -120,7 +128,7 @@ class PostgresUserTable(PostgresBase):
         returns a list of tuples: [('username', 'full_name'),…]
         If full_name is None it will be replaced with username.
         """
-        #TODO: use identifiers
+        # TODO: use identifiers
         selecter = SQL("SELECT username, full_name FROM userdb.users")
         cur = self._execute(selecter)
         return [(uid, full_name or uid) for uid, full_name in cur]
@@ -130,8 +138,9 @@ class PostgresUserTable(PostgresBase):
             logger.info("no attempt to authenticate, not enough privileges")
             return False
 
-        #TODO: use identifiers
-        selecter = SQL("SELECT bcpassword, password FROM userdb.users WHERE username = %s")
+        # TODO: use identifiers
+        selecter = SQL(
+            "SELECT bcpassword, password FROM userdb.users WHERE username = %s")
         cur = self._execute(selecter, [uid])
         if cur.rowcount == 0:
             raise ValueError("User not present in database!")
@@ -144,19 +153,26 @@ class PostgresUserTable(PostgresBase):
                 if oldpass == self.hashpwd(pwd, str(i)):
                     bcpass = self.bchash(pwd)
                     if bcpass:
-                        logger.info("user " + uid + " logged in with old style password, trying to update")
+                        logger.info(
+                            "user " + uid + " logged in with old style password, trying to update")
                         try:
-                            #TODO: use identifiers
-                            updater = SQL("UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
+                            # TODO: use identifiers
+                            updater = SQL(
+                                "UPDATE userdb.users SET (bcpassword) = (%s) WHERE username = %s")
                             self._execute(updater, [bcpass, uid])
-                            logger.info("password update for " + uid + " succeeded")
+                            logger.info(
+                                "password update for " + uid + " succeeded")
                         except Exception:
-                            #if you can't update the password then likely someone is using a local install
-                            #log and continue
-                            logger.warning("password update for " + uid + " failed!")
+                            # if you can't update the password then likely someone is using a local install
+                            # log and continue
+                            logger.warning(
+                                "password update for " + uid + " failed!")
                         return True
                     else:
-                        logger.warning("user " + uid + " logged in with old style password, but update was not possible")
+                        logger.warning(
+                            "user " +
+                            uid +
+                            " logged in with old style password, but update was not possible")
                         return False
         return False
 
@@ -165,8 +181,8 @@ class PostgresUserTable(PostgresBase):
             logger.info("no attempt to save, not enough privileges")
             return
 
-        data = dict(data) # copy
-        uid = data.pop("username",None)
+        data = dict(data)  # copy
+        uid = data.pop("username", None)
         if not uid:
             raise ValueError("data must contain username")
         if not self.user_exists(uid):
@@ -174,23 +190,27 @@ class PostgresUserTable(PostgresBase):
         if not data:
             raise ValueError("no data to save")
         fields, values = zip(*data.items())
-        updater = SQL("UPDATE userdb.users SET ({0}) = ({1}) WHERE username = %s").format(SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
+        updater = SQL("UPDATE userdb.users SET ({0}) = ({1}) WHERE username = %s").format(
+            SQL(", ").join(map(Identifier, fields)), SQL(", ").join(Placeholder() * len(values)))
         self._execute(updater, list(values) + [uid])
 
     def lookup(self, uid):
-        selecter = SQL("SELECT {0} FROM userdb.users WHERE username = %s").format(SQL(", ").join(map(Identifier, self._cols)))
+        selecter = SQL("SELECT {0} FROM userdb.users WHERE username = %s").format(
+            SQL(", ").join(map(Identifier, self._cols)))
         cur = self._execute(selecter, [uid])
         if cur.rowcount == 0:
             raise ValueError("user does not exist")
         if cur.rowcount > 1:
             raise ValueError("multiple users with same username!")
-        return {field:value for field,value in zip(self._cols, cur.fetchone()) if value is not None}
+        return {field: value for field, value in zip(
+            self._cols, cur.fetchone()) if value is not None}
 
     def full_names(self, uids):
-        #TODO: use identifiers
-        selecter = SQL("SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
+        # TODO: use identifiers
+        selecter = SQL(
+            "SELECT username, full_name FROM userdb.users WHERE username = ANY(%s)")
         cur = self._execute(selecter, [Array(uids)])
-        return [dict(zip(["username","full_name"], rec)) for rec in cur]
+        return [dict(zip(["username", "full_name"], rec)) for rec in cur]
 
     def create_tokens(self, tokens):
         if not self._rw_userdb:
@@ -204,7 +224,8 @@ class PostgresUserTable(PostgresBase):
 
     def token_exists(self, token):
         if not self._rw_userdb:
-            logger.info("no attempt to check if token exists, not enough privileges")
+            logger.info(
+                "no attempt to check if token exists, not enough privileges")
             return False
         selecter = SQL("SELECT 1 FROM userdb.tokens WHERE id = %s")
         cur = self._execute(selecter, [token])
@@ -212,7 +233,8 @@ class PostgresUserTable(PostgresBase):
 
     def delete_old_tokens(self):
         if not self._rw_userdb:
-            logger.info("no attempt to delete old tokens, not enough privileges")
+            logger.info(
+                "no attempt to delete old tokens, not enough privileges")
             return
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
         now = datetime.utcnow()
@@ -227,8 +249,10 @@ class PostgresUserTable(PostgresBase):
         self._execute(deletor, [token])
 
     def change_colors(self, uid, new_color):
-        updator = SQL("UPDATE userdb.users SET color_scheme = %s WHERE username = %s")
+        updator = SQL(
+            "UPDATE userdb.users SET color_scheme = %s WHERE username = %s")
         self._execute(updator, [new_color, uid])
+
 
 userdb = PostgresUserTable()
 
@@ -326,11 +350,13 @@ class LmfdbUser(UserMixin):
         userdb.save(self._data)
         self._dirty = False
 
+
 class LmfdbAnonymousUser(AnonymousUserMixin):
     """
     The sole purpose of this Anonymous User is the 'is_admin' method
     and probably others.
     """
+
     def is_admin(self):
         return False
 
@@ -345,6 +371,7 @@ class LmfdbAnonymousUser(AnonymousUserMixin):
     # property. To match the behavior of LmfdbUser, we make it callable always.
     def is_anonymous(self):
         return True
+
 
 if __name__ == "__main__":
     print("Usage:")

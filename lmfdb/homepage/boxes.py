@@ -15,6 +15,7 @@ class Box():
     def add_link(self, title, href):
         self.links.append((title, href))
 
+
 @cached_function
 def load_boxes():
     boxes = []
@@ -25,7 +26,11 @@ def load_boxes():
             B = Box(b['title'])
             B.content = b['content']
             if 'image' in b:
-                B.img = url_for('static', filename='images/'+b['image']+'.png')
+                B.img = url_for(
+                    'static',
+                    filename='images/' +
+                    b['image'] +
+                    '.png')
             for title, url in b['links']:
                 B.add_link(title, url)
             boxes.append(B)

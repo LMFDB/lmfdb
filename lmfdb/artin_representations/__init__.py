@@ -1,4 +1,5 @@
 
+from . import main
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
@@ -14,16 +15,18 @@ artin_logger = make_logger("artin", hl=True)
 def body_class():
     return {'body_class': 'artin_representations'}
 
-from . import main
-assert main # silence pyflakes
 
-app.register_blueprint(artin_representations_page, url_prefix="/ArtinRepresentation")
+assert main  # silence pyflakes
+
+app.register_blueprint(
+    artin_representations_page,
+    url_prefix="/ArtinRepresentation")
 
 # API2 has been disabled for now
 #from lmfdb.api2.searchers import register_search_function
-#register_search_function(
+# register_search_function(
 #    "artin_representations",
 #    "Artin representations",
 #    "Search over Artin representations",
 #    auto_search = 'artin_reps'
-#)
+# )

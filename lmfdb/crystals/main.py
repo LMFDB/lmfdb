@@ -15,7 +15,8 @@ def make_tableaux_crystal(crystal):
     from sage.all_cmdline import CrystalOfTableaux
     cartan, rank, weight = crystal.split("-")
     weight = weight.split(".")
-    return CrystalOfTableaux([str(cartan), int(rank)], shape=tuple(map(int, weight)))
+    return CrystalOfTableaux([str(cartan), int(rank)],
+                             shape=tuple(map(int, weight)))
 
 
 def make_path_crystal(crystal):
@@ -29,7 +30,8 @@ def make_path_crystal(crystal):
 def show(crystal):
     C = make_tableaux_crystal(crystal)
     bc = get_bread([(crystal, url_for('.show', crystal=crystal))])
-    return render_template("crystals.html", crystal=C, crystal_string=crystal, bread=bc)
+    return render_template("crystals.html", crystal=C,
+                           crystal_string=crystal, bread=bc)
 
 
 @crystals_page.route("/search")
@@ -146,4 +148,5 @@ def littelmann_recenter(crystal):
 @crystals_page.route("/")
 def index():
     bread = get_bread()
-    return render_template("crystals-index.html", title="Crystals", bread=bread)
+    return render_template("crystals-index.html",
+                           title="Crystals", bread=bread)

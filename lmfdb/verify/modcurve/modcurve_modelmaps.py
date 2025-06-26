@@ -24,19 +24,22 @@ class modcurve_modelmaps(TableChecker):
     @lazy_attribute
     def modcurve_points(self):
         ans = defaultdict(list)
-        for rec in db.modcurve_points.search({'degree': 1}, ["curve_label", "coordinates", "jinv"]):
+        for rec in db.modcurve_points.search(
+                {'degree': 1}, ["curve_label", "coordinates", "jinv"]):
             ans[rec["curve_label"]].append(rec)
         return ans
 
     @lazy_attribute
     def modcurve_models(self):
         ans = {}
-        for rec in db.modcurve_models.search({}, ["modcurve", "model_type", "equation", "number_variables"]):
-            ans[rec["modcurve"], rec["model_type"]] = (rec["equation"], rec["number_variables"])
+        for rec in db.modcurve_models.search(
+                {}, ["modcurve", "model_type", "equation", "number_variables"]):
+            ans[rec["modcurve"], rec["model_type"]] = (
+                rec["equation"], rec["number_variables"])
         return ans
 
     @slow(ratio=1, projection=['domain_label', 'codomain_label', 'coordinates', 'domain_model_type', 'codomain_model_type'],
-          constraint={'domain_model_type':{"$ne":1}, 'codomain_model_type':{"$ne":1}})
+          constraint={'domain_model_type': {"$ne": 1}, 'codomain_model_type': {"$ne": 1}})
     def check_rat_pts_map_to_rat_pts(self, rec):
         """
         given a rational point on a modular curve, and a map from this modular curve
@@ -47,20 +50,25 @@ class modcurve_modelmaps(TableChecker):
             if not point.get("coordinates"):
                 continue
             try:
-                relevant_pts = point['coordinates'][str(rec['domain_model_type'])]  # these are the pts that can be hit with the map
+                # these are the pts that can be hit with the map
+                relevant_pts = point['coordinates'][str(
+                    rec['domain_model_type'])]
             except KeyError:
                 # means there are no points on the model required by the map
                 continue
             for rel_pt in relevant_pts:
-                pt_on_codomain_as_list = apply_map_to_pt(rec['coordinates'], rel_pt)
+                pt_on_codomain_as_list = apply_map_to_pt(
+                    rec['coordinates'], rel_pt)
 
                 # TEST 1: check this pt is rational
                 if not all(t in QQ for t in pt_on_codomain_as_list):
                     return False
 
                 # TEST 2: check this is actually a point on the codomain
-                equation, number_variables = self.modcurve_models[rec["codomain_label"], rec["codomain_model_type"]]
-                Pol = PolynomialRing(QQ, number_variables, names=VARORDER[:number_variables])
+                equation, number_variables = self.modcurve_models[rec["codomain_label"],
+                                                                  rec["codomain_model_type"]]
+                Pol = PolynomialRing(QQ, number_variables,
+                                     names=VARORDER[:number_variables])
 
                 if not all(Pol(f_str)(pt_on_codomain_as_list) == 0
                            for f_str in equation):

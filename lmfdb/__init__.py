@@ -1,5 +1,6 @@
 
-# psycodict was added as a dependency on May 10, 2024; we provide a useful error message for people upgrading
+# psycodict was added as a dependency on May 10, 2024; we provide a useful
+# error message for people upgrading
 try:
     import psycodict
     assert psycodict

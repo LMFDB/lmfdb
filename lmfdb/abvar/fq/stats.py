@@ -9,8 +9,12 @@ from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
 
 logger = make_logger("abvarfq")
+
+
 def yn(t):
     return "yes" if (t and t != "no") else "no"
+
+
 def ynu(t):
     if t in [0, "0", "unknown"]:
         return "unknown"
@@ -21,6 +25,7 @@ def ynu(t):
     else:
         print(t)
         raise RuntimeError
+
 
 class AbvarFqStats(StatsDisplay):
     extent_knowl = "rcs.cande.av.fq"
@@ -89,7 +94,7 @@ class AbvarFqStats(StatsDisplay):
                   "is_primitive": yn,
                   "has_jacobian": ynu,
                   "has_principal_polarization": ynu,
-    }
+                  }
     query_formatters = {"is_geometrically_simple": (lambda t: "geom_simple=%s" % (yn(t))),
                         "is_simple": (lambda t: "simple=%s" % (yn(t))),
                         "is_primitive": (lambda t: "primitive=%s" % (yn(t))),
@@ -97,7 +102,7 @@ class AbvarFqStats(StatsDisplay):
                         "has_principal_polarization": (lambda t: "polarizable=%s" % (ynu(t))),
                         "jacobian_count": (lambda t: "jac_cnt=%s" % range_formatter(t)),
                         "hyp_count": (lambda t: "hyp_cnt=%s" % range_formatter(t)),
-    }
+                        }
     stat_list = [
         {"cols": ["g", "q"],
          "proportioner": proportioners.per_total,
@@ -121,45 +126,45 @@ class AbvarFqStats(StatsDisplay):
          "top_title": display_knowl("av.geometrically_simple", "geometrically simple") + " isogeny classes among those that are " + display_knowl("av.simple", "simple")},
         {"cols": ["has_principal_polarization", "q"],
          "constraint": {"g": 2},
-         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
+         "buckets": {"q": ["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("av.princ_polarizable", "principally polarizable") + " abelian surfaces"},
         {"cols": ["has_jacobian", "q"],
          "constraint": {"g": 2},
-         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
+         "buckets": {"q": ["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian surfaces"},
         {"cols": ["has_jacobian", "q"],
          "constraint": {"g": 3},
-         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
+         "buckets": {"q": ["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("ag.jacobian", "Jacobians") + " among isogeny classes of abelian threefolds"},
         {"cols": ["jacobian_count", "q"],
          "constraint": {"g": 2},
-         "buckets": {"q":["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"],
+         "buckets": {"q": ["2", "3", "4", "5", "7", "8", "9", "11", "13", "16", "17", "19", "23", "25"],
                      "jacobian_count": ["0", "1", "2", "3-8", "9-16", "17-256"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("av.jacobian_count", "Jacobian counts") + " among isogeny classes of abelian surfaces"},
         {"cols": ["jacobian_count", "q"],
          "constraint": {"g": 3},
-         "buckets": {"q":["2", "3", "5"],
+         "buckets": {"q": ["2", "3", "5"],
                      "jacobian_count": ["0", "1", "2", "3-8", "9-16", "17-256", "257-6375"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("av.jacobian_count", "Jacobian counts") + " among isogeny classes of abelian threefolds"},
         {"cols": ["hyp_count", "q"],
          "constraint": {"g": 3},
-         "buckets": {"q":["2", "3", "5", "7", "9", "11", "13"],
+         "buckets": {"q": ["2", "3", "5", "7", "9", "11", "13"],
                      "hyp_count": ["0", "1", "2", "3-8", "9-16", "17-256", "257-6375"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("av.hyperelliptic_count", "hyperelliptic Jacobian counts") + " among isogeny classes of abelian threefolds"},
         {"cols": ["is_primitive", "q"],
          "constraint": {"g": 2},
-         "buckets": {"q":["4", "8", "9", "16", "25", "27", "32", "49", "64", "81", "125", "128", "243", "256", "343", "512", "625", "729", "1024"]},
+         "buckets": {"q": ["4", "8", "9", "16", "25", "27", "32", "49", "64", "81", "125", "128", "243", "256", "343", "512", "625", "729", "1024"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("ag.primitive", "primitive") + " abelian surfaces"},
         {"cols": ["is_primitive", "q"],
-         "constraint": {"g":3},
-         "buckets": {"q":["4", "8", "9", "16", "25"]},
+         "constraint": {"g": 3},
+         "buckets": {"q": ["4", "8", "9", "16", "25"]},
          "proportioner": proportioners.per_col_total,
          "top_title": display_knowl("ag.primitive", "primitive") + " abelian threefolds"},
     ]
@@ -170,7 +175,24 @@ class AbvarFqStats(StatsDisplay):
         common_parse(info, query)
 
     dynamic_parent_page = "abvarfq-refine-search.html"
-    dynamic_cols = ["q", "g", "p_rank", "angle_rank", "size", "geometric_extension_degree", "jacobian_count", "hyp_count", "twist_count", "max_twist_degree", "is_simple", "is_geometrically_simple", "is_primitive", "has_jacobian", "has_principal_polarization", "jacobian_count", "hyp_count"]
+    dynamic_cols = [
+        "q",
+        "g",
+        "p_rank",
+        "angle_rank",
+        "size",
+        "geometric_extension_degree",
+        "jacobian_count",
+        "hyp_count",
+        "twist_count",
+        "max_twist_degree",
+        "is_simple",
+        "is_geometrically_simple",
+        "is_primitive",
+        "has_jacobian",
+        "has_principal_polarization",
+        "jacobian_count",
+        "hyp_count"]
 
     @cached_method
     def _counts(self):
@@ -227,11 +249,13 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def maxq(self):
-        return {g: max(q for gg, q in self._counts() if g == gg) for g in self.gs}
+        return {g: max(q for gg, q in self._counts() if g == gg)
+                for g in self.gs}
 
     @lazy_attribute
     def maxg(self):
-        maxg = {q: max(g for g, qq in self._counts() if q == qq) for q in self.qs}
+        maxg = {q: max(g for g, qq in self._counts() if q == qq)
+                for q in self.qs}
         # maxg[None] used in decomposition search
         maxg[None] = max(self.gs)
         return maxg

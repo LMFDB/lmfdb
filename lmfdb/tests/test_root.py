@@ -3,6 +3,7 @@ import unittest
 from flask import url_for
 from lmfdb.tests import LmfdbTest
 
+
 class PermalinkTest(LmfdbTest):
 
     """
@@ -11,7 +12,9 @@ class PermalinkTest(LmfdbTest):
     """
 
     def ec(self):
-        assert url_for('by_ec_label', label='17.a3') == '/EllipticCurve/Q/17.a3'
+        assert url_for(
+            'by_ec_label',
+            label='17.a3') == '/EllipticCurve/Q/17.a3'
 
 
 class RootTest(LmfdbTest):
@@ -47,7 +50,8 @@ class RootTest(LmfdbTest):
             if "GET" in rule.methods:
                 tc = self.app.test_client()
                 res = tc.get(rule.rule)
-                assert "Database" in res.get_data(as_text=True), "rule %s failed " % rule
+                assert "Database" in res.get_data(
+                    as_text=True), "rule %s failed " % rule
 
     @unittest.skip("Tests for latex errors, but fails at the moment because of other errors")
     def test_some_latex_error(self):
@@ -59,7 +63,8 @@ class RootTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert "Undefined control sequence" not in res.get_data(as_text=True), "rule %s failed" % rule
+                    assert "Undefined control sequence" not in res.get_data(
+                        as_text=True), "rule %s failed" % rule
                 except KeyError:
                     pass
 

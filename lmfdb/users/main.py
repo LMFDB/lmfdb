@@ -2,6 +2,8 @@
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
 
+from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
+import re
 import flask
 from functools import wraps
 from lmfdb.app import app
@@ -19,18 +21,18 @@ assert db
 login_page = Blueprint("users", __name__, template_folder='templates')
 logger = make_logger(login_page)
 
-import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 
 login_manager = LoginManager()
 
-from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
+
 
 @login_manager.user_loader
 def load_user(userid):
     return LmfdbUser(userid)
+
 
 login_manager.login_view = "users.info"
 
@@ -55,11 +57,14 @@ def ctx_proc_userdata():
         userdata['user_is_admin'] = False
         userdata['user_is_authenticated'] = False
         userdata['user_can_review_knowls'] = False
-        userdata['get_username'] = LmfdbAnonymousUser().name # this is a function
+        # this is a function
+        userdata['get_username'] = LmfdbAnonymousUser().name
 
     else:
-        userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
-        userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
+        userdata['userid'] = 'anon' if current_user.is_anonymous(
+        ) else current_user._uid
+        userdata['username'] = 'Anonymous' if current_user.is_anonymous(
+        ) else current_user.name
 
         userdata['user_is_authenticated'] = current_user.is_authenticated
 
@@ -98,9 +103,9 @@ def list():
     # attempt to sort by last name
     users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
     if len(users) % COLS:
-        users += [{} for i in range(COLS-len(users) % COLS)]
-    n = len(users)//COLS
-    user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
+        users += [{} for i in range(COLS - len(users) % COLS)]
+    n = len(users) // COLS
+    user_rows = tuple(zip(*[users[i * n: (i + 1) * n] for i in range(COLS)]))
     bread = base_bread()
     return render_template("user-list.html", title="All Users",
                            user_rows=user_rows, bread=bread)
@@ -115,6 +120,7 @@ def change_colors(scheme):
     response = make_response(flask.redirect(url_for(".info")))
     response.set_cookie('color', str(scheme))
     return response
+
 
 @login_page.route("/myself")
 def info():
@@ -149,7 +155,8 @@ def profile(userid):
     if not user.exists:
         flash_error("User %s does not exist", userid)
         return flask.redirect(url_for(".list"))
-    bread = base_bread() + [(user.name, url_for('.profile', userid=user.get_id()))]
+    bread = base_bread() + \
+        [(user.name, url_for('.profile', userid=user.get_id()))]
     from lmfdb.knowledge.knowl import knowldb
     userknowls = knowldb.search(author=userid, sort=['title'])
     return render_template("user-detail.html", user=user,
@@ -190,6 +197,7 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return decorated_view
 
+
 def knowl_reviewer_required(fn):
     """
     wrap this around those entry points where you need to be a knowl reviewer.
@@ -202,6 +210,7 @@ def knowl_reviewer_required(fn):
             return flask.abort(403)  # access denied
         return fn(*args, **kwargs)
     return decorated_view
+
 
 def housekeeping(fn):
     """
@@ -221,6 +230,7 @@ def housekeeping(fn):
 def register_new():
     return ""
 
+
 @login_page.route("/register/new")
 @login_page.route("/register/new/<int:N>")
 @admin_required
@@ -229,7 +239,12 @@ def register(N=10):
     import random
     tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
     userdb.create_tokens(tokens)
-    urls = ["%s%s" % (base_url, url_for(".register_token", token=t)) for t in tokens]
+    urls = [
+        "%s%s" %
+        (base_url,
+         url_for(
+             ".register_token",
+             token=t)) for t in tokens]
     resp = make_response('\n'.join(urls))
     resp.headers['Content-type'] = 'text/plain'
     return resp
@@ -244,8 +259,9 @@ def register_token(token):
         flask.abort(401)
     bread = base_bread() + [('Register', url_for(".register_new"))]
     if request.method != 'POST':
-        return render_template("register.html", title="Register", bread=bread, next=request.referrer or "/", token=token)
-    else: # must be post
+        return render_template("register.html", title="Register",
+                               bread=bread, next=request.referrer or "/", token=token)
+    else:  # must be post
         name = request.form['name']
         if not allowed_usernames.match(name):
             flash_error("""Oops, usename '%s' is not allowed.
@@ -260,7 +276,8 @@ def register_token(token):
             return flask.redirect(url_for(".register_new"))
 
         if len(pw1) < 8:
-            flash_error("Oops, password too short. Minimum 8 characters please!")
+            flash_error(
+                "Oops, password too short. Minimum 8 characters please!")
             return flask.redirect(url_for(".register_new"))
 
         full_name = request.form['full_name']
@@ -273,9 +290,12 @@ def register_token(token):
         newuser = userdb.new_user(name, pwd=pw1, full_name=full_name)
         userdb.delete_token(token)
         #newuser.full_name = full_name
-        #newuser.save()
+        # newuser.save()
         login_user(newuser, remember=True)
-        flask.flash(Markup("Hello %s! Congratulations, you are a new user!" % newuser.name))
+        flask.flash(
+            Markup(
+                "Hello %s! Congratulations, you are a new user!" %
+                newuser.name))
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
         return flask.redirect(url_for(".info"))
@@ -307,7 +327,8 @@ def logout():
     # FIXME delete color cookie
     logout_user()
     flask.flash(Markup("You are logged out now. Have a nice day!"))
-    return flask.redirect(request.args.get("next") or request.referrer or url_for('.info'))
+    return flask.redirect(request.args.get(
+        "next") or request.referrer or url_for('.info'))
 
 
 @login_page.route("/admin")
@@ -339,9 +360,15 @@ class Reviewer(Uploader):
     """
     This uploader is used to collect UploadSection objects from different sections of the LMFDB that use them.
     """
+
     def __init__(self):
         from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC, MultiKnowl
-        super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
+        super().__init__([Points(),
+                          PointCompleteness(),
+                          GonalityBounds(),
+                          Models(),
+                          UniversalEC(),
+                          MultiKnowl()])
 
 
 @login_page.route("/uploads", methods=["GET", "POST"])

@@ -6,9 +6,10 @@ from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
 from sage.all import latex, Matrix, ZZ, Infinity
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
-                                        get_instances_by_Lhash_and_trace_hash)
+                                                get_instances_by_Lhash_and_trace_hash)
 
 logger = make_logger("ecnf")
+
 
 def curve_url(c):
     return url_for(".show_ecnf",
@@ -16,6 +17,7 @@ def curve_url(c):
                    conductor_label=c['conductor_label'],
                    class_label=c['iso_label'],
                    number=c['number'])
+
 
 class ECNF_isoclass():
 
@@ -42,7 +44,7 @@ class ECNF_isoclass():
         class label.  In either case the data will be obtained from
         the curve in the database with number 1 in the class.
         """
-        #print "label = %s" % label
+        # print "label = %s" % label
         try:
             if label[-1].isdigit():
                 data = db.ec_nfcurves.lookup(label)
@@ -94,57 +96,92 @@ class ECNF_isoclass():
         self.field_name = field_pretty(self.field_label)
         self.field_knowl = nf_display_knowl(self.field_label, self.field_name)
 
-        self.curves = [[c['short_label'], curve_url(c), web_ainvs(self.field_label,c['ainvs'])] for c in self.db_curves]
+        self.curves = [[c['short_label'], curve_url(c), web_ainvs(
+            self.field_label, c['ainvs'])] for c in self.db_curves]
 
         self.urls = {}
-        self.urls['class'] = url_for(".show_ecnf_isoclass", nf=self.field_label, conductor_label=self.conductor_label, class_label=self.iso_label)
-        self.urls['conductor'] = url_for(".show_ecnf_conductor", nf=self.field_label, conductor_label=self.conductor_label)
+        self.urls['class'] = url_for(
+            ".show_ecnf_isoclass",
+            nf=self.field_label,
+            conductor_label=self.conductor_label,
+            class_label=self.iso_label)
+        self.urls['conductor'] = url_for(
+            ".show_ecnf_conductor",
+            nf=self.field_label,
+            conductor_label=self.conductor_label)
         self.urls['field'] = url_for('.show_ecnf1', nf=self.field_label)
         sig = self.signature
         totally_real = sig[1] == 0
-        imag_quadratic = sig == [0,1]
+        imag_quadratic = sig == [0, 1]
         if totally_real:
-            self.hmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
-            self.urls['hmf'] = url_for('hmf.render_hmf_webpage', field_label=self.field_label, label=self.hmf_label)
-            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            self.hmf_label = "-".join([self.field_label,
+                                       self.conductor_label, self.iso_label])
+            self.urls['hmf'] = url_for(
+                'hmf.render_hmf_webpage',
+                field_label=self.field_label,
+                label=self.hmf_label)
+            lfun_url = url_for(
+                "l_functions.l_function_ecnf_page",
+                field_label=self.field_label,
+                conductor_label=self.conductor_label,
+                isogeny_class_label=self.iso_label)
             origin_url = lfun_url.lstrip('/L/').rstrip('/')
             if sig[0] <= 2 and db.lfunc_instances.exists({'url': origin_url}):
                 self.urls['Lfunction'] = lfun_url
             elif self.abs_disc ** 2 * self.conductor_norm < 40000:
-                # we shouldn't trust the Lfun computed on the fly for large conductor
-                self.urls['Lfunction'] = url_for("l_functions.l_function_hmf_page", field=self.field_label, label=self.hmf_label, character='0', number='0')
+                # we shouldn't trust the Lfun computed on the fly for large
+                # conductor
+                self.urls['Lfunction'] = url_for(
+                    "l_functions.l_function_hmf_page",
+                    field=self.field_label,
+                    label=self.hmf_label,
+                    character='0',
+                    number='0')
 
         if imag_quadratic:
-            self.bmf_label = "-".join([self.field_label, self.conductor_label, self.iso_label])
-            self.bmf_url = url_for('bmf.render_bmf_webpage', field_label=self.field_label, level_label=self.conductor_label, label_suffix=self.iso_label)
-            lfun_url = url_for("l_functions.l_function_ecnf_page", field_label=self.field_label, conductor_label=self.conductor_label, isogeny_class_label=self.iso_label)
+            self.bmf_label = "-".join([self.field_label,
+                                       self.conductor_label, self.iso_label])
+            self.bmf_url = url_for(
+                'bmf.render_bmf_webpage',
+                field_label=self.field_label,
+                level_label=self.conductor_label,
+                label_suffix=self.iso_label)
+            lfun_url = url_for(
+                "l_functions.l_function_ecnf_page",
+                field_label=self.field_label,
+                conductor_label=self.conductor_label,
+                isogeny_class_label=self.iso_label)
             origin_url = lfun_url.lstrip('/L/').rstrip('/')
-            if db.lfunc_instances.exists({'url':origin_url}):
+            if db.lfunc_instances.exists({'url': origin_url}):
                 self.urls['Lfunction'] = lfun_url
 
         # most of this code is repeated in WebEllipticCurve.py
         # and should be refactored
         self.friends = []
         if totally_real and 'Lfunction' not in self.urls:
-            self.friends += [('Hilbert modular form ' + self.hmf_label, self.urls['hmf'])]
+            self.friends += [('Hilbert modular form ' +
+                              self.hmf_label, self.urls['hmf'])]
 
         if imag_quadratic:
             if "CM" in self.label:
                 self.friends += [('Bianchi modular form is not cuspidal', '')]
             elif 'Lfunction' not in self.urls:
                 if db.bmf_forms.label_exists(self.bmf_label):
-                    self.friends += [('Bianchi modular form %s' % self.bmf_label, self.bmf_url)]
+                    self.friends += [('Bianchi modular form %s' %
+                                      self.bmf_label, self.bmf_url)]
                 else:
-                    self.friends += [('(Bianchi modular form %s)' % self.bmf_label, '')]
+                    self.friends += [('(Bianchi modular form %s)' %
+                                      self.bmf_label, '')]
 
         if 'Lfunction' in self.urls:
-            Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip('/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
+            Lfun = get_lfunction_by_url(self.urls['Lfunction'].lstrip(
+                '/L').rstrip('/'), projection=['degree', 'trace_hash', 'Lhash'])
             instances = get_instances_by_Lhash_and_trace_hash(
-                    Lfun['Lhash'],
-                    Lfun['degree'],
-                    Lfun.get('trace_hash'))
+                Lfun['Lhash'],
+                Lfun['degree'],
+                Lfun.get('trace_hash'))
             exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
-                     if elt[1]}
+                       if elt[1]}
             exclude.add(lfun_url.lstrip('/L/').rstrip('/'))
             self.friends += names_and_urls(instances, exclude=exclude)
             self.friends += [('L-function', self.urls['Lfunction'])]
@@ -155,7 +192,7 @@ class ECNF_isoclass():
                            ('Label', self.class_label),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.conductor_label)
-                       ]
+                           ]
         if self.rk != '?':
             self.properties += [('Rank', '%s' % self.rk)]
         else:
@@ -197,52 +234,68 @@ def make_graph(M):
             # o--o--o
             centervert = [i for i in range(3) if max(MM.row(i)) < maxdegree][0]
             other = [i for i in range(3) if i != centervert]
-            G.set_pos(pos={centervert: [0, 0], other[0]: [-1, 0], other[1]: [1, 0]})
+            G.set_pos(pos={centervert: [0, 0],
+                           other[0]: [-1, 0], other[1]: [1, 0]})
         elif maxdegree == 4:
             # o--o<8
             centervert = [i for i in range(4) if max(MM.row(i)) < maxdegree][0]
             other = [i for i in range(4) if i != centervert]
-            G.set_pos(pos={centervert: [0, 0], other[0]: [0, 1], other[1]: [-0.8660254, -0.5], other[2]: [0.8660254, -0.5]})
+            G.set_pos(pos={centervert: [0, 0], other[0]: [
+                      0, 1], other[1]: [-0.8660254, -0.5], other[2]: [0.8660254, -0.5]})
         elif maxdegree == 27 and n == 4:
             # o--o--o--o
             centers = [i for i in range(4) if list(MM.row(i)).count(3) == 2]
-            left = [j for j in range(4) if MM[centers[0], j] == 3 and j not in centers][0]
-            right = [j for j in range(4) if MM[centers[1], j] == 3 and j not in centers][0]
-            G.set_pos(pos={left: [-1.5, 0], centers[0]: [-0.5, 0], centers[1]: [0.5, 0], right: [1.5, 0]})
+            left = [j for j in range(4) if MM[centers[0], j]
+                    == 3 and j not in centers][0]
+            right = [j for j in range(
+                4) if MM[centers[1], j] == 3 and j not in centers][0]
+            G.set_pos(pos={left: [-1.5, 0], centers[0]: [-0.5, 0],
+                           centers[1]: [0.5, 0], right: [1.5, 0]})
         elif n == 4:
             # square
             opp = [i for i in range(1, 4) if not MM[0, i].is_prime()][0]
             other = [i for i in range(1, 4) if i != opp]
-            G.set_pos(pos={0: [1, 1], other[0]: [-1, 1], opp: [-1, -1], other[1]: [1, -1]})
+            G.set_pos(pos={0: [1, 1], other[0]: [-1, 1],
+                           opp: [-1, -1], other[1]: [1, -1]})
         elif maxdegree == 8:
             # 8>o--o<8
             centers = [i for i in range(6) if list(MM.row(i)).count(2) == 3]
-            left = [j for j in range(6) if MM[centers[0], j] == 2 and j not in centers]
-            right = [j for j in range(6) if MM[centers[1], j] == 2 and j not in centers]
-            G.set_pos(pos={centers[0]: [-0.5, 0], left[0]: [-1, 0.8660254], left[1]: [-1, -0.8660254], centers[1]: [0.5, 0], right[0]: [1, 0.8660254], right[1]: [1, -0.8660254]})
+            left = [j for j in range(6) if MM[centers[0], j]
+                    == 2 and j not in centers]
+            right = [j for j in range(
+                6) if MM[centers[1], j] == 2 and j not in centers]
+            G.set_pos(pos={centers[0]: [-0.5, 0], left[0]: [-1, 0.8660254], left[1]: [-1, -0.8660254],
+                           centers[1]: [0.5, 0], right[0]: [1, 0.8660254], right[1]: [1, -0.8660254]})
         elif maxdegree == 18 and n == 6:
             # two squares joined on an edge
             centers = [i for i in range(6) if list(MM.row(i)).count(3) == 2]
             top = [j for j in range(6) if MM[centers[0], j] == 3]
             bl = [j for j in range(6) if MM[top[0], j] == 2][0]
             br = [j for j in range(6) if MM[top[1], j] == 2][0]
-            G.set_pos(pos={centers[0]: [0, 0.5], centers[1]: [0, -0.5], top[0]: [-1, 0.5], top[1]: [1, 0.5], bl: [-1, -0.5], br: [1, -0.5]})
+            G.set_pos(pos={centers[0]: [0, 0.5], centers[1]: [
+                      0, -0.5], top[0]: [-1, 0.5], top[1]: [1, 0.5], bl: [-1, -0.5], br: [1, -0.5]})
         elif maxdegree == 16 and n == 8:
             # tree from bottom, 3 regular except for the leaves.
             centers = [i for i in range(8) if list(MM.row(i)).count(2) == 3]
-            center = [i for i in centers if len([j for j in centers if MM[i, j] == 2]) == 2][0]
+            center = [i for i in centers if len(
+                [j for j in centers if MM[i, j] == 2]) == 2][0]
             centers.remove(center)
-            bottom = [j for j in range(8) if MM[center, j] == 2 and j not in centers][0]
-            left = [j for j in range(8) if MM[centers[0], j] == 2 and j != center]
-            right = [j for j in range(8) if MM[centers[1], j] == 2 and j != center]
-            G.set_pos(pos={center: [0, 0], bottom: [0, -1], centers[0]: [-0.8660254, 0.5], centers[1]: [0.8660254, 0.5], left[0]: [-0.8660254, 1.5], right[0]: [0.8660254, 1.5], left[1]: [-1.7320508, 0], right[1]: [1.7320508, 0]})
+            bottom = [j for j in range(
+                8) if MM[center, j] == 2 and j not in centers][0]
+            left = [j for j in range(
+                8) if MM[centers[0], j] == 2 and j != center]
+            right = [j for j in range(
+                8) if MM[centers[1], j] == 2 and j != center]
+            G.set_pos(pos={center: [0, 0], bottom: [0, -1], centers[0]: [-0.8660254, 0.5], centers[1]: [0.8660254, 0.5],
+                           left[0]: [-0.8660254, 1.5], right[0]: [0.8660254, 1.5], left[1]: [-1.7320508, 0], right[1]: [1.7320508, 0]})
         elif maxdegree == 12:
             # tent
             centers = [i for i in range(8) if list(MM.row(i)).count(2) == 3]
             left = [j for j in range(8) if MM[centers[0], j] == 2]
             right = []
             for i in range(3):
-                right.append([j for j in range(8) if MM[centers[1], j] == 2 and MM[left[i], j] == 3][0])
+                right.append(
+                    [j for j in range(8) if MM[centers[1], j] == 2 and MM[left[i], j] == 3][0])
             G.set_pos(pos={centers[0]: [-0.3, 0], centers[1]: [0.3, 0],
                            left[0]: [-0.14, 0.15], right[0]: [0.14, 0.15],
                            left[1]: [-0.14, -0.15], right[1]: [0.14, -0.15],

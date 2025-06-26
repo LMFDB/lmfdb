@@ -61,7 +61,8 @@ class SymmetricPowerLFunction(SageObject):
             s = m - 2 * i
             s2 = s // 2
 
-            TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in range(s2 + 1)])
+            TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k)
+                      for k in range(s2 + 1)])
 
             if s % 2 != 0:
                 TI = ap * TI
@@ -73,7 +74,7 @@ class SymmetricPowerLFunction(SageObject):
         return F.coefficients(sparse=False)
 
     def an_list(self, upperbound=100000):
-        #from sage.rings.fast_arith import prime_range # imported but unused
+        # from sage.rings.fast_arith import prime_range # imported but unused
         from lmfdb.utils import an_list
         return an_list(self.eulerFactor, upperbound=upperbound,
                        base_field=sage.rings.all.RationalField())
@@ -111,7 +112,8 @@ class SymmetricPowerLFunction(SageObject):
             Q = (2 * self.conductor / (2 * RR.pi()) ** (self.m + 1)).sqrt()
 
             kapp = v * [1.0] + [0.5]
-            gamm = [self.m / 2.0 - i for i in range(v)] + [self.m / 4.0 - v // 2]
+            gamm = [self.m / 2.0 -
+                    i for i in range(v)] + [self.m / 4.0 - v // 2]
 
             self._kappa_fe = kapp
             self._lambda_fe = gamm
@@ -119,7 +121,8 @@ class SymmetricPowerLFunction(SageObject):
             poles = []
             residues = []
 
-            # return lcalc.Lfunction_D("", 0,coeffs,0,Q, self.root_number, kapp, gamm,poles,residues)
+            # return lcalc.Lfunction_D("", 0,coeffs,0,Q, self.root_number,
+            # kapp, gamm,poles,residues)
 
         # generate data for renderer
         self._Q_fe = Q
@@ -129,7 +132,17 @@ class SymmetricPowerLFunction(SageObject):
         # self._kappa_fe=gamm
         # self._lambda_fe=[]
 
-        self._L = lcalc.Lfunction_D("", 0, coeffs, 0, Q, self.root_number, kapp, gamm, poles, residues)
+        self._L = lcalc.Lfunction_D(
+            "",
+            0,
+            coeffs,
+            0,
+            Q,
+            self.root_number,
+            kapp,
+            gamm,
+            poles,
+            residues)
         return self._L
 
 
@@ -158,7 +171,8 @@ def symmetricEulerFactor(E, m, p):
         s2 = s // 2
         ap = E.ap(p)
 
-        TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k) for k in range(s2 + 1)])
+        TI = sum([tbin(s, s2 - k) * ap ** (2 * k) * p ** (s2 - k)
+                  for k in range(s2 + 1)])
 
         if s % 2 != 0:
             TI = ap * TI
@@ -175,5 +189,6 @@ def symmetricPowerLfunction(E, n):
     """gives lcalc version of symmetric power L function"""
     bad_primes, conductor, root_number = sympowlmfdb.local_data(E, n)
 
-#What is the point of this last line?
+
+# What is the point of this last line?
 sympowlmfdb

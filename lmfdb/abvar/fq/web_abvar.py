@@ -11,11 +11,15 @@ from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 
 lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
 
+
 def split_label(lab):
     return lmfdb_label_regex.match(lab).groups()
 
+
 def av_display_knowl(label):
-    return '<a title = "[av.data]" knowl="av.fq.abvar.data" kwargs="label={0}">{1}</a>'.format(str(label), label)
+    return '<a title = "[av.data]" knowl="av.fq.abvar.data" kwargs="label={0}">{1}</a>'.format(
+        str(label), label)
+
 
 def av_data(label):
     abvar = db.av_fq_isog.lookup(label)
@@ -31,7 +35,9 @@ def av_data(label):
                 + nf_display_knowl(nf, name=field_pretty(nf))
                 + "<br />"
             )
-            inf += "Galois group: " + transitive_group_display_knowl(abvar["galois_groups"][0]) + "<br />"
+            inf += "Galois group: " + \
+                transitive_group_display_knowl(
+                    abvar["galois_groups"][0]) + "<br />"
     inf += "$p$-rank: " + str(abvar["p_rank"]) + "</div>"
     inf += '<div align="right">'
     g, q, iso = split_label(label)

@@ -1,9 +1,14 @@
 
+from . import half_integral_form
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
 
-hiwf_page = Blueprint("hiwf", __name__, template_folder='templates', static_folder="static")
+hiwf_page = Blueprint(
+    "hiwf",
+    __name__,
+    template_folder='templates',
+    static_folder="static")
 hiwf_logger = make_logger(hiwf_page)
 
 
@@ -11,7 +16,9 @@ hiwf_logger = make_logger(hiwf_page)
 def body_class():
     return {'body_class': 'hiwf'}
 
-from . import half_integral_form
+
 assert half_integral_form
 
-app.register_blueprint(hiwf_page, url_prefix="/ModularForm/GL2/Q/holomorphic_half")
+app.register_blueprint(
+    hiwf_page,
+    url_prefix="/ModularForm/GL2/Q/holomorphic_half")

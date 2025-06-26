@@ -6,10 +6,12 @@ from lmfdb import db
 
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
+
 class ModCurveIsog_class():
     """
     Class for a Gassmann class of modular curves over Q
     """
+
     def __init__(self, dbdata):
         """
         Arguments:
@@ -35,11 +37,11 @@ class ModCurveIsog_class():
                 return "Invalid label"
 
             N, i, g, iso = label.split(".")
-            iso_num = class_to_int(iso)+1
-            data = db.gps_gl2zhat_fine.lucky({"coarse_level" : N,
-                                              "coarse_index" : i,
-                                              "genus" : g,
-                                              "coarse_class_num" : iso_num})
+            iso_num = class_to_int(iso) + 1
+            data = db.gps_gl2zhat_fine.lucky({"coarse_level": N,
+                                              "coarse_index": i,
+                                              "genus": g,
+                                              "coarse_class_num": iso_num})
             if data is None:
                 return "Class not found"
             data['label_type'] = 'LMFDB'
@@ -50,11 +52,11 @@ class ModCurveIsog_class():
                     return "Invalid label"
                 # !!! Do we have other labels for which the label remembers the Gassmann class?
             except AttributeError:
-                return "Invalid label" # caller must catch this and raise an error
+                return "Invalid label"  # caller must catch this and raise an error
 
         if data:
             return ModCurveIsog_class(data)
-        return "Class not found" # caller must catch this and raise an error
+        return "Class not found"  # caller must catch this and raise an error
 
     def make_class(self):
         # Extract the size of the Gassmann class from the database
@@ -62,11 +64,11 @@ class ModCurveIsog_class():
         # classdata = db.ec_classdata.lucky({'lmfdb_iso': self.lmfdb_iso})
         # self.class_size = ncurves = classdata['class_size']
 
-        query = {'coarse_level' : self.coarse_level,
-                 'coarse_index' : self.coarse_index,
-                 'genus' : self.genus,
-                 'coarse_class_num' : self.coarse_class_num,
-                 'contains_negative_one' : True}
+        query = {'coarse_level': self.coarse_level,
+                 'coarse_index': self.coarse_index,
+                 'genus': self.genus,
+                 'coarse_class_num': self.coarse_class_num,
+                 'contains_negative_one': True}
 
         self.class_size = ncurves = db.gps_gl2zhat_fine.count(query)
 
@@ -74,7 +76,7 @@ class ModCurveIsog_class():
         number_key = 'coarse_num'
         self.curves = []
         for i in range(ncurves):
-            query.update({number_key : i+1})
+            query.update({number_key: i + 1})
             self.curves.append(db.gps_gl2zhat_fine.lucky(query))
 
         for c in self.curves:
@@ -103,9 +105,11 @@ class ModCurveIsog_class():
                            ]
 
         if self.conductor is not None:
-            self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
+            self.properties.append(
+                ('Conductor', '$' + self.web_curve.factored_conductor + '$'))
         if self.rank is not None:
-            self.properties.append(('Analytic rank', prop_int_pretty(self.rank)))
+            self.properties.append(
+                ('Analytic rank', prop_int_pretty(self.rank)))
 
         self.friends = self.web_curve.friends[1:]
 
@@ -142,4 +146,4 @@ class ModCurveIsog_class():
                       ('%s' % self.coarse_level, base_query + level_query),
                       ('%s' % self.coarse_index, base_query + index_query),
                       ('%s' % self.genus, base_query + genus_query),
-                      ('%s' % cremona_letter_code(self.coarse_class_num-1), base_query + self_query)]
+                      ('%s' % cremona_letter_code(self.coarse_class_num - 1), base_query + self_query)]

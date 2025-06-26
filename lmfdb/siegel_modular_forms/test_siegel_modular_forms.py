@@ -5,7 +5,10 @@ from lmfdb import db
 
 class HomePageTest(LmfdbTest):
     def check(self, url, text):
-        data = self.tc.get("/ModularForm/GSp/Q/" + url, follow_redirects=True).get_data(as_text=True)
+        data = self.tc.get(
+            "/ModularForm/GSp/Q/" + url,
+            follow_redirects=True).get_data(
+            as_text=True)
         if isinstance(text, list):
             for t in text:
                 assert t in data, (
@@ -32,7 +35,8 @@ class HomePageTest(LmfdbTest):
             "Sp4Z/",
             ["Galois orbits", "Klingen", "Eisenstein", "Maass", "Saito-Kurokawa"],
         )
-        self.check("Sp4Z_2/", ["Galois orbits", "Cusp", "Non cusp", "Satoh bracket"])
+        self.check("Sp4Z_2/", ["Galois orbits", "Cusp",
+                               "Non cusp", "Satoh bracket"])
         self.check("Kp/", "in level 277, the")
         self.check("Sp6Z/", "Miyawaki (1)")
         self.check("Sp8Z/", "Other_II (2)")
@@ -61,18 +65,32 @@ class HomePageTest(LmfdbTest):
         self.check("?family=Gamma_2&k=&j=&table=1", ["111111", "3111"])
         self.check("?family=Gamma_2&k=&j=2&table=1", ["111111", "3111"])
         self.check("?family=Gamma0_3&k=&j=&table=1", ["Total", "74"])
-        self.check("?family=Gamma0_3&k=&j=2&table=1", "should not be specified")
+        self.check(
+            "?family=Gamma0_3&k=&j=2&table=1",
+            "should not be specified")
         self.check("?family=Gamma0_3_psi_3&k=&j&table=1", ["Total", "68"])
-        self.check("?family=Gamma0_3_psi_3&k=&j=2&table=1", "should not be specified")
+        self.check(
+            "?family=Gamma0_3_psi_3&k=&j=2&table=1",
+            "should not be specified")
         self.check("?family=Gamma0_4&k=&j=&table=1", ["Total", "192"])
-        self.check("?family=Gamma0_4&k=&j=2&table=1", "should not be specified")
+        self.check(
+            "?family=Gamma0_4&k=&j=2&table=1",
+            "should not be specified")
         self.check("?family=Gamma0_4_psi_4&k=&j&table=1", ["Total", "495"])
-        self.check("?family=Gamma0_4_psi_4&k=&j=2&table=1", "should not be specified")
+        self.check(
+            "?family=Gamma0_4_psi_4&k=&j=2&table=1",
+            "should not be specified")
         self.check("?family=Gamma0_4_half&k=&j&table=1", ["Cusp", "129"])
-        self.check("?family=Gamma0_4_half&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Sp6Z&k=&j&table=1", ["Miyawaki lifts", "conjectured"])
+        self.check(
+            "?family=Gamma0_4_half&k=&j=2&table=1",
+            "should not be specified")
+        self.check(
+            "?family=Sp6Z&k=&j&table=1", [
+                "Miyawaki lifts", "conjectured"])
         self.check("?family=Sp6Z&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Sp8Z&k=&j&table=1", ["Ikeda lifts", "Miyawaki lifts"])
+        self.check(
+            "?family=Sp8Z&k=&j&table=1", [
+                "Ikeda lifts", "Miyawaki lifts"])
         self.check("?family=Sp8Z&k=&j=2&table=1", "should not be specified")
 
     def test_sample_page_Q(self):
@@ -123,7 +141,8 @@ class HomePageTest(LmfdbTest):
         Test sample page with defining equation and explicit formula too large to display
         """
         self.check(
-            "Sp4Z.56_Ups", ["interesting cusp form", "6085 bytes", "7912968 bytes"]
+            "Sp4Z.56_Ups", ["interesting cusp form",
+                            "6085 bytes", "7912968 bytes"]
         )
 
     def test_all_sample_pages(self):

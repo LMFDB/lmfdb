@@ -56,8 +56,8 @@ def learnmore_list_add(learnmore_label, learnmore_url):
 def search_by_label(label):
     try:
         mf = WebMaassForm.by_label(label)
-    except (KeyError,ValueError) as err:
-        return abort(404,err.args)
+    except (KeyError, ValueError) as err:
+        return abort(404, err.args)
     info = to_dict(request.args)
     learnmore_picture = ('Picture description', url_for('.picture_page'))
     return render_template("maass_form.html",
@@ -80,7 +80,10 @@ def search_by_label(label):
 
 @maass_forms_page.route('/')
 def index():
-    info = to_dict(request.args, search_array=MaassSearchArray(), stats=MaassStats())
+    info = to_dict(
+        request.args,
+        search_array=MaassSearchArray(),
+        stats=MaassStats())
     if request.args:
         return search(info)
     title = 'Maass forms'
@@ -140,7 +143,7 @@ def maass_data(label):
 @maass_forms_page.route('/Source')
 def source_page():
     t = 'Source of Maass form data'
-    bread = bread_prefix() + [('Source','')]
+    bread = bread_prefix() + [('Source', '')]
     return render_template('multi.html', kids=['rcs.source.maass_rigor',
                                                'rcs.ack.maass_rigor',
                                                'rcs.cite.maass_rigor'],
@@ -150,7 +153,7 @@ def source_page():
 @maass_forms_page.route('/Completeness')
 def completeness_page():
     t = 'Completeness of Maass form data'
-    bread = bread_prefix() + [('Completeness','')]
+    bread = bread_prefix() + [('Completeness', '')]
     return render_template('single.html', kid='rcs.cande.maass_rigor',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
@@ -158,7 +161,7 @@ def completeness_page():
 @maass_forms_page.route('/Reliability')
 def reliability_page():
     t = 'Reliability of Maass form data'
-    bread = bread_prefix() + [('Reliability','')]
+    bread = bread_prefix() + [('Reliability', '')]
     return render_template('single.html', kid='rcs.rigor.maass_rigor',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
@@ -209,7 +212,8 @@ def interesting():
 def statistics():
     title = "Maass forms: statistics"
     bread = bread_prefix() + [("Statistics", " ")]
-    return render_template("display_stats.html", info=MaassStats(), title=title, bread=bread, learnmore=learnmore_list())
+    return render_template("display_stats.html", info=MaassStats(
+    ), title=title, bread=bread, learnmore=learnmore_list())
 
 
 @maass_forms_page.route("/<int:level>/")
@@ -229,7 +233,8 @@ def by_level_weight(level, weight):
         return redirect(url_for('.index', **request.args), code=307)
     else:
         info['level'] = str(level)
-        info['weight'] = str(weight) # str needed since search_wrap will remove 0 as an int
+        # str needed since search_wrap will remove 0 as an int
+        info['weight'] = str(weight)
         return search(info)
 
 
@@ -262,7 +267,8 @@ def browse_graph(min_level, max_level, min_R, max_R):
     bread = bread_prefix() + [('Browse graph', '')]
     info['bread'] = bread
     info['learnmore'] = learnmore_list()
-    return render_template("maass_browse_graph.html", title='Browsing graph of Maass forms', **info)
+    return render_template("maass_browse_graph.html",
+                           title='Browsing graph of Maass forms', **info)
 
 
 ###############################################################################
@@ -281,10 +287,27 @@ class MaassSearchArray(SearchArray):
     jump_prompt = "Label"
 
     def __init__(self):
-        level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="2 or 1-10")
-        weight = TextBox(name="weight", label="Weight", knowl="mf.maass.mwf.weight", example="0", example_span="0 (only weight 0 currently available)")
-        character = TextBox(name="character", label="Character", knowl="mf.maass.mwf.character", example="1.1", example_span="1.1 or 5.1 (only trivial character currently available)")
-        symmetry = SelectBox(name="symmetry", label="Symmetry", knowl="mf.maass.mwf.symmetry", options=[("", "any symmetry"), ("0", "even only"), ("1", "odd only")])
+        level = TextBox(
+            name="level",
+            label="Level",
+            knowl="mf.maass.mwf.level",
+            example="1",
+            example_span="2 or 1-10")
+        weight = TextBox(
+            name="weight",
+            label="Weight",
+            knowl="mf.maass.mwf.weight",
+            example="0",
+            example_span="0 (only weight 0 currently available)")
+        character = TextBox(
+            name="character",
+            label="Character",
+            knowl="mf.maass.mwf.character",
+            example="1.1",
+            example_span="1.1 or 5.1 (only trivial character currently available)")
+        symmetry = SelectBox(
+            name="symmetry", label="Symmetry", knowl="mf.maass.mwf.symmetry", options=[
+                ("", "any symmetry"), ("0", "even only"), ("1", "odd only")])
         spectral_parameter = TextBox(name="spectral_parameter",
                                      label="Spectral parameter",
                                      knowl="mf.maass.mwf.spectralparameter",
@@ -299,20 +322,24 @@ class MaassSearchArray(SearchArray):
             [symmetry],
             [count]
         ]
-        self.refine_array = [[level, weight, character, spectral_parameter, symmetry]]
+        self.refine_array = [
+            [level, weight, character, spectral_parameter, symmetry]]
 
 
-@search_parser # see SearchParser.__call__ for actual arguments when calling
+@search_parser  # see SearchParser.__call__ for actual arguments when calling
 def parse_character(inp, query, qfield):
     if not CHARACTER_LABEL_RE.match(inp):
-        raise ValueError("Character labels must be of the form q.n, where q and n are positive integers.")
+        raise ValueError(
+            "Character labels must be of the form q.n, where q and n are positive integers.")
     level_field, conrey_index_field = 'level', 'conrey_index'
     level, conrey_index = inp.split('.')
     level, conrey_index = int(level), int(conrey_index)
     if conrey_index > level:
-        raise ValueError("Character labels q.n must have Conrey index n no greater than the modulus q.")
+        raise ValueError(
+            "Character labels q.n must have Conrey index n no greater than the modulus q.")
     if gcd(level, conrey_index) != 1:
-        raise ValueError("Character labels q.n must have Conrey index coprime to the modulus q.")
+        raise ValueError(
+            "Character labels q.n must have Conrey index coprime to the modulus q.")
 
     def contains_level(D):
         if D == level:
@@ -326,11 +353,13 @@ def parse_character(inp, query, qfield):
     # given by the character, and update level/$or
     if '$or' in query and all(level_field in D for D in query['$or']):
         if not any(contains_level(D) for D in query['$or']):
-            raise ValueError("The modulus is not consistent with the specified level.")
+            raise ValueError(
+                "The modulus is not consistent with the specified level.")
         del query['$or']
     elif level_field in query:
         if not contains_level(query[level_field]):
-            raise ValueError("The modulus is not consistent with the specified level.")
+            raise ValueError(
+                "The modulus is not consistent with the specified level.")
     query[level_field] = level
     query[conrey_index_field] = conrey_index
 
@@ -345,7 +374,12 @@ def get_url(label):
 
 
 maass_columns = SearchColumns([
-    ProcessedLinkCol("maass_label", "mf.maass.label", "Label", get_url, short_label),
+    ProcessedLinkCol(
+        "maass_label",
+        "mf.maass.label",
+        "Label",
+        get_url,
+        short_label),
     MathCol("level", "mf.maass.mwf.level", "Level"),
     MathCol("weight", "mf.maass.mwf.weight", "Weight"),
     MultiProcessedCol("character", "mf.maass.mwf.character", "Char",
@@ -425,7 +459,11 @@ class MaassStats(StatsDisplay):
               'symmetry': 'mf.maass.mwf.symmetry'}
 
     formatters = {'symmetry': (lambda t: 'even' if t in [0, '0'] else 'odd')}
-    query_formatters = {'symmetry': (lambda t: 'symmetry=%s' % (1 if t in [1, '1', 'odd'] else 0))}
+    query_formatters = {
+        'symmetry': (
+            lambda t: 'symmetry=%s' %
+            (1 if t in [
+                1, '1', 'odd'] else 0))}
 
     def __init__(self):
         self.nforms = self.table.count()
@@ -433,8 +471,11 @@ class MaassStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return self.summary + '  Here are some <a href="%s">further statistics</a>.' % (url_for(".statistics"))
+        return self.summary + \
+            '  Here are some <a href="%s">further statistics</a>.' % (
+                url_for(".statistics"))
 
     @property
     def summary(self):
-        return r"The database currently contains %s %s of %s 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to %s." % (comma(self.nforms), display_knowl('mf.maass.mwf', 'Maass forms'), display_knowl('mf.maass.mwf.weight', 'weight'), self.max_level)
+        return r"The database currently contains %s %s of %s 0 on $\Gamma_0(N)$ for $N$ in the range from 1 to %s." % (comma(
+            self.nforms), display_knowl('mf.maass.mwf', 'Maass forms'), display_knowl('mf.maass.mwf.weight', 'weight'), self.max_level)

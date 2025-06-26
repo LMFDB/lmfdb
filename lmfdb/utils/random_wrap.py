@@ -1,5 +1,7 @@
 from functools import wraps
 from flask import make_response, redirect
+
+
 def redirect_no_cache(f):
     @wraps(f)
     def wrapper(*args, **kwds):

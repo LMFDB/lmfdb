@@ -23,11 +23,13 @@ class CustomRedirectHandler(HTTPRedirectHandler):
         # by passing the code 307.
         return self.http_error_307(req, fp, 307, msg, headers)
 
+
 class LmfdbTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         app.config["TESTING"] = True
-        # Ensure secret key is set for testing (required for session functionality like flash messages)
+        # Ensure secret key is set for testing (required for session
+        # functionality like flash messages)
         if not app.secret_key:
             app.secret_key = "test_secret_key_for_testing_only"
         cls.app = app
@@ -79,11 +81,15 @@ class LmfdbTest(unittest.TestCase):
         request = Request(path, headers=headers)
         assert path in homepage, f"Path {path} not found in homepage"
         try:
-            # Create opener that follows redirects for both HTTP and HTTPS, including 308
+            # Create opener that follows redirects for both HTTP and HTTPS,
+            # including 308
             redirect_handler = CustomRedirectHandler()
             http_handler = HTTPHandler()
             https_handler = HTTPSHandler(context=context)
-            opener = build_opener(redirect_handler, http_handler, https_handler)
+            opener = build_opener(
+                redirect_handler,
+                http_handler,
+                https_handler)
             response = opener.open(request)
 
             # Check if we were redirected
@@ -95,9 +101,11 @@ class LmfdbTest(unittest.TestCase):
 
             assert text in response_text, f"Text '{text}' not found in response from {path} (final URL: {final_url})"
         except URLError as e:
-            if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
+            if e.errno in [errno.ETIMEDOUT,
+                           errno.ECONNREFUSED, errno.EHOSTDOWN]:
                 pass
-            elif "Connection refused" in str(e):  # not every error comes with a errno
+            # not every error comes with a errno
+            elif "Connection refused" in str(e):
                 pass
             else:
                 print(e)
@@ -156,4 +164,5 @@ class LmfdbTest(unittest.TestCase):
           sage code. This then allows the developer
           to implement subsequent checks.
         """
-        return self.check_sage_compiles_and_extract_variables(sage_code)[my_name]
+        return self.check_sage_compiles_and_extract_variables(sage_code)[
+            my_name]

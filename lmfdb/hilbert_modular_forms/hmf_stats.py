@@ -8,10 +8,12 @@ from sage.misc.cachefunc import cached_method
 
 logger = make_logger("hmf")
 
+
 class HMFstats(StatsDisplay):
     """
     Class for creating and displaying statistics for Hilbert modular forms
     """
+
     def __init__(self):
         self.nforms = db.hmf_forms.count()
 
@@ -35,14 +37,17 @@ class HMFstats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return self.summary + "  Here are some <a href='%s'>further statistics</a>." % (url_for(".statistics"),)
+        return self.summary + \
+            "  Here are some <a href='%s'>further statistics</a>." % (
+                url_for(".statistics"),)
 
     @property
     def summary(self):
         hmf_knowl = '<a knowl="mf.hilbert">Hilbert modular forms</a>'
         nf_knowl = '<a knowl="nf.totally_real">totally real number fields</a>'
         deg_knowl = '<a knowl="nf.degree">degree</a>'
-        return "The database currently contains %s %s over %s %s of %s 2 to %s." % (comma(self.nforms), hmf_knowl, self.counts()["nfields"], nf_knowl, deg_knowl, self.counts()["maxdeg"])
+        return "The database currently contains %s %s over %s %s of %s 2 to %s." % (comma(
+            self.nforms), hmf_knowl, self.counts()["nfields"], nf_knowl, deg_knowl, self.counts()["maxdeg"])
 
     def degree_summary(self, d):
         stats = self.statistics(d)
@@ -74,9 +79,11 @@ class HMFstats(StatsDisplay):
         counts["nfields_c"] = comma(len(fields))
         counts["maxdeg"] = max(degrees)
         counts["max_deg_c"] = comma(max(degrees))
-        counts["fields_by_degree"] = {d: [F["label"] for F in by_deg[d]] for d in degrees}
+        counts["fields_by_degree"] = {d: [F["label"]
+                                          for F in by_deg[d]] for d in degrees}
         counts["nfields_by_degree"] = {d: len(by_deg[d]) for d in degrees}
-        counts["max_disc_by_degree"] = {d: max(F["discriminant"] for F in by_deg[d]) for d in degrees}
+        counts["max_disc_by_degree"] = {
+            d: max(F["discriminant"] for F in by_deg[d]) for d in degrees}
         return counts
 
     @cached_method

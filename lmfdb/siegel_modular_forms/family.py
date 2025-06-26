@@ -10,8 +10,11 @@ import importlib
 import inspect
 from .sample import Samples
 
+
 def get_smf_families():
-    return [SiegelFamily(doc['name'], doc) for doc in db.smf_families.search({})]
+    return [SiegelFamily(doc['name'], doc)
+            for doc in db.smf_families.search({})]
+
 
 def get_smf_family(name):
     try:
@@ -27,9 +30,11 @@ class SiegelFamily (SageObject):
 
     def __init__(self, name, doc=None):
         if doc is None:
-            doc = db.smf_families.lucky({ 'name': name })
+            doc = db.smf_families.lucky({'name': name})
             if not doc:
-                raise ValueError('Siegel modular form family "%s" not found in database' % (name))
+                raise ValueError(
+                    'Siegel modular form family "%s" not found in database' %
+                    (name))
         self.name = name
         self.latex_name = doc.get('latex_name')
         if not self.latex_name:
@@ -39,14 +44,15 @@ class SiegelFamily (SageObject):
             self.plain_name = Latex(self.name)
         self.degree = doc.get('degree')
         self.dim_args_default = doc.get('dim_args_default')
-        module = importlib.import_module('lmfdb.siegel_modular_forms.dimensions')
-        self.__dimension = module.__dict__.get('dimension_'+name)
+        module = importlib.import_module(
+            'lmfdb.siegel_modular_forms.dimensions')
+        self.__dimension = module.__dict__.get('dimension_' + name)
         if self.__dimension:
             args = inspect.getfullargspec(self.__dimension).args
             self.__dimension_glossary = self.__dimension.__doc__
-            self.__dimension_desc = { 'name': name,
-                                      'args': args
-                                    }
+            self.__dimension_desc = {'name': name,
+                                     'args': args
+                                     }
         else:
             self.__dimension_desc = None
             self.__dimension_glossary = None
@@ -67,5 +73,6 @@ class SiegelFamily (SageObject):
 
     def samples(self):
         if not self.__samples:
-            self.__samples = Samples({'collection': {'$contains': [self.name]}})
+            self.__samples = Samples(
+                {'collection': {'$contains': [self.name]}})
         return self.__samples

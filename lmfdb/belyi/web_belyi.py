@@ -3,7 +3,7 @@ from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
 from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset,
-        web_latex, compress_expression)
+                         web_latex, compress_expression)
 from flask import url_for
 import re
 
@@ -44,6 +44,7 @@ def make_curve_latex(crv_str, nu=None):
         rhs = S(new_rhs)
     eqn_str = latex(lhs) + "=" + latex(rhs)
     return eqn_str
+
 
 def make_map_latex(map_str, nu=None):
     if "nu" not in map_str:
@@ -111,7 +112,7 @@ def make_map_latex(map_str, nu=None):
         phi_str = lc_str + "\\frac{%s}{%s}" % (num_str, den_str)
     return phi_str
 
-#def make_plane_model_latex(crv_str, nu=None):
+# def make_plane_model_latex(crv_str, nu=None):
 #    if "nu" not in crv_str:
 #        R0 = QQ
 #    else:
@@ -121,7 +122,7 @@ def make_map_latex(map_str, nu=None):
 #    #return teXify_pol(f)
 #    return latex(f)+"=0"
 #
-#def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
+# def make_plane_model_latex_factored(crv_str, numfld_cs, nu=None):
 #    R0 = PolynomialRing(QQ,"T")
 #    K = NumberField(R0(numfld_cs), "nu") # sage factors out constants, ruining integrality
 #    S0 = PolynomialRing(K,"x")
@@ -143,13 +144,14 @@ def make_map_latex(map_str, nu=None):
 #        f_str += latex(factor(cs[-1])) + latex(mons[-1])
 #    return f_str
 
+
 def belyi_latex(s):
-    str = s.replace('*',' ')
-    str = str.replace('(',r'\left(')
-    str = str.replace(')',r'\right)')
-    str = str.replace('nu',r'\nu')
+    str = s.replace('*', ' ')
+    str = str.replace('(', r'\left(')
+    str = str.replace(')', r'\right)')
+    str = str.replace('nu', r'\nu')
     # multidigit exponents
-    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}', str)
     return str
 
 ###############################################################################
@@ -186,9 +188,9 @@ class WebBelyiGalmap():
         """
         try:
             slabel = label.split("-")
-            if len(slabel) == 2: # passport label length
+            if len(slabel) == 2:  # passport label length
                 galmap = db.belyi_galmaps.lucky({"plabel": label})
-            elif len(slabel) == 3: # galmap label length
+            elif len(slabel) == 3:  # galmap label length
                 galmap = db.belyi_galmaps.lucky({"label": label})
             else:
                 raise ValueError("Invalid Belyi map label %s." % label)
@@ -207,10 +209,12 @@ class WebBelyiGalmap():
         from lmfdb.belyi.main import url_for_belyi_passport_label, url_for_belyi_galmap_label
 
         # all information about the map goes in the data dictionary
-        # most of the data from the database gets polished/formatted before we put it in the data dictionary
+        # most of the data from the database gets polished/formatted before we
+        # put it in the data dictionary
         data = self.data = {}
         # the stuff that does not need to be polished
-        for elt in ("label", "plabel", "triples_cyc", "orbit_size", "g", "abc", "deg", "primitivization", "is_primitive"):
+        for elt in ("label", "plabel", "triples_cyc", "orbit_size",
+                    "g", "abc", "deg", "primitivization", "is_primitive"):
             data[elt] = galmap[elt]
         if triple:
             data["label"] += '-' + (triple).replace(' ', '')
@@ -219,7 +223,8 @@ class WebBelyiGalmap():
 
         data["geomtype"] = geomtypelet_to_geomtypename_dict[galmap["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
-        data["primitivization_url"] = url_for_belyi_galmap_label(data['primitivization'])
+        data["primitivization_url"] = url_for_belyi_galmap_label(
+            data['primitivization'])
 
         data["isQQ"] = False
         data["in_LMFDB"] = False
@@ -263,9 +268,15 @@ class WebBelyiGalmap():
             data['embeddings_and_triples'].append(my_dict)
 
         # Friends
-        self.friends = [("Passport", url_for_belyi_passport_label(galmap["plabel"]))]
+        self.friends = [
+            ("Passport",
+             url_for_belyi_passport_label(
+                 galmap["plabel"]))]
         if galmap['label'] != galmap['primitivization']:
-            self.friends.append(("Primitivization", url_for_belyi_galmap_label(galmap["primitivization"])))
+            self.friends.append(
+                ("Primitivization",
+                 url_for_belyi_galmap_label(
+                     galmap["primitivization"])))
         self.friends.extend(names_and_urls(galmap['friends']))
 
         curve_ref = ''
@@ -289,13 +300,36 @@ class WebBelyiGalmap():
         if crv_str == "PP1":
             data["curve"] = r"$\mathbb{P}^1$"
         else:
-            data["curve"] = raw_typeset(crv_str, r'$\displaystyle '+compress_expression(make_curve_latex(crv_str, nu=self.embedding))+'$', extra=curve_ref)
+            data["curve"] = raw_typeset(
+                crv_str,
+                r'$\displaystyle ' +
+                compress_expression(
+                    make_curve_latex(
+                        crv_str,
+                        nu=self.embedding)) +
+                '$',
+                extra=curve_ref)
 
-        data["map"] = raw_typeset(galmap["map"], r'$\displaystyle '+compress_expression(make_map_latex(galmap["map"], nu=self.embedding))+'$')
+        data["map"] = raw_typeset(
+            galmap["map"],
+            r'$\displaystyle ' +
+            compress_expression(
+                make_map_latex(
+                    galmap["map"],
+                    nu=self.embedding)) +
+            '$')
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         # plane model
         if galmap.get("plane_model"):
-            data["plane_model"] = raw_typeset(galmap["plane_model"]+'=0', r'$\displaystyle '+compress_expression(belyi_latex(galmap["plane_model"]))+'=0$', extra=curve_ref)
+            data["plane_model"] = raw_typeset(
+                galmap["plane_model"] +
+                '=0',
+                r'$\displaystyle ' +
+                compress_expression(
+                    belyi_latex(
+                        galmap["plane_model"])) +
+                '=0$',
+                extra=curve_ref)
 
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
@@ -303,7 +337,8 @@ class WebBelyiGalmap():
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},
                                                     projection="portrait")
-        plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
+        plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(
+            self.plot)
         properties = [("Label", galmap["label"])]
         if triple:
             properties += [("Triple", "$%s$" % triple)]
@@ -340,7 +375,9 @@ class WebBelyiGalmap():
             ]
         else:
             self.downloads = []
-        self.downloads.append(("Underlying data", url_for(".belyi_data", label=data_label)))
+        self.downloads.append(
+            ("Underlying data", url_for(
+                ".belyi_data", label=data_label)))
 
         # Breadcrumbs
         label_spl = data["label"].split("-")
@@ -438,10 +475,12 @@ class WebBelyiPassport():
         from lmfdb.belyi.main import url_for_belyi_galmap_label, url_for_belyi_passport_label
 
         # all information about the map goes in the data dictionary
-        # most of the data from the database gets polished/formatted before we put it in the data dictionary
+        # most of the data from the database gets polished/formatted before we
+        # put it in the data dictionary
         data = self.data = {}
 
-        for elt in ("plabel", "abc", "num_orbits", "g", "abc", "deg", "maxdegbf", "is_primitive", "primitivization"):
+        for elt in ("plabel", "abc", "num_orbits", "g", "abc", "deg",
+                    "maxdegbf", "is_primitive", "primitivization"):
             data[elt] = passport[elt]
 
         data["group"] = transitive_group_display_knowl(passport["group"])
@@ -449,7 +488,8 @@ class WebBelyiPassport():
         data["geomtype"] = geomtypelet_to_geomtypename_dict[passport["geomtype"]]
         data["lambdas"] = [str(c)[1:-1] for c in passport["lambdas"]]
         data["pass_size"] = passport["pass_size"]
-        data["primitivization_url"] = url_for_belyi_passport_label(data['primitivization'])
+        data["primitivization_url"] = url_for_belyi_passport_label(
+            data['primitivization'])
 
         # Permutation triples
         galmaps_for_plabel = db.belyi_galmaps.search(

@@ -18,7 +18,8 @@ class SpellingTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert "zeroes" not in res.get_data(as_text=True), "rule %s failed " % rule
+                    assert "zeroes" not in res.get_data(
+                        as_text=True), "rule %s failed " % rule
                 except KeyError:
                     pass
 
@@ -26,7 +27,7 @@ class SpellingTest(LmfdbTest):
     # If someone wants it to work correctly, they are going to have
     # to write it better.
 
-    #def test_maass_spelling(self):
+    # def test_maass_spelling(self):
     #    """
     #        'Maass', not anything else
     #    """

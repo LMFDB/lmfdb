@@ -14,6 +14,7 @@ via optional command-line arguments.
 """
 
 
+from psycodict.config import Configuration as _Configuration
 import argparse
 import getpass
 import os
@@ -30,8 +31,6 @@ root_lmfdb_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
 
-from psycodict.config import Configuration as _Configuration
-
 
 def is_port_open(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
@@ -40,7 +39,8 @@ def is_port_open(host, port):
 
 
 def abs_path_lmfdb(filename):
-    return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
+    return os.path.relpath(os.path.join(
+        root_lmfdb_path, filename), os.getcwd())
 
 
 def get_secret_key():
@@ -266,10 +266,15 @@ class Configuration(_Configuration):
             default=argparse.SUPPRESS,
         )
         # if start-lmfdb.py was executed
-        startlmfdbQ = getattr(__main__, '__file__').endswith("start-lmfdb.py") if hasattr(__main__, '__file__') else False
+        startlmfdbQ = getattr(__main__, '__file__').endswith(
+            "start-lmfdb.py") if hasattr(__main__, '__file__') else False
         writeargstofile = writeargstofile or startlmfdbQ
         readargs = readargs or startlmfdbQ
-        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
+        _Configuration.__init__(
+            self,
+            parser,
+            writeargstofile=writeargstofile,
+            readargs=readargs)
 
         opts = self.options
         extopts = self.extra_options
@@ -289,34 +294,38 @@ class Configuration(_Configuration):
             self.flask_options["host"] = "0.0.0.0"
             self.cocalc_options["host"] = "cocalc.com"
             external_ip = get('https://api.ipify.org').content.decode('utf8')
-            if external_ip == "18.18.21.21": # chatelet
+            if external_ip == "18.18.21.21":  # chatelet
                 self.cocalc_options["host"] = "chatelet.mit.edu"
                 global COCALC_port
                 if COCALC_port:
                     self.flask_options["port"] = COCALC_port
                 else:
                     # randomify port, we have only container
-                    if self.flask_options["port"] == 37777: # default
+                    if self.flask_options["port"] == 37777:  # default
                         username = getpass.getuser()
                         intusername = int(username, base=36)
-                        self.flask_options["port"] = 10000 + (intusername % 55536)
-                    while is_port_open(self.flask_options["host"], self.flask_options["port"]):
-                        print(f'port {self.flask_options["port"]} already in use, trying the next one')
+                        self.flask_options["port"] = 10000 + \
+                            (intusername % 55536)
+                    while is_port_open(
+                            self.flask_options["host"], self.flask_options["port"]):
+                        print(
+                            f'port {self.flask_options["port"]} already in use, trying the next one')
                         self.flask_options["port"] += 1
                         if self.flask_options["port"] > 65536:
                             self.flask_options["port"] = 10000
                     COCALC_port = self.flask_options["port"]
-            self.cocalc_options["root"] = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(self.flask_options['port'])
+            self.cocalc_options["root"] = '/' + os.environ['COCALC_PROJECT_ID'] + \
+                "/server/" + str(self.flask_options['port'])
             self.cocalc_options["prefix"] = ("https://"
                                              + self.cocalc_options["host"]
                                              + self.cocalc_options["root"])
             stars = "\n" + "*" * 80
             self.cocalc_options["message"] = (stars +
-             "\n\033[1mCocalc\033[0m environment detected!\n"
-             + "Visit"
-             + f"\n  \033[1m {self.cocalc_options['prefix']} \033[0m"
-             + "\nto access this LMFDB instance"
-             + stars)
+                                              "\n\033[1mCocalc\033[0m environment detected!\n"
+                                              + "Visit"
+                                              + f"\n  \033[1m {self.cocalc_options['prefix']} \033[0m"
+                                              + "\nto access this LMFDB instance"
+                                              + stars)
 
         self.color = opts["core"]["color"]
 
