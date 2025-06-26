@@ -1257,7 +1257,7 @@ def family_page(label):
     except NotImplementedError:
         flash_error("No famly with label %s in the database", label)
         return redirect(url_for(".index"))
-    info = to_dict(request.args, search_array=FamilySearchArray(), family_label=label, family=family, stats=LFStats())
+    info = to_dict(request.args, search_array=FamilySearchArray(family), family_label=label, family=family, stats=LFStats())
     p, n = family.p, family.n
     if family.n0 == 1:
         info['bread'] = get_bread([("Families", url_for(".index", search_type="Families")),
@@ -1521,15 +1521,18 @@ class FamilySearchArray(EmbeddedSearchArray):
         ("s", "top slope", ['top_slope', 'ctr_subfamily', 'ctr']),
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr_subfamily', 'ctr']),
     ]
-    def __init__(self):
+    def __init__(self, fam):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
-        one_per = SelectBox(
-            name="one_per",
-            label="Fields per packet",
-            knowl="lf.packet",
-            options=[("", "all"),
-                     ("packet", "one")])
-        self.refine_array = [[gal, slopes, ind_insep, hidden], [associated_inertia, jump_set, one_per]]
+        if fam.packet_count is None:
+            self.refine_array = [[gal, slopes, ind_insep, hidden], [associated_inertia, jump_set]]
+        else:
+            one_per = SelectBox(
+                name="one_per",
+                label="Fields per packet",
+                knowl="lf.packet",
+                options=[("", "all"),
+                         ("packet", "one")])
+            self.refine_array = [[gal, slopes, ind_insep, hidden], [associated_inertia, jump_set, one_per]]
 
 class FamiliesSearchArray(SearchArray):
     def __init__(self, relative=False):
@@ -1728,6 +1731,9 @@ class LFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.1.4.6a2.1"
     jump_knowl = "lf.search_input"
     jump_prompt = "Label"
+    null_column_explanations = {
+        'packet': False, # If a packet is stored, it's complete since we don't record packets unless all hidden info known for that subfamily
+    }
 
     def __init__(self):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
