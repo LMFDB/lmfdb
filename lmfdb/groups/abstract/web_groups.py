@@ -1248,6 +1248,9 @@ class WebAbstractGroup(WebObj):
 
     @cached_method
     def _subgroup_summary(self, in_profile):
+        if self.subgroup_index_bound is None:
+            # No subgroups computed
+            return "Subgroup data has not been computed"
         if self.subgroup_index_bound != 0:
             if self.normal_index_bound is None or self.normal_index_bound == 0:
                 return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as all normal subgroups of any index. <br>"
