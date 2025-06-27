@@ -5,6 +5,7 @@
 
 {% endblock %}
 
+{% if info.number > 0 %}
 {{ info.columns.above_results | safe }}
 {% if info.columns.languages %}
 {% set languages = info.columns.languages %}
@@ -27,10 +28,17 @@
 {% endif %}
 <br>
 <div>
-  {% if info.number > info.count or info.start != 0 -%}
+  {% if info.number > info.count or info.start != 0 or info.show_count -%}
     <h2 style="display: inline; color: #1565C0; font-weight: bold; font-family: sans-serif; text-decoration: none; font-size: 120%; text-align: left;">
-      Showing {{ info.start + 1 }}-{{ upper_count }} of {{ info.number }}
-    </h2>
+    Showing {% if info.number <= info.count and info.start == 0 -%}
+      all {{ info.number }}
+    {% elif info.exact_count -%}
+      {{ info.start + 1 }}-{{ upper_count }} of {{ info.number }}
+    {% else -%}
+      {{ info.start + 1 }}-{{ upper_count }} of
+    <span id="result-count"><a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">at least {{ info.number }}</a></span>
+    {% endif %}
+  </h2>
   {% endif %}
   {% include 'forward_back.html' %}
   {% include 'download_search_results.html' %}
@@ -45,7 +53,13 @@
   {% include 'download_search_results.html' %}
 {% endif %}
 {{ info.columns.below_download | safe }}
+
+{% endif %} {# info.number > 0 #}
+
 {% include 'debug_info.html' %}
 
+{% block post_results_content %}
+
+{% endblock %}
 
 {% endblock %}

@@ -88,6 +88,5 @@ def register_singleton(url, table, key=None, simple_search=None, full_search=Non
     simple_search -- A function that modifies a query object to make it search for the requested object
     full_search -- A function that performs a search itself and returns the results
     """
-
     singletons[url] = {'table':table, 'key':key,
         'simple_search':simple_search, 'full_search':full_search}

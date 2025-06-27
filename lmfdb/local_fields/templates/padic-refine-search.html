@@ -1,0 +1,18 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{% if info.stats %}
+<p>
+{{info.stats|safe}}
+</p>
+{% endif %}
+
+{% block top_matter %}{% endblock %}
+
+{% include 'refine_search_form.html' %}
+
+{% block show_results %}{% endblock %}
+{% include 'debug_info.html' %}
+
+{% endblock %}
