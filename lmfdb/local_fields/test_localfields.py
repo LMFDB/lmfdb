@@ -25,7 +25,7 @@ class LocalFieldTest(LmfdbTest):
 
     def test_field_page(self):
         L = self.tc.get('/padicField/11.6.4.2', follow_redirects=True)
-        assert '11.2.3.4a1.2' in L.get_data(as_text=True)
+        assert '11.2.3.4a1.1' in L.get_data(as_text=True)
         #assert 'x^{2} - x + 7' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
         #assert 'x^{3} - 11 t' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
 
@@ -47,10 +47,10 @@ data = {[
 ["2.2.1.0a1.1", [1, 1, 1], 2, 2, 1, 0, [2, 1], [[], 1, 2]],
 ["2.1.2.2a1.1", [2, 2, 1], 2, 1, 2, 2, [2, 1], [[2], 1, 1]],
 ["2.1.2.2a1.2", [6, 2, 1], 2, 1, 2, 2, [2, 1], [[2], 1, 1]],
-["2.1.2.3a1.1", [2, 4, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]],
-["2.1.2.3a1.2", [10, 4, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]],
-["2.1.2.3a1.3", [2, 0, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]],
-["2.1.2.3a1.4", [10, 0, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]]
+["2.1.2.3a1.1", [2, 0, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]],
+["2.1.2.3a1.2", [10, 0, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]],
+["2.1.2.3a1.3", [2, 4, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]],
+["2.1.2.3a1.4", [10, 4, 1], 2, 1, 2, 3, [2, 1], [[3], 1, 1]]
 ]};
 
 create_record(row) =
