@@ -358,7 +358,11 @@ function get_count_of_results() {
     $("span.download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
-    address += "&result_count=1";
+    if (address.includes("?")) {
+        address += "&result_count=1";
+    } else {
+        address += "?result_count=1";
+    }
     $.ajax({url: address, success: get_count_callback});
 };
 
