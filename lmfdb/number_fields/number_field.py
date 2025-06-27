@@ -509,7 +509,11 @@ def render_field_webpage(args):
                         myurl = url_for('local_fields.by_label', label=lab)
                         if mm[3]*mm[2] == 1:
                             lab = r'$\Q_{%s}$' % str(p)
-                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>$%s$</td>' % (myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                        if mm[8]:
+                            mysc = '$'+show_slope_content(mm[8],mm[6],mm[7])+'$'
+                        else:
+                            mysc = 'not computed'
+                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>%s</td>' % (myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],mysc)
             loc_alg += '</tr>\n'
         loc_alg += '</tbody></table>\n'
 

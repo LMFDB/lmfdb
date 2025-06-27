@@ -26,8 +26,12 @@
         <small style="color:gray">n/a</small>
         {% else %}
         {% set url = info.url_func(row, col) %}
+        {% if url is none %}
+        {{size}}
+        {% else %}
         <a href="{{url}}">{{size}}</a>
-        {% endif %}
+        {% endif %} {# url none #}
+        {% endif %} {# size none #}
       </td>
       {% endfor %}
     </tr>

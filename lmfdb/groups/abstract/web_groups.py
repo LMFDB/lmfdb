@@ -5,6 +5,7 @@ import yaml
 from lmfdb import db
 from flask import url_for
 from urllib.parse import quote_plus
+from psycopg2.sql import SQL, Identifier
 
 from sage.all import (
     Permutations,
@@ -192,6 +193,30 @@ def in_small_gp_db(order):
         return True
     if len(f) == 1 and f[0][1] <= 7:
         return True
+    return False
+
+@cached_function
+def groups_from_missing_orders():
+    # There was a casting problem comparing smallint[] and the arrays
+    return set(x[0] for x in db._execute(SQL("SELECT label, factors_of_order, exponents_of_order FROM gps_groups WHERE {0} > 2000 AND (exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint [] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[])").format(Identifier("order")), [[8],[7],[4],[3,1],[2,2],[2,1,1],[1,1,1,1]]) if (x[1] == [3] and x[2] == [8] or x[1][0] > 11 and x[2] == [7] or x[2] == [4] or len(x[2]) > 1))
+
+# determine groups which are identified in Magma but not Gap
+@cached_function
+def missing_subs(n_or_label):
+    if isinstance(n_or_label, str):
+        if n_or_label in groups_from_missing_orders():
+            return False
+        n = ZZ(n_or_label.split(".")[0])
+    else:
+        n = ZZ(n_or_label)
+    if n == 6561:
+        return True
+    f = factor(n)
+    if n > 2000:
+        if sum(e for p,e in f) == 4:
+            return True
+        if len(f) == 1 and f[0][1] == 7 and f[0][0] > 11:
+            return True
     return False
 
 
@@ -389,7 +414,7 @@ class WebAbstractGroup(WebObj):
             elif isinstance(self._data, GapElement):
                 return self._data
         # Reconstruct the group from the stored data
-        if self.order == 1 or self.element_repr_type == "PC":  # trvial
+        if self.order == 1 or self.element_repr_type == "PC":  # trivial
             return self.PCG
         else:
             if self.element_repr_type == "Lie":   #need to take first entry of Lie type
@@ -1544,7 +1569,7 @@ class WebAbstractGroup(WebObj):
         return table
 
     def most_product_expressions(self):
-        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.as_aut_gp))
+        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.possibly_split_products), len(self.as_aut_gp))
 
     @lazy_attribute
     def display_direct_product(self):
@@ -1645,7 +1670,7 @@ class WebAbstractGroup(WebObj):
         nonsplit = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
-            if sub.normal and not sub.split:
+            if sub.normal and (sub.split == False):
                 pair = (sub.subgroup, sub.quotient)
                 if pair not in subs:
                     nonsplit.append(sub)
@@ -1654,6 +1679,23 @@ class WebAbstractGroup(WebObj):
         for V in subs.values():
             V.sort(key=label_sortkey)
         return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in nonsplit]
+
+    @lazy_attribute
+    def possibly_split_products(self):
+        if not self.has_subgroups:
+            return None
+        possibly = []
+        subs = defaultdict(list)
+        for sub in self.subgroups.values():
+            if sub.normal and (sub.split is None):
+                pair = (sub.subgroup, sub.quotient)
+                if pair not in subs:
+                    possibly.append(sub)
+                subs[pair].append(sub.short_label)
+        possibly.sort(key=product_sort_key)
+        for V in subs.values():
+            V.sort(key=label_sortkey)
+        return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in possibly]
 
     @lazy_attribute
     def as_aut_gp(self):
@@ -2317,6 +2359,13 @@ class WebAbstractGroup(WebObj):
                 out += f" ({count})"
             return out
 
+        def display_possibly_split(trip):
+            sub, count, labels = trip
+            out = fr"{sub.knowl(paren=True)}&nbsp;.&nbsp;{sub.quotient_knowl(paren=True)}"
+            if count > 1:
+                out += f" ({count})"
+            return out
+
         def nonsplit_expressions_knowl(label, name=None):
             if not name:
                 name = f"Nonsplit product expressions for {label}"
@@ -2375,6 +2424,15 @@ class WebAbstractGroup(WebObj):
                                       False, # hide if no expressions
                                       display_nonsplit,
                                       nonsplit_expressions_knowl))
+            elif rtype == "possibly_split":
+                return rep_line(
+                    "group.nonsplit_product",
+                    "Possibly split product",
+                    content_from_opts(self.possibly_split_products,
+                                      self.possibly_split_products,
+                                      False, # hide if no expressions
+                                      display_nonsplit,
+                                      nonsplit_expressions_knowl))
             elif rtype == "aut":
                 return rep_line(
                     "group.automorphism",
@@ -2403,6 +2461,7 @@ class WebAbstractGroup(WebObj):
             output_strg += show_reps("semidirect")
             output_strg += show_reps("wreath")
             output_strg += show_reps("nonsplit")
+            output_strg += show_reps("possibly_split")
         output_strg += show_reps("aut")
         if output_strg == "":  #some live groups have no constructions
             return "data not computed"
@@ -3087,7 +3146,8 @@ class WebAbstractSubgroup(WebObj):
                       'aut_group': self.aut_label, 'aut_order': None,
                       'pgroup':len(ZZ(order).abs().factor()) == 1})
             return newgroup
-        if self.subgroup_order == 6561:
+         # issue with groups identifiable in magma but not gap
+        if missing_subs(self.subgroup):
             gp = WebAbstractGroup(self.subgroup, None)
             if gp.source == "Missing":
                 order = self.subgroup_order

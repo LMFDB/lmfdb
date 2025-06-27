@@ -16,6 +16,7 @@ from markupsafe import Markup
 from string import ascii_lowercase, digits
 from io import BytesIO
 from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
+from sage.misc.cachefunc import cached_function
 from sage.databases.cremona import class_to_int
 
 from lmfdb import db
@@ -28,6 +29,7 @@ from lmfdb.utils import (
     TextBox,
     SneakyTextBox,
     SneakySelectBox,
+    SelectBox,
     CountBox,
     YesNoBox,
     parse_ints,
@@ -65,6 +67,7 @@ from .web_groups import (
     abstract_group_display_knowl,
     cc_data_to_gp_label,
     gp_label_to_cc_data,
+    missing_subs,
 )
 from .stats import GroupStats
 
@@ -94,9 +97,27 @@ abstract_subgroup_label_regex = re.compile(
 gap_group_label_regex = re.compile(r"^(\d+)\.(\d+)$")
 # order_stats_regex = re.compile(r'^(\d+)(\^(\d+))?(,(\d+)\^(\d+))*')
 
+abstract_group_hash_regex = re.compile(r"^(\d+)#(\d+)$")
+
 def yesno(val):
     return "yes" if val else "no"
 
+def deTeX_name(s):
+    s = re.sub(r"[{}\\$]", "", s)
+    return s
+
+@cached_function
+def group_families(deTeX=False):
+    L = [(el["family"], el["tex_name"], el["name"]) for el in db.gps_families.search(projection=["family", "tex_name", "name"], sort=["priority"])]
+    L = [(fam, name if "fam" in tex else f"${tex}$") for (fam, tex, name) in L]
+    if deTeX:
+        # Used for constructing the dropdown
+        return [(fam, deTeX_name(name)) for (fam, name) in L]
+
+    def hidden(fam):
+        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic"]
+    L = [(fam, name, "fam_more" if hidden(fam) else "fam_always", hidden(fam)) for (fam, name) in L]
+    return L
 
 # For dynamic knowls
 @app.context_processor
@@ -109,6 +130,7 @@ def ctx_abstract_groups():
         "dyn_gen": dyn_gen,
         "semidirect_data": semidirect_data,
         "nonsplit_data": nonsplit_data,
+        "possibly_split_data": possibly_split_data,
         "aut_data": aut_data,
         "trans_expr_data": trans_expr_data,
     }
@@ -152,6 +174,36 @@ def parse_group(inp, query, qfield):
         query["group_order"] = int(inp)
     else:
         raise ValueError("It must be a valid group label or order of the group. ")
+
+@search_parser
+def parse_family(inp, query, qfield):
+    if inp not in ([el[0] for el in group_families(deTeX=True)] + ['any']):
+        raise ValueError("Not a valid family label.")
+    if inp == 'any':
+        query[qfield] = {'$in':list(db.gps_special_names.search(projection='label'))}
+    elif inp == 'C':
+        query["cyclic"] = True
+    else:
+        query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
+
+@search_parser
+def parse_hashes(inp, query, qfield, order_field):
+    if inp.count("#") == 0:
+        opts = [ZZ(opt) for opt in inp.split(",")]
+        if len(opts) == 1:
+            query[qfield] = opts[0]
+        else:
+            query[qfield] = {"$or": opts}
+    elif inp.count("#") == 1:
+        N, hsh = inp.split("#")
+        N, hsh = ZZ(N), ZZ(hsh)
+        if order_field not in query:
+            query[order_field] = N
+        elif query[order_field] != N:
+            raise ValueError(f"You cannot specify order both in the {order_field} input and the {qfield} input")
+        query[qfield] = hsh
+    else:
+        raise ValueError("To specify multiple hash values, all must have the same order; provide the order in the order input and then just give hashes separated by commas")
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -632,6 +684,7 @@ def index():
         ("rational=yes", "rational"),
     ]
     info["maxgrp"] = db.gps_groups.max("order")
+    info["families"] = group_families()
 
     return render_template(
         "abstract-index.html",
@@ -902,6 +955,16 @@ def group_jump(info):
             flash_error(f"Transitive group {jump} is not in the database")
             return redirect(url_for(".index"))
         return redirect(url_for(".by_label", label=label))
+    #hash
+    hre = abstract_group_hash_regex.fullmatch(jump)
+    if hre:
+        N, hsh = [ZZ(c) for c in hre.groups()]
+        if N <= 2000 and (N < 512 or N.valuation(2) < 7):
+            # Less useful here, since we mostly have group ids in this regime, but we include it for completeness
+            possible_labels = list(db.gps_groups.search({"order":N, "hash": hsh}, "label"))
+            if len(possible_labels) == 1:
+                return redirect(url_for(".by_label", label=possible_labels[0]))
+        return redirect(url_for(".index", hash=jump))
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
@@ -957,7 +1020,7 @@ def get_trans_url(label):
     return url_for("galois_groups.by_label", label=trans_gp(label))
 
 def display_url(label, tex):
-    if label is None:
+    if label is None or missing_subs(label):
         if tex is None:
             return ''
         return f'${tex}$'
@@ -1011,6 +1074,10 @@ def field_knowl(fld):
 
 # This function returns a label for the conjugacy class search page for a group
 def display_cc_url(numb,gp):
+    if numb is None:    # for cases where we didn't compute number
+        return 'not computed'
+    elif numb > 512:    # remove url if conjugacy classes are not stored
+        return numb
     return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
 class Group_download(Downloader):
@@ -1028,11 +1095,35 @@ def group_postprocess(res, info, query):
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
+    if "family" in info:
+        if info["family"] == "any":
+            fquery = {}
+        else:
+            fquery = {"family": info["family"]}
+        fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
+        fquery["label"] = {"$in":[rec["label"] for rec in res]}
+        special_names = defaultdict(list)
+        for rec in db.gps_special_names.search(fquery, ["label", "family", "parameters"]):
+            fam, params = rec["family"], rec["parameters"]
+            name = fams[fam][1].format(**params)
+            if fam == "Sporadic":
+                name = re.sub(r"(\d+)", r"_{\1}", name)
+                if not re.match(r"[MJ]_", name):
+                    name = "\\" + name
+            special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
+        for rec in res:
+            names = [x[-1] for x in sorted(special_names[rec["label"]])]
+            if len(names) > 4:
+                names = ", ".join(names[:4]) + ",\\dots"
+            else:
+                names = ", ".join(names)
+            rec["family_name"] = names
     return res
 
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url),
     MathCol("tex_name", "group.name", "Name"),
+    MathCol("family_name", "group.families", "Family name", contingent=lambda info: "family" in info, default=lambda info: "family" in info and info["family"] not in ["C", "S", "D", "A", "Q", "He", "Sporadic"]),
     ProcessedCol("order", "group.order", "Order", show_factor, align="center"),
     ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, align="center"),
     MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class", default=False),
@@ -1151,6 +1242,8 @@ def group_parse(info, query):
     parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
     parse_ints(info, query, "order_factorization_type")
+    parse_family(info, query, "family", qfield="label")
+    parse_hashes(info, query, "hash", order_field="order")
 
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
@@ -1354,7 +1447,7 @@ conjugacy_class_columns = SearchColumns([
     MultiProcessedCol("label", "group.label_conjugacy_class", "Label",["group_order", "group_counter", "label","highlight_col"],get_cc_url, download_col="label"),
     MathCol("order", "group.order_conjugacy_class", "Order"),
     MathCol("size", "group.size_conjugacy_class", "Size"),
-    MultiProcessedCol("center", "group.subgroup.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
+    MultiProcessedCol("center", "group.centralizer", "Centralizer", ["centralizer", "group", "sub_latex"], char_to_sub, download_col="centralizer"),
     ColGroup("power_cols","group.conjugacy_class.power_classes", "Powers",
              lambda info: [Power_col(i, info["group_factors"]) for i in range(len(info["group_factors"]))],
              contingent=lambda info: info.get("group_factors",True), # group_factors not present when downloading
@@ -1744,7 +1837,7 @@ def shortsubinfo(ambient, short_label):
     ans += subinfo_getsub(
         "Normal closure", "group.subgroup.normal_closure", wsg.normal_closure
     )
-    ans += subinfo_getsub("Centralizer", "group.subgroup.centralizer", wsg.centralizer)
+    ans += subinfo_getsub("Centralizer", "group.centralizer", wsg.centralizer)
     ans += subinfo_getsub("Core", "group.core", wsg.core)
     # ans += '<tr><td>Coset action</td><td>%s</td></tr>\n' % wsg.coset_action_label
     ## There was a bug in the Magma code computing generators, so we disable this for the moment
@@ -2011,7 +2104,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, or 12.4.2.b1.a1"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
@@ -2175,37 +2268,37 @@ class GroupsSearchArray(SearchArray):
         )
         permutation_degree = TextBox(
             name="permutation_degree",
-            label="Permutation degree",
+            label="Min. permutation degree",
             knowl="group.permutation_degree",
             example="3",
             example_span="4, or a range like 3..5",
         )
         transitive_degree = TextBox(
             name="transitive_degree",
-            label="Transitive degree",
+            label="Min. transitive degree",
             knowl="group.transitive_degree",
             example="3",
             example_span="4, or a range like 3..5",
         )
         irrC_degree = TextBox(
             name="irrC_degree",
-            label=r"Minimal degree of $\C$-irrep",
+            label=r"Min. degree of $\C$-irrep",
             knowl="group.min_faithful_linear",
             example="3",
-            example_span="-1, 4, or a range like 3..5",
+            example_span="-1, or a range like 3..5",
             advanced=True,
         )
         irrQ_degree = TextBox(
             name="irrQ_degree",
-            label=r"Minimal degree of $\Q$-irrep",
+            label=r"Min. degree of $\Q$-irrep",
             knowl="group.min_faithful_linear",
             example="3",
-            example_span="-1, 4, or a range like 3..5",
+            example_span="-1, or a range like 3..5",
             advanced=True,
         )
         linC_degree = TextBox(
             name="linC_degree",
-            label=r"Minimal degree of $\C$-rep",
+            label=r"Min. degree of $\C$-rep",
             knowl="group.min_faithful_linear",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2213,7 +2306,7 @@ class GroupsSearchArray(SearchArray):
         )
         linQ_degree = TextBox(
             name="linQ_degree",
-            label=r"Minimal degree of $\Q$-rep",
+            label=r"Min. degree of $\Q$-rep",
             knowl="group.min_faithful_linear",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2317,7 +2410,7 @@ class GroupsSearchArray(SearchArray):
             knowl="group.find_input",
             example="C16.D4",
         )
-        name = SneakySelectBox(
+        order_factorization_type = SneakySelectBox(
             name="order_factorization_type",
             label="Order",
             knowl="group.order_factorization_type",
@@ -2347,29 +2440,29 @@ class GroupsSearchArray(SearchArray):
         )
         number_normal_subgroups = TextBox(
             name="number_normal_subgroups",
-            label="Number of normal subgroups",
+            label="Num. of normal subs",
             knowl="group.subgroup.normal",
             example="3",
             example_span="4, or a range like 3..5",
         )
         number_conjugacy_classes = TextBox(
             name="number_conjugacy_classes",
-            label="Number of conjugacy classes",
+            label="Num. of conj. classes",
             knowl="group.conjugacy_class",
             example="3",
             example_span="4, or a range like 3..5",
         )
         number_autjugacy_classes = TextBox(
-            name="number_autjugacy_classes ",
-            label="Number of autjugacy classes",
+            name="number_autjugacy_classes",
+            label="Num. of aut. classes",
             knowl="group.autjugacy_class",
             example="3",
             example_span="4, or a range like 3..5",
             advanced=True
         )
         number_characteristic_subgroups = TextBox(
-            name="number_characteristic_subgroups ",
-            label="Number of characteristic subgroups",
+            name="number_characteristic_subgroups",
+            label="Num. of char. subgroups",
             knowl="group.characteristic_subgroup",
             example="3",
             example_span="4, or a range like 3..5",
@@ -2382,6 +2475,18 @@ class GroupsSearchArray(SearchArray):
             example="3",
             example_span="4, or a range like 3..5",
             advanced=True
+        )
+        family = SelectBox(
+            name="family",
+            options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
+            knowl="group.families",
+            label="Family",
+        )
+        hsh = SneakyTextBox(
+            name="hash",
+            label="Hash",
+            knowl="group.hash",
+            example="5120#4714647875464396655",
         )
 
         count = CountBox()
@@ -2397,6 +2502,9 @@ class GroupsSearchArray(SearchArray):
             [nilpotent, perfect],
             [simple, solvable],
             [transitive_degree, permutation_degree],
+            [number_subgroups, number_normal_subgroups],
+            [number_conjugacy_classes, number_autjugacy_classes],
+            [order_stats, rank],
             [irrC_degree, irrQ_degree],
             [linC_degree, linQ_degree],
             [almost_simple, derived_length],
@@ -2406,12 +2514,9 @@ class GroupsSearchArray(SearchArray):
             [Agroup, monomial],
             [Zgroup, rational],
             [schur_multiplier, wreath_product],
-            [number_subgroups, number_normal_subgroups],
             [number_characteristic_subgroups, number_divisions],
-            [number_conjugacy_classes, number_autjugacy_classes],
-            [order_stats, rank],
             [exponents_of_order, commutator_count],
-            [count],
+            [count, family],
         ]
 
         self.refine_array = [
@@ -2420,17 +2525,15 @@ class GroupsSearchArray(SearchArray):
             [abelian, cyclic, solvable, simple],
             [perfect, direct_product, semidirect_product, wreath_product],
             [aut_group, aut_order, transitive_degree, permutation_degree],
+            [number_subgroups, number_normal_subgroups, number_conjugacy_classes],
+            [order_stats, family, exponents_of_order, commutator_count],
             [irrC_degree, irrQ_degree, linC_degree, linQ_degree],
             [outer_group, outer_order, metabelian, metacyclic],
             [almost_simple, quasisimple, Agroup, Zgroup],
             [frattini_label, derived_length, rank, schur_multiplier],
             [supersolvable, monomial, rational],
-
-            [number_subgroups, number_normal_subgroups, number_conjugacy_classes],
             [number_characteristic_subgroups, number_autjugacy_classes, number_divisions],
-
-            [order_stats, exponents_of_order, commutator_count],
-            [name],
+            [name, order_factorization_type, hsh],
         ]
 
     sort_knowl = "group.sort_order"
@@ -2879,8 +2982,8 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[1] is None:
             ans += "Isomorphism class has not been identified<br />"
         else:
-            # TODO: add hash knowl and search link to groups with this order and hash
-            ans += f"Hash: {profiledata[1]}<br />"
+            # TODO: add search link to groups with this order and hash
+            ans += f"{display_knowl('group.hash', 'Hash')} : {profiledata[1]}<br />"
         isomorphism_label = "Subgroups with this data:"
     else:
         if label.startswith("ab/"):
@@ -2890,9 +2993,14 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        #GAP doesn't have groups of order 3^8 so if not in db, can't be live
-        if label.startswith("6561.") and gp.source == "Missing":
-            return Markup("No additional information for this group of order 6561 is available.")
+        # dealing with groups identified in magma but not in gap so can't do live pages˚
+        ord = label.split(".")[0]
+        if missing_subs(label) and gp.source == "Missing":
+            ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
+                label,
+                f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
+                "subgroups with this order")
+            return Markup(ans)
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"
@@ -3020,6 +3128,20 @@ def nonsplit_data(label):
     ans += "</table>"
     return Markup(ans)
 
+def possibly_split_data(label):
+    gp = WebAbstractGroup(label)
+    ans = f"Possibly nonsplit product expressions for ${gp.tex_name}$:<br />\n"
+    ans += "<table>\n"
+    for sub, cnt, labels in gp.possibly_split_products:
+        ans += fr"<tr><td>{sub.knowl(paren=True)} $\,.\,$ {sub.quotient_knowl(paren=True)}</td><td>"
+        if cnt > 1:
+            ans += f" in {cnt} ways"
+        ans += ' via </td>'
+        ans += "".join([f'<td><a href="{url_for("abstract.by_subgroup_label", label=label+"."+sublabel)}">{sublabel}</a></td>' for sublabel in labels])
+        ans += "</tr>\n"
+    ans += "</table>"
+    return Markup(ans)
+
 def trans_expr_data(label):
     tex_name = db.gps_groups.lookup(label, "tex_name")
     ans = f"Transitive permutation representations of ${tex_name}$:<br />\n"
@@ -3064,6 +3186,7 @@ flist = {
     "qrep_data": qrep_data,
     "semidirect_data": semidirect_data,
     "nonsplit_data": nonsplit_data,
+    "possibly_split_data": possibly_split_data,
     "aut_data": aut_data,
     "trans_expr_data": trans_expr_data,
 }
