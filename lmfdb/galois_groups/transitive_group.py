@@ -120,7 +120,7 @@ class WebGaloisGroup:
         return int(self._data['order'])
 
     def gens(self):
-        return(self._data['gens'])
+        return (self._data['gens'])
 
     def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty') is not None:
@@ -399,7 +399,7 @@ def group_phrase(n, t):
         inf += "A non-solvable"
     inf += ' group of order '
     inf += str(group['order'])
-    return(inf)
+    return (inf)
 
 
 @cached_function

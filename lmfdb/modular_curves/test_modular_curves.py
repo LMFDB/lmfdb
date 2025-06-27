@@ -225,7 +225,7 @@ class ModCrvTest(LmfdbTest):
         assert "$j$-height" in data
         assert "Plane model" in data
         assert "Weierstrass model" in data
-        assert"Embedded model" in data
+        assert "Embedded model" in data
 
     def test_low_degree_points_search(self):
         L = self.tc.get("/ModularCurve/Q/low_degree_points?cusp=no")
