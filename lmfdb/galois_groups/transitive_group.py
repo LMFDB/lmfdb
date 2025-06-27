@@ -276,7 +276,6 @@ class WebGaloisGroup:
 
             regdata= [[raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))] for z in t]
             for j in range(len(regdata)):
-                regdata[j][0] = '$f_{%d} = $'%(j+1) + regdata[j][0]
                 if regdata[j][1]:
                     regdata[j][1] = 'The polynomial $f_{%d}$ '%(j+1)+regdata[j][1]
             return regdata

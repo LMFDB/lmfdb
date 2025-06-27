@@ -168,12 +168,15 @@ list of indecomposable integral representations:
       {% if not info.wgg.regulars %}
         <p>Data not computed</p>
       {% else %}
-        {% for model in info.wgg.regulars %}
       <p>
-          <div>{{ model[0]|safe }}</div>
-          <div style="text-indent:15px">{{ model[1]|safe }}</div>
-      </p>
+        <table>
+        {% for model in info.wgg.regulars %}
+          <tr><td style="vertical-align: top">$f_{ {{ loop.index }} } =$</td>
+              <td> {{ model[0]|safe }}</td></tr>
+          <tr><td></td><td> {{ model[1]|safe }}</td></tr>
         {% endfor %}
+        </table>
+      </p>
       {% endif %}
 
 
