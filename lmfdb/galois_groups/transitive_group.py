@@ -8,7 +8,7 @@ import os
 import yaml
 from flask import render_template
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
@@ -74,6 +74,16 @@ def cyclestrings(perm):
 def compress_cycle_type(ct):
     bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
+
+def quick_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return '$'+str+'$'
+
+
 ############  Galois group object
 
 
@@ -247,6 +257,31 @@ class WebGaloisGroup:
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
+
+    @lazy_attribute
+    def regulars(self):
+        s=db.gps_regular_polynomials.search({'label':self.label})
+        t=[z for z in s] # it will be a short list
+        if t:
+            genknowl = '<a title = "generic [gg.generic_polynomial]" knowl="gg.generic_polynomial" >generic</a>'
+
+            def msg(code):
+                if code is None:
+                    return ''
+                if code == []:
+                    return ' is '+genknowl+' for any base field $K$'
+                if code == [0]:
+                    return ' is '+genknowl+r' for any base field $\Q$'
+                return ' is '+genknowl+r' for any base field $K$ of characteristic $\neq$ '+','.join([str(z) for z in code])
+
+            regdata= [[raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))] for z in t]
+            for j in range(len(regdata)):
+                regdata[j][0] = '$f_{%d} = $'%(j+1) + regdata[j][0]
+                if regdata[j][1]:
+                    regdata[j][1] = 'The polynomial $f_{%d}$ '%(j+1)+regdata[j][1]
+            return regdata
+        else:
+            return None
 
     def chartable(self):
         self.conjclasses # called to load info in self
