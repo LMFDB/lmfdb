@@ -104,7 +104,7 @@ class SearchCol:
             elif isinstance(title, str):
                 short_title = title.lower()
             else:
-                short_title = lambda info: title(info).lower()
+                def short_title(info): return title(info).lower()
         self.short_title = short_title
         self.default = get_default_func(default, name)
         self.mathmode = mathmode

@@ -394,6 +394,7 @@ class pAdicSlopeFamily:
         opts = sorted(Counter((rec["galT"], rec["galois_label"]) for rec in fields if "galT" in rec and "galois_label" in rec).items())
         if not opts:
             return "No Galois groups in this family have been computed"
+
         def show_gal(label, cnt):
             kwl = transitive_group_display_knowl(label, cache=cache)
             if len(opts) == 1:
@@ -419,6 +420,7 @@ class pAdicSlopeFamily:
         hidden = Counter(rec["hidden"] for rec in fields if "hidden" in rec)
         if not hidden:
             return "No hidden slopes in this family have been computed"
+
         def show_hidden(x, cnt):
             disp = latex_content(x)
             if len(hidden) == 1:
@@ -434,6 +436,7 @@ class pAdicSlopeFamily:
     def indices_of_insep(self):
         fields, cache = self.fields
         ii = sorted(Counter(tuple(rec["ind_of_insep"]) for rec in fields).items())
+
         def show_ii(x, cnt):
             disp = str(x).replace(" ","").replace("[]", r"[\ ]")
             if len(ii) == 1:
@@ -446,6 +449,7 @@ class pAdicSlopeFamily:
     def associated_inertia(self):
         fields, cache = self.fields
         ai = sorted(Counter(tuple(rec["associated_inertia"]) for rec in fields).items())
+
         def show_ai(x, cnt):
             disp = str(x).replace(" ","").replace("[]", r"[\ ]")
             if len(ai) == 1:
@@ -458,6 +462,7 @@ class pAdicSlopeFamily:
     def jump_set(self):
         fields, cache = self.fields
         js = sorted(Counter(tuple(rec["jump_set"]) for rec in fields if "jump_set" in rec).items())
+
         def show_js(x, cnt):
             if not x:
                 srch = "[]"
