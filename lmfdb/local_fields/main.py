@@ -442,7 +442,7 @@ label_col = MultiProcessedCol("label", "lf.field_label", "Label", ["old_label", 
 
 def poly_col(relative=False):
     if relative:
-        title = lambda info: "Polynomial" if info['family'].n0 == 1 else r"Polynomial $/ \Q_p$"
+        def title(info): return "Polynomial" if info['family'].n0 == 1 else r"Polynomial $/ \Q_p$"
     else:
         title = "Polynomial"
     return MultiProcessedCol("coeffs", "lf.defining_polynomial", title, ["coeffs", "unram"], eisensteinformlatex, mathmode=True, short_title="polynomial", apply_download=lambda coeffs, unram: coeffs)
@@ -452,7 +452,7 @@ e_col = MathCol("e", "lf.ramification_index", "$e$", short_title="ramification i
 f_col = MathCol("f", "lf.residue_field_degree", "$f$", short_title="residue field degree")
 def gal_col(relative=False):
     if relative:
-        title = lambda info: "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"
+        def title(info): return "Galois group" if info['family'].n0 == 1 else r"Galois group $/ \Q_p$"
     else:
         title = "Galois group"
     return MultiProcessedCol("gal", "nf.galois_group", title,
@@ -463,7 +463,7 @@ def aut_col(default):
     return MathCol("aut", "lf.automorphism_group", r"$\#\Aut(K/\Q_p)$", short_title="auts", default=default)
 def slopes_col(default=True, relative=False):
     if relative:
-        title = lambda info: "Artin slope content" if info['family'].n0 == 1 else r"Artin slope content $/ \Q_p$"
+        def title(info): return "Artin slope content" if info['family'].n0 == 1 else r"Artin slope content $/ \Q_p$"
     else:
         title = "Artin slope content"
     return MultiProcessedCol("slopes", "lf.slopes", title,
@@ -472,7 +472,7 @@ def slopes_col(default=True, relative=False):
                              apply_download=unpack_slopes, default=default)
 def hidden_col(default=True, relative=False):
     if relative:
-        title = lambda info: "Hidden Artin slopes" if info['family'].n0 == 1 else r"Hidden Artin slopes $/ \Q_p$"
+        def title(info): return "Hidden Artin slopes" if info['family'].n0 == 1 else r"Hidden Artin slopes $/ \Q_p$"
     else:
         title = "Hidden Artin slopes"
     return ProcessedCol("hidden", "lf.slopes",
@@ -482,7 +482,7 @@ def hidden_col(default=True, relative=False):
 
 def swanslopes_col(default=False, relative=False):
     if relative:
-        title = lambda info: "Swan slope content" if info['family'].n0 == 1 else r"Swan slope content $/ \Q_p$"
+        def title(info): return "Swan slope content" if info['family'].n0 == 1 else r"Swan slope content $/ \Q_p$"
     else:
         title = "Swan slope content"
     return MultiProcessedCol("swanslopes", "lf.slopes", title,
@@ -494,7 +494,7 @@ def swanslopes_col(default=False, relative=False):
 
 def hiddenswan_col(default=False, relative=False):
     if relative:
-        title = lambda info: "Hidden Swan slopes" if info['family'].n0 == 1 else r"Hidden Swan slopes $/ \Q_p$"
+        def title(info): return "Hidden Swan slopes" if info['family'].n0 == 1 else r"Hidden Swan slopes $/ \Q_p$"
     else:
         title = "Hidden Swan slopes"
     return MultiProcessedCol("hiddenswan", "lf.slopes",
@@ -507,13 +507,13 @@ def hiddenswan_col(default=False, relative=False):
 
 def insep_col(default=True, relative=False):
     if relative:
-        title = lambda info: "Ind. of Insep." if info['family'].n0 == 1 else r"Ind. of Insep. $/ \Q_p$"
+        def title(info): return "Ind. of Insep." if info['family'].n0 == 1 else r"Ind. of Insep. $/ \Q_p$"
     else:
         title = "Ind. of Insep."
     return ProcessedCol("ind_of_insep", "lf.indices_of_inseparability", title, formatbracketcol, default=default, short_title="ind. of insep.")
 def assoc_col(default=True, relative=False):
     if relative:
-        title = lambda info: "Assoc. Inertia" if info['family'].n0 == 1 else r"Assoc. Inertia $/ \Q_p$"
+        def title(info): return "Assoc. Inertia" if info['family'].n0 == 1 else r"Assoc. Inertia $/ \Q_p$"
     else:
         title = "Assoc. Inertia"
     return ProcessedCol("associated_inertia", "lf.associated_inertia", title, formatbracketcol, default=default)
@@ -613,7 +613,7 @@ families_columns = SearchColumns([
                     show_slopes2, default=False, short_title="abs. Artin slopes"),
     RationalListCol("slopes", "lf.slopes", "Swan slopes", short_title="Swan slopes"),
     RationalListCol("means", "lf.means", "Means", delim=[r"\langle", r"\rangle"]),
-    RationalListCol("rams", "lf.rams", "Rams", delim = "()"),
+    RationalListCol("rams", "lf.rams", "Rams", delim="()"),
     ProcessedCol("poly", "lf.family_polynomial", "Generic poly", lambda pol: teXify_pol(pol, greek_vars=True, subscript_vars=True), mathmode=True, default=False),
     MathCol("ambiguity", "lf.family_ambiguity", "Ambiguity"),
     MathCol("field_count", "lf.family_field_count", "Field count"),
@@ -703,13 +703,17 @@ def count_fields(p, n=None, f=None, e=None, eopts=None):
         if n % f != 0:
             return 0
         e = n // f
+
     def eps(i):
         return sum(p**(-j) for j in range(1, i+1))
+
     def ee(i):
         return euler_phi(p**i)
+
     def sig(n0, e, f, s):
         nn = n0 * e * f
         return 1 + sum(p**i * (p**(eps(i) * nn) - p**(eps(i-1) * nn)) for i in range(1,s+1))
+
     def delta(m, s, i):
         if s == i == 0:
             return 1
@@ -720,6 +724,7 @@ def count_fields(p, n=None, f=None, e=None, eopts=None):
         if s == i > 0:
             return (p - 1) * p**(m * s + s - 1)
         return 0
+
     def term(i, fp, ep):
         ep_val = ep.valuation(p)
         epp = e / (ee(i) * ep)
@@ -752,21 +757,22 @@ def count_postprocess(res, info, query):
                 eopts = integer_options(info["e"], upper_bound=47)
             else:
                 eopts = None
-            func = lambda p, n: count_fields(p, n=n, eopts=eopts)
+
+            def func(p, n): return count_fields(p, n=n, eopts=eopts)
         elif groupby == ["p", "e"]:
             n = db.lf_fields.distinct("n", query)
             if len(n) != 1:
                 # There were no results...
                 return res
             n = ZZ(n[0])
-            func = lambda p, e: count_fields(p, n=n, e=e)
+            def func(p, e): return count_fields(p, n=n, e=e)
         elif groupby == ["n", "e"]:
             p = db.lf_fields.distinct("p", query)
             if len(p) != 1:
                 # No results...
                 return res
             p = ZZ(p[0])
-            func = lambda n, e: count_fields(p, n=n, e=e)
+            def func(n, e): return count_fields(p, n=n, e=e)
         else:
             return res
         for a in info["row_heads"]:
@@ -809,7 +815,7 @@ def local_field_count(info, query):
             query["n0"] = 1
     if "gal" in info and "n" not in info:
         # parse_galgrp adds restrictions on n
-        if type(query["n"]) == int:
+        if isinstance(query["n"], int):
             info["n"] = str(query["n"])
         else:
             info["n"] = ",".join(query["n"]["$in"])
@@ -852,6 +858,7 @@ def local_field_count(info, query):
     urlgen_info.pop("stats", None)
     if info["search_type"] == "FamilyCounts":
         urlgen_info["search_type"] = "Families"
+
     def url_generator(a, b):
         if (a,b) in info["nolink"]:
             return
@@ -1702,7 +1709,6 @@ class FamiliesSearchArray(SearchArray):
                 #("mass_found", "mass found", ['mass_found', 'mass_relative', 'p', 'n', 'e', 'c', 'ctr']),
             ]
 
-
     def search_types(self, info):
         return self._search_again(info, [
             ('Families', 'List of families'),
@@ -1875,4 +1881,3 @@ class LFStats(StatsDisplay):
             display_knowl("lf.family_polynomial", "families"),
             comma(self.num_rel_families),
         )
-

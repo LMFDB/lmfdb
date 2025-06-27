@@ -1205,8 +1205,8 @@ def parse_padicfields(inp, query, qfield, flag_unramified=False):
         if not NEW_LF_RE.fullmatch(label) and not OLD_LF_RE.fullmatch(label):
             raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
         splitlab = label.split('.')
-        if (OLD_LF_RE.fullmatch(label) and splitlab[2] == '0' or
-            NEW_LF_RE.fullmatch(label) and splitlab[3][0] == '0'):
+        if (OLD_LF_RE.fullmatch(label) and splitlab[2] == '0'
+            or NEW_LF_RE.fullmatch(label) and splitlab[3][0] == '0'):
             doflash = True
     if flag_unramified and doflash:
         flash_info("Search results may be incomplete.  Given $p$-adic completions contain an <a title='unramified' knowl='nf.unramified_prime'>unramified</a> field and completions are only searched for <a title='ramified' knowl='nf.ramified_primes'>ramified primes</a>.")
