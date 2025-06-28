@@ -1953,13 +1953,13 @@ def sgp_data(label):
 
 
 
-# need to write characters in GAP
-def cyclotomic_gap(n,vals):
+# need to write characters in GAP or Magma formats for downloads
+def download_cyclotomics(n,vals, dltype):
     print(n,vals)
     s = ""
     val = vals[0]
     c = val[0]  # coefficient
-    if c == 0:   # JP DOES THIS ONLY HAPPEN WITH 0?
+    if c == 0:
         return 0
     e = val[1]  # exponent
     if c == 1 and e == 0:  # special case of 1
@@ -1991,6 +1991,8 @@ def cyclotomic_gap(n,vals):
             s += "E(" + str(n) + ")"
             if e != 1:
                 s += "^" + str(e)
+    if dltype == "magma":  # Magma needs different format. 
+        return s.replace("E(" +str(n)+ ")", "K.1")
     return s
 
 
@@ -2085,7 +2087,61 @@ def download_boolean_string(G,dltype,ul_label):
 
 #JP TO DO
 def download_char_table_magma(G, ul_label):
-    return ""
+    gp_type = G.element_repr_type
+
+    print(gp_type)
+
+    if gp_type == "PC":
+        s = "G:= GPC;\n"
+    if gp_type == "Perm":
+        s = "G:= GPerm;\n"
+    if gp_type == "GLZ":
+        s = "G:= GLZ;\n"
+    if gp_type == "GLFp":
+        s = "G:= GLFp;\n"
+    if gp_type == "GLZN":
+        s = "G:= GLZN;\n"
+    if gp_type == "GLZq":
+        s = "G:= GLZq;\n"
+    if gp_type == "GLFq":
+        s = "G:= GLFq;\n"
+    if gp_type == "Lie":   # need to check this for other Lie groups JP
+        repr_data = G.representations['Lie'][0]
+        print(repr_data)
+        str_d = str(repr_data['d'])  # need later
+        s = "G:= " + repr_data['family'] + "(" + str_d+ "," + str(repr_data['q']) +"); \n"
+
+
+    s += "C := SequenceToConjugacyClasses([car<Integers(), Integers(), G> |"
+    for conj in G.conjugacy_classes:
+        if gp_type != "Perm" and gp_type != "PC":
+            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type = gp_type, ListForm = True, LieType=(gp_type == "Lie"))) +")>,"
+        else:
+            s += "< " + str(conj.order) + ", " + str(conj.size) + ", " + str(G.decode(conj.representative,rep_type = gp_type, as_magma = True)) +">,"
+    s = s[:-1]  # get rid of last comma
+    s +=  "]); \n"
+
+    s += "CR := CharacterRing(G);\n"
+
+    for char in G.characters:
+        if char.cyclotomic_n != 1:  # number field
+            s += "K := CyclotomicField(" + str(char.cyclotomic_n) + ": Sparse := true);\n"
+            s += "S := [ K |"
+            for val in char.values:
+                s +=  str(download_cyclotomics(str(char.cyclotomic_n),val, "magma"))
+                s += ","
+            s = s[:-1]  # get rid of last comma
+            s += "]; \n"
+            s += "x := CR!S; \n"
+        else:
+            s += "x := CR!\\" + str([val[0][0] for val in char.values]) + "; \n"
+        s += "x`IsCharacter := true;\n"
+        s += "x`Schur := " + str(char.indicator) + ";\n"
+        s += "x`IsIrreducible := true; \n"
+#irr_values_individual =[cyclotomic_gap(char.cyclotomic_n,char.values[i]) for i in range(len(char.values))]
+    s += "_ := CharacterTable(G : Check := 0); \n"
+    s += "chartbl_" + G.label.replace(".","_") +  ":= KnownIrreducibles(CR); \n"
+    return s
 
 
 def download_char_table_gap(G,ul_label):
@@ -2096,35 +2152,19 @@ def download_char_table_gap(G,ul_label):
 
     gp_type = G.element_repr_type
 
-    #JP DONT HAVE TO REDO SNIPPET PARTS SINCE ABOVE -- commented out below
-    snippet = G.code_snippets()
     if gp_type == "PC":
-#        gp_str =  str(snippet['presentation']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,",  "GPC,")
         s += tbl + ".UnderlyingGroup:= GPC;\n"
     if gp_type == "Perm":
-#        gp_str =  str(snippet['permutation']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GPerm :=")
         s += tbl + ".UnderlyingGroup:= GPerm;\n"
     if gp_type == "GLZ":
-#        gp_str = str(snippet['GLZ']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GLZ :=")
         s += tbl + ".UnderlyingGroup:= GLZ;\n"
     if gp_type == "GLFp":
-#        gp_str = str(snippet['GLFp']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GLFp :=")
         s += tbl + ".UnderlyingGroup:= GLFp;\n"
     if gp_type == "GLZN":
-#        gp_str = str(snippet['GLZN']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GLZN :=")
         s += tbl + ".UnderlyingGroup:= GLZN;\n"
     if gp_type == "GLZq":
-#        gp_str = str(snippet['GLZq']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GLZq :=")
         s += tbl + ".UnderlyingGroup:= GLZq;\n"
     if gp_type == "GLFq":
-#        gp_str = str(snippet['GLFq']['gap']) + "\n"
-#        s += gp_str.replace("G :=", "GLFq :=")
         s += tbl + ".UnderlyingGroup:= GLFq;\n"
 
 
@@ -2144,7 +2184,10 @@ def download_char_table_gap(G,ul_label):
         size_centralizers.append(int(conj.group_order/conj.size))
         class_names.append(conj.label)
         order_class_reps.append(conj.order)
-        cc_reps.append(G.decode(conj.representative,rep_type = gp_type))  
+        if gp_type != "PC" and gp_type != "Perm":  # need to do matrix directly to include right format
+            cc_reps.append(G.decode_as_matrix(conj.representative,rep_type = gp_type,ListForm=True))
+        else:
+            cc_reps.append(G.decode(conj.representative,rep_type = gp_type))
 
     cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
     pwr_maps = "[ , "
@@ -2161,7 +2204,7 @@ def download_char_table_gap(G,ul_label):
 
     irr_values = []
     for char in G.characters:
-        irr_values_individual =[cyclotomic_gap(char.cyclotomic_n,char.values[i]) for i in range(len(char.values))]
+        irr_values_individual =[download_cyclotomics(char.cyclotomic_n,char.values[i],"gap") for i in range(len(char.values))]
         irr_values.append(irr_values_individual)
     irr = str(irr_values).replace("'","")
     s += tbl + ".Irr:= " +str(irr) + ";\n"
