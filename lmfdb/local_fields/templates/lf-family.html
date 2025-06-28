@@ -1,0 +1,141 @@
+{% extends 'embedded_results.html' %}
+
+{% block embedding_content %}
+
+{% if family.e > 1 %}
+<h2> {{ KNOWL('lf.family_polynomial', 'Defining polynomial') }}{% if family.f > 1 %} over unramified subextension{% endif %}</h2>
+
+<table>
+  <tr><td> ${{ family.polynomial._latex_() }}$ </td></tr>
+</table>
+{% endif %}
+
+<h2> {{ KNOWL('lf.family_invariants', 'Invariants') }} </h2>
+<table>
+  <tr><td>{{ KNOWL('lf.residue_field', 'Residue field characteristic') }}:</td><td> ${{family.p}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.degree', 'Degree') }}:</td><td> ${{family.n}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_base', 'Base field') }}:</td><td> {{family.base_link | safe}} </td></tr>
+  <tr><td>{{ KNOWL('lf.ramification_index', 'Ramification index') }} $e$:</td><td> ${{family.e}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.residue_field_degree', 'Residue field degree') }} $f$:</td><td> ${{family.f}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.discriminant_exponent', 'Discriminant exponent') }} $c$:</td><td> ${{family.c}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.slopes', 'Absolute Artin slopes' if family.n0 > 1 else 'Artin slopes') }}:</td><td> {{info.latex_content(family.artin_slopes)}} </td></tr>
+  <tr><td>{{ KNOWL('lf.slopes', 'Swan slopes') }}:</td><td> {{info.latex_content(family.slopes)}}</td></tr>
+  <tr><td>{{ KNOWL('lf.means', 'Means') }}:</td><td> {{family.means_display}} </td></tr>
+  <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> {{family.rams_display}} </td></tr>
+  <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.all_stored %} (complete) {% else %} (incomplete) {% endif %}</td></tr>
+  <tr><td>{{ KNOWL('lf.family_ambiguity', 'Ambiguity') }}:</td><td> ${{family.ambiguity}}$ </td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Mass') }}:</td><td> ${{family.mass_relative_display}}$</td></tr>
+  <tr><td>{{ KNOWL('lf.family_mass', 'Absolute Mass') }}:</td><td> ${{family.mass_absolute_display}}$ {% if not family.all_stored %}(${{family.mass_stored}}$ currently in the LMFDB){% endif %}</td></tr>
+</table>
+
+{% if family.w > 0 %}
+<h2> {{ KNOWL('lf.family_diagrams', 'Diagrams') }} </h2>
+
+<div>
+  <button class='dia_eisenstein dia_active' onclick="select_diagram_mode('eisenstein'); return false;">Eisenstein diagram</button>
+  <button class='dia_rampoly dia_inactive' onclick="select_diagram_mode('rampoly'); return false;">Ramification polygon</button>
+  <button class='dia_herbrand dia_inactive' onclick="select_diagram_mode('herbrand'); return false;">Herbrand function</button>
+</div>
+<div id="diagram_eisenstein" class="diagram">
+  <img src="{{ family.picture }}" width="1000">
+</div>
+<div id="diagram_rampoly" class="diagram" style="display: none;">
+  <img src="{{ family.ramification_polygon_plot }}" width="1000">
+</div>
+<div id="diagram_herbrand" class="diagram" style="display: none;">
+  <img src="{{ family.herbrand_function_plot }}" width="1000">
+</div>
+{% endif %}
+
+{% if family.field_count > 0 %}
+
+<h2> {{ KNOWL('lf.family_varying', 'Varying') }} </h2>
+{% if not family.all_stored %}
+<p>The following invariants arise for fields within the LMFDB; since not all fields in this family are stored, it may be incomplete.</p>
+{% endif %}
+{% if family.n0 > 1 %}
+<p>These invariants are all associated to absolute extensions of $\Q_{ {{family.p}} }$ within this relative family, not the relative extension.</p>
+{% endif %}
+<table>
+  {% if family.n0 > 1 and family.some_hidden_data_available %}
+  <tr><td>{{ KNOWL('nf.galois_group', 'Galois group') }}:</td><td> {{ family.galois_groups | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.hidden_slopes', 'Hidden Artin slopes') }}:</td><td> {{ family.hidden_slopes | safe }} </td></tr>
+  {% endif %}
+  <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability') }}:</td><td> {{ family.indices_of_insep | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.associated_inertia', 'Associated inertia') }}:</td><td> {{ family.associated_inertia | safe }} </td></tr>
+  <tr><td>{{ KNOWL('lf.jump_set', 'Jump Set') }}:</td><td> {{ family.jump_set | safe }} </td></tr>
+</table>
+
+{% if family.n0 == 1 and family.some_hidden_data_available %}
+<h3> {{ KNOWL('lf.packet', 'Galois groups and Hidden Artin slopes') }} </h3>
+
+{% if (family.gal_slope_tables|length) > 1 %}
+  <p>Select desired size of Galois group.{% if not family.all_hidden_data_available %}  Note that the following data has not all been computed for fields in this family, so the tables below are incomplete.{% endif %}</p>
+  <div>
+    {% for N, d in family.gal_slope_tables %}
+      <button class="gs_{{N}} gs_inactive" onclick="select_gs_mode('{{N}}'); return false;">{{N}}</button>
+    {% endfor %}
+    <button class="gs_all gs_inactive" onclick="select_gs_mode('all'); return false;">all</button>
+  </div>
+{% elif not family.all_hidden_data_available %}
+  <p>Note that the following data has not all been computed for fields in this family, so the table below is incomplete.</p>
+{% endif %}
+
+{% for N, d in family.gal_slope_tables %}
+  <div id="gsstats_{{N}}" class="gsstats" style="display:none;">
+    {% include 'stat_2d.html' %}
+  </div>
+{% endfor %}
+
+{% endif %} {# family.n0 == 1 #}
+
+<h2><a id="fields"></a>{{ KNOWL('lf.family_polynomial', 'Fields') }} </h2>
+
+{% else %} {# family.field_count = 0 #}
+
+<p>
+  The LMFDB does not contain any fields from this family.
+</p>
+
+{% endif %}
+
+<script type="text/javascript">
+  function select_diagram_mode(mode) {
+    $("button.dia_active").addClass("dia_inactive").removeClass("dia_active");
+    $("button.dia_"+mode).removeClass("dia_inactive").addClass("dia_active");
+    $("div.diagram").hide();
+    $("#diagram_"+mode).show();
+  }
+  function select_gs_mode(mode) {
+    $("button.gs_active").addClass("gs_inactive").removeClass("gs_active");
+    $("button.gs_"+mode).removeClass("gs_inactive").addClass("gs_active");
+    if (mode == "all") {
+      $("div.gsstats").show();
+    } else {
+      $("div.gsstats").hide();
+      $("#gsstats_"+mode).show();
+    }
+  }
+  {% if (family.gal_slope_tables | length) > 0 %}
+  select_gs_mode('{{family.gal_slope_tables[0][0]}}');
+  {% endif %}
+</script>
+
+{% endblock %}
+
+{% block post_results_content %}
+
+{#
+{% if family.poly_count < 100 %}
+<h2> Polynomials </h2>
+
+<table>
+  {% for poly in family %}
+    <tr><td>${{ poly._latex_() }}$</td></tr>
+  {% endfor %}
+</table>
+
+{% endif %}
+#}
+
+{% endblock %}
