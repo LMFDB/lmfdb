@@ -271,7 +271,7 @@ class WebGaloisGroup:
                 if code == []:
                     return ' is '+genknowl+' for any base field $K$'
                 if code == [0]:
-                    return ' is '+genknowl+r' for any base field $\Q$'
+                    return ' is '+genknowl+r' for the base field $\Q$'
                 return ' is '+genknowl+r' for any base field $K$ of characteristic $\neq$ '+','.join([str(z) for z in code])
 
             regdata= [[raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))] for z in t]
