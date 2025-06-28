@@ -8,7 +8,7 @@ import os
 import yaml
 from flask import render_template
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
@@ -260,27 +260,25 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def regulars(self):
-        s=db.gps_regular_polynomials.search({'label':self.label})
-        t=[z for z in s] # it will be a short list
+        t = list(db.gps_regular_polynomials.search({'label':self.label})) # it will be a short list
         if t:
-            genknowl = '<a title = "generic [gg.generic_polynomial]" knowl="gg.generic_polynomial" >generic</a>'
+            genknowl = display_knowl("gg.generic_polynomial", "generic")
 
             def msg(code):
                 if code is None:
                     return ''
                 if code == []:
-                    return ' is '+genknowl+' for any base field $K$'
+                    return f' is {genknowl} for any base field $K$'
                 if code == [0]:
-                    return ' is '+genknowl+r' for the base field $\Q$'
-                return ' is '+genknowl+r' for any base field $K$ of characteristic $\neq$ '+','.join([str(z) for z in code])
+                    return fr' is {genknowl} for the base field $\Q$'
+                code = ','.join(str(z) for z in code)
+                return fr' is {genknowl} for any base field $K$ of characteristic $\neq$ {code}'
 
-            regdata= [[raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))] for z in t]
-            for j in range(len(regdata)):
-                if regdata[j][1]:
-                    regdata[j][1] = 'The polynomial $f_{%d}$ '%(j+1)+regdata[j][1]
+            regdata= [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
+            for j, (poly, msg) in enumerate(regdata):
+                if msg:
+                    regdata[j] = (poly, f'The polynomial $f_{{{j+1}}}$ {msg}')
             return regdata
-        else:
-            return None
 
     def chartable(self):
         self.conjclasses # called to load info in self
