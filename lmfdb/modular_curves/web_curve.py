@@ -398,11 +398,11 @@ def modcurve_link(label):
     return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",label=label),label)
 
 def combined_data(label):
-    data = db.gps_gl2zhat_fine.lookup(label)
+    data = db.gps_gl2zhat.lookup(label)
     if data is None:
         return
     if not data["contains_negative_one"]:
-        coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
+        coarse = db.gps_gl2zhat.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
     return data
@@ -414,7 +414,7 @@ def learnmore_list():
             ('Modular curve labels', url_for(".labels_page"))]
 
 class WebModCurve(WebObj):
-    table = db.gps_gl2zhat_fine
+    table = db.gps_gl2zhat
 
     # We have to modify _get_dbdata, since we need to also include information from the coarse modular curve
     def _get_dbdata(self):
@@ -705,7 +705,7 @@ class WebModCurve(WebObj):
         res = []
         if maps:
             codomain_labels = [m["codomain_label"] for m in maps]
-            codomains = list(db.gps_gl2zhat_fine.search(
+            codomains = list(self.table.search(
                 {"label": {"$in": codomain_labels}},
                 ["label","name"]))
             # Do not display maps for which the codomain model has dont_display = False
@@ -759,6 +759,18 @@ class WebModCurve(WebObj):
         if self.Glabel:
             return abstract_group_display_knowl(self.Glabel)
         return ""
+
+    def show_entanglement_quotient(self):
+        if self.entanglement_quotient:
+            return abstract_group_display_knowl(self.entanglement_quotient)
+        return ""
+
+    def format_agreeable_quotient(self):
+        if self.agreeable_quotient is None:
+            return "not computed"
+        if self.agreeable_quotient:  # non-empty list
+            return r" $\oplus$ ".join(r"$\Z/{%s}\Z$" % n for n in self.agreeable_quotient)
+        return "trivial"
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
@@ -1096,7 +1108,7 @@ class WebModCurve(WebObj):
             return [], []
         parents = {}
         names = {}
-        for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
+        for rec in self.table.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
             if rec["name"] and db.modcurve_teximages.count({"label":rec["name"]}):
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]
