@@ -1869,7 +1869,8 @@ class WebAbstractGroup(WebObj):
     def pcgs_relative_orders(self):
         return [ZZ(c) for c in self.pcgs.RelativeOrders()]
 
-    def pcgs_expos_to_str(self, vec):
+    # as_magma is for downloads where we need "a*b" not "ab"
+    def pcgs_expos_to_str(self, vec, as_magma = False):
         w = []
         e = 0
         # We need to shift the relative orders by 1, since we're multiplying on the previous pass of the for loop
@@ -1886,17 +1887,27 @@ class WebAbstractGroup(WebObj):
         for i, c in enumerate(w):
             if c == 1:
                 s += var_name(i)
+                if as_magma:
+                    s += "*"
+                print("S 1:", s)
             elif c != 0:
                 s += "%s^{%s}" % (var_name(i), c)
+                if as_magma:
+                    s += "*"
+                print("S 2:", s)
+        if as_magma:
+            s = s[:-1] # need to get rid of last "*"
+            print("S 3:", s)
+            print("--------")
         return s
 
-    def pcgs_as_str(self, elt):
+    def pcgs_as_str(self, elt, as_magma = False):
         # take an element of a pcgs in GAP and make our string form
         if elt == '':
             return ''
-        return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt))
+        return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt),as_magma)
 
-    def decode_as_pcgs(self, code, as_str=False):
+    def decode_as_pcgs(self, code, as_str=False, as_magma = False):
         # Decode an element
         vec = []
         if code < 0 or code >= self.order:
@@ -1907,7 +1918,7 @@ class WebAbstractGroup(WebObj):
             code = code // m
         if as_str:
             # Need to combine some generators
-            return self.pcgs_expos_to_str(vec)
+            return self.pcgs_expos_to_str(vec, as_magma)
         else:
             return self.pcgs.PcElementByExponents(vec)
 
@@ -2027,12 +2038,24 @@ class WebAbstractGroup(WebObj):
             return latex(x)
         return x
 
-    def decode(self, code, rep_type=None, as_str=False):
+    # as_magma is for downloading.  Will automatically set as_str to True
+    def decode(self, code, rep_type=None, as_str=False, as_magma=False):
         if rep_type is None:
             rep_type = self.element_repr_type
         if rep_type == "Perm":
+            if as_magma:
+                raw_output = self.decode_as_perm(code, as_str=True)
+                if raw_output == "()":
+                    return "Id(G)"
+                return "G!" + raw_output
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
+            if as_magma:   #need to postprocess magma a bit
+                if code == 0:
+                    return "Id(G)"
+                default_str = self.decode_as_pcgs(code, as_str=True, as_magma=True)
+                default_str = default_str.replace("{","").replace("}","")
+                return default_str
             if code == 0 and as_str:
                 return "1"
             return self.decode_as_pcgs(code, as_str=as_str)
