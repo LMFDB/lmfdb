@@ -274,7 +274,7 @@ class WebGaloisGroup:
                 code = ','.join(str(z) for z in code)
                 return fr' is {genknowl} for any base field $K$ of characteristic $\neq$ {code}'
 
-            regdata= [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
+            regdata = [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
             for j, (poly, msg) in enumerate(regdata):
                 if msg:
                     regdata[j] = (poly, f'The polynomial $f_{{{j+1}}}$ {msg}')
