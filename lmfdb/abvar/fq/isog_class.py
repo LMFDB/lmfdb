@@ -405,16 +405,27 @@ class AbvarFq_isoclass():
                 conductor = r"\mathcal{O}_{\mathbb{Q}[F]}"
                 if M != 1:
                     conductor = f"{M} {conductor}"
-            ans.append(
-                fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
-            )
+            conductor = f"${conductor}$"
+        else:
+            conductor = "not computed"
+        ans.append(
+            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
+        )
 
-
-        cm_type = "$%s$" % rec["cohen_macaulay_type"]
+        if rec["cohen_macaulay_type"] is None:
+            cm_type = "not computed"
+        else:
+            cm_type = "$%s$" % rec["cohen_macaulay_type"]
+        if rec["pic_invs"] is not None:
+            pic_disp = display_abelian_group(rec['pic_invs'])
+        elif rec["pic_size"] is not None:
+            pic_disp = f"Abelian group of order {rec['pic_size']}"
+        else:
+            pic_disp = "not computed"
 
         ans.extend([
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{display_abelian_group(rec['pic_invs'])}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{pic_disp}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
