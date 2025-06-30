@@ -8,7 +8,7 @@ import os
 import yaml
 from flask import render_template
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
@@ -74,6 +74,16 @@ def cyclestrings(perm):
 def compress_cycle_type(ct):
     bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
+
+def quick_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return '$'+str+'$'
+
+
 ############  Galois group object
 
 
@@ -247,6 +257,28 @@ class WebGaloisGroup:
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
+
+    @lazy_attribute
+    def regulars(self):
+        t = list(db.gps_regular_polynomials.search({'label':self.label})) # it will be a short list
+        if t:
+            genknowl = display_knowl("gg.generic_polynomial", "generic")
+
+            def msg(code):
+                if code is None:
+                    return ''
+                if code == []:
+                    return f' is {genknowl} for any base field $K$'
+                if code == [0]:
+                    return fr' is {genknowl} for the base field $\Q$'
+                code = ','.join(str(z) for z in code)
+                return fr' is {genknowl} for any base field $K$ of characteristic $\neq$ {code}'
+
+            regdata= [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
+            for j, (poly, msg) in enumerate(regdata):
+                if msg:
+                    regdata[j] = (poly, f'The polynomial $f_{{{j+1}}}$ {msg}')
+            return regdata
 
     def chartable(self):
         self.conjclasses # called to load info in self
