@@ -23,16 +23,14 @@ with open("prettyindex", "r") as fn:
 print("Loaded new")
 # Have all the image loaded
 
-afile = open("imagereloader", "w")
-afile.write('label|image\n')
-afile.write('text|text\n\n')
+with open("imagereloader", "w") as afile:
+    _ = afile.write('label|image\n')
+    _ = afile.write('text|text\n\n')
 
-
-for key,value in imdict.items():
-    afile.write(key.replace('\\','\\\\')+'|'+value.replace('\\','\\\\'))
-    afile.write('\n')
-    #inps.append({'label': key, 'image': value})
-afile.close()
+    for key,value in imdict.items():
+        afile.write(key.replace('\\','\\\\')+'|'+value.replace('\\','\\\\'))
+        afile.write('\n')
+        #inps.append({'label': key, 'image': value})
 db.gps_images.reload('imagereloader')
 
 inps=[]

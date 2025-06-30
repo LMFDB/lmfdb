@@ -288,7 +288,10 @@ class AbvarFq_isoclass():
                 self.label = label
                 self.index = ZZ(label.split(".")[0])
                 self.tex = tex[label]
-                self.img = texlabels[self.tex]
+                if self.tex in texlabels:
+                    self.img = texlabels[self.tex]
+                else:
+                    self.img = texlabels["?"]
                 self.rank = sum(e for (p,e) in self.index.factor())
                 self.x = xcoord[label]
         parents = {}
@@ -300,15 +303,15 @@ class AbvarFq_isoclass():
             R = rec['multiplicator_ring']
             N = ZZ(R.split(".")[0])
             num_wes[R] += 1
-            num_ind[N] += 1
             if rec['is_invertible']:
+                num_ind[N] += 1
                 parents[R] = rec['minimal_overorders']
                 pic_size[R] = rec['pic_size']
                 xcoord[R] = rec['diagramx']
         if not pic_size:
             return [], [] # no weak equivalence class data for this isogeny class
         tex = {}
-        texlabels = set()
+        texlabels = set(["?"])
         for R, npic in pic_size.items():
             N, i = R.split(".")
             N = ZZ(N)

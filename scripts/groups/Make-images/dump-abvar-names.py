@@ -16,7 +16,6 @@ for rec in db.av_fq_weak_equivalences.search({}, ["is_invertible", "isog_label",
         num_ind[ilabel][N] += 1
         pic_size[ilabel][mring] = rec["pic_size"]
 
-texdata = []
 texdata = set((mring, pic_size[ilabel][mring], num_we, num_ind[ilabel][mring.split(".")[0]] > 1) for (ilabel, mrings) in num_wes.items() for (mring, num_we) in mrings.items())
 
 count = 1
