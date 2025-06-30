@@ -18,11 +18,11 @@ from lmfdb import db
 from lmfdb.app import app
 
 from sage.all import Factorization, FreeAlgebra
+from sage.rings.all import Integer, QQ, RR, ZZ
+from sage.plot.all import line, points, circle, polygon, Graphics
 from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
-from sage.plot.all import line, points, circle, polygon, Graphics
-from sage.rings.all import Integer, QQ, RR, ZZ
 
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import (
@@ -180,11 +180,15 @@ class AbvarFq_isoclass():
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
             return ""
         else:
-            self.expanded_polynomial = latex(QQ[['x']](self.polynomial))
-        if self.zfv_index_factorization is not None:
-            self.zfv_index_factorization_latex = latex(Factorization(self.zfv_index_factorization))
-        if self.zfv_plus_index_factorization is not None:
-            self.zfv_plus_index_factorization_latex = latex(Factorization(self.zfv_plus_index_factorization))
+            return latex(QQ[['x']](self.polynomial))
+
+    @lazy_attribute
+    def zfv_index_factorization_latex(self):
+        return latex(Factorization(self.zfv_index_factorization))
+
+    @lazy_attribute
+    def zfv_plus_index_factorization_latex(self):
+        return latex(Factorization(self.zfv_plus_index_factorization))
 
     @property
     def p(self):
@@ -202,6 +206,10 @@ class AbvarFq_isoclass():
     def polygon_slopes(self):
         # Remove the multiset indicators
         return [s[:-1] for s in self.slopes]
+
+    @property
+    def pretty_slopes(self):
+        return "[" + ",".join(latex(QQ(s)) for s in self.polygon_slopes) + "]"
 
     @property
     def polynomial(self):
@@ -237,14 +245,12 @@ class AbvarFq_isoclass():
         L = Graphics()
         xmax = len(S)
         ymax = ZZ(len(S)/2)
-        pts.append((xmax,0))
-        L += polygon(pts,alpha=0.1)
-        pts.remove((xmax,0))
+        L += polygon(pts+[(0,ymax)],alpha=0.1)
         for i in range(xmax+1):
             L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
         for j in range(ymax+1):
             L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
-        L+=line(pts,thickness=2)
+        L += line(pts, thickness=2)
         for v in pts:
             L += circle(v, 0.06, fill=True)
         L.axes(False)
@@ -494,6 +500,9 @@ class AbvarFq_isoclass():
     def is_supersingular(self):
         return all(slope == "1/2" for slope in self.polygon_slopes)
 
+    def is_almost_ordinary(self):
+        return self.newton_elevation == 1
+
     def display_slopes(self):
         return "[" + ", ".join(self.polygon_slopes) + "]"
 
@@ -518,6 +527,10 @@ class AbvarFq_isoclass():
             return "The Galois group of this isogeny class is not in the database."
         else:
             return transitive_group_display_knowl(self.galois_groups[0])
+
+    def galois_groups_pretty(self):
+        # Used in search result pages
+        return ", ".join(transitive_group_display_knowl(gal, cache=self.gal_cache) for gal in self.galois_groups)
 
     def decomposition_display_search(self):
         if self.is_simple:
@@ -774,7 +787,7 @@ def describe_end_algebra(p, extension_label):
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += "</tr></table>\n"
         center_poly = db.nf_fields.lookup(center, 'coeffs')
-        center_poly = latex.latex(ZZ["x"](center_poly))
+        center_poly = latex(ZZ["x"](center_poly))
         ans[1] += r"where $\pi$ is a root of ${0}$.".format(center_poly)
         ans[1] += "\n"
     return ans

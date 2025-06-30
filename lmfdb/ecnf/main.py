@@ -200,7 +200,7 @@ def show_ecnf1(nf):
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -223,7 +223,7 @@ def show_ecnf_conductor(nf, conductor_label):
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -364,13 +364,13 @@ ecnf_columns = SearchColumns([
     ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center", default=False),
     FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5, default=False),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes",
-                 lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
+                 lambda primes: ", ".join(''.join(str(p.replace('w', 'a')).split('*')) for p in primes) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s" % (rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                 lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
+                 lambda tors: r"\oplus".join(r"\Z/%s\Z" % n for n in tors) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$" % ("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
@@ -386,7 +386,7 @@ ecnf_columns = SearchColumns([
                  short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
-                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
+                 short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш", default=False),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", default=False),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left", default=False),
@@ -791,8 +791,8 @@ class ECNFSearchArray(SearchArray):
             )
 
         tor_opts = ([("", ""),
-                     ("[]", "trivial")] +
-                    [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
+                     ("[]", "trivial")]
+                    + [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
         torsion_structure = SelectBox(
             name="torsion_structure",
             label="Torsion structure",

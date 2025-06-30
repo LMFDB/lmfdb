@@ -155,7 +155,7 @@ def decjac_format(decjac_list):
             entry = entry + "^{" + str(ints[1]) + "}"
         entries.append(entry)
     latex = "\\times ".join(entries)
-    ccClasses = cc_display ([ints[2] for ints in decjac_list])
+    ccClasses = cc_display([ints[2] for ints in decjac_list])
     return latex, ccClasses
 
 # Turn 'i.j' in the total label in to cc displayed in mongo
@@ -292,7 +292,7 @@ def expr_error(err):
     return err_msg
 
 def expr_getc():
-    global cur_expr, cur_index
+    global cur_index
     while cur_index < len(cur_expr):
         result = cur_expr[cur_index]
         cur_index += 1
@@ -545,15 +545,15 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                             group_order = int(a)*g-b
                     elif a == '':
                         group_order = g
-                    else: #ag
+                    else:  # ag
                         group_order = int(a)*g
 
                 queries.append((group_order, g))
 
-            if instance == 1: #If there is only one linear function
-                return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
+            if instance == 1:  # If there is only one linear function
+                return ['$or', [{key: gp_ord, 'genus': g} for gp_ord, g in queries]]
             else:
-                return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
+                return [[key, gp_ord, g] for gp_ord, g in queries]  # Nested list
 
         else:
             raise ValueError("It needs to be an integer (such as 25), \

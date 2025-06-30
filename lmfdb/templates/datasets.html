@@ -1,0 +1,60 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+  The LMFDB hosts several auxilliary datasets which are mostly stored as text files rather than as SQL tables.
+</p>
+
+{# TODO: Use CSS to control horizontal table layout rather than manual line breaks #}
+<table class="ntdata">
+  <tr>
+    <th>Dataset</th>
+    <th>Description</th>
+    <th>Size</th>
+    <th>Source</th>
+  </tr>
+  <tr>
+    <td><a href="/NumberField/QuadraticImaginaryClassGroups">Quadratic imaginary class groups</a></td>
+    <td>{{KNOWL('nf.class_number', 'Class number')}} and {{KNOWL('nf.ideal_class_group', 'group structure')}} for {{KNOWL('nf.totally_imaginary', 'imaginary')}} <br>
+      {{KNOWL('nf.degree', 'quadratic')}} fields with {{KNOWL('nf.discriminant', 'discriminant')}} larger than $-2^{40}$</td>
+    <td>2.24 TB</td>
+    <td> <a href="https://doi.org/10.1090/mcom3050">Mosunov, Jacobson</a></td>
+  </tr>
+  <tr>
+    <td><a href="/zeros/zeta/">Zeros of $\zeta(s)$</a></td>
+    <td>The first $10^{11}$ zeros of the {{ KNOWL('lfunction.riemann', 'Riemann zeta function') }}.</td>
+    <td>1.32 TB</td>
+    <td>The ZetaGrid project</td>
+  </tr>
+  <tr>
+    <td><a href='{{url_for("ec.render_bhkssw")}}'>BHKSSW dataset</a></td>
+    <td>All {{KNOWL('ec.q', 'elliptic curves')}} of naive height up to $2.7 \cdot 10^{10}$.</td>
+    <td>18.5 GB</td>
+    <td><a href="https://doi.org/10.1112/S1461157016000152">Balakrishnan, Ho, Kaplan, Spicer, Stein, Weigandt</a></td>
+  </tr>
+  <tr>
+    <td><a href="{{url_for('ec.render_sw_ecdb')}}">Stein-Watkins dataset</a></td>
+    <td>Many {{KNOWL('ec.q', 'elliptic curves')}} of {{KNOWL('ec.q.conductor', 'conductor')}} up to $10^8$ and <br> prime conductor up to $10^{10}$</td>
+    <td>10.9 GB</td>
+    <td><a href="https://doi.org/10.1007/3-540-45455-1_22">Stein, Watkins</a></td>
+  </tr>
+  <tr>
+    <td><a href="/EllipticCurve/Q/CongruentNumbers">Congruent numbers</a></td>
+    <td>The first $10^6$ {{KNOWL('ec.congruent_number_curve', 'congruent number curves')}}, with <br>
+      {{KNOWL('ec.mw_generators', 'Mordell-Weil generators')}} and {{KNOWL('ec.q.bsdconjecture', 'BSD invariants')}}</td>
+    <td>893 MB</td>
+    <td>Randall L. Rathbun</td>
+  </tr>
+</table>
+
+<p>
+  If you have a dataset you would like to contribute to the LMFDB, please contact a member of the <a href="/editorial-board">Editorial Board</a>.  In order to be considered for inclusion, your dataset should
+  <ol>
+    <li>fit within the LMFDB's general scope (L-functions, modular forms and related objects),</li>
+    <li>have a publicly available description of how it was computed, either through a paper or a code repository,</li>
+    <li>be available under the <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">CC-BY-SA</a> license.</li>
+  </ol>
+</p>
+
+{% endblock %}

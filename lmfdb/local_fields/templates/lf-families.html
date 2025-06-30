@@ -1,0 +1,32 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<table>
+  <tr>
+    <th>Label</th>
+    <th>$e$</th>
+    <th>$f$</th>
+    <th>$c$</th>
+    <th>Visible Slopes</th>
+    <th>Heights</th>
+    <th>Rams</th>
+    <th>Num. Poly</th>
+    <th>Num. Fields</th>
+  </tr>
+  {% for family in families %}
+    <tr>
+      <td>{{family.link|safe}}</td>
+      <td>${{family.e}}$</td>
+      <td>${{family.f}}$</td>
+      <td>${{family.c}}$</td>
+      <td>${{family.artin_slopes}}$</td>
+      <td>${{family.heights}}$</td>
+      <td>${{family.rams}}$</td>
+      <td>${{family.poly_count}}$</td>
+      <td>${{family.field_count}}$</td>
+    </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

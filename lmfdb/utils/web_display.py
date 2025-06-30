@@ -231,14 +231,14 @@ def pos_int_and_factor(n, factor_base=None):
     n = ZZ(n)
     if factor_base:
         factors = [(p, ZZ(n).valuation(p)) for p in factor_base]
-        factors = [(z[0],z[1]) for z in factors if z[1] > 0]
+        factors = [(z[0], z[1]) for z in factors if z[1] > 0]
 
         def power_prime(p, exponent):
             if exponent == 1:
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        latexfactors = r" \cdot ".join(power_prime(p, val) for (p, val) in factors)
+        latexfactors = r" \cdot ".join(power_prime(p, val) for p, val in factors)
     else:
         factors = n.factor()
         latexfactors = latex(factors)
@@ -587,7 +587,7 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
 
 
 def raw_typeset_qexp(coeffs_list,
-                     compress_threshold=100,
+                     compress_threshold=200,
                      coeff_compress_threshold=30,
                      var=r"\beta",
                      final_rawvar='b',
@@ -655,7 +655,7 @@ def raw_typeset_qexp(coeffs_list,
         raw += r
         if add_to_tset:
             tset += t
-        if add_to_tset and "cdots" in tset:
+        if add_to_tset and (len(tset) > compress_threshold):
             add_to_tset = False
             lastt = None
     else:
@@ -708,10 +708,16 @@ def compress_poly_Q(rawpoly,
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a polynomial (or other string containing polynomials)
     if not isinstance(pol_str, str):
         pol_str = str(pol_str)
-    o_str = pol_str.replace('*', '')
+    if greek_vars:
+        greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
+        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
+    if subscript_vars:
+        subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
+        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
+    o_str = pol_str.replace('*', ' ')
     ind_mid = o_str.find('/')
     while ind_mid != -1:
         ind_start = ind_mid - 1
@@ -790,15 +796,16 @@ def sparse_cyclotomic_to_latex(n, dat):
         # Now the coefficient
 
         if p[0] == 1:
-            ans += '+'  + zpart
+            ans += '+' + zpart
         elif p[0] == -1:
-            ans += '-'  + zpart
+            ans += '-' + zpart
         else:
-            ans += '{:+d}'.format(p[0])  + zpart
+            ans += '{:+d}'.format(p[0]) + zpart
     ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
+
 
 def sparse_cyclotomic_to_mathml(n, dat):
     r"""

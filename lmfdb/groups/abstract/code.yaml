@@ -56,7 +56,7 @@ GLZq:
 
 GLFq:
   comment: Define the group as a matrix group with coefficients in GLFq
-  magma: F:=GF({Fq}); al:=PrimitiveElement(F); G := MatrixGroup< {nFq}, F | {LFq} >;
+  magma: F:=GF({Fq}); al:=F.1; G := MatrixGroup< {nFq}, F | {LFq} >;
   gap: G := Group({LFqsplit});
 
 transitive:

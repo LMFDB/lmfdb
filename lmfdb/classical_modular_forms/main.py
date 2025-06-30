@@ -30,7 +30,7 @@ from lmfdb.classical_modular_forms.web_newform import (
 from lmfdb.classical_modular_forms.web_space import (
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_new_cusp_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -91,8 +91,8 @@ def level_bound(nontriv=None):
 #############################################################################
 
 def ALdims_knowl(al_dims, level, weight):
-    short = "+".join(["$%s$" % (d) for d in al_dims])
-    AL_table = ALdim_table(al_dims, level, weight)
+    short = "+".join(f"${d}$" for d in al_dims)
+    AL_table = ALdim_new_cusp_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>' % (AL_table, short)
 
 def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
@@ -582,7 +582,7 @@ def url_for_label(label):
         return abort(404, "Invalid label")
     keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
     keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
-    for i in range (len(slabel)):
+    for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
@@ -798,12 +798,13 @@ def newform_parse(info, query):
         parse_noop(info, query, 'projective_image', func=str.upper)
     parse_ints(info, query, 'artin_degree', name="Artin degree")
 
+
 def newspace_parse(info, query):
     for key, display in newform_only_fields.items():
         if key in info:
             msg = "%s not valid when searching for spaces"
             flash_error(msg, display)
-            raise ValueError(msg  % display)
+            raise ValueError(msg % display)
     if 'dim' not in info and 'hst' not in info:
         # When coming from browse page, add dim condition to only show non-empty spaces
         info['dim'] = '1-'
@@ -1446,7 +1447,7 @@ class CMFSearchArray(SearchArray):
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
-    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for name, disp, sord in _sort]
     sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces}
@@ -1455,6 +1456,7 @@ class CMFSearchArray(SearchArray):
     jump_knowl = "cmf.search_input"
     jump_prompt = "Label"
     null_column_explanations = { # No need to display warnings for these
+        'atkin_lehner_string': False,
         'is_polredabs': False,
         'projective_image': False,
         'projective_image_type': False,

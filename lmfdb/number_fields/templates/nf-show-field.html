@@ -31,7 +31,18 @@ table.ntdata a {
        <tr><td>{{ KNOWL('nf.galois_root_discriminant', title="Galois root discriminant") }}:<td>&nbsp;&nbsp;<td>{{info.grd}}
       <tr><td>{{ KNOWL('nf.ramified_primes', title="Ramified primes") }}:<td>&nbsp;&nbsp;<td>{{info.ram_primes|safe}}<td>{{ place_code('ramified_primes') }}
       <tr><td>{{ KNOWL('nf.discriminant_root_field', title="Discriminant root field") }}:<td>&nbsp;&nbsp;<td>{{nf.discrootfield()|safe}}
-      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q) }$:<td>&nbsp;&nbsp;<td>${{info.auts}}$<td>{{ place_code('automorphisms') }}
+
+      <tr><td> 
+        {% if info.is_galois %}
+          {{ KNOWL('lf.automorphism_group', title='$\Aut(K/\Q)$') }}
+          $=$
+          {{ KNOWL('nf.galois_group', title='$\Gal(K/\Q)$') }}:
+          <td>&nbsp;&nbsp;<td>{{info.aut_gp_knowl|safe}}<td>{{ place_code('automorphisms') }}
+        {% else %}
+          {{ KNOWL('lf.automorphism_group', title='$\Aut(K/\Q)$') }}:
+          <td>&nbsp;&nbsp;<td>{{info.aut_gp_knowl|safe}}<td>{{ place_code('automorphisms') }}
+        {% endif %}
+
 {% if info.is_abelian %}
     <tr><td colspan="3">This field is Galois and abelian over $\Q$.</tr>
         <tr><td>{{KNOWL('nf.conductor', title='Conductor')}}:<td>&nbsp;&nbsp;<td>{{info.conductor}}</tr>
@@ -173,9 +184,9 @@ table.ntdata a {
             {% if r[0] == 'ae' %}
               <tr><td>
                 {% if r[2]==1 %}
-                  {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently sibling') }}:
+                  {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equivalent sibling') }}:
                 {% else %}
-                  {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equvalently siblings') }}:
+                  {{ KNOWL('nf.arithmetically_equivalent', title='Arithmetically equivalent siblings') }}:
                 {% endif %}
                 <td> {{ r[1] |safe }}
             {% endif %}
@@ -267,7 +278,7 @@ table.ntdata a {
       <th>{{KNOWL("lf.residue_field_degree",title="$f$")}}</th>
       <th>{{KNOWL("lf.discriminant_exponent",title="$c$")}}</th>
       <th>{{KNOWL("nf.galois_group",title="Galois group")}}</th>
-      <th>{{KNOWL("lf.slope_content",title="Slope content")}}</th>
+      <th>{{KNOWL("lf.slopes",title="Slope content")}}</th>
     </tr></thead>
     <tbody>
     {{ info.loc_alg | safe }}
@@ -322,6 +333,9 @@ table.ntdata a {
         which appear with multiplicity greater than one are indicated
         by exponents on the *.
     </div>
-    {% endif %}
-
+	{% endif %}
+<h2> {{ KNOWL('nf.spectrum_ring_of_integers', title='Spectrum of ring of integers') }}</h2>
+	<img>
+	  {{ nf.draw_spectrum() | safe}}
+	  </img>
 {% endblock %}

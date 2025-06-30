@@ -73,7 +73,7 @@ def by_label(label):
 def dispmat(mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-        rw = '& '.join([str(z) for z in row])
+        rw = '& '.join(str(z) for z in row)
         s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
@@ -131,6 +131,7 @@ def group_search(info, query):
     parse_ints(info, query, 'order', 'order')
     parse_ints(info, query, 'dim', 'dim')
 
+
 #Writes individual pages
 def render_glnQ_group(args):
     info = {}
@@ -141,7 +142,7 @@ def render_glnQ_group(args):
         info['groupname'] = '${}$'.format(group_names_pretty(info['group']))
         info['groupknowl'] = abstract_group_display_knowl(info['group'], info['groupname'])
 
-        title = r'$\GL('+str(info['dim'])+r',\Q)$ subgroup '  + label
+        title = r'$\GL('+str(info['dim']) + r',\Q)$ subgroup ' + label
 
         prop = [('Label', '%s' % label),
                 ('Order', r'\(%s\)' % info['order']),

@@ -37,7 +37,6 @@ SIGNED_LIST_RE = re.compile(r"^(-?\d+|(-?\d+--?\d+))(,(-?\d+|(-?\d+--?\d+)))*$")
 FLOAT_RE = re.compile("^" + FLOAT_STR + "$")
 BRACKETING_RE = re.compile(r"(\[[^\]]*\])")  # won't work for iterated brackets [[a,b],[c,d]]
 PREC_RE = re.compile(r"^-?((?:\d+(?:[.]\d*)?)|(?:[.]\d+))(?:e([-+]?\d+))?$")
-LF_LABEL_RE = re.compile(r"^\d+\.\d+\.\d+\.\d+$")
 MULTISET_RE = re.compile(r"^(\d+)(\^(\d+))?(,(\d+)(\^(\d+))?)*$")
 
 class PowMulNodeVisitor(ast.NodeTransformer):
@@ -70,6 +69,7 @@ class SearchParser():
         default_qfield,
         error_is_safe,
         clean_spaces,
+        angle_to_curly,
     ):
         self.f = f
         self.clean_info = clean_info
@@ -81,6 +81,7 @@ class SearchParser():
         self.default_qfield = default_qfield
         self.error_is_safe = error_is_safe  # Indicates that the message in raised exception contains no user input, so it is not escaped
         self.clean_spaces = clean_spaces
+        self.angle_to_curly = angle_to_curly
 
     def __call__(self, info, query, field=None, name=None, qfield=None, *args, **kwds):
         try:
@@ -97,7 +98,7 @@ class SearchParser():
             inp = str(inp)
             if SPACES_RE.search(inp):
                 raise SearchParsingError("You have entered spaces in between digits. Please add a comma or delete the spaces.")
-            inp = clean_input(inp, self.clean_spaces)
+            inp = clean_input(inp, self.clean_spaces, self.angle_to_curly)
             if qfield is None:
                 if field is None:
                     qfield = self.default_qfield
@@ -147,6 +148,7 @@ def search_parser(
     default_qfield=None,
     error_is_safe=False,
     clean_spaces=True,
+    angle_to_curly=False,
 ):
     return SearchParser(
         f,
@@ -159,15 +161,19 @@ def search_parser(
         default_qfield,
         error_is_safe,
         clean_spaces,
+        angle_to_curly,
     )
 
 # Remove whitespace for simpler parsing
 # Remove brackets to avoid tricks (so we can echo it back safely)
-def clean_input(inp, clean_spaces=True):
+def clean_input(inp, clean_spaces=True, angle_to_curly=False):
     if inp is None:
         return None
     if clean_spaces:
-        return re.sub(r"[\s<>]", "", str(inp))
+        inp = re.sub(r"\s", "", str(inp))
+    if angle_to_curly:
+        inp = re.sub("<", "{", inp)
+        return re.sub(">", "}", inp)
     else:
         return re.sub(r"[<>]", "", str(inp))
 
@@ -355,6 +361,21 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus
     else:
         return [key, parse_singleton(arg)]
 
+def unparse_range(query_part, col_name=None):
+    """
+    Given the output of parse_ints or other parser based on parse_range2,
+    return a lower and upper bound for the result.  Either being None indicates no limit.
+    $or is not supported
+    """
+    if isinstance(query_part, dict):
+        if "$or" in query_part:
+            msg = "Multiple ranges not supported"
+            if col_name:
+                msg += f" for {col_name}"
+            raise ValueError(msg)
+        return query_part.get("$gte"), query_part.get("$lte")
+    return query_part, query_part
+
 # Like parse_range2, but to deal with strings which could be rational numbers
 # process is a function to apply to arguments after they have been parsed
 def parse_range2rat(arg, key, process):
@@ -380,20 +401,28 @@ def parse_range2rat(arg, key, process):
 
 # We parse into a list of singletons and pairs, like [[-5,-2], 10, 11, [16,100]]
 # If split0, we split ranges [-a,b] that cross 0 into [-a, -1], [1, b]
-def parse_range3(arg, split0=False):
+def parse_range3(arg, split0=False, lower_bound=None, upper_bound=None):
     if isinstance(arg, str):
         arg = arg.replace(" ", "")
     if "," in arg:
-        return sum([parse_range3(a, split0) for a in arg.split(",")], [])
+        return sum([parse_range3(a, split0, lower_bound, upper_bound) for a in arg.split(",")], [])
     elif "-" in arg[1:]:
         ix = arg.index("-", 1)
         start, end = arg[:ix], arg[ix + 1:]
         if start:
             low = ZZ(str(start))
+            if lower_bound is not None:
+                low = max(low, lower_bound)
+        elif lower_bound is not None:
+            low = lower_bound
         else:
             raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if end:
             high = ZZ(str(end))
+            if upper_bound is not None:
+                high = min(high, upper_bound)
+        elif upper_bound is not None:
+            high = upper_bound
         else:
             raise SearchParsingError("It needs to be an integer (such as 25), a range of integers (such as 2-10 or 2..10), or a comma-separated list of these (such as 4,9,16 or 4-25, 81-121).")
         if low == high:
@@ -413,7 +442,7 @@ def parse_range3(arg, split0=False):
     else:
         return [ZZ(str(arg))]
 
-def integer_options(arg, max_opts=None, contained_in=None):
+def integer_options(arg, max_opts=None, contained_in=None, lower_bound=None, upper_bound=None):
     if not LIST_RE.match(arg) and MULT_PARSE.fullmatch(arg):
         # Make input work using some arithmetic expressions
         try:
@@ -421,7 +450,7 @@ def integer_options(arg, max_opts=None, contained_in=None):
             arg = str(int(PowMulNodeVisitor().visit(ast_expression).body))
         except (TypeError, ValueError, SyntaxError):
             raise SearchParsingError("Unable to evaluate expression.")
-    intervals = parse_range3(arg)
+    intervals = parse_range3(arg, lower_bound=lower_bound, upper_bound=upper_bound)
     check = max_opts is not None and contained_in is None
     if check and len(intervals) > max_opts:
         raise ValueError("Too many options.")
@@ -698,12 +727,12 @@ def parse_not_element_of(inp, query, qfield, parse_singleton=int):
 # Parses signed ints as an int and a sign the fields these are stored are passed in as qfield = (sign_field, abs_field)
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, prep_ranges=True)
-def parse_signed_ints(inp, query, qfield, parse_one=None):
+def parse_signed_ints(inp, query, qfield, parse_one=None, lower_bound=None, upper_bound=None):
     if parse_one is None:
         def parse_one(x): return (int(x.sign()), int(x.abs())) if x != 0 else (1, 0)
     sign_field, abs_field = qfield
     if SIGNED_LIST_RE.match(inp):
-        parsed = parse_range3(inp, split0=True)
+        parsed = parse_range3(inp, split0=True, lower_bound=lower_bound, upper_bound=upper_bound)
         # if there is only one part, we don't need an $or
         if len(parsed) == 1:
             parsed = parsed[0]
@@ -1147,12 +1176,16 @@ def parse_inertia(inp, query, qfield, err_msg=None):
                 nt = aliases[inp2][0]
                 query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
-                # Check for Gap code
-                rematch = re.match(r"^\[(\d+),(\d+)\]$", inp)
+                # Check for Gap code using [a,b] or a.b notation
+                rematch = re.fullmatch(r"\[(\d+),(\d+)\]", inp)
                 if rematch:
                     query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
                 else:
-                    raise NameError
+                    rematch = re.fullmatch(r"(\d+)\.(\d+)", inp)
+                    if rematch:
+                        query[iner_gap] = [int(rematch.group(1)), int(rematch.group(2))]
+                    else:
+                        raise NameError
 
     except NameError:
         if re.match(r"^[ACDFMQS]\d+$", inp):
@@ -1160,18 +1193,20 @@ def parse_inertia(inp, query, qfield, err_msg=None):
         if err_msg:
             raise SearchParsingError(err_msg)
         else:
-            raise SearchParsingError("It needs to be a GAP id, such as [4,1] or [12,5], ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
+            raise SearchParsingError("It needs to be a small group id, such as [4,1] or 12.5, ia transitive group in nTj notation, such as 5T1, or a <a title = 'Group label' knowl='nf.galois_group.name'>group label</a>")
 
 # see SearchParser.__call__ for actual arguments when calling
 @search_parser(clean_info=True, error_is_safe=True)
 def parse_padicfields(inp, query, qfield, flag_unramified=False):
+    from lmfdb.local_fields.main import NEW_LF_RE, OLD_LF_RE
     labellist = inp.split(",")
     doflash = False
     for label in labellist:
-        if not LF_LABEL_RE.match(label):
+        if not NEW_LF_RE.fullmatch(label) and not OLD_LF_RE.fullmatch(label):
             raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
         splitlab = label.split('.')
-        if splitlab[2] == '0':
+        if (OLD_LF_RE.fullmatch(label) and splitlab[2] == '0'
+            or NEW_LF_RE.fullmatch(label) and splitlab[3][0] == '0'):
             doflash = True
     if flag_unramified and doflash:
         flash_info("Search results may be incomplete.  Given $p$-adic completions contain an <a title='unramified' knowl='nf.unramified_prime'>unramified</a> field and completions are only searched for <a title='ramified' knowl='nf.ramified_primes'>ramified primes</a>.")

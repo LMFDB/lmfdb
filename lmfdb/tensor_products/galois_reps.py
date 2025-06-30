@@ -376,8 +376,8 @@ class GaloisRepresentation( Lfunction):
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
             if ((Vans[2] in ZZ and Wans[2] in ZZ
-                    and all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
-                    all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
+                    and all(Vans[n] == Wans[n] for n in range(1, 50)) )
+                    or all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
                 raise NotImplementedError("It seems you are asking to tensor a "
                                           "Galois representation with its dual "
                                           "which results in the L-function having "
@@ -510,8 +510,7 @@ class GaloisRepresentation( Lfunction):
         self.ld._gp_eval("MaxImaginaryPart = %s" % self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
         # to be on the safe side, we make sure to have a min of terms
-        if self.numcoeff < 50:
-            self.numcoeff = 50
+        self.numcoeff = max(self.numcoeff, 50)
 
 ## produce coefficients
 
