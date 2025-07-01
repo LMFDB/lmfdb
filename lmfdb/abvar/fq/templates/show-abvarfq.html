@@ -1,4 +1,6 @@
-{% extends 'homepage.html' %}
+{% extends 'embedded_results.html' %}
+
+{% block embedding_content %}
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='abvar.js') }}"></script>
@@ -267,51 +269,72 @@ function show_twists(number) {
 
 {% if cl.weak_equivalence_classes %}
 <h2>{{ KNOWL('ag.endomorphism_ring',title="Endomorphism rings") }}</h2>
-{# An invisible span to get the select color in the diagram into the DOM #}
+
+{#
 <div>
-<span id="group-diagram-selected" style="display:none;">Hi</span>
+  <button class='er_lattice endring_active' onclick="select_endring_mode('lattice'); return false;">Lattice</button>
+  <button class='er_list endring_inactive' onclick="select_endring_mode('list'); return false;">List</button>
 </div>
+<div id="endring_lattice" class="endring">
+#}
+  {# An invisible span to get the select color in the diagram into the DOM #}
+  <div>
+    <span id="group-diagram-selected" style="display:none;">Hi</span>
+  </div>
 
-{% if cl.diagram_js.display_opts.w > 1600 %}
-<canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
-  Sorry, your browser does not support the subgroup diagram.
-</canvas>
+  {% if cl.diagram_js.display_opts.w > 1600 %}
+  <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
+    Sorry, your browser does not support the subgroup diagram.
+  </canvas>
 
-<div class="subgroup_diagram">
-  <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+  <div class="subgroup_diagram">
+    <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+  </div>
+
+  <h4>Endomorphism ring information</h4>
+  <div class="selectedsub">
+    {{ cl.endring_select_line | safe }}
+  </div>
+  {% else %} {# not wide #}
+  <table>
+    <tr>
+      <td>
+        <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
+          Sorry, your browser does not support the nearby lattice.
+        </canvas>
+      <td valign="top">
+        <h4>Endomorphism ring information</h4>
+        <div class="selectedsub">
+          {{ cl.endring_select_line | safe }}
+        </div>
+      </td>
+    </tr>
+  </table>
+  <div class="subgroup_diagram">
+    <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+  </div>
+  {% endif %} {# wide #}
+
+  <script type="text/javascript">
+    {{ cl.diagram_js.string |safe }}
+    sdiagram.setSize();
+    sdiagram.draw();
+  </script>
+{#
 </div>
-
-<h4>Endomorphism ring information</h4>
-<div class="selectedsub">
-  {{ cl.endring_select_line | safe }}
-</div>
-{% else %} {# not wide #}
-<table>
-  <tr>
-    <td>
-      <canvas id="subdiagram" width="500" height="300" style="border: 0px solid black">
-        Sorry, your browser does not support the nearby lattice.
-      </canvas>
-    <td valign="top">
-      <h4>Endomorphism ring information</h4>
-      <div class="selectedsub">
-        {{ cl.endring_select_line | safe }}
-      </div>
-    </td>
-  </tr>
-</table>
-<div class="subgroup_diagram">
-  <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
-</div>
-{% endif %} {# wide #}
-
-<script type="text/javascript">
-  {{ cl.diagram_js.string |safe }}
-  sdiagram.setSize();
-  sdiagram.draw();
-</script>
+<div id="endring_list" class="endring">
+#}
 {% endif %} {# weak_equivalence_classes #}
 
+{% endblock %}
+
+{% block post_results_content %}
+
+{#
+{% if cl.weak_equivalence_classes %}
+</div>
+{% endif %}
+#}
 
 {% if cl.polarized_abelian_varieties %}
 <h2>{{ KNOWL('av.polarization',title="Polarizations") }} </h2>

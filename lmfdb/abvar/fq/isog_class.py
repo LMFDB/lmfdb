@@ -9,7 +9,7 @@ TODO
 """
 
 from flask import url_for
-from collections import Counter
+from collections import defaultdict, Counter
 
 from lmfdb.utils import encode_plot, display_float
 from lmfdb.logger import make_logger
@@ -24,7 +24,7 @@ from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
 
-from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl, abelian_group_display_knowl
 from lmfdb.utils import (
     coeff_to_poly,
     display_knowl,
@@ -106,17 +106,6 @@ def diagram_js(layers, display_opts):
     display_opts["h"] = 160 * len(ranks)
 
     return [ll, layers[1]], rank_lookup, len(ranks)
-
-def display_abelian_group(inv):
-    if inv == []:
-        label = "1.1"
-        url = url_for("abstract.by_label", label=label)
-        name = "C_1"
-    else:
-        label = ".".join(str(c) for c in inv)
-        url = url_for("abstract.by_abelian_label", label=label)
-        name = r"\times ".join(f"C_{{{c}}}" for c in inv)
-    return fr"""<a href="{url}">${name}$</a>"""
 
 class AbvarFq_isoclass():
     """
@@ -349,49 +338,32 @@ class AbvarFq_isoclass():
     def endring_select_line(self):
         return self.select_line
 
-    def endringinfo(self, endring):
-        for elt in self.weak_equivalence_classes:
-            if elt['multiplicator_ring'] == endring and elt['is_invertible']:
-                rec = elt
-                break
-        else:
-            assert False
+    @lazy_attribute
+    def endring_data(self):
+        inv = {}
+        ninv = defaultdict(list)
+        for rec in self.weak_equivalence_classes:
+            mring = rec["multiplicator_ring"]
+            if rec["is_invertible"]:
+                inv[mring] = rec
+            else:
+                ninv[mring].append(rec)
+        return {mring: [inv[mring]] + ninv[mring] for mring in inv}
 
-        num_we = sum(1 for elt in self.weak_equivalence_classes if elt['multiplicator_ring'] == endring)
+    @cached_method
+    def endring_disp(self, endring):
+        we = self.endring_data[endring]
+        disp = {}
+        rec = we[0]
 
         R = FreeAlgebra(ZZ, ["F", "V"])
         F, V = R.gens()
-        index = int(endring.split(".")[0])
         pows = [V**i for i in reversed(range(0, self.g))] + [F**i for i in range(1, self.g + 1)]
         def to_R(num):
             assert len(num) == len(pows)
             return sum(c*p for c, p in zip(num, pows))
 
-        # Ring display
-        names = ["R"]
-        if rec.get("is_Zconductor_sum"):
-            names.append(r"\mathbb{Z} + \mathfrak{f}_R")
-        elif rec.get("is_ZFVconductor_sum"):
-            names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
-        gen = rec.get("generator_over_ZFV")
-        if gen:
-            d, num = gen
-            num = to_R(num)
-            gens = ["F", "V"]
-            if num != 0:
-                s = latex(num)
-                if d != 1:
-                    s = r"\frac{1}{%s}(%s)" % (d, s)
-                gens.append(s)
-            names.append(fr"\mathbb{{Z}}[{','.join(gens)}]")
-        names = "=".join(names)
-
-        ans = [
-            "<table>",
-            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
-            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${index}$</td></tr>",
-        ]
-
+        # Conductor display
         if rec["conductor"]:
             # conductor
             M, d, num = rec["conductor"]
@@ -405,27 +377,103 @@ class AbvarFq_isoclass():
                 conductor = r"\mathcal{O}_{\mathbb{Q}[F]}"
                 if M != 1:
                     conductor = f"{M} {conductor}"
-            conductor = f"${conductor}$"
         else:
             conductor = "not computed"
+
+        # Ring display
+        short_names = []
+        long_names = []
+        if rec["index"] == 1:
+            short_names.append(conductor)
+            long_names.append(conductor)
+        elif rec.get("is_Zconductor_sum"):
+            short_names.append(r"\mathbb{Z} + \mathfrak{f}_R")
+            if rec["conductor"]:
+                long_names.append(r"\mathbb{Z} + " + conductor)
+        elif rec.get("is_ZFVconductor_sum"):
+            short_names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
+            if rec["conductor"]:
+                long_names.append(r"\mathbb{Z}[F, V] + " + conductor)
+        gen = rec.get("generator_over_ZFV")
+        if gen:
+            d, num = gen
+            num = to_R(num)
+            gens = ["F", "V"]
+            if num != 0:
+                s = latex(num)
+                if d != 1:
+                    s = r"\frac{1}{%s}(%s)" % (d, s)
+                gens.append(s)
+            gen_name = fr"\mathbb{{Z}}[{','.join(gens)}]"
+            short_names.append(gen_name)
+            long_names.append(gen_name)
+
+        if rec["conductor"]:
+            conductor = f"${conductor}$"
+
+        pic_size = rec["pic_size"]
+        if rec["pic_invs"] is not None:
+            pic_disp = abelian_group_display_knowl(rec['pic_invs'])
+        elif rec["pic_size"] is not None:
+            pic_disp = f"Abelian group of order {pic_size}"
+        else:
+            pic_disp = "not computed"
+
+        av_structure = defaultdict(Counter)
+        for w in we:
+            av_structure[1][tuple(w["rational_invariants"])] += pic_size
+            for n in range(2, 11):
+                av_structure[n][tuple(w["higher_invariants"][n-2])] += pic_size
+        for n in range(1, 11):
+            if len(av_structure[n]) == 1:
+                disp[f"av_structure{n}"] = abelian_group_display_knowl(next(iter(av_structure[n])))
+            else:
+                gps = sorted((-cnt, invs) for (invs, cnt) in av_structure[n].items())
+                disp[f"av_structure{n}"] = ",".join(f"%s ($%s$)" % (abelian_group_display_knowl(invs), -m) for (m, invs) in gps)
+
+        dimensions = Counter()
+        for w in we:
+            dimensions[tuple(w["dimensions"])] += pic_size
+        if len(dimensions) == 1:
+            disp["dimensions"] = f"${list(next(iter(dimensions)))}$"
+        else:
+            dimensions = sorted((-cnt, dims) for (dims, cnt) in dimensions.items())
+            disp["dimensions"] = ",".join("$[%s]$ ($%s$)" % (",".join(str(c) for c in dims), -m) for (m, dims) in dimensions)
+
+        disp["short_names"] = short_names
+        disp["long_names"] = long_names
+        disp["index"] = int(endring.split(".")[0])
+        disp["conductor"] = conductor
+        disp["pic"] = pic_disp
+        disp["num_we"] = len(we)
+        disp["av_count"] = len(we) * pic_size
+        return disp
+
+    def endringinfo(self, endring):
+        rec = self.endring_data[endring][0]
+        disp = self.endring_disp(endring)
+
+        num_we = len(self.endring_data[endring])
+        names = "=".join(["R"] + disp["short_names"])
+
+        ans = [
+            "<table>",
+            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
+        ]
+
         ans.append(
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>${conductor}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}$</td></tr>",
         )
 
         if rec["cohen_macaulay_type"] is None:
             cm_type = "not computed"
         else:
             cm_type = "$%s$" % rec["cohen_macaulay_type"]
-        if rec["pic_invs"] is not None:
-            pic_disp = display_abelian_group(rec['pic_invs'])
-        elif rec["pic_size"] is not None:
-            pic_disp = f"Abelian group of order {rec['pic_size']}"
-        else:
-            pic_disp = "not computed"
 
         ans.extend([
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{pic_disp}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{disp['pic']}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
@@ -732,7 +780,7 @@ class AbvarFq_isoclass():
         'endomorphism_ring': lambda x : x['endomorphism_ring'],
         # 'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
         'isom_label' : lambda x : x['isom_label'],
-        'kernel' : lambda x : display_abelian_group(x['kernel']),
+        'kernel' : lambda x : abelian_group_display_knowl(x['kernel']),
         'label' : lambda x : x['label'],
         }
         res = ""

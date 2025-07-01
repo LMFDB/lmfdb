@@ -11,7 +11,7 @@ from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_newton_polygon, parse_submultiset, parse_bool, parse_bool_unknown,
-    search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
+    search_wrap, count_wrap, embed_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.api import datapage
@@ -103,6 +103,111 @@ def abelian_varieties_by_gq(g, q):
     )
     return abelian_variety_search(D)
 
+def endring_postprocess(res, info, query):
+    # In addition to the normal postprocessing, we can put code here for determining induced inclusion relations on the poset
+    # Need to add index to schema
+    # Need to set name, av_count, av_structure*, conductor_disp, dimensions_disp, pic_disp
+    cl = info["cl"]
+    # We can access all weak equivalence classes from cl; res contains only the endomorphism rings being displayed
+    for rec in res:
+        disp = cl.endring_disp(rec["multiplicator_ring"])
+        rec["name"] = "<br/>".join(f"${name}$" for name in disp["long_names"])
+        for col in ["av_count", "num_we"] + [f"av_structure{n}" for n in range(1, 11)]:
+            rec[col] = disp[col]
+        for col in ["conductor", "dimensions", "pic"]:
+            rec[col+"_disp"] = disp[col]
+    return res
+
+endring_columns = SearchColumns([
+    SearchCol("label", "av.fq.endring_label", "Label", default=False),
+    MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
+    MathCol("num_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
+    MathCol("pic_size", "av.fq.endomorphism_ring_notation", "Picard size", default=False),
+    SearchCol("av_structure1", "av.fq.point_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
+    SearchCol("av_structure2", "av.fq.point_structure", r"$A(\mathbb{F}_{q^2})$-structure", short_title="q^2-structure", default=False),
+    SearchCol("av_structure3", "av.fq.point_structure", r"$A(\mathbb{F}_{q^3})$-structure", short_title="q^3-structure", default=False),
+    SearchCol("av_structure4", "av.fq.point_structure", r"$A(\mathbb{F}_{q^4})$-structure", short_title="q^4-structure", default=False),
+    SearchCol("av_structure5", "av.fq.point_structure", r"$A(\mathbb{F}_{q^5})$-structure", short_title="q^5-structure", default=False),
+    SearchCol("av_structure6", "av.fq.point_structure", r"$A(\mathbb{F}_{q^6})$-structure", short_title="q^6-structure", default=False),
+    SearchCol("av_structure7", "av.fq.point_structure", r"$A(\mathbb{F}_{q^7})$-structure", short_title="q^7-structure", default=False),
+    SearchCol("av_structure8", "av.fq.point_structure", r"$A(\mathbb{F}_{q^8})$-structure", short_title="q^8-structure", default=False),
+    SearchCol("av_structure9", "av.fq.point_structure", r"$A(\mathbb{F}_{q^9})$-structure", short_title="q^9-structure", default=False),
+    SearchCol("av_structure10", "av.fq.point_structure", r"$A(\mathbb{F}_{q^{10}})$-structure", short_title="q^10-structure", default=False),
+    CheckCol("is_product", "av.is_product", "Product", default=False),
+    SearchCol("name", "ag.endomorphism_ring", "Endomorphism ring"),
+    MathCol("index", "av.fq.endomorphism_ring_notation", "Index"),
+    CheckCol("is_conjugate_stable", "av.fq.conjugate_stable", "Conjugate stable", default=False),
+    CheckCol("is_Zconductor_sum", "av.is_Zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
+    CheckCol("is_ZFVconductor_sum", "av.is_ZFVconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
+    MathCol("conductor_disp", "av.endomorphism_ring_conductor", "Conductor"),
+    CheckCol("conductor_is_Oprime", "av.endomorphism_ring_conductor", r"Conductor $\mathcal{O}$-prime", short_title="conductor O-prime", default=False),
+    CheckCol("conductor_is_Sprime", "av.endomorphism_ring_conductor", "Conductor $S$-prime", short_title="conductor S-prime", default=False),
+    MathCol("cohen_macaulay_type", "ag.cohen_macaulay_type", "Cohen-Macaulay type"),
+    SearchCol("dimensions_disp", "av.fq.singular_dimensions", "Singular dimensions", default=False),
+    SearchCol("pic_disp", "av.fq.endomorphism_ring_notation", "Picard group")],
+    db_cols=["cohen_macaulay_type", "conductor", "conductor_Oindex", "conductor_Sindex", "conductor_is_Oprime", "conductor_is_Sprime", "dimensions", "generator_over_ZFV", "higher_invariants", "index", "is_ZFVconductor_sum", "is_Zconductor_sum", "is_conjugate_stable", "is_product", "label", "multiplicator_ring", "pic_invs", "pic_size", "rational_invariants", "we_number"])
+
+class EndringSearchArray(SearchArray):
+    sorts = [("", "index", ["isog_label", "index", "multiplicator_ring"]),
+             ("cohen_macaulay", "cohen_macaulay", ["isog_label", "cohen_macaulay_type", "index", "multiplicator_ring"])]
+    def __init__(self):
+        cohen_macaulay = TextBox(
+            "cohen_macaulay",
+            label="Cohen-Macaulay type",
+            knowl="ag.cohen_macaulay_type",
+            example="3"
+        )
+        pic_size = TextBox(
+            "pic_size",
+            label="Picard group order",
+            knowl="av.fq.endomorphism_ring_notation",
+            example="1"
+        )
+        we_number = TextBox(
+            "we_number",
+            label="Num. weak equiv. classes",
+            knowl="av.fq.weak_equivalence_class",
+            example="2"
+        )
+        cond_index = TextBox(
+            "cond_index",
+            label=r"Conductor $\mathcal{O}$-index",
+            knowl="av.endomorphism_ring_conductor",
+            example="100-200"
+        )
+        Zcond = YesNoBox(
+            "Zcond",
+            label=r"$\mathbb{Z}$-conductor sum",
+            knowl="av.is_Zconductor_sum",
+        )
+        ZFVcond = YesNoBox(
+            "ZFVcond",
+            label=r"$\mathbb{Z}[F,V]$-conductor sum",
+            knowl="av.is_ZFVconductor_sum",
+        )
+        product = YesNoBox(
+            "product",
+            label="Product",
+            knowl="av.is_product",
+        )
+        conj_stable = YesNoBox(
+            "conj_stable",
+            label="Conjugate stable",
+            knowl="av.conjugate_stable",
+        )
+        Oprime = YesNoBox(
+            "OPrime",
+            label=r"Conductor $\mathcal{O}$-prime",
+            knowl="av.endomorphism_ring_conductor",
+        )
+        Sprime = YesNoBox(
+            "SPrime",
+            label="Conductor $S$-prime",
+            knowl="av.endomorphism_ring_conductor",
+        )
+        self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
+                             [we_number, cond_index, conj_stable, ZFVcond, Sprime]]
+
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
     label = abvar_label(g, q, iso)
@@ -115,6 +220,7 @@ def abelian_varieties_by_gqi(g, q, iso):
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError:
         return abort(404, "Isogeny class %s is not in the database." % label)
+    info = to_dict(request.args, search_array=EndringSearchArray(), cl=cl)
     bread = get_bread(
         (str(g), url_for(".abelian_varieties_by_g", g=g)),
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
@@ -128,18 +234,44 @@ def abelian_varieties_by_gqi(g, q, iso):
     if hasattr(cl, "curves") and cl.curves:
         downloads.append(('Curves to text', url_for('.download_curves', label=label)))
     downloads.append(("Underlying data", url_for('.AV_data', label=label)))
+    info['title'] = 'Abelian variety isogeny class %s over $%s$' % (label, cl.field())
+    info['bread'] = bread
+    info['properties'] = cl.properties()
+    info['friends'] = cl.friends()
+    info['downloads'] = downloads
+    info['KNOWL_ID'] = 'av.fq.%s' % label
+    return render_abvar(info)
 
-    return render_template(
-        "show-abvarfq.html",
-        properties=cl.properties(),
-        friends=cl.friends(),
-        downloads=downloads,
-        title='Abelian variety isogeny class %s over $%s$' % (label, cl.field()),
-        bread=bread,
-        cl=cl,
-        learnmore=learnmore_list(),
-        KNOWL_ID='av.fq.%s' % label
-    )
+@embed_wrap(
+    table=db.av_fq_weak_equivalences,
+    template="show-abvarfq.html",
+    err_title="Endomorphism ring search error",
+    columns=endring_columns,
+    learnmore=learnmore_list,
+    postprocess=endring_postprocess,
+    # Each of the following arguments is set here so that it is overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in family_page() before calling render_family)
+    bread=lambda:None,
+    properties=lambda:None,
+    cl=lambda:None,
+    friends=lambda:None,
+    downloads=lambda:None,
+    KNOWL_ID=lambda:None,
+)
+def render_abvar(info, query):
+    cl = info["cl"]
+    query["is_invertible"] = True
+    query["isog_label"] = cl.label
+    parse_ints(info, query, "cohen_macaulay", qfield="cohen_macaulay_type")
+    parse_ints(info, query, "pic_size")
+    parse_ints(info, query, "we_number")
+    parse_ints(info, query, "cond_index", qfield="conductor_Oindex")
+    parse_bool(info, query, "Zcond", qfield="is_Zconductor_sum")
+    parse_bool(info, query, "ZFVcond", qfield="is_ZFVconductor_sum")
+    parse_bool(info, query, "product", qfield="is_product")
+    parse_bool(info, query, "conj_stable", qfield="is_conjugate_stable")
+    parse_bool(info, query, "Oprime", qfield="conductor_is_Oprime")
+    parse_bool(info, query, "Sprime", qfield="conductor_is_Sprime")
 
 isogeny_class_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
 mring_regex = re.compile(r"(\d+)\.(\d+)")
