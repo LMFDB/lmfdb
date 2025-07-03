@@ -65,7 +65,7 @@ def getAllMaassGraphHtml(degree, signature=""):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the header and information about the Gamma-factors for the
@@ -164,7 +164,7 @@ def getGroupHtml(group):
     else:
         ans = ""
 
-    return(ans)
+    return ans
 
 
 # ============================================
@@ -190,7 +190,7 @@ def getOneGraphHtml(gls):
             + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the url and width and height of the svg-file for
@@ -212,7 +212,7 @@ def getGraphInfo(gls):
     ans['width'] = width
     ans['height'] = height
 
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the width and height of the svg-file for
@@ -242,7 +242,7 @@ def getWidthAndHeight(gls):
     width = int(xfactor * xMax + extraSpace)
     height = int(yfactor * yMax + extraSpace)
 
-    return((width, height))
+    return ((width, height))
 
 # ============================================
 # Returns the contents (as a string) of the svg-file for
@@ -284,7 +284,7 @@ def paintSvgFileAll(glslist):  # list of group and level
     height = yfactor * yMax + extraSpace
 
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-    for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
+    for x, y, lid, group, level, char, R, ap_id, sign in paralist:
         if float(x) > 0 and float(y) > 0:  # Only one of dual pair
             try:
                 linkurl = url_for('.l_function_maass_gln_page', group=group,
@@ -300,7 +300,7 @@ def paintSvgFileAll(glslist):  # list of group and level
             ans += "</circle></a>\n"
 
     ans += svgEnd()
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the svg-code for a simple coordinate system.
@@ -355,7 +355,7 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
                              + "' y2='" + str(height - i * yfactor)
                              + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 # ============================================
 # Returns the svg-code for a simple coordinate system.
@@ -412,7 +412,7 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, y
                              + str(height - i * ysign * yfactor)
                              + "' style='stroke:rgb(0,0,0);'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 
 ###############################################################################
@@ -437,7 +437,7 @@ def getOneGraphHtmlHolo(condmax):
            + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
-    return(ans)
+    return ans
 
 
 # TODO cleanup here
@@ -718,7 +718,7 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
                                  + "' y2='" + str(height - i * yfactor)
                                  + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 
 ###############################################################################
@@ -914,7 +914,7 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
         #                 "' y2='" + str(height - i*yfactor) +
         #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 
 # ============================================
@@ -983,7 +983,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
         orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
-    return(ans)
+    return ans
 
 # ==================
 # addlists:  adds two lists as if they were vectors
@@ -991,7 +991,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
 
 
 def addlists(list1, list2):
-    return([list1[j] + list2[j] for j in range(len(list1))])
+    return ([list1[j] + list2[j] for j in range(len(list1))])
 
 # ==================
 # lincomb:  adds a v1 + b v2 as if lists v1, v2 were vectors
@@ -999,7 +999,7 @@ def addlists(list1, list2):
 
 
 def lincomb(scalar1, list1, scalar2, list2):
-    return([scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1))])
+    return ([scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1))])
 
 
 # ============================================
@@ -1015,7 +1015,7 @@ def mydot(offset, scale, startpt, radius, color, shape, title):
     ans += ">"
     ans += "<title>" + str(title) + "</title>"
     ans += "</circle>"
-    return(ans)
+    return ans
 
 
 # ============================================
@@ -1035,7 +1035,7 @@ def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcol
     ans += ">"
     ans += str(thetext)
     ans += "</text>"
-    return(ans)
+    return ans
 
 
 # ============================================
@@ -1046,7 +1046,7 @@ def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcol
 # ============================================
 def myline(offset, scale, startpt, endpt, width, style, color):
     if startpt == endpt:
-        return("")
+        return ("")
     ans = "<line "
     mystartpt = scoord(offset, scale, startpt)
     ans += "x1='" + str(mystartpt[0]) + "' "
@@ -1061,7 +1061,7 @@ def myline(offset, scale, startpt, endpt, width, style, color):
         ans += style + "; "
     ans += "'"
     ans += "/>"
-    return(ans)
+    return ans
 
 
 # =================
@@ -1072,4 +1072,4 @@ def myline(offset, scale, startpt, endpt, width, style, color):
 # ================
 def scoord(base, scale, wc):
     rescaled = [base[j] + scale[j] * wc[j] for j in range(len(scale))]
-    return(rescaled)
+    return (rescaled)

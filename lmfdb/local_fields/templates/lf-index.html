@@ -1,3 +1,4 @@
+
 {% extends "homepage.html" %}
 
 {% block content %}
@@ -6,85 +7,58 @@
   {{ info.stats.short_summary | safe }}
 </div>
 
-<h2>Browse</h2>
+<h2 style="margin: 10px 0 5px 0;">Browse fields</h2>
 
-<p>
-The table gives for each $p$ and $n$ shown, the number of degree $n$ extension
-fields
-of $\Q_p$ up to isomorphism.
+<p style="margin: 5px 0;">
+This table gives, for each $p$ and $n$ shown, the number of degree $n$ extension
+fields of $\Q_p$ up to isomorphism.  Here are <a href="?search_type=Counts">more counts</a> for larger $p$ and $n$.
 </p>
 
-<p>
-<table class='number_table'>
+{# We want the columns in the field and family tables to align, which requires some circumlocutions (we end up making them one table, but have to mess with the layout to insert a header and paragraph in between) #}
+
+<table class="number_table" style="min-width: 1087px; margin: 0;">
   <thead>
-<tr>
-<th>$p$ \ $n$</th>
-<th>2</th> <th>3</th> <th>4</th> <th>5</th> <th>6</th>
-<th>7</th> <th>8</th> <th>9</th> <th>10</th> <th>11</th>
-<th>12</th> <th>13</th> <th>14</th> <th>15</th>
-</tr>
+    <tr>
+      <th style="white-space: nowrap;">$p$ \ $n$</th>
+      {% for n in range(2,24) %}
+      <th>{{n}}</th>
+      {% endfor %}
+    </tr>
   </thead>
   <tbody>
-<tr>
-<th>2</th> <td><a href="?p=2&n=2">7</a></td> <td><a href="?p=2&n=3">2</a></td> <td><a href="?p=2&n=4">59</a></td> <td><a href="?p=2&n=5">2</a></td> <td><a href="?p=2&n=6">47</a></td> <td><a href="?p=2&n=7">2</a></td> <td><a href="?p=2&n=8">1823</a></td> <td><a href="?p=2&n=9">3</a></td> <td><a href="?p=2&n=10">158</a></td> <td><a href="?p=2&n=11">2</a></td> <td><a href="?p=2&n=12">5493</a></td>
-<td><a href="?p=2&n=13">2</a></td>
-<td><a href="?p=2&n=14">590</a></td>
-<td><a href="?p=2&n=15">4</a></td>
-</tr>
-<tr>
-<th>3</th>
-<td><a href="?p=3&n=2">3</a></td> <td><a href="?p=3&n=3">10</a></td> <td><a href="?p=3&n=4">5</a></td> <td><a href="?p=3&n=5">2</a></td> <td><a href="?p=3&n=6">75</a></td> <td><a href="?p=3&n=7">2</a></td> <td><a href="?p=3&n=8">8</a></td> <td><a href="?p=3&n=9">795</a></td> <td><a href="?p=3&n=10">6</a></td> <td><a href="?p=3&n=11">2</a></td> <td><a href="?p=3&n=12">785</a></td> <td><a href="?p=3&n=13">2</a></td>
-<td><a href="?p=3&n=14">6</a></td>
-<td><a href="?p=3&n=15">1172</a></td>
-</tr>
-<tr>
-<th>5</th>
-<td><a href="?p=5&n=2">3</a></td> <td><a href="?p=5&n=3">2</a></td> <td><a href="?p=5&n=4">7</a></td> <td><a href="?p=5&n=5">26</a></td> <td><a href="?p=5&n=6">7</a></td> <td><a href="?p=5&n=7">2</a></td> <td><a href="?p=5&n=8">11</a></td> <td><a href="?p=5&n=9">3</a></td> <td><a href="?p=5&n=10">258</a></td> <td><a href="?p=5&n=11">2</a></td> <td><a href="?p=5&n=12">17</a></td> <td><a href="?p=5&n=13">2</a></td>
-<td><a href="?p=5&n=14">6</a></td>
-<td><a href="?p=5&n=15">1012</a></td>
-</tr>
-<tr>
-<th>7</th>
-<td><a href="?p=7&n=2">3</a></td> <td><a href="?p=7&n=3">4</a></td> <td><a href="?p=7&n=4">5</a></td> <td><a href="?p=7&n=5">2</a></td> <td><a href="?p=7&n=6">12</a></td> <td><a href="?p=7&n=7">50</a></td> <td><a href="?p=7&n=8">8</a></td> <td><a href="?p=7&n=9">7</a></td> <td><a href="?p=7&n=10">6</a></td> <td><a href="?p=7&n=11">2</a></td>  <td><a href="?p=7&n=12">20</a></td> <td><a href="?p=7&n=13">2</a></td>
-<td><a href="?p=7&n=14">654</a></td>
-<td><a href="?p=7&n=15">8</a></td>
-</tr>
-<tr>
-<th>11</th>
-<td><a href="?p=11&n=2">3</a></td> <td><a href="?p=11&n=3">2</a></td> <td><a href="?p=11&n=4">5</a></td> <td><a href="?p=11&n=5">6</a></td> <td><a href="?p=11&n=6">7</a></td> <td><a href="?p=11&n=7">2</a></td> <td><a href="?p=11&n=8">8</a></td> <td><a href="?p=11&n=9">3</a></td> <td><a href="?p=11&n=10">18</a></td> <td><a href="?p=11&n=11">122</a></td>  <td><a href="?p=11&n=12">13</a></td> <td><a href="?p=11&n=13">2</a></td>
-<td><a href="?p=11&n=14">6</a></td>
-<td><a href="?p=11&n=15">12</a></td>
-</tr>
-<tr>
-<th>13</th>
-<td><a href="?p=13&n=2">3</a></td> <td><a href="?p=13&n=3">4</a></td> <td><a href="?p=13&n=4">7</a></td> <td><a href="?p=13&n=5">2</a></td> <td><a href="?p=13&n=6">12</a></td> <td><a href="?p=13&n=7">2</a></td> <td><a href="?p=13&n=8">11</a></td> <td><a href="?p=13&n=9">7</a></td> <td><a href="?p=13&n=10">6</a></td> <td><a href="?p=13&n=11">2</a></td>  <td><a href="?p=13&n=12">28</a></td> <td><a href="?p=13&n=13">170</a></td>
-<td><a href="?p=13&n=14">9</a></td>
-<td><a href="?p=13&n=15">8</a></td>
-</tr>
-<tr>
-<th>17</th>
-<td><a href="?p=17&n=2">3</a></td> <td><a href="?p=17&n=3">2</a></td> <td><a href="?p=17&n=4">7</a></td> <td><a href="?p=17&n=5">2</a></td> <td><a href="?p=17&n=6">7</a></td> <td><a href="?p=17&n=7">2</a></td> <td><a href="?p=17&n=8">15</a></td> <td><a href="?p=17&n=9">3</a></td> <td><a href="?p=17&n=10">6</a></td> <td><a href="?p=17&n=11">2</a></td> <td><a href="?p=17&n=12">17</a></td> <td><a href="?p=17&n=13">2</a></td>
-<td><a href="?p=17&n=14">6</a></td>
-<td><a href="?p=17&n=15">4</a></td>
-</tr>
-<tr>
-<th>19</th>
-<td><a href="?p=19&n=2">3</a></td> <td><a href="?p=19&n=3">4</a></td> <td><a href="?p=19&n=4">5</a></td> <td><a href="?p=19&n=5">2</a></td> <td><a href="?p=19&n=6">12</a></td> <td><a href="?p=19&n=7">2</a></td> <td><a href="?p=19&n=8">8</a></td> <td><a href="?p=19&n=9">13</a></td> <td><a href="?p=19&n=10">8</a></td> <td><a href="?p=19&n=11">2</a></td> <td><a href="?p=19&n=12">20</a></td> <td><a href="?p=19&n=13">2</a></td>
-<td><a href="?p=19&n=14">6</a></td>
-<td><a href="?p=19&n=15">8</a></td>
-</tr>
-<tr>
-<th>23</th>
-<td><a href="?p=23&n=2">3</a></td> <td><a href="?p=23&n=3">2</a></td> <td><a href="?p=23&n=4">5</a></td> <td><a href="?p=23&n=5">2</a></td> <td><a href="?p=23&n=6">7</a></td> <td><a href="?p=23&n=7">2</a></td> <td><a href="?p=23&n=8">8</a></td> <td><a href="?p=23&n=9">3</a></td> <td><a href="?p=23&n=10">6</a></td> <td><a href="?p=23&n=11">12</a></td>  <td><a href="?p=23&n=12">13</a></td> <td><a href="?p=23&n=13">2</a></td>
-<td><a href="?p=19&n=14">6</a></td>
-<td><a href="?p=19&n=15">4</a></td>
-</tr>
-</tbody>
+    {% for p in [2,3,5,7] %}
+    <tr>
+      <th style="text-align: right;">{{p}}</th>
+      {% for n in range(2,24) %}
+      <td><a href="?p={{p}}&n={{n}}">{{info.field_count[n,p]}}</a></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    <tr>
+      <td colspan="23" style="text-align:left; padding: 0;">
+        <h2 style="font-size: 120%; text-align: left; color: {{color.a_text}}; margin: 10px 0 5px 0; padding: 2px 0 5px 0;">Browse families</h2>
+        <p style="margin: 5px 0;">This table gives the number of degree $n$ {{KNOWL('lf.family_polynomial', 'families')}} over $\Q_p$.  Here are <a href="?search_type=FamilyCounts">more counts</a> for larger $p$ and $n$, and search pages for <a href="?search_type=Families">absolute families</a> and <a href="?search_type=Families&relative=1">relative families</a>.</p>
+      </td>
+    </tr>
+    <tr>
+      <th style="background:#fff; border-bottom: 2px solid {{color.table_table_ntdata_background_cn}}; white-space: nowrap;">$p$ \ $n$</th>
+      {% for n in range(2,24) %}
+      <th style="background:#fff; text-align: right; border-right: 0; border-bottom: 2px solid {{color.table_table_ntdata_background_cn}};">{{n}}</th>
+      {% endfor %}
+    </tr>
+    {% for p in [2,3,5,7] %}
+    <tr>
+      <th>{{p}}</th>
+      {% for n in range(2,24) %}
+      <td><a href="?search_type=Families&p={{p}}&n={{n}}">{{info.family_count[n,p]}}</a></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
-</p>
 
 <p>
-Some <a href="{{url_for('.interesting')}}">interesting $p$-adic fields</a> or a <a href={{url_for('.random_field')}}>random $p$-adic field</a>
+Some <a href="{{url_for('.interesting')}}">interesting $p$-adic fields</a>, a <a href={{url_for('.random_field')}}>random $p$-adic field</a>, a <a href="?search_type=RandomFamily">random absolute family</a>, a <a href="?search_type=RandomFamily&relative=1">random relative family</a>
 </p>
 
 <h2>{{KNOWL('intro.search', 'Search')}}</h2>

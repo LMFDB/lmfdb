@@ -272,7 +272,7 @@ class SearchWrapper(Wrapper):
                 nulls = table.stats.null_counts()
                 if nulls:
                     search_columns = table._columns_searched(query)
-                    nulls = {col: cnt for (col, cnt) in nulls.items() if col in search_columns}
+                    nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
                     col_display = {}
                     if "search_array" in info:
                         for row in info["search_array"].refine_array:
@@ -333,12 +333,18 @@ class CountWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data  # error page
         query, sort, table, title, err_title, template, one_per = data
+        groupby = query.pop("__groupby__", self.groupby)
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:
-                res = table.count(query, groupby=self.groupby)
+                res = table.count(query, groupby=groupby)
             else:
-                res = table.stats.column_counts(self.groupby)
+                # We want to use column_counts since it caches results, but it also sorts the input columns and doesn't adjust the results
+                res = table.stats.column_counts(groupby)
+                sgroupby = sorted(groupby)
+                if sgroupby != groupby:
+                    perm = [sgroupby.index(col) for col in groupby]
+                    res = {tuple(key[i] for i in perm): val for (key, val) in res.items()}
         except QueryCanceledError as err:
             return self.query_cancelled_error(
                 info, query, err, err_title, template, template_kwds
@@ -355,7 +361,7 @@ class CountWrapper(Wrapper):
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
-                    info['count'] = 50 # put count back in so that it doesn't show up as none in url
+                info['count'] = 50 # put count back in so that it doesn't show up as none in url
 
             except ValueError as err:
                 # Errors raised in postprocessing
@@ -404,6 +410,12 @@ class EmbedWrapper(Wrapper):
         proj = query.pop("__projection__", self.projection)
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
+        if "result_count" in info:
+            if one_per:
+                nres = table.count_distinct(one_per, query)
+            else:
+                nres = table.count(query)
+            return jsonify({"nres": str(nres)})
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
@@ -414,6 +426,7 @@ class EmbedWrapper(Wrapper):
                 offset=start,
                 sort=sort,
                 info=info,
+                one_per=one_per
             )
         except QueryCanceledError as err:
             return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
@@ -424,8 +437,94 @@ class EmbedWrapper(Wrapper):
             # This is caused when a user inputs a number that's too large for a column search type
             return self.oob_error(info, query, err, err_title, template, template_kwds)
         else:
+            try:
+                if self.postprocess is not None:
+                    res = self.postprocess(res, info, query)
+            except ValueError as err:
+                raise
+                flash_error(str(err))
+                info["err"] = str(err)
+                return render_template(template, info=info, title=err_title, **template_kwds)
             info["results"] = res
             return render_template(template, info=info, title=title, **template_kwds)
+
+class YieldWrapper(Wrapper):
+    """
+    A variant on search wrapper that is intended to replace the database table with a Python function
+    that yields rows.
+
+    The Python function should also accept a boolean random keyword (though it's allowed to raise an error)
+    """
+    def __init__(
+        self,
+        f, # still a function that parses info into a query dictionary
+        template="search_results.html",
+        yielder=None,
+        title=None,
+        err_title=None,
+        per_page=50,
+        columns=None,
+        url_for_label=None,
+        **kwds
+    ):
+        Wrapper.__init__(
+            self, f, template, yielder, title, err_title, postprocess=None, **kwds
+        )
+        self.per_page = per_page
+        self.columns = columns
+        self.url_for_label = url_for_label
+
+    def __call__(self, info):
+        info = to_dict(info)
+        #  if search_type starts with 'Random' returns a random label
+        search_type = info.get("search_type", info.get("hst", ""))
+        info["search_type"] = search_type
+        info["columns"] = self.columns
+        random = info["search_type"].startswith("Random")
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        data = self.make_query(info, random)
+        if not isinstance(data, tuple):
+            return data
+        query, sort, yielder, title, err_title, template, one_per = data
+        if "result_count" in info:
+            if one_per:
+                nres = yielder(query, one_per=one_per, count=True)
+            else:
+                nres = yielder(query, count=True)
+            return jsonify({"nres": str(nres)})
+        count = parse_count(info, self.per_page)
+        start = parse_start(info)
+        try:
+            if random:
+                label = yielder(query, random=True)
+                if label is None:
+                    res = []
+                    # ugh; we have to set these manually
+                    info["query"] = dict(query)
+                    info["number"] = 0
+                    info["count"] = count
+                    info["start"] = start
+                    info["exact_count"] = True
+                else:
+                    return redirect(self.url_for_label(label), 307)
+            else:
+                res = yielder(
+                    query,
+                    limit=count,
+                    offset=start,
+                    sort=sort,
+                    info=info,
+                    one_per=one_per,
+                )
+        except ValueError as err:
+            flash_error(str(err))
+            info["err"] = str(err)
+            title = err_title
+            raise
+        else:
+            info["results"] = res
+        return render_template(template, info=info, title=title, **template_kwds)
+
 
 @decorator_keywords
 def search_wrap(f, **kwds):
@@ -438,3 +537,7 @@ def count_wrap(f, **kwds):
 @decorator_keywords
 def embed_wrap(f, **kwds):
     return EmbedWrapper(f, **kwds)
+
+@decorator_keywords
+def yield_wrap(f, **kwds):
+    return YieldWrapper(f, **kwds)

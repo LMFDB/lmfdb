@@ -538,7 +538,7 @@ class AbvarSearchArray(SearchArray):
 
     def search_types(self, info):
         return self._search_again(info, [
-            ('', 'List of isogeny classes'),
+            ('List', 'List of isogeny classes'),
             ('Counts', 'Counts table'),
             ('Random', 'Random isogeny class')])
 
@@ -620,9 +620,9 @@ def jump(info):
             return redirect(url_for(".abelian_varieties"))
         g = deg//2
         lead = cdict[deg]
-        if lead == 1: # accept monic normalization
+        if lead == 1:  # accept monic normalization
             lead = cdict[0]
-            cdict = {deg-exp: coeff for (exp, coeff) in cdict.items()}
+            cdict = {deg - exp: coeff for exp, coeff in cdict.items()}
         if cdict.get(0) != 1:
             flash_error("%s is not valid input.  Polynomial must have constant or leading coefficient 1", jump_box)
             return redirect(url_for(".abelian_varieties"))

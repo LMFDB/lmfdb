@@ -537,7 +537,11 @@ class ColumnController(SelectBox):
         for col in C.columns_shown(info, use_rank):
             if col.short_title is None: # probably a spacer column:
                 continue
-            title = col.short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
+            if isinstance(col.short_title, str):
+                short_title = col.short_title
+            else:
+                short_title = col.short_title(info)
+            title = short_title.replace("$", "").replace(r"\(", "").replace(r"\)", "").replace("\\", "")
             if col.default(info):
                 disp = "✓ " + title # The space is a unicode space the size of an emdash
             else:
@@ -672,13 +676,16 @@ class SearchArray(UniqueRepresentation):
                 #for name, display, prefix in self.sorts:
                 #    yield (name, display + " &#9650;")
                 #    yield (name + "op", display + " &#9660;")
-                return [(name, display) for (name, display, sort_order) in sorts]
+                return [(name, display) for name, display, sort_order in sorts]
 
     def _search_again(self, info, search_types):
         if info is None:
             return search_types
-        st = self._st(info)
-        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != st]
+        mst = st = self._st(info)
+        # Sometimes need to treat empty string as equal to "List"
+        if not st and any(v == "List" for (v,d) in search_types):
+            mst = "List"
+        return [(st, "Search again")] + [(v, d) for v, d in search_types if v != mst]
 
     def search_types(self, info):
         # Override this method to change the displayed search buttons
@@ -745,7 +752,7 @@ class SearchArray(UniqueRepresentation):
         if info is not None:
             search_type = info.get("search_type", info.get("hst", ""))
             if search_type == "List":
-                # Backward compatibility
+                # Want to avoid including search_type in URL when possible
                 search_type = ""
             return search_type
 
@@ -795,7 +802,7 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return ""
         else:
-            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for (name, val) in self.hidden(info))
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for name, val in self.hidden(info))
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"

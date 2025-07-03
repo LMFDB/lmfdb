@@ -12,14 +12,37 @@
 <table>
   <tr><td>Base field:</td> <td> {{info.base|safe}}
       <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$:</td> <td>${{info.n}}$</td></tr>
-      <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification exponent') }} $e$:</td> <td>${{info.e}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification index') }} $e$:</td> <td>${{info.e}}$</td></tr>
       <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$:</td> <td>${{info.f}}$</td></tr>
       <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$:</td> <td>${{info.c}}$</td></tr>
       <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf|safe}}</td></tr>
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>
-      <tr><td> $\card{ {{ info.autstring|safe }}(K/\Q_{ {{info.p}} }) }$:</td> <td>${{info.aut}}$</td></tr>
+
+  {% if info.aut_gp_knowl %}
+      <tr><td> 
+      {%- set ktitle = '$\Aut(K/\Q_{' ~ info.p ~ '})$' -%}
+      {{ KNOWL('lf.automorphism_group', title=ktitle) -}}
+      {%- if info.auttype=='aut' -%}
+      :
+      {% else %}
+      $=$
+      {%- set ktitle = '$\Gal(K/\Q_{' ~ info.p ~ '})$' -%}
+      {{ KNOWL('nf.galois_group', title=ktitle) }}:
+      {% endif %}
+      </td> 
+      <td>{{info.aut_gp_knowl|safe}}</td></tr>
+    {% else %}
+      {%- set ktitle = '$\Aut(K/\Q_{' ~ info.p ~ '})$' -%}
+      <tr><td> $\#$ {{ KNOWL('lf.automorphism_group', title=ktitle) }}:</td> <td>${{info.aut}}$</td></tr>
+  {% endif %}
+
       <tr><td colspan="2">{{info.galphrase}}</td></tr>
-      <tr><td>{{ KNOWL('lf.visible_slopes', title='Visible slopes')}}:</td><td>{{info.visible}}</td></tr>
+      <tr><td>{{ KNOWL('lf.slopes', title='Visible Artin slopes')}}:</td><td>{{info.visible}}</td></tr>
+      <tr><td>{{ KNOWL('lf.slopes', title='Visible Swan slopes')}}:</td><td>{{info.visible_swan}}</td></tr>
+      <tr><td>{{ KNOWL('lf.means', title='Means')}}:</td><td>{{info.means}}</td></tr>
+      <tr><td>{{ KNOWL('lf.rams', title='Rams')}}:</td><td>{{info.rams}}</td></tr>
+      <tr><td>{{ KNOWL('lf.jump_set', title='Jump set')}}:</td><td>{{info.jump_set}}</td></tr>
+      <tr><td>{{ KNOWL('lf.roots_of_unity', title='Roots of unity') }}:</td><td>{{info.roots_of_unity}}</td></tr>
 </table>
 
 <h2> {{ KNOWL('lf.intermediate_fields', title='Intermediate fields') }}</h2>
@@ -42,7 +65,7 @@
 </p>
 {% endif %}
 
-<h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Unramified/totally ramified tower') }}</h2>
+<h2>{{ KNOWL('lf.unramified_totally_ramified_tower', title='Canonical tower') }}</h2>
 <table>
   <tr><td>{{ KNOWL('lf.unramified_subfield', title='Unramified subfield')}}:</td><td>{{info.unram|safe}}</tr>
   <tr><td>Relative {{ KNOWL('lf.eisenstein_polynomial', 'Eisenstein polynomial')}}:</td><td>{{info.eisen|safe}}</tr>
@@ -53,7 +76,7 @@
 
 {% if info.e > 1 %}
 
-  {% if info.ram_poly_polt %}
+  {% if info.ram_polygon_plot %}
     <img src="{{info.ram_polygon_plot}}" width="800" height="{{100 if (info.e % info.p) else 400}}">
 
     <table>
@@ -62,7 +85,7 @@
       <tr><td>{{ KNOWL('lf.indices_of_inseparability', 'Indices of inseparability')}}:</td><td>{{info.ind_insep|safe}}</tr>
     </table>
   {% else %}
-     Not computed
+     not computed
   {% endif %}
 
 
@@ -72,55 +95,68 @@
 
 {% endif %}
 
-<h2>{{ KNOWL('lf.galois_invariants', title='Invariants of the Galois closure') }}</h2>
+<h2>{{ KNOWL('lf.galois_closure_invariants', title='Invariants of the Galois closure') }}</h2>
 <table>
+  <tr><td>{{ KNOWL('nf.galois_group', title='Galois degree')}}:</td><td>
+  {% if info.galois_degree %}
+    ${{info.galois_degree}}$
+  {% else %}
+    not computed
+  {% endif %}
+  </td></tr>
   <tr><td>{{ KNOWL('nf.galois_group', title='Galois group')}}:</td><td>
   {% if info.gal %}
-  {{info.gal|safe}}
+    {{info.gal|safe}}
   {% else %}
-    Not computed
+    not computed
   {% endif %}
   </td></tr>
   <tr><td>{{ KNOWL('lf.inertia_group', title='Inertia group')}}:</td><td>
   {% if info.inertia %}
     {{info.inertia|safe}}
   {% else %}
-    Not computed
+    not computed
   {% endif %}
   </td></tr>
   <tr><td>{{ KNOWL('lf.wild_inertia_group', title='Wild inertia group')}}:</td><td>
   {% if info.wild_inertia %}
   {{info.wild_inertia|safe}}
   {% else %}
-    Not computed
+    not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.unramified_degree', title='Unramified degree')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.unramified_degree', title='Galois unramified degree')}}:</td><td>
   {% if info.u %}
   ${{info.u}}$
   {% else %}
-    Not computed
+    not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.tame_degree', title='Tame degree')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.tame_degree', title='Galois tame degree')}}:</td><td>
   {% if info.t %}
   ${{info.t}}$
   {% else %}
-    Not computed
+    not computed
   {% endif %}
   </td></tr>
-  <tr><td>{{ KNOWL('lf.wild_slopes', title='Wild slopes')}}:</td><td>
+  <tr><td>{{ KNOWL('lf.slopes', title='Galois Artin slopes')}}:</td><td>
   {% if info.slopes %}
   {{info.slopes}}
   {% else %}
-    Not computed
+    not computed
+  {% endif %}
+  <tr><td>{{ KNOWL('lf.slopes', title='Galois Swan slopes')}}:</td><td>
+  {% if info.slopes %}
+  {{info.swanslopes}}
+  {% else %}
+    not computed
   {% endif %}
   </td></tr>
   <tr><td>{{ KNOWL('lf.galois_mean_slope', title='Galois mean slope')}}:</td><td>
   {% if info.gms %}
   ${{info.gms}}$
   {% else %}
-    Not computed
+    not computed
   {% endif %}
   </td></tr>
   <tr><td>{{KNOWL('lf.galois_splitting_model', title='Galois splitting model')}}:</td><td>{{info.gsm|safe}}</td></tr>

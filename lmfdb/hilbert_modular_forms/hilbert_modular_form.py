@@ -231,7 +231,7 @@ def download_hmf_magma(**args):
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
     outstr += 'ZF := Integers(F);\n\n'
-#    outstr += 'ideals_str := [' + ','.join([st for st in F_hmf["ideals"]]) + '];\n'
+#    outstr += 'ideals_str := [' + ','.join(st for st in F_hmf["ideals"]) + '];\n'
 #    outstr += 'ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];\n\n'
 
     outstr += 'NN := ideal<ZF | {' + f["level_ideal"][1:-1] + '}>;\n\n'

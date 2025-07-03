@@ -20,7 +20,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.api import datapage
@@ -406,7 +406,7 @@ def ec_postprocess(res, info, query):
     for rec in res:
         gens = mwgens.get(rec["lmfdb_label"])
         if gens is not None:
-            gens = [(a/c, b/c) for (a,b,c) in gens]
+            gens = [(a / c, b / c) for a, b, c in gens]
         rec["mwgens"] = gens
     return res
 
@@ -470,7 +470,7 @@ ec_columns = SearchColumns([
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
-    MathCol("mwgens", "ec.mordell_weil_group", "MW-generators", default=False),
+    ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
 ])
 
 class ECDownloader(Downloader):
@@ -498,7 +498,7 @@ class ECDownloader(Downloader):
         if "mwgens" in info.get("showcol", "").split("."):
             gens = db.ec_mwbsd.lucky({"lmfdb_label": row["lmfdb_label"]}, "gens")
             if gens is not None:
-                gens = [(ZZ(a)/c, ZZ(b)/c) for (a,b,c) in gens]
+                gens = [(ZZ(a) / c, ZZ(b) / c) for a, b, c in gens]
             row["mwgens"] = gens
         return row
 

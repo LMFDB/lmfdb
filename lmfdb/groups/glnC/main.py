@@ -78,7 +78,7 @@ def by_label(label):
 def dispmat(n, mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-        rw = '& '.join([sparse_cyclotomic_to_latex(n, z) for z in row])
+        rw = '& '.join(sparse_cyclotomic_to_latex(n, z) for z in row)
         s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
