@@ -980,6 +980,8 @@ class WebNumberField:
                     local_algebra_dict[str(p)].append([deg,e,f,c])
             else:
                 LF = db.lf_fields.lookup(lab)
+                if not LF:
+                    LF = db.lf_fields.lucky({'new_label': lab}) 
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
                 gglabel = LF.get('galois_label')
