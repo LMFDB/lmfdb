@@ -18,7 +18,7 @@ class searcher:
         return utils.get_filtered_fields(self._inv)
 
     def get_inventory(self):
-        if(self._full_inventory):
+        if (self._full_inventory):
             return self._full_inventory()
         return utils.get_filtered_fields(self._inv)
 
@@ -39,7 +39,7 @@ class searcher:
         return self.get_search(sd, proj)
 
     def get_search(self, query, projection):
-        if(self._full_search):
+        if (self._full_search):
             return self._full_search(query, projection)
         return utils.simple_search(query, projection)
 
@@ -88,6 +88,5 @@ def register_singleton(url, table, key=None, simple_search=None, full_search=Non
     simple_search -- A function that modifies a query object to make it search for the requested object
     full_search -- A function that performs a search itself and returns the results
     """
-
     singletons[url] = {'table':table, 'key':key,
         'simple_search':simple_search, 'full_search':full_search}
