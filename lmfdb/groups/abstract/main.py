@@ -1076,7 +1076,8 @@ def field_knowl(fld):
 def display_cc_url(numb,gp):
     if numb is None:    # for cases where we didn't compute number
         return 'not computed'
-    elif numb > 512:    # remove url if conjugacy classes are not stored
+#    elif numb > 512:    # remove url if conjugacy classes are not stored
+    elif gp.conjugacy_classes_known is False:
         return numb
     return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
@@ -1979,7 +1980,6 @@ def sgp_data(label):
 
 # need to write characters in GAP or Magma formats for downloads
 def download_cyclotomics(n,vals, dltype):
-    print(n,vals)
     s = ""
     val = vals[0]
     c = val[0]  # coefficient
@@ -2021,7 +2021,7 @@ def download_cyclotomics(n,vals, dltype):
 
 
 # create preable for downloading individual group
-def download_preable(com1, com2, dltype):
+def download_preable(com1, com2, dltype, conj_classes_known):
     if dltype == "gap":
         f = "#"
     else:
@@ -2034,9 +2034,14 @@ def download_preable(com1, com2, dltype):
     s += f + "\t Agroup, Zgroup, abelian, almost_simple,cyclic, metabelian, \n"
     s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n" 
     s += f + "\t solvable, supersolvable \n \n"
-    if dltype == "gap":
-        s += f + "The character table is stored as a record which is converted to a  \n"
-        s += f + "character table using the command ConvertToLibraryCharacterTableNC \n"
+    if conj_classes_known:
+        if dltype == "gap":
+            s += f + " The character table is stored as a record which is converted to a  \n"
+            s += f + " character table using the command ConvertToLibraryCharacterTableNC \n"
+        if dltype == "magma":
+            s += f + " The character table is stored as chartbl_n_i where n is the order of \n"
+            s += f + " the group and i is which group of that order it is. Conjugacy classes \n"
+            s += f + " are stored in the variable 'C' with elements from the group 'G'. \n"
     s +=com2
     return s
 
@@ -2100,7 +2105,6 @@ def download_boolean_string(G,dltype,ul_label):
     s += "solvable := " + str(G.solvable).lower() +", \n"
     s += "supersolvable := " + str(G.supersolvable).lower() +" \n" # no comma since last one
 
-
     # close record
     if dltype == "gap":
         s += "); \n"
@@ -2109,16 +2113,17 @@ def download_boolean_string(G,dltype,ul_label):
     return s
 
 
-#JP TO DO
 def download_char_table_magma(G, ul_label):
     gp_type = G.element_repr_type
-
-    print(gp_type)
 
     if gp_type == "PC":
         s = "G:= GPC;\n"
     if gp_type == "Perm":
         s = "G:= GPerm;\n"
+    else:
+        repr_data = G.representations[gp_type]
+        print(repr_data)
+        str_d = str(repr_data['d'])  # need later
     if gp_type == "GLZ":
         s = "G:= GLZ;\n"
     if gp_type == "GLFp":
@@ -2135,11 +2140,12 @@ def download_char_table_magma(G, ul_label):
         str_d = str(repr_data['d'])  # need later
         s = "G:= " + repr_data['family'] + "(" + str_d+ "," + str(repr_data['q']) +"); \n"
 
-
     s += "C := SequenceToConjugacyClasses([car<Integers(), Integers(), G> |"
     for conj in G.conjugacy_classes:
-        if gp_type != "Perm" and gp_type != "PC":
+        if gp_type == "Lie":
             s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type = gp_type, ListForm = True, LieType=(gp_type == "Lie"))) +")>,"
+        elif gp_type != "PC" and gp_type != "Perm":
+            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type = gp_type, ListForm = True, LieType=(gp_type== gp_type))) +")>,"
         else:
             s += "< " + str(conj.order) + ", " + str(conj.size) + ", " + str(G.decode(conj.representative,rep_type = gp_type, as_magma = True)) +">,"
     s = s[:-1]  # get rid of last comma
@@ -2162,7 +2168,6 @@ def download_char_table_magma(G, ul_label):
         s += "x`IsCharacter := true;\n"
         s += "x`Schur := " + str(char.indicator) + ";\n"
         s += "x`IsIrreducible := true; \n"
-#irr_values_individual =[cyclotomic_gap(char.cyclotomic_n,char.values[i]) for i in range(len(char.values))]
     s += "_ := CharacterTable(G : Check := 0); \n"
     s += "chartbl_" + G.label.replace(".","_") +  ":= KnownIrreducibles(CR); \n"
     return s
@@ -2256,7 +2261,6 @@ def download_group(**args):
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
-    #gp_data = db.gps_groups2.lucky({"label": label})
     wag = WebAbstractGroup(label)
     gp_data = wag._data
 
@@ -2280,7 +2284,7 @@ def download_group(**args):
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
-    s += download_preable(com1, com2,dltype)
+    s += download_preable(com1, com2,dltype, wag.conjugacy_classes_known)
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 +  "\n"
