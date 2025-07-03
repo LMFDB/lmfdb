@@ -50,12 +50,12 @@
 <h3>{{title|safe}}<h3>
 
 
-<canvas id="subdiagram" width="{{ cl.diagram_js.display_opts.w }}" height="{{ cl.diagram_js.display_opts.h }}">
+<canvas id="subdiagram" width="{{ cl.diagram_js(query).display_opts.w }}" height="{{ cl.diagram_js(query).display_opts.h }}">
   Sorry, your browser does not support the subgroup diagram.
 </canvas>
 
 <script type="text/javascript">
-  {{ cl.diagram_js.string |safe }}
+  {{ cl.diagram_js(query).string |safe }}
   sdiagram.newgraph(graph);
   sdiagram.setSize();
   sdiagram.draw();

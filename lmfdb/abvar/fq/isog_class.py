@@ -31,6 +31,7 @@ from lmfdb.utils import (
     integer_divisors,
     list_to_factored_poly_otherorder,
     web_latex,
+    teXify_pol,
 )
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
@@ -268,15 +269,38 @@ class AbvarFq_isoclass():
     def weak_equivalence_classes(self):
         return list(db.av_fq_weak_equivalences.search({"isog_label": self.label}))
 
+    def filtered_mrings(self, query):
+        query["is_invertible"] = True
+        query["isog_label"] = self.label
+        if len(query) == 2:
+            return set(self.endring_data)
+        return set(db.av_fq_weak_equivalences.search(query, "multiplicator_ring"))
+
     @lazy_attribute
-    def endring_poset(self):
+    def endring_data(self):
+        inv = {}
+        ninv = defaultdict(list)
+        for rec in self.weak_equivalence_classes:
+            mring = rec["multiplicator_ring"]
+            if rec["is_invertible"]:
+                inv[mring] = rec
+            else:
+                ninv[mring].append(rec)
+        return {mring: [inv[mring]] + ninv[mring] for mring in inv}
+
+    @cached_method(key=lambda self, query: str(query))
+    def endring_poset(self, query={}):
         # The poset of endomorphism rings for abelian varieties in this isogeny class
         # For ordinary isogeny classes, these are precisely the sub-orders of the maximal order that contain the Frobenius order
+        included_in_query = self.filtered_mrings(query)
         class LatNode:
             def __init__(self, label):
                 self.label = label
                 self.index = ZZ(label.split(".")[0])
-                self.tex = tex[label]
+                if label in included_in_query:
+                    self.tex = tex[label]
+                else:
+                    self.tex = r"\cdot"
                 if self.tex in texlabels:
                     self.img = texlabels[self.tex]
                 else:
@@ -288,19 +312,17 @@ class AbvarFq_isoclass():
         num_wes = Counter()
         num_ind = Counter()
         xcoord = {}
-        for rec in self.weak_equivalence_classes:
-            R = rec['multiplicator_ring']
+        for R, wes in self.endring_data.items():
             N = ZZ(R.split(".")[0])
-            num_wes[R] += 1
-            if rec['is_invertible']:
-                num_ind[N] += 1
-                parents[R] = rec['minimal_overorders']
-                pic_size[R] = rec['pic_size']
-                xcoord[R] = rec['diagramx']
+            num_wes[R] = len(wes)
+            num_ind[N] += 1
+            parents[R] = wes[0]['minimal_overorders']
+            pic_size[R] = wes[0]['pic_size']
+            xcoord[R] = wes[0]['diagramx']
         if not pic_size:
             return [], [] # no weak equivalence class data for this isogeny class
         tex = {}
-        texlabels = set(["?"])
+        texlabels = set(["?", r"\cdot"])
         for R, npic in pic_size.items():
             N, i = R.split(".")
             N = ZZ(N)
@@ -323,10 +345,9 @@ class AbvarFq_isoclass():
         return nodes, edges
 
 
-    @lazy_attribute
-    def diagram_js(self):
+    def diagram_js(self, query):
         display_opts = {}
-        graph, rank_lookup, num_layers = diagram_js(self.endring_poset, display_opts)
+        graph, rank_lookup, num_layers = diagram_js(self.endring_poset(query), display_opts)
         return {
             'string': f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{self.label}", {graph}, {rank_lookup}, {num_layers});',
             'display_opts': display_opts
@@ -338,21 +359,10 @@ class AbvarFq_isoclass():
     def endring_select_line(self):
         return self.select_line
 
-    @lazy_attribute
-    def endring_data(self):
-        inv = {}
-        ninv = defaultdict(list)
-        for rec in self.weak_equivalence_classes:
-            mring = rec["multiplicator_ring"]
-            if rec["is_invertible"]:
-                inv[mring] = rec
-            else:
-                ninv[mring].append(rec)
-        return {mring: [inv[mring]] + ninv[mring] for mring in inv}
-
     @cached_method
     def endring_disp(self, endring):
         we = self.endring_data[endring]
+        max_index = max(L[0]["index"] for L in self.endring_data.values())
         disp = {}
         rec = we[0]
 
@@ -386,11 +396,11 @@ class AbvarFq_isoclass():
         if rec["index"] == 1:
             short_names.append(conductor)
             long_names.append(conductor)
-        elif rec.get("is_Zconductor_sum"):
+        elif rec.get("is_Zconductor_sum") and rec["index"] != max_index: # Don't write for Z[F,V] itself
             short_names.append(r"\mathbb{Z} + \mathfrak{f}_R")
             if rec["conductor"]:
                 long_names.append(r"\mathbb{Z} + " + conductor)
-        elif rec.get("is_ZFVconductor_sum"):
+        elif rec.get("is_ZFVconductor_sum") and rec["index"] != max_index: # Don't write for Z[F,V] itself
             short_names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
             if rec["conductor"]:
                 long_names.append(r"\mathbb{Z}[F, V] + " + conductor)
@@ -445,9 +455,41 @@ class AbvarFq_isoclass():
         disp["index"] = int(endring.split(".")[0])
         disp["conductor"] = conductor
         disp["pic"] = pic_disp
-        disp["num_we"] = len(we)
         disp["av_count"] = len(we) * pic_size
         return disp
+
+    @lazy_attribute
+    def _group_structures(self):
+        av_structure = defaultdict(Counter)
+        for we in self.endring_data.values():
+            pic_size = we[0]["pic_size"]
+            for w in we:
+                av_structure[1][tuple(w["rational_invariants"])] += pic_size
+                for n in range(2, 6):
+                    av_structure[n][tuple(w["higher_invariants"][n-2])] += pic_size
+        return av_structure
+
+    @lazy_attribute
+    def group_structures(self):
+        N = self.most_group_structures
+        av_structure = self._group_structures
+        disp = [[] for _ in range(N)]
+        for n in range(1, 6):
+            if len(av_structure[n]) == 1:
+                disp[0].append(abelian_group_display_knowl(next(iter(av_structure[n]))))
+                nextj = 1
+            else:
+                gps = sorted((-cnt, invs) for (invs, cnt) in av_structure[n].items())
+                for j, (m, invs) in enumerate(gps):
+                    disp[j].append(f"%s ($%s$)" % (abelian_group_display_knowl(invs), -m))
+                nextj = len(gps)
+            for j in range(nextj, N):
+                disp[j].append("")
+        return disp
+
+    @lazy_attribute
+    def most_group_structures(self):
+        return max(len(opts) for opts in self._group_structures.values())
 
     def endringinfo(self, endring):
         rec = self.endring_data[endring][0]
@@ -463,7 +505,7 @@ class AbvarFq_isoclass():
         ]
 
         ans.append(
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}</td></tr>",
         )
 
         if rec["cohen_macaulay_type"] is None:
@@ -479,6 +521,11 @@ class AbvarFq_isoclass():
         ])
         # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
         return "\n".join(ans)
+
+    @lazy_attribute
+    def singular_primes_disp(self):
+        disp = [",".join(teXify_pol(f) for f in P.split(",")) for P in self.singular_primes]
+        return r"\left\{" + ",".join(fr"\langle {P} \rangle" for P in disp) + r"\right\}"
 
     def _make_jacpol_property(self):
         ans = []

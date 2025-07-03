@@ -18,11 +18,11 @@ for rec in db.av_fq_weak_equivalences.search({}, ["is_invertible", "isog_label",
 
 texdata = set((mring, pic_size[ilabel][mring], num_we, num_ind[ilabel][mring.split(".")[0]] > 1) for (ilabel, mrings) in num_wes.items() for (mring, num_we) in mrings.items())
 
-count = 1
+count = 2
 with open("eqguts.tex", "w") as eqguts:
     with open("prettyindex", "w") as prettyindex:
-        prettyindex.write('[1,"?"]\n')
-        eqguts.write(r'$?$'+'\n')
+        prettyindex.write('[1,"?"]\n[2,"\\cdot"]\n')
+        eqguts.write('$?$\n$\\cdot$\n')
         for (mring, pic, we_cnt, include_i) in texdata:
             N, i = mring.split(".")
             N = ZZ(N)

@@ -35,7 +35,6 @@ function make_sdiagram(canv, ambient, gdatalist, orderdata, num_layers) {
 }
 
 function showsubinfo(node, isocls) {
-  console.log("ISOCLS", isocls);
   $.get(`/Variety/Abelian/Fq/endringinfo/${isocls}/${node.value}`,
         function(data){
           $(".selectedsub").map(function() {
@@ -43,7 +42,6 @@ function showsubinfo(node, isocls) {
             renderMathInElement(this, katexOpts);
             return;
           });
-          //$(".subgp").hover(highlight_group, unhighlight_group);
         });
 }
 
@@ -55,6 +53,5 @@ function clearsubinfo() {
             renderMathInElement(this, katexOpts);
             return;
           });
-          //$(".subgp").hover(highlight_group, unhighlight_group);
         });
 }

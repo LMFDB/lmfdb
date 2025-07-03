@@ -101,9 +101,9 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 
 
 
-<h2>Point counts</h2>
+<h2>Point counts{% if cl.weak_equivalence_classes %} and group structure{% endif %}</h2>
 
-<p>{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}
+<p>{{ KNOWL('ag.fq.point_counts',title="Point counts and group structure of the abelian variety" if cl.weak_equivalence_classes else "Point counts of the abelian variety") }}
 
 {% set n = cl.length_A_counts() if cl.length_A_counts() < 6 else 5 %}
 <table style="margin-left:5%;">
@@ -115,11 +115,20 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
     </tr>
   </thead>
   <tbody>
-    <tr><td>$A(\F_{q^r})$</td>
+    <tr{% if cl.weak_equivalence_classes %} style="border-bottom: 1px solid #000;"{% endif %}><td>$\# A(\F_{q^r})$</td>
         {% for i in range(n) %}
         <td> ${{ cl.abvar_counts[i] }}$ </td>
         {% endfor %}
     </tr>
+    {% if cl.weak_equivalence_classes %}
+    {% for G in cl.group_structures %}
+    <tr>{% if loop.first %}<td rowspan="{{cl.most_group_structures}}">$A(\F_{q^r})$</td>{% endif %}
+      {% for A in G %}
+      <td style="white-space: nowrap;">{{A|safe}}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    {% endif %}
   </tbody>
 </table>
 </p>
@@ -139,7 +148,7 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
         {% endfor %}
     </tr>
   </thead><tbody>
-    <tr><td>$C(\F_{q^r})$</td>
+    <tr><td>$\# C(\F_{q^r})$</td>
         {% for count in cl.curve_counts %}
         <td>${{ count }}$</td>
         {% endfor %}
@@ -262,6 +271,13 @@ function show_twists(number) {
     ${{ cl.zfv_plus_norm }} $</td>
   </tr>
 
+  <tr>
+    <td>{{ KNOWL('av.fq.singular_primes',title="Singular primes") }}:</td>
+    <td colspan="3">
+      ${{ cl.singular_primes_disp }}$
+    </td>
+  </tr>
+
  </table>
 
 {% endif %}
@@ -269,26 +285,26 @@ function show_twists(number) {
 
 {% if cl.weak_equivalence_classes %}
 <h2>{{ KNOWL('ag.endomorphism_ring',title="Endomorphism rings") }}</h2>
+{% endif %}
 
-{#
-<div>
-  <button class='er_lattice endring_active' onclick="select_endring_mode('lattice'); return false;">Lattice</button>
-  <button class='er_list endring_inactive' onclick="select_endring_mode('list'); return false;">List</button>
-</div>
-<div id="endring_lattice" class="endring">
-#}
+{% endblock %}
+
+{% block post_results_content %}
+
+{% if cl.weak_equivalence_classes %}
+<div id="endring-lattice">
   {# An invisible span to get the select color in the diagram into the DOM #}
   <div>
     <span id="group-diagram-selected" style="display:none;">Hi</span>
   </div>
 
-  {% if cl.diagram_js.display_opts.w > 1600 %}
+  {% if cl.diagram_js(query).display_opts.w > 1600 %}
   <canvas id="subdiagram" width="1000" height="300" style="border: 0px solid black">
     Sorry, your browser does not support the subgroup diagram.
   </canvas>
 
   <div class="subgroup_diagram">
-    <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+    <a href="{{modify_url(path=urlparse(url_for('.endring_diagram', label=cl.label)).path)}}">See a full page version of the diagram</a>
   </div>
 
   <h4>Endomorphism ring information</h4>
@@ -311,30 +327,55 @@ function show_twists(number) {
     </tr>
   </table>
   <div class="subgroup_diagram">
-    <a href="{{url_for('.endring_diagram', label=cl.label)}}">See a full page version of the diagram</a>
+    <a href="{{modify_url(path=urlparse(url_for('.endring_diagram', label=cl.label)).path)}}">See a full page version of the diagram</a>
   </div>
   {% endif %} {# wide #}
 
   <script type="text/javascript">
-    {{ cl.diagram_js.string |safe }}
+    {{ cl.diagram_js(query).string |safe }}
     sdiagram.setSize();
     sdiagram.draw();
+
+    var switch_button = $("button[name='switch']");
+    function set_endring_mode(mode) {
+      if (mode == 'lattice') {
+        $("div.results-line").hide();
+        $("#search-results").hide();
+        $("#sort-selector").hide();
+        $("#sort-selector-label").hide();
+        $("#column-selector").hide();
+        $("#column-selector-label").hide();
+        $("div.download-section").hide();
+        switch_button.text('List mode');
+        $("#endring-lattice").show();
+      } else {
+        $("#endring-lattice").hide();
+        switch_button.text('Lattice mode');
+        $("div.results-line").show();
+        $("#search-results").show();
+        $("#sort-selector").show();
+        $("#sort-selector-label").show();
+        $("#column-selector").show();
+        $("#column-selector-label").show();
+        $("div.download-section").show();
+      }
+    }
+
+    function switch_endring_mode() {
+      if (switch_button.text() == 'Lattice mode') {
+        set_endring_mode('lattice');
+      } else {
+        set_endring_mode('list');
+      }
+    }
+
+    if (switch_button.length > 0) {
+      switch_endring_mode();
+    }
   </script>
-{#
+
 </div>
-<div id="endring_list" class="endring">
-#}
-{% endif %} {# weak_equivalence_classes #}
-
-{% endblock %}
-
-{% block post_results_content %}
-
-{#
-{% if cl.weak_equivalence_classes %}
-</div>
-{% endif %}
-#}
+{% endif %} {# cl.weak_equivalence_classes #}
 
 {% if cl.polarized_abelian_varieties %}
 <h2>{{ KNOWL('av.polarization',title="Polarizations") }} </h2>

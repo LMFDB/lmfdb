@@ -20,7 +20,7 @@ from .search_parsing import parse_nf_string, parse_galgrp
 from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
-from lmfdb.utils import redirect_no_cache
+from lmfdb.utils import redirect_no_cache, SearchButton
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, CheckCol, CheckMaybeCol
 from lmfdb.abvar.fq.download import AbvarFq_download
 
@@ -112,7 +112,7 @@ def endring_postprocess(res, info, query):
     for rec in res:
         disp = cl.endring_disp(rec["multiplicator_ring"])
         rec["name"] = "<br/>".join(f"${name}$" for name in disp["long_names"])
-        for col in ["av_count", "num_we"] + [f"av_structure{n}" for n in range(1, 11)]:
+        for col in ["av_count"] + [f"av_structure{n}" for n in range(1, 11)]:
             rec[col] = disp[col]
         for col in ["conductor", "dimensions", "pic"]:
             rec[col+"_disp"] = disp[col]
@@ -121,7 +121,8 @@ def endring_postprocess(res, info, query):
 endring_columns = SearchColumns([
     SearchCol("label", "av.fq.endring_label", "Label", default=False),
     MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
-    MathCol("num_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
+    MathCol("singular_support", "av.fq.singular_primes", "Singular support"),
+    MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
     MathCol("pic_size", "av.fq.endomorphism_ring_notation", "Picard size", default=False),
     SearchCol("av_structure1", "av.fq.point_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
     SearchCol("av_structure2", "av.fq.point_structure", r"$A(\mathbb{F}_{q^2})$-structure", short_title="q^2-structure", default=False),
@@ -145,12 +146,13 @@ endring_columns = SearchColumns([
     MathCol("cohen_macaulay_type", "ag.cohen_macaulay_type", "Cohen-Macaulay type"),
     SearchCol("dimensions_disp", "av.fq.singular_dimensions", "Singular dimensions", default=False),
     SearchCol("pic_disp", "av.fq.endomorphism_ring_notation", "Picard group")],
-    db_cols=["cohen_macaulay_type", "conductor", "conductor_Oindex", "conductor_Sindex", "conductor_is_Oprime", "conductor_is_Sprime", "dimensions", "generator_over_ZFV", "higher_invariants", "index", "is_ZFVconductor_sum", "is_Zconductor_sum", "is_conjugate_stable", "is_product", "label", "multiplicator_ring", "pic_invs", "pic_size", "rational_invariants", "we_number"])
+    db_cols=["cohen_macaulay_type", "conductor", "conductor_Oindex", "conductor_Sindex", "conductor_is_Oprime", "conductor_is_Sprime", "dimensions", "generator_over_ZFV", "higher_invariants", "index", "is_ZFVconductor_sum", "is_Zconductor_sum", "is_conjugate_stable", "is_product", "label", "multiplicator_ring", "pic_invs", "pic_size", "rational_invariants", "number_of_we", "singular_support"])
 
 class EndringSearchArray(SearchArray):
     sorts = [("", "index", ["isog_label", "index", "multiplicator_ring"]),
              ("cohen_macaulay", "cohen_macaulay", ["isog_label", "cohen_macaulay_type", "index", "multiplicator_ring"])]
-    def __init__(self):
+    def __init__(self, cl):
+        self.cl = cl
         cohen_macaulay = TextBox(
             "cohen_macaulay",
             label="Cohen-Macaulay type",
@@ -163,8 +165,8 @@ class EndringSearchArray(SearchArray):
             knowl="av.fq.endomorphism_ring_notation",
             example="1"
         )
-        we_number = TextBox(
-            "we_number",
+        number_of_we = TextBox(
+            "number_of_we",
             label="Num. weak equiv. classes",
             knowl="av.fq.weak_equivalence_class",
             example="2"
@@ -205,8 +207,20 @@ class EndringSearchArray(SearchArray):
             label="Conductor $S$-prime",
             knowl="av.endomorphism_ring_conductor",
         )
+        singular_support = TextBox(
+            "singular_support",
+            label="Singular support",
+            knowl="av.fq.singular_support",
+            example="1,2,4"
+        )
         self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
-                             [we_number, cond_index, conj_stable, ZFVcond, Sprime]]
+                             [number_of_we, cond_index, conj_stable, ZFVcond, Sprime], [singular_support]]
+
+    def search_types(self, info):
+        if len(self.cl.endring_data) == 1:
+            return [("", "Search again")]
+        else:
+            return [("", "Search again"), SearchButton("", "Lattice mode", type="", name="switch", onclick=" onclick='switch_endring_mode(); return false;'", cls="")]
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
@@ -220,7 +234,7 @@ def abelian_varieties_by_gqi(g, q, iso):
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError:
         return abort(404, "Isogeny class %s is not in the database." % label)
-    info = to_dict(request.args, search_array=EndringSearchArray(), cl=cl)
+    info = to_dict(request.args, search_array=EndringSearchArray(cl), cl=cl)
     bread = get_bread(
         (str(g), url_for(".abelian_varieties_by_g", g=g)),
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
@@ -242,6 +256,22 @@ def abelian_varieties_by_gqi(g, q, iso):
     info['KNOWL_ID'] = 'av.fq.%s' % label
     return render_abvar(info)
 
+def endring_parse(info, query):
+    cl = info["cl"]
+    query["is_invertible"] = True
+    query["isog_label"] = cl.label
+    parse_ints(info, query, "cohen_macaulay", qfield="cohen_macaulay_type")
+    parse_ints(info, query, "pic_size")
+    parse_ints(info, query, "number_of_we")
+    parse_ints(info, query, "cond_index", qfield="conductor_Oindex")
+    parse_ints(info, query, "singular_support")
+    parse_bool(info, query, "Zcond", qfield="is_Zconductor_sum")
+    parse_bool(info, query, "ZFVcond", qfield="is_ZFVconductor_sum")
+    parse_bool(info, query, "product", qfield="is_product")
+    parse_bool(info, query, "conj_stable", qfield="is_conjugate_stable")
+    parse_bool(info, query, "OPrime", qfield="conductor_is_Oprime")
+    parse_bool(info, query, "SPrime", qfield="conductor_is_Sprime")
+
 @embed_wrap(
     table=db.av_fq_weak_equivalences,
     template="show-abvarfq.html",
@@ -259,19 +289,7 @@ def abelian_varieties_by_gqi(g, q, iso):
     KNOWL_ID=lambda:None,
 )
 def render_abvar(info, query):
-    cl = info["cl"]
-    query["is_invertible"] = True
-    query["isog_label"] = cl.label
-    parse_ints(info, query, "cohen_macaulay", qfield="cohen_macaulay_type")
-    parse_ints(info, query, "pic_size")
-    parse_ints(info, query, "we_number")
-    parse_ints(info, query, "cond_index", qfield="conductor_Oindex")
-    parse_bool(info, query, "Zcond", qfield="is_Zconductor_sum")
-    parse_bool(info, query, "ZFVcond", qfield="is_ZFVconductor_sum")
-    parse_bool(info, query, "product", qfield="is_product")
-    parse_bool(info, query, "conj_stable", qfield="is_conjugate_stable")
-    parse_bool(info, query, "Oprime", qfield="conductor_is_Oprime")
-    parse_bool(info, query, "Sprime", qfield="conductor_is_Sprime")
+    endring_parse(info, query)
 
 isogeny_class_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
 mring_regex = re.compile(r"(\d+)\.(\d+)")
@@ -912,9 +930,13 @@ def endring_diagram(label):
     except ValueError:
         flash_error("There is no isogeny class %s in the database", label)
         return redirect(url_for(".abelian_varieties"))
+    info = to_dict(request.args, cl=isoclass)
+    query = {}
+    endring_parse(info, query)
     return render_template(
         "endring_diagram_page.html",
         cl=isoclass,
+        query=query,
         title="Diagram of endomorphism rings for %s" % label,
         bread=get_bread(("Endomorphism ring diagram", " ")),
         learnmore=learnmore_list(),
