@@ -227,7 +227,7 @@ class WebModLGalRep(WebObj):
         n = sum([len(a)-1 for a in A[0]])
         data = { "A": r" $\times$ ".join(formatfield(f) for f in A[0]),
                  "B": r" $\times$ ".join(formatfield(f) for f in A[1]),
-                 "Phi": r"\frac{1}{%s} " % (str(A[2][0])) + web_latex(Matrix(QQ,n,A[2][1]),enclose=False)
+                 "Phi": r"\dfrac{1}{%s} " % (str(A[2][0])) + web_latex(Matrix(QQ,n,A[2][1]),enclose=False)
                }
         return data
 
