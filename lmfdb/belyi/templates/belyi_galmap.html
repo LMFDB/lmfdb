@@ -111,9 +111,14 @@ function show_eqns(eqnstyle) {
     </thead>
     <tbody>
       {% for g in data.embeddings_and_triples %}
+       <td>${{g['embedding']}}$</td>
+       <td>${{g['triple']}}$</td>
+       </tr>
+      <!-- TODO: uncomment this when embedded map pages are reactivated
          <td><a href="{{g['triple_link']}}">${{g['embedding']}}$</a></td>
          <td><a href="{{g['triple_link']}}">${{g['triple']}}$</a></td>
          </tr>
+      -->
       {% endfor %}
     </tbody>
     </table>
