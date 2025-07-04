@@ -37,7 +37,9 @@ def plane_map_constant_factored(rec):
             num_list = [el/n for el in num_list]
             poly = K(num_list)
             # now LaTeX everything
+            s = ''
             if a in QQ:
+                s = '-' if a.sign()==-1 else '' # if a in QQ, keep track of sign
                 poly_lat = ''
             else:
                 if ("+" in str(poly)) or ("-" in str(poly)):
@@ -47,7 +49,7 @@ def plane_map_constant_factored(rec):
             if d == 1:
                 rec['plane_map_constant_factored'] = "%s" % (latex(factor(n))+poly_lat)
             else:
-                rec['plane_map_constant_factored'] = r"\frac{%s}{%s} %s" % (latex(factor(n)), latex(factor(d)), poly_lat)
+                rec['plane_map_constant_factored'] = r"%s\frac{%s}{%s}%s" % (s,latex(factor(n)), latex(factor(d)), poly_lat)
     return rec
 
 def pretty_print_factor(f):
