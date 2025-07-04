@@ -94,7 +94,7 @@ def index():
 @belyi_page.route("/random")
 @redirect_no_cache
 def random_belyi_galmap():
-    label = db.belyi_galmaps.random()
+    label = db.belyi_galmaps_new.random()
     return url_for_belyi_galmap_label(label)
 
 
@@ -102,7 +102,7 @@ def random_belyi_galmap():
 def interesting():
     return interesting_knowls(
         "belyi",
-        db.belyi_galmaps,
+        db.belyi_galmaps_new,
         url_for_label,
         title=r"Some interesting Belyi maps and passports",
         bread=get_bread("Interesting"),
@@ -414,7 +414,7 @@ def make_base_field(rec):
 
 
 class Belyi_download(Downloader):
-    table = db.belyi_galmaps
+    table = db.belyi_galmaps_new
     title = "Belyi maps"
     inclusions = {
         "perms": (
@@ -484,7 +484,7 @@ class Belyi_download(Downloader):
 
     def download_galmap_magma(self, label, lang="magma"):
         s = ""
-        rec = db.belyi_galmaps.lookup(label)
+        rec = db.belyi_galmaps_new.lookup(label)
         if rec is None:
             return abort(404, "Label not found: %s" % label)
         s += "// Magma code for Belyi map with label %s\n\n" % label
@@ -537,7 +537,7 @@ class Belyi_download(Downloader):
 
     def download_galmap_sage(self, label, lang="sage"):
         s = ""
-        rec = db.belyi_galmaps.lookup(label)
+        rec = db.belyi_galmaps_new.lookup(label)
         if rec is None:
             return abort(404, "Label not found: %s" % label)
         s += "# Sage code for Belyi map with label %s\n\n" % label
@@ -600,7 +600,7 @@ class Belyi_download(Downloader):
         return self._wrap(s, label, lang=lang)
 
     def download_galmap_text(self, label, lang="text"):
-        data = db.belyi_galmaps.lookup(label)
+        data = db.belyi_galmaps_new.lookup(label)
         if data is None:
             return abort(404, f"Label not found: {label}")
         return self._wrap(Json.dumps(data),
@@ -635,11 +635,11 @@ def belyi_data(label):
     if label.count("-") == 1:  # passport label length
         labels = [label, label]
         label_cols = ["plabel", "plabel"]
-        tables = ["belyi_passports", "belyi_galmaps"]
+        tables = ["belyi_passports", "belyi_galmaps_new"]
     elif label.count("-") == 2:  # galmap label length
         labels = [label, "-".join(label.split("-")[:-1]), label]
         label_cols = ["label", "plabel", "label"]
-        tables = ["belyi_galmaps", "belyi_passports", "belyi_galmap_portraits"]
+        tables = ["belyi_galmaps_new", "belyi_passports", "belyi_galmap_portraits"]
     else:
         return abort(404, f"Invalid label {label}")
     return datapage(labels, tables, title=f"Belyi map data - {label}", bread=bread, label_cols=label_cols)
@@ -723,7 +723,7 @@ def primitivization_search(info, query, search_type):
             raise ValueError("%s is not a valid %s label" % (primitivization, err_name))
 
 @search_wrap(
-    table=db.belyi_galmaps,
+    table=db.belyi_galmaps_new,
     title="Belyi map search results",
     err_title="Belyi map search input error",
     columns=belyi_columns,
@@ -779,13 +779,13 @@ class Belyi_stats(StatsDisplay):
     """
 
     def __init__(self):
-        self.ngalmaps = comma(db.belyi_galmaps.stats.count())
+        self.ngalmaps = comma(db.belyi_galmaps_new.stats.count())
         self.npassports = comma(db.belyi_passports.stats.count())
         self.max_deg = comma(db.belyi_passports.max("deg"))
         self.deg_knowl = display_knowl("belyi.degree", title="degree")
         self.belyi_knowl = '<a title="Belyi maps (up to Galois conjugation) [belyi.galmap]" knowl="belyi.galmap" kwargs="">Belyi maps</a>'
 
-    table = db.belyi_galmaps
+    table = db.belyi_galmaps_new
     baseurl_func = ".index"
     short_display = {"deg": "degree", "orbit_size": "size", "g": "genus"}
     top_titles = {"orbit_size": "Galois orbit size"}
