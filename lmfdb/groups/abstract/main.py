@@ -287,7 +287,7 @@ group_prop_implications = {
 }
 
 
-def get_group_prop_display(gp):
+def get_group_prop_display(gp, cyclic_known=True):
     # We want elementary and hyperelementary to display which primes, but only once
     elementaryp = ''
     hyperelementaryp = ''
@@ -306,10 +306,15 @@ def get_group_prop_display(gp):
     elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
         elementaryp = hyperelementaryp = ""
     elif gp.cyclic:  # both are in the implication list
-        elementaryp = f" ($p = {elementaryp}$)"
-        if gp.elementary == gp.hyperelementary:
+        if not cyclic_known: # rare case where subgroup is cyclic but not in db
+            elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
+            elementaryp = f" ($p = {elementarylist}$)"
+            hyperelementaryp = ""
+        elif gp.elementary == gp.hyperelementary:
+            elementaryp = f" ($p = {elementaryp}$)"
             hyperelementaryp = ""
         else:
+            elementaryp = f" ($p = {elementaryp}$)"
             hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
     elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
         elementaryp = f" for $p = {elementaryp}$"
@@ -507,7 +512,11 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         overall_display.update(norm_attr)
 
     if type == "normal":
-        overall_display.update(get_group_prop_display(sgp.sub))
+        if sgp.cyclic and sgp.subgroup is None:  # deals with rare case where subgroup is cyclic but not in db
+            overall_display.update(get_group_prop_display(sgp.sub, cyclic_known=False))
+        else:
+            overall_display.update(get_group_prop_display(sgp.sub))
+
 
     assert set(overall_display) == set(overall_order)
     hence_str = display_knowl(
@@ -530,6 +539,16 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     unknown = [prop for prop in overall_order if getattr(sgp, prop, None) is None]
     if {'ab_simple', 'nab_simple'} <= set(unknown):
         unknown.remove('ab_simple')
+    if sgp.cyclic and sgp.subgroup is None:  # deals with rare case of certain cyclic subgroups not in db
+        unknown.remove('is_elementary')
+        unknown.remove('is_hyperelementary')
+        unknown.remove('metabelian')
+        unknown.remove('metacyclic')
+        unknown.remove('supersolvable')
+        unknown.remove('Agroup')
+        unknown.remove('Zgroup')
+        unknown.remove('monomial')
+
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown:
