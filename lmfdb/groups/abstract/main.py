@@ -1429,8 +1429,6 @@ def complex_char_search(info, query={}):
 #need mathmode for MultiProcessedCol
 def cc_repr(label,code , latex=True):  #default is include dollar signs
     gp = WebAbstractGroup(label)
-    if gp.representations.get("Lie") and gp.representations["Lie"][0]["family"][0] == "P" and gp.order < 2000:
-        return ""   #Problem with PGL, PSL, etc
     if latex:
         return "$" + gp.decode(code,as_str=True) + "$"
     else:  # this is for download postprocess
