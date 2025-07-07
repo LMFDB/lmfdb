@@ -439,7 +439,7 @@ class AbvarFq_isoclass():
                 disp[f"av_structure{n}"] = abelian_group_display_knowl(next(iter(av_structure[n])))
             else:
                 gps = sorted((-cnt, invs) for (invs, cnt) in av_structure[n].items())
-                disp[f"av_structure{n}"] = ",".join(f"%s ($%s$)" % (abelian_group_display_knowl(invs), -m) for (m, invs) in gps)
+                disp[f"av_structure{n}"] = ",".join("%s ($%s$)" % (abelian_group_display_knowl(invs), -m) for (m, invs) in gps)
 
         dimensions = Counter()
         for w in we:
@@ -481,7 +481,7 @@ class AbvarFq_isoclass():
             else:
                 gps = sorted((-cnt, invs) for (invs, cnt) in av_structure[n].items())
                 for j, (m, invs) in enumerate(gps):
-                    disp[j].append(f"%s ($%s$)" % (abelian_group_display_knowl(invs), -m))
+                    disp[j].append("%s ($%s$)" % (abelian_group_display_knowl(invs), -m))
                 nextj = len(gps)
             for j in range(nextj, N):
                 disp[j].append("")

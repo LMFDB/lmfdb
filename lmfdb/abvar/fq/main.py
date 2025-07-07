@@ -657,6 +657,60 @@ class AbvarSearchArray(SearchArray):
             example="1.2.b,1.2.b,2.2.a_b",
             advanced=True,
         )
+
+        all_product = YesNoBox(
+            "all_product",
+            label="All pol. products",
+            knowl="av.fq.all_polarizations_product",
+            advanced=True,
+        )
+        cohen_macaulay_max = TextBox(
+            "cohen_macaulay_max",
+            label="Max Cohen-Macaulay type",
+            knowl="av.fq.max_cohen_macaulay_type",
+            example="3",
+            example_span="3 or 1-2",
+            advanced=True,
+        )
+        end_ring_count = TextBox(
+            "end_ring_count",
+            label="Num. End. rings",
+            knowl="ag.endomorphism_ring",
+            example="10-",
+            example_span="1 or 10-",
+            advanced=True,
+        )
+        weak_equv_count = TextBox(
+            "weak_equiv_count",
+            label="Num. weak equiv. classes",
+            knowl="av.fq.weak_equivalence_class",
+            example="15-",
+            example_span="1 or 15-",
+            advanced=True,
+        )
+        sing_prime_count = TextBox(
+            "sing_prime_count",
+            label="Num. sing. primes",
+            knowl="av.fq.singular_primes",
+            example="3",
+            example_span="3 or 1-2",
+            advanced=True,
+        )
+        disinct_groups = TextBox(
+            "distinct_groups",
+            label="Distinct groups",
+            example="4-",
+            example_span="1 or 4-",
+            advanced=True,
+        )
+        zfv_pic_size = TextBox(
+            "zfv_pic_size",
+            label=r"$\#\Pic(\Z[F,V])",
+            example="1",
+            example_span="1 or 1000-",
+            advanced=True,
+        )
+
         count = CountBox()
 
         self.refine_array = [
@@ -761,6 +815,14 @@ def common_parse(info, query):
 
         elif info['geom_squarefree'] == 'NotGeom':
             query['is_geometrically_squarefree'] = False
+
+    parse_bool(info, query, "all_product", qfield="all_polarized_product")
+    parse_ints(info, query, "cohen_macaulay_max")
+    parse_ints(info, query, "end_ring_count", qfield="endomorphism_ring_count")
+    parse_ints(info, query, "weak_equiv_count", qfield="weak_equivalence_count")
+    parse_ints(info, query, "sing_prime_count", qfield="zfv_singular_count")
+    parse_ints(info, query, "distinct_groups", qfield="group_structure_count")
+    parse_ints(info, query, "zfv_pic_size")
 
 def jump(info):
     jump_box = info["jump"].strip() # only called when this present
