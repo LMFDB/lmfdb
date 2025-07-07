@@ -710,6 +710,13 @@ class AbvarSearchArray(SearchArray):
             example_span="1 or 1000-",
             advanced=True,
         )
+        size = TextBox(
+            "size",
+            label=r"Unpol. isom. classes",
+            example="1-10",
+            example_span="6 or 1-10",
+            advanced=True,
+        )
 
         count = CountBox()
 
