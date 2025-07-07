@@ -126,7 +126,7 @@ class WebGaloisGroup:
         if self._data.get('pretty') is not None:
             return self._data['pretty']
         gp_label = self.abstract_label()
-        group = db.gps_groups2.lookup(gp_label)
+        group = db.gps_groups.lookup(gp_label)
         if group and group.get('tex_name'):
             return f"${group['tex_name']}$"
         if emptyifnotpretty:
@@ -244,7 +244,7 @@ class WebGaloisGroup:
     def can_chartable(self):
         if self.num_conjclasses() > CC_LIMIT:
             return False
-        if not db.gps_groups2.lookup(self.abstract_label()):
+        if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
 

@@ -683,7 +683,7 @@ def index():
         ("perfect=yes", "perfect"),
         ("rational=yes", "rational"),
     ]
-    info["maxgrp"] = db.gps_groups2.max("order")
+    info["maxgrp"] = db.gps_groups.max("order")
     info["families"] = group_families()
 
     return render_template(
@@ -723,7 +723,7 @@ def dynamic_statistics():
 
 @abstract_page.route("/random")
 def random_abstract_group():
-    label = db.gps_groups2.random(projection="label")
+    label = db.gps_groups.random(projection="label")
     response = make_response(redirect(url_for(".by_label", label=label), 307))
     response.headers["Cache-Control"] = "no-cache, no-store"
     return response
@@ -733,7 +733,7 @@ def random_abstract_group():
 def interesting():
     return interesting_knowls(
         "group.abstract",
-        db.gps_groups2,
+        db.gps_groups,
         url_for_label,
         title="Some interesting groups",
         bread=get_bread([("Interesting", " ")]),
@@ -786,7 +786,7 @@ def by_abelian_label(label):
     # Avoid database error on a hopeless search
     dblabel = None
     if not [z for z in primary if z > 2**31-1]:
-        dblabel = db.gps_groups2.lucky(
+        dblabel = db.gps_groups.lucky(
             {"abelian": True, "primary_abelian_invariants": primary}, "label"
         )
     if dblabel is None:
@@ -970,7 +970,7 @@ def group_jump(info):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
         return redirect(url_for(".by_abelian_label", label=".".join(invs)))
     # by name
-    labs = db.gps_groups2.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
+    labs = db.gps_groups.search({"name":jump.replace(" ", "")}, projection="label", limit=2)
     if len(labs) == 1:
         return redirect(url_for(".by_label", label=labs[0]))
     elif len(labs) == 2:
@@ -1081,7 +1081,7 @@ def display_cc_url(numb,gp):
     return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
 class Group_download(Downloader):
-    table = db.gps_groups2
+    table = db.gps_groups
     title = "Abstract groups"
 
 
@@ -1093,7 +1093,7 @@ def group_postprocess(res, info, query):
             label = rec.get(col)
             if label is not None:
                 labels.add(label)
-    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups2.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
     if "family" in info:
@@ -1168,7 +1168,7 @@ group_columns = SearchColumns([
                       align="center")])
 
 @search_wrap(
-    table=db.gps_groups2,
+    table=db.gps_groups,
     title="Abstract group search results",
     err_title="Abstract groups search input error",
     columns=group_columns,
@@ -1381,18 +1381,18 @@ def char_postprocess(res, info, query):
                 labels.add(label)
         rec["qchar"] = q_char(rec["label"])
         qchars.add(rec["qchar"])
-    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups2.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
-    schur = {rec["label"]: rec["schur_index"] for rec in db.gps_qchar2.search({"label":{"$in":list(qchars)}}, ["label", "schur_index"])}
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    schur = {rec["label"]: rec["schur_index"] for rec in db.gps_qchar.search({"label":{"$in":list(qchars)}}, ["label", "schur_index"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
         rec["schur_index"] = schur[rec["qchar"]]
     return res
 
 class Complex_char_download(Downloader):
-    table = db.gps_char2
+    table = db.gps_char
 
 @search_wrap(
-    table=db.gps_char2,
+    table=db.gps_char,
     title="Complex character search results",
     err_title="Complex character search input error",
     columns=complex_char_columns,
@@ -1492,7 +1492,7 @@ def cc_postprocess(res, info, query):
         gp = WebAbstractGroup(list(gps)[0])
         info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
     info["group_factors"] = common_support if common_support else []
-    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups2.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
+    complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
     centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
     highlight_col = {}
     for rec in res:
@@ -1510,7 +1510,7 @@ def cc_postprocess(res, info, query):
         else:
             highlight_col[(group, label)] = None
     if missing:
-        for rec in db.gps_conj_classes2.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for (group_order, group_counter), counters in missing.items()]}, ["group_order", "group_counter", "counter", "label"]):
+        for rec in db.gps_conj_classes.search({"$or":[{"group_order":group_order,"group_counter":group_counter, "counter":{"$in":counters}} for (group_order, group_counter), counters in missing.items()]}, ["group_order", "group_counter", "counter", "label"]):
             gp_ord = rec.get("group_order")
             gp_counter = rec.get("group_counter")
             group = cc_data_to_gp_label(gp_ord,gp_counter)
@@ -1520,7 +1520,7 @@ def cc_postprocess(res, info, query):
                 highlight_col[(group, label)] = rec["counter"]
             else:
                 highlight_col[(group, label)] = None
-    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups2.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
     for rec in res:
         rec["tex_cache"] = tex_cache
         rec["powers"] = [counter_to_label[rec["group_order"], rec["group_counter"], ctr] for ctr in rec["powers"]]
@@ -1529,7 +1529,7 @@ def cc_postprocess(res, info, query):
 
 
 class Conjugacy_class_download(Downloader):
-    table = db.gps_conj_classes2
+    table = db.gps_conj_classes
 
     def postprocess(self, res, info, query):  # need to convert representatives to human readable, and write cc labels
         if not hasattr(self, 'counter_to_label'):
@@ -1539,14 +1539,14 @@ class Conjugacy_class_download(Downloader):
             query_pow = {}  # need this dict to get all the power labels
             query_pow['group_order'] = res['group_order']
             query_pow['group_counter'] = res['group_counter']
-            self.counter_to_label[gptuple] = {rec["counter"]: rec["label"] for rec in db.gps_conj_classes2.search(query_pow, ["group_order", "group_counter", "counter", "label"])}  # counter-to-label dictionary for group, order pair
+            self.counter_to_label[gptuple] = {rec["counter"]: rec["label"] for rec in db.gps_conj_classes.search(query_pow, ["group_order", "group_counter", "counter", "label"])}  # counter-to-label dictionary for group, order pair
         res['representative'] = cc_repr(cc_data_to_gp_label(res['group_order'],res['group_counter']), res['representative'], latex=False)
         pow_list = [self.counter_to_label[gptuple][pow] for pow in res['powers']]
         res['powers'] = ",".join(pow_list)
         return res
 
 @search_wrap(
-    table=db.gps_conj_classes2,
+    table=db.gps_conj_classes,
     title="Conjugacy class search results",
     err_title="Conjugacy class search input error",
     columns=conjugacy_class_columns,
@@ -2213,7 +2213,7 @@ def download_group(**args):
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
-    #gp_data = db.gps_groups2.lucky({"label": label})
+    #gp_data = db.gps_groups.lucky({"label": label})
     wag = WebAbstractGroup(label)
     gp_data = wag._data
 
@@ -2962,7 +2962,7 @@ def abstract_group_namecache(labels, cache=None, reverse=None):
     # and serve as keys for the cache dictionary.
     if cache is None:
         cache = {}
-    for rec in db.gps_groups2.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
+    for rec in db.gps_groups.search({"label": {"$in": labels}}, ["label", "order", "tex_name"]):
         label = rec["label"]
         cache[label] = rec
         if reverse is not None:
@@ -3327,7 +3327,7 @@ def possibly_split_data(label):
     return Markup(ans)
 
 def trans_expr_data(label):
-    tex_name = db.gps_groups2.lookup(label, "tex_name")
+    tex_name = db.gps_groups.lookup(label, "tex_name")
     ans = f"Transitive permutation representations of ${tex_name}$:<br />\n"
     ans += f"<table>\n<tr><th>{display_knowl('gg.label', 'Label')}</th><th>{display_knowl('gg.parity', 'Parity')}</th><th>{display_knowl('gg.primitive', 'Primitive')}</th></tr>\n"
     for rec in db.gps_transitive.search({"abstract_label":label}, ["label", "parity", "prim"]):
