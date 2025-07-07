@@ -119,11 +119,11 @@ def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
     label = "{}-{}_{}_{}-{}".format(group, sigma0, sigma1, sigmaoo, letnum)
     return render_belyi_galmap_webpage(label)
 
-
-@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>/<triple>/")
-def by_url_embedded_belyi_map_label(group, sigma0, sigma1, sigmaoo, letnum, triple):
-    label = "{}-{}_{}_{}-{}".format(group, sigma0, sigma1, sigmaoo, letnum)
-    return render_embedded_belyi_map_webpage(label, triple)
+# TODO: fix embedded Belyi pages to work with raw and compress
+#@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>/<triple>/")
+#def by_url_embedded_belyi_map_label(group, sigma0, sigma1, sigmaoo, letnum, triple):
+#    label = "{}-{}_{}_{}-{}".format(group, sigma0, sigma1, sigmaoo, letnum)
+#    return render_embedded_belyi_map_webpage(label, triple)
 
 
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/")
