@@ -662,6 +662,7 @@ class AbvarSearchArray(SearchArray):
             "all_product",
             label="All pol. products",
             knowl="av.fq.all_polarizations_product",
+            example_col=False,
             advanced=True,
         )
         cohen_macaulay_max = TextBox(
@@ -678,9 +679,8 @@ class AbvarSearchArray(SearchArray):
             knowl="ag.endomorphism_ring",
             example="10-",
             example_span="1 or 10-",
-            advanced=True,
         )
-        weak_equv_count = TextBox(
+        weak_equiv_count = TextBox(
             "weak_equiv_count",
             label="Num. weak equiv. classes",
             knowl="av.fq.weak_equivalence_class",
@@ -696,16 +696,17 @@ class AbvarSearchArray(SearchArray):
             example_span="3 or 1-2",
             advanced=True,
         )
-        disinct_groups = TextBox(
+        distinct_groups = TextBox(
             "distinct_groups",
             label="Distinct groups",
+            knowl="ag.fq.point_counts",
             example="4-",
             example_span="1 or 4-",
             advanced=True,
         )
         zfv_pic_size = TextBox(
             "zfv_pic_size",
-            label=r"$\#\Pic(\Z[F,V])",
+            label=r"$\#\Pic(\Z[F,V])$",
             example="1",
             example_span="1 or 1000-",
             advanced=True,
@@ -713,9 +714,9 @@ class AbvarSearchArray(SearchArray):
         size = TextBox(
             "size",
             label=r"Unpol. isom. classes",
+            knowl="av.fq.isogeny_class_size",
             example="1-10",
             example_span="6 or 1-10",
-            advanced=True,
         )
 
         count = CountBox()
@@ -723,7 +724,9 @@ class AbvarSearchArray(SearchArray):
         self.refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [simple, geom_simple, primitive, polarizable, jacobian],
-            [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
+            [size, end_ring_count, newton_polygon, abvar_point_count, curve_point_count],
+            [simple_factors, distinct_groups, zfv_pic_size, all_product],
+            [cohen_macaulay_max, weak_equiv_count, sing_prime_count],
             [newton_elevation, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
             [angle_rank, angle_corank, geom_deg, p_corank, geom_squarefree],
             use_geom_refine,
@@ -736,6 +739,7 @@ class AbvarSearchArray(SearchArray):
             [g, geom_simple],
             [initial_coefficients, polarizable],
             [p_rank, jacobian],
+            [size, end_ring_count],
             [p_corank, geom_squarefree],
             [jac_cnt, hyp_cnt],
             [angle_rank, angle_corank],
@@ -745,6 +749,9 @@ class AbvarSearchArray(SearchArray):
             [abvar_point_count],
             [curve_point_count],
             [simple_factors],
+            [distinct_groups, zfv_pic_size],
+            [cohen_macaulay_max, all_product],
+            [weak_equiv_count, sing_prime_count],
             use_geom_index,
             [dim1, dim1d],
             [dim2, dim2d],
