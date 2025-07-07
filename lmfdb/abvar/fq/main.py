@@ -123,7 +123,7 @@ endring_columns = SearchColumns([
     MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
     MathCol("singular_support", "av.fq.singular_primes", "Singular support"),
     MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
-    MathCol("pic_size", "av.fq.endomorphism_ring_notation", "Picard size", default=False),
+    MathCol("pic_size", "av.fq.picard_of_order", "Picard size", default=False),
     SearchCol("av_structure1", "av.fq.point_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
     SearchCol("av_structure2", "av.fq.point_structure", r"$A(\mathbb{F}_{q^2})$-structure", short_title="q^2-structure", default=False),
     SearchCol("av_structure3", "av.fq.point_structure", r"$A(\mathbb{F}_{q^3})$-structure", short_title="q^3-structure", default=False),
@@ -136,7 +136,7 @@ endring_columns = SearchColumns([
     SearchCol("av_structure10", "av.fq.point_structure", r"$A(\mathbb{F}_{q^{10}})$-structure", short_title="q^10-structure", default=False),
     CheckCol("is_product", "av.is_product", "Product", default=False),
     SearchCol("name", "ag.endomorphism_ring", "Endomorphism ring"),
-    MathCol("index", "av.fq.endomorphism_ring_notation", "Index"),
+    MathCol("index", "av.fq.index_of_order", "Index"),
     CheckCol("is_conjugate_stable", "av.fq.conjugate_stable", "Conjugate stable", default=False),
     CheckCol("is_Zconductor_sum", "av.is_Zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
     CheckCol("is_ZFVconductor_sum", "av.is_ZFVconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
@@ -145,7 +145,7 @@ endring_columns = SearchColumns([
     CheckCol("conductor_is_Sprime", "av.endomorphism_ring_conductor", "Conductor $S$-prime", short_title="conductor S-prime", default=False),
     MathCol("cohen_macaulay_type", "ag.cohen_macaulay_type", "Cohen-Macaulay type"),
     SearchCol("dimensions_disp", "av.fq.singular_dimensions", "Singular dimensions", default=False),
-    SearchCol("pic_disp", "av.fq.endomorphism_ring_notation", "Picard group")],
+    SearchCol("pic_disp", "av.fq.picard_of_order", "Picard group")],
     db_cols=["cohen_macaulay_type", "conductor", "conductor_Oindex", "conductor_Sindex", "conductor_is_Oprime", "conductor_is_Sprime", "dimensions", "generator_over_ZFV", "higher_invariants", "index", "is_ZFVconductor_sum", "is_Zconductor_sum", "is_conjugate_stable", "is_product", "label", "multiplicator_ring", "pic_invs", "pic_size", "rational_invariants", "number_of_we", "singular_support"])
 
 class EndringSearchArray(SearchArray):
@@ -162,7 +162,7 @@ class EndringSearchArray(SearchArray):
         pic_size = TextBox(
             "pic_size",
             label="Picard group order",
-            knowl="av.fq.endomorphism_ring_notation",
+            knowl="av.fq.picard_of_order",
             example="1"
         )
         number_of_we = TextBox(
@@ -707,6 +707,7 @@ class AbvarSearchArray(SearchArray):
         zfv_pic_size = TextBox(
             "zfv_pic_size",
             label=r"$\#\Pic(\Z[F,V])$",
+            knowl="av.fq.picard_of_order",
             example="1",
             example_span="1 or 1000-",
             advanced=True,

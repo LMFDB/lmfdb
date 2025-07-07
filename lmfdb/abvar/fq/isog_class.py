@@ -501,7 +501,7 @@ class AbvarFq_isoclass():
         ans = [
             "<table>",
             f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
-            fr"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.fq.index_of_order', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
         ]
 
         ans.append(
@@ -515,7 +515,7 @@ class AbvarFq_isoclass():
 
         ans.extend([
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
-            f"<tr><td>{display_knowl('av.fq.endomorphism_ring_notation', 'Picard group')}:</td><td>{disp['pic']}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.picard_of_order', 'Picard group')}:</td><td>{disp['pic']}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
         ])
