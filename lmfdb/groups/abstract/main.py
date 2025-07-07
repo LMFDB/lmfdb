@@ -2036,8 +2036,9 @@ def download_preable(com1, com2, dltype, conj_classes_known):
     s += f + "\t solvable, supersolvable \n \n"
     if conj_classes_known:
         if dltype == "gap":
-            s += f + " The character table is stored as a record which is converted to a  \n"
-            s += f + " character table using the command ConvertToLibraryCharacterTableNC \n"
+            s += f + " The character table is stored as a record chartbl_n_i where n is the order \n"
+            s += f + " of the group and i is which group of that order it is. The record is \n"
+            s += f + " converted to a character table using ConvertToLibraryCharacterTableNC \n"
         if dltype == "magma":
             s += f + " The character table is stored as chartbl_n_i where n is the order of \n"
             s += f + " the group and i is which group of that order it is. Conjugacy classes \n"
@@ -2050,7 +2051,6 @@ def download_preable(com1, com2, dltype, conj_classes_known):
 # create construction of group for downloading, G is WebAbstractGroup
 def download_construction_string(G,dltype):
     # add Lie groups?
-#    s = str(G.code_snippets()) + "\n"
     s = ""
     snippet = G.code_snippets()
     if "PC" in G.representations:
@@ -2074,8 +2074,6 @@ def download_construction_string(G,dltype):
     if "GLFq" in G.representations:
         gp_str = str(snippet['GLFq'][dltype]) + "\n"
         s += gp_str.replace("G :=", "GLFq :=")
-    #fix up transitive case?
-#    s += (str(snippet['transitive'][dltype]) + "\n").replace("G :=", "Gtr :=")
     return str(s)
 
 

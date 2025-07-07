@@ -2241,7 +2241,10 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         gens = [ [ self.decode(gen) for gen in z ] for z in gens]
         auts = [libgap.GroupHomomorphismByImagesNC(self.G,self.G,gens[0],z) for z in gens]
+        print("HEREO:", self.G, gens,auts)
         orders = [z.Order() for z in auts]
+        
+
 
         def myisinner(a):
             if a.IsInnerAutomorphism():
