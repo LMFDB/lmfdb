@@ -3028,38 +3028,29 @@ class WebAbstractSubgroup(WebObj):
             self._data.update(more_data)
             for key, val in more_data.items():
                 setattr(self, key, val)
-
-        s = self.subgroup_tex
-        if s is None:
-            self.subgroup_tex = "?"
-            self.subgroup_tex_parened = "(?)"
-        else:
-            self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
-        if self.normal:
-            q = self.quotient_tex
-            if q is None:
-                self.quotient_tex = "?"
-                self.quotient_tex_parened = "(?)"
-                if self._data.get("quotient"):
-                    tryhard = db.gps_groups.lookup(self.quotient)
-                    if tryhard and tryhard["tex_name"]:
-                        q = tryhard["tex_name"]
-                        self.quotient_tex = q
-                        self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+        if self._data is not None:
+            s = self.subgroup_tex
+            if s is None:
+                self.subgroup_tex = "?"
+                self.subgroup_tex_parened = "(?)"
             else:
-                self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
-        # Temp fix for a bug in sylow data
-        #p, k = self.subgroup_order.is_prime_power(get_data=True)
-        #if self.subgroup_order == 1:
-        #    self.sylow = self.hall = 1
-        #elif self.subgroup_order.gcd(self.quotient_order) == 1:
-        #    self.hall = self.subgroup_order.radical()
-        #    if k > 0:
-        #        self.sylow = p
-        #    else:
-        #        self.sylow = p
-        #else:
-        #    self.sylow = self.hall = 0
+                self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
+            if self.normal:
+                q = self.quotient_tex
+                if q is None:
+                    self.quotient_tex = "?"
+                    self.quotient_tex_parened = "(?)"
+                    if self._data.get("quotient"):
+                        tryhard = db.gps_groups.lookup(self.quotient)
+                        if tryhard and tryhard["tex_name"]:
+                            q = tryhard["tex_name"]
+                            self.quotient_tex = q
+                            self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+                else:
+                    self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+
+    def is_null(self):
+        return self._data is None
 
     def spanclass(self):
         s = "subgp"

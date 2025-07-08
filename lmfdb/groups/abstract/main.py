@@ -1424,8 +1424,6 @@ def complex_char_search(info, query={}):
 #need mathmode for MultiProcessedCol
 def cc_repr(label,code , latex=True):  #default is include dollar signs
     gp = WebAbstractGroup(label)
-    if gp.representations.get("Lie") and gp.representations["Lie"][0]["family"][0] == "P" and gp.order < 2000:
-        return ""   #Problem with PGL, PSL, etc
     if latex:
         return "$" + gp.decode(code,as_str=True) + "$"
     else:  # this is for download postprocess
@@ -1753,6 +1751,9 @@ def render_abstract_subgroup(label):
     info = {}
     label = clean_input(label)
     seq = WebAbstractSubgroup(label)
+    if seq.is_null():
+        flash_error("No subgroup with label %s was found in the database.", label)
+        return redirect(url_for(".index"))
 
     info["create_boolean_string"] = create_boolean_string
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
@@ -2014,13 +2015,13 @@ def download_cyclotomics(n,vals, dltype):
             s += "E(" + str(n) + ")"
             if e != 1:
                 s += "^" + str(e)
-    if dltype == "magma":  # Magma needs different format. 
+    if dltype == "magma":  # Magma needs different format.
         return s.replace("E(" +str(n)+ ")", "K.1")
     return s
 
 
 # create preable for downloading individual group
-def download_preable(com1, com2, dltype, conj_classes_known):
+def download_preable(com1, com2, dltype, cc_known):
     if dltype == "gap":
         f = "#"
     else:
@@ -2031,9 +2032,9 @@ def download_preable(com1, com2, dltype, conj_classes_known):
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
     s += f + " Many characteristics of the group are stored as booleans in a record: \n"
     s += f + "\t Agroup, Zgroup, abelian, almost_simple,cyclic, metabelian, \n"
-    s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n" 
+    s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n"
     s += f + "\t solvable, supersolvable \n \n"
-    if conj_classes_known:
+    if cc_known:
         if dltype == "gap":
             s += f + " The character table is stored as a record chartbl_n_i where n is the order \n"
             s += f + " of the group and i is which group of that order it is. The record is \n"
@@ -2280,7 +2281,7 @@ def download_group(**args):
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
-    s += download_preable(com1, com2,dltype, wag.conjugacy_classes_known)
+    s += download_preable(com1, com2,dltype, wag.complex_characters_known)
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 +  "\n"
