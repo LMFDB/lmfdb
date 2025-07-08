@@ -358,6 +358,13 @@ def nf_knowl_guts(label):
     out += '</div>'
     return out
 
+@cached_function
+def get_local_field(lab):
+    LF = db.lf_fields.lookup(lab)
+    if not LF:
+        LF = db.lf_fields.lucky({'new_label': lab})
+    return LF
+
 class WebNumberField:
     """
      Class for retrieving number field information from the database
@@ -979,7 +986,7 @@ class WebNumberField:
                 else:
                     local_algebra_dict[str(p)].append([deg,e,f,c])
             else:
-                LF = db.lf_fields.lookup(lab)
+                LF = get_local_field(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
                 gglabel = LF.get('galois_label')
@@ -1017,7 +1024,7 @@ class WebNumberField:
                 else:
                     local_algebra_dict[str(p)].append([e,f])
             else:
-                LF = db.lf_fields.lookup(lab)
+                LF = get_local_field(lab)
                 p = LF['p']
                 thisdat = [LF['e'], LF['f']]
                 if str(p) not in local_algebra_dict:

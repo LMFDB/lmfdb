@@ -118,7 +118,6 @@ table.reptable td, table.reptable th {
 
   <p>{{place_code('char_table')}}</p>
 
-
 {% if info.int_reps %}
 <h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
 <table>
@@ -164,5 +163,21 @@ list of indecomposable integral representations:
     </table>
   {% endif %}
 {% endif %}
+
+<h2>{{ KNOWL('gg.regular_extension', title='Regular extensions') }}</h2>
+      {% if not info.wgg.regulars %}
+        <p>Data not computed</p>
+      {% else %}
+      <p>
+        <table>
+        {% for model in info.wgg.regulars %}
+          <tr><td style="vertical-align: top">$f_{ {{ loop.index }} } =$</td>
+              <td> {{ model[0]|safe }}</td></tr>
+          <tr><td></td><td> {{ model[1]|safe }}</td></tr>
+        {% endfor %}
+        </table>
+      </p>
+      {% endif %}
+
 
 {% endblock %}
