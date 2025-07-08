@@ -1096,7 +1096,7 @@ def render_field_webpage(args):
             if zeta3loc == ["3.2.1.2"]:
                 # Old labels
                 lstr = data["old_label"]
-            elif zeta3loc == ["3.1.2.1a1.2"]:
+            elif zeta3loc == ["3.1.2.1a1.1"]:
                 # New labels
                 lstr = data["new_label"]
             else:

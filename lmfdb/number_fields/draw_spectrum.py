@@ -42,10 +42,6 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     """
     num_primes = min(len(frobs), num_primes)
     frobs = frobs[:num_primes]
-    if colors:
-        col_max = max(i[0] for [p,l] in frobs for i in l if l != [0])
-    else:
-        col_max = 0
 
     ### Options:
     # I've hardcoded these values instead of providing them
@@ -96,7 +92,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
                 local_alg_dict, p, x_coord, y_centre, y_spread))
         else:
             coords.append(unram_coords(
-                l, x_coord, y_centre, y_spread, col_max))
+                l, x_coord, y_centre, y_spread))
 
     # draw Spec Z line at the bottom
     if not gaga:
@@ -184,7 +180,7 @@ def draw_gaga(frobs, local_alg_dict, colors=True) -> svg.SVG:
     """
     return draw_spec(frobs, local_alg_dict, colors=colors, gaga=True)
 
-def unram_coords(frob_cycle_list, x_coord, y_centre, spread, col_max):
+def unram_coords(frob_cycle_list, x_coord, y_centre, spread):
     """
     Given list of frobenius cycle describing a fixed fibre with no ramification, evenly spread points. Returns list of `Point`s.
     """

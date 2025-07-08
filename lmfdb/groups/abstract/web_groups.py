@@ -82,7 +82,7 @@ def group_names_pretty(label):
                 else:
                     invs.append(ZZ(pe))
             return abelian_gp_display(invs)
-        pretty = db.gps_groups2.lookup(label, "tex_name")
+        pretty = db.gps_groups.lookup(label, "tex_name")
     else:
         pretty = label.tex_name
     if pretty:
@@ -236,7 +236,7 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
             if label in cache and "tex_name" in cache[label]:
                 name = cache[label]["tex_name"]
             else:
-                name = db.gps_groups2.lookup(label, "tex_name")
+                name = db.gps_groups.lookup(label, "tex_name")
             if name is None:
                 if label is None:
                     name = '?'
@@ -336,7 +336,7 @@ def compress_pres(pres, cutoff=150, sides=70):
 
 
 class WebAbstractGroup(WebObj):
-    table = db.gps_groups2
+    table = db.gps_groups
 
     def __init__(self, label, data=None):
         self.source = "db" # can be overridden below by either GAP or LiveAbelian
@@ -707,7 +707,7 @@ class WebAbstractGroup(WebObj):
     def cc_known(self):
         # if self.representations.get("Lie") and self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000:
         #     return False   # problem with PGL, PSL, etc.
-        return db.gps_conj_classes2.exists({'group_order': self.order, 'group_counter': self.counter})
+        return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     @lazy_attribute
     def element_repr_type(self):
@@ -853,7 +853,7 @@ class WebAbstractGroup(WebObj):
                 label_for[name] = label
                 label_rev[label].append(name)
         subdata = {}
-        for rec in db.gps_groups2.search({"label": {"$in": list(label_for.values())}}, ["label", "tex_name", "order"]):
+        for rec in db.gps_groups.search({"label": {"$in": list(label_for.values())}}, ["label", "tex_name", "order"]):
             for name in label_rev[rec["label"]]:
                 subdata[name] = WebAbstractGroup(rec["label"], data=rec)
                 subdata[name].G = gapH[name]
@@ -1248,6 +1248,9 @@ class WebAbstractGroup(WebObj):
 
     @cached_method
     def _subgroup_summary(self, in_profile):
+        if self.subgroup_index_bound is None:
+            # No subgroups computed
+            return "Subgroup data has not been computed"
         if self.subgroup_index_bound != 0:
             if self.normal_index_bound is None or self.normal_index_bound == 0:
                 return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as all normal subgroups of any index. <br>"
@@ -1468,7 +1471,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_conj_classes2.search({"group_order": self.order, "group_counter": self.counter})
+            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter})
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -1521,7 +1524,7 @@ class WebAbstractGroup(WebObj):
         # Should join with creps once we have images and join queries
         chrs = [
             WebAbstractCharacter(chardata["label"], chardata)
-            for chardata in db.gps_char2.search({"group": self.label})
+            for chardata in db.gps_char.search({"group": self.label})
         ]
         return sorted(chrs, key=lambda x: x.counter)
 
@@ -1530,7 +1533,7 @@ class WebAbstractGroup(WebObj):
         # Should join with creps once we have images and join queries
         chrs = [
             WebAbstractRationalCharacter(chardata["label"], chardata)
-            for chardata in db.gps_qchar2.search({"group": self.label})
+            for chardata in db.gps_qchar.search({"group": self.label})
         ]
         return sorted(chrs, key=lambda x: x.counter)
 
@@ -1632,7 +1635,7 @@ class WebAbstractGroup(WebObj):
             cn_match = cn_re.match(A)
             if cn_match:
                 order = cn_match.group(1)
-                Agroup = db.gps_groups2.lucky({'order':int(order), 'cyclic':True})
+                Agroup = db.gps_groups.lucky({'order':int(order), 'cyclic':True})
                 A = Agroup['label']
                 A = abstract_group_display_knowl(Agroup['label'])
             elif A == 'S_3':
@@ -1704,7 +1707,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def as_aut_gp(self):
-        return [(rec['label'], fr"\Aut({rec['tex_name']})") for rec in db.gps_groups2.search({"aut_group": self.label}, ["label", "tex_name"]) if rec['label'] != self.label]
+        return [(rec['label'], fr"\Aut({rec['tex_name']})") for rec in db.gps_groups.search({"aut_group": self.label}, ["label", "tex_name"]) if rec['label'] != self.label]
 
     # Figuring out the subgroup count for an autjugacy class might not be stored
     # directly.  We do them all at once.  If we only computed up to aut
@@ -2592,7 +2595,7 @@ class WebAbstractGroup(WebObj):
         CF = Counter(self.composition_factors)
         display = {
             rec["label"]: '$'+rec["tex_name"]+'$'
-            for rec in db.gps_groups2.search(
+            for rec in db.gps_groups.search(
                 {"label": {"$in": list(set(CF))}}, ["label", "tex_name"]
             )
         }
@@ -2611,7 +2614,7 @@ class WebAbstractGroup(WebObj):
 
     #first function is if we only know special subgroups as abstract groups
     def special_subs_label(self,label):
-        info = db.gps_groups2.lucky({"label": label})
+        info = db.gps_groups.lucky({"label": label})
         if info is None:
             return label
         else:
@@ -3038,7 +3041,7 @@ class WebAbstractSubgroup(WebObj):
                 self.quotient_tex = "?"
                 self.quotient_tex_parened = "(?)"
                 if self._data.get("quotient"):
-                    tryhard = db.gps_groups2.lookup(self.quotient)
+                    tryhard = db.gps_groups.lookup(self.quotient)
                     if tryhard and tryhard["tex_name"]:
                         q = tryhard["tex_name"]
                         self.quotient_tex = q
@@ -3155,7 +3158,7 @@ class WebAbstractSubgroup(WebObj):
         if self.projective_image is not None:
             labels.append(self.projective_image)
         return list(
-            db.gps_groups2.search({"label": {"$in": labels}})
+            db.gps_groups.search({"label": {"$in": labels}})
         )  # should maybe project and just retrieve needed cols
 
     @lazy_attribute
@@ -3376,11 +3379,11 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_conj_classes2
+    table = db.gps_conj_classes
     def __init__(self, group, label, data=None):
         if data is None:
             group_order, group_counter = gp_label_to_cc_data(group)
-            data = db.gps_conj_classes2.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label})
+            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label})
         WebObj.__init__(self, label, data)
         self.force_repr_elt = False
 
@@ -3422,7 +3425,7 @@ class WebAbstractAutjClass():
         self.order = classes[0].order
 
 class WebAbstractCharacter(WebObj):
-    table = db.gps_char2
+    table = db.gps_char
 
     def type(self):
         if self.indicator == 0:
@@ -3438,7 +3441,7 @@ class WebAbstractCharacter(WebObj):
         return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cchar_data&args={label}">{name}</a>'
 
 class WebAbstractRationalCharacter(WebObj):
-    table = db.gps_qchar2
+    table = db.gps_qchar
 
     def display_knowl(self, name=None):
         label = self.label

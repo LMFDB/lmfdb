@@ -47,7 +47,7 @@ class GroupsTest(LmfdbTest):
         errors = []
         res = []
         n = 0
-        for label in self.db.gps_groups2.search({"order": N, "counter": {"$gte": imin, "$lte": imax}}, "label"):
+        for label in self.db.gps_groups.search({"order": N, "counter": {"$gte": imin, "$lte": imax}}, "label"):
             n += 1
             load, url = self.abstract_group(label)
             if load is None:
