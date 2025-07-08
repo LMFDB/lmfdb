@@ -119,7 +119,7 @@ def endring_postprocess(res, info, query):
     return res
 
 endring_columns = SearchColumns([
-    SearchCol("label", "av.fq.endring_label", "Label", default=False),
+    ProcessedCol("label", "av.fq.endring_label", "Label", lambda label: ".".join(label.split(".")[3:]), default=False),
     MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
     MathCol("singular_support", "av.fq.singular_primes", "Singular support"),
     MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
@@ -899,24 +899,32 @@ abvar_columns = SearchColumns([
     CheckMaybeCol("has_jacobian", "ag.jacobian", "Jacobian", default=False),
     MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", short_title="L-polynomial", download_col="polynomial"),
     MathCol("pretty_slopes", "lf.newton_polygon", "Newton slopes", default=False),
-    MathCol("newton_elevation", "av.fq.newton_elevation", "Newton elevation", default=False),
+    MathCol("newton_elevation", "av.fq.newton_elevation", "Newton elevation", default=lambda info: "newton_elevation" in info),
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank"),
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-corank", default=False),
-    MathCol("angle_rank", "av.fq.angle_rank", "Angle rank", default=False),
-    MathCol("angle_corank", "av.fq.angle_rank", "Angle corank", default=False),
-    MathCol("curve_count", "av.fq.curve_point_counts", r"$\mathbb{F}_q$ points on curve", short_title="Fq points on curve", default=False),
+    MathCol("size", "av.fq.isogeny_class_size", "Unpol. isom. classes"),
+    CheckCol("all_polarized_product", "av.fq.all_polarizations_product", "All pol. products", default=lambda info: "all_product" in info),
+    MathCol("cohen_macaulay_max", "av.fq.max_cohen_macaulay_type", "Max Cohen-Macaulay type", default=lambda info: "cohen_macaulay_max" in info),
+    MathCol("endomorphism_ring_count", "ag.endomorphism_ring", "Num. End. rings", default=lambda info: "end_ring_count" in info),
+    MathCol("weak_equivalence_count", "av.fq.weak_equivalence_class", "Num. weak equiv. classes", default=lambda info: "weak_equiv_count" in info),
+    MathCol("zfv_singular_count", "av.fq.singular_primes", "Num. sing. primes", default=lambda info: "sing_prime_count" in info),
+    MathCol("group_structure_count", "ag.fq.point_counts", "Distinct groups", default=lambda info: "distinct_groups" in info),
+    MathCol("zfv_pic_size", "av.fq.picard_of_order", r"$\#\Pic(\Z[F,V])$", default=lambda info: "zfv_pic_size" in info),
+    MathCol("angle_rank", "av.fq.angle_rank", "Angle rank", default=lambda info: "angle_rank" in info),
+    MathCol("angle_corank", "av.fq.angle_rank", "Angle corank", default=lambda info: "angle_corank" in info),
+    MathCol("curve_count", "av.fq.curve_point_counts", r"$\mathbb{F}_q$ points on curve", short_title="Fq points on curve", default=lambda info: "curve_count" in info),
     MathCol("curve_counts", "av.fq.curve_point_counts", r"$\mathbb{F}_{q^k}$ points on curve", short_title="Fq^k points on curve", default=False),
-    MathCol("abvar_count", "ag.fq.point_counts", r"$\mathbb{F}_q$ points on variety", short_title="Fq points on variety", default=False),
+    MathCol("abvar_count", "ag.fq.point_counts", r"$\mathbb{F}_q$ points on variety", short_title="Fq points on variety", default=lambda info: "abvar_count" in info),
     MathCol("abvar_counts", "ag.fq.point_counts", r"$\mathbb{F}_{q^k}$ points on variety", short_title="Fq^k points on variety", default=False),
-    MathCol("jacobian_count", "av.jacobian_count", "Jacobians", default=False),
-    MathCol("hyp_count", "av.hyperelliptic_count", "Hyperelliptic Jacobians", default=False),
-    MathCol("twist_count", "av.twist", "Num. twists", default=False),
-    MathCol("max_twist_degree", "av.twist", "Max. twist degree", default=False),
-    MathCol("geometric_extension_degree", "av.endomorphism_field", "End. degree", default=False),
+    MathCol("jacobian_count", "av.jacobian_count", "Jacobians", default=lambda info: "jac_cnt" in info),
+    MathCol("hyp_count", "av.hyperelliptic_count", "Hyperelliptic Jacobians", default=lambda info: "hyp_cnt" in info),
+    MathCol("twist_count", "av.twist", "Num. twists", default=lambda info: "twist_count" in info),
+    MathCol("max_twist_degree", "av.twist", "Max. twist degree", default=lambda info: "max_twist_degree" in info),
+    MathCol("geometric_extension_degree", "av.endomorphism_field", "End. degree", default=lambda info: "geom_deg" in info),
     ProcessedCol("number_fields", "av.fq.number_field", "Number fields", lambda nfs: ", ".join(nf_display_knowl(nf, field_pretty(nf)) for nf in nfs), default=False),
     SearchCol("galois_groups_pretty", "nf.galois_group", "Galois groups", download_col="galois_groups", default=False),
     SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw")],
-    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian"])
+    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "size"])
 
 def abvar_postprocess(res, info, query):
     gals = set()

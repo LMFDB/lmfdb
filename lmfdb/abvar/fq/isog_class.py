@@ -122,20 +122,9 @@ class AbvarFq_isoclass():
 """
 
     def __init__(self, dbdata):
-        if "size" not in dbdata:
-            dbdata["size"] = None
-        if "zfv_index" not in dbdata:
-            dbdata["zfv_is_bass"] = None
-            dbdata["zfv_is_maximal"] = None
-            dbdata["zfv_index"] = None
-            dbdata["zfv_index_factorization"] = None
-            dbdata["zfv_plus_index"] = None
-            dbdata["zfv_plus_index_factorization"] = None
-            dbdata["zfv_plus_norm"] = None
-        if "hyp_count" not in dbdata:
-            dbdata["hyp_count"] = None
-        if "jacobian_count" not in dbdata:
-            dbdata["jacobian_count"] = None
+        for col in ["size", "zfv_is_bass", "zfv_is_maximal", "zfv_index", "zfv_index_factorization", "zfv_plus_index", "zfv_plus_index_factorization", "zfv_plus_norm", "hyp_count", "jacobian_count", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size"]:
+            if col not in dbdata:
+                dbdata[col] = None
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -499,8 +488,9 @@ class AbvarFq_isoclass():
         names = "=".join(["R"] + disp["short_names"])
 
         ans = [
-            "<table>",
             f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+            "<table>",
+            f"<tr><td>{display_knowl('av.fq.lmfdb_label', 'Label')}:</td><td>{'.'.join(rec['label'].split('.')[3:])}</td></tr>",
             fr"<tr><td>{display_knowl('av.fq.index_of_order', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
         ]
 

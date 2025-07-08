@@ -278,13 +278,20 @@ function show_twists(number) {
     </td>
   </tr>
 
+  <tr>
+    <td>{{ KNOWL('av.fq.max_cohen_macaulay_type',title="Maximum Cohen-Macaulay type") }}:</td>
+    <td colspan="3">
+      ${{ cl.cohen_macaulay_max }}$
+    </td>
+  </tr>
+
  </table>
 
 {% endif %}
 
 
 {% if cl.weak_equivalence_classes %}
-<h2>{{ KNOWL('ag.endomorphism_ring',title="Endomorphism rings") }}</h2>
+<h2 id="endring-section">{{ KNOWL('ag.endomorphism_ring',title="Endomorphism rings") }}</h2>
 {% endif %}
 
 {% endblock %}
