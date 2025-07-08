@@ -13,9 +13,9 @@ from flask import (
 )
 from markupsafe import Markup
 #from six import BytesIO
-from string import ascii_lowercase, digits
+from string import digits
 from io import BytesIO
-from sage.all import ZZ, latex, factor, prod, Permutations, is_prime
+from sage.all import ZZ, latex, factor, prod, is_prime
 from sage.misc.cachefunc import cached_function
 from sage.databases.cremona import class_to_int
 
@@ -1073,11 +1073,10 @@ def field_knowl(fld):
 
 
 # This function returns a label for the conjugacy class search page for a group
-def display_cc_url(numb,gp):
+def display_cc_url(numb,conj_classes_known,gp):
     if numb is None:    # for cases where we didn't compute number
         return 'not computed'
-#    elif numb > 512:    # remove url if conjugacy classes are not stored
-    elif gp.conjugacy_classes_known is False:
+    elif conj_classes_known is False:
         return numb
     return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
 
@@ -1132,7 +1131,7 @@ group_columns = SearchColumns([
     MathCol("derived_length", "group.derived_series", "Der. length", short_title="derived length", default=False),
     MathCol("composition_length", "group.chief_series", "Comp. length", short_title="composition length", default=False),
     MathCol("rank", "group.rank", "Rank", default=False),
-    MultiProcessedCol("number_cojugacy_classes","group.conjugacy_class",r"$\card{\mathrm{conj}(G)}$",["number_conjugacy_classes","label"], display_cc_url, download_col="number_conjugacy_classes", align="center", short_title="#conj(G)"),
+    MultiProcessedCol("number_cojugacy_classes","group.conjugacy_class",r"$\card{\mathrm{conj}(G)}$",["number_conjugacy_classes","conjugacy_classes_known","label"], display_cc_url, download_col="number_conjugacy_classes", align="center", short_title="#conj(G)"),
     MathCol("number_subgroups", "group.subgroup", "Subgroups", short_title="subgroups", default=False),
     MathCol("number_subgroup_classes", "group.subgroup", r"Subgroup classes", default=False),
     MathCol("number_normal_subgroups", "group.subgroup.normal", "Normal subgroups", short_title="normal subgroups", default=False),
@@ -2116,7 +2115,7 @@ def download_char_table_magma(G, ul_label):
 
     if gp_type == "PC":
         s = "G:= GPC;\n"
-    if gp_type == "Perm":
+    elif gp_type == "Perm":
         s = "G:= GPerm;\n"
     else:
         repr_data = G.representations[gp_type]
@@ -2255,30 +2254,29 @@ def download_char_table(G,dltype,ul_label):  # G is web abstract group
 def download_group(**args):
     dltype = args["download_type"]
     label = args["label"]
-    com = "#"  # single line comment start
+#    com = "#"  # single line comment start
     com1 = ""  # multiline comment start
     com2 = ""  # multiline comment end
 
     wag = WebAbstractGroup(label)
-    gp_data = wag._data
 
     ul_label = wag.label.replace(".","_")
     filename = "group" + ul_label
     mydate = time.strftime("%d %B %Y")
     if dltype == "gap":
         filename += ".g"
-        com = ""
+#        com = ""
         com1 = "#"
         com2 = ""
     elif dltype == "magma":
-        com = ""
+#        com = ""
         com1 = "/*"
         com2 = "*/"
         filename += ".m"
-    elif dltype == "oscar":
-        com = ""
-        com1 = "#="
-        com2 = "=#"
+#    elif dltype == "oscar":
+#        com = ""
+#        com1 = "#="
+#        com2 = "=#"
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
