@@ -64,4 +64,14 @@
 
 {% endblock %}
 
+{% if info.search_array.is_narrowing(info) %}
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function() {
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("form.re-search").offset().top
+    }, 200);
+  });
+</script>
+{% endif %}
+
 {% endblock %}

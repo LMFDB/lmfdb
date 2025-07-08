@@ -905,6 +905,9 @@ class SearchArray(UniqueRepresentation):
 <button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
 """ % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
 
+    def is_narrowing(self, info):
+        return any(any(box.name in info for box in row) for row in self.refine_array)
+
 class EmbeddedSearchArray(SearchArray):
     """
     For holding the controls for selecting the sort order and columns to display
