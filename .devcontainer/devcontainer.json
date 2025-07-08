@@ -7,7 +7,10 @@
     "cpus": 4
   },
   "postCreateCommand": "/bin/bash .devcontainer/setup.sh",
-  "postAttachCommand": "sage -python start-lmfdb.py --debug",
+  "postAttachCommand": {
+    "server": "sage -python start-lmfdb.py --debug",
+  },
+  "forwardPorts": [37777],
   "customizations": {
     "codespaces": {
       "openFiles": ["GettingStarted.md"]
