@@ -344,6 +344,7 @@ function show_twists(number) {
     sdiagram.draw();
 
     var switch_button = $("button[name='switch']");
+    var search_button = $("button[name='search_type']");
     function set_endring_mode(mode) {
       if (mode == 'lattice') {
         $("div.results-line").hide();
@@ -355,6 +356,7 @@ function show_twists(number) {
         $("div.download-section").hide();
         switch_button.text('List mode');
         $("#endring-lattice").show();
+        search_button.val("lattice");
       } else {
         $("#endring-lattice").hide();
         switch_button.text('Lattice mode');
@@ -365,6 +367,7 @@ function show_twists(number) {
         $("#column-selector").show();
         $("#column-selector-label").show();
         $("div.download-section").show();
+        search_button.val("list");
       }
     }
 
@@ -377,7 +380,7 @@ function show_twists(number) {
     }
 
     if (switch_button.length > 0) {
-      switch_endring_mode();
+      set_endring_mode($("button[name='search_type']").val());
     }
   </script>
 

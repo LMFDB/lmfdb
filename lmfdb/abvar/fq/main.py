@@ -220,7 +220,7 @@ class EndringSearchArray(SearchArray):
         if len(self.cl.endring_data) == 1:
             return [("", "Search again")]
         else:
-            return [("", "Search again"), SearchButton("", "Lattice mode", type="", name="switch", onclick=" onclick='switch_endring_mode(); return false;'", cls="")]
+            return [(info.get("search_type", "lattice"), "Search again"), SearchButton("", "Lattice mode", type="", name="switch", onclick=" onclick='switch_endring_mode(); return false;'", cls="")]
 
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
