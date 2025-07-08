@@ -1,0 +1,19 @@
+{
+  "image": "sagemath/sagemath:latest",
+  "hostRequirements": {
+    "cpus": 4
+  },
+  "waitFor": "onCreateCommand",
+  "postCreateCommand": "/bin/bash .devcontainer/setup.sh",
+  "postAttachCommand": "sage -python start-lmfdb.py --debug",
+  "customizations": {
+    "codespaces": {
+      "openFiles": []
+    },
+    "vscode": {
+      "extensions": [
+        "Lov3.sagemath-enhanced"
+      ]
+    }
+  }
+}
