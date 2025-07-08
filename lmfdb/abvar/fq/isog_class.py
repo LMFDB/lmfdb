@@ -487,28 +487,23 @@ class AbvarFq_isoclass():
         num_we = len(self.endring_data[endring])
         names = "=".join(["R"] + disp["short_names"])
 
-        ans = [
-            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
-            "<table>",
-            f"<tr><td>{display_knowl('av.fq.lmfdb_label', 'Label')}:</td><td>{'.'.join(rec['label'].split('.')[3:])}</td></tr>",
-            fr"<tr><td>{display_knowl('av.fq.index_of_order', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
-        ]
-
-        ans.append(
-            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}</td></tr>",
-        )
-
         if rec["cohen_macaulay_type"] is None:
             cm_type = "not computed"
         else:
             cm_type = "$%s$" % rec["cohen_macaulay_type"]
 
-        ans.extend([
+        ans = [
+            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+            "<table>",
+            f"<tr><td>{display_knowl('av.fq.lmfdb_label', 'Label')}:</td><td>{'.'.join(rec['label'].split('.')[3:])}</td></tr>",
+            fr"<tr><td>{display_knowl('av.fq.index_of_order', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}</td></tr>",
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
+            f"<tr><td>{display_knowl('ag.fq.point_counts', 'Group structure')}:</td><td>{disp['av_structure1']}</td></tr>",
             f"<tr><td>{display_knowl('av.fq.picard_of_order', 'Picard group')}:</td><td>{disp['pic']}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
             "</table>"
-        ])
+        ]
         # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
         return "\n".join(ans)
 
