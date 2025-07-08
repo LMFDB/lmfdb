@@ -1889,16 +1889,12 @@ class WebAbstractGroup(WebObj):
                 s += var_name(i)
                 if as_magma:
                     s += "*"
-                print("S 1:", s)
             elif c != 0:
                 s += "%s^{%s}" % (var_name(i), c)
                 if as_magma:
                     s += "*"
-                print("S 2:", s)
         if as_magma:
             s = s[:-1] # need to get rid of last "*"
-            print("S 3:", s)
-            print("--------")
         return s
 
     def pcgs_as_str(self, elt, as_magma = False):
@@ -2241,10 +2237,7 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         gens = [ [ self.decode(gen) for gen in z ] for z in gens]
         auts = [libgap.GroupHomomorphismByImagesNC(self.G,self.G,gens[0],z) for z in gens]
-        print("HEREO:", self.G, gens,auts)
         orders = [z.Order() for z in auts]
-        
-
 
         def myisinner(a):
             if a.IsInnerAutomorphism():

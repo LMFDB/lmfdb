@@ -2132,7 +2132,7 @@ def download_char_table_magma(G, ul_label):
         s = "G:= GLZq;\n"
     if gp_type == "GLFq":
         s = "G:= GLFq;\n"
-    if gp_type == "Lie":   # need to check this for other Lie groups JP
+    if gp_type == "Lie":   # need to check this for other Lie groups 
         repr_data = G.representations['Lie'][0]
         print(repr_data)
         str_d = str(repr_data['d'])  # need later
