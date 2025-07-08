@@ -13,8 +13,8 @@ ctrl/cmd-click the link to open it in a new tab. (Your tab will open to a URL
 similar to `random-words-97vv7x9gw9h7777-37777.app.github.dev` which only you
 have access to.)
 
-You can alternatively ctrl/cmd-click the http://127.0.0.1:37777 URL in this
-readme file.
+You can alternatively ctrl/cmd-click the `http://127.0.0.1:37777` URL in this
+readme file within your Codespace.
 
 
 Installation
