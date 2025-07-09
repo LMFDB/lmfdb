@@ -3,6 +3,7 @@ import re
 
 from flask import abort, render_template, url_for, request, redirect
 from sage.rings.all import ZZ
+from sage.combinat.subset import Subsets
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
@@ -17,7 +18,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.api import datapage
 from . import abvarfq_page
 from .search_parsing import parse_nf_string, parse_galgrp
-from .isog_class import validate_label, AbvarFq_isoclass
+from .isog_class import validate_label, AbvarFq_isoclass, show_singular_support
 from .stats import AbvarFqStats
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.utils import redirect_no_cache, SearchButton
@@ -118,10 +119,23 @@ def endring_postprocess(res, info, query):
             rec[col+"_disp"] = disp[col]
     return res
 
+def support_opts(num_primes):
+    for w in range(num_primes, 0, -1):
+        for S in Subsets(range(num_primes), w):
+            S = sorted(S)
+            if w > 1:
+                N = sum(2**c for c in S)
+                if w == num_primes:
+                    key = ""
+                else:
+                    key = ",".join(str(c) for c in range(N+1) if (c & N == c))
+                yield (key, "any of " + ", ".join(f"P{i+1}" for i in S))
+            yield ("0," + ",".join(str(2**c) for c in S), ("one of " if w > 1 else "") + ", ".join(f"P{i+1}" for i in S))
+
 endring_columns = SearchColumns([
     ProcessedCol("label", "av.fq.endring_label", "Label", lambda label: ".".join(label.split(".")[3:]), default=False),
     MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
-    MathCol("singular_support", "av.fq.singular_primes", "Singular support"),
+    ProcessedCol("singular_support", "av.fq.singular_primes", "Singular support", show_singular_support, mathmode=True, default=lambda info: "singular_support" in info),
     MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
     MathCol("pic_size", "av.fq.picard_of_order", "Picard size", default=False),
     SearchCol("av_structure1", "av.fq.point_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
@@ -207,14 +221,16 @@ class EndringSearchArray(SearchArray):
             label="Conductor $S$-prime",
             knowl="av.endomorphism_ring_conductor",
         )
-        singular_support = TextBox(
+        singular_support = SelectBox(
             "singular_support",
             label="Singular support",
             knowl="av.fq.singular_support",
-            example="1,2,4"
+            options=list(support_opts(len(cl.zfv_singular_primes))),
         )
         self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
-                             [number_of_we, cond_index, conj_stable, ZFVcond, Sprime], [singular_support]]
+                             [number_of_we, cond_index, conj_stable, ZFVcond, Sprime]]
+        if len(cl.zfv_singular_primes) > 1:
+            self.refine_array.append([singular_support])
 
     def search_types(self, info):
         if len(self.cl.endring_data) == 1:

@@ -79,6 +79,12 @@ def validate_label(label):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
 
+def show_singular_support(n):
+    if n == 0:
+        return r"\varnothing"
+    return r"\{" + ",".join(fr"\mathfrak{{P}}_{{ {i} }}" for (i, b) in enumerate(ZZ(n).bits(), 1) if b) + r"\}"
+
+
 def diagram_js(layers, display_opts):
     ll = [
         [
@@ -499,6 +505,7 @@ class AbvarFq_isoclass():
             fr"<tr><td>{display_knowl('av.fq.index_of_order', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
             fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}</td></tr>",
             f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.singular_primes', 'Singular support')}:</td><td>${show_singular_support(rec['singular_support'])}$</td></tr>",
             f"<tr><td>{display_knowl('ag.fq.point_counts', 'Group structure')}:</td><td>{disp['av_structure1']}</td></tr>",
             f"<tr><td>{display_knowl('av.fq.picard_of_order', 'Picard group')}:</td><td>{disp['pic']}</td></tr>",
             fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
@@ -510,7 +517,7 @@ class AbvarFq_isoclass():
     @lazy_attribute
     def singular_primes_disp(self):
         disp = [",".join(teXify_pol(f) for f in P.split(",")) for P in self.singular_primes]
-        return r"\left\{" + ",".join(fr"\langle {P} \rangle" for P in disp) + r"\right\}"
+        return [fr"\langle {P} \rangle" for P in disp]
 
     def _make_jacpol_property(self):
         ans = []
