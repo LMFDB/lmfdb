@@ -588,6 +588,14 @@ class LfunctionTest(LmfdbTest):
         assert 'not in the database' in L.get_data(as_text=True)
 
     # ------------------------------------------------------
+    # Testing congruences in search
+    # ------------------------------------------------------
+
+    def test_trace_search_mod_q(self):
+        L = self.tc.get('/L/rational?search_type=Traces&an_constraints=a3%3D7&an_modulo=13&view_modp=reductions')
+        assert '24-3e36-1.1-c1e12-0-0' in L.get_data(as_text=True), "Mod q reduction in trace search failure"
+    
+    # ------------------------------------------------------
     # Testing units not tested above
     # ------------------------------------------------------
 
