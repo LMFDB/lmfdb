@@ -564,7 +564,6 @@ class StatsDisplay(UniqueRepresentation):
                 if 'addl_row_title' in kwds.keys():
                     addl_row_title = kwds['addl_row_title']
                     D['value2'] = formatter[addl_row_title](old_val)
-                    print("addl_row_title:", addl_row_title)
 
             if proportioner is None or show_total:
                 self._overall = total
