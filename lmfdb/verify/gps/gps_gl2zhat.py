@@ -27,8 +27,8 @@ def bkm_bounds(p, dims, mults):
     else:
         return sum([m * d * bkm_const(p,d) for d,m in zip(dims, mults)])
 
-class gps_gl2zhat_fine(TableChecker):
-    table = db.gps_gl2zhat_fine
+class gps_gl2zhat(TableChecker):
+    table = db.gps_gl2zhat
     uniqueness_constraints = [["label"]]
 
     # We can't use the default check_label, since our labels come in two flavors
