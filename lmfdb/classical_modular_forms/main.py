@@ -1426,8 +1426,6 @@ def statistics():
 @cmf.route("/dynamic_stats")
 def dynamic_statistics():
     info = to_dict(request.args, search_array=CMFSearchArray())
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(info)
     CMF_stats().dynamic_setup(info)
     title = 'Classical modular forms: Dynamic statistics'
     return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
