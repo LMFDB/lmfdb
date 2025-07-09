@@ -169,7 +169,11 @@ def index():
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
 
         if search_type in ['List', '', 'Random']:
-            return newform_search(info)
+            try:
+                return newform_search(info)
+            except ValueError as err:
+                flash_error(f"Invalid level_type: {err}")
+                return redirect(url_for(".index"))
         elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
         elif search_type == 'Dimensions':
