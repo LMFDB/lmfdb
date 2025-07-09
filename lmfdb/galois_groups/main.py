@@ -310,6 +310,8 @@ def render_group_webpage(args):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
         if db.lf_fields.exists({'n': n, 'galT': t}):
             friends.append(('$p$-adic fields with this Galois group', url_for('local_fields.index')+"?gal=%dT%d" % (n, t) ))
+        if db.gps_groups.exists({'label': data['abstract_label']}):
+            friends.append(('As an abstract group', url_for('abstract.by_label', label=data['abstract_label'])))
         prop2 = [('Label', label),
             ('Degree', prop_int_pretty(data['n'])),
             ('Order', prop_int_pretty(order)),
