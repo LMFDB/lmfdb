@@ -592,9 +592,9 @@ class LfunctionTest(LmfdbTest):
     # ------------------------------------------------------
 
     def test_trace_search_mod_q(self):
-        L = self.tc.get('/L/rational?search_type=Traces&an_constraints=a3%3D7&an_modulo=13&view_modp=reductions')
-        assert '24-3e36-1.1-c1e12-0-0' in L.get_data(as_text=True)
-        assert '8-31e4-1.1-c1e4-0-1' not in L.get_data(as_text=True)
+        L = self.tc.get('L/rational?conductor=37&degree=2&search_type=Traces&an_constraints=a11+%3D1&an_modulo=3&view_modp=reductions')
+        assert '2-37-1.1-c1-0-1' in L.get_data(as_text=True)
+        assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
         
     # ------------------------------------------------------
     # Testing units not tested above
