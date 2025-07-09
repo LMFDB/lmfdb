@@ -4,6 +4,8 @@
 This is the code for the 
 [L-functions and modular forms database website](https://www.lmfdb.org/).
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/lmfdb/lmfdb)
+
 Wiki
 ----
 
