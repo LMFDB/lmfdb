@@ -17,8 +17,12 @@
     },
     "vscode": {
       "extensions": [
-        "Lov3.sagemath-enhanced"
-      ]
+        "Lov3.sagemath-enhanced",
+        "ms-python.python"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "sage --python"
+      }
     }
   }
 }
