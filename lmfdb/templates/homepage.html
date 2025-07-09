@@ -166,7 +166,13 @@
 
 {% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
       <div id="properties">
-       <div id="properties-collapser">&uarr;</div>
+        <div id="properties-collapser">&uarr;</div>
+        <div id="properties-find">
+          <form>
+            <input type="text" name="jump" />
+            <button type="submit">Find</button>
+          </form>
+        </div>
     {% if properties %}
        <h1 class="properties-header">Properties</h1>
        <div class="properties-body">
