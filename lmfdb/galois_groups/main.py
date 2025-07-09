@@ -337,7 +337,10 @@ def render_group_webpage(args):
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
-        bread = get_bread([(label, ' ')])
+        # split the label so that breadcrumbs point to a search for this object's degree
+        parent_id, child_id = label.split("T")
+        split_label = [(parent_id, "./?n=" + parent_id), (child_id, " ")]
+        bread = get_bread(split_label)
         return render_template(
             "gg-show-group.html",
             title=title,
