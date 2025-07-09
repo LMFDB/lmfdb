@@ -747,7 +747,7 @@ def common_parse(info, query, na_check=False):
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
                 query['level'] = {'$mod': [0, ZZ(query['level'])]}
-        elif info['level_type'] in ['prime', 'prime_power', 'square', 'squarefree']: 
+        elif info['level_type'] in ['prime', 'prime_power', 'square', 'squarefree']:
             query['level_is_' + info['level_type']] = True
         else:
             flash_error("The level type %s is invalid.", info['level_type'])
