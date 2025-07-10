@@ -8,7 +8,7 @@
     <td>{{c.value|safe}}</td>
     {% endfor %}
   </tr>
-  {% if d.attribute.addl_row_title | safe %}
+  {% if d.attribute.addl_row_title %}
     <tr>
       <th>{{d.attribute.addl_row_title | safe}}</th>
       {% for c in r %}
