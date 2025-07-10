@@ -393,7 +393,7 @@ def l_function_search(info, query):
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
-    process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
+    process_an_constraints(info, query, qfield='dirichlet_coefficients')
 
 
 @search_parser
