@@ -536,11 +536,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
     if sgp.cyclic and sgp.subgroup is None:  # deals with rare case of certain cyclic subgroups not in db
         unknown.remove('is_elementary')
         unknown.remove('is_hyperelementary')
-        unknown.remove('metabelian')
-        unknown.remove('metacyclic')
-        unknown.remove('supersolvable')
-        unknown.remove('Agroup')
-        unknown.remove('Zgroup')
         unknown.remove('monomial')
 
 
