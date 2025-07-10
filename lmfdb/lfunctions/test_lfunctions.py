@@ -595,7 +595,7 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('L/rational?conductor=37&degree=2&search_type=Traces&an_constraints=a11+%3D1&an_modulo=3&view_modp=reductions')
         assert '2-37-1.1-c1-0-1' in L.get_data(as_text=True)
         assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
-        
+
     # ------------------------------------------------------
     # Testing units not tested above
     # ------------------------------------------------------
