@@ -824,18 +824,16 @@ class G2C_stats(StatsDisplay):
         {"cols": "analytic_sha", "totaler": {"avg": True}},
         {"cols": "locally_solvable"},
         {"cols": "is_gl2_type"},
-        {"cols": "real_geom_end_alg", 
+        {"cols": "real_geom_end_alg",
          "addl_row_title": "real geometric endomorphism algebra"
         },
         {"cols": "st_group"},
         {"cols": "torsion_order", "totaler": {"avg": True}},
     ]
 
-
     addl_row_data_dict = {
         'real_geometric_endomorphism_algebra': 'test'
     }
-
 
 
 @g2c_page.route("/Q/stats")
