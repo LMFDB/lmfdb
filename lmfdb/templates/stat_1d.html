@@ -8,6 +8,14 @@
     <td>{{c.value|safe}}</td>
     {% endfor %}
   </tr>
+  {% if d.attribute.addl_row_title %}
+    <tr>
+      <th>{{d.attribute.addl_row_title | safe}}</th>
+      {% for c in r %}
+        <td>{{c.value2|safe}}</td>
+      {% endfor %}
+    </tr>
+  {% endif %}
   <tr>
     <th>count</th>
     {% for c in r %}
