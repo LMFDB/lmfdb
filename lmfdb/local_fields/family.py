@@ -355,7 +355,7 @@ class pAdicSlopeFamily:
     def fields(self):
         fields = list(db.lf_fields.search(
             {"family": self.label_absolute},
-            ["label", "coeffs", "galT", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield", "jump_set"]))
+            ["label", "coeffs", "gal", "galois_label", "galois_degree", "slopes", "ind_of_insep", "associated_inertia", "t", "u", "aut", "hidden", "subfield", "jump_set"]))
         if self.n0 > 1:
             fields = [rec for rec in fields if self.base in rec["subfield"] or self.oldbase in rec["subfield"]]
         glabels = list(set(rec["galois_label"] for rec in fields if rec.get("galois_label")))
@@ -371,7 +371,7 @@ class pAdicSlopeFamily:
             return False
         fields, cache = self.fields
         for rec in fields:
-            if not all(rec.get(col) for col in ["galT", "galois_label", "hidden"]):
+            if not all(rec.get(col) for col in ["gal", "galois_label", "hidden"]):
                 return False
         return True
 
@@ -384,14 +384,14 @@ class pAdicSlopeFamily:
             return False
         fields, cache = self.fields
         for rec in fields:
-            if all(rec.get(col) for col in ["galT", "galois_label", "hidden"]):
+            if all(rec.get(col) for col in ["gal", "galois_label", "hidden"]):
                 return True
         return False
 
     @lazy_attribute
     def galois_groups(self):
         fields, cache = self.fields
-        opts = sorted(Counter((rec["galT"], rec["galois_label"]) for rec in fields if "galT" in rec and "galois_label" in rec).items())
+        opts = sorted(Counter((rec["gal"], rec["galois_label"]) for rec in fields if "gal" in rec and "galois_label" in rec).items())
         if not opts:
             return "No Galois groups in this family have been computed"
 
