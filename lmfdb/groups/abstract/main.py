@@ -511,7 +511,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         else:
             overall_display.update(get_group_prop_display(sgp.sub))
 
-
     assert set(overall_display) == set(overall_order)
     hence_str = display_knowl(
         "group.subgroup_properties_interdependencies", "hence"
@@ -537,7 +536,6 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         unknown.remove('is_elementary')
         unknown.remove('is_hyperelementary')
         unknown.remove('monomial')
-
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown:
