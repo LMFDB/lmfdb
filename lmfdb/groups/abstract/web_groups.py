@@ -455,9 +455,6 @@ class WebAbstractGroup(WebObj):
             return G
         return G.IsomorphismPcGroup().Image()
 
-
-
-
     # The following are used for live groups to emulate database groups
     # by computing relevant quantities in GAP
     @lazy_attribute
@@ -694,7 +691,7 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def num_primes_for_power_maps(self):
-#        self._set_aut_data()
+        #        self._set_aut_data()
         return len(self.factors_of_order)
 
     @lazy_attribute
@@ -1873,7 +1870,7 @@ class WebAbstractGroup(WebObj):
         return [ZZ(c) for c in self.pcgs.RelativeOrders()]
 
     # as_magma is for downloads where we need "a*b" not "ab"
-    def pcgs_expos_to_str(self, vec, as_magma = False):
+    def pcgs_expos_to_str(self, vec, as_magma=False):
         w = []
         e = 0
         # We need to shift the relative orders by 1, since we're multiplying on the previous pass of the for loop
@@ -1900,13 +1897,13 @@ class WebAbstractGroup(WebObj):
             s = s[:-1] # need to get rid of last "*"
         return s
 
-    def pcgs_as_str(self, elt, as_magma = False):
+    def pcgs_as_str(self, elt, as_magma=False):
         # take an element of a pcgs in GAP and make our string form
         if elt == '':
             return ''
         return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt),as_magma)
 
-    def decode_as_pcgs(self, code, as_str=False, as_magma = False):
+    def decode_as_pcgs(self, code, as_str=False, as_magma=False):
         # Decode an element
         vec = []
         if code < 0 or code >= self.order:

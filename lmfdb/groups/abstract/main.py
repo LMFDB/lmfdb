@@ -1659,11 +1659,10 @@ def render_abstract_group(label, data=None):
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-					 ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-		#            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-					 ("Underlying data", url_for(".gp_data", label=label)),
+                                         ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+                #            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+                                         ("Underlying data", url_for(".gp_data", label=label)),
         ]
-
 
         # "internal" friends
         sbgp_of_url = (
@@ -1977,7 +1976,6 @@ def sgp_data(label):
         return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
-
 # need to write characters in GAP or Magma formats for downloads
 def download_cyclotomics(n,vals, dltype):
     s = ""
@@ -1993,7 +1991,7 @@ def download_cyclotomics(n,vals, dltype):
     if e != 0:
         if c != 1:
             s += "*"
-        s +="E(" + str(n) + ")"
+        s += "E(" + str(n) + ")"
         if e != 1:
             s += "^" + str(e)
 
@@ -2011,12 +2009,12 @@ def download_cyclotomics(n,vals, dltype):
             s += str(c)
         if e != 0:
             if abs(c) != 1:
-                s+= "*"
+                s += "*"
             s += "E(" + str(n) + ")"
             if e != 1:
                 s += "^" + str(e)
     if dltype == "magma":  # Magma needs different format.
-        return s.replace("E(" +str(n)+ ")", "K.1")
+        return s.replace("E(" + str(n) + ")", "K.1")
     return s
 
 
@@ -2043,9 +2041,8 @@ def download_preable(com1, com2, dltype, cc_known):
             s += f + " The character table is stored as chartbl_n_i where n is the order of \n"
             s += f + " the group and i is which group of that order it is. Conjugacy classes \n"
             s += f + " are stored in the variable 'C' with elements from the group 'G'. \n"
-    s +=com2
+    s += com2
     return s
-
 
 
 # create construction of group for downloading, G is WebAbstractGroup
@@ -2054,10 +2051,10 @@ def download_construction_string(G,dltype):
     s = ""
     snippet = G.code_snippets()
     if "PC" in G.representations:
-        gp_str =  str(snippet['presentation'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,",  "GPC,")
+        gp_str = str(snippet['presentation'][dltype]) + "\n"
+        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,", "GPC,")
     if "Perm" in G.representations:
-        gp_str =  str(snippet['permutation'][dltype]) + "\n"
+        gp_str = str(snippet['permutation'][dltype]) + "\n"
         s += gp_str.replace("G :=", "GPerm :=")
     if "GLZ" in G.representations:
         gp_str = str(snippet['GLZ'][dltype]) + "\n"
@@ -2077,7 +2074,6 @@ def download_construction_string(G,dltype):
     return str(s)
 
 
-
 # create boolean string for downloading, G is WebAbstractGroup
 def download_boolean_string(G,dltype,ul_label):
     if dltype == "magma":
@@ -2090,18 +2086,18 @@ def download_boolean_string(G,dltype,ul_label):
 
     s += "Agroup := " + str(G.Agroup).lower() + ", \n"
     s += "Zgroup := " +	str(G.Zgroup).lower() + ", \n"
-    s += "abelian := " + str(G.abelian).lower() +", \n"
-    s += "almost_simple := " + str(G.almost_simple).lower() +", \n"
-    s += "cyclic := " + str(G.cyclic).lower() +", \n"
-    s += "metabelian := " + str(G.metabelian).lower() +", \n"
-    s += "metacyclic := " + str(G.metacyclic).lower() +", \n"
-    s += "monomial := " + str(G.monomial).lower() +", \n"
-    s += "nilpotent := " + str(G.nilpotent).lower() +", \n"
-    s += "perfect := " + str(G.perfect).lower() +", \n"
-    s += "quasisimple := " + str(G.quasisimple).lower() +", \n"
-    s += "rational := " + str(G.rational).lower() +", \n"
-    s += "solvable := " + str(G.solvable).lower() +", \n"
-    s += "supersolvable := " + str(G.supersolvable).lower() +" \n" # no comma since last one
+    s += "abelian := " + str(G.abelian).lower() + ", \n"
+    s += "almost_simple := " + str(G.almost_simple).lower() + ", \n"
+    s += "cyclic := " + str(G.cyclic).lower() + ", \n"
+    s += "metabelian := " + str(G.metabelian).lower() + ", \n"
+    s += "metacyclic := " + str(G.metacyclic).lower() + ", \n"
+    s += "monomial := " + str(G.monomial).lower() + ", \n"
+    s += "nilpotent := " + str(G.nilpotent).lower() + ", \n"
+    s += "perfect := " + str(G.perfect).lower() + ", \n"
+    s += "quasisimple := " + str(G.quasisimple).lower() + ", \n"
+    s += "rational := " + str(G.rational).lower() + ", \n"
+    s += "solvable := " + str(G.solvable).lower() + ", \n"
+    s += "supersolvable := " + str(G.supersolvable).lower() + " \n" # no comma since last one
 
     # close record
     if dltype == "gap":
@@ -2131,21 +2127,21 @@ def download_char_table_magma(G, ul_label):
         s = "G:= GLZq;\n"
     if gp_type == "GLFq":
         s = "G:= GLFq;\n"
-    if gp_type == "Lie":   # need to check this for other Lie groups 
+    if gp_type == "Lie":   # need to check this for other Lie groups
         repr_data = G.representations['Lie'][0]
         str_d = str(repr_data['d'])  # need later
-        s = "G:= " + repr_data['family'] + "(" + str_d+ "," + str(repr_data['q']) +"); \n"
+        s = "G:= " + repr_data['family'] + "(" + str_d + "," + str(repr_data['q']) + "); \n"
 
     s += "C := SequenceToConjugacyClasses([car<Integers(), Integers(), G> |"
     for conj in G.conjugacy_classes:
         if gp_type == "Lie":
-            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type = gp_type, ListForm = True, LieType=(gp_type == "Lie"))) +")>,"
+            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == "Lie"))) + ")>,"
         elif gp_type != "PC" and gp_type != "Perm":
-            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type = gp_type, ListForm = True, LieType=(gp_type== gp_type))) +")>,"
+            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == gp_type))) + ")>,"
         else:
-            s += "< " + str(conj.order) + ", " + str(conj.size) + ", " + str(G.decode(conj.representative,rep_type = gp_type, as_magma = True)) +">,"
+            s += "< " + str(conj.order) + ", " + str(conj.size) + ", " + str(G.decode(conj.representative,rep_type=gp_type, as_magma=True)) + ">,"
     s = s[:-1]  # get rid of last comma
-    s +=  "]); \n"
+    s += "]); \n"
 
     s += "CR := CharacterRing(G);\n"
 
@@ -2154,7 +2150,7 @@ def download_char_table_magma(G, ul_label):
             s += "K := CyclotomicField(" + str(char.cyclotomic_n) + ": Sparse := true);\n"
             s += "S := [ K |"
             for val in char.values:
-                s +=  str(download_cyclotomics(str(char.cyclotomic_n),val, "magma"))
+                s += str(download_cyclotomics(str(char.cyclotomic_n),val, "magma"))
                 s += ","
             s = s[:-1]  # get rid of last comma
             s += "]; \n"
@@ -2165,7 +2161,7 @@ def download_char_table_magma(G, ul_label):
         s += "x`Schur := " + str(char.indicator) + ";\n"
         s += "x`IsIrreducible := true; \n"
     s += "_ := CharacterTable(G : Check := 0); \n"
-    s += "chartbl_" + G.label.replace(".","_") +  ":= KnownIrreducibles(CR); \n"
+    s += "chartbl_" + G.label.replace(".","_") + ":= KnownIrreducibles(CR); \n"
     return s
 
 
@@ -2173,7 +2169,7 @@ def download_char_table_gap(G,ul_label):
     tbl = "chartbl_" + G.label.replace(".","_")
     s = tbl + ":=rec(); \n"
     s += tbl + ".IsFinite:= true; \n"
-    s += tbl +".UnderlyingCharacteristic:= 0; \n"
+    s += tbl + ".UnderlyingCharacteristic:= 0; \n"
 
     gp_type = G.element_repr_type
 
@@ -2192,7 +2188,6 @@ def download_char_table_gap(G,ul_label):
     if gp_type == "GLFq":
         s += tbl + ".UnderlyingGroup:= GLFq;\n"
 
-
     s += tbl + ".Size:= " + str(G.order) + ";\n"
     s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB."; \n'
     s += tbl + '.Identifier:= " ' + G.name + ' "; \n'
@@ -2210,18 +2205,18 @@ def download_char_table_gap(G,ul_label):
         class_names.append(conj.label)
         order_class_reps.append(conj.order)
         if gp_type != "PC" and gp_type != "Perm":  # need to do matrix directly to include right format
-            cc_reps.append(G.decode_as_matrix(conj.representative,rep_type = gp_type,ListForm=True))
+            cc_reps.append(G.decode_as_matrix(conj.representative,rep_type=gp_type,ListForm=True))
         else:
-            cc_reps.append(G.decode(conj.representative,rep_type = gp_type))
+            cc_reps.append(G.decode(conj.representative,rep_type=gp_type))
 
     cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
     pwr_maps = "[ , "
     for i in range(len(power_maps)-1):
         pwr_maps += str(power_maps[i]) + ", "
-    pwr_maps += str(power_maps[len(power_maps)-1]) +"]"  # PowerMaps needs a blank entry in front
+    pwr_maps += str(power_maps[len(power_maps)-1]) + "]"  # PowerMaps needs a blank entry in front
 
     s += tbl + ".ConjugacyClasses:= " + str(cc_reps) + ";\n"
-    s += tbl + ".IdentificationOfConjugacyClasses:= " + str(list(range(1,G.number_conjugacy_classes+1))) +";\n"
+    s += tbl + ".IdentificationOfConjugacyClasses:= " + str(list(range(1,G.number_conjugacy_classes+1))) + ";\n"
     s += tbl + ".ComputedPowerMaps:= "  + str(pwr_maps) + ";\n"
     s += tbl + ".SizesCentralizers:= "  + str(size_centralizers) + ";\n"
     s += tbl + ".ClassNames:= "  + str(cl_names) + ";\n"
@@ -2229,14 +2224,13 @@ def download_char_table_gap(G,ul_label):
 
     irr_values = []
     for char in G.characters:
-        irr_values_individual =[download_cyclotomics(char.cyclotomic_n,char.values[i],"gap") for i in range(len(char.values))]
+        irr_values_individual = [download_cyclotomics(char.cyclotomic_n,char.values[i],"gap") for i in range(len(char.values))]
         irr_values.append(irr_values_individual)
     irr = str(irr_values).replace("'","")
-    s += tbl + ".Irr:= " +str(irr) + ";\n"
-
+    s += tbl + ".Irr:= " + str(irr) + ";\n"
 
     # end material
-    s += "ConvertToLibraryCharacterTableNC("+ tbl+ "); \n"
+    s += "ConvertToLibraryCharacterTableNC(" + tbl + "); \n"
     return s
 
 
@@ -2268,7 +2262,7 @@ def download_group(**args):
         com1 = "#"
         com2 = ""
     elif dltype == "magma":
-#        com = ""
+        #        com = ""
         com1 = "/*"
         com2 = "*/"
         filename += ".m"
@@ -2282,16 +2276,16 @@ def download_group(**args):
     s += download_preable(com1, com2,dltype, wag.complex_characters_known)
     s += "\n \n"
 
-    s += com1 + " Constructions " + com2 +  "\n"
+    s += com1 + " Constructions " + com2 + "\n"
     s += download_construction_string(wag,dltype)
     s += "\n \n"
 
-    s += com1 + " Booleans " + com2 +  "\n"
+    s += com1 + " Booleans " + com2 + "\n"
     s += download_boolean_string(wag,dltype, ul_label)
     s += "\n \n"
 
     if wag.complex_characters_known:
-        s += com1 + " Character Table " + com2 +  "\n"
+        s += com1 + " Character Table " + com2 + "\n"
         s += download_char_table(wag,dltype, ul_label)
 
     response = make_response(s)
