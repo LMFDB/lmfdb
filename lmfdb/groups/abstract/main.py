@@ -2096,20 +2096,12 @@ def download_boolean_string(G,dltype,ul_label):
     else:
         return ""
 
-    s += "Agroup := " + str(G.Agroup).lower() + ", \n"
-    s += "Zgroup := " +	str(G.Zgroup).lower() + ", \n"
-    s += "abelian := " + str(G.abelian).lower() + ", \n"
-    s += "almost_simple := " + str(G.almost_simple).lower() + ", \n"
-    s += "cyclic := " + str(G.cyclic).lower() + ", \n"
-    s += "metabelian := " + str(G.metabelian).lower() + ", \n"
-    s += "metacyclic := " + str(G.metacyclic).lower() + ", \n"
-    s += "monomial := " + str(G.monomial).lower() + ", \n"
-    s += "nilpotent := " + str(G.nilpotent).lower() + ", \n"
-    s += "perfect := " + str(G.perfect).lower() + ", \n"
-    s += "quasisimple := " + str(G.quasisimple).lower() + ", \n"
-    s += "rational := " + str(G.rational).lower() + ", \n"
-    s += "solvable := " + str(G.solvable).lower() + ", \n"
-    s += "supersolvable := " + str(G.supersolvable).lower() + " \n" # no comma since last one
+    bool_attr = ['Agroup','Zgroup','abelian', 'almost_simple','cyclic','metabelian','metacyclic','monomial','nilpotent','perfect','quasisimple','rational','solvable','supersolvable']
+    for attr in bool_attr:
+        if getattr(G,attr) is not None:
+            s += "\n"
+            s += attr + " := " + str(getattr(G,attr)).lower() + ","
+    s = s[:-1]   # last comma!
 
     # close record
     if dltype == "gap":
@@ -2122,10 +2114,16 @@ def download_boolean_string(G,dltype,ul_label):
 def download_char_table_magma(G, ul_label):
     gp_type = G.element_repr_type
 
+    # need to work on decode for Lie type for Magma
+    if gp_type == "Lie":
+        return "\n /* Character tables not currently avaialable for download for groups of Lie type. */"
     if gp_type == "PC":
         s = "G:= GPC;\n"
     elif gp_type == "Perm":
         s = "G:= GPerm;\n"
+#    elif gp_type == "Lie":
+#        repr_data = G.representations[gp_type][0]
+#        str_d = str(repr_data['d'])
     else:
         repr_data = G.representations[gp_type]
         str_d = str(repr_data['d'])  # need later
@@ -2139,16 +2137,14 @@ def download_char_table_magma(G, ul_label):
         s = "G:= GLZq;\n"
     if gp_type == "GLFq":
         s = "G:= GLFq;\n"
-    if gp_type == "Lie":   # need to check this for other Lie groups
-        repr_data = G.representations['Lie'][0]
-        str_d = str(repr_data['d'])  # need later
-        s = "G:= " + repr_data['family'] + "(" + str_d + "," + str(repr_data['q']) + "); \n"
+#    if gp_type == "Lie":
+#        s = "G:= " + repr_data['family'] + "(" + str_d + "," + str(repr_data['q']) + "); \n"
 
     s += "C := SequenceToConjugacyClasses([car<Integers(), Integers(), G> |"
     for conj in G.conjugacy_classes:
-        if gp_type == "Lie":
-            s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == "Lie"))) + ")>,"
-        elif gp_type != "PC" and gp_type != "Perm":
+#        if gp_type == "Lie":
+#            s += "< " + str(conj.order) + ", " + str(conj.size) + ", G!Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == "Lie"))) + ")>,"
+        if gp_type != "PC" and gp_type != "Perm":
             s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == gp_type))) + ")>,"
         else:
             s += "< " + str(conj.order) + ", " + str(conj.size) + ", " + str(G.decode(conj.representative,rep_type=gp_type, as_magma=True)) + ">,"
@@ -2285,7 +2281,17 @@ def download_group(**args):
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
-    s += download_preable(com1, com2,dltype, wag.complex_characters_known)
+    if wag.complex_characters_known is False:
+        cc_known = False
+    elif wag.element_repr_type == "Lie":  # issue with representatives of quotients vs permutations
+            if wag.representations["Lie"][0]["family"][0] == "P":
+                cc_known = False
+            else:
+                cc_known = True
+    else:
+        cc_known = True
+
+    s += download_preable(com1, com2,dltype, cc_known)
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 + "\n"
@@ -2296,7 +2302,7 @@ def download_group(**args):
     s += download_boolean_string(wag,dltype, ul_label)
     s += "\n \n"
 
-    if wag.complex_characters_known:
+    if cc_known:
         s += com1 + " Character Table " + com2 + "\n"
         s += download_char_table(wag,dltype, ul_label)
 
