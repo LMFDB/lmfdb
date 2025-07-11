@@ -348,6 +348,8 @@ class AbvarSearchArray(SearchArray):
              ("elevation", "Newton elevation", ['newton_elevation', 'g', 'q', 'poly']),
              ("curve_count", "curve points", ['curve_count', 'g', 'q', 'poly']),
              ("abvar_count", "abvar points", ['abvar_count', 'g', 'q', 'poly']),
+             ("size", "Unpol. isom. count", ['size', 'g', 'q', 'poly']),
+             ("principal_polarization_count", "Num. princ. pol", ['principal_polarization_count', 'g', 'q', 'poly']),
              ("jacobian_count", "Jacobian count", ['jacobian_count', 'g', 'q', 'poly']),
              ("hyp_count", "Hyp. Jacobian count", ['hyp_count', 'g', 'q', 'poly']),
              ("twist_count", "Num .twists", ['twist_count', 'g', 'q', 'poly']),
@@ -928,6 +930,7 @@ abvar_columns = SearchColumns([
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank"),
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-corank", default=False),
     MathCol("size", "av.fq.isogeny_class_size", "Unpol. isom. classes"),
+    MathCol("principal_polarization_count", "av.princ_polarizable", "Num princ. pol."),
     CheckCol("all_polarized_product", "av.fq.all_polarizations_decomposable", "All pol. decomposable", default=lambda info: "all_product" in info),
     MathCol("cohen_macaulay_max", "av.fq.max_cohen_macaulay_type", "Max Cohen-Macaulay type", default=lambda info: "cohen_macaulay_max" in info),
     MathCol("endomorphism_ring_count", "ag.endomorphism_ring", "Num. End. rings", default=lambda info: "end_ring_count" in info),
@@ -949,7 +952,7 @@ abvar_columns = SearchColumns([
     ProcessedCol("number_fields", "av.fq.number_field", "Number fields", lambda nfs: ", ".join(nf_display_knowl(nf, field_pretty(nf)) for nf in nfs), default=False),
     SearchCol("galois_groups_pretty", "nf.galois_group", "Galois groups", download_col="galois_groups", default=False),
     SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw")],
-    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "size"])
+    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "size", "principal_polarization_count"])
 
 def abvar_postprocess(res, info, query):
     gals = set()
