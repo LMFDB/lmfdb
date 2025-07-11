@@ -101,6 +101,14 @@ real_geom_end_alg_to_ST0_dict = {
     "R x R": "SU(2) x SU(2)",
     "R": "USp(4)",
 }
+real_geom_end_alg_to_latex_dict = {
+    "M_2(C)": "$M_2(\\mathbb{C})$",
+    "M_2(R)": "$M_2(\\mathbb{R})$",
+    "C x C": "$\\mathbb{C} \\times \\mathbb{C}$",
+    "C x R": "$\\mathbb{C} \\times \\mathbb{R}$",
+    "R x R": "$\\mathbb{R} \\times \\mathbb{R}$",
+    "R": "$\\mathbb{R}$",
+}
 
 # End tensored with QQ
 end_alg_list = ["Q", "RM", "CM", "Q x Q", "M_2(Q)"]
@@ -796,6 +804,7 @@ class G2C_stats(StatsDisplay):
         "is_gl2_type": formatters.boolean,
         "real_geom_end_alg": lambda x: "\\(" + st0_group_name(x) + "\\)",
         "st_group": lambda x: st_link_by_name(1, 4, x),
+        "real geometric endomorphism algebra": lambda x: real_geom_end_alg_to_latex_dict[x],
     }
     query_formatters = {
         "aut_grp_label": lambda x: "aut_grp_label=%s" % x,
@@ -815,10 +824,16 @@ class G2C_stats(StatsDisplay):
         {"cols": "analytic_sha", "totaler": {"avg": True}},
         {"cols": "locally_solvable"},
         {"cols": "is_gl2_type"},
-        {"cols": "real_geom_end_alg"},
+        {"cols": "real_geom_end_alg",
+         "addl_row_title": "real geometric endomorphism algebra"
+        },
         {"cols": "st_group"},
         {"cols": "torsion_order", "totaler": {"avg": True}},
     ]
+
+    addl_row_data_dict = {
+        'real_geometric_endomorphism_algebra': 'test'
+    }
 
 
 @g2c_page.route("/Q/stats")

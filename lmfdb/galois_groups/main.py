@@ -308,8 +308,10 @@ def render_group_webpage(args):
         friends = []
         if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
-        if db.lf_fields.exists({'n': n, 'galT': t}):
+        if db.lf_fields.exists({'n': n, 'gal': t}):
             friends.append(('$p$-adic fields with this Galois group', url_for('local_fields.index')+"?gal=%dT%d" % (n, t) ))
+        if db.gps_groups.exists({'label': data['abstract_label']}):
+            friends.append(('As an abstract group', url_for('abstract.by_label', label=data['abstract_label'])))
         prop2 = [('Label', label),
             ('Degree', prop_int_pretty(data['n'])),
             ('Order', prop_int_pretty(order)),
@@ -337,7 +339,10 @@ def render_group_webpage(args):
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
-        bread = get_bread([(label, ' ')])
+        # split the label so that breadcrumbs point to a search for this object's degree
+        parent_id, child_id = label.split("T")
+        split_label = [(parent_id, "./?n=" + parent_id), (child_id, " ")]
+        bread = get_bread(split_label)
         return render_template(
             "gg-show-group.html",
             title=title,

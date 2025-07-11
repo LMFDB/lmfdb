@@ -747,8 +747,11 @@ def common_parse(info, query, na_check=False):
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
                 query['level'] = {'$mod': [0, ZZ(query['level'])]}
-        else:
+        elif info['level_type'] in ['prime', 'prime_power', 'square', 'squarefree']:
             query['level_is_' + info['level_type']] = True
+        else:
+            flash_error("The level type %s is invalid.", info['level_type'])
+            return redirect(url_for(".index"))
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")

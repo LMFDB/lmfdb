@@ -1524,7 +1524,7 @@ def common_boxes():
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
         ("", "Label", ['ctr_subfamily', 'ctr']),
-        ("gal", "Galois group", ['galT', 'ctr_subfamily', 'ctr']),
+        ("gal", "Galois group", ['gal', 'ctr_subfamily', 'ctr']),
         ("s", "top slope", ['top_slope', 'ctr_subfamily', 'ctr']),
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr_subfamily', 'ctr']),
     ]
@@ -1728,7 +1728,7 @@ class LFSearchArray(SearchArray):
              ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("e", "ramification index", ['n', 'e', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("f", "residue degree", ['f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
-             ("gal", "Galois group", ['n', 'galT', 'p', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("gal", "Galois group", ['n', 'gal', 'p', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("u", "Galois unramified degree", ['u', 'f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("t", "Galois tame degree", ['t', 'e', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("s", "top slope", ['top_slope', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
