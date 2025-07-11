@@ -13,20 +13,20 @@
 {% endif %}
 
 <h2>Common Base Conversions</h2>
-<table>
+<table class="ntdata">
     <thead>
         <tr>
-            {% for n in [2,3,4,5,6,8,16] %}
-            <th>Base {{n}}</th>
-            {% endfor %}
+            <th>Base</th>
+            <th>Expression in Base</th>
         </tr>
     </thead>
     <tbody>
+        {% for n in [2,3,4,5,6,8,16] %}
         <tr>
-            {% for n in [2,3,4,5,6,8,16] %}
-            <td>${{ integer.str(base=n) }}$</td>
-            {% endfor %}
+            <td>{{ n }}</td>
+            <td>{{ integer.str(base=n) }}</td>
         </tr>
+        {% endfor %}
     </tbody>
 </table>
 
