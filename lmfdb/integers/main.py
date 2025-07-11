@@ -55,4 +55,11 @@ def show(label:str):
         logger.info("Impossible to create a natural from input.")
         flash_error("Ooops, impossible to create a natural from given input!")
         return redirect(url_for(".index"))
-    return render_template("integers.html", integer=n, bread=get_bread([(f"{n}", "")]))
+    integer_string = f"{n:,}"
+    integer_latex = integer_string.replace(",","{,}")
+    return render_template(
+        "integers.html", 
+        integer=n,
+        integer_latex=integer_latex, 
+        bread=get_bread([(integer_string, "")]),
+    )
