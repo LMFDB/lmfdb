@@ -5,6 +5,7 @@ from flask import render_template, request, url_for, redirect
 from . import integers_page, logger
 from sage.all import Integer
 from lmfdb.utils import flash_error
+from random import randrange
 
 
 def get_bread(breads=None):
@@ -39,6 +40,16 @@ def parse_and_redirect():
     assert request.method == "POST", "request.method is assumed to be POST"
     integer = str(request.form.get('integer', ''))
     return redirect(url_for(".show", label=integer))
+
+
+@integers_page.route("/random", methods=["GET"])
+def random():
+    r"""
+    This gets called when this address gets loaded:
+
+    /Integers/random
+    """
+    return redirect(url_for(".show", label=randrange(-9_999_999,10_000_000)))
 
 
 @integers_page.route("/<label>", methods=["GET"])
