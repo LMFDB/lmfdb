@@ -2116,7 +2116,7 @@ def download_char_table_magma(G, ul_label):
 
     # need to work on decode for Lie type for Magma
     if gp_type == "Lie":
-        return "\n /* Character tables not currently avaialable for download for groups of Lie type. */"
+        return "\n /* Character tables not currently available for download for groups of Lie type. */"
     if gp_type == "PC":
         s = "G:= GPC;\n"
     elif gp_type == "Perm":
