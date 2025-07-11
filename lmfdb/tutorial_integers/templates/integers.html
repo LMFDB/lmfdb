@@ -9,7 +9,15 @@
 </div>
 
 <h2>Integer</h2>
-<p>${{ integer_latex }}$</p>
+<p>
+    ${{ integer_latex }}$
+</p>
+{% if integer == 42 %}
+    <p>The answer to the ultimate quesiton of life, the universe, and everything.</p>
+{% endif %}
+{% if integer == -42 %}
+    <p>The answer to the ultimate quesiton of death, the void, and nothing.</p>
+{% endif %}
 
 <h2>Prime Factorization</h2>
 {% if integer != 0 %}
