@@ -727,7 +727,7 @@ class WebNewform():
     def defining_polynomial(self, separator='', latex_only=False):
         if self.field_poly:
             if latex_only:
-                return '\(%s\)' % latex(coeff_to_poly(self.field_poly))
+                return r'\(%s\)' % latex(coeff_to_poly(self.field_poly))
             else:
                 return raw_typeset_poly(self.field_poly, superscript=True, extra=separator)
         return None
