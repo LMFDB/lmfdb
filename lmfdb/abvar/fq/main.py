@@ -133,33 +133,33 @@ def support_opts(num_primes):
             yield ("0," + ",".join(str(2**c) for c in S), ("one of " if w > 1 else "") + ", ".join(f"P{i+1}" for i in S))
 
 endring_columns = SearchColumns([
-    ProcessedCol("label", "av.fq.endring_label", "Label", lambda label: ".".join(label.split(".")[3:]), default=False),
+    ProcessedCol("label", "av.fq.lmfdb_label", "Label", lambda label: ".".join(label.split(".")[3:]), default=False),
     MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
     ProcessedCol("singular_support", "av.fq.singular_primes", "Singular support", show_singular_support, mathmode=True, default=lambda info: "singular_support" in info),
     MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
-    MathCol("pic_size", "av.fq.picard_of_order", "Picard size", default=False),
-    SearchCol("av_structure1", "av.fq.point_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
-    SearchCol("av_structure2", "av.fq.point_structure", r"$A(\mathbb{F}_{q^2})$-structure", short_title="q^2-structure", default=False),
-    SearchCol("av_structure3", "av.fq.point_structure", r"$A(\mathbb{F}_{q^3})$-structure", short_title="q^3-structure", default=False),
-    SearchCol("av_structure4", "av.fq.point_structure", r"$A(\mathbb{F}_{q^4})$-structure", short_title="q^4-structure", default=False),
-    SearchCol("av_structure5", "av.fq.point_structure", r"$A(\mathbb{F}_{q^5})$-structure", short_title="q^5-structure", default=False),
-    SearchCol("av_structure6", "av.fq.point_structure", r"$A(\mathbb{F}_{q^6})$-structure", short_title="q^6-structure", default=False),
-    SearchCol("av_structure7", "av.fq.point_structure", r"$A(\mathbb{F}_{q^7})$-structure", short_title="q^7-structure", default=False),
-    SearchCol("av_structure8", "av.fq.point_structure", r"$A(\mathbb{F}_{q^8})$-structure", short_title="q^8-structure", default=False),
-    SearchCol("av_structure9", "av.fq.point_structure", r"$A(\mathbb{F}_{q^9})$-structure", short_title="q^9-structure", default=False),
-    SearchCol("av_structure10", "av.fq.point_structure", r"$A(\mathbb{F}_{q^{10}})$-structure", short_title="q^10-structure", default=False),
-    CheckCol("is_product", "av.is_product", "Product", default=False),
+    MathCol("pic_size", "av.fq.picard_group", "Picard size", default=False),
+    SearchCol("av_structure1", "av.fq.group_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
+    SearchCol("av_structure2", "av.fq.group_structure", r"$A(\mathbb{F}_{q^2})$-structure", short_title="q^2-structure", default=False),
+    SearchCol("av_structure3", "av.fq.group_structure", r"$A(\mathbb{F}_{q^3})$-structure", short_title="q^3-structure", default=False),
+    SearchCol("av_structure4", "av.fq.group_structure", r"$A(\mathbb{F}_{q^4})$-structure", short_title="q^4-structure", default=False),
+    SearchCol("av_structure5", "av.fq.group_structure", r"$A(\mathbb{F}_{q^5})$-structure", short_title="q^5-structure", default=False),
+    SearchCol("av_structure6", "av.fq.group_structure", r"$A(\mathbb{F}_{q^6})$-structure", short_title="q^6-structure", default=False),
+    SearchCol("av_structure7", "av.fq.group_structure", r"$A(\mathbb{F}_{q^7})$-structure", short_title="q^7-structure", default=False),
+    SearchCol("av_structure8", "av.fq.group_structure", r"$A(\mathbb{F}_{q^8})$-structure", short_title="q^8-structure", default=False),
+    SearchCol("av_structure9", "av.fq.group_structure", r"$A(\mathbb{F}_{q^9})$-structure", short_title="q^9-structure", default=False),
+    SearchCol("av_structure10", "av.fq.group_structure", r"$A(\mathbb{F}_{q^{10}})$-structure", short_title="q^10-structure", default=False),
+    CheckCol("is_product", "av.fq.is_product", "Product", default=False),
     SearchCol("name", "ag.endomorphism_ring", "Endomorphism ring"),
     MathCol("index", "av.fq.index_of_order", "Index"),
     CheckCol("is_conjugate_stable", "av.fq.conjugate_stable", "Conjugate stable", default=False),
-    CheckCol("is_Zconductor_sum", "av.is_Zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
-    CheckCol("is_ZFVconductor_sum", "av.is_ZFVconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
+    CheckCol("is_Zconductor_sum", "av.fq.is_Zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
+    CheckCol("is_ZFVconductor_sum", "av.fq.is_ZFVconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
     MathCol("conductor_disp", "av.endomorphism_ring_conductor", "Conductor"),
     CheckCol("conductor_is_Oprime", "av.endomorphism_ring_conductor", r"Conductor $\mathcal{O}$-prime", short_title="conductor O-prime", default=False),
     CheckCol("conductor_is_Sprime", "av.endomorphism_ring_conductor", "Conductor $S$-prime", short_title="conductor S-prime", default=False),
     MathCol("cohen_macaulay_type", "ag.cohen_macaulay_type", "Cohen-Macaulay type"),
     SearchCol("dimensions_disp", "av.fq.singular_dimensions", "Singular dimensions", default=False),
-    SearchCol("pic_disp", "av.fq.picard_of_order", "Picard group")],
+    SearchCol("pic_disp", "av.fq.picard_group", "Picard group")],
     db_cols=["cohen_macaulay_type", "conductor", "conductor_Oindex", "conductor_Sindex", "conductor_is_Oprime", "conductor_is_Sprime", "dimensions", "generator_over_ZFV", "higher_invariants", "index", "is_ZFVconductor_sum", "is_Zconductor_sum", "is_conjugate_stable", "is_product", "label", "multiplicator_ring", "pic_invs", "pic_size", "rational_invariants", "number_of_we", "singular_support"])
 
 class EndringSearchArray(SearchArray):
@@ -176,7 +176,7 @@ class EndringSearchArray(SearchArray):
         pic_size = TextBox(
             "pic_size",
             label="Picard group order",
-            knowl="av.fq.picard_of_order",
+            knowl="av.fq.picard_group",
             example="1"
         )
         number_of_we = TextBox(
@@ -194,22 +194,22 @@ class EndringSearchArray(SearchArray):
         Zcond = YesNoBox(
             "Zcond",
             label=r"$\mathbb{Z}$-conductor sum",
-            knowl="av.is_Zconductor_sum",
+            knowl="av.fq.is_Zconductor_sum",
         )
         ZFVcond = YesNoBox(
             "ZFVcond",
             label=r"$\mathbb{Z}[F,V]$-conductor sum",
-            knowl="av.is_ZFVconductor_sum",
+            knowl="av.fq.is_ZFVconductor_sum",
         )
         product = YesNoBox(
             "product",
             label="Product",
-            knowl="av.is_product",
+            knowl="av.fq.is_product",
         )
         conj_stable = YesNoBox(
             "conj_stable",
             label="Conjugate stable",
-            knowl="av.conjugate_stable",
+            knowl="av.fq.conjugate_stable",
         )
         Oprime = YesNoBox(
             "OPrime",
@@ -224,7 +224,7 @@ class EndringSearchArray(SearchArray):
         singular_support = SelectBox(
             "singular_support",
             label="Singular support",
-            knowl="av.fq.singular_support",
+            knowl="av.fq.singular_primes",
             options=list(support_opts(len(cl.zfv_singular_primes))),
         )
         self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
@@ -706,7 +706,7 @@ class AbvarSearchArray(SearchArray):
         )
         sing_prime_count = TextBox(
             "sing_prime_count",
-            label="Num. sing. primes",
+            label=r"Num. sing. primes of \Z[F,V]",
             knowl="av.fq.singular_primes",
             example="3",
             example_span="3 or 1-2",
@@ -723,17 +723,24 @@ class AbvarSearchArray(SearchArray):
         zfv_pic_size = TextBox(
             "zfv_pic_size",
             label=r"$\#\Pic(\Z[F,V])$",
-            knowl="av.fq.picard_of_order",
+            knowl="av.fq.picard_group",
             example="1",
             example_span="1 or 1000-",
             advanced=True,
         )
         size = TextBox(
             "size",
-            label=r"Unpol. isom. classes",
+            label="Unpol. isom. classes",
             knowl="av.fq.isogeny_class_size",
             example="1-10",
             example_span="6 or 1-10",
+        )
+        ppcount = TextBox(
+            "ppcount",
+            label="Num. principal pol.",
+            knowl="av.princ_polarizable",
+            example="100-120",
+            example_span="0 or 10-20",
         )
 
         count = CountBox()
@@ -741,9 +748,9 @@ class AbvarSearchArray(SearchArray):
         self.refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [simple, geom_simple, primitive, polarizable, jacobian],
-            [size, end_ring_count, newton_polygon, abvar_point_count, curve_point_count],
+            [size, ppcount, newton_polygon, abvar_point_count, curve_point_count],
             [simple_factors, distinct_groups, zfv_pic_size, all_product],
-            [cohen_macaulay_max, weak_equiv_count, sing_prime_count],
+            [cohen_macaulay_max, end_ring_count, weak_equiv_count, sing_prime_count],
             [newton_elevation, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
             [angle_rank, angle_corank, geom_deg, p_corank, geom_squarefree],
             use_geom_refine,
@@ -756,7 +763,7 @@ class AbvarSearchArray(SearchArray):
             [g, geom_simple],
             [initial_coefficients, polarizable],
             [p_rank, jacobian],
-            [size, end_ring_count],
+            [size, ppcount],
             [p_corank, geom_squarefree],
             [jac_cnt, hyp_cnt],
             [angle_rank, angle_corank],
@@ -768,7 +775,8 @@ class AbvarSearchArray(SearchArray):
             [simple_factors],
             [distinct_groups, zfv_pic_size],
             [cohen_macaulay_max, all_product],
-            [weak_equiv_count, sing_prime_count],
+            [weak_equiv_count, end_ring_count],
+            [sing_prime_count],
             use_geom_index,
             [dim1, dim1d],
             [dim2, dim2d],
@@ -854,6 +862,7 @@ def common_parse(info, query):
     parse_ints(info, query, "sing_prime_count", qfield="zfv_singular_count")
     parse_ints(info, query, "distinct_groups", qfield="group_structure_count")
     parse_ints(info, query, "zfv_pic_size")
+    parse_ints(info, query, "ppcount", qfield="principal_polarization_count")
 
 def jump(info):
     jump_box = info["jump"].strip() # only called when this present
@@ -919,13 +928,13 @@ abvar_columns = SearchColumns([
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank"),
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-corank", default=False),
     MathCol("size", "av.fq.isogeny_class_size", "Unpol. isom. classes"),
-    CheckCol("all_polarized_product", "av.fq.all_polarizations_product", "All pol. products", default=lambda info: "all_product" in info),
+    CheckCol("all_polarized_product", "av.fq.all_polarizations_decomposable", "All pol. decomposable", default=lambda info: "all_product" in info),
     MathCol("cohen_macaulay_max", "av.fq.max_cohen_macaulay_type", "Max Cohen-Macaulay type", default=lambda info: "cohen_macaulay_max" in info),
     MathCol("endomorphism_ring_count", "ag.endomorphism_ring", "Num. End. rings", default=lambda info: "end_ring_count" in info),
     MathCol("weak_equivalence_count", "av.fq.weak_equivalence_class", "Num. weak equiv. classes", default=lambda info: "weak_equiv_count" in info),
     MathCol("zfv_singular_count", "av.fq.singular_primes", "Num. sing. primes", default=lambda info: "sing_prime_count" in info),
     MathCol("group_structure_count", "ag.fq.point_counts", "Distinct groups", default=lambda info: "distinct_groups" in info),
-    MathCol("zfv_pic_size", "av.fq.picard_of_order", r"$\#\Pic(\Z[F,V])$", default=lambda info: "zfv_pic_size" in info),
+    MathCol("zfv_pic_size", "av.fq.picard_group", r"$\#\Pic(\Z[F,V])$", default=lambda info: "zfv_pic_size" in info),
     MathCol("angle_rank", "av.fq.angle_rank", "Angle rank", default=lambda info: "angle_rank" in info),
     MathCol("angle_corank", "av.fq.angle_rank", "Angle corank", default=lambda info: "angle_corank" in info),
     MathCol("curve_count", "av.fq.curve_point_counts", r"$\mathbb{F}_q$ points on curve", short_title="Fq points on curve", default=lambda info: "curve_count" in info),

@@ -103,7 +103,7 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 
 <h2>Point counts{% if cl.weak_equivalence_classes %} and group structure{% endif %}</h2>
 
-<p>{{ KNOWL('ag.fq.point_counts',title="Point counts and group structure of the abelian variety" if cl.weak_equivalence_classes else "Point counts of the abelian variety") }}
+<p>{% if cl.weak_equivalence_classes %}{{ KNOWL('av.fq.group_structure', "Point counts and group structure of the abelian variety") }}{% else %}{{ KNOWL('ag.fq.point_counts',title="Point counts of the abelian variety") }}{% endif %}
 
 {% set n = cl.length_A_counts() if cl.length_A_counts() < 6 else 5 %}
 <table style="margin-left:5%;">
