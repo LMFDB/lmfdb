@@ -2142,8 +2142,8 @@ def download_char_table_magma(G, ul_label):
 
     s += "C := SequenceToConjugacyClasses([car<Integers(), Integers(), G> |"
     for conj in G.conjugacy_classes:
-#        if gp_type == "Lie":
-#            s += "< " + str(conj.order) + ", " + str(conj.size) + ", G!Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == "Lie"))) + ")>,"
+        #        if gp_type == "Lie":
+        #            s += "< " + str(conj.order) + ", " + str(conj.size) + ", G!Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == "Lie"))) + ")>,"
         if gp_type != "PC" and gp_type != "Perm":
             s += "< " + str(conj.order) + ", " + str(conj.size) + ", Matrix(" + str_d + ", " + str(G.decode_as_matrix(conj.representative,rep_type=gp_type, ListForm=True, LieType=(gp_type == gp_type))) + ")>,"
         else:
@@ -2284,10 +2284,10 @@ def download_group(**args):
     if wag.complex_characters_known is False:
         cc_known = False
     elif wag.element_repr_type == "Lie":  # issue with representatives of quotients vs permutations
-            if wag.representations["Lie"][0]["family"][0] == "P":
-                cc_known = False
-            else:
-                cc_known = True
+        if wag.representations["Lie"][0]["family"][0] == "P":
+            cc_known = False
+        else:
+            cc_known = True
     else:
         cc_known = True
 
