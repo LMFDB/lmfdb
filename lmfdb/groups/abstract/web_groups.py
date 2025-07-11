@@ -1058,7 +1058,7 @@ class WebAbstractGroup(WebObj):
             return None
         subs = {subdata["label"]: subdata
                 for subdata in db.gps_subgroup_search.search({"ambient": self.label})}
-        for rec in db.gps_subgroup_data.search({"label": {"$in": list(subs)}}):
+        for rec in db.gps_subgroup_data.search({"ambient": self.label}):
             subs[rec["label"]].update(rec)
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
