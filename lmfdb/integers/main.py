@@ -52,14 +52,15 @@ def show(label:str):
     try:
         n = Integer(label)
     except (TypeError, ValueError):
-        logger.info("Impossible to create a natural from input.")
-        flash_error("Ooops, impossible to create a natural from given input!")
+        logger.info(f"Impossible to create a natural from input `{label}`.")
+        flash_error(f"Oops, impossible to create a natural from given input: `{label}`")
         return redirect(url_for(".index"))
     integer_string = f"{n:,}"
     integer_latex = integer_string.replace(",","{,}")
     return render_template(
         "integers.html", 
         integer=n,
-        integer_latex=integer_latex, 
+        integer_latex=integer_latex,
+        title=f"Integer {integer_string}",
         bread=get_bread([(integer_string, "")]),
     )
