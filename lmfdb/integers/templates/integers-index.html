@@ -1,0 +1,24 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+An integer is a real number with no fractional part.
+You are likely familiar with such objects; this is just a toy
+example for those new to the LMFDB.
+<p>
+
+<h2>Browse {{KNOWL('integers.integer', title="Integers")}}</h2>
+<p>
+
+<form method="post">
+<table>
+<tr>
+    <td>Data:</td> <td> <input name="data" /> </td>
+    <td><span class="formexample"></span>an integer, e.g. 42 or -321</span></td>
+</tr>
+<tr> <td><button type="submit">Submit</button> </td></tr>
+</table>
+</form>
+
+{% endblock %}

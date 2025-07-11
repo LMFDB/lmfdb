@@ -723,6 +723,7 @@ def WhiteListedRoutes():
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
         'HigherGenus/C/Aut',
+        'Integers'
         'L/Completeness',
         'L/CuspForms',
         'L/Labels',
