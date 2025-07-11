@@ -1445,8 +1445,6 @@ function switch_basis(btype) {
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
         vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
-        
-        #find trace bound from the newspace
         sage_trace_bound = self.ns_data.get('trace_bound')
         sage_traces_up_to_bound = self.traces[0:sage_trace_bound]
 
