@@ -2248,6 +2248,8 @@ class WebAbstractGroup(WebObj):
                 inners = [matrix(R, d, d, [list(zz) for zz in z3])
                           if z3 != '' else '' for z3 in inners]
             inners = [latex(matrix(z)) if z != '' else '' for z in inners]
+            if self.element_repr_type == "Lie":
+                inners = [ z.replace(" a","\\alpha") for z in inners]
         return {'orders': orders, 'inners': inners}
 
     def representation_line(self, rep_type, skip_head=False):
