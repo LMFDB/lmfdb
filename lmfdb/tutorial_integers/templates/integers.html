@@ -21,9 +21,20 @@
 
 <h2>Prime Factorization</h2>
 {% if integer != 0 %}
-<p>${{ integer.factor() }}$</p>
+    <p>
+        {% for factor in integer.factor(): %}
+            {% if loop.index0 != 0 %}$\times${% endif %}
+            <a href="./{{factor[0]**factor[1]}}">
+                ${{ factor[0] }}
+                {% if factor[1] > 1 %}
+                    ^{ {{ factor[1] }} }
+                {% endif %}
+                $
+            </a>
+        {% endfor %}
+    </p>
 {% else %}
-<p>$0$ has no prime factorization</p>
+    <p>$0$ has no prime factorization</p>
 {% endif %}
 
 <h2>Common Base Conversions</h2>
