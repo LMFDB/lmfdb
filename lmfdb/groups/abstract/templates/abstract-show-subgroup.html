@@ -22,10 +22,8 @@
         not computed
     {% endif %}
     </td></tr>
-    {% if seq.amb.show_subgroup_flag() %}
 	<tr><td>{{KNOWL('group.generators', 'Generators:')}}</td><td>
 		{{seq.amb.show_subgroup_generators(seq)|safe}}</td></tr>
-	{% endif %}
 	{% if seq.nilpotent %}
     <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency
     class:')}}</td>
