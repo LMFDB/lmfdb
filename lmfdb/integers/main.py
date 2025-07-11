@@ -37,8 +37,8 @@ def parse_and_redirect():
     It then redirects to the appropriate integer page.
     """
     assert request.method == "POST", "request.method is assumed to be POST"
-    data = str(request.form.get('data', ''))
-    return redirect(url_for(".show", label=data))
+    integer = str(request.form.get('integer', ''))
+    return redirect(url_for(".show", label=integer))
 
 
 @integers_page.route("/<label>", methods=["GET"])

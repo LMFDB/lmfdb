@@ -2,6 +2,12 @@
 
 {% block content %}
 
+<div id="properties">
+<form method="POST" action=".">
+    <input name="integer" placeholder="Look up integer" />
+    <button type="submit">Submit</button>
+</div>
+
 <h2>Integer</h2>
 <p>${{ integer_latex }}$</p>
 
