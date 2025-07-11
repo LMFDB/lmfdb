@@ -71,9 +71,8 @@ relative_polynomial:
 newform:
   comment: select newform
   sage: |
-    trace_bound = {sage_trace_bound}
-    traces = {sage_traces}
-    f = next(g for g in N if [g.coefficient(i+1).trace() for i in range(trace_bound)] == traces)
+    {sage_traces}
+    f = next(g for g in N if [g.coefficient(i+1).trace() for i in range({sage_trace_bound})] == traces)
   pari: |
     f = lf[1] \\ Warning: the index may be different
 

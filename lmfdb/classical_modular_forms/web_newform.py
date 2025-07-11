@@ -1446,7 +1446,19 @@ function switch_basis(btype) {
         vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
         sage_trace_bound = self.ns_data.get('trace_bound')
-        sage_traces_up_to_bound = self.traces[0:sage_trace_bound]
+        traces_string = "traces = "+str(self.traces[0:sage_trace_bound]).replace(" ","")
+        #format string to look nice in the code box if it's long (check 3912/1/cp/a e.g.)
+        line_length = 70
+        i = 0
+        sage_traces_up_to_bound = ""
+        while i < len(traces_string):
+            sage_traces_up_to_bound += traces_string[i:i+line_length]
+            i += line_length
+            while sage_traces_up_to_bound[-1] != "," and i < len(traces_string):
+                sage_traces_up_to_bound += traces_string[i]
+                i += 1
+            if i < len(traces_string):
+                sage_traces_up_to_bound += "\n"
 
         data = { 'N': self.level,
                  'k': self.weight,
