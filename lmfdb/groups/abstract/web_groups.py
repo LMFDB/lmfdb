@@ -2066,7 +2066,6 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
-
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
