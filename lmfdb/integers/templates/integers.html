@@ -12,4 +12,22 @@
 <p>$0$ has no factorization</p>
 {% endif %}
 
+<h2>Common Base Conversions</h2>
+<table>
+    <thead>
+        <tr>
+            {% for n in [2,3,4,5,6,8,16] %}
+            <th>Base {{n}}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            {% for n in [2,3,4,5,6,8,16] %}
+            <td>${{ integer.str(base=n) }}$</td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
 {% endblock %}
