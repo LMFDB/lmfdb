@@ -714,7 +714,7 @@ def sitemap():
 
 @cached_function
 def WhiteListedRoutes():
-    routes = [
+    return [
         'ArtinRepresentation',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
@@ -786,7 +786,6 @@ def WhiteListedRoutes():
         'whitelistedsitemap',
         'zeros/zeta'
     ]
-    return routes
 
 
 @cached_function
