@@ -1,5 +1,5 @@
 
-from lmfdb.app import app
+from lmfdb.app import app, is_tutorial_mode
 from lmfdb.logger import make_logger
 from flask import Blueprint
 
@@ -14,4 +14,7 @@ def body_class():
 from . import main
 assert main
 
-app.register_blueprint(integers_page, url_prefix="/Integers")
+# only for use in tutorials:
+# $ export LMFDB_TUTORIAL=on
+if is_tutorial_mode():
+    app.register_blueprint(integers_page, url_prefix="/Integers")
