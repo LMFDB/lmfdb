@@ -1,8 +1,8 @@
-# This Blueprint is a toy example based upon the Integers
+# This Blueprint is a toy example based upon the Integers for use in tutorials
 # Author: Steven Clontz
 
 from flask import render_template, request, url_for, redirect
-from lmfdb.integers import integers_page, logger
+from . import integers_page, logger
 from sage.all import Integer
 from lmfdb.utils import flash_error
 

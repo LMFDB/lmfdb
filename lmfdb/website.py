@@ -99,7 +99,7 @@ from . import maass_forms
 assert maass_forms
 from . import modular_curves
 assert modular_curves
-from . import integers
+from . import tutorial_integers as integers
 assert integers
 from .homepage import random
 assert random

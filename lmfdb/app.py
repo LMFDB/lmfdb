@@ -710,7 +710,7 @@ def sitemap():
 
 @cached_function
 def WhiteListedRoutes():
-    return [
+    routes = [
         'ArtinRepresentation',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
@@ -723,7 +723,6 @@ def WhiteListedRoutes():
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
         'HigherGenus/C/Aut',
-        'Integers'
         'L/Completeness',
         'L/CuspForms',
         'L/Labels',
@@ -783,6 +782,9 @@ def WhiteListedRoutes():
         'whitelistedsitemap',
         'zeros/zeta'
     ]
+    if True: # todo command line option
+        routes.append('Integers')
+    return routes
 
 
 @cached_function
