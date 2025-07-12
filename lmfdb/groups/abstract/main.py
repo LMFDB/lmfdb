@@ -180,9 +180,11 @@ def parse_family(inp, query, qfield):
     if inp not in ([el[0] for el in group_families(deTeX=True)] + ['any']):
         raise ValueError("Not a valid family label.")
     if inp == 'any':
-        query[qfield] = {'$in':list(db.gps_special_names.search(projection='label'))}
+        query['familial'] = True
     elif inp == 'C':
         query["cyclic"] = True
+    elif inp == 'D':
+        query["dihedral"] = True
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
 
