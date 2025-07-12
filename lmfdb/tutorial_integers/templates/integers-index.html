@@ -1,0 +1,20 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+An integer is a real number with no fractional part.
+<em>You are likely well-familiar with such objects; this is just a toy
+example for those new to the LMFDB!</em>
+<p>
+
+<h2>Browse Integers</h2>
+
+<form method="POST">
+    <input name="integer" placeholder="e.g. 42, -26234208"/>
+    <button type="submit">Submit</button>
+</form>
+
+<p>Or view a <a href="{{url_for('.random')}}"">random integer</a>.</p>
+
+{% endblock %}
