@@ -1273,7 +1273,9 @@ subgroup_columns = SearchColumns([
         CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable"),
         CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
         CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
-        CheckCol("central", "group.central", "cent", short_title="Sub. central")]),
+        CheckCol("central", "group.central", "cent", short_title="Sub. central"),
+        ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
+    ]),
     SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
@@ -1281,7 +1283,7 @@ subgroup_columns = SearchColumns([
                           display_url,
                           short_title="Ambient name", apply_download=False),
         ProcessedCol("ambient_order", "group.order", "Order", show_factor, align="center", short_title="Ambient order")]),
-    SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
+        SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
