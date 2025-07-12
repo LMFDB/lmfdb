@@ -291,6 +291,11 @@ class WebNewform():
             self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
         self.title = "Newform orbit %s" % (self.label)
 
+        self.base_label = [str(s) for s in [self.level, self.weight]]
+        self.ns1_label = '.'.join(self.base_label)
+        self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
+        self.ns_data = db.mf_newspaces.lookup(self.ns_label)
+
     # Breadcrumbs
     @property
     def bread(self):
@@ -340,15 +345,11 @@ class WebNewform():
     def friends(self):
         # first newspaces
         res = []
-        base_label = [str(s) for s in [self.level, self.weight]]
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
-        ns1_label = '.'.join(base_label)
-        ns1_url = cmf_base + '/'.join(base_label)
-        res.append(('Newspace ' + ns1_label, ns1_url))
-        char_letter = self.char_orbit_label
-        ns_label = '.'.join(base_label + [char_letter])
-        ns_url = cmf_base + '/'.join(base_label + [char_letter])
-        res.append(('Newspace ' + ns_label, ns_url))
+        ns1_url = cmf_base + '/'.join(self.base_label)
+        res.append(('Newspace ' + self.ns1_label, ns1_url))
+        ns_url = cmf_base + '/'.join(self.base_label + [self.char_orbit_label])
+        res.append(('Newspace ' + self.ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:
             res.append(('Newform orbit ' + self.label, nf_url))
@@ -1447,12 +1448,28 @@ function switch_basis(btype) {
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
         vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
+        sage_trace_bound = self.ns_data.get('trace_bound')
+        traces_string = "traces = "+str(self.traces[0:sage_trace_bound]).replace(" ","")
+        #format string to look nice in the code box if it's long (check 3912/1/cp/a e.g.)
+        line_length = 70
+        i = 0
+        sage_traces_up_to_bound = ""
+        while i < len(traces_string):
+            sage_traces_up_to_bound += traces_string[i:i+line_length]
+            i += line_length
+            while sage_traces_up_to_bound[-1] != "," and i < len(traces_string):
+                sage_traces_up_to_bound += traces_string[i]
+                i += 1
+            if i < len(traces_string):
+                sage_traces_up_to_bound += "\n"
 
         data = { 'N': self.level,
                  'k': self.weight,
                  'conrey_index': self.conrey_index,
                  'sage_zeta_order': sage_zeta_order,
                  'sage_genvalues': sage_genvalues,
+                 'sage_trace_bound': sage_trace_bound,
+                 'sage_traces': sage_traces_up_to_bound,
                }
         for prop in code:
             if not isinstance(code[prop], dict):
