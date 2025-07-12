@@ -49,7 +49,7 @@ def my_latex(s):
 # breadcrumbs and links for data quality entries
 
 def get_bread(tail=[]):
-    base = [("Lattice", url_for(".lattice_render_webpage"))]
+    base = [("Lattices", url_for(".lattice_render_webpage"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
