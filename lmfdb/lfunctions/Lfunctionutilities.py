@@ -14,6 +14,7 @@ from lmfdb.utils import (
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from lmfdb.lfunctions import logger
 from sage.databases.cremona import cremona_letter_code
+from lmfdb.abvar.fq.main import url_for_label
 
 
 ###############################################################
@@ -184,6 +185,7 @@ def seriesvar(index, seriestype):
     return ""
 
 def Lfactor_to_label(poly):
+    print(poly)
     Lpoly = coeff_to_poly(poly)
     cdict = Lpoly.dict()
     deg = Lpoly.degree()
