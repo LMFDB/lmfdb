@@ -2297,7 +2297,6 @@ def download_group(**args):
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
-
     if label == "1.1":
         cc_known = False
     elif wag.complex_characters_known is False or wag.complex_characters_known is None:
