@@ -37,12 +37,32 @@ end function;
 
 // Right now only works for characteristics not 2,3.
 
+EllCurveToString := function(E)
+    f,yCoeff := HyperellipticPolynomials(E);
+    if yCoeff eq 0 then 
+        return "y^2 = " cat Sprint(f);
+    else 
+        return &cat["y^2 + ", Sprint(yCoeff), " = ", Sprint(f)];
+    end if;
+end function;
+
 EnumerateIsogenyClassesG1 := function(q)
 
-    k:=GF(q);
-
+    k<a>:=GF(q);
+    R<x>:=PolynomialRing(k);
+    
     // generate one representative for each j-invariant aside from 0, 1728,
     // and for each representative, generate all its twists.
+
+    EllCurveToString := function(EC)
+        fx,yCoeff := HyperellipticPolynomials(EC);
+        if yCoeff eq 0 then 
+            return "y^2 = " cat Sprint(fx);
+        else 
+            return &cat["y^2 + ", Sprint(yCoeff), " = ", Sprint(fx)];
+        end if;
+    end function;
+
 
     jInvReps := [EllipticCurveFromjInvariant(j) : j in k | not j in [k!0, k!1728]]; 
     allEllCurves := &cat[Twists(E): E in jInvReps];
@@ -62,6 +82,8 @@ EnumerateIsogenyClassesG1 := function(q)
 
 
     findIsomorphicRepresentative := function(E,c)
+
+        // For char nor 2 or 3
 
         // Returns an isomorphic model of the form 
         // y^2 = x^3 + Mx + M (if B/A is square)
@@ -107,6 +129,7 @@ EnumerateIsogenyClassesG1 := function(q)
 
     labelToCurves := AssociativeArray();
 
+
     for curve in allEllCurves do 
 
         label := IsogenyLabel(LPolynomial(curve),q);  
@@ -114,7 +137,7 @@ EnumerateIsogenyClassesG1 := function(q)
             labelToCurves[label] := Set([]);
         end if;
 
-        Include(~labelToCurves[label], findIsomorphicRepresentative(curve,c));
+        Include(~labelToCurves[label], EllCurveToString(findIsomorphicRepresentative(curve,c)));
     end for;
 
 
@@ -153,7 +176,7 @@ EnumerateIsogenyClassesG1 := function(q)
             labelToCurves[label] := Set([]);
         end if;
 
-        Include(~labelToCurves[label], E);
+        Include(~labelToCurves[label], EllCurveToString(E));
 
     end for;
 
@@ -165,7 +188,7 @@ EnumerateIsogenyClassesG1 := function(q)
         end for;
     end procedure;
 
-    PrintAssociativeArray(labelToCurves);
+    //PrintAssociativeArray(labelToCurves);
 
     /*
 
@@ -205,11 +228,44 @@ EnumerateIsogenyClassesG1 := function(q)
     */
 
 
-    
-    return labelToCanonicalCurve;
+
+    return labelToCurves;
 end function;
 
 
-EnumerateIsogenyClassesG1(19);
-EnumerateIsogenyClassesG1(19^2);
+
+DictionaryToFile := procedure(g,q,D, filename)
+
+    Write(filename, "\n");
+    Write(filename, &cat["(g, q)= (", Sprint(g),",",Sprint(q),")"]);
+    for key in Keys(D) do 
+        output := key cat "|" cat Sprint(D[key]);
+        output:= StripWhiteSpace(output);
+        Write(filename, output);
+    end for;
+end procedure;
+
+
+// Now, try to generate the data for prime powers 2 <= q <= 499, and q in {512, 625, 729, 1024}, not char 2,3
+
+PrimePowers:=[2..499] cat [512, 625, 729, 1024];
+
+//PrimePowers:=[4,7,49,19,19^2];
+
+OutputAllPrimeData := procedure(qs, filename)
+
+    Write(filename, "\n" : Overwrite:=true);
+    for q in qs do 
+        if IsPrimePower(q) and not ((q mod 2) eq 0) and not ((q mod 3) eq 0) then 
+            results := EnumerateIsogenyClassesG1(q);
+            DictionaryToFile(1,q,results,filename);
+        end if;
+    end for;
+end procedure;
+
+OutputAllPrimeData(PrimePowers, "output.txt");
+
+
+//EnumerateIsogenyClassesG1(19);
+//EnumerateIsogenyClassesG1(19^2);
 
