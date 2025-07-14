@@ -1268,7 +1268,7 @@ subgroup_columns = SearchColumns([
                           display_url,
                           short_title="Sub. name", apply_download=False),
         ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
-	ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
+        ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
         CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
         CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
         CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
