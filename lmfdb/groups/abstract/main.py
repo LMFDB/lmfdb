@@ -814,7 +814,7 @@ def by_abelian_label(label):
         return redirect(url_for(".by_label", label=dblabel))
 
 
-@abstract_page.route("/auto_gens/<label>")
+@abstract_page.route("/auto/<label>")
 def auto_gens(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
@@ -822,13 +822,13 @@ def auto_gens(label):
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if gp.live() or gp.aut_gens is None:
-        flash_error("The generators for the automorphism group of the group with label %s have not been computed.", label)
+        flash_error("The automorphism group of %s has not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     return render_template(
-        "auto_gens_page.html",
+        "auto_page.html",
         gp=gp,
-        title="Generators of automorphism group for $%s$" % gp.tex_name,
-        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
+        title="Automorphism group of $%s$" % gp.tex_name,
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group", " ")]),
                         )
 
 
