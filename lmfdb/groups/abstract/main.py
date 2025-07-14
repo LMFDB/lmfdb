@@ -2298,7 +2298,7 @@ def download_group(**args):
 
     if label == "1.1":
         cc_known = False
-    elif wag.complex_characters_known is (False or None):
+    elif wag.complex_characters_known is False or wag.complex_characters_known is None:
         cc_known = False
     elif wag.element_repr_type == "Lie":  # issue with representatives of quotients vs permutations
         if wag.representations["Lie"][0]["family"][0] == "P":
