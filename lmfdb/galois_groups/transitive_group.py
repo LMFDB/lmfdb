@@ -184,7 +184,7 @@ class WebGaloisGroup:
         if pict:
             pict_link = '<div style="align:center">'+pict+'</div>'
             return pict_link
-        return '<div style="text-align:center"><img src="%s" style="display:inline" height="150" width="116"/></div>'% url_for('static', filename='images/Evariste_galois.jpg')
+        return '<div style="text-align:center"><img src="%s" style="display:inline" height="150" width="116"/></div>' % url_for('static', filename='images/Evariste_galois.jpg')
 
     @lazy_attribute
     def wag(self):
