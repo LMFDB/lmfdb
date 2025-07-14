@@ -370,6 +370,10 @@ def render_newform_webpage(label):
         for e in errs:
             flash_error("%s", e)
     learnmore_cmf_picture = ('Picture description', url_for(".picture_page"))
+    from lmfdb.utils import CodeSnippet
+    def place_code(item):
+        return CodeSnippet(newform.code,item).place_code()
+
     return render_template("cmf_newform.html",
                            info=info,
                            newform=newform,
@@ -380,7 +384,9 @@ def render_newform_webpage(label):
                            title=newform.title,
                            friends=newform.friends,
                            code=newform.code,
-                           KNOWL_ID="cmf.%s" % label)
+                           KNOWL_ID="cmf.%s" % label,
+                           place_code = place_code,
+                           )
 
 def render_embedded_newform_webpage(newform_label, embedding_label):
     try:
