@@ -851,6 +851,23 @@ class WebNumberField:
         if not self.haskey('class_group'):
             return [-1]
         return self._data['class_group']
+    
+    def narrow_class_group_invariants(self, in_search_results=False):
+        if not self.haskey('narrow_class_group'):
+            return "n/a" if in_search_results else na_text()
+        cg_list = self._data['narrow_class_group']
+        if not cg_list:
+            invs = 'trivial'
+        else:
+            invs = cg_list
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
+
+    def narrow_class_group_invariants_raw(self):
+        if not self.haskey('narrow_class_group'):
+            return [-1]
+        return self._data['narrow_class_group']
 
     def class_group(self):
         if self.haskey('class_group'):

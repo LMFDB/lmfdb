@@ -844,10 +844,11 @@ nf_columns = SearchColumns([
     CheckMaybeCol("monogenic", "nf.monogenic", "Monogenic", default=False),
     SearchCol("galois", "nf.galois_group", "Galois group", download_col="galois_label"),
     ClassGroupCol("class_group_desc", "nf.ideal_class_group", "Class group", download_col="class_group"),
+    ClassGroupCol("narrow_class_group_desc", "nf.narrow_class_group", "Narrow class group", download_col="narrow_class_group", default=False),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center", default=False),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True, default=False),
     MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False)],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number"])
+    db_cols=["class_group", "narrow_class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -858,6 +859,7 @@ def nf_postprocess(res, info, query):
         rec["disc"] = wnf.disc_factored_latex()
         rec["galois"] = wnf.galois_string(cache=cache)
         rec["class_group_desc"] = wnf.class_group_invariants()
+        rec["narrow_class_group_desc"] = wnf.narrow_class_group_invariants()
     return res
 
 class NFDownloader(Downloader):
@@ -1267,6 +1269,7 @@ class NFSearchArray(SearchArray):
         narrow_class_group = TextBox(
             name="class_group",
             label="Narrow class group structure",
+            short_label='Narrow class group',
             knowl="nf.narrow_class_group",
             example="[2,4]",
             example_span="[ ], [3], or [2,4]")
@@ -1346,7 +1349,7 @@ class NFSearchArray(SearchArray):
         self.refine_array = [
             [degree, signature, num_ram, ram_primes, ur_primes ],
             [gal, field_is, subfield, class_group, class_number],
-            [narrow_class_number, narrow_class_group, discriminant, rd, grd],
+            [discriminant, rd, grd, narrow_class_group, narrow_class_number],
             [cm_field, relative_class_number, regulator, completion, monogenic],
             [index, inessentialprimes, is_minimal_sibling]]
 
