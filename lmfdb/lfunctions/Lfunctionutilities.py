@@ -378,6 +378,7 @@ def lfuncEPhtml(L, fmt):
     if display_galois:
         eptable += r"<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
+    eptable += r"""<th class='weight' style="text-align: left; font-weight: normal;">Isogeny Class?</th>"""
     eptable += "</tr>"
     eptable += "</thead>"
 
@@ -394,9 +395,11 @@ def lfuncEPhtml(L, fmt):
             elif not display_galois:
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
+                isog_class = '' if p in bad_primes else 'data unavailable'
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
+                isog_class = '' if p in bad_primes else 'data unavailable'
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
@@ -406,10 +409,11 @@ def lfuncEPhtml(L, fmt):
                     out += r"$\times$".join(transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups)
                 out += "</td>"
             out += "<td> %s </td>" % factors
+            out += "<td> %s </td>" % isog_class
             out += "</tr>"
 
         except IndexError:
-            out += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>"
+            out += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>" + "not available" + "</td></tr>"
         return out
     goodorbad = "bad"
     trclass = ""
