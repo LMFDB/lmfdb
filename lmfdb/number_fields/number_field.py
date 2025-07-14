@@ -975,7 +975,6 @@ def residue_field_degrees_function(nf):
     """
     D = nf.disc()
 
-
     def decomposition(p):
         if not ZZ(p).divides(D):
             return [z[3] for z in nf.idealprimedec(p)]
