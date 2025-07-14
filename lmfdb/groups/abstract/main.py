@@ -2255,6 +2255,18 @@ def download_char_table(G,dltype,ul_label):  # G is web abstract group
         return ""
 
 
+def download_trivial_construction(dltype):  #trival gp construction is different
+    if dltype == "gap":
+        s = "GPC := TrivialGroup(); \n"
+        s += "GPerm := SymmetricGroup(1); \n"
+    elif dltype == "magma":
+        s = "GPC := SmallGroup(1,1); \n"
+        s += "GPerm := Sym(1); \n"
+    else:
+        s = ""
+    return s
+
+
 @abstract_page.route("/<label>/download/<download_type>")
 def download_group(**args):
     dltype = args["download_type"]
@@ -2285,7 +2297,10 @@ def download_group(**args):
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
-    if wag.complex_characters_known is False:
+
+    if label == "1.1":
+        cc_known = False
+    elif wag.complex_characters_known is False or wag.complex_characters_known is None:
         cc_known = False
     elif wag.element_repr_type == "Lie":  # issue with representatives of quotients vs permutations
         if wag.representations["Lie"][0]["family"][0] == "P":
@@ -2299,7 +2314,10 @@ def download_group(**args):
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 + "\n"
-    s += download_construction_string(wag,dltype)
+    if label == "1.1":  #special case for trivial subgroup
+        s += download_trivial_construction(dltype)
+    else:
+        s += download_construction_string(wag,dltype)
     s += "\n \n"
 
     s += com1 + " Booleans " + com2 + "\n"
