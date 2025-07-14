@@ -42,7 +42,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     typeset = f'<span class="tset-container">{typeset}</span>'
     # clean white space
     raw = re.sub(r'\s+', ' ', str(raw).strip())
-    raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
+    raw = f'<textarea readonly rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
     # the doublesclick behavior is set on load in javascript
     out = f"""
