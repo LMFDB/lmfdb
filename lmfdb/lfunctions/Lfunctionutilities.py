@@ -15,6 +15,9 @@ from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_
 from lmfdb.lfunctions import logger
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.abvar.fq.main import url_for_label
+from lmfdb.abvar.fq.stats import AbvarFqStats
+
+AbvarFqStatslookup = AbvarFqStats._counts()
 
 
 ###############################################################
@@ -198,6 +201,9 @@ def Lfactor_to_label(poly):
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
     label = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
+    
+    if not ((g,q) in AbvarFqStatslookup.keys()):
+        return label
     
     return '<a href="%s">%s</a>' % (url_for_label(label), label)
 
