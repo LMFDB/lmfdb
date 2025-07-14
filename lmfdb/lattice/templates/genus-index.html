@@ -1,0 +1,35 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div>
+{{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('lattice.dimension', title='rank') }}:</td>
+    <td>{% for rnge in info.dim_list %} <a href="?rank={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
+    <td>{% for rnge in info.det_list %} <a href="?det={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr>
+</table>
+
+<h2> {{ KNOWL('intro.search', 'Search') }} </h2>
+
+<form class='search'>
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+<table><tr><td>{{KNOWL('genus.search_input','Label or name')}}</td><td>
+<input type='text' name='label' placeholder='3.3.4.01.6e'></td><td>
+<button type='submit'>Label</button></td></tr>
+<tr><td colspan="2"><span class="formexample">e.g. 3.3.4.01.6e</span></td></tr></table>
+</form>
+
+{% endblock %}

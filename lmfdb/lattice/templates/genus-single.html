@@ -1,0 +1,18 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2> {{ KNOWL('lattice.invariants', title='Genus Invariants') }} </h2>
+
+<table>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{info.rank}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='$n_+$') }}:</td><td>${{info.signature}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+<td>
+</table>
+
+<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
+<p>${{info.gram}}$</p>
+
+{% endblock %}
