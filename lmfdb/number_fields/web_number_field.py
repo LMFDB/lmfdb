@@ -851,7 +851,7 @@ class WebNumberField:
         if not self.haskey('class_group'):
             return [-1]
         return self._data['class_group']
-    
+
     def narrow_class_group_invariants(self, in_search_results=False):
         if not self.haskey('narrow_class_group'):
             return "n/a" if in_search_results else na_text()
@@ -898,12 +898,12 @@ class WebNumberField:
         if self.haskey('class_number'):
             return '$%s$' % str(self._data['class_number'])
         return na_text()
-    
+
     def narrow_class_number(self):
         if self.haskey('narrow_class_number'):
             return self._data['narrow_class_number']
         return na_text()
-    
+
     def narrow_class_number_latex(self):
         if self.haskey('narrow_class_number'):
             return '$%s$' % str(self._data['narrow_class_number'])
