@@ -2752,11 +2752,11 @@ class WebAbstractGroup(WebObj):
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
     def create_snippet(self,item):
-        snippet = CodeSnippet(self.code_snippets()
-                              pre=defaultdict(lambda: f"<tr> <td colspan={col_span_val}>")
-                              post=defaultdict(lambda: "</td></tr>"))
         col_span_val = '"6"'
-        return snippet.place_code(item, pre, post)
+        snippet = CodeSnippet(self.code_snippets(), item,
+                              pre=f"<tr> <td colspan={col_span_val}>",
+                              post="</td></tr>")
+        return snippet.place_code()
 
     @cached_method
     def code_snippets(self):
