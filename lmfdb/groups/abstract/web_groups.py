@@ -702,8 +702,6 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def cc_known(self):
-        # if self.representations.get("Lie") and self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000:
-        #     return False   # problem with PGL, PSL, etc.
         return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     @lazy_attribute
@@ -1058,7 +1056,7 @@ class WebAbstractGroup(WebObj):
             return None
         subs = {subdata["label"]: subdata
                 for subdata in db.gps_subgroup_search.search({"ambient": self.label})}
-        for rec in db.gps_subgroup_data.search({"label": {"$in": list(subs)}}):
+        for rec in db.gps_subgroup_data.search({"ambient": self.label}):
             subs[rec["label"]].update(rec)
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
@@ -2068,12 +2066,6 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
-    def show_subgroup_flag(self):
-        if self.representations.get("Lie"):
-            if self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000: # Issue with projective Lie groups
-                return False
-        return True
-
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
@@ -2255,6 +2247,8 @@ class WebAbstractGroup(WebObj):
                 inners = [matrix(R, d, d, [list(zz) for zz in z3])
                           if z3 != '' else '' for z3 in inners]
             inners = [latex(matrix(z)) if z != '' else '' for z in inners]
+            if self.element_repr_type == "Lie":
+                inners = [ z.replace(" a","\\alpha") for z in inners]
         return {'orders': orders, 'inners': inners}
 
     def representation_line(self, rep_type, skip_head=False):
@@ -2519,14 +2513,12 @@ class WebAbstractGroup(WebObj):
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
 
-    def aut_gens_flag(self): #issue with Lie type when family is projective, auto stored as permutations often
+    def aut_gens_flag(self): # issue with Lie type when family is projective, Gap stores these groups as permutations
         if self.aut_gens is None:
             return False
         if self.element_repr_type == "Lie":
             if self.representations["Lie"][0]["family"][0] == "P":
                 return False
-        if self.element_repr_type in ["GLZN", "GLZq", "Lie", "GLFq", "GLFp"]:
-            return False
         return True
 
     # outer automorphism group

@@ -40,7 +40,7 @@ Structural Conventions
 Below, we describe several of the structural conventions used in the LMFDB. Note
 that we also have styling conventions for the content of individual pages. These
 styling conventions are described in
-[StyleSheet.md](https://github.com/LMFDB/lmfdb/blob/main/StyleSheet.md).
+[StyleGuide.md](https://github.com/LMFDB/lmfdb/blob/main/StyleGuide.md).
 
 Pages in the LMFDB
 ------------------
