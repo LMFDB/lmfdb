@@ -425,6 +425,7 @@ def render_field_webpage(args):
     info['wnf'] = nf
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number_latex()
+    data['narrow_class_number'] = nf.narrow_class_number_latex()
     ram_primes = nf.ramified_primes()
     t = nf.galois_t()
     n = nf.degree()
@@ -451,6 +452,7 @@ def render_field_webpage(args):
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
+    data['narrow_class_group'] = nf.narrow_class_group()
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
     data['coefficients'] = nf.coeffs()
@@ -902,6 +904,7 @@ def number_field_search(info, query):
     parse_floats(info, query, 'regulator')
     parse_posints(info,query,'class_number')
     parse_posints(info,query,'relative_class_number')
+    parse_posints(info,query,'narrow_class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
     fi = info.get("field_is")
@@ -947,6 +950,7 @@ def number_field_search(info, query):
         query["gal_is_solvable"] = False
 
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
+    parse_bracketed_posints(info,query,'narrow_class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
@@ -968,6 +972,7 @@ def residue_field_degrees_function(nf):
             output: the residue field degrees at the prime p
     """
     D = nf.disc()
+
 
     def decomposition(p):
         if not ZZ(p).divides(D):
@@ -1163,7 +1168,6 @@ def nf_code(**args):
             code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
     return code
 
-
 class NFSearchArray(SearchArray):
     noun = "field"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
@@ -1255,6 +1259,17 @@ class NFSearchArray(SearchArray):
             knowl="nf.ideal_class_group",
             example="[2,4]",
             example_span="[ ], [3], or [2,4]")
+        narrow_class_number = TextBox(
+            name="narrow_class_number",
+            label="Narrow class number",
+            knowl="nf.narrow_class_number",
+            example="5")
+        narrow_class_group = TextBox(
+            name="class_group",
+            label="Narrow class group structure",
+            knowl="nf.narrow_class_group",
+            example="[2,4]",
+            example_span="[ ], [3], or [2,4]")
         relative_class_number = TextBox(
             name="relative_class_number",
             label="Relative class number",
@@ -1320,6 +1335,7 @@ class NFSearchArray(SearchArray):
             [gal, field_is],
             [num_ram, grd],
             [class_number, class_group],
+            [narrow_class_number, narrow_class_group],
             [ram_primes, ur_primes],
             [regulator, cm_field],
             [completion, relative_class_number],
@@ -1330,9 +1346,9 @@ class NFSearchArray(SearchArray):
         self.refine_array = [
             [degree, signature, num_ram, ram_primes, ur_primes ],
             [gal, field_is, subfield, class_group, class_number],
-            [discriminant, rd, grd, cm_field, relative_class_number],
-            [regulator, completion, monogenic, index, inessentialprimes],
-            [is_minimal_sibling]]
+            [narrow_class_number, narrow_class_group, discriminant, rd, grd],
+            [cm_field, relative_class_number, regulator, completion, monogenic],
+            [index, inessentialprimes, is_minimal_sibling]]
 
             #[degree, signature, class_number, class_group, cm_field],
             #[num_ram, ram_primes, ur_primes, gal, field_is],
