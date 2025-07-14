@@ -196,7 +196,9 @@ def Lfactor_to_label(poly):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
-    return "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
+    label = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
+    
+    return '<a href="%s">%s</a>' % (url_for_label(label), label)
 
 
 def lfuncDShtml(L, fmt):
@@ -394,7 +396,8 @@ def lfuncEPhtml(L, fmt):
     if display_galois:
         eptable += r"<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
-    eptable += r"""<th class='weight' style="text-align: left; font-weight: normal;">Isogeny Class?</th>"""
+    if L.motivic_weight==1:
+        eptable += r"""<th class='weight' style="text-align: left; font-weight: normal;">Isogeny Class?</th>"""
     eptable += "</tr>"
     eptable += "</thead>"
 
@@ -411,11 +414,13 @@ def lfuncEPhtml(L, fmt):
             elif not display_galois:
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
+                if L.motivic_weight==1:
+                    isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
+                if L.motivic_weight==1:
+                    isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
@@ -425,7 +430,8 @@ def lfuncEPhtml(L, fmt):
                     out += r"$\times$".join(transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups)
                 out += "</td>"
             out += "<td> %s </td>" % factors
-            out += "<td> %s </td>" % isog_class
+            if L.motivic_weight==1:
+                out += "<td> %s </td>" % isog_class
             out += "</tr>"
 
         except IndexError:
