@@ -10,9 +10,10 @@ from sage.all import (
 
 from lmfdb.utils import (
     display_complex, list_to_factored_poly_otherorder, make_bigint,
-    list_factored_to_factored_poly_otherorder)
+    list_factored_to_factored_poly_otherorder, coeff_to_poly)
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
 from lmfdb.lfunctions import logger
+from sage.databases.cremona import cremona_letter_code
 
 
 ###############################################################
@@ -181,6 +182,19 @@ def seriesvar(index, seriestype):
             return 'T'
         return 'T^{' + str(index) + '}'
     return ""
+
+def Lfactor_to_label(poly):
+    Lpoly = coeff_to_poly(poly)
+    cdict = Lpoly.dict()
+    deg = Lpoly.degree()
+    g = deg//2
+    lead = cdict[deg]
+    q = lead.nth_root(g)
+    def extended_code(c):
+            if c < 0:
+                return 'a' + cremona_letter_code(-c)
+            return cremona_letter_code(c)
+    return "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
 
 
 def lfuncDShtml(L, fmt):
@@ -395,11 +409,11 @@ def lfuncEPhtml(L, fmt):
             elif not display_galois:
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                isog_class = '' if p in bad_primes else 'data unavailable'
+                isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                isog_class = '' if p in bad_primes else 'data unavailable'
+                isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
