@@ -184,6 +184,8 @@ def seriesvar(index, seriestype):
     return ""
 
 def Lfactor_to_label(poly):
+    if isinstance(poly[0], list):
+        poly = poly[0][0]
     Lpoly = coeff_to_poly(poly)
     cdict = Lpoly.dict()
     deg = Lpoly.degree()
