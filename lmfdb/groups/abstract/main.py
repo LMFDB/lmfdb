@@ -1254,6 +1254,7 @@ subgroup_columns = SearchColumns([
                           display_url,
                           short_title="Sub. name", apply_download=False),
         ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
+	ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
         CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
         CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
         CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
@@ -1262,8 +1263,7 @@ subgroup_columns = SearchColumns([
         CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
         CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
         CheckCol("central", "group.central", "cent", short_title="Sub. central"),
-        ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
-    ]),
+            ]),
     SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
