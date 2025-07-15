@@ -935,7 +935,7 @@ class WebG2C():
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
                 data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]                
-                data['good_lfactors_pretty_with_label'] = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])).replace('_','\\_'), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(2,c[0]) else '') for c in data['good_lfactors']]
+                data['good_lfactors_pretty_with_label'] = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(2,c[0]) else '') for c in data['good_lfactors']]
                 
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')

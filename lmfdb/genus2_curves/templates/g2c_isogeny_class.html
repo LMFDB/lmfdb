@@ -65,14 +65,14 @@ text-align: center;
             <td align="left">\( {{ c[1] }}\)</td>
             <td>
               {% if c[3] == '' %}
-                \( {{ c[2] }} \)
+                {{ c[2] }}
               {% else %}
-                <a href="{{ c[3] }}">\( {{ c[2] }} \)</a>
+                <a href="{{ c[3] }}">{{ c[2] }}</a>
               {% endif %}
             </td>
           </tr>
         {% endfor %}
-        <tr><td>$\cdots$</td><td>$\cdots$</td>
+        <tr><td>$\cdots$</td><td>$\cdots$</td><td>$\cdots$</td>
         </table>
     </tr>
     <tr><td>&nbsp;</td></tr>
