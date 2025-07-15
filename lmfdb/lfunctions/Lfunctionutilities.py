@@ -187,7 +187,7 @@ def seriesvar(index, seriestype):
         return 'T^{' + str(index) + '}'
     return ""
 
-def Lfactor_to_label(poly):
+def polynomial_unroll_get_gq(poly):
     if isinstance(poly[0], list):
         expanded_factor_list = [] 
         for tuple in poly:
@@ -201,17 +201,26 @@ def Lfactor_to_label(poly):
     g = deg//2
     lead = cdict[deg]
     q = lead.nth_root(g)
+    return [Lpoly, cdict, g, q]
+
+def Lfactor_to_label(poly):
+    [Lpoly, cdict, g, q] = polynomial_unroll_get_gq(poly)
     def extended_code(c):
             if c < 0:
                 return 'a' + cremona_letter_code(-c)
             return cremona_letter_code(c)
-    label = "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
-    
-    if not ((g,q) in AbvarFqStatslookup.keys()):
-        return label
-    
-    return '<a href="%s">%s</a>' % (url_for_label(label), label)
+    return "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
 
+def AbvarExists(g,q):
+    return ((g,q) in AbvarFqStatslookup.keys())
+
+def Lfactor_to_label_and_link_if_exists(poly):
+    [Lpoly, cdict, g, q] = polynomial_unroll_get_gq(poly)
+    label = Lfactor_to_label(poly)
+    if not AbvarExists(g,q):
+        return label
+    return '<a href="%s">%s</a>' % (url_for_label(label), label)
+    
 
 def lfuncDShtml(L, fmt):
     """ Returns the HTML for displaying the Dirichlet series of the L-function L.
@@ -427,12 +436,12 @@ def lfuncEPhtml(L, fmt):
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
                 if L.motivic_weight==1 and L.rational:
-                    isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
+                    isog_class = '' if p in bad_primes else Lfactor_to_label_and_link_if_exists(poly)
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
                 if L.motivic_weight==1 and L.rational:
-                    isog_class = '' if p in bad_primes else Lfactor_to_label(poly)
+                    isog_class = '' if p in bad_primes else Lfactor_to_label_and_link_if_exists(poly)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"

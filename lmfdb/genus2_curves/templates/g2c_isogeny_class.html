@@ -57,9 +57,20 @@ text-align: center;
         <tr>
             <th>Prime</th>
             <th align="left">L-Factor</th>
+            <th align="left">Isogeny Class over \(\mathbb{F}_p\)</th>
         </tr>
-        {% for c in data.good_lfactors_pretty %}
-        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
+        {% for c in data.good_lfactors_pretty_with_label %}
+        <tr>
+            <td class="center">\({{ c[0] }}\)</a></td>
+            <td align="left">\( {{ c[1] }}\)</td>
+            <td>
+              {% if c[3] == '' %}
+                \( {{ c[2] }} \)
+              {% else %}
+                <a href="{{ c[3] }}">\( {{ c[2] }} \)</a>
+              {% endif %}
+            </td>
+          </tr>
         {% endfor %}
         <tr><td>$\cdots$</td><td>$\cdots$</td>
         </table>
