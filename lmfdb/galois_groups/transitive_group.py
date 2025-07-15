@@ -6,7 +6,7 @@ from lmfdb import db
 from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
-from flask import render_template
+from flask import render_template, url_for
 
 from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
@@ -177,6 +177,14 @@ class WebGaloisGroup:
 
     def num_conjclasses(self):
         return self._data['num_conj_classes']
+
+    @lazy_attribute
+    def portrait(self):
+        pict = db.gps_transitive_portraits.lookup(self.label, projection='portrait')
+        if pict:
+            pict_link = '<div style="align:center">'+pict+'</div>'
+            return pict_link
+        return '<div style="text-align:center"><img src="%s" style="display:inline" height="150" width="116"/></div>' % url_for('static', filename='images/Evariste_galois.jpg')
 
     @lazy_attribute
     def wag(self):
