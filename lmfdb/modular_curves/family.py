@@ -196,7 +196,7 @@ Xarithpm1 = ModCurveFamily_base(
     moduli_description_text=fr"""
     $NAME$ is the {display_knowl('modcurve','modular curve')} $X_H$ for $H\le \GL_2(\widehat\Z)$ the inverse image
     of $\begin{{pmatrix}} \pm1 & M* \\ 0 & * \end{{pmatrix}} \subset \GL_2(\Z/MN\Z)$. The modular curve
-    {display_knowl('modcurve.x1mn', '$X_{{\mathrm{{arith}},1}}(M,MN)$')} is one of its
+    {display_knowl('modcurve.x1mn', r'$X_{{\mathrm{{arith}},1}}(M,MN)$')} is one of its
     {display_knowl('modcurve.quadratic_refinements','quadratic refinements')}. <p> The {display_knowl('modcurve.canonical_field', 'canonical field of definition')}
     of $NAME$ is $\Q$. </p>
     """,
