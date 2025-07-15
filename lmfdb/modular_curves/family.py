@@ -24,6 +24,10 @@ def ModCurveFamily(name):
         raise ValueError(f"Invalid name '{name}'. Valid names: {list(FAMILY_CLASSES.keys())}")
 
 class ModCurveFamily_base():
+    sl2level = None
+    index = None
+    genus = None
+
     @lazy_attribute
     def bread(self):
         return get_bread([(f"${self.name}$", " ")])
@@ -35,6 +39,13 @@ class ModCurveFamily_base():
     @lazy_attribute
     def cusps_display(self):
         return self.cusps
+
+    @lazy_attribute
+    def properties(self):
+        return [("Level", "$N$"),
+                (r"$SL_2$-level", str(self.sl2level)),
+                ("Index", str(self.index)),
+                ("Genus", str(self.genus))]
 
 
 class X0N(ModCurveFamily_base):
@@ -57,13 +68,6 @@ class X0N(ModCurveFamily_base):
     biell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=1688168">MR:1688168</a>] showed that there are only 41 biellipic curves in this family and [<a href="https://mathscinet.ams.org/mathscinet/article?mr=3086199">MR:3086199</a>] provided equations for these curves. Among them, there are 30 values for which they are non-hyperelliptic. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=22%2C+26%2C+28%2C+30%2C+33%2C+34%2C+35%2C+37%2C+38%2C+39%2C+40%2C+42%2C+43%2C+44%2C+45%2C+48%2C+50%2C+51%2C+53%2C+54%2C+55%2C+56%2C+60%2C+61%2C+62%2C+63%2C+64%2C+65%2C+69%2C+72%2C+75%2C+79%2C+81%2C+83%2C+89%2C+92%2C+94%2C+95%2C+101%2C+119%2C+131&family=X0">following table</a>] for the full list and the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=34%2C+38%2C+42%2C+43%2C+44%2C+45%2C+51%2C+53%2C+54%2C+55%2C+56%2C+60%2C+61%2C+62%2C+63%2C+64%2C+65%2C+69%2C+72%2C+75%2C+79%2C+81%2C+83%2C+89%2C+92%2C+94%2C+95%2C+102%2C+119%2C+131&family=X0">following table</a>] for the non-hyperelliptic list.'
 
 
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
-
 class X1N(ModCurveFamily_base):
     famname = "X1"
     name = "X_1(N)"
@@ -83,13 +87,6 @@ class X1N(ModCurveFamily_base):
     biell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=2040593">MR:2040593</a>] showed that there are only 8 bielliptic curves in this family. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1">following table</a>] for the full list.'
 
 
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
-
 class XN(ModCurveFamily_base):
     famname = "X"
     name = "X(N)"
@@ -105,13 +102,6 @@ class XN(ModCurveFamily_base):
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
     hypell_description = "None."
     biell_description = "None."
-
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
 
 
 class Xpm1N(ModCurveFamily_base):
@@ -130,13 +120,6 @@ class Xpm1N(ModCurveFamily_base):
     #hypell_description = "Unknown."
     #biell_description = "Unknown."
 
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
-
 
 class Xarith1MMN(ModCurveFamily_base):
     famname = "Xarith1"
@@ -152,13 +135,6 @@ class Xarith1MMN(ModCurveFamily_base):
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
     #hypell_description = "Unknown."
     #biell_description = "Unknown."
-
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
 
 
 class Xarithpm1MMN(ModCurveFamily_base):
@@ -176,13 +152,6 @@ class Xarithpm1MMN(ModCurveFamily_base):
     genus_formula = r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$"
     #hypell_description = "Unknown."
     #biell_description = "Unknown."
-
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
 
 
 class XspN(ModCurveFamily_base):
@@ -202,13 +171,6 @@ class XspN(ModCurveFamily_base):
     biell_description = "Unknown."
     #notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>"
 
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
-
 
 class XspplusN(ModCurveFamily_base):
     famname = "Xspplus"
@@ -226,13 +188,6 @@ class XspplusN(ModCurveFamily_base):
     #hypell_description = "Unknown."
     #biell_description = "Unknown."
     #notation = r"<ul> <li>$\delta = \begin{cases}1& \text{if } 2\mid N, \\ 0& \text{otherwise.}\end{cases}$ </li> </ul>"
-
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
 
 
 class XnsN(ModCurveFamily_base):
@@ -252,13 +207,6 @@ class XnsN(ModCurveFamily_base):
     #biell_description = "Unknown."
     notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>"
 
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
-
 
 class XnsplusN(ModCurveFamily_base):
     famname = "Xnsplus"
@@ -277,13 +225,6 @@ class XnsplusN(ModCurveFamily_base):
     #biell_description = "Unknown."
     notation = r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>"
 
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
-
 
 class XS4p(ModCurveFamily_base):
     famname = "XS4"
@@ -300,13 +241,6 @@ class XS4p(ModCurveFamily_base):
     genus_formula = r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$"
     #hypell_description = "Unknown."
     #biell_description = "Unknown."
-
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
 
 
 class XarithN(ModCurveFamily_base):
@@ -325,12 +259,4 @@ class XarithN(ModCurveFamily_base):
     biell_level = "?level=7%2C8&family=Xarith"
     hypell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=3145452">MR:3145452</a>] showed that there are no hyperelliptic curves in this family.'
     biell_description = r'[<a href="https://mathscinet.ams.org/mathscinet/article?mr=3145452">MR:3145452</a>] showed that there are only 2 bielliptic curves in this family. $X_{\textup{arith}}(7)$ is isomorphic to the Klein quartic and $X_{\textup{arith}}(8)$ is isomorphic to the Wiman curve. See the [<a href="https://beta.lmfdb.org/ModularCurve/Q/?level=7%2C8&family=Xarith">following table</a>] for the full list.'
-
-
-    @lazy_attribute
-    def properties(self):
-        return [("Level", "$N$"),
-                (r"$SL_2$-level", str(self.sl2level)),
-                ("Index", str(self.index)),
-                ("Genus", str(self.genus))]
 
