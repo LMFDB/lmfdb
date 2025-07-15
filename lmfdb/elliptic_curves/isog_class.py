@@ -1,11 +1,13 @@
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
+from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
+from lmfdb.abvar.fq.main import url_for_label
 from lmfdb import db
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, nth_prime
 
 
 class ECisog_class():
@@ -187,8 +189,16 @@ class ECisog_class():
         self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}
         self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
         self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
-
-
+        
+        lfun_url = self.lfunction_link
+        origin_url = lfun_url.lstrip('/L/').rstrip('/')
+        self.lfunc_label = db.lfunc_instances.lucky({'url':origin_url}, "label")
+        self.euler_factors = db.lfunc_search.lookup(self.lfunc_label)["euler_factors"]
+        self.bad_primes = db.lfunc_search.lookup(self.lfunc_label)["bad_primes"]
+        self.good_lfactors = [[nth_prime(n+1), self.euler_factors[n]] for n in range(len(self.euler_factors)) if nth_prime(n+1) < 30 and self.conductor % nth_prime(n+1)]
+        self.good_lfactors_pretty = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in self.good_lfactors]                
+        self.good_lfactors_pretty_with_label = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(1,c[0]) else '') for c in self.good_lfactors]
+        
 def make_graph(M, vertex_labels=None):
     """
     Code extracted from Sage's elliptic curve isogeny class (reshaped
