@@ -189,8 +189,13 @@ def seriesvar(index, seriestype):
 
 def Lfactor_to_label(poly):
     if isinstance(poly[0], list):
-        poly = poly[0][0]
-    Lpoly = coeff_to_poly(poly)
+        expanded_factor_list = [] 
+        for tuple in poly:
+            for _ in range(tuple[1]):
+                expanded_factor_list.append(tuple[0])
+        Lpoly = prod([coeff_to_poly(factor) for factor in expanded_factor_list])
+    else:
+        Lpoly = coeff_to_poly(poly)
     cdict = Lpoly.dict()
     deg = Lpoly.degree()
     g = deg//2
