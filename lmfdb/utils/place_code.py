@@ -37,10 +37,11 @@ class CodeSnippet():
 
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])
+                sep = "\n"
                 snippet_str += f"""
     <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top">
         <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 12px; margin: 3px"><img alt="Copy content" class="tset-icon"></span> 
-        <span class="prompt" style="{prompt_style}">{prompt}:&nbsp;</span><span class="code" style="{code_style}">{"\n".join(lines)}</span>
+        <span class="prompt" style="{prompt_style}">{prompt}:&nbsp;</span><span class="code" style="{code_style}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
     """
@@ -48,7 +49,6 @@ class CodeSnippet():
 
     def show_commands_box(self):
         """Display 'Show commands' box and corresponding logic"""
-        lang_str = ""
         lang_names = {"pari": "PariGP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar"}
         box_str = r"""<div align="right" style="float: right; margin-top:2px;">""" + "Show commands: "
         lang_strs = []
