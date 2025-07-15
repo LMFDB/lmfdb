@@ -675,7 +675,7 @@ def interesting_motives():
 @hypergm_page.route("/Source")
 def how_computed_page():
     t = r'Source and acknowledgments for hypergeometric motives over $\Q$'
-    bread = get_bread(('Source', ''))
+    bread = get_bread([('Source', '')])
     return render_template("multi.html", kids=['rcs.source.hgm',
                                                'rcs.ack.hgm',
                                                'rcs.cite.hgm'],
@@ -686,7 +686,7 @@ def how_computed_page():
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of hypergeometric motive data over $\Q$'
-    bread = get_bread(('Completeness', ''))
+    bread = get_bread([('Completeness','')])
     return render_template("single.html", kid='rcs.cande.hgm',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
@@ -695,7 +695,7 @@ def completeness_page():
 @hypergm_page.route("/Reliability")
 def reliability_page():
     t = r'Reliability of hypergeometric motive data over $\Q$'
-    bread = get_bread(('Reliability', ''))
+    bread = get_bread([('Reliability', '')])
     return render_template("single.html", kid='rcs.rigor.hgm',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Reliability'))
@@ -704,7 +704,7 @@ def reliability_page():
 @hypergm_page.route("/Labels")
 def labels_page():
     t = r'Labels for hypergeometric motives over $\Q$'
-    bread = get_bread(('Labels', ''))
+    bread = get_bread([('Labels', '')])
     return render_template("single.html", kid='hgm.field.label',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))

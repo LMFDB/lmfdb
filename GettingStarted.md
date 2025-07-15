@@ -1,3 +1,22 @@
+Quick Start using your browser
+==============================
+
+While logged into GitHub and viewing the `LMFDB/lmfdb` GitHub repository
+(or your fork of the repository), press the comma (`,`) key on your keyboard.
+
+Alternatively, click the green "Code" button, choose the "Codespaces" tab, and
+then click "Create codesace on main".
+
+After several minutes, a virtual machine will boot up and run a private
+development server. When the text `Running on http://127.0.0.1:37777` appears,
+ctrl/cmd-click the link to open it in a new tab. (Your tab will open to a URL
+similar to `random-words-97vv7x9gw9h7777-37777.app.github.dev` which only you
+have access to.)
+
+You can alternatively ctrl/cmd-click the `http://127.0.0.1:37777` URL in this
+readme file within your Codespace.
+
+
 Installation
 ============
 

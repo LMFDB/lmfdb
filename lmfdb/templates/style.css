@@ -164,10 +164,6 @@ table tbody tr.trivial a:hover {
   padding-right: 2px;
 }
 
-body.checklist {
- font-size: 70%;
-}
-
 span.disable-links {
   pointer-events: none;
 }
