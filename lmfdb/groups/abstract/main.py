@@ -219,7 +219,9 @@ def get_bread(tail=[]):
     return base + tail
 
 def display_props(proplist, joiner="and"):
-    if len(proplist) == 1:
+    if len(proplist) == 0:
+        return ""
+    elif len(proplist) == 1:
         return proplist[0]
     elif len(proplist) == 2:
         return f" {joiner} ".join(proplist)
@@ -234,11 +236,12 @@ def find_props(
     implications,
     hence_str,
     show,
+    prefix="",
 ):
     props = []
     noted = set()
     for prop in overall_order:
-        if not getattr(gp, prop, None) or prop in noted or prop not in show:
+        if not getattr(gp, prefix+prop, None) or prop in noted or prop not in show:
             continue
         noted.add(prop)
         impl = [B for B in implications.get(prop, []) if B not in noted]
@@ -283,7 +286,7 @@ group_prop_implications = {
 }
 
 
-def get_group_prop_display(gp, cyclic_known=True):
+def get_group_prop_display(gp, prefix="", cyclic_known=True):
     # We want elementary and hyperelementary to display which primes, but only once
     elementaryp = ''
     hyperelementaryp = ''
@@ -643,6 +646,60 @@ def create_boolean_string(gp, type="normal"):
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
 
+def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphism group"):
+    overall_order = [
+        "cyclic",
+        "abelian",
+        "nonabelian",
+        "pgroup",
+        "nilpotent",
+        "supersolvable",
+        "solvable",
+        "nonsolvable",
+    ]
+    # Only things that are implied need to be included here, and there are no constraints on the order
+    impl_order = [
+        "abelian",
+        "nilpotent",
+        "solvable",
+        "supersolvable",
+        "monomial",
+        "nonsolvable",
+        "is_elementary",
+        "is_hyperelementary",
+        "metacyclic",
+        "metabelian",
+        "Zgroup",
+        "Agroup",
+        "nab_perfect",
+        "quasisimple",
+        "almost_simple",
+    ]
+    short_string = type == "knowl"
+    overall_display = get_group_prop_display(gp)
+
+    hence_str = display_knowl("group.properties_interdependencies", "hence")
+    props = find_props(
+        gp,
+        overall_order,
+        impl_order,
+        overall_display,
+        group_prop_implications,
+        hence_str,
+        show=overall_display,
+        prefix=prefix,
+    )
+    if type == "knowl":
+        main = f"{display_props(props)}."
+    else:
+        main = f"This {name} is {display_props(props)}."
+    unknown = [prop for prop in overall_order if getattr(gp, prefix+prop, None) is None]
+
+    unknown = [overall_display[prop] for prop in unknown]
+    if unknown and type != "knowl":
+        main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+    return main
+
 
 def url_for_label(label):
     if label == "random":
@@ -824,12 +881,17 @@ def auto_gens(label):
     if gp.live() or gp.aut_gens is None:
         flash_error("The automorphism group of %s has not been computed.", label)
         return redirect(url_for(".by_label", label=label))
+    info = {}
+    info["aut_boolean_string"] = create_boolean_aut_string(gp)
+    info["out_boolean_string"] = create_boolean_aut_string(gp, prefix="outer_", name="outer automorphism group")
+    info["inner_boolean_string"] = create_boolean_aut_string(gp, prefix="inner_", name="inner automorphism group")
     return render_template(
         "auto_page.html",
+        info=info,
         gp=gp,
         title="Automorphism group of $%s$" % gp.tex_name,
         bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group", " ")]),
-                        )
+    )
 
 
 @abstract_page.route("/sub/<label>")
@@ -3342,6 +3404,38 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f'<div align="right"><a href="{quotient_url}">{quotient_label} home page</a></div>'
     return Markup(ans)
 
+def autknowl_data(label):
+    gp = WebAbstractGroup(label)
+    ans = f'Automorphism group of ${gp.tex_name}$:'
+    if gp.aut_order is None:
+        return Markup(ans + ' not computed')
+    ans += '<br />\n'
+    if gp.aut_tex is not None:
+        atex = gp.aut_tex.replace("\t", r"\t")
+        if gp.aut_group is not None:
+            ans += f'Description: <a href="{url_for_label(gp.aut_group)}">${atex}$</a><br />\n'
+        else:
+            ans += f'Description: ${atex}$<br />\n'
+    ans += f'Order: ${gp.aut_order}$<br />\n'
+    for tvar, idvar, ovar, name in [
+            (gp.outer_tex, gp.outer_group, gp.outer_order, "Outer"),
+            (gp.inner_tex, gp.central_quotient, gp.inner_order, "Inner"),
+    ]:
+        if tvar is not None:
+            tvar = tvar.replace("\t", r"\t")
+            if idvar is not None:
+                ans += f'{name} automorphism group: <a href="{url_for_label(idvar)}">${tvar}$</a>'
+            else:
+                ans += f'{name} automorphism group: ${tvar}$'
+            if ovar is not None:
+                ans += f', of order {pos_int_and_factor(ovar)}'
+            ans += '<br />\n'
+        elif ovar is not None:
+            ans += f'{name} automorphism group of order ${pos_int_and_factor(ovar)}$<br />\n'
+    ans += create_boolean_aut_string(gp, type="knowl") + '<br />\n'
+    ans += f'<div align="right"><a href="{url_for("abstract.auto_gens", label=label)}">Automorphism group data for {label}</div>'
+    return Markup(ans)
+
 def semidirect_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Semidirect product expressions for ${gp.tex_name}$:<br />\n"
@@ -3422,6 +3516,7 @@ flist = {
     "rchar_data": rchar_data,
     "cchar_data": cchar_data,
     "group_data": group_data,
+    "autknowl_data": autknowl_data,
     "crep_data": crep_data,
     "qrep_data": qrep_data,
     "semidirect_data": semidirect_data,

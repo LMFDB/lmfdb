@@ -3,40 +3,67 @@
 
 {% block content %}
 
-
-
-<p>
- Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns). <br>
+<h2>Automorphism group information</h2>
 
 <p>
-The column "Inner by" gives an element which gives rise to the automorphism as
-an inner automorphism if it is, in fact, inner.  Otherwise, it is blank. 
-
+<table>
+  <tr>
+    <td>{{KNOWL('group.name', title='Description:')}}</td>
+    <td>{{gp.show_aut_group()|safe}}</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.order',title='Order:')}}</td>
+    <td>${{gp.aut_order}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.aut_phi_ratio',title='$\\phi$-ratio')}}</td>
+    <td>${{gp.aut_phi_ratio}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    <td>${{gp.aut_exponent}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td>
+    <td>${{gp.aut_nilpotency_class}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.derived_series', title='Derived length:')}}</td>
+    <td>${{gp.aut_derived_length}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.automorphism', 'Underlying group')}}</td>
+    <td><a href="{{url_for('.by_label', label=gp.label)}}">${{gp.tex_name}}$</a></td>
+  </tr>
+</table>
+</p>
 <p>
-{{gp.repr_strg(other_page=True) | safe}}<br>
+  {{info.aut_boolean_string | safe}}
 </p>
 
-
+<h4>Generators</h4>
+<p>
+  Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns).
+</p>
 
 <p>
-  {% set aut_data = gp.auto_gens_data() %}
-  {% set orders = aut_data.orders %}
+{{gp.repr_strg(other_page=True) | safe}}
+</p>
+
+<p>
   {% set inner = aut_data.inners %}
   <table class="ntdata" style="margin-left:0;">
     <thead>
-      <tr> 
-        <th> </th>
+      <tr>
         <th>{{KNOWL('group.element_order','Order')}}</th>
-        <th>{{KNOWL('group.inner_automorphism','Inner by')}}</th>
         {% for c in gp.auto_gens_list()[0] %}
         <th>${{c}}$</th>
         {% endfor %}
       </tr>
       <tbody>
 	{% for i in range(1,gp.auto_gens_list()|length) %}
-      <tr> <td>  </td>
-      <td align="center"> {{ orders[i] }} </td>
-      <td> ${{ inner[i] }}$ </td>
+      <tr>
+      <td align="center"> {{ gp.aut_gen_orders[i-1] }} </td>
 	{% for j in gp.auto_gens_list()[i] %}
       <td>${{j}}$ </td>
       {% endfor %}
@@ -47,18 +74,101 @@ an inner automorphism if it is, in fact, inner.  Otherwise, it is blank.
     </table>
 </p>
 
-{% endblock %}
+<h2>Outer automorphism group information</h2>
+
+<p>
+<table>
+  <tr>
+    <td>{{KNOWL('group.name', title='Description:')}}</td>
+    <td>{{gp.show_outer_group()|safe}}</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.order',title='Order:')}}</td>
+    <td>${{gp.outer_order}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    <td>${{gp.outer_exponent}}$</td>
+  </tr>
+</table>
+</p>
+<p>
+  {{info.out_boolean_string | safe}}
+</p>
+
+<h4>Generators</h4>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+        <th>{{KNOWL('group.element_order','Order in $\\Out(G)$')}}</th>
+        {% for c in gp.auto_gens_list()[0] %}
+        <th>${{c}}$</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(gp.outer_gens|length) %}
+      <tr>
+        <td align="center"> {{ gp.outer_gen_orders[i] }} </td>
+        {% for g in gp.outer_gens[i] %}
+        <td>${{ gp.decode(g, as_str=True) }}$ </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+</p>
 
 
-{# Hack to remove the sidebar and move main content over #}
-{#
-{% block sidebar %}
-<style>
-#main {
-  margin:  0px 0px 0px 0px;
-  padding: 0px 0px 0px 10px;
-  min-height:600px;
-}
-</style>
+<h2>Inner automorphism group information</h2>
+
+<p>
+<table>
+  <tr>
+    <td>{{KNOWL('group.name', title='Description:')}}</td>
+    <td>{{gp.show_inner_group()|safe}}</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.order',title='Order:')}}</td>
+    <td>${{gp.inner_order}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    <td>${{gp.inner_exponent}}$</td>
+  </tr>
+</table>
+</p>
+<p>
+  {{info.inner_boolean_string | safe}}
+</p>
+
+<h4>Generators</h4>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+        <th>{{KNOWL('group.element_order','Order')}}</th>
+        <th>{{KNOWL('group.inner_automorphism','Inner by')}}</th>
+        {% for c in gp.auto_gens_list()[0] %}
+        <th>${{c}}$</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(gp.inner_gens|length) %}
+      <tr>
+        <td align="center"> {{ gp.inner_gen_orders[i] }} </td>
+        <td> ${{ gp.auto_gens_list()[0][i] }}$ </td>
+	{% for g in gp.inner_gens[i] %}
+        <td>${{ gp.decode(g, as_str=True) }}$ </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+</p>
+
 {% endblock %}
-#}

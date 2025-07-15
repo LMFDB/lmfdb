@@ -2494,20 +2494,29 @@ class WebAbstractGroup(WebObj):
 
     # automorphism group
     def show_aut_group(self):
-        try:
-            if self.aut_group is None:
-                if self.aut_order is None:
-                    return r"not computed"
-                else:
-                    return f"Group of order {pos_int_and_factor(self.aut_order)}"
-            else:
-                if self.aut_order is None:
-                    return r"not computed"
-                else:
-                    url = url_for(".by_label", label=self.aut_group)
-                    return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
-        except AssertionError:  # timed out
-            return r"$\textrm{Computation timed out}$"
+        if self.aut_order is None:
+            return "not computed"
+        aut_order = pos_int_and_factor(self.aut_order)
+        tex = self.aut_tex
+        if tex is not None:
+            tex = tex.replace("\t",r"\t")
+        if self.aut_group is not None:
+            url = url_for(".by_label", label=self.aut_group)
+            return f'<a href="{url}">${tex}$</a>, of order {aut_order}'
+        if tex is None:
+            return f"Group of order {aut_order}"
+        else:
+            return f'${tex}$'
+
+    def aut_group_knowl(self):
+        if self.aut_order is None:
+            return "not computed"
+        aut_order = pos_int_and_factor(self.aut_order)
+        tex = self.aut_tex
+        if tex is not None:
+            tex = tex.replace("\t", r"\t")
+        knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">${tex}$</a>'
+        return f'{knowl}, of order {aut_order}'
 
     # TODO if prime factors get large, use factors in database
     def aut_order_factor(self):
@@ -2523,17 +2532,31 @@ class WebAbstractGroup(WebObj):
 
     # outer automorphism group
     def show_outer_group(self):
-        try:
-            if self.outer_group is None:
-                if self.outer_order is None:
-                    return r"$\textrm{not computed}$"
-                else:
-                    return f"Group of order {pos_int_and_factor(self.outer_order)}"
-            else:
-                url = url_for(".by_label", label=self.outer_group)
-                return f'<a href="{url}">${group_names_pretty(self.outer_group)}$</a>, of order {pos_int_and_factor(self.outer_order)}'
-        except AssertionError:  # timed out
-            return r"$\textrm{Computation timed out}$"
+        tex = self.outer_tex
+        if self.outer_group is None:
+            if self.outer_order is None:
+                return "not computed"
+            if tex is None:
+                return f"Group of order {pos_int_and_factor(self.outer_order)}"
+            return "${tex}$"
+        url = url_for("abstract.by_label", label=self.outer_group)
+        if tex is None:
+            tex = group_names_pretty(self.outer_group)
+        return f'<a href="{url}">${tex}$</a>, of order {pos_int_and_factor(self.outer_order)}'
+
+    # inner automorphism group
+    def show_inner_group(self):
+        tex = self.inner_tex
+        if self.central_quotient is None:
+            if self.inner_order is None:
+                return "not computed"
+            if tex is None:
+                return f"Group of order {pos_int_and_factor(self.inner_order)}"
+            return "${tex}$"
+        url = url_for("abstract.by_label", label=self.central_quotient)
+        if tex is None:
+            tex = group_names_pretty(self.central_quotient)
+        return f'<a href="{url}">${tex}$</a>, of order {pos_int_and_factor(self.inner_order)}'
 
     # TODO if prime factors get large, use factors in database
     def out_order_factor(self):
@@ -2879,6 +2902,77 @@ class WebAbstractGroup(WebObj):
     @property
     def is_hyperelementary(self):
         return self.hyperelementary > 1
+
+    # and in create_boolean_aut_string
+    @property
+    def aut_nonabelian(self):
+        if self.aut_abelian is not None:
+            return not self.aut_abelian
+
+    @property
+    def outer_nonabelian(self):
+        if self.outer_abelian is not None:
+            return not self.outer_abelian
+
+    @property
+    def inner_nonabelian(self):
+        if self.inner_abelian is not None:
+            return not self.inner_abelian
+
+    @property
+    def aut_nonsolvable(self):
+        if self.aut_solvable is not None:
+            return not self.aut_solvable
+
+    @property
+    def outer_nonsolvable(self):
+        if self.outer_solvable is not None:
+            return not self.outer_solvable
+
+    @property
+    def inner_solvable(self):
+        # Inner automorphism group is G/Z, so solvable <=> G solvable
+        return self.solvable
+
+    @property
+    def inner_supersolvable(self):
+        # Inner automorphism group is G/Z, so supersolvable <=> G supersolvable
+        return self.supersolvable
+
+    @property
+    def inner_nonsolvable(self):
+        if self.inner_solvable is not None:
+            return not self.inner_solvable
+
+    @property
+    def aut_pgroup(self):
+        if self.aut_order is not None:
+            p, k = ZZ(self.aut_order).is_prime_power(get_data=True)
+            if p == 1:
+                return p
+            if k == 0:
+                return k
+            return p
+
+    @property
+    def outer_pgroup(self):
+        if self.outer_order is not None:
+            p, k = ZZ(self.outer_order).is_prime_power(get_data=True)
+            if p == 1:
+                return p
+            if k == 0:
+                return k
+            return p
+
+    @property
+    def inner_pgroup(self):
+        if self.inner_order is not None:
+            p, k = ZZ(self.inner_order).is_prime_power(get_data=True)
+            if p == 1:
+                return p
+            if k == 0:
+                return k
+            return p
 
 # We may get abelian groups which are too large for GAP, so handle them directly
 class LiveAbelianGroup():
