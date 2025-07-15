@@ -1,5 +1,5 @@
 from lmfdb.tests import LmfdbTest
-from lmfdb.modular_curves.family import FAMILY_DATA
+from lmfdb.modular_curves.family import ALL_FAMILIES
 
 class ModCrvTest(LmfdbTest):
     def test_home(self):
@@ -296,13 +296,12 @@ class ModCrvTest(LmfdbTest):
             assert url[15:] in L1.get_data(as_text=True)
 
     def test_family_page(self):
-        for family in FAMILY_DATA.keys():
-            L = self.tc.get(f"/ModularCurve/Q/family/{family}", follow_redirects=True)
-            assert family in L.get_data(as_text=True)
-            assert FAMILY_DATA[family]['name'] in L.get_data(as_text=True)
-            assert FAMILY_DATA[family]['sl2level'] in L.get_data(as_text=True)
-            assert FAMILY_DATA[family]['index'] in L.get_data(as_text=True)
-            assert FAMILY_DATA[family]['genus'] in L.get_data(as_text=True)
+        for family in ALL_FAMILIES.keys():
+            L = self.tc.get(f'/ModularCurve/Q/family/{family}')
+            assert ALL_FAMILIES[family].name in L.get_data(as_text=True)
+            assert str(ALL_FAMILIES[family].sl2level) in L.get_data(as_text=True)
+            assert str(ALL_FAMILIES[family].index) in L.get_data(as_text=True)
+            assert str(ALL_FAMILIES[family].genus) in L.get_data(as_text=True)
 
     def test_family_search(self):
         family_set = [
