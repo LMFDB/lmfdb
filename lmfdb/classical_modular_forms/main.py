@@ -1428,7 +1428,7 @@ def dynamic_statistics():
     info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
     title = 'Classical modular forms: Dynamic statistics'
-    return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
+    return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic statistics'), learnmore=learnmore_list())
 
 class CMFSearchArray(SearchArray):
     sort_knowl = 'cmf.sort_order'
