@@ -877,7 +877,7 @@ def render_by_label(label):
     info['st0_description'] = st0['description']
     if data['component_group'][:2] == "ab":
         info['component_group'] = r"C_{%s}" % info['components']
-        info['component_group_knowl'] = name=r"$C_{%s}$" % info['components']
+        info['component_group_knowl'] = r"$C_{%s}$" % info['components']
         info['cyclic'] = boolean_name(True)
         info['abelian'] = boolean_name(True)
         info['solvable'] = boolean_name(True)
