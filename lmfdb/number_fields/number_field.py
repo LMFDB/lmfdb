@@ -586,8 +586,6 @@ def render_field_webpage(args):
         Ra = PolynomialRing(QQ,'a')
         myunits = [Ra(z) for z in myunits]
         unit_compress = [compress_poly_Q(x, 'a') for x in myunits]
-        # remove negative space in compression
-        unit_compress = [re.sub(r'\\!', ' ', z) for z in unit_compress]
         unit_compress = ['$%s$' % x for x in unit_compress]
         unit_compress = ', '.join(unit_compress)
         myunits = str(myunits)[1:-1] # remove brackets

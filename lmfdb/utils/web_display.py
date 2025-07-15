@@ -113,11 +113,14 @@ def web_latex(x, enclose=True):
     return rf"\( {latex(x)} \)" if enclose else f" {latex(x)} "
 
 
-def compress_int(n, cutoff=15, sides=2):
+def compress_int(n, cutoff=15, sides=2, negative_space=True):
     res = str(n)
     minus_width = 1 if '-' in res else 0
     if len(res) > cutoff+minus_width:
-        short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        if negative_space:
+            short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        else:
+            short = res[:sides + minus_width] + r'\cdots ' + res[-sides:]
         return short, True
     else:
         return res, False
@@ -684,8 +687,8 @@ def compress_poly_Q(rawpoly,
 
     def frac_string(frac):
         if frac.denominator() == 1:
-            return compress_int(frac.numerator())[0]
-        return r'\frac{%s}{%s}' % (compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+            return compress_int(frac.numerator(), negative_space=False)[0]
+        return r'\frac{%s}{%s}' % (compress_int(frac.numerator(), negative_space=False)[0], compress_int(frac.denominator(), negative_space=False)[0])
 
     tset = ''
     for j in range(1, d + 1):
