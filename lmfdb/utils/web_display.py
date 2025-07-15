@@ -687,7 +687,7 @@ def compress_poly_Q(rawpoly,
 
     def frac_string(frac):
         if frac.denominator() == 1:
-            return compress_int(frac.numerator(), negative_space=False)[0]
+            return compress_int(frac.numerator())[0]
         return r'\frac{%s}{%s}' % (compress_int(frac.numerator(), negative_space=False)[0], compress_int(frac.denominator(), negative_space=False)[0])
 
     tset = ''
