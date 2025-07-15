@@ -49,7 +49,7 @@ class CodeSnippet():
 
     def show_commands_box(self):
         """Display 'Show commands' box and corresponding logic"""
-        lang_names = {"pari": "PariGP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar"}
+        lang_names = {"pari": "PariGP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
         box_str = r"""<div align="right" style="float: right; margin-top:2px;">""" + "Show commands: "
         lang_strs = []
         for lang in self.langs:
