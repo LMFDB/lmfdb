@@ -2,7 +2,6 @@ AttachSpec("/home/janeshi/Magma/magma.spec");
 function IsogenyLabel(f,q)
 // returns the LMFDB label of the isogeny class determined by f.
     g:=Degree(f) div 2;
-    //q:=Integers() ! (Coefficients(f)[1]^(2/Degree(f)));
     str1:=Reverse(Prune(Coefficients(f)))[1..g];
     str2:="";
     for a in str1 do
@@ -30,7 +29,6 @@ end function;
 // There's a theorem that says all twists of elliptic curves over F_q, (j inv not 0, 1728),
 // the only twists are the quadratic twists. For j=0,1728, we can get quartic or sectic twists.
 
-
 // Takes a prime power, and outputs an associative array,
 // where the keys is the label, and the value is a canonical curve representing
 // the isogeny class.
@@ -38,7 +36,7 @@ end function;
 // Right now only works for characteristics not 2,3.
 
 EllCurveToString := function(E)
-    f,yCoeff := HyperellipticPolynomials(E);
+    f, yCoeff := HyperellipticPolynomials(E);
     if yCoeff eq 0 then 
         return "y^2 = " cat Sprint(f);
     else 
@@ -53,16 +51,6 @@ EnumerateIsogenyClassesG1 := function(q)
     
     // generate one representative for each j-invariant aside from 0, 1728,
     // and for each representative, generate all its twists.
-
-    EllCurveToString := function(EC)
-        fx,yCoeff := HyperellipticPolynomials(EC);
-        if yCoeff eq 0 then 
-            return "y^2 = " cat Sprint(fx);
-        else 
-            return &cat["y^2 + ", Sprint(yCoeff), " = ", Sprint(fx)];
-        end if;
-    end function;
-
 
     jInvReps := [EllipticCurveFromjInvariant(j) : j in k | not j in [k!0, k!1728]]; 
     allEllCurves := &cat[Twists(E): E in jInvReps];
@@ -129,7 +117,6 @@ EnumerateIsogenyClassesG1 := function(q)
 
     labelToCurves := AssociativeArray();
 
-
     for curve in allEllCurves do 
 
         label := IsogenyLabel(LPolynomial(curve),q);  
@@ -188,59 +175,17 @@ EnumerateIsogenyClassesG1 := function(q)
         end for;
     end procedure;
 
-    //PrintAssociativeArray(labelToCurves);
-
-    /*
-
-
-    // A helper function to determine the order 
-    // of the curve based on the lexicographic order of the 
-    // coefficients.
-    CompareCurves := function(E1,E2)
-        if Coefficients(E1) gt Coefficients(E2) then 
-            return 1;
-        else 
-            return -1;
-        end if;
-    end function;
-
-    // a helper function to return the "smallest"
-    // curve with respect to the lexicographic ordering
-
-    smallest := function(setOfCurves)
-        curveList := [x: x in setOfCurves];
-        Sort(~curveList, func<x, y| CompareCurves(x,y)>);
-        return curveList[1];
-    end function;
-
-
-    // the dictionary that has keys as labels, and values as the 
-    // smallest curve based on lexicographic ordering
-    labelToCanonicalCurve := AssociativeArray();
-
-    for label in Keys(labelToCurves) do
-        labelToCanonicalCurve[label] := smallest(labelToCurves[label]);
-    end for;
-
-    PrintAssociativeArray(labelToCanonicalCurve);
-    print "Total of ", #Keys(labelToCanonicalCurve), " isogeny classes.";
-
-    */
-
-
-
     return labelToCurves;
 end function;
 
 
 
-DictionaryToFile := procedure(g,q,D, filename)
-
+DictionaryToFile := procedure(g, q, ~D, filename)
     Write(filename, "\n");
     Write(filename, &cat["(g, q)= (", Sprint(g),",",Sprint(q),")"]);
     for key in Keys(D) do 
         output := key cat "|" cat Sprint(D[key]);
-        output:= StripWhiteSpace(output);
+        output := StripWhiteSpace(output);
         Write(filename, output);
     end for;
 end procedure;
@@ -250,22 +195,14 @@ end procedure;
 
 PrimePowers:=[2..499] cat [512, 625, 729, 1024];
 
-//PrimePowers:=[4,7,49,19,19^2];
-
 OutputAllPrimeData := procedure(qs, filename)
-
     Write(filename, "\n" : Overwrite:=true);
     for q in qs do 
         if IsPrimePower(q) and not ((q mod 2) eq 0) and not ((q mod 3) eq 0) then 
             results := EnumerateIsogenyClassesG1(q);
-            DictionaryToFile(1,q,results,filename);
+            DictionaryToFile(1,q,~results,filename);
         end if;
     end for;
 end procedure;
 
 OutputAllPrimeData(PrimePowers, "output.txt");
-
-
-//EnumerateIsogenyClassesG1(19);
-//EnumerateIsogenyClassesG1(19^2);
-
