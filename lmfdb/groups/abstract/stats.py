@@ -207,7 +207,8 @@ class GroupStats(StatsDisplay):
         from .main import group_parse
         group_parse(info, query)
 
-    dynamic_parent_page = "abstract-search.html"
+#dynamic_parent_page = "abstract-search.html"
+    dynamic_parent_page = "abstract-refine-search.html"
     dynamic_cols = ["order", "order_factorization_type", "abelian"]
 
     @lazy_attribute
