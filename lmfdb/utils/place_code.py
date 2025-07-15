@@ -12,10 +12,19 @@ class CodeSnippet():
     """ Utility class for displaying code snippets on lmfdb pages
     """
     def __init__(self, code, item=None, pre="", post=""):
+        """NB: Pre and post are used exclusively for placing code
+        and is useful for displaying codes in table, for example.
+        """
         self.code = code
         self.item = item
         self.langs = sorted([lang for lang in code['show']])
         self.pre, self.post = pre, post
+
+        # edit these when adding support for more languages 
+        self.comments = {'magma': '//', 'sage': '#',
+                         'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
+        self.full_names = {"pari": "PariGP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+
                 
     def place_code(self):
         """Return HTML string which displays code in code box, with copying functionality."""
@@ -49,11 +58,10 @@ class CodeSnippet():
 
     def show_commands_box(self):
         """Display 'Show commands' box and corresponding logic"""
-        lang_names = {"pari": "PariGP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
         box_str = r"""<div align="right" style="float: right; margin-top:2px;">""" + "Show commands: "
         lang_strs = []
         for lang in self.langs:
-            name = lang_names[lang] if lang in lang_names.keys() else lang
+            name = self.full_names[lang] if lang in self.full_names.keys() else lang
             lang_strs.append(rf"""<a onclick="show_code('{lang}',{self.langs} ); return false" href='#'>{name}</a>""")
 
         box_str += " / ".join(lang_strs) + "</div>"
@@ -76,3 +84,13 @@ class CodeSnippet():
         """
         return js_str + box_str
     
+
+    def export_code(self, lang, code_names, frontmatter=""):
+        """ Export code via 'Code to LANG' button for properties box
+        """
+        code = ""
+        for k in code_names:
+            if lang in self.code[k]:
+                code += "\n{} {}: \n".format(self.comments[lang], code_names[k])
+                code += self.code[k][lang] + ('\n' if '\n' not in self.code[k][lang] else '')
+

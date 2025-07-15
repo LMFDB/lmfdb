@@ -1149,19 +1149,16 @@ def nf_code(**args):
     if nf.is_null():
         raise ValueError(f"There is no number field with label {label}")
     nf.make_code_snippets()
-    code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
+    frontmatter = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
+    # MAYBE: This should be in the yaml file! eg. "frontmatter"
     if lang == 'oscar':
-        code += '{} If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'.format(Comment[lang])
-        code += "{} Some of these functions may take a long time to compile (this depends on the state of your Julia REPL), and/or to execute (this depends on the field).\n".format(Comment[lang])
+        frontmatter += '{} If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'.format(Comment[lang])
+        frontmatter += "{} Some of these functions may take a long time to compile (this depends on the state of your Julia REPL), and/or to execute (this depends on the field).\n".format(Comment[lang])
     else:
-        code += "{} Some of these functions may take a long time to execute (this depends on the field).\n".format(Comment[lang])
+        frontmatter += "{} Some of these functions may take a long time to execute (this depends on the field).\n".format(Comment[lang])
     if lang == 'gp':
         lang = 'pari'
-    for k in sorted_code_names:
-        if lang in nf.code[k]:
-            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
-    return code
+    return CreateSnippet(nf.code).export_code(lang,sorted_code_names,frontmatter)
 
 
 class NFSearchArray(SearchArray):
