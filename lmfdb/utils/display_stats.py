@@ -544,6 +544,7 @@ class StatsDisplay(UniqueRepresentation):
             col = cols[0]
             split_list = self._split_lists[col]
             headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
+            old_headers = headers  ## Preserve the original headers for later lookups
             if not buckets:
                 if show_total or proportioner is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
@@ -557,8 +558,13 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 raise ValueError("Bucket keys must be subset of columns")
             counts = [counts[val] for val in headers]
-            for D, val in zip(counts, headers):
+
+            for D, val, old_val in zip(counts, headers, old_headers):
                 D['value'] = val
+                if 'addl_row_title' in kwds.keys():
+                    addl_row_title = kwds['addl_row_title']
+                    D['value2'] = formatter[addl_row_title](old_val)
+
             if proportioner is None or show_total:
                 self._overall = total
             if proportioner is None or isinstance(proportioner, dict):
@@ -634,6 +640,9 @@ class StatsDisplay(UniqueRepresentation):
         data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
+        # issue when no constraints are included yet
+        if len(cols) == 0:
+            return data
         if 'row_title' not in attr:
             attr['row_title'] = self._short_display[cols[0]]
         if len(cols) == 1:

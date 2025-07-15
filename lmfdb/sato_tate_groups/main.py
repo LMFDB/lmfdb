@@ -697,7 +697,7 @@ def mu_data(n):
     if rec['component_group'] is None:
         rec['component_group'] = 'ab/%s' % n
     else:
-        rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+        rec['component_group_number'] = rec['component_group'].split('.')[1]
     rec['st0_label'] = '0.1.A'
     rec['identity_component'] = 'SO(1)'
     rec['trace_zero_density'] = '0'
