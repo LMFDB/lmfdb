@@ -942,11 +942,17 @@ class WebAbstractGroup(WebObj):
                         ov = None
         return ans
 
+    def label_compress(self):
+        spl_label = self.label.split('.')
+        if len(spl_label[0])>12:
+            spl_label[0] = spl_label[0][:3] + "..." + spl_label[0][-3:]
+        return ".".join(spl_label)
+
     def properties(self):
         nilp_str = "yes" if self.nilpotent else "no"
         solv_str = "yes" if self.solvable else "no"
         props = [
-            ("Label", self.label),
+            ("Label", self.label_compress()),
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
