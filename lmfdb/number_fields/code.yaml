@@ -152,14 +152,14 @@ intermediate_fields:
 
 prime_cycle_types:
   sage: |
-    # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Sage:
+    # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Sage:
     p = 7; [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
   pari: |
-    \\ to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Pari:
+    \\ to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Pari:
     p = 7; pfac = idealprimedec(K, p); vector(length(pfac), j, [pfac[j][3], pfac[j][4]])
   magma: |
-    // to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7 in Magma:
+    // to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Magma:
     p := 7; [<pr[2], Valuation(Norm(pr[1]), p)> : pr in Factorization(p*Integers(K))];
   oscar: |
-    # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Oscar:
+    # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
     p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]

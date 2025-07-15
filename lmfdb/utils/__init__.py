@@ -51,7 +51,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'raw_typeset_qexp', 'raw_typeset_int', 'compress_poly_Q',
            'input_string_to_poly', 'dispZmat', 'dispcyclomat',
            'compress_expression',
-           'pos_int_and_factor', 'compress_polynomial', 'create_snippet']
+           'pos_int_and_factor', 'compress_polynomial', 'CodeSnippet']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
