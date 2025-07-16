@@ -18,7 +18,6 @@ import time
 from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
-from datetime import datetime, UTC
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
                    request, url_for)

@@ -16,6 +16,7 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
 from sage.all import cached_function
+from lmfdb.knowledge import logger
 
 # Timezone handling utilities for knowl system
 # 
@@ -43,6 +44,7 @@ def ensure_naive_utc(dt):
     else:
         # Already naive, assume it's UTC
         return dt
+
 
 
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -209,8 +211,8 @@ class KnowlBackend(PostgresBase):
             fields = ['id'] + self._default_fields
         if timestamp is not None:
             timestamp = ensure_naive_utc(timestamp)
-            selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
             logger.debug("Fetching knowl with ID: %s and timestamp: %s", ID, timestamp)
+            selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
             L = self._safe_execute(selecter, [ID, timestamp])
             if L:
                 return dict(zip(fields, L[0]))
