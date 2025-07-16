@@ -195,7 +195,6 @@ class ECisog_class():
         self.lfunc_label = db.lfunc_instances.lucky({'url':origin_url}, "label")
         self.euler_factors = db.lfunc_search.lookup(self.lfunc_label)["euler_factors"]
         self.good_lfactors = [[nth_prime(n+1), self.euler_factors[n]] for n in range(len(self.euler_factors)) if nth_prime(n+1) < 30 and self.conductor % nth_prime(n+1)]
-        self.good_lfactors_pretty = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in self.good_lfactors]                
         self.good_lfactors_pretty_with_label = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(1,c[0]) else '') for c in self.good_lfactors]
         self.bad_lfactors = db.lfunc_lfunctions.lucky({"label": self.lfunc_label})["bad_lfactors"]
         self.bad_lfactors_pretty = [(c[0], list_to_factored_poly_otherorder(c[1])) for c in self.bad_lfactors]
