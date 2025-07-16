@@ -110,6 +110,18 @@ def deTeX_name(s):
 def group_families(deTeX=False):
     L = [(el["family"], el["tex_name"], el["name"]) for el in db.gps_families.search(projection=["family", "tex_name", "name"], sort=["priority"])]
     L = [(fam, name if "fam" in tex else f"${tex}$") for (fam, tex, name) in L]
+
+    # Here, we're directly adding the individual Chevalley group families (i.e. 'A(n,q)', 'B(n,q)', ...) to the group families list
+    # (doing this here to avoid manually adding new families to the data; this avoids re-duplicating data which is already stored in the database)
+    chev_index = [t[0] for t in L].index("Chev")+1
+    for f in ['An','Bn','Cn','Dn','En','F4', 'G2']:
+        L.insert(chev_index, ("Chev"+f[0], "$"+f[0]+"({"+f[1]+"}, {q})$"))
+        chev_index += 1
+    twistchev_index = [t[0] for t in L].index("TwistChev")+1
+    for f in ['2An','2B2','2Dn','3D4','2E6','2F4','2G2']:
+        L.insert(twistchev_index, ("TwistChev"+f[:2], "$^{"+f[0]+"}{"+f[1]+"}({"+f[2]+"},{q})$"))
+        twistchev_index += 1
+
     if deTeX:
         # Used for constructing the dropdown
         return [(fam, deTeX_name(name)) for (fam, name) in L]
@@ -185,6 +197,13 @@ def parse_family(inp, query, qfield):
         query["cyclic"] = True
     elif inp == 'D':
         query["dihedral"] = True
+    
+    # Special cases to check if family is one of the individual Chevalley or twisted Chevalley families
+    elif inp[:4] == 'Chev' and len(inp)==5:
+        query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Chev", 'parameters.fam':inp[4]}, projection='label'))}
+    elif inp[:9] == 'TwistChev' and len(inp)==11:
+        query[qfield] = {'$in':list(db.gps_special_names.search({'family':"TwistChev", 'parameters.twist':int(inp[9]), 'parameters.fam':inp[10]}, projection='label'))}
+
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
 
@@ -1113,6 +1132,14 @@ def group_postprocess(res, info, query):
     if "family" in info:
         if info["family"] == "any":
             fquery = {}
+
+        # Special case to convert the family "ChevX" (for X = A..G) to just "Chev" for the database query
+        elif info["family"][:4] == "Chev":
+            fquery = {"family": "Chev"}
+        # Also special case to convert the family "TwistChevNX" to just "TwistChev" for the database query
+        elif info["family"][:9] == "TwistChev":
+            fquery = {"family": "TwistChev"}
+
         else:
             fquery = {"family": info["family"]}
         fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
@@ -1125,6 +1152,14 @@ def group_postprocess(res, info, query):
                 name = re.sub(r"(\d+)", r"_{\1}", name)
                 if not re.match(r"[MJ]_", name):
                     name = "\\" + name
+
+            # Special case to deal with individual Chevalley families
+            # (e.g. querying the "A(n,q)" family should ensure the "B(n,q)" family names don't show up under "Family name" search column)
+            if (info["family"][:4] == "Chev") and (len(info["family"])==5):
+                if name[0] != info["family"][4]: continue
+            if (info["family"][:9] == "TwistChev") and (len(info["family"])==11):
+                if name[3:5] != info["family"][9:11]: continue
+
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
         for rec in res:
             names = [x[-1] for x in sorted(special_names[rec["label"]])]
