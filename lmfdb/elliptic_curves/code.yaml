@@ -30,6 +30,10 @@ not-implemented:
   oscar: |
     # (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with elliptic curve {label}
+
 curve:
   comment: Define the curve
   sage:  E = EllipticCurve({ainvs})
@@ -38,14 +42,17 @@ curve:
   oscar: E = elliptic_curve({ainvs})
 
 simple_curve:
+  comment: Simplified equation
   sage: E.short_weierstrass_model()
   magma: WeierstrassModel(E);
   oscar: short_weierstrass_model(E)
 
 mwgroup:
+  comment: Mordell-Weil group
   magma: MordellWeilGroup(E);
 
 gens:
+  comment: Mordell-Weil generators
   sage:  E.gens()
   magma: Generators(E);
   pari: E.gen
@@ -84,26 +91,30 @@ jinv:
   oscar: j_invariant(E)
 
 cm:
+  comment: Potential complex multiplication
   sage: E.has_cm()
   magma: HasComplexMultiplication(E);
 
 faltings:
+  comment: Faltings height
   pari: ellheight(E)
   magma: FaltingsHeight(E);
   oscar: faltings_height(E)
 
 stable_faltings:
+  comment: Stable Faltings height
   magma: StableFaltingsHeight(E);
   oscar: stable_faltings_height(E)
 
 rank:
-  comment: Rank
+  comment: Mordell-Weil rank
   sage:  E.rank()
   pari: |
     [lower,upper] = ellrank(E)
   magma: Rank(E);
 
 analytic_rank:
+  comment: Analytic rank
   sage: E.analytic_rank()
   pari: ellanalyticrank(E)
   magma: AnalyticRank(E);
@@ -142,6 +153,7 @@ sha:
   magma: MordellWeilShaInformation(E);
 
 L1:
+  comment: Special L-value
   sage:  |
     r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()
   pari:  |
@@ -150,6 +162,7 @@ L1:
     Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
 
 bsd_formula:
+  comment: BSD formula
   sage: |
     # self-contained SageMath code snippet for the BSD formula (checks rank, computes analytic sha)
     E = EllipticCurve(%s); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
@@ -204,13 +217,14 @@ localdata:
     [(p,tamagawa_number(E,p), kodaira_symbol(E,p), reduction_type(E,p)) for p in bad_primes(E)]
 
 galrep:
-  comment: mod p Galois image
+  comment: Mod p Galois image
   sage:  |
     rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
 adelicimage:
+  comment: Adelic image of Galois representation
   sage:   |
     gens = {adelic_gens}
     GL(2,Integers({level})).subgroup(gens)
@@ -227,4 +241,5 @@ padicreg:
     [ellpadicregulator(E,p,10,G) | p <- primes([5,20])]
 
 isogenies:
+  comment: Isogenies
   pari: ellisomat(E)

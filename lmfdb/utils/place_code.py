@@ -6,6 +6,7 @@
 # so you don't have to pass "| safe"
 # whenever you call .place_code()
 from markupsafe import Markup
+
 # TODO: remove annoying white space at the end of code box
 
 class CodeSnippet():
@@ -17,15 +18,23 @@ class CodeSnippet():
         """
         self.code = code
         self.item = item
-        self.langs = sorted([lang for lang in code['show']])
+        # print(type(code['prompt'].keys()))
+        if 'prompt' in code.keys():
+            self.langs = sorted(list(code['prompt'].keys()))
+        elif 'show' in code.keys():
+            self.langs = sorted(list(code['show'].keys()))
+
+        else:
+            self.langs = []
+        
         self.pre, self.post = pre, post
 
         # edit these when adding support for more languages 
         self.comments = {'magma': '//', 'sage': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
-        self.full_names = {"pari": "PariGP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+        self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+        
 
-                
     def place_code(self):
         """Return HTML string which displays code in code box, with copying functionality."""
         if self.item is None:
@@ -84,13 +93,28 @@ class CodeSnippet():
         """
         return js_str + box_str
     
-
-    def export_code(self, lang, code_names, frontmatter=""):
+    def build_frontmatter(self, label, lang):
+        """ Build frontmatter for export_code
+        """
+        codefrmt = self.code['frontmatter']
+        keys = list(codefrmt.keys())
+        cmt = self.comments[lang]
+        frmt = cmt + " "
+        for key in ['all', lang, 'rest']:
+                frmt += codefrmt[key] if key in keys else ""
+        
+        frmt = frmt.replace('\n', '\n' + cmt + " ", frmt.count("\n")-1)
+        return frmt.format(lang=self.full_names[lang], label=label) + "\n"
+    
+    def export_code(self, label, lang, sorted_code_names):
         """ Export code via 'Code to LANG' button for properties box
         """
-        code = ""
-        for k in code_names:
-            if lang in self.code[k]:
-                code += "\n{} {}: \n".format(self.comments[lang], code_names[k])
-                code += self.code[k][lang] + ('\n' if '\n' not in self.code[k][lang] else '')
-
+        if lang == 'gp':
+            lang = 'pari'
+        code = self.build_frontmatter(label,lang)
+        for key in sorted_code_names:
+            assert key in self.code.keys()
+            if not self.code[key] is None and lang in self.code[key]:
+                code += "\n{} {}: \n".format(self.comments[lang], self.code[key]['comment'])
+                code += self.code[key][lang] + ('\n' if '\n' not in self.code[key][lang] else '')
+        return code

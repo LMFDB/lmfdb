@@ -854,7 +854,7 @@ class ECNF():
 
         self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
         for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"]]:
-            self.downloads.append(('Code to {}'.format(lang[0]),
+            self.downloads.append(('{} commands'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
         self.downloads.append(('Underlying data', url_for(".ecnf_data", label=self.label)))
@@ -887,24 +887,6 @@ sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
                      'disc', 'disc_norm', 'jinv', 'cm', 'rank',
                      'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
-code_names = {'field': 'Define the base number field',
-              'curve': 'Define the curve',
-              'is_min': 'Test whether it is a global minimal model',
-              'cond': 'Compute the conductor',
-              'cond_norm': 'Compute the norm of the conductor',
-              'disc': 'Compute the discriminant',
-              'disc_norm': 'Compute the norm of the discriminant',
-              'jinv': 'Compute the j-invariant',
-              'cm': 'Test for Complex Multiplication',
-              'rank': 'Compute the Mordell-Weil rank',
-              'ntors': 'Compute the order of the torsion subgroup',
-              'gens': 'Compute the generators (of infinite order)',
-              'heights': 'Compute the heights of the generators (of infinite order)',
-              'reg': 'Compute the regulator',
-              'tors': 'Compute the torsion subgroup',
-              'torgens': 'Compute the generators of the torsion subgroup',
-              'localdata': 'Compute the local reduction data at primes of bad reduction'
-}
 
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}

@@ -3436,10 +3436,10 @@ def order_stats_list_to_string(o_list):
 
 sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
 
-code_names = {'presentation': 'Define the group using generators and relations',
-              'permutation': 'Define the group as a permutation group',
-              'matrix': 'Define the group as a matrix group',
-              'transitive': 'Define the group from the transitive group database'}
+# code_names = {'presentation': 'Define the group using generators and relations',
+#               'permutation': 'Define the group as a permutation group',
+#               'matrix': 'Define the group as a matrix group',
+#               'transitive': 'Define the group from the transitive group database'}
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}

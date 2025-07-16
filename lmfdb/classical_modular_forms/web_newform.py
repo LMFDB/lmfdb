@@ -412,11 +412,11 @@ class WebNewform():
             label = '%s.%s' % (self.label, self.embedding_label)
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
         downloads.append(
-                ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
+                ('Magma commands', url_for(".cmf_code_download", label=self.label, download_type='magma')))
         downloads.append(
-                ('Code to PariGP', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+                ('PariGP commands', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
-                ('Code to SageMath', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+                ('SageMath commands', url_for(".cmf_code_download", label=self.label, download_type='sage')))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads

@@ -16,7 +16,7 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
-    raw_typeset_int, compress_poly_Q, compress_polynomial)
+    raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -700,7 +700,7 @@ def render_field_webpage(args):
     downloads = [('Stored data to gp',
                   url_for('.nf_download', nf=label, download_type='data'))]
     for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "gp"), ("SageMath", "sage")]:
-        downloads.append(('Code to {}'.format(lang[0]),
+        downloads.append(('{} commands'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
     downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
@@ -1117,24 +1117,6 @@ sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'fundamental_units', 'regulator', 'class_number_formula',
                      'intermediate_fields', 'galois_group', 'prime_cycle_types']
 
-code_names = {'field': 'Define the number field',
-              'poly': 'Defining polynomial',
-              'degree': 'Degree over Q',
-              'signature': 'Signature',
-              'discriminant': 'Discriminant',
-              'ramified_primes': 'Ramified primes',
-              'automorphisms': 'Autmorphisms',
-              'integral_basis': 'Integral basis',
-              'class_group': 'Class group',
-              'unit_group': 'Unit group',
-              'unit_rank': 'Unit rank',
-              'unit_torsion_gen': 'Generator for roots of unity',
-              'fundamental_units': 'Fundamental units',
-              'regulator': 'Regulator',
-              'class_number_formula': 'Analytic class number formula',
-              'galois_group': 'Galois group',
-              'intermediate_fields': 'Intermediate fields',
-              'prime_cycle_types': 'Frobenius cycle types'}
 
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
@@ -1144,21 +1126,16 @@ def nf_code(**args):
     label = args['nf']
     if not FIELD_LABEL_RE.fullmatch(label):
         raise ValueError(f"Invalid label {label}")
+    Comment = {'magma': '//', 'sage': '#',
+                     'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
+    
     lang = args['download_type']
     nf = WebNumberField(label)
     if nf.is_null():
         raise ValueError(f"There is no number field with label {label}")
     nf.make_code_snippets()
-    frontmatter = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
-    # MAYBE: This should be in the yaml file! eg. "frontmatter"
-    if lang == 'oscar':
-        frontmatter += '{} If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'.format(Comment[lang])
-        frontmatter += "{} Some of these functions may take a long time to compile (this depends on the state of your Julia REPL), and/or to execute (this depends on the field).\n".format(Comment[lang])
-    else:
-        frontmatter += "{} Some of these functions may take a long time to execute (this depends on the field).\n".format(Comment[lang])
-    if lang == 'gp':
-        lang = 'pari'
-    return CreateSnippet(nf.code).export_code(lang,sorted_code_names,frontmatter)
+    code = CodeSnippet(nf.code)
+    return code.export_code(label, lang, sorted_code_names)
 
 
 class NFSearchArray(SearchArray):

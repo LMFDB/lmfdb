@@ -571,10 +571,10 @@ class WebEC():
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
-                          ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
-                          ('Code to Oscar', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
-                          ('Code to PariGP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
-                          ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Magma commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Oscar commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
+                          ('PariGP commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('SageMath commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
                           ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
@@ -815,9 +815,12 @@ class WebEC():
                 adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
             else:
                 adelic_gens = adelic_level = ''
-            data = { 'ainvs': self.data['ainvs'],
-                     'level': adelic_level,
-                     'adelic_gens': adelic_gens }
+            data = {
+                'label': "{label}",
+                'lang' : "{lang}",
+                'ainvs': self.data['ainvs'],
+                'level': adelic_level,
+                'adelic_gens': adelic_gens }
             for prop in code:
                 for lang in code[prop]:
                     code[prop][lang] = code[prop][lang].format(**data)
