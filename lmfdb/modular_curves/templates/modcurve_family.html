@@ -28,15 +28,17 @@
       <td> {{ family.cusps | safe }}</td><td style="width:20px;"></td>
     </tr>
     <tr>
-      <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td>{{ family.genus_formula }}</td>
+      <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td>{{ family.genus_formula | safe }}</td>
     </tr>
 </table>
 
 
-{% if family.hypell_description or family.biell_description %}
-<h2> Remarks </h2>
+<!-- {% if family.hypell_description or family.biell_description %} -->
+<!-- <h2> Remarks </h2>
 <p>{{KNOWL('ag.hyperelliptic_curve', 'Hyperelliptic curves')}}: {{ family.hypell_description|safe }}</p>
-<p>{{KNOWL('ag.bielliptic_curve', 'Bielliptic curves')}}: {{ family.biell_description|safe }}</p>
-{% endif %}
+<p>{{KNOWL('ag.bielliptic_curve', 'Bielliptic curves')}}: {{ family.biell_description|safe }}</p> -->
+<!-- {% endif %} -->
+<p>{{ KNOWL_INC(family.knowl_ID_remarks) }}</p>
+
 
 {% endblock %}

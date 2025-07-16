@@ -28,6 +28,7 @@ class ModCurveFamily_base():
         self.biell_description_text = biell_description_text
         self.notation = notation
         self.knowl_ID = knowl_ID
+        self.knowl_ID_remarks = knowl_ID + ".remarks"
 
     @lazy_attribute
     def bread(self):
