@@ -3,17 +3,12 @@ from lmfdb.modular_curves.web_curve import get_bread
 
 
 def ModCurveFamily(name):
-    return get_family(name)
-
-
-def get_family(name):
     try:
         return ALL_FAMILIES[name]
     except KeyError:
         raise ValueError(
-            f"Invalid name '{name}'. Valid names: {list(ALL_FAMILIES.keys())}"
+            f"Invalid name '{name}'. Valid names: {list(ALL_FAMILIES)}"
         )
-
 
 class ModCurveFamily_base:
 
