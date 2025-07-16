@@ -48,18 +48,6 @@ class ModCurveFamily_base:
     def title(self):
         return f"Modular curve family ${self.name}$"
 
-    @lazy_attribute
-    def hypell_description(self):
-        if self.hypell_description_text:
-            return self.hypell_description_text.replace("NAME", self.name)
-        return None
-
-    @lazy_attribute
-    def biell_description(self):
-        if self.biell_description_text:
-            return self.biell_description_text.replace("NAME", self.name)
-        return None
-
 
 X0 = ModCurveFamily_base(
     famname="X0",
