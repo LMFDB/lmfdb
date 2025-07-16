@@ -296,7 +296,7 @@ class ModCrvTest(LmfdbTest):
             assert url[15:] in L1.get_data(as_text=True)
 
     def test_family_page(self):
-           for name, family in ALL_FAMILIES.items():
+        for name, family in ALL_FAMILIES.items():
             self.check_args(
                 f"/ModularCurve/Q/family/{name}",
                 [
@@ -308,7 +308,7 @@ class ModCrvTest(LmfdbTest):
                     family.nu3,
                 ],
             )
-            
+
     def test_family_search(self):
         family_set = [
             ('X0','2.3.0.a.1'),
