@@ -893,12 +893,32 @@ def auto_gens(label):
     info["aut_boolean_string"] = create_boolean_aut_string(gp)
     info["out_boolean_string"] = create_boolean_aut_string(gp, prefix="outer_", name="outer automorphism group")
     info["inner_boolean_string"] = create_boolean_aut_string(gp, prefix="inner_", name="inner automorphism group")
+
+    props = [
+        ("Order", factor_latex(gp.aut_order)),
+        ]
+    if gp.aut_abelian is None:
+        props.append(("Abelian", "not computed"))
+    elif gp.aut_abelian:
+        props.append(("Abelian", "yes"))
+    else:
+        props.append(("Abelian", "no"))
+    if gp.outer_order is None:
+        props.append(("Outer", "not computed"))
+    else:
+        props.append(("Outer", factor_latex(gp.outer_order))),
+    if gp.inner_order is None:
+        props.append(("Inner", "not computed"))
+    else:
+        props.append(("Inner", factor_latex(gp.inner_order)))
+
     return render_template(
         "auto_page.html",
         info=info,
         gp=gp,
+        properties=props,
         title="Automorphism group of $%s$" % gp.tex_name,
-        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group", " ")]),
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group", " ")])
     )
 
 

@@ -2225,6 +2225,15 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
+    def auto_perms_list(self):
+        perms = self.aut_perms
+        return [ self.decode_as_perm(perm, n= self.aut_permdeg, as_str=True) for perm in perms ]
+
+    def outer_perms_list(self):
+        perms = self.outer_perms
+        return [ self.decode_as_perm(perm, n= self.outer_permdeg, as_str=True) for perm in perms ]
+
+
     def auto_gens_data(self):
         gens = self.aut_gens
         gens = [ [ self.decode(gen) for gen in z ] for z in gens]
@@ -2550,14 +2559,11 @@ class WebAbstractGroup(WebObj):
     # inner automorphism group
     def show_inner_group(self):
         tex = self.inner_tex
-        print("TEX", tex)
         if self.central_quotient is None:
             if self.inner_order is None:
                 return "not computed"
             if tex is None:
-                print("What about here?")
                 return f"Group of order {pos_int_and_factor(self.inner_order)}"
-            print("TEX", tex)
             return f"${tex}$"
         url = url_for("abstract.by_label", label=self.central_quotient)
         if tex is None:
