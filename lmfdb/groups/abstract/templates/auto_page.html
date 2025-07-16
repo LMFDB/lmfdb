@@ -17,19 +17,23 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.aut_phi_ratio',title='$\\phi$-ratio')}}</td>
-    <td>${{gp.aut_phi_ratio}}$</td>
+    {% if gp.aut_phi_ratio %}<td>${{gp.aut_phi_ratio}}$</td>
+    {% else %}  <td> not computed </td>  {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
-    <td>${{gp.aut_exponent}}$</td>
+    {% if gp.aut_exponent %}<td>${{gp.aut_exponent}}$</td>
+     {% else %} 	<td> not computed </td>	 {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td>
-    <td>${{gp.aut_nilpotency_class}}$</td>
+    {% if gp.aut_nilpotency_class %}<td>${{gp.aut_nilpotency_class}}$</td>
+     {% else %} 	<td> not computed </td>	 {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.derived_series', title='Derived length:')}}</td>
-    <td>${{gp.aut_derived_length}}$</td>
+    {% if gp.aut_derived_length %}<td>${{gp.aut_derived_length}}$</td>
+     {% else %} 	<td> not computed </td>	 {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.automorphism', 'Underlying group')}}</td>
@@ -74,6 +78,8 @@
     </table>
 </p>
 
+
+
 <h2>Outer automorphism group information</h2>
 
 <p>
@@ -88,7 +94,9 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    {% if gp.outer_exponent %}
     <td>${{gp.outer_exponent}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
   </tr>
 </table>
 </p>
@@ -96,6 +104,8 @@
   {{info.out_boolean_string | safe}}
 </p>
 
+
+{% if gp.outer_gens %}
 <h4>Generators</h4>
 
 <p>
@@ -120,9 +130,14 @@
       </tbody>
     </table>
 </p>
+{% endif %}
+
+
 
 
 <h2>Inner automorphism group information</h2>
+
+{% if gp.inner_order %}
 
 <p>
 <table>
@@ -136,13 +151,17 @@
   </tr>
   <tr>
     <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
-    <td>${{gp.inner_exponent}}$</td>
+    {% if gp.outer_exponent %}    <td>${{gp.inner_exponent}}$</td>
+    {% else %} <td> not computed </td> {% endif %}
   </tr>
 </table>
 </p>
 <p>
   {{info.inner_boolean_string | safe}}
 </p>
+
+
+{% if inner_gens %}
 
 <h4>Generators</h4>
 
@@ -170,5 +189,14 @@
       </tbody>
     </table>
 </p>
+
+{% endif %}
+
+{% else %}
+
+No data about inner automorphisms has been computed.
+
+
+{% endif %}
 
 {% endblock %}

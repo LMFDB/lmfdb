@@ -2513,8 +2513,11 @@ class WebAbstractGroup(WebObj):
             return "not computed"
         aut_order = pos_int_and_factor(self.aut_order)
         tex = self.aut_tex
-        if tex is not None:
-            tex = tex.replace("\t", r"\t")
+        if tex is None:
+            tex = "Group"
+            knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">{tex}</a>'
+            return f'{knowl} of order {aut_order}'
+        tex = tex.replace("\t", r"\t")
         knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">${tex}$</a>'
         return f'{knowl}, of order {aut_order}'
 
@@ -2547,12 +2550,15 @@ class WebAbstractGroup(WebObj):
     # inner automorphism group
     def show_inner_group(self):
         tex = self.inner_tex
+        print("TEX", tex)
         if self.central_quotient is None:
             if self.inner_order is None:
                 return "not computed"
             if tex is None:
+                print("What about here?")
                 return f"Group of order {pos_int_and_factor(self.inner_order)}"
-            return "${tex}$"
+            print("TEX", tex)
+            return f"${tex}$"
         url = url_for("abstract.by_label", label=self.central_quotient)
         if tex is None:
             tex = group_names_pretty(self.central_quotient)

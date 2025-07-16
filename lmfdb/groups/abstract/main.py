@@ -543,6 +543,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
+
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -694,10 +695,17 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
     else:
         main = f"This {name} is {display_props(props)}."
     unknown = [prop for prop in overall_order if getattr(gp, prefix+prop, None) is None]
+    if {'abelian', 'nonabelian'} <= set(unknown):
+        unknown.remove('nonabelian')
+    if {'solvable', 'nonsolvable'} <= set(unknown):
+        unknown.remove('nonsolvable')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
+        if display_props(props) == "":
+            return f"We have not determined whether the {name} is {display_props(unknown, 'or')}."
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+
     return main
 
 
@@ -3431,7 +3439,7 @@ def autknowl_data(label):
                 ans += f', of order {pos_int_and_factor(ovar)}'
             ans += '<br />\n'
         elif ovar is not None:
-            ans += f'{name} automorphism group of order ${pos_int_and_factor(ovar)}$<br />\n'
+            ans += f'{name} automorphism group of order {pos_int_and_factor(ovar)}<br />\n'
     ans += create_boolean_aut_string(gp, type="knowl") + '<br />\n'
     ans += f'<div align="right"><a href="{url_for("abstract.auto_gens", label=label)}">Automorphism group data for {label}</div>'
     return Markup(ans)
