@@ -25,20 +25,19 @@ class CodeSnippet():
         else:
             # for backwards compatibility
             self.langs = []
-        
+
         self.pre, self.post = pre, post
 
-        # edit these when adding support for more languages 
+        # edit these when adding support for more languages
         self.comments = {'magma': '//', 'sage': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
         self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
-        
 
     def place_code(self):
         """Return HTML string which displays code in code box, with copying functionality."""
         if self.item is None:
             raise ValueError("No code to place, please init with code item")
-        item = self.item 
+        item = self.item
         snippet_str = self.pre # initiate new string
         prompt_style = "color: gray;"
         code_style = "user-select: text; flex: 1"
@@ -48,7 +47,7 @@ class CodeSnippet():
                 if isinstance(code[item][L],str):
                     lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
                     lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
-                else:   
+                else:
                     lines = code[item][L]
 
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
@@ -56,7 +55,7 @@ class CodeSnippet():
                 sep = "\n"
                 snippet_str += f"""
     <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top">
-        <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 12px; margin: 3px"><img alt="Copy content" class="tset-icon"></span> 
+        <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 12px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
         <span class="prompt" style="{prompt_style}">{prompt}:&nbsp;</span><span class="code" style="{code_style}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
@@ -72,7 +71,7 @@ class CodeSnippet():
             lang_strs.append(rf"""<a onclick="show_code('{lang}',{self.langs} ); return false" href='#'>{name}</a>""")
 
         box_str += " / ".join(lang_strs) + "</div>"
-        # NB: unlike the past jinja2 macro, this formats as inline-flex 
+        # NB: unlike the past jinja2 macro, this formats as inline-flex
         # instead of inline-block in order to correctly render copy symbol in blocks
         js_str = r"""
         <script>
@@ -90,7 +89,7 @@ class CodeSnippet():
         </script>
         """
         return js_str + box_str
-    
+
     def build_frontmatter(self, label, lang):
         """ Build frontmatter for export_code
         """
@@ -98,11 +97,11 @@ class CodeSnippet():
         cmt = self.comments[lang]
         frmt = cmt + " "
         for key in ['all', lang, 'rest']:
-                frmt += codefrmt[key] if key in codefrmt else ""
-        
+            frmt += codefrmt[key] if key in codefrmt else ""
+
         frmt = frmt.replace('\n', '\n' + cmt + " ", frmt.count("\n")-1)
         return frmt.format(lang=self.full_names[lang], label=label) + "\n"
-    
+
     def export_code(self, label, lang, sorted_code_names):
         """ Export code via 'Code to LANG' button for properties box
         """
