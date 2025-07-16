@@ -175,7 +175,6 @@ class KnowlBackend(PostgresBase):
         # that restore happens, we could trigger an error.  The restore
         # takes about 0.6 seconds, so if we hit an error we wait
         # 1 second and try again.
-        print(self._db.cursor().mogrify(query, values))
         try:
             return list(self._execute(query, values))
         except Exception:
