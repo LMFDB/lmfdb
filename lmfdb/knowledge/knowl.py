@@ -211,7 +211,7 @@ class KnowlBackend(PostgresBase):
         if timestamp is not None:
             timestamp = ensure_naive_utc(timestamp)
             selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
-            print("ID", ID, "timestamp", timestamp)
+            logger.debug("Fetching knowl with ID: %s and timestamp: %s", ID, timestamp)
             L = self._safe_execute(selecter, [ID, timestamp])
             if L:
                 return dict(zip(fields, L[0]))
