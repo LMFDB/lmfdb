@@ -296,16 +296,19 @@ class ModCrvTest(LmfdbTest):
             assert url[15:] in L1.get_data(as_text=True)
 
     def test_family_page(self):
-        for family in ALL_FAMILIES.keys():
-            L = self.tc.get(f'/ModularCurve/Q/family/{family}')
-            assert ALL_FAMILIES[family].name in L.get_data(as_text=True)
-            assert ALL_FAMILIES[family].genus_formula in L.get_data(as_text=True)
-            assert ALL_FAMILIES[family].cusps in L.get_data(as_text=True)
-            assert ALL_FAMILIES[family].psl2index in L.get_data(as_text=True)
-            assert ALL_FAMILIES[family].nu2 in L.get_data(as_text=True)
-            assert ALL_FAMILIES[family].nu3 in L.get_data(as_text=True)
-
-
+           for name, family in ALL_FAMILIES.items():
+            self.check_args(
+                f"/ModularCurve/Q/family/{name}",
+                [
+                    family.name,
+                    family.genus_formula,
+                    family.cusps,
+                    family.psl2index,
+                    family.nu2,
+                    family.nu3,
+                ],
+            )
+            
     def test_family_search(self):
         family_set = [
             ('X0','2.3.0.a.1'),

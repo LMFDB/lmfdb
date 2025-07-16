@@ -53,9 +53,6 @@ X0 = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \sum\limits_{d|N, d>0} \varphi\left(\left(d,\frac{N}{d}\right)\right)$",
     knowl_ID="modcurve.x0",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
-    #hypell_level="?level=22%2C+23%2C+26%2C+28%2C+29%2C+30%2C+31%2C+33%2C+35%2C+37%2C+39%2C+40%2C+41%2C+46%2C+47%2C+48%2C+50%2C+59%2C+71&family=X0",
-    #biell_level="?level=22%2C+26%2C+28%2C+30%2C+33%2C+34%2C+35%2C+37%2C+38%2C+39%2C+40%2C+42%2C+43%2C+44%2C+45%2C+48%2C+50%2C+51%2C+53%2C+54%2C+55%2C+56%2C+60%2C+61%2C+62%2C+63%2C+64%2C+65%2C+69%2C+72%2C+75%2C+79%2C+81%2C+83%2C+89%2C+92%2C+94%2C+95%2C+101%2C+119%2C+131&family=X0",
-    #biell_nonhypell_level="?level=34%2C+38%2C+42%2C+43%2C+44%2C+45%2C+51%2C+53%2C+54%2C+55%2C+56%2C+60%2C+61%2C+62%2C+63%2C+64%2C+65%2C+69%2C+72%2C+75%2C+79%2C+81%2C+83%2C+89%2C+92%2C+94%2C+95%2C+102%2C+119%2C+131&family=X0",
 )
 
 X1 = ModCurveFamily_base(
@@ -67,8 +64,6 @@ X1 = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \begin{cases} 1, & \text{ if } N =1, \\ 2, & \text{ if } N = 2, \\ 3, & \text{ if } N = 4, \\ \frac{1}{2} \cdot \sum\limits_{d|N,d>0} \varphi(d)\varphi\left(\frac{N}{d}\right), & \text{ otherwise.} \end{cases}$",
     knowl_ID="modcurve.x1",
     genus_formula=r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$",
-    #hypell_level="?level=13%2C16%2C18&family=X1",
-    #biell_level="?level=13%2C16%2C17%2C18%2C20%2C21%2C22%2C24&family=X1",
 )
 
 X = ModCurveFamily_base(
@@ -181,7 +176,6 @@ Xarith = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \begin{cases}1, & \text{if } N=1,\\ i/N, & \text{if } N>1.\end{cases}$",
     knowl_ID="modcurve.xarith",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
-    #biell_level="?level=7%2C8&family=Xarith",
 )
 
 ALL_FAMILIES = {
