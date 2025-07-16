@@ -197,11 +197,11 @@ def parse_family(inp, query, qfield):
         query["cyclic"] = True
     elif inp == 'D':
         query["dihedral"] = True
-    
+
     # Special cases to check if family is one of the individual Chevalley or twisted Chevalley families
-    elif inp[:4] == 'Chev' and len(inp)==5:
+    elif inp[:4] == 'Chev' and len(inp) == 5:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Chev", 'parameters.fam':inp[4]}, projection='label'))}
-    elif inp[:9] == 'TwistChev' and len(inp)==11:
+    elif inp[:9] == 'TwistChev' and len(inp) == 11:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"TwistChev", 'parameters.twist':int(inp[9]), 'parameters.fam':inp[10]}, projection='label'))}
 
     else:
@@ -1155,10 +1155,12 @@ def group_postprocess(res, info, query):
 
             # Special case to deal with individual Chevalley families
             # (e.g. querying the "A(n,q)" family should ensure the "B(n,q)" family names don't show up under "Family name" search column)
-            if (info["family"][:4] == "Chev") and (len(info["family"])==5):
-                if name[0] != info["family"][4]: continue
-            if (info["family"][:9] == "TwistChev") and (len(info["family"])==11):
-                if name[3:5] != info["family"][9:11]: continue
+            if (info["family"][:4] == "Chev") and (len(info["family"]) == 5):
+                if name[0] != info["family"][4]:
+                    continue
+            if (info["family"][:9] == "TwistChev") and (len(info["family"]) == 11):
+                if name[3:5] != info["family"][9:11]:
+                    continue
 
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
         for rec in res:

@@ -887,7 +887,7 @@ def render_by_label(label):
             flash_error("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
             return redirect(url_for(".index"))
         info['component_group'] = G['tex_name']
-        info['component_group_knowl'] = abstract_group_display_knowl(r"%s"% data['component_group'])
+        info['component_group_knowl'] = abstract_group_display_knowl(r"%s" % data['component_group'])
         info['cyclic'] = boolean_name(G['cyclic'])
         info['abelian'] = boolean_name(G['abelian'])
         info['solvable'] = boolean_name(G['solvable'])
