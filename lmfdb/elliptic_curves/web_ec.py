@@ -561,7 +561,8 @@ class WebEC():
         else:
             self.friends += [('L-function not available', "")]
 
-        if not self.cm:
+        # kill symmetric power L-functions for now
+        if False and not self.cm:
             if N <= 300:
                 self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=N, isogeny=iso))]
             if N <= 50:
