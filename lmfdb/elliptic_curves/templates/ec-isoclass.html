@@ -117,8 +117,8 @@ curve {{info.optimal_label}}.{% endif %}
             <th>Prime</th>
             <th align="left">L-Factor</th>
         </tr>
-        {% for c in info.bad_primes %}
-        <tr><td class="center">\({{ c }}\)</a></td><td align="left">Placeholder</td></tr>
+        {% for c in info.bad_lfactors_pretty %}
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\({{ c[1] }}\)</td></tr>
         {% endfor %}
         </table>
     </tr>
