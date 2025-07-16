@@ -144,7 +144,7 @@ Xns = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \varphi(N)$",
     knowl_ID="modcurve.xns",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
-    notation=r'''<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> 
+    notation=r'''<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li>
     <li>$\varphi(N)$ is the Euler totient function </li>
     </ul>''',
 )
@@ -158,7 +158,7 @@ Xnsplus = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \begin{cases}1 & \text{if } N=2, \\ \frac{1}{2}\cdot \varphi(N) & \text{otherwise.}\end{cases}$",
     knowl_ID="modcurve.xns_plus",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
-    notation=r'''<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> 
+    notation=r'''<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li>
     <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li>
     <li>$\varphi(N)$ is the Euler totient function </li>
     </ul>''',
