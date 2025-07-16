@@ -1,7 +1,7 @@
 # the basic knowledge object, with database awareness, …
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import re
 import subprocess
 import time
@@ -408,7 +408,7 @@ class KnowlBackend(PostgresBase):
 
     def review(self, knowl, who, set_beta=False):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
-        self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
+        self._execute(updator, [0 if set_beta else 1, who, datetime.now(UTC), knowl.id, knowl.timestamp])
 
     def _set_referrers(self, knowls):
         kids = [k.id for k in knowls]
@@ -426,7 +426,7 @@ class KnowlBackend(PostgresBase):
                     for D in self.code_references(k)]
 
     def needs_review(self, days):
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
@@ -623,7 +623,7 @@ class KnowlBackend(PostgresBase):
         old_name = knowl.id
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
-            new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
+            new_knowl = knowl.copy(ID=new_name, timestamp=datetime.now(UTC), source=knowl.id)
             new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
@@ -725,7 +725,7 @@ class KnowlBackend(PostgresBase):
         if there has been a lock in the last @delta_min minutes, returns a dictionary with the name of the user who obtained a lock and the time it was obtained; else None.
         attention, it discards all locks prior to @delta_min!
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
@@ -738,7 +738,7 @@ class KnowlBackend(PostgresBase):
         when a knowl is edited, a lock is created. username is the user id.
         """
         inserter = SQL("INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         self._execute(inserter, [knowl.id, now, username])
 
     def knowl_title(self, kid):
@@ -831,7 +831,7 @@ class Knowl():
         # Because category is different from cat, the category will be recomputed when copying knowls.
         self.category = data.get('cat', extract_cat(ID))
         self._last_author = data.get('last_author', data.get('_last_author', ''))
-        self.timestamp = data.get('timestamp', datetime.utcnow())
+        self.timestamp = data.get('timestamp', datetime.now(UTC))
         self.ms_timestamp = datetime_to_timestamp_in_ms(self.timestamp)
         self.links = data.get('links', [])
         self.defines = data.get('defines', [])
@@ -885,7 +885,7 @@ class Knowl():
             self.most_recent = not self.edit_history or self.edit_history[-1]['timestamp'] == self.timestamp
             #if not self.edit_history:
             #    # New knowl.  This block should be edited according to the desired behavior for diffs
-            #    self.edit_history = [{"timestamp":datetime.utcnow(),
+            #    self.edit_history = [{"timestamp":datetime.now(UTC),
             #                          "last_author":"__nobody__",
             #                          "content":"",
             #                          "status":0}]

@@ -96,7 +96,7 @@ class LMFDBSearchTable(PostgresSearchTable):
             for col, knowl in knowls.items():
                 if col in self.col_type:
                     if keep_old:
-                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=datetime.datetime.utcnow())
+                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=datetime.datetime.now(datetime.UTC))
                         who = self._db.login()
                         new_knowl.save(who, most_recent=knowl, minor=True)
                     else:
@@ -362,7 +362,7 @@ class LMFDBDatabase(PostgresDatabase):
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
+        self._execute(inserter, [uid, datetime.datetime.now(datetime.UTC), tablename, operation, data])
 
     def verify(
         self,
