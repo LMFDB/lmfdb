@@ -38,6 +38,7 @@ from lmfdb.utils import (
     WebObj,
     pos_int_and_factor,
     raw_typeset,
+    CodeSnippet
 )
 from .circles import find_packing
 
@@ -2781,33 +2782,11 @@ class WebAbstractGroup(WebObj):
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
     def create_snippet(self,item):
-        # mimics jinja macro place_code to be included in Constructions section
-        # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
-        code = self.code_snippets()
-        snippet_str = "" # initiate new string
-        if code[item]:
-            for L in code[item]:
-                if isinstance(code[item][L],str):
-                    lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
-                    lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
-                else:   # not currently used in groups
-                    lines = code[item][L]
-                prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
-                class_str = " ".join([L,'nodisplay','codebox'])
-                col_span_val = '"6"'
-                for line in lines:
-                    snippet_str += f"""
-<tr>
-    <td colspan={col_span_val}>
-        <div class="{class_str}">
-            <span class="raw-tset-copy-btn" onclick="copycode(this)"><img alt="Copy content" class="tset-icon"></span>
-            <span class="prompt">{prompt}:&nbsp;</span><span class="code">{line}</span>
-            <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
-        </div>
-    </td>
-</tr>
-"""
-        return snippet_str
+        col_span_val = '"6"'
+        snippet = CodeSnippet(self.code_snippets(), item,
+                              pre=f"<tr> <td colspan={col_span_val}>",
+                              post="</td></tr>")
+        return snippet.place_code()
 
     @cached_method
     def code_snippets(self):
