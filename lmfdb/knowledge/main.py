@@ -18,13 +18,12 @@ import time
 from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
-from datetime import datetime, UTC
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, utc_now_naive
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -628,7 +627,7 @@ def columns():
 
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
-    time = datetime_to_timestamp_in_ms(datetime.now(UTC))
+    time = datetime_to_timestamp_in_ms(utc_now_naive())
     cid = '%s.%s.comment' % (ID, time)
     return edit(ID=cid)
 
@@ -692,7 +691,7 @@ def save_form():
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
-        k.timestamp = datetime.now(UTC)
+        k.timestamp = utc_now_naive()
         k.status = 0
         k.save(who=who)
     if NEWID:
