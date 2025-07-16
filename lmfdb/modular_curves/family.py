@@ -53,6 +53,7 @@ X0 = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \sum\limits_{d|N, d>0} \varphi\left(\left(d,\frac{N}{d}\right)\right)$",
     knowl_ID="modcurve.x0",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
+    notation=r'''<ul> <li>$\varphi(d)$ is the Euler totient function </li></ul>''',
 )
 
 X1 = ModCurveFamily_base(
@@ -86,6 +87,7 @@ Xpm1 = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \begin{cases} 1, & \text{ if } N =1, \\ 2, & \text{ if } N = 2, \\ 3, & \text{ if } N = 4, \\ \frac{1}{2} \cdot \sum\limits_{d|N,d>0} \varphi(d)\varphi\left(\frac{N}{d}\right), & \text{ otherwise.} \end{cases}$",
     knowl_ID="modcurve.xpm1",
     genus_formula=r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$",
+    notation=r'''<ul> <li>$\varphi(d)$ is the Euler totient function </li>  </ul>''',
 )
 
 Xarith1 = ModCurveFamily_base(
@@ -108,6 +110,7 @@ Xarithpm1 = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \begin{cases}1 & \text{if } M,N=1, \\ 2 & \text{if } M=1, \ N=2, \\ 3 & \text{if } M=1, \ N=4, \\ \frac{1}{2}\cdot \sum\limits_{d \mid MN } \varphi \left(\frac{MN}{d}\right) \varphi(d) \gcd \left(M,\frac{MN}{d}\right) & \text{otherwise.}\end{cases}$",
     knowl_ID="modcurve.xpm1mn",
     genus_formula=r"$$g = 1 + \frac{i}{12} - \frac{\nu_2}{4} - \frac{\nu_3}{3} - \frac{\nu_\infty}{2}$$",
+    notation=r'''<ul>    <li>$\varphi(d)$ is the Euler totient function </li>    </ul>''',
 )
 
 Xsp = ModCurveFamily_base(
@@ -141,7 +144,9 @@ Xns = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \varphi(N)$",
     knowl_ID="modcurve.xns",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
-    notation=r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> </ul>",
+    notation=r'''<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> 
+    <li>$\varphi(N)$ is the Euler totient function </li>
+    </ul>''',
 )
 
 Xnsplus = ModCurveFamily_base(
@@ -153,7 +158,10 @@ Xnsplus = ModCurveFamily_base(
     cusps=r"$\nu_\infty = \begin{cases}1 & \text{if } N=2, \\ \frac{1}{2}\cdot \varphi(N) & \text{otherwise.}\end{cases}$",
     knowl_ID="modcurve.xns_plus",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
-    notation=r"<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li> </ul>",
+    notation=r'''<ul> <li>$\omega(N)$ is the number of primes dividing $N$.</li> 
+    <li>$S = \{a+b\alpha \in (\mathbb{Z}/N\mathbb{Z})[\alpha]^\times/\pm 1 : N(a+b\alpha) = -1, \operatorname{gcd}(b,N) >1\}.$ </li>
+    <li>$\varphi(N)$ is the Euler totient function </li>
+    </ul>''',
 )
 
 XS4 = ModCurveFamily_base(
