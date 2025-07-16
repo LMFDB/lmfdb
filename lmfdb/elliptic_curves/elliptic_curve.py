@@ -1059,32 +1059,6 @@ def render_bhkssw():
 
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
-# code_names = {'curve': '',
-#                  'simple_curve': '',
-#                  'mwgroup': '',
-#                  'gens': '',
-#                  'tors': '',
-#                  'intpts': 'Integral points',
-#                  'cond': 'Conductor',
-#                  'disc': 'Discriminant',
-#                  'jinv': 'j-invariant',
-#                  'cm': '',
-#                  'faltings': '',
-#                  'stable_faltings': '',
-#                  'rank': '',
-#                  'analytic_rank': '',
-#                  'reg': 'Regulator',
-#                  'real_period': 'Real Period',
-#                  'cp': 'Tamagawa numbers',
-#                  'ntors': 'Torsion order',
-#                  'sha': 'Order of Sha',
-#                  'L1': '',
-#                  'bsd_formula': '',
-#                  'qexp': '',
-#                  'moddeg': 'Modular degree',
-#                  'manin': 'Manin constant',
-#                  'localdata': 'Local data',
-#                  'galrep': 'mod p Galois image'}
 
 Fullname = {
     'magma': 'Magma',

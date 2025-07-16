@@ -1126,9 +1126,6 @@ def nf_code(**args):
     label = args['nf']
     if not FIELD_LABEL_RE.fullmatch(label):
         raise ValueError(f"Invalid label {label}")
-    Comment = {'magma': '//', 'sage': '#',
-                     'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
-    
     lang = args['download_type']
     nf = WebNumberField(label)
     if nf.is_null():

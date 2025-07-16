@@ -18,7 +18,6 @@ class CodeSnippet():
         """
         self.code = code
         self.item = item
-        # print(type(code['prompt'].keys()))
         if 'prompt' in code.keys():
             self.langs = sorted(list(code['prompt'].keys()))
         elif 'show' in code.keys():
