@@ -24,7 +24,7 @@ from sage.all import cached_function
 from lmfdb.knowledge import logger
 
 # Timezone handling utilities for knowl system
-# 
+#
 # IMPORTANT: The knowl database stores timestamps in columns defined as
 # "timestamp without time zone". All timestamps are stored as UTC but
 # without timezone information. These utilities ensure consistent handling.
@@ -49,7 +49,6 @@ def ensure_naive_utc(dt):
     else:
         # Already naive, assume it's UTC
         return dt
-
 
 
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
