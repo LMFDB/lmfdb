@@ -16,7 +16,12 @@ import csv
 import io
 import codecs
 import tempfile
-from datetime import datetime, UTC
+from datetime import datetime
+try:
+    from datetime import UTC               # Py 3.11+
+except ImportError:                         # Py ≤3.10
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 from flask import request, flash, send_file, render_template
 from flask_login import current_user
 from sage.misc.lazy_attribute import lazy_attribute
