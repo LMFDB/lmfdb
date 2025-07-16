@@ -18,19 +18,19 @@ class CodeSnippet():
         """
         self.code = code
         self.item = item
-        if 'prompt' in code.keys():
-            self.langs = sorted(list(code['prompt'].keys()))
-        elif 'show' in code.keys():
-            self.langs = sorted(list(code['show'].keys()))
-
+        if 'prompt' in code:
+            self.langs = sorted(code['prompt'])
+        elif 'show' in code:
+            self.langs = sorted(code['show'])
         else:
+            # for backwards compatibility
             self.langs = []
         
         self.pre, self.post = pre, post
 
         # edit these when adding support for more languages 
         self.comments = {'magma': '//', 'sage': '#',
-                         'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
+                         'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
         self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
         
 
@@ -39,7 +39,6 @@ class CodeSnippet():
         if self.item is None:
             raise ValueError("No code to place, please init with code item")
         item = self.item 
-        # replaces jinja macro place_code 
         snippet_str = self.pre # initiate new string
         prompt_style = "color: gray;"
         code_style = "user-select: text; flex: 1"
@@ -96,11 +95,10 @@ class CodeSnippet():
         """ Build frontmatter for export_code
         """
         codefrmt = self.code['frontmatter']
-        keys = list(codefrmt.keys())
         cmt = self.comments[lang]
         frmt = cmt + " "
         for key in ['all', lang, 'rest']:
-                frmt += codefrmt[key] if key in keys else ""
+                frmt += codefrmt[key] if key in codefrmt else ""
         
         frmt = frmt.replace('\n', '\n' + cmt + " ", frmt.count("\n")-1)
         return frmt.format(lang=self.full_names[lang], label=label) + "\n"
@@ -112,8 +110,8 @@ class CodeSnippet():
             lang = 'pari'
         code = self.build_frontmatter(label,lang)
         for key in sorted_code_names:
-            assert key in self.code.keys()
-            if not self.code[key] is None and lang in self.code[key]:
+            assert key in self.code
+            if lang in self.code[key] is not None:
                 code += "\n{} {}: \n".format(self.comments[lang], self.code[key]['comment'])
                 code += self.code[key][lang] + ('\n' if '\n' not in self.code[key][lang] else '')
         return code
