@@ -24,7 +24,7 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, utc_now_naive, ensure_naive_utc
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, utc_now_naive
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
