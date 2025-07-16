@@ -10,6 +10,7 @@ from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
 from psycodict.statstable import PostgresStatsTable
+from lmfdb.knowledge.knowl import utc_now_naive
 
 def overrides(super_class):
     def overrider(method):
@@ -96,7 +97,7 @@ class LMFDBSearchTable(PostgresSearchTable):
             for col, knowl in knowls.items():
                 if col in self.col_type:
                     if keep_old:
-                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=datetime.datetime.now(datetime.UTC))
+                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=utc_now_naive())
                         who = self._db.login()
                         new_knowl.save(who, most_recent=knowl, minor=True)
                     else:
