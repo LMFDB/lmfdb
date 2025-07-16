@@ -25,21 +25,11 @@
     </tr>
     <tr>
       <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
-      <td> {{ family.cusps_display }}</td><td style="width:20px;"></td>
+      <td> {{ family.cusps | safe }}</td><td style="width:20px;"></td>
     </tr>
     <tr>
       <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td>{{ family.genus_formula }}</td>
     </tr>
-  {# Need to think about what should go here.  List of references?
-  <tr>
-    <td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td>
-    <td> ${{ family.q_gonality if family.q_gonality else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$ </td>
-  </tr>
-  <tr>
-    <td>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}:</td>
-    <td> ${{ family.qbar_gonality if family.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$ </td>
-  </tr>
-  #}
 </table>
 
 

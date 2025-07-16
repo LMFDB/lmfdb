@@ -36,10 +36,6 @@ class ModCurveFamily_base():
     @lazy_attribute
     def title(self):
         return f"Modular curve family ${self.name}$"
-    
-    @lazy_attribute
-    def cusps_display(self):
-        return self.cusps
 
     @lazy_attribute
     def hypell_description(self):

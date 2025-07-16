@@ -299,8 +299,12 @@ class ModCrvTest(LmfdbTest):
         for family in ALL_FAMILIES.keys():
             L = self.tc.get(f'/ModularCurve/Q/family/{family}')
             assert ALL_FAMILIES[family].name in L.get_data(as_text=True)
-            assert ALL_FAMILIES[family].knowl_ID in L.get_data(as_text=True)
-            
+            assert ALL_FAMILIES[family].genus_formula in L.get_data(as_text=True)
+            assert ALL_FAMILIES[family].cusps in L.get_data(as_text=True)
+            assert ALL_FAMILIES[family].psl2index in L.get_data(as_text=True)
+            assert ALL_FAMILIES[family].nu2 in L.get_data(as_text=True)
+            assert ALL_FAMILIES[family].nu3 in L.get_data(as_text=True)
+
 
     def test_family_search(self):
         family_set = [
