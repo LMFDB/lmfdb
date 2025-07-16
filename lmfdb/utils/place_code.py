@@ -111,7 +111,7 @@ class CodeSnippet():
         code = self.build_frontmatter(label,lang)
         for key in sorted_code_names:
             assert key in self.code
-            if lang in self.code[key] is not None:
+            if self.code[key] is not None and lang in self.code[key]:
                 code += "\n{} {}: \n".format(self.comments[lang], self.code[key]['comment'])
                 code += self.code[key][lang] + ('\n' if '\n' not in self.code[key][lang] else '')
         return code
