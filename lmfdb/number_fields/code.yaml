@@ -142,7 +142,7 @@ class_number_formula:
     hK = K.class_number(); wK = K.unit_group().torsion_generator().order();
     2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))  
   pari: |
-    # self-contained Pari/GP code snippet to compute the analytic class number formula
+    \\ self-contained Pari/GP code snippet to compute the analytic class number formula
     K = bnfinit(%s, 1);
     [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
   magma: |
