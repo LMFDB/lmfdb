@@ -18,7 +18,7 @@ import time
 from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
-from datetime import datetime
+from datetime import datetime, UTC
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
                    request, url_for)
@@ -628,7 +628,7 @@ def columns():
 
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
-    time = datetime_to_timestamp_in_ms(datetime.utcnow())
+    time = datetime_to_timestamp_in_ms(datetime.now(UTC))
     cid = '%s.%s.comment' % (ID, time)
     return edit(ID=cid)
 
@@ -692,7 +692,7 @@ def save_form():
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
-        k.timestamp = datetime.utcnow()
+        k.timestamp = datetime.now(UTC)
         k.status = 0
         k.save(who=who)
     if NEWID:

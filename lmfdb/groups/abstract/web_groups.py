@@ -730,6 +730,38 @@ class WebAbstractGroup(WebObj):
         return primary_to_smith(self.primary_abelian_invariants)
 
     @lazy_attribute
+    def nick_name(self):
+        if self.label == '7920.a':
+            return r'Mathieu group $M_{11}$'
+        if self.label == '95040.a':
+            return r'Mathieu group $M_{12}$'
+        if self.label == '443520.a':
+            return r'Mathieu group $M_{22}$'
+        if self.label == '10200960.a':
+            return r'Mathieu group $M_{23}$'
+        if self.label == '244823040.a':
+            return r'Mathieu group $M_{24}$'
+        if self.label == '17556.a':
+            return r'Janko group $J_1$'
+        if self.label == '60480.a':
+            return r'Janko group $J_2$'
+        if self.label == '50232960.a':
+            return r'Janko group $J_3$'
+        if self.label == '44352000.a':
+            return r'Higman-Sims group'
+        if self.label == '898128000.a':
+            return r'McLaughlin group'
+        if self.label == '4030387200.a':
+            return r'Held group'
+        if self.label == '145926144000.a':
+            return r'Rudvalis group'
+        if self.label == '495766656000.a':
+            return r'Conway group $\mathrm{Co}_3$'
+        if self.label == '42305421312000.a':
+            return r'Conway group $\mathrm{Co}_2$'
+        return f'${self.tex_name}$'
+
+    @lazy_attribute
     def tex_name(self):
         if self.abelian:
             return abelian_gp_display(self.smith_abelian_invariants)
@@ -942,11 +974,17 @@ class WebAbstractGroup(WebObj):
                         ov = None
         return ans
 
+    def label_compress(self):
+        spl_label = self.label.split('.')
+        if len(spl_label[0]) > 12:
+            spl_label[0] = spl_label[0][:3] + "..." + spl_label[0][-3:]
+        return ".".join(spl_label)
+
     def properties(self):
         nilp_str = "yes" if self.nilpotent else "no"
         solv_str = "yes" if self.solvable else "no"
         props = [
-            ("Label", self.label),
+            ("Label", self.label_compress()),
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
