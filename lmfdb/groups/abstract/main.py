@@ -1671,7 +1671,7 @@ def render_abstract_group(label, data=None):
             info["max_sub_cnt"] = gp.max_sub_cnt
             info["max_quo_cnt"] = gp.max_quo_cnt
 
-        title = f"Abstract group ${gp.tex_name}$"
+        title = f"Abstract group {gp.label}: {gp.nick_name}"
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
