@@ -1,5 +1,5 @@
 # This is for generating information for computing Artin L-functions
-# Run it with 
+# Run it with
 #    sage -python extract_art.py artinlabel count
 #
 # where artinlabel is the label for a specific artin representation
@@ -132,7 +132,7 @@ while j<bound:
     p = next_prime(p)
     outfile.write(str(ar.any_prime_to_cc_index(p))+"\n")
     j+=1
-  
+
 #plist = [ar.any_prime_to_cc_index(p) for p in primes_first_n(bound)]
 #for j in plist:
 #    outfile.write(str(j)+"\n")

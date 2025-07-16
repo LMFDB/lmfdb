@@ -24,7 +24,7 @@ def main(argv):
     print("I have it")
 
     C = base.getDBConnection()
-    
+
     collection = C[database_name][collection_name]
     print("Got a collection: ", collection)
     with open(file_name, "r") as f:

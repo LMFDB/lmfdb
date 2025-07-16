@@ -33,7 +33,7 @@
     - title: Classical
       url_for: "cmf.index"
     - title: Maass
-      url_for: "maass.index"
+      url_for: "maass_forms.index"
     - title: Hilbert
       url_for: "hmf.hilbert_modular_form_render_webpage"
     - title: Bianchi
@@ -119,7 +119,6 @@
       url_for: "abvarfq.abelian_varieties"
       colspan: onecolumn
     - title: Belyi maps
-      status: beta
       url_for: "belyi.index"
       colspan: onecolumn
 
@@ -228,7 +227,7 @@
   type: single
   heading:
     title: Database
-    url_for: "API.index"
+    url_for: "API.options"
     type: knowl
 
 ...

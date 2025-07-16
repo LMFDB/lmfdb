@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from ast import literal_eval
 import os
@@ -16,7 +15,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor
+from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor, convert_label
 from lmfdb.genus2_curves import g2c_logger
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
@@ -468,7 +467,7 @@ def end_lattice_statement(lattice):
                 % (strlist_to_nfelt(ED[0][2], 'a'), intlist_to_poly(ED[0][1])))
         statement += ":\n"
         statement += end_statement(ED[1], ED[2], field='F', ring=ED[3])
-        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_display_knowl(ED[4])
+        statement += "&nbsp;&nbsp;Sato Tate group: %s" % st_display_knowl(convert_label(ED[4]))
         statement += "<br>&nbsp;&nbsp;"
         statement += gl2_simple_statement(ED[1], ED[2])
         statement += "</p>\n"
@@ -899,11 +898,11 @@ class WebG2C():
             else:
                 data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
             if lower >= upper:
-                data['mw_gens_table'] = mw_gens_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
-                data['mw_gens_simple_table'] = mw_gens_simple_table (ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
+                data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
+                data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
 
             if curve['two_torsion_field'][0]:
-                data['two_torsion_field_knowl'] = nf_display_knowl (curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
+                data['two_torsion_field_knowl'] = nf_display_knowl(curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
             else:
                 t = curve['two_torsion_field']
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),transitive_group_display_knowl(f"{t[2][0]}T{t[2][1]}"))

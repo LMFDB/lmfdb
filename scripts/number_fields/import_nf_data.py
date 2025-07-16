@@ -1,6 +1,6 @@
 #!/usr/local/bin/sage -python
 # -*- coding: utf-8 -*-
-r""" Import number field data.  
+r""" Import number field data.
 
 Imports from a json file directly to the database.
 

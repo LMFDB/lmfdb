@@ -11,9 +11,10 @@
   <tr>
     <td>By {{KNOWL('mf.maass.mwf.level', 'level')}}:</td>
     <td>
-      {% for N in range(1,10) %} <a href="?level={{N}}">{{N}}</a>&nbsp;&nbsp; {% endfor %}
+      {% for N in (1, 2, 3, 5, 6, 7, 10) %} <a href="?level={{N}}">{{N}}</a>&nbsp;&nbsp; {% endfor %}
       <a href="?level=11-20">11-20</a>&nbsp;&nbsp;
-      <a href="?level=21-100">21-100</a>&nbsp;&nbsp;
+      <a href="?level=11-20">21-50</a>&nbsp;&nbsp;
+      <a href="?level=21-100">51-105</a>&nbsp;&nbsp;
     </td>
   </tr><tr>
     <td>By {{KNOWL('mf.maass.mwf.spectralparameter', 'spectral parameter')}}:</td>
@@ -31,9 +32,7 @@
   </tr><tr>
     <td colspan="2">A <a href="{{ url_for('.browse_graph',min_level = 1,max_level= 15, min_R = 0,max_R = 15) }}">table of Maass forms</a> of level $N\le 15$ and spectral parameter $R\le 15$</td>
   </tr><tr>
-    <td colspan="2">A <a href="{{ url_for('.browse_graph',min_level = 10,max_level= 100, min_R = 0,max_R = 4) }}">table of Maass forms</a> of level $N\in [15,100]$ and spectral parameter $R\le 4$</td>
-  </tr><tr>
-    <td colspan="2">A <a href="{{ url_for('.browse_graph', min_level = 100, max_level= 1000, min_R = 0,max_R = 1) }}">table of Maass forms</a> of prime level $p\in [100,1000]$ and spectral parameter $R\leq 1$</td>
+    <td colspan="2">A <a href="{{ url_for('.browse_graph',min_level = 10,max_level= 105, min_R = 0,max_R = 4) }}">table of Maass forms</a> of level $N\in [15,105]$ and spectral parameter $R\le 4$</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Maass forms</a> or a <a href={{url_for('.random')}}>random Maass form</a></td>
   </tr>
@@ -43,6 +42,12 @@
 
 <form class='search'>
   {{ info.search_array.html() | safe }}
+</form>
+
+<h2>Find</h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
 </form>
 
 {% endblock %}

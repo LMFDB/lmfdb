@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Author: Pascal Molin, molin.maths@gmail.com
 """
 Any character object is obtained as a double inheritance of
@@ -8,7 +7,7 @@ Any character object is obtained as a double inheritance of
 2. an object type (list of groups, character group, character)
 
 For Dirichlet characters of modulus up to 100,000, the database holds data for
-character orbits in char_orbits. For these objects, there are the "DB" classes
+character orbits in char_dirichlet. For these objects, there are the "DB" classes
 that replace on-the-fly computation with database lookups.
 
 The code thus defines, from the generic top class WebCharObject
@@ -45,6 +44,7 @@ The design is the following:
 
 from flask import url_for
 from collections import defaultdict
+from sage.databases.cremona import cremona_letter_code
 from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
                       euler_phi, latex)
 from sage.misc.lazy_attribute import lazy_attribute
@@ -59,15 +59,33 @@ from lmfdb.characters.utils import url_character, complex2str
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 logger = make_logger("DC")
 
+
 def parity_string(n):
-    return "odd" if n == -1 else "even"
+    return ("even" if n else "odd") if isinstance(n, bool) else ("odd" if n == -1 else "even")
+
 
 def bool_string(b):
     return "yes" if b else "no"
 
+
 def compute_values(chi, groupelts):
-        "Helper function to compute values of several elements on the fly"
-        return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+    "Helper function to compute values of several elements on the fly"
+    return [[k, int(chi.conreyangle(k) * chi.order)] for k in groupelts]
+
+
+def valuefield_from_order(order):
+    order2 = order if order % 4 != 2 else order / 2
+    nf = WebNumberField.from_cyclo(order2)
+    if not nf.is_null():
+        if order2 == 3:
+            nfpretty = r'\(\mathbb{Q}(\zeta_3)\)'
+        elif order2 == 4:
+            nfpretty = r'\(\mathbb{Q}(i)\)'
+        else:
+            nfpretty = nf.field_pretty()
+        return nf_display_knowl(nf.get_label(), nfpretty)
+    else:
+        return r'$\Q(\zeta_{%d})$' % order2
 
 #############################################################################
 ###
@@ -88,12 +106,12 @@ class WebCharObject():
 
     def to_dict(self):
         d = {}
-        logger.info('[DC] start collecting data for %s'%self.__class__.__name__)
+        logger.info('[DC] start collecting data for %s' % self.__class__.__name__)
         for k in self._keys:
-            d[k] = getattr(self,k,None)
+            d[k] = getattr(self, k, None)
             if d[k] is None:
-                logger.debug('[DC warning] ### key[%s] is None'%k)
-        logger.info('[DC] collected for %s'%self.__class__.__name__)
+                logger.debug('[DC warning] ### key[%s] is None' % k)
+        logger.info('[DC] collected for %s' % self.__class__.__name__)
         return d
 
     @staticmethod
@@ -103,7 +121,7 @@ class WebCharObject():
         if not isinstance(x, Rational):
             return '1'
         d = int(x.denom())
-        n = int(x.numer())  % d
+        n = int(x.numer()) % d
         if d == 1:
             s = '1'
         elif n == 1 and d == 2:
@@ -177,7 +195,7 @@ class WebDirichlet(WebCharObject):
     """ for Dirichlet over Z, everything is described using integers """
     @staticmethod
     def char2tex(modulus, number, val=r'\cdot', tag=True):
-        c = r'\chi_{%s}(%s,%s)'%(modulus,number,val)
+        c = r'\chi_{%s}(%s,%s)' % (modulus,number,val)
         if tag:
             return r'\(%s\)' % c
         else:
@@ -304,7 +322,7 @@ class WebDirichlet(WebCharObject):
         Gtex = r'\Z/%s\Z' % mod
         chitex = self.char2tex(mod, num, tag=False)
         chitexr = self.char2tex(mod, num, 'r', tag=False)
-        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)'%(Gtex,chitexr,n,d)
+        deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)' % (Gtex,chitexr,n,d)
         return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
 
     @lazy_attribute
@@ -321,13 +339,13 @@ class WebDirichlet(WebCharObject):
         try:
             val = int(val)
         except ValueError:
-            raise Warning ("n must be a positive integer coprime to the modulus {} and no greater than it".format(mod))
+            raise Warning("n must be a positive integer coprime to the modulus {} and no greater than it".format(mod))
         if gcd(mod, val) > 1:
-            raise Warning ("n must be coprime to the modulus : %s"%mod)
+            raise Warning("n must be coprime to the modulus : %s" % mod)
         if val > mod:
-            raise Warning ("n must be less than the modulus : %s"%mod)
+            raise Warning("n must be less than the modulus : %s" % mod)
         if val < 0:
-            raise Warning ("n must be positive")
+            raise Warning("n must be positive")
 
         chi_valuepairs = [[k, chi.conreyangle(k) * chi.order] for k in self.gens]
         chi_genvalues = [int(v) for g, v in chi_valuepairs]
@@ -344,7 +362,7 @@ class WebDirichlet(WebCharObject):
         Gtex = r'\Z/%s\Z' % mod
         chitexr = self.char2tex(mod, num, 'r', tag=False)
         psitex1r = self.char2tex(mod, val, '1-r', tag=False)
-        deftex = r'\sum_{r\in %s} %s %s'%(Gtex,chitexr,psitex1r)
+        deftex = r'\sum_{r\in %s} %s %s' % (Gtex,chitexr,psitex1r)
         return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
     @lazy_attribute
@@ -485,12 +503,7 @@ class WebChar(WebCharObject):
 
     @lazy_attribute
     def valuefield(self):
-        order2 = self.order if self.order % 4 != 2 else self.order / 2
-        nf = WebNumberField.from_cyclo(order2)
-        if not nf.is_null():
-            return nf_display_knowl(nf.get_label(), nf.field_pretty())
-        else:
-            return r'$\Q(\zeta_{%d})$' % order2
+        return valuefield_from_order(self.order)
 
     @lazy_attribute
     def kerfield(self):
@@ -523,18 +536,15 @@ class WebChar(WebCharObject):
     def friends(self):
         from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
         f = []
-        cglink = url_character(type=self.type,number_field=self.nflabel,modulus=self.modlabel)
-        f.append( ("Character group", cglink) )
-        if self.nflabel:
-            f.append( ('Number field', '/NumberField/' + self.nflabel) )
-        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 100000:
-            url = url_character(type=self.type, number_field=self.nflabel, modulus=self.modlabel, number=self.numlabel)
+        if self.type == 'Dirichlet' and self.chi.is_primitive() and self.conductor < 1000000:
+            url = url_character(type=self.type, modulus=self.modlabel, number=self.numlabel)
             lfun_label = get_lfunction_by_url(url[1:], projection='label')
             if lfun_label:
                 f.append(('L-function', url_for('by_full_label', lfun_label)))
         if self.type == 'Dirichlet':
+            f.append( ("Character group", url_character(type=self.type,modulus=self.modlabel)) )
             f.append( ('Sato-Tate group', url_for('st.by_label', label=f'0.1.{self.order}')))
-        if len(self.vflabel)>0:
+        if len(self.vflabel) > 0:
             f.append( ("Value field", url_for("number_fields.by_label", label=self.vflabel)) )
         return f
 
@@ -579,13 +589,10 @@ class WebDBDirichlet(WebDirichlet):
     def _populate_from_db(self):
 
         gal_orbit = self.chi.galois_orbit()
-        min_conrey_conj = gal_orbit[0]
 
-        orbit_data = db.char_orbits.lucky(
-            {'modulus': self.modulus, 'first_label': "{}.{}".format(self.modulus, min_conrey_conj)}
-        )
+        orbit_data = db.char_dirichlet.lucky({'modulus': self.modulus, 'first': gal_orbit[0]})
 
-        self.orbit_index = orbit_data['orbit_index']
+        self.orbit_index = orbit_data['orbit']
         self.orbit_label = orbit_data['label'].split(".")[1]
         self.order = int(orbit_data['order'])
         self.conductor = self.chi.conductor()  # this also sets indlabel
@@ -615,10 +622,6 @@ class WebDBDirichlet(WebDirichlet):
             self.genvalues = self.textuple([self._tex_value(v) for v in vals])
 
     def _set_values_and_groupelts(self):
-        """
-        The char_orbits db collection does not contain `values`,
-        so these are computed on the fly.
-        """
         if self.modulus == 1:
             self.groupelts = [1]
             self.values = [r"\(1\)"]
@@ -673,7 +676,7 @@ class WebDBDirichlet(WebDirichlet):
         self.isminimal = bool_string(orbit_data['is_minimal'])
 
     def _set_parity(self, orbit_data):
-        self.parity = parity_string(int(orbit_data['parity']))
+        self.parity = parity_string(orbit_data['is_even'])
 
     def _set_galoisorbit(self, gal_orbit):
         if self.modulus == 1:
@@ -818,9 +821,9 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def codeinit(self):
         return {
                 'sage': [
-                    'H = DirichletGroup(%i)'%(self.modulus)
+                    'H = DirichletGroup(%i)' % (self.modulus)
                     ],
-                'pari': 'g = idealstar(,%i,2)'%(self.modulus)
+                'pari': 'g = idealstar(,%i,2)' % (self.modulus)
                 }
 
     @lazy_attribute
@@ -903,12 +906,8 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         valuepairs = compute_values(chi, self.groupelts)
         min_conrey_conj = chi.min_conrey_conj
 
-        # This next db lookup takes ages, I don't know how to speed it up
-        orbit_label = db.char_orbits.lucky(
-            {'modulus': mod, 'first_label': "{}.{}".format(mod, min_conrey_conj)},
-            projection='label'
-        )
-        logger.debug(f"[DC DB query] modulus = {mod}, first_label = {mod},{min_conrey_conj} -> {orbit_label}")
+        orbit_label = db.char_dirichlet.lucky({'modulus':mod,'first':min_conrey_conj},projection='label')
+        logger.debug(f"[DC DB query] modulus = {mod}, first = {min_conrey_conj} -> {orbit_label}")
 
         return is_prim, order, orbit_label, valuepairs
 
@@ -1002,10 +1001,10 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
                 assoclabel = '2.0.%d.1' % -self.symbol_numerator()
             friendlist.append(("Associated quadratic field", url_for("number_fields.by_label", label=assoclabel)))
 
-        label = "%s.%s"%(self.modulus, self.number)
+        label = "%s.%s" % (self.modulus, self.number)
         myrep = db.artin_reps.lucky({'Dets': {'$contains': label}})
         if myrep is not None:
-            j=myrep['Dets'].index(label)
+            j = myrep['Dets'].index(label)
             artlabel = myrep['Baselabel']+'.'+num2letters(j+1)
             friendlist.append(('Artin representation '+artlabel,
                 url_for('artin_representations.render_artin_representation_webpage', label=artlabel)))
@@ -1067,7 +1066,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m,
+            return { 'sage': 'kronecker_character(%i)' % m,
                      'pari': 'znchartokronecker(g,chi)'
                      }
         return None
@@ -1138,9 +1137,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     def _populate_from_db(self):
 
-        orbit_data = db.char_orbits.lucky(
-            {'modulus': self.modulus, 'label': self.label}
-        )
+        orbit_data = db.char_dirichlet.lookup(self.label)
         if orbit_data is None:
             raise ValueError
 
@@ -1149,10 +1146,10 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self.degree = orbit_data['degree']
         self.isprimitive = bool_string(orbit_data['is_primitive'])
         self.isminimal = bool_string(orbit_data['is_minimal'])
-        self.parity = parity_string(int(orbit_data['parity']))
+        self.parity = parity_string(orbit_data['is_even'])
         self._set_kernel_field_poly(orbit_data)
-        self.orbit_index = orbit_data['orbit_index']
-        self.inducing = orbit_data['primitive_label']
+        self.orbit_index = orbit_data['orbit']
+        self.inducing = "{}.{}".format(orbit_data['conductor'],cremona_letter_code(orbit_data['primitive_orbit']-1))
         self.ind_orbit_label = self.inducing.split(".")[1]
 
         # The rest of the function is setting the Galois orbit
@@ -1170,7 +1167,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             ]
 
     def _set_kernel_field_poly(self, orbit_data):
-        an_orbit_rep = int(orbit_data['first_label'].split(".")[1])
+        an_orbit_rep = orbit_data['first']
         chi = ConreyCharacter(self.modulus, an_orbit_rep)
         self.first_chi = chi
         if self.order <= 100:
@@ -1258,7 +1255,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m,
+            return { 'sage': 'kronecker_character(%i)' % m,
                      'pari': 'znchartokronecker(g,chi)'
                      }
         return None
@@ -1374,9 +1371,9 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codeinit(self):
         return {
           'sage': [
-                 'H = DirichletGroup(%i)'%(self.modulus),
-                 'chi = H[%i]'%(self.number) ],
-          'pari': '[g,chi] = znchar(Mod(%i,%i))'%(self.number,self.modulus),
+                 'H = DirichletGroup(%i)' % (self.modulus),
+                 'chi = H[%i]' % (self.number) ],
+          'pari': '[g,chi] = znchar(Mod(%i,%i))' % (self.number,self.modulus),
           }
 
     @lazy_attribute
@@ -1420,7 +1417,7 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     def codesymbol(self):
         m = self.symbol_numerator()
         if m:
-            return { 'sage': 'kronecker_character(%i)'%m,
+            return { 'sage': 'kronecker_character(%i)' % m,
                      'pari': 'znchartokronecker(g,chi)'
                      }
         return None

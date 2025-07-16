@@ -70,12 +70,45 @@ cellpadding="5";
     {{ place_code('is_min') }}
 </p>
 
+<h2> {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil group') }} structure</h2>
+<p>
+  {% if ec.rk == "not available" %}
+  Not computed ($ {{ec.rk_lb}} \le r \le {{ec.rk_ub}} $)
+  {% else %}
+  {{ ec.mw_struct}}
+  {%endif%}
+</p>
+
+{% if ec.ngens > 0 or ec.torsion_order > 1 %}
+
+<h2> {{ KNOWL('ec.mw_generators', title="Mordell-Weil generators") }} </h2>
+<div>
+  <p>
+    {% if ec.ngens < ec.rk_ub %}
+      {% if ec.ngens > 0 %} Only {{ec.ngens}}  {% else %} No {% endif %} non-torsion
+      {% if ec.ngens == 1 %} generator is {% else %} generators are {% endif %} known.
+    {% endif %}
+    <table>
+      <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\hat{h}(P)$")}}</th><th>Order</th></tr>
+      {% for P,h in ec.gens_and_heights %}
+      <tr><td>{{P}}</td><td>${{h}}$</td><td>$\infty$</td></tr>
+      {% endfor %}
+      {% for T,n in ec.tor_gens_and_orders %}
+      <tr><td>{{T}}</td><td>$0$</td><td>${{n}}$</td></tr>
+      {% endfor %}
+    </table>
+  </p>
+</div>
+{%endif%}
+
 
 <h2>{{ KNOWL('ec.invariants', title='Invariants')}}</h2>
 
       <table id="invariants" style="overflow:auto;">
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor')}}:</td>
+	<td>$\frak{N}$</td>
+	<td>=</td>
         <td>{{ ec.cond }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond }}</td>
@@ -84,6 +117,8 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.conductor', title='Conductor norm')}}:</td>
+	<td>$N(\frak{N})$</td>
+	<td>=</td>
         <td>{{ ec.cond_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_cond_norm }}</td>
@@ -92,6 +127,27 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.discriminant', title='Discriminant')}}:</td>
+	<td>$\Delta$</td>
+	<td>=</td>
+        <td>${{ ec.model_disc }}$</td>
+        </tr>
+
+        <tr>
+          <td>
+	    {% if ec.is_minimal %}
+	    {{KNOWL('ec.minimal_discriminant', title='Discriminant ideal')}}:
+	    {% else %}
+	    {{KNOWL('ec.discriminant', title='Discriminant ideal')}}:
+	    {% endif %}
+	  </td>
+	<td>
+	  {% if ec.is_minimal %}
+	  $\frak{D}_{\mathrm{min}} = (\Delta)$
+	  {% else %}
+	  $(\Delta)$
+	  {% endif %}
+	</td>
+	<td>=</td>
         <td>{{ ec.disc }}</td>
         {% if ec.fact_disc %}
         <td>=</td>
@@ -101,7 +157,21 @@ cellpadding="5";
 
         <tr><td colspan=4 style="padding:0;">{{ place_code('disc') }}</td></tr>
         <tr>
-        <td>{{KNOWL('ec.discriminant', title='Discriminant norm')}}:</td>
+          <td>
+	    {% if ec.is_minimal %}
+	    {{KNOWL('ec.minimal_discriminant', title='Discriminant norm')}}:
+	    {% else %}
+	    {{KNOWL('ec.discriminant', title='Discriminant norm')}}:
+            {% endif %}
+	  </td>
+	<td>
+	  {% if ec.is_minimal %}
+	  $N(\frak{D}_{\mathrm{min}}) = N(\Delta)$
+	  {% else %}
+	  $N(\Delta)$
+	  {% endif %}
+	</td>
+	<td>=</td>
         <td>{{ ec.disc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_disc_norm }}</td>
@@ -111,6 +181,8 @@ cellpadding="5";
 {% if not ec.is_minimal %}
         <tr>
         <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant')}}:</td>
+	<td>$\frak{D}_{\mathrm{min}}$</td>
+	<td>=</td>
         <td>{{ ec.mindisc }}</td>
         {% if ec.fact_mindisc %}
         <td>=</td>
@@ -120,6 +192,8 @@ cellpadding="5";
 
         <tr>
         <td>{{KNOWL('ec.minimal_discriminant', title='Minimal discriminant norm')}}:</td>
+	<td>$N(\frak{D}_{\mathrm{min}})$</td>
+	<td>=</td>
         <td>{{ ec.mindisc_norm }}</td>
         <td>=</td>
         <td>{{ ec.fact_mindisc_norm }}</td>
@@ -128,6 +202,8 @@ cellpadding="5";
 
         <tr>
         <td>{{ KNOWL('ec.j_invariant','j-invariant')}}:</td>
+	<td>$j$</td>
+	<td>=</td>
         {% if ec.fact_j %}
         <td>{{ ec.j }}</td>
         <td>=</td>
@@ -140,100 +216,41 @@ cellpadding="5";
 
         <tr>
         <td>{{ KNOWL('ec.endomorphism_ring', title='Endomorphism ring') }}:</td>
-        <td>{% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}</td>
-        <td colspan="2">{% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}</td>
+	<td>$\mathrm{End}(E)$</td>
+	<td>=</td>
+        <td colspan="3">
+	  {% if ec.rational_cm %} {{ ec.End }} {% else %} \(\Z\) {% endif %}
+	  &nbsp;&nbsp;
+          {% if ec.rational_cm %} ({{ KNOWL('ec.complex_multiplication', title='complex multiplication')}}) {% endif %}
+	</td>
         </tr>
         
         <tr>
         <td>{{ KNOWL('ec.geom_endomorphism_ring', title='Geometric endomorphism ring') }}:</td>
-        <td>{{ ec.End }}</td>
-        <td colspan="2">
-        {%if not ec.cm %}
+	<td>$\mathrm{End}(E_{\overline{\Q}})$</td>
+	<td>=</td>
+        <td colspan="3">
+	  {{ ec.End }}
+	  &nbsp;&nbsp;
+          {%if not ec.cm %}
           (no {{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
-        {% elif not ec.rational_cm %}
+          {% elif not ec.rational_cm %}
           ({{ KNOWL('ec.complex_multiplication', title='potential complex multiplication')}})
-        {% endif %}
+          {% endif %}
         </td>
         </tr>
 
         <tr><td colspan=4 style="padding:0;">{{ place_code('cm') }}</td></tr>
         <tr>
         <td>{{ KNOWL('st_group.definition', title='Sato-Tate group') }}:</td>
+	<td>$\mathrm{ST}(E)$</td>
+	<td>=</td>
         <td>{{ ec.ST|safe }}</td>
         </td>
         </tr>
 
 </table>
 
-<h2> {{ KNOWL('ec.mordell_weil_group', title="Mordell-Weil group") }} </h2>
-<div>
-<p>
-<table>
-<tr>
-  <td align = 'left'>{{ KNOWL('ec.rank', title="Rank")}}:</td>
-{% if ec.rk == "not available" %}
-{% if ec.rank_bounds != "not available" %}
-  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
-{% else %}
-  <td>not available</td>
-{% endif %}
-{% else %}
-  <td>\({{ ec.rank }}\)</td>
-{% endif %}
-</tr>
-
-{% if ec.ngens %}
-<tr>
-  <td align = 'left'>
-    {% if ec.ngens==1 %}
-    {{KNOWL('ec.mw_generators','Generator')}}
-    {% else %}
-    {{KNOWL('ec.mw_generators','Generators')}}
-    {% endif %}
-  </td>
-  {% if ec.gens == 'not available' %}
-  <td>not available</td>
-  {% else %}
-  {% for gen in ec.gens %}
-  <td>{{ gen }}</td>
-  {% endfor %}
-{% endif %}
-</tr>
-{% endif %}
-
-{% if ec.heights %}
-<tr>
-  <td align = 'left'>
-    {% if ec.ngens==1 %}
-    {{ KNOWL('ec.canonical_height', title="Height") }}
-    {% else %}
-    {{ KNOWL('ec.canonical_height', title="Heights") }}
-    {% endif %}
-  </td>
-  {% for h in ec.heights %}
-  <td>\({{ h }}\)</td>
-  {% endfor %}
-</tr>
-{% endif %}
-
-<tr>
-<td align='left'>{{KNOWL('ec.torsion_subgroup','Torsion structure')}}:</td>
-<td>{{ ec.tor_struct_pretty }}</td>
-</tr>
-<tr><td colspan=2> {{ place_code('tors') }}</td></tr>
-<!-- <tr><td colspan=2> {{ place_code('ntors') }}</td></tr> -->
-    {% if ec.tr %}
-<tr>
-<td align='left'>{% if ec.tr==1 %}{{KNOWL('ec.mw_generators','Torsion generator')}}{% else %}{{KNOWL('ec.mw_generators','Torsion generators')}}{% endif %}:</td>
-{% for gen in ec.torsion_gens %}
-<td>{{ gen }}</td>
-{% endfor %}
-</tr>
-<tr><td colspan=2> {{ place_code('torgens') }}</td></tr>
-    {% endif %}
-</table>
-</p>
-</div>
 
 <h2> {{ KNOWL('ec.bsdconjecture', title='BSD invariants') }}</h2>
 <div>
@@ -242,6 +259,7 @@ cellpadding="5";
 
         <tr>
         <td align='left'>{{ KNOWL('lfunction.analytic_rank', title='Analytic rank') }}:</td>
+	<td>$r_{\mathrm{an}}$</td><td>=</td>
         <td>
 	  {{ ec.ar }}
         </td>
@@ -256,12 +274,16 @@ cellpadding="5";
 	<tr>
 	  <td align='left'>{{ KNOWL('ec.rank', title="Mordell-Weil rank")}}:</td>
 	  {% if ec.rk == "not available" %}
+	  <td>$r?$</td>
+	  <td>&nbsp;</td>
 	  {% if ec.rank_bounds != "not available" %}
 	  <td>\({{ ec.rk_lb }} \le r \le {{ec.rk_ub}}\)</td>
 	  {% else %}
 	  <td>not available</td>
 	  {% endif %}
 	  {% else %}
+	  <td>$r$</td>
+	  <td>=</td>
 	  <td>\({{ ec.rank }}\)</td>
 	  {% endif %}
 	</tr>
@@ -273,6 +295,8 @@ cellpadding="5";
 	    {{ KNOWL('ec.regulator', title='Regulator') }}:
 	    {% endif %}
 	  </td>
+	  <td>$\mathrm{Reg}(E/K)$</td>
+	  <td>{% if ec.rank == 0 %}={% else %}&approx;{% endif %}</td>
           <td>
 	  {% if ec.reg=='not available' %}
 	  not available
@@ -281,14 +305,34 @@ cellpadding="5";
 	  {% endif %}
 	</td>
         </tr>
+        <tr>
+	  <td align='left'>
+	    {% if ec.bsd_status == "conditional" %}
+            {{ KNOWL('ec.regulator', title='N&eacute;ron-Tate Regulator*') }}:
+	    {% else %}
+	    {{ KNOWL('ec.regulator', title='N&eacute;ron-Tate Regulator') }}:
+	    {% endif %}
+	  </td>
+	  <td>$\mathrm{Reg}_{\mathrm{NT}}(E/K)$</td>
+	  <td>{% if ec.rank == 0 %}={% else %}&approx;{% endif %}</td>
+          <td>
+	  {% if ec.NTreg=='not available' %}
+	  not available
+	  {% else %}
+	  {{ ec.NTreg }}
+	  {% endif %}
+	</td>
+        </tr>
 
         <tr>
-        <td align='left'>{{ KNOWL('ec.period', title='Period') }}:</td>
+        <td align='left'>{{ KNOWL('ec.period', title='Global period') }}:</td>
+	<td>$\Omega(E/K)$</td><td>&approx;</td>
         <td> {{ ec.omega }}</td>
         </tr>
 
         <tr>
         <td align='left'>{{ KNOWL('ec.tamagawa_number', title='Tamagawa product') }}:</td>
+	<td>$\prod_{\frak{p}}c_{\frak{p}}$</td><td>=</td>
         <td> {{ ec.tamagawa_product }}
           {% if ec.tamagawa_factors %}
           &nbsp;=&nbsp; \({{ ec.tamagawa_factors }}\)
@@ -298,18 +342,18 @@ cellpadding="5";
 
         <tr>
         <td align='left'>{{ KNOWL('ec.torsion_order', title='Torsion order') }}:</td>
+	<td>$\#E(K)_{\mathrm{tor}}$</td><td>=</td>
         <td>\({{ ec.torsion_order }}\)</td>
         </tr>
 
         <tr>
-        <td align='left'>{{ KNOWL('lfunction.leading_coeff', title='Leading coefficient') }}:</td>
-        <td>
-	  {% if ec.Lvalue=='not available' %}
-	  not available
-	  {% else %}
-	  {{ ec.Lvalue }}
-	  {% endif %}
-	</td>
+        <td align='left'>{{ KNOWL('ec.special_value', title='Special value') }}:</td>
+	<td>$L^{(r)}(E/K,1)/r!$</td>
+	{% if ec.Lvalue=='not available' %}
+	<td></td><td>not available</td>
+	{% else %}
+	<td>&approx;</td><td>{{ ec.Lvalue }}</td>
+	{% endif %}
         </tr>
 
         <tr>
@@ -320,10 +364,22 @@ cellpadding="5";
 	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064;') }}:
 	    {% endif %}
 	  </td>
-        <td> {{ ec.sha }} </td>
+	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
+          <td> {{ ec.sha }} </td>
         </tr>
+{#
+	<tr>
+	  <td align='left'>
+	    {{ KNOWL('ec.analytic_sha_order', title='Analytic order of &#1064; (from formula)') }}:
+	  </td>
+	  <td>&#1064;${}_{\mathrm{an}}$</td><td>=</td>
+          <td> {{ ec.BSDsha }} </td>
+        </tr>
+#}
         </table>
-    </p>
+{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
+</p>
+
 {% if ec.bsd_status == "conditional" %}
 <p>
   * Conditional on {{ KNOWL('ec.bsdconjecture', title='BSD') }}: assuming rank = analytic rank.
@@ -337,33 +393,61 @@ cellpadding="5";
 </p>
 {% endif %}
 {% endif %}
-
-{# %%%%%%%%%%%%%%%% END OF TABLE %%%%%%%%%%%%%%%%%%% #}
 </div>
+
+{% if ec.bsd_formula %}
+
+<h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
+<div>
+<p style="margin:10px 280px;">
+$\displaystyle {{ ec.bsd_formula|safe }}$
+</p>
+<center>
+{{ place_code('bsd_formula') }}
+</center>
+</div>
+
+{% endif %}
 
 <h2>{{KNOWL('ec.local_data', title='Local data')}} at {{KNOWL('ec.bad_reduction', title='primes of bad reduction')}} </h2>
 <div>
  {{ place_code('localdata') }}
 
+<p>
+  This elliptic curve is {{ '' if ec.semistable else 'not' }} {{KNOWL('ec.semistable', title='semistable')}}.
+  There
+  {% if ec.n_bad_primes==0 %}
+  are no primes
+  {% else %}
+  {% if ec.n_bad_primes==1 %}
+  is only one prime $\frak{p}$
+  {% else %}
+  are {{ec.n_bad_primes }} primes $\frak{p}$
+  {% endif %}
+  {% endif %}
+  of {{KNOWL('ec.q.reduction_type', title='bad reduction')}}.
+
   {% if not ec.is_minimal %}
     Primes of good reduction for the curve but which divide the
     discriminant of the model above (if any) are included.
   {% endif %}
+</p>
+
 
 {% if ec.local_data %}
-<table class="ntdata"><thead>
+<table class="ntdata centered"><thead>
 <tr>
-<th>prime</th>
-<th>Norm</th>
+<th>$\mathfrak{p}$</th>
+<th>$N(\mathfrak{p})$</th>
 <th>{{KNOWL('ec.tamagawa_number', title='Tamagawa number')}}</th>
 <th>{{KNOWL('ec.kodaira_symbol', title='Kodaira symbol')}}</th>
 <th>{{KNOWL('ec.reduction_type', title='Reduction type')}}</th>
 {% if ec.local_data.0.rootno %}
 <th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
 {% endif %}
-<th>{{KNOWL('ec.conductor_valuation', title='ord(\(\mathfrak{N}\))')}}</th>
-<th>{{KNOWL('ec.discriminant_valuation', title='ord(\(\mathfrak{D}\))')}}</th>
-<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='ord\((j)_{-}\)')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathfrak{N}\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathfrak{D}_{\mathrm{min}}\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathrm{den}(j))\)')}}</th>
 </tr>
 </thead><tbody>
 {% for pr in ec.local_data %}
@@ -401,8 +485,6 @@ cellpadding="5";
 {% endfor %}
 </tbody>
 </table>
-{% else %}
-No primes of bad reduction.
 {% endif %}
 </div>
 

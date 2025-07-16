@@ -15,7 +15,8 @@ the number of corresponding {{KNOWL('hgm.familes', title="hypergeometric familie
 </div>
 
 <div>
-<table border=1 cellpadding=5 class='right_align_table'>
+  <!--<table border=1 cellpadding=5 class='right_align_table'>-->
+  <table style="margin-left:1%;" border="1" class="ntdata">
 <tr>
 <th>$w$ \ $d$</th>
 <th>1</th> <th>3</th> <th>5</th> <th>7</th> <th class="rightline">9</th>
@@ -163,13 +164,13 @@ Some <a href="{{url_for('.interesting_families')}}">interesting families of hype
 </p>
 
 <form class="search">
-  <h3> Search for families of HGMs</h3>
+  <h3> Search for hypergeometric families</h3>
   <p>
     Enter values into one or more boxes to restrict the list of families returned.
   </p>
   {{ info.search_array.family_html() | safe }}
 
-  <h3> Search for individual HGMs</h3>
+  <h3> Search for individual hypergeometric motives</h3>
   <p>
     Enter values into the boxes above and the boxes below to obtain the
     list of corresponding hypergeometric motives.
@@ -187,9 +188,25 @@ Some <a href="{{url_for('.interesting_families')}}">interesting families of hype
    family search instead of motive search #}
 
 <script type="text/javascript">
-  $(".family").keyup(function(e) {
+  function wait(ms) {
+    var start = Date.now(),
+        now = start;
+    while (now - start < ms) {
+      now = Date.now();
+    }
+}
+  $(".family").on("keypress", function(e) {
       if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-          $("#family").click();
+          console.log("Familying");
+          e.preventDefault();
+          $("#family").trigger("click");
+      }
+});
+  $(".motive").on("keypress", function(e) {
+      if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+          console.log("Motiving");
+          e.preventDefault();
+          $("#motive").trigger("click");
       }
 });
 </script>

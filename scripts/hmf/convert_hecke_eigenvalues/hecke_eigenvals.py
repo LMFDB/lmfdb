@@ -52,7 +52,7 @@ def polredabs_coeffs(poly):
         poly -- polynomial, a polynomial with coefficients in QQ
 
     OUTPUT:
-        cs_string -- string, the coefficients of the normalized polynomial (the output of gp.polredabs(poly)), given as a comma-separated string with no spaces 
+        cs_string -- string, the coefficients of the normalized polynomial (the output of gp.polredabs(poly)), given as a comma-separated string with no spaces
     """
     R = poly.parent()
     (x,) = R._first_ngens(1)
@@ -97,7 +97,7 @@ def get_number_field_integral_basis(c_string):
         fld_bool -- bool, True if the number field has a page in the LMFDB, False otherwise
         K_new -- number field, the number field with defining polynomial that is the normalized version (given by gp.polredabs) of the one with coefficients specified by c_string
         a -- number field element, generator for K_new
-        the integral basis for K_new recorded on its LMFDB page 
+        the integral basis for K_new recorded on its LMFDB page
     """
     C = getDBconnection()
     c_hash = field_coeffs_string_to_hash(c_string)
@@ -176,7 +176,7 @@ def convert_hecke_eigenvalues(K_old, eigenvals, K_new, int_basis):
 
     eigen_strings = []
     for c in eigenvals_new:
-        eigen_strings.append(vector_to_string(c))   
+        eigen_strings.append(vector_to_string(c))
     return eigen_strings, K_new, a, int_basis
 
 # Wrapper for above functions

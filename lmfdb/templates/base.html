@@ -26,6 +26,11 @@
           integrity="sha384-Nlo8b0yiGl7Dn+BgLn4mxhIIBU6We7aeeiulNCjHdUv/eKHx59s3anfSUjExbDxn"
           crossorigin="anonymous">
 
+    {% if not BETA %}
+      <!--reCAPTCHA-->
+      <script src="https://www.google.com/recaptcha/enterprise.js?render=6LchHWwpAAAAACFe52hZNEkUP5Bn5_0FfLiEuF3i&waf=session" async defer></script>
+    {% endif %}
+
 
 
 
@@ -34,10 +39,6 @@
     <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script>
-
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='raw_typeset.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='notify.min.js') }}"></script>
 
@@ -122,6 +123,7 @@ katexOpts = {
   "\\AGammaL": '{\\textrm{A}\\Gamma\\textrm{L}}',
   "\\ASigmaL": '{\\textrm{A}\\Sigma\\textrm{L}}',
   "\\ASigmaSp": '{\\textrm{A}\\Sigma\\textrm{Sp}}',
+  "\\Dic": '{\\textrm{Dic}}',
   "\\SD": '{\\textrm{SD}}',
   "\\OD": '{\\textrm{OD}}',
   "\\He": '{\\textrm{He}}',
@@ -173,17 +175,14 @@ katexOpts = {
       gtag('config', 'G-YVBFDNX374');
     </script>
 
-    {% if body_class == "checklist" -%}
-      <base target="page">
-      {%- endif %}
   </head>
 
   {%- if BETA -%}
   <body class="beta {{ body_class }}">
-    {%- else -%}
-    <body class="{{ body_class }}">
-      {%- endif -%}
+  {%- else -%}
+  <body class="{{ body_class }}">
+  {%- endif -%}
 
-      {% block body -%}{%- endblock body %}
-      </body>
+  {% block body -%}{%- endblock body %}
+  </body>
 </html>

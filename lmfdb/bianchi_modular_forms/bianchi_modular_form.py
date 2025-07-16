@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 from flask import render_template, url_for, request, redirect, make_response, abort
@@ -65,13 +64,19 @@ def index():
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,7,11,19,43,67,163]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
+        gl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]
+        gl2_forms_max = "2.0.2491.1"
+        gl2_forms_max_name = r"\(\Q(\sqrt{-2491})\)"
+        gl2_dims_max = "2.0.2495.1"
+        gl2_dims_max_name = r"\(\Q(\sqrt{-2495})\)"
+        sl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,7,11,19,43,67,163]]
+        gl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]
+        sl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
+        info['last_field_forms'] = {'url':url_for("bmf.index", field_label=gl2_forms_max), 'name':gl2_forms_max_name}
+        info['last_field_dims'] = {'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=gl2_dims_max), 'name':gl2_dims_max_name}
 
         t = 'Bianchi modular forms'
         bread = get_bread()
@@ -108,7 +113,7 @@ def statistics():
 def bianchi_modular_form_jump(info):
     label = info['jump'].strip()
     dat = label.split("-")
-    if len(dat)==2: # assume field & level, display space
+    if len(dat) == 2: # assume field & level, display space
         return render_bmf_space_webpage(dat[0], dat[1])
     else: # assume single newform label; will display an error if invalid
         return bianchi_modular_form_by_label(label)
@@ -185,7 +190,7 @@ def bianchi_modular_form_search(info, query):
             query['CM'] = 0 # will exclude NULL values
         elif info['include_cm'] == 'only':
             query['CM'] = {'$ne': 0} # will exclude NULL values
-    if info.get('include_base_change') =='exclude':
+    if info.get('include_base_change') == 'exclude':
         query['bc'] = 0
     elif info.get('include_base_change') == 'only':
         query['bc'] = {'$ne': 0}
@@ -224,13 +229,13 @@ def bmf_field_dim_table(**args):
     argsdict.update(to_dict(request.args))
     gl_or_sl = argsdict['gl_or_sl']
 
-    field_label=argsdict['field_label']
+    field_label = argsdict['field_label']
     field_label = nf_string_to_label(field_label)
 
     count = parse_count(argsdict, 50)
     start = parse_start(argsdict)
 
-    info={}
+    info = {}
     info['gl_or_sl'] = gl_or_sl
     # level_flag controls whether to list all levels ('all'), only
     # those with positive cuspidal dimension ('cusp'), or only those
@@ -246,7 +251,7 @@ def bmf_field_dim_table(**args):
         parse_ints(argsdict, query, 'level_norm')
         info["level_norm"] = argsdict["level_norm"]
     query['field_label'] = field_label
-    if gl_or_sl=='gl2_dims':
+    if gl_or_sl == 'gl2_dims':
         info['group'] = 'GL(2)'
         info['bgroup'] = r'\GL(2,\mathcal{O}_K)'
     else:
@@ -297,7 +302,7 @@ def bmf_field_dim_table(**args):
     info['nlevels'] = len(data)
     dimtable = [{'level_label': dat['level_label'],
                  'level_norm': dat['level_norm'],
-                 'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']) if gl_or_sl=='gl2_dims' else "",
+                 'level_space': url_for(".render_bmf_space_webpage", field_label=field_label, level_label=dat['level_label']) if gl_or_sl == 'gl2_dims' else "",
                   'dims': dims[dat['level_label']]} for dat in data]
     info['dimtable'] = dimtable
     return render_template("bmf-field_dim_table.html", info=info, title=t, properties=properties, bread=bread)
@@ -335,7 +340,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 info['level_norm'] = data['level_norm']
                 info['field_poly'] = teXify_pol(str(nf.poly()))
                 info['field_knowl'] = nf_display_knowl(field_label, pretty_field_label)
-                w = 'i' if nf.disc()==-4 else 'a'
+                w = 'i' if nf.disc() == -4 else 'a'
                 L = nf.K().change_names(w)
                 alpha = L.gen()
                 info['field_gen'] = latex(alpha)
@@ -346,7 +351,7 @@ def render_bmf_space_webpage(field_label, level_label):
                 weights = list(dim_data)
                 weights.sort(key=int)
                 for w in weights:
-                    dim_data[w]['dim']=dim_data[w]['cuspidal_dim']
+                    dim_data[w]['dim'] = dim_data[w]['cuspidal_dim']
                 info['dim_data'] = dim_data
                 info['weights'] = weights
                 info['nweights'] = len(weights)
@@ -358,14 +363,14 @@ def render_bmf_space_webpage(field_label, level_label):
                     'url': url_for(".render_bmf_webpage",field_label=f['field_label'], level_label=f['level_label'], label_suffix=f['label_suffix']),
                     'wt': f['weight'],
                     'dim': f['dimension'],
-                    'sfe': "+1" if f.get('sfe',None)==1 else "-1" if f.get('sfe',None)==-1 else "?",
+                    'sfe': "+1" if f.get('sfe',None) == 1 else "-1" if f.get('sfe',None) == -1 else "?",
                     'bc': bc_info(f['bc']),
                     'cm': cm_info(f.get('CM','?')),
                     } for f in newforms]
                 info['nnewforms'] = len(info['nfdata'])
                 # currently we have newforms of dimension 1 and 2 only (mostly dimension 1)
                 # but the dimension 2 data is untrustworthy so is ignored here
-                info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim']==1)
+                info['nnf1'] = sum(1 for f in info['nfdata'] if f['dim'] == 1)
                 #info['nnf2'] = sum(1 for f in info['nfdata'] if f['dim']==2)
                 info['nnf_missing'] = dim_data['2']['new_dim'] - info['nnf1'] # - 2*info['nnf2']
                 properties = [('Base field', pretty_field_label), ('Level',info['level_label']), ('Norm',str(info['level_norm'])), ('New dimension',str(newdim))]
@@ -411,7 +416,7 @@ def download_bmf_magma(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -448,12 +453,12 @@ def download_bmf_magma(**args):
         outstr += 'heckePol := x;\nK := Rationals(); e := 1;\n'
 
     hecke_eigs_processed = [str(st).replace(' ', '') if st != 'not known' else '"not known"' for st in hecke_eigs]
-    outstr += '\nheckeEigenvaluesList := [*\n'+ ',\n'.join(hecke_eigs_processed) + '\n*];\n'
+    outstr += '\nheckeEigenvaluesList := [*\n' + ',\n'.join(hecke_eigs_processed) + '\n*];\n'
     outstr += '\nheckeEigenvalues := AssociativeArray();\n'
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += '\nALEigenvalues := AssociativeArray();\n'
         for s in AL_eigs:
             outstr += 'ALEigenvalues[ideal<ZF | {}>] := {};\n'.format(set(s[0]), s[1])
@@ -541,7 +546,7 @@ def download_bmf_sage(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -581,10 +586,10 @@ def download_bmf_sage(**args):
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += 'AL_eigenvalues = {}\n'
         for s in AL_eigs:
-            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0], s[1])
     else:
         outstr += 'AL_eigenvalues ="not known"\n'
 
@@ -636,7 +641,7 @@ def render_bmf_webpage(field_label, level_label, label_suffix):
         friends=friends,
         info=info,
         learnmore=learnmore_list(),
-        KNOWL_ID="mf.bianchi.%s"%label,
+        KNOWL_ID="mf.bianchi.%s" % label,
     )
 
 
@@ -792,7 +797,7 @@ class BianchiStats(StatsDisplay):
     stat_list = [
         {'cols': ['field_label', 'level_norm'],
          'top_title': '%s by %s and %s' % (
-             display_knowl("mf.bianchi.bianchimodularforms",
+             display_knowl("mf.bianchi",
                            "Bianchi modular forms"),
              display_knowl('nf', 'base field'),
              display_knowl('mf.bianchi.level', 'level norm')),
@@ -853,7 +858,7 @@ class BianchiStats(StatsDisplay):
     def summary(self):
         return r"The database currently contains %s %s of weight 2 over %s imaginary quadratic fields, and %s %s over %s imaginary quadratic fields, including all with class number one." % (
             comma(self.nforms),
-            display_knowl("mf.bianchi.bianchimodularforms",
+            display_knowl("mf.bianchi",
                           "Bianchi modular forms"),
             self.nformfields,
             comma(self.ndims),
@@ -863,4 +868,4 @@ class BianchiStats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return r'The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi.bianchimodularforms", "Bianchi modular forms"), self.nformfields, url_for(".statistics"))
+        return r'The database currently contains %s %s of weight 2 over %s imaginary quadratic fields.  Here are some <a href="%s">further statistics</a>.' % (comma(self.nforms), display_knowl("mf.bianchi", "Bianchi modular forms"), self.nformfields, url_for(".statistics"))

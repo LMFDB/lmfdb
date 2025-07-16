@@ -2,7 +2,7 @@ import re
 from flask import url_for
 from urllib.parse import quote
 from markupsafe import Markup, escape
-from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, KodairaSymbol,
+from sage.all import (Infinity, PolynomialRing, QQ, RDF, ZZ, RR, KodairaSymbol,
                       implicit_plot, plot, prod, rainbow, sqrt, text, var)
 from lmfdb import db
 from lmfdb.utils import (encode_plot, names_and_urls, web_latex, display_knowl,
@@ -84,7 +84,7 @@ def get_nf_info(lab):
     r""" extract number field label from string and pretty"""
     try:
         label = nf_string_to_label(lab)
-        pretty = field_pretty (label)
+        pretty = field_pretty(label)
     except ValueError as err:
         raise ValueError(Markup("<span style='color:black'>%s</span> is not a valid number field label. %s" % (escape(lab),err)))
     return label, pretty
@@ -157,9 +157,9 @@ def latex_factorization(plist, exponents, sign=+1):
     for example) set sign=-1 to preprend a minus sign.
 
     """
-    factors = ["{}^{{{}}}".format(q,n) if n>1 else "{}".format(q) if n>0 else "" for q,n in zip(plist, exponents)]
+    factors = ["{}^{{{}}}".format(q,n) if n > 1 else "{}".format(q) if n > 0 else "" for q,n in zip(plist, exponents)]
     factors = [f for f in factors if f] # exclude any factors with exponent 0
-    return r"\({}{}\)".format("-" if sign==-1 else "", r"\cdot".join(factors))
+    return r"\({}{}\)".format("-" if sign == -1 else "", r"\cdot".join(factors))
 
 def parse_point(K, s):
     r""" Returns a point in P^2(K) defined by the string s.  s has the form
@@ -171,45 +171,47 @@ def parse_point(K, s):
     return [K([QQ(ci.encode()) for ci in c.split(",")]) for c in cc]
 
 def inflate_interval(a,b,r):
-    c=(a+b)/2
-    d=(b-a)/2
-    d*=r
+    c = (a+b)/2
+    d = (b-a)/2
+    d *= r
     return (c-d,c+d)
 
-def plot_zone_union(R,S):
-    return(min(R[0],S[0]),max(R[1],S[1]),min(R[2],S[2]),max(R[3],S[3]))
+
+def plot_zone_union(R, S):
+    return (min(R[0], S[0]), max(R[1], S[1]), min(R[2], S[2]), max(R[3], S[3]))
+
 
 # Finds a suitable plotting zone for the component a <= x <= b of the EC y**2+h(x)*y=f(x)
 def EC_R_plot_zone_piece(f,h,a,b):
-    npts=50
-    Y=[]
-    g=f+h**2/4
-    t=a
-    s=(b-a)/npts
+    npts = 50
+    Y = []
+    g = f+h**2/4
+    t = a
+    s = (b-a)/npts
     for _ in range(npts+1):
-        y=g(t)
-        if y>0:
-            y=sqrt(y)
-            w=h(t)/2
+        y = g(t)
+        if y > 0:
+            y = sqrt(y)
+            w = h(t)/2
             Y.append(y-w)
             Y.append(-y-w)
-        t+=s
-    (ymin,ymax)=inflate_interval(min(Y),max(Y),1.2)
-    (a,b)=inflate_interval(a,b,1.3)
+        t += s
+    (ymin,ymax) = inflate_interval(min(Y),max(Y),1.2)
+    (a,b) = inflate_interval(a,b,1.3)
     return (a,b,ymin,ymax)
 
 # Finds a suitable plotting zone for the EC y**2+h(x)*y=f(x)
 def EC_R_plot_zone(f,h):
-    F=f+h**2/4
-    F1=F.derivative()
-    F2=F1.derivative()
-    G=F*F2-F1**2/2
-    ZF=[z[0] for z in F.roots()]
-    ZG=[z[0] for z in G.roots()]
-    xi=max(ZG)
-    if len(ZF)==1:
+    F = f+h**2/4
+    F1 = F.derivative()
+    F2 = F1.derivative()
+    G = F*F2-F1**2/2
+    ZF = [z[0] for z in F.roots()]
+    ZG = [z[0] for z in G.roots()]
+    xi = max(ZG)
+    if len(ZF) == 1:
         return EC_R_plot_zone_piece(f,h,ZF[0],2*xi-ZF[0])
-    if len(ZF)==3:
+    if len(ZF) == 3:
         return plot_zone_union(EC_R_plot_zone_piece(f,h,ZF[0],ZF[1]),EC_R_plot_zone_piece(f,h,ZF[2],2*xi-ZF[2]))
     return EC_R_plot_zone_piece(f,h,ZF[0],2*ZF[1]-ZF[0])
 
@@ -220,17 +222,17 @@ def EC_R_plot(ainvs, xmin, xmax, ymin, ymax, colour, legend):
     d = (xmax - xmin)
     return implicit_plot(y ** 2 + ainvs[0] * x * y + ainvs[2] * y - x ** 3 - ainvs[1] * x ** 2 - ainvs[3] * x - ainvs[4], (x, xmin, xmax), (y, ymin, ymax), plot_points=500, aspect_ratio="automatic", color=colour) + plot(0, xmin=c - 1e-5 * d, xmax=c + 1e-5 * d, ymin=ymin, ymax=ymax, aspect_ratio="automatic", color=colour, legend_label=legend)  # Add an extra plot outside the visible frame because implicit plots are buggy: their legend does not show (https://trac.sagemath.org/ticket/15903)
 
-Rx=PolynomialRing(RDF,'x')
+Rx = PolynomialRing(RDF,'x')
 
 def EC_nf_plot(K, ainvs, base_field_gen_name):
     try:
         n1 = K.signature()[0]
         if n1 == 0:
             return plot([])
-        R=[]
-        S=K.embeddings(RDF)
+        R = []
+        S = K.embeddings(RDF)
         for s in S:
-            A=[s(c) for c in ainvs]
+            A = [s(c) for c in ainvs]
             R.append(EC_R_plot_zone(Rx([A[4],A[3],A[1],1]),Rx([A[2],A[0]])))
         xmin = min([r[0] for r in R])
         xmax = max([r[1] for r in R])
@@ -238,19 +240,19 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         ymax = max([r[3] for r in R])
         cols = rainbow(n1) # Default choice of n colours
         # However, these tend to be too pale, so we preset them for small values of n
-        if n1==1:
-            cols=["blue"]
-        elif n1==2:
-            cols=["red","blue"]
-        elif n1==3:
-            cols=["red","limegreen","blue"]
-        elif n1==4:
+        if n1 == 1:
+            cols = ["blue"]
+        elif n1 == 2:
+            cols = ["red","blue"]
+        elif n1 == 3:
+            cols = ["red","limegreen","blue"]
+        elif n1 == 4:
             cols = ["red", "orange", "forestgreen", "blue"]
-        elif n1==5:
+        elif n1 == 5:
             cols = ["red", "orange", "forestgreen", "blue", "darkviolet"]
-        elif n1==6:
+        elif n1 == 6:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet"]
-        elif n1==7:
+        elif n1 == 7:
             cols = ["red", "darkorange", "gold", "forestgreen", "blue", "darkviolet", "fuchsia"]
         return sum([EC_R_plot([S[i](c) for c in ainvs], xmin, xmax, ymin, ymax, cols[i], "$" + base_field_gen_name + r" \mapsto$ " + str(S[i].im_gens()[0].n(20)) + r"$\dots$") for i in range(n1)])
     except Exception:
@@ -357,6 +359,9 @@ class ECNF():
         self.cond_norm = web_latex(self.conductor_norm)
 
         Dnorm = self.normdisc
+        self.model_disc = self.disc.replace('w', Kgen).replace("*","").replace("(","").replace(")","")
+        if Kgen == 'phi':
+            self.model_disc = self.model_disc.replace(Kgen, r"\phi")
         self.disc = pretty_ideal(Kgen, self.disc)
 
         local_data = self.local_data
@@ -392,12 +397,12 @@ class ECNF():
             Dnorm_factor = local_data[ip]['normp']**12
 
         self.disc_norm = web_latex(Dnorm)
-        signDnorm = 1 if Dnorm>0 else -1
+        signDnorm = 1 if Dnorm > 0 else -1
         if Dnorm in [1, -1]:  # since the factorization of (1) displays as "1"
             self.fact_disc = self.disc
             self.fact_disc_norm = str(Dnorm)
         else:
-            self.fact_disc      = latex_factorization(badprimes, disc_ords)
+            self.fact_disc = latex_factorization(badprimes, disc_ords)
             self.fact_disc_norm = latex_factorization(badnorms, disc_ords, sign=signDnorm)
 
         if self.is_minimal:
@@ -409,10 +414,10 @@ class ECNF():
 
         self.mindisc_norm = web_latex(Dmin_norm)
         if Dmin_norm in [1,-1]:  # since the factorization of (1) displays as "1"
-            self.fact_mindisc      = self.mindisc
+            self.fact_mindisc = self.mindisc
             self.fact_mindisc_norm = self.mindisc_norm
         else:
-            self.fact_mindisc      = latex_factorization(badprimes, mindisc_ords)
+            self.fact_mindisc = latex_factorization(badprimes, mindisc_ords)
             self.fact_mindisc_norm = latex_factorization(badnorms, mindisc_ords, sign=signDnorm)
 
         j = self.field.parse_NFelt(self.jinv)
@@ -447,7 +452,7 @@ class ECNF():
         # CM and End(E)
         self.cm_bool = "no"
         self.End = r"\(\Z\)"
-        self.rational_cm = self.cm_type>0
+        self.rational_cm = self.cm_type > 0
         if self.cm:
             self.cm_sqf = integer_squarefree_part(ZZ(self.cm))
             self.cm_bool = r"yes (\(%s\))" % self.cm
@@ -461,7 +466,7 @@ class ECNF():
         if self.cm and self.galois_images != '?':
             self.cm_ramp = [p for p in ZZ(self.cm).support() if p not in self.nonmax_primes]
             self.cm_nramp = len(self.cm_ramp)
-            if self.cm_nramp==1:
+            if self.cm_nramp == 1:
                 self.cm_ramp = self.cm_ramp[0]
             else:
                 self.cm_ramp = ", ".join(str(p) for p in self.cm_ramp)
@@ -481,17 +486,26 @@ class ECNF():
         except AttributeError:
             self.qc = "not determined"
 
+        # Mordell-Weil group
+        try:
+            invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
+            self.mw_struct = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+        except AttributeError: # if self.rank not set
+            self.mw_struct = "unknown"
+
         # Torsion
-        self.ntors = web_latex(self.torsion_order)
+        BSDntors = self.torsion_order
+        self.ntors = web_latex(BSDntors)
         self.tr = len(self.torsion_structure)
         if self.tr == 0:
-            self.tor_struct_pretty = "trivial"
+            self.tor_struct_pretty = "$0$"
         if self.tr == 1:
             self.tor_struct_pretty = r"\(\Z/%s\Z\)" % self.torsion_structure[0]
         if self.tr == 2:
             self.tor_struct_pretty = r"\(\Z/%s\Z\oplus\Z/%s\Z\)" % tuple(self.torsion_structure)
 
         self.torsion_gens = [web_point(parse_point(K,P)) for P in self.torsion_gens]
+        self.tor_gens_and_orders = list(zip(self.torsion_gens, self.torsion_structure))
 
         # BSD data
         #
@@ -538,66 +552,158 @@ class ECNF():
         # for debugging:
         assert self.rk == "not available" or (self.rk_lb == self.rank
                                               and self.rank == self.rk_ub)
-        assert self.ar=="not available" or (self.rk_lb<=self.analytic_rank and self.analytic_rank<=self.rk_ub)
+        assert self.ar == "not available" or (self.rk_lb <= self.analytic_rank and self.analytic_rank <= self.rk_ub)
 
         self.bsd_status = "incomplete"
         if self.analytic_rank is not None:
-            if self.rk_lb==self.rk_ub:
+            if self.rk_lb == self.rk_ub:
                 self.bsd_status = "unconditional"
-            elif self.rk_lb==self.analytic_rank:
+            elif self.rk_lb == self.analytic_rank:
                 self.bsd_status = "conditional"
             else:
                 self.bsd_status = "missing_gens"
 
         # Regulator only in conditional/unconditional cases, or when we know the rank:
+        BSDReg = None
         if self.bsd_status in ["conditional", "unconditional"]:
-            if self.ar == 0:
-                self.reg = web_latex(1)  # otherwise we only get 1.00000...
+            if self.analytic_rank == 0:
+                BSDReg = 1
+                self.reg = self.NTreg = web_latex(BSDReg)  # otherwise we only get 1.00000...
             else:
                 try:
-                    self.reg = web_latex(self.reg)
-                except AttributeError:
+                    R = self.reg
+                    BSDReg = R * K.degree()**self.rank
+                    self.reg = web_latex(R)
+                    self.NTreg = web_latex(BSDReg)
+                except Exception:
                     self.reg = "not available"
+                    self.NTreg = "not available"
         elif self.rk != "not available":
-            self.reg = web_latex(self.reg) if self.rank else web_latex(1)
+            R = self.reg
+            BSDReg = R * K.degree()**self.rank
+            self.reg = web_latex(R) if self.rank else web_latex(1)
+            self.NTreg = web_latex(BSDReg) if self.rank else web_latex(1)
         else:
             self.reg = "not available"
+            self.NTreg = "not available"
 
         # Generators
         try:
             self.gens = [web_point(parse_point(K, P)) for P in self.gens]
+            self.gens_and_heights = list(zip(self.gens,self.heights))
+            self.gens_and_heights.sort(key=lambda Ph: Ph[1])
         except AttributeError:
             self.gens = []
+            self.gens_and_heights = []
 
-        # Global period
+        # Global period -- see issue #5409 for why we multiply by
+        # 2**nc in most cases.  However, data computed after
+        # 2024-07-09 (including all data for imaginary quadratic
+        # fields of absolute discriminant > 600 as well as some larger
+        # conductors for other IQFs) already has the extra factor of
+        # 2.  As a fail-safe until we fix the data in all cases, we
+        # will test (using the BSD formula) whether to remove the
+        # factor of 2 added here.
+        BSDomega = None
         try:
-            self.omega = web_latex(self.omega)
+            BSDomega = self.omega
+            nc = self.signature[1] # number of complex places
+            if nc:
+                BSDomega *= 2**nc
+            self.omega = web_latex(BSDomega)
         except AttributeError:
             self.omega = "not available"
 
         # L-value
+        BSDLvalue = None
         try:
             r = int(self.analytic_rank)
             # lhs = "L(E,1) = " if r==0 else "L'(E,1) = " if r==1 else "L^{{({})}}(E,1)/{}! = ".format(r,r)
-            self.Lvalue = web_latex(self.Lvalue)
+            BSDLvalue = self.Lvalue
+            self.Lvalue = web_latex(BSDLvalue)
         except (TypeError, AttributeError):
             self.Lvalue = "not available"
 
         # Tamagawa product
         tamagawa_numbers = [ZZ(_ld['cp']) for _ld in self.local_data]
         cp_fac = [cp.factor() for cp in tamagawa_numbers]
-        cp_fac = [latex(cp) if len(cp)<2 else '('+latex(cp)+')' for cp in cp_fac]
-        if len(cp_fac)>1:
+        cp_fac = [latex(cp) if len(cp) < 2 else '('+latex(cp)+')' for cp in cp_fac]
+        if len(cp_fac) > 1:
             self.tamagawa_factors = r'\cdot'.join(cp_fac)
         else:
             self.tamagawa_factors = None
-        self.tamagawa_product = web_latex(prod(tamagawa_numbers,1))
+        BSDprodcp = prod(tamagawa_numbers,1)
+        self.tamagawa_product = web_latex(BSDprodcp)
 
         # Analytic Sha
+        BSDsha = None
         try:
-            self.sha = web_latex(self.sha) + " (rounded)"
+            BSDsha = self.sha
+            self.sha = web_latex(BSDsha) + " (rounded)"
         except AttributeError:
             self.sha = "not available"
+
+        # Check analytic Sha value compatible with formula in the knowl (see issue #5409)
+
+        BSDrootdisc = RR(K.discriminant().abs()).sqrt()
+        BSDok = True
+        if BSDLvalue and BSDsha and BSDReg and (self.rank is not None):
+            BSDsha_numerator = BSDrootdisc * BSDntors**2
+            BSDsha_denominator = BSDReg * BSDomega * BSDprodcp
+            BSDsha_from_formula = BSDLvalue * BSDsha_numerator / BSDsha_denominator
+            BSDsha_from_formula_rounded = BSDsha_from_formula.round()
+            BSDok = (BSDsha_from_formula_rounded == BSDsha) and ((BSDsha_from_formula_rounded - BSDsha_from_formula).abs() < 0.001)
+            #print(f"{BSDsha_from_formula=}")
+            #print(f"{BSDsha_from_formula_rounded=}")
+            #print(f"{BSDsha=}")
+            #print(f"{BSDok=}")
+            if not BSDok:
+                # this means that we doubled BSDomega when we should
+                # not have, so BSDsha_denominator is doubled and
+                # BSDsha_from formula is halved
+                print(f"BSD normalization: adjusting Omega for {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
+                BSDok = ((BSDsha/BSDsha_from_formula)-2).abs() < 0.01
+                if not BSDok:
+                    print(f"BSD normalization issue with {self.label}: stored Sha = {BSDsha} but formula gives {BSDsha_from_formula}")
+                BSDomega /= 2
+                BSDsha_denominator /= 2
+                BSDsha_from_formula *= 2
+                BSDsha_from_formula_rounded = BSDsha_from_formula.round()
+            BSDLvalue_from_formula = BSDsha * BSDsha_denominator / BSDsha_numerator
+            self.BSDsha = web_latex(BSDsha_from_formula)
+            self.BSDLvalue = web_latex(BSDLvalue_from_formula)
+
+            # The BSD formula for display
+
+            dot = '\\cdot'
+            approx = '\\approx'
+            eq_query = '\\overset{?}{=}'
+            frac = '\\frac'
+            Sha = '\\# &#1064;(E/K)'
+            Om = '\\Omega(E/K)'
+            Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
+            prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
+            tors2 = '\\#E(K)_{\\mathrm{tor}}^2'
+            rootD = '\\left|d_K\\right|^{1/2}'
+
+            lder_name  = rf"L^{{({r})}}(E/K,1)/{r}!" if r >= 2 else "L'(E/K,1)" if r else "L(E/K,1)"
+            lhs_num    = rf'{Sha} {dot} {Om} {dot} {Reg} {dot} {prodcp}'
+            lhs_den    = rf'{tors2} {dot} {rootD}'
+            lhs        = rf'{frac}{{ {lhs_num} }} {{ {lhs_den} }}'
+            rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg} {dot} {BSDprodcp}'
+            if r:
+                rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
+            rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
+            rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
+            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} {eq_query} {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+
+        else:
+            self.BSDsha = "not available"
+            self.BSDLvalue = "not available"
+            self.bsd_formula = None
+
+        if not BSDok: # don't display the formula if it is not correct
+            self.bsd_formula = None
 
         # Local data
 
@@ -627,8 +733,8 @@ class ECNF():
         # Isogeny information
 
         self.one_deg = ZZ(self.class_deg).is_prime()
-        isodegs = [str(d) for d in self.isodeg if d>1]
-        if len(isodegs)<3:
+        isodegs = [str(d) for d in self.isodeg if d > 1]
+        if len(isodegs) < 3:
             self.isodeg = " and ".join(isodegs)
         else:
             self.isodeg = " and ".join([", ".join(isodegs[:-1]), isodegs[-1]])
@@ -718,7 +824,7 @@ class ECNF():
         # LMFDB labels:
         self.base_change_Q = [cremona_label_to_lmfdb_label(lab) for lab in self.base_change if '-' not in lab]
 
-        # sort by conductor (so also unkown curves come last)
+        # sort by conductor (so also unknown curves come last)
         self.base_change_Q.sort(key=lambda lab:ZZ(conductor_from_label(lab)))
         self.bcQtext = [] # for the Base change section of the home page
         for lab in self.base_change_Q:
@@ -735,7 +841,7 @@ class ECNF():
         # we want to use split_full_label but that will fail if the class code + number are '?'
         self.base_change_NFsplit = [(lab,)+split_full_label(lab.replace('?','a1')) for lab in self.base_change_NF]
         self.bcNFtext = [] # for the Base change section of the home page
-        for (lab,nf,cond,cl,num) in self.base_change_NFsplit:
+        for lab, nf, cond, cl, num in self.base_change_NFsplit:
             field_knowl = FIELD(nf).knowl()
             if '?' in lab:
                 cond_norm = cond.split(".")[0]
@@ -762,7 +868,7 @@ class ECNF():
                     Lfun['Lhash'],
                     Lfun['degree'],
                     Lfun.get('trace_hash'))
-                exclude={elt[1].rstrip('/').lstrip('/') for elt in self.friends
+                exclude = {elt[1].rstrip('/').lstrip('/') for elt in self.friends
                          if elt[1]}
                 self.friends += names_and_urls(instances, exclude=exclude)
                 self.friends += [('L-function', self.urls['Lfunction'])]
@@ -808,7 +914,7 @@ def make_code(label, lang=None):
     language (if lang is 'pari' or 'gp', 'sage', or 'magma') or all
     three (if lang is None).
     """
-    if lang=='gp':
+    if lang == 'gp':
         lang = 'pari'
     all_langs = ['magma', 'pari', 'sage']
 

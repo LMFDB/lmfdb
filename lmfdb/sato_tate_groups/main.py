@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 from flask import render_template, url_for, redirect, request, abort
@@ -181,6 +180,20 @@ st_aliases = {
     'J(E_4)': '1.4.E.8.3a',
     'J(E_6)': '1.4.E.12.4a',
     'U(1)_2': '1.4.F.1.1a',
+    'C_1': '1.4.F.1.1a',
+    'C_2': '1.4.F.2.1b',
+    'C_3': '1.4.F.3.1a',
+    'C_4': '1.4.F.4.1b',
+    'C_6': '1.4.F.6.2c',
+    'C_{4,1}': '1.4.F.4.1a',
+    'J(C_1)': '1.4.F.2.1a',
+    'D_2': '1.4.F.4.2a',
+    'D_3': '1.4.F.6.1a',
+    'D_4': '1.4.F.8.3b',
+    'J(C_3)': '1.4.F.6.2a',
+    'T': '1.4.F.12.3a',
+    'D_6': '1.4.F.12.4c',
+    'O': '1.4.F.24.12b',
     'J(C_2)': '1.4.F.4.2b',
     'J(C_4)': '1.4.F.8.2a',
     'J(C_6)': '1.4.F.12.5a',
@@ -294,32 +307,32 @@ def convert_label(label):
 def st_name(label):
     label = convert_label(label)
     if re.match(MU_LABEL_RE, label):
-        name = r'\mu(%s)'%label.split('.')[2]
+        name = r'\mu(%s)' % label.split('.')[2]
     elif re.match(NU1_MU_LABEL_RE, label):
         if label.split('.')[3] == 'd1':
             if label.split('.')[0] == '1':
                 label = '1.2.B.2.1a'
             name = r'N(\mathrm{U}(1))'
         else:
-            name = r'\mathrm{U}(1)[D_{%s}]'%label.split('.')[3][1:]
+            name = r'\mathrm{U}(1)[D_{%s}]' % label.split('.')[3][1:]
     elif re.match(SU2_MU_LABEL_RE, label):
         if label.split('.')[3] == 'c1':
             if label.split('.')[0] == '1':
                 label = '1.2.A.1.1a'
             name = r'\mathrm{SU}(2)'
         else:
-            name = r'\mathrm{SU}(2)[C_{%s}]'%label.split('.')[3][1:]
+            name = r'\mathrm{SU}(2)[C_{%s}]' % label.split('.')[3][1:]
     else:
         data = db.gps_st.lookup(label,projection=["name","pretty"])
         name = (data['pretty'] if data['pretty'] else data['name']) if data else None
     return name, label
 
 def st_ambient(weight, degree):
-    return '\\mathrm{USp}(%d)'%degree if weight%2 == 1 else '\\mathrm{O}(%d)'%degree
+    return '\\mathrm{USp}(%d)' % degree if weight % 2 == 1 else '\\mathrm{O}(%d)' % degree
 
 def trace_moments(moments):
     for m in moments:
-        if m[0] == 'a_1'or m[0] == 's_1':
+        if m[0] == 'a_1' or m[0] == 's_1':
             return m[1:10]
     return ''
 
@@ -352,20 +365,20 @@ def st_pretty(st_name):
 def st_link(label,name=None):
     if not name:
         name, label = st_name(label)
-    return '<a href=%s>%s</a>' % (url_for('st.by_label', label=label), "$%s$"%name if (name and name != label) else label)
+    return '<a href=%s>%s</a>' % (url_for('st.by_label', label=label), "$%s$" % name if (name and name != label) else label)
 
 def st_link_by_name(weight,degree,name):
-    return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s"%(weight,degree,name)), st_pretty(name))
+    return '<a href="%s">$%s$</a>' % (url_for('st.by_label', label="%s.%s.%s" % (weight,degree,name)), st_pretty(name))
 
 def st_anchor(label):
     if label in st_latex_dict:
-        return r"$%s$"%st_latex_dict[label]
+        return r"$%s$" % st_latex_dict[label]
     elif re.match(MU_LABEL_RE, label):
-        return r"$\mu(%s)$"%label.split('.')[2]
+        return r"$\mu(%s)$" % label.split('.')[2]
     elif re.match(NU1_MU_LABEL_RE, label):
-        return r"$N(\mathrm{U}(1))$" if label.split('.')[3] == 'd1' else r"$\mathrm{U}(1)[D_{%s}]$"%label.split('.')[3][1:]
+        return r"$N(\mathrm{U}(1))$" if label.split('.')[3] == 'd1' else r"$\mathrm{U}(1)[D_{%s}]$" % label.split('.')[3][1:]
     elif re.match(SU2_MU_LABEL_RE, label):
-        return r"$\mathrm{SU}(2)$" if label.split('.')[3] == 'c1' else r"$\mathrm{SU}(2)[C_{%s}]$"%label.split('.')[3][1:]
+        return r"$\mathrm{SU}(2)$" if label.split('.')[3] == 'c1' else r"$\mathrm{SU}(2)[C_{%s}]$" % label.split('.')[3][1:]
     else:
         return label
 
@@ -385,6 +398,7 @@ def st_lookup(label):
         return db.gps_st.lookup(label), True
 
 def st_knowl(label):
+    # import pdb; pdb.set_trace()
     try:
         data,_ = st_lookup(label)
         if not data:
@@ -393,9 +407,9 @@ def st_knowl(label):
         return "Unable to locate data for Sato-Tate group with label %s" % label
     label = data['label'] # label might have been converted
     def row_wrap(cap, val): return "<tr><td>%s: </td><td>%s</td></tr>\n" % (cap, val)
-    def math_mode(s): return '$%s$'%s
+    def math_mode(s): return '$%s$' % s
     info = '<table>\n'
-    info += row_wrap('Sato-Tate group <b>%s</b>'%label, math_mode(data['pretty']))
+    info += row_wrap('Sato-Tate group <b>%s</b>' % label, math_mode(data['pretty']))
     info += "<tr><td></td><td></td></tr>\n"
     info += row_wrap(display_knowl('st_group.weight','Weight'), math_mode(data['weight']))
     info += row_wrap(display_knowl('st_group.degree','Degree'), math_mode(data['degree']))
@@ -409,7 +423,7 @@ def st_knowl(label):
     if data.get('character_diagonal'):
         info += row_wrap(display_knowl('st_group.moment_matrix','Character diagonal'), math_mode(data['character_diagonal']))
     info += "</table>\n"
-    info += '<br><div style="float:right;">Sato-Tate group %s home page</div>'%st_link(label,name=label)
+    info += '<br><div style="float:right;">Sato-Tate group %s home page</div>' % st_link(label,name=label)
     return info
 
 def st_display_knowl(label):
@@ -510,7 +524,7 @@ def index():
     info = to_dict(request.args, search_array=STSearchArray(), stats=STStats())
     if request.args:
         return sato_tate_search(info)
-    weight_list= [0, 1]
+    weight_list = [0, 1]
     degree_list = list(range(1, 7, 1))
 
     for key, val in [('weight_list', weight_list),
@@ -670,25 +684,25 @@ def mu_data(n):
     assert n > 0
     n = ZZ(n)
     rec = {}
-    rec['label'] = "0.1.%d"%n
-    rec['label_components'] = [int(0),int(1),int(0),int(n)]
+    rec['label'] = "0.1.%d" % n
+    rec['label_components'] = [0, 1, 0, int(n)]
     rec['weight'] = 0
     rec['degree'] = 1
     rec['rational'] = bool(n <= 2)
-    rec['name'] = 'mu(%d)'%n
-    rec['pretty'] = r'\mu(%d)'%n
+    rec['name'] = 'mu(%d)' % n
+    rec['pretty'] = r'\mu(%d)' % n
     rec['real_dimension'] = 0
     rec['components'] = int(n)
     rec['component_group'] = db.gps_special_names.lucky({'family':'C','parameters':{'n':n}},projection='label')
     if rec['component_group'] is None:
-        rec['component_group'] = 'ab/%s'%n
+        rec['component_group'] = 'ab/%s' % n
     else:
-        rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+        rec['component_group_number'] = rec['component_group'].split('.')[1]
     rec['st0_label'] = '0.1.A'
     rec['identity_component'] = 'SO(1)'
-    rec['trace_zero_density']='0'
-    rec['gens'] = [[[r"\zeta_{%d}"%n]]]
-    rec['subgroups'] = ["0.1.%d"%(n/p) for p in n.prime_factors()]
+    rec['trace_zero_density'] = '0'
+    rec['gens'] = [[[r"\zeta_{%d}" % n]]]
+    rec['subgroups'] = ["0.1.%d" % (n/p) for p in n.prime_factors()]
     rec['subgroup_multiplicities'] = [1 for p in n.prime_factors()]
     # only list supgroups with the same ambient (i.e.if mu(n) lies in O(1) don't list supgroups that are not)
     if n == 1:
@@ -699,12 +713,12 @@ def mu_data(n):
         rec['maximal'] = True
     elif n > 2:
         if n <= 200000:
-            rec['supgroups'] = ["0.1.%d"%(p*n) for p in [2,3,5]]
+            rec['supgroups'] = ["0.1.%d" % (p*n) for p in [2,3,5]]
         rec['maximal'] = False
     rec['moments'] = [['a_1'] + [1 if m % n == 0 else 0 for m in range(13)]]
     rec['second_trace_moment'] = 1 if 2 % n == 0 else 0
     rec['fourth_trace_moment'] = 1 if 4 % n == 0 else 0
-    rec['counts'] = [['a_1', [[t,1] for t in ([1] if n%2 else [1,-1])]]]
+    rec['counts'] = [['a_1', [[t,1] for t in ([1] if n % 2 else [1,-1])]]]
     rec['zvector'] = []
     return rec
 
@@ -728,33 +742,33 @@ def su2_mu_data(w, n):
     if w == 1 and n == 1:
         return db.gps_st.lookup('1.2.A.1.1a')
     rec = {}
-    rec['label'] = "%d.2.3.c%d"%(w,n)
+    rec['label'] = "%d.2.3.c%d" % (w,n)
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = bool(n <= 2)
-    rec['name'] = 'SU(2)[C%d]'%n if n > 1 else 'SU(2)'
-    rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]'%n if n > 1 else r'\mathrm{SU}(2)'
+    rec['name'] = 'SU(2)[C%d]' % n if n > 1 else 'SU(2)'
+    rec['pretty'] = r'\mathrm{SU}(2)[C_{%d}]' % n if n > 1 else r'\mathrm{SU}(2)'
     rec['real_dimension'] = 3
     rec['components'] = int(n)
     rec['component_group'] = db.gps_special_names.lucky({'family':'C','parameters':{'n':n}},projection='label')
     if rec['component_group'] is None:
-        rec['component_group'] = 'ab/%s'%n
+        rec['component_group'] = 'ab/%s' % n
     else:
         rec['component_group_number'] = int(rec['component_group'].split('.')[1])
-    rec['st0_label'] = '%d.2.A'%w
+    rec['st0_label'] = '%d.2.A' % w
     rec['identity_component'] = 'SU(2)'
-    rec['trace_zero_density']='0'
-    rec['gens'] = [[['1','0'],['0',r'\zeta_{%d}'%n]]]
-    rec['subgroups'] = ["%d.2.A.c%d"%(w,n/p) for p in n.prime_factors()]
+    rec['trace_zero_density'] = '0'
+    rec['gens'] = [[['1','0'],['0',r'\zeta_{%d}' % n]]]
+    rec['subgroups'] = ["%d.2.A.c%d" % (w,n/p) for p in n.prime_factors()]
     rec['subgroup_multiplicities'] = [1 for p in n.prime_factors()]
     if n == 1:
         rec['supgroups'] = []
         rec['maximal'] = True
     else:
-        rec['supgroups'] = ["%d.2.A.c%d"%(w,p*n) for p in [2,3,5]]
+        rec['supgroups'] = ["%d.2.A.c%d" % (w,p*n) for p in [2,3,5]]
         rec['maximal'] = False
     su2_moments = [1, 0, 1, 0, 2, 0, 5, 0, 14, 0, 42, 0, 132]
-    rec['moments'] = [['a_1'] + [su2_moments[m] if m%n == 0 else 0 for m in range(13)]]
+    rec['moments'] = [['a_1'] + [su2_moments[m] if m % n == 0 else 0 for m in range(13)]]
     rec['second_trace_moment'] = 1 if 2 % n == 0 else 0
     rec['fourth_trace_moment'] = 2 if 4 % n == 0 else 0
     rec['counts'] = []
@@ -783,32 +797,32 @@ def nu1_mu_data(w,n):
     if w == 1 and n == 1:
         return db.gps_st.lookup('1.2.B.2.1a')
     rec = {}
-    rec['label'] = "%d.2.1.d%d"%(w,n)
+    rec['label'] = "%d.2.1.d%d" % (w,n)
     rec['weight'] = w
     rec['degree'] = 2
     rec['rational'] = bool(n <= 2)
-    rec['name'] = 'U(1)[C%d]'%n if n > 1 else 'N(U(1))'
-    rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]'%n if n > 1 else r'N(\mathrm{U}(1))'
+    rec['name'] = 'U(1)[C%d]' % n if n > 1 else 'N(U(1))'
+    rec['pretty'] = r'\mathrm{U}(1)[D_{%d}]' % n if n > 1 else r'N(\mathrm{U}(1))'
     rec['real_dimension'] = 1
     rec['components'] = int(2*n)
     rec['component_group'] = '4.2' if n == 2 else db.gps_special_names.lucky({'family':'D','parameters':{'n':n}},projection='label')
     if rec['component_group'] is None:
         return None
     rec['component_group_number'] = int(rec['component_group'].split('.')[1])
-    rec['st0_label'] = '%d.2.B'%w
+    rec['st0_label'] = '%d.2.B' % w
     rec['identity_component'] = 'U(1)'
-    rec['trace_zero_density']='1/2'
-    rec['gens'] = [[['0','1'],['-1','0']],[['1','0'],['0',r'\zeta_{%d}'%n]]]
-    rec['subgroups'] = ["%d.2.B.D%d"%(w,n/p) for p in n.prime_factors()]
+    rec['trace_zero_density'] = '1/2'
+    rec['gens'] = [[['0','1'],['-1','0']],[['1','0'],['0',r'\zeta_{%d}' % n]]]
+    rec['subgroups'] = ["%d.2.B.D%d" % (w,n/p) for p in n.prime_factors()]
     rec['subgroup_multiplicities'] = [1 for p in n.prime_factors()]
     if n == 1:
         rec['supgroups'] = []
         rec['maximal'] = True
     else:
-        rec['supgroups'] = ["%d.2.B.D%d"%(w,p*n) for p in [2,3,5]]
+        rec['supgroups'] = ["%d.2.B.D%d" % (w,p*n) for p in [2,3,5]]
         rec['maximal'] = False
     nu1_moments = [1, 0, 1, 0, 3, 0, 10, 0, 35, 0, 126, 0, 462]
-    rec['moments'] = [['a_1'] + [nu1_moments[m] if m%n == 0 else 0 for m in range(13)]]
+    rec['moments'] = [['a_1'] + [nu1_moments[m] if m % n == 0 else 0 for m in range(13)]]
     rec['second_trace_moment'] = 1 if 2 % n == 0 else 0
     rec['fourth_trace_moment'] = 3 if 4 % n == 0 else 0
     rec['counts'] = [['a_1', [[0,n]]]]
@@ -845,36 +859,38 @@ def render_by_label(label):
     data, in_database = st_lookup(label)
     info = {}
     if data is None:
-        flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
+        flash_error("%s is not the label of a Sato-Tate group currently in the database.", label)
         return redirect(url_for(".index"))
     for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
     info['ambient'] = st_ambient(info['weight'],info['degree'])
-    info['connected']=boolean_name(info['components'] == 1)
-    info['rational']=boolean_name(info.get('rational',True))
+    info['connected'] = boolean_name(info['components'] == 1)
+    info['rational'] = boolean_name(info.get('rational',True))
     st0 = db.gps_st0.lucky({'name':data['identity_component']})
     if not st0:
-        flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
+        flash_error("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['symplectic_form'] = st0.get('symplectic_form')
     info['hodge_circle'] = st0.get('hodge_circle')
-    info['st0_name']=st0['name']
-    info['identity_component']=st0['pretty']
-    info['st0_description']=st0['description']
+    info['st0_name'] = st0['name']
+    info['identity_component'] = st0['pretty']
+    info['st0_description'] = st0['description']
     if data['component_group'][:2] == "ab":
-        info['component_group'] = r"C_{%s}"%info['components']
-        info['cyclic']=boolean_name(True)
-        info['abelian']=boolean_name(True)
-        info['solvable']=boolean_name(True)
+        info['component_group'] = r"C_{%s}" % info['components']
+        info['component_group_knowl'] = r"$C_{%s}$" % info['components']
+        info['cyclic'] = boolean_name(True)
+        info['abelian'] = boolean_name(True)
+        info['solvable'] = boolean_name(True)
     else:
         G = db.gps_groups.lookup(data['component_group'])
         if not G:
-            flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
+            flash_error("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
             return redirect(url_for(".index"))
-        info['component_group']=G['tex_name']
-        info['cyclic']=boolean_name(G['cyclic'])
-        info['abelian']=boolean_name(G['abelian'])
-        info['solvable']=boolean_name(G['solvable'])
+        info['component_group'] = G['tex_name']
+        info['component_group_knowl'] = abstract_group_display_knowl(r"%s" % data['component_group'])
+        info['cyclic'] = boolean_name(G['cyclic'])
+        info['abelian'] = boolean_name(G['abelian'])
+        info['solvable'] = boolean_name(G['solvable'])
     if data.get('gens'):
         info['gens'] = comma_separated_list([string_matrix(m) for m in data['gens']]) if isinstance(data['gens'], list) else data['gens']
         info['numgens'] = len(info['gens'])
@@ -882,13 +898,13 @@ def render_by_label(label):
         info['numgens'] = 0
     if data.get('subgroups'):
         if data.get('subgroup_multiplicities') and len(data["subgroup_multiplicities"]) == len(data['subgroups']):
-            mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['subgroup_multiplicities']]
+            mults = ["${}^{\\times %d}$" % m if m > 1 else "" for m in data['subgroup_multiplicities']]
         else:
             mults = ["" for s in data['subgroups']]
         info['subgroups'] = comma_separated_list([st_link(data['subgroups'][i]) + mults[i] for i in range(len(mults))])
     if data.get('supgroups'):
         if data.get('supgroup_multiplicities') and len(data["supgroup_multiplicities"]) == len(data['supgroups']):
-            mults = ["${}^{\\times %d}$"%m if m >1 else "" for m in data['supgroup_multiplicities']]
+            mults = ["${}^{\\times %d}$" % m if m > 1 else "" for m in data['supgroup_multiplicities']]
         else:
             mults = ["" for s in data['supgroups']]
         info['supgroups'] = comma_separated_list([st_link(data['supgroups'][i]) + mults[i] for i in range(len(mults))])
@@ -898,18 +914,18 @@ def render_by_label(label):
         else:
             info['supgroups'] = "$\\cdots$"
     if data.get('moments'):
-        info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]'%m for m in range(len(data['moments'][0])-1)]]
+        info['moments'] = [['x'] + [ '\\mathrm{E}[x^{%d}]' % m for m in range(len(data['moments'][0])-1)]]
         info['moments'] += data['moments']
     if data.get('simplex'):
         if data['degree'] == 4:
             s = data['simplex']
-            if len(s)>= 27:
+            if len(s) >= 27:
                 info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20],s[20:27]]
             elif len(s) >= 20:
                 info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
             elif len(s) >= 14:
                 info['simplex'] = [s[0:2],s[2:5],s[5:9],s[9:14],s[14:20]]
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}\right]:\sum ie_i=%d\right)\colon" % (2*d+2) for d in range(len(info['simplex']))]
         elif data['degree'] == 6:
             s = data['simplex']
             if len(s) >= 56:
@@ -918,7 +934,7 @@ def render_by_label(label):
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23],s[23:37]]
             elif len(s) >= 23:
                 info['simplex'] = [s[0:2],s[2:6],s[6:13],s[13:23]]
-            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon"%(2*d+2) for d in range(len(info['simplex']))]
+            info['simplex_header'] = [r"\left(\mathrm{E}\left[a_1^{e_1}a_2^{e_2}a_3^{e_3}\right]:\sum ie_i=%d\right)\colon" % (2*d+2) for d in range(len(info['simplex']))]
             if len(s) >= 56:
                 info['simplex_header'][-1] = ""
     if data.get('character_matrix'):
@@ -959,35 +975,35 @@ def render_by_label(label):
                 s += "</table>"
             info['probabilities'] = s
     elif data.get('counts'):
-        c=data['counts']
-        T = [['$\\mathrm{Pr}[%s=%s]=%s$'%(c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
+        c = data['counts']
+        T = [['$\\mathrm{Pr}[%s=%s]=%s$' % (c[i][0],c[i][1][j][0],c[i][1][j][1]/n) for j in range(len(c[i][1]))] for i in range(len(c))]
         info['probabilities'] = "<table><tr>" + "<tr></tr>".join(["<td>" + "<td></td".join(r) + "</td>" for r in T]) + "</tr></table>"
     return render_st_group(info, portrait=data.get('trace_histogram'), in_database=in_database)
 
 def render_st_group(info, portrait=None, in_database=False):
     """ render html page for Sato-Tate group described by info """
-    prop = [('Label', '%s'%info['label'])]
+    prop = [('Label', '%s' % info['label'])]
     if portrait is None:
         portrait = st_portrait(info['label'])
     if portrait:
         prop += [(None, '&nbsp;&nbsp;<img src="%s" width="216" height="126"/>' % portrait)]
     prop += [
-        ('Name', r'\(%s\)'%info['pretty']),
+        ('Name', r'\(%s\)' % info['pretty']),
         ('Weight', prop_int_pretty(info['weight'])),
         ('Degree', prop_int_pretty(info['degree'])),
         ('Real dimension', prop_int_pretty(info['real_dimension'])),
         ('Components', prop_int_pretty(info['components'])),
-        ('Contained in',r'\(%s\)'%info['ambient']),
-        ('Identity component', r'\(%s\)'%info['identity_component']),
-        ('Component group', r'\(%s\)'%info['component_group']),
+        ('Contained in',r'\(%s\)' % info['ambient']),
+        ('Identity component', r'\(%s\)' % info['identity_component']),
+        ('Component group', r'\(%s\)' % info['component_group']),
     ]
     downloads = [("Underlying data", url_for(".st_data", label=info['label']))] if in_database else []
     bread = get_bread([
-        ('Weight %d'% info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
-        ('Degree %d'% info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
+        ('Weight %d' % info['weight'], url_for('.index')+'?weight='+str(info['weight'])),
+        ('Degree %d' % info['degree'], url_for('.index')+'?weight='+str(info['weight'])+'&degree='+str(info['degree'])),
         (info['name'], '')
     ])
-    title = r'Sato-Tate group \(' + info['pretty'] + r'\) of weight %d'% info['weight'] + ' and degree %d'% info['degree']
+    title = r'Sato-Tate group \(' + info['pretty'] + r'\) of weight %d' % info['weight'] + ' and degree %d' % info['degree']
     return render_template('st_display.html',
                            properties=prop,
                            downloads=downloads,
@@ -995,7 +1011,7 @@ def render_st_group(info, portrait=None, in_database=False):
                            bread=bread,
                            learnmore=learnmore_list(),
                            title=title,
-                           KNOWL_ID='st_group.%s'%(info['label']))
+                           KNOWL_ID='st_group.%s' % (info['label']))
 
 @st_page.route("/data/<label>")
 def st_data(label):

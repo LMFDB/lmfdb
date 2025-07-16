@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
@@ -18,8 +17,7 @@ class WebCharacterTest(LmfdbTest):
 class DirichletSearchTest(LmfdbTest):
     def test_nchars(self):
         from lmfdb import db
-        nchars = db.char_orbits.sum_column('degree')
-        assert nchars == 3039650754 # if this fails, one also needs to update DirichStats.__init__
+        nchars = db.char_dirichlet.sum('degree')
         W = self.tc.get('/Character/Dirichlet/')
         assert comma(nchars) in W.get_data(as_text=True)
 
@@ -29,8 +27,8 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_even_odd(self):
         W = self.tc.get('/Character/Dirichlet/?modulus=35')
-        assert '>%s</t'%(parity_string(1)) in W.get_data(as_text=True)
-        assert '>%s</t'%(parity_string(-1)) in W.get_data(as_text=True)
+        assert '>%s</t' % (parity_string(1)) in W.get_data(as_text=True)
+        assert '>%s</t' % (parity_string(-1)) in W.get_data(as_text=True)
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modbrowse=41-60')
@@ -63,8 +61,8 @@ class DirichletSearchTest(LmfdbTest):
 class DirichletTableTest(LmfdbTest):
 
     def test_table(self):
-        get= r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
-        W = self.tc.get('/Character/Dirichlet/grouptable?%s'%get)
+        get = r'modulus=35&poly=x%5E6+-+x%5E5+-+7%2Ax%5E4+%2B+2%2Ax%5E3+%2B+7%2Ax%5E2+-+2%2Ax+-+1&char_number_list=1%2C4%2C9%2C11%2C16%2C29'
+        W = self.tc.get('/Character/Dirichlet/grouptable?%s' % get)
         assert '35 }(29' in W.get_data(as_text=True)
 
 class DirichletCharactersTest(LmfdbTest):
@@ -83,7 +81,7 @@ class DirichletCharactersTest(LmfdbTest):
         assert bool_string(True) in W.get_data(as_text=True)
         assert 'DirichletGroup(23)' in W.get_data(as_text=True)
         assert 'e\\left(\\frac{7}{11}\\right)' in W.get_data(as_text=True)
-        assert '/Character/Dirichlet/23/10' in W.get_data(as_text=True)
+        assert '\\chi_{23}(10,\\cdot)' in W.get_data(as_text=True)
 
         W = self.tc.get('/Character/Dirichlet/91', follow_redirects=True)
         assert bool_string(True) in W.get_data(as_text=True)
@@ -136,7 +134,6 @@ class DirichletCharactersTest(LmfdbTest):
         # Tests for URL behaviour of characters
 
         W = self.tc.get('/Character/Dirichlet/5489/banana/100', follow_redirects=True)
-        #import pdb; pdb.set_trace()
         assert bool_string(True) in W.get_data(as_text=True)
         assert r"The URL has been duly corrected." in W.get_data(as_text=True)
 
@@ -251,6 +248,6 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_underlying_data(self):
         W = self.tc.get('/Character/Dirichlet/data/289.j.7').get_data(as_text=True)
-        assert 'is_minimal' in W and 'last_label' in W
+        assert 'is_minimal' in W and 'last' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W

@@ -217,6 +217,30 @@ class AbGpsHomeTest(LmfdbTest):
         self.not_check_args("/Groups/Abstract/?semidirect_product=no", "10.1")
         self.not_check_args("/Groups/Abstract/?direct_product=no&semidirect_product=yes", "16.9")
 
+    def test_famly_search(self):
+        r"""
+        Check that we can search by family
+        """
+        self.check_args("/Groups/Abstract/?family=A", ["12.3","60.5"])
+        self.check_args("/Groups/Abstract/?family=C", ["6.2","27.1"])
+        self.check_args("/Groups/Abstract/?family=D", ["30.3","48.7"])
+        self.check_args("/Groups/Abstract/?family=GL", ["168.42","480.218"])
+        self.check_args("/Groups/Abstract/?family=PSL", ["60.5","660.13"])
+        self.check_args("/Groups/Abstract/?family=Q", ["4.1","64.54"])
+        self.check_args("/Groups/Abstract/?family=S", ["1.1","120.34"])
+        self.check_args("/Groups/Abstract/?family=SL", ["6.1","720.409"])
+        self.check_args("/Groups/Abstract/?family=any", ["6.1", "18.1", "18.2", "24.3"])
+        # not checks
+        self.not_check_args("/Groups/Abstract/?family=A", "6.1")
+        self.not_check_args("/Groups/Abstract/?family=C", "8.3")
+        self.not_check_args("/Groups/Abstract/?family=D", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=GL", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=PSL", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=Q", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=S", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=SL", "16.11")
+        self.not_check_args("/Groups/Abstract/?family=any", "D_4:C_2")
+
     def test_order_stats_search(self):
         r"""
         Check that we can search by order statistics
@@ -391,8 +415,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "3.1.3.a1.a1")
         self.not_check_args("/Groups/Abstract/?solvable=yes&search_type=Subgroups", "60.5.1.a1.a1")
-        self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
-        self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
+        # Solvable = False requires a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "60.5.1.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?solvable=no&search_type=Subgroups", "3.1.3.a1.a1")
 
     def test_subgroup_normal_search(self):
         r"""
@@ -539,8 +564,9 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?quotient_solvable=yes&search_type=Subgroups", "1.1.1.a1.a1")
         self.not_check_args("/Groups/Abstract/?quotient_solvable=yes&search_type=Subgroups", "60.5.60.a1.a1")
-        self.check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "60.5.60.a1.a1")
-        self.not_check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
+        # The following searches require a 30GB index to support, so we disable them for now
+        #self.check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "60.5.60.a1.a1")
+        #self.not_check_args("/Groups/Abstract/?quotient_solvable=no&search_type=Subgroups", "1.1.1.a1.a1")
 
     def test_subgroup_maximal_quotient_search(self):
         r"""
@@ -568,5 +594,19 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that character links work
         """
-        self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highighted below.")
-        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highighted below.")
+        self.check_args("/Groups/Abstract/char_table/72.43?char_highlight=72.43.6a", "The row representing the character 72.43.6a is highlighted below.")
+        self.check_args("/Groups/Abstract/Qchar_table/96.71?char_highlight=96.71.6a", "The row representing the character 96.71.6a is highlighted below.")
+
+    def test_conj_class_search(self):
+        r"""
+        Check that conjugacy class search works
+        """
+        self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", "6A"])
+        self.check_args("/Groups/Abstract/?group=128.15&search_type=ConjugacyClasses", r"\OD_{16}:C_8" #group name
+        )
+
+    def test_highlighted_conj_class(self):
+        r"""
+        Check that conjugacy class links work
+        """
+        self.check_args("/Groups/Abstract/char_table/24.7?cc_highlight=4B-1&cc_highlight_i=9", r"The column representing the conjugacy class 4B-1 is highlighted below.")

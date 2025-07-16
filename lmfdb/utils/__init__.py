@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # make pyflakes happy, define interface for import *
 __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
@@ -26,15 +25,16 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_rational_to_list', 'parse_inertia', 'parse_group_label_or_order',
            'parse_rats', 'parse_bracketed_posints', 'parse_bracketed_rats', 'parse_bool',
            'parse_bool_unknown', 'parse_primes', 'parse_element_of', 'parse_not_element_of',
-           'parse_subset', 'parse_submultiset', 'parse_list',
+           'parse_subset', 'parse_submultiset', 'parse_list', 'parse_kerpol_string',
            'parse_list_start', 'parse_string_start', 'parse_restricted', 'parse_regex_restricted',
            'parse_noop', 'parse_equality_constraints', 'parse_gap_id', 'parse_interval',
            'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt', 'parse_nf_jinv',
            'parse_container', 'parse_hmf_weight', 'parse_count', 'parse_newton_polygon',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
+           'unparse_range',
            'nf_string_to_label', 'clean_input', 'prep_ranges',
-           'search_wrap', 'count_wrap',
-           'SearchArray', 'TextBox', 'TextBoxNoEg', 'TextBoxWithSelect', 'BasicSpacer',
+           'search_wrap', 'count_wrap', 'embed_wrap', 'yield_wrap',
+           'SearchArray', 'EmbeddedSearchArray', 'TextBox', 'TextBoxNoEg', 'TextBoxWithSelect', 'BasicSpacer',
            'SkipBox', 'CheckBox', 'CheckboxSpacer', 'DoubleSelectBox', 'HiddenBox',
            'SearchButton', 'SearchButtonWithSelect', 'RowSpacer',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
@@ -139,7 +139,8 @@ from .search_parsing import (
     parse_ints, parse_signed_ints, parse_posints,
     parse_floats, parse_mod1, parse_rational,
     parse_rational_to_list, parse_padicfields, parse_rats, parse_inertia,
-    parse_bracketed_posints, parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
+    parse_bracketed_posints, parse_bracketed_rats, parse_bool,
+    parse_bool_unknown, parse_primes, parse_kerpol_string,
     parse_element_of, parse_not_element_of, parse_subset, parse_submultiset, parse_list,
     parse_list_start, parse_string_start, parse_restricted,
     parse_regex_restricted, parse_noop, parse_group_label_or_order,
@@ -147,11 +148,12 @@ from .search_parsing import (
     parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     parse_subfield, parse_interval,
+    unparse_range,
     clean_input, prep_ranges, input_string_to_poly)
 
-from .search_wrapper import search_wrap, count_wrap
+from .search_wrapper import search_wrap, count_wrap, embed_wrap, yield_wrap
 from .search_boxes import (
-    SearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
+    SearchArray, EmbeddedSearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
     SelectBox, YesNoBox, YesNoMaybeBox, ExcludeOnlyBox,
     ParityBox, ParityMod, SubsetBox, SubsetNoExcludeBox, SelectBoxNoEg, CountBox,

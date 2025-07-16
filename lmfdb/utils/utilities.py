@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 import cmath
 import math
 import datetime
@@ -61,7 +60,7 @@ def integer_prime_divisors(n):
 
 def integer_squarefree_part(n):
     """ returns the squarefree part of the integer n (uses factor rather than calling pari like sage 9.3+ does) """
-    return sign(n)*prod([p**(e%2) for p, e in ZZ(n).factor()])
+    return sign(n)*prod([p**(e % 2) for p, e in ZZ(n).factor()])
 
 
 def integer_is_squarefree(n):
@@ -244,7 +243,7 @@ def coeff_to_poly(c, var=None):
             varposs = set(re.findall(r"[A-Za-z_]+", c))
             if len(varposs) == 1:
                 var = varposs.pop()
-            elif not(varposs):
+            elif not (varposs):
                 var = 'x'
             else:
                 raise ValueError("Polynomial must be univariate")
@@ -290,7 +289,7 @@ def display_multiset(mset, formatter=str, *args):
     >>> display_multiset([["a", 5], [1, 3], ["cat", 2]])
     'a x5, 1 x3, cat x2'
     """
-    return ', '.join([formatter(pair[0], *args)+(' x%d'% pair[1] if pair[1]>1 else '') for pair in mset])
+    return ', '.join([formatter(pair[0], *args)+(' x%d' % pair[1] if pair[1] > 1 else '') for pair in mset])
 
 
 def pair2complex(pair):
@@ -373,8 +372,9 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  += sign * CBF(b)* CBF.gens()[0]
+            res += sign * CBF(b) * CBF.gens()[0]
         return res
+
 
 # Conversion from numbers to letters and back
 def letters2num(s):
@@ -387,6 +387,7 @@ def letters2num(s):
         ssum = ssum*26+letters[j]
     return ssum
 
+
 def num2letters(n):
     r"""
     Convert a number into a string of letters
@@ -394,7 +395,7 @@ def num2letters(n):
     if n <= 26:
         return chr(96+n)
     else:
-        return num2letters(int((n-1)/26))+chr(97+(n-1)%26)
+        return num2letters(int((n-1)/26))+chr(97+(n-1) % 26)
 
 
 def to_dict(args, exclude=[], **kwds):
@@ -595,7 +596,7 @@ def latex_comma(x):
 def format_percentage(num, denom):
     if denom == 0:
         return 'NaN'
-    return "%10.2f"%((100.0*num)/denom)
+    return "%10.2f" % ((100.0*num)/denom)
 
 
 def signtocolour(sign):
@@ -606,7 +607,7 @@ def signtocolour(sign):
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
-    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+    return ("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
 
 
 def rgbtohex(rgb):
@@ -639,7 +640,7 @@ def code_snippet_knowl(D, full=True):
     lines = D.get('lines')
     code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
     if is_debug_mode():
-        branch = "master"
+        branch = "main"
     elif is_beta():
         branch = "dev"
     else:
@@ -940,12 +941,14 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     return "data:image/png;base64," + quote(b64encode(buf))
 
 # conversion tools between timestamp different kinds of timestamp
-epoch = datetime.datetime.utcfromtimestamp(0)
+epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 def datetime_to_timestamp_in_ms(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
     return int((dt - epoch).total_seconds() * 1000000)
 
 def timestamp_in_ms_to_datetime(ts):
-    return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
+    return datetime.datetime.fromtimestamp(float(int(ts)/1000000.0), datetime.timezone.utc)
 
 class WebObj:
     def __init__(self, label, data=None):
@@ -973,8 +976,10 @@ def plural_form(noun):
         noun += "s"
     return noun
 
-def pluralize(n, noun, omit_n=False, denom=None):
+def pluralize(n, noun, omit_n=False, denom=None, offset=0):
     if denom is not None:
+        if offset != 0:
+            return f"{n}/{denom} {plural_form(noun)} (starting at row {offset+1})"
         return f"{n}/{denom} {plural_form(noun)}"
     if n == 1:
         if omit_n:

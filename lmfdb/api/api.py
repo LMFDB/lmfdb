@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from urllib.parse import unquote
 import re
 import yaml
@@ -6,7 +5,7 @@ import json
 from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
 from flask import (render_template, request, url_for, current_app,
@@ -57,10 +56,24 @@ def get_database_info(show_hidden=False):
         info[database].append((table, table[i+1:], coll.count()))
     return info
 
+@api_page.route("/options")
+def options():
+    return render_template(
+        "database_options.html",
+        title="Access options for the LMFDB database",
+        learnmore=[
+            ("Auxiliary datasets", url_for("datasets")),
+            ("API", url_for(".index")),
+            ("Table statistics", url_for(".stats")),
+            ("lmfdb-lite", "https://www.github.com/roed314/lmfdb-lite"),
+            ("Install the LMFDB locally", "https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md")],
+        bread=[("Access options", " ")],
+    )
+
 @api_page.route("/")
 def index(show_hidden=False):
     databases = get_database_info(show_hidden)
-    title = "Database"
+    title = "API"
     return render_template("api.html", **locals())
 
 @api_page.route("/all")
@@ -71,14 +84,14 @@ def full_index():
 def stats():
     def mb(x):
         return int(round(x/2**20.))
-    info={}
+    info = {}
     info['minsizes'] = ['0','1','10','100','1000','10000','100000']
     info['minsize'] = request.args.get('minsize','1').strip()
-    if not info['minsize'] in info['minsizes']:
+    if info['minsize'] not in info['minsizes']:
         info['minsizes'] = '1'
     info['groupby'] = 'db' if request.args.get('groupby','').strip().lower() == 'db' else ''
     info['sortby'] = request.args.get('sortby','size').strip().lower()
-    if not info['sortby'] in ['size', 'objects', 'name']:
+    if info['sortby'] not in ['size', 'objects', 'name']:
         info['sortby'] = 'size'
     nobjects = size = dataSize = indexSize = 0
     dbSize = defaultdict(int)
@@ -271,7 +284,7 @@ def api_query(table, id=None):
 
         # executing the query "q" and replacing the _id in the result list
         # So as not to preserve backwards compatibility (see test_api_usage() test)
-        if table=='ec_curvedata':
+        if table == 'ec_curvedata':
             for oldkey, newkey in zip(['label', 'iso', 'number'], ['Clabel', 'Ciso', 'Cnumber']):
                 if oldkey in q:
                     q[newkey] = q[oldkey]
@@ -358,7 +371,7 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     """
     INPUT:
 
-    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table)
+    - ``labels`` -- a string giving a label used in the tables (e.g. '11.a1' for an elliptic curve), or a list of strings (one per table).  Entries can also be a list of values (corresponding to multiple ``label_cols``) in cases where multiple columns are needed to uniquely specify a row.
     - ``tables`` -- a search table or list of search tables (as strings)
     - ``title`` -- title for the page
     - ``bread`` -- bread for the page
@@ -389,7 +402,10 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     search_schema = {}
     extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
-        q = {col: label}
+        if isinstance(col, list):  # Needed for gps_conj_classes, which effectively has a pair of columns for a label
+            q = dict(zip(col, label))
+        else:
+            q = {col: label}
         coll = db[table]
         try:
             data.append(list(coll.search(q, projection=3, sort=sort)))

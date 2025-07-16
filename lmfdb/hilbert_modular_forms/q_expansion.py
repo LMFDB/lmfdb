@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from sage.misc.preparser import preparse
 from sage.interfaces.magma import magma

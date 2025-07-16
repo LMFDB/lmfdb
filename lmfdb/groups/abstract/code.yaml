@@ -1,0 +1,66 @@
+prompt:
+  magma: 'magma'
+  gap: 'gap'
+
+logo:
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
+
+comment:
+  magma: |
+    //
+  gap: |
+    #
+
+not-implemented:
+  magma: |
+    // (not yet implemented)
+  gap: |
+    # (not yet implemented)
+
+
+
+presentation:
+  comment: Define the group with the given generators and relations
+  magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens}); AssignNames(~G, {magma_assign});
+  gap: G := PcGroupCode({pccode},{ordgp}); {gap_assign}
+
+
+permutation:
+  comment: Define the group as a permutation group
+  magma: G := PermutationGroup< {deg} | {perms} >;
+  gap: G := Group( {perms} );
+
+
+GLZ:
+  comment: Define the group as a matrix group with coefficients in Z
+  magma: G := MatrixGroup< {nZ}, Integers() | {LZ} >;
+  gap: G := Group({LZsplit});
+
+
+GLFp:
+  comment: Define the group as a matrix group with coefficients in GLFp
+  magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
+  gap: G := Group({LFpsplit});
+
+GLZN:
+  comment: Define the group as a matrix group with coefficients in GLZN
+  magma: G := MatrixGroup< {nZN}, Integers({N}) | {LZN} >;
+  gap: G := Group({LZNsplit});
+
+GLZq:
+  comment: Define the group as a matrix group with coefficients in GLZq
+  magma: G := MatrixGroup< {nZq}, Integers({Zq}) | {LZq} >;
+  gap: G := Group({LZqsplit});
+
+
+GLFq:
+  comment: Define the group as a matrix group with coefficients in GLFq
+  magma: F:=GF({Fq}); al:=F.1; G := MatrixGroup< {nFq}, F | {LFq} >;
+  gap: G := Group({LFqsplit});
+
+transitive:
+  comment: Define the group from the transitive group database
+  magma: G := TransitiveGroup(d,n);
+  gap: G := TransitiveGroup(d,n);
+

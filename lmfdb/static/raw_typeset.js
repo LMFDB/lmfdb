@@ -86,8 +86,15 @@ function copyTextOf(elt) {
 );
 }
 
+function copySibling(elt, filter) {
+  copyTextOf($(elt).parent().children(filter).first());
+}
+
 function copyrawcontainer(elt) {
-  copyTextOf($(elt).parent().children("textarea.raw-container").first());
+  copySibling(elt, "textarea.raw-container");
+}
+function copycode(elt) {
+  copySibling(elt, "span.code");
 }
 
 

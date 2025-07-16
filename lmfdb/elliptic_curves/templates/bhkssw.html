@@ -1,0 +1,137 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<p>
+  This dataset contains all 238,764,310 {{KNOWL('ec.q', 'elliptic curves')}} over $\Q$ with {{ KNOWL('ec.q.naive_height', 'naive height') }} up to $2.7 \cdot 10^{10}$ and is described in <a href="https://doi.org/10.1112/S1461157016000152">Balakrishnan-Ho-Kaplan-Spicer-Stein-Watkins</a>.
+</p>
+
+<h3>File and data format</h3>
+
+<p>
+  The data is stored in text files, indexed from $k=0$ to $k=2699$.  The file $k$.txt contains data for elliptic curves $y^2 = x^3 + A x + B$ with $k \cdot 10^7 < H \le (k+1) \cdot 10^7$, where $H:=\max(4|A|^3,27B^2)$.
+</p>
+
+<p>
+  Each line corresponds to an elliptic curve, with columns separated by | characters and format given as follows.  If a column has not been computed it is saved as the empty string.
+</p>
+
+<table class="ntdata">
+  <tr>
+    <th>Column(s)</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>$H$</td>
+    <td>{{KNOWL('ec.q.naive_height', 'Naive height')}}</td>
+    <td>$19003704300$</td>
+  </tr>
+  <tr>
+    <td>$a_1$, $a_2$, $a_3$, $a_4$, $a_6$</td>
+    <td>$a$-invariants for the {{KNOWL('ec.q.minimal_weierstrass_equation', 'reduced minimal model')}}</td>
+    <td>$1$, $-1$, $0$, $-102$, $-389$</td>
+  </tr>
+  <tr>
+    <td>$p_1$, $p_2$</td>
+    <td>Parameters to form the elliptic curve, which is isomorphic to $y^2 = x^3 + p_1 x + p_2$</td>
+    <td>$-1635$, $-26530$</td>
+  </tr>
+  <tr>
+    <td>$N$</td>
+    <td>{{KNOWL('ec.q.conductor', 'Conductor')}}</td>
+    <td>$5940675$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{tam}$</td>
+    <td>{{KNOWL('ec.tamagawa_number', 'Tamagawa product')}}</td>
+    <td>$1$</td>
+  </tr>
+  <tr>
+    <td>$n_1$, $n_2$</td>
+    <td>structure of {{KNOWL('ec.q.torsion_subgroup', 'torsion subgroup')}}, $\Z/n_1 \times \Z/n_2$ where $n_1 \in {1, 2}$ and $n_1 \mid n_2$</td>
+    <td>$1$, $1$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{sel}_2$</td>
+    <td>$2$-rank of the {{KNOWL('ag.selmer_group', '$2$-Selmer group')}}</td>
+    <td>$2$</td>
+  </tr>
+  <tr>
+    <td>$w$</td>
+    <td>Root number (sign of functional equation)</td>
+    <td>$-1$</td>
+  </tr>
+  <tr>
+    <td>$r_{\mathrm{an},0}$</td>
+    <td>Running analytic_rank_upper_bound in Sage with parameter $\delta$ (see below) returns $r_{\mathrm{an},0}$, which is an upper bound for the rank</td>
+    <td>$0$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{mw}_{\mathrm{ub}}, \operatorname{mw}_{\mathrm{lb}}, \operatorname{mw}_{\mathrm{time}}$</td>
+    <td>Upper and lower bounds returned by mwrank in Sage, as well as the the time used</td>
+    <td>$2, 2, 0.052$</td>
+  </tr>
+  <tr>
+    <td>$\delta$</td>
+    <td>Running analytic_rank_upper_bound in Sage with parameter $\delta$ returns $r_{\mathrm{an},0}$ (see above), which is an upper bound for the rank.</td>
+    <td>$2.0$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{magma}$</td>
+    <td>Rank computed by the Magma function MordellWeilShaInformation (almost always null)</td>
+    <td>$2$</td>
+  </tr>
+  <tr>
+    <td>$r$</td>
+    <td>{{KNOWL('ec.rank', 'rank')}}</td>
+    <td>$4$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{CM}$</td>
+    <td>1 if $E$ has {{KNOWL('ec.complex_multiplication', 'CM')}}, 0 otherwise</td>
+    <td>$0$</td>
+  </tr>
+</table>
+
+<h3>Download</h3>
+
+<form>
+  <table>
+    <tr>
+      <td align="right">$k = $</td>
+      <td align="left">
+        <input type="text" name="k" size="7" placeholder="123">
+        <span class="formexample">integer from 0 to 2699</span>
+      </td>
+    </tr>
+    <tr>
+      <td align="left">
+        <button type="submit" name="Fetch" value="fetch">Fetch file</button>
+      </td>
+    </tr>
+  </table>
+</form>
+
+{# This format was nice since it gave statistics and provided direct download links, but the files are too big to download given the current 30-second timeout limitation.
+<table class="ntdata">
+  <tr>
+    <th>File</th>
+    <th>Size (MB)</th>
+    <th>Number of curves</th>
+    <th>Lower height bound</th>
+    <th>Upper height bound</th>
+  </tr>
+  {% for ncurves, size, lower, upper, fname in info.files %}
+  <tr>
+    <td><a href="{{ url_for('.render_bhkssw', filename=fname) }}">{{fname}}</a></td>
+    <td>{{size}}</td>
+    <td>{{comma(ncurves)}}</td>
+    <td>${{lower}}$</td>
+    <td>${{upper}}$</td>
+  </tr>
+  {% endfor %}
+</table>
+#}
+
+{% endblock %}

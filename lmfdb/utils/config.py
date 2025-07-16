@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -18,7 +17,6 @@ via optional command-line arguments.
 import argparse
 import getpass
 import os
-import sys
 import random
 import string
 import __main__
@@ -32,20 +30,14 @@ root_lmfdb_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
 
-# We don't want to trigger the lmfdb/__init__.py
-working_dir = sys.path[0]
-sys.path[0] = os.path.join(root_lmfdb_path, 'lmfdb', 'backend')
-from config import Configuration as _Configuration
-sys.path[0] = working_dir
+from psycodict.config import Configuration as _Configuration
 
 
 def is_port_open(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(1)
-        if sock.connect_ex((host, port)) == 0:
-            return True
-        else:
-            return False
+        return sock.connect_ex((host, port)) == 0
+
 
 def abs_path_lmfdb(filename):
     return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())

@@ -1,0 +1,75 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<p>
+  This page allows logged in users to upload data for use in the LMFDB.  If you need an account, please <a href="{{url_for('contact')}}">contact us</a>.
+</p>
+
+<p>
+  By using this form, you consent to the information you submit appearing publicly on the LMFDB.
+</p>
+
+<p>
+  This page is not intended for uploading large quantities of data.  If you have more than 100 entries you want to add, or an algorithm that can be run on large number of curves in the database, please contact us about using a different mechanism.
+</p>
+
+{% for section in uploader.sections %}
+
+  <h1>{{section.title}}</h1>
+
+  <p>{{section.intro|safe}}</p>
+
+  <div class="upload_section">
+    <form method="post">
+      <table>
+        <tr>
+          {% for box in section.inputs %}
+            <td>{{KNOWL(box.knowl, box.label)}}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          {% for box in section.inputs %}
+            <td>{{box.html() | safe}}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td><button type="submit" name="submit" value="{{section.name}}">Upload</button></td>
+        </tr>
+      </table>
+    </form>
+    {% if section.offer_csv %}
+      <p>
+        To upload multiple records, provide a CSV file following <a href="{{section.csv_template_url}}">this template</a>.
+      </p>
+      <form method="post" enctype="multipart/form-data">
+        <table>
+          <tr>
+            <td>
+              {#See https://stackoverflow.com/questions/572768/styling-an-input-type-file-button for discussion.#}
+              <label class="file-upload">
+                <input type="file" id="{{section.name}}_fileup" name="{{section.name}}_csv" />
+                Add File
+              </label>
+              <span id="{{section.name}}_fileup_span" class="fileup">No file selected</span>
+
+            </td>
+            <td>
+              <button type="submit" name="submit" value="{{section.name}}_file">Upload</button>
+            </td>
+          </tr>
+        </table>
+      </form>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<script type="text/javascript">
+  $('input[type=file]').bind('change', function() {
+    var thisid = $(this).attr('id');
+    var fileName = '';
+    fileName = $(this).val().split("\\").pop(); // the path is weird, so we only show the filename itself
+    $('#'+thisid+'_span').html(fileName);
+  })
+</script>
+
+{% endblock %}

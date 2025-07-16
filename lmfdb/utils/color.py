@@ -265,8 +265,8 @@ class ColorScheme():
                 elif default in self.colors:
                     return get(default)
                 else:
-                    raise ValueError("Unrecognized color %s"%default)
-            raise ValueError("No value for %s specified"%key)
+                    raise ValueError("Unrecognized color %s" % default)
+            raise ValueError("No value for %s specified" % key)
         scheme = {}
         for std_color in c:
             val = getattr(self, std_color, None)

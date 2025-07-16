@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 
+import re
 from collections import Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
-from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl
+from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl, raw_typeset, prop_int_pretty
+from lmfdb.utils.web_display import compress_multipolynomial
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label
@@ -12,6 +13,16 @@ from lmfdb.ecnf.main import url_for_label as url_for_ECNF_label
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cycloinfo
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
+
+from sage.databases.cremona import cremona_letter_code
+
+coarse_label_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)\.(\d+)"
+fine_label_re = r"(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)"
+iso_class_re = r"(\d+)\.(\d+)\.(\d+)\.([a-z]+)"
+LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
+FINE_LABEL_RE = re.compile(fine_label_re)
+COARSE_LABEL_RE = re.compile(coarse_label_re)
+ISO_CLASS_RE = re.compile(f"{iso_class_re}")
 
 def get_bread(tail=[]):
     base = [("Modular curves", url_for(".index")), (r"$\Q$", url_for(".index_Q"))]
@@ -98,13 +109,13 @@ def canonicalize_name(name):
     cname = "X" + name[1:].lower().replace("_", "").replace("^", "")
     if cname[:4] == "Xs4(":
         cname = cname.upper()
-    elif cname in ["X1(2,2)", "Xpm1(2,2)", "Xsp(2)", "Xsym(2)"]:
+    elif cname in ["X1(2,2)", "Xpm1(2,2)", "Xsp(2)", "Xarith(2)"]:
         cname = "X(2)"
     elif cname in ["X1(2)", "Xpm1(2)", "Xsp+(2)"]:
         cname = "X0(2)"
     elif cname == "Xpm1(3)":
         cname = "X0(3)"
-    elif cname in ["Xns+(2)", "Xsym(1)"]:
+    elif cname in ["Xns+(2)", "Xarith(1)"]:
         cname = "X(1)"
     elif cname == "Xpm1(4)":
         cname = "X0(4)"
@@ -116,6 +127,7 @@ def name_to_latex(name):
     if not name:
         return ""
     name = canonicalize_name(name)
+    # Temporary measure until we update data with Xarith1 and Xarithpm1 families
     if "+" in name:
         name = name.replace("+", "^+")
     if "ns" in name:
@@ -124,22 +136,29 @@ def name_to_latex(name):
         name = name.replace("sp", r"{\mathrm{sp}}")
     elif "S4" in name:
         name = name.replace("S4", "{S_4}")
+    elif name.startswith("Xarith1"):
+        name = r"X{\mathrm{arith},1}" + name[7:]
+    elif name.startswith("Xarithpm1"):
+        name = r"X{\mathrm{arith},\pm 1}" + name[9:]
     elif "pm1" in name:
         name = name.replace("pm1", r"{\pm1}")
-    elif "sym" in name:
-        name = name.replace('sym', r"{\mathrm{sym}}")
+    elif "arith" in name:
+        name = name.replace('arith', r"{\mathrm{arith}}")
     if name[1] != "(":
         name = "X_" + name[1:]
     return f"${name}$"
 
+
 def factored_conductor(conductor):
-    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else ("1" if conductor == [] else r"?")
+    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for p, e in conductor) if conductor else ("1" if conductor == [] else r"?")
+
 
 def remove_leading_coeff(jfac):
-    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ',''):
+    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ', ''):
         return "*".join(str(jfac).split("*")[1:])
     else:
         return str(jfac)
+
 
 def formatted_dims(dims, mults):
     if dims is None:
@@ -151,19 +170,87 @@ def formatted_dims(dims, mults):
     for d, c in zip(dims, mults):
         collapsed[d] += c
     dims, mults = zip(*(sorted(collapsed.items())))
-    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in zip(dims, mults)) + "$"
+    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for d, c in zip(dims, mults)) + "$"
+
 
 def formatted_newforms(newforms, mults):
     if newforms is None:
         return "not computed"
     if not newforms:
         return ""
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
+    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
 
-def formatted_model(m):
-    if m["model_type"] == 5:
+
+def formatted_model_html(self, m):
+    # this is only for curves with models
+    # but not curves with self.has_more_models
+    # and also not for genus 0 curves with points
+    # we need to somehow give this info
+    eqn_threshold = 3 #this displays threshold - 1 lines to start
+    eqns, lines, nb_var, typ, smooth = formatted_model_data(m)
+
+    def title_of_model(self, lines, nb_var, typ, smooth):
+        if typ == 0:
+            title = display_knowl('ag.canonical_model', 'Canonical model') + r" in $\mathbb{P}^{ %d }$ " % (nb_var-1,)
+            if len(lines) > eqn_threshold:
+                title += " defined by %d equations" % (len(lines) - 1,)
+            return title
+        elif typ == 2:
+            #smooth is true, false, or none
+            if smooth is True:
+                return display_knowl('modcurve.plane_model', 'Smooth plane model')
+            elif smooth is False:
+                return display_knowl('modcurve.plane_model', 'Singular plane model')
+            else:
+                return display_knowl('modcurve.plane_model', 'Plane model')
+        elif typ == 5:
+            if self.genus == 1:
+                return display_knowl('ec.weierstrass_coeffs', 'Weierstrass model')
+            else:
+                return display_knowl('ag.hyperelliptic_curve', 'Weierstrass model')
+        elif typ == 7:
+            return display_knowl('ag.hyperelliptic_curve', 'Geometric Weierstrass model')
+        elif typ == 8:
+            return display_knowl('modcurve.embedded_model', 'Embedded model') + r" in $\mathbb{P}^{%d}$" % (nb_var-1,)
+
+    def equation_of_model(lines, typ):
+        table = '<table valign="center">' +\
+        '<tr>' +\
+        f'<td> $ {lines[0]} $ </td>' +\
+        '<td style="padding: 5px 0px;">$=$</td>' +\
+        f'<td> $ {lines[1]} $</td>' +\
+        '</tr>'
+        if typ == 2 or typ == 5: #plane or weierstrass, 1 eqn
+            pass
+        elif typ == 0 or typ == 8: #canonical or embedded, many equations = 0
+            if len(lines) < 7:
+                for line in lines[2:]:
+                    table += '<tr><td></td><td style="padding: 5px 0px;">$=$</td>' +\
+                    f'<td> ${line}$</td>' +\
+                    '</tr>'
+            else:
+                for line in lines[2:5]:
+                    table += '<tr><td></td><td style="padding: 5px 0px;">$=$</td>' +\
+                    f'<td> ${line}$</td>' +\
+                    '</tr>'
+                table += r'<tr><td></td><td style="padding: 5px 0px;">$=$</td><td>$\cdots$</td> </tr>'
+        elif typ == 7: #geometric weierstrass, 2 eqns
+            table += '<tr>' +\
+            f'<td> ${lines[2]}$</td>' +\
+            '<td style="padding: 5px 0px;">$=$</td>' +\
+            f'<td> ${lines[3]}$</td>' +\
+            '</tr>'
+        return table + '</table>'
+    title = title_of_model(self, lines, nb_var, typ, smooth)
+    table = equation_of_model(lines, typ)
+    table = raw_typeset(eqns,table)
+    return "<p>" + title + "</p>" + "\n" + table
+
+
+def formatted_model_data(m):
+    if m["model_type"] == 5: #Weierstrass equation
         assert m["number_variables"] == 3
-        R1 = PolynomialRing(QQ, "x")
+        R1 = PolynomialRing(ZZ, "x")
         R2 = PolynomialRing(R1, "y")
         y = R2.gen()
         R3 = PolynomialRing(R2, "z")
@@ -174,17 +261,19 @@ def formatted_model(m):
         if F2.monomial_coefficient(y**2) != -1:
             F2 *= -1
         assert F2.monomial_coefficient(y**2) == -1
+        eqns = [F2]
         lines = [
             latex(elt)
             for elt in [
-                -sum(F2.monomial_coefficient(elt) * elt for elt in [y, y**2]),
-                F2.constant_coefficient(),
+               -sum(F2.monomial_coefficient(elt) * elt for elt in [y, y**2]),
+               F2.constant_coefficient(),
             ]
         ]
-    elif m["model_type"] == 7:
+
+    elif m["model_type"] == 7: #geometric weierstrass
         assert m["number_variables"] == 4
         assert len(m["equation"]) == 2
-        R3 = PolynomialRing(QQ, 3, "x,y,z")
+        R3 = PolynomialRing(ZZ, 3, "x,y,z", order="lex")
         R4 = PolynomialRing(R3, "w")
         w = R4.gen()
         if "w^2" not in m["equation"][1]:
@@ -194,19 +283,33 @@ def formatted_model(m):
         if F.monomial_coefficient(w**2).constant_coefficient() > 0:
             F *= -1
         lines = [
-            latex(elt)
-            for elt in [
-                -sum(F.monomial_coefficient(elt) * elt for elt in [w, w**2]),
-                F.constant_coefficient(),
-            ]
+           latex(elt)
+           for elt in [
+               -sum(F.monomial_coefficient(elt) * elt for elt in [w, w**2]),
+               F.constant_coefficient(),
+           ]
         ]
         lines += ["0", latex(C)]
+        eqns = [F, C]
+    elif m["model_type"] == 2: #plane model
+
+        assert m["number_variables"] == 3
+        assert len(m["equation"]) == 1
+        fqq = PolynomialRing(QQ, 3, "x,y,z", order="lex")(m["equation"][0])
+        eqns = [(fqq*fqq.denominator()).change_ring(ZZ)]
+        f = compress_multipolynomial(eqns[0])
+        lines = ["0"] + [f.lower()]
+
     else:
         # lines = [teXify_pol(l).lower() for l in m["equation"].replace(" ","").split("=")]
-        lines = ["0"] + [teXify_pol(l).lower() for l in m["equation"]]
         # if len(lines)>2: #display as 0 = ...
         #    lines = ["0"] + [l for l in lines if l != "0"]
-    return (lines, m["number_variables"], m["model_type"], m["smooth"])
+        # variable order is xyzwtuvrsabcdefghiklmnopqj
+        R = PolynomialRing(ZZ, list("xyzwtuvrsabcdefghiklmnopqj"), order="lex")
+        eqns = [R(m["equation"][i]) for i in range(len(m["equation"]))]
+        lines = ["0"] + [compress_multipolynomial(e).lower() for e in eqns]
+
+    return (eqns, lines, m["number_variables"], m["model_type"], m["smooth"])
 
 
 def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
@@ -271,7 +374,8 @@ def formatted_map(m, codomain_name="X(1)", codomain_equation=[]):
             else:
                 equations.append("{}({})".format(lead[j], eqs[j]))
     f["equations"] = equations
-    return(f)
+    return f
+
 
 def difference(Ad, Bd, Am, Bm):
     # Ad and Bd are lists of dimensions, Am, Bm of multiplicities
@@ -285,13 +389,13 @@ def difference(Ad, Bd, Am, Bm):
         C[d] += m
     for d, m in zip(Bd, Bm):
         C[d] -= m
-    C = {d: m for (d,m) in C.items() if m != 0}
+    C = {d: m for d, m in C.items() if m != 0}
     if not C:
         return [], []
     return tuple(zip(*(sorted(C.items()))))
 
 def modcurve_link(label):
-    return '<a href="%s">%s</a>'%(url_for(".by_label",label=label),label)
+    return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",label=label),label)
 
 def combined_data(label):
     data = db.gps_gl2zhat_fine.lookup(label)
@@ -302,6 +406,12 @@ def combined_data(label):
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
     return data
+
+def learnmore_list():
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Modular curve labels', url_for(".labels_page"))]
 
 class WebModCurve(WebObj):
     table = db.gps_gl2zhat_fine
@@ -314,16 +424,16 @@ class WebModCurve(WebObj):
     def properties(self):
         props = [
             ("Label", self.label),
-            ("Level", str(self.level)),
-            ("Index", str(self.index)),
-            ("Genus", str(self.genus)),
+            ("Level", prop_int_pretty(self.level)),
+            ("Index", prop_int_pretty(self.index)),
+            ("Genus", prop_int_pretty(self.genus)),
         ]
         if self.image is not None:
             props.append((None, self.image))
         if hasattr(self,"rank") and self.rank is not None:
-            props.append(("Analytic rank", str(self.rank)))
-        props.extend([("Cusps", str(self.cusps)),
-                      (r"$\Q$-cusps", str(self.rational_cusps))])
+            props.append(("Analytic rank", prop_int_pretty(self.rank)))
+        props.extend([("Cusps", prop_int_pretty(self.cusps)),
+                      (r"$\Q$-cusps", prop_int_pretty(self.rational_cusps))])
         return props
 
     @lazy_attribute
@@ -334,19 +444,28 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def friends(self):
-        friends = []
+        if self.coarse_label == self.label:
+            friends = [("Gassmann class " + self.coarse_class, url_for(".by_label", label=self.coarse_class))]
+        else:
+            friends = []
         if self.simple and self.newforms:
             friends.append(("Modular form " + self.newforms[0], url_for_mf_label(self.newforms[0])))
-            if self.genus == 1:
-                s = self.newforms[0].split(".")
-                label = s[0] + "." + s[3]
-                friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
-            if self.genus == 2:
-                g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
-                if g2c_url:
-                    s = g2c_url.split("/")
-                    label = s[2] + "." + s[3]
-                    friends.append(("Isogeny class " + label, url_for("g2c.by_label", label=label)))
+            if self.curve_label:
+                assert self.genus in [1,2]
+                route = "ec.by_ec_label" if self.genus == 1 else "g2c.by_label"
+                name = ("Elliptic" if self.genus == 1 else "Genus 2") + " curve " + self.curve_label
+                friends.append((name, url_for(route, label=self.curve_label)))
+            else: # the best we can do is to point to the isogeny class
+                if self.genus == 1:
+                    s = self.newforms[0].split(".")
+                    label = s[0] + "." + s[3]
+                    friends.append(("Isogeny class " + label, url_for("ec.by_ec_label", label=label)))
+                if self.genus == 2:
+                    g2c_url = db.lfunc_instances.lucky({'Lhash':str(self.trace_hash), 'type' : 'G2Q'}, 'url')
+                    if g2c_url:
+                        s = g2c_url.split("/")
+                        label = s[2] + "." + s[3]
+                        friends.append(("Isogeny class " + label, url_for("g2c.by_label", label=label)))
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
@@ -366,7 +485,17 @@ class WebModCurve(WebObj):
             tail.append(
                 (str(D[a]), url_for(".index_Q", **D))
             )
-        tail.append((self.label, url_for(".by_label", label=self.label)))
+        if not self.contains_negative_one:
+            D["level"] = self.coarse_level
+            D["index"] = self.coarse_index
+            D["contains_negative_one"] = "yes"
+            tail.append(
+                (str(D["level"]), url_for(".index_Q", **D))
+            )
+        tail.append((cremona_letter_code(self.coarse_class_num-1), url_for(".by_label", label=self.coarse_class))),
+        tail.append((self.coarse_num, url_for(".by_label", label=self.coarse_label)))
+        if not self.contains_negative_one:
+            tail.append((self.fine_num, url_for(".by_label", label=self.label)))
         return get_bread(tail)
 
     @lazy_attribute
@@ -400,14 +529,14 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             return r"yes"
         else:
-            return r"no $\quad$ (see %s for the level structure with $-I$)"%(modcurve_link(self.coarse_label))
+            return r"no $\quad$ (see %s for the level structure with $-I$)" % (modcurve_link(self.coarse_label))
 
     @lazy_attribute
     def quadratic_refinements(self):
         if self.contains_negative_one:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s"%(', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
+                return r"%s" % (', '.join(modcurve_link(label) for label in qtwists if label != self.label))
             else:
                 return r"none in database"
         else:
@@ -430,13 +559,13 @@ class WebModCurve(WebObj):
     def cusp_widths_display(self):
         if not self.cusp_widths:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_widths) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_widths) + "$"
 
     @lazy_attribute
     def cusp_orbits_display(self):
         if not self.cusp_orbits:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_orbits) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):
@@ -452,7 +581,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def formatted_models(self):
-        return [formatted_model(m) for m in self.models_to_display]
+        return [formatted_model_html(self, m) for m in self.models_to_display]
 
     @lazy_attribute
     def models_count(self):
@@ -545,13 +674,13 @@ class WebModCurve(WebObj):
             f["equations"] += [r"1728\,\frac{E_4^3}{E_4^3-E_6^2}"]
         f["nb_coords"] = nb_coords
         f["coord_names"] = ["j"] + [""]*(nb_coords-1)
-        return(f)
+        return f
 
     def formatted_E4E6(self, domain_model_type):
         E4E6 = [m for m in self.modelmaps_to_display if m["codomain_label"] == "1.1.0.a.1" and m["codomain_model_type"] == 4 and m["domain_model_type"] == domain_model_type][0]
         f = formatted_map(E4E6)
         f["coord_names"] = ["E_4", "E_6"]
-        return(f)
+        return f
 
     @lazy_attribute
     def formatted_modelisos(self):
@@ -705,7 +834,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def low_degree_cusps(self):
-        return sum([n for (w,n) in self.cusp_orbits if 1 < w <= 6])
+        return sum([n for w, n in self.cusp_orbits if 1 < w <= 6])
 
     @lazy_attribute
     def db_points(self):
@@ -961,14 +1090,14 @@ class WebModCurve(WebObj):
                     level, index, genus = get_lig(label)
                     self.tex = "%s_{%s}^{%s}" % (self.level, self.index, self.genus)
                 self.img = texlabels[self.tex]
-                self.rank = sum(e for (p,e) in self.index.factor())
+                self.rank = sum(e for p, e in self.index.factor())
                 self.x = x
         if "-" in self.label or not self.lattice_labels:
-            return [],[]
+            return [], []
         parents = {}
         names = {}
         for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
-            if rec["name"]:
+            if rec["name"] and db.modcurve_teximages.count({"label":rec["name"]}):
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]
         texlabels = []
@@ -981,7 +1110,7 @@ class WebModCurve(WebObj):
         nodes, edges = [], []
         for lab, x in zip(self.lattice_labels, self.lattice_x):
             nodes.append(LatNode(lab, x))
-        nodes, edges = [LatNode(lab, x) for (lab, x) in zip(self.lattice_labels, self.lattice_x)], []
+        nodes, edges = [LatNode(lab, x) for lab, x in zip(self.lattice_labels, self.lattice_x)], []
         if nodes:
             minrank = min(node.rank for node in nodes)
             for node in nodes:

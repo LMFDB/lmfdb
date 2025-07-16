@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import inspect
 import os
@@ -7,10 +6,10 @@ import signal
 import subprocess
 from psycopg2.sql import SQL
 from lmfdb.utils.config import Configuration
-from lmfdb.backend.utils import DelayCommit
-from lmfdb.backend.database import PostgresDatabase
-from lmfdb.backend.searchtable import PostgresSearchTable
-from lmfdb.backend.statstable import PostgresStatsTable
+from psycodict.utils import DelayCommit
+from psycodict.database import PostgresDatabase
+from psycodict.searchtable import PostgresSearchTable
+from psycodict.statstable import PostgresStatsTable
 
 def overrides(super_class):
     def overrider(method):
@@ -34,9 +33,23 @@ class LMFDBSearchTable(PostgresSearchTable):
         PostgresSearchTable.__init__(self, *args, **kwds)
         self._verifier = None  # set when importing lmfdb.verify
 
+    def description(self, table_description=None):
+        """
+        We use knowls to implement the table description API.
+        """
+        from lmfdb.knowledge.knowl import knowldb
+        if table_description is None:
+            current = knowldb.get_table_description(self.search_table)
+            if current:
+                return current.content
+            else:
+                return "(description not yet updated on this server)"
+        else:
+            knowldb.set_table_description(self.search_table, table_description)
+
     def column_description(self, col=None, description=None, drop=False):
         """
-        We use knowls to store column descriptions rather than meta_tables.
+        We use knowls to implement the column description API.
         """
         from lmfdb.knowledge.knowl import knowldb
         allcols = self.search_cols + self.extra_cols
@@ -460,5 +473,14 @@ class LMFDBDatabase(PostgresDatabase):
             kwargs["force_description"] = True
         return PostgresDatabase.create_table(self, name, *args, **kwargs)
 
+    @overrides(PostgresDatabase)
+    def drop_table(self, name, *args, **kwargs):
+        cols = self[name].search_cols + self[name].extra_cols
+        super().drop_table(name, *args, **kwargs)
+        from lmfdb.knowledge.knowl import knowldb
+        knowldb.drop_table(name)
+        for col in cols:
+            knowldb.drop_column(name, col)
+        print("Deleted table and column descriptions from knowl database")
 
 db = LMFDBDatabase()

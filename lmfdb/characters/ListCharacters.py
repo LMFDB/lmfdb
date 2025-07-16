@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
 # ListCharacters.py
 import re
 from sage.all import lcm, factor, Integers
-from sage.databases.cremona import cremona_letter_code
-from lmfdb.characters.web_character import WebDirichlet, parity_string
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.utils import flash_error, integer_divisors
 
@@ -12,43 +9,48 @@ from lmfdb.utils import flash_error, integer_divisors
 
 def modn_exponent(n):
     """ given a nonzero integer n, returns the group exponent of (Z/nZ)* """
-    return lcm( [ (p-1)*p**(e-1) for (p,e) in factor(n) ] ) // (1 if n%8 else 2)
+    numer = lcm([(p - 1) * p**(e - 1) for p, e in factor(n)])
+    return numer // (1 if n % 8 else 2)
+
 
 def divisors_in_interval(n, a, b):
     """ given a nonzero integer n and an interval [a,b] returns a list of the divisors of n in [a,b] """
-    return [d for d in integer_divisors(n) if a <= d and d <= b]
+    return [d for d in integer_divisors(n) if a <= d <= b]
+
 
 def parse_interval(arg, name):
     """ parses a user specified interval of positive integers (or a single integer), flashes errors and raises exceptions """
-    a,b = 0,0
-    arg = arg.replace (' ','')
+    a, b = 0, 0
+    arg = arg.replace(' ', '')
     if re.match('^[0-9]+$', arg):
-        a,b = (int(arg), int(arg))
+        a, b = (int(arg), int(arg))
     elif re.match('^[0-9]+-[0-9]+$', arg):
         s = arg.split('-')
-        a,b = (int(s[0]), int(s[1]))
+        a, b = (int(s[0]), int(s[1]))
     elif re.match('^[0-9]+..[0-9]+$', arg):
         s = arg.split('..')
-        a,b = (int(s[0]), int(s[1]))
+        a, b = (int(s[0]), int(s[1]))
     elif re.match(r'^\[[0-9]+..[0-9]+\]$', arg):
         s = arg[1:-1].split('..')
-        a,b = (int(s[0]), int(s[1]))
+        a, b = (int(s[0]), int(s[1]))
     if a <= 0 or b < a:
         flash_error("%s is not a valid value for %s. It should be a positive integer (e.g. 7) or a nonempty range of positive integers (e.g. 1-10 or 1..10)", arg, name)
         raise ValueError("invalid " + name)
-    return a,b
+    return a, b
+
 
 def parse_limit(arg):
     if not arg:
         return 50
     limit = -1
-    arg = arg.replace  (' ','')
+    arg = arg.replace(' ', '')
     if re.match('^[0-9]+$', arg):
         limit = int(arg)
     if limit > 100:
         flash_error("%s is not a valid limit on the number of results to display.  It should be a positive integer no greater than 100.", arg)
         raise ValueError("limit")
     return limit
+
 
 def get_character_modulus(a, b, limit=7):
     """ this function is also used by lfunctions/LfunctionPlot.py """
@@ -71,8 +73,11 @@ def get_character_modulus(a, b, limit=7):
                 entry.append(el)
                 entries[(row, col)] = entry
     entries2 = {}
-    def out(chi): return (chi.number, chi.is_primitive(),
-                       chi.order, chi.is_even())
+
+    def out(chi):
+        return (chi.number, chi.is_primitive(),
+                chi.order, chi.is_even())
+
     for k, v in entries.items():
         l = []
         v = sorted(v, key=lambda x: x.number)
@@ -87,52 +92,10 @@ def get_character_modulus(a, b, limit=7):
                 l.append((out(e1),))
             else:
                 l.append((out(e1), out(inv)))
-                v = [x for x in v if (x.modulus, x.number) != (inv.modulus, inv.number)]
+                v = [x for x in v
+                     if (x.modulus, x.number) != (inv.modulus, inv.number)]
         if k[1] == "more":
             l = sorted(l, key=lambda e: e[0][2])
         entries2[k] = l
     cols = headers
     return headers, entries2, rows, cols
-
-
-def info_from_db_orbit(orbit):
-    mod = orbit['modulus']
-    conductor = orbit['conductor']
-    orbit_index = orbit['orbit_index']
-    orbit_letter = cremona_letter_code(orbit_index - 1)
-    orbit_label = "{}.{}".format(mod, orbit_letter)
-    order = orbit['order']
-    is_odd = parity_string(orbit['parity'])
-    is_prim = _is_primitive(orbit['is_primitive'])
-    results = []
-    for num in orbit['galois_orbit']:
-        results.append((
-            mod,
-            num,
-            conductor,
-            orbit_label,
-            order,
-            is_odd,
-            is_prim,
-            WebDirichlet.char2tex(mod, num)
-        ))
-    return results
-
-
-def _is_primitive(db_primitive):
-    """
-    Translate db's primitive entry to boolean.
-    """
-    if str(db_primitive) == "True":
-        return True
-    return False
-
-
-def _is_odd(db_parity):
-    """
-    Translate db's parity entry to boolean.
-    """
-    _parity = int(db_parity)
-    if _parity == -1:
-        return True
-    return False

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 from collections import Counter
@@ -10,6 +9,7 @@ from sage.all import ZZ
 
 from lmfdb.utils import (
     SearchArray,
+    EmbeddedSearchArray,
     TextBox,
     TextBoxWithSelect,
     SelectBox,
@@ -21,6 +21,7 @@ from lmfdb.utils import (
     display_knowl,
     flash_error,
     search_wrap,
+    embed_wrap,
     to_dict,
     parse_ints,
     parse_noop,
@@ -45,7 +46,7 @@ from lmfdb.utils.search_columns import (
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -53,25 +54,21 @@ from lmfdb.modular_curves import modcurve_page
 from lmfdb.modular_curves.web_curve import (
     WebModCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
+    learnmore_list, LABEL_RE, ISO_CLASS_RE
 )
+from lmfdb.modular_curves.family import ModCurveFamily
+from lmfdb.modular_curves.upload import ModularCurveUploader
+from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
-coarse_label_re = r"\d+\.\d+\.\d+\.[a-z]+\.\d+"
-fine_label_re = r"\d+\.\d+\.\d+-\d+\.[a-z]+\.\d+\.\d+"
-LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
-FINE_LABEL_RE = re.compile(fine_label_re)
+from sage.databases.cremona import class_to_int
+
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
 CP_LABEL_RE = re.compile(r"\d+[A-Z]+\d+")
 CP_LABEL_GENUS_RE = re.compile(r"\d+[A-Z]+(\d+)")
 SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
-RZB_LABEL_RE = re.compile(r"X\d+")
+RZB_LABEL_RE = re.compile(r"X\d+[a-z]*")
 S_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
-NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|SYM)?\(\d+\)")
-
-def learnmore_list():
-    return [('Source and acknowledgments', url_for(".how_computed_page")),
-            ('Completeness of the data', url_for(".completeness_page")),
-            ('Reliability of the data', url_for(".reliability_page")),
-            ('Modular curve labels', url_for(".labels_page"))]
+NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|ARITH)?\(\d+\)")
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -132,8 +129,22 @@ def by_label(label):
     if RSZB_LABEL_RE.fullmatch(label):
         label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
-        flash_error("Invalid label %s", label)
-        return redirect(url_for(".index"))
+        if not ISO_CLASS_RE.fullmatch(label):
+            flash_error("Invalid label %s", label)
+            return redirect(url_for(".index"))
+        iso_class = ModCurveIsog_class.by_label(label)
+        return render_template("modcurve_isoclass.html",
+                               iso_class=iso_class,
+                               zip=zip,
+                               name_to_latex=name_to_latex,
+                               properties=iso_class.properties,
+                               friends=iso_class.friends,
+                               bread=iso_class.bread,
+                               title=iso_class.title,
+                               downloads=iso_class.downloads,
+                               KNOWL_ID=f"modcurve.{label}",
+                               learnmore=learnmore_list()
+        )
     curve = WebModCurve(label)
     if curve.is_null():
         flash_error("There is no modular curve %s in the database", label)
@@ -225,7 +236,7 @@ def curveinfo(label):
     return ans
 
 def url_for_modcurve_label(label):
-    return url_for(".by_label", label=label)
+    return url_for("modcurve.by_label", label=label)
 
 def url_for_RZB_label(label):
     return "https://users.wfu.edu/rouseja/2adic/" + label + ".html"
@@ -235,7 +246,7 @@ def url_for_CP_label(label):
     return "https://mathstats.uncg.edu/sites/pauli/congruence/csg" + genus + ".html#group" + label
 
 def modcurve_lmfdb_label(label):
-    if LABEL_RE.fullmatch(label):
+    if LABEL_RE.fullmatch(label) or ISO_CLASS_RE.fullmatch(label):
         label_type = "label"
         lmfdb_label = label
     elif RSZB_LABEL_RE.fullmatch(label):
@@ -296,8 +307,20 @@ def modcurve_jump(info):
         else:
             return redirect(url_for_modcurve_label(label))
 
+@modcurve_page.route("/Q/upload/", methods=['GET', 'POST'])
+def upload_data():
+    return ModularCurveUploader().render()
+
+@modcurve_page.route("/Q/review/", methods=['GET', 'POST'])
+def review_data():
+    return ModularCurveUploader().review()
+
+@modcurve_page.route("/Q/needs_review/")
+def needs_review():
+    return ModularCurveUploader().needs_review()
+
 def blankzeros(n):
-    return "$%o$"%n if n else ""
+    return "$%o$" % n if n else ""
 
 modcurve_columns = SearchColumns(
     [
@@ -312,7 +335,7 @@ modcurve_columns = SearchColumns(
         MathCol("index", "modcurve.index", "Index"),
         MathCol("genus", "modcurve.genus", "Genus"),
         ProcessedCol("rank", "modcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
-        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
+        ProcessedCol("q_gonality_bounds", "modcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$' % (b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$' % (b[0],b[1]), align="center", short_title="Q-gonality"),
         MathCol("cusps", "modcurve.cusps", "Cusps"),
         MathCol("rational_cusps", "modcurve.cusps", r"$\Q$-cusps", short_title="Q-cusps"),
         CheckCol("cm_discriminants", "modcurve.cm_discriminants", "CM points", align="center"),
@@ -330,7 +353,7 @@ modcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xsym", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "Xarith1", "Xarithpm1", "Xsym", "Xarith", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -341,15 +364,17 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)"]}]}
     elif inp == "Xsp": #add X(1),X(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
-    elif inp == "X2": # X_1(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
-    elif inp == "Xpm2": # X_{\pm1}(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
+    elif inp == "Xarith1": # X_{arith,1}(m,mn); add X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%,%"}, {"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
+    elif inp == "Xarithpm1": # X_{\pm1}(2,2n); add X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%,%"}, {"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
     elif inp == "Xpm1": # Add X(1) and X0(N) for N=2,3,4,6
         query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
     elif inp == "X1":
         query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
-    elif inp == "Xsym": # add X(1), X(2)
+    elif inp == "Xarith": # add X(1), X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
+    elif inp == "Xarith":
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
@@ -456,7 +481,7 @@ class ModCurve_download(Downloader):
         s += "// Number of cusps\n"
         s += "Ncusps := %s\n;" % rec['cusps']
         s += "// Number of rational cusps\n"
-        s += "Nrat_cusps := %s\n;" % rec['cusps']
+        s += "Nrat_cusps := %s\n;" % rec['rational_cusps']
         s += "// CM discriminants\n"
         s += "CM_discs := %s;\n" % rec['cm_discriminants']
         if rec['factorization'] != []:
@@ -517,9 +542,9 @@ class ModCurve_download(Downloader):
             {"modcurve": {"$in": codomain_labels}},
             ["equation", "modcurve", "model_type"]))
         map_id = 0
-        if maps and is_P1: #variable t has not been introduced above
-            s += "Pol<t> := PolynomialRing(Rationals());\n"
-
+        #if maps and is_P1: #variable t has not been introduced above
+        #     s += "Pol<t> := PolynomialRing(Rationals());\n"
+        #This was using t twice when the genus was large enough that t was used above. Even when t is not defined above, t is not used below.
         for m in maps:
             prefix = "map_%s_" % map_id
             has_codomain_equation = False
@@ -596,7 +621,7 @@ class ModCurve_download(Downloader):
             return self._wrap(Json.dumps(data),
                               label,
                               lang=lang,
-                              title='Data for modular curve with label %s,'%label)
+                              title='Data for modular curve with label %s,' % label)
 
 @modcurve_page.route("/download_to_magma/<label>")
 def modcurve_magma_download(label):
@@ -609,6 +634,36 @@ def modcurve_sage_download(label):
 @modcurve_page.route("/download_to_text/<label>")
 def modcurve_text_download(label):
     return ModCurve_download().download_modular_curve(label, lang="text")
+
+# !!! TODO : currently there is a lot of overlapping with code creating the Gassmann class. Should solve this more generally by refactoring the search and download
+def modcurve_Gassmann_download(request, lang):
+    query_dict = to_dict(request.args)
+    print("query_dict", query_dict)
+    ncurves = db.gps_gl2zhat_fine.count(query_dict)
+    info = {}
+    info["Submit"] = lang
+    info["query"] = str(query_dict)
+    print("info query = ", info["query"])
+    info["results"] = []
+    for i in range(ncurves):
+        query_dict.update({'coarse_num' : i+1})
+        info["results"].append(db.gps_gl2zhat_fine.lucky(query_dict))
+    info["search_table"] = db.gps_gl2zhat_fine
+    info["columns"] = modcurve_columns
+    info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
+    return ModCurve_download()(info)
+
+@modcurve_page.route("/download_Gassmann_to_magma/")
+def modcurve_Gassmann_magma_download():
+    return modcurve_Gassmann_download(request, lang="magma")
+
+@modcurve_page.route("/download_Gassmann_to_sage/")
+def modcurve_Gassmann_sage_download():
+    return modcurve_Gassmann_download(request, lang="sage")
+
+@modcurve_page.route("/download_Gassmann_to_text/")
+def modcurve_Gassmann_text_download():
+    return modcurve_Gassmann_download(request, lang="text")
 
 @search_wrap(
     table=db.gps_gl2zhat_fine,
@@ -629,13 +684,15 @@ def modcurve_search(info, query):
             query['num_bad_primes'] = 1
         elif info['level_type'] == 'squarefree':
             query['level_is_squarefree'] = True
-        elif info['level_type'] == 'divides':
+        elif info['level_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('level'), int):
                 err = "You must specify a single level"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
+            else:
+                query['level'] = {'$mod': [0, ZZ(query['level'])]}
     parse_family(info, query, "family", qfield="name")
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
@@ -691,11 +748,17 @@ def modcurve_search(info, query):
             raise ValueError(msg % info["covered_by"])
         query["label"] = {"$in": parents}
 
+modcurve_sorts = [
+    ("", "level", ["level", "index", "genus", "label"]),
+    ("index", "index", ["index", "level", "genus", "label"]),
+    ("genus", "genus", ["genus", "level", "index", "label"]),
+    ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
 
+]
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.a.1"
-    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
+    jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.a, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
     jump_prompt = "Label or name"
     jump_knowl = "modcurve.search_input"
 
@@ -707,6 +770,7 @@ class ModCurveSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides', 'divides'),
+                     ('multiple', 'multiple of'),
                      ],
             min_width=85)
         level = TextBoxWithSelect(
@@ -765,8 +829,10 @@ class ModCurveSearchArray(SearchArray):
                      ('possibly', 'possibly'),
                      ('atleast', 'at least'),
                      ('atmost', 'at most'),
+                     ('inexactly', 'inexactly'),
                      ],
-            min_width=85)
+            min_width=86,
+        )
         gonality = TextBoxWithSelect(
             name="q_gonality",
             knowl="modcurve.gonality",
@@ -821,7 +887,7 @@ class ModCurveSearchArray(SearchArray):
         )
         cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+                   + [('-%d' % d, 'CM discriminant -%d' % d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm_discriminants = SelectBox(
             name="cm_discriminants",
             options=cm_opts,
@@ -840,14 +906,15 @@ class ModCurveSearchArray(SearchArray):
         points_type = SelectBox(
             name="points_type",
             options=[('', 'non-cusp'),
-                     ('noncm', 'non-CM, non-cusp'),
+                     ('noncm', 'non-CM/cusp'),
                      ('all', 'all'),
                      ],
-            min_width=105)
+            min_width=114,
+        )
         points = TextBoxWithSelect(
             name="points",
             knowl="modcurve.known_points",
-            label="$j$-points",
+            label="Points",
             example="0, 3-5",
             select_box=points_type,
         )
@@ -866,14 +933,14 @@ class ModCurveSearchArray(SearchArray):
                      ("X1", "X1(N)"),
                      ("Xpm1", "X±1(N)"),
                      ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "X±1(2,2N)"),
+                     ("Xarith1", "Xarith1(M,MN)"),
+                     ("Xarithpm1", "Xarith±1(M,MN)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),
                      ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
-                     ("Xsym", "Xsym(N)"),
+                     ("Xarith", "Xarith(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
             label="Family",
@@ -908,12 +975,8 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
-    sorts = [
-        ("", "level", ["level", "index", "genus", "label"]),
-        ("index", "index", ["index", "level", "genus", "label"]),
-        ("genus", "genus", ["genus", "level", "index", "label"]),
-        ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
-    ]
+    sorts = modcurve_sorts
+
     null_column_explanations = {
         'simple': False,
         'squarefree': False,
@@ -921,6 +984,37 @@ class ModCurveSearchArray(SearchArray):
         'genus_minus_rank': False,
         'name': False,
     }
+
+class FamilySearchArray(EmbeddedSearchArray):
+    sorts = modcurve_sorts
+
+@modcurve_page.route("/Q/family/<name>")
+def family_page(name):
+    info = to_dict(request.args, search_array=FamilySearchArray(), name=name)
+    try:
+        info["family"] = family = ModCurveFamily(name)
+    except ValueError:
+        flash_error(f"There is no family with name {name}")
+        return redirect(url_for(".index_Q"))
+    info["title"] = family.title
+    info["bread"] = family.bread
+   # info["properties"] = family.properties
+    return render_family(info)
+
+@embed_wrap(
+    table=db.gps_gl2zhat_fine,
+    template="modcurve_family.html",
+    err_title="Modular curve family error",
+    columns=modcurve_columns,
+    learnmore=learnmore_list,
+    # Each of the following arguments is set here so that it overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in family_page() before calling render_family)
+    bread=lambda:None,
+    properties=lambda:None,
+    family=lambda:None,
+)
+def render_family(info, query):
+    parse_family(info, query, 'name')
 
 @modcurve_page.route("/Q/low_degree_points")
 def low_degree_points():
@@ -1053,7 +1147,7 @@ class RatPointSearchArray(SearchArray):
         )
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+                   + [('-%d' % d, 'CM discriminant -%d' % d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",
@@ -1073,14 +1167,14 @@ class RatPointSearchArray(SearchArray):
                      ("X1", "X1(N)"),
                      ("Xpm1", "Xpm1(N)"),
                      ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "Xpm1(2,2N)"),
+                     ("Xarith1", "Xarith1(M,MN)"),
+                     ("Xarithpm1", "Xarith±1(M,MN)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),
                      ("Xnsplus", "Xns+(N)"),
                      ("XS4", "XS4(N)"),
-                     ("Xsym", "Xsym(N)"),
+                     ("Xarith", "Xarith(N)"),
                      ("any", "any")],
             knowl="modcurve.standard",
             label="Family",
@@ -1189,15 +1283,34 @@ def labels_page():
     return render_template("single.html", kid='modcurve.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
+# !! TODO - overlapping code between the two options coming from different merges
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
     coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
-        return abort(404)
-    if label == coarse_label:
-        labels = [label]
+        if not ISO_CLASS_RE.fullmatch(label):
+            return abort(404)
+        N, i, g, iso = label.split(".")
+        iso_num = class_to_int(iso)+1
+        labels = db.gps_gl2zhat_fine.search({"coarse_level" : N,
+                                             "coarse_index" : i,
+                                             "genus" : g,
+                                             "coarse_class_num" : iso_num,
+                                             "contains_negative_one" : "yes"},
+                                            "label")
+        labels = list(labels)
+        label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
     else:
-        labels = [label, coarse_label]
-    tables = ["gps_gl2zhat_fine" for lab in labels]
-    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread)
+        label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
+        if label != coarse_label:
+            label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
+        # modcurve_models
+        label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
+        # modcurve_modelmaps
+        label_tables_cols.append((coarse_label, "modcurve_modelmaps", "domain_label"))
+        # modcurve_points
+        label_tables_cols.append((coarse_label, "modcurve_points", "curve_label"))
+
+    labels, tables, label_cols = map(list, zip(*label_tables_cols)) # transpose
+    return datapage(labels, tables, title=f"Modular curve data - {label}", bread=bread, label_cols=label_cols)

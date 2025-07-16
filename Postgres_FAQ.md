@@ -13,8 +13,10 @@ Changes
 
 1. What's an overview of the changes?
 
-   There is a new folder, `lmfdb/backend/`, containing the
-   main components of the new interface to the Postgres database.
+   The main components of the interface to the Postgres database are
+   in [psycodict](https://github.com/roed314/psycodict/), which the LMFDB
+   now depends on. This might be moved to the lmfdb organization later.
+
    Postgres is a mature, open-source implementation of SQL.  One of
    the main differences is that Postgres is a strongly-typed
    relational database, meaning that every table has a schema with
@@ -48,11 +50,6 @@ Changes
    advantage of this restructuring to add some consistency to the
    naming scheme.
 
-1. Why do I still see messages about mongo when I start the LMFDB?
-
-   Classical modular forms are still using mongo.  We're working on
-   revising them to use postgres, but in the mean time we're still
-   connecting to a mongo database.
 
 Database Interface
 ------------------
@@ -105,7 +102,7 @@ Database Interface
    ```
 
    The first argument is a dictionary specifying the query (in a style
-   similar to what you're used to from MongoDB, but with custom
+   similar to what you may be used to from MongoDB, but with custom
    operators like `$contains` that are translated to Postgres
    expressions).  You can project in order to obtain only a certain
    set of columns, and provide limits, offsets and custom sort orders.
@@ -115,8 +112,8 @@ Database Interface
 
    The `info` argument is a dictionary that will be updated with
    various data that is commonly needed by templates populated by the
-   search functions.  For more details, see the documentation in the folder
-   `lmfdb/backend`.
+   search functions.  For more details, see the documentation at
+   https://github.com/roed314/psycodict/.
 
 1. What if I only want a single entry, for example with a specified label?
 
@@ -158,11 +155,11 @@ Database Interface
 
    If use `db._execute`, make sure to wrap your statements in the SQL
    class from `psycopg2.sql` (you can also import it from
-   `lmfdb.backend`). You can see lots of examples of this
-   paradigm in `lmfdb/backend/`.
+   `psycodict`). You can see lots of examples of this
+   paradigm in https://github.com/roed314/psycodict/
 
    ```python
-   sage: from lmfdb.backend import db, SQL
+   sage: from psycodict import db, SQL
    sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
    sage: cur.rowcount
    2
@@ -217,7 +214,7 @@ Developer configuration
 Adding and modifying data
 -------------------------
 
-Note that you need editor priviledges to add, delete or modify data.
+Note that you need editor privileges to add, delete or modify data.
 
 1. How do I create a new table?
 
@@ -231,18 +228,18 @@ Note that you need editor priviledges to add, delete or modify data.
    `lookup` method, typically the `label` column if there is one.
    You should provide a default sort order if your table will be the
    primary table behind a section of the website (auxiliary tables may
-   not need a sort order).  You also need to proved a short description
+   not need a sort order).  You also need to provide a short description
    of the table, which will be shown in the banner when its contents are
    viewed on the database section of the website, as well as short
    descriptions of each of its columns which will be shown when users
    view the schema for the table in the database section (these will
    be used to populate knowls that can then be edited by you or anyone
    with an LMFDB account can edit, they don't need to be perfect).
-   
-   You can also give columns for an extra table (see the question two prior),
-   using the same format as the second argument.  Finally, you can specify
-   the order of columns, which will be used by the `copy_from` and `copy_to`
-   functions by default.
+
+   You can also give columns for an extra table (see the question "What is an
+   `extra_table`?" later in this document), using the same format as the second
+   argument.  Finally, you can specify the order of columns, which will be used
+   by the `copy_from` and `copy_to` functions by default.
 
    ```python
    db.create_table(name='perfect_numbers',
@@ -264,6 +261,34 @@ Note that you need editor priviledges to add, delete or modify data.
                                    },
                    search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
    ```
+
+   If there were `extras` (suppose we put `log_N` and `num_factors` in
+   `extras`), the table creation could look like
+
+   ```python
+   db.create_table(name='perfect_numbers2',
+                   search_columns={'numeric': ['N','mersenne_n'],
+                                   'text': ['label'],
+                                   'bool': ['odd'],
+                                   },
+                   label_col='label',
+                   sort=['label'],
+                   table_description='perfect numbers',
+                   extra_columns={'double precision': ['log_N'],
+                                 'int': ['num_factors'],
+                                 },
+                   col_description={'N': "Integer value of the perfect number",
+                                    'log_N': "Natural logarithm of $N$",
+                                    'num_factors': "The number of factors of the perfect number.",
+                                    'mersenne_n': "For odd perfect numbers, the positive integer n for which $N=2^{n-1}(2^n-1)$, where $2^n-1$ is prime.  Set to zero for even perfect numbers",
+                                    'label': "Label of the perfect number",
+                                    'odd': "True if $N$ is odd, false otherwise.",
+                                   },
+                   search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
+   ```
+
+   In `perfect_numbers2`, the columns `log_N` and `num_factors` are now not in
+   the search columns.
 
    Once this table exists, you can access it via the object
     `db.perfect_numers`, which is of type `PostgresTable`.
@@ -290,7 +315,7 @@ Note that you need editor priviledges to add, delete or modify data.
    ```
 
    This column will be NULL for existing rows.
-   
+
 1. How do I delete a column?
 
    If you want to delete a column to an existing table, use the
@@ -299,7 +324,7 @@ Note that you need editor priviledges to add, delete or modify data.
    ```python
    sage: db.test_table.drop_column("bad_primes")
    ```
-   
+
 1. How do I insert new data?
 
    There are two main methods for adding data to a table.
@@ -586,7 +611,7 @@ Statistics
    in which case the function will only compute counts of at least the
    threshold.  You can also specify a dictionary of constraints (in
    fact, an arbitrary search query), in which case only rows
-   satsifying the query will be considered.
+   satisfying the query will be considered.
 
    For example, consider the following data.
    ```
@@ -606,9 +631,9 @@ Statistics
    ```
 
    If you added stats for column `A`, it would record that there are
-   four instances of 2, three of 1, two of 5 and one each of 3, 4, and
-   8.  It would also record the minimum value (1), the maximum value
-   (6), the average (3), and the total (12 rows).
+   four instances of 2, three of 1, two of 5 and one each of 3, 4,
+   and 8.  It would also record the minimum value (1), the maximum value (6),
+   the average (3), and the total (12 rows).
 
    If you specified a threshold of 3, it would only record that there
    are four instances of 2 and three of 1.  Now the minimum and
@@ -621,8 +646,8 @@ Statistics
    statistics.
 
    If you want to group values into buckets (for example, class
-   numbers of number fields split into ranges like 1 < h <= 10 and 10
-   < h <= 100 and 100 < h <= 1000), you can use the
+   numbers of number fields split into ranges like `1 < h <= 10` and `10
+   < h <= 100` and `100 < h <= 1000`), you can use the
    `add_bucketed_counts` method.
 
    If you want to add counts for many sets of columns (in order to
@@ -634,11 +659,11 @@ Statistics
    Create a statistics object inheriting from `StatsDisplay` in
    `lmfdb/display_stats.py`.  It should have attributes
 
-   - `short_summary` (which can be displayed at the top of your browse page), 
+   - `short_summary` (which can be displayed at the top of your browse page),
    - `summary` (which will be displayed at the top of the statistics page),
    - `table` (the postgres table on which statistics are computed),
    - `baseurl_func` (the function giving your browse page, e.g. `'.index'`),
-   - `stat_list` (a list of dictionaries giving the statistics to be displayed; 
+   - `stat_list` (a list of dictionaries giving the statistics to be displayed;
    - `'cols'`, `'row_title'` and `'knowl'` are required arguments,
    - and other optional arguments allow you to adjust the default behavior)
 
@@ -647,7 +672,7 @@ Statistics
    collect the relevant statistics.  You should also create a view
    using the `display_stats.html` template, passing your object in as
    the `info` parameter.  Note that `DisplayStats` inherits from
-   Sage's `UniqueRepresentation, so it will only be created once.
+   Sage's `UniqueRepresentation`, so it will only be created once.
 
 1. How do I display statistics from multiple tables on one page?
 
@@ -682,18 +707,15 @@ Data Validation
 1. How can I add consistency checks for data in the LMFDB?
 
    One option is to add constraints to your table.  To do so, use the
-   `create_constraint` method in `database.py`.  You can see the
-   current constraints using `list_constraints`.
+   `create_constraint` method in `psycodict/table.py`. You can see the current
+   constraints using `list_constraints`.
 
    There are three supported types of constraints.  The simplest is
    `not null`, which checks that a specified column is filled in for
    every row in the table.  The second is `unique`, which checks that
    a column or set of columns is unique across all rows of a table.
    The final options is `check`, which runs an arbitrary SQL function
-   on a set of rows.  We are building up a library of SQL functions
-   for use in this way; you can see them in `backend/utils.psql`.
-   Once written, these functions need to be added to postgres, at
-   which point they can be used in checks.
+   on a set of rows.
 
    Note that constraints are checked whenever a row is added or
    updated, so if they are complicated it will impose a speed penalty
@@ -714,7 +736,7 @@ Data Validation
    utilities for writing such queries, such as `check_values`,
    `check_iff`, `check_count`.  You can also write the query directly
    and use `_run_query`.  If you want to run queries that check
-   consistency accross multiple tables, see the `check_crosstable`
+   consistency across multiple tables, see the `check_crosstable`
    utility functions.  For fast queries you can use the `@overall`
    decorator; if your query takes longer than about a minute, you may
    want to use the `@overall_long` decorator instead.

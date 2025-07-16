@@ -99,7 +99,8 @@ affil: University of Bristol and AIM
 url: https://www.aimath.org/conrey/
 ---
 name: Lewis Combes
-affil: University of Sheffield
+affil: University of Sydney
+url: https://lewismcombes.github.io
 ---
 name: Edgar Costa
 affil: MIT
@@ -280,8 +281,8 @@ email: aurel.page@normalesup.org
 affil: University of Bordeaux
 ---
 name: Jennifer Paulhus
-affil: Grinnell College
-url: https://www.math.grinnell.edu/~paulhusj/
+affil: Mount Holyoke College
+url: https://www.jenpaulhus.com
 ---
 name: David Platt
 affil: University of Bristol
@@ -409,9 +410,13 @@ affil: University of Vermont
 email: christelle.vincent@uvm.edu
 url: https://www.uvm.edu/~cvincen1/
 ---
+name: Robin Visser
+affil: Charles University
+url: http://warwick.ac.uk/fac/sci/maths/people/staff/visser/
+---
 name: John Voight
-url: https://www.math.dartmouth.edu/~jvoight
-affil: Dartmouth College
+url: https://www.sydney.edu.au/science/about/our-people/academic-staff/john-voight.html
+affil: University of Sydney
 ---
 name: Lynne Walling
 affil: University of Bristol
@@ -443,4 +448,6 @@ affil: The University of North Carolina Greensboro
 name: David Yuen
 affil: Lake Forest College
 url: https://www.lakeforest.edu/academics/faculty/yuen/
-
+---
+name: Weiyi Wang
+email: wwylele@gmail.com

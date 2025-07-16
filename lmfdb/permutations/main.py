@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Permutations
 # Author: Sebastien Labbe
 

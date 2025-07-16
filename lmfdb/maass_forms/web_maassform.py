@@ -1,9 +1,14 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
-from lmfdb.utils import display_knowl, Downloader, web_latex_factored_integer, prop_int_pretty
-from lmfdb.backend.encoding import Json
+from lmfdb.utils import (
+    display_knowl,
+    Downloader,
+    prop_int_pretty,
+    raw_typeset,
+    web_latex_factored_integer,
+)
+from psycodict.encoding import Json
 from flask import url_for, abort
-from sage.all import RR
+from sage.all import RR, ZZ, factor, sign, prod
 
 
 def character_link(level, conrey_index):
@@ -12,11 +17,25 @@ def character_link(level, conrey_index):
 
 
 def fricke_pretty(fricke_eigenvalue):
-    return "$%+d$" % fricke_eigenvalue if fricke_eigenvalue else ""
+    if fricke_eigenvalue == 0:
+        return "not computed rigorously"
+    elif fricke_eigenvalue == 1:
+        return "$+1$"
+    else:
+        return "$-1$"
+
+
+def sgn_to_tex(sgn):
+    if sgn == 1:
+        return "+"
+    elif sgn == -1:
+        return "-"
+    else:
+        return r"\pm"
 
 
 def symmetry_pretty(symmetry):
-    return "even" if symmetry == 1 else ("odd" if symmetry == -1 else "")
+    return "even" if symmetry == 0 else ("odd" if symmetry == 1 else "")
 
 
 def th_wrap(kwl, title):
@@ -35,71 +54,158 @@ def td_wrapr(val):
     return '    <td align="right">%s</td>' % val
 
 
+def coeff_is_finite_rational(n, primes):
+    """
+    In the case when n is divisible only the primes 2 and 5, and 2 or 5
+    divides the level, and if n is a square, and the level is squarefree --- then a(n)
+    is actually rational.
+    """
+    f = factor(n)
+    for p, e in f:
+        if p not in primes:
+            return False
+        if e % 2 != 0:
+            return False
+    return True
+
+
+def rational_coeff_error_notation(factored_n):
+    res = 1
+    if not factored_n:  # n = 1
+        return "1"
+    for p, e in factored_n:
+        res *= p**(e//2)
+    res = 1./res
+    res = str(res).rstrip('0')
+    return res
+
+
+def coeff_error_notation(coeff, error, pm=False):
+    r"""Web coefficient and error display, with truncation"""
+    if error == -1:
+        return r"\mathrm{unknown}"
+    if pm:
+        coeffpart = r"\pm%.8f" % coeff
+    else:
+        coeffpart = "%+.8f" % coeff
+    if error == 0:
+        errorpart = ""
+    else:
+        base, negexponent = mantissa_and_exponent(error)
+        if negexponent > 8:
+            negexponent = 8
+            base = 1
+        errorpart = r" \pm " + exponential_form(base, negexponent, digits_to_show=3)
+    return coeffpart + errorpart
+
+
+def mantissa_and_exponent(number):
+    """
+    Returns (mantissa, exponent) where number = mantissa * 10^(-exponent).
+
+    The input should be a RealLiteral.
+    """
+    if number > 1:
+        return (number, 0)
+    exponent = -number.log10().floor()
+    return (number * 10**exponent, exponent)
+
+
+def exponential_form(mantissa, negative_exponent, digits_to_show=9):
+    """
+    Format the number `mantissa * 10^(-negative_exponent)` nicely.
+    """
+    mantissa = str(mantissa)
+    if negative_exponent == 0:
+        return mantissa[:digits_to_show]
+    return mantissa[:digits_to_show] + r" \cdot 10^{-" + str(negative_exponent) + "}"
+
+
 def parity_text(val):
     return 'odd' if val == -1 else 'even'
+
+
+def short_label(label):
+    # We shorten some labels from 5 components to 2 for simplicity (all of the
+    # Maass forms in the initial draft of the database had the same values for
+    # the second, third and fifth part of the label)
+    pieces = label.split(".")
+    if len(pieces) == 5 and pieces[1] == '0' and pieces[2] == '1' and pieces[4] == '1':
+        return f"{pieces[0]}.{pieces[3]}"
+    return label
+
+
+def long_label(label):
+    # Undo the transformation from short_label
+    pieces = label.split(".")
+    if len(pieces) == 2:
+        return f"{pieces[0]}.0.1.{pieces[1]}.1"
+    return label
 
 
 class WebMaassForm():
     def __init__(self, data):
         self.__dict__.update(data)
         self._data = data
-        self.portrait = db.maass_portraits.lookup(self.label, projection="portrait")
+        self.portrait = db.maass_rigor_portraits.lookup(self.label, projection="portrait")
 
     @staticmethod
     def by_label(label):
-        data = db.maass_newforms.lookup(label)
+        data = db.maass_rigor.lookup(label)
         if data is None:
             raise KeyError("Maass newform %s not found in database." % (label))
         return WebMaassForm(data)
 
-    @staticmethod
-    def by_maass_id(maass_id):
-        return WebMaassForm.by_label(maass_id)
-
     @property
     def label(self):
-        return self.maass_id  # TODO: we should revisit this at some point
-
-    # next_maass_form and prev_maass_form below are provided for backward compatibility
-    # they are referenced in lfunctions but are not currently used
-
-    @property
-    def next_maass_form(self):
-        # return the "next" maass form of the save level, character, and weight with spectral parameter approximately >= our spectral _parameter
-        # forms with the same spectral parameter are sorted by maass_id
-        query = {'level': self.level, 'weight': self.weight, 'conrey_index': self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$gt': self.maass_id}}
-        forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
-        if forms:
-            return forms[0]
-        query = {'level': self.level, 'weight': self.weight, 'conrey_index': self.conrey_index, 'spectral_parameter': {'$gt': self.spectral_parameter}}
-        forms = db.maass_forms.search(query, sort=["spectral_parameter", "maass_id"], projection='maass_id', limit=1)
-        return forms[0] if forms else None
-
-    @property
-    def prev_maass_form(self):
-        query = {'level': self.level, 'weight': self.weight, 'conrey_index': self.conrey_index, 'spectral_parameter': self.spectral_parameter, 'maass_id': {'$lt': self.maass_id}}
-        forms = db.maass_newforms.esearch(query, sort=["maass_id"], projection='maass_id', limit=1)
-        if forms:
-            return forms[0]
-        query = {'level': self.level, 'weight': self.weight, 'conrey_index': self.conrey_index, 'spectral_parameter': {'$lt': self.spectral_parameter}}
-        forms = db.maass_forms.search(query, sort=["spectral_parameter", "maass_id"], projection='maass_id', limit=1)
-        return forms[0] if forms else None
+        return self.maass_label
 
     @property
     def coeffs(self):
         return [RR(c) for c in self.coefficients]
 
     @property
+    def spectral_index(self):
+        return self.nspec
+
+    @property
+    def web_spectral_error(self):
+        str_error = "%E" % self.spectral_error
+        base, _, exponent = str_error.partition("E")
+        base, rest = base.split(".")
+        base = str(int(base) + 1)
+        exponent = str(int(exponent))
+        return rf"{base} \cdot 10^{{{exponent}}}"
+
+    @property
+    def web_spectral_line(self):
+        if len(str(self.spectral_parameter)) < 35:
+            return rf"\({self.spectral_parameter} \pm {self.web_spectral_error}\)"
+        else:
+            short_spectral = str(self.spectral_parameter)[:35]
+            return raw_typeset(
+                str(self.spectral_parameter) + " +- " + str(self.spectral_error),
+                rf"\( {short_spectral}\ldots \pm {self.web_spectral_error} \)",
+                extra="(toggle for full precision)"
+            )
+
+    @property
     def title(self):
-        return r"Maass form on \(\Gamma_0(%d)\) with \(R=%s\)" % (self.level, self.spectral_parameter)
+        digits_to_show = 10
+        return (rf"Maass form {short_label(self.label)} on \(\Gamma_0({self.level})\) "
+                rf"with \(R={str(self.spectral_parameter)[:digits_to_show]}\)")
 
     @property
     def properties(self):
-        props = [(None, '<img src="{0}" width="200" height="150" style="margin:10px;"/>'.format(self.portrait))] if self.portrait is not None else []
-        props += [('Level', prop_int_pretty(self.level)),
+        props = [
+          (None, '<img src="{0}" width="200" height="200" style="margin:10px;"/>'.format(self.portrait))
+        ] if self.portrait is not None else []
+        props += [('Label', short_label(self.label)),
+                  ('Level', prop_int_pretty(self.level)),
                   ('Weight', prop_int_pretty(self.weight)),
                   ('Character', self.character_label),
                   ('Symmetry', self.symmetry_pretty),
+                  (r"\(R\)", str(self.spectral_parameter)[:8]),
                   ]
         if self.conrey_index == 1:
             props.append(('Fricke sign', self.fricke_pretty))
@@ -143,57 +249,120 @@ class WebMaassForm():
 
     @property
     def friends(self):
-        return [("L-function", "/L" + url_for(".by_label", label=self.label))]
+        friendlist = []
+        if self.nspec > 1:
+            prevlabel = f"{self.level}.{self.weight}.{self.conrey_index}.{self.nspec - 1}.1"
+            friendlist += [("Previous Maass form", url_for(".by_label", label=prevlabel))]
+        if self.nspec < db.maass_rigor.count(query={'level':self.level}):
+            nextlabel = f"{self.level}.{self.weight}.{self.conrey_index}.{self.nspec + 1}.1"
+            friendlist += [("Next Maass form", url_for(".by_label", label=nextlabel))]
+        friendlist += [("L-function not computed", '')]
+        return friendlist
 
-    def coefficient_table(self, rows=20, cols=5):
-        if not self.coefficients:
-            return ""
+    def coefficient_table(self, rows=20, cols=3, row_opts=[20,60,334]):
+        # This logic applies to squarefree level.
+        has_finite_rational_coeffs = False
+        level_primes = ZZ(self.level).prime_divisors()
+        level_10_primes = [p for p in level_primes if p in [2,5]]
+        has_finite_rational_coeffs = bool(level_10_primes)
+
         n = len(self.coefficients)
+        row_opts = sorted(row_opts)
+        overage = [r for r in row_opts if r * cols >= n]
+        if len(overage) > 1:
+            row_opts = row_opts[:1 - len(overage)]
+        if rows not in row_opts:
+            rows = row_opts[0]
         assert rows > 0 and cols > 0
+        default_rows = rows
+        rows = row_opts[-1]
         table = ['<table class="ntdata"><thead><tr><th></th></tr></thead><tbody>']
         if (rows - 1) * cols >= n:
             rows = (n // cols) + (1 if (n % cols) else 0)
         for i in range(rows):
-            table.append('<tr>')
+            maassrow = "maassrow " + " ".join(f"maassrow{m}" for m in row_opts if i < m)
+            display = "" if i < default_rows else ' style="display: none;"'
+            table.append(f'<tr class="{maassrow}"{display}>')
             for j in range(cols):
                 if i * cols + j >= n:
                     break
-                table.append(td_wrapr(r"\(a_{%d}=%+.9f\)" % (i * cols + j + 1,
-                                                             self.coefficients[i * cols + j])))
+                m = i * cols + j + 1
+                if m == 1:
+                    table.append(
+                        td_wrapl(rf"\(a_{{{m}}}= +1 \)")
+                    )
+                    continue
+                f = factor(m)
+                if has_finite_rational_coeffs:
+                    level_part = prod(p**e for p, e in f if p in level_10_primes)
+                    other_part = prod(p**e for p, e in f if p not in level_10_primes)
+                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for p, e in f))
+                    if m_is_finite_rational:
+                        # determine sign
+                        sgn = sign(self.coefficients[m - 1])  # if fricke_unknown, this is 0
+                        sign_str = sgn_to_tex(sgn)
+                        table.append(
+                            td_wrapl(rf"\(a_{{{m}}}= {sign_str}{rational_coeff_error_notation(f)} \)")
+                        )
+                        continue
+                coeff = self.coefficients[i * cols + j]
+                error = self.coefficient_errors[i * cols + j]
+                pm = False
+                if self.fricke_eigenvalue == 0:
+                    # Work out the coefficient from one that's prime to the level
+                    level_part = prod(p**e for p, e in f if p in level_primes)
+                    other_part = prod(p**e for p, e in f if p not in level_primes)
+                    if level_part > 1:
+                        coeff = abs(self.coefficients[other_part - 1] / RR(level_part).sqrt())
+                        pm = True
+                        if other_part == 1:
+                            error = RR(1e-8)
+                        else:
+                            error = max(RR(1e-8),self.coefficient_errors[other_part - 1] / RR(level_part.sqrt()))
+                # otherwise: m is not special, and print as normal
+                table.append(
+                    td_wrapl(r"\(a_{%d}= %s \)"
+                             % (i * cols + j + 1,
+                                coeff_error_notation(
+                                    coeff,
+                                    error,
+                                    pm=pm
+                                ))))
             table.append('</tr>')
         table.append('</tbody></table>')
-        if rows * cols < n:
-            table.append('<p>Showing %d of %d available coefficients</p>' % (rows * cols, n))
-        else:
-            table.append('<p>Showing all %d available coefficients</p>' % n)
+        buttons = " ".join(f'<a onclick="return maass_switch({r});" href="#">{min(n, r*cols)}</a>' for r in row_opts)
+        table.append(f'<p>Displaying $a_n$ with $n$ up to: {buttons}</p>')
         return '\n'.join(table)
 
 
 class MaassFormDownloader(Downloader):
-    table = db.maass_newforms
+    table = db.maass_rigor
     title = 'Maass forms'
 
     def download(self, label, lang='text'):
-        data = db.maass_newforms.lookup(label)
+        table = db.maass_rigor
+        data = table.lookup(label)
         if data is None:
             return abort(404, "Maass form %s not found in the database" % label)
-        for col in db.maass_newforms.col_type:
-            if db.maass_newforms.col_type[col] == "numeric" and data.get(col):
+        for col in table.col_type:
+            if table.col_type[col] == "numeric" and data.get(col):
                 data[col] = str(data[col])
-            if db.maass_newforms.col_type[col] == "numeric[]" and data.get(col):
+            if table.col_type[col] == "numeric[]" and data.get(col):
                 data[col] = [str(data[col][n]) for n in range(len(data[col]))]
         return self._wrap(Json.dumps(data),
-                          label,
+                          "maass." + label,
                           lang=lang,
                           title='All stored data for Maass form %s,' % (label))
 
     def download_coefficients(self, label, lang='text'):
-        data = db.maass_newforms.lookup(label, projection="coefficients")
+        table = db.maass_rigor
+        data = table.lookup(label, projection=["coefficients", "coefficient_errors"])
         if data is None:
             return abort(404, "Coefficient data for Maass form %s not found in the database" % label)
-        c = data
-        data = [str(c[n]) for n in range(len(c))]
-        return self._wrap(Json.dumps(data).replace('"', ''),
-                          label + '.coefficients',
+        coeffs = data["coefficients"]
+        errors = data["coefficient_errors"]
+        retdata = [str(coeffs[n]) + " +- " + str(errors[n]) for n in range(len(coeffs))]
+        return self._wrap(Json.dumps(retdata).replace('"', ''),
+                          "maass." + label + '.coefficients',
                           lang=lang,
                           title='Coefficients for Maass form %s,' % (label))

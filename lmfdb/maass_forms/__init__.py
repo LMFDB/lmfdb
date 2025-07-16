@@ -1,26 +1,20 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.app import app
 from lmfdb.logger import make_logger
 from flask import Blueprint
 
-maass_page = Blueprint("maass", __name__, template_folder='templates')
-logger = make_logger(maass_page)
 
-@maass_page.context_processor
+maass_forms_page = Blueprint("maass_forms", __name__, template_folder='templates')
+logger = make_logger(maass_forms_page)
+
+
+@maass_forms_page.context_processor
 def body_class():
-    return {'body_class': 'maass'}
+    return {'body_class': 'maass_forms'}
+
 
 from . import main
-assert main # silence pyflakes
+assert main
 
-app.register_blueprint(maass_page, url_prefix="/ModularForm/GL2/Q/Maass")
 
-# API2 has been disabled for now
-#from lmfdb.api2.searchers import register_search_function
-#register_search_function(
-#    "gl2_maass_forms",
-#    "GL2 Maass forms",
-#    "Search over GL2 Maass forms",
-#    auto_search = 'maass_newforms'
-#)
+app.register_blueprint(maass_forms_page, url_prefix="/ModularForm/GL2/Q/Maass")

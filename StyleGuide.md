@@ -1,7 +1,7 @@
 # Style guide
 
 Below, we describe several styling conventions for the LMFDB. See also the
-[Developer's Guide](https://github.com/LMFDB/lmfdb/blob/master/Development.md)
+[Developer's Guide](https://github.com/LMFDB/lmfdb/blob/main/Development.md)
 contains other conventions and information for the development process.
 
 ## General style conventions
@@ -45,7 +45,7 @@ contains other conventions and information for the development process.
 
 - Object page templates should extend homepage.html and include a content block.
 - Every object page should have a properties box, and when relevant/available, a related objects box, and a downloads box.
-- Content should be organized intos sections (with`<h2>` headings).  The first section should contain the information that defines the object, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
+- Content should be organized into sections (with`<h2>` headings).  The first section should contain the information that defines the object, the second section should contain standard invariants associated to the object, and from there they should be ordered from least to most technical/obscure.
 - Content tables that are lists (each row is the same type of thing, e.g. local data at a prime) should use row striping (ntdata table).
 - Content captions should be knowls (or contain a knowl) and be followed by colons.
 - Any invariant listed in the properties box should also appear in the body (or header) of the page -- all information should be visible even with the property box closed.

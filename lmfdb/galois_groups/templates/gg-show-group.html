@@ -10,118 +10,120 @@ table.reptable td, table.reptable th {
 }
 </style>
 
-<p> {{ place_code('gg') }}</p> 
-  <p><h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
+<p> {{ place_code('gg') }}</p>
+
+<h2> {{ KNOWL('gg.invariants', title='Group invariants') }}</h2>
+  <div>
     <table>
-      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:<td>&nbsp;&nbsp;<td>${{info.n}}$</td>
-      <td>{{ place_code('n') }}</td></tr>
+      <tr><td>{{KNOWL('group.small_group_label','Abstract group')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.groupid | safe}}</td>
+        <td>{{place_code('id')}}</td></tr>
+      <tr><td>{{KNOWL('group.order','Order')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.ordermsg }}</td>
+      <td>{{place_code('order')}}</td></tr>
+      <tr><td>{{KNOWL('group.cyclic','Cyclic')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.yesno(info.cyc)}}</td>
+      <td>{{place_code('cyclic')}}</td></tr>
+      <tr><td>{{KNOWL('group.abelian', 'Abelian')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.yesno(info.ab)}}</td>
+      <td>{{place_code('abelian')}}</td></tr>
+      <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.yesno(info.solv)}}</td>
+      <td>{{place_code('solvable')}}</td></tr>
+      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.nilpotency}}</td><td>{{ place_code('nilpotent') }}</td></tr>
+    </table>
+  </div>
+
+  <h2>{{ KNOWL('gg.group_action_invariants', title='Group action invariants') }}</h2>
+    <table>
+      <tr><td>{{KNOWL('gg.degree', 'Degree')}} $n$:</td><td>&nbsp;&nbsp;</td><td>${{info.n}}$</td>
+        <td>{{ place_code('n') }}</td></tr>
       <tr><td class="nowrap">{{KNOWL('gg.tnumber', 'Transitive number')}} $t$:<td>&nbsp;&nbsp;<td>${{info.t}}$</td>
-      <td>{{ place_code('t') }}</td></tr>
-      {% if info.pretty_name %}
-      <tr><td>{{KNOWL('gg.simple_name', title='Group')}}:<td>&nbsp;&nbsp;<td>{{info.pretty_name}}</tr>
-      {% endif %}
+        <td>{{ place_code('t') }}</td></tr>
       {% if info.n < 16 %}
-      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:<td>&nbsp;&nbsp;<td>${{info.name}}$</tr>
+      <tr><td>{{KNOWL('gg.conway_name', title='CHM label')}}:</td><td>&nbsp;&nbsp;</td><td>
+      {% if info.n == 1 %}
+        {{info.name}}
+      {% else %}
+        ${{info.name}}$
       {% endif %}
-      <tr><td>{{KNOWL('gg.parity','Parity')}}:<td>&nbsp;&nbsp;<td>{{info.parity}}
+      </td></tr>
+      {% endif %}
+      <tr><td>{{KNOWL('gg.parity','Parity')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.parity}}</td>
       <td>{{ place_code('even') }}</td></tr>
-      <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.prim)}}</td>
+      <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.yesno(info.prim)}}</td>
       <td>{{ place_code('primitive') }}</td></tr>
-      <td>{{ place_code('nilpotent') }}</td></tr>
-      <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:<td>&nbsp;&nbsp;<td>${{info.auts}}$</td>
+      <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:</td><td>&nbsp;&nbsp;</td><td>${{info.auts}}$</td>
       <td>{{ place_code('auts') }}</td></tr>
-      <tr><td>{{KNOWL('group.generators', 'Generators')}}:<td>&nbsp;&nbsp;<td>{{info.gens}}
+      <tr><td>{{KNOWL('group.generators', 'Generators')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.gens}}</td>
       <td>{{ place_code('gens') }}</td></tr>
     </table>
-  </p>
 
-  <p><h2>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}</h2>
+  <h2>{{KNOWL('gg.resolvents', 'Low degree resolvents')}}</h2>
   <blockquote>
   {{info.resolve|safe}}
 
-<p> Resolvents shown for degrees $\leq {{info.wgg.quotient_bound()}}$
+  <p>Resolvents shown for degrees $\leq {{info.wgg.quotient_bound()}}$</p>
   </blockquote>
 
-  <p><h2>{{ KNOWL('gg.subfields', title='Subfields') }}</h2>
-   <p>
+  <h2>{{ KNOWL('gg.subfields', title='Subfields') }}</h2>
    <blockquote>
     {{info.subinfo|safe}}
    </blockquote>
-   </p>
 
-  <p><h2>{{ KNOWL('gg.other_representations', title='Low degree siblings') }}</h2>
-   <p>
+  <h2>{{ KNOWL('gg.other_representations', title='Low degree siblings') }}</h2>
    <blockquote>
     {{info.otherreps|safe}}
    </blockquote>
    <blockquote>
       {{info.arith_equiv|safe}}
    </blockquote>
-   </p>
 
-  <p><h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy classes') }}</h2>
-   <p>
+  <h2>{{ KNOWL('gg.conjugacy_classes', title='Conjugacy classes') }}</h2>
 
       {% if info.cclasses is defined %}
    <table class="ntdata">
-      <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+      <thead><tr><td>Label</td><td>Cycle Type</td><td>Size</td><td>Order</td><td>{{KNOWL('gg.index', 'Index')}}</td><td>Representative</td></tr></thead>
       <tbody>
         {% for c in info.cclasses %}
-           <tr><td> ${{c[3]}}$</td>
+           <tr>
+              <td> {{c[4]}}</td>
+              <td> ${{c[3]}}$</td>
               <td> ${{c[2]}}$</td>
               <td> ${{c[1]}}$</td>
+              <td> ${{c[5]}}$</td>
               <td> ${{c[0]}}$</td>
            </tr>
         {% endfor %}
       </tbody>
       </table>
+   <p>
+   {{KNOWL('gg.malle_a', "Malle's constant $a(G)$")}}: &nbsp; &nbsp;
+   {% if info.malle_a is not none %}
+   ${{info.malle_a}}$
+   {% else %}
+   not computed
+   {% endif %}
+      {% elif cclasses not in info %}
+        Conjugacy classes not computed
       {% else %}
-        There are {{ info.num_cc }} conjugacy classes of elements.
-        Data not shown.
+        {{ info.cclass_knowl | safe }}
       {% endif %}
    </p>
    <p>{{ place_code('ccs') }}</p>
 
-
-
-
-<p><h2> {{ KNOWL('gg.invariants', title='Group invariants') }}</h2>
-  <div>
-    <table>
-      <tr><td>{{KNOWL('group.order','Order')}}:<td>&nbsp;&nbsp;<td>{{info.ordermsg }}</td>
-      <td>{{place_code('order')}}</td></tr>
-      <tr><td>{{KNOWL('group.cyclic','Cyclic')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.cyc)}}</td>
-      <td>{{place_code('cyclic')}}</td></tr>
-      <tr><td>{{KNOWL('group.abelian', 'Abelian')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.ab)}}</td>
-      <td>{{place_code('abelian')}}</td></tr>
-      <tr><td>{{KNOWL('group.solvable', 'Solvable')}}:<td>&nbsp;&nbsp;<td>{{info.yesno(info.solv)}}</td>
-      <td>{{place_code('solvable')}}</td></tr>
-      <tr><td class="nowrap">{{KNOWL('group.nilpotent', 'Nilpotency class')}}:<td>&nbsp;&nbsp;<td>{{info.nilpotency}}</td>
-      <tr><td>{{KNOWL('group.small_group_label','Label')}}:<td>&nbsp;&nbsp;<td>{{info.groupid | safe}}
-      <td>{{place_code('id')}}</td></tr>
-    </table>
-
-    <table>
-      <tr><td>{{KNOWL('group.complex_character_table', 'Character table')}}:
-      {% if info.chartable is defined %}
-      <td>&nbsp;&nbsp;<td>
-      <pre>
-{{info.chartable}}
-</pre>
+   <h2>{{KNOWL('group.complex_character_table', 'Character table')}}</h2>
+      {% if not info.wgg.can_chartable %}
+        <p>Character table not computed</p>
+      {% elif info.chartable %}
+        {% include 'character-table.html' %}
       {% else %}
-      not available.
+        {{ info.chartable_knowl | safe }}
       {% endif %}
-    </table> </div> </p>
 
   <p>{{place_code('char_table')}}</p>
 
 {% if info.int_reps %}
-<p><h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
-</p>
+<h2>{{ KNOWL('gg.int_modules', title='Indecomposable integral representations') }}</h2>
 <table>
-<tr><td> 
+<tr><td>
 {% if info['int_reps_complete'] > 0 %}
-Complete 
+Complete
 {% else %}
 Partial
 {% endif %}
@@ -129,14 +131,14 @@ list of indecomposable integral representations:
   <p>
   <div>
     <table class="ntdata reptable">
-        <tr><th>{{ KNOWL('gg.int_modules.names', title='Name') }}</th> <th>Dim</th> 
+        <tr><th>{{ KNOWL('gg.int_modules.names', title='Name') }}</th> <th>Dim</th>
         {% for gen in info['int_rep_classes'] %}
           <th> ${{ gen | safe  }} \mapsto $ </th>
         {% endfor %}
         </tr>
     {% for rep in info['int_reps'] %}
       <tr>
-          <td> {{ rep['name'] | safe }} </td> <td> ${{rep['dim'] }}$ </td> 
+          <td> {{ rep['name'] | safe }} </td> <td> ${{rep['dim'] }}$ </td>
         {% for gen in rep['gens'] %}
           <td> ${{ gen | safe  }}$ </td>
         {% endfor %}
@@ -161,5 +163,21 @@ list of indecomposable integral representations:
     </table>
   {% endif %}
 {% endif %}
+
+<h2>{{ KNOWL('gg.regular_extension', title='Regular extensions') }}</h2>
+      {% if not info.wgg.regulars %}
+        <p>Data not computed</p>
+      {% else %}
+      <p>
+        <table>
+        {% for model in info.wgg.regulars %}
+          <tr><td style="vertical-align: top">$f_{ {{ loop.index }} } =$</td>
+              <td> {{ model[0]|safe }}</td></tr>
+          <tr><td></td><td> {{ model[1]|safe }}</td></tr>
+        {% endfor %}
+        </table>
+      </p>
+      {% endif %}
+
 
 {% endblock %}

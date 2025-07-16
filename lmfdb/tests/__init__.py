@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-import unittest2
-from urllib.request import Request, urlopen
+import unittest
+
+from urllib.request import Request, HTTPRedirectHandler, HTTPSHandler, HTTPHandler, build_opener
 from urllib.error import URLError
 import ssl
 import errno
@@ -17,17 +17,33 @@ assert QQ
 assert NumberField
 
 
-class LmfdbTest(unittest2.TestCase):
-    def setUp(self):
+class CustomRedirectHandler(HTTPRedirectHandler):
+    def http_error_308(self, req, fp, code, msg, headers):
+        # Treat 308 like 307 to bypass the check in redirect_request in older Python versions
+        # by passing the code 307.
+        return self.http_error_307(req, fp, 307, msg, headers)
+
+class LmfdbTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
         app.config["TESTING"] = True
-        self.app = app
-        self.tc = app.test_client()
+        # Ensure secret key is set for testing (required for session functionality like flash messages)
+        if not app.secret_key:
+            app.secret_key = "test_secret_key_for_testing_only"
+        cls.app = app
+        cls.tc = app.test_client()
+        cls.app_context = cls.app.app_context()
+        cls.app_context.push()
         import lmfdb.website
 
         assert lmfdb.website
         from lmfdb import db
 
-        self.db = db
+        cls.db = db
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.app_context.pop()
 
     def check(self, homepage, path, text):
         assert path in homepage, "%s not in the homepage" % path
@@ -61,9 +77,23 @@ class LmfdbTest(unittest2.TestCase):
         headers = {"User-Agent": "Mozilla/5.0"}
         context = ssl._create_unverified_context()
         request = Request(path, headers=headers)
-        assert path in homepage
+        assert path in homepage, f"Path {path} not found in homepage"
         try:
-            assert text in urlopen(request, context=context).read().decode("utf-8")
+            # Create opener that follows redirects for both HTTP and HTTPS, including 308
+            redirect_handler = CustomRedirectHandler()
+            http_handler = HTTPHandler()
+            https_handler = HTTPSHandler(context=context)
+            opener = build_opener(redirect_handler, http_handler, https_handler)
+            response = opener.open(request)
+
+            # Check if we were redirected
+            final_url = response.geturl()
+            if final_url != path:
+                print(f"Redirected from {path} to {final_url}")
+
+            response_text = response.read().decode("utf-8")
+
+            assert text in response_text, f"Text '{text}' not found in response from {path} (final URL: {final_url})"
         except URLError as e:
             if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
                 pass
@@ -87,11 +117,13 @@ class LmfdbTest(unittest2.TestCase):
 
         if has_magma:
             if mode == 'equal':
-                assert expected == magma.eval(magma_code)
+                magma_result = magma.eval(magma_code)
+                assert expected == magma_result, f"Expected '{expected}', but magma.eval('{magma_code}') returned '{magma_result}'"
             elif mode == 'in':
-                assert expected in magma.eval(magma_code)
+                magma_result = magma.eval(magma_code)
+                assert expected in magma_result, f"Expected '{expected}' to be in magma.eval('{magma_code}') result '{magma_result}'"
             else:
-                raise ValueError("mode must be either 'equal' or 'in")
+                raise ValueError("mode must be either 'equal' or 'in'")
 
     def check_sage_compiles_and_extract_variables(self, sage_code):
         """

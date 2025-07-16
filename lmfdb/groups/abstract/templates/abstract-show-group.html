@@ -1,7 +1,7 @@
 {% extends "homepage.html" %}
 
-
 {% block content %}
+
 
 <script type="text/javascript" src="{{ url_for('static', filename='groups.js') }}"></script>
 <script type="text/javascript">
@@ -15,6 +15,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
 
 
+
 {% if gp.live() %}
 <p>
   This group is not stored in the database. However, basic information about the group, computed on the fly, is listed below.
@@ -22,7 +23,7 @@
 {% endif %}
 
 
-<h2> Group information</h2>
+<h2>Group information</h2>
 <p>
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
@@ -44,8 +45,7 @@
 </p>
 
 <h2>Group statistics</h2>
-
-<p> {% if gp.order_stats != None %}
+<p> {% if gp.order_stats != None %} 
   <div class="table-scroll-wrapper">
    <table class="ntdata onesticky" style="margin-left:0;">
     <thead>
@@ -67,11 +67,19 @@
       </tr>
       <tr>
         <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
+	{% if gp.cc_known %}
         {% for c in gp.cc_statistics %}
-          <td>{{ c[1] }} </td>
+	<td><a href={{ url_for('.index', group=gp.label, order=c[0], search_type="ConjugacyClasses") }}>{{ c[1] }}</a></td>
+        {% endfor %}
+        <td class="border-left"><a href={{url_for('.index', group=gp.label, search_type="ConjugacyClasses") }}>{{ gp.number_conjugacy_classes }}</td>
+      </tr>
+      {% else %}
+ {% for c in gp.cc_statistics %}
+        <td>{{ c[1] }}</a></td>
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
       </tr>
+      {% endif %}
       {% if not gp.live() %}
       <tr>
         <td>{{KNOWL('group.division', 'Divisions')}}</td>
@@ -107,10 +115,13 @@
         <td colspan="{{gp.order_stats|length}}">data not computed</td>
         <td class="border-left"></td>
       </tr>
+      
       {% endif %}
     </tbody>
   </table>
-  </div> 
+</div>
+{% else %}
+Statistics about orders of elements in this group have not been computed.
   {% endif %}
 </p>
 
@@ -155,7 +166,7 @@
 
 
  {% if not gp.live() %}
-<h2>Minimal Presentations</h2>
+<h2>Minimal presentations</h2>
 
 <table>
   <tr><td>{{KNOWL('group.permutation_degree', 'Permutation degree')}}:</td><td>{{gp.perm_degree()|safe}}</td></tr>
@@ -183,6 +194,16 @@
 {% if not (gp.live() and gp.abelian) %}
 
 <h2>Constructions</h2>
+  {% if code %}<div align="right" style="float: left;">
+            Show commands:
+            {% set slash = joiner("/ ") %}
+            {% for lang in code['show']|sort %}
+            {# override show names for standard languages to ensure consistency #}
+            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else "Gap" if lang == 'gap' else code['show']['lang'] %}
+            {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
+            {% endfor %}
+        </div><br><br>
+    {% endif %}
 
 <table class=nowrap>
   {{ gp.stored_representations | safe }}
@@ -234,7 +255,11 @@
   {% if not gp.live() %}
   <tr>
     <td>{{KNOWL('group.schur_multiplier', 'Schur multiplier')}}:</td>
-    <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td>
+    {% if gp.schur_multiplier is none %}
+      <td>not computed</td>
+    {% else %}
+      <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text() | safe}}$</a></td>
+    {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>

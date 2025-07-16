@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
 
@@ -285,20 +284,20 @@ class Genus2Test(LmfdbTest):
     def test_badprimes_search(self):
         L = self.tc.get("/Genus2Curve/Q/?bad_quantifier=exactly&bad_primes=2%2C3")
         assert "324.a.648.1" in L.get_data(as_text=True)
-        assert not ("450.a.2700.1" in L.get_data(as_text=True))
-        assert not ("169.a.169.1" in L.get_data(as_text=True))
+        assert "450.a.2700.1" not in L.get_data(as_text=True)
+        assert "169.a.169.1" not in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/?bad_quantifier=exclude&bad_primes=2%2C3")
-        assert not ("324.a.648.1" in L.get_data(as_text=True))
-        assert not ("450.a.2700.1" in L.get_data(as_text=True))
+        assert "324.a.648.1" not in L.get_data(as_text=True)
+        assert "450.a.2700.1" not in L.get_data(as_text=True)
         assert "169.a.169.1" in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/?bad_quantifier=include&bad_primes=2%2C3")
         assert "324.a.648.1" in L.get_data(as_text=True)
         assert "450.a.2700.1" in L.get_data(as_text=True)
-        assert not ("169.a.169.1" in L.get_data(as_text=True))
+        assert "169.a.169.1" not in L.get_data(as_text=True)
         L = self.tc.get("/Genus2Curve/Q/?bad_primes=2%2C3")
         assert "324.a.648.1" in L.get_data(as_text=True)
         assert "450.a.2700.1" in L.get_data(as_text=True)
-        assert not ("169.a.169.1" in L.get_data(as_text=True))
+        assert "169.a.169.1" not in L.get_data(as_text=True)
 
     def test_related_objects(self):
         for url, friends in [

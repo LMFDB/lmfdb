@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 r""" Make database lattices and number fields
 
-Note: This code can be run on all files in any order. Even if you 
-rerun this code on previously entered files, it should have no affect.  
-This code checks if the entry exists, if so returns that and updates 
-with new information. If the entry does not exist then it creates it 
+Note: This code can be run on all files in any order. Even if you
+rerun this code on previously entered files, it should have no affect.
+This code checks if the entry exists, if so returns that and updates
+with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
@@ -27,14 +27,14 @@ C['Lattices'].authenticate('editor', password)
 l1 = C.Lattices.lat
 l2 = C.Lattices.lat_nf
 
-saving = True 
+saving = True
 
 
 ## Main importing function
 
 def add_lattice_nf(ll):
     n_field,gram_input = ll
-    gram_input=[[int(i) for i in l] for l in gram_input] 
+    gram_input=[[int(i) for i in l] for l in gram_input]
 
     R = PolynomialRing(QQ, 'x')
     nf_label = poly_to_field_label(R(n_field))
@@ -56,13 +56,13 @@ def add_lattice_nf(ll):
     else:
        lat_label=lattice['label']
        is_lat_in = "yes"
-    
+
     try:
         lab=nf_label+lat_label
     except Exception:
         print(nf_label, lat_label)
         print("fail")
-            
+
     res=l2.find_one({'label': lab })
     if res is None:
         print("new data")

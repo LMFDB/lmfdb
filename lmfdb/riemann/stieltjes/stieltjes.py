@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import sqlite3
 from sage.all import RealField, RealIntervalField, ZZ
@@ -35,16 +34,14 @@ def list_constants(start=None,
 
     if limit < 0:
         limit = 100
-    if limit > 1000:
-        limit = 1000
-    if start < 0:
-        start = 0
+    limit = min(limit, 1000)
+    start = max(start, 0)
     s_constants = stieltjes_list(start, limit)
 
     if fmt == 'plain':
         response = Response(
-                "%d %s %s\n" % (n, str(g), str(c))
-                for (n, g, c) in s_constants)
+            "%d %s %s\n" % (n, str(g), str(c))
+            for n, g, c in s_constants)
         response.headers['content-type'] = 'text/plain'
     else:
         response = str(list(s_constants))
@@ -59,7 +56,7 @@ def stieltjes_list(start, limit):
             'FROM stieltjes WHERE n >= ? LIMIT ?'
     c.execute(query, (start, limit))
     L = []
-    for (n, m, e) in c:
+    for n, m, e in c:
         g = RR(m)*RR(2)**e
         c = (-1)**n * g/RR(n+1).gamma()
         L.append((n, RR(m)*RR(2)**e, c))

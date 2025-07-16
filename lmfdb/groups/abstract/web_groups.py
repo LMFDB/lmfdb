@@ -1,9 +1,11 @@
 import re
 # import timeout_decorator
-
+import os
+import yaml
 from lmfdb import db
 from flask import url_for
 from urllib.parse import quote_plus
+from psycopg2.sql import SQL, Identifier
 
 from sage.all import (
     Permutations,
@@ -21,10 +23,12 @@ from sage.all import (
     lcm,
     is_prime,
     cartesian_product_iterator,
+    exists,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
 from sage.misc.cachefunc import cached_function, cached_method
+from sage.databases.cremona import class_to_int, cremona_letter_code
 from collections import Counter, defaultdict
 from lmfdb.utils import (
     display_knowl,
@@ -43,6 +47,7 @@ nc = "not computed"
 fix_exponent_re = re.compile(r"\^(-\d+|\d\d+)")
 perm_re = re.compile(r"^\(\d+(,\d+)*\)(,?\(\d+(,\d+)*\))*$")
 
+
 def label_sortkey(label):
     L = []
     for piece in label.split("."):
@@ -55,11 +60,14 @@ def label_sortkey(label):
                 L.append(x)
     return L
 
+
 def is_atomic(s):
     return not any(sym in s for sym in [".", ":", r"\times", r"\rtimes", r"\wr"])
 
+
 def sub_paren(s):
     return s if is_atomic(s) else "(%s)" % s
+
 
 def group_names_pretty(label):
     # Avoid using this function if you have the tex_name available without a database lookup
@@ -82,6 +90,7 @@ def group_names_pretty(label):
     else:
         return label
 
+
 def group_pretty_image(label):
     # Avoid using this function if you have the tex_name available without a database lookup
     pretty = group_names_pretty(label)
@@ -93,6 +102,129 @@ def group_pretty_image(label):
     if img:
         return str(img)
     # we should not get here
+
+
+def create_gens_list(genslist):
+    # For Magma
+    gens_list = [f"G.{i}" for i in genslist]
+    return str(gens_list).replace("'", "")
+
+
+def create_gap_assignment(genslist):
+    # For GAP
+    return " ".join(f"{var_name(j)} := G.{i};" for j, i in enumerate(genslist))
+
+
+def create_magma_assignment(G):
+    used = [u - 1 for u in sorted(G.gens_used)]
+    rel_ords = [ZZ(p) for p in G.PCG.FamilyPcgs().RelativeOrders()]
+    ngens = len(used)
+    names = []
+    for j, i in enumerate(used):
+        if j == ngens - 1:
+            icap = len(rel_ords)
+        else:
+            icap = used[j+1]
+        power = 1
+        v = var_name(j)
+        for i0 in range(i, icap):
+            if power == 1:
+                names.append(v)
+            else:
+                names.append(f"{v}{power}")
+            power *= rel_ords[i0]
+    return str(names).replace("'", '"')
+
+
+def split_matrix_list(longList, d):
+    # for code snippets, turns d^2 list into d lists of length d for Gap matrices
+    return [longList[i:i+d] for i in range(0, d**2, d)]
+
+
+def split_matrix_list_ZN(longList, d, Znfld):
+    longList = [f"ZmodnZObj({x},{Znfld})" for x in longList]
+    return str([longList[i:i+d] for i in range(0, d**2, d)]).replace("'", "")
+
+
+def split_matrix_list_Fp(longList, d, e):
+    return [longList[i:i+d]*e for i in range(0, d**2, d)]
+
+
+def split_matrix_list_Fq(longList, d, Fqfld):
+    # for gap definition of Fq
+    longList = [f"0*Z({Fqfld})" if x == -1 else f"Z({Fqfld})^{x}" for x in longList]  #-1 distinguishes 0 from z^0
+    return str([longList[i:i+d] for i in range(0, d**2, d)]).replace("'", "")
+
+
+def split_matrix_Fq_add_al(longList, d):
+    # for magma definition of Fq
+    longList = [0 if x == -1 else 1 if x == 0 else f"al^{x}" for x in longList]
+    return str([longList[i:i+d] for i in range(0, d**2, d)]).replace("'", "")
+
+
+# Functions below are for conjugacy class searches
+def gp_label_to_cc_data(gp):
+    gp_ord, gp_counter = gp.split(".")
+    gp_order = int(gp_ord)
+    if re.fullmatch(r'\d+', gp_counter):
+        return gp_order, int(gp_counter)
+    return gp_order, class_to_int(gp_counter) + 1
+
+
+# mimics magma IsInSmallGroupDatabase
+def in_small_gp_db(order):
+    if order == 1024:
+        return False
+    if order <= 2000 or order in {2187, 6561, 3125, 2401}:
+        return True
+    f = factor(order)
+    if all(f[i][1] == 1 and f[i][0] < 1073741824 for i in range(len(f))):
+        return True
+    if len(f) == 2:
+        pairs, n = exists((i for i in {0,1}), lambda i: f[i][1] == 1)
+        if pairs:
+            p = f[1-n]
+            if ( p[1] <= 2 or p[0] == 2 and p[1] <= 8
+                  or p[0] == 3 and p[1] <= 6
+                  or p[0] == 5 and p[1] <= 5
+                  or p[0] == 7 and p[1] <= 4 ):
+                return True
+    if len(f) <= 3 and sum([p[1] for p in f]) == 4:
+        return True
+    if len(f) == 1 and f[0][1] <= 7:
+        return True
+    return False
+
+@cached_function
+def groups_from_missing_orders():
+    # There was a casting problem comparing smallint[] and the arrays
+    return set(x[0] for x in db._execute(SQL("SELECT label, factors_of_order, exponents_of_order FROM gps_groups WHERE {0} > 2000 AND (exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint [] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[] OR exponents_of_order = %s::smallint[])").format(Identifier("order")), [[8],[7],[4],[3,1],[2,2],[2,1,1],[1,1,1,1]]) if (x[1] == [3] and x[2] == [8] or x[1][0] > 11 and x[2] == [7] or x[2] == [4] or len(x[2]) > 1))
+
+# determine groups which are identified in Magma but not Gap
+@cached_function
+def missing_subs(n_or_label):
+    if isinstance(n_or_label, str):
+        if n_or_label in groups_from_missing_orders():
+            return False
+        n = ZZ(n_or_label.split(".")[0])
+    else:
+        n = ZZ(n_or_label)
+    if n == 6561:
+        return True
+    f = factor(n)
+    if n > 2000:
+        if sum(e for p,e in f) == 4:
+            return True
+        if len(f) == 1 and f[0][1] == 7 and f[0][0] > 11:
+            return True
+    return False
+
+
+def cc_data_to_gp_label(order,counter):
+    if in_small_gp_db(order):
+        return str(order) + '.' + str(counter)
+    return str(order) + '.' + cremona_letter_code(counter-1)
+
 
 @cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
 def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
@@ -124,8 +256,8 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 def primary_to_smith(invs):
-    if invs==[]:
-        return([])
+    if not invs:
+        return []
     by_p = defaultdict(list)
     for q in invs:
         p, _ = q.is_prime_power(get_data=True)
@@ -140,7 +272,7 @@ def abelian_gp_display(invs):
         return "C_1"
     return r" \times ".join(
         ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
-        for (q, e) in Counter(invs).items()
+        for q, e in Counter(invs).items()
     )
 
 def product_sort_key(sub):
@@ -179,9 +311,9 @@ def abelian_get_elementary(snf):
 
 
 def compress_perm(perms, cutoff=150, sides=70):
-    if len(perms) < cutoff or sides >=cutoff:
-        return r'$\langle'+ perms + r'\rangle$'
-    short_perm = r'$\langle'+ perms[:sides]
+    if len(perms) < cutoff or sides >= cutoff:
+        return r'$\langle' + perms + r'\rangle$'
+    short_perm = r'$\langle' + perms[:sides]
     while perms[sides] != ")":  # will always have ")" as long as sides < cutoff (see above)
         short_perm = short_perm + perms[sides]
         sides += 1
@@ -192,7 +324,7 @@ def compress_perm(perms, cutoff=150, sides=70):
 def compress_pres(pres, cutoff=150, sides=70):
     if len(pres) < cutoff:
         return f"${pres}$"
-    short_pres = '${'+ pres[:sides]
+    short_pres = '${' + pres[:sides]
     while pres[sides] != "=" and sides < len(pres)-1:
         short_pres = short_pres + pres[sides]
         sides += 1
@@ -257,7 +389,6 @@ class WebAbstractGroup(WebObj):
 
     # We support some basic information for groups not in the database using GAP
     def live(self):
-        # return not self.source == "db"
         return self._data is not None and not isinstance(self._data, dict)
 
     @lazy_attribute
@@ -283,11 +414,35 @@ class WebAbstractGroup(WebObj):
             elif isinstance(self._data, GapElement):
                 return self._data
         # Reconstruct the group from the stored data
-        if self.order == 1 or self.element_repr_type == "PC":  # trvial
+        if self.order == 1 or self.element_repr_type == "PC":  # trivial
             return self.PCG
         else:
-            gens = [self.decode(g) for g in self.representations[self.element_repr_type]["gens"]]
+            if self.element_repr_type == "Lie":   #need to take first entry of Lie type
+                gens = [self.decode(g) for g in self.representations[self.element_repr_type][0]["gens"]]
+            else:
+                gens = [self.decode(g) for g in self.representations[self.element_repr_type]["gens"]]
             return libgap.Group(gens)
+
+    def G_gens(self):
+        # Generators for the gap group G
+        G = self.G
+        rep_type = self.element_repr_type
+        repn = self.representations[rep_type]
+        if self.order == 1:
+            gens = []
+        elif rep_type == "PC":
+            gens = G.GeneratorsOfGroup()
+            gens = [gens[z-1] for z in repn['gens']]
+        elif rep_type == "Perm":
+            n = repn["d"]
+            gens = [SymmetricGroup(n)(Permutations(n).unrank(z)) for z in repn["gens"]]
+        elif rep_type == "Lie":
+            # problems here
+            # projective groups need to be accounted for
+            gens = [self.decode(g) for g in repn[0]["gens"]]
+        elif rep_type in ['GLZ', 'GLFp','GLZN','GLZq','GLFq']:
+            gens = [self.decode(g) for g in repn["gens"]]
+        return gens
 
     @lazy_attribute
     def PCG(self):
@@ -535,10 +690,19 @@ class WebAbstractGroup(WebObj):
         return self.outer_group
 
     @lazy_attribute
+    def num_primes_for_power_maps(self):
+        #        self._set_aut_data()
+        return len(self.factors_of_order)
+
+    @lazy_attribute
     def number_conjugacy_classes(self):
         if self.abelian:
             return self.order
         return len(self.conjugacy_classes)
+
+    @lazy_attribute
+    def cc_known(self):
+        return db.gps_conj_classes.exists({'group_order': self.order, 'group_counter': self.counter})
 
     @lazy_attribute
     def element_repr_type(self):
@@ -564,6 +728,38 @@ class WebAbstractGroup(WebObj):
         if self.source == "LiveAbelian":
             return primary_to_smith(self.G.AbelianInvariants())
         return primary_to_smith(self.primary_abelian_invariants)
+
+    @lazy_attribute
+    def nick_name(self):
+        if self.label == '7920.a':
+            return r'Mathieu group $M_{11}$'
+        if self.label == '95040.a':
+            return r'Mathieu group $M_{12}$'
+        if self.label == '443520.a':
+            return r'Mathieu group $M_{22}$'
+        if self.label == '10200960.a':
+            return r'Mathieu group $M_{23}$'
+        if self.label == '244823040.a':
+            return r'Mathieu group $M_{24}$'
+        if self.label == '17556.a':
+            return r'Janko group $J_1$'
+        if self.label == '60480.a':
+            return r'Janko group $J_2$'
+        if self.label == '50232960.a':
+            return r'Janko group $J_3$'
+        if self.label == '44352000.a':
+            return r'Higman-Sims group'
+        if self.label == '898128000.a':
+            return r'McLaughlin group'
+        if self.label == '4030387200.a':
+            return r'Held group'
+        if self.label == '145926144000.a':
+            return r'Rudvalis group'
+        if self.label == '495766656000.a':
+            return r'Conway group $\mathrm{Co}_3$'
+        if self.label == '42305421312000.a':
+            return r'Conway group $\mathrm{Co}_2$'
+        return f'${self.tex_name}$'
 
     @lazy_attribute
     def tex_name(self):
@@ -778,11 +974,17 @@ class WebAbstractGroup(WebObj):
                         ov = None
         return ans
 
+    def label_compress(self):
+        spl_label = self.label.split('.')
+        if len(spl_label[0]) > 12:
+            spl_label[0] = spl_label[0][:3] + "..." + spl_label[0][-3:]
+        return ".".join(spl_label)
+
     def properties(self):
         nilp_str = "yes" if self.nilpotent else "no"
         solv_str = "yes" if self.solvable else "no"
         props = [
-            ("Label", self.label),
+            ("Label", self.label_compress()),
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
@@ -816,7 +1018,7 @@ class WebAbstractGroup(WebObj):
                 props.extend([(r"$\card{Z(G)}$", "not computed")])
 
             if self.aut_order is None:
-                  props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
+                props.extend([(r"$\card{\mathrm{Aut}(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -826,7 +1028,7 @@ class WebAbstractGroup(WebObj):
                     pass
 
             if self.outer_order is None:
-                  props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
+                props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -868,20 +1070,20 @@ class WebAbstractGroup(WebObj):
             if self.number_normal_subgroups is None:
                 return " "
             elif self.number_characteristic_subgroups is None:
-                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
+                return """There are <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ + str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
             else:
-                ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ +str(self.number_normal_subgroups) + """ normal subgroups</a>"""
+                ret_str = """ There are  <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ + str(self.number_normal_subgroups) + """ normal subgroups</a>"""
                 if self.number_characteristic_subgroups < self.number_normal_subgroups:
                     ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + " characteristic</a>).<p>"+charcolor+"  "+normalcolor
                 else:
-                    ret_str=ret_str+ ", and all normal subgroups are characteristic.<p>"+charcolor
+                    ret_str = ret_str + ", and all normal subgroups are characteristic.<p>"+charcolor
                 return ret_str
         elif self.number_normal_subgroups < self.number_subgroups:
-            ret_str =  "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes'))+ """ "> """ +str(self.number_normal_subgroups) + """ normal</a>"""
+            ret_str = "There are " + str(self.number_subgroups) + """ subgroups in <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroup_classes) + """ conjugacy classes</a>, <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, normal='yes')) + """ "> """ + str(self.number_normal_subgroups) + """ normal</a>"""
         else:
-            ret_str = """ There are  <a href=" """ +str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ +str(self.number_subgroups) + """ subgroups</a>, all normal"""
+            ret_str = """ There are  <a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label)) + """ "> """ + str(self.number_subgroups) + """ subgroups</a>, all normal"""
         if self.number_characteristic_subgroups < self.number_normal_subgroups:
-            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes'))+ """ ">""" + str(self.number_characteristic_subgroups) + """ characteristic</a>).<p>"""+charcolor+" "+normalcolor
+            ret_str = ret_str + """ (<a href=" """ + str(url_for('.index', search_type='Subgroups', ambient=self.label, characteristic='yes')) + """ ">""" + str(self.number_characteristic_subgroups) + """ characteristic</a>).<p>"""+charcolor+" "+normalcolor
         else:
             ret_str = ret_str + ", and all normal subgroups are characteristic. <p>"+charcolor
         return ret_str
@@ -890,9 +1092,13 @@ class WebAbstractGroup(WebObj):
     def subgroups(self):
         if not self.has_subgroups:
             return None
+        subs = {subdata["label"]: subdata
+                for subdata in db.gps_subgroup_search.search({"ambient": self.label})}
+        for rec in db.gps_subgroup_data.search({"ambient": self.label}):
+            subs[rec["label"]].update(rec)
         subs = {
             subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
-            for subdata in db.gps_subgroups.search({"ambient": self.label})
+            for subdata in subs.values()
         }
         if self.subgroup_inclusions_known:
             self.add_layers(subs)
@@ -983,7 +1189,7 @@ class WebAbstractGroup(WebObj):
             # Python 3 won't compare None with strings
             return sum(([c is None, c] for c in x), [])
         for order, subs in by_order.items():
-            by_order[order] = sorted(((cnt,) + k for (k, cnt) in subs.items()), key=sort_key, reverse=True)
+            by_order[order] = sorted(((cnt,) + k for k, cnt in subs.items()), key=sort_key, reverse=True)
         return sorted(by_order.items(), key=lambda z: -z[0]) # largest order first
 
     @lazy_attribute
@@ -1011,7 +1217,7 @@ class WebAbstractGroup(WebObj):
             by_order = defaultdict(Counter)
             for s in self.subgroups.values():
                 if s.normal:
-                     by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex, s.quotient, s.quotient_hash, s.quotient_tex, s.quotient_order] += s.conjugacy_class_count
             if self.normal_counts is not None:
                 for d, cnt in zip(self.order.divisors(), self.normal_counts):
                     if cnt and cnt > sum(by_order[d].values()):
@@ -1059,7 +1265,7 @@ class WebAbstractGroup(WebObj):
             return sep.join(l)
 
         if profile is not None:
-            return [(order, display_profile_line(order, subs)) for (order, subs) in profile]
+            return [(order, display_profile_line(order, subs)) for order, subs in profile]
 
     @cached_method
     def _normal_summary(self):
@@ -1069,19 +1275,22 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def subgroup_order_bound(self):
-        if self.subgroup_index_bound == 0:
+        if self.subgroup_index_bound == 0 or self.subgroup_index_bound is None:
             return 1
         return self.order // self.subgroup_index_bound
 
     @cached_method
     def _subgroup_summary(self, in_profile):
+        if self.subgroup_index_bound is None:
+            # No subgroups computed
+            return "Subgroup data has not been computed"
         if self.subgroup_index_bound != 0:
             if self.normal_index_bound is None or self.normal_index_bound == 0:
-                return f"All subgroup of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as all normal subgroups of any index. <br>"
-            elif self.normal_order_bound !=0:
-                return f"All subgroup of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound} or of order up to {self.normal_order_bound}. <br>"
+                return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as all normal subgroups of any index. <br>"
+            elif self.normal_order_bound != 0:
+                return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound} or of order up to {self.normal_order_bound}. <br>"
             else:
-                return f"All subgroup of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound}. <br>"
+                return f"All subgroups of index up to {self.subgroup_index_bound} (order at least {self.subgroup_order_bound}) are shown, as well as normal subgroups of index up to {self.normal_index_bound}. <br>"
             # TODO: add more verbiage here about Sylow subgroups, maximal subgroups, explain when we don't know subgroups up to automorphism/conjugacy, etc
         return ""
 
@@ -1119,7 +1328,7 @@ class WebAbstractGroup(WebObj):
             return n
         if sub_all == "subgroup":
             if sub_aut:
-                subs = [H for H in self.subgroups.values() if (H.quotient_order <= self.subgroup_index_bound) or (self.subgroup_index_bound==0)]
+                subs = [H for H in self.subgroups.values() if (H.quotient_order <= self.subgroup_index_bound) or (self.subgroup_index_bound == 0)]
                 if any(H.aut_label is None or H.diagramx is None for H in subs):
                     # We don't know subgroups up to automorphism or can't lay out the subgroups
                     return 0
@@ -1128,7 +1337,7 @@ class WebAbstractGroup(WebObj):
                 if self.outer_equivalence:
                     # We don't know subgroups up to conjugacy
                     return 0
-                subs = [H for H in self.subgroups.values() if (H.quotient_order <= self.subgroup_index_bound) or (self.subgroup_index_bound==0)]
+                subs = [H for H in self.subgroups.values() if (H.quotient_order <= self.subgroup_index_bound) or (self.subgroup_index_bound == 0)]
                 if any(H.diagramx is None for H in subs):
                     # No layout computed
                     return 0
@@ -1213,10 +1422,9 @@ class WebAbstractGroup(WebObj):
                 return [h for h in G.normal_contains if test(subs[h])]
         nodes = [H for H in subs.values() if test(H)]
         if self.outer_equivalence or not sub_aut:
-            edges = []
-            for G in nodes:
-                for h in contains(G):
-                    edges.append([h, G.short_label])
+            edges = [[h, G.short_label]
+                     for G in nodes
+                     for h in contains(G)]
         else:
             # Subgroups are stored up to conjugacy but we want them up to automorphism.
             # We pick a rep from each autjugacy class
@@ -1246,11 +1454,6 @@ class WebAbstractGroup(WebObj):
 
     def fullpage_links(self, getpositions=False):
         s = ""
-        if getpositions:
-            s += '<button onclick="getpositions()">Get positions</button><br>\n'
-            s += '<p><div id="positions"></div></p>\n'
-#        s += '<div>\nEach subgroup order has its own level?\n'
-#        s += '<input type="checkbox" id="orderForHeight" onchange="toggleheight()" />\n</div>\n'
         for sub_all in ["subgroup", "normal"]:
             for sub_aut in ["", "aut"]:
                 cls = f'{sub_all}_{sub_aut}diagram'
@@ -1301,7 +1504,7 @@ class WebAbstractGroup(WebObj):
             return cl
         cl = [
             WebAbstractConjClass(self.label, ccdata["label"], ccdata)
-            for ccdata in db.gps_groups_cc.search({"group": self.label})
+            for ccdata in db.gps_conj_classes.search({"group_order": self.order, "group_counter": self.counter})
         ]
         divs = defaultdict(list)
         autjs = defaultdict(list)
@@ -1406,33 +1609,8 @@ class WebAbstractGroup(WebObj):
 </table>"""
         return table
 
-    @lazy_attribute
-    def maximal_subgroup_of(self):
-        # Could show up multiple times as non-conjugate maximal subgroups in the same ambient group
-        # So we should eliminate duplicates from the following list
-        return [
-            WebAbstractSupergroup(self, "sub", supdata["label"], supdata)
-            for supdata in db.gps_subgroups.search(
-                {"subgroup": self.label, "maximal": True},
-                sort=["ambient_order", "ambient"],
-                limit=10,
-            )
-        ]
-
-    @lazy_attribute
-    def maximal_quotient_of(self):
-        # Could show up multiple times as a quotient of different normal subgroups in the same ambient group
-        # So we should eliminate duplicates from the following list
-        return [
-            WebAbstractSupergroup(self, "quo", supdata["label"], supdata)
-            for supdata in db.gps_subgroups.search(
-                {"quotient": self.label, "minimal_normal": True},
-                sort=["ambient_order", "ambient"],
-            )
-        ]
-
     def most_product_expressions(self):
-        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.as_aut_gp))
+        return max(1, len(self.semidirect_products), len(self.nonsplit_products), len(self.possibly_split_products), len(self.as_aut_gp))
 
     @lazy_attribute
     def display_direct_product(self):
@@ -1460,7 +1638,7 @@ class WebAbstractGroup(WebObj):
                         break
             # What if the subgroup doesn't have information?
             for c in C:
-                if not c in sort_key:
+                if c not in sort_key:
                     cgroup = WebAbstractGroup(c)
                     sort_key[c] = (
                         not cgroup.abelian,
@@ -1473,7 +1651,7 @@ class WebAbstractGroup(WebObj):
             df = sorted(self.direct_factorization, key=lambda x: sort_key[x[0]])
             s = r" $\, \times\, $ ".join(
                 "%s%s" % (latex_lookup[label], r" ${}^%s$ " % e if e > 1 else "")
-                for (label, e) in df
+                for label, e in df
             )
         return s
 
@@ -1483,17 +1661,17 @@ class WebAbstractGroup(WebObj):
             return None
         wpd = self.wreath_data
         from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
-        if len(wpd)==3:
+        if len(wpd) == 3:
             [A, B, nt] = wpd
             # try to guess actual group for A from the latex
             cn_re = re.compile(r'^C_\{?(\d+)\}?$')
-            cn_match= cn_re.match(A)
+            cn_match = cn_re.match(A)
             if cn_match:
                 order = cn_match.group(1)
                 Agroup = db.gps_groups.lucky({'order':int(order), 'cyclic':True})
                 A = Agroup['label']
                 A = abstract_group_display_knowl(Agroup['label'])
-            elif A=='S_3':
+            elif A == 'S_3':
                 A = abstract_group_display_knowl('6.1')
             else:
                 A = rf'${sub_paren(A)}$ '
@@ -1507,7 +1685,7 @@ class WebAbstractGroup(WebObj):
             B = [z for z in allsubs if z.short_label == B][0]
             B = B.subgroup_tex_parened
             B = transitive_group_display_knowl(nt, rf'${B}$')
-        return A+r"$\ \wr\ $"+ B
+        return A+r"$\ \wr\ $" + B
 
     @lazy_attribute
     def semidirect_products(self):
@@ -1533,7 +1711,7 @@ class WebAbstractGroup(WebObj):
         nonsplit = []
         subs = defaultdict(list)
         for sub in self.subgroups.values():
-            if sub.normal and not sub.split:
+            if sub.normal and (sub.split == False):
                 pair = (sub.subgroup, sub.quotient)
                 if pair not in subs:
                     nonsplit.append(sub)
@@ -1542,6 +1720,23 @@ class WebAbstractGroup(WebObj):
         for V in subs.values():
             V.sort(key=label_sortkey)
         return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in nonsplit]
+
+    @lazy_attribute
+    def possibly_split_products(self):
+        if not self.has_subgroups:
+            return None
+        possibly = []
+        subs = defaultdict(list)
+        for sub in self.subgroups.values():
+            if sub.normal and (sub.split is None):
+                pair = (sub.subgroup, sub.quotient)
+                if pair not in subs:
+                    possibly.append(sub)
+                subs[pair].append(sub.short_label)
+        possibly.sort(key=product_sort_key)
+        for V in subs.values():
+            V.sort(key=label_sortkey)
+        return [(sub, len(subs[sub.subgroup, sub.quotient]), subs[sub.subgroup, sub.quotient]) for sub in possibly]
 
     @lazy_attribute
     def as_aut_gp(self):
@@ -1604,6 +1799,8 @@ class WebAbstractGroup(WebObj):
         return data
 
     def schur_multiplier_text(self):
+        if self.schur_multiplier is None:
+            return "not computed"
         if not self.schur_multiplier:
             return "C_1"
         entries = []
@@ -1615,22 +1812,23 @@ class WebAbstractGroup(WebObj):
         return r" \times ".join(entries)
 
     def schur_multiplier_label(self):
-        if self.schur_multiplier:
-            return ".".join(str(e) for e in self.schur_multiplier)
-        else:  # trivial group has to be handled separately
-            return "1"
+        if self.schur_multiplier is not None:
+            if self.schur_multiplier:
+                return ".".join(str(e) for e in self.schur_multiplier)
+            else:  # trivial group has to be handled separately
+                return "1"
 
     @lazy_attribute
     def rep_dims(self):
         # Dimensions that occur for either a rational or complex irreducible character
         return sorted(
-            set([d for (d,cnt) in self.irrep_stats]
-                + [d for (d,cnt) in self.ratrep_stats]))
+            set([d for d, cnt in self.irrep_stats]
+                + [d for d, cnt in self.ratrep_stats]))
 
     @lazy_attribute
     def irrep_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
-        return [(ZZ(d), ZZ(cnt)) for (d, cnt) in self.G.CharacterDegrees()]
+        return [(ZZ(d), ZZ(cnt)) for d, cnt in self.G.CharacterDegrees()]
 
     @lazy_attribute
     def irrep_statistics(self):
@@ -1656,14 +1854,14 @@ class WebAbstractGroup(WebObj):
     def cc_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
         if self.abelian:
-            return [[o, 1, cnt] for (o, cnt) in self.order_stats]
+            return [[o, 1, cnt] for o, cnt in self.order_stats]
         D = Counter([(cc.order, cc.size) for cc in self.conjugacy_classes])
-        return sorted((o, s, m) for ((o, s), m) in D.items())
+        return sorted((o, s, m) for (o, s), m in D.items())
 
     @lazy_attribute
     def cc_statistics(self):
         D = Counter()
-        for (o, s, m) in self.cc_stats:
+        for o, s, m in self.cc_stats:
             D[o] += m
         return sorted(D.items())
 
@@ -1673,12 +1871,12 @@ class WebAbstractGroup(WebObj):
         D = Counter()
         for div in self.conjugacy_class_divisions:
             D[div.order, len(div.classes), div.classes[0].size] += 1
-        return sorted((o, s, k, m) for ((o, s, k), m) in D.items())
+        return sorted((o, s, k, m) for (o, s, k), m in D.items())
 
     @lazy_attribute
     def div_statistics(self):
         D = Counter()
-        for (o, s, k, m) in self.div_stats:
+        for o, s, k, m in self.div_stats:
             D[o] += m
         return sorted(D.items())
 
@@ -1688,16 +1886,15 @@ class WebAbstractGroup(WebObj):
         D = Counter()
         for c in self.autjugacy_classes:
             D[c.order, len(c.classes), c.classes[0].size] += 1
-        return sorted((o, s, k, m) for ((o, s, k), m) in D.items())
+        return sorted((o, s, k, m) for (o, s, k), m in D.items())
 
     @lazy_attribute
     def aut_statistics(self):
         if self.aut_stats is None:
             return None
-        else:
-           D = Counter()
-           for (o, s, k, m) in self.aut_stats:
-               D[o] += m
+        D = Counter()
+        for o, s, k, m in self.aut_stats:
+            D[o] += m
         return sorted(D.items())
 
     @lazy_attribute
@@ -1708,7 +1905,41 @@ class WebAbstractGroup(WebObj):
     def pcgs_relative_orders(self):
         return [ZZ(c) for c in self.pcgs.RelativeOrders()]
 
-    def decode_as_pcgs(self, code, as_str=False):
+    # as_magma is for downloads where we need "a*b" not "ab"
+    def pcgs_expos_to_str(self, vec, as_magma=False):
+        w = []
+        e = 0
+        # We need to shift the relative orders by 1, since we're multiplying on the previous pass of the for loop
+        relords = [1] + self.pcgs_relative_orders[:-1]
+        for i, (c, m) in reversed(list(enumerate(zip(vec, relords)))):
+            e += c
+            if i + 1 in self.gens_used:
+                w.append(e)
+                e = 0
+            else:
+                e *= m
+        w.reverse()
+        s = ""
+        for i, c in enumerate(w):
+            if c == 1:
+                s += var_name(i)
+                if as_magma:
+                    s += "*"
+            elif c != 0:
+                s += "%s^{%s}" % (var_name(i), c)
+                if as_magma:
+                    s += "*"
+        if as_magma:
+            s = s[:-1] # need to get rid of last "*"
+        return s
+
+    def pcgs_as_str(self, elt, as_magma=False):
+        # take an element of a pcgs in GAP and make our string form
+        if elt == '':
+            return ''
+        return self.pcgs_expos_to_str(self.pcgs.ExponentsOfPcElement(elt),as_magma)
+
+    def decode_as_pcgs(self, code, as_str=False, as_magma=False):
         # Decode an element
         vec = []
         if code < 0 or code >= self.order:
@@ -1719,23 +1950,7 @@ class WebAbstractGroup(WebObj):
             code = code // m
         if as_str:
             # Need to combine some generators
-            w = []
-            e = 0
-            for i, (c, m) in reversed(list(enumerate(zip(vec, reversed(self.pcgs_relative_orders))))):
-                e += c
-                if i + 1 in self.gens_used:
-                    w.append(e)
-                    e = 0
-                else:
-                    e *= m
-            w.reverse()
-            s = ""
-            for i, c in enumerate(w):
-                if c == 1:
-                    s += var_name(i)
-                elif c != 0:
-                    s += "%s^{%s}" % (var_name(i), c)
-            return s
+            return self.pcgs_expos_to_str(vec, as_magma)
         else:
             return self.pcgs.PcElementByExponents(vec)
 
@@ -1784,14 +1999,20 @@ class WebAbstractGroup(WebObj):
             q = ZZ(rep_data["q"])
             if sq_flag:
                 q = q**2
-            R = rf"\F_{{{q}}}" if as_str else GF(q)
+            if as_str:
+                R = rf"\F_{{{q}}}"
+            else:
+                R = GF(q, modulus="primitive", names=('a',))
             N, k = q.is_prime_power(get_data=True)
             if k == 1:
                 # Might happen for Lie
                 rep_type = "GLFp"
         return R, N, k, d, rep_type
 
-    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False):
+    def decode_as_matrix(self, code, rep_type, as_str=False, LieType=False, ListForm=False, GLFq_logs=None):
+        if GLFq_logs is None:
+            GLFq_logs = as_str or ListForm
+        # ListForm is for code snippet
         if rep_type == "GLZ" and not isinstance(code, int):  # decimal here represents an integer encoding b
             a, b = str(code).split(".")
             code = int(a)
@@ -1802,6 +2023,10 @@ class WebAbstractGroup(WebObj):
             d = rep_data["d"]
         else:
             R, N, k, d, rep_type = self._matrix_coefficient_data(rep_type)
+            if rep_type == "GLFq":
+                q = N**k
+                R = GF(q, modulus="primitive", names=('a',))
+                a = R.gen()  # need a for powers
         L = ZZ(code).digits(N)
 
         def pad(X, m):
@@ -1809,26 +2034,65 @@ class WebAbstractGroup(WebObj):
         L = pad(L, k * d**2)
         if rep_type == "GLFq":
             L = [R(L[i:i+k]) for i in range(0, k*d**2, k)]
+            if GLFq_logs:
+                L = [l.log(a) if l != 0 else -1 for l in L]  #-1 represents 0, to distinguish from  a^0
         elif rep_type == "GLZ":
             shift = (N - 1) // 2
             L = [c - shift for c in L]
-        x = matrix(R, d, d, L)
+        if ListForm:
+            return L  #as ints representing powers of primitive element if GLFq
+        if rep_type == "GLFq" and GLFq_logs:
+            x = matrix(ZZ, d, d, L)  #giving powers of alpha (primitive element)
+        else:
+            x = matrix(R, d, d, L)
         if as_str:
             # for projective families, we add "[ ]"
             if LieType and self.representations["Lie"][0]["family"][0] == "P":
-                return r"\left[" + latex(x) + "\\right]"
+                return r"\left[" + latex(x) + r"\right]"
+            if rep_type == "GLFq":  #need to customize latex command for GLFq
+                ls = 'l'*d
+                st_latex = r'\left(\begin{array}{'+ls+'}'
+                for i, entrylog in enumerate(L):
+                    if entrylog > 1:
+                        st_latex += rf'\alpha^{{{entrylog}}}'
+                    elif entrylog == 1:
+                        st_latex += r'\alpha'
+                    elif entrylog == 0:
+                        st_latex += "1"
+                    else:
+                        st_latex += "0"
+                    if (i + 1) % d == 0:
+                        st_latex += r' \\ '
+                    else:
+                        st_latex += ' & '
+                st_latex += r'\end{array}\right)'
+                return st_latex
             return latex(x)
         return x
 
-    def decode(self, code, rep_type=None, as_str=False):
+    # as_magma is for downloading.  Will automatically set as_str to True
+    def decode(self, code, rep_type=None, as_str=False, as_magma=False):
         if rep_type is None:
             rep_type = self.element_repr_type
         if rep_type == "Perm":
+            if as_magma:
+                raw_output = self.decode_as_perm(code, as_str=True)
+                if raw_output == "()":
+                    return "Id(G)"
+                return "G!" + raw_output
             return self.decode_as_perm(code, as_str=as_str)
         elif rep_type == "PC":
+            if as_magma:   #need to postprocess magma a bit
+                if code == 0:
+                    return "Id(G)"
+                default_str = self.decode_as_pcgs(code, as_str=True, as_magma=True)
+                default_str = default_str.replace("{","").replace("}","")
+                return default_str
+            if code == 0 and as_str:
+                return "1"
             return self.decode_as_pcgs(code, as_str=as_str)
         else:
-            return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str, LieType=(rep_type=="Lie"))
+            return self.decode_as_matrix(code, rep_type=rep_type, as_str=as_str, LieType=(rep_type == "Lie"))
 
     @lazy_attribute
     def pc_code(self):
@@ -1840,16 +2104,13 @@ class WebAbstractGroup(WebObj):
             return list(range(1, 1 + len(self.G.GeneratorsOfGroup())))
         return self.representations["PC"]["gens"]
 
-    def show_subgroup_flag(self):
-        if self.representations.get("Lie"):
-            if self.representations["Lie"][0]["family"][0] == "P" and self.order < 2000: # Issue with projective Lie groups
-                return False
-        return True
-
     def show_subgroup_generators(self, H):
         if H.subgroup_order == 1:
             return ""
-        return ", ".join(self.decode(g, as_str=True) for g in H.generators)
+        gens = ", ".join(self.decode(g, as_str=True) for g in H.generators)
+        if self.element_repr_type == "Perm":
+            return raw_typeset(gens,compress_perm(gens))
+        return raw_typeset(gens,"$" + gens + "$")
 
     # @lazy_attribute
     # def fp_isom(self):
@@ -1923,8 +2184,9 @@ class WebAbstractGroup(WebObj):
         relators = ", ".join(rel_powers + relators)
         return r"\langle %s \mid %s \rangle" % (show_gens, relators)
 
-    def presentation_raw(self):
+    def presentation_raw(self, as_str=True):
         # We use knowledge of the form of the presentation to construct it manually.
+        # Need as_str = False for code snippet
         gens = list(self.PCG.GeneratorsOfGroup())
         pcgs = self.PCG.FamilyPcgs()
         used = [u - 1 for u in sorted(self.gens_used)]  # gens_used is 1-indexed
@@ -1947,10 +2209,10 @@ class WebAbstractGroup(WebObj):
                 if j == u:
                     if e == 1:
                         if first_pass:
-                            s = var_name(i)  + s
+                            s = var_name(i) + s
                             first_pass = False
                         else:
-                            s = var_name(i)+ '*' + s
+                            s = var_name(i) + '*' + s
 
                     elif e > 1:
                         if first_pass:
@@ -1975,16 +2237,22 @@ class WebAbstractGroup(WebObj):
             for j in range(i + 1, ngens):
                 b = used[j]
                 if all(x == 0 for x in pcgs.ExponentsOfCommutator(b + 1, a + 1)):  # back to 1-indexed
-                    if not self.abelian:
+                    if not as_str:  # print commutator out for code snippets
+                        comm.append("%s^-1*%s^-1*%s*%s" % (var_name(i), var_name(j), var_name(i), var_name(j)))
+                    elif not self.abelian:
                         comm.append("[%s,%s]" % (var_name(i), var_name(j)))
                 else:
                     v = pcgs.ExponentsOfConjugate(b + 1, a + 1)  # back to 1-indexed
                     relators.append("%s*%s^-1*%s^-1*%s" % (print_elt(v), var_name(i), var_name(j), var_name(i)))
-        show_gens = ", ".join(var_name(i) for i in range(len(used)))
         if pure_powers or comm:
             rel_powers = [",".join(pure_powers + comm)] + rel_powers
         relators = ", ".join(rel_powers + relators)
-        return r"< %s | %s >" % (show_gens, relators)
+        if as_str:
+            show_gens = ", ".join(var_name(i) for i in range(len(used)))
+            return r"< %s | %s >" % (show_gens, relators)
+        else:
+            show_gens = ",".join(var_name(i) for i in range(len(used)))  # no space for code snipptes
+            return show_gens
 
     @lazy_attribute
     def representations(self):
@@ -1995,38 +2263,86 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
+    def auto_gens_data(self):
+        gens = self.aut_gens
+        gens = [ [ self.decode(gen) for gen in z ] for z in gens]
+        auts = [libgap.GroupHomomorphismByImagesNC(self.G,self.G,gens[0],z) for z in gens]
+        orders = [z.Order() for z in auts]
+
+        def myisinner(a):
+            if a.IsInnerAutomorphism():
+                return a.ConjugatorOfConjugatorIsomorphism()
+            return ''
+        inners = [myisinner(z) for z in auts]
+        rep_type = self.element_repr_type
+        if rep_type == "PC":
+            inners = [self.pcgs_as_str(z) for z in inners]
+        elif rep_type == "Perm":
+            inners = [str(z) for z in inners]
+        else:
+            if self.element_repr_type == "GLFq":
+                R, N, k, d, rep_type = self._matrix_coefficient_data(self.element_repr_type)
+                inners = [matrix(R, d, d, [list(zz) for zz in z3])
+                          if z3 != '' else '' for z3 in inners]
+            inners = [latex(matrix(z)) if z != '' else '' for z in inners]
+            if self.element_repr_type == "Lie":
+                inners = [ z.replace(" a","\\alpha") for z in inners]
+        return {'orders': orders, 'inners': inners}
+
     def representation_line(self, rep_type, skip_head=False):
         # TODO: Add links to searches for other representations when available
         # skip_head is used for matrix groups, where we only include the header for the first
+        # or for PC groups if not on the same page
         if rep_type != "PC":
             rdata = self.representations[rep_type]
         if rep_type == "Lie":
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
-            reps = ", ".join([fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata])
+            reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
-            pres_raw=self.presentation_raw()
-            pres = raw_typeset(pres_raw,compress_pres(pres))
+            if not skip_head:  #add copy button in certain cases
+                pres_raw = self.presentation_raw()
+                pres = raw_typeset(pres_raw,compress_pres(pres))
+                if self.live():  # skip code snippet on live group for now
+                    return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:<td><td colspan="5">{pres}</td></tr>'
+                code_cmd = self.create_snippet('presentation')
+            else:
+                pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
-                pres = "Abelian group " + pres
-            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>'
+                if skip_head:
+                    pres = " of the abelian group " + pres
+                else:
+                    pres = "Abelian group " + pres
+            if skip_head:
+                return f'{pres} .'  # for repr_strg
+            return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:</td><td colspan="5">{pres}</td></tr>{code_cmd}'
         elif rep_type == "Perm":
             gens = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
-            gens=raw_typeset(gens,compress_perm(gens))
+            gens = raw_typeset(gens,compress_perm(gens))
             d = rdata["d"]
+            if self.live():  # skip code snippet on live group for now
+                code_cmd = ""
+            else:
+                code_cmd = self.create_snippet('permutation')
             if d >= 10:
-                gens=f"Degree ${d}$" + gens
-            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>'
+                gens = f"Degree ${d}$" + gens
+            return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>{code_cmd}'
         else:
             # Matrix group
             R, N, k, d, _ = self._matrix_coefficient_data(rep_type, as_str=True)
             gens = ", ".join(self.decode_as_matrix(g, rep_type, as_str=True) for g in rdata["gens"])
-            gens = fr"$\left\langle {gens} \right\rangle \subseteq \GL_{{{d}}}({R})$"
+            ambient = fr"\GL_{{{d}}}({R})"
+            if rep_type == "GLFq":
+                Fq = GF(N**k, "alpha")
+                poly = latex(Fq.polynomial())
+                ambient += fr" = \GL_{{{d}}}(\F_{{{N}}}[\alpha]/({poly}))"
+            gens = fr"$\left\langle {gens} \right\rangle \subseteq {ambient}$"
+            code_cmd = self.create_snippet(rep_type)
             if skip_head:
-                return f'<tr><td></td><td colspan="5">{gens}</td></tr>'
+                return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
             else:
-                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>'
+                return f'<tr><td>{display_knowl("group.matrix_group", "Matrix group")}:</td><td colspan="10">{gens}</td></tr>{code_cmd}'
 
     @lazy_attribute
     def transitive_friends(self):
@@ -2099,6 +2415,13 @@ class WebAbstractGroup(WebObj):
                 out += f" ({count})"
             return out
 
+        def display_possibly_split(trip):
+            sub, count, labels = trip
+            out = fr"{sub.knowl(paren=True)}&nbsp;.&nbsp;{sub.quotient_knowl(paren=True)}"
+            if count > 1:
+                out += f" ({count})"
+            return out
+
         def nonsplit_expressions_knowl(label, name=None):
             if not name:
                 name = f"Nonsplit product expressions for {label}"
@@ -2157,6 +2480,15 @@ class WebAbstractGroup(WebObj):
                                       False, # hide if no expressions
                                       display_nonsplit,
                                       nonsplit_expressions_knowl))
+            elif rtype == "possibly_split":
+                return rep_line(
+                    "group.nonsplit_product",
+                    "Possibly split product",
+                    content_from_opts(self.possibly_split_products,
+                                      self.possibly_split_products,
+                                      False, # hide if no expressions
+                                      display_nonsplit,
+                                      nonsplit_expressions_knowl))
             elif rtype == "aut":
                 return rep_line(
                     "group.automorphism",
@@ -2185,6 +2517,7 @@ class WebAbstractGroup(WebObj):
             output_strg += show_reps("semidirect")
             output_strg += show_reps("wreath")
             output_strg += show_reps("nonsplit")
+            output_strg += show_reps("possibly_split")
         output_strg += show_reps("aut")
         if output_strg == "":  #some live groups have no constructions
             return "data not computed"
@@ -2206,8 +2539,11 @@ class WebAbstractGroup(WebObj):
                 else:
                     return f"Group of order {pos_int_and_factor(self.aut_order)}"
             else:
-                url = url_for(".by_label", label=self.aut_group)
-                return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
+                if self.aut_order is None:
+                    return r"not computed"
+                else:
+                    url = url_for(".by_label", label=self.aut_group)
+                    return f'<a href="{url}">${group_names_pretty(self.aut_group)}$</a>, of order {pos_int_and_factor(self.aut_order)}'
         except AssertionError:  # timed out
             return r"$\textrm{Computation timed out}$"
 
@@ -2215,10 +2551,10 @@ class WebAbstractGroup(WebObj):
     def aut_order_factor(self):
         return latex(factor(self.aut_order))
 
-    def aut_gens_flag(self): #issue with Lie type when family is projective, auto stored as permutations often
+    def aut_gens_flag(self): # issue with Lie type when family is projective, Gap stores these groups as permutations
         if self.aut_gens is None:
             return False
-        elif self.element_repr_type == "Lie":
+        if self.element_repr_type == "Lie":
             if self.representations["Lie"][0]["family"][0] == "P":
                 return False
         return True
@@ -2263,8 +2599,8 @@ class WebAbstractGroup(WebObj):
             # is only done for one of them, and only if the user clicks
             # on the link
             basiclist = [(url_for(".by_abelian_label", label=z[0]),
-                "C_{%d}"%z[0],
-                "" if z[1] == 1 else "<span style='font-size: small'> x %d</span>"% z[1]
+                "C_{%d}" % z[0],
+                "" if z[1] == 1 else "<span style='font-size: small'> x %d</span>" % z[1]
                 )
                 for z in theorder]
 
@@ -2298,7 +2634,7 @@ class WebAbstractGroup(WebObj):
 
         return ", ".join(
             f'<a href="{url_for_label(label)}">{display.get(label,label)}</a>{exp(e)}'
-            for (label, e) in CF.items()
+            for label, e in CF.items()
         )
 
     # special subgroups
@@ -2348,7 +2684,7 @@ class WebAbstractGroup(WebObj):
         return abelian_gp_display(self.primary_abelian_invariants)
         return r" \times ".join(
             ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
-            for (q, e) in Counter(self.primary_abelian_invariants).items()
+            for q, e in Counter(self.primary_abelian_invariants).items()
         )
 
     def abelianization_label(self):
@@ -2395,11 +2731,11 @@ class WebAbstractGroup(WebObj):
             d = data["d"]
             return f"Elements of the group are displayed as permutations of degree {d}."
         elif rep_type == "PC":
-            rep_str =  "Elements of the group are displayed as words in the generators from the presentation given"
+            rep_str = "Elements of the group are displayed as words in the presentation"
             if other_page:
-                return rep_str + " in the Construction section of this group's <a href='%s'>main page</a>." % url_for(".by_label", label=self.label)
+                return rep_str + self.representation_line("PC", skip_head=True)
             else:
-                return rep_str + " above."
+                return rep_str + " generators from the presentation above."
         elif rep_type in ["GLFp", "GLFq", "GLZN", "GLZq", "GLZ"]:
             d = data["d"]
             if rep_type == "GLFp":
@@ -2418,13 +2754,13 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def max_sub_cnt(self):
-        return db.gps_subgroups.count_distinct(
+        return db.gps_subgroup_search.count_distinct(
             "ambient", {"subgroup": self.label, "maximal": True}, record=False
         )
 
     @lazy_attribute
     def max_quo_cnt(self):
-        return db.gps_subgroups.count_distinct(
+        return db.gps_subgroup_search.count_distinct(
             "ambient", {"quotient": self.label, "minimal_normal": True}, record=False
         )
 
@@ -2437,12 +2773,117 @@ class WebAbstractGroup(WebObj):
             R = R.ceiling()
             circles = "\n".join(
                 f'<circle cx="{x}" cy="{y}" r="{rad}" fill="rgb({r},{g},{b})" />'
-                for (x, y, rad, (r, g, b)) in circles
+                for x, y, rad, (r, g, b) in circles
             )
         else:
             R = 1
             circles = ""
-        return f'<img><svg xmlns="https://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg></img>'
+        return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
+
+    def create_snippet(self,item):
+        # mimics jinja macro place_code to be included in Constructions section
+        # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
+        code = self.code_snippets()
+        snippet_str = "" # initiate new string
+        if code[item]:
+            for L in code[item]:
+                if isinstance(code[item][L],str):
+                    lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
+                    lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
+                else:   # not currently used in groups
+                    lines = code[item][L]
+                prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
+                class_str = " ".join([L,'nodisplay','codebox'])
+                col_span_val = '"6"'
+                for line in lines:
+                    snippet_str += f"""
+<tr>
+    <td colspan={col_span_val}>
+        <div class="{class_str}">
+            <span class="raw-tset-copy-btn" onclick="copycode(this)"><img alt="Copy content" class="tset-icon"></span>
+            <span class="prompt">{prompt}:&nbsp;</span><span class="code">{line}</span>
+            <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
+        </div>
+    </td>
+</tr>
+"""
+        return snippet_str
+
+    @cached_method
+    def code_snippets(self):
+        if self.live():
+            return
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        code['show'] = { lang:'' for lang in code['prompt'] }
+        if "PC" in self.representations:
+            gens = self.presentation_raw(as_str=False)
+            pccodelist = self.representations["PC"]["pres"]
+            pccode = self.representations["PC"]["code"]
+            ordgp = self.order
+            used_gens = create_gens_list(self.representations["PC"]["gens"])
+            gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
+            magma_assign = create_magma_assignment(self)
+        else:
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign = None, None, None, None, None, None, None
+        if "Perm" in self.representations:
+            rdata = self.representations["Perm"]
+            perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
+            deg = rdata["d"]
+        else:
+            perms, deg = None, None
+
+        if "GLZ" in self.representations:
+            nZ = self.representations["GLZ"]["d"]
+            LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]]
+            LZsplit = [split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ) for g in self.representations["GLZ"]["gens"]]
+        else:
+            nZ, LZ, LZsplit = None, None, None
+        if "GLFp" in self.representations:
+            nFp = self.representations["GLFp"]["d"]
+            Fp = self.representations["GLFp"]["p"]
+            LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]]
+            e = libgap.One(GF(Fp))
+            LFpsplit = [split_matrix_list_Fp(A,nFp,e) for A in LFp]
+        else:
+            nFp, Fp, LFp, LFpsplit = None, None, None, None
+        if "GLZN" in self.representations:
+            nZN = self.representations["GLZN"]["d"]
+            N = self.representations["GLZN"]["p"]
+            LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
+            LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
+        else:
+            nZN, N, LZN, LZNsplit = None, None, None, None
+        if "GLZq" in self.representations:
+            nZq = self.representations["GLZq"]["d"]
+            Zq = self.representations["GLZq"]["q"]
+            LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
+            LZqsplit = "[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZq", ListForm=True) , nZq, Zq) for g in self.representations["GLZq"]["gens"]]) + "]"
+        else:
+            nZq, Zq, LZq, LZqsplit = None, None, None, None
+# add below for GLFq implementation
+        if "GLFq" in self.representations:
+            nFq = self.representations["GLFq"]["d"]
+            Fq = self.representations["GLFq"]["q"]
+            mats = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
+            LFq = ",".join(split_matrix_Fq_add_al(mat, nFq ) for mat in mats)
+            LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nFq, Fq) for mat in mats) + "]"
+        else:
+            nFq, Fq, LFq, LFqsplit = None, None, None, None
+
+        data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
+                'magma_assign': magma_assign, 'deg': deg, 'perms' : perms,
+                'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
+                'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,
+                'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, 'LFq': LFq,
+                'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
+                'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
+        }
+        for prop in code:
+            for lang in code['prompt']:
+                code[prop][lang] = code[prop][lang].format(**data)
+        return code
 
     # The following attributes are used in create_boolean_string
     @property
@@ -2603,42 +3044,40 @@ class LiveAbelianGroup():
             for T in cartesian_product_iterator(
                     [Zmod(m) for m in self.snf]))
 
+
 class WebAbstractSubgroup(WebObj):
-    table = db.gps_subgroups
+    table = db.gps_subgroup_search
 
     def __init__(self, label, data=None):
         WebObj.__init__(self, label, data)
-        s = self.subgroup_tex
-        if s is None:
-            self.subgroup_tex = "?"
-            self.subgroup_tex_parened = "(?)"
-        else:
-            self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
-        if self.normal:
-            q = self.quotient_tex
-            if q is None:
-                self.quotient_tex = "?"
-                self.quotient_tex_parened = "(?)"
-                if self._data.get("quotient"):
-                    tryhard = db.gps_groups.lookup(self.quotient)
-                    if tryhard and tryhard["tex_name"]:
-                        q = tryhard["tex_name"]
-                        self.quotient_tex = q
-                        self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+        if isinstance(self._data, dict):
+            more_data = db.gps_subgroup_data.lookup(label)
+            self._data.update(more_data)
+            for key, val in more_data.items():
+                setattr(self, key, val)
+        if self._data is not None:
+            s = self.subgroup_tex
+            if s is None:
+                self.subgroup_tex = "?"
+                self.subgroup_tex_parened = "(?)"
             else:
-                self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
-        # Temp fix for a bug in sylow data
-        p, k = self.subgroup_order.is_prime_power(get_data=True)
-        if self.subgroup_order == 1:
-            self.sylow = self.hall = 1
-        elif self.subgroup_order.gcd(self.quotient_order) == 1:
-            self.hall = self.subgroup_order.radical()
-            if k > 0:
-                self.sylow = p
-            else:
-                self.sylow = p
-        else:
-            self.sylow = self.hall = 0
+                self.subgroup_tex_parened = s if is_atomic(s) else "(%s)" % s
+            if self.normal:
+                q = self.quotient_tex
+                if q is None:
+                    self.quotient_tex = "?"
+                    self.quotient_tex_parened = "(?)"
+                    if self._data.get("quotient"):
+                        tryhard = db.gps_groups.lookup(self.quotient)
+                        if tryhard and tryhard["tex_name"]:
+                            q = tryhard["tex_name"]
+                            self.quotient_tex = q
+                            self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+                else:
+                    self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+
+    def is_null(self):
+        return self._data is None
 
     def spanclass(self):
         s = "subgp"
@@ -2746,14 +3185,23 @@ class WebAbstractSubgroup(WebObj):
         # We set various properties from S for create_boolean_subgroup_string
         if not S:
             order = self.subgroup_order
-            #newgroup.order = order
-            #newgroup.pgroup = len(ZZ(order).abs().factor())==1
             newgroup = WebAbstractGroup('nolabel',
-                data={'order': order, 'G': None, 'abelian': self.abelian,
+                data={'order': order, 'G': None, 'abelian': self.abelian,'cyclic': self.cyclic,
                       # What if aut_label is set?
                       'aut_group': self.aut_label, 'aut_order': None,
-                      'pgroup':len(ZZ(order).abs().factor())==1})
+                      'pgroup':len(ZZ(order).abs().factor()) == 1})
             return newgroup
+         # issue with groups identifiable in magma but not gap
+        if missing_subs(self.subgroup):
+            gp = WebAbstractGroup(self.subgroup, None)
+            if gp.source == "Missing":
+                order = self.subgroup_order
+                newgroup = WebAbstractGroup('nolabel',
+                      data={'order': order, 'G': None, 'abelian': self.abelian,'cyclic': self.cyclic,
+                      # What if aut_label is set?
+                      'aut_group': self.aut_label, 'aut_order': None, 'sub_missing' : True,
+                      'pgroup':len(ZZ(order).abs().factor()) == 1})
+                return newgroup
         for prop in [
             "pgroup",
             "is_elementary",
@@ -2824,7 +3272,7 @@ class WebAbstractSubgroup(WebObj):
         elif hasattr(self, 'quotient_tex') and self.quotient_tex:
             return prefix + '$'+self.quotient_tex+'$'
         if ab_invs:
-            ablabel = '.'.join([str(z) for z in ab_invs])
+            ablabel = '.'.join(str(z) for z in ab_invs)
             url = url_for(".by_abelian_label", label=ablabel)
             return prefix + f'<a href="{url}">$' + abelian_gp_display(ab_invs) + '$</a>'
         if self.quotient_tex is None:
@@ -2854,7 +3302,10 @@ class WebAbstractSubgroup(WebObj):
         for llist in [self.complements, self.contained_in, self.contains]:
             if llist:
                 labels.extend([make_full(label) for label in llist])
-        return list(db.gps_subgroups.search({"label": {"$in": labels}}))
+        subs = {rec["label"]: rec for rec in db.gps_subgroup_search.search({"label": {"$in": labels}})}
+        for rec in db.gps_subgroup_data.search({"label": {"$in": labels}}):
+            subs[rec["label"]].update(rec)
+        return list(subs.values())
 
     def autjugate_subgroups(self):
         if self.amb.outer_equivalence is False and self.amb.complements_known is False and self.amb.subgroup_inclusions_known is False:
@@ -2946,17 +3397,28 @@ class WebAbstractSubgroup(WebObj):
 
 # Conjugacy class labels do not contain the group
 class WebAbstractConjClass(WebObj):
-    table = db.gps_groups_cc
-
+    table = db.gps_conj_classes
     def __init__(self, group, label, data=None):
         if data is None:
-            data = db.gps_groups_cc.lucky({"group": group, "label": label})
+            group_order, group_counter = gp_label_to_cc_data(group)
+            data = db.gps_conj_classes.lucky({"group_order": group_order, "group_counter" : group_counter, "label": label})
         WebObj.__init__(self, label, data)
+        self.force_repr_elt = False
+
+    # Allows us to use representative from a Galois group
+    def force_repr(self, newrep):
+        newrep = newrep.replace(' ','')
+        self.representative = newrep
+        self.force_repr_elt = True
 
     def display_knowl(self, name=None):
         if not name:
             name = self.label
-        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={self.group}%7C{self.label}%7Ccomplex">{name}</a>'
+        force_string = ''
+        if self.force_repr_elt:
+            force_string = "%7C"+str(self.representative)
+        group = cc_data_to_gp_label(self.group_order, self.group_counter)
+        return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=cc_data&args={group}%7C{self.label}%7Ccomplex{force_string}">{name}</a>'
 
 class WebAbstractDivision():
     def __init__(self, group, label, classes):
@@ -3007,11 +3469,3 @@ class WebAbstractRationalCharacter(WebObj):
             '<a title = "%s [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="func=rchar_data&args=%s">%s</a>'
             % (name, label, name)
         )
-
-class WebAbstractSupergroup(WebObj):
-    table = db.gps_subgroups
-
-    def __init__(self, sub_or_quo, typ, label, data=None):
-        self.sub_or_quo_gp = sub_or_quo
-        self.typ = typ
-        WebObj.__init__(self, label, data)

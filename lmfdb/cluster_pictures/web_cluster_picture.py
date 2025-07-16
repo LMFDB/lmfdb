@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.logger import make_logger
 wcplog = make_logger("WCP")

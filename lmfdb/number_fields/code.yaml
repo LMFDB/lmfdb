@@ -24,7 +24,7 @@ field:
   sage: x = polygen(QQ);  K.<a> = NumberField(%s)
   pari: K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
-  oscar: Qx, x = PolynomialRing(QQ); K, a = NumberField(%s)
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
 
 poly:
   sage:  K.defining_polynomial()
@@ -123,7 +123,7 @@ class_number_formula:
     [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
   magma: |
     /* self-contained Magma code snippet to compute the analytic class number formula */
-    Qx<x> := PolynomialRing(QQ); K<a> := NumberField(%s);
+    Qx<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
     OK := Integers(K); DK := Discriminant(OK);
     UK, fUK := UnitGroup(OK); clK, fclK := ClassGroup(OK);
     r1,r2 := Signature(K); RK := Regulator(K); RR := Parent(RK);

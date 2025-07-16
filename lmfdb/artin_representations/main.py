@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Artin representations
 # Authors: Paul-Olivier Dehaye, John Jones
 
@@ -151,7 +150,7 @@ def artin_representation_jump(info):
             return redirect(url_for(".index"))
     return redirect(url_for(".render_artin_representation_webpage", label=label), 307)
 
-dihedrals =[ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
+dihedrals = [ [4,2], [6,1], [8, 3], [10,1], [12,4], [14,1], [16,7],
   [ 18, 1 ], [ 20, 4 ], [ 22, 1 ], [ 24, 6 ], [ 26, 1 ], [ 28, 3 ], [ 30, 3 ],
   [ 32, 18 ], [ 34, 1 ], [ 36, 4 ], [ 38, 1 ], [ 40, 6 ], [ 42, 5 ], [ 44, 3 ],
   [ 46, 1 ], [ 48, 7 ], [ 50, 1 ], [ 52, 4 ], [ 54, 1 ], [ 56, 5 ], [ 58, 1 ],
@@ -184,9 +183,9 @@ def parse_projective_group(inp, query, qfield):
         query[qfield] = [24,12]
     elif Dn_RE.match(inp):
         n = int(inp.replace('d',''))-2
-        if n>=0 and n<len(dihedrals):
+        if n >= 0 and n < len(dihedrals):
             query[qfield] = dihedrals[n]
-        elif n>=0:
+        elif n >= 0:
             query[qfield] = [-1,-2] # we don't have it
     else:
         try:
@@ -224,7 +223,7 @@ def parse_projective_type(inp, query, qfield):
             query[qfield] = current
 
 def url_for_label(label):
-    return url_for(".render_artin_representation_webpage", label=label)
+    return url_for("artin_representations.render_artin_representation_webpage", label=label)
 
 artin_columns = SearchColumns([
     SearchCol("galois_links", "artin.label", "Label", download_col="baselabel"),
@@ -340,7 +339,7 @@ def render_artin_representation_webpage(label):
 
     #artin_logger.info("Found %s" % (the_rep._data))
 
-    if case=='rep':
+    if case == 'rep':
         title = "Artin representation %s" % label
     else:
         title = "Galois orbit of Artin representations %s" % label
@@ -370,10 +369,10 @@ def render_artin_representation_webpage(label):
         if proj_coefs != the_nf.polynomial():
             friends.append(("Field {}".format(proj_wnf.get_label()),
                 str(url_for("number_fields.by_label", label=proj_wnf.get_label()))))
-    if case == 'rep' or the_rep.galois_conjugacy_size()==1:
+    if case == 'rep' or the_rep.galois_conjugacy_size() == 1:
         cc = the_rep.central_character()
         if cc is not None:
-            if the_rep.dimension()==1:
+            if the_rep.dimension() == 1:
                 if cc.order == 2:
                     cc_name = cc.symbol
                 else:
@@ -392,7 +391,7 @@ def render_artin_representation_webpage(label):
                 friends.append(("L-function", url_for('l_functions.by_full_label', label='1-1-1.1-r0-0-0')))
             else:
                 # looking for Lhash dirichlet_L_modulus.number
-                mylhash = 'dirichlet_L_%d.%d'%(cc.modulus,cc.number)
+                mylhash = 'dirichlet_L_%d.%d' % (cc.modulus,cc.number)
                 lres = db.lfunc_instances.lucky({'Lhash': mylhash})
                 if lres is not None:
                     friends.append(("L-function", url_for('l_functions.by_full_label', label=lres["label"])))
@@ -411,7 +410,7 @@ def render_artin_representation_webpage(label):
             friends.append(("Artin representation " + artin_label_pretty(newlabel),
                 url_for(".render_artin_representation_webpage", label=newlabel)))
 
-    info={} # for testing
+    info = {} # for testing
 
     if case == 'rep':
         return render_template(
@@ -654,8 +653,8 @@ def unsci(rng, first=False):
         return rng
     if "-" in rng:
         pieces = "-".split(rng)
-        fz = [True] + [False]*(len(pieces)-1)
-        return "-".join(unsci(piece, z) for (piece, z) in zip(pieces, fz))
+        fz = [True] + [False] * (len(pieces) - 1)
+        return "-".join(unsci(piece, z) for piece, z in zip(pieces, fz))
     e = tpow.findall(rng)
     if not e:
         return rng
@@ -760,7 +759,7 @@ class ArtinStats(StatsDisplay):
         "Indicator": (lambda ind: r"frobenius_schur_indicator=%s" % ind),
     }
     buckets = {
-        "Conductor": [trange(a, b) for (a,b) in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
+        "Conductor": [trange(a, b) for a, b in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
         "Dim": [str(x) for x in range(1,13)] + ["14-21", "24-30", "35", "40-70"]
     }
 

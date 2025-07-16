@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
@@ -52,7 +51,7 @@ def show():
     for p in objPaths:
         galoisRepObjs.append(galois_rep_from_path(p))
 
-    if len(galoisRepObjs)==1:
+    if len(galoisRepObjs) == 1:
         gr = galoisRepObjs[0]
         gr.lfunction()
 
@@ -66,7 +65,7 @@ def show():
         return render_template('Lfunction.html', **info)
 
     # currently only implemented tp of two things
-    if len(galoisRepObjs)==2:
+    if len(galoisRepObjs) == 2:
 
         try:
             tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
@@ -84,7 +83,7 @@ def show():
             info['properties'] = properties
 
             if (tp.numcoeff > len(tp.dirichlet_coefficients)+10):
-                info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)
+                info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' % (len(tp.dirichlet_coefficients), tp.numcoeff)
                 info['svwarning'] = 'These special values may also be inaccurate, for the same reason.'
             else:
                 info['zeroswarning'] = ''
@@ -133,18 +132,18 @@ def zeros(L):
         negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
 
 def galois_rep_from_path(p):
-    if p[0]=='EllipticCurve':
+    if p[0] == 'EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
         ainvs = db.ec_curvedata.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
 
-    elif (p[0]=='Character' and p[1]=='Dirichlet'):
+    elif (p[0] == 'Character' and p[1] == 'Dirichlet'):
         dirichletArgs = {'type':'Dirichlet', 'modulus':int(p[2]), 'number':int(p[3])}
         chi = WebSmallDirichletCharacter(**dirichletArgs)
         return GaloisRepresentation(chi)
 
-    elif (p[0]=='ModularForm'):
+    elif (p[0] == 'ModularForm'):
         level = int(p[4])
         weight = int(p[5])
         conrey_label = p[6] # this should be zero; TODO check this is the case
@@ -154,7 +153,7 @@ def galois_rep_from_path(p):
         form = WebNewform(label)
         return GaloisRepresentation([form, ZZ(embedding)])
 
-    elif (p[0]=='ArtinRepresentation'):
+    elif (p[0] == 'ArtinRepresentation'):
         dim = p[1]
         conductor = p[2]
         index = p[3]

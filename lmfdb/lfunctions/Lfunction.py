@@ -1,4 +1,3 @@
-#_ -*- coding: utf-8 -*-
 # The class Lfunction is defined in Lfunction_base and represents an L-function
 # We subclass it here:
 # RiemannZeta, Lfunction_Dirichlet, Lfunction_EC_Q, Lfunction_CMF,
@@ -46,7 +45,7 @@ import sage.libs.lcalc.lcalc_Lfunction as lc
 
 from lmfdb.app import is_debug_mode
 
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     Downloader,
     display_complex,
@@ -129,6 +128,7 @@ def an_from_data(euler_factors,upperbound=30):
             k += 1
 
     return result
+
 
 # Convert the information extracted from the database to the format
 # expected by the L-functions homepage template.
@@ -388,7 +388,7 @@ def apply_coeff_info(L, coeff_info):
                     res = -I, -I
             else:
                 # an = e^(2 pi i an_power_int / this_base_power_int)
-                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + r"}\right)$"
+                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int) + r"}\right)$"
                 #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
@@ -497,7 +497,7 @@ class Lfunction_from_db(Lfunction):
         _, conductor, character, cr, imag, index = self.label.split('-')
         spectral_label = cr + '-' + imag
         degree = self.degree
-        conductor  = conductor.replace('e', '^')
+        conductor = conductor.replace('e', '^')
         bread = [('L-functions', url_for('.index'))]
         if self.rational:
             bread.append(('Rational', url_for('.rational')))
@@ -596,10 +596,11 @@ class Lfunction_from_db(Lfunction):
 
     def download_euler_factors(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
-        data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
+        data['first_lfactors'] = [[ps[i], l]
+                                  for i, l in enumerate(self.localfactors)]
         return Downloader()._wrap(Json.dumps(data),
                                   filename + '.euler_factors',
                                   lang='text',
@@ -717,10 +718,10 @@ class Lfunction_Maass(Lfunction):
 
         # Check for compulsory arguments
         if self.fromDB:
-            validate_required_args ('Unable to construct L-function of Maass form.',
+            validate_required_args('Unable to construct L-function of Maass form.',
                                     args, 'group', 'level', 'char', 'R', 'ap_id')
         else:
-            validate_required_args ('Unable to construct L-function of Maass form.',
+            validate_required_args('Unable to construct L-function of Maass form.',
                                     args, 'maass_id')
 
         self._Ltype = "maass"
@@ -847,9 +848,9 @@ class Lfunction_HMF(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Hilbert modular form '
+        validate_required_args('Unable to construct Hilbert modular form '
                                 + 'L-function.', args, 'label', 'number', 'character')
-        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+        validate_integer_args('Unable to construct Hilbert modular form L-function.',
                                args, 'character','number')
 
         self._Ltype = "hilbertmodularform"
@@ -862,7 +863,7 @@ class Lfunction_HMF(Lfunction):
             raise ValueError(f'Error constructing L-function for Hilbert modular form {self.origin_label}, as it is not in the database')
 
         self.number = int(args['number'])
-        self.character= int(args['character'])
+        self.character = int(args['character'])
         if self.character != 0:
             raise KeyError('L-function of Hilbert form of non-trivial character not implemented yet.')
 
@@ -870,7 +871,7 @@ class Lfunction_HMF(Lfunction):
         (f, F_hmf) = getHmfData(self.origin_label)
         if f is None:
             # NB raising an error is not a good way to handle this on website!
-            raise KeyError('No Hilbert modular form with label "%s" found in database.'%self.origin_label)
+            raise KeyError('No Hilbert modular form with label "%s" found in database.' % self.origin_label)
         try:
             self.weight = int(f['parallel_weight'])
         except KeyError:
@@ -879,7 +880,7 @@ class Lfunction_HMF(Lfunction):
         # Load the field (F)
         F = WebNumberField(f['field_label'])
         if not F or F.is_null():
-            raise KeyError('Error constructing number field %s'%f['field_label'])
+            raise KeyError('Error constructing number field %s' % f['field_label'])
         self.field_disc = F.disc()
         self.field_degree = int(F.degree())
 
@@ -916,14 +917,14 @@ class Lfunction_HMF(Lfunction):
         self.numcoeff = PP  # The number of coefficients is given by the
                             # norm of the last prime
 
-        Fhmfprimes = [st.replace(' ','') for st in F_hmf['primes']]
+        Fhmfprimes = [st.replace(' ', '') for st in F_hmf['primes']]
 
-        ppmidNN = [c[0].replace(' ','') for c in f['AL_eigenvalues']]
+        ppmidNN = [c[0].replace(' ', '') for c in f['AL_eigenvalues']]
 
         ratl_primes = [p for p in range(primes[-1][0] + 1) if is_prime(p)]
         RCC = CC['T']
-        (T,) = RCC._first_ngens(1)
-        heckepols = [RCC(1) for p in ratl_primes]
+        T = RCC.gen()
+        heckepols = [RCC.one() for p in ratl_primes]
         for l in range(len(hecke_eigenvalues)):
             if Fhmfprimes[l] in ppmidNN:
                 heckepols[ratl_primes.index(primes[l][1])] *= (
@@ -1033,7 +1034,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
             self.number = 0     # Default embedding of the coefficients
 
         # Load form (S) from database
-        label = '%d_%s'%(self.weight,self.orbit)
+        label = '%d_%s' % (self.weight,self.orbit)
 
         # disable L-functions on the fly in production
         if not is_debug_mode():
@@ -1075,7 +1076,7 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         self.quasidegree = 1
         self.level_factored = self.level = 1
         self.mu_fe = []  # the shifts of the Gamma_R to print
-        self.automorphyexp = float(self.weight) - float(1.5)
+        self.automorphyexp = float(self.weight) - 1.5
         self.nu_fe = [Rational(1/2), self.automorphyexp]  # the shift of the Gamma_C to print
         self.compute_kappa_lambda_Q_from_mu_nu()
         self.algebraic = True
@@ -1124,7 +1125,7 @@ class DedekindZeta(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Dedekind zeta function.', args, 'label')
+        validate_required_args('Unable to construct Dedekind zeta function.', args, 'label')
         self._Ltype = "dedekindzeta"
 
         # Put the arguments into the object dictionary
@@ -1139,7 +1140,7 @@ class DedekindZeta(Lfunction):
         # Fetch the polynomial of the field from the database
         wnf = WebNumberField(self.origin_label)
         if not wnf or wnf.is_null():
-            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database'%self.origin_label)
+            raise KeyError('Unable to construct Dedekind zeta function.', 'No data for the number field "%s" was found in the database' % self.origin_label)
         self.NF = wnf.K()
         self.h = wnf.class_number()
         self.R = wnf.regulator()
@@ -1179,7 +1180,7 @@ class DedekindZeta(Lfunction):
         # Determine the factorization
         self.grh = wnf.used_grh()
         if self.degree > 1:
-            if wnf.is_abelian() and len(wnf.dirichlet_group())>0:
+            if wnf.is_abelian() and len(wnf.dirichlet_group()) > 0:
                 dir_group = wnf.dirichlet_group()
                 # Remove 1 from the list
                 j = 0
@@ -1199,16 +1200,16 @@ class DedekindZeta(Lfunction):
                 nfgg = wnf.factor_perm_repn() # first call cached it
                 ar = wnf.artin_reps() # these are in the same order
                 self.factorization = (r'\(\zeta_K(s) =\) <a href="/L/Riemann/">'
-                                           +r'\(\zeta(s)\)</a>')
+                                           + r'\(\zeta(s)\)</a>')
                 for j in range(len(ar)):
-                    if nfgg[j]>0:
+                    if nfgg[j] > 0:
                         the_rep = ar[j]
-                        if (the_rep.dimension()>1
-                                  or str(the_rep.conductor())!=str(1)):
+                        if (the_rep.dimension() > 1
+                                  or str(the_rep.conductor()) != str(1)):
                             ar_url = url_for("l_functions.l_function_artin_page",
                                              label=the_rep.label())
                             right = (r'\({}^{%d}\)' % (nfgg[j])
-                                     if nfgg[j]>1 else r'')
+                                     if nfgg[j] > 1 else r'')
                             self.factorization += r'\(\;\cdot\)'
                             tex_label = the_rep.label()
                             tex_label = tex_label.replace('_',r'\_')
@@ -1263,7 +1264,7 @@ class ArtinLfunction(Lfunction):
         try:
             self.artin = ArtinRepresentation(self.origin_label)
         except Exception as err:
-            raise KeyError('Error constructing Artin representation %s.'%self.origin_label, *err.args)
+            raise KeyError('Error constructing Artin representation %s.' % self.origin_label, *err.args)
 
         # Mandatory properties
         self.fromDB = False
@@ -1286,7 +1287,7 @@ class ArtinLfunction(Lfunction):
         self.motivic_weight = 0
         cc = self.artin.central_character()
         if not cc:
-            raise ValueError('Error constructing Artin representation %s, unable to compute central character, possibly because the modulus is too large.'%self.origin_label)
+            raise ValueError('Error constructing Artin representation %s, unable to compute central character, possibly because the modulus is too large.' % self.origin_label)
         self.charactermodulus, self.characternumber = cc.modulus, cc.number
 
         # Compute Dirichlet coefficients and period ########################
@@ -1326,6 +1327,7 @@ class ArtinLfunction(Lfunction):
     def original_object(self):
         return self.artin
 
+
 #############################################################################
 
 class HypergeometricMotiveLfunction(Lfunction):
@@ -1356,7 +1358,7 @@ class HypergeometricMotiveLfunction(Lfunction):
         # Get the motive from the database
         self.motive = getHgmData(self.origin_label)
         if not self.motive:
-            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.'%self.origin_label)
+            raise KeyError('No data for the hypergeometric motive "%s" was found in the database.' % self.origin_label)
 
         # Mandatory properties
         self.fromDB = False
@@ -1432,7 +1434,7 @@ class SymmetricPowerLfunction(Lfunction):
         validate_required_args('Unable to construct symmetric power L-function.',
                                args, 'power', 'underlying_type', 'field',
                                'conductor', 'isogeny')
-        validate_integer_args ('The power has to be an integer.',
+        validate_integer_args('The power has to be an integer.',
                                args, 'power', 'conductor')
         self._Ltype = "SymmetricPower"
 
@@ -1596,7 +1598,7 @@ class TensorProductLfunction(Lfunction):
 
         self.texname = r"L(s,E,\chi)"
         self.texnamecompleteds = r"\Lambda(s,E,\chi)"
-        self.title = r"$L(s,E,\chi)$, where $E$ is the elliptic curve %s and $\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s"%(self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
+        self.title = r"$L(s,E,\chi)$, where $E$ is the elliptic curve %s and $\chi$ is the Dirichlet character of conductor %s, modulo %s, number %s" % (self.ellipticcurvelabel, self.tp.chi.conductor(), self.charactermodulus, self.characternumber)
 
         self.credit = 'Workshop in Besancon, 2014'
 

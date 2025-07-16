@@ -4,7 +4,7 @@ on:
   push:
     branches: [ '**' ]
   pull_request:
-    branches: [ master, dev, web ]
+    branches: [ main, dev, web ]
 
 jobs:
   matrix_prep:
@@ -42,7 +42,7 @@ jobs:
         # environment-file: .environment.yml # now we install after cache
         channel-priority: strict
         # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
-        use-only-tar-bz2: true
+        use-only-tar-bz2: false
 
     - name: Cache conda
       uses: actions/cache@v3
@@ -85,7 +85,7 @@ jobs:
       shell: bash -l {0}
       run: |
         sage -pip install -r requirements.txt
-        pip install pyflakes pylint pycodestyle
+        pip install pyflakes pylint pycodestyle ruff
 
     - name: checking that we didn't miss any test files
       shell: bash -l {0}

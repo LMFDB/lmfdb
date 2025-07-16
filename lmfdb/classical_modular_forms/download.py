@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
 from ast import literal_eval
+from sage.all import prime_range, previous_prime
 from flask import url_for, redirect, abort
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
+from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.classical_modular_forms.web_newform import WebNewform
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
@@ -16,14 +17,22 @@ class CMF_download(Downloader):
 
     def _get_hecke_nf(self, label):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
+        print(label)
         data = db.mf_hecke_nf.lucky({'label':label}, proj)
-        if not data:
-            return None
+        print(data)
+        if data is None:
+            f = db.mf_newforms.lookup(label,projection=["level","char_orbit_label","dim","traces"])
+            if f["dim"] == 1:
+                vals = ConreyCharacter(f["level"], db.char_dirichlet.lookup("%s.%s" % (f["level"],f["char_orbit_label"]),projection="first")).values_gens
+                vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
+                aps = [[f["traces"][p-1]] for p in prime_range(len(f["traces"])+1)]
+                data = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'field_poly': [0,1], 'maxp': previous_prime(len(f["traces"])), 'ap': aps }
+            else:
+                return None
         # Make up for db_backend currently deleting Nones
         for elt in proj:
             if elt not in data:
                 data[elt] = None
-
         return data
 
     def _get_traces(self, label):
@@ -34,11 +43,11 @@ class CMF_download(Downloader):
         elif label.count('.') == 3:
             traces = db.mf_newforms.lookup(label, projection=['traces'])
         else:
-            return abort(404, "Invalid label: %s"%label)
+            return abort(404, "Invalid label: %s" % label)
         if traces is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         elif traces.get('traces') is None:
-            return abort(404, "We have not computed traces for: %s"%label)
+            return abort(404, "We have not computed traces for: %s" % label)
         else:
             return [0] + traces['traces']
 
@@ -143,7 +152,7 @@ class CMF_download(Downloader):
             lang = self.languages.get(lang, self.languages['sage'])
         hecke_nf = self._get_hecke_nf(label)
         if hecke_nf is None:
-            return abort(404, "No q-expansion found for %s" % label)
+            return abort(404, "q-expansion not available for newform %s" % label)
 
         aps = hecke_nf['ap']
         level, weight = map(int, label.split('.')[:2])
@@ -195,7 +204,7 @@ class CMF_download(Downloader):
         return self._wrap(explain + code + level_data + weight_data + poly_data + basis_data + hecke_ring_character_values + aps_data,
                           label + '.qexp',
                           lang=lang,
-                          title='q-expansion of newform %s,'%(label))
+                          title='q-expansion of newform %s,' % (label))
 
     def download_traces(self, label, lang='text'):
         data = self._get_traces(label)
@@ -205,7 +214,7 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label + '.traces',
                           lang=lang,
-                          title='Trace form for %s,'%(label))
+                          title='Trace form for %s,' % (label))
 
     def download_multiple_traces(self, info, spaces=False):
         lang = info.get(self.lang_key,'text').strip()
@@ -284,7 +293,7 @@ class CMF_download(Downloader):
                                      'an_normalized',
                                      'angles'])
         if data is None:
-            return abort(404, "No embedded newform found for %s"%(label))
+            return abort(404, "No embedded newform found for %s" % (label))
         root = (data.pop('embedding_root_real', None),
                 data.pop('embedding_root_imag', None))
         if root != (None, None):
@@ -292,12 +301,12 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Coefficient data for embedded newform %s,'%label)
+                          title='Coefficient data for embedded newform %s,' % label)
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         if form.has_exact_qexp:
             data['qexp'] = form.qexp
@@ -305,17 +314,17 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for newform %s,'%(label))
+                          title='Stored data for newform %s,' % (label))
 
     def download_code(self, label, lang):
         if lang == 'gp':
             lang = 'pari'
         Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
-        if not lang in Fullname:
+        if lang not in Fullname:
             abort(404,"Invalid code language specified: " + lang)
         data = db.mf_newforms.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         code = form.code
         comment = code.pop('comment').get(lang).strip()
@@ -330,20 +339,20 @@ class CMF_download(Downloader):
     def download_newspace(self, label, lang='text'):
         data = db.mf_newspaces.lookup(label)
         if data is None:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         space = WebNewformSpace(data)
         data['newforms'] = [form['label'] for form in space.newforms]
         data['oldspaces'] = space.oldspaces
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for newspace %s,'%(label))
+                          title='Stored data for newspace %s,' % (label))
 
     def download_full_space(self, label, lang='text'):
         try:
             space = WebGamma1Space.by_label(label)
         except ValueError:
-            return abort(404, "Label not found: %s"%label)
+            return abort(404, "Label not found: %s" % label)
         data = {}
         for attr in ['level', 'weight', 'label', 'oldspaces']:
             data[attr] = getattr(space, attr)
@@ -355,7 +364,7 @@ class CMF_download(Downloader):
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,
-                          title='Stored data for newspace %s,'%(label))
+                          title='Stored data for newspace %s,' % (label))
 
     def download_spaces(self, info):
         lang = info.get(self.lang_key,'text').strip()
@@ -467,7 +476,7 @@ class CMF_download(Downloader):
                 ]
         if hecke_nf is None or hecke_nf['hecke_ring_character_values'] is None:
             return out + [
-                    'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
+                    'function MakeCharacter_%d_%s_Hecke( : Kf := Kf)' % (newform.level, newform.char_orbit_label),
                     '    return MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                     'end function;'
                     ]
@@ -483,13 +492,13 @@ class CMF_download(Downloader):
             self.explain.append(explain)
             out += [
                 explain,
-                'function MakeCharacter_%d_%s_Hecke(Kf)' % (newform.level, newform.char_orbit_label),
+                'function MakeCharacter_%d_%s_Hecke( : Kf := false)' % (newform.level, newform.char_orbit_label),
                     '    ' + magma.assign('N', level).rstrip('\n'), # level
                     '    ' + magma.assign('order', order).rstrip('\n'), # order of the character
                     '    ' + magma.assign('char_gens', char_gens).rstrip('\n'), # generators
                     '    ' + magma.assign('char_values', char_values).rstrip('\n'), # chi(gens[i]) = zeta_n^exp[i]
                     '    assert UnitGenerators(DirichletGroup(N)) eq char_gens;',
-                    '    values := ConvertToHeckeField(char_values : pass_field := true, Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
+                    '    values := ConvertToHeckeField(char_values : pass_field := ISA(Type(Kf), Fld), Kf := Kf); // the value of chi on the gens as elements in the Hecke field',
                     '    F := Universe(values);// the Hecke field',
                     '    chi := DirichletCharacterFromValuesOnUnitGenerators(DirichletGroup(N,F),values);',
                     '    return chi;',
@@ -510,7 +519,7 @@ class CMF_download(Downloader):
                 '    // 1/(1 - a_p T + p^(weight - 1) * char(p) T^2) = 1 + a_p T + a_{p^2} T^2 + ...',
                 '    R<T> := PowerSeriesRing(FXY : Precision := log_prec + 1);',
                 '    recursion := Coefficients(1/(1 - X*T + Y*T^2));',
-                '    coeffs := [F!0: i in [1..(prec+1)]];',
+                '    coeffs := [F!0: i in [1..prec]];',
                 '    coeffs[1] := 1; //a_1',
                 '    for i := 1 to #primes do',
                 '        p := primes[i];',
@@ -548,7 +557,7 @@ class CMF_download(Downloader):
             '    ' + magma.assign('weight', newform.weight).rstrip('\n'),
             '    ' + magma.assign('raw_aps', hecke_nf['ap']).rstrip('\n'),
             '    aps := ConvertToHeckeField(raw_aps);',
-            '    chi := MakeCharacter_%d_%s_Hecke(Universe(aps));' % (newform.level, newform.char_orbit_label),
+            '    chi := MakeCharacter_%d_%s_Hecke( : Kf := Universe(aps));' % (newform.level, newform.char_orbit_label),
             '    return ExtendMultiplicatively(weight, aps, chi);',
             'end function;',
             ]

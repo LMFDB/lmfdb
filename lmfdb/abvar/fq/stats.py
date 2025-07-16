@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 
 from collections import defaultdict
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
-from lmfdb.backend.utils import range_formatter
+from psycodict.utils import range_formatter
 from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method

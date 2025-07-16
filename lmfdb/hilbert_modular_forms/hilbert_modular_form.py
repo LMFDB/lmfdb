@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import abort, render_template, url_for, request, redirect, make_response
 
 from lmfdb import db
@@ -144,8 +143,8 @@ hmf_columns = SearchColumns([
     MathCol("level_norm", "mf.level_norm", "Level norm", default=False),
     ListCol("weight", "mf.hilbert.weight_vector", "Weight", mathmode=True, default=False),
     MathCol("dimension", "mf.hilbert.dimension", "Dimension"),
-    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm=="yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
-    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc=="yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
+    ProcessedCol("is_CM", "mf.cm", "CM", lambda cm: "&#x2713;" if cm == "yes" else "", short_title="CM", align="center", apply_download=lambda cm: (cm == "yes"), default=False),
+    ProcessedCol("is_base_change", "mf.base_change", "Base change", lambda bc: "&#x2713;" if bc == "yes" else "", align="center", apply_download=lambda bc: (bc == "yes"), default=False)])
 
 @search_wrap(table=db.hmf_forms,
              title='Hilbert modular form search results',
@@ -214,9 +213,9 @@ def download_hmf_magma(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    hecke_pol  = f['hecke_polynomial']
+    hecke_pol = f['hecke_polynomial']
     hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    AL_eigs    = f['AL_eigenvalues']
+    AL_eigs = f['AL_eigenvalues']
 
     outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
     outstr += '  It will load the data associated to the HMF, including\n'
@@ -232,7 +231,7 @@ def download_hmf_magma(**args):
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
     outstr += 'ZF := Integers(F);\n\n'
-#    outstr += 'ideals_str := [' + ','.join([st for st in F_hmf["ideals"]]) + '];\n'
+#    outstr += 'ideals_str := [' + ','.join(st for st in F_hmf["ideals"]) + '];\n'
 #    outstr += 'ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];\n\n'
 
     outstr += 'NN := ideal<ZF | {' + f["level_ideal"][1:-1] + '}>;\n\n'
@@ -327,9 +326,9 @@ def download_hmf_sage(**args):
     if f is None:
         return "No such form"
 
-    hecke_pol  = f['hecke_polynomial']
+    hecke_pol = f['hecke_polynomial']
     hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    AL_eigs    = f['AL_eigenvalues']
+    AL_eigs = f['AL_eigenvalues']
 
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
@@ -422,13 +421,7 @@ def render_hmf_webpage(**args):
                             url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
 
     else:
-        # if there is no instance
-        # old code
-        if hmf_field['narrow_class_no'] == 1 and nf.disc()**2 * data['level_norm'] < 40000:
-            info['friends'] = [('L-function',
-                                url_for("l_functions.l_function_hmf_page", field=info['field_label'], label=info['label'], character='0', number='0'))]
-        else:
-            info['friends'] = [('L-function not available', "")]
+        info['friends'] = [('L-function not available', "")]
 
         if data['dimension'] == 1:   # Try to attach associated elliptic curve
             lab = split_class_label(info['label'])
@@ -453,10 +446,10 @@ def render_hmf_webpage(**args):
         numeigs = 20
     info['numeigs'] = numeigs
 
-    hecke_pol  = data['hecke_polynomial']
-    eigs       = [str(eig) for eig in data['hecke_eigenvalues']]
+    hecke_pol = data['hecke_polynomial']
+    eigs = [str(eig) for eig in data['hecke_eigenvalues']]
     eigs = eigs[:min(len(eigs), numeigs)]
-    AL_eigs    = data['AL_eigenvalues']
+    AL_eigs = data['AL_eigenvalues']
 
     primes = hmf_field['primes']
     n = min(len(eigs), len(primes))
@@ -489,7 +482,7 @@ def render_hmf_webpage(**args):
                             'prime_norm': al[0][1:al[0].index(',')]} for al in data['AL_eigenvalues']]
 
     max_eig_len = max([len(eig['eigenvalue']) for eig in info['eigs']])
-    display_eigs = display_eigs or (max_eig_len<=300)
+    display_eigs = display_eigs or (max_eig_len <= 300)
     info['display_eigs'] = display_eigs
     if not display_eigs:
         for eig in info['eigs']:
@@ -533,7 +526,7 @@ def render_hmf_webpage(**args):
         bread=bread,
         friends=info['friends'],
         learnmore=learnmore_list(),
-        KNOWL_ID="mf.hilbert.%s"%label,
+        KNOWL_ID="mf.hilbert.%s" % label,
     )
 
 @hmf_page.route("/data/<label>")
@@ -592,7 +585,7 @@ def statistics_by_degree(d):
     counts = HMFstats().counts()
     info = {}
     if d not in counts['degrees']:
-        if d==1:
+        if d == 1:
             info['error'] = r"For modular forms over $\mathbb{Q}$ go <a href=%s>here</a>" % url_for('cmf.index')
         else:
             info['error'] = "The database does not contain any Hilbert modular forms over fields of degree %s" % d
@@ -603,22 +596,22 @@ def statistics_by_degree(d):
         info['degree'] = d
         info['stats'] = HMFstats().statistics(d)
 
-    if d==2:
+    if d == 2:
         t = 'Hilbert modular forms over real quadratic number fields'
-    elif d==3:
+    elif d == 3:
         t = 'Hilbert modular forms over totally real cubic number fields'
-    elif d==4:
+    elif d == 4:
         t = 'Hilbert modular forms over totally real quartic number fields'
-    elif d==5:
+    elif d == 5:
         t = 'Hilbert modular forms over totally real quintic number fields'
-    elif d==6:
+    elif d == 6:
         t = 'Hilbert modular forms over totally real sextic number fields'
     else:
         t = 'Hilbert modular forms over totally real fields of degree %s' % d
 
     bread = get_bread("Degree %s" % d)
 
-    if d=='bad':
+    if d == 'bad':
         t = 'Hilbert modular forms'
         bread = bread[:-1]
 

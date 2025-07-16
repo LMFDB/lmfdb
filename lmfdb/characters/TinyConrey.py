@@ -100,7 +100,8 @@ class ConreyCharacter():
     """
 
     def __init__(self, modulus, number):
-        assert gcd(modulus, number)==1
+        if gcd(modulus, number) != 1:
+            raise ValueError(f"Conrey number ({number}) must be coprime to the modulus ({modulus})")
         self.modulus = Integer(modulus)
         self.number = Integer(number)
         self.conrey = Mod(number,modulus)

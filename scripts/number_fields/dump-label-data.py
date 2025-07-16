@@ -1,6 +1,6 @@
 #!/usr/local/bin/sage -python
 # -*- coding: utf-8 -*-
-r""" 
+r"""
    Dump existing label information
    If a degree is given, just do that degree
 """
@@ -14,7 +14,7 @@ from lmfdb import db
 
 fields = db.nf_fields
 
-saving = True 
+saving = True
 
 count = 0
 #t = time.time()
@@ -37,7 +37,7 @@ for deg in dlist:
             pol = pol.replace("L","")
             disc = f['disc_abs']
             n = int(f['degree'])
-            sig = n-2*f['r2'] 
+            sig = n-2*f['r2']
             outf.write("[%s,%s,%d,%d]\n"%(pol,n,disc,sig))
         outf.close()
 

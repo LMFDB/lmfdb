@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-import unittest2
+import unittest
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -12,12 +12,12 @@ class TensorProductTest(LmfdbTest):
     conductor is displayed somewhere on the page.
     """
 
-    @unittest2.skip("Tests tensor product of elliptic curve and Dirchlet L-functions -- skipping all tensor product tests ")
+    @unittest.skip("Tests tensor product of elliptic curve and Dirchlet L-functions -- skipping all tensor product tests ")
     def test_ellcurve_dirichletchar(self):
         L = self.tc.get("/TensorProducts/show/?obj1=Character%2FDirichlet%2F13%2F2&obj2=EllipticCurve%2FQ%2F11.a2")
         assert '1859' in L.get_data(as_text=True)
 
-    @unittest2.skip("Tests tensor product of artin rep and modular form L-functions -- skipping all tensor product tests ")
+    @unittest.skip("Tests tensor product of artin rep and modular form L-functions -- skipping all tensor product tests ")
     def test_modform_artinrep(self):
         L1 = self.tc.get("ModularForm/GL2/Q/holomorphic/1/12/1/a/")
         assert "6048q^{6}" in L1.get_data(as_text=True)
