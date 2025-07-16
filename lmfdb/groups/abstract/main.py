@@ -828,7 +828,7 @@ def auto_gens(label):
         "auto_gens_page.html",
         gp=gp,
         title="Generators of automorphism group for $%s$" % gp.tex_name,
-        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
+        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
                         )
 
 
@@ -867,7 +867,7 @@ def char_table(label):
         gp=gp,
         info=info,
         title=f"Character table for ${gp.tex_name}$",
-        bread=get_bread([(label, url_for(".by_label", label=label)), ("Character table", " ")]),
+        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Character table", " ")]),
     )
 
 
@@ -890,7 +890,7 @@ def Qchar_table(label):
         gp=gp,
         info=info,
         title="Rational character table for $%s$" % gp.tex_name,
-        bread=get_bread([(label, url_for(".by_label", label=label)), ("Rational character table", " ")]),
+        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Rational character table", " ")]),
     )
 
 
@@ -1744,7 +1744,7 @@ def render_abstract_group(label, data=None):
             )
             friends += [("As the component group of a Sato-Tate group", st_url)]
 
-    bread = get_bread([(label, "")])
+    bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
 
     return render_template(
