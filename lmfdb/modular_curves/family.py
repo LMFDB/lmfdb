@@ -1,7 +1,6 @@
 
 from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb.modular_curves.web_curve import get_bread
-from lmfdb.utils import display_knowl
 
 def ModCurveFamily(name):
     return get_family(name)
