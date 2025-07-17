@@ -897,20 +897,23 @@ def auto_gens(label):
     props = [
         ("Order", factor_latex(gp.aut_order)),
         ]
-    if gp.aut_abelian is None:
-        props.append(("Abelian", "not computed"))
-    elif gp.aut_abelian:
-        props.append(("Abelian", "yes"))
-    else:
-        props.append(("Abelian", "no"))
+    def ynnc(val):
+        if val is None:
+            return "not computed"
+        if val:
+            return "yes"
+        return "no"
+    props.append(("Abelian", ynnc(gp.aut_abelian)))
+    props.append(("Solvable", ynnc(gp.aut_solvable)))
+    props.append(("Nilpotent", ynnc(gp.aut_nilpotent)))
     if gp.outer_order is None:
-        props.append(("Outer", "not computed"))
+        props.append(("Outer order", "not computed"))
     else:
-        props.append(("Outer", factor_latex(gp.outer_order))),
+        props.append(("Outer order", factor_latex(gp.outer_order))),
     if gp.inner_order is None:
-        props.append(("Inner", "not computed"))
+        props.append(("Inner order", "not computed"))
     else:
-        props.append(("Inner", factor_latex(gp.inner_order)))
+        props.append(("Inner order", factor_latex(gp.inner_order)))
 
     return render_template(
         "auto_page.html",
