@@ -191,11 +191,29 @@
     <tr>
       <td>{{ KNOWL('modcurve.decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td>
     </tr>
+    {% if (curve.newforms_by_dimrank|length) == 1 %}
     <tr>
       <td>{{ KNOWL('modcurve.decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td>
     </tr>
+    {% endif %}
   </table>
-{% endif %}
+  {% if (curve.newforms_by_dimrank|length) > 1 %}
+    <table class="ntdata" style="margin-left:0">
+      <tr>
+        <th>{{ KNOWL('cmf.dimension', 'Dimension') }}</th>
+        <th>{{ KNOWL('cmf.analytic_rank', 'Rank') }}</th>
+        <th>{{ KNOWL('modcurve.decomposition', 'Newforms') }}</th>
+      </tr>
+      {% for dim, rank, newforms in curve.newforms_by_dimrank %}
+        <tr>
+          <td>${{ dim }}$</td>
+          <td>${{ rank }}$</td>
+          <td sytle="white-space:normal;">{{ newforms | safe }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %} {# (curve.newforms_by_dimrank|length) > 1 #}
+{% endif %} {# curve.genus > 0 and curve.dims is not none #}
 
 {% set models = curve.formatted_models %}
 {% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}

@@ -1,6 +1,6 @@
 
 import re
-from collections import Counter
+from collections import defaultdict, Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
@@ -178,7 +178,17 @@ def formatted_newforms(newforms, mults):
         return "not computed"
     if not newforms:
         return ""
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
+    return ", ".join(f'<a style="display: inline;" href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
+
+def newforms_by_dimrank(newforms, mults, dims, ranks):
+    if newforms is None or mults is None or dims is None or ranks is None:
+        # We return an empty list so that the template falls back on formatted_newforms
+        return []
+    by_dimrank = defaultdict(list)
+    for mf, m, d, r in zip(newforms, mults, dims, ranks):
+        by_dimrank[d,r].append((mf, m))
+    return [(d, r, formatted_newforms(*zip(*by_dimrank[d,r])))
+            for d, r in sorted(by_dimrank)]
 
 
 def formatted_model_html(self, m):
@@ -402,9 +412,15 @@ def combined_data(label):
     if data is None:
         return
     if not data["contains_negative_one"]:
-        coarse = db.gps_gl2zhat.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
+        coarse = db.gps_gl2zhat.lookup(data["coarse_label"], ["parents", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
+    data["gassman_class"] = gassman_class = ".".join(data["coarse_label"].split(".")[:4])
+    decomp = db.modcurve_decomposition.lookup(gassman_class)
+    if decomp is None:
+        data["newforms"] = data["dims"] = data["mults"] = data["analytic_ranks"] = None
+    else:
+        data.update(decomp)
     return data
 
 def learnmore_list():
@@ -516,6 +532,10 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def formatted_newforms(self):
         return formatted_newforms(self.newforms, self.mults)
+
+    @lazy_attribute
+    def newforms_by_dimrank(self):
+        return newforms_by_dimrank(self.newforms, self.mults, self.dims, self.analytic_ranks)
 
     @lazy_attribute
     def obstruction_primes(self):
