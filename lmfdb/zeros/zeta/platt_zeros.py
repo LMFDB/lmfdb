@@ -8,7 +8,7 @@ from pathlib import Path
 import sqlite3
 import struct
 import sys
-from math import log, log2
+from math import log2
 
 import mpmath
 mpmath.mp.prec = 300
