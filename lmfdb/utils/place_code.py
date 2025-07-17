@@ -39,8 +39,6 @@ class CodeSnippet():
             raise ValueError("No code to place, please init with code item")
         item = self.item
         snippet_str = self.pre # initiate new string
-        prompt_style = "color: gray;"
-        code_style = "user-select: text; flex: 1"
         code = self.code
         if code[item]:
             for L in code[item]:
@@ -56,7 +54,7 @@ class CodeSnippet():
                 snippet_str += f"""
     <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top">
         <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 12px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
-        <span class="prompt" style="{prompt_style}">{prompt}:&nbsp;</span><span class="code" style="{code_style}">{sep.join(lines)}</span>
+        <span class="prompt">{prompt}:</span><span class="code">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
     """
