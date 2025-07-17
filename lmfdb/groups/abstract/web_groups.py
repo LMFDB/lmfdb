@@ -2225,6 +2225,15 @@ class WebAbstractGroup(WebObj):
         gens = self.aut_gens
         return [ [ self.decode(gen, as_str=True) for gen in gens[i]] for i in range(len(gens))]
 
+    def auto_perms_list(self):
+        perms = self.aut_perms
+        return [ self.decode_as_perm(perm, n= self.aut_permdeg, as_str=True) for perm in perms ]
+
+    def outer_perms_list(self):
+        perms = self.outer_perms
+        return [ self.decode_as_perm(perm, n= self.outer_permdeg, as_str=True) for perm in perms ]
+
+
     def auto_gens_data(self):
         gens = self.aut_gens
         gens = [ [ self.decode(gen) for gen in z ] for z in gens]
@@ -2513,8 +2522,11 @@ class WebAbstractGroup(WebObj):
             return "not computed"
         aut_order = pos_int_and_factor(self.aut_order)
         tex = self.aut_tex
-        if tex is not None:
-            tex = tex.replace("\t", r"\t")
+        if tex is None:
+            tex = "Group"
+            knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">{tex}</a>'
+            return f'{knowl} of order {aut_order}'
+        tex = tex.replace("\t", r"\t")
         knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">${tex}$</a>'
         return f'{knowl}, of order {aut_order}'
 
@@ -2552,7 +2564,7 @@ class WebAbstractGroup(WebObj):
                 return "not computed"
             if tex is None:
                 return f"Group of order {pos_int_and_factor(self.inner_order)}"
-            return "${tex}$"
+            return f"${tex}$"
         url = url_for("abstract.by_label", label=self.central_quotient)
         if tex is None:
             tex = group_names_pretty(self.central_quotient)

@@ -543,6 +543,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
+
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -694,10 +695,17 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
     else:
         main = f"This {name} is {display_props(props)}."
     unknown = [prop for prop in overall_order if getattr(gp, prefix+prop, None) is None]
+    if {'abelian', 'nonabelian'} <= set(unknown):
+        unknown.remove('nonabelian')
+    if {'solvable', 'nonsolvable'} <= set(unknown):
+        unknown.remove('nonsolvable')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
+        if display_props(props) == "":
+            return f"We have not determined whether the {name} is {display_props(unknown, 'or')}."
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+
     return main
 
 
@@ -885,12 +893,32 @@ def auto_gens(label):
     info["aut_boolean_string"] = create_boolean_aut_string(gp)
     info["out_boolean_string"] = create_boolean_aut_string(gp, prefix="outer_", name="outer automorphism group")
     info["inner_boolean_string"] = create_boolean_aut_string(gp, prefix="inner_", name="inner automorphism group")
+
+    props = [
+        ("Order", factor_latex(gp.aut_order)),
+        ]
+    if gp.aut_abelian is None:
+        props.append(("Abelian", "not computed"))
+    elif gp.aut_abelian:
+        props.append(("Abelian", "yes"))
+    else:
+        props.append(("Abelian", "no"))
+    if gp.outer_order is None:
+        props.append(("Outer", "not computed"))
+    else:
+        props.append(("Outer", factor_latex(gp.outer_order))),
+    if gp.inner_order is None:
+        props.append(("Inner", "not computed"))
+    else:
+        props.append(("Inner", factor_latex(gp.inner_order)))
+
     return render_template(
         "auto_page.html",
         info=info,
         gp=gp,
+        properties=props,
         title="Automorphism group of $%s$" % gp.tex_name,
-        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group", " ")]),
+        bread=get_bread([(label, url_for(".by_label", label=label)), ("Automorphism group", " ")])
     )
 
 
@@ -3431,7 +3459,7 @@ def autknowl_data(label):
                 ans += f', of order {pos_int_and_factor(ovar)}'
             ans += '<br />\n'
         elif ovar is not None:
-            ans += f'{name} automorphism group of order ${pos_int_and_factor(ovar)}$<br />\n'
+            ans += f'{name} automorphism group of order {pos_int_and_factor(ovar)}<br />\n'
     ans += create_boolean_aut_string(gp, type="knowl") + '<br />\n'
     ans += f'<div align="right"><a href="{url_for("abstract.auto_gens", label=label)}">Automorphism group data for {label}</div>'
     return Markup(ans)
