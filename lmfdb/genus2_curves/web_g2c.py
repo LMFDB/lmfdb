@@ -844,7 +844,7 @@ class WebG2C():
         data['root_number'] = ZZ(curve['root_number'])
         data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
-        data['bad_lfactors_pretty'] = [(c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
+        data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
         read_bad_lfactors = {c[0]: c[1] for c in data['bad_lfactors_pretty']}
         data['bad_primes_to_possibly_unavailable_l_factors'] = [(p, (read_bad_lfactors[p] if p in read_bad_lfactors.keys() else "N/A")) for p in curve['bad_primes']]
         if is_curve:
