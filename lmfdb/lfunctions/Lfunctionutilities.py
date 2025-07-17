@@ -220,7 +220,18 @@ def Lfactor_to_label_and_link_if_exists(poly):
     if not AbvarExists(g,q):
         return label
     return '<a href="%s">%s</a>' % (url_for_label(label), label)
-    
+
+def display_isogeny_label(L):
+    if not (L.motivic_weight==1 and L.rational and L.degree <= 6):
+        return False
+    if L.degree <= 3:
+        return True 
+    elif L.degree == 4:
+        return any(not(p in L.bad_lfactors) for p in [2,3,5])
+    elif L.degree == 5:
+        return any(not(p in L.bad_lfactors) for p in [2,3])
+    else: #L.degree == 6
+        return not (2 in L.bad_lfactors)
 
 def lfuncDShtml(L, fmt):
     """ Returns the HTML for displaying the Dirichlet series of the L-function L.
@@ -417,7 +428,7 @@ def lfuncEPhtml(L, fmt):
     if display_galois:
         eptable += r"<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
-    if L.motivic_weight==1 and L.rational:
+    if display_isogeny_label(L):
         eptable += r"""<th class='weight' style="text-align: left; font-weight: normal;">Isogeny Class over $\mathbf{F}_p$</th>"""
     eptable += "</tr>"
     eptable += "</thead>"
@@ -435,12 +446,12 @@ def lfuncEPhtml(L, fmt):
             elif not display_galois:
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                if L.motivic_weight==1 and L.rational:
+                if display_isogeny_label(L):
                     isog_class = '' if p in bad_primes else Lfactor_to_label_and_link_if_exists(poly)
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                if L.motivic_weight==1 and L.rational:
+                if display_isogeny_label(L):
                     isog_class = '' if p in bad_primes else Lfactor_to_label_and_link_if_exists(poly)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
@@ -451,7 +462,7 @@ def lfuncEPhtml(L, fmt):
                     out += r"$\times$".join(transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups)
                 out += "</td>"
             out += "<td> %s </td>" % factors
-            if L.motivic_weight==1 and L.rational:
+            if display_isogeny_label(L):
                 out += "<td> %s </td>" % isog_class
             out += "</tr>"
 
