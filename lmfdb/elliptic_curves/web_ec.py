@@ -689,7 +689,7 @@ class WebEC():
 
         mwbsd['equal'] = r'=' if mwbsd['analytic_rank'] < 2 else r'\overset{?}{=}'
         mwbsd['rhs'] = '?' if mwbsd['sha'] == '?' else mwbsd['sha'] * mwbsd['real_period'] * mwbsd['reg'] * mwbsd['tamagawa_product'] / mwbsd['torsion']**2
-        mwbsd['formula'] = r'%0.9f \approx %s %s \frac{\# &#1064;(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \approx %0.9f' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
+        mwbsd['formula'] = r'\begin{aligned} %0.9f \approx %s & %s \frac{\# Ш(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \\ & \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \\ & \approx %0.9f\end{aligned}' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
 
     def display_modell_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
