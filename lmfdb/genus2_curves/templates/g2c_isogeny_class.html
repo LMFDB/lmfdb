@@ -46,7 +46,7 @@ text-align: center;
             <th>Prime</th>
             <th align="left">L-Factor</th>
         </tr>
-        {% for c in data.bad_lfactors_pretty %}
+        {% for c in data.bad_primes_to_possibly_unavailable_l_factors %}
         <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
         {% endfor %}
         </table>

@@ -190,15 +190,23 @@ class ECisog_class():
         self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
         self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
         
-        lfun_url = self.lfunction_link
-        origin_url = lfun_url.lstrip('/L/').rstrip('/')
+        lfunc_url = self.lfunction_link
+        origin_url = lfunc_url.lstrip('/L/').rstrip('/')
         self.lfunc_label = db.lfunc_instances.lucky({'url':origin_url}, "label")
-        self.euler_factors = db.lfunc_search.lookup(self.lfunc_label)["euler_factors"]
-        self.good_lfactors = [[nth_prime(n+1), self.euler_factors[n]] for n in range(len(self.euler_factors)) if nth_prime(n+1) < 30 and self.conductor % nth_prime(n+1)]
-        self.good_lfactors_pretty_with_label = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(1,c[0]) else '') for c in self.good_lfactors]
-        self.bad_lfactors = db.lfunc_lfunctions.lucky({"label": self.lfunc_label})["bad_lfactors"]
-        self.bad_lfactors_pretty = [(c[0], list_to_factored_poly_otherorder(c[1])) for c in self.bad_lfactors]
-        
+        if self.lfunc_label: 
+            self.lfunc_entry = db.lfunc_search.lookup(self.lfunc_label)
+            if self.lfunc_entry:
+                self.has_lfunction = True
+                self.euler_factors = self.lfunc_entry["euler_factors"]
+                self.good_lfactors = [[nth_prime(n+1), self.euler_factors[n]] for n in range(len(self.euler_factors)) if nth_prime(n+1) < 30 and self.conductor % nth_prime(n+1)]
+                self.good_lfactors_pretty_with_label = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(1,c[0]) else '') for c in self.good_lfactors]
+                self.bad_lfactors = db.lfunc_lfunctions.lucky({"label": self.lfunc_label})["bad_lfactors"]
+                self.bad_lfactors_pretty = [(c[0], list_to_factored_poly_otherorder(c[1])) for c in self.bad_lfactors]
+            else:
+                self.has_lfunction = False
+        else:
+            self.has_lfunction = False
+            
 def make_graph(M, vertex_labels=None):
     """
     Code extracted from Sage's elliptic curve isogeny class (reshaped

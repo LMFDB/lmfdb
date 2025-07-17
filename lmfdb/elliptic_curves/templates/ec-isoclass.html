@@ -107,6 +107,7 @@ curve {{info.optimal_label}}.{% endif %}
 {{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
 </p>
 
+{% if info.has_lfunction %}
 <h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
 <p>
 <table>
@@ -149,6 +150,7 @@ curve {{info.optimal_label}}.{% endif %}
     <tr><td>&nbsp;</td></tr>
     <tr><td colspan="2">See <a href="{{info.lfunction_link}}">L-function page</a> for more information</td></tr>
 </table>
+{% endif %}
 
 <h2>{{KNOWL('ec.complex_multiplication', title='Complex multiplication')}}</h2>
 {% if info.cm %}
