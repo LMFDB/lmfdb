@@ -97,6 +97,12 @@ class_group:
   magma: ClassGroup(K); 
   oscar: class_group(K)
 
+narrow_class_group:
+  comment: Narrow class group
+  sage:  K.narrow_class_group().invariants()
+  pari:  bnfnarrow(K)
+  magma: NarrowClassGroup(K);
+
 unit_group:
   comment: Unit group
   sage:  UK = K.unit_group()
