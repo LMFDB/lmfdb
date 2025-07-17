@@ -73,7 +73,7 @@ class SatoTateGroupTest(LmfdbTest):
         assert '3 matches' in L.get_data(as_text=True)
         data = list(db.gps_st.search({'weight': 1, 'degree': 2}, projection='label'))
         assert len(data) == 3
-        print("")
+        print()
         for label in data:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()

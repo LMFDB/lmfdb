@@ -225,7 +225,7 @@ def register_new():
 @login_page.route("/register/new/<int:N>")
 @admin_required
 def register(N=10):
-    N = 100 if N > 100 else N
+    N = min(N, 100)
     import random
     tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
     userdb.create_tokens(tokens)
