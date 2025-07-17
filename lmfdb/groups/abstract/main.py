@@ -676,7 +676,6 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
         "quasisimple",
         "almost_simple",
     ]
-    short_string = type == "knowl"
     overall_display = get_group_prop_display(gp)
 
     hence_str = display_knowl("group.properties_interdependencies", "hence")
