@@ -222,16 +222,18 @@ def Lfactor_to_label_and_link_if_exists(poly):
     return '<a href="%s">%s</a>' % (url_for_label(label), label)
 
 def display_isogeny_label(L):
-    if not (L.motivic_weight==1 and L.rational and L.degree <= 6):
+    g = L.degree // 2
+    bad_primes = [factor[0] for factor in L.bad_lfactors]
+    if not (L.motivic_weight==1 and L.rational and g <= 6):
         return False
-    if L.degree <= 3:
+    if g <= 3:
         return True 
-    elif L.degree == 4:
-        return any(not(p in L.bad_lfactors) for p in [2,3,5])
-    elif L.degree == 5:
-        return any(not(p in L.bad_lfactors) for p in [2,3])
-    else: #L.degree == 6
-        return not (2 in L.bad_lfactors)
+    elif g == 4:
+        return any(not(p in bad_primes) for p in [2,3,5])
+    elif g == 5:
+        return any(not(p in bad_primes) for p in [2,3])
+    else: # g == 6
+        return not (2 in bad_primes)
 
 def lfuncDShtml(L, fmt):
     """ Returns the HTML for displaying the Dirichlet series of the L-function L.
