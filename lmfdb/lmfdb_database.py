@@ -90,13 +90,13 @@ class LMFDBSearchTable(PostgresSearchTable):
         - ``other_table`` -- a string, the name of the other table.
         - ``keep_old`` -- if true, new knowls for this table will be created from the column knowls for the old table.  Otherwise, the old knowls will be renamed, or deleted if they are not columns of this table.
         """
-        from lmfdb.knowledge.knowl import knowldb
+        from lmfdb.knowledge.knowl import knowldb, utc_now_naive
         knowls = knowldb.get_column_description(other_table)
         with DelayCommit(self):
             for col, knowl in knowls.items():
                 if col in self.col_type:
                     if keep_old:
-                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=datetime.datetime.utcnow())
+                        new_knowl = knowl.copy(ID=f'columns.{self.search_table}.{col}', timestamp=utc_now_naive())
                         who = self._db.login()
                         new_knowl.save(who, most_recent=knowl, minor=True)
                     else:
@@ -362,7 +362,7 @@ class LMFDBDatabase(PostgresDatabase):
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        self._execute(inserter, [uid, datetime.datetime.utcnow(), tablename, operation, data])
+        self._execute(inserter, [uid, datetime.datetime.now(datetime.UTC), tablename, operation, data])
 
     def verify(
         self,

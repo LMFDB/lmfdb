@@ -50,6 +50,11 @@ class DynamicKnowlTest(LmfdbTest):
             from lmfdb.utils.config import Configuration
             from psycopg2.sql import SQL
             from datetime import timedelta, datetime
+            try:
+                from datetime import UTC               # Py 3.11+
+            except ImportError:                         # Py ≤3.10
+                from datetime import timezone as _tz
+                UTC = _tz.utc
             dev_config = Configuration()
             # Modify configuration to connect to devmirror
             for D in [dev_config.default_args["postgresql"], dev_config.postgresql_options, dev_config.options["postgresql"]]:
@@ -62,7 +67,7 @@ class DynamicKnowlTest(LmfdbTest):
             dev_db = PostgresDatabase(dev_config)
 
             # Updates happen every 20 minutes, so we only compare knowls older than that (plus a buffer).
-            cutoff = datetime.utcnow() - timedelta(minutes=30)
+            cutoff = datetime.now(UTC) - timedelta(minutes=30)
 
             t_query = SQL("SELECT timestamp FROM kwl_knowls WHERE timestamp < %s LIMIT 1")
             dev_t = dev_db._execute(t_query, [cutoff]).fetchone()[0]
