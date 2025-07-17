@@ -64,7 +64,9 @@
   <table class="ntdata" style="margin-left:0;">
     <thead>
       <tr>
+	{% if gp.aut_gen_orders %}
         <th>{{KNOWL('group.element_order','Order')}}</th>
+	{% endif %}
         {% for c in gp.auto_gens_list()[0] %}
         <th>${{c}}$</th>
         {% endfor %}
@@ -75,8 +77,9 @@
       </tr></thead>
       <tbody>
 	{% for i in range(1,gp.auto_gens_list()|length) %}
-      <tr>
-      <td align="center"> {{ gp.aut_gen_orders[i-1] }} </td>
+	<tr>
+	     {% if gp.aut_gen_orders %}
+      <td align="center"> {{ gp.aut_gen_orders[i-1] }} </td> {% endif %}
 	{% for j in gp.auto_gens_list()[i] %}
       <td>${{j}}$ </td>
       {% endfor %}
@@ -128,8 +131,8 @@
 <p>
   <table class="ntdata" style="margin-left:0;">
     <thead>
-      <tr>
-        <th>{{KNOWL('group.element_order','Order in $\\Out(G)$')}}</th>
+      <tr>{% if gp.outer_gen_order %}
+        <th>{{KNOWL('group.element_order','Order in $\\Out(G)$')}}</th> {% endif %}
         {% for c in gp.auto_gens_list()[0] %}
         <th>${{c}}$</th>
         {% endfor %}
@@ -140,8 +143,8 @@
     </thead>
     <tbody>
       {% for i in range(gp.outer_gens|length) %}
-      <tr>
-        <td align="center"> {{ gp.outer_gen_orders[i] }} </td>
+      <tr>{% if gp.outer_gen_order %}
+        <td align="center"> {{ gp.outer_gen_orders[i] }} </td> {% endif %}
         {% for g in gp.outer_gens[i] %}
         <td>${{ gp.decode(g, as_str=True) }}$ </td>
         {% endfor %}

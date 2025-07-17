@@ -2507,7 +2507,9 @@ class WebAbstractGroup(WebObj):
             return "not computed"
         aut_order = pos_int_and_factor(self.aut_order)
         tex = self.aut_tex
-        if tex is not None:
+        if tex is None:
+            return f'Group of order {aut_order}'
+        else:
             tex = tex.replace("\t",r"\t")
         if self.aut_group is not None:
             url = url_for(".by_label", label=self.aut_group)
@@ -2520,6 +2522,8 @@ class WebAbstractGroup(WebObj):
     def aut_group_knowl(self):
         if self.aut_order is None:
             return "not computed"
+        if self.live():
+            return f"Group of order {self.aut_order}"
         aut_order = pos_int_and_factor(self.aut_order)
         tex = self.aut_tex
         if tex is None:
@@ -2544,6 +2548,8 @@ class WebAbstractGroup(WebObj):
 
     # outer automorphism group
     def show_outer_group(self):
+        if self.live():
+            return f"Group of order {self.order_order}"
         tex = self.outer_tex
         if self.outer_group is None:
             if self.outer_order is None:
