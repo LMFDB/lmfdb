@@ -15,6 +15,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly,
 from lmfdb.utils.web_display import compress_int
 from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
+from lmfdb.number_fields.draw_spectrum import draw_spec, draw_gaga
 
 wnflog = make_logger("WNF")
 
@@ -357,6 +358,13 @@ def nf_knowl_guts(label):
     out += '</div>'
     return out
 
+@cached_function
+def get_local_field(lab):
+    LF = db.lf_fields.lookup(lab)
+    if not LF:
+        LF = db.lf_fields.lucky({'new_label': lab})
+    return LF
+
 class WebNumberField:
     """
      Class for retrieving number field information from the database
@@ -562,7 +570,7 @@ class WebNumberField:
             return ([-newd, 0, 1], newd)
 
     def discrootfield(self):
-        (rfcoeffs, newd) = self.discrootfieldcoeffs()
+        rfcoeffs, newd = self.discrootfieldcoeffs()
         return formatfield(rfcoeffs, missing_text=r'$\Q(\sqrt{%s}$)' % compress_int(newd, sides=5)[0])
 
     # Warning, this produces our preferred integral basis
@@ -844,6 +852,23 @@ class WebNumberField:
             return [-1]
         return self._data['class_group']
 
+    def narrow_class_group_invariants(self, in_search_results=False):
+        if not self.haskey('narrow_class_group'):
+            return "n/a" if in_search_results else na_text()
+        cg_list = self._data['narrow_class_group']
+        if not cg_list:
+            invs = 'trivial'
+        else:
+            invs = cg_list
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
+
+    def narrow_class_group_invariants_raw(self):
+        if not self.haskey('narrow_class_group'):
+            return [-1]
+        return self._data['narrow_class_group']
+
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
@@ -854,6 +879,16 @@ class WebNumberField:
             return '$%s$, which has order %s' % (cg_string, self.class_number_latex())
         return na_text()
 
+    def narrow_class_group(self):
+        if self.haskey('narrow_class_group'):
+            cg_list = self._data['narrow_class_group']
+            if not cg_list:
+                return 'Trivial group, which has order $1$'
+            cg_list = [r'C_{%s}' % z for z in cg_list]
+            cg_string = r'\times '.join(cg_list)
+            return '$%s$, which has order %s' % (cg_string, self.narrow_class_number_latex())
+        return na_text()
+
     def class_number(self):
         if self.haskey('class_number'):
             return self._data['class_number']
@@ -862,6 +897,16 @@ class WebNumberField:
     def class_number_latex(self):
         if self.haskey('class_number'):
             return '$%s$' % str(self._data['class_number'])
+        return na_text()
+
+    def narrow_class_number(self):
+        if self.haskey('narrow_class_number'):
+            return self._data['narrow_class_number']
+        return na_text()
+
+    def narrow_class_number_latex(self):
+        if self.haskey('narrow_class_number'):
+            return '$%s$' % str(self._data['narrow_class_number'])
         return na_text()
 
     def can_class_number(self):
@@ -963,7 +1008,7 @@ class WebNumberField:
 
     # Helper for ramified algebras table
     def get_local_algebras(self):
-        local_algs = self._data.get('local_algs', None)
+        local_algs = self._data.get('local_algs')
         if local_algs is None:
             return None
         local_algebra_dict = {}
@@ -978,12 +1023,17 @@ class WebNumberField:
                 else:
                     local_algebra_dict[str(p)].append([deg,e,f,c])
             else:
-                LF = db.lf_fields.lookup(lab)
+                LF = get_local_field(lab)
                 f = latex(R(LF['coeffs']))
                 p = LF['p']
+                gglabel = LF.get('galois_label')
+                if gglabel:
+                    gglabel = transitive_group_display_knowl(gglabel)
+                else:
+                    gglabel = 'not computed'
                 thisdat = [lab, f, LF['e'], LF['f'], LF['c'],
-                    transitive_group_display_knowl(LF['galois_label']),
-                    LF['t'], LF['u'], LF['slopes']]
+                    gglabel,
+                    LF.get('t'), LF.get('u'), LF.get('slopes')]
                 if str(p) not in local_algebra_dict:
                     local_algebra_dict[str(p)] = [thisdat]
                 else:
@@ -995,6 +1045,38 @@ class WebNumberField:
             return dnc
         loc_alg_dict = self.get_local_algebras()
         return [loc_alg_dict.get(str(p), None) for p in self.ramified_primes()]
+
+    def spec_data(self):
+        # extract ramified data:
+        local_algs = self._data.get('local_algs', None)
+        if local_algs is None:
+            return None
+        local_algebra_dict = {}
+        for lab in local_algs:
+            if lab[0] == 'm': # signals data about field not in lf db
+                lab1 = lab[1:] # deletes marker m
+                p, e, f, c = [int(z) for z in lab1.split('.')]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [[e,f]]
+                else:
+                    local_algebra_dict[str(p)].append([e,f])
+            else:
+                LF = get_local_field(lab)
+                p = LF['p']
+                thisdat = [LF['e'], LF['f']]
+                if str(p) not in local_algebra_dict:
+                    local_algebra_dict[str(p)] = [thisdat]
+                else:
+                    local_algebra_dict[str(p)].append(thisdat)
+        return self.frobs(), local_algebra_dict
+
+    def draw_spectrum(self, num_primes=20):
+        frobs, local_algebra_dict = self.spec_data()
+        return draw_spec(frobs[:num_primes], local_algebra_dict).as_str()
+
+    def draw_gaga(self, num_primes=7):
+        frobs, local_algebra_dict = self.spec_data()
+        return draw_gaga(frobs[:num_primes], local_algebra_dict).as_str()
 
     def make_code_snippets(self):
         # read in code.yaml from numberfields directory:

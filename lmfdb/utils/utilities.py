@@ -243,7 +243,7 @@ def coeff_to_poly(c, var=None):
             varposs = set(re.findall(r"[A-Za-z_]+", c))
             if len(varposs) == 1:
                 var = varposs.pop()
-            elif not(varposs):
+            elif not (varposs):
                 var = 'x'
             else:
                 raise ValueError("Polynomial must be univariate")
@@ -607,7 +607,7 @@ def signtocolour(sign):
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
-    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+    return ("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
 
 
 def rgbtohex(rgb):
@@ -941,12 +941,14 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     return "data:image/png;base64," + quote(b64encode(buf))
 
 # conversion tools between timestamp different kinds of timestamp
-epoch = datetime.datetime.utcfromtimestamp(0)
+epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 def datetime_to_timestamp_in_ms(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
     return int((dt - epoch).total_seconds() * 1000000)
 
 def timestamp_in_ms_to_datetime(ts):
-    return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
+    return datetime.datetime.fromtimestamp(float(int(ts)/1000000.0), datetime.timezone.utc)
 
 class WebObj:
     def __init__(self, label, data=None):

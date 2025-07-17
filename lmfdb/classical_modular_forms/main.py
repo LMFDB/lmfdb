@@ -30,7 +30,7 @@ from lmfdb.classical_modular_forms.web_newform import (
 from lmfdb.classical_modular_forms.web_space import (
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_new_cusp_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -91,8 +91,8 @@ def level_bound(nontriv=None):
 #############################################################################
 
 def ALdims_knowl(al_dims, level, weight):
-    short = "+".join(["$%s$" % (d) for d in al_dims])
-    AL_table = ALdim_table(al_dims, level, weight)
+    short = "+".join(f"${d}$" for d in al_dims)
+    AL_table = ALdim_new_cusp_table(al_dims, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>' % (AL_table, short)
 
 def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
@@ -747,8 +747,11 @@ def common_parse(info, query, na_check=False):
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
                 query['level'] = {'$mod': [0, ZZ(query['level'])]}
-        else:
+        elif info['level_type'] in ['prime', 'prime_power', 'square', 'squarefree']:
             query['level_is_' + info['level_type']] = True
+        else:
+            flash_error("The level type %s is invalid.", info['level_type'])
+            return redirect(url_for(".index"))
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
@@ -1425,7 +1428,7 @@ def dynamic_statistics():
     info = to_dict(request.args, search_array=CMFSearchArray())
     CMF_stats().dynamic_setup(info)
     title = 'Classical modular forms: Dynamic statistics'
-    return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
+    return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic statistics'), learnmore=learnmore_list())
 
 class CMFSearchArray(SearchArray):
     sort_knowl = 'cmf.sort_order'
@@ -1447,7 +1450,7 @@ class CMFSearchArray(SearchArray):
         if 'char_orbit_index' not in sord:
             sord.append('char_orbit_index')
     _sort_spaces = _sort[:-3]
-    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for (name, disp, sord) in _sort]
+    _sort_forms = [(name, disp, sord + ['hecke_orbit']) for name, disp, sord in _sort]
     sorts = {'': _sort_forms,
              'Traces': _sort_forms,
              'Spaces': _sort_spaces}
@@ -1456,6 +1459,7 @@ class CMFSearchArray(SearchArray):
     jump_knowl = "cmf.search_input"
     jump_prompt = "Label"
     null_column_explanations = { # No need to display warnings for these
+        'atkin_lehner_string': False,
         'is_polredabs': False,
         'projective_image': False,
         'projective_image_type': False,

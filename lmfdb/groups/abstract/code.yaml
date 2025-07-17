@@ -19,7 +19,6 @@ not-implemented:
     # (not yet implemented)
 
 
-
 presentation:
   comment: Define the group with the given generators and relations
   magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens}); AssignNames(~G, {magma_assign});
@@ -52,7 +51,6 @@ GLZq:
   comment: Define the group as a matrix group with coefficients in GLZq
   magma: G := MatrixGroup< {nZq}, Integers({Zq}) | {LZq} >;
   gap: G := Group({LZqsplit});
-
 
 GLFq:
   comment: Define the group as a matrix group with coefficients in GLFq

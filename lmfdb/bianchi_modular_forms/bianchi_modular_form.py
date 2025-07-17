@@ -64,13 +64,19 @@ def index():
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,7,11,19,43,67,163]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
+        gl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]
+        gl2_forms_max = "2.0.2491.1"
+        gl2_forms_max_name = r"\(\Q(\sqrt{-2491})\)"
+        gl2_dims_max = "2.0.2495.1"
+        gl2_dims_max_name = r"\(\Q(\sqrt{-2495})\)"
+        sl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,7,11,19,43,67,163]]
+        gl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]
+        sl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
+        info['last_field_forms'] = {'url':url_for("bmf.index", field_label=gl2_forms_max), 'name':gl2_forms_max_name}
+        info['last_field_dims'] = {'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=gl2_dims_max), 'name':gl2_dims_max_name}
 
         t = 'Bianchi modular forms'
         bread = get_bread()

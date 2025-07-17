@@ -118,7 +118,6 @@
       url_for: "abvarfq.abelian_varieties"
       colspan: onecolumn
     - title: Belyi maps
-      status: beta
       url_for: "belyi.index"
       colspan: onecolumn
 

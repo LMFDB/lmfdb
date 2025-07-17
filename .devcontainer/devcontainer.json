@@ -1,0 +1,28 @@
+{
+  "name": "LMFDB",
+  "build": {
+      "dockerfile": "Dockerfile"
+  },
+  "hostRequirements": {
+    "cpus": 4
+  },
+  "postCreateCommand": "/bin/bash .devcontainer/setup.sh",
+  "postAttachCommand": {
+    "server": "sage -python start-lmfdb.py --debug",
+  },
+  "forwardPorts": [37777],
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["GettingStarted.md"]
+    },
+    "vscode": {
+      "extensions": [
+        "Lov3.sagemath-enhanced",
+        "ms-python.python"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "sage --python"
+      }
+    }
+  }
+}

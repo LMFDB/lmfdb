@@ -2,6 +2,17 @@
 
 {% block content %}
 
+<script type="text/javascript">
+  function show_more_families() {
+    $(".fam_more").show();
+    $(".fam_less").hide();
+  }
+  function show_less_families() {
+    $(".fam_less").show();
+    $(".fam_more").hide();
+  }
+</script>
+
 <div>
   {{ info.stats.short_summary | safe }}
 </div>
@@ -25,6 +36,13 @@
   {% for searchstr, display in info.prop_browse_list %}
     <a href="?{{searchstr}}">{{display}}</a>&nbsp;
   {% endfor %}
+</p>
+<p>By {{KNOWL('group.families', 'family')}}:
+  {% for family, tex_name, morecls, hide in info.families%}
+    <span class="{{morecls}}" {% if hide %}style="display: none;" {% endif %}><a href="?family={{family}}">{{tex_name}}</a>&nbsp;</span>
+  {% endfor %}
+  <a class="fam_less" onclick="show_more_families(); return false;" href="#">more...</a>
+  <a class="fam_more" style="display: none;" onclick="show_less_families(); return false;" href="#">less...</a>
 </p>
 <p>Some <a href="{{url_for('.interesting')}}">interesting groups</a> or a <a href="{{url_for('.random_abstract_group')}}">random group</a></p>
 

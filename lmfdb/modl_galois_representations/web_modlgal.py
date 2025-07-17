@@ -189,13 +189,13 @@ class WebModLGalRep(WebObj):
     def frobenius_generators(self):
         if not self.generating_primes:
             return None
-        return ",".join([r"\mathrm{Frob}_{%s}" % (p) for p in self.generating_primes])
+        return ",".join(r"\mathrm{Frob}_{%s}" % (p) for p in self.generating_primes)
 
     @lazy_attribute
     def frobenius_primes(self):
         if not self.generating_primes:
             return None
-        return ",".join([str(p) for p in self.generating_primes])
+        return ",".join(str(p) for p in self.generating_primes)
 
     @lazy_attribute
     def frobenius_matrices_pretty(self):
@@ -225,9 +225,9 @@ class WebModLGalRep(WebObj):
         if not A:
             return None
         n = sum([len(a)-1 for a in A[0]])
-        data = { "A": r" $\times$ ".join([formatfield(f) for f in A[0]]),
-                 "B": r" $\times$ ".join([formatfield(f) for f in A[1]]),
-                 "Phi": r"\frac{1}{%s} " % (str(A[2][0])) + web_latex(Matrix(QQ,n,A[2][1]),enclose=False)
+        data = { "A": r" $\times$ ".join(formatfield(f) for f in A[0]),
+                 "B": r" $\times$ ".join(formatfield(f) for f in A[1]),
+                 "Phi": r"\dfrac{1}{%s} " % (str(A[2][0])) + web_latex(Matrix(QQ,n,A[2][1]),enclose=False)
                }
         return data
 

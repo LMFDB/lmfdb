@@ -353,15 +353,15 @@ euler_factor_columns = SearchColumns([
     MultiProcessedCol("label", "lfunction.label", "Label",
                          ["label", "url"],
                          lambda label, url: '<a href="%s">%s</a>' % (url, label),
-                      download_col="label")] +
-    [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
+                      download_col="label")]
+    + [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
     db_cols=1)
 
 class LfuncDownload(Downloader):
     table = db.lfunc_search
     def postprocess(self, rec, info, query):
         rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
-        rec['nus'] = [(0.5*r,i) for (r,i) in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        rec['nus'] = [(0.5*r, i) for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
             rec['root_number'] = 1 - int(4*rec['root_angle'])
@@ -393,7 +393,7 @@ def l_function_search(info, query):
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
-    process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
+    process_an_constraints(info, query, qfield='dirichlet_coefficients')
 
 
 @search_parser
@@ -445,7 +445,7 @@ def euler_search(info, query):
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
     p_range = parse_ints_to_list(info['n'])
-    info["showcol"] = ".".join(["euler%s" % p for p in prime_range(100) if p in p_range])
+    info["showcol"] = ".".join("euler%s" % p for p in prime_range(100) if p in p_range)
     for p in prime_range(100):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 

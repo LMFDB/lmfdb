@@ -54,17 +54,19 @@ class HMFTest(LmfdbTest):
 
     def test_hmf_page(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.73.1/holomorphic/2.2.73.1-48.4-b')
-        assert 'no' in L.get_data(as_text=True)
-        assert '-6' in L.get_data(as_text=True)
-        assert '2w + 10' in L.get_data(as_text=True)
-        assert r'\Q' in L.get_data(as_text=True)
-        assert '[2, 2]' in L.get_data(as_text=True)
+        s = L.get_data(as_text=True).replace(" ", "")
+        assert 'no' in s
+        assert '-6' in s
+        assert '2w+10' in s
+        assert r'\Q' in s
+        assert '[2,2]' in s
 
     def test_hmf_page_higherdim(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/2.2.60.1/holomorphic/2.2.60.1-44.1-c')
-        assert '-2w - 4' in L.get_data(as_text=True)
-        assert '2e' in L.get_data(as_text=True)
-        assert 'defining polynomial' in L.get_data(as_text=True)
+        s = L.get_data(as_text=True).replace(" ", "")
+        assert '-2w-4' in s
+        assert '2e' in s
+        assert 'definingpolynomial' in s
 
     def test_by_field(self):
         L = self.tc.get('/ModularForm/GL2/TotallyReal/?field_label=4.4.725.1')

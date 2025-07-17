@@ -36,9 +36,10 @@ from lmfdb.utils import (
     to_dict,
     web_latex,
     web_latex_factored_integer,
+    CodeSnippet
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol, RationalListCol
 from lmfdb.utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
@@ -100,6 +101,14 @@ real_geom_end_alg_to_ST0_dict = {
     "C x R": "U(1) x SU(2)",
     "R x R": "SU(2) x SU(2)",
     "R": "USp(4)",
+}
+real_geom_end_alg_to_latex_dict = {
+    "M_2(C)": "$M_2(\\mathbb{C})$",
+    "M_2(R)": "$M_2(\\mathbb{R})$",
+    "C x C": "$\\mathbb{C} \\times \\mathbb{C}$",
+    "C x R": "$\\mathbb{C} \\times \\mathbb{R}$",
+    "R x R": "$\\mathbb{R} \\times \\mathbb{R}$",
+    "R": "$\\mathbb{R}$",
 }
 
 # End tensored with QQ
@@ -608,10 +617,10 @@ g2c_columns = SearchColumns([
     ProcessedCol("regulator", "g2c.regulator", "Regulator", lambda v: r"\(%.6f\)" % v, align="right", default=False),
     ProcessedCol("real_period", "g2c.real_period", "Real period", lambda v: r"\(%.6f\)" % v, align="right", default=False),
     ProcessedCol("leading_coeff", "g2c.bsd_invariants", "Leading coefficient", lambda v: r"\(%.6f\)" % v, align="right", default=False),
-    ListCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True, default=False),
-    ListCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True, default=False),
-    ListCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True, default=False),
-    ListCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), mathmode=True)
+    RationalListCol("igusa_clebsch_inv", "g2c.igusa_clebsch_invariants", "Igusa-Clebsch invariants", lambda v: v.replace("'",""), short_title="Igusa-Clebsch invariants", mathmode=True, default=False),
+    RationalListCol("igusa_inv", "g2c.igusa_invariants", "Igusa invariants", lambda v: v.replace("'",""), short_title="Igusa invariants", mathmode=True, default=False),
+    RationalListCol("g2_inv", "g2c.g2_invariants", "G2-invariants", lambda v: v.replace("'",""), short_title="G2-invariants", mathmode=True, default=False),
+    RationalListCol("eqn", "g2c.minimal_equation", "Equation", lambda v: min_eqn_pretty(literal_eval(v)), mathmode=True)
 ])
 
 @search_wrap(
@@ -796,6 +805,7 @@ class G2C_stats(StatsDisplay):
         "is_gl2_type": formatters.boolean,
         "real_geom_end_alg": lambda x: "\\(" + st0_group_name(x) + "\\)",
         "st_group": lambda x: st_link_by_name(1, 4, x),
+        "real geometric endomorphism algebra": lambda x: real_geom_end_alg_to_latex_dict[x],
     }
     query_formatters = {
         "aut_grp_label": lambda x: "aut_grp_label=%s" % x,
@@ -815,10 +825,16 @@ class G2C_stats(StatsDisplay):
         {"cols": "analytic_sha", "totaler": {"avg": True}},
         {"cols": "locally_solvable"},
         {"cols": "is_gl2_type"},
-        {"cols": "real_geom_end_alg"},
+        {"cols": "real_geom_end_alg",
+         "addl_row_title": "real geometric endomorphism algebra"
+        },
         {"cols": "st_group"},
         {"cols": "torsion_order", "totaler": {"avg": True}},
     ]
+
+    addl_row_data_dict = {
+        'real_geometric_endomorphism_algebra': 'test'
+    }
 
 
 @g2c_page.route("/Q/stats")
@@ -901,16 +917,6 @@ def labels_page():
 
 sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
 
-code_names = {'curve': 'Define the curve',
-                 'tors': 'Torsion subgroup',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'ntors': 'Torsion order of Jacobian',
-                 'jacobian': 'Jacobian',
-                 'aut': 'Automorphism group',
-                 'mwgroup': 'Mordell-Weil group'}
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def g2c_code(**args):
@@ -921,16 +927,9 @@ def g2c_code(**args):
         return genus2_jump_error(label, {}), False
     except KeyError:
         return genus2_jump_error(label, {}, missing_curve=True), False
-    Ccode = C.get_code()
     lang = args['download_type']
-    code = "%s %s code for working with genus 2 curve %s\n\n" % (Comment[lang],Fullname[lang],label)
-    if lang == 'gp':
-        lang = 'pari'
-    for k in sorted_code_names:
-        if lang in Ccode[k]:
-            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ccode[k][lang] + ('\n' if '\n' not in Ccode[k][lang] else '')
-    return code, True
+    code = CodeSnippet(C.get_code())
+    return code.export_code(label, lang, sorted_code_names), True
 
 @g2c_page.route('/Q/<conductor>/<iso>/<discriminant>/<number>/download/<download_type>')
 def g2c_code_download(**args):

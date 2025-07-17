@@ -9,7 +9,7 @@ def elist_formatter(elist):
     if not elist:
         return "1"
     edisp = ["^{%s}" % e if e != 1 else "" for e in elist]
-    return f"${''.join(p+e for (p,e) in zip('pqrsl', edisp))}$"
+    return f"${''.join(p + e for p, e in zip('pqrsl', edisp))}$"
 
 
 pqr_re = re.compile(r"^(1)|(p(\^\{(\d+)\})?)(q(\^\{(\d+)\})?)?(r(\^\{(\d+)\})?)?(s(\^\{(\d+)\})?)?(l(\^\{(\d+)\})?)?$")
@@ -110,13 +110,15 @@ group_knowls = {
     "rank": "group.rank",
 }
 
+
 def stype_insert_knowls(s):
     L = re.split("(,? ?(?:(?:and)|(?:or)|(?:not))? )", s)
     for i in range(len(L)):
         if i % 2 == 0 and L[i] in group_knowls:
             L[i] = display_knowl(group_knowls[L[i]], L[i])
     return "".join(L)
-stype_klookup = {stype: stype_insert_knowls(desc) for (stype, desc) in stype_lookup.items()}
+stype_klookup = {stype: stype_insert_knowls(desc) for stype, desc in stype_lookup.items()}
+
 
 def stype_formatter(stype):
     return stype_klookup[stype]
@@ -205,13 +207,14 @@ class GroupStats(StatsDisplay):
         from .main import group_parse
         group_parse(info, query)
 
-    dynamic_parent_page = "abstract-search.html"
+#dynamic_parent_page = "abstract-search.html"
+    dynamic_parent_page = "abstract-refine-search.html"
     dynamic_cols = ["order", "order_factorization_type", "abelian"]
 
     @lazy_attribute
     def short_summary(self):
-        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroups.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'# or <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
+        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroup_search.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'# or <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
 
     @lazy_attribute
     def summary(self):
-        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroups.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.' #  In addition to the statistics below, you can also <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
+        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroup_search.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.' #  In addition to the statistics below, you can also <a href="{url_for(".dynamic_statistics")}">create your own</a>.'

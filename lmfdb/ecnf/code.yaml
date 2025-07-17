@@ -16,83 +16,105 @@ not-implemented:
   magma: |
     // (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with elliptic curve {label}
+    (Note that not all these functions may be available, and some may take a long time to execute.)
+    
 field:
+  comment: Define the base number field
   sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
   pari:  K = nfinit(Polrev(%s));
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
 
 curve:
+  comment: Define the curve
   sage:  E = EllipticCurve(%s)
   pari:  E = ellinit(%s);
   magma: E := EllipticCurve(%s);
 
 is_min:
+  comment: Test whether it is a global minimal model
   sage:  E.is_global_minimal_model()
 
 cond:
+  comment: Compute the conductor
   sage:  E.conductor()
   pari:  ellglobalred(E)[1]
   magma: Conductor(E);
 
 cond_norm:
+  comment: Compute the norm of the conductor
   sage:  E.conductor().norm()
   pari:  idealnorm(ellglobalred(E)[1])
   magma: Norm(Conductor(E));
 
 disc:
+  comment: Compute the discriminant
   sage:  E.discriminant()
   pari:  E.disc
   magma: Discriminant(E);
 
 disc_norm:
+  comment: Compute the norm of the discriminant
   sage:  E.discriminant().norm()
   pari:  norm(E.disc)
   magma: Norm(Discriminant(E));
 
 jinv:
+  comment: Compute the j-invariant
   sage:  E.j_invariant()
   pari:  E.j
   magma: jInvariant(E);
 
 cm:
+  comment: Test for Complex Multiplication
   sage:  E.has_cm(), E.cm_discriminant()
   magma: HasComplexMultiplication(E);
 
 rank:
+  comment: Compute the Mordell-Weil rank
   sage:  E.rank()
   magma: Rank(E);
 
 gens:
+  comment: Compute the generators (of infinite order)
   sage:  gens = E.gens(); gens
   magma: |
          gens := [P:P in Generators(E)|Order(P) eq 0]; gens;
 
 reg:
+  comment: Compute the regulator
   sage:  E.regulator_of_points(gens)
   magma: Regulator(gens);
 
 heights:
+  comment: Compute the heights of the generators (of infinite order)
   sage:  |
          [P.height() for P in gens]
   magma: |
          [Height(P):P in gens];
 
 tors:
+  comment: Compute the torsion subgroup
   sage:  T = E.torsion_subgroup(); T.invariants()
   pari:  T = elltors(E); T[2]
   magma: T,piT := TorsionSubgroup(E); Invariants(T);
 
 torgens:
+  comment: Compute the generators of the torsion subgroup
   sage:  T.gens()
   pari:  T[3]
   magma: |
          [piT(P) : P in Generators(T)];
 
 ntors:
+  comment: Compute the order of the torsion subgroup
   sage:  T.order()
   pari:  T[1]
   magma: Order(T);
 
 localdata:
+  comment: Compute the local reduction data at primes of bad reduction
   sage:  E.local_data()
   magma: LocalInformation(E);

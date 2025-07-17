@@ -164,10 +164,6 @@ table tbody tr.trivial a:hover {
   padding-right: 2px;
 }
 
-body.checklist {
- font-size: 70%;
-}
-
 span.disable-links {
   pointer-events: none;
 }
@@ -1128,6 +1124,16 @@ table.statgrid th.chead {
     border: 1px solid #ccc;
     border-bottom: 2px solid {{color.table_ntdata_border}};
 }
+table.statgrid .totalrow {
+    border-top: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid .totalcol {
+    border-left: 2px solid {{color.table_ntdata_border}};
+}
+table.statgrid .totalcorner {
+    border-top: 2px solid {{color.table_ntdata_border}};
+    border-left: 2px solid {{color.table_ntdata_border}};
+}
 table.statgrid td.prop {
     border-bottom: 1px solid #ccc;
     border-right: 1px solid #ccc;
@@ -1950,7 +1956,7 @@ div.table-scroll-wrapper table.onesticky th:first-child::after, div.table-scroll
 table.nowrap td {
     white-space:nowrap;
 }
-td.nowrap {
+td.nowrap, th.nowrap, span.nowrap {
     white-space:nowrap;
 }
 table.ntdata td.nowrap a {
@@ -2141,13 +2147,13 @@ div.sub_divider {
   margin-right: 20px;
 }
 
-button.sub_active {
+button.sub_active, button.dia_active, button.gs_active {
   background: {{color.lf_an_button_bkg}};
   border: 2px solid {{color.lf_an_button_brd}};
   cursor: pointer;
 }
 
-button.sub_inactive {
+button.sub_inactive, button.dia_inactive, button.gs_inactive {
   background: {{color.lf_ar_button_bkg}};
   border: 1px solid {{color.lf_ar_button_brd}};
 }

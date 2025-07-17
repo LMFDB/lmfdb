@@ -179,8 +179,8 @@ class ArtinRepresentation():
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
-        return tmp
+
+        return r" \cdot ".join(power_prime(p, val) for p, val in self.factored_conductor())
 
     def num_ramps(self):
         return self._data["NumBadPrimes"]

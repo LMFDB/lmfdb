@@ -42,7 +42,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     typeset = f'<span class="tset-container">{typeset}</span>'
     # clean white space
     raw = re.sub(r'\s+', ' ', str(raw).strip())
-    raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
+    raw = f'<textarea readonly rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
     # the doublesclick behavior is set on load in javascript
     out = f"""
@@ -113,11 +113,14 @@ def web_latex(x, enclose=True):
     return rf"\( {latex(x)} \)" if enclose else f" {latex(x)} "
 
 
-def compress_int(n, cutoff=15, sides=2):
+def compress_int(n, cutoff=15, sides=2, negative_space=True):
     res = str(n)
     minus_width = 1 if '-' in res else 0
     if len(res) > cutoff+minus_width:
-        short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        if negative_space:
+            short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        else:
+            short = res[:sides + minus_width] + r'\cdots ' + res[-sides:]
         return short, True
     else:
         return res, False
@@ -231,14 +234,14 @@ def pos_int_and_factor(n, factor_base=None):
     n = ZZ(n)
     if factor_base:
         factors = [(p, ZZ(n).valuation(p)) for p in factor_base]
-        factors = [(z[0],z[1]) for z in factors if z[1] > 0]
+        factors = [(z[0], z[1]) for z in factors if z[1] > 0]
 
         def power_prime(p, exponent):
             if exponent == 1:
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        latexfactors = r" \cdot ".join(power_prime(p, val) for (p, val) in factors)
+        latexfactors = r" \cdot ".join(power_prime(p, val) for p, val in factors)
     else:
         factors = n.factor()
         latexfactors = latex(factors)
@@ -685,7 +688,7 @@ def compress_poly_Q(rawpoly,
     def frac_string(frac):
         if frac.denominator() == 1:
             return compress_int(frac.numerator())[0]
-        return r'\frac{%s}{%s}' % (compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+        return r'\frac{%s}{%s}' % (compress_int(frac.numerator(), negative_space=False)[0], compress_int(frac.denominator(), negative_space=False)[0])
 
     tset = ''
     for j in range(1, d + 1):
@@ -708,10 +711,16 @@ def compress_poly_Q(rawpoly,
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a polynomial (or other string containing polynomials)
     if not isinstance(pol_str, str):
         pol_str = str(pol_str)
-    o_str = pol_str.replace('*', '')
+    if greek_vars:
+        greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
+        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
+    if subscript_vars:
+        subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
+        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
+    o_str = pol_str.replace('*', ' ')
     ind_mid = o_str.find('/')
     while ind_mid != -1:
         ind_start = ind_mid - 1

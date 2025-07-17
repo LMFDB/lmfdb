@@ -16,7 +16,7 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
-    raw_typeset_int, compress_poly_Q, compress_polynomial)
+    raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -27,6 +27,7 @@ from lmfdb.galois_groups.transitive_group import (
     group_cclasses_knowl_guts, group_pretty_and_nTj, knowl_cache,
     group_character_table_knowl_guts, group_alias_table,
     dihedral_gal, dihedral_ngal, multiquad)
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.number_fields import nf_page, nf_logger
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
@@ -269,7 +270,7 @@ def statistics():
             for deg in range(23)]
     # Galois groups
     nt_stats = nfstatdb.column_counts(['degree', 'galois_label'])
-    nt_stats = {(key[0],int(key[1].split('T')[1])): value for (key,value) in nt_stats.items()}
+    nt_stats = {(key[0], int(key[1].split('T')[1])): value for key, value in nt_stats.items()}
     # if a count is missing it is because it is zero
     nt_all = [[nt_stats.get((deg+1, t+1), 0) for t in range(ntrans[deg+1])]
               for deg in range(23)]
@@ -424,11 +425,11 @@ def render_field_webpage(args):
     info['wnf'] = nf
     data['degree'] = nf.degree()
     data['class_number'] = nf.class_number_latex()
+    data['narrow_class_number'] = nf.narrow_class_number_latex()
     ram_primes = nf.ramified_primes()
     t = nf.galois_t()
     n = nf.degree()
     data['is_galois'] = nf.is_galois()
-    data['autstring'] = r'\Gal' if data['is_galois'] else r'\Aut'
     data['is_abelian'] = nf.is_abelian()
     if nf.is_abelian():
         conductor = nf.conductor()
@@ -447,10 +448,11 @@ def render_field_webpage(args):
             factored_conductor = factor_base_factorization_latex(factored_conductor, cutoff=30)
             data['conductor'] = r"\(%s=%s\)" % (str(data['conductor']), factored_conductor)
     data['galois_group'] = group_pretty_and_nTj(n,t,True)
-    data['auts'] = db.gps_transitive.lookup(r'{}T{}'.format(n,t))['auts']
+    data['aut_gp_knowl'] = abstract_group_display_knowl(db.gps_transitive.lookup(f'{n}T{t}', 'aut_label'))
     data['cclasses'] = cclasses_display_knowl(n, t)
     data['character_table'] = character_table_display_knowl(n, t)
     data['class_group'] = nf.class_group()
+    data['narrow_class_group'] = nf.narrow_class_group()
     data['class_group_invs'] = nf.class_group_invariants()
     data['signature'] = nf.signature()
     data['coefficients'] = nf.coeffs()
@@ -509,7 +511,11 @@ def render_field_webpage(args):
                         myurl = url_for('local_fields.by_label', label=lab)
                         if mm[3]*mm[2] == 1:
                             lab = r'$\Q_{%s}$' % str(p)
-                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>$%s$</td>' % (myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],show_slope_content(mm[8],mm[6],mm[7]))
+                        if mm[8]:
+                            mysc = '$'+show_slope_content(mm[8],mm[6],mm[7])+'$'
+                        else:
+                            mysc = 'not computed'
+                        loc_alg += '<td><a href="%s">%s</a></td><td>$%s$</td><td>$%d$</td><td>$%d$</td><td>$%d$</td><td>%s</td><td>%s</td>' % (myurl,lab,mm[1],mm[2],mm[3],mm[4],mm[5],mysc)
             loc_alg += '</tr>\n'
         loc_alg += '</tbody></table>\n'
 
@@ -677,13 +683,14 @@ def render_field_webpage(args):
         primes = 'prime'
     else:
         primes = 'primes'
-    ram_primes = ','.join([str(z).rstrip('L') for z in nf.ramified_primes()])
+    ram_primes = ','.join(str(z).rstrip('L') for z in nf.ramified_primes())
     if len(ram_primes) > 30:
         ram_primes = 'see page'
     else:
         ram_primes = '$%s$' % ram_primes
 
     properties = [('Label', nf_label_pretty(label)),
+                  (None, '<a> %s <a/>' % nf.draw_gaga()),
                   ('Degree', prop_int_pretty(data['degree'])),
                   ('Signature', '$%s$' % data['signature']),
                   ('Discriminant', prop_int_pretty(D)),
@@ -695,7 +702,7 @@ def render_field_webpage(args):
     downloads = [('Stored data to gp',
                   url_for('.nf_download', nf=label, download_type='data'))]
     for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "gp"), ("SageMath", "sage")]:
-        downloads.append(('Code to {}'.format(lang[0]),
+        downloads.append(('{} commands'.format(lang[0]),
                           url_for(".nf_download", nf=label, download_type=lang[1])))
     downloads.append(('Underlying data', url_for(".nf_datapage", label=label)))
     from lmfdb.artin_representations.math_classes import NumberFieldGaloisGroup
@@ -837,10 +844,11 @@ nf_columns = SearchColumns([
     CheckMaybeCol("monogenic", "nf.monogenic", "Monogenic", default=False),
     SearchCol("galois", "nf.galois_group", "Galois group", download_col="galois_label"),
     ClassGroupCol("class_group_desc", "nf.ideal_class_group", "Class group", download_col="class_group"),
+    ClassGroupCol("narrow_class_group_desc", "nf.narrow_class_group", "Narrow class group", download_col="narrow_class_group", default=False),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center", default=False),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True, default=False),
     MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False)],
-    db_cols=["class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number"])
+    db_cols=["class_group", "narrow_class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -851,6 +859,7 @@ def nf_postprocess(res, info, query):
         rec["disc"] = wnf.disc_factored_latex()
         rec["galois"] = wnf.galois_string(cache=cache)
         rec["class_group_desc"] = wnf.class_group_invariants()
+        rec["narrow_class_group_desc"] = wnf.narrow_class_group_invariants()
     return res
 
 class NFDownloader(Downloader):
@@ -897,6 +906,7 @@ def number_field_search(info, query):
     parse_floats(info, query, 'regulator')
     parse_posints(info,query,'class_number')
     parse_posints(info,query,'relative_class_number')
+    parse_posints(info,query,'narrow_class_number')
     parse_ints(info,query,'num_ram')
     parse_bool(info,query,'cm_field',qfield='cm')
     fi = info.get("field_is")
@@ -923,7 +933,7 @@ def number_field_search(info, query):
                 ggopt = set(query["galois_label"]["$in"])
             else:
                 ggopt = {query["galois_label"]}
-            opts = {n: gg for (n, gg) in opts.items() if gg in ggopt}
+            opts = {n: gg for n, gg in opts.items() if gg in ggopt}
         if len(opts) == 0:
             # Incompatible with specified degree or galois labels, so we add an impossible condition
             query["degree"] = -1
@@ -942,6 +952,7 @@ def number_field_search(info, query):
         query["gal_is_solvable"] = False
 
     parse_bracketed_posints(info,query,'class_group',check_divisibility='increasing',process=int)
+    parse_bracketed_posints(info,query,'narrow_class_group',check_divisibility='increasing',process=int)
     parse_primes(info,query,'ur_primes',name='Unramified primes',
                  qfield='ramps',mode='exclude')
     parse_primes(info,query,'ram_primes',name='Ramified primes',
@@ -1112,24 +1123,6 @@ sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'fundamental_units', 'regulator', 'class_number_formula',
                      'intermediate_fields', 'galois_group', 'prime_cycle_types']
 
-code_names = {'field': 'Define the number field',
-              'poly': 'Defining polynomial',
-              'degree': 'Degree over Q',
-              'signature': 'Signature',
-              'discriminant': 'Discriminant',
-              'ramified_primes': 'Ramified primes',
-              'automorphisms': 'Autmorphisms',
-              'integral_basis': 'Integral basis',
-              'class_group': 'Class group',
-              'unit_group': 'Unit group',
-              'unit_rank': 'Unit rank',
-              'unit_torsion_gen': 'Generator for roots of unity',
-              'fundamental_units': 'Fundamental units',
-              'regulator': 'Regulator',
-              'class_number_formula': 'Analytic class number formula',
-              'galois_group': 'Galois group',
-              'intermediate_fields': 'Intermediate fields',
-              'prime_cycle_types': 'Frobenius cycle types'}
 
 Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
@@ -1144,20 +1137,8 @@ def nf_code(**args):
     if nf.is_null():
         raise ValueError(f"There is no number field with label {label}")
     nf.make_code_snippets()
-    code = "{} {} code for working with number field {}\n\n".format(Comment[lang],Fullname[lang],label)
-    if lang == 'oscar':
-        code += '{} If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'.format(Comment[lang])
-        code += "{} Some of these functions may take a long time to compile (this depends on the state of your Julia REPL), and/or to execute (this depends on the field).\n".format(Comment[lang])
-    else:
-        code += "{} Some of these functions may take a long time to execute (this depends on the field).\n".format(Comment[lang])
-    if lang == 'gp':
-        lang = 'pari'
-    for k in sorted_code_names:
-        if lang in nf.code[k]:
-            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += nf.code[k][lang] + ('\n' if '\n' not in nf.code[k][lang] else '')
-    return code
-
+    code = CodeSnippet(nf.code)
+    return code.export_code(label, lang, sorted_code_names)
 
 class NFSearchArray(SearchArray):
     noun = "field"
@@ -1250,6 +1231,18 @@ class NFSearchArray(SearchArray):
             knowl="nf.ideal_class_group",
             example="[2,4]",
             example_span="[ ], [3], or [2,4]")
+        narrow_class_number = TextBox(
+            name="narrow_class_number",
+            label="Narrow class number",
+            knowl="nf.narrow_class_number",
+            example="5")
+        narrow_class_group = TextBox(
+            name="class_group",
+            label="Narrow class group structure",
+            short_label='Narrow class group',
+            knowl="nf.narrow_class_group",
+            example="[2,4]",
+            example_span="[ ], [3], or [2,4]")
         relative_class_number = TextBox(
             name="relative_class_number",
             label="Relative class number",
@@ -1315,6 +1308,7 @@ class NFSearchArray(SearchArray):
             [gal, field_is],
             [num_ram, grd],
             [class_number, class_group],
+            [narrow_class_number, narrow_class_group],
             [ram_primes, ur_primes],
             [regulator, cm_field],
             [completion, relative_class_number],
@@ -1325,9 +1319,9 @@ class NFSearchArray(SearchArray):
         self.refine_array = [
             [degree, signature, num_ram, ram_primes, ur_primes ],
             [gal, field_is, subfield, class_group, class_number],
-            [discriminant, rd, grd, cm_field, relative_class_number],
-            [regulator, completion, monogenic, index, inessentialprimes],
-            [is_minimal_sibling]]
+            [discriminant, rd, grd, narrow_class_group, narrow_class_number],
+            [cm_field, relative_class_number, regulator, completion, monogenic],
+            [index, inessentialprimes, is_minimal_sibling]]
 
             #[degree, signature, class_number, class_group, cm_field],
             #[num_ram, ram_primes, ur_primes, gal, field_is],

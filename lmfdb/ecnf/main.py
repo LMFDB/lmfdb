@@ -15,7 +15,7 @@ from lmfdb.utils import (
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer
+    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer, CodeSnippet
     )
 from lmfdb.utils.search_parsing import search_parser
 
@@ -364,13 +364,13 @@ ecnf_columns = SearchColumns([
     ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center", default=False),
     FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5, default=False),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes",
-                 lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
+                 lambda primes: ", ".join(''.join(str(p.replace('w', 'a')).split('*')) for p in primes) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s" % (rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                 lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
+                 lambda tors: r"\oplus".join(r"\Z/%s\Z" % n for n in tors) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$" % ("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
@@ -680,18 +680,10 @@ def ecnf_code(**args):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     lang = args['download_type']
-    if lang == 'gp':
-        lang = 'pari'
 
-    from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode = make_code(label, lang)
-    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
-    for k in sorted_code_names:
-        if Ecode[k]:
-            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
-    return code
+    from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
+    code = CodeSnippet(make_code(label))
+    return code.export_code(label, lang, sorted_code_names)
 
 
 def disp_tor(t):
@@ -791,8 +783,8 @@ class ECNFSearchArray(SearchArray):
             )
 
         tor_opts = ([("", ""),
-                     ("[]", "trivial")] +
-                    [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
+                     ("[]", "trivial")]
+                    + [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
         torsion_structure = SelectBox(
             name="torsion_structure",
             label="Torsion structure",

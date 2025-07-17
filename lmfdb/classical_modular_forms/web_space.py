@@ -4,6 +4,7 @@
 from lmfdb import db
 from sage.all import ZZ, prod, gp, divisors, number_of_divisors
 from sage.modular.dims import sturm_bound
+from sage.modules.free_module_element import vector
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.number_fields.web_number_field import nf_display_knowl, cyclolookup, rcyclolookup
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -82,7 +83,8 @@ def cyc_display(m, d, real_sub):
     else:
         return name
 
-def ALdim_table(al_dims, level, weight):
+# This function is for backward compatibility when we do not have all the data
+def ALdim_new_cusp_table(al_dims, level, weight):
     def sign_char(x): return "-" if x else "+"
     def url_sign_char(x): return "-" if x else "%2B"
     primes = ZZ(level).prime_divisors()
@@ -120,6 +122,80 @@ def ALdim_table(al_dims, level, weight):
         rows.append(r"<tr><td colspan='%s'>%s</td><td class='center'>\(-\)</td><td>%s</td></tr>" % (num_primes, minus_knowl, minus_link))
     return ("<table class='ntdata'><thead><tr>%s</tr></thead><tbody>%s</tbody></table>" %
             (''.join(header), ''.join(rows)))
+
+
+def ALdim_table(al_dims, level, weight):
+    def sign_char(x): return "-" if x else "+"
+    def url_sign_char(x): return "-" if x else "%2B"
+    primes = ZZ(level).prime_divisors()
+    num_primes = len(primes)
+    header = [r"<th rowspan=2 class='center'>\(%s\)</th>" % p for p in primes]
+    if num_primes > 1:
+        header.append(r"<th rowspan=2 class='center'>%s</th>" % (display_knowl('cmf.fricke', title='Fricke').replace('"',"'")))
+
+    space_type = {'M':'Total',
+                  'S':'Cusp',
+                  'E':'Eisenstein'}
+
+    subheader = []
+
+    fricke = {}
+    for X in ['M','S','E']:
+        fricke[X] = {}
+        header.append("<th rowspan=2></th>")
+        header.append("<th class='center' colspan=3>" + space_type[X] + "</th>")
+        for typ in ['all', 'new', 'old']:
+            fricke[X][typ] = [0,0]
+            subheader.append("<th class='center'>" + typ.capitalize() + "</th>")
+
+    rows = []
+    for i, dim in enumerate(al_dims['M']['all']):
+        if dim == 0:
+            continue
+        b = list(reversed(ZZ(i).bits()))
+        b = [0 for j in range(num_primes-len(b))] + b
+        row = [r"<td class='center'>\(%s\)</td>" % sign_char(x) for x in b]
+        sign = sum(b) % 2
+        if num_primes > 1:
+            row.append(r"<td class='center'>\(%s\)</td>" % sign_char(sign))
+        query = {'level':level, 'weight':weight, 'char_order':1, 'atkin_lehner_string':"".join(map(url_sign_char,b))}
+        for X in ['M','S','E']:
+            row.append("<td></td>")
+            for typ in ['all', 'new', 'old']:
+                dim = r'\(%s\)' % al_dims[X][typ][i]
+                if (X == 'S') and (typ == 'new'):
+                    dim = newform_search_link(dim, **query)
+                row.append(r"<td class='center'>%s</td>" % dim)
+                fricke[X][typ][sign] += al_dims[X][typ][i]
+        if i == len(al_dims['M']['all']) - 1 and num_primes > 1:
+            tr = "<tr class='endsection'>"
+        else:
+            tr = "<tr>"
+        rows.append(tr + ''.join(row) + '</tr>')
+    if num_primes > 1:
+        plus_knowl = display_knowl('cmf.plus_space',title='Plus space').replace('"',"'")
+        minus_knowl = display_knowl('cmf.minus_space',title='Minus space').replace('"',"'")
+        plus_row = r"<tr><td colspan='%s'>%s</td><td class='center'>\(+\)</td>" % (num_primes, plus_knowl)
+        minus_row = r"<tr><td colspan='%s'>%s</td><td class='center'>\(-\)</td>" % (num_primes, minus_knowl)
+
+        for X in ['M','S','E']:
+            plus_row += "<td></td>"
+            minus_row += "<td></td>"
+            for typ in ['all', 'new', 'old']:
+                plus_dim = r'\(%s\)' % fricke[X][typ][0]
+                minus_dim = r'\(%s\)' % fricke[X][typ][1]
+                if (X == 'S') and (typ == 'new'):
+                    plus_dim = newform_search_link(plus_dim, level=level, weight=weight, char_order=1, fricke_eigenval=1)
+                    minus_dim = newform_search_link(minus_dim, level=level, weight=weight, char_order=1, fricke_eigenval=-1)
+                prefix = "<td class='center'>"
+                plus_row += prefix + r"%s</td>" % (plus_dim)
+                minus_row += prefix + r"%s</td>" % (minus_dim)
+        plus_row += r"</tr>"
+        minus_row += r"</tr>"
+        rows.append(plus_row)
+        rows.append(minus_row)
+    return ("<table class='ntdata'><thead><tr class='middle bottomlined'>%s</tr><tr>%s</tr></thead><tbody>%s</tbody></table>" %
+            (''.join(header), ''.join(subheader), ''.join(rows)))
 
 def common_latex(level, weight, conrey=None, S="S", t=0, typ="", symbolic_chi=False):
     # symbolic_chi is currently ignored: we always use a symbolic chi
@@ -454,7 +530,13 @@ class WebNewformSpace():
                                   for N, i, conrey, mult in self.oldspaces)
 
     def ALdim_table(self):
-        return ALdim_table(self.ALdims, self.level, self.weight)
+        if not hasattr(self,'ALdims_old'):
+            return ALdim_new_cusp_table(self.ALdims, self.level, self.weight)
+        aldims_data = {'dim' : vector(self.ALdims), 'cusp_dim' : vector(self.ALdims) + vector(self.ALdims_old),
+                       'eis_new_dim' : vector(self.ALdims_eis_new), 'eis_dim' : vector(self.ALdims_eis_new) + vector(self.ALdims_eis_old)}
+        aldims_data['mf_dim'] = aldims_data['cusp_dim'] + aldims_data['eis_dim']
+        aldims = DimGrid.from_db(aldims_data)
+        return ALdim_table(aldims, self.level, self.weight)
 
     def trace_expansion(self, prec_max=10):
         return trace_expansion_generic(self, prec_max)

@@ -23,7 +23,7 @@
 {% endif %}
 
 
-<h2> Group information</h2>
+<h2>Group information</h2>
 <p>
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
@@ -195,15 +195,9 @@ Statistics about orders of elements in this group have not been computed.
 
 <h2>Constructions</h2>
   {% if code %}<div align="right" style="float: left;">
-            Show commands:
-            {% set slash = joiner("/ ") %}
-            {% for lang in code['show']|sort %}
-            {# override show names for standard languages to ensure consistency #}
-            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else "Gap" if lang == 'gap' else code['show']['lang'] %}
-            {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
-            {% endfor %}
-        </div><br><br>
-    {% endif %}
+  {{CodeSnippet(code).show_commands_box() | safe}}
+</div><br><br>
+{% endif %}
 
 <table class=nowrap>
   {{ gp.stored_representations | safe }}
@@ -255,7 +249,11 @@ Statistics about orders of elements in this group have not been computed.
   {% if not gp.live() %}
   <tr>
     <td>{{KNOWL('group.schur_multiplier', 'Schur multiplier')}}:</td>
-    <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text()}}$</a></td>
+    {% if gp.schur_multiplier is none %}
+      <td>not computed</td>
+    {% else %}
+      <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text() | safe}}$</a></td>
+    {% endif %}
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>

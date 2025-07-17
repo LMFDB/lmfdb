@@ -31,8 +31,9 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_galgrp', 'parse_nf_string', 'parse_subfield', 'parse_nf_elt', 'parse_nf_jinv',
            'parse_container', 'parse_hmf_weight', 'parse_count', 'parse_newton_polygon',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
+           'unparse_range',
            'nf_string_to_label', 'clean_input', 'prep_ranges',
-           'search_wrap', 'count_wrap', 'embed_wrap',
+           'search_wrap', 'count_wrap', 'embed_wrap', 'yield_wrap',
            'SearchArray', 'EmbeddedSearchArray', 'TextBox', 'TextBoxNoEg', 'TextBoxWithSelect', 'BasicSpacer',
            'SkipBox', 'CheckBox', 'CheckboxSpacer', 'DoubleSelectBox', 'HiddenBox',
            'SearchButton', 'SearchButtonWithSelect', 'RowSpacer',
@@ -50,7 +51,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'raw_typeset_qexp', 'raw_typeset_int', 'compress_poly_Q',
            'input_string_to_poly', 'dispZmat', 'dispcyclomat',
            'compress_expression',
-           'pos_int_and_factor', 'compress_polynomial']
+           'pos_int_and_factor', 'compress_polynomial', 'CodeSnippet']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -147,9 +148,10 @@ from .search_parsing import (
     parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
     parse_ints_to_list_flash, integer_options, nf_string_to_label,
     parse_subfield, parse_interval,
+    unparse_range,
     clean_input, prep_ranges, input_string_to_poly)
 
-from .search_wrapper import search_wrap, count_wrap, embed_wrap
+from .search_wrapper import search_wrap, count_wrap, embed_wrap, yield_wrap
 from .search_boxes import (
     SearchArray, EmbeddedSearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
@@ -163,3 +165,4 @@ from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url
 from .trace_hash import TraceHash, TraceHashClass
 from .random_wrap import redirect_no_cache
+from .place_code import CodeSnippet

@@ -6,9 +6,9 @@ from lmfdb import db
 from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
-from flask import render_template
+from flask import render_template, url_for
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
@@ -68,12 +68,22 @@ def list_with_mult(lis, names=True, cache=None):
 
 # Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
 def cyclestrings(perm):
-    a = ['('+','.join([str(u) for u in v])+')' for v in perm]
+    a = ('(' + ','.join(str(u) for u in v) + ')' for v in perm)
     return ''.join(a)
 
 def compress_cycle_type(ct):
     bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
+
+def quick_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return '$'+str+'$'
+
+
 ############  Galois group object
 
 
@@ -120,7 +130,7 @@ class WebGaloisGroup:
         return int(self._data['order'])
 
     def gens(self):
-        return(self._data['gens'])
+        return (self._data['gens'])
 
     def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty') is not None:
@@ -150,9 +160,12 @@ class WebGaloisGroup:
         if str(self.n()) == "1":
             return "None needed"
         gens = self.gens()
-        gens = [cyclestrings(g) for g in gens]
+        gens = ['$'+cyclestrings(g)+'$' for g in gens]
         gens = ', '.join(gens)
         return gens
+
+    def aut_knowl(self):
+        return abstract_group_display_knowl(self._data['aut_label'])
 
     def gapgroupnt(self):
         if int(self.n()) == 1:
@@ -164,6 +177,14 @@ class WebGaloisGroup:
 
     def num_conjclasses(self):
         return self._data['num_conj_classes']
+
+    @lazy_attribute
+    def portrait(self):
+        pict = db.gps_transitive_portraits.lookup(self.label, projection='portrait')
+        if pict:
+            pict_link = '<div style="align:center">'+pict+'</div>'
+            return pict_link
+        return '<div style="text-align:center"><img src="%s" style="display:inline" height="150" width="116"/></div>' % url_for('static', filename='images/Evariste_galois.jpg')
 
     @lazy_attribute
     def wag(self):
@@ -244,6 +265,28 @@ class WebGaloisGroup:
         if not db.gps_groups.lookup(self.abstract_label()):
             return False
         return self.wag.complex_characters_known
+
+    @lazy_attribute
+    def regulars(self):
+        t = list(db.gps_regular_polynomials.search({'label':self.label})) # it will be a short list
+        if t:
+            genknowl = display_knowl("gg.generic_polynomial", "generic")
+
+            def msg(code):
+                if code is None:
+                    return ''
+                if code == []:
+                    return f' is {genknowl} for any base field $K$'
+                if code == [0]:
+                    return fr' is {genknowl} for the base field $\Q$'
+                code = ','.join(str(z) for z in code)
+                return fr' is {genknowl} for any base field $K$ of characteristic $\neq$ {code}'
+
+            regdata = [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
+            for j, (poly, msg) in enumerate(regdata):
+                if msg:
+                    regdata[j] = (poly, f'The polynomial $f_{{{j+1}}}$ {msg}')
+            return regdata
 
     def chartable(self):
         self.conjclasses # called to load info in self
@@ -396,7 +439,7 @@ def group_phrase(n, t):
         inf += "A non-solvable"
     inf += ' group of order '
     inf += str(group['order'])
-    return(inf)
+    return (inf)
 
 
 @cached_function
