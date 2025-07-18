@@ -3168,7 +3168,6 @@ class WebAbstractSubgroup(WebObj):
                 return k
             return p
 
-
     @lazy_attribute
     def sub(self):
         S = self._lookup(self.subgroup, self._full, WebAbstractGroup)
