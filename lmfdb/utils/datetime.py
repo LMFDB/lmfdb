@@ -28,7 +28,7 @@ def ensure_naive_utc(dt):
         # Already naive, assume it's UTC
         return dt
 
-# conversion tools between different kinds of timestamps
+# Conversion tools for converting between different timestamp formats
 epoch = datetime.datetime.fromtimestamp(0, UTC)
 
 def datetime_to_timestamp_in_ms(dt):
