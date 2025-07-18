@@ -656,11 +656,12 @@ def local_table(N, D, tama, bad_lpolys, bad_lfactors, cluster_pics, root_numbers
               th_wrap('ag.conductor', r'ord(\(N\))'),
               th_wrap('g2c.discriminant', r'ord(\(\Delta\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
-              th_wrap('g2c.local_root_number', 'Root number*'),
+              None, # Set below once we know whether all root numbers proven
               th_wrap('g2c.bad_lfactors', 'L-factor'),
               th_wrap('ag.cluster_picture', 'Cluster picture'),
               th_wrap('g2c.tame_reduction', 'Tame reduction?'),
               '</tr>', '</thead>', '<tbody>']
+    rnname = 'Root number'
     for p in integer_prime_divisors(D):
         loctab.append('  <tr>')
         cplist = [r for r in tama if r[0] == p]
@@ -694,9 +695,11 @@ def local_table(N, D, tama, bad_lpolys, bad_lfactors, cluster_pics, root_numbers
         else:
             root_number = ''
         if p == 2 or is_tame == 'no':
+            rnname = 'Root number*'
             root_number += '^*'
         loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapc(root_number),td_wrapl(Lp),td_wrapcn(Clus),td_wrapcn(is_tame)])
         loctab.append('  </tr>')
+    loctab[7] = th_wrap('g2c.local_root_number', rnname)
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
