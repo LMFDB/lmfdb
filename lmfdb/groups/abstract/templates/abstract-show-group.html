@@ -243,10 +243,12 @@ Statistics about orders of elements in this group have not been computed.
     {% if gp.abelian %}
       <td>{{KNOWL('group.primary_decomposition', 'Primary decomposition')}}:</td>
       <td>${{gp.abelian_quot_primary()}}$</td>
+      <td>{{ place_code('primary_decomposition') }}</td>
     {% else %}
       <td>{{KNOWL('group.abelianization', 'Abelianization')}}:</td>
       <td> <a href="{{url_for('.by_abelian_label', label=gp.abelianization_label())}}">${{gp.abelian_quot()}} {% if gp.smith_abelian_invariants != gp.primary_abelian_invariants %} \simeq {{gp.abelian_quot_primary()}}{% endif %}$</a></td>
-    {% endif %}
+      <td>{{ place_code('abelianization') }}</td>
+      {% endif %}
   </tr>
   {% if not gp.live() %}
   <tr>
@@ -256,6 +258,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
       <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text() | safe}}$</a></td>
     {% endif %}
+    <td>{{ place_code('schur_multiplier') }}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
@@ -263,6 +266,7 @@ Statistics about orders of elements in this group have not been computed.
       <td>${{gp.commutator_count}}$</td>
     {% elif gp.abelian %} <td>$0$</td>
     {% else %} <td>not computed</td> {% endif %}
+    <td>{{ place_code('commutator_length') }}</td>
   </tr>
   {% endif %}
 </table>

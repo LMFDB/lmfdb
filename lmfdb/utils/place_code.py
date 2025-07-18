@@ -51,10 +51,22 @@ class CodeSnippet():
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])
                 sep = "\n"
+
+                # Here, we decide whether to make our code snippet horizontally scrollable
+                # (e.g. for very long group presentation/permutation definition codes)
+                # Todo: The widths can still be fine-tuned...
+                is_scrollable_div, is_scrollable_span = "", ""
+                if (item == "code_description") and (len(code[item][prompt]) > 90):
+                    is_scrollable_div = " width: 50%;"
+                    is_scrollable_span = "overflow-x: scroll;"
+                elif (item in ['presentation', 'permutation', 'GLZ', 'GLFp', 'GLZN', 'GLZq', 'GLFq']) and (len(code[item][prompt]) > 160):
+                    is_scrollable_div = " width: 1200px;"
+                    is_scrollable_span = "overflow-x: scroll;"
+
                 snippet_str += f"""
-    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top">
-        <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 12px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
-        <span class="prompt">{prompt}:</span><span class="code">{sep.join(lines)}</span>
+    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top; {is_scrollable_div}">
+        <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 16px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
+        <span class="prompt">{prompt}:</span><span class="code" style="{is_scrollable_span}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
     """

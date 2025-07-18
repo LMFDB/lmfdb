@@ -104,13 +104,30 @@ derived_length:
   gap: DerivedLength(G);
 
 conjugacy_classes:
-  comment: Conjugacy classes of the group
-  magma: ConjugacyClasses(G);
-  gap:  ConjugacyClasses(G);
-  sage: G.conjugacy_classes()
+  comment: List of conjugacy classes of the group
+  magma: ConjugacyClasses(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap:  ConjugacyClasses(G);   // Output not guaranteed to exactly match the LMFDB table
+  sage: G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
+
+primary_decomposition:
+  comment:  The primary decomposition of the group
+  gap:  AbelianInvariants(G);
+
+abelianization:
+  comment:  The abelianization of the group
+  magma:  quo< G | CommutatorSubgroup(G)>;
+  gap:  FactorGroup(G, DerivedSubgroup(G));
+
+schur_multiplier:
+  comment:  The Schur multiplier of the group
+  gap:  AbelianInvariantsMultiplier(G);
+
+commutator_length:
+  comment:  The commutator length of the group
+  gap: CommutatorLength(G);
 
 subgroups:
-  comment:  Subgroups of the group
+  comment:  List of subgroups of the group
   magma:  Subgroups(G);
   gap:  AllSubgroups(G);
   sage:   G.subgroups()
@@ -142,6 +159,7 @@ fitting_subgroup:
 radical:
   comment: Radical of the group G
   magma:  Radical(G);
+  gap: SolvableRadical(G);
 
 socle:
   comment:  Socle of the group G
@@ -174,6 +192,7 @@ upper_central_series:
 
 character_table:
   comment: Character table
-  magma: CharacterTable(G);
-  sage: G.character_table()
+  magma: CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap:   CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
+  sage:  G.character_table()  # Output not guaranteed to exactly match the LMFDB table
 

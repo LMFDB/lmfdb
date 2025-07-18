@@ -2864,6 +2864,7 @@ class WebAbstractGroup(WebObj):
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath
         # to display at the top of each group page
         # If the group is not in a special family, we will default to showing the permutation group code snippet
+        # TODO: This code seems somewhat hacky.  Should ideally somehow implement this through the code.yaml file
         code['code_description'] = dict()
         self_families = []
         # Highest priority: check if group is cyclic
@@ -2924,6 +2925,17 @@ class WebAbstractGroup(WebObj):
             chev_index = [t['family'] for t in self_families].index("TwistChev")
             chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
             code['code_description']['magma'] = 'G := ChevalleyGroup("'+str(self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
+        # Otherwise, check if group is abelian (can define from its primary decomposition)
+        if self.abelian:
+            for lang in ['magma', 'gap']:
+                if lang not in code['code_description']:
+                    code['code_description'][lang] = 'G := AbelianGroup('+str(self.primary_abelian_invariants)+');'
+        # Otherwise, check if in small groups database (can then define G in Magma and Gap)
+        if (self.label.split('.')[1].isdigit()):
+            gap_id = self.label.split('.')
+            for lang in ['magma', 'gap']:
+                if lang not in code['code_description']:
+                    code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'
 
         # If the group is not in a special family, we will default to showing the permutation group code snippet
         for lang in code['prompt']:
