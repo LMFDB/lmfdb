@@ -1211,7 +1211,7 @@ def dynamic_statistics():
         "dynamic_stats.html",
         info=info,
         title=title,
-        bread=get_bread([("Dynamic Statistics", " ")]),
+        bread=get_bread([("Dynamic statistics", " ")]),
         learnmore=learnmore_list(),
     )
 

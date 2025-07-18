@@ -148,10 +148,10 @@ class ECisog_class():
             self.CMfield = field_pretty(lab)
         else:
             self.CMfield = "no"
-            if self.conductor <= 300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=self.conductor, isogeny=self.iso_label))]
-            if self.conductor <= 50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
+            #if self.conductor <= 300:
+            #    self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=self.conductor, isogeny=self.iso_label))]
+            #if self.conductor <= 50:
+            #    self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
