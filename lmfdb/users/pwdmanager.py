@@ -12,7 +12,7 @@ from psycodict.base import PostgresBase
 from psycodict.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
-from lmfdb.utils.datetime import UTC
+from lmfdb.utils.datetime_utils import UTC
 
 from .main import logger
 

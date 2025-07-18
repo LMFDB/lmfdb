@@ -29,7 +29,7 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
-from lmfdb.utils.datetime import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error
 from lmfdb.knowledge import knowledge_page
 

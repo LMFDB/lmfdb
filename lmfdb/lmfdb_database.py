@@ -91,7 +91,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         - ``keep_old`` -- if true, new knowls for this table will be created from the column knowls for the old table.  Otherwise, the old knowls will be renamed, or deleted if they are not columns of this table.
         """
         from lmfdb.knowledge.knowl import knowldb
-        from lmfdb.utils.datetime import utc_now_naive
+        from lmfdb.utils.datetime_utils import utc_now_naive
         knowls = knowldb.get_column_description(other_table)
         with DelayCommit(self):
             for col, knowl in knowls.items():

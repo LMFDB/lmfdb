@@ -164,4 +164,4 @@ from .names_and_urls import names_and_urls, name_and_object_from_url
 from .trace_hash import TraceHash, TraceHashClass
 from .random_wrap import redirect_no_cache
 from .place_code import CodeSnippet
-from .datetime import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from .datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime

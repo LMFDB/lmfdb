@@ -1,7 +1,7 @@
 
 import re
 from datetime import datetime
-from lmfdb.utils.datetime import UTC
+from lmfdb.utils.datetime_utils import UTC
 from flask import url_for
 from sage.all import ZZ, QQ, lazy_attribute, NumberField
 from lmfdb import db
