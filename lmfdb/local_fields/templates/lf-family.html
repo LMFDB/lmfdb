@@ -18,8 +18,8 @@
   <tr><td>{{ KNOWL('lf.ramification_index', 'Ramification index') }} $e$:</td><td> ${{family.e}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.residue_field_degree', 'Residue field degree') }} $f$:</td><td> ${{family.f}}$ </td></tr>
   <tr><td>{{ KNOWL('lf.discriminant_exponent', 'Discriminant exponent') }} $c$:</td><td> ${{family.c}}$ </td></tr>
-  <tr><td>{{ KNOWL('lf.slopes', 'Absolute Artin slopes' if family.n0 > 1 else 'Artin slopes') }}:</td><td> {{info.latex_content(family.artin_slopes)}} </td></tr>
-  <tr><td>{{ KNOWL('lf.slopes', 'Swan slopes') }}:</td><td> {{info.latex_content(family.slopes)}}</td></tr>
+  <tr><td>{{ KNOWL('lf.slopes', 'Absolute Artin slopes' if family.n0 > 1 else 'Artin slopes') }}:</td><td> {{info.latex_content(family.artin_slopes, add_space=True)}} </td></tr>
+  <tr><td>{{ KNOWL('lf.slopes', 'Swan slopes') }}:</td><td> {{info.latex_content(family.slopes, add_space=True)}}</td></tr>
   <tr><td>{{ KNOWL('lf.means', 'Means') }}:</td><td> {{family.means_display}} </td></tr>
   <tr><td>{{ KNOWL('lf.rams', 'Rams') }}:</td><td> {{family.rams_display}} </td></tr>
   <tr><td>{{ KNOWL('lf.family_field_count', 'Field count') }}:</td><td> ${{family.field_count}}$ {% if family.all_stored %} (complete) {% else %} (incomplete) {% endif %}</td></tr>
