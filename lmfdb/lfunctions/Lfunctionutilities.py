@@ -189,7 +189,7 @@ def seriesvar(index, seriestype):
 
 def polynomial_unroll_get_gq(poly):
     if isinstance(poly[0], list):
-        expanded_factor_list = [] 
+        expanded_factor_list = []
         for tuple in poly:
             for _ in range(tuple[1]):
                 expanded_factor_list.append(tuple[0])
@@ -205,10 +205,11 @@ def polynomial_unroll_get_gq(poly):
 
 def Lfactor_to_label(poly):
     [Lpoly, cdict, g, q] = polynomial_unroll_get_gq(poly)
+
     def extended_code(c):
-            if c < 0:
-                return 'a' + cremona_letter_code(-c)
-            return cremona_letter_code(c)
+        if c < 0:
+            return 'a' + cremona_letter_code(-c)
+        return cremona_letter_code(c)
     return "%s.%s.%s" % (g, q, "_".join(extended_code(cdict.get(i, 0)) for i in range(1, g+1)))
 
 def AbvarExists(g,q):
@@ -224,10 +225,10 @@ def Lfactor_to_label_and_link_if_exists(poly):
 def display_isogeny_label(L):
     g = L.degree // 2
     bad_primes = [factor[0] for factor in L.bad_lfactors]
-    if not (L.motivic_weight==1 and L.rational and g <= 6):
+    if not (L.motivic_weight == 1 and L.rational and g <= 6):
         return False
     if g <= 3:
-        return True 
+        return True
     elif g == 4:
         return any(not(p in bad_primes) for p in [2,3,5])
     elif g == 5:

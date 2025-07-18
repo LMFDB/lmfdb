@@ -189,11 +189,11 @@ class ECisog_class():
         self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}
         self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
         self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
-        
+
         lfunc_url = self.lfunction_link
         origin_url = lfunc_url.lstrip('/L/').rstrip('/')
         self.lfunc_label = db.lfunc_instances.lucky({'url':origin_url}, "label")
-        if self.lfunc_label: 
+        if self.lfunc_label:
             self.lfunc_entry = db.lfunc_search.lookup(self.lfunc_label)
             if self.lfunc_entry:
                 self.has_lfunction = True
@@ -206,7 +206,7 @@ class ECisog_class():
                 self.has_lfunction = False
         else:
             self.has_lfunction = False
-            
+
 def make_graph(M, vertex_labels=None):
     """
     Code extracted from Sage's elliptic curve isogeny class (reshaped
