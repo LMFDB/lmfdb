@@ -1,5 +1,6 @@
 
 from lmfdb.tests import LmfdbTest
+from lmfdb.utils.datetime import UTC
 
 class DynamicKnowlTest(LmfdbTest):
     """
@@ -50,11 +51,6 @@ class DynamicKnowlTest(LmfdbTest):
             from lmfdb.utils.config import Configuration
             from psycopg2.sql import SQL
             from datetime import timedelta, datetime
-            try:
-                from datetime import UTC               # Py 3.11+
-            except ImportError:                         # Py ≤3.10
-                from datetime import timezone as _tz
-                UTC = _tz.utc
             dev_config = Configuration()
             # Modify configuration to connect to devmirror
             for D in [dev_config.default_args["postgresql"], dev_config.postgresql_options, dev_config.options["postgresql"]]:
