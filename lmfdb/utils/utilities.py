@@ -1,6 +1,5 @@
 import cmath
 import math
-import datetime
 import os
 import random
 import re
@@ -940,15 +939,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
-# conversion tools between timestamp different kinds of timestamp
-epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
-def datetime_to_timestamp_in_ms(dt):
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
-    return int((dt - epoch).total_seconds() * 1000000)
-
-def timestamp_in_ms_to_datetime(ts):
-    return datetime.datetime.fromtimestamp(float(int(ts)/1000000.0), datetime.timezone.utc)
 
 class WebObj:
     def __init__(self, label, data=None):
