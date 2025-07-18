@@ -8,7 +8,7 @@ import os
 import sys
 import tempfile
 from datetime import datetime
-from lmfdb.utils.datetime import UTC
+from lmfdb.utils.datetime_utils import UTC
 here = os.path.dirname(os.path.abspath(__file__))
 upone, _ = os.path.split(here)
 uptwo, _ = os.path.split(upone)

@@ -1,6 +1,6 @@
 
 from lmfdb.tests import LmfdbTest
-from lmfdb.utils.datetime import UTC
+from lmfdb.utils.datetime_utils import UTC
 
 class DynamicKnowlTest(LmfdbTest):
     """

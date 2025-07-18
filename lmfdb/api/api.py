@@ -8,7 +8,7 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
-from lmfdb.utils.datetime import UTC
+from lmfdb.utils.datetime_utils import UTC
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
 from lmfdb.api import api_page, api_logger
