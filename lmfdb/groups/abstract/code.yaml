@@ -103,6 +103,10 @@ derived_length:
   magma:  DerivedLength(G);
   gap: DerivedLength(G);
 
+group_statistics:
+  comment:  Compute statistics for the group G
+  magma:  
+
 conjugacy_classes:
   comment: List of conjugacy classes of the group
   magma: ConjugacyClasses(G);  // Output not guaranteed to exactly match the LMFDB table
