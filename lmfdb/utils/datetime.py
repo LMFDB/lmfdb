@@ -29,7 +29,7 @@ def ensure_naive_utc(dt):
 
 # conversion tools between timestamp different kinds of timestamp
 import datetime
-epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
+epoch = datetime.datetime.fromtimestamp(0, UTC)
 
 def datetime_to_timestamp_in_ms(dt):
     if dt.tzinfo is None:
