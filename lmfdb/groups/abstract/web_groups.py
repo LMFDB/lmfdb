@@ -2865,7 +2865,7 @@ class WebAbstractGroup(WebObj):
         # to display at the top of each group page
         # If the group is not in a special family, we will default to showing the permutation group code snippet
         code['code_description'] = dict()
-        
+        self_families = []
         # Highest priority: check if group is cyclic
         if self.cyclic:
             for lang in ['magma', 'gap']: 

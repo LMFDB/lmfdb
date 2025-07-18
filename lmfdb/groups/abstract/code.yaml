@@ -149,6 +149,29 @@ socle:
   gap:  Socle(G);
   sage:  G.socle()
 
+derived_series:
+  comment:  Derived series of the group GF
+  magma:  DerivedSeries(G);
+  gap: DerivedSeriesOfGroup(G);
+  sage: G.derived_series()
+
+chief_series:
+  comment:  Chief series of the group G
+  magma:  ChiefSeries(G);
+  gap: ChiefSeries(G);
+
+lower_central_series:
+  comment:  The lower central series of the group G
+  magma:  LowerCentralSeries(G);
+  gap: LowerCentralSeriesOfGroup(G);
+  sage: G.lower_central_series()
+
+upper_central_series:
+  comment: The upper central series of the group G
+  magma:  UpperCentralSeries(G);
+  gap: UpperCentralSeriesOfGroup(G);
+  sage: G.upper_central_series()
+
 character_table:
   comment: Character table
   magma: CharacterTable(G);

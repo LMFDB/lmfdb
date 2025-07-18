@@ -476,8 +476,8 @@ Statistics about orders of elements in this group have not been computed.
         <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.short_label}}">${{sub.subgroup_tex}}$</span></td>
       {% endfor %}
     {% endif %}
-    <td>{{ place_code(name) }}</td>
-  </tr>
+    <td colspan="1000" style="text-align: right;">{{ place_code(kwl.split('.')[1]) }}</td>
+  </tr> 
   {% endfor %}
 </table>
 
