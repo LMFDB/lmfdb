@@ -17,6 +17,9 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor, convert_label
 from lmfdb.genus2_curves import g2c_logger
+from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
+from lmfdb.abvar.fq.main import url_for_label
+
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
 from flask import url_for
@@ -842,6 +845,8 @@ class WebG2C():
         data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
         data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
+        read_bad_lfactors = {c[0]: c[1] for c in data['bad_lfactors_pretty']}
+        data['bad_primes_to_possibly_unavailable_l_factors'] = [(p, (read_bad_lfactors[p] if p in read_bad_lfactors.keys() else "N/A")) for p in curve['bad_primes']]
         if is_curve:
             # invariants specific to curve
             data['class'] = curve['class']
@@ -931,8 +936,8 @@ class WebG2C():
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." % curve['label'])
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
-                data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
-
+                data['good_lfactors_pretty_with_label'] = [ (c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(2,c[0]) else '') for c in data['good_lfactors']]
+                
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
         data['factorsQQ_base'] = endo['factorsQQ_base']
