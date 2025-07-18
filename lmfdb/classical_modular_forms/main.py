@@ -69,22 +69,22 @@ def learnmore_list_remove(matchstring):
 @cached_function
 def Nk2_bound(nontriv=None):
     if nontriv:
-        return db.mf_newforms.max('Nk2',{'char_order':{'$ne':1}})
+        return db.mf_newforms_eis.max('Nk2',{'char_order':{'$ne':1}})
     else:
-        return db.mf_newforms.max('Nk2')
+        return db.mf_newforms_eis.max('Nk2')
 @cached_function
 def weight_bound(nontriv=None):
     if nontriv:
-        return db.mf_newforms.max('weight',{'char_order':{'$ne':1}})
+        return db.mf_newforms_eis.max('weight',{'char_order':{'$ne':1}})
     else:
-        return db.mf_newforms.max('weight')
+        return db.mf_newforms_eis.max('weight')
 
 @cached_function
 def level_bound(nontriv=None):
     if nontriv:
-        return db.mf_newforms.max('level',{'char_order':{'$ne':1}})
+        return db.mf_newforms_eis.max('level',{'char_order':{'$ne':1}})
     else:
-        return db.mf_newforms.max('level')
+        return db.mf_newforms_eis.max('level')
 
 #############################################################################
 # The following functions are used for processing columns in search results #
@@ -195,20 +195,20 @@ def index():
 @cmf.route("/random/")
 @redirect_no_cache
 def random_form():
-    label = db.mf_newforms.random()
+    label = db.mf_newforms_eis.random()
     return url_for_label(label)
 
 @cmf.route("/random_space/")
 @redirect_no_cache
 def random_space():
-    label = db.mf_newspaces.random()
+    label = db.mf_newspaces_eis.random()
     return url_for_label(label)
 
 @cmf.route("/interesting_newforms")
 def interesting_newforms():
     return interesting_knowls(
         "cmf",
-        db.mf_newforms,
+        db.mf_newforms_eis,
         url_for_label,
         regex=LABEL_RE,
         title="Some interesting newforms",
@@ -220,7 +220,7 @@ def interesting_newforms():
 def interesting_spaces():
     return interesting_knowls(
         "cmf",
-        db.mf_newspaces,
+        db.mf_newspaces_eis,
         url_for_label,
         regex=NEWSPACE_RE,
         title="Some interesting newspaces",
@@ -462,7 +462,7 @@ def mf_data(label):
         emb_label = label
         form_label = ".".join(slabel[:4])
         space_label = ".".join(slabel[:3])
-        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        ocode = db.mf_newforms_eis.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
             return abort(404, f"{label} not in database")
         tables = ["mf_newforms", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
@@ -472,23 +472,23 @@ def mf_data(label):
     elif len(slabel) == 4:
         form_label = label
         space_label = ".".join(slabel[:3])
-        ocode = db.mf_newforms.lookup(form_label, "hecke_orbit_code")
+        ocode = db.mf_newforms_eis.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
             return abort(404, f"{label} not in database")
-        tables = ["mf_newforms", "mf_hecke_nf", "mf_newspaces", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        tables = ["mf_newforms_eis", "mf_hecke_nf_eis", "mf_newspaces_eis", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces_eis"]
         labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
         label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
         title = f"Newform data - {label}"
     elif len(slabel) == 3:
-        ocode = db.mf_newspaces.lookup(label, "hecke_orbit_code")
+        ocode = db.mf_newspaces_eis.lookup(label, "hecke_orbit_code")
         if ocode is None:
             return abort(404, f"{label} not in database")
-        tables = ["mf_newspaces", "mf_newspace_portraits"]
+        tables = ["mf_newspaces_eis", "mf_newspace_portraits"]
         labels = [label, label]
         label_cols = ["label", "label"]
         title = f"Newspace data - {label}"
     elif len(slabel) == 2:
-        tables = ["mf_gamma1", "mf_gamma1_portraits"]
+        tables = ["mf_gamma1_eis", "mf_gamma1_portraits"]
         labels = label
         label_cols = None
         title = fr"$\Gamma_1$ data - {label}"
@@ -535,6 +535,11 @@ def by_url_space_conreylabel(level, weight, conrey_index):
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/C/<hecke_orbit>/")
 def by_url_cuspidal_newform_label(level, weight, char_orbit_label, hecke_orbit):
     label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
+    return render_newform_webpage(label)
+
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/E/<hecke_orbit>/")
+def by_url_eisenstein_newform_label(level, weight, char_orbit_label, hecke_orbit):
+    label = ".".join(map(str, [level, weight, char_orbit_label, "E", hecke_orbit]))
     return render_newform_webpage(label)
 
 # Backward compatibility from before 2018
@@ -606,7 +611,7 @@ def jump_box(info):
             jump = newjump
     #handle direct trace_hash search
     if re.match(r'^\#\d+$', jump) and ZZ(jump[1:]) < 2**61:
-        label = db.mf_newforms.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
+        label = db.mf_newforms_eis.lucky({'trace_hash': ZZ(jump[1:].strip())}, projection="label")
         if label:
             return redirect(url_for_label(label), 301)
         else:
@@ -614,7 +619,7 @@ def jump_box(info):
     elif jump == 'yes':
         query = {}
         newform_parse(info, query)
-        jump = db.mf_newforms.lucky(query, 'label', sort=None)
+        jump = db.mf_newforms_eis.lucky(query, 'label', sort=None)
         if jump is None:
             errmsg = "There are no newforms specified by the query %s"
             jump = query
@@ -898,7 +903,7 @@ newform_columns = SearchColumns([
     ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_largest', 'is_maximal', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
-@search_wrap(table=db.mf_newforms,
+@search_wrap(table=db.mf_newforms_eis,
              title='Newform search results',
              err_title='Newform Search Input Error',
              columns=newform_columns,
@@ -922,7 +927,7 @@ def trace_postprocess(res, info, query):
             q = None
         hecke_codes = [mf['hecke_orbit_code'] for mf in res]
         trace_dict = defaultdict(dict)
-        table = db.mf_hecke_traces
+        table = db.mf_hecke_traces_eis
         for rec in table.search({'n':{'$in': info['Tr_n']}, 'hecke_orbit_code':{'$in':hecke_codes}}, projection=['hecke_orbit_code', 'n', 'trace_an'], sort=[]):
             if q:
                 trace_dict[rec['hecke_orbit_code']][rec['n']] = (rec['trace_an'] % q)
@@ -970,7 +975,7 @@ def set_Trn(info, query, limit=1000):
     info['Tr_n'] = Trn
 
 @search_wrap(template="cmf_trace_search_results.html",
-             table=db.mf_newforms,
+             table=db.mf_newforms_eis,
              title='Newform search results',
              err_title='Newform search input error',
              shortcuts={'jump':jump_box,
@@ -1136,7 +1141,7 @@ def dimension_form_postprocess(res, info, query):
     na_query = {}
     common_parse(info, na_query, na_check=True)
     dim_dict = {}
-    for rec in db.mf_newspaces.search(na_query, ['level', 'weight', 'num_forms']):
+    for rec in db.mf_newspaces_eis.search(na_query, ['level', 'weight', 'num_forms']):
         N = rec['level']
         k = rec['weight']
         if (N,k) not in dim_dict:
@@ -1152,7 +1157,7 @@ def dimension_form_postprocess(res, info, query):
     return dim_dict
 
 @search_wrap(template="cmf_dimension_search_results.html",
-             table=db.mf_newforms,
+             table=db.mf_newforms_eis,
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
@@ -1171,7 +1176,7 @@ def dimension_form_search(info, query):
     query['__sort__'] = []
 
 @search_wrap(template="cmf_dimension_space_search_results.html",
-             table=db.mf_newspaces,
+             table=db.mf_newspaces_eis,
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
@@ -1201,7 +1206,7 @@ space_columns = SearchColumns([
     MultiProcessedCol("decomp", "cmf.dim_decomposition", "Decomposition", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "cmf.atkin_lehner_dims", "AL-decomposition.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, short_title="AL-decomposition", align="center", td_class=" nowrap")])
 
-@search_wrap(table=db.mf_newspaces,
+@search_wrap(table=db.mf_newspaces_eis,
              title='Newspace search results',
              err_title='Newspace search input error',
              columns=space_columns,
@@ -1317,15 +1322,15 @@ class CMF_stats(StatsDisplay):
 
     @lazy_attribute
     def nforms(self):
-        return comma(db.mf_newforms.count())
+        return comma(db.mf_newforms_eis.count())
 
     @lazy_attribute
     def nspaces(self):
-        return comma(db.mf_newspaces.count({'num_forms':{'$gt':0}}))
+        return comma(db.mf_newspaces_eis.count({'num_forms':{'$gt':0}}))
 
     @lazy_attribute
     def ndim(self):
-        return comma(db.mf_hecke_cc.count())
+        return comma(db.mf_hecke_cc_eis.count())
 
     @lazy_attribute
     def short_summary(self):
@@ -1345,7 +1350,7 @@ class CMF_stats(StatsDisplay):
                 'char_degree':['1','2','3','4','5','6-10','11-20','21-100','101-1000']}
 
     extent_knowl = 'cmf.statistics_extent'
-    table = db.mf_newforms
+    table = db.mf_newforms_eis
     baseurl_func = ".index"
     reverses = {'cm_discs': True}
     sort_keys = {'projective_image': projective_image_sort_key}
@@ -1407,7 +1412,7 @@ class CMF_stats(StatsDisplay):
                       ('for weight 1 forms', None)],
          'constraint':{'weight': 1}},
         {'cols':'num_forms',
-         'table':db.mf_newspaces,
+         'table':db.mf_newspaces_eis,
          'top_title': [('number of newforms', 'cmf.galois_orbit'), (r'in \(S_k(N, \chi)\)', None)],
          'url_extras': 'search_type=Spaces&'},
         {'cols':'inner_twist_count'},

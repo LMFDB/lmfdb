@@ -29,14 +29,14 @@ from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
-
+LABEL_EIS_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.E\.[a-z]+$")
 
 # we may store alpha_p with p <= 3000
 primes_for_angles = prime_range(3000)
 
 
 def valid_label(label):
-    return bool(LABEL_RE.match(label))
+    return bool(LABEL_RE.match(label)) or bool(LABEL_EIS_RE.match(label))
 
 
 def valid_emb_label(label):
@@ -79,7 +79,7 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 
 
 def newform_conrey_exists(newformlabel_conrey):
-    return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
+    return db.mf_newforms_eis.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
 
 def quad_field_knowl(disc):
@@ -147,7 +147,7 @@ class WebNewform():
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in db.mf_newforms.col_type:
+        for elt in db.mf_newforms_eis.col_type:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -190,7 +190,7 @@ class WebNewform():
                 vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
                 eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces }
             else:
-                eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
+                eigenvals = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
             if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
                 for attr in hecke_cols:
@@ -214,7 +214,7 @@ class WebNewform():
                     self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
-            hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, hecke_cols)
+            hecke_data = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code': self.hecke_orbit_code}, hecke_cols)
             if hecke_data:
                 for attr in hecke_cols:
                     setattr(self, attr, hecke_data.get(attr))
@@ -294,7 +294,7 @@ class WebNewform():
         self.base_label = [str(s) for s in [self.level, self.weight]]
         self.ns1_label = '.'.join(self.base_label)
         self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
-        self.ns_data = db.mf_newspaces.lookup(self.ns_label)
+        self.ns_data = db.mf_newspaces_eis.lookup(self.ns_label)
 
     # Breadcrumbs
     @property
@@ -499,7 +499,10 @@ class WebNewform():
         if format in angles_formats:
             cc_proj.append(angles_projection)
 
-        cc_data = list(db.mf_hecke_cc.search(query, projection=cc_proj))
+        # we wait with visualizing complex embeddings until we put Satake parameters
+        # cc_data = list(db.mf_hecke_cc_eis.search(query, projection=cc_proj))
+        cc_data = []
+        
         if not cc_data:
             self.has_complex_qexp = False
         else:
@@ -545,7 +548,7 @@ class WebNewform():
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
-        data = db.mf_newforms.lookup(label)
+        data = db.mf_newforms_eis.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')

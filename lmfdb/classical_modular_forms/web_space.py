@@ -225,7 +225,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
     N, k, n = map(int, spacelabel_conrey.split('.'))
     try:
-        return db.mf_newspaces.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
+        return db.mf_newspaces_eis.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
     except ValueError: # N and n not relatively prime
         pass
 
@@ -373,7 +373,7 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
     sub_level_list = [sub_level for sub_level in divisors(level) if (sub_level % char_conductor == 0) and sub_level != level]
     sub_chars = {char['modulus'] : char for char in db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index})}
     if weight == 1:
-        newspace_dims = {rec['level']: rec['dim'] for rec in db.mf_newspaces.search({'weight': weight, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', 'dim'])}
+        newspace_dims = {rec['level']: rec['dim'] for rec in db.mf_newspaces_eis.search({'weight': weight, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', 'dim'])}
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -401,7 +401,7 @@ class WebNewformSpace():
         self.has_trace_form = (data.get('traces') is not None)
         self.char_conrey = self.conrey_index
         self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
-        self.newforms = list(db.mf_newforms.search({'space_label':self.label}, projection=2))
+        self.newforms = list(db.mf_newforms_eis.search({'space_label':self.label}, projection=2))
         oldspaces = make_oldspace_data(self.label, self.char_conductor, self.prim_orbit_index)
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
@@ -461,7 +461,7 @@ class WebNewformSpace():
         """
         if not valid_label(label):
             raise ValueError("Invalid modular forms space label %s." % label)
-        data = db.mf_newspaces.lookup(label)
+        data = db.mf_newspaces_eis.lookup(label)
         if data is None:
             weight = int(label.split('.')[1])
             if (weight != 2) or (label.split('.')[-1] == 'a'):
@@ -549,7 +549,7 @@ class WebNewformSpace():
 
 class WebGamma1Space():
     def __init__(self, level, weight):
-        data = db.mf_gamma1.lucky({'level':level,'weight':weight})
+        data = db.mf_gamma1_eis.lucky({'level':level,'weight':weight})
         if data is None:
             raise ValueError("Space not in database")
         self.__dict__.update(data)
@@ -562,12 +562,12 @@ class WebGamma1Space():
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         # By default we sort on char_orbit_index
-        newspaces = list(db.mf_newspaces.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
+        newspaces = list(db.mf_newspaces_eis.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
         self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level) if sublevel != level]
         self.oldspaces.sort()
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []
-        newforms = list(db.mf_newforms.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
+        newforms = list(db.mf_newforms_eis.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
         if len(newspaces) == len([dim for dim in self.newspace_dims if dim != 0]):
             for space in newspaces:
