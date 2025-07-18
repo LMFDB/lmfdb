@@ -1,12 +1,8 @@
 # the basic knowledge object, with database awareness, …
 
 from collections import defaultdict
-from datetime import datetime, timedelta
-try:
-    from datetime import UTC               # Py 3.11+
-except ImportError:                         # Py ≤3.10
-    from datetime import timezone as _tz
-    UTC = _tz.utc
+from datetime import timedelta
+from lmfdb.utils.datetime import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
 import re
 import subprocess
 import time
@@ -18,7 +14,6 @@ from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
-from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
 from sage.all import cached_function
 from lmfdb.knowledge import logger
@@ -28,27 +23,6 @@ from lmfdb.knowledge import logger
 # IMPORTANT: The knowl database stores timestamps in columns defined as
 # "timestamp without time zone". All timestamps are stored as UTC but
 # without timezone information. These utilities ensure consistent handling.
-
-def utc_now_naive():
-    """
-    Return current UTC time as a naive datetime object (no timezone info).
-    This is used for storing timestamps in the knowl database which uses
-    'timestamp without time zone' columns but stores all times as UTC.
-    """
-    return datetime.now(UTC).replace(tzinfo=None)
-
-def ensure_naive_utc(dt):
-    """
-    Ensure datetime object is naive (no timezone) and represents UTC time.
-    If timezone-aware, convert to UTC first, then strip timezone info.
-    If naive, assume it's already UTC.
-    """
-    if dt.tzinfo is not None:
-        # Convert to UTC and strip timezone
-        return dt.astimezone(UTC).replace(tzinfo=None)
-    else:
-        # Already naive, assume it's UTC
-        return dt
 
 
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
