@@ -533,7 +533,7 @@ def by_url_space_conreylabel(level, weight, conrey_index):
 
 # New label after eisenstein series were added
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/C/<hecke_orbit>/")
-def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
+def by_url_cuspidal_newform_label(level, weight, char_orbit_label, hecke_orbit):
     label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
 
