@@ -181,14 +181,15 @@ class WebNewform():
         self.has_exact_qexp = False
         self.hecke_ring_cyclotomic_generator = None # in case there is no data in mf_hecke_nf
         if self.embedding_label is None:
-            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
+            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp', 'a0_num', 'a0_denom']
             if self.dim == 1:
                 # avoid using mf_hecke_nf when the dimension is 1
                 vals = ConreyCharacter(self.level, db.char_dirichlet.lookup("%s.%s" % (self.level,self.char_orbit_label),projection="first")).values_gens
                 # ConreyCharacter.values_gens returns the exponent of character values,
                 # But we need the character values themselves here when hecke_ring_cyclotomic_generator is unspecified.
                 vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
-                eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces }
+                eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces, 'a0_num' : self.trace_a0_num, 'a0_denom' : self.a0_denom }
+                
             else:
                 eigenvals = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
             if eigenvals and eigenvals.get('an'):
@@ -201,7 +202,10 @@ class WebNewform():
                     zero = [0] * self.dim
                 else:
                     zero = []
-                self.qexp = [zero] + eigenvals['an']
+                a0 = eigenvals['a0_num']
+                # !! TODO - currently we assume a0 is integral
+                # self.qexp = [zero] + eigenvals['an']
+                self.qexp = [a0] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
                 # This is not enough, for some reason
