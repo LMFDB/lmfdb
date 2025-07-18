@@ -33,7 +33,7 @@ epoch = datetime.datetime.fromtimestamp(0, UTC)
 
 def datetime_to_timestamp_in_ms(dt):
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return int((dt - epoch).total_seconds() * 1000000)
 
 def timestamp_in_ms_to_datetime(ts):
