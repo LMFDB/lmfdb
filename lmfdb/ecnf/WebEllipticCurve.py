@@ -680,6 +680,7 @@ class ECNF():
             eq_query = '\\overset{?}{=}'
             frac = '\\frac'
             Sha = '\\# &#1064;(E/K)'
+            Sha = '\\# Ш(E/K)'
             Om = '\\Omega(E/K)'
             Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
             prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
@@ -695,7 +696,7 @@ class ECNF():
                 rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
             rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
             rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
-            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} {eq_query} {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+            self.bsd_formula = rf'\begin{{aligned}}{BSDLvalue:0.9f} {approx} {lder_name} & {eq_query} {lhs} \\ & {approx} {rhs} \\ & {approx} {BSDLvalue_from_formula:0.9f} \end{{aligned}}'
 
         else:
             self.BSDsha = "not available"

@@ -8,11 +8,7 @@ import os
 import sys
 import tempfile
 from datetime import datetime
-try:
-    from datetime import UTC               # Py 3.11+
-except ImportError:                         # Py ≤3.10
-    from datetime import timezone as _tz
-    UTC = _tz.utc
+from lmfdb.utils.datetime_utils import UTC
 here = os.path.dirname(os.path.abspath(__file__))
 upone, _ = os.path.split(here)
 uptwo, _ = os.path.split(upone)
