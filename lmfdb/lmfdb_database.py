@@ -358,11 +358,16 @@ class LMFDBDatabase(PostgresDatabase):
         - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
         uid = self.login()
+        if hasattr(datetime, 'UTC'):
+            utc = datetime.UTC
+        else:
+            from datetime import timezone
+            utc = timezone.utc
         inserter = SQL(
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        self._execute(inserter, [uid, datetime.datetime.now(datetime.UTC), tablename, operation, data])
+        self._execute(inserter, [uid, datetime.datetime.now(utc), tablename, operation, data])
 
     def verify(
         self,
