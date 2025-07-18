@@ -8,11 +8,7 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error
 from datetime import datetime
-try:
-    from datetime import UTC               # Py 3.11+
-except ImportError:                         # Py ≤3.10
-    from datetime import timezone as _tz
-    UTC = _tz.utc
+from lmfdb.utils.datetime_utils import UTC
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
 from lmfdb.api import api_page, api_logger

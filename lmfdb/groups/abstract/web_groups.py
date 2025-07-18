@@ -3159,6 +3159,16 @@ class WebAbstractSubgroup(WebObj):
         )  # should maybe project and just retrieve needed cols
 
     @lazy_attribute
+    def pgroup(self):
+        if self.subgroup_order is not None:
+            p, k = ZZ(self.subgroup_order).is_prime_power(get_data=True)
+            if p == 1:
+                return p
+            if k == 0:
+                return k
+            return p
+
+    @lazy_attribute
     def sub(self):
         S = self._lookup(self.subgroup, self._full, WebAbstractGroup)
         # We set various properties from S for create_boolean_subgroup_string
