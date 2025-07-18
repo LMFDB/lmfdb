@@ -656,7 +656,7 @@ def local_table(N, D, tama, bad_lpolys, bad_lfactors, cluster_pics, root_numbers
               th_wrap('ag.conductor', r'ord(\(N\))'),
               th_wrap('g2c.discriminant', r'ord(\(\Delta\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
-              th_wrap('g2c.local_root_number', 'Root number'),
+              th_wrap('g2c.local_root_number', 'Root number*'),
               th_wrap('g2c.bad_lfactors', 'L-factor'),
               th_wrap('ag.cluster_picture', 'Cluster picture'),
               th_wrap('g2c.tame_reduction', 'Tame reduction?'),
@@ -693,6 +693,8 @@ def local_table(N, D, tama, bad_lpolys, bad_lfactors, cluster_pics, root_numbers
             root_number = str(rootlist[0][1])
         else:
             root_number = ''
+        if p == 2 or is_tame == 'no':
+            root_number += '^*'
         loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapc(root_number),td_wrapl(Lp),td_wrapcn(Clus),td_wrapcn(is_tame)])
         loctab.append('  </tr>')
     loctab.extend(['</tbody>', '</table>'])
