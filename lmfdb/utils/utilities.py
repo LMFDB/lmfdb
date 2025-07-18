@@ -940,7 +940,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     return "data:image/png;base64," + quote(b64encode(buf))
 
 
-
 class WebObj:
     def __init__(self, label, data=None):
         self.label = label
