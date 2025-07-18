@@ -2861,7 +2861,7 @@ class WebAbstractGroup(WebObj):
                 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
         }
 
-        # Here, we add the (perhaps subjectively?) best implementation of this group as a code snippet in Magma/GAP/SageMath
+        # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath
         # to display at the top of each group page
         # If the group is not in a special family, we will default to showing the permutation group code snippet
         code['code_description'] = dict()

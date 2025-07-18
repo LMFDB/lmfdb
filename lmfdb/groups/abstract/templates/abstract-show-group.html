@@ -33,7 +33,7 @@
     <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}} {% if not gp.live() and gp.aut_gens_flag() %} (<a href="{{url_for('.auto_gens', label=gp.label)}}">generators</a>){% endif %}</td><td>{{ place_code('automorphism_group') }}  </td></tr>
     <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
     {% if not gp.live() %}
-      <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
+      <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td><td>{{ place_code('composition_factors') }}  </td></tr>
     {% endif %}
     {% if gp.nilpotent %}
       <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td><td>${{gp.nilpotency_class}}$  </td> <td>{{ place_code('nilpotency_class') }}  </td></tr>
@@ -476,6 +476,7 @@ Statistics about orders of elements in this group have not been computed.
         <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.short_label}}">${{sub.subgroup_tex}}$</span></td>
       {% endfor %}
     {% endif %}
+    <td>{{ place_code(name) }}</td>
   </tr>
   {% endfor %}
 </table>
