@@ -1,0 +1,58 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div id="properties">
+<form method="POST" action=".">
+    <input name="integer" placeholder="Look up integer" />
+    <button type="submit">Submit</button>
+</div>
+
+<h2>Integer</h2>
+<p>
+    ${{ integer_latex }}$
+</p>
+{% if integer == 42 %}
+    <p>The answer to the ultimate quesiton of life, the universe, and everything.</p>
+{% endif %}
+{% if integer == -42 %}
+    <p>The answer to the ultimate quesiton of death, the void, and nothing.</p>
+{% endif %}
+
+<h2>Prime Factorization</h2>
+{% if integer != 0 %}
+    <p>
+        {% for factor in integer.factor(): %}
+            {% if loop.index0 != 0 %}$\times${% endif %}
+            <a href="./{{factor[0]**factor[1]}}">
+                ${{ factor[0] }}
+                {% if factor[1] > 1 %}
+                    ^{ {{ factor[1] }} }
+                {% endif %}
+                $
+            </a>
+        {% endfor %}
+    </p>
+{% else %}
+    <p>$0$ has no prime factorization</p>
+{% endif %}
+
+<h2>Common Base Conversions</h2>
+<table class="ntdata">
+    <thead>
+        <tr>
+            <th>Base</th>
+            <th>Expression in Base</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for n in [2,3,4,5,6,8,16] %}
+        <tr>
+            <td>{{ n }}</td>
+            <td>{{ integer.str(base=n) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
