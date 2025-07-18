@@ -2808,6 +2808,7 @@ class WebAbstractGroup(WebObj):
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
+            perms_sage = "'"+("', '".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"]))+"'"
             deg = rdata["d"]
         else:
             perms, deg = None, None
@@ -2852,15 +2853,85 @@ class WebAbstractGroup(WebObj):
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
                 'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
-                'magma_assign': magma_assign, 'deg': deg, 'perms' : perms,
+                'magma_assign': magma_assign, 'deg': deg, 'perms' : perms, 'perms_sage' : perms_sage,
                 'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
                 'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,
                 'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, 'LFq': LFq,
                 'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
                 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
         }
+
+        # Here, we add the (perhaps subjectively?) best implementation of this group as a code snippet in Magma/GAP/SageMath
+        # to display at the top of each group page
+        # If the group is not in a special family, we will default to showing the permutation group code snippet
+        code['code_description'] = dict()
+        
+        # Highest priority: check if group is cyclic
+        if self.cyclic:
+            for lang in ['magma', 'gap']: 
+                code['code_description'][lang] = "G := CyclicGroup("+str(self.order)+");"
+            code['code_description']['sage'] = "G = CyclicPermutationGroup("+str(self.order)+")"
+        # Check if symmetric
+        elif self.name[0]=='S' and self.name[1:].isdigit():
+            for lang in ['magma', 'gap']: 
+                code['code_description'][lang] = "G := SymmetricGroup("+self.name[1:]+");"
+            code['code_description']['sage'] = "G = SymmetricGroup("+self.name[1:]+")"
+        # Check if dihedral
+        elif self.dihedral:
+            code['code_description']['magma'] = "G := DihedralGroup("+str(self.order/2)+");" # Magma D(n) has order 2n
+            code['code_description']['gap'] = "G := DihedralGroup("+str(self.order)+");"     # GAP D(n) has order n
+            code['code_description']['sage'] = "G = DihedralGroup("+str(self.order/2)+")"    # Sage D(n) has order 2n
+        # Check if alternating
+        elif self.name[0]=='A' and self.name[1:].isdigit():
+            for lang in ['magma', 'gap']: 
+                code['code_description'][lang] = "G := AlternatingGroup("+self.name[1:]+");"
+            code['code_description']['sage'] = "G = AlternatingGroup("+self.name[1:]+")"
+        else:
+            # Otherwise must query to database: gps_special_names
+            self_families = list(db.gps_special_names.search({'label':self.label}, projection={'family','parameters'}))
+            if 'Dic' in [t['family'] for t in self_families]:
+                code['code_description']['magma'] = "G := DicyclicGroup("+str(self.order/4)+");" # Magma Dic(n) has order 4n
+                code['code_description']['gap'] = "G := DicyclicGroup("+str(self.order)+");"     # GAP Dic(n) has order n
+                code['code_description']['sage'] = "G = DiCyclicGroup("+str(self.order/4)+")"    # Sage Dic(n) has order 4n
+            else:
+                # List of Lie Type families available in Magma  (NB: Must ensure the Magma implementation agrees with our definition!)
+                for f in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU', 'SOPlus', 'SOMinus']:
+                    if f in [t['family'] for t in self_families]:
+                        fam_index = [t['family'] for t in self_families].index(f)
+                        lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
+                        code['code_description']['magma'] = "G := "+f+"("+lie_params+");"
+                        break
+                # List of Lie Type families available in GAP  (NB: Must ensure the GAP implementation agrees with our definition!)
+                for f in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU']:
+                    if f in [t['family'] for t in self_families]:
+                        fam_index = [t['family'] for t in self_families].index(f)
+                        lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
+                        code['code_description']['gap'] = "G := "+f+"("+lie_params+");"
+                        break
+                # List of Lie Type families available in Sage (NB: Must ensure the Sage implementation agrees with our definition!)
+                for f in ['GL', 'SL', 'PSL', 'PGL']:
+                    if f in [t['family'] for t in self_families]:
+                        fam_index = [t['family'] for t in self_families].index(f)
+                        lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
+                        code['code_description']['sage'] = "G = "+f+"("+lie_params+")"
+                        break
+        # Checking if Chevalley or Twisted Chevalley group
+        if ('Chev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
+            chev_index = [t['family'] for t in self_families].index("Chev")
+            chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
+            code['code_description']['magma'] = 'G := ChevalleyGroup("'+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
+        if ('TwistChev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
+            chev_index = [t['family'] for t in self_families].index("TwistChev")
+            chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
+            code['code_description']['magma'] = 'G := ChevalleyGroup("'+str(self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
+
+        # If the group is not in a special family, we will default to showing the permutation group code snippet
+        for lang in code['prompt']:
+            if lang not in code['code_description']:
+                code['code_description'][lang] = code['permutation'][lang]
+
         for prop in code:
-            for lang in code['prompt']:
+            for lang in code[prop]:
                 code[prop][lang] = code[prop][lang].format(**data)
         return code
 

@@ -1,21 +1,27 @@
 prompt:
   magma: 'magma'
   gap: 'gap'
+  sage: 'sage'
 
 logo:
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
 
 comment:
   magma: |
     //
   gap: |
     #
+  sage: |
+    #
 
 not-implemented:
   magma: |
     // (not yet implemented)
   gap: |
+    # (not yet implemented)
+  sage: |
     # (not yet implemented)
 
 
@@ -29,6 +35,7 @@ permutation:
   comment: Define the group as a permutation group
   magma: G := PermutationGroup< {deg} | {perms} >;
   gap: G := Group( {perms} );
+  sage: G = PermutationGroup([{perms_sage}])
 
 
 GLZ:
@@ -61,4 +68,75 @@ transitive:
   comment: Define the group from the transitive group database
   magma: G := TransitiveGroup(d,n);
   gap: G := TransitiveGroup(d,n);
+  sage: G = TransitiveGroup(d,n)
+
+order:
+  comment: Order of the group
+  magma: Order(G);
+  gap: Order(G);
+  sage:  G.order()
+
+exponent:
+  comment: Exponent of the group
+  magma: Exponent(G);
+  gap: Exponent(G);
+  sage:  G.exponent()
+
+automorphism_group:
+  comment: Automorphism group
+  gap: AutomorphismGroup(G);
+  magma: AutomorphismGroup(G);
+
+nilpotency_class:
+  comment:  Nilpotency class of the group
+  magma: NilpotencyClass(G);
+  gap: NilpotencyClassOfGroup(G);
+
+derived_length:
+  comment:  Derived length of the group
+  magma:  DerivedLength(G);
+
+conjugacy_classes:
+  comment: Conjugacy classes of the group
+  magma: ConjugacyClasses(G);
+  sage: G.conjugacy_classes()
+
+subgroups:
+  comment:  Subgroups of the group
+  magma:  Subgroups(G);
+  sage:   G.subgroups()
+
+center:
+  comment: Center of the group
+  magma: Center(G);
+  sage:  G.center()
+
+commutator_subgroup:
+  comment: Commutator subgroup of the group G
+  magma:  CommutatorSubgroup(G);
+  sage:  G.commutator()
+
+frattini_subgroup:
+  comment: Frattini subgroup of the group G
+  magma:  FrattiniSubgroup(G);
+  sage:  G.frattini_subgroup()
+
+fitting_subgroup:
+  comment:  Fitting subgroup of the group G
+  magma:  Fitting(G);
+  sage:  G.fitting_subgroup()
+
+radical:
+  comment: Radical of the group G
+  magma:  Radical(G);
+
+socle:
+  comment:  Socle of the group G
+  magma: Socle(G);
+  sage:  G.socle()
+
+character_table:
+  comment: Character table
+  magma: CharacterTable(G);
+  sage: G.character_table()
 
