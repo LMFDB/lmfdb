@@ -1314,6 +1314,13 @@ subgroup_columns = SearchColumns([
         CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
         CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
         CheckCol("central", "group.central", "cent", short_title="Sub. central"),
+        CheckCol("simple", "group.simple", "simp", short_title="Sub. simple"),
+        CheckCol("nilpotent", "group.nilpotent", "nilp", short_title="Sub. nilpotent"),
+        CheckCol("Agroup", "group.a_group", "Agp", short_title="Sub. Agroup"),
+        CheckCol("Zgroup", "group.z_group", "Zgp", short_title="Sub. Zgroup"),
+        CheckCol("metabelian", "group.metabelian", "metab", short_title="Sub. metabelian"),
+        CheckCol("metacyclic", "group.metacyclic", "metacyc", short_title="Sub. metacyclic"),
+        CheckCol("supersolvable", "group.supersolvable", "sup solv", short_title="Sub. supersolvable"),
             ]),
     SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
@@ -1333,7 +1340,11 @@ subgroup_columns = SearchColumns([
         CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic"),
         CheckCol("quotient_abelian", "group.abelian", "ab", unknown="$-$", short_title="Quo. abelian"),
         CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown="$-$", short_title="Quo. maximal")])],
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown="$-$", short_title="Quo. maximal"),
+      CheckCol("quotient_simple", "group.simple", "simp", unknown="$-$", short_title="Quo. simple"),
+      CheckCol("quotient_nilpotent", "group.nilpotent", "nilp", unknown="$-$", short_title="Quo. nilpotent"),
+      CheckCol("quotient_Agroup", "group.a_group", "Agp", unknown="$-$", short_title="Quo. Agroup"),
+      CheckCol("quotient_metabelian", "group.metabelian", "metab", unknown="$-$", short_title="Quo. metabelian"),])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
