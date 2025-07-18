@@ -1,5 +1,18 @@
-AttachSpec("/home/janeshi/Magma/magma.spec");
-function IsogenyLabel(f,q)
+/*
+Lists all labels of isogeny classes for prime powers up to a certain bound.
+
+For each label, and for each characteristic not 2 or 3 field,
+it lists a canonical representative for each isomorphism class in the isogeny class.
+
+For each label, and for each characteristic 2 or 3 field and j-invariant not 0, 1728
+it lists a representative for each isomorphism class in the isogeny class.
+
+For characteristics 2 or 3 and j-invariant equal to 0 or 1728, we use 
+John Cremona's sage package to pick a favourite curve of each isomorphism class.
+*/
+
+
+IsogenyLabel := function(f,q)
 // returns the LMFDB label of the isogeny class determined by f.
     g:=Degree(f) div 2;
     str1:=Reverse(Prune(Coefficients(f)))[1..g];
@@ -16,25 +29,6 @@ function IsogenyLabel(f,q)
     return isog_label;
 end function;
 
-
-// goal: enumerate all isomorphism class and collapse them together by isogeny classes.
-
-// Note: twists of elliptic curves are elliptic curves isomorphic 
-// over an algebraic closure but not over the base field. 
-
-// J-invariants corresponds to isomorphism classes over algebraic closure, 
-// so that's why enumerating the isomorphism classes over the smaller field F_q,
-// we would like to get all twists of them.
-
-// There's a theorem that says all twists of elliptic curves over F_q, (j inv not 0, 1728),
-// the only twists are the quadratic twists. For j=0,1728, we can get quartic or sectic twists.
-
-// Takes a prime power, and outputs an associative array,
-// where the keys is the label, and the value is a canonical curve representing
-// the isogeny class.
-
-// Right now only works for characteristics not 2,3.
-
 EllCurveToString := function(E)
     f, yCoeff := HyperellipticPolynomials(E);
     if yCoeff eq 0 then 
@@ -44,34 +38,33 @@ EllCurveToString := function(E)
     end if;
 end function;
 
-EnumerateIsogenyClassesG1 := function(q)
-
+/*
+Runs algorithm for when characteristic is not 2 or 3
+*/
+EnumerateIsogenyClassesG1Not23 := function(q)
     k<a>:=GF(q);
     R<x>:=PolynomialRing(k);
     
     // generate one representative for each j-invariant aside from 0, 1728,
     // and for each representative, generate all its twists.
-
     jInvReps := [EllipticCurveFromjInvariant(j) : j in k | not j in [k!0, k!1728]]; 
     allEllCurves := &cat[Twists(E): E in jInvReps];
 
     Pickc := function(F)
         // Choose the first nonsquare c in the field
         // where the order is determined by magma's default enumeration
-
         for x in F do 
             if not x eq 0 and not IsSquare(x) then 
                 return x;
             end if;
         end for;
         return 0;
-
     end function;
 
 
     findIsomorphicRepresentative := function(E,c)
 
-        // For char nor 2 or 3
+        // For char nor 2 or 3, j-invariant not 0 or 1728
 
         // Returns an isomorphic model of the form 
         // y^2 = x^3 + Mx + M (if B/A is square)
@@ -82,19 +75,15 @@ EnumerateIsogenyClassesG1 := function(q)
         // where lambda = (Sqrt(B/A)^(-1)) if (B/A) is square,
         // (Sqrt((B/A)*c)^(-1)) otherwise
 
-        // c is a non-square nonzero field element determined by Pickc
+        // c is a non-square nonzero field element determined by function Pickc
 
         E := WeierstrassModel(E);
-
-        originalJinvariant:=jInvariant(E);
+        originalLabel := IsogenyLabel(LPolynomial(E),q);
 
         A := Coefficients(E)[4];
         B := Coefficients(E)[5];
-
         assert not (A eq 0) and not (B eq 0);
-
         BoverA := B/A;
-
         Lambda := 1;
 
         if IsSquare(BoverA) then 
@@ -104,7 +93,9 @@ EnumerateIsogenyClassesG1 := function(q)
         end if;
 
         canonicalE := EllipticCurve([0,0,0,Lambda^4*A, Lambda^6*B]);
-        assert jInvariant(canonicalE) eq originalJinvariant;
+        assert jInvariant(E) eq jInvariant(canonicalE);
+        newLabel := IsogenyLabel(LPolynomial(canonicalE),q);
+        assert originalLabel eq newLabel;
         return canonicalE;
 
     end function;
@@ -113,17 +104,16 @@ EnumerateIsogenyClassesG1 := function(q)
 
     // label to curves is dictionary, 
     // where the keys are labels, and values are 
-    // sets of curves corresponding to the label.
+    // sets of isomorphism class of 
+    // curves corresponding to the label.
 
     labelToCurves := AssociativeArray();
 
     for curve in allEllCurves do 
-
         label := IsogenyLabel(LPolynomial(curve),q);  
         if not label in Keys(labelToCurves) then 
             labelToCurves[label] := Set([]);
         end if;
-
         Include(~labelToCurves[label], EllCurveToString(findIsomorphicRepresentative(curve,c)));
     end for;
 
@@ -141,43 +131,71 @@ EnumerateIsogenyClassesG1 := function(q)
     l728JInvCurve := EllipticCurveFromjInvariant(k!1728);
     l728Twists:=Twists(l728JInvCurve);
 
-
     for curve in zeroTwists cat l728Twists do 
-
         E := WeierstrassModel(curve);
+        originalLabel:= IsogenyLabel(LPolynomial(E),q);
 
         if jInvariant(E) eq k!0 then 
             B:=Coefficients(E)[5];
             // pick smallest [lambda^4 * B] where we cycle all lambda in k
-            repB := Min([lambda^4 * B : lambda in k| lambda ne 0]);
+            repB := Min([lambda^6 * B : lambda in k| lambda ne 0]);
             E := EllipticCurve([0,0,0,0,repB]);
         else 
             A:=Coefficients(E)[4];
             // pick smallest [lambda^6 * A] where we cycle all lambda in k
-            repA := Min([lambda^6 * A : lambda in k| lambda ne 0]);
+            repA := Min([lambda^4 * A : lambda in k| lambda ne 0]);
             E := EllipticCurve([0,0,0,repA,0]);
         end if;
-
+        
         label := IsogenyLabel(LPolynomial(E),q);  
         if not label in Keys(labelToCurves) then 
             labelToCurves[label] := Set([]);
         end if;
-
+        
+        assert originalLabel eq label;
         Include(~labelToCurves[label], EllCurveToString(E));
-
     end for;
-
-
-    //nice print function for associative array
-    PrintAssociativeArray := procedure(AA)
-        for k in Keys(AA) do
-            print "k=",k," v:=",AA[k];
-        end for;
-    end procedure;
 
     return labelToCurves;
 end function;
 
+
+/*
+Runs algorithm for when characteristic is 2 or 3
+but j is not 0 or 1728
+*/
+
+EnumerateIsogenyClassesG123 := function(q)
+
+    k<a>:=GF(q);
+    R<x>:=PolynomialRing(k);
+    
+    // generate one representative for each j-invariant aside from 0, 1728,
+    // and for each representative, generate all its twists.
+
+    jInvReps := [EllipticCurveFromjInvariant(j) : j in k | not j in [k!0, k!1728]]; 
+    allEllCurves := &cat[Twists(E): E in jInvReps];
+
+    // label to curves is dictionary, 
+    // where the keys are labels, and values are 
+    // sets of curves corresponding to the label.
+
+    labelToCurves := AssociativeArray();
+
+    for curve in allEllCurves do 
+        label := IsogenyLabel(LPolynomial(curve),q);  
+        if not label in Keys(labelToCurves) then 
+            labelToCurves[label] := Set([]);
+        end if;
+
+        Include(~labelToCurves[label], EllCurveToString(curve));
+    end for;
+
+    // Now, we don't deal with elliptic curves of j-invariants 0, 1728
+    // It's done by John Cremona in his function
+
+    return labelToCurves;
+end function;
 
 
 DictionaryToFile := procedure(g, q, ~D, filename)
@@ -188,6 +206,7 @@ DictionaryToFile := procedure(g, q, ~D, filename)
         output := StripWhiteSpace(output);
         Write(filename, output);
     end for;
+    Write(filename, &cat["Total of ", Sprint(#Keys(D)), " isogeny classes "]);
 end procedure;
 
 
@@ -195,14 +214,25 @@ end procedure;
 
 PrimePowers:=[2..499] cat [512, 625, 729, 1024];
 
-OutputAllPrimeData := procedure(qs, filename)
+OutputAllData := procedure(qs, filename)
     Write(filename, "\n" : Overwrite:=true);
+
+    Write(filename, "Below are characteristic not 2, 3");
+    
     for q in qs do 
         if IsPrimePower(q) and not ((q mod 2) eq 0) and not ((q mod 3) eq 0) then 
-            results := EnumerateIsogenyClassesG1(q);
+            results := EnumerateIsogenyClassesG1Not23(q);
+            DictionaryToFile(1,q,~results,filename);
+        end if;
+    end for;
+
+    Write(filename, "Below are characteristic 2, 3 with j-inv not 0");
+    for q in qs do 
+        if IsPrimePower(q) and (((q mod 2) eq 0) or ((q mod 3) eq 0)) then 
+            results := EnumerateIsogenyClassesG123(q);
             DictionaryToFile(1,q,~results,filename);
         end if;
     end for;
 end procedure;
 
-OutputAllPrimeData(PrimePowers, "output.txt");
+OutputAllData(PrimePowers, "output.txt");
