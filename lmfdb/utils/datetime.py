@@ -27,7 +27,7 @@ def ensure_naive_utc(dt):
         # Already naive, assume it's UTC
         return dt
 
-# conversion tools between timestamp different kinds of timestamp
+# conversion tools between different kinds of timestamps
 import datetime
 epoch = datetime.datetime.fromtimestamp(0, UTC)
 
