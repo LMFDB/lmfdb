@@ -105,7 +105,32 @@ derived_length:
 
 group_statistics:
   comment:  Compute statistics for the group G
-  magma:  
+  magma: |
+    // Magma code to output the first two rows of the group statistics table
+    element_orders := [Order(g) : g in G];
+    orders := Set(element_orders);
+    printf "Orders: %o\n", orders;
+    printf "Elements: %o %o\n", [#[x : x in element_orders | x eq n] : n in orders], Order(G);
+    cc_orders := [cc[1] : cc in ConjugacyClasses(G)];
+    printf "Conjugacy classes: %o %o\n", [#[x : x in cc_orders | x eq n] : n in orders], #cc_orders;
+  gap: |
+    // Gap code to output the first two rots of the group statistics table
+    element_orders := List(Elements(G), g -> Order(g));
+    orders := Set(element_orders);
+    Print("Orders: ", orders, "\n");
+    element_counts := List(orders, n -> Length(Filtered(element_orders, x -> x = n)));
+    Print("Elements: ", element_counts, " ", Size(G), "\n");
+    cc_orders := List(ConjugacyClasses(G), cc -> Order(Representative(cc)));
+    cc_counts := List(orders, n -> Length(Filtered(cc_orders, x -> x = n)));
+    Print("Conjugacy classes: ", cc_counts, " ", Length(ConjugacyClasses(G)), "\n");
+  sage: |
+    # Sage code to output the first two rows of the group statistics table
+    element_orders = [g.order() for g in G]
+    orders = sorted(list(set(element_orders)))
+    print("Orders:", orders)
+    print("Elements:", [element_orders.count(n) for n in orders], G.order())
+    cc_orders = [cc[0].order() for cc in G.conjugacy_classes()]
+    print("Conjugacy classes:", [cc_orders.count(n) for n in orders], len(cc_orders))
 
 conjugacy_classes:
   comment: List of conjugacy classes of the group
