@@ -537,6 +537,10 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     padding-left: .3em;
     user-select: text;
     flex: 1;
+
+    /* For scrollable code snippets */
+    scrollbar-color: #bbbaba #ffffff;
+    scrollbar-width: thin; 
 }
 
 .prompt {
