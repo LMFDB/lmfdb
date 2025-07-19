@@ -64,10 +64,10 @@ class CodeSnippet():
                 # (e.g. for very long group presentation/permutation definition codes)
                 # Todo: The widths and character limits can still be fine-tuned...
                 is_scroll_div, is_scroll_span = "", ""
-                if (item in top_code_snippets) and (max([len(line) for line in code[item][L].split('\n')]) > 90):
+                if (item in top_code_snippets) and (max([len(line) for line in lines]) > 90):
                     is_scroll_div, is_scroll_span = " width: 50%;", "overflow-x: scroll;"
                     vcenter_style = ""
-                elif (max([len(line) for line in code[item][L].split('\n')]) > 160):
+                elif (max([len(line) for line in lines]) > 160):
                     is_scroll_div, is_scroll_span = " width: 1200px;", "overflow-x: scroll;"
                     vcenter_style = ""
 
