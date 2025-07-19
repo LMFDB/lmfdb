@@ -52,21 +52,29 @@ class CodeSnippet():
                 class_str = " ".join([L,'nodisplay','codebox'])
                 sep = "\n"
 
+		# Particular additional style elements to ensure text is vertically centered
+                # (only if single line and no scroll bar)
+                vcenter_style = "display: flex; align-items: center;"
+                if ('\n' in code[item][L]): vcenter_style = ""
+
+		# The code snippets shown top of the page (i.e which have a stricter bound on their maximum width)
+                top_code_snippets = ['field', 'curve', 'code_description'] 
+
                 # Here, we decide whether to make our code snippet horizontally scrollable
                 # (e.g. for very long group presentation/permutation definition codes)
-                # Todo: The widths can still be fine-tuned...
-                is_scrollable_div, is_scrollable_span = "", ""
-                if (item == "code_description") and (len(code[item][prompt]) > 90):
-                    is_scrollable_div = " width: 50%;"
-                    is_scrollable_span = "overflow-x: scroll;"
-                elif (item in ['presentation', 'permutation', 'GLZ', 'GLFp', 'GLZN', 'GLZq', 'GLFq']) and (len(code[item][prompt]) > 160):
-                    is_scrollable_div = " width: 1200px;"
-                    is_scrollable_span = "overflow-x: scroll;"
+                # Todo: The widths and character limits can still be fine-tuned...
+                is_scroll_div, is_scroll_span = "", ""
+                if (item in top_code_snippets) and (max([len(line) for line in code[item][L].split('\n')]) > 90):
+                    is_scroll_div, is_scroll_span = " width: 50%;", "overflow-x: scroll;"
+                    vcenter_style = ""
+                elif (max([len(line) for line in code[item][L].split('\n')]) > 160):
+                    is_scroll_div, is_scroll_span = " width: 1200px;", "overflow-x: scroll;"
+                    vcenter_style = ""
 
                 snippet_str += f"""
-    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top; {is_scrollable_div}">
+    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top; {is_scroll_div}">
         <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 16px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
-        <span class="prompt">{prompt}:</span><span class="code" style="{is_scrollable_span}">{sep.join(lines)}</span>
+        <span class="prompt" style="{vcenter_style}">{prompt}:</span><span class="code" style="{vcenter_style} {is_scroll_span}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
     """

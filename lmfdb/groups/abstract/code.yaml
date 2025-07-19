@@ -103,6 +103,67 @@ derived_length:
   magma:  DerivedLength(G);
   gap: DerivedLength(G);
 
+is_abelian:
+  comment:  Determine if the group G is abelian
+  magma:  IsAbelian(G);
+  gap:  IsAbelian(G);
+  sage: G.is_abelian()
+
+is_cyclic:
+  comment:  Determine if the group G is cyclic
+  magma:  IsCyclic(G);
+  gap:  IsCyclic(G);
+  sage: G.is_cyclic()
+
+is_elementary_abelian:
+  comment:  Determine if the group G is elementary abelian
+  magma: IsElementaryAbelian(G);
+  gap: IsElementaryAbelian(G);
+  sage: G.is_elementary_abelian()
+
+is_monomial:
+  comment:  Determine if the group G is a monomial group
+  gap: IsMonomialGroup(G);
+
+is_nilpotent:
+  comment: Determine if the group G is nilpotent
+  magma: IsNilpotent(G);
+  gap: IsNilpotentGroup(G);
+  sage: G.is_nilpotent()
+
+is_perfect:
+  comment:  Determine if the group G is perfect
+  magma:  IsPerfect(G);
+  gap: IsPerfectGroup(G);
+  sage: G.is_perfect()
+
+is_pgroup:
+  comment:  Determine if the group G is a p-group
+  sage: G.is_pgroup()
+
+is_polycyclic:
+  comment:  Determine if the group G is polycyclic
+  gap:  IsPolycyclicGroup(G);
+  sage:  G.is_polycyclic()
+  
+is_simple:
+  comment:  Determine if the group G is simple
+  magma: IsSimple(G);
+  gap:  IsSimpleGroup(G);
+
+is_solvable:
+  comment: Determine if the group G is solvable
+  magma:  IsSolvable(G);
+  gap: IsSolvableGroup(G);
+  sage:  G.is_solvable()
+
+is_supersolvable:
+  comment:  Determine if the group G is supersolvable
+  gap: IsSupersolvableGroup(G);
+  sage: G.is_supersolvable()
+
+
+
 group_statistics:
   comment:  Compute statistics for the group G
   magma: |
@@ -114,7 +175,7 @@ group_statistics:
     cc_orders := [cc[1] : cc in ConjugacyClasses(G)];
     printf "Conjugacy classes: %o %o\n", [#[x : x in cc_orders | x eq n] : n in orders], #cc_orders;
   gap: |
-    // Gap code to output the first two rots of the group statistics table
+    # Gap code to output the first two rows of the group statistics table
     element_orders := List(Elements(G), g -> Order(g));
     orders := Set(element_orders);
     Print("Orders: ", orders, "\n");

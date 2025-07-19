@@ -44,8 +44,15 @@
 <p>
   {{info.boolean_characteristics_string | safe}}
 </p>
+<p>
+  {{ place_code('is_abelian') }} {{ place_code('is_cyclic') }} {{ place_code('is_nilpotent') }} {{ place_code('is_solvable') }}
+  {{ place_code('is_supersolvable') }} {{ place_code('is_simple') }} {{ place_code('perfect') }} {{ place_code('polycyclic') }} 
+</p> 
 
 <h2>Group statistics</h2>
+
+<p>{{ place_code('group_statistics') }}</p>
+
 <p> {% if gp.order_stats != None %} 
   <div class="table-scroll-wrapper">
    <table class="ntdata onesticky" style="margin-left:0;">
@@ -79,7 +86,7 @@
         <td>{{ c[1] }}</a></td>
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
-        <td> {{ place_code('conjugacy_classes') }} </td>
+        <td> {{ place_code('num_conjugacy_classes') }} </td>
       </tr>
       {% endif %}
       {% if not gp.live() %}
