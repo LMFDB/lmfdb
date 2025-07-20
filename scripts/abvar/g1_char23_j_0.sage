@@ -31,16 +31,18 @@ def output_data():
             to_write = "(g,q) = %s,%s\n" % (1, q)
             file.write(to_write)
             
+        F.<a> = GF(q, name='a')
         label_to_curves = defaultdict(set)
         
         if q%2 == 0:
-            curves = curves_with_j_0_char2(GF(q))
+            curves = curves_with_j_0_char2(F)
         else:
-            curves = curves_with_j_0_char3(GF(q))
+            curves = curves_with_j_0_char3(F)
             
         for curve in curves:
             Lpoly = curve.frobenius_polynomial()
-            label_to_curves[get_label(Lpoly,q)].add(curve._equation_string())
+            to_output = (curve._equation_string()).replace(" ", "")
+            label_to_curves[get_label(Lpoly,q)].add(to_output)
         
         for label in label_to_curves.keys():
             with open(output_filename, "a") as file:
