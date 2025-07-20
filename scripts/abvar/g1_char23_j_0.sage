@@ -1,4 +1,4 @@
-from sage.schemes.elliptic_curves.ell_finite_field import curves_with_j_0, curves_with_j_0_char2, curves_with_j_0_char3, curves_with_j_1728
+from sage.schemes.elliptic_curves.ell_finite_field import curves_with_j_0_char2, curves_with_j_0_char3
 from sage.databases.cremona import cremona_letter_code
 from collections import defaultdict
 
@@ -26,13 +26,13 @@ def output_data():
         file.write("")
 
     for q in qs:
-        
         with open(output_filename, "a") as file:
             file.write("\n")
             to_write = "(g,q) = %s,%s\n" % (1, q)
             file.write(to_write)
             
         label_to_curves = defaultdict(set)
+        
         if q%2 == 0:
             curves = curves_with_j_0_char2(GF(q))
         else:
@@ -42,9 +42,9 @@ def output_data():
             Lpoly = curve.frobenius_polynomial()
             label_to_curves[get_label(Lpoly,q)].add(curve._equation_string())
         
-        for label_key in label_to_curves:
+        for label in label_to_curves.keys():
             with open(output_filename, "a") as file:
-                to_write = "%s|{%s}\n" % (label_key, ','.join(label_to_curves[label_key]))
+                to_write = "%s|{%s}\n" % (label, ','.join(label_to_curves[label]))
                 file.write(to_write)
             
         with open(counts_filename, "a") as file:

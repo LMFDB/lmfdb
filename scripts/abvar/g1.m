@@ -1,5 +1,7 @@
 /*
-Lists all labels of isogeny classes for prime powers up to a certain bound.
+Lists all labels of isogeny classes for genus 1 and Fq, where q is a prime 
+power ranging from 2 to 499, or q is in [512, 625, 729, 1024], except 
+for when q is divisible by 2 or 3, it only lists labels for abvars with j-invariants not 0. 
 
 For each label, and for each field of characteristic not 2 or 3,
 it lists a canonical representative for each isomorphism class in the isogeny class.
@@ -9,6 +11,7 @@ it lists a representative for each isomorphism class in the isogeny class.
 
 For characteristics 2 or 3 and j-invariant equal to 0 or 1728, we use 
 John Cremona's sage package to pick a favourite curve of each isomorphism class.
+See g1_char23_j_0.sage.
 */
 
 
@@ -114,7 +117,7 @@ findIsomorphicRepresentative := function(E)
         newE := EllipticCurve([0,0,0,Lambda^4*A, Lambda^6*B]);
     end if;
     
-    // sanity check
+    // validity check
     assert IsogenyLabel(E) eq IsogenyLabel(newE);
     return newE;
 end function;
@@ -157,7 +160,7 @@ EnumerateIsogenyClassesG1 := function(q)
     return labelToCurves;
 end function;
 
-// Now, try to generate the data for prime powers 2 <= q <= 499, and q in {512, 625, 729, 1024}, 
+// Now, generate the data for prime powers 2 <= q <= 499, and q in {512, 625, 729, 1024}, 
 DictionaryToFile := procedure(g, q, ~D, filename)
     Write(filename, "\n");
     Write(filename, &cat["(g, q)= (", Sprint(g),",",Sprint(q),")"]);
@@ -170,10 +173,9 @@ end procedure;
 
 PrimePowers:=[2..499] cat [512, 625, 729, 1024];
 
-
 // It outputs data into two files:
-// {label|isomorphism classes} -> filename
-// {q, # of labels for each q} -> filename
+// {label|isomorphism classes} -> outputFilename, this is the actual data
+// {q, # of labels for each q} -> countsFilename, this is used for checking the consistency with lmfdb
 OutputAllData := procedure(qs, outputFilename, countsFilename)
     QLabelPairs := [];
     Write(outputFilename, "\n" : Overwrite:=true);

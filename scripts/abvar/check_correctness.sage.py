@@ -4,9 +4,15 @@
 from sage.all_cmdline import *   # import sage library
 
 _sage_const_1 = Integer(1); _sage_const_0 = Integer(0)
-from collections import defaultdict
 sys.path.append("../..") 
+from collections import defaultdict
 from lmfdb import db
+
+'''
+Reads files from counts_filenames, and for each prime power q,
+add the number of isogeny labels of genus 1 over F_q
+from each of the files. Then we check if it matches the LMFDB data.
+'''
 
 counts_filenames = ["counts23_0_1728.txt", "counts.txt"]
 
@@ -22,7 +28,6 @@ def is_int(s):
 for filename in counts_filenames:
     with open(filename, "r") as file:
         for line in file:
-            line = line.strip()
             line = line.replace(" ", "")
             if not line: 
                 continue
@@ -34,8 +39,7 @@ for filename in counts_filenames:
 lmfdb_counts = db.av_fq_isog.stats.column_counts(["g", "q"])
 
 for key in sorted(counts.keys()):
-    assert lmfdb_counts[(_sage_const_1 , key)] == counts[key]
+    assert lmfdb_counts[(_sage_const_1 , key)] == counts[key], "Number of labels for q=%s does not match." % (key)
 
 print("SUCCESS: we just verified that the number of labels in our output matches the lmfdb data.")
-    
 
