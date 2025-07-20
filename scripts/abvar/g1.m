@@ -143,7 +143,6 @@ EnumerateIsogenyClassesG1 := function(q)
 end function;
 
 // Now, try to generate the data for prime powers 2 <= q <= 499, and q in {512, 625, 729, 1024}, 
-
 DictionaryToFile := procedure(g, q, ~D, filename)
     Write(filename, "\n");
     Write(filename, &cat["(g, q)= (", Sprint(g),",",Sprint(q),")"]);
@@ -154,27 +153,28 @@ DictionaryToFile := procedure(g, q, ~D, filename)
     end for;
 end procedure;
 
-//PrimePowers:=[2..499] cat [512, 625, 729, 1024];
+PrimePowers:=[2..499] cat [512, 625, 729, 1024];
 
-PrimePowers:=[2..100];
 
-OutputAllData := procedure(qs, filename)
+// It outputs data into two files:
+// {label|isomorphism classes} -> filename
+// {q, # of labels for each q} -> filename
+OutputAllData := procedure(qs, outputFilename, countsFilename)
     QLabelPairs := [];
-    Write(filename, "\n" : Overwrite:=true);
+    Write(outputFilename, "\n" : Overwrite:=true);
     for q in qs do 
         if IsPrimePower(q) then 
             results := EnumerateIsogenyClassesG1(q);
-            DictionaryToFile(1,q,~results,filename);
+            DictionaryToFile(1,q,~results,outputFilename);
+            Append(~QLabelPairs, [q, #Keys(results)]);
         end if;
-    Append(~QLabelPairs, [q, #Keys(results)]);
     end for;
 
-    Write(filename, "");
-    Write(filename, "The following are (q, #of labels produced) pairs");
-    Write(filename, "WARNING: for char 2 or 3, j = 0 or 1728, labels are not presented here.");
+    Write(countsFilename, "The following are (q, #of labels produced) pairs");
+    Write(countsFilename, "WARNING: for char 2 or 3, j = 0 or 1728, labels are not presented here.");
     for qLabelPair in QLabelPairs do 
-        Write(filename, &cat[Sprint(qLabelPair[1]), ", ", Sprint(qLabelPair[2])]);
+        Write(countsFilename, &cat[Sprint(qLabelPair[1]), ", ", Sprint(qLabelPair[2])]);
     end for;
 end procedure;
 
-OutputAllData(PrimePowers, "output_test_jul18.txt");
+OutputAllData(PrimePowers, "output.txt", "counts.txt");
