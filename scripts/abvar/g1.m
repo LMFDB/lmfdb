@@ -129,7 +129,22 @@ EnumerateIsogenyClassesG1 := function(q)
     else 
         jInvReps := [EllipticCurveFromjInvariant(j) : j in k]; 
     end if;
-    allEllCurves := &cat[Twists(E): E in jInvReps];
+    allEllCurves := &cat[Twists(E): E in jInvReps];        
+    
+    /*
+    In the case that char is 2 or 3, we don't have a canonical class, 
+    so it's always good to check that it is not isomorphic to any existing curves
+    */
+    if (q mod 2 eq 0) or (q mod 3 eq 0) then 
+        nonIsoCurves := [];
+        for E in allEllCurves do 
+            if &or[IsIsomorphic(E,existingCurve) : existingCurve in nonIsoCurves] then 
+                break;
+            end if;
+            Append(~nonIsoCurves, E);
+        end for;
+        allEllCurves := nonIsoCurves;
+    end if;
 
     labelToCurves := AssociativeArray();
     for E in allEllCurves do 
@@ -162,6 +177,7 @@ PrimePowers:=[2..499] cat [512, 625, 729, 1024];
 OutputAllData := procedure(qs, outputFilename, countsFilename)
     QLabelPairs := [];
     Write(outputFilename, "\n" : Overwrite:=true);
+    Write(countsFilename, "\n" : Overwrite:=true);
     for q in qs do 
         if IsPrimePower(q) then 
             results := EnumerateIsogenyClassesG1(q);
@@ -173,7 +189,7 @@ OutputAllData := procedure(qs, outputFilename, countsFilename)
     Write(countsFilename, "The following are (q, #of labels produced) pairs");
     Write(countsFilename, "WARNING: for char 2 or 3, j = 0 or 1728, labels are not presented here.");
     for qLabelPair in QLabelPairs do 
-        Write(countsFilename, &cat[Sprint(qLabelPair[1]), ", ", Sprint(qLabelPair[2])]);
+        Write(countsFilename, &cat[Sprint(qLabelPair[1]), ",", Sprint(qLabelPair[2])]);
     end for;
 end procedure;
 
