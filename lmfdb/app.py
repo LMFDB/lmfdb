@@ -131,7 +131,8 @@ def ctx_proc_userdata():
     # overwrite this variable when you want to customize it
     # For example, [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
     vars['bread'] = None
-
+    from lmfdb.utils import CodeSnippet
+    vars['CodeSnippet'] = CodeSnippet
     # default title
     vars['title'] = r'LMFDB'
 

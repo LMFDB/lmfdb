@@ -38,6 +38,7 @@ from lmfdb.utils import (
     WebObj,
     pos_int_and_factor,
     raw_typeset,
+    CodeSnippet
 )
 from .circles import find_packing
 
@@ -730,6 +731,38 @@ class WebAbstractGroup(WebObj):
         return primary_to_smith(self.primary_abelian_invariants)
 
     @lazy_attribute
+    def nick_name(self):
+        if self.label == '7920.a':
+            return r'Mathieu group $M_{11}$'
+        if self.label == '95040.a':
+            return r'Mathieu group $M_{12}$'
+        if self.label == '443520.a':
+            return r'Mathieu group $M_{22}$'
+        if self.label == '10200960.a':
+            return r'Mathieu group $M_{23}$'
+        if self.label == '244823040.a':
+            return r'Mathieu group $M_{24}$'
+        if self.label == '17556.a':
+            return r'Janko group $J_1$'
+        if self.label == '60480.a':
+            return r'Janko group $J_2$'
+        if self.label == '50232960.a':
+            return r'Janko group $J_3$'
+        if self.label == '44352000.a':
+            return r'Higman-Sims group'
+        if self.label == '898128000.a':
+            return r'McLaughlin group'
+        if self.label == '4030387200.a':
+            return r'Held group'
+        if self.label == '145926144000.a':
+            return r'Rudvalis group'
+        if self.label == '495766656000.a':
+            return r'Conway group $\mathrm{Co}_3$'
+        if self.label == '42305421312000.a':
+            return r'Conway group $\mathrm{Co}_2$'
+        return f'${self.tex_name}$'
+
+    @lazy_attribute
     def tex_name(self):
         if self.abelian:
             return abelian_gp_display(self.smith_abelian_invariants)
@@ -942,11 +975,17 @@ class WebAbstractGroup(WebObj):
                         ov = None
         return ans
 
+    def label_compress(self):
+        spl_label = self.label.split('.')
+        if len(spl_label[0]) > 12:
+            spl_label[0] = spl_label[0][:3] + "..." + spl_label[0][-3:]
+        return ".".join(spl_label)
+
     def properties(self):
         nilp_str = "yes" if self.nilpotent else "no"
         solv_str = "yes" if self.solvable else "no"
         props = [
-            ("Label", self.label),
+            ("Label", self.label_compress()),
             ("Order", web_latex(factor(self.order))),
             ("Exponent", web_latex(factor(self.exponent))),
         ]
@@ -2743,33 +2782,11 @@ class WebAbstractGroup(WebObj):
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
     def create_snippet(self,item):
-        # mimics jinja macro place_code to be included in Constructions section
-        # this is specific for embedding in a table. eg. we need to replace "<" with "&lt;"
-        code = self.code_snippets()
-        snippet_str = "" # initiate new string
-        if code[item]:
-            for L in code[item]:
-                if isinstance(code[item][L],str):
-                    lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
-                    lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
-                else:   # not currently used in groups
-                    lines = code[item][L]
-                prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
-                class_str = " ".join([L,'nodisplay','codebox'])
-                col_span_val = '"6"'
-                for line in lines:
-                    snippet_str += f"""
-<tr>
-    <td colspan={col_span_val}>
-        <div class="{class_str}">
-            <span class="raw-tset-copy-btn" onclick="copycode(this)"><img alt="Copy content" class="tset-icon"></span>
-            <span class="prompt">{prompt}:&nbsp;</span><span class="code">{line}</span>
-            <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
-        </div>
-    </td>
-</tr>
-"""
-        return snippet_str
+        col_span_val = '"6"'
+        snippet = CodeSnippet(self.code_snippets(), item,
+                              pre=f"<tr> <td colspan={col_span_val}>",
+                              post="</td></tr>")
+        return snippet.place_code()
 
     @cached_method
     def code_snippets(self):
@@ -3140,6 +3157,16 @@ class WebAbstractSubgroup(WebObj):
         return list(
             db.gps_groups.search({"label": {"$in": labels}})
         )  # should maybe project and just retrieve needed cols
+
+    @lazy_attribute
+    def pgroup(self):
+        if self.subgroup_order is not None:
+            p, k = ZZ(self.subgroup_order).is_prime_power(get_data=True)
+            if p == 1:
+                return p
+            if k == 0:
+                return k
+            return p
 
     @lazy_attribute
     def sub(self):

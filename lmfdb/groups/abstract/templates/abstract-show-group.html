@@ -195,15 +195,9 @@ Statistics about orders of elements in this group have not been computed.
 
 <h2>Constructions</h2>
   {% if code %}<div align="right" style="float: left;">
-            Show commands:
-            {% set slash = joiner("/ ") %}
-            {% for lang in code['show']|sort %}
-            {# override show names for standard languages to ensure consistency #}
-            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else "Gap" if lang == 'gap' else code['show']['lang'] %}
-            {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
-            {% endfor %}
-        </div><br><br>
-    {% endif %}
+  {{CodeSnippet(code).show_commands_box() | safe}}
+</div><br><br>
+{% endif %}
 
 <table class=nowrap>
   {{ gp.stored_representations | safe }}

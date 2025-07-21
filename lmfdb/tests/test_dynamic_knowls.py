@@ -1,5 +1,6 @@
 
 from lmfdb.tests import LmfdbTest
+from lmfdb.utils.datetime_utils import UTC
 
 class DynamicKnowlTest(LmfdbTest):
     """
@@ -62,7 +63,7 @@ class DynamicKnowlTest(LmfdbTest):
             dev_db = PostgresDatabase(dev_config)
 
             # Updates happen every 20 minutes, so we only compare knowls older than that (plus a buffer).
-            cutoff = datetime.utcnow() - timedelta(minutes=30)
+            cutoff = datetime.now(UTC) - timedelta(minutes=30)
 
             t_query = SQL("SELECT timestamp FROM kwl_knowls WHERE timestamp < %s LIMIT 1")
             dev_t = dev_db._execute(t_query, [cutoff]).fetchone()[0]
