@@ -2811,36 +2811,40 @@ class WebAbstractGroup(WebObj):
             perms_sage = "'"+("', '".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"]))+"'"
             deg = rdata["d"]
         else:
-            perms, deg = None, None
+            perms, perms_sage, deg = None, None, None
 
         if "GLZ" in self.representations:
             nZ = self.representations["GLZ"]["d"]
             LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]]
             LZsplit = [split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ) for g in self.representations["GLZ"]["gens"]]
+            LZsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ))+")" for g in self.representations["GLZ"]["gens"]])+"]"
         else:
-            nZ, LZ, LZsplit = None, None, None
+            nZ, LZ, LZsplit, LZsage = None, None, None, None
         if "GLFp" in self.representations:
             nFp = self.representations["GLFp"]["d"]
             Fp = self.representations["GLFp"]["p"]
             LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]]
             e = libgap.One(GF(Fp))
             LFpsplit = [split_matrix_list_Fp(A,nFp,e) for A in LFp]
+            LFpsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLFp", ListForm=True),nFp))+")" for g in self.representations["GLFp"]["gens"]])+"]"
         else:
-            nFp, Fp, LFp, LFpsplit = None, None, None, None
+            nFp, Fp, LFp, LFpsplit, LFpsage = None, None, None, None, None
         if "GLZN" in self.representations:
             nZN = self.representations["GLZN"]["d"]
             N = self.representations["GLZN"]["p"]
             LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
             LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
+            LZNsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZN", ListForm=True),nZN))+")" for g in self.representations["GLZN"]["gens"]])+"]"
         else:
-            nZN, N, LZN, LZNsplit = None, None, None, None
+            nZN, N, LZN, LZNsplit, LZNsage = None, None, None, None, None
         if "GLZq" in self.representations:
             nZq = self.representations["GLZq"]["d"]
             Zq = self.representations["GLZq"]["q"]
             LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
             LZqsplit = "[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZq", ListForm=True) , nZq, Zq) for g in self.representations["GLZq"]["gens"]]) + "]"
+            LZqsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZq", ListForm=True), nZq))+")" for g in self.representations["GLZq"]["gens"]])+"]"
         else:
-            nZq, Zq, LZq, LZqsplit = None, None, None, None
+            nZq, Zq, LZq, LZqsplit, LZqsage = None, None, None, None, None
 # add below for GLFq implementation
         if "GLFq" in self.representations:
             nFq = self.representations["GLFq"]["d"]
@@ -2848,8 +2852,9 @@ class WebAbstractGroup(WebObj):
             mats = [self.decode_as_matrix(g, "GLFq", ListForm=True) for g in self.representations["GLFq"]["gens"]]
             LFq = ",".join(split_matrix_Fq_add_al(mat, nFq ) for mat in mats)
             LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nFq, Fq) for mat in mats) + "]"
+            LFqsage = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nFq))+")" for mat in mats])+"]"
         else:
-            nFq, Fq, LFq, LFqsplit = None, None, None, None
+            nFq, Fq, LFq, LFqsplit, LFqsage = None, None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
                 'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
@@ -2859,6 +2864,8 @@ class WebAbstractGroup(WebObj):
                 'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, 'LFq': LFq,
                 'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
                 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
+                # Adding the Sage versions of the matrix group code snippets:
+                'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage,  'LFqsage': LFqsage,
         }
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath

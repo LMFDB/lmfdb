@@ -42,27 +42,42 @@ GLZ:
   comment: Define the group as a matrix group with coefficients in Z
   magma: G := MatrixGroup< {nZ}, Integers() | {LZ} >;
   gap: G := Group({LZsplit});
-
+  sage: |
+    MS = MatrixSpace(Integers(), {nZ}, {nZ})
+    G = MatrixGroup({LZsage})
 
 GLFp:
   comment: Define the group as a matrix group with coefficients in GLFp
   magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
   gap: G := Group({LFpsplit});
+  sage: |
+    MS = MatrixSpace(GF({Fp}), {nFp}, {nFp})
+    G = MatrixGroup({LFpsage})
 
 GLZN:
   comment: Define the group as a matrix group with coefficients in GLZN
   magma: G := MatrixGroup< {nZN}, Integers({N}) | {LZN} >;
   gap: G := Group({LZNsplit});
+  sage: |
+    MS = MatrixSpace(Integers({N}), {nZN}, {nZN})
+    G = MatrixGroup({LZNsage})
 
 GLZq:
   comment: Define the group as a matrix group with coefficients in GLZq
   magma: G := MatrixGroup< {nZq}, Integers({Zq}) | {LZq} >;
   gap: G := Group({LZqsplit});
+  sage: |
+    MS = MatrixSpace(Integers({Zq}), {nZq}, {nZq})
+    G = MatrixGroup({LZqsage})
 
 GLFq:
   comment: Define the group as a matrix group with coefficients in GLFq
   magma: F:=GF({Fq}); al:=F.1; G := MatrixGroup< {nFq}, F | {LFq} >;
   gap: G := Group({LFqsplit});
+  sage: |
+    F = GF({Fq}); al = F.0; MS = MatrixSpace(F, {nFq}, {nFq})
+    G = MatrixGroup({LFqsage})
+
 
 transitive:
   comment: Define the group from the transitive group database
@@ -86,6 +101,10 @@ automorphism_group:
   comment: Automorphism group
   gap: AutomorphismGroup(G);
   magma: AutomorphismGroup(G);
+
+outer_automorphism_group:
+  comment: The outer automorphism group of G
+  gap:  FactorGroup(AutomorphismGroup(G), InnerAutomorphismGroup(G));
 
 composition_factors:
   comment: Composition factors of the group
@@ -199,13 +218,27 @@ conjugacy_classes:
   gap:  ConjugacyClasses(G);   // Output not guaranteed to exactly match the LMFDB table
   sage: G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
 
+character_statistics:
+  comment:  Compute statistics about the characters of G
+  magma: |
+    // Outputs [<d_1,c_1>, <d_2,c_2>, ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    CharacterDegrees(G);
+  gap: |
+    # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    CharacterDegrees(G);
+  sage: |
+    # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    character_degrees = [c[0] for c in G.character_table()]
+    [[n, character_degrees.count(n)] for n in set(character_degrees)]
+
+
 primary_decomposition:
   comment:  The primary decomposition of the group
   gap:  AbelianInvariants(G);
 
 abelianization:
   comment:  The abelianization of the group
-  magma:  quo< G | CommutatorSubgroup(G)>;
+  magma:  quo< G | CommutatorSubgroup(G) >;
   gap:  FactorGroup(G, DerivedSubgroup(G));
 
 schur_multiplier:
@@ -283,6 +316,6 @@ upper_central_series:
 character_table:
   comment: Character table
   magma: CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
-  gap:   CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap:   CharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
   sage:  G.character_table()  # Output not guaranteed to exactly match the LMFDB table
 
