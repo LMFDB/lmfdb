@@ -450,7 +450,7 @@ def lfuncEPhtml(L, fmt):
             elif not display_galois:
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                if display_isogeny_label(L) and p not  in bad_primes:
+                if display_isogeny_label(L) and p not in bad_primes:
                     isog_class = Lfactor_to_label_and_link_if_exists(poly)
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
