@@ -290,39 +290,43 @@ def get_group_prop_display(gp, prefix="", cyclic_known=True):
     # We want elementary and hyperelementary to display which primes, but only once
     elementaryp = ''
     hyperelementaryp = ''
-    if hasattr(gp, 'elementary'):
-        elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
-        hyperelementaryp = ",".join(
-            str(p)
-            for p, e in ZZ(gp.hyperelementary).factor()
-            if not p.divides(gp.elementary)
-        )
-    if (
-        gp.order == 1
-    ):  # here it will be implied from cyclic, so both are in the implication list
-        elementaryp = " (for every $p$)"
-        hyperelementaryp = ""
-    elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
-        elementaryp = hyperelementaryp = ""
-    elif gp.cyclic:  # both are in the implication list
-        if not cyclic_known: # rare case where subgroup is cyclic but not in db
-            elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
-            elementaryp = f" ($p = {elementarylist}$)"
+    if prefix != "":
+        if hasattr(gp, prefix+"pgroup") and gp.pgroup:  # We don't display p since there's only one in play
+            elementaryp = hyperelementaryp = ""
+    else:
+        if hasattr(gp, 'elementary'):
+            elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
+            hyperelementaryp = ",".join(
+                str(p)
+                for p, e in ZZ(gp.hyperelementary).factor()
+                if not p.divides(gp.elementary)
+            )
+        if (
+            gp.order == 1
+        ):  # here it will be implied from cyclic, so both are in the implication list
+            elementaryp = " (for every $p$)"
             hyperelementaryp = ""
-        elif gp.elementary == gp.hyperelementary:
-            elementaryp = f" ($p = {elementaryp}$)"
-            hyperelementaryp = ""
-        else:
-            elementaryp = f" ($p = {elementaryp}$)"
-            hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
-        elementaryp = f" for $p = {elementaryp}$"
-        if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
-            hyperelementaryp = ""
-        else:
-            hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
-        hyperelementaryp = f" for $p = {hyperelementaryp}$"
+        elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
+            elementaryp = hyperelementaryp = ""
+        elif gp.cyclic:  # both are in the implication list
+            if not cyclic_known: # rare case where subgroup is cyclic but not in db
+                elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
+                elementaryp = f" ($p = {elementarylist}$)"
+                hyperelementaryp = ""
+            elif gp.elementary == gp.hyperelementary:
+                elementaryp = f" ($p = {elementaryp}$)"
+                hyperelementaryp = ""
+            else:
+                elementaryp = f" ($p = {elementaryp}$)"
+                hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
+        elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
+            elementaryp = f" for $p = {elementaryp}$"
+            if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
+                hyperelementaryp = ""
+            else:
+                hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
+        elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
+            hyperelementaryp = f" for $p = {hyperelementaryp}$"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
@@ -676,8 +680,8 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
         "quasisimple",
         "almost_simple",
     ]
-    overall_display = get_group_prop_display(gp)
 
+    overall_display = get_group_prop_display(gp,prefix=prefix)
     hence_str = display_knowl("group.properties_interdependencies", "hence")
     props = find_props(
         gp,
@@ -889,8 +893,16 @@ def auto_gens(label):
         flash_error("The automorphism group of %s has not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     info = {}
-    info["aut_boolean_string"] = create_boolean_aut_string(gp)
-    info["out_boolean_string"] = create_boolean_aut_string(gp, prefix="outer_", name="outer automorphism group")
+    if gp.aut_group is not None:
+        aut_gp = WebAbstractGroup(gp.aut_group)
+        info["aut_boolean_string"] = create_boolean_string(aut_gp)
+    else:
+        info["aut_boolean_string"] = create_boolean_aut_string(gp)
+    if gp.outer_group is not None:
+        out_gp = WebAbstractGroup(gp.outer_group)
+        info["out_boolean_string"] = create_boolean_string(out_gp)
+    else:
+        info["out_boolean_string"] = create_boolean_aut_string(gp, prefix="outer_", name="outer automorphism group")
     info["inner_boolean_string"] = create_boolean_aut_string(gp, prefix="inner_", name="inner automorphism group")
 
     props = [
