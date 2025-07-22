@@ -33,8 +33,10 @@ class CodeSnippet():
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
         self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
 
-    def place_code(self):
-        """Return HTML string which displays code in code box, with copying functionality."""
+    def place_code(self, is_top_snippet=False):
+        """Return HTML string which displays code in code box, with copying functionality.
+           If is_top_snippet is True, then adjusts the CSS code to allow the snippet to only use a smaller amount of whitespace.
+        """
         if self.item is None:
             raise ValueError("No code to place, please init with code item")
         item = self.item
@@ -54,27 +56,29 @@ class CodeSnippet():
 
 		# Particular additional style elements to ensure text is vertically centered
                 # (only if single line and no scroll bar)
-                vcenter_style = "display: flex; align-items: center;"
-                if ('\n' in code[item][L]): vcenter_style = ""
-
-		# The code snippets shown top of the page (i.e which have a stricter bound on their maximum width)
-                top_code_snippets = ['field', 'curve', 'code_description'] 
+                vcenter_style = "display: inline-flex; align-items: center;"
+                if (len(lines) > 1): vcenter_style = ""
 
                 # Here, we decide whether to make our code snippet horizontally scrollable
                 # (e.g. for very long group presentation/permutation definition codes)
                 # Todo: The widths and character limits can still be fine-tuned...
-                is_scroll_div, is_scroll_span = "", ""
-                if (item in top_code_snippets) and (max([len(line) for line in lines]) > 90):
-                    is_scroll_div, is_scroll_span = " width: 50%;", "overflow-x: scroll;"
-                    vcenter_style = ""
-                elif (max([len(line) for line in lines]) > 160):
-                    is_scroll_div, is_scroll_span = " width: 1200px;", "overflow-x: scroll;"
-                    vcenter_style = ""
+                #is_scroll_div, is_scroll_span = "", ""
+                #if (item in top_code_snippets) and (max([len(line) for line in lines]) > 90):
+                #    is_scroll_div, is_scroll_span = " width: 50%;", "overflow-x: auto;"
+                #    vcenter_style = ""
+                #elif (max([len(line) for line in lines]) > 160):
+                #    is_scroll_div, is_scroll_span = " max-width: 1200px;", ""
+                #    vcenter_style = ""
+
+                if is_top_snippet: is_scroll_div = " width: 50%;"
+                else: is_scroll_div = " max-width: 1200px;"
+
+                    
 
                 snippet_str += f"""
     <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top; {is_scroll_div}">
         <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 16px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
-        <span class="prompt" style="{vcenter_style}">{prompt}:</span><span class="code" style="{vcenter_style} {is_scroll_span}">{sep.join(lines)}</span>
+        <span class="prompt" style="{vcenter_style}">{prompt}:</span><span class="code" style="overflow-x: auto; {vcenter_style}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
     """
@@ -82,7 +86,7 @@ class CodeSnippet():
 
     def show_commands_box(self):
         """Display 'Show commands' box and corresponding logic"""
-        box_str = r"""<div align="right" style="float: right; margin-top:2px;">""" + "Show commands: "
+        box_str = r"""<div align="right" style="float: right; margin-top:2px; margin-left:10px;">""" + "Show commands: "
         lang_strs = []
         for lang in self.langs:
             name = self.full_names[lang] if lang in self.full_names.keys() else lang
@@ -101,6 +105,8 @@ class CodeSnippet():
             } else {
               $('.'+new_lang).show();
               $('.'+new_lang).css('display','inline-flex');
+              #$('.'+new_lang).css('display','flex');
+              #$('.'+new_lang).css('width','fit-content');
               cur_lang = new_lang;
             }
         }

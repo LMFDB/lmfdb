@@ -2565,7 +2565,7 @@ class WebAbstractGroup(WebObj):
         try:
             if self.outer_group is None:
                 if self.outer_order is None:
-                    return r"$\textrm{not computed}$"
+                    return r"not computed"
                 else:
                     return f"Group of order {pos_int_and_factor(self.outer_order)}"
             else:
