@@ -828,6 +828,11 @@ class WebNumberField:
     def is_cm_field(self):
         return self._data['cm']
 
+    def maximal_cm_subfield(self):
+        max_cm = self._data.get('maximal_cm_subfield')
+        if max_cm:
+            return formatfield(max_cm)
+
     def disc_factored_latex(self):
         D = self.disc()
         s = ''
