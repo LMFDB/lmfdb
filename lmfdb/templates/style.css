@@ -539,6 +539,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     flex: 1;
 
     /* For scrollable code snippets */
+    overflow-x: auto;
     scrollbar-color: #bbbaba #ffffff;
     scrollbar-width: thin; 
 }

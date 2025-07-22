@@ -69,16 +69,14 @@ class CodeSnippet():
                 #elif (max([len(line) for line in lines]) > 160):
                 #    is_scroll_div, is_scroll_span = " max-width: 1200px;", ""
                 #    vcenter_style = ""
-
-                if is_top_snippet: is_scroll_div = " width: 50%;"
+                
+                if is_top_snippet: is_scroll_div = " max-width: 50%;"
                 else: is_scroll_div = " max-width: 1200px;"
-
-                    
 
                 snippet_str += f"""
     <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top; {is_scroll_div}">
         <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 16px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
-        <span class="prompt" style="{vcenter_style}">{prompt}:</span><span class="code" style="overflow-x: auto; {vcenter_style}">{sep.join(lines)}</span>
+        <span class="prompt" style="{vcenter_style}">{prompt}:</span><span class="code" style="{vcenter_style}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
     """
@@ -105,8 +103,6 @@ class CodeSnippet():
             } else {
               $('.'+new_lang).show();
               $('.'+new_lang).css('display','inline-flex');
-              #$('.'+new_lang).css('display','flex');
-              #$('.'+new_lang).css('width','fit-content');
               cur_lang = new_lang;
             }
         }
