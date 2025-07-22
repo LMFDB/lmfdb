@@ -1557,11 +1557,13 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_class_divisions(self):
         cl = self.conjugacy_classes  # creates divisions
+        assert cl or cl is None # for linter
         return self.conjugacy_class_divisions
 
     @lazy_attribute
     def autjugacy_classes(self):
         cl = self.conjugacy_classes  # creates autjugacy classes
+        assert cl or cl is None # for linter
         return self.autjugacy_classes
 
     @lazy_attribute
