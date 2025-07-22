@@ -19,6 +19,8 @@ def latex_content(s):
     # Input should be a content string, [s1, s2, ..., sm]^t_u.  This converts the s_i (which might be rational numbers) to their latex form
     if s is None or s == "":
         return "not computed"
+    elif s == []:
+        return r'$[\ ]$'
     elif isinstance(s, list):
         return '$[' + ','.join(latex(x) for x in s) + ']$'
     else:

@@ -30,8 +30,7 @@
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
     <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(gp.order)|safe}} </td> <td>{{ place_code('order') }}</td> </tr>
     <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(gp.exponent)|safe}} </td> <td>{{ place_code('exponent') }}  </td></tr>
-    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}} {% if not gp.live() and gp.aut_gens_flag() %} (<a href="{{url_for('.auto_gens', label=gp.label)}}">generators</a>){% endif %}</td><td>{{ place_code('automorphism_group') }}  </td></tr>
-    <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td><td>{{ place_code('outer_automorphism_group') }}</td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.aut_group_knowl()|safe}}</td><td>{{ place_code('automorphism_group') }}  </td></tr>
     {% if not gp.live() %}
       <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td><td>{{ place_code('composition_factors') }}  </td></tr>
     {% endif %}

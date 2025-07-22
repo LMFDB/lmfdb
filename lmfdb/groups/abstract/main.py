@@ -238,7 +238,9 @@ def get_bread(tail=[]):
     return base + tail
 
 def display_props(proplist, joiner="and"):
-    if len(proplist) == 1:
+    if len(proplist) == 0:
+        return ""
+    elif len(proplist) == 1:
         return proplist[0]
     elif len(proplist) == 2:
         return f" {joiner} ".join(proplist)
@@ -253,11 +255,12 @@ def find_props(
     implications,
     hence_str,
     show,
+    prefix="",
 ):
     props = []
     noted = set()
     for prop in overall_order:
-        if not getattr(gp, prop, None) or prop in noted or prop not in show:
+        if not getattr(gp, prefix+prop, None) or prop in noted or prop not in show:
             continue
         noted.add(prop)
         impl = [B for B in implications.get(prop, []) if B not in noted]
@@ -302,43 +305,42 @@ group_prop_implications = {
 }
 
 
-def get_group_prop_display(gp, cyclic_known=True):
+def get_group_prop_display(gp, prefix="", cyclic_known=True):
     # We want elementary and hyperelementary to display which primes, but only once
     elementaryp = ''
     hyperelementaryp = ''
-    if hasattr(gp, 'elementary'):
-        elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
-        hyperelementaryp = ",".join(
-            str(p)
-            for p, e in ZZ(gp.hyperelementary).factor()
-            if not p.divides(gp.elementary)
-        )
-    if (
-        gp.order == 1
-    ):  # here it will be implied from cyclic, so both are in the implication list
-        elementaryp = " (for every $p$)"
-        hyperelementaryp = ""
-    elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
-        elementaryp = hyperelementaryp = ""
-    elif gp.cyclic:  # both are in the implication list
-        if not cyclic_known: # rare case where subgroup is cyclic but not in db
-            elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
-            elementaryp = f" ($p = {elementarylist}$)"
+    if prefix == "":
+        if hasattr(gp, 'elementary'):
+            elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
+            hyperelementaryp = ",".join(
+                str(p)
+                for p, e in ZZ(gp.hyperelementary).factor()
+                if not p.divides(gp.elementary)
+            )
+        if gp.order == 1:  # here it will be implied from cyclic, so both are in the implication list
+            elementaryp = " (for every $p$)"
             hyperelementaryp = ""
-        elif gp.elementary == gp.hyperelementary:
-            elementaryp = f" ($p = {elementaryp}$)"
-            hyperelementaryp = ""
-        else:
-            elementaryp = f" ($p = {elementaryp}$)"
-            hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
-        elementaryp = f" for $p = {elementaryp}$"
-        if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
-            hyperelementaryp = ""
-        else:
-            hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
-        hyperelementaryp = f" for $p = {hyperelementaryp}$"
+        elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
+            elementaryp = hyperelementaryp = ""
+        elif gp.cyclic:  # both are in the implication list
+            if not cyclic_known: # rare case where subgroup is cyclic but not in db
+                elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
+                elementaryp = f" ($p = {elementarylist}$)"
+                hyperelementaryp = ""
+            elif gp.elementary == gp.hyperelementary:
+                elementaryp = f" ($p = {elementaryp}$)"
+                hyperelementaryp = ""
+            else:
+                elementaryp = f" ($p = {elementaryp}$)"
+                hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
+        elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
+            elementaryp = f" for $p = {elementaryp}$"
+            if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
+                hyperelementaryp = ""
+            else:
+                hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
+        elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
+            hyperelementaryp = f" for $p = {hyperelementaryp}$"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
@@ -559,6 +561,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
+
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -660,6 +663,66 @@ def create_boolean_string(gp, type="normal"):
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+    return main
+
+def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphism group"):
+    overall_order = [
+        "cyclic",
+        "abelian",
+        "nonabelian",
+        "pgroup",
+        "nilpotent",
+        "supersolvable",
+        "solvable",
+        "nonsolvable",
+    ]
+    # Only things that are implied need to be included here, and there are no constraints on the order
+    impl_order = [
+        "abelian",
+        "nilpotent",
+        "solvable",
+        "supersolvable",
+        "monomial",
+        "nonsolvable",
+        "is_elementary",
+        "is_hyperelementary",
+        "metacyclic",
+        "metabelian",
+        "Zgroup",
+        "Agroup",
+        "nab_perfect",
+        "quasisimple",
+        "almost_simple",
+    ]
+
+    overall_display = get_group_prop_display(gp, prefix=prefix)
+    hence_str = display_knowl("group.properties_interdependencies", "hence")
+    props = find_props(
+        gp,
+        overall_order,
+        impl_order,
+        overall_display,
+        group_prop_implications,
+        hence_str,
+        show=overall_display,
+        prefix=prefix,
+    )
+    if type == "knowl":
+        main = f"{display_props(props)}."
+    else:
+        main = f"This {name} is {display_props(props)}."
+    unknown = [prop for prop in overall_order if getattr(gp, prefix+prop, None) is None]
+    if {'abelian', 'nonabelian'} <= set(unknown):
+        unknown.remove('nonabelian')
+    if {'solvable', 'nonsolvable'} <= set(unknown):
+        unknown.remove('nonsolvable')
+
+    unknown = [overall_display[prop] for prop in unknown]
+    if unknown and type != "knowl":
+        if display_props(props) == "":
+            return f"We have not determined whether the {name} is {display_props(unknown, 'or')}."
+        main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+
     return main
 
 
@@ -833,7 +896,7 @@ def by_abelian_label(label):
         return redirect(url_for(".by_label", label=dblabel))
 
 
-@abstract_page.route("/auto_gens/<label>")
+@abstract_page.route("/auto/<label>")
 def auto_gens(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
@@ -841,14 +904,51 @@ def auto_gens(label):
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if gp.live() or gp.aut_gens is None:
-        flash_error("The generators for the automorphism group of the group with label %s have not been computed.", label)
+        flash_error("The automorphism group of %s has not been computed.", label)
         return redirect(url_for(".by_label", label=label))
+    info = {}
+    for gcol, prefix, name in [
+            ("aut_group", "aut_", "automorphism group"),
+            ("outer_group", "outer_", "outer automorphism group"),
+            ("central_quotient", "inner_", "inner automorphism group")]:
+        gid = getattr(gp, gcol, None)
+        if gid is None:
+            astr = create_boolean_aut_string(gp, prefix=prefix, name=name)
+        else:
+            agp = WebAbstractGroup(gid)
+            astr = create_boolean_string(agp)
+        info[prefix + "boolean_string"] = astr
+
+    props = [
+        ("Order", factor_latex(gp.aut_order)),
+        ]
+
+    def ynnc(val):
+        if val is None:
+            return "not computed"
+        if val:
+            return "yes"
+        return "no"
+    props.append(("Abelian", ynnc(gp.aut_abelian)))
+    props.append(("Solvable", ynnc(gp.aut_solvable)))
+    props.append(("Nilpotent", ynnc(gp.aut_nilpotent)))
+    if gp.outer_order is None:
+        props.append(("Outer order", "not computed"))
+    else:
+        props.append(("Outer order", factor_latex(gp.outer_order))),
+    if gp.inner_order is None:
+        props.append(("Inner order", "not computed"))
+    else:
+        props.append(("Inner order", factor_latex(gp.inner_order)))
+
     return render_template(
-        "auto_gens_page.html",
+        "auto_page.html",
+        info=info,
         gp=gp,
-        title="Generators of automorphism group for $%s$" % gp.tex_name,
-        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
-                        )
+        properties=props,
+        title="Automorphism group of $%s$" % gp.tex_name,
+        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Automorphism group", " ")]),
+    )
 
 
 @abstract_page.route("/sub/<label>")
@@ -1308,13 +1408,20 @@ subgroup_columns = SearchColumns([
         ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
         CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
         CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
-        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
-        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
-        CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable"),
         CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
-        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
         CheckCol("central", "group.central", "cent", short_title="Sub. central"),
-            ]),
+        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic", default=False),
+        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
+        CheckCol("nilpotent", "group.nilpotent", "nilp", short_title="Sub. nilpotent", default=False),
+        CheckCol("supersolvable", "group.supersolvable", "sup solv", short_title="Sub. supersolvable", default=False),
+        CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable", default=False),
+        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect", default=False),
+        CheckCol("simple", "group.simple", "simp", short_title="Sub. simple", default=False),
+        CheckCol("Agroup", "group.a_group", "Agp", short_title="Sub. Agroup", default=False),
+        CheckCol("Zgroup", "group.z_group", "Zgp", short_title="Sub. Zgroup", default=False),
+        CheckCol("metabelian", "group.metabelian", "metab", short_title="Sub. metabelian", default=False),
+        CheckCol("metacyclic", "group.metacyclic", "metacyc", short_title="Sub. metacyclic", default=False),
+    ]),
     SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
@@ -1329,11 +1436,17 @@ subgroup_columns = SearchColumns([
                           display_url,
                           short_title="Quo. name", apply_download=False),
         ProcessedCol("quotient_order", "group.quotient_size", "Size", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. size"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal"),
         #next columns are None if non-normal so we set unknown to "-" instead of "?"
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic"),
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic", default=False),
         CheckCol("quotient_abelian", "group.abelian", "ab", unknown="$-$", short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown="$-$", short_title="Quo. maximal")])],
+        CheckCol("quotient_nilpotent", "group.nilpotent", "nilp", unknown="$-$", short_title="Quo. nilpotent", default=False),
+        CheckCol("quotient_supersolvable", "group.supersolvable", "sup solv", unknown="$-$", short_title="Quo. supersolvable", default=False),
+        CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable", default=False),
+        CheckCol("quotient_simple", "group.simple", "simp", unknown="$-$", short_title="Quo. simple", default=False),
+        CheckCol("quotient_Agroup", "group.a_group", "Agp", unknown="$-$", short_title="Quo. Agroup", default=False),
+        CheckCol("quotient_metabelian", "group.metabelian", "metab", unknown="$-$", short_title="Quo. metabelian", default=False),
+    ])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
@@ -3398,6 +3511,38 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f'<div align="right"><a href="{quotient_url}">{quotient_label} home page</a></div>'
     return Markup(ans)
 
+def autknowl_data(label):
+    gp = WebAbstractGroup(label)
+    ans = f'Automorphism group of ${gp.tex_name}$:'
+    if gp.aut_order is None:
+        return Markup(ans + ' not computed')
+    ans += '<br />\n'
+    if gp.aut_tex is not None:
+        atex = gp.aut_tex.replace("\t", r"\t")
+        if gp.aut_group is not None:
+            ans += f'Description: <a href="{url_for_label(gp.aut_group)}">${atex}$</a><br />\n'
+        else:
+            ans += f'Description: ${atex}$<br />\n'
+    ans += f'Order: ${gp.aut_order}$<br />\n'
+    for tvar, idvar, ovar, name in [
+            (gp.outer_tex, gp.outer_group, gp.outer_order, "Outer"),
+            (gp.inner_tex, gp.central_quotient, gp.inner_order, "Inner"),
+    ]:
+        if tvar is not None:
+            tvar = tvar.replace("\t", r"\t")
+            if idvar is not None:
+                ans += f'{name} automorphism group: <a href="{url_for_label(idvar)}">${tvar}$</a>'
+            else:
+                ans += f'{name} automorphism group: ${tvar}$'
+            if ovar is not None:
+                ans += f', of order {pos_int_and_factor(ovar)}'
+            ans += '<br />\n'
+        elif ovar is not None:
+            ans += f'{name} automorphism group of order {pos_int_and_factor(ovar)}<br />\n'
+    ans += create_boolean_aut_string(gp, type="knowl") + '<br />\n'
+    ans += f'<div align="right"><a href="{url_for("abstract.auto_gens", label=label)}">Automorphism group data for {label}</div>'
+    return Markup(ans)
+
 def semidirect_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Semidirect product expressions for ${gp.tex_name}$:<br />\n"
@@ -3478,6 +3623,7 @@ flist = {
     "rchar_data": rchar_data,
     "cchar_data": cchar_data,
     "group_data": group_data,
+    "autknowl_data": autknowl_data,
     "crep_data": crep_data,
     "qrep_data": qrep_data,
     "semidirect_data": semidirect_data,

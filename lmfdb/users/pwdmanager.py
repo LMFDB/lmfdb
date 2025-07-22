@@ -12,11 +12,7 @@ from psycodict.base import PostgresBase
 from psycodict.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import datetime, timedelta
-try:
-    from datetime import UTC               # Py 3.11+
-except ImportError:                         # Py ≤3.10
-    from datetime import timezone as _tz
-    UTC = _tz.utc
+from lmfdb.utils.datetime_utils import UTC
 
 from .main import logger
 

@@ -64,6 +64,11 @@ table.ntdata a {
     <tr><td>{{ KNOWL('nf.reflex_field', title='Reflex fields') }}:<td>&nbsp;&nbsp;<td>{{ info.reflex_fields | safe }}</tr>
   {% else %}
     <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+    {% if nf.maximal_cm_subfield() %}
+      <tr><td>{{ KNOWL('nf.maximal_cm_subfield', title="Maximal CM subfield")}}:<td>&nbsp;&nbsp;<td>{{ nf.maximal_cm_subfield() | safe }}</tr>
+    {% else %}
+      <tr><td>This field has no CM subfields.</td>
+    {% endif %}
   {% endif %}
 
           </table>
