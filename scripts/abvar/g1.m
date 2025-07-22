@@ -20,31 +20,44 @@ IsogenyLabel := function(E)
     f := LPolynomial(E);
     q := #BaseField(E);
 
-    g:=Degree(f) div 2;
-    str1:=Reverse(Prune(Coefficients(f)))[1..g];
-    str2:="";
+    g := Degree(f) div 2;
+    str1 := Reverse(Prune(Coefficients(f)))[1..g];
+    str2 := "";
     for a in str1 do
         if a lt 0 then
-            str2:=str2 cat "a" cat Base26Encode(-a) cat "_";
+            str2 := str2 cat "a" cat Base26Encode(-a) cat "_";
             else
-            str2:=str2 cat Base26Encode(a) cat "_";
+            str2 := str2 cat Base26Encode(a) cat "_";
         end if;
     end for;
-    str2:=Prune(str2);
-    isog_label:=Sprintf("%o.%o.",g,q) cat str2;
+    str2 := Prune(str2);
+    isog_label := Sprintf("%o.%o.",g,q) cat str2;
     return isog_label;
 end function;
 
 
 EllCurveToString := function(E)
-    k<a>:=GF(#BaseField(E));
-    R<x>:=PolynomialRing(k);
+    q := #BaseField(E);
+    k<a> := GF(q);
+    R<x> := PolynomialRing(k);
+    
     f, yCoeff := HyperellipticPolynomials(E);
-    if yCoeff eq 0 then 
+
+    if not (q mod 2 eq 0 or q mod 3 eq 0) then
+        // We assume that E is in magma's Weierstrass model. Hence the xy and y terms are 0.
+        assert IsWeierstrassModel(E);
+        assert yCoeff eq 0;
         return "y^2 = " cat Sprint(f);
     else 
-        return &cat["y^2 + ", Sprint(yCoeff), " = ", Sprint(f)];
+        if yCoeff eq 0 then
+            return "y^2 = " cat Sprint(f);
+        elif yCoeff eq x then 
+            return &cat["y^2 + x*y = ", Sprint(f)];
+        else 
+            return &cat["y^2 + (", yCoeff ,")*y = ", Sprint(f)];
+        end if;
     end if;
+
 end function;
 
 
