@@ -315,7 +315,10 @@ upper_central_series:
 
 character_table:
   comment: Character table
-  magma: CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
-  gap:   CharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
-  sage:  G.character_table()  # Output not guaranteed to exactly match the LMFDB table
+  magma: |
+    CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap: |
+    CharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
+  sage: |
+    G.character_table()  # Output not guaranteed to exactly match the LMFDB table
 
