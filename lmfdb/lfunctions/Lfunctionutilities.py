@@ -443,19 +443,20 @@ def lfuncEPhtml(L, fmt):
             galois_pretty_factors = list_to_factored_poly_otherorder
         out = ""
         try:
+            isog_class = ''
             if L.coefficient_field == "CDF" or None in poly:
                 factors = r'\( %s \)' % pretty_poly(poly)
                 gal_groups = [[0, 0]]
             elif not display_galois:
                 factors = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                if display_isogeny_label(L):
-                    isog_class = '' if p in bad_primes else Lfactor_to_label_and_link_if_exists(poly)
+                if display_isogeny_label(L) and p not  in bad_primes:
+                    isog_class = Lfactor_to_label_and_link_if_exists(poly)
             else:
                 factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
                 factors = make_bigint(r'\( %s \)' % factors)
-                if display_isogeny_label(L):
-                    isog_class = '' if p in bad_primes else Lfactor_to_label_and_link_if_exists(poly)
+                if display_isogeny_label(L) and p not in bad_primes:
+                    isog_class = Lfactor_to_label_and_link_if_exists(poly)
             out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
             if display_galois:
                 out += "<td class='galois'>"
