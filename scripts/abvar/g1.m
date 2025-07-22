@@ -54,7 +54,7 @@ EllCurveToString := function(E)
         elif yCoeff eq x then 
             return &cat["y^2 + x*y = ", Sprint(f)];
         else 
-            return &cat["y^2 + (", yCoeff ,")*y = ", Sprint(f)];
+            return &cat["y^2 + (", Sprint(yCoeff) ,")*y = ", Sprint(f)];
         end if;
     end if;
 
