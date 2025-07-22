@@ -2290,12 +2290,11 @@ class WebAbstractGroup(WebObj):
 
     def auto_perms_list(self):
         perms = self.aut_perms
-        return [ self.decode_as_perm(perm, n= self.aut_permdeg, as_str=True) for perm in perms ]
+        return [ self.decode_as_perm(perm, n=self.aut_permdeg, as_str=True) for perm in perms ]
 
     def outer_perms_list(self):
         perms = self.outer_perms
-        return [ self.decode_as_perm(perm, n= self.outer_permdeg, as_str=True) for perm in perms ]
-
+        return [ self.decode_as_perm(perm, n=self.outer_permdeg, as_str=True) for perm in perms ]
 
     def auto_gens_data(self):
         gens = self.aut_gens
