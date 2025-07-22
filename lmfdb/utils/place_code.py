@@ -58,6 +58,7 @@ class CodeSnippet():
                 # (only if single line and no scroll bar)
                 vcenter_style = "display: inline-flex; align-items: center;"
                 if (len(lines) > 1): vcenter_style = ""
+                #vcenter_style = ""
 
                 # Here, we decide whether to make our code snippet horizontally scrollable
                 # (e.g. for very long group presentation/permutation definition codes)
