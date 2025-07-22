@@ -1117,7 +1117,7 @@ class WebAbstractGroup(WebObj):
         for rec in db.gps_subgroup_data.search({"ambient": self.label}):
             subs[rec["label"]].update(rec)
         subs = {
-            subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata)
+            subdata["short_label"]: WebAbstractSubgroup(subdata["label"], subdata, get_more_data=False)
             for subdata in subs.values()
         }
         if self.subgroup_inclusions_known:
@@ -3151,9 +3151,9 @@ class LiveAbelianGroup():
 class WebAbstractSubgroup(WebObj):
     table = db.gps_subgroup_search
 
-    def __init__(self, label, data=None):
+    def __init__(self, label, data=None, get_more_data=True):
         WebObj.__init__(self, label, data)
-        if isinstance(self._data, dict):
+        if isinstance(self._data, dict) and get_more_data:
             more_data = db.gps_subgroup_data.lookup(label)
             self._data.update(more_data)
             for key, val in more_data.items():
@@ -3170,12 +3170,12 @@ class WebAbstractSubgroup(WebObj):
                 if q is None:
                     self.quotient_tex = "?"
                     self.quotient_tex_parened = "(?)"
-                    if self._data.get("quotient"):
-                        tryhard = db.gps_groups.lookup(self.quotient)
-                        if tryhard and tryhard["tex_name"]:
-                            q = tryhard["tex_name"]
-                            self.quotient_tex = q
-                            self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
+                    #if self._data.get("quotient"):
+                    #    tryhard = db.gps_groups.lookup(self.quotient)
+                    #    if tryhard and tryhard["tex_name"]:
+                    #        q = tryhard["tex_name"]
+                    #        self.quotient_tex = q
+                    #        self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
                 else:
                     self.quotient_tex_parened = q if is_atomic(q) else "(%s)" % q
 
