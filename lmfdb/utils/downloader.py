@@ -12,7 +12,6 @@ In particular, the languages shown available for download are set by the `langua
 
 
 import time
-import datetime
 import re
 import itertools
 import csv
@@ -27,6 +26,7 @@ from io import BytesIO
 from sage.all import Integer, Rational, lazy_attribute
 
 from lmfdb.utils import plural_form, pluralize, flash_error
+from lmfdb.utils.datetime_utils import utc_now_naive
 
 class DownloadLanguage():
     # We choose the most common values; override these if needed in each subclass
@@ -663,7 +663,7 @@ class Downloader():
         table = self.get_table(info)
         self.search_array = info.get("search_array")
         filename = self.filebase
-        ts = datetime.datetime.now().strftime("%m%d_%H%M")
+        ts = utc_now_naive().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
         urlparts = urlparse(request.url)
         pieces = urlparts.query.split("&")

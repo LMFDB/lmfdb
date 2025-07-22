@@ -147,9 +147,9 @@ def url_for_label(label):
         validate_label(label)
     except ValueError as err:
         flash_error("%s is not a valid label: %s.", label, str(err))
-        return url_for(".abelian_varieties")
+        return url_for("abvarfq.abelian_varieties")
     g, q, iso = split_label(label)
-    return url_for(".abelian_varieties_by_gqi", g=g, q=q, iso=iso)
+    return url_for("abvarfq.abelian_varieties_by_gqi", g=g, q=q, iso=iso)
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):
@@ -796,7 +796,7 @@ def dynamic_statistics():
         "dynamic_stats.html",
         info=info,
         title=title,
-        bread=get_bread(("Dynamic Statistics", " ")),
+        bread=get_bread(("Dynamic statistics", " ")),
         learnmore=learnmore_list(),
     )
 

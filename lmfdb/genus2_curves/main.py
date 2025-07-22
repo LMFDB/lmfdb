@@ -36,6 +36,7 @@ from lmfdb.utils import (
     to_dict,
     web_latex,
     web_latex_factored_integer,
+    CodeSnippet
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol, RationalListCol
@@ -916,16 +917,6 @@ def labels_page():
 
 sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
 
-code_names = {'curve': 'Define the curve',
-                 'tors': 'Torsion subgroup',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'ntors': 'Torsion order of Jacobian',
-                 'jacobian': 'Jacobian',
-                 'aut': 'Automorphism group',
-                 'mwgroup': 'Mordell-Weil group'}
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def g2c_code(**args):
@@ -936,16 +927,9 @@ def g2c_code(**args):
         return genus2_jump_error(label, {}), False
     except KeyError:
         return genus2_jump_error(label, {}, missing_curve=True), False
-    Ccode = C.get_code()
     lang = args['download_type']
-    code = "%s %s code for working with genus 2 curve %s\n\n" % (Comment[lang],Fullname[lang],label)
-    if lang == 'gp':
-        lang = 'pari'
-    for k in sorted_code_names:
-        if lang in Ccode[k]:
-            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ccode[k][lang] + ('\n' if '\n' not in Ccode[k][lang] else '')
-    return code, True
+    code = CodeSnippet(C.get_code())
+    return code.export_code(label, lang, sorted_code_names), True
 
 @g2c_page.route('/Q/<conductor>/<iso>/<discriminant>/<number>/download/<download_type>')
 def g2c_code_download(**args):

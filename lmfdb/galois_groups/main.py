@@ -312,7 +312,10 @@ def render_group_webpage(args):
             friends.append(('$p$-adic fields with this Galois group', url_for('local_fields.index')+"?gal=%dT%d" % (n, t) ))
         if db.gps_groups.exists({'label': data['abstract_label']}):
             friends.append(('As an abstract group', url_for('abstract.by_label', label=data['abstract_label'])))
-        prop2 = [('Label', label),
+        prop2 = [('Label', label)]
+        if wgg.portrait:
+            prop2.append( (None, wgg.portrait) )
+        prop2 = prop2 + [
             ('Degree', prop_int_pretty(data['n'])),
             ('Order', prop_int_pretty(order)),
             ('Cyclic', yesno(data['cyc'])),
@@ -337,7 +340,7 @@ def render_group_webpage(args):
         data['malle_a'] = wgg.malle_a
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
-            downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         # split the label so that breadcrumbs point to a search for this object's degree
         parent_id, child_id = label.split("T")
@@ -354,7 +357,7 @@ def render_group_webpage(args):
             friends=friends,
             downloads=downloads,
             KNOWL_ID="gg.%s" % label,
-            learnmore=learnmore_list())
+            learnmore=learnmore_list()+[('Picture description', url_for('.pictures'))])
 
 @galois_groups_page.route('/<label>/download/<download_type>')
 def gg_code(label,download_type):
@@ -438,6 +441,14 @@ def reliability():
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+@galois_groups_page.route("/Pictures")
+def pictures():
+    t = r'Pictures for Galois Groups'
+    bread = get_bread('Galois Group Pictures')
+    return render_template(
+        "single.html", kid='portrait.gg',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
 
 class GalSearchArray(SearchArray):
     noun = "group"

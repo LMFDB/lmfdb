@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 from datetime import datetime
+from lmfdb.utils.datetime_utils import UTC
 here = os.path.dirname(os.path.abspath(__file__))
 upone, _ = os.path.split(here)
 uptwo, _ = os.path.split(upone)
@@ -34,7 +35,7 @@ def verify_all():
             else:
                 status = 1
                 comment = ""
-            timestamp = datetime.utcnow().isoformat()
+            timestamp = datetime.now(UTC).isoformat()
             _ = F.write(f"{rec['id']}|{status}|{timestamp}|{timestamp}|{comment}\n")
         F.close()
         db.data_uploads.update_from_file(F.name, "id")

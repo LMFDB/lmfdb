@@ -1,6 +1,7 @@
 
 import re
 from datetime import datetime
+from lmfdb.utils.datetime_utils import UTC
 from flask import url_for
 from sage.all import ZZ, QQ, lazy_attribute, NumberField
 from lmfdb import db
@@ -232,7 +233,7 @@ class GonalityBounds(UploadSection):
         else:
             status = 3
             comment = ""
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         ids = {upid: (status, timestamp, comment) for upid, data in self.delayed}
 
         # If other columns are added later, it's important that these be sorted (see lmfdb/uploads/process.py)

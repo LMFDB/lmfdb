@@ -14,7 +14,7 @@ class SMFPageTest(LmfdbTest):
                                       'name': {'$exists': True}},
                                      ['collection', 'name'])
         n = 0
-        print("")
+        print()
         for s in data:
             full_label = s['collection'][0] + "." + s['name']
             url = "/ModularForm/GSp/Q/" + full_label + "/"

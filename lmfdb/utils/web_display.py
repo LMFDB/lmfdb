@@ -42,7 +42,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     typeset = f'<span class="tset-container">{typeset}</span>'
     # clean white space
     raw = re.sub(r'\s+', ' ', str(raw).strip())
-    raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
+    raw = f'<textarea readonly rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
     # the doublesclick behavior is set on load in javascript
     out = f"""
@@ -113,11 +113,14 @@ def web_latex(x, enclose=True):
     return rf"\( {latex(x)} \)" if enclose else f" {latex(x)} "
 
 
-def compress_int(n, cutoff=15, sides=2):
+def compress_int(n, cutoff=15, sides=2, negative_space=True):
     res = str(n)
     minus_width = 1 if '-' in res else 0
     if len(res) > cutoff+minus_width:
-        short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        if negative_space:
+            short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        else:
+            short = res[:sides + minus_width] + r'\cdots ' + res[-sides:]
         return short, True
     else:
         return res, False
@@ -685,7 +688,7 @@ def compress_poly_Q(rawpoly,
     def frac_string(frac):
         if frac.denominator() == 1:
             return compress_int(frac.numerator())[0]
-        return r'\frac{%s}{%s}' % (compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+        return r'\frac{%s}{%s}' % (compress_int(frac.numerator(), negative_space=False)[0], compress_int(frac.denominator(), negative_space=False)[0])
 
     tset = ''
     for j in range(1, d + 1):
@@ -708,35 +711,30 @@ def compress_poly_Q(rawpoly,
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
+greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
+subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
+rat_re = re.compile(r"\b(\d+)/(\d+)\b")
+exp_re = re.compile(r"\^(-\d+|\d\d+)\b")
 def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a polynomial (or other string containing polynomials)
     if not isinstance(pol_str, str):
         pol_str = str(pol_str)
-    if greek_vars:
-        greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
-        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
-    if subscript_vars:
-        subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
-        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
-    o_str = pol_str.replace('*', ' ')
-    ind_mid = o_str.find('/')
-    while ind_mid != -1:
-        ind_start = ind_mid - 1
-        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_start -= 1
-        ind_end = ind_mid + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
-            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_mid = o_str.find('/')
 
-    ind_start = o_str.find('^')
-    while ind_start != -1:
-        ind_end = ind_start + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_start = o_str.find('^', ind_end)
+    if greek_vars:
+        # Add backslashes to greek variables
+        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
+
+    if subscript_vars:
+        # If digits directly follow letter, make them subscripts
+        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
+
+    # Remove explicit multiplication symbols
+    o_str = pol_str.replace('*', ' ')
+
+    # Make a/b into a latex fraction when a and b are numbers
+    o_str = rat_re.sub(r"\\frac{\g<1>}{\g<2>}", o_str)
+
+    # Wrap negative and multidigit exponents in braces
+    o_str = exp_re.sub(r"^{\g<1>}", o_str)
 
     return o_str
 

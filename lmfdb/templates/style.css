@@ -533,9 +533,14 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     margin: 2px;
     margin-right: 20px;
     margin-left: 0px;
+    cursor: text;
+    padding-left: .3em;
+    user-select: text;
+    flex: 1;
 }
 
 .prompt {
+    color: gray;
     margin: 2px;
     margin-right: 0px;
 }

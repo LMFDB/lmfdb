@@ -16,7 +16,12 @@ not-implemented:
   magma: |
     // (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with genus 2 curve {label}.
+
 curve:
+  comment: Define the curve
   magma: |
     R<x> := PolynomialRing(Rationals());
     fh := %s;
@@ -25,22 +30,29 @@ curve:
     C := HyperellipticCurve(f, h);
 
 aut:
+  comment: Automorphism group
   magma: AutomorphismGroup(C);
 
 jacobian:
+  comment: Jacobian
   magma: J := Jacobian(SimplifiedModel(C));
 
 tors:
+  comment: Torsion subgroup
   magma: TorsionSubgroup(J);
 
 cond:
+  comment: Conductor
   magma: Conductor(LSeries(C));
 
 disc:
+  comment: Discriminant
   magma: Discriminant(C);
 
 ntors:
+  comment: Torsion order of Jacobian
   magma: Order(TorsionSubgroup(J));
 
 mwgroup:
+  comment: Mordell-Weil group
   magma: MordellWeilGroupGenus2(J);

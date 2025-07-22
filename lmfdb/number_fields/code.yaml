@@ -20,31 +20,45 @@ not-implemented:
   oscar: |
     # (not yet implemented)
 
+# Valid keys are: 'all' any key appearing in prompt, and 'rest'
+frontmatter:
+  all: |
+    {lang} code for working with number field {label}.
+  oscar: |
+    If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.
+  rest: |
+    Some of these functions may take a long time to execute (this depends on the field).
+
 field:
+  comment: Define the number field
   sage: x = polygen(QQ);  K.<a> = NumberField(%s)
   pari: K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
   oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
 
 poly:
+  comment: Defining polynomial
   sage:  K.defining_polynomial()
   pari:  K.pol
   magma: DefiningPolynomial(K);
   oscar: defining_polynomial(K)
 
 degree:
+  comment: Degree over Q
   sage:  K.degree()
   pari:  poldegree(K.pol)
   magma: Degree(K);
   oscar: degree(K)
 
 signature:
+  comment: Signature
   sage:  K.signature()
   pari:  K.sign
   magma: Signature(K);
   oscar: signature(K)
 
 discriminant:
+  comment: Discriminant
   sage:  K.disc()
   pari:  K.disc
   magma: OK := Integers(K); Discriminant(OK);
@@ -57,46 +71,60 @@ rd:
   oscar: (1.0 * dK)^(1/degree(K))
 
 automorphisms:
+  comment: Autmorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
   oscar: automorphisms(K)
 
 ramified_primes:
+  comment: Ramified primes
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~
   magma: PrimeDivisors(Discriminant(OK));
   oscar: prime_divisors(discriminant((OK)))
 
 integral_basis:
+  comment: Integral basis
   sage:  K.integral_basis()
   pari:  K.zk
   magma: IntegralBasis(K);
   oscar: basis(OK)
 
 class_group:
+  comment: Class group
   sage:  K.class_group().invariants()
   pari:  K.clgp
   magma: ClassGroup(K); 
   oscar: class_group(K)
 
+narrow_class_group:
+  comment: Narrow class group
+  sage:  K.narrow_class_group().invariants()
+  pari:  bnfnarrow(K)
+  magma: NarrowClassGroup(K);
+
 unit_group:
+  comment: Unit group
   sage:  UK = K.unit_group()
   magma: UK, fUK := UnitGroup(K);
   oscar: UK, fUK = unit_group(OK)
 
 unit_rank:
+  comment: Unit rank
   sage:  UK.rank()
   pari:  K.fu
   magma: UnitRank(K);
   oscar: rank(UK)
 
 unit_torsion_gen:
+  comment: Generator for roots of unity
   sage:  UK.torsion_generator()
   pari:  K.tu[2]
   magma: K!f(TU.1) where TU,f is TorsionUnitGroup(K);
   oscar: torsion_units_generator(OK)
 
 fundamental_units:
+  comment: Fundamental units
   sage:  UK.fundamental_units()
   pari:  K.fu
   magma: |
@@ -105,12 +133,14 @@ fundamental_units:
     [K(fUK(a)) for a in gens(UK)]
 
 regulator:
+  comment: Regulator
   sage:  K.regulator()
   pari:  K.reg
   magma: Regulator(K);
   oscar: regulator(K)
 
 class_number_formula:
+  comment: Analytic class number formula
   sage: |
     # self-contained SageMath code snippet to compute the analytic class number formula
     x = polygen(QQ);  K.<a> = NumberField(%s)
@@ -118,7 +148,7 @@ class_number_formula:
     hK = K.class_number(); wK = K.unit_group().torsion_generator().order();
     2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))  
   pari: |
-    # self-contained Pari/GP code snippet to compute the analytic class number formula
+    \\ self-contained Pari/GP code snippet to compute the analytic class number formula
     K = bnfinit(%s, 1);
     [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
   magma: |
@@ -139,27 +169,30 @@ class_number_formula:
     2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 
 galois_group:
+  comment: Galois group
   sage:  K.galois_group(type='pari')
   pari:  polgalois(K.pol)
   magma: G = GaloisGroup(K);
   oscar: G, Gtx = galois_group(K); G, transitive_group_identification(G)
 
 intermediate_fields:
+  comment: Intermediate fields
   sage: K.subfields()[1:-1]
   pari: L = nfsubfields(K); L[2..length(b)]
   magma: L := Subfields(K); L[2..#L];
   oscar: subfields(K)[2:end-1]
 
 prime_cycle_types:
+  comment: Frobenius cycle types
   sage: |
-    # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Sage:
+    # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Sage:
     p = 7; [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
   pari: |
-    \\ to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Pari:
+    \\ to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Pari:
     p = 7; pfac = idealprimedec(K, p); vector(length(pfac), j, [pfac[j][3], pfac[j][4]])
   magma: |
-    // to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7 in Magma:
+    // to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Magma:
     p := 7; [<pr[2], Valuation(Norm(pr[1]), p)> : pr in Factorization(p*Integers(K))];
   oscar: |
-    # to obtain a list of $[e_i,f_i]$ for the factorization of the ideal $p\mathcal{O}_K$ for $p=7$ in Oscar:
+    # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
     p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]

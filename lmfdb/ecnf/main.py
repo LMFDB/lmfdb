@@ -15,7 +15,7 @@ from lmfdb.utils import (
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer
+    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer, CodeSnippet
     )
 from lmfdb.utils.search_parsing import search_parser
 
@@ -680,18 +680,10 @@ def ecnf_code(**args):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     lang = args['download_type']
-    if lang == 'gp':
-        lang = 'pari'
 
-    from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode = make_code(label, lang)
-    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
-    for k in sorted_code_names:
-        if Ecode[k]:
-            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
-    return code
+    from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
+    code = CodeSnippet(make_code(label))
+    return code.export_code(label, lang, sorted_code_names)
 
 
 def disp_tor(t):
