@@ -44,9 +44,9 @@ def output_data():
             to_output = (curve._equation_string()).replace(" ", "")
             label_to_curves[get_label(Lpoly,q)].add(to_output)
         
-        for label in label_to_curves.keys():
+        for label, equations in label_to_curves.items():
             with open(output_filename, "a") as file:
-                to_write = "%s|{%s}\n" % (label, ','.join(label_to_curves[label]))
+                to_write = "%s|{%s}\n" % (label, ','.join(equations))
                 file.write(to_write)
             
         with open(counts_filename, "a") as file:
