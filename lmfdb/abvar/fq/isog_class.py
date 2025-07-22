@@ -23,7 +23,7 @@ from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors, teXify_pol
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
@@ -452,7 +452,7 @@ class AbvarFq_isoclass():
 
     def curve_display(self):
         def show_curve(cv):
-            cv = cv.replace("*", "")
+            cv = teXify_pol(cv)
             if "=" not in cv:
                 cv = cv + "=0"
             return "  <li>$%s$</li>\n" % cv

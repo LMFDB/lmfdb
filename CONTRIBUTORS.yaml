@@ -20,6 +20,10 @@ email: eran.assaf@dartmouth.edu
 affil: Dartmouth College
 url: https://www.math.dartmouth.edu/~eassaf/
 ---
+name: Edwina Aylward
+affil: University College London
+url: https://aylwarde.github.io/
+---
 name: Angelica Babei
 url: https://www.math.dartmouth.edu/~ababei/
 affil: Dartmouth College
@@ -47,7 +51,7 @@ url: https://sage.math.washington.edu/home/bober/www/
 affil: University of Bristol
 ---
 name: Raymond van Bommel
-affil: MIT
+affil: University of Bristol
 url: https://www.raymondvanbommel.nl/
 ---
 name: Andrew Booker
@@ -370,6 +374,10 @@ url: https://www.math.brown.edu/~jhs/
 name: Nils-Peter Skoruppa
 url: https://www.nskoruppa.de/
 affil: Universität Siegen
+---
+name: Harry Spencer
+url: https://hspen99.github.io/
+affil: University College, London
 ---
 name: William Stein
 url: https://wstein.org/
