@@ -922,6 +922,7 @@ def auto_gens(label):
     props = [
         ("Order", factor_latex(gp.aut_order)),
         ]
+
     def ynnc(val):
         if val is None:
             return "not computed"
