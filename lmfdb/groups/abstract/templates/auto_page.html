@@ -121,7 +121,7 @@
 </table>
 </p>
 <p>
-  {{info.out_boolean_string | safe}}
+  {{info.outer_boolean_string | safe}}
 </p>
 
 
@@ -131,7 +131,7 @@
 <p>
   <table class="ntdata" style="margin-left:0;">
     <thead>
-      <tr>{% if gp.outer_gen_order %}
+      <tr>{% if gp.outer_gen_orders %}
         <th>{{KNOWL('group.element_order','Order in $\\Out(G)$')}}</th> {% endif %}
         {% for c in gp.auto_gens_list()[0] %}
         <th>${{c}}$</th>
@@ -143,7 +143,7 @@
     </thead>
     <tbody>
       {% for i in range(gp.outer_gens|length) %}
-      <tr>{% if gp.outer_gen_order %}
+      <tr>{% if gp.outer_gen_orders %}
         <td align="center"> {{ gp.outer_gen_orders[i] }} </td> {% endif %}
         {% for g in gp.outer_gens[i] %}
         <td>${{ gp.decode(g, as_str=True) }}$ </td>

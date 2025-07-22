@@ -290,10 +290,7 @@ def get_group_prop_display(gp, prefix="", cyclic_known=True):
     # We want elementary and hyperelementary to display which primes, but only once
     elementaryp = ''
     hyperelementaryp = ''
-    if prefix != "":
-        if hasattr(gp, prefix+"pgroup") and gp.pgroup:  # We don't display p since there's only one in play
-            elementaryp = hyperelementaryp = ""
-    else:
+    if prefix == "":
         if hasattr(gp, 'elementary'):
             elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
             hyperelementaryp = ",".join(
@@ -301,9 +298,7 @@ def get_group_prop_display(gp, prefix="", cyclic_known=True):
                 for p, e in ZZ(gp.hyperelementary).factor()
                 if not p.divides(gp.elementary)
             )
-        if (
-            gp.order == 1
-        ):  # here it will be implied from cyclic, so both are in the implication list
+        if gp.order == 1:  # here it will be implied from cyclic, so both are in the implication list
             elementaryp = " (for every $p$)"
             hyperelementaryp = ""
         elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
@@ -681,7 +676,7 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
         "almost_simple",
     ]
 
-    overall_display = get_group_prop_display(gp,prefix=prefix)
+    overall_display = get_group_prop_display(gp, prefix=prefix)
     hence_str = display_knowl("group.properties_interdependencies", "hence")
     props = find_props(
         gp,
@@ -893,17 +888,17 @@ def auto_gens(label):
         flash_error("The automorphism group of %s has not been computed.", label)
         return redirect(url_for(".by_label", label=label))
     info = {}
-    if gp.aut_group is not None:
-        aut_gp = WebAbstractGroup(gp.aut_group)
-        info["aut_boolean_string"] = create_boolean_string(aut_gp)
-    else:
-        info["aut_boolean_string"] = create_boolean_aut_string(gp)
-    if gp.outer_group is not None:
-        out_gp = WebAbstractGroup(gp.outer_group)
-        info["out_boolean_string"] = create_boolean_string(out_gp)
-    else:
-        info["out_boolean_string"] = create_boolean_aut_string(gp, prefix="outer_", name="outer automorphism group")
-    info["inner_boolean_string"] = create_boolean_aut_string(gp, prefix="inner_", name="inner automorphism group")
+    for gcol, prefix, name in [
+            ("aut_group", "aut_", "automorphism group"),
+            ("outer_group", "outer_", "outer automorphism group"),
+            ("central_quotient", "inner_", "inner automorphism group")]:
+        gid = getattr(gp, gcol, None)
+        if gid is None:
+            astr = create_boolean_aut_string(gp, prefix=prefix, name=name)
+        else:
+            agp = WebAbstractGroup(gid)
+            astr = create_boolean_string(agp)
+        info[prefix + "boolean_string"] = astr
 
     props = [
         ("Order", factor_latex(gp.aut_order)),

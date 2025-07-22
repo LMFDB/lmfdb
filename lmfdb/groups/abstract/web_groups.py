@@ -480,7 +480,9 @@ class WebAbstractGroup(WebObj):
         return bool(self.G.IsSupersolvable())
     @lazy_attribute
     def monomial(self):
-        return bool(self.G.IsMonomial())
+        # This takes too long
+        #return bool(self.G.IsMonomial())
+        return None
     @lazy_attribute
     def solvable(self):
         return bool(self.G.IsSolvable())
@@ -594,12 +596,24 @@ class WebAbstractGroup(WebObj):
                 cnt = prod(pair[1] for pair in tup)
                 order_stats[order] = cnt
         else:
-            for c in self.conjugacy_classes:
+            cc = self.conjugacy_classes
+            if cc is None:
+                return
+            for c in cc:
                 order_stats[c.order] += c.size
         return sorted(order_stats.items())
 
+    @lazy_attribute
+    def has_large_prime(self):
+        # Whether a prime larger than 2000 divides the order
+        n = ZZ(self.order)
+        fac = n.factor(limit=2000)
+        return not all(p.is_prime(proof=False) and p < 2000 for p,e in fac)
+
     # @timeout_decorator.timeout(3, use_signals=False)
     def _aut_group_data(self):
+        if self.has_large_prime:
+            return None, None, None, None
         if self.abelian:
             # See https://www.msri.org/people/members/chillar/files/autabeliangrps.pdf
             invs = self.primary_abelian_invariants
@@ -645,6 +659,9 @@ class WebAbstractGroup(WebObj):
 
     def _set_aut_data(self):
         aut_order, aid, out_order, oid = self._aut_group_data()
+        if aut_order is None:
+            self.aut_order = self.aut_group = self.outer_order = self.outer_group = None
+            return
         self.aut_order = ZZ(aut_order)
         if aid == 0:
             # try a bit harder for cyclic groups
@@ -698,7 +715,9 @@ class WebAbstractGroup(WebObj):
     def number_conjugacy_classes(self):
         if self.abelian:
             return self.order
-        return len(self.conjugacy_classes)
+        cc = self.conjugacy_classes
+        if cc:
+            return len(self.conjugacy_classes)
 
     @lazy_attribute
     def cc_known(self):
@@ -957,9 +976,9 @@ class WebAbstractGroup(WebObj):
             if self.simple:
                 props.append(("Simple", "yes"))
             try:
-                props.append((r"$\card{\operatorname{Aut}(G)}$", web_latex(factor(self.aut_order))))
-            except AssertionError:  # timed out
-                pass
+                props.append((r"$\card{\Aut(G)}$", web_latex(factor(self.aut_order))))
+            except (AssertionError, TypeError):  # timed out or no aut_order
+                props.extend([(r"$\card{\Aut(G)}$", "not computed")])
         else:
             if self.simple:
                 props.append(("Simple", "yes"))
@@ -984,13 +1003,13 @@ class WebAbstractGroup(WebObj):
             else:
                 try:
                     props.extend([
-                        (r"$\card{\mathrm{Aut}(G)}$", web_latex(factor(self.aut_order)))
+                        (r"$\card{\Aut(G)}$", web_latex(factor(self.aut_order)))
                     ])
                 except AssertionError:  # timed out
                     pass
 
             if self.outer_order is None:
-                props.extend([(r"$\card{\mathrm{Out}(G)}$", "not computed")])
+                props.extend([(r"$\card{\Out(G)}$", "not computed")])
             else:
                 try:
                     props.extend([
@@ -1446,6 +1465,9 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_classes(self):
         if self.live():
+            if self.has_large_prime or self.abelian and self.order > 2000:
+                self.autjugacy_classes = self.conjugacy_class_divisions = None
+                return
             if isinstance(self.G, LiveAbelianGroup):
                 cl = [
                     WebAbstractConjClass(self.label, f"{m}?", {
@@ -1496,13 +1518,11 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def conjugacy_class_divisions(self):
         cl = self.conjugacy_classes  # creates divisions
-        assert cl
         return self.conjugacy_class_divisions
 
     @lazy_attribute
     def autjugacy_classes(self):
         cl = self.conjugacy_classes  # creates autjugacy classes
-        assert cl
         return self.autjugacy_classes
 
     @lazy_attribute
@@ -1815,25 +1835,28 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def cc_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
-        if self.abelian:
+        if self.abelian and self.order_stats is not None:
             return [[o, 1, cnt] for o, cnt in self.order_stats]
-        D = Counter([(cc.order, cc.size) for cc in self.conjugacy_classes])
-        return sorted((o, s, m) for (o, s), m in D.items())
+        if self.conjugacy_classes is not None:
+            D = Counter([(cc.order, cc.size) for cc in self.conjugacy_classes])
+            return sorted((o, s, m) for (o, s), m in D.items())
 
     @lazy_attribute
     def cc_statistics(self):
-        D = Counter()
-        for o, s, m in self.cc_stats:
-            D[o] += m
-        return sorted(D.items())
+        if self.cc_stats is not None:
+            D = Counter()
+            for o, s, m in self.cc_stats:
+                D[o] += m
+            return sorted(D.items())
 
     @lazy_attribute
     def div_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
-        D = Counter()
-        for div in self.conjugacy_class_divisions:
-            D[div.order, len(div.classes), div.classes[0].size] += 1
-        return sorted((o, s, k, m) for (o, s, k), m in D.items())
+        if self.conjugacy_class_divisions is not None:
+            D = Counter()
+            for div in self.conjugacy_class_divisions:
+                D[div.order, len(div.classes), div.classes[0].size] += 1
+            return sorted((o, s, k, m) for (o, s, k), m in D.items())
 
     @lazy_attribute
     def div_statistics(self):
@@ -1845,10 +1868,11 @@ class WebAbstractGroup(WebObj):
     @lazy_attribute
     def aut_stats(self):
         # This should be cached for groups coming from the database, so this is only used for live groups
-        D = Counter()
-        for c in self.autjugacy_classes:
-            D[c.order, len(c.classes), c.classes[0].size] += 1
-        return sorted((o, s, k, m) for (o, s, k), m in D.items())
+        if self.autjugacy_classes is not None:
+            D = Counter()
+            for c in self.autjugacy_classes:
+                D[c.order, len(c.classes), c.classes[0].size] += 1
+            return sorted((o, s, k, m) for (o, s, k), m in D.items())
 
     @lazy_attribute
     def aut_statistics(self):
@@ -2534,10 +2558,6 @@ class WebAbstractGroup(WebObj):
         knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">${tex}$</a>'
         return f'{knowl}, of order {aut_order}'
 
-    # TODO if prime factors get large, use factors in database
-    def aut_order_factor(self):
-        return latex(factor(self.aut_order))
-
     def aut_gens_flag(self): # issue with Lie type when family is projective, Gap stores these groups as permutations
         if self.aut_gens is None:
             return False
@@ -2575,10 +2595,6 @@ class WebAbstractGroup(WebObj):
         if tex is None:
             tex = group_names_pretty(self.central_quotient)
         return f'<a href="{url}">${tex}$</a>, of order {pos_int_and_factor(self.inner_order)}'
-
-    # TODO if prime factors get large, use factors in database
-    def out_order_factor(self):
-        return latex(factor(self.outer_order))
 
     def perm_degree(self):
         if self.permutation_degree is None:
@@ -2685,10 +2701,6 @@ class WebAbstractGroup(WebObj):
 
     def abelian_quot_primary(self):
         return abelian_gp_display(self.primary_abelian_invariants)
-        return r" \times ".join(
-            ("C_{%s}^{%s}" % (q, e) if e > 1 else "C_{%s}" % q)
-            for q, e in Counter(self.primary_abelian_invariants).items()
-        )
 
     def abelianization_label(self):
         return ".".join(str(m) for m in self.smith_abelian_invariants)
