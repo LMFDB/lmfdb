@@ -542,6 +542,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     overflow-x: auto;
     scrollbar-color: #bbbaba #ffffff;
     scrollbar-width: thin; 
+    scrollbar-gutter: stable;
 }
 
 .prompt {
