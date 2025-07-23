@@ -526,7 +526,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 
 .code, .prompt {
     font-family: monospace;
-    white-space: pre;
+    white-space: nowrap;
 }
 
 .code {
