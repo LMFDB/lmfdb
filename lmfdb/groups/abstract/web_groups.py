@@ -2920,10 +2920,14 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage,  'LFqsage': LFqsage,
         }
 
-        # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath
-        # to display at the top of each group page
-        # If the group is not in a special family, we will default to showing the permutation group code snippet
-        # TODO: This code seems somewhat hacky.  Should ideally somehow implement this through the code.yaml file
+
+        # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
+        # to display at the top of each group page.  This is computed and stored in code['code_description'].
+        # If the group is a member of a special family (i.e. Cyclic,Symmetric,Dihedral,Alternating,Dicyclic,LieType,Chevalley),
+        # then we give the code for that family.  Otherwise, if abelian, we use AbelianGroup, or otherwise use SmallGroup (if in GAP db)
+        # If none of the above apply, we will default to showing one of the built-in code snippet constructions for the group
+        # (i.e. either Perm, PC, or one of the matrix group constructions: GLZ, GLFp, GLZN, GLZq, or GLFq )
+        # TODO: I realize this big lump of code does seem somewhat hacky. Should ideally somehow implement this through the code.yaml file
         code['code_description'] = dict()
         self_families = []
         # Highest priority: check if group is cyclic
@@ -2947,7 +2951,7 @@ class WebAbstractGroup(WebObj):
                 code['code_description'][lang] = "G := AlternatingGroup("+self.name[1:]+");"
             code['code_description']['sage'] = "G = AlternatingGroup("+self.name[1:]+")"
         else:
-            # Otherwise must query to database: gps_special_names
+            # Otherwise, we must make a query to the database: gps_special_names  (to obtain the families this group lies in)
             self_families = list(db.gps_special_names.search({'label':self.label}, projection={'family','parameters'}))
             if 'Dic' in [t['family'] for t in self_families]:
                 code['code_description']['magma'] = "G := DicyclicGroup("+str(self.order/4)+");" # Magma Dic(n) has order 4n
@@ -2975,7 +2979,7 @@ class WebAbstractGroup(WebObj):
                         lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
                         code['code_description']['sage'] = "G = "+f+"("+lie_params+")"
                         break
-        # Checking if Chevalley or Twisted Chevalley group
+        # Checking if group is in the Chevalley or Twisted Chevalley family
         if ('Chev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
             chev_index = [t['family'] for t in self_families].index("Chev")
             chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
@@ -2984,22 +2988,32 @@ class WebAbstractGroup(WebObj):
             chev_index = [t['family'] for t in self_families].index("TwistChev")
             chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
             code['code_description']['magma'] = 'G := ChevalleyGroup("'+str(self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
-        # Otherwise, check if group is abelian (can define from its primary decomposition)
+        # Otherwise, check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
         if self.abelian:
             for lang in ['magma', 'gap']:
                 if lang not in code['code_description']:
                     code['code_description'][lang] = 'G := AbelianGroup('+str(self.primary_abelian_invariants)+');'
-        # Otherwise, check if in small groups database (can then define G in Magma and Gap)
+           # Sage's implementation of AbelianGroup doesn't support all the usual group functions (I'm unsure whether to add this?)
+           #if 'sage' not in code['code_description']: code['code_description']['sage'] = 'G = AbelianGroup('+str(self.primary_abelian_invariants)+')'
+        # Otherwise, check if in small groups database (can then define the group G in Magma and Gap)
         if (self.label.split('.')[1].isdigit()):
             gap_id = self.label.split('.')
             for lang in ['magma', 'gap']:
                 if lang not in code['code_description']:
                     code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'
-
-        # If the group is not in a special family, we will default to showing the permutation group code snippet
-        for lang in code['prompt']:
-            if lang not in code['code_description']:
-                code['code_description'][lang] = code['permutation'][lang]
+        # If the group is not in a special family, we will default to showing one of the built-in group constructions (if it exists and is implemented)
+        # Highest  priority: Permutation group, then PC group, then a matrix group, I guess?
+        for rep in ["Perm", "PC", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
+            if rep in self.representations:
+                # Get the corresponding name of the code snippet in the code.yaml file, for this representation
+                if rep == "Perm": code_rep = "permutation"
+                elif rep == "PC": code_rep = "presentation"
+                else: code_rep = rep
+                for lang in code[code_rep]:
+                    if lang not in code['code_description']:
+                        code['code_description'][lang] = code[code_rep][lang]
+        # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
+        
 
         for prop in code:
             for lang in code[prop]:
