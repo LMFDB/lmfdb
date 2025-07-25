@@ -978,6 +978,8 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
     # thus it must be an old label, and we redirect to the orbit
     old_label = '.'.join(map(str, [level, weight, character, hecke_orbit]))
     newform_label = convert_newformlabel_from_conrey(old_label)
+    if newform_label is None:
+        return abort(404, 'Invalid label')
     level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                               char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)
