@@ -3025,26 +3025,28 @@ class WebAbstractGroup(WebObj):
         else: code['prompt'].pop('sage', None)
 
         # If our implementation of G is either as a matrix group or abelian group,
-        # then unfortunately not all the default commands in Sage and Magma will work correctly!
+        # then unfortunately not all the default code snippets in Sage and Magma will work correctly!
         # As a (hopefully temporary) solution, we hide the code snippets which will not work with our implemention of G in the top code snippet
         # TODO: Find a better solution for this (would it be worth converting G to a permutation group within the top code snippet?)
         if ("MatrixGroup" in code['code_description']['sage']) and ("permutation" not in code['code_description']['sage']):
             # Must disable all code snippets which do not work with MatrixGroup in Sage  
-            for c in ['composition_series', 'is_cyclic', 'is_elementary_abelian', 'is_pgroup', 'abelianization', 'schur_multiplier',
+            for c in ['composition_factors', 'is_cyclic', 'is_elementary_abelian', 'is_pgroup', 'abelianization', 'schur_multiplier',
                       'commutator', 'frattini_subgroup', 'fitting_subgroup', 'socle', 'derived_series', 'lower_central_series', 'upper_central_series']:
-                 code[c].pop('sage', None)
+                if c in code: code[c].pop('sage', None)
         if ("AbelianGroup" in code['code_description']['sage']) and ("permutation" not in code['code_description']['sage']):
             # Must disable all code snippets which do not work with AbelianGroup in Sage  
-            for c in ['composition_series', 'is_elementary_abelian', 'is_nilpotent', 'is_perfect', 'is_pgroup', 'is_polycyclic', 'is_solvable', 'is_supersolvable',
+            for c in ['composition_factors', 'is_elementary_abelian', 'is_nilpotent', 'is_perfect', 'is_pgroup', 'is_polycyclic', 'is_solvable', 'is_supersolvable',
                       'abelianization', 'schur_multiplier', 'center', 'commutator', 'frattini_subgroup', 'fitting_subgroup', 'socle',
                       'derived_series', 'lower_central_series', 'upper_central_series']:
-                 code[c].pop('sage', None)
+                if c in code: code[c].pop('sage', None)
         if ("MatrixGroup" in code['code_description']['magma']) and ("permutation" not in code['code_description']['magma']):
             # Must disable all code snippets which do not work with MatrixGroup in Magma
-            for c in ['socle']: code[c].pop('magma', None)
+            for c in ['socle']:
+                if c in code: code[c].pop('magma', None)
         if ("AbelianGroup" in code['code_description']['magma']) and ("permutation" not in code['code_description']['magma']):
             # Must disable all code snippets which do not work with AbelianGroup in Magma
-            for c in ['radical', 'socle']: code[c].pop('magma', None)
+            for c in ['radical', 'socle']:
+                if c in code: code[c].pop('magma', None)
 
 
 
