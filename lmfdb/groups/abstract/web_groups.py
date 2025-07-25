@@ -2925,8 +2925,6 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage,  'LFqsage': LFqsage,
         }
 
-        print("*************", self.representations["PC"]["gens"])
-
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
         # to display at the top of each group page.  This is computed and stored in code['code_description'].
         # If the group is a member of a special family (i.e. Cyclic,Symmetric,Dihedral,Alternating,Dicyclic,LieType,Chevalley),
