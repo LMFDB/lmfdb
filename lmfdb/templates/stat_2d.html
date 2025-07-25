@@ -1,5 +1,5 @@
 <table class="statgrid">
-  <tr><th></th><th></th><th colspan="{{ d.col_headers | length}}"> {{info.stats._short_display[d.attribute.cols[1]]}}</td></tr>
+  <tr><th></th><th></th><th colspan="{{ d.col_headers | length}}"> {{d.attribute.col_title | safe}} </td></tr>
   <tr>
     <th></th>
     <th></th>
@@ -12,26 +12,26 @@
     {% if loop.index == 1 %}
     <th rowspan="{{ (d.grid | length) * 2 }}">
       <div class="table_rotate">
-        {{info.stats._short_display[d.attribute.cols[0]] | safe}}
+        {{d.attribute.row_title | safe}}
       </div>
     </th>
     {% endif %}
-    <th class="rhead" rowspan=2>{{ rhead | safe}}</th>
+    <th class="rhead nowrap" rowspan=2>{{ rhead | safe}}</th>
     {% for c in row %}
     {% if c.count %}
     {% if c.query %}
-    <td class="cnt"><a href='{{c.query}}'>{{c.count}}</a></td>
+    <td class="cnt{% if 'extraclass' in c %} {{c.extraclass}}{% endif %}"><a href='{{c.query}}'>{{c.count}}</a></td>
     {% else %}
-    <td class="cnt">{{c.count}}</td>
+    <td class="cnt{% if 'extraclass' in c %} {{c.extraclass}}{% endif %}">{{c.count}}</td>
     {% endif %}
     {% else %}
-    <td class="cnt"></td>
+    <td class="cnt{% if 'extraclass' in c %} {{c.extraclass}}{% endif %}"></td>
     {% endif %}
     {% endfor %}
   </tr>
   <tr>
     {% for c in row %}
-    <td class="prop">{{c.proportion}}</td>
+    <td class="prop{% if 'propclass' in c %} {{c.propclass}}{% endif %}">{{c.proportion}}</td>
     {% endfor %}
   </tr>
   {% endfor %} {# d.grid #}

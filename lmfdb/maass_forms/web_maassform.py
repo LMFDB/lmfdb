@@ -294,9 +294,9 @@ class WebMaassForm():
                     continue
                 f = factor(m)
                 if has_finite_rational_coeffs:
-                    level_part = prod(p**e for (p,e) in f if p in level_10_primes)
-                    other_part = prod(p**e for (p,e) in f if p not in level_10_primes)
-                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for (p,e) in f))
+                    level_part = prod(p**e for p, e in f if p in level_10_primes)
+                    other_part = prod(p**e for p, e in f if p not in level_10_primes)
+                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for p, e in f))
                     if m_is_finite_rational:
                         # determine sign
                         sgn = sign(self.coefficients[m - 1])  # if fricke_unknown, this is 0
@@ -310,8 +310,8 @@ class WebMaassForm():
                 pm = False
                 if self.fricke_eigenvalue == 0:
                     # Work out the coefficient from one that's prime to the level
-                    level_part = prod(p**e for (p,e) in f if p in level_primes)
-                    other_part = prod(p**e for (p,e) in f if p not in level_primes)
+                    level_part = prod(p**e for p, e in f if p in level_primes)
+                    other_part = prod(p**e for p, e in f if p not in level_primes)
                     if level_part > 1:
                         coeff = abs(self.coefficients[other_part - 1] / RR(level_part).sqrt())
                         pm = True

@@ -148,14 +148,17 @@ def name_to_latex(name):
         name = "X_" + name[1:]
     return f"${name}$"
 
+
 def factored_conductor(conductor):
-    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for (p, e) in conductor) if conductor else ("1" if conductor == [] else r"?")
+    return "\\cdot".join(f"{p}{showexp(e, wrap=False)}" for p, e in conductor) if conductor else ("1" if conductor == [] else r"?")
+
 
 def remove_leading_coeff(jfac):
-    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ',''):
+    if "(%s)" % jfac.unit() == (str(jfac).split("*")[0]).replace(' ', ''):
         return "*".join(str(jfac).split("*")[1:])
     else:
         return str(jfac)
+
 
 def formatted_dims(dims, mults):
     if dims is None:
@@ -167,14 +170,16 @@ def formatted_dims(dims, mults):
     for d, c in zip(dims, mults):
         collapsed[d] += c
     dims, mults = zip(*(sorted(collapsed.items())))
-    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for (d, c) in zip(dims, mults)) + "$"
+    return "$" + r"\cdot".join(f"{d}{showexp(c, wrap=False)}" for d, c in zip(dims, mults)) + "$"
+
 
 def formatted_newforms(newforms, mults):
     if newforms is None:
         return "not computed"
     if not newforms:
         return ""
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for (label, c) in zip(newforms, mults))
+    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
+
 
 def formatted_model_html(self, m):
     # this is only for curves with models
@@ -384,7 +389,7 @@ def difference(Ad, Bd, Am, Bm):
         C[d] += m
     for d, m in zip(Bd, Bm):
         C[d] -= m
-    C = {d: m for (d,m) in C.items() if m != 0}
+    C = {d: m for d, m in C.items() if m != 0}
     if not C:
         return [], []
     return tuple(zip(*(sorted(C.items()))))
@@ -531,7 +536,7 @@ class WebModCurve(WebObj):
         if self.contains_negative_one:
             qtwists = list(self.table.search({'coarse_label':self.label}, 'label'))
             if len(qtwists) > 1:
-                return r"%s" % (', '.join([modcurve_link(label) for label in qtwists if label != self.label]))
+                return r"%s" % (', '.join(modcurve_link(label) for label in qtwists if label != self.label))
             else:
                 return r"none in database"
         else:
@@ -554,13 +559,13 @@ class WebModCurve(WebObj):
     def cusp_widths_display(self):
         if not self.cusp_widths:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_widths) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_widths) + "$"
 
     @lazy_attribute
     def cusp_orbits_display(self):
         if not self.cusp_orbits:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for (w,n) in self.cusp_orbits) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):
@@ -829,7 +834,7 @@ class WebModCurve(WebObj):
 
     @lazy_attribute
     def low_degree_cusps(self):
-        return sum([n for (w,n) in self.cusp_orbits if 1 < w <= 6])
+        return sum([n for w, n in self.cusp_orbits if 1 < w <= 6])
 
     @lazy_attribute
     def db_points(self):
@@ -1085,10 +1090,10 @@ class WebModCurve(WebObj):
                     level, index, genus = get_lig(label)
                     self.tex = "%s_{%s}^{%s}" % (self.level, self.index, self.genus)
                 self.img = texlabels[self.tex]
-                self.rank = sum(e for (p,e) in self.index.factor())
+                self.rank = sum(e for p, e in self.index.factor())
                 self.x = x
         if "-" in self.label or not self.lattice_labels:
-            return [],[]
+            return [], []
         parents = {}
         names = {}
         for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
@@ -1105,7 +1110,7 @@ class WebModCurve(WebObj):
         nodes, edges = [], []
         for lab, x in zip(self.lattice_labels, self.lattice_x):
             nodes.append(LatNode(lab, x))
-        nodes, edges = [LatNode(lab, x) for (lab, x) in zip(self.lattice_labels, self.lattice_x)], []
+        nodes, edges = [LatNode(lab, x) for lab, x in zip(self.lattice_labels, self.lattice_x)], []
         if nodes:
             minrank = min(node.rank for node in nodes)
             for node in nodes:

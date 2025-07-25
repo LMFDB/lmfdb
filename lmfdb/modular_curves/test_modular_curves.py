@@ -1,4 +1,5 @@
 from lmfdb.tests import LmfdbTest
+from lmfdb.modular_curves.family import ALL_FAMILIES
 
 class ModCrvTest(LmfdbTest):
     def test_home(self):
@@ -225,7 +226,7 @@ class ModCrvTest(LmfdbTest):
         assert "$j$-height" in data
         assert "Plane model" in data
         assert "Weierstrass model" in data
-        assert"Embedded model" in data
+        assert "Embedded model" in data
 
     def test_low_degree_points_search(self):
         L = self.tc.get("/ModularCurve/Q/low_degree_points?cusp=no")
@@ -294,6 +295,20 @@ class ModCrvTest(LmfdbTest):
             assert url[15:] in L.get_data(as_text=True)
             assert url[15:] in L1.get_data(as_text=True)
 
+    def test_family_page(self):
+        for name, family in ALL_FAMILIES.items():
+            self.check_args(
+                f"/ModularCurve/Q/family/{name}",
+                [
+                    family.name,
+                    family.genus_formula,
+                    family.cusps,
+                    family.psl2index,
+                    family.nu2,
+                    family.nu3,
+                ],
+            )
+
     def test_family_search(self):
         family_set = [
             ('X0','2.3.0.a.1'),
@@ -310,7 +325,7 @@ class ModCrvTest(LmfdbTest):
             ('Xarith','4.48.0-4.b.1.1'),
             ('any','1.1.0.a.1')
         ]
-        for (family,crv) in family_set:
+        for family, crv in family_set:
             url = '/ModularCurve/Q/?family=' + family
             L = self.tc.get(url)
             assert crv in L.get_data(as_text=True)

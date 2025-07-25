@@ -1,11 +1,13 @@
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part
+from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
+from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
+from lmfdb.abvar.fq.main import url_for_label
 from lmfdb import db
 
-from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField
+from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, nth_prime
 
 
 class ECisog_class():
@@ -148,10 +150,10 @@ class ECisog_class():
             self.CMfield = field_pretty(lab)
         else:
             self.CMfield = "no"
-            if self.conductor <= 300:
-                self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=self.conductor, isogeny=self.iso_label))]
-            if self.conductor <= 50:
-                self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
+            #if self.conductor <= 300:
+            #    self.friends += [('Symmetric square L-function', url_for("l_functions.l_function_ec_sym_page", power='2', conductor=self.conductor, isogeny=self.iso_label))]
+            #if self.conductor <= 50:
+            #    self.friends += [('Symmetric cube L-function', url_for("l_functions.l_function_ec_sym_page", power='3', conductor=self.conductor, isogeny=self.iso_label))]
         if self.newform_exists_in_db:
             self.friends += [('Modular form ' + self.newform_label, self.newform_link)]
 
@@ -188,6 +190,22 @@ class ECisog_class():
         self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
         self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
 
+        lfunc_url = self.lfunction_link
+        origin_url = lfunc_url.lstrip('/L/').rstrip('/')
+        self.lfunc_label = db.lfunc_instances.lucky({'url':origin_url}, "label")
+        if self.lfunc_label:
+            self.lfunc_entry = db.lfunc_search.lookup(self.lfunc_label)
+            if self.lfunc_entry:
+                self.has_lfunction = True
+                self.euler_factors = self.lfunc_entry["euler_factors"]
+                self.good_lfactors = [[nth_prime(n+1), self.euler_factors[n]] for n in range(len(self.euler_factors)) if nth_prime(n+1) < 30 and self.conductor % nth_prime(n+1)]
+                self.good_lfactors_pretty_with_label = [(c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(1,c[0]) else '') for c in self.good_lfactors]
+                self.bad_lfactors = db.lfunc_lfunctions.lucky({"label": self.lfunc_label})["bad_lfactors"]
+                self.bad_lfactors_pretty = [(c[0], list_to_factored_poly_otherorder(c[1])) for c in self.bad_lfactors]
+            else:
+                self.has_lfunction = False
+        else:
+            self.has_lfunction = False
 
 def make_graph(M, vertex_labels=None):
     """

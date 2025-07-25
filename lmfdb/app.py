@@ -131,7 +131,8 @@ def ctx_proc_userdata():
     # overwrite this variable when you want to customize it
     # For example, [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
     vars['bread'] = None
-
+    from lmfdb.utils import CodeSnippet
+    vars['CodeSnippet'] = CodeSnippet
     # default title
     vars['title'] = r'LMFDB'
 
@@ -612,17 +613,6 @@ def css():
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
 
-# the checklist is used for human testing on a high-level, supplements test.sh
-
-
-@app.route("/checklist-list")
-def checklist_list():
-    return render_template("checklist.html", body_class="checklist")
-
-
-@app.route("/checklist")
-def checklist():
-    return render_template("checklist-fs.html")
 
 ##############################
 #         Intro pages        #

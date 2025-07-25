@@ -1,5 +1,6 @@
 
 from lmfdb.tests import LmfdbTest
+from lmfdb.utils.datetime_utils import UTC
 
 class DynamicKnowlTest(LmfdbTest):
     """
@@ -12,7 +13,7 @@ class DynamicKnowlTest(LmfdbTest):
 
     def test_conjugacy_classes_knowl(self):
         L = self.tc.get('/knowledge/show/gg.conjugacy_classes.data?n=5&t=5', follow_redirects=True)
-        assert '1,5,3,2' in L.get_data(as_text=True)
+        assert '1,3,4,5' in L.get_data(as_text=True)
 
     def test_character_table_knowl(self):
         L = self.tc.get('/knowledge/show/gg.character_table.data?n=5&t=5', follow_redirects=True)
@@ -62,7 +63,7 @@ class DynamicKnowlTest(LmfdbTest):
             dev_db = PostgresDatabase(dev_config)
 
             # Updates happen every 20 minutes, so we only compare knowls older than that (plus a buffer).
-            cutoff = datetime.utcnow() - timedelta(minutes=30)
+            cutoff = datetime.now(UTC) - timedelta(minutes=30)
 
             t_query = SQL("SELECT timestamp FROM kwl_knowls WHERE timestamp < %s LIMIT 1")
             dev_t = dev_db._execute(t_query, [cutoff]).fetchone()[0]

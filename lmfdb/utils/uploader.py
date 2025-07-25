@@ -17,6 +17,7 @@ import io
 import codecs
 import tempfile
 from datetime import datetime
+from lmfdb.utils.datetime_utils import UTC
 from flask import request, flash, send_file, render_template
 from flask_login import current_user
 from sage.misc.lazy_attribute import lazy_attribute
@@ -132,7 +133,7 @@ class USelectBox(UploadBox):
         )
 
     def validate(self, value):
-        opts = [val for (val, display) in self.options]
+        opts = [val for val, display in self.options]
         if value in opts:
             if getattr(self, "no_empty", None) and not value:
                 raise ValueError(f"Must specify {self.name}")
@@ -312,7 +313,7 @@ class UploadSection():
                 if any(x for x in row):
                     if len(row) != len(header):
                         raise ValueError(f"Row {i} of CSV file has {len(row)} entries but header has {len(header)}")
-                    yield self.validate({box.name: val for (box, val) in zip(header, row)})
+                    yield self.validate({box.name: val for box, val in zip(header, row)})
 
     def parse_form(self, form):
         form = dict(form)
@@ -323,7 +324,7 @@ class UploadSection():
             columns = ["section", "status", "submitter", "data", "submitted", "verified", "reviewed", "processed", "updated", "version", "comment"]
             types = ["text", "smallint", "text", "jsonb", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "smallint", "text"]
             _ = F.write("|".join(columns) + "\n" + "|".join(types) + "\n\n")
-            timestamp = datetime.utcnow().isoformat()
+            timestamp = datetime.now(UTC).isoformat()
             for rec in data:
                 _ = F.write(f"{self.name}|0|{current_user.id}|{copy_dumps(rec, 'jsonb')}|{timestamp}|\\N|\\N|\\N|{timestamp}|{self.version}|\n")
             F.close()
@@ -424,7 +425,7 @@ class Uploader():
                 elif new_status in [2, -2] and not all(status == 1 for status in db.data_uploads.search({"id":{"$in":ids}}, "status")):
                     flash_error("You must select only rows that need review")
                 else:
-                    t0 = datetime.utcnow()
+                    t0 = datetime.now(UTC)
                     payload = {"status": new_status, "reviewed": t0, "updated": t0}
                     if comment:
                         payload["comment"] = comment
@@ -467,10 +468,10 @@ class Uploader():
         # Construct the query, specifying a submitter and/or upload status
         results = {}
         has_unexpected = False
-        if any(c for (a,b,c) in statuses):
+        if any(c for a, b, c in statuses):
             query = {}
             query["section"] = {"$in": list(self.section_lookup)}
-            query["status"] = {"$in": [int(a) for (a,b,c) in statuses if c]}
+            query["status"] = {"$in": [int(a) for a, b, c in statuses if c]}
             if user_shown:
                 query["submitter"] = user_shown
 

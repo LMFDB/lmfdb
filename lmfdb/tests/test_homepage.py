@@ -1,55 +1,146 @@
-
+import os
+import yaml
+import re
 from lmfdb.tests import LmfdbTest
 
+
 class HomePageTest(LmfdbTest):
-    # All tests should pass: these are all the links in the home page as specified in index_boxes.yaml
-    #
-    # Box 1
-    def test_box1(self):
-        r"""
-        Check that the links in Box 1 work.
-        """
-        # homepage = self.tc.get("/").get_data(as_text=True)
-        # self.check(homepage, "L/?degree=2", '2-23-23.22-c0-0-0')
-        # self.check(homepage, "EllipticCurve/Q/?conductor=1-99", '[1, 0, 1, -11, 12]')
-        # self.check(homepage, "ModularForm/GL2/Q/Maass/", '/BrowseGraph/1/15/0/15/')
-        # self.check(homepage, "zeros", 'have real part') # the interesting numbers are filled in dynamically
-        # self.check(homepage, "NumberField/?degree=2", '"/NumberField/2.0.8.1">2.0.8.1')
+    _links_data = None
+    _homepage_content = None
 
-    #
-    # Box 2
-    def test_box2(self):
-        r"""
-        Check that the links in Box 2 work.
-        """
-        # homepage = self.tc.get("/").get_data(as_text=True)
-        # self.check(homepage,"L/Riemann/", r'14.1347251417346937')
-        # self.check(homepage,"ModularForm/GL2/Q/holomorphic/1/12/a/a/", '4830')
-        # self.check(homepage,"ModularForm/GL2/Q/holomorphic/1/12/a/a/", '113643')
-        # self.check(homepage,"L/ModularForm/GL2/Q/holomorphic/1/12/a/a/", '0.792122')
-        # self.check(homepage,"EllipticCurve/Q/5077/a/1", r'y^2+y=x^3-7x+6')
-        # self.check(homepage,"L/EllipticCurve/Q/5077.a/", '5077')
+    @classmethod
+    def _parse_links_from_content(cls, content):
+        """Extract links from HTML content."""
+        link_pattern = r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>'
+        return re.findall(link_pattern, content, re.IGNORECASE)
 
-    # Box 3
-    def test_box3(self):
-        r"""
-        Check that the links in Box 3 work.
-        """
-        # homepage = self.tc.get("/").get_data(as_text=True)
-        # self.check(homepage, "L/", 'Lowest zero')
-        # self.check(homepage, "EllipticCurve/Q/", 'Label or coefficients')
-        # self.check(homepage, "NumberField/", 'x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1')
+    @classmethod
+    def _get_links_data(cls):
+        """Parse YAML file once and return all links with metadata."""
+        if cls._links_data is None:
+            lmfdb_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            yaml_path = os.path.join(lmfdb_dir, "homepage", "index_boxes.yaml")
 
-    # Box 4
-    def test_box4(self):
-        r"""
-        Check that the links in Box 4 work.
-        """
-        # homepage = self.tc.get("/").get_data(as_text=True)
-        # self.check(homepage, "L/degree4/MaassForm/", 'data on L-functions associated to Maass cusp forms for GSp(4) of level 1')
-        # self.check(homepage, "EllipticCurve/Q/102/c/", r'1 &amp; 2 &amp; 4 &amp; 4 &amp; 8 &amp; 8')
+            with open(yaml_path, "r") as f:
+                boxes = list(yaml.load_all(f, Loader=yaml.FullLoader))
 
-    # test global random
-    def test_random(self):
-        L = self.tc.get("/random", follow_redirects=True)
-        assert "Properties" in L.get_data(as_text=True)
+            links = []
+            for box_idx, box in enumerate(boxes):
+                box_title = box.get("title", f"Box {box_idx + 1}")
+
+                if "content" in box:
+                    urls = cls._parse_links_from_content(box["content"])
+                    for url in urls:
+                        links.append({
+                            "url": url,
+                            "box_title": box_title,
+                            "is_external": url.startswith(('http://', 'https://')),
+                            "is_internal": url.startswith('/'),
+                        })
+
+            cls._links_data = links
+        return cls._links_data
+
+    def _get_homepage(self):
+        """Get homepage content once and cache it."""
+        if self._homepage_content is None:
+            self._homepage_content = self.tc.get("/").get_data(as_text=True)
+        return self._homepage_content
+
+    def _test_link(self, link_info):
+        """Test a single link."""
+        url = link_info["url"]
+        box_title = link_info["box_title"]
+        homepage = self._get_homepage()
+
+        # Check that link appears in homepage
+        self.assertIn(url, homepage,
+                     f"Link {url} from {box_title} not found in homepage")
+
+        if link_info["is_external"]:
+            # Test external links
+            try:
+                self.check_external(homepage, url, "html")
+            except AssertionError:
+                self.check_external(homepage, url, "<")
+        elif link_info["is_internal"]:
+            # Test internal links
+            response = self.tc.get(url, follow_redirects=True)
+            self.assertEqual(response.status_code, 200,
+                           f"Internal link {url} from {box_title} returned status {response.status_code}")
+
+    def test_all_internal_links(self):
+        """Test all internal links found in index_boxes.yaml."""
+        links = self._get_links_data()
+        internal_links = [link for link in links if link["is_internal"]]
+
+        for link_info in internal_links:
+            with self.subTest(url=link_info["url"], box=link_info["box_title"]):
+                self._test_link(link_info)
+
+    def test_all_external_links(self):
+        """Test all external links found in index_boxes.yaml."""
+        links = self._get_links_data()
+        external_links = [link for link in links if link["is_external"]]
+
+        for link_info in external_links:
+            with self.subTest(url=link_info["url"], box=link_info["box_title"]):
+                self._test_link(link_info)
+
+    def test_all_links_by_box(self):
+        """Test all links grouped by box."""
+        links = self._get_links_data()
+
+        # Group links by box
+        boxes = {}
+        for link in links:
+            box_title = link["box_title"]
+            if box_title not in boxes:
+                boxes[box_title] = []
+            boxes[box_title].append(link)
+
+        for box_title, box_links in boxes.items():
+            with self.subTest(box=box_title):
+                for link_info in box_links:
+                    with self.subTest(url=link_info["url"]):
+                        self._test_link(link_info)
+
+    def test_random_link(self):
+        """Test the global random link functionality."""
+        response = self.tc.get("/random", follow_redirects=True)
+        assert "Properties" in response.get_data(as_text=True)
+
+
+# Dynamic test generation for individual boxes
+def _create_box_test(box_title, box_links):
+    """Create a test method for a specific box."""
+    def test_method(self):
+        for link_info in box_links:
+            with self.subTest(url=link_info["url"]):
+                self._test_link(link_info)
+
+    test_method.__doc__ = f"Test links from box: {box_title}"
+    return test_method
+
+
+# Add individual box tests
+try:
+    links = HomePageTest._get_links_data()
+
+    # Group links by box for dynamic test creation
+    boxes = {}
+    for link in links:
+        box_title = link["box_title"]
+        if box_title not in boxes:
+            boxes[box_title] = []
+        boxes[box_title].append(link)
+
+    # Create test methods for each box
+    for box_title, box_links in boxes.items():
+        safe_name = re.sub(r'[^a-zA-Z0-9_]', '_', box_title.lower())
+        method_name = f"test_box_{safe_name}"
+        setattr(HomePageTest, method_name, _create_box_test(box_title, box_links))
+
+except Exception:
+    # Graceful fallback if YAML can't be read
+    pass

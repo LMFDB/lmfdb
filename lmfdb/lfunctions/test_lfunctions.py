@@ -94,9 +94,9 @@ class LfunctionTest(LmfdbTest):
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-176e2-1.1-c1e2-0-4' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/', follow_redirects=True)
+        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.1/a/', follow_redirects=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-        assert 'Elliptic curve 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.1879.1-1.1-a' in L.get_data(as_text=True)
         assert '4-1879e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/', follow_redirects=True)
@@ -586,6 +586,15 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27/a/')
         assert 'not in the database' in L.get_data(as_text=True)
+
+    # ------------------------------------------------------
+    # Testing congruences in search
+    # ------------------------------------------------------
+
+    def test_trace_search_mod_q(self):
+        L = self.tc.get('L/rational?conductor=37&degree=2&search_type=Traces&an_constraints=a11+%3D1&an_modulo=3&view_modp=reductions')
+        assert '2-37-1.1-c1-0-1' in L.get_data(as_text=True)
+        assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
 
     # ------------------------------------------------------
     # Testing units not tested above

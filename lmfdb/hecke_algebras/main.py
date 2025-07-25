@@ -283,12 +283,12 @@ def render_hecke_algebras_webpage_l_adic(**args):
     if 'orbit_label' in args and 'prime' in args:
         lab = clean_input(args.get('orbit_label'))
         if lab != args.get('orbit_label'):
-            base_lab = ".".join([split(lab)[i] for i in [0,1,2]])
+            base_lab = ".".join(split(lab)[i] for i in [0,1,2])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
         try:
             ell = int(args.get('prime'))
         except ValueError:
-            base_lab = ".".join([split(lab)[i] for i in [0,1,2]])
+            base_lab = ".".join(split(lab)[i] for i in [0,1,2])
             return redirect(url_for('.render_hecke_algebras_webpage', label=base_lab), 301)
         data = db.hecke_ladic.lucky({'orbit_label': lab, 'ell': ell})
     if data is None:
@@ -349,7 +349,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
     info['l_adic_orbits'] = res
     info['level'] = int(data['level'])
     info['weight'] = int(data['weight'])
-    info['base_lab'] = ".".join([split(data['orbit_label'])[i] for i in [0,1,2]])
+    info['base_lab'] = ".".join(split(data['orbit_label'])[i] for i in [0,1,2])
     info['orbit_label'] = str(data['orbit_label'])
     info['ell'] = int(data['ell'])
 
@@ -455,7 +455,7 @@ def download_hecke_algebras_full_lists_gen(**args):
 
     outstr = c + 'Hecke algebra for Gamma0(%s) and weight %s, orbit label %s. List of generators for the algebra. Downloaded from the LMFDB on %s. \n\n' % (res['level'], res['weight'], res['orbit_label'], mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry([list(k) for k in matrix(sqrt(len(r)), sqrt(len(r)), r).rows()]) for r in [[int(i) for i in j] for j in res['Zbasis']] ])
+    outstr += ",\\\n".join(entry([list(k) for k in matrix(sqrt(len(r)), sqrt(len(r)), r).rows()]) for r in [[int(i) for i in j] for j in res['Zbasis']])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
@@ -491,7 +491,7 @@ def download_hecke_algebras_full_lists_mod_op(**args):
 
     outstr = c + ' List of Hecke operators T_1, ..., T_%s mod %s for orbit %s index %s downloaded from the LMFDB on %s. \n\n' % (len(res['operators']), ell, label, index, mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join([entry(r) for r in res['operators']])
+    outstr += ",\\\n".join(entry(r) for r in res['operators'])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'

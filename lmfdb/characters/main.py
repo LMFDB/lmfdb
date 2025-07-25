@@ -587,7 +587,7 @@ def _dir_knowl_data(label, orbit=False):
         parts = label.split('.')
         modulus = int(parts[0])
         if orbit:
-            assert(modulus <= ORBIT_MAX_MOD)
+            assert (modulus <= ORBIT_MAX_MOD)
             args = {'type': 'Dirichlet', 'modulus': modulus, 'orbit_label': parts[1]}
         else:
             number = int(parts[1])
