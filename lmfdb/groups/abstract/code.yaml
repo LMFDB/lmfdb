@@ -30,13 +30,11 @@ presentation:
   magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens}); AssignNames(~G, {magma_assign});
   gap: G := PcGroupCode({pccode},{ordgp}); {gap_assign}
 
-
 permutation:
   comment: Define the group as a permutation group
   magma: G := PermutationGroup< {deg} | {perms} >;
   gap: G := Group( {perms} );
   sage: G = PermutationGroup([{perms_sage}])
-
 
 GLZ:
   comment: Define the group as a matrix group with coefficients in Z
@@ -213,9 +211,12 @@ group_statistics:
 
 conjugacy_classes:
   comment: List of conjugacy classes of the group
-  magma: ConjugacyClasses(G);  // Output not guaranteed to exactly match the LMFDB table
-  gap:  ConjugacyClasses(G);   # Output not guaranteed to exactly match the LMFDB table
-  sage: G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
+  magma: |
+    ConjugacyClasses(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap: |
+    ConjugacyClasses(G);   # Output not guaranteed to exactly match the LMFDB table
+  sage: |
+    G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
 
 character_statistics:
   comment:  Compute statistics about the characters of G
@@ -240,6 +241,7 @@ abelianization:
   comment:  The abelianization of the group
   magma:  quo< G | CommutatorSubgroup(G) >;
   gap:  FactorGroup(G, DerivedSubgroup(G));
+  sage:  G.quotient(G.commutator())
 
 schur_multiplier:
   comment:  The Schur multiplier of the group
