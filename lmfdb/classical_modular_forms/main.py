@@ -803,6 +803,7 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool(info, query, 'is_self_dual')
+    parse_bool(info, query, 'is_cuspidal')
     if info.get('is_maximal_largest'):
         if info['is_maximal_largest'] == 'maximal':
             query['is_maximal'] = True
@@ -888,6 +889,7 @@ newform_columns = SearchColumns([
     CheckCol("is_twist_minimal", "cmf.twist_minimal", "Twist minimal", default=False),
     CheckCol("is_largest", "cmf.maximal", "Largest", default=False),
     CheckCol("is_maximal", "cmf.maximal", "Maximal", default=False),
+    CheckCol("is_cuspidal", "cmf.cusp_form", "Cusp", default=False),
     LinkCol("minimal_twist", "cmf.minimal_twist", "Minimal twist", url_for_label, default=False),
     MathCol("inner_twist_count", "cmf.inner_twist_count", "Inner twists", default=False),
     MathCol("analytic_rank", "cmf.analytic_rank", "Rank*", default=False),
@@ -907,7 +909,7 @@ newform_columns = SearchColumns([
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       download_col="qexp_display")],
-    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_largest', 'is_maximal', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
+    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_largest', 'is_maximal', 'is_rm', 'is_self_dual', 'is_twist_minimal', 'is_cuspidal', 'label', 'level', 'minimal_twist', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.mf_newforms_eis,
@@ -1708,7 +1710,13 @@ class CMFSearchArray(SearchArray):
             label='View',
             options=[('', 'integers'),
                      ('reductions', 'reductions')])
-
+        
+        is_cuspidal = SelectBox(
+            name='is_cuspidal',
+            knowl='cmf.cusp_form',
+            options=[('yes', 'yes'), ('no', 'no'), ('', '')],
+            label='Is cuspidal')
+        
         self.browse_array = [
             [level, weight],
             [level_primes, character],
@@ -1719,13 +1727,14 @@ class CMFSearchArray(SearchArray):
             [coefficient_ring_index, hecke_ring_generator_nbound],
             [self_twist_discs, self_twist],
             [inner_twist_count, is_twist_minimal],
-            [results, projective_image]]
+            [projective_image, is_cuspidal],
+            [results]]
 
         self.refine_array = [
             [level, weight, analytic_conductor, analytic_rank, dim],
             [level_primes, character, char_primitive, char_order, is_maximal_largest],
             [coefficient_field, self_twist, self_twist_discs, inner_twist_count, is_self_dual],
-            [coefficient_ring_index, hecke_ring_generator_nbound, is_twist_minimal, projective_image]]
+            [coefficient_ring_index, hecke_ring_generator_nbound, is_twist_minimal, projective_image, is_cuspidal]]
 
         self.space_array = [
             [level, weight, analytic_conductor, dim, num_newforms],
