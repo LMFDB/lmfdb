@@ -115,6 +115,10 @@ def create_gap_assignment(genslist):
     # For GAP
     return " ".join(f"{var_name(j)} := G.{i};" for j, i in enumerate(genslist))
 
+def create_sage_gap_assignment(genslist):
+    # For Sage (using the GAP interface)
+    return " ".join(f"{var_name(j)} = G.{i};" for j, i in enumerate(genslist))
+
 
 def create_magma_assignment(G):
     used = [u - 1 for u in sorted(G.gens_used)]
@@ -2855,6 +2859,7 @@ class WebAbstractGroup(WebObj):
             used_gens = create_gens_list(self.representations["PC"]["gens"])
             gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
             magma_assign = create_magma_assignment(self)
+            sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
         else:
             gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign = None, None, None, None, None, None, None
         if "Perm" in self.representations:
@@ -2909,7 +2914,7 @@ class WebAbstractGroup(WebObj):
             nFq, Fq, LFq, LFqsplit, LFqsage = None, None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
-                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign,
                 'magma_assign': magma_assign, 'deg': deg, 'perms' : perms, 'perms_sage' : perms_sage,
                 'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
                 'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,
@@ -2920,6 +2925,7 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage,  'LFqsage': LFqsage,
         }
 
+        print("*************", self.representations["PC"]["gens"])
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
         # to display at the top of each group page.  This is computed and stored in code['code_description'].
@@ -2988,19 +2994,20 @@ class WebAbstractGroup(WebObj):
             chev_index = [t['family'] for t in self_families].index("TwistChev")
             chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
             code['code_description']['magma'] = 'G := ChevalleyGroup("'+str(self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
-        # Otherwise, check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
-        if self.abelian:
-            for lang in ['magma', 'gap']:
-                if lang not in code['code_description']:
-                    code['code_description'][lang] = 'G := AbelianGroup('+str(self.primary_abelian_invariants)+');'
-           # Sage's implementation of AbelianGroup doesn't support all the usual group functions (I'm unsure whether to add this?)
-           #if 'sage' not in code['code_description']: code['code_description']['sage'] = 'G = AbelianGroup('+str(self.primary_abelian_invariants)+')'
         # Otherwise, check if in small groups database (can then define the group G in Magma and Gap)
         if (self.label.split('.')[1].isdigit()):
             gap_id = self.label.split('.')
             for lang in ['magma', 'gap']:
                 if lang not in code['code_description']:
-                    code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'
+                    code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'        
+            if 'sage_gap' not in code['code_description']: code['code_description']['sage_gap'] = 'G = gap.SmallGroup('+gap_id[0]+', '+gap_id[1]+')'  
+        # Otherwise, check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
+        if self.abelian:
+            for lang in ['magma', 'gap']:
+                if lang not in code['code_description']:
+                    code['code_description'][lang] = 'G := AbelianGroup('+str(self.primary_abelian_invariants)+');'
+           # Sage's implementation of AbelianGroup seems to not support most of the usual group functions (probably better to not add this?)
+           #if 'sage' not in code['code_description']: code['code_description']['sage'] = 'G = AbelianGroup('+str(self.primary_abelian_invariants)+')'
         # If the group is not in a special family, we will default to showing one of the built-in group constructions (if it exists and is implemented)
         # Highest  priority: Permutation group, then PC group, then a matrix group, I guess?
         for rep in ["Perm", "PC", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
@@ -3014,6 +3021,36 @@ class WebAbstractGroup(WebObj):
                         code['code_description'][lang] = code[code_rep][lang]
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
         
+        #print("*********", code['code_description'])
+        # If no Sage top code snippet, then we resort to implementing the group G using the GAP interface in Sage
+        if ('sage' in code['code_description']) and ("gap" not in code['code_description']['sage']):
+            #print("***********", code['code_description']['sage'])
+            code['prompt'].pop('sage_gap', None)
+        else: code['prompt'].pop('sage', None)
+
+        # If our implementation of G is either as a matrix group or abelian group,
+        # then unfortunately not all the default commands in Sage and Magma will work correctly!
+        # As a (hopefully temporary) solution, we hide the code snippets which will not work with our implemention of G in the top code snippet
+        # TODO: Find a better solution for this (would it be worth converting G to a permutation group within the top code snippet?)
+        if ("MatrixGroup" in code['code_description']['sage']) and ("permutation" not in code['code_description']['sage']):
+            # Must disable all code snippets which do not work with MatrixGroup in Sage  
+            for c in ['composition_series', 'is_cyclic', 'is_elementary_abelian', 'is_pgroup', 'abelianization', 'schur_multiplier',
+                      'commutator', 'frattini_subgroup', 'fitting_subgroup', 'socle', 'derived_series', 'lower_central_series', 'upper_central_series']:
+                 code[c].pop('sage', None)
+        if ("AbelianGroup" in code['code_description']['sage']) and ("permutation" not in code['code_description']['sage']):
+            # Must disable all code snippets which do not work with AbelianGroup in Sage  
+            for c in ['composition_series', 'is_elementary_abelian', 'is_nilpotent', 'is_perfect', 'is_pgroup', 'is_polycyclic', 'is_solvable', 'is_supersolvable',
+                      'abelianization', 'schur_multiplier', 'center', 'commutator', 'frattini_subgroup', 'fitting_subgroup', 'socle',
+                      'derived_series', 'lower_central_series', 'upper_central_series']:
+                 code[c].pop('sage', None)
+        if ("MatrixGroup" in code['code_description']['magma']) and ("permutation" not in code['code_description']['magma']):
+            # Must disable all code snippets which do not work with MatrixGroup in Magma
+            for c in ['socle']: code[c].pop('magma', None)
+        if ("AbelianGroup" in code['code_description']['magma']) and ("permutation" not in code['code_description']['magma']):
+            # Must disable all code snippets which do not work with AbelianGroup in Magma
+            for c in ['radical', 'socle']: code[c].pop('magma', None)
+
+
 
         for prop in code:
             for lang in code[prop]:

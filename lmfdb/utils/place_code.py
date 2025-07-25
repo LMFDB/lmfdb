@@ -31,7 +31,8 @@ class CodeSnippet():
         # edit these when adding support for more languages
         self.comments = {'magma': '//', 'sage': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
-        self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+        self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "sage_gap": "SageMath (using Gap)",
+                           "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
 
     def place_code(self, is_top_snippet=False):
         """Return HTML string which displays code in code box, with copying functionality.
@@ -71,11 +72,12 @@ class CodeSnippet():
                 #    is_scroll_div, is_scroll_span = " max-width: 1200px;", ""
                 #    vcenter_style = ""
                 
-                if is_top_snippet: is_scroll_div = " max-width: 50%;"
-                else: is_scroll_div = " max-width: 1200px;"
+                # If is_top_snippet is True, then code snippet appears near top of page, and so max-width should be smaller
+                if is_top_snippet: max_width_style = " max-width: 50%;"
+                else: max_width_style = " max-width: 1200px;"
 
                 snippet_str += f"""
-    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: baseline; {is_scroll_div}">
+    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: baseline; {max_width_style}">
         <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 16px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
         <span class="prompt" style="{vcenter_style}">{prompt}:</span><span class="code" style="{vcenter_style}">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
