@@ -275,7 +275,7 @@ frattini_subgroup:
 
 fitting_subgroup:
   comment:  Fitting subgroup of the group G
-  magma:  Fitting(G);
+  magma:  FittingSubgroup(G);
   gap:  FittingSubgroup(G);
   sage:  G.fitting_subgroup()
 
