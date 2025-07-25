@@ -344,7 +344,7 @@ class AbvarFq_isoclass():
             return r"\F_{%s^{%s}}" % (self.p, n)
 
     def display_generator_explanation(self):
-        return self.curves and any(['a' in curve for curve in self.curves])
+        return getattr(self, "curves", None) and any(['a' in curve for curve in self.curves])
 
     @cached_method
     def endo_extensions(self):
