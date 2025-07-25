@@ -38,6 +38,7 @@ from lmfdb.characters.main import ORBIT_MAX_MOD
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
+AUTTYPE_RE = re.compile("[CE]")
 
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
@@ -537,9 +538,9 @@ def by_url_cuspidal_newform_label(level, weight, char_orbit_label, hecke_orbit):
     label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
 
-@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/E/<hecke_orbit>/")
-def by_url_eisenstein_newform_label(level, weight, char_orbit_label, hecke_orbit):
-    label = ".".join(map(str, [level, weight, char_orbit_label, "E", hecke_orbit]))
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<automorphic_type>/<hecke_orbit>/")
+def by_url_eisenstein_newform_label(level, weight, char_orbit_label, automorphic_type, hecke_orbit):
+    label = ".".join(map(str, [level, weight, char_orbit_label, automorphic_type, hecke_orbit]))
     return render_newform_webpage(label)
 
 # Backward compatibility from before 2018
@@ -580,8 +581,14 @@ def url_for_label(label):
         return abort(404, "Invalid label")
 
     slabel = label.split(".")
+    keys = ['level', 'weight', 'char_orbit_label']
+    keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE]
     if len(slabel) == 6:
         func = "cmf.by_url_embedded_newform_label"
+    elif len(slabel) == 5:
+        func = "cmf.by_url_eisenstein_newform_label"
+        keys += ['automorphic_type']
+        keytypes += [AUTTYPE_RE]
     elif len(slabel) == 4:
         func = "cmf.by_url_newform_label"
     elif len(slabel) == 3:
@@ -592,8 +599,8 @@ def url_for_label(label):
         func = "cmf.by_url_level"
     else:
         return abort(404, "Invalid label")
-    keys = ['level', 'weight', 'char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
-    keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    keys += ['hecke_orbit', 'conrey_index', 'embedding']
+    keytypes += [ALPHA_RE, POSINT_RE, POSINT_RE]
     for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")
