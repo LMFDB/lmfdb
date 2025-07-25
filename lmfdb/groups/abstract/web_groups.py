@@ -2861,7 +2861,7 @@ class WebAbstractGroup(WebObj):
             magma_assign = create_magma_assignment(self)
             sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
         else:
-            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign = None, None, None, None, None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign = None, None, None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -3021,10 +3021,8 @@ class WebAbstractGroup(WebObj):
                         code['code_description'][lang] = code[code_rep][lang]
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
         
-        #print("*********", code['code_description'])
         # If no Sage top code snippet, then we resort to implementing the group G using the GAP interface in Sage
         if ('sage' in code['code_description']) and ("gap" not in code['code_description']['sage']):
-            #print("***********", code['code_description']['sage'])
             code['prompt'].pop('sage_gap', None)
         else: code['prompt'].pop('sage', None)
 
