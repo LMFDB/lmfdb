@@ -182,7 +182,6 @@ is_supersolvable:
   sage: G.is_supersolvable()
 
 
-
 group_statistics:
   comment:  Compute statistics for the group G
   magma: |
@@ -215,7 +214,7 @@ group_statistics:
 conjugacy_classes:
   comment: List of conjugacy classes of the group
   magma: ConjugacyClasses(G);  // Output not guaranteed to exactly match the LMFDB table
-  gap:  ConjugacyClasses(G);   // Output not guaranteed to exactly match the LMFDB table
+  gap:  ConjugacyClasses(G);   # Output not guaranteed to exactly match the LMFDB table
   sage: G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
 
 character_statistics:
@@ -234,6 +233,7 @@ character_statistics:
 
 primary_decomposition:
   comment:  The primary decomposition of the group
+  magma:  PrimaryInvariants(G);
   gap:  AbelianInvariants(G);
 
 abelianization:
@@ -244,6 +244,7 @@ abelianization:
 schur_multiplier:
   comment:  The Schur multiplier of the group
   gap:  AbelianInvariantsMultiplier(G);
+  sage:  G.homology(2)
 
 commutator_length:
   comment:  The commutator length of the group
