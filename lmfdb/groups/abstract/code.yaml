@@ -39,10 +39,10 @@ presentation:
   gap: G := PcGroupCode({pccode},{ordgp}); {gap_assign}
   sage: |
     # This uses Sage's interface to GAP, as Sage (currently) has no native support for PC groups
-    G = gap.new('PcGroupCode({pccode},{ordgp});') {sage_gap_assign}
+    G = gap.new('PcGroupCode({pccode},{ordgp})'); {sage_gap_assign}
   sage_gap: |
     # This uses Sage's interface to GAP, as Sage (currently) has no native support for PC groups
-    G = gap.new('PcGroupCode({pccode},{ordgp});') {sage_gap_assign}
+    G = gap.new('PcGroupCode({pccode},{ordgp})'); {sage_gap_assign}
 
 permutation:
   comment: Define the group as a permutation group
