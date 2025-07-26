@@ -38,7 +38,7 @@ function show_code(system) {
  {{cl.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
  }} \({{cl.field.class_number()}}\).
 </p>
-    {{ place_code('field') }}
+    {{ place_code('field', is_top_snippet=True) }}
 </div>
 
 <h2>Elliptic curves in class {{cl.short_class_label}} over   {{ cl.field_knowl|safe }}</h2>

@@ -31,10 +31,13 @@ class CodeSnippet():
         # edit these when adding support for more languages
         self.comments = {'magma': '//', 'sage': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
-        self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+        self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "sage_gap": "SageMath (using Gap)",
+                           "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
 
-    def place_code(self):
-        """Return HTML string which displays code in code box, with copying functionality."""
+    def place_code(self, is_top_snippet=False):
+        """Return HTML string which displays code in code box, with copying functionality.
+           If is_top_snippet is True, then adjusts the CSS code to allow the snippet to only use a smaller amount of whitespace.
+        """
         if self.item is None:
             raise ValueError("No code to place, please init with code item")
         item = self.item
@@ -51,9 +54,16 @@ class CodeSnippet():
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])
                 sep = "\n"
+                
+                # If is_top_snippet is True, then code snippet appears near top of page,
+                # This means we should set max-width to be smaller than usual
+                # Todo: make this decision uniform for all code snippets
+                if is_top_snippet: max_width_style = " max-width: 50%;"
+                else: max_width_style = " max-width: 1200px;"
+
                 snippet_str += f"""
-    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: top">
-        <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 12px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
+    <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: baseline; {max_width_style}">
+        <span class="raw-tset-copy-btn" onclick="copycode(this)" style="max-height: 16px; margin: 3px"><img alt="Copy content" class="tset-icon"></span>
         <span class="prompt">{prompt}:</span><span class="code">{sep.join(lines)}</span>
         <div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>
     </div>
@@ -62,7 +72,7 @@ class CodeSnippet():
 
     def show_commands_box(self):
         """Display 'Show commands' box and corresponding logic"""
-        box_str = r"""<div align="right" style="float: right; margin-top:2px;">""" + "Show commands: "
+        box_str = r"""<div align="right" style="float: right; margin-top:2px; margin-left:10px;">""" + "Show commands: "
         lang_strs = []
         for lang in self.langs:
             name = self.full_names[lang] if lang in self.full_names.keys() else lang

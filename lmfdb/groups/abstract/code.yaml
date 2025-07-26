@@ -1,21 +1,35 @@
 prompt:
   magma: 'magma'
   gap: 'gap'
+  sage: 'sage'
+  sage_gap: 'sage'   # For implementing groups in SageMath, but using the GAP interface
 
 logo:
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  sage_gap: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+
 
 comment:
   magma: |
     //
   gap: |
     #
+  sage: |
+    #
+  sage_gap: |
+    #
+
 
 not-implemented:
   magma: |
     // (not yet implemented)
   gap: |
+    # (not yet implemented)
+  sage: |
+    # (not yet implemented)
+  sage_gap: |
     # (not yet implemented)
 
 
@@ -23,42 +37,343 @@ presentation:
   comment: Define the group with the given generators and relations
   magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens}); AssignNames(~G, {magma_assign});
   gap: G := PcGroupCode({pccode},{ordgp}); {gap_assign}
-
+  sage: |
+    # This uses Sage's interface to GAP, as Sage (currently) has no native support for PC groups
+    G = gap.new('PcGroupCode({pccode},{ordgp})'); {sage_gap_assign}
+  sage_gap: |
+    # This uses Sage's interface to GAP, as Sage (currently) has no native support for PC groups
+    G = gap.new('PcGroupCode({pccode},{ordgp})'); {sage_gap_assign}
 
 permutation:
   comment: Define the group as a permutation group
   magma: G := PermutationGroup< {deg} | {perms} >;
   gap: G := Group( {perms} );
-
+  sage: G = PermutationGroup([{perms_sage}])
 
 GLZ:
   comment: Define the group as a matrix group with coefficients in Z
   magma: G := MatrixGroup< {nZ}, Integers() | {LZ} >;
   gap: G := Group({LZsplit});
-
+  sage: |
+    MS = MatrixSpace(Integers(), {nZ}, {nZ})
+    G = MatrixGroup({LZsage})
 
 GLFp:
   comment: Define the group as a matrix group with coefficients in GLFp
   magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
   gap: G := Group({LFpsplit});
+  sage: |
+    MS = MatrixSpace(GF({Fp}), {nFp}, {nFp})
+    G = MatrixGroup({LFpsage})
 
 GLZN:
   comment: Define the group as a matrix group with coefficients in GLZN
   magma: G := MatrixGroup< {nZN}, Integers({N}) | {LZN} >;
   gap: G := Group({LZNsplit});
+  sage: |
+    MS = MatrixSpace(Integers({N}), {nZN}, {nZN})
+    G = MatrixGroup({LZNsage})
 
 GLZq:
   comment: Define the group as a matrix group with coefficients in GLZq
   magma: G := MatrixGroup< {nZq}, Integers({Zq}) | {LZq} >;
   gap: G := Group({LZqsplit});
+  sage: |
+    MS = MatrixSpace(Integers({Zq}), {nZq}, {nZq})
+    G = MatrixGroup({LZqsage})
 
 GLFq:
   comment: Define the group as a matrix group with coefficients in GLFq
   magma: F:=GF({Fq}); al:=F.1; G := MatrixGroup< {nFq}, F | {LFq} >;
   gap: G := Group({LFqsplit});
+  sage: |
+    F = GF({Fq}); al = F.0; MS = MatrixSpace(F, {nFq}, {nFq})
+    G = MatrixGroup({LFqsage})
+
 
 transitive:
   comment: Define the group from the transitive group database
   magma: G := TransitiveGroup(d,n);
   gap: G := TransitiveGroup(d,n);
+  sage: G = TransitiveGroup(d,n)
 
+order:
+  comment: Order of the group
+  magma: Order(G);
+  gap: Order(G);
+  sage:  G.order()
+  sage_gap:  G.Order()
+
+exponent:
+  comment: Exponent of the group
+  magma: Exponent(G);
+  gap: Exponent(G);
+  sage:  G.exponent()
+  sage_gap:  G.Exponent()
+
+automorphism_group:
+  comment: Automorphism group
+  gap: AutomorphismGroup(G);
+  magma: AutomorphismGroup(G);
+  sage_gap: G.AutomorphismGroup()
+
+outer_automorphism_group:
+  comment: The outer automorphism group of G
+  gap:  FactorGroup(AutomorphismGroup(G), InnerAutomorphismGroup(G));
+
+composition_factors:
+  comment: Composition factors of the group
+  magma: CompositionFactors(G);
+  gap:  CompositionSeries(G);
+  sage:  G.composition_series()
+  sage_gap: G.CompositionSeries()
+
+nilpotency_class:
+  comment:  Nilpotency class of the group
+  magma: NilpotencyClass(G);
+  gap: NilpotencyClassOfGroup(G);
+  sage_gap: G.NilpotencyClassOfGroup()
+
+derived_length:
+  comment:  Derived length of the group
+  magma:  DerivedLength(G);
+  gap: DerivedLength(G);
+  sage_gap:  G.DerivedLength()
+
+is_abelian:
+  comment:  Determine if the group G is abelian
+  magma:  IsAbelian(G);
+  gap:  IsAbelian(G);
+  sage: G.is_abelian()
+  sage_gap:  G.IsAbelian()
+
+is_cyclic:
+  comment:  Determine if the group G is cyclic
+  magma:  IsCyclic(G);
+  gap:  IsCyclic(G);
+  sage: G.is_cyclic()
+  sage_gap:  G.IsCyclic()
+
+is_elementary_abelian:
+  comment:  Determine if the group G is elementary abelian
+  magma: IsElementaryAbelian(G);
+  gap: IsElementaryAbelian(G);
+  sage: G.is_elementary_abelian()
+  sage_gap:  G.IsElementaryAbelian()
+
+is_monomial:
+  comment:  Determine if the group G is a monomial group
+  gap: IsMonomialGroup(G);
+  sage_gap:  G.IsMonomialGroup()
+
+is_nilpotent:
+  comment: Determine if the group G is nilpotent
+  magma: IsNilpotent(G);
+  gap: IsNilpotentGroup(G);
+  sage: G.is_nilpotent()
+  sage_gap:  G.IsNilpotentGroup()
+
+is_perfect:
+  comment:  Determine if the group G is perfect
+  magma:  IsPerfect(G);
+  gap: IsPerfectGroup(G);
+  sage: G.is_perfect()
+  sage_gap:  G.IsPerfect()
+
+is_pgroup:
+  comment:  Determine if the group G is a p-group
+  gap:  IsPGroup(G);
+  sage: G.is_pgroup()
+  sage_gap: G.IsPGroup()
+
+is_polycyclic:
+  comment:  Determine if the group G is polycyclic
+  gap:  IsPolycyclicGroup(G);
+  sage:  G.is_polycyclic()
+  sage_gap: G.IsPolycyclicGroup()
+  
+is_simple:
+  comment:  Determine if the group G is simple
+  magma: IsSimple(G);
+  gap:  IsSimpleGroup(G);
+  sage_gap:  G.IsSimpleGroup()
+
+is_solvable:
+  comment: Determine if the group G is solvable
+  magma:  IsSolvable(G);
+  gap: IsSolvableGroup(G);
+  sage:  G.is_solvable()
+  sage_gap:  G.IsSolvableGroup()
+
+is_supersolvable:
+  comment:  Determine if the group G is supersolvable
+  gap: IsSupersolvableGroup(G);
+  sage: G.is_supersolvable()
+  sage_gap:  G.IsSupersolvableGroup()
+
+
+group_statistics:
+  comment:  Compute statistics for the group G
+  magma: |
+    // Magma code to output the first two rows of the group statistics table
+    element_orders := [Order(g) : g in G];
+    orders := Set(element_orders);
+    printf "Orders: %o\n", orders;
+    printf "Elements: %o %o\n", [#[x : x in element_orders | x eq n] : n in orders], Order(G);
+    cc_orders := [cc[1] : cc in ConjugacyClasses(G)];
+    printf "Conjugacy classes: %o %o\n", [#[x : x in cc_orders | x eq n] : n in orders], #cc_orders;
+  gap: |
+    # Gap code to output the first two rows of the group statistics table
+    element_orders := List(Elements(G), g -> Order(g));
+    orders := Set(element_orders);
+    Print("Orders: ", orders, "\n");
+    element_counts := List(orders, n -> Length(Filtered(element_orders, x -> x = n)));
+    Print("Elements: ", element_counts, " ", Size(G), "\n");
+    cc_orders := List(ConjugacyClasses(G), cc -> Order(Representative(cc)));
+    cc_counts := List(orders, n -> Length(Filtered(cc_orders, x -> x = n)));
+    Print("Conjugacy classes: ", cc_counts, " ", Length(ConjugacyClasses(G)), "\n");
+  sage: |
+    # Sage code to output the first two rows of the group statistics table
+    element_orders = [g.order() for g in G]
+    orders = sorted(list(set(element_orders)))
+    print("Orders:", orders)
+    print("Elements:", [element_orders.count(n) for n in orders], G.order())
+    cc_orders = [cc[0].order() for cc in G.conjugacy_classes()]
+    print("Conjugacy classes:", [cc_orders.count(n) for n in orders], len(cc_orders))
+
+conjugacy_classes:
+  comment: List of conjugacy classes of the group
+  magma: |
+    ConjugacyClasses(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap: |
+    ConjugacyClasses(G);   # Output not guaranteed to exactly match the LMFDB table
+  sage: |
+    G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
+  sage_gap: |
+    G.ConjugacyClasses()  # Output not guaranteed to exactly match the LMFDB table
+
+character_statistics:
+  comment:  Compute statistics about the characters of G
+  magma: |
+    // Outputs [<d_1,c_1>, <d_2,c_2>, ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    CharacterDegrees(G);
+  gap: |
+    # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    CharacterDegrees(G);
+  sage: |
+    # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    character_degrees = [c[0] for c in G.character_table()]
+    [[n, character_degrees.count(n)] for n in set(character_degrees)]
+  sage_gap:
+    # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
+    G.CharacterDegrees()
+
+
+primary_decomposition:
+  comment:  The primary decomposition of the group
+  magma:  PrimaryInvariants(G);
+  gap:  AbelianInvariants(G);
+  sage_gap: G.AbelianInvariants()
+
+abelianization:
+  comment:  The abelianization of the group
+  magma:  quo< G | CommutatorSubgroup(G) >;
+  gap:  FactorGroup(G, DerivedSubgroup(G));
+  sage:  G.quotient(G.commutator())
+
+schur_multiplier:
+  comment:  The Schur multiplier of the group
+  gap:  AbelianInvariantsMultiplier(G);
+  sage:  G.homology(2)
+  sage_gap:  G.AbelianInvariantsMultiplier()
+
+commutator_length:
+  comment:  The commutator length of the group
+  gap: CommutatorLength(G);
+  sage_gap: G.CommutatorLength()
+
+subgroups:
+  comment:  List of subgroups of the group
+  magma:  Subgroups(G);
+  gap:  AllSubgroups(G);
+  sage:   G.subgroups()
+  sage_gap: G.AllSubgroups()
+
+center:
+  comment: Center of the group
+  magma: Center(G);
+  gap:  Center(G);
+  sage:  G.center()
+  sage_gap:  G.Center()
+
+commutator_subgroup:
+  comment: Commutator subgroup of the group G
+  magma:  CommutatorSubgroup(G);
+  gap:  DerivedSubgroup(G);
+  sage:  G.commutator()
+  sage_gap:  G.DerivedSubgroup()
+
+frattini_subgroup:
+  comment: Frattini subgroup of the group G
+  magma:  FrattiniSubgroup(G);
+  gap: FrattiniSubgroup(G);
+  sage:  G.frattini_subgroup()
+  sage_gap: G.FrattiniSubgroup()
+
+fitting_subgroup:
+  comment:  Fitting subgroup of the group G
+  magma:  FittingSubgroup(G);
+  gap:  FittingSubgroup(G);
+  sage:  G.fitting_subgroup()
+  sage_gap: G.FittingSubgroup()
+
+radical:
+  comment: Radical of the group G
+  magma:  Radical(G);
+  gap: SolvableRadical(G);
+  sage_gap: G.SolvableRadical()
+
+socle:
+  comment:  Socle of the group G
+  magma: Socle(G);
+  gap:  Socle(G);
+  sage:  G.socle()
+  sage_gap: G.Socle()
+
+derived_series:
+  comment:  Derived series of the group GF
+  magma:  DerivedSeries(G);
+  gap: DerivedSeriesOfGroup(G);
+  sage: G.derived_series()
+  sage_gap:  G.DerivedSeriesOfGroup()
+
+chief_series:
+  comment:  Chief series of the group G
+  magma:  ChiefSeries(G);
+  gap: ChiefSeries(G);
+  sage_gap:  G.ChiefSeries()
+
+lower_central_series:
+  comment:  The lower central series of the group G
+  magma:  LowerCentralSeries(G);
+  gap: LowerCentralSeriesOfGroup(G);
+  sage: G.lower_central_series()
+  sage_gap:  G.LowerCentralSeriesOfGroup()
+
+upper_central_series:
+  comment: The upper central series of the group G
+  magma:  UpperCentralSeries(G);
+  gap: UpperCentralSeriesOfGroup(G);
+  sage: G.upper_central_series()
+  sage_gap:  G.UpperCentralSeriesOfGroup()
+
+character_table:
+  comment: Character table
+  magma: |
+    CharacterTable(G);  // Output not guaranteed to exactly match the LMFDB table
+  gap: |
+    CharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
+  sage: |
+    G.character_table()  # Output not guaranteed to exactly match the LMFDB table
+  sage_gap: |
+    G.CharacterTable()  # Output not guaranteed to exactly match the LMFDB table
