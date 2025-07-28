@@ -5,7 +5,7 @@ While logged into GitHub and viewing the `LMFDB/lmfdb` GitHub repository
 (or your fork of the repository), press the comma (`,`) key on your keyboard.
 
 Alternatively, click the green "Code" button, choose the "Codespaces" tab, and
-then click "Create codesace on main".
+then click "Create codespace on main".
 
 After several minutes, a virtual machine will boot up and run a private
 development server. When the text `Running on http://127.0.0.1:37777` appears,
@@ -71,7 +71,7 @@ Installation
      ```
      sage -pip install -r requirements.txt --upgrade
      ```
-   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to insall gap_packages
+   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to install gap_packages
      (see [this](https://ask.sagemath.org/question/54252/sage92-install-gap_packages-on-macos-1015-fails/) post for some documentation on
      that). This problem does seem to be resolved for Sage 9.3beta, and it is currently
      unclear if the problem exists for Sage 9.0 or 9.1.
