@@ -2922,7 +2922,7 @@ class WebAbstractGroup(WebObj):
                 'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
                 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
                 # Adding the Sage versions of the matrix group code snippets:
-                'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage,  'LFqsage': LFqsage,
+                'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
@@ -2936,12 +2936,12 @@ class WebAbstractGroup(WebObj):
         self_families = []
         # Highest priority: check if group is cyclic
         if self.cyclic:
-            for lang in ['magma', 'gap']: 
+            for lang in ['magma', 'gap']:
                 code['code_description'][lang] = "G := CyclicGroup("+str(self.order)+");"
             code['code_description']['sage'] = "G = CyclicPermutationGroup("+str(self.order)+")"
         # Check if symmetric
-        elif self.name[0]=='S' and self.name[1:].isdigit():
-            for lang in ['magma', 'gap']: 
+        elif self.name[0] == 'S' and self.name[1:].isdigit():
+            for lang in ['magma', 'gap']:
                 code['code_description'][lang] = "G := SymmetricGroup("+self.name[1:]+");"
             code['code_description']['sage'] = "G = SymmetricGroup("+self.name[1:]+")"
         # Check if dihedral
@@ -2950,8 +2950,8 @@ class WebAbstractGroup(WebObj):
             code['code_description']['gap'] = "G := DihedralGroup("+str(self.order)+");"     # GAP D(n) has order n
             code['code_description']['sage'] = "G = DihedralGroup("+str(self.order/2)+")"    # Sage D(n) has order 2n
         # Check if alternating
-        elif self.name[0]=='A' and self.name[1:].isdigit():
-            for lang in ['magma', 'gap']: 
+        elif self.name[0] == 'A' and self.name[1:].isdigit():
+            for lang in ['magma', 'gap']:
                 code['code_description'][lang] = "G := AlternatingGroup("+self.name[1:]+");"
             code['code_description']['sage'] = "G = AlternatingGroup("+self.name[1:]+")"
         else:
@@ -2997,8 +2997,9 @@ class WebAbstractGroup(WebObj):
             gap_id = self.label.split('.')
             for lang in ['magma', 'gap']:
                 if lang not in code['code_description']:
-                    code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'        
-            if 'sage_gap' not in code['code_description']: code['code_description']['sage_gap'] = 'G = gap.SmallGroup('+gap_id[0]+', '+gap_id[1]+')'  
+                    code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'
+            if 'sage_gap' not in code['code_description']:
+                code['code_description']['sage_gap'] = 'G = gap.SmallGroup('+gap_id[0]+', '+gap_id[1]+')'
         # Otherwise, check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
         if self.abelian:
             for lang in ['magma', 'gap']:
@@ -3011,44 +3012,50 @@ class WebAbstractGroup(WebObj):
         for rep in ["Perm", "PC", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
             if rep in self.representations:
                 # Get the corresponding name of the code snippet in the code.yaml file, for this representation
-                if rep == "Perm": code_rep = "permutation"
-                elif rep == "PC": code_rep = "presentation"
-                else: code_rep = rep
+                if rep == "Perm":
+                    code_rep = "permutation"
+                elif rep == "PC":
+                    code_rep = "presentation"
+                else:
+                    code_rep = rep
                 for lang in code[code_rep]:
                     if lang not in code['code_description']:
                         code['code_description'][lang] = code[code_rep][lang]
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
-        
+
         # If no Sage top code snippet, then we resort to implementing the group G using the GAP interface in Sage
         if ('sage' in code['code_description']) and ("gap" not in code['code_description']['sage']):
             code['prompt'].pop('sage_gap', None)
-        else: code['prompt'].pop('sage', None)
+        else:
+            code['prompt'].pop('sage', None)
 
         # If our implementation of G is either as a matrix group or abelian group,
         # then unfortunately not all the default code snippets in Sage and Magma will work correctly!
         # As a (hopefully temporary) solution, we hide the code snippets which will not work with our implemention of G in the top code snippet
         # TODO: Find a better solution for this (would it be worth converting G to a permutation group within the top code snippet?)
         if ("MatrixGroup" in code['code_description']['sage']) and ("permutation" not in code['code_description']['sage']):
-            # Must disable all code snippets which do not work with MatrixGroup in Sage  
+            # Must disable all code snippets which do not work with MatrixGroup in Sage
             for c in ['composition_factors', 'is_cyclic', 'is_elementary_abelian', 'is_pgroup', 'abelianization', 'schur_multiplier',
                       'commutator', 'frattini_subgroup', 'fitting_subgroup', 'socle', 'derived_series', 'lower_central_series', 'upper_central_series']:
-                if c in code: code[c].pop('sage', None)
+                if c in code:
+                    code[c].pop('sage', None)
         if ("AbelianGroup" in code['code_description']['sage']) and ("permutation" not in code['code_description']['sage']):
-            # Must disable all code snippets which do not work with AbelianGroup in Sage  
+            # Must disable all code snippets which do not work with AbelianGroup in Sage
             for c in ['composition_factors', 'is_elementary_abelian', 'is_nilpotent', 'is_perfect', 'is_pgroup', 'is_polycyclic', 'is_solvable', 'is_supersolvable',
                       'abelianization', 'schur_multiplier', 'center', 'commutator', 'frattini_subgroup', 'fitting_subgroup', 'socle',
                       'derived_series', 'lower_central_series', 'upper_central_series']:
-                if c in code: code[c].pop('sage', None)
+                if c in code:
+                    code[c].pop('sage', None)
         if ("MatrixGroup" in code['code_description']['magma']) and ("permutation" not in code['code_description']['magma']):
             # Must disable all code snippets which do not work with MatrixGroup in Magma
             for c in ['socle']:
-                if c in code: code[c].pop('magma', None)
+                if c in code:
+                    code[c].pop('magma', None)
         if ("AbelianGroup" in code['code_description']['magma']) and ("permutation" not in code['code_description']['magma']):
             # Must disable all code snippets which do not work with AbelianGroup in Magma
             for c in ['radical', 'socle']:
-                if c in code: code[c].pop('magma', None)
-
-
+                if c in code:
+                    code[c].pop('magma', None)
 
         for prop in code:
             for lang in code[prop]:
