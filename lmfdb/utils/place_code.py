@@ -54,12 +54,14 @@ class CodeSnippet():
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])
                 sep = "\n"
-                
+
                 # If is_top_snippet is True, then code snippet appears near top of page,
                 # This means we should set max-width to be smaller than usual
                 # Todo: make this decision uniform for all code snippets
-                if is_top_snippet: max_width_style = " max-width: 50%;"
-                else: max_width_style = " max-width: 1200px;"
+                if is_top_snippet:
+                    max_width_style = " max-width: 50%;"
+                else:
+                    max_width_style = " max-width: 1200px;"
 
                 snippet_str += f"""
     <div class="{class_str}" style="user-select: none; margin-bottom: 12px; align-items: baseline; {max_width_style}">
