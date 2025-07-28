@@ -233,7 +233,7 @@ def index_Q():
 @g2c_page.route("/Q/random/")
 @redirect_no_cache
 def random_curve():
-    label = db.g2c_curves.random()
+    label = db.g2c_curves_new.random()
     return url_for_curve_label(label)
 
 
@@ -241,7 +241,7 @@ def random_curve():
 def interesting():
     return interesting_knowls(
         "g2c",
-        db.g2c_curves,
+        db.g2c_curves_new,
         url_for_curve_label,
         regex=re.compile(r"\d+\.[a-z]+\.\d+\.\d+"),
         title="Some interesting genus 2 curves",
@@ -269,7 +269,7 @@ def by_url_isogeny_class_discriminant(cond, alpha, disc):
     data = to_dict(request.args, search_array=G2CSearchArray())
     clabel = str(cond) + "." + alpha
     # if the isogeny class is not present in the database, return a 404 (otherwise title and bread crumbs refer to a non-existent isogeny class)
-    if not db.g2c_curves.exists({"class": clabel}):
+    if not db.g2c_curves_new.exists({"class": clabel}):
         return abort(404, f"Genus 2 isogeny class {clabel} not found in database.")
     data["title"] = f"Genus 2 curves in isogeny class {clabel} of discriminant {disc}"
     data["bread"] = get_bread([
@@ -448,7 +448,7 @@ def genus2_lookup_equation(input_str):
     except (TypeError, RuntimeError):
         raise ValueError(f'{C_str_latex} invalid genus 2 curve')
     g2 = str([str(i) for i in g2]).replace(" ", "")
-    for r in db.g2c_curves.search({"g2_inv": g2}):
+    for r in db.g2c_curves_new.search({"g2_inv": g2}):
         eqn = literal_eval(r["eqn"])
         fgD = [R(eqn[0]), R(eqn[1])]
         D = magma.HyperellipticCurve(fgD)
@@ -525,7 +525,7 @@ def genus2_jump(info):
         return redirect(url_for_isogeny_class_label(jump), 301)
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
-        c = db.g2c_curves.lucky({"Lhash": jump[1:].strip()}, projection="class")
+        c = db.g2c_curves_new.lucky({"Lhash": jump[1:].strip()}, projection="class")
         if c:
             return redirect(url_for_isogeny_class_label(c), 301)
         else:
@@ -568,7 +568,7 @@ def genus2_jump(info):
 
 
 class G2C_download(Downloader):
-    table = db.g2c_curves
+    table = db.g2c_curves_new
     title = "Genus 2 curves"
     inclusions = {
         "curve": (
@@ -624,7 +624,7 @@ g2c_columns = SearchColumns([
 ])
 
 @search_wrap(
-    table=db.g2c_curves,
+    table=db.g2c_curves_new,
     title="Genus 2 curve search results",
     err_title="Genus 2 curves search input error",
     shortcuts={"jump": genus2_jump, "download": G2C_download()},
@@ -732,8 +732,8 @@ class G2C_stats(StatsDisplay):
     """
 
     def __init__(self):
-        self.ncurves = comma(db.g2c_curves.count())
-        self.max_D = comma(db.g2c_curves.max("abs_disc"))
+        self.ncurves = comma(db.g2c_curves_new.count())
+        self.max_D = comma(db.g2c_curves_new.max("abs_disc"))
         self.disc_knowl = display_knowl(
             "g2c.abs_discriminant", title="absolute discriminant"
         )
@@ -755,7 +755,7 @@ class G2C_stats(StatsDisplay):
             % (self.ncurves, nclasses, self.disc_knowl, self.max_D)
         )
 
-    table = db.g2c_curves
+    table = db.g2c_curves_new
     baseurl_func = ".index_Q"
     knowls = {
         "num_rat_pts": "g2c.num_rat_pts",
@@ -853,7 +853,7 @@ def statistics():
 
 @g2c_page.route("/download_all/<label>")
 def download_G2C_all(label):
-    data = db.g2c_curves.lookup(label, label_col='label')
+    data = db.g2c_curves_new.lookup(label, label_col='label')
     if data is None:
         return genus2_jump_error(label, {})
     data_list = [data]

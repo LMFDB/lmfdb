@@ -312,8 +312,8 @@ def st0_group_name(name):
 
 
 def plot_from_label(label):
-    curve = db.g2c_curves.lookup(label)
-    ratpts = db.g2c_ratpts.lookup(curve['label'])
+    curve = db.g2c_curves_new.lookup(label)
+    ratpts = db.g2c_ratpts_new.lookup(curve['label'])
     min_eqn = literal_eval(curve['eqn'])
     plot = encode_plot(eqn_list_to_curve_plot(min_eqn, ratpts['rat_pts']))
     return plot
@@ -797,9 +797,9 @@ class WebG2C():
         try:
             slabel = label.split(".")
             if len(slabel) == 2:
-                curve = db.g2c_curves.lucky({"class": label})
+                curve = db.g2c_curves_new.lucky({"class": label})
             elif len(slabel) == 4:
-                curve = db.g2c_curves.lookup(label)
+                curve = db.g2c_curves_new.lookup(label)
             else:
                 raise ValueError("Invalid genus 2 label %s." % label)
         except AttributeError:
@@ -809,16 +809,16 @@ class WebG2C():
                 raise KeyError("Genus 2 isogeny class %s not found in the database." % label)
             else:
                 raise KeyError("Genus 2 curve %s not found in database." % label)
-        endo = db.g2c_endomorphisms.lookup(curve['label'])
+        endo = db.g2c_endomorphisms_new.lookup(curve['label'])
         if not endo:
             g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
             raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
-        tama = list(db.g2c_tamagawa.search({"label": curve['label']}))
+        tama = list(db.g2c_tamagawa_new.search({"label": curve['label']}))
         if len(tama) == 0:
             g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
         if len(slabel) == 4:
-            ratpts = db.g2c_ratpts.lookup(curve['label'])
+            ratpts = db.g2c_ratpts_new.lookup(curve['label'])
             if not ratpts:
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
@@ -835,7 +835,7 @@ class WebG2C():
                     g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
         nonsurj = curve.get('non_maximal_primes')
-        galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
+        galrep = list(db.g2c_galrep_new.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
         galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
         return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
 
@@ -949,7 +949,7 @@ class WebG2C():
             #TODO (?) also for the isogeny class
         else:
             # invariants specific to isogeny class
-            curves_data = list(db.g2c_curves.search({"class": curve['class']}, ['label', 'eqn']))
+            curves_data = list(db.g2c_curves_new.search({"class": curve['class']}, ['label', 'eqn']))
             if not curves_data:
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." % (curve['class'],curve['label']))
             data['curves'] = [ {"label": c['label'], "equation_formatted": min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
@@ -1013,7 +1013,7 @@ class WebG2C():
         # Properties
         self.properties = properties = [('Label', data['label'])]
         if is_curve:
-            plot_from_db = db.g2c_plots.lucky({"label": curve['label']})
+            plot_from_db = db.g2c_plots_new.lucky({"label": curve['label']})
             if (plot_from_db is None):
                 self.plot = encode_plot(eqn_list_to_curve_plot(data['min_eqn'], ratpts['rat_pts'] if ratpts else []))
             else:
