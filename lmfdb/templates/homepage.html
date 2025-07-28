@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% macro place_code(item) %}
+{% macro place_code(item, is_top_snippet=False) %}
 {% if code and code[item] %}
-{{CodeSnippet(code, item).place_code()}}
+{{ CodeSnippet(code, item).place_code(is_top_snippet=is_top_snippet) }}
 {% endif %}
 {% endmacro %}
 
