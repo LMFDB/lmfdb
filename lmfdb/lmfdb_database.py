@@ -1,4 +1,3 @@
-import datetime
 import inspect
 import os
 import shutil
@@ -358,12 +357,13 @@ class LMFDBDatabase(PostgresDatabase):
         - ``tablename`` -- the name of the table that the change is affecting
         - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
+        from lmfdb.utils.datetime_utils import utc_now_naive
         uid = self.login()
         inserter = SQL(
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        self._execute(inserter, [uid, datetime.datetime.now(datetime.UTC), tablename, operation, data])
+        self._execute(inserter, [uid, utc_now_naive(), tablename, operation, data])
 
     def verify(
         self,
