@@ -2614,7 +2614,7 @@ class WebAbstractGroup(WebObj):
                 return "not computed"
             if tex is None:
                 return f"Group of order {pos_int_and_factor(self.outer_order)}"
-            return "${tex}$"
+            return f"${tex}$"
         url = url_for("abstract.by_label", label=self.outer_group)
         if tex is None:
             tex = group_names_pretty(self.outer_group)
