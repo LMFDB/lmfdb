@@ -659,6 +659,8 @@ def create_boolean_string(gp, type="normal"):
     unknown = [prop for prop in overall_order if getattr(gp, prop, None) is None]
     if {'ab_simple', 'nab_simple'} <= set(unknown):
         unknown.remove('ab_simple')
+    if gp.abelian and gp.monomial is None:  #if abelian then monomial
+        unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
@@ -716,6 +718,11 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
         unknown.remove('nonabelian')
     if {'solvable', 'nonsolvable'} <= set(unknown):
         unknown.remove('nonsolvable')
+    prop = 'pgroup'  # if p-group, we know it is nilpotent, solvable, and supersolvable
+    if getattr(gp,prefix+prop,None) > 1:
+        unknown.remove('nilpotent')
+        unknown.remove('solvable')
+        unknown.remove('supersolvable')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
