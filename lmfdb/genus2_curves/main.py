@@ -554,7 +554,7 @@ def genus2_jump(info):
                 try:
                     f,h = unpack_hyperelliptic_polys(main_poly)
                 except ValueError as e:
-                    err_msg, jump = str(e), main_poly
+                    errmsg, jump = str(e), main_poly
                 else:
                     new_input = str(f) + "," + str(h)
                     label, eqn_str = genus2_lookup_equation(new_input)
