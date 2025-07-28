@@ -343,6 +343,9 @@ class AbvarFq_isoclass():
         else:
             return r"\F_{%s^{%s}}" % (self.p, n)
 
+    def display_generator_explanation(self):
+        return getattr(self, "curves", None) and any(['a' in curve for curve in self.curves])
+
     @cached_method
     def endo_extensions(self):
         return list(db.av_fq_endalg_factors.search({"base_label": self.label}))
