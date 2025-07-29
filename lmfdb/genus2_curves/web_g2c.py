@@ -29,6 +29,20 @@ from flask import url_for
 # Pretty print functions
 ###############################################################################
 
+def aut_grp_pretty (id):
+    _aut_grp_pretty = {
+        "2.1": "$C_2$",
+        "4.1": "$C_4$",
+        "4.2": "$C_2^2$",
+        "6.2": "$C_6$",
+        "8.3": "$D_4$",
+        "10.2": "$C_{10}$",
+        "12.4": "$D_6$",
+        "24.8": "$C_3:D_4$",
+        "48.29": r"$\GL(2,3)$",
+    }
+    return _aut_grp_pretty[id]
+
 def decimal_pretty(s, min_chars_before_decimal=1, max_chars_after_decimal=6,
                    max_chars=10):
     m = s.index(".") if "." in s else len(s)
@@ -129,11 +143,11 @@ def ec_label_class(ec_label):
     return x
 
 
-def g2c_lmfdb_label(cond, alpha, disc, num):
-    return "%s.%s.%s.%s" % (cond, alpha, disc, num)
+def g2c_lmfdb_label(cond, alpha, num):
+    return "%s.%s.%s.%s" % (cond, alpha, num)
 
 
-g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)\.(\d+)\.(\d+)')
+g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)\.(\d+)')
 
 
 def split_g2c_lmfdb_label(lab):
@@ -236,7 +250,7 @@ def eqn_list_to_curve_plot(L, rat_pts):
         plotzones.append((c, d, m, M))
     x = var('x')
     y = var('y')
-    plot = sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),(y,R[2],R[3]), aspect_ratio='automatic', plot_points=500, zorder=1) for R in plotzones)
+    plot = sum(implicit_plot(y**2 + y*h(x) - f(x), (x,R[0],R[1]),(y,R[2],R[3]), aspect_ratio='automatic', plot_points=100, zorder=1) for R in plotzones)
     xmin = min([R[0] for R in plotzones])
     xmax = max([R[1] for R in plotzones])
     ymin = min([R[2] for R in plotzones])
@@ -798,7 +812,7 @@ class WebG2C():
             slabel = label.split(".")
             if len(slabel) == 2:
                 curve = db.g2c_curves_new.lucky({"class": label})
-            elif len(slabel) == 4:
+            elif len(slabel) == 3:
                 curve = db.g2c_curves_new.lookup(label)
             else:
                 raise ValueError("Invalid genus 2 label %s." % label)
@@ -810,14 +824,15 @@ class WebG2C():
             else:
                 raise KeyError("Genus 2 curve %s not found in database." % label)
         endo = db.g2c_endomorphisms_new.lookup(curve['label'])
-        if not endo:
-            g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
-            raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
+        #if not endo:
+        #    g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
+        #    raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
         tama = list(db.g2c_tamagawa_new.search({"label": curve['label']}))
-        if len(tama) == 0:
-            g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
-            raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
-        if len(slabel) == 4:
+        #if len(tama) == 0:
+        #    g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
+        #    raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
+        if len(slabel) == 3:
+            print("lookup ratpts for "+curve['label'])
             ratpts = db.g2c_ratpts_new.lookup(curve['label'])
             if not ratpts:
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
@@ -837,7 +852,7 @@ class WebG2C():
         nonsurj = curve.get('non_maximal_primes')
         galrep = list(db.g2c_galrep_new.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
         galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
-        return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 4))
+        return WebG2C(curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve=(len(slabel) == 3))
 
     def make_object(self, curve, endo, tama, ratpts, clus, galrep, nonsurj, is_curve):
         from lmfdb.genus2_curves.main import url_for_curve_label
@@ -881,10 +896,11 @@ class WebG2C():
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
             data['igusa_clebsch_factor_latex'] = [web_latex_factored_integer(i) for i in data['igusa_clebsch']]
             data['igusa_factor_latex'] = [ web_latex_factored_integer(j) for j in data['igusa'] ]
-            data['aut_grp'] = abstract_group_display_knowl(curve['aut_grp_label'], f"${curve['aut_grp_tex']}$")
-            data['geom_aut_grp'] = abstract_group_display_knowl(curve['geom_aut_grp_label'], f"${curve['geom_aut_grp_tex']}$")
+            data['aut_grp'] = abstract_group_display_knowl(curve['aut_grp'], aut_grp_pretty(curve['aut_grp']))
+            data['geom_aut_grp'] = abstract_group_display_knowl(curve['geom_aut_grp'], aut_grp_pretty(curve['geom_aut_grp']))
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
-            data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
+            if curve.get('has_square_sha'):
+                data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             P = curve['non_solvable_places']
             if len(P):
                 sz = "except over "
@@ -896,53 +912,55 @@ class WebG2C():
             else:
                 sz = "everywhere"
             data['non_solvable_places'] = sz
-            data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
+            if curve.get('two_selmer_rank'):
+                data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['torsion_order'] = curve['torsion_order']
 
-            data['end_ring_base'] = endo['ring_base']
-            data['end_ring_geom'] = endo['ring_geom']
-            data['real_period'] = decimal_pretty(str(curve['real_period']))
-            data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve['regulator'] > -0.5 else 'unknown'
-            if data['mw_rank'] == 0 and data['mw_rank_proved']:
-                data['regulator'] = '1' # display an exact 1 when we know this
+            data['real_period'] = decimal_pretty(str(curve['real_period'])) if curve.get('real_period') else 'unknown'
+            data['regulator'] = decimal_pretty(str(curve['regulator'])) if curve.get('regulator') and curve['regulator'] > -0.5 else 'unknown'
 
             data['tamagawa_product'] = ZZ(curve['tamagawa_product']) if curve.get('tamagawa_product') else 0
             data['analytic_sha'] = ZZ(curve['analytic_sha']) if curve.get('analytic_sha') else 0
-            data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve['leading_coeff'] else 'unknown'
+            data['leading_coeff'] = decimal_pretty(str(curve['leading_coeff'])) if curve.get('leading_coeff') else 'unknown'
 
-            data['rat_pts'] = ratpts['rat_pts']
-            data['rat_pts_v'] = ratpts['rat_pts_v']
-            data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
-            data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
+            if data['mw_rank'] == 0 and data['mw_rank_proved']:
+                data['regulator'] = '1' # display an exact 1 when we know this
+            if ratpts:
+                data['rat_pts'] = ratpts['rat_pts']
+                data['rat_pts_v'] = ratpts['rat_pts_v']
+                data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
+                data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
 
-            data['mw_gens_v'] = ratpts['mw_gens_v']
-            lower = len([n for n in ratpts['mw_invs'] if n == 0])
-            upper = data['analytic_rank']
-            invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + ratpts['mw_invs']
-            if len(invs) == 0:
-                data['mw_group'] = 'trivial'
-            else:
-                data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
-            if lower >= upper:
-                data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
-                data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
+                data['mw_gens_v'] = ratpts['mw_gens_v']
+                lower = len([n for n in ratpts['mw_invs'] if n == 0])
+                upper = data['analytic_rank']
+                invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + ratpts['mw_invs']
+                if len(invs) == 0:
+                    data['mw_group'] = 'trivial'
+                else:
+                    data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+                if lower >= upper:
+                    data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
+                    data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
 
-            if curve['two_torsion_field'][0]:
-                data['two_torsion_field_knowl'] = nf_display_knowl(curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
-            else:
-                t = curve['two_torsion_field']
-                data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),transitive_group_display_knowl(f"{t[2][0]}T{t[2][1]}"))
+            if curve.get('two_torsion_field'):
+                if curve['two_torsion_field'][0]:
+                    data['two_torsion_field_knowl'] = nf_display_knowl(curve['two_torsion_field'][0], field_pretty(curve['two_torsion_field'][0]))
+                else:
+                    t = curve['two_torsion_field']
+                    data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),transitive_group_display_knowl(f"{t[2][0]}T{t[2][1]}"))
 
-            tamalist = [[item['p'], item['tamagawa_number']] for item in tama]
-            root_numbers = [[item['p'], item['local_root_number']] for item in tama]
-            data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], data['bad_lfactors'], clus, root_numbers)
-            data['galrep_table'] = galrep_table(galrep, data['torsion_order'])
+            if tama:
+                tamalist = [[item['p'], item['tamagawa_number']] for item in tama]
+                root_numbers = [[item['p'], item['local_root_number']] for item in tama]
+                data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], data['bad_lfactors'], clus, root_numbers)
+                data['galrep_table'] = galrep_table(galrep, data['torsion_order'])
 
             lmfdb_label = data['label']
-            cond, alpha, disc, num = split_g2c_lmfdb_label(lmfdb_label)
+            cond, alpha, num = split_g2c_lmfdb_label(lmfdb_label)
             self.downloads = [#('Frobenius eigenvalues to text', url_for(".download_G2C_fouriercoeffs", label=self.lmfdb_label, limit=1000)),
                           ('All stored data to text', url_for(".download_G2C_all", label=lmfdb_label)),
-                          ('Code to Magma', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='magma'))#,
+                          ('Code to Magma', url_for(".g2c_code_download", conductor=cond, iso=alpha, number=num, label=lmfdb_label, download_type='magma'))#,
                           #('Code to SageMath', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='sage')),
                           #('Code to GP', url_for(".g2c_code_download", conductor=cond, iso=alpha, discriminant=disc, number=num, label=lmfdb_label, download_type='gp'))
             ]
@@ -960,48 +978,52 @@ class WebG2C():
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
                 data['good_lfactors_pretty_with_label'] = [ (c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(2,c[0]) else '') for c in data['good_lfactors']]
 
-        # Endomorphism data over QQ:
-        data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
-        data['factorsQQ_base'] = endo['factorsQQ_base']
-        data['factorsRR_base'] = endo['factorsRR_base']
-        data['end_statement_base'] = (r"Endomorphism %s over \(\Q\):<br>" % ("ring" if is_curve else "algebra")
-            + end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None))
-
-        # Field over which all endomorphisms are defined
-        data['end_field_label'] = endo['fod_label']
-        data['end_field_poly'] = intlist_to_poly(endo['fod_coeffs'])
-        data['end_field_statement'] = end_field_statement(data['end_field_label'], data['end_field_poly'])
-
-        # Endomorphism data over QQbar:
-        data['factorsQQ_geom'] = endo['factorsQQ_geom']
-        data['factorsRR_geom'] = endo['factorsRR_geom']
-        if data['end_field_label'] != '1.1.1.1':
-            data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
-            data['end_statement_geom'] = (r"Endomorphism %s over \(\overline{\Q}\):" % ("ring" if is_curve else "algebra")
-                + end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
         data['real_geom_end_alg_name'] = real_geom_end_alg_name(curve['real_geom_end_alg'])
         data['geom_end_alg_name'] = geom_end_alg_name(curve['geom_end_alg'])
         data['end_alg_name'] = end_alg_name(curve['end_alg'])
+        data['is_simple_geom'] = curve['is_simple_geom']
+        if endo:
+            data['end_ring_base'] = endo['ring_base']
+            data['end_ring_geom'] = endo['ring_geom']
 
-        # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
-        if is_curve:
-            data['end_lattice'] = (endo['lattice'])[1:-1]
-            if data['end_lattice']:
-                data['end_lattice_statement'] = end_lattice_statement(data['end_lattice'])
+            # Endomorphism data over QQ:
+            data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')
+            data['factorsQQ_base'] = endo['factorsQQ_base']
+            data['factorsRR_base'] = endo['factorsRR_base']
+            data['end_statement_base'] = (r"Endomorphism %s over \(\Q\):<br>" % ("ring" if is_curve else "algebra")
+                + end_statement(data['factorsQQ_base'], endo['factorsRR_base'], ring=data['end_ring_base'] if is_curve else None))
 
-        # Field over which the Jacobian decomposes (base field if Jacobian is geometrically simple)
-        data['is_simple_geom'] = endo['is_simple_geom']
-        data['split_field_label'] = endo['spl_fod_label']
-        data['split_field_poly'] = intlist_to_poly(endo['spl_fod_coeffs'])
-        data['split_field_statement'] = split_field_statement(data['is_simple_geom'], data['split_field_label'], data['split_field_poly'])
+            # Field over which all endomorphisms are defined
+            data['end_field_label'] = endo['fod_label']
+            data['end_field_poly'] = intlist_to_poly(endo['fod_coeffs'])
+            data['end_field_statement'] = end_field_statement(data['end_field_label'], data['end_field_poly'])
 
-        # Elliptic curve factors for non-simple Jacobians
-        if not data['is_simple_geom']:
-            data['split_coeffs'] = endo['spl_facs_coeffs']
-            if 'spl_facs_labels' in endo and len(endo['spl_facs_labels']) == len(endo['spl_facs_coeffs']):
-                data['split_labels'] = endo['spl_facs_labels']
-            data['split_condnorms'] = endo['spl_facs_condnorms']
-            data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
+            # Endomorphism data over QQbar:
+            data['factorsQQ_geom'] = endo['factorsQQ_geom']
+            data['factorsRR_geom'] = endo['factorsRR_geom']
+            if data['end_field_label'] != '1.1.1.1':
+                data['gl2_statement_geom'] = gl2_statement_base(data['factorsRR_geom'], r'\(\overline{\Q}\)')
+                data['end_statement_geom'] = (r"Endomorphism %s over \(\overline{\Q}\):" % ("ring" if is_curve else "algebra")
+                    + end_statement(data['factorsQQ_geom'], data['factorsRR_geom'], field=r'\overline{\Q}', ring=data['end_ring_geom'] if is_curve else None))
+
+            # Endomorphism data over intermediate fields not already treated (only for curves, not necessarily isogeny invariant):
+            if is_curve:
+                data['end_lattice'] = (endo['lattice'])[1:-1]
+                if data['end_lattice']:
+                    data['end_lattice_statement'] = end_lattice_statement(data['end_lattice'])
+
+            # Field over which the Jacobian decomposes (base field if Jacobian is geometrically simple)
+            data['split_field_label'] = endo['spl_fod_label']
+            data['split_field_poly'] = intlist_to_poly(endo['spl_fod_coeffs'])
+            data['split_field_statement'] = split_field_statement(data['is_simple_geom'], data['split_field_label'], data['split_field_poly'])
+
+            # Elliptic curve factors for non-simple Jacobians
+            if not data['is_simple_geom']:
+                data['split_coeffs'] = endo['spl_facs_coeffs']
+                if 'spl_facs_labels' in endo and len(endo['spl_facs_labels']) == len(endo['spl_facs_coeffs']):
+                    data['split_labels'] = endo['spl_facs_labels']
+                data['split_condnorms'] = endo['spl_facs_condnorms']
+                data['split_statement'] = split_statement(data['split_coeffs'], data.get('split_labels'), data['split_condnorms'])
 
         # Nonsurjective primes data
         if nonsurj is None:
@@ -1095,7 +1117,7 @@ class WebG2C():
                                               g21=str(data['g2'][1]),
                                               g22=str(data['g2'][2]))))
 
-        friends.append(('L-function', data['lfunc_url']))
+        # friends.append(('L-function', data['lfunc_url']))
 
         # Breadcrumbs
         self.bread = bread = [
@@ -1106,8 +1128,7 @@ class WebG2C():
              ]
         if is_curve:
             bread += [
-                ('%s' % data['slabel'][2], url_for(".by_url_isogeny_class_discriminant", cond=data['slabel'][0], alpha=data['slabel'][1], disc=data['slabel'][2])),
-                ('%s' % data['slabel'][3], url_for(".by_url_curve_label", cond=data['slabel'][0], alpha=data['slabel'][1], disc=data['slabel'][2], num=data['slabel'][3]))
+                ('%s' % data['slabel'][2], url_for(".by_url_curve_label", cond=data['slabel'][0], alpha=data['slabel'][1], num=data['slabel'][2]))
                 ]
 
         # Title
@@ -1148,7 +1169,6 @@ class WebG2C():
         code['endos0'] = {'magma':'//Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code'}
         code['endos1'] = {'magma':'HeuristicIsGL2(C); HeuristicEndomorphismDescription(C); HeuristicEndomorphismFieldOfDefinition(C);'}
         code['endos2'] = {'magma':'HeuristicIsGL2(C : Geometric := true); HeuristicEndomorphismDescription(C : Geometric := true); HeuristicEndomorphismLatticeDescription(C);'}
-
         self._code = None
 
     def get_code(self):

@@ -165,6 +165,7 @@ function show_eqns(invstyle) {
 <div class='simp_eqn nodisplay'><td>{{ data.mw_gens_simple_table | safe }}</div>
 {% endif %}
 
+<!--
 <p>{{ KNOWL('g2c.two_torsion_field', '2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>
 <p>{{place_code('two_torsion_field')}}</p>
 
@@ -192,11 +193,15 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.has_square_sha', 'Order of &#1064;') }}:</td><td>{{data.has_square_sha}}</td></tr>
 </table>
 </p>
+-->
 
+<!--
 <h2> {{KNOWL('g2c.local_invariants', 'Local invariants')}} </h2>
 
 <p>{{ data.local_table | safe }}</p>
+-->
 
+<!--
 <h2> {{KNOWL('g2c.galois_rep', 'Galois representations')}} </h2>
 
 <p>
@@ -220,6 +225,7 @@ function show_eqns(invstyle) {
         <p>{{ data.galrep_table | safe }}</p>
     {% endif %}
 </p>
+-->
 
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 
@@ -230,39 +236,47 @@ function show_eqns(invstyle) {
 </table>
 </p>
 
-<h2 style="display: inline"> {{ KNOWL('g2c.decomposition', 'Decomposition of the Jacobian') }} </h2>
+<!-- <h2 style="display: inline"> {{ KNOWL('g2c.decomposition', 'Decomposition of the Jacobian') }} </h2> -->
 
-<!-- Description of a splitting field of minimal degree: -->
+<!-- Description of a splitting field of minimal degree:
 <p>{{data.split_field_statement|safe}}</p>
+-->
 
-<!-- Description of the splittings themselves. -->
+<!-- Description of the splittings themselves.
 <p>{{data.split_statement|safe}}</p>
+-->
 
-<!-- Code snippet -->
+<!-- Code snippet
 <p>{{place_code('decomp')}}</p>
+-->
 
-<h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2>
+<!-- <h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2> -->
 
-<!-- Description over QQ: -->
+<!-- Description over QQ:
 <p>{{data.gl2_statement_base}}</p>
 <p>{{data.end_statement_base|safe}}</p>
+ -->
 
-<!-- Description of field of definition: -->
+<!-- Description of field of definition: 
 <p>{{data.end_field_statement|safe}}</p>
+-->
 
-<!-- Description over QQbar: -->
+<!-- Description over QQbar: 
 <p>{{data.gl2_statement_geom}}</p>
 <p>{{data.end_statement_geom|safe}}</p>
+-->
 
-<!-- Remainder of the lattice: -->
+<!-- Remainder of the lattice:
 {% if data.end_lattice_statement %}
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', 'endomorphism lattice') }} by field</h3>
 <p>{{data.end_lattice_statement|safe}}</p>
 {% endif %}
+-->
 
-<!-- Code snippet -->
+<!-- Code snippet 
 <p>{{place_code('endos0')}}</p>
 <p>{{place_code('endos1')}}</p>
 <p>{{place_code('endos2')}}</p>
+-->
 
 {% endblock %}
