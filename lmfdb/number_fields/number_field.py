@@ -1237,7 +1237,7 @@ class NFSearchArray(SearchArray):
             knowl="nf.narrow_class_number",
             example="5")
         narrow_class_group = TextBox(
-            name="class_group",
+            name="narrow_class_group",
             label="Narrow class group structure",
             short_label='Narrow class group',
             knowl="nf.narrow_class_group",
