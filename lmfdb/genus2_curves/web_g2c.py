@@ -972,8 +972,8 @@ class WebG2C():
                 raise KeyError("No curves found in database for isogeny class %s of genus 2 curve %s." % (curve['class'],curve['label']))
             data['curves'] = [ {"label": c['label'], "equation_formatted": min_eqn_pretty(literal_eval(c['eqn'])), "url": url_for_curve_label(c['label'])} for c in curves_data ]
             lfunc_data = db.lfunc_lfunctions.lucky({'Lhash':str(curve['Lhash'])})
-            if not lfunc_data:
-                raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." % curve['label'])
+            # if not lfunc_data:
+            #    raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." % curve['label'])
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
                 data['good_lfactors_pretty_with_label'] = [ (c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(2,c[0]) else '') for c in data['good_lfactors']]
