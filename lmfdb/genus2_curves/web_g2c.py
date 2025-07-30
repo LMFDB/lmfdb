@@ -748,14 +748,14 @@ def ratpts_table(pts, pts_v):
     kid = 'g2c.all_rational_points' if pts_v else 'g2c.known_rational_points'
     if len(pts) == 0:
         if pts_v:
-            return 'This curve has no %s.' % display_knowl(kid, 'rational points')
+            return '<p>This curve has no %s.</p>' % display_knowl(kid, 'rational points')
         else:
-            return 'No %s for this curve.' % display_knowl(kid, 'rational points are known')
+            return '<p>No %s for this curve.</p>' % display_knowl(kid, 'rational points are known')
     spts = [point_string(P) for P in pts]
     caption = 'All points' if pts_v else 'Known points'
     tabcols = 6
     if len(pts) <= tabcols+1:
-        return r'%s: \(%s\)' % (display_knowl(kid,caption),r',\, '.join(spts))
+        return r'<p>%s: \(%s\)</p>' % (display_knowl(kid,caption),r',\, '.join(spts))
     ptstab = ['<table class="ntdata">', '<thead>', '<tr>', th_wrap(kid, caption, colspan=tabcols)]
     ptstab.extend(['</tr>', '</thead>', '<tbody>'])
     for i in range(0, len(pts), 6):
@@ -832,7 +832,6 @@ class WebG2C():
         #    g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
         #    raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
         if len(slabel) == 3:
-            print("lookup ratpts for "+curve['label'])
             ratpts = db.g2c_ratpts_new.lookup(curve['label'])
             if not ratpts:
                 g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
@@ -898,20 +897,19 @@ class WebG2C():
             data['igusa_factor_latex'] = [ web_latex_factored_integer(j) for j in data['igusa'] ]
             data['aut_grp'] = abstract_group_display_knowl(curve['aut_grp'], aut_grp_pretty(curve['aut_grp']))
             data['geom_aut_grp'] = abstract_group_display_knowl(curve['geom_aut_grp'], aut_grp_pretty(curve['geom_aut_grp']))
+            data['num_rat_pts'] = ZZ(curve['num_rat_pts'])
             data['num_rat_wpts'] = ZZ(curve['num_rat_wpts'])
             if curve.get('has_square_sha'):
                 data['has_square_sha'] = "square" if curve['has_square_sha'] else "twice a square"
             P = curve['non_solvable_places']
             if len(P):
-                sz = "except over "
+                sz = "It has no rational points over "
                 sz += ", ".join(QpName(p) for p in P)
                 last = " and"
                 if len(P) > 2:
                     last = ", and"
-                sz = last.join(sz.rsplit(",", 1))
-            else:
-                sz = "everywhere"
-            data['non_solvable_places'] = sz
+                sz = last.join(sz.rsplit(",", 1)) + "."
+                data['non_solvable_places'] = sz
             if curve.get('two_selmer_rank'):
                 data['two_selmer_rank'] = ZZ(curve['two_selmer_rank'])
             data['torsion_order'] = curve['torsion_order']
@@ -930,18 +928,18 @@ class WebG2C():
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
                 data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
-
-                data['mw_gens_v'] = ratpts['mw_gens_v']
-                lower = len([n for n in ratpts['mw_invs'] if n == 0])
-                upper = data['analytic_rank']
-                invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + ratpts['mw_invs']
-                if len(invs) == 0:
-                    data['mw_group'] = 'trivial'
-                else:
-                    data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
-                if lower >= upper:
-                    data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
-                    data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
+                if data.get('mw_gens'):
+                    data['mw_gens_v'] = ratpts['mw_gens_v']
+                    lower = len([n for n in ratpts['mw_invs'] if n == 0])
+                    upper = data['analytic_rank']
+                    invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + ratpts['mw_invs']
+                    if len(invs) == 0:
+                        data['mw_group'] = 'trivial'
+                    else:
+                        data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
+                    if lower >= upper:
+                        data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
+                        data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
 
             if curve.get('two_torsion_field'):
                 if curve['two_torsion_field'][0]:

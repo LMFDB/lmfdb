@@ -145,12 +145,19 @@ function show_eqns(invstyle) {
 
 <p>{{place_code('rat_pts')}}{{place_code('rat_pts_simp')}}</p>
 
+{% if data.num_rat_pts or not data.rat_pts_v %}
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', 'Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 <p>{{place_code('num_rat_wpts')}}</p>
+{% endif %}
 
-<p>This curve is {{ KNOWL('g2c.locally_solvable', 'locally solvable') }} {{data.non_solvable_places}}.</p>
+{% if data.non_solvable_places %}
+<p>This curve is not {{ KNOWL('g2c.locally_solvable', 'locally solvable') }}, {{data.non_solvable_places}}</p>
+{% else %}
+<p>This curve is {{ KNOWL('g2c.locally_solvable', 'locally solvable') }}.</p>
+{% endif %}
 <p>{{place_code('locally_solvable')}}</p>
 
+{% if data.mw_gens %}
 <h2> {{KNOWL('ag.mordell_weil', 'Mordell-Weil group of the Jacobian')}} </h2>
 
 <p>
@@ -163,6 +170,7 @@ function show_eqns(invstyle) {
 <div class='min_eqn'>{{ data.mw_gens_table | safe }}</div>
 <div class='proj_eqn nodisplay'><td>{{ data.mw_gens_table | safe }}</div>
 <div class='simp_eqn nodisplay'><td>{{ data.mw_gens_simple_table | safe }}</div>
+{% endif %}
 {% endif %}
 
 <!--
