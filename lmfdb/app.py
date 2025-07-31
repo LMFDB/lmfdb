@@ -53,6 +53,10 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 def is_debug_mode():
     return current_app.debug
 
+def is_tutorial_mode():
+    # $ export LMFDB_TUTORIAL=on
+    return os.environ.get("LMFDB_TUTORIAL") and os.environ.get("LMFDB_TUTORIAL").lower() == "on"
+
 # this is set here and is available for ctx_proc_userdata
 
 

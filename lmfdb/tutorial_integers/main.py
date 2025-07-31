@@ -1,0 +1,77 @@
+# This Blueprint is a toy example based upon the Integers for use in tutorials
+# Author: Steven Clontz
+
+from flask import render_template, request, url_for, redirect
+from . import integers_page, logger
+from sage.all import Integer
+from lmfdb.utils import flash_error
+from random import randrange
+
+
+def get_bread(breads=None):
+    bc = [("Integers", url_for(".index"))]
+    if breads is None:
+        return bc
+    bc.extend(b for b in breads)
+    return bc
+
+
+@integers_page.route("/", methods=["GET"])
+def index():
+    r"""
+    This gets called when this address gets loaded:
+
+    /Integers/
+    """
+    bread = get_bread()
+    return render_template("integers-index.html", title="Integers", bread=bread)
+
+
+@integers_page.route("/", methods=["POST"])
+def parse_and_redirect():
+    r"""
+    This gets called when the user submit some input in the data box of the
+    following page:
+
+    /Integers/
+
+    It then redirects to the appropriate integer page.
+    """
+    assert request.method == "POST", "request.method is assumed to be POST"
+    integer = str(request.form.get('integer', ''))
+    return redirect(url_for(".show", label=integer))
+
+
+@integers_page.route("/random", methods=["GET"])
+def random():
+    r"""
+    This gets called when this address gets loaded:
+
+    /Integers/random
+    """
+    return redirect(url_for(".show", label=randrange(-9_999_999,10_000_000)))
+
+
+@integers_page.route("/<label>", methods=["GET"])
+def show(label:str):
+    r"""
+    This gets called when an address of that kind gets loaded:
+
+    /Integers/42
+    """
+    assert request.method == "GET", "request.method is assumed to be GET"
+    try:
+        n = Integer(label)
+    except (TypeError, ValueError):
+        logger.info(f"Impossible to create a natural from input `{label}`.")
+        flash_error(f"Oops, impossible to create a natural from given input: `{label}`")
+        return redirect(url_for(".index"))
+    integer_string = f"{n:,}"
+    integer_latex = integer_string.replace(",","{,}")
+    return render_template(
+        "integers.html", 
+        integer=n,
+        integer_latex=integer_latex,
+        title=f"Integer {integer_string}",
+        bread=get_bread([(integer_string, "")]),
+    )
