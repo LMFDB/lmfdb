@@ -33,7 +33,7 @@ class Points(UploadSection):
     title = "Upload rational points on modular curves"
     intro = "To upload a single rational point, fill in the following entries."
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
-              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
+              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link),
               UTextBox("residue_field", "Residue field", "upload.modcurve.residue_field", label_for="nf_fields", label_linker=lambda label: nf_display_knowl(label, label)),
               UTextBox("jorig", "$j$-invariant", "upload.modcurve.jinv", remove_spaces=True, re=(jre, "comma separated rationals"), mathmode=True),
               UTextBox("coordinates", "Coordinates", "upload.modcurve.coordinates", remove_spaces=True, re=(coordre, "semicolon separated points, each point giving (weighted) projective coordinates separated by colons, with each coordinate specified as a comma separated list of rational numbers"), mathmode=True),
@@ -129,7 +129,7 @@ class Points(UploadSection):
             "isolated": isolated,
         }
         curvecols = ["level", "index", "genus", "name"]
-        cdata = db.gps_gl2zhat_fine.lookup(curve, curvecols)
+        cdata = db.gps_gl2zhat.lookup(curve, curvecols)
         for col, val in cdata.items():
             data["curve_" + col] = val
         if resfield == "1.1.1.1":
@@ -158,7 +158,7 @@ class PointCompleteness(UploadSection):
     title = "Rational point completeness"
     intro = "If the LMFDB's list of rational points for a modular curve is proven complete in some reference, enter it here."
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
-              UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link, cols=30, rows=3),
+              UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link, cols=30, rows=3),
               ]
 
     def verify(self, rec):
@@ -167,14 +167,14 @@ class PointCompleteness(UploadSection):
         pass
 
     def process(self, rec):
-        return [("gps_gl2zhat_fine", False, {"label": rec["curves"], "all_degree1_points_known": True})]
+        return [("gps_gl2zhat", False, {"label": rec["curves"], "all_degree1_points_known": True})]
 
 class GonalityBounds(UploadSection):
     name = "modcurve_gonality"
     title = "Gonality bounds"
     intro = "To update gonality bounds for a single curve, enter it here; these bounds will be propagated to other modular curves."
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
-              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
+              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link),
               UTextBox("q_gonality", r"$\mathbb{Q}$-gonality", "upload.modcurve.q_gonality", remove_spaces=True, natural_or_range=True),
               UTextBox("qbar_gonality", r"$\bar{\mathbb{Q}}$-gonality", "upload.modcurve.qbar_gonality", remove_spaces=True, natural_or_range=True),
               ModelTypeBox("gonal_model", "Gonal model", no_empty=False),
@@ -201,7 +201,7 @@ class GonalityBounds(UploadSection):
         else:
             qbar_low = qbar_high = ZZ(qbargon)
 
-        cur = db.gps_gl2zhat_fine.lookup(rec["curve"], ["q_gonality_bounds", "qbar_gonality_bounds"])
+        cur = db.gps_gl2zhat.lookup(rec["curve"], ["q_gonality_bounds", "qbar_gonality_bounds"])
         if not (cur["q_gonality_bounds"][0] <= q_low <= q_high <= cur["q_gonality_bounds"][1]):
             raise ValueError(f"Q-gonality bounds for {rec['curve']} inconsistent with current bounds {cur['q_gonality_bounds']}")
         if not (cur["qbar_gonality_bounds"][0] <= qbar_low <= qbar_high <= cur["qbar_gonality_bounds"][1]):
@@ -237,8 +237,8 @@ class GonalityBounds(UploadSection):
 
         # If other columns are added later, it's important that these be sorted (see lmfdb/uploads/process.py)
         columns = sorted(['label', 'q_gonality', 'q_gonality_bounds', 'qbar_gonality', 'qbar_gonality_bounds'])
-        by_table["gps_gl2zhat_fine", False] = ["|".join(line[col] for col in columns) for line in lines]
-        cols["gps_gl2zhat_fine", False] = set(columns)
+        by_table["gps_gl2zhat", False] = ["|".join(line[col] for col in columns) for line in lines]
+        cols["gps_gl2zhat", False] = set(columns)
         super().final_process(ids, F)
 
     @lazy_attribute
@@ -256,11 +256,11 @@ class Models(UploadSection):
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
               ModelTypeBox("model_type", "Model type"),
               UTextBox("equation", "Equation(s)", "upload.modcurve.model_equation"),
-              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
+              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link),
               USelectBox("maps", "Maps", "upload.modcurve.map_direction",
                          [("to", "To"),
                           ("from", "From")]),
-              UTextBox("other_curve", "Other curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
+              UTextBox("other_curve", "Other curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link),
               ModelTypeBox("other_model_type", "Other model type"),
               UTextBox("map_coordinates", "Map Definition", "upload.modcurve.map_coordinates", mathmode=True),
               ]
@@ -287,7 +287,7 @@ class Models(UploadSection):
         if rec["other_model_type"] == 1:
             if og != 0:
                 raise ValueError(f"Other curve {rec['other_curve']} does not have genus 0")
-            if db.gps_gl2zhat_fine.lookup(rec["other_curve"], "pointless") is not False:
+            if db.gps_gl2zhat.lookup(rec["other_curve"], "pointless") is not False:
                 raise ValueError("Other curve {rec['other_curve']} is not P1")
         elif not db.modcurve_models.exists({"modcurve":rec["other_curve"], "model_type": rec["other_model_type"]}):
             raise ValueError(f"Other model of type {rec['other_model_type']} for {rec['other_curve']} must exist")
@@ -375,7 +375,7 @@ class UniversalEC(UploadSection):
     title = "Universal Elliptic Curve"
     intro = "To add a model for the universal elliptic curve on a modular curve, enter it here."
     inputs = [UReferenceBox("reference", "Reference", "upload.reference"),
-              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link),
+              UTextBox("curve", "Modular curve", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link),
               ModelTypeBox("model_type", "Model type"),
               UTextBox("universal_ec", "Universal Elliptic Curve Model", "upload.modcurve.universal_ec"),
               ]
@@ -386,7 +386,7 @@ class UniversalEC(UploadSection):
             raise ValueError("Equation must be given as a list of a-invariants of length either 2 or 5")
         coarse_label, g = to_coarse_label(rec["curve"])
         if g == 0:
-            pointless = db.gps_gl2zhat_fine.lookup(coarse_label, "pointless")
+            pointless = db.gps_gl2zhat.lookup(coarse_label, "pointless")
             vars = "xyz" if pointless else "xy" # TODO: should we be using t as a coordinate here or xy?
         else:
             numvars = db.modcurve_models.lucky({"modcurve": rec["curve"], "model_type": rec["model_type"]}, "number_variables")
@@ -405,7 +405,7 @@ class UniversalEC(UploadSection):
         pass
 
     def process(self, rec):
-        return [("gps_gl2zhat_fine", False, {"label": rec["curve"], "universal_ec": rec["universal_ec"].split(","), "universal_ec_model_type": rec["model_type"]})]
+        return [("gps_gl2zhat", False, {"label": rec["curve"], "universal_ec": rec["universal_ec"].split(","), "universal_ec_model_type": rec["model_type"]})]
 
     @lazy_attribute
     def csv_template_url(self):
@@ -416,7 +416,7 @@ class MultiKnowl(UploadSection):
     title = "Additional Information on Multiple Curves"
     intro = f"While {display_knowl('doc.knowl.annotation_guidelines', 'annotations')} provide a convenient way to add information to the top or bottom of a single object's homepage, they are not as well adapted to including specialized information on a family of objects (such as $X_1(N)$).  You can use this form to link a knowl to a list of modular forms, so that it is included at the bottom of each object's homepage."
     inputs = [UTextBox("knowl", "Knowl", "upload.multi_knowl", label_linker=display_knowl),
-              UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat_fine", label_linker=modcurve_link, cols=30, rows=3),
+              UTextArea("curves", "Modular Curve(s)", "upload.modcurve.name_or_label", name_or_label_for="gps_gl2zhat", label_linker=modcurve_link, cols=30, rows=3),
               ]
     offer_csv = False
 
