@@ -127,7 +127,7 @@ def group_families(deTeX=False):
         L.insert(cox_index, ("Cox"+f[0], "$W("+f+"_{{n}})$"))
         cox_index += 1
     L.insert(cox_index, ("CoxH", "$H_{{n}}$"))
-    L.insert(cox_index+1, ("CoxI", "$I_2({n})$"))
+    L.insert(cox_index+1, ("CoxI2", "$I_2({n})$"))
 
     if deTeX:
         # Used for constructing the dropdown
@@ -220,8 +220,8 @@ def parse_family(inp, query, qfield):
         labels = list(db.gps_special_names.search({'family':'S'}, projection='label'))
         labels.remove('1.1')
         query[qfield] = {'$in':labels}
-    # Case of CoxI (return all dihedral groups D_n)
-    elif inp == 'CoxI':
+    # Case of CoxI2 (return all dihedral groups D_n)
+    elif inp == 'CoxI2':
         query["dihedral"] = True
     # Case to check if family if one of the individual irreducible Coxeter families
     elif inp[:3] == 'Cox' and len(inp) == 4:
