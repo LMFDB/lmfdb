@@ -129,8 +129,6 @@ def group_families(deTeX=False):
     L.insert(cox_index, ("CoxH", "$H_{{n}}$"))
     L.insert(cox_index+1, ("CoxI", "$I_2({n})$"))
 
-
-
     if deTeX:
         # Used for constructing the dropdown
         return [(fam, deTeX_name(name)) for (fam, name) in L]
@@ -1268,7 +1266,6 @@ def group_postprocess(res, info, query):
         elif info["family"][:3] == "Cox":
             fquery = {'$or':[{'family':'Cox'},{'family':'D'},{'family':'S'}]}
 
-
         else:
             fquery = {"family": info["family"]}
         fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
@@ -1293,10 +1290,10 @@ def group_postprocess(res, info, query):
             # Some special cases to deal with individual Coxeter families
             if (info["family"][:3] == "Cox"):
                 # Convert "S_n" family name to "W(A_{n-1})" family name
-                if name[:2]=="S_":
+                if name[:2] == "S_":
                     name = "W(A_{"+str(int(name[3:-1])-1)+"})"
                 # Convert "D_n" family name to "I_2(n)" family name
-                if name[:2]=="D_":
+                if name[:2] == "D_":
                     name = "I_2("+name[3:-1]+")"
                 # As the H_n and I_2(n) Coxeter families are not Weyl groups, we should not display these with the W(..) notation
                 if (('H' in name) or ('I' in name)) and (name[:2] == "W(") and (name[-1] == ")"):
