@@ -114,20 +114,29 @@ def group_families(deTeX=False):
     # Here, we're directly adding the individual Chevalley group families (i.e. 'A(n,q)', 'B(n,q)', ...) to the group families list
     # (doing this here to avoid manually adding new families to the data; this avoids re-duplicating data which is already stored in the database)
     chev_index = [t[0] for t in L].index("Chev")+1
-    for f in ['An','Bn','Cn','Dn','En','F4', 'G2']:
+    for f in ['An','Bn','Cn','Dn','En','F4','G2']:
         L.insert(chev_index, ("Chev"+f[0], "$"+f[0]+"({"+f[1]+"}, {q})$"))
         chev_index += 1
     twistchev_index = [t[0] for t in L].index("TwistChev")+1
     for f in ['2An','2B2','2Dn','3D4','2E6','2F4','2G2']:
         L.insert(twistchev_index, ("TwistChev"+f[:2], "$^{"+f[0]+"}{"+f[1]+"}({"+f[2]+"},{q})$"))
         twistchev_index += 1
+    # Adding the individual irreducible Coxeter group families
+    cox_index = [t[0] for t in L].index("Cox")+1
+    for f in ['A','B','D','E','F']:
+        L.insert(cox_index, ("Cox"+f[0], "$W("+f+"_{{n}})$"))
+        cox_index += 1
+    L.insert(cox_index, ("CoxH", "$H_{{n}}$"))
+    L.insert(cox_index+1, ("CoxI", "$I_2({n})$"))
+
+
 
     if deTeX:
         # Used for constructing the dropdown
         return [(fam, deTeX_name(name)) for (fam, name) in L]
 
     def hidden(fam):
-        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic"]
+        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic", "Cox"]
     L = [(fam, name, "fam_more" if hidden(fam) else "fam_always", hidden(fam)) for (fam, name) in L]
     return L
 
@@ -203,6 +212,9 @@ def parse_family(inp, query, qfield):
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Chev", 'parameters.fam':inp[4]}, projection='label'))}
     elif inp[:9] == 'TwistChev' and len(inp) == 11:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"TwistChev", 'parameters.twist':int(inp[9]), 'parameters.fam':inp[10]}, projection='label'))}
+    # Case to check if family if one of the individual irreducible Coxeter families
+    elif inp[:3] == 'Cox' and len(inp) == 4:
+        query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Cox", 'parameters.fam':inp[4]}, projection='label'))}
 
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
@@ -1239,6 +1251,10 @@ def group_postprocess(res, info, query):
         # Also special case to convert the family "TwistChevNX" to just "TwistChev" for the database query
         elif info["family"][:9] == "TwistChev":
             fquery = {"family": "TwistChev"}
+        # Convert "CoxX" to "Cox" for database query
+        elif info["family"][:3] == "Cox":
+            fquery = {"family": "Cox"}
+
 
         else:
             fquery = {"family": info["family"]}
@@ -1261,6 +1277,10 @@ def group_postprocess(res, info, query):
             if (info["family"][:9] == "TwistChev") and (len(info["family"]) == 11):
                 if name[3:5] != info["family"][9:11]:
                     continue
+            if (info["family"][:3] == "Cox") and (len(info["family"]) == 11):
+                if name[3:5] != info["family"][9:11]:
+                    continue
+
 
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
         for rec in res:
