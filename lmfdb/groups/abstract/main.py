@@ -223,7 +223,7 @@ def parse_family(inp, query, qfield):
     # Case of CoxI2 (return all dihedral groups D_n)
     elif inp == 'CoxI2':
         query["dihedral"] = True
-    # Case to check if family if one of the individual irreducible Coxeter families
+    # Case to check if family is one of the individual irreducible Coxeter families
     elif inp[:3] == 'Cox' and len(inp) == 4:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Cox", 'parameters.fam':inp[3]}, projection='label'))}
 
