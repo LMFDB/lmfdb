@@ -1298,7 +1298,7 @@ def group_postprocess(res, info, query):
                 # As the H_n and I_2(n) Coxeter families are not Weyl groups, we should not display these with the W(..) notation
                 if (('H' in name) or ('I' in name)) and (name[:2] == "W(") and (name[-1] == ")"):
                     name = name[2:-1]
-                if len(info["family"]) == 4 and info["family"][3] not in name:
+                if len(info["family"]) > 3 and info["family"][3] not in name:
                     continue
 
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
