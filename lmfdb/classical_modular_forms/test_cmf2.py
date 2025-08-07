@@ -29,7 +29,7 @@ class CmfTest(LmfdbTest):
         for label in ['212.2.k.a', '887.2.a.b']:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label), follow_redirects=True)
             assert 'q-expansion not available for newform {}'.format(label) in page.get_data(as_text=True)
-        
+
         # Test invalid labels return 404 with proper error message
         for label in ['safeboating', 'invalid.label', '11.2.a', '11.2.a.a.extra']:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label), follow_redirects=True)
