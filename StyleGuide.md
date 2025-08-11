@@ -67,7 +67,7 @@ contains other conventions and information for the development process.
 
 ## Related objects box
 
-- If an object has an L-function, all objects with the same L-function should appear (this will eventually be automated), as well as the L-function of the object itself, which should be the last entry in the related objxcts box.
+- If an object has an L-function, all objects with the same L-function should appear (this will eventually be automated), as well as the L-function of the object itself, which should be the last entry in the related objects box.
 
 ## Downloads box
 

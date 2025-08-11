@@ -5,7 +5,7 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.classical_modular_forms.web_newform import WebNewform
+from lmfdb.classical_modular_forms.web_newform import WebNewform, valid_label
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
 
@@ -148,6 +148,8 @@ class CMF_download(Downloader):
     qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
+        if not valid_label(label):
+            return abort(404, "Invalid label: %s" % label)
         if isinstance(lang, str):
             lang = self.languages.get(lang, self.languages['sage'])
         hecke_nf = self._get_hecke_nf(label)
