@@ -106,9 +106,34 @@ def deTeX_name(s):
     s = re.sub(r"[{}\\$]", "", s)
     return s
 
+# need to store different name for certain groups Magma uses nonconventional names for
+def change_name(tex,fam = None):
+    if fam is None:  # for search page results only
+        if 'GO' in tex:
+            return '$' + tex.replace('GO','Orth') +'$'
+        if 'GOPlus' in tex or 'GOMinus' in tex:
+            return '$'+ tex.replace('G','')+'$'
+        if 'GU' in tex:
+            return '$' + tex.replace('GU','Unitary') +'$'
+        if  'CO' in tex or 'CU' in tex or 'CSp' in tex or 'CSO' in tex or 'CSOPlus' in tex or 'CSOMinus' in tex or 'CSU' in tex or 'COPlus' in tex or 'COMinus' in tex:
+            return '$'+tex.replace('C','G')+'$'
+        else:
+            return '$' + tex +'$'
+    else:
+        if fam in ['GO']:
+            return tex.replace('GO','Orth')
+        if fam in ['GOPlus','GOMinus']:
+            return tex.replace('G','')
+        if fam in ['GU']:
+            return tex.replace('GU','Unitary')
+        elif fam in ['CO','CU','CSp','CSO','CSOPlus','CSOMinus','CSU','COPlus','COMinus']:
+            return tex.replace('C','G')
+        else:
+            return tex
+
 @cached_function
 def group_families(deTeX=False):
-    L = [(el["family"], el["tex_name"], el["name"]) for el in db.gps_families.search(projection=["family", "tex_name", "name"], sort=["priority"])]
+    L = [(el["family"], change_name(el["tex_name"],fam = el["family"]), el["name"]) for el in db.gps_families.search(projection=["family", "tex_name", "name"], sort=["priority"])]
     L = [(fam, name if "fam" in tex else f"${tex}$") for (fam, tex, name) in L]
 
     # Here, we're directly adding the individual Chevalley group families (i.e. 'A(n,q)', 'B(n,q)', ...) to the group families list
@@ -1275,7 +1300,7 @@ def group_postprocess(res, info, query):
 group_columns = SearchColumns([
     LinkCol("label", "group.label", "Label", get_url),
     MathCol("tex_name", "group.name", "Name"),
-    MathCol("family_name", "group.families", "Family name", contingent=lambda info: "family" in info, default=lambda info: "family" in info and info["family"] not in ["C", "S", "D", "A", "Q", "He", "Sporadic"]),
+    ProcessedCol("family_name", "group.families", "Family name", change_name, contingent=lambda info: "family" in info, default=lambda info: "family" in info and info["family"] not in ["C", "S", "D", "A", "Q", "He", "Sporadic"]),
     ProcessedCol("order", "group.order", "Order", show_factor, align="center"),
     ProcessedCol("exponent", "group.exponent", "Exponent", show_factor, align="center"),
     MathCol("nilpotency_class", "group.nilpotent", "Nilp. class", short_title="nilpotency class", default=False),
