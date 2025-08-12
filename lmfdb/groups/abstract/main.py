@@ -49,7 +49,7 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
 )
-from lmfdb.utils.search_parsing import (parse_multiset, search_parser)
+from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
@@ -104,6 +104,7 @@ def yesno(val):
 
 def deTeX_name(s):
     s = re.sub(r"[{}\\$]", "", s)
+    s = s.replace("Orth", "O").replace("Unitary", "U")
     return s
 
 @cached_function
@@ -126,8 +127,6 @@ def group_families(deTeX=False):
     for f in ['A','B','D','E','F']:
         L.insert(cox_index, ("Cox"+f[0], "$W("+f+"_{{n}})$"))
         cox_index += 1
-    L.insert(cox_index, ("CoxH", "$H_{{n}}$"))
-    L.insert(cox_index+1, ("CoxI2", "$I_2({n})$"))
 
     if deTeX:
         # Used for constructing the dropdown
@@ -212,19 +211,13 @@ def parse_family(inp, query, qfield):
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"TwistChev", 'parameters.twist':int(inp[9]), 'parameters.fam':inp[10]}, projection='label'))}
     # Searching for Coxeter families should include all dihedral groups and all symmetric S_n for n >= 2
     elif inp == 'Cox':
-        labels = list(db.gps_special_names.search({'$or':[{'family':'Cox'},{'family':'D'},{'family':'S'}]}, projection='label'))
-        labels.remove('1.1')
-        query[qfield] = {'$in':labels}
-    # Case of CoxA  (return all symmetric groups S_n for n >= 2)
-    elif inp == 'CoxA':
-        labels = list(db.gps_special_names.search({'family':'S'}, projection='label'))
-        labels.remove('1.1')
-        query[qfield] = {'$in':labels}
+        labels = list(db.gps_special_names.search({'family': {'$or': ['Cox', 'CoxH']}}, projection='label'))
+        collapse_ors(["$or", [{"dihedral":True}, {"label": {"$in": labels}}]], query)
     # Case of CoxI2 (return all dihedral groups D_n)
-    elif inp == 'CoxI2':
+    elif inp == 'CoxI':
         query["dihedral"] = True
     # Case to check if family is one of the individual irreducible Coxeter families
-    elif inp[:3] == 'Cox' and len(inp) == 4:
+    elif inp[:3] == 'Cox' and inp[3] != "H":
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Cox", 'parameters.fam':inp[3]}, projection='label'))}
 
     else:
@@ -1132,14 +1125,54 @@ def group_jump(info):
     elif len(labs) == 2:
         return redirect(url_for(".index", name=jump.replace(" ", "")))
     # by special name
+    def int_try(x):
+        if x.isdigit():
+            return int(x)
+        return x
+    def valid_params(fam, params):
+        n = ZZ(params.get("n"))
+        q = ZZ(params.get("q"))
+        if fam in ["Q", "SD", "OD"]:
+            return n.is_power_of(2)
+        if fam == "F":
+            return n.is_prime_power()
+        elif fam == "He":
+            return n > 2 and n.is_prime()
+        elif fam in ["Sp", "PSp", "SOPlus", "SOMinus", "GOPlus", "GOMinus", "OmegaPlus", "OmegaMinus", "PSOPlus", "PSOMinus", "PGOPlus", "PGOMinus", "POmegaPlus", "POmegaMinus", "SpinPlus", "SpinMinus", "CSp", "CSOPlus", "CSOMinus", "COPlus", "COMinus", "PSigmaSp", "ASigmaSp"]:
+            return n % 2 == 0
+        elif fam in ["SO", "PSO", "GO", "Omega", "PGO", "POmega", "Spin", "CSO", "CO"]:
+            return n % 2 == 1
+        elif fam == "CoxH":
+            return n in [3,4]
+        elif fam in ["Cox", "Chev"]:
+            if params["fam"] == "E":
+                return n in [6,7,8]
+            elif params["fam"] == "F":
+                return n == 4
+            elif params["fam"] == "G":
+                return n == 2
+        elif fam == "TwistChev":
+            if params["fam"] == "A":
+                return params["twist"] == 2
+            elif params["fam"] == "B":
+                return n == 2 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
+            elif params["fam"] == "D":
+                return params["twist"] == 2 or (params["twist"] == 3 and n == 4)
+            elif params["fam"] == "E":
+                return n == 6 and params["twist"] == 2
+            elif params["fam"] == "F":
+                return n == 4 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
+            elif params["fam"] == "G":
+                return n == 2 and params["twist"] == 2 and q.is_power_of(3) and not q.is_power_of(9)
     for family in db.gps_families.search():
         m = re.fullmatch(family["input"], jump)
         if m:
-            m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
+            m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items()) # convert string to int
             lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")
             if lab:
                 return redirect(url_for(".by_label", label=lab))
-            else:
+            elif valid_params(family["family"], m_dict):
+                # Only display this messages for groups that exist
                 flash_error("The group %s has not yet been added to the database." % jump)
                 return redirect(url_for(".index"))
     flash_error("%s is not a valid name for a group or subgroup; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
@@ -1253,21 +1286,23 @@ def group_postprocess(res, info, query):
     for rec in res:
         rec["tex_cache"] = tex_cache
     if "family" in info:
-        if info["family"] == "any":
+        family = info["family"]
+        if family == "any":
             fquery = {}
 
         # Special case to convert the family "ChevX" (for X = A..G) to just "Chev" for the database query
-        elif info["family"][:4] == "Chev":
+        elif family[:4] == "Chev":
             fquery = {"family": "Chev"}
         # Also special case to convert the family "TwistChevNX" to just "TwistChev" for the database query
-        elif info["family"][:9] == "TwistChev":
+        elif family[:9] == "TwistChev":
             fquery = {"family": "TwistChev"}
         # Convert "CoxX" to: ("Cox" or "S" or "D") for database query
-        elif info["family"][:3] == "Cox":
-            fquery = {'$or':[{'family':'Cox'},{'family':'D'},{'family':'S'}]}
-
+        elif family == "Cox":
+            fquery = {"family": {"$or": ["Cox", "CoxH", "CoxI"]}}
+        elif family[:3] == "Cox" and family[3] not in "HI":
+            fquery = {"family": "Cox"}
         else:
-            fquery = {"family": info["family"]}
+            fquery = {"family": family}
         fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
         fquery["label"] = {"$in":[rec["label"] for rec in res]}
         special_names = defaultdict(list)
@@ -1281,24 +1316,14 @@ def group_postprocess(res, info, query):
 
             # Special case to deal with individual Chevalley families
             # (e.g. querying the "A(n,q)" family should ensure the "B(n,q)" family names don't show up under "Family name" search column)
-            if (info["family"][:4] == "Chev") and (len(info["family"]) == 5):
-                if name[0] != info["family"][4]:
+            if (family[:4] == "Chev") and (len(family) == 5):
+                if name[0] != family[4]:
                     continue
-            if (info["family"][:9] == "TwistChev") and (len(info["family"]) == 11):
-                if name[3:5] != info["family"][9:11]:
+            elif (family[:9] == "TwistChev") and (len(family) == 11):
+                if name[3:5] != family[9:11]:
                     continue
-            # Some special cases to deal with individual Coxeter families
-            if (info["family"][:3] == "Cox"):
-                # Convert "S_n" family name to "W(A_{n-1})" family name
-                if name[:2] == "S_":
-                    name = "W(A_{"+str(int(name[3:-1])-1)+"})"
-                # Convert "D_n" family name to "I_2(n)" family name
-                if name[:2] == "D_":
-                    name = "I_2("+name[3:-1]+")"
-                # As the H_n and I_2(n) Coxeter families are not Weyl groups, we should not display these with the W(..) notation
-                if (('H' in name) or ('I' in name)) and (name[:2] == "W(") and (name[-1] == ")"):
-                    name = name[2:-1]
-                if len(info["family"]) > 3 and info["family"][3] not in name:
+            elif (fam == "Cox" and family[:3] == "Cox" and len(family) == 4):
+                if params["fam"] != family[3]:
                     continue
 
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
@@ -2926,7 +2951,7 @@ class GroupsSearchArray(SearchArray):
         )
         family = SelectBox(
             name="family",
-            options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
+            options=[("", ""), ("any", "any")] + group_families(deTeX=True),
             knowl="group.families",
             label="Family",
         )
