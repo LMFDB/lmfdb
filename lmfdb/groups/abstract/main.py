@@ -1132,10 +1132,12 @@ def group_jump(info):
     elif len(labs) == 2:
         return redirect(url_for(".index", name=jump.replace(" ", "")))
     # by special name
+
     def int_try(x):
         if x.isdigit():
             return int(x)
         return x
+
     def valid_params(fam, params):
         n = ZZ(params.get("n"))
         q = ZZ(params.get("q"))
