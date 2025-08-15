@@ -1714,7 +1714,7 @@ class CMFSearchArray(SearchArray):
         is_cuspidal = SelectBox(
             name='is_cuspidal',
             knowl='cmf.cusp_form',
-            options=[('yes', 'yes'), ('no', 'no'), ('', '')],
+            options=[('yes', 'yes'), ('no', 'no'), ('Any', '')],
             label='Is cuspidal')
         
         self.browse_array = [
