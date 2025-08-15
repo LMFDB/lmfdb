@@ -602,18 +602,18 @@ def raw_typeset_qexp(coeffs_list,
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
 
-    def rawtset_coeff(i, coeffs):
-        poly = R(coeffs)
+    def rawtset_coeff(i, coeffs, pivot=1):
+        poly = R(coeffs) if i > 0 else R(coeffs.numerator())
         if poly == 0:
             return "", ""
-        rawq = f" * q^{i}" if i > 1 else " * q"
-        tsetq = f" q^{{{i}}}" if i > 1 else " q"
+        rawq = f" * q^{i}" if i > 1 else " * q" if i == 1 else ""
+        tsetq = f" q^{{{i}}}" if i > 1 else " q" if i == 1 else ""
         raw = str(poly)
-        if poly in [1, -1]:
+        if poly in [1, -1] and (i > 0):
             rawq = f"q^{i}" if i > 1 else "q"
             if poly == -1:
                 return minus + rawq, minus + tsetq
-            elif i > 1:
+            elif i > pivot:
                 return plus + rawq, plus + tsetq
             else:
                 return rawq, tsetq
@@ -622,6 +622,9 @@ def raw_typeset_qexp(coeffs_list,
                 poly,
                 coeff_compress_threshold,
                 decreasing=True)
+            if (i == 0) and (coeffs.denominator() != 1):
+                tset = f"\\frac{{" + tset + f"}}{{{coeffs.denominator()}}}"
+                raw += f"/{coeffs.denominator()}"
         if not superscript:
             raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
             tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
@@ -631,7 +634,7 @@ def raw_typeset_qexp(coeffs_list,
             if tset.endswith(var):
                 tset += "_1"
         if poly.number_of_terms() == 1:
-            if i > 1:
+            if i > pivot:
                 if raw.startswith('-'):
                     raw = minus + raw[1:]
                 else:
@@ -640,7 +643,7 @@ def raw_typeset_qexp(coeffs_list,
         else:
             tset = f"({tset})"
             raw = f"({raw})"
-            if i > 1:
+            if i > pivot:
                 raw = plus + raw
                 tset = plus + tset
         raw += rawq
@@ -651,8 +654,15 @@ def raw_typeset_qexp(coeffs_list,
     raw = ''
     add_to_tset = True
     lastt = None
+    # finding the pivot - for new cusp forms this will always be 1,
+    # but for Eisenstein series and perhaps other power series, could differ.
     for i, coeffs in enumerate(coeffs_list):
-        r, t = rawtset_coeff(i, coeffs)
+        if (coeffs != 0):
+            pivot = i
+            break
+    
+    for i, coeffs in enumerate(coeffs_list):
+        r, t = rawtset_coeff(i, coeffs, pivot=pivot)
         if t:
             lastt = t
         raw += r

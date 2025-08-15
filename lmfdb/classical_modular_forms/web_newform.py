@@ -202,7 +202,7 @@ class WebNewform():
                     zero = [0] * self.dim
                 else:
                     zero = []
-                a0 = eigenvals['a0_num']
+                a0 = eigenvals['a0_num'] / eigenvals['a0_denom']
                 # !! TODO - currently we assume a0 is integral
                 # self.qexp = [zero] + eigenvals['an']
                 self.qexp = [a0] + eigenvals['an']
