@@ -658,7 +658,7 @@ def raw_typeset_qexp(coeffs_list,
     # finding the pivot - for new cusp forms this will always be 1,
     # but for Eisenstein series and perhaps other power series, could differ.
     for i, coeffs in enumerate(coeffs_list):
-        if (coeffs != 0):
+        if not (coeffs is None) and (coeffs != 0):
             pivot = i
             break
     
