@@ -595,6 +595,7 @@ def raw_typeset_qexp(coeffs_list,
                      var=r"\beta",
                      final_rawvar='b',
                      superscript=False,
+                     a0_denom=1,
                      **kwargs):
     plus = r" + "
     minus = r" - "
@@ -603,7 +604,7 @@ def raw_typeset_qexp(coeffs_list,
     R = PolynomialRing(ZZ, rawvar)
 
     def rawtset_coeff(i, coeffs, pivot=1):
-        poly = R(coeffs) if i > 0 else R(coeffs.numerator())
+        poly = R(coeffs)
         if poly == 0:
             return "", ""
         rawq = f" * q^{i}" if i > 1 else " * q" if i == 1 else ""
@@ -622,9 +623,9 @@ def raw_typeset_qexp(coeffs_list,
                 poly,
                 coeff_compress_threshold,
                 decreasing=True)
-            if (i == 0) and (coeffs.denominator() != 1):
-                tset = f"\\frac{{" + tset + f"}}{{{coeffs.denominator()}}}"
-                raw += f"/{coeffs.denominator()}"
+            if (i == 0) and (a0_denom != 1):
+                tset = f"\\frac{{" + tset + f"}}{{{a0_denom}}}"
+                raw += f"/{a0_denom}"
         if not superscript:
             raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
             tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")

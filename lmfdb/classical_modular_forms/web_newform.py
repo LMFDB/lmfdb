@@ -202,10 +202,9 @@ class WebNewform():
                     zero = [0] * self.dim
                 else:
                     zero = []
-                a0 = eigenvals['a0_num'] / eigenvals['a0_denom']
-                # !! TODO - currently we assume a0 is integral
-                # self.qexp = [zero] + eigenvals['an']
-                self.qexp = [a0] + eigenvals['an']
+                a0_num = eigenvals['a0_num']
+                # This is only the numerator, has to add the denominator
+                self.qexp = [a0_num] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
                 # This is not enough, for some reason
@@ -1233,14 +1232,14 @@ function switch_basis(btype) {
                         out[e] += c
                     return out
                 coeffs = [to_list(data) for data in self.qexp[:prec]]
-                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
+                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z', a0_denom=self.a0_denom)
             elif self.single_generator:
                 var = str(self._PrintRing.gen(0))
-                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
+                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0], a0_denom=self.a0_denom)
             else:
                 # in this case str(self._PrintRing.gen(0)) = beta1
                 # and thus the extra case
-                return raw_typeset_qexp(self.qexp[:prec])
+                return raw_typeset_qexp(self.qexp[:prec], a0_denom=self.a0_denom)
 
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
