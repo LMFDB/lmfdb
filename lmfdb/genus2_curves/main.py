@@ -695,7 +695,7 @@ class G2C_stats(StatsDisplay):
         stats_url = url_for(".statistics")
         g2c_knowl = display_knowl("g2c.g2curve", title="genus 2 curves")
         return (
-            r'The database currently contains %s %s over $\Q$ of %s up to %s and %s up to %.3g.  Here are some <a href="%s">further statistics</a>. THIS DATA IS CURRENTLY PROVISIONAL, LABELS MAY CHANGE!'
+            r'The database currently contains %s %s over $\Q$ of %s up to %s and %s up to %.3g.  Here are some <a href="%s">further statistics</a>. <b>This data is provisional, labels may change!</b>'
             % (self.ncurves, g2c_knowl, self.cond_knowl, "$2^{20}$" if self.max_cond == 2**20 else comma(self.max_cound), self.disc_knowl, self.max_disc, stats_url)
         )
 
@@ -703,7 +703,7 @@ class G2C_stats(StatsDisplay):
     def summary(self):
         nclasses = comma(db.lfunc_instances.count({"type": "G2Q"}))
         return (
-            "The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s. THIS DATA IS CURRENTLY PROVISIONAL, LABELS MAY CHANGE!"
+            "The database currently contains %s genus 2 curves in %s isogeny classes, with %s at most %s. <b>This data is provisional, labels may change!</b>"
             % (self.ncurves, nclasses, self.cond_knowl, self.max_cond)
         )
 
