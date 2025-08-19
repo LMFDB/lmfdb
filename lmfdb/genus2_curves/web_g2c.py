@@ -928,7 +928,7 @@ class WebG2C():
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
                 data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
-                if data.get('mw_gens'):
+                if ratpts.get('mw_gens'):
                     data['mw_gens_v'] = ratpts['mw_gens_v']
                     lower = len([n for n in ratpts['mw_invs'] if n == 0])
                     upper = data['analytic_rank']
