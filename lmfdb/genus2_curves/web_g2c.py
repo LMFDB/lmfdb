@@ -4,7 +4,7 @@ import os
 import re
 import yaml
 from lmfdb import db
-from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
+from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty, raw_typeset_int,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
                          display_knowl, web_latex_factored_integer, integer_squarefree_part, integer_prime_divisors)
 from lmfdb.lfunctions.LfunctionDatabase import get_instances_by_Lhash_and_trace_hash
@@ -887,11 +887,14 @@ class WebG2C():
             data['class'] = curve['class']
             data['abs_disc'] = ZZ(curve['abs_disc'])
             data['disc'] = curve['disc_sign'] * data['abs_disc']
+            data['disc_pretty'] = raw_typeset_int(data['disc'])
             data['min_eqn'] = literal_eval(curve['eqn'])
             data['min_eqn_display'] = min_eqns_pretty(data['min_eqn'])
-            data['disc_factor_latex'] = web_latex_factored_integer(data['disc'])
+            data['disc_factor_latex'] = web_latex_factored_integer(curve['disc_sign'] * data['abs_disc'])
             data['igusa_clebsch'] = [ZZ(a) for a in literal_eval(curve['igusa_clebsch_inv'])]
+            data['igusa_clebsch_pretty'] = [raw_typeset_int(i) for i in data['igusa_clebsch']]
             data['igusa'] = [ZZ(a) for a in literal_eval(curve['igusa_inv'])]
+            data['igusa_pretty'] = [raw_typeset_int(i) for i in data['igusa']]
             data['g2'] = [QQ(a) for a in literal_eval(curve['g2_inv'])]
             data['igusa_clebsch_factor_latex'] = [web_latex_factored_integer(i) for i in data['igusa_clebsch']]
             data['igusa_factor_latex'] = [ web_latex_factored_integer(j) for j in data['igusa'] ]
