@@ -147,7 +147,7 @@ def g2c_lmfdb_label(cond, alpha, num):
     return "%s.%s.%s.%s" % (cond, alpha, num)
 
 
-g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)\.(\d+)')
+g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d+)')
 
 
 def split_g2c_lmfdb_label(lab):
@@ -809,7 +809,7 @@ class WebG2C():
         Constructs the WebG2C object if the curve is found, raises an error otherwise
         """
         try:
-            slabel = label.split(".")
+            slabel = split_g2c_lmfdb_label(label)
             if len(slabel) == 2:
                 curve = db.g2c_curves_new.lucky({"class": label})
             elif len(slabel) == 3:
@@ -861,7 +861,7 @@ class WebG2C():
         data = self.data = {}
 
         data['label'] = curve['label'] if is_curve else curve['class']
-        data['slabel'] = data['label'].split('.')
+        data['slabel'] = split_g2c_lmfdb_label(data['label'])
 
         # set attributes common to curves and isogeny classes here
         data['Lhash'] = str(curve['Lhash'])

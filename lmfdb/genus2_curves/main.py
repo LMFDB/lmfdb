@@ -44,7 +44,7 @@ from lmfdb.utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page
-from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label, gsp4_subgroup_data, aut_grp_pretty
+from lmfdb.genus2_curves.web_g2c import WebG2C, min_eqn_pretty, st0_group_name, end_alg_name, geom_end_alg_name, g2c_lmfdb_label, split_g2c_lmfdb_label, gsp4_subgroup_data, aut_grp_pretty
 
 modell_image_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)')
 
@@ -242,7 +242,7 @@ def ctx_gsp4_subgroup():
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:num>")
 def by_url_curve_label(cond, alpha, num):
-    label = str(cond) + "." + alpha + "." + str(num)
+    label = str(cond) + "." + alpha + str(num)
     return render_curve_webpage(label)
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/")
@@ -327,7 +327,7 @@ def render_isogeny_class_webpage(label):
 
 
 def url_for_curve_label(label):
-    slabel = label.split(".")
+    slabel = split_g2c_lmfdb_label(label)
     return url_for(
         "g2c.by_url_curve_label",
         cond=slabel[0],
@@ -342,7 +342,7 @@ def url_for_isogeny_class_label(label):
 
 
 def class_from_curve_label(label):
-    return ".".join(label.split(".")[:2])
+    return ".".join(split_g2c_lmfdb_label(label)[:2])
 
 @g2c_page.route("/Q/data/<label>")
 def G2C_data(label):
@@ -358,7 +358,7 @@ def G2C_data(label):
 ################################################################################
 
 ### Regex patterns used in lookup
-LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+")
+LABEL_RE = re.compile(r"\d+\.[a-z]+\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")
 
