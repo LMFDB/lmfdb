@@ -19,8 +19,7 @@ from lmfdb.lfunctions.main import render_lfunction_exception
 def get_bread(breads=[]):
     bc = [("L-functions", url_for("l_functions.index")),
           ("Tensor Products", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(breads)
     return bc
 
 @tensor_products_page.route("/")

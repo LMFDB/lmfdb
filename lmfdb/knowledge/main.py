@@ -293,7 +293,7 @@ def body_class():
 
 def get_bread(breads=[]):
     bc = [("Knowledge", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 
