@@ -19,7 +19,7 @@ l_range = list(prime_range(14))
 
 def get_bread(breads=[]):
     bc = [("HeckeAlgebra", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
