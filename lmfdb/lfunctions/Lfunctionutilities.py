@@ -230,11 +230,11 @@ def display_isogeny_label(L):
     if g <= 3:
         return True
     elif g == 4:
-        return any(not(p in bad_primes) for p in [2,3,5])
+        return any(p not in bad_primes for p in [2,3,5])
     elif g == 5:
-        return any(not(p in bad_primes) for p in [2,3])
+        return any(p not in bad_primes for p in [2,3])
     else: # g == 6
-        return not (2 in bad_primes)
+        return 2 not in bad_primes
 
 def lfuncDShtml(L, fmt):
     """ Returns the HTML for displaying the Dirichlet series of the L-function L.
