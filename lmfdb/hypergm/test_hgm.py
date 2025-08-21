@@ -14,7 +14,7 @@ class HGMTest(LmfdbTest):
         self.check_args("/Motive/Hypergeometric/Q/random_family", ["Hypergeometric motive family", "Defining parameters"])
 
     def test_by_family_label(self):
-        self.check_args("/Motive/Hypergeometric/Q/A4.4_B1.1.1.1", ["[4, 4]", "[1, 1, 1, 1]", "[-2, -2, -1, -1, -1, -1, 4, 4]"]) # As, Bs, gamma
+        self.check_args("/Motive/Hypergeometric/Q/A4.4_B1.1.1.1", ["[4, 4]", "[1, 1, 1, 1]", "[-2, -2, -1, -1, -1, -1, 4, 4]"])  # As, Bs, gamma
 
     def test_type(self):
         self.check_args("/Motive/Hypergeometric/Q/A18.12_B8.3.2.1.1.1", "Orthogonal")
@@ -35,14 +35,14 @@ class HGMTest(LmfdbTest):
     def test_good_euler(self):
         self.check_args("/Motive/Hypergeometric/Q/A6.4.4.3_B12.2.2.2.1", "1 + 6 T - 45 p T^{2} - 2130 p^{2} T^{3} + 268 p^{4} T^{4} - 2130 p^{6} T^{5} - 45 p^{9} T^{6} + 6 p^{12} T^{7} + p^{16} T^{8}")
 
-    ### motive pages
+    # ## motive pages
 
     def test_random_motive(self):
         self.check_args("/Motive/Hypergeometric/Q/random_motive", "Local information")
         self.not_check_args("/Motive/Hypergeometric/Q/random_motive", "Hypergeometric motive family")
 
     def test_by_motive_label(self):
-        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t9.8", ["[2, 2, 2]", "[4, 1]", "[-4, -1, -1, -1, -1, 2, 2, 2, 2]"]) # As, Bs, gamma
+        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t9.8", ["[2, 2, 2]", "[4, 1]", "[-4, -1, -1, -1, -1, 2, 2, 2, 2]"])  # As, Bs, gamma
 
     def test_type_motive(self):
         self.check_args("/Motive/Hypergeometric/Q/A4.4_B1.1.1.1/t-8.1", "Symplectic")
@@ -56,12 +56,12 @@ class HGMTest(LmfdbTest):
     def test_local_information(self):
         self.check_args("/Motive/Hypergeometric/Q/A4.2.2_B1.1.1.1/t1.9", ["3737281794192", "8013465013431125"])
 
-    ### searches
+    # ## searches
 
-    ### family searches
+    # ## family searches
 
     def test_search_degree(self):
-        self.check_args("/Motive/Hypergeometric/Q/?degree=4&search_type=Family", ["A5_B3.2.1","A10_B4.2.1"])
+        self.check_args("/Motive/Hypergeometric/Q/?degree=4&search_type=Family", ["A5_B3.2.1", "A10_B4.2.1"])
         self.not_check_args("/Motive/Hypergeometric/Q/?degree=4&search_type=Family", "A2_B1")
 
     def test_search_weight(self):
@@ -96,7 +96,7 @@ class HGMTest(LmfdbTest):
         self.check_args("/Motive/Hypergeometric/Q/?p=7&Bpperp=[4%2C2%2C1%2C1%2C1]&search_type=Family", "A9_B4.2.1.1.1")
         self.not_check_args("/Motive/Hypergeometric/Q/?p=7&Bpperp=[4%2C2%2C1%2C1%2C1]&search_type=Family", "A2.2.2.2.2.2_B14")
 
-    ### motive searches
+    # ## motive searches
 
     def test_search_conductor(self):
         self.check_args("/Motive/Hypergeometric/Q/?conductor=32&search_type=Motive", "A4_B2.1_t-8.1")
@@ -114,17 +114,17 @@ class HGMTest(LmfdbTest):
         self.check_args("/Motive/Hypergeometric/Q/?sign=-1&search_type=Motive", "A4_B1.1_t-1.1")
         self.not_check_args("/Motive/Hypergeometric/Q/?sign=-1&search_type=Motive", "A4_B2.1_t-1.1")
 
-    ### downloads
+    # ## downloads
 
-    ### friends
+    # ## friends
 
-    ### for families
+    # ## for families
 
     def test_friends_family(self):
         self.check_args("/Motive/Hypergeometric/Q/A12.6.6.6_B3.2.2.2.2.2.2.1.1", "Motives in the family")
 
-    ### for motives
+    # ## for motives
 
     def test_friends_motive(self):
-        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "Motive family A2.2.2 B4.1") # containing family
-        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "/L/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1") # L-function
+        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "Motive family A2.2.2 B4.1")  # containing family
+        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "/L/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1")  # L-function
