@@ -504,9 +504,9 @@ class WebNewform():
         if format in angles_formats:
             cc_proj.append(angles_projection)
 
-        # we wait with visualizing complex embeddings until we put Satake parameters
-        # cc_data = list(db.mf_hecke_cc_eis.search(query, projection=cc_proj))
-        cc_data = []
+        # !! TODO - Satake parameters for eisenstein newforms are still incorrect !!
+        # Write a test for these
+        cc_data = list(db.mf_hecke_cc_eis.search(query, projection=cc_proj))
         
         if not cc_data:
             self.has_complex_qexp = False
