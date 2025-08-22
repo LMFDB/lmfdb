@@ -3058,7 +3058,6 @@ class WebAbstractGroup(WebObj):
                     code[c].pop('magma', None)
 
         # Hides code snippets for language lang if no top code snippet has been defined for lang
-        remove_lang = []
         for lang in list(code['prompt']):
             if lang not in code['code_description']:
                 code['prompt'].pop(lang, None)
