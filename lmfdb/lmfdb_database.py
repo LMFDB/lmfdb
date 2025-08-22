@@ -312,15 +312,46 @@ class LMFDBDatabase(PostgresDatabase):
     In addition to the attributes on PostgresDatabase:
 
     - ``is_verifying`` -- whether this database has been configured with verifications (import from lmfdb.verify if you want this to be True)
+    
+    PARAMETERS:
+    
+    - ``config`` -- optional configuration. Can be:
+        * None (default): creates a default Configuration() object
+        * dict: a dictionary with keys 'postgresql_options', 'flask_options', 'logging_options'
+        * Configuration object: used directly
     """
     _search_table_class_ = LMFDBSearchTable
 
-    def __init__(self, **kwargs):
-        # This will write the default configuration file if needed
-        config = Configuration()
+    def __init__(self, config=None, **kwargs):
+        # If config is not provided, create the default configuration
+        if config is None:
+            # This will write the default configuration file if needed
+            config = Configuration()
+        elif isinstance(config, dict):
+            # If config is a dict, create a simple object with the required attributes
+            class ConfigWrapper:
+                def __init__(self, config_dict):
+                    # Set default values and update with provided config
+                    self.postgresql_options = config_dict.get('postgresql_options', {})
+                    self.flask_options = config_dict.get('flask_options', {})
+                    self.logging_options = config_dict.get('logging_options', {'editor': ''})
+                    
+                # Add the get methods that might be expected
+                def get_postgresql(self):
+                    return self.postgresql_options
+                    
+                def get_flask(self):
+                    return self.flask_options
+                    
+                def get_logging(self):
+                    return self.logging_options
+                    
+            config = ConfigWrapper(config)
+        # else: config is already a Configuration object, use it as-is
+        
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
-        self.__editor = config.logging_options["editor"]
+        self.__editor = config.logging_options.get("editor", "")
 
     def login(self):
         """
