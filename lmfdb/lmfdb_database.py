@@ -4,7 +4,7 @@ import shutil
 import signal
 import subprocess
 from psycopg2.sql import SQL
-from lmfdb.utils.config import Configuration
+from lmfdb.utils.config import Configuration, ConfigWrapper
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
@@ -19,28 +19,6 @@ def overrides(super_class):
         method.__signature__ = inspect.signature(super_method)
         return method
     return overrider
-
-
-class ConfigWrapper:
-    """
-    A wrapper class that provides the same interface as Configuration
-    but is initialized from a dictionary of options.
-    """
-    def __init__(self, config_dict):
-        # Set default values and update with provided config
-        self.postgresql_options = config_dict.get('postgresql_options', {})
-        self.flask_options = config_dict.get('flask_options', {})
-        self.logging_options = config_dict.get('logging_options', {'editor': ''})
-        
-    # Add the get methods that might be expected
-    def get_postgresql(self):
-        return self.postgresql_options
-        
-    def get_flask(self):
-        return self.flask_options
-        
-    def get_logging(self):
-        return self.logging_options
 
 
 class LMFDBStatsTable(PostgresStatsTable):
