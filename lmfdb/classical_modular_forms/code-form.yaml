@@ -53,8 +53,11 @@ initialize-newspace:
     from sage.modular.dirichlet import DirichletCharacter
     H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
     chi = DirichletCharacter(H, H._module({sage_genvalues}))
-    N = Newforms(chi, {k}, names="a") if {k} != 1 \
-    else ModularForms(chi, 1).cuspidal_submodule().basis()[0].qexp(100)
+    if {k} != 1:
+      N = Newforms(chi, {k}, names="a") 
+    else:
+      B = ModularForms(chi, 1).cuspidal_submodule().basis()
+      N = [B[i].qexp(100) for i in range(len(B))]
   magma: |
     //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
     chi := DirichletCharacter("{N}.{conrey_index}");
