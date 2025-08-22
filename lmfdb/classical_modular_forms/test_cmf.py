@@ -40,9 +40,13 @@ class CmfTest(LmfdbTest):
         assert "character order" in page.get_data(as_text=True)
 
     def test_dynamic_stats(self):
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/dynamic_stats?char_order=2&col1=level&buckets1=1-1000%2C1001-10000&proportions=recurse&col2=weight&buckets2=1-8%2C9-316&search_type=DynStats")
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/dynamic_stats?is_cuspidal=yes&char_order=2&col1=level&buckets1=1-1000%2C1001-10000&proportions=recurse&col2=weight&buckets2=1-8%2C9-316&search_type=DynStats")
         data = page.get_data(as_text=True)
-        for x in ["16576", "24174", "6172", "20.90%", "30.46%", "13.26%"]:
+        # The proportions are against the unconstrained number, which now includes the Eisenstein series.
+        # Therefore, we update the percentages accordingly. 
+        # Eventually should allow generation of statistics with respect to imposed constraints
+        # for x in ["16576", "24174", "6172", "20.90%", "30.46%", "13.26%"]:
+        for x in ["16576", "24174", "6172", "19.88%", "30.36%", "13.26%"]:
             assert x in data
 
     def test_sidebar(self):
