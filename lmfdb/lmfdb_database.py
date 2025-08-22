@@ -21,6 +21,28 @@ def overrides(super_class):
     return overrider
 
 
+class ConfigWrapper:
+    """
+    A wrapper class that provides the same interface as Configuration
+    but is initialized from a dictionary of options.
+    """
+    def __init__(self, config_dict):
+        # Set default values and update with provided config
+        self.postgresql_options = config_dict.get('postgresql_options', {})
+        self.flask_options = config_dict.get('flask_options', {})
+        self.logging_options = config_dict.get('logging_options', {'editor': ''})
+        
+    # Add the get methods that might be expected
+    def get_postgresql(self):
+        return self.postgresql_options
+        
+    def get_flask(self):
+        return self.flask_options
+        
+    def get_logging(self):
+        return self.logging_options
+
+
 class LMFDBStatsTable(PostgresStatsTable):
     saving = True
 
@@ -328,24 +350,7 @@ class LMFDBDatabase(PostgresDatabase):
             # This will write the default configuration file if needed
             config = Configuration()
         elif isinstance(config, dict):
-            # If config is a dict, create a simple object with the required attributes
-            class ConfigWrapper:
-                def __init__(self, config_dict):
-                    # Set default values and update with provided config
-                    self.postgresql_options = config_dict.get('postgresql_options', {})
-                    self.flask_options = config_dict.get('flask_options', {})
-                    self.logging_options = config_dict.get('logging_options', {'editor': ''})
-                    
-                # Add the get methods that might be expected
-                def get_postgresql(self):
-                    return self.postgresql_options
-                    
-                def get_flask(self):
-                    return self.flask_options
-                    
-                def get_logging(self):
-                    return self.logging_options
-                    
+            # If config is a dict, create a wrapper object with the required attributes
             config = ConfigWrapper(config)
         # else: config is already a Configuration object, use it as-is
         
