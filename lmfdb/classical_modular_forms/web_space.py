@@ -548,8 +548,8 @@ class WebNewformSpace():
         return cyc_display(self.char_order, self.char_degree, False)
 
 class WebGamma1Space():
-    def __init__(self, level, weight):
-        data = db.mf_gamma1_eis.lucky({'level':level,'weight':weight})
+    def __init__(self, level, weight, is_cuspidal=True):
+        data = db.mf_gamma1_eis.lucky({'level':level,'weight':weight, 'is_cuspidal':is_cuspidal})
         if data is None:
             raise ValueError("Space not in database")
         self.__dict__.update(data)
@@ -562,12 +562,12 @@ class WebGamma1Space():
         self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
         # By default we sort on char_orbit_index
-        newspaces = list(db.mf_newspaces_eis.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity}))
+        newspaces = list(db.mf_newspaces_eis.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity, 'is_cuspidal' : is_cuspidal}))
         self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level) if sublevel != level]
         self.oldspaces.sort()
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []
-        newforms = list(db.mf_newforms_eis.search({'level':level, 'weight':weight}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
+        newforms = list(db.mf_newforms_eis.search({'level':level, 'weight':weight, 'is_cuspidal' : is_cuspidal}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
         self.has_uncomputed_char = False
         if len(newspaces) == len([dim for dim in self.newspace_dims if dim != 0]):
             for space in newspaces:

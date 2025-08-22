@@ -192,8 +192,6 @@ class WebNewform():
                 
             else:
                 eigenvals = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
-                if 'a0_num' not in eigenvals:
-                    eigenvals['a0_num'] = 0 
             if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
                 for attr in hecke_cols:
@@ -204,6 +202,8 @@ class WebNewform():
                     zero = [0] * self.dim
                 else:
                     zero = []
+                if 'a0_num' not in eigenvals:
+                    eigenvals['a0_num'] = 0 
                 a0_num = eigenvals['a0_num']
                 # This is only the numerator, has to add the denominator
                 self.qexp = [a0_num] + eigenvals['an']
