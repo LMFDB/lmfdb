@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from markupsafe import escape
 from sage.all import (
     Factorization,
+    Integer,
     latex,
     ZZ,
     QQ,
@@ -658,9 +659,10 @@ def raw_typeset_qexp(coeffs_list,
     # finding the pivot - for new cusp forms this will always be 1,
     # but for Eisenstein series and perhaps other power series, could differ.
     for i, coeffs in enumerate(coeffs_list):
-        if not (coeffs is None) and (coeffs != 0) and not all([c == 0 for c in coeffs]):
-            pivot = i
-            break
+        if not (coeffs is None):
+            if (type(coeffs) == list and not all([c == 0 for c in coeffs])) or (type(coeffs) in [int, Integer] and (coeffs != 0)):
+                pivot = i
+                break
     
     for i, coeffs in enumerate(coeffs_list):
         r, t = rawtset_coeff(i, coeffs, pivot=pivot)
