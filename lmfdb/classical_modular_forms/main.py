@@ -519,9 +519,28 @@ def by_url_full_gammma1_space_label(level, weight):
     label = str(level)+"."+str(weight)
     return render_full_gamma1_space_webpage(label)
 
+# We cannot directly redirect here because there is no distinction from the next one
+# @cmf.route("/<int:level>/<int:weight>/<automorphic_type>/")
+def by_url_full_gammma1_eisenstein_space_label(level, weight, automorphic_type):
+    label = str(level)+"."+str(weight)+"."+automorphic_type
+    if automorphic_type == 'C':
+        label = str(level)+"."+str(weight)
+    return render_full_gamma1_space_webpage(label)
+
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
 def by_url_space_label(level, weight, char_orbit_label):
+    if char_orbit_label in ['C', 'E']:
+        return by_url_full_gammma1_eisenstein_space_label(level, weight, char_orbit_label)
     label = str(level)+"."+str(weight)+"."+char_orbit_label
+    return render_space_webpage(label)
+
+@cmf.route("/<int:level>/<int:weight>/<automorphic_type>/<char_orbit_label>/")
+def by_url_eisenstein_space_label(level, weight, automorphic_type, char_orbit_label):
+    if not (automorphic_type in ['C', 'E']):
+        return by_url_newform_label(level, weight, automorphic_type, char_orbit_label)
+    label = ".".join(map(str, [level, weight, automorphic_type, char_orbit_label]))
+    if automorphic_type == 'C':
+        label = ".".join(map(str, [level, weight, char_orbit_label]))
     return render_space_webpage(label)
 
 # Backward compatibility from before 2018
@@ -532,20 +551,20 @@ def by_url_space_conreylabel(level, weight, conrey_index):
         return abort(404, "Invalid space label: not relatively prime")
     return redirect(url_for_label(label), code=301)
 
-# New label after eisenstein series were added
-@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/C/<hecke_orbit>/")
-def by_url_cuspidal_newform_label(level, weight, char_orbit_label, hecke_orbit):
-    label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
-    return render_newform_webpage(label)
-
-@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<automorphic_type>/<hecke_orbit>/")
-def by_url_eisenstein_newform_label(level, weight, char_orbit_label, automorphic_type, hecke_orbit):
-    label = ".".join(map(str, [level, weight, char_orbit_label, automorphic_type, hecke_orbit]))
+@cmf.route("/<int:level>/<int:weight>/<automorphic_type>/<char_orbit_label>/<hecke_orbit>/")
+def by_url_eisenstein_newform_label(level, weight, automorphic_type, char_orbit_label, hecke_orbit):
+    if not (automorphic_type in ['C','E']):
+        by_url_newform_conrey5(level, weight, automorphic_type, char_orbit_label, hecke_orbit)
+    label = ".".join(map(str, [level, weight, automorphic_type, char_orbit_label, hecke_orbit]))
+    if automorphic_type == 'C':
+        label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
 
 # Backward compatibility from before 2018
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(level, weight, char_orbit_label, hecke_orbit):
+    if char_orbit_label in ['C', 'E']:
+        return by_url_eisenstein_space_label(level, weight, char_orbit_label, hecke_orbit)
     label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
 
@@ -558,6 +577,8 @@ def by_url_newform_conreylabel(level, weight, conrey_index, hecke_orbit):
 # Utility redirect for bread and links from embedding table
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
 def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embedding_label):
+    if char_orbit_label in ['C', 'E']:
+        return by_url_eisenstein_newform_label(level, weight, char_orbit_label, hecke_orbit, embedding_label)
     if embedding_label.count('.') != 1:
         return abort(404, "Invalid embedding label: periods")
     conrey_index, embedding = embedding_label.split('.')
@@ -574,6 +595,17 @@ def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, 
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
     return render_embedded_newform_webpage(newform_label, embedding_label)
 
+@cmf.route("/<int:level>/<int:weight>/<automorphic_type>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
+def by_url_eisenstein_embedded_newform_label(level, weight, automorphic_type, char_orbit_label, hecke_orbit, conrey_index, embedding):
+    if conrey_index <= 0 or embedding <= 0:
+        return abort(404, "Invalid embedding label: negative values")
+   
+    newform_label = ".".join(map(str, [level, weight, automorphic_type, char_orbit_label, hecke_orbit]))
+    if automorphic_type == 'C':
+        newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
+    embedding_label = ".".join(map(str, [conrey_index, embedding]))
+    return render_embedded_newform_webpage(newform_label, embedding_label)
+
 def url_for_label(label):
     if label == "random":
         return url_for("cmf.random_form")
@@ -581,26 +613,34 @@ def url_for_label(label):
         return abort(404, "Invalid label")
 
     slabel = label.split(".")
-    keys = ['level', 'weight', 'char_orbit_label']
-    keytypes = [POSINT_RE, POSINT_RE, ALPHA_RE]
-    if len(slabel) == 6:
-        func = "cmf.by_url_embedded_newform_label"
-    elif len(slabel) == 5:
-        func = "cmf.by_url_eisenstein_newform_label"
+    keys = ['level', 'weight']
+    keytypes = [POSINT_RE, POSINT_RE]
+    has_aut_type = ('E' in slabel) or ('C' in slabel)
+    if has_aut_type:
         keys += ['automorphic_type']
         keytypes += [AUTTYPE_RE]
-    elif len(slabel) == 4:
+    if (len(slabel) == 7) and has_aut_type:
+        func = "cmf.by_url_eisenstein_embedded_newform_label"
+    elif (len(slabel) == 6) and not has_aut_type:
+        func = "cmf.by_url_embedded_newform_label"
+    elif (len(slabel) == 5) and has_aut_type:
+        func = "cmf.by_url_eisenstein_newform_label"
+    elif (len(slabel) == 4) and not has_aut_type:
         func = "cmf.by_url_newform_label"
-    elif len(slabel) == 3:
+    elif (len(slabel) == 4) and has_aut_type:
+        func = "cmf.by_url_eisenstein_space_label"
+    elif (len(slabel) == 3) and not has_aut_type:
         func = "cmf.by_url_space_label"
+    elif (len(slabel) == 3) and has_aut_type:
+        func = "cmf.by_url_full_gammma1_eisenstein_space_label"
     elif len(slabel) == 2:
         func = "cmf.by_url_full_gammma1_space_label"
     elif len(slabel) == 1:
         func = "cmf.by_url_level"
     else:
         return abort(404, "Invalid label")
-    keys += ['hecke_orbit', 'conrey_index', 'embedding']
-    keytypes += [ALPHA_RE, POSINT_RE, POSINT_RE]
+    keys += ['char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
+    keytypes += [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
     for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")

@@ -29,7 +29,8 @@ from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
-LABEL_EIS_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.E\.[a-z]+$")
+LABEL_EIS_RE = re.compile(r"^[0-9]+\.[0-9]+\.E\.[a-z]+\.[a-z]+$")
+EMB_LABEL_EIS_RE = re.compile(r"^[0-9]+\.[0-9]+\.E\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 
 # we may store alpha_p with p <= 3000
 primes_for_angles = prime_range(3000)
@@ -40,7 +41,7 @@ def valid_label(label):
 
 
 def valid_emb_label(label):
-    return bool(EMB_LABEL_RE.match(label))
+    return bool(EMB_LABEL_RE.match(label)) or bool(EMB_LABEL_EIS_RE.match(label))
 
 
 def decode_hecke_orbit(code):

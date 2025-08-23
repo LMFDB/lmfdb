@@ -242,7 +242,7 @@ class CmfTest(LmfdbTest):
         assert 'Results (7 matches)' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{2}, \sqrt{-3})' in page.get_data(as_text=True)
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?dim=8&char_order=20&cm=no&rm=no')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_cuspidal=yes&dim=8&char_order=20&cm=no&rm=no')
         assert "Results (17 matches)" in page.get_data(as_text=True)
         assert r"Q(\zeta_{20})" in page.get_data(as_text=True)
 
