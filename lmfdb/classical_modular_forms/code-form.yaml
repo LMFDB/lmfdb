@@ -43,26 +43,34 @@ dimensions-spaces:
     mfdim([N,k,chi],1) \\ Cusps
     mfdim([N,k,chi],0) \\ New
 
-initialize-newspace:
+initialize-newspace-common: &initialize-newspace-common
   comment: Compute space of new eigenforms
   pari: |
     [N,k,chi] = [{N},{k},Mod({conrey_index},{N})]
     mf = mfinit([N,k,chi],0)
     lf = mfeigenbasis(mf)
-  sage: |
-    from sage.modular.dirichlet import DirichletCharacter
-    H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
-    chi = DirichletCharacter(H, H._module({sage_genvalues}))
-    if {k} != 1:
-      N = Newforms(chi, {k}, names="a") 
-    else:
-      B = ModularForms(chi, 1).cuspidal_submodule().basis()
-      N = [B[i].qexp(100) for i in range(len(B))]
   magma: |
     //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
     chi := DirichletCharacter("{N}.{conrey_index}");
     S:= CuspForms(chi, {k});
     N := Newforms(S);
+
+initialize-newspace-weight-1:
+  <<: *initialize-newspace-common
+  sage: |
+    from sage.modular.dirichlet import DirichletCharacter
+    H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
+    chi = DirichletCharacter(H, H._module({sage_genvalues}))
+    B = ModularForms(chi, 1).cuspidal_submodule().basis()
+    N = [B[i] for i in range(len(B))]
+
+initialize-newspace-weight-not-1:
+  <<: *initialize-newspace-common
+  sage: |
+    from sage.modular.dirichlet import DirichletCharacter
+    H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
+    chi = DirichletCharacter(H, H._module({sage_genvalues}))
+    N = Newforms(chi, {k}, names="a") 
 
 coeff-field:
   comment: Coefficient field, relative polynomial
