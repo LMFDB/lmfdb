@@ -16,10 +16,12 @@ import re
 NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([a-z]+)$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
+EIS_NEWLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.E\.([a-z]+)$")
+EIS_GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.E$")
 def valid_label(label):
-    return NEWLABEL_RE.match(label) or OLDLABEL_RE.match(label)
+    return NEWLABEL_RE.match(label) or OLDLABEL_RE.match(label) or EIS_NEWLABEL_RE.match(label)
 def valid_gamma1(label):
-    return GAMMA1_RE.match(label)
+    return GAMMA1_RE.match(label) or EIS_GAMMA1_RE.match(label)
 
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
