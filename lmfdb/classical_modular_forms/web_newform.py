@@ -387,7 +387,7 @@ class WebNewform():
         res += names_and_urls(related_objects)
 
         # finally L-functions
-        if (self.weight <= 200) and not ((self.level > 10000) and (self.weight == 2)): # L-functions for the weight 2 and level > 10000 forms haven't been computed as of 2024/04/11.
+        if (self.weight <= 200) and not ((self.level > 10000) and (self.weight == 2)) and (self.is_cuspidal): # L-functions for the weight 2 and level > 10000 forms haven't been computed as of 2024/04/11.
             if (self.dim == 1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_orbit) * self.rel_dim > 50:
