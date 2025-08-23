@@ -7,7 +7,11 @@
 
 <h2> {{KNOWL('cmf.newspace',title='Newspace')}} parameters </h2>
 
-{{ place_code('initialize-newspace')}}
+{% if newform.weight == 1 %}
+{{ place_code('initialize-newspace-weight-1')}}
+{% else %}
+{{ place_code('initialize-newspace-weight-not-1')}}
+{% endif %}
 
 <table>
   <tr>
