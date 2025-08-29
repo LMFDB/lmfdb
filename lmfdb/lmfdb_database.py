@@ -497,7 +497,7 @@ class LMFDBDatabase(PostgresDatabase):
         # This table is used for long-term recording of database operations
         inserter = SQL(
             "INSERT INTO userdb.dbrecord (username, time, tablename, logid, operation, data) "
-            "VALUES (%s, %s, %s, %s, %s)"
+            "VALUES (%s, %s, %s, %s, %s, %s)"
         )
         self._execute(inserter, [uid, utc_now_naive(), tablename, logid, operation, data])
         if operation not in _nolog_changetypes:
