@@ -1424,6 +1424,13 @@ class ECSearchArray(SearchArray):
             example="8-",
             advanced=True)
 
+        manin_constant = TextBox(
+            name="manin_constant",
+            label="Manin constant",
+            knowl="ec.q.manin_constant",
+            example="2",
+            advanced=True)
+
         count = CountBox()
 
         self.browse_array = [
@@ -1439,7 +1446,7 @@ class ECSearchArray(SearchArray):
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
             [abc_quality, szpiro_ratio],
-            [count]
+            [count, manin_constant]
             ]
 
         self.refine_array = [
@@ -1448,5 +1455,5 @@ class ECSearchArray(SearchArray):
             [class_deg, isodeg, class_size, num_int_pts],
             [sha, sha_primes, regulator, reduction, faltings_height],
             [galois_image, adelic_level, adelic_index, adelic_genus],
-            [nonmax_primes, abc_quality, szpiro_ratio],
+            [nonmax_primes, abc_quality, szpiro_ratio, manin_constant],
             ]
