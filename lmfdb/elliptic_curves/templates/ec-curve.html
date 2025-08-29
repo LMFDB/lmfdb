@@ -84,7 +84,7 @@ white-space: pre in order to keep line breaks! #}
     <tr>
     </table>
 
-    <p>{{ place_code('curve') }}{{ place_code('simple_curve') }}</p>
+    <p>{{ place_code('curve', is_top_snippet=True) }}{{ place_code('simple_curve') }}</p>
 
     <h2> {{ KNOWL('ec.mordell_weil_group', title='Mordell-Weil group') }} structure</h2>
     <p>
@@ -330,8 +330,8 @@ white-space: pre in order to keep line breaks! #}
         </table>
 
 <h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
-<p style="margin:10px 280px;">
-$\displaystyle {{ data.mwbsd.formula|safe }}$
+<p>
+$${{ data.mwbsd.formula }}$$
 </p>
 <center>
 {{ place_code('bsd_formula') }}

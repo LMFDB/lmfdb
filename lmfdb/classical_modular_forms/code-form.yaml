@@ -70,7 +70,9 @@ relative_polynomial:
 
 newform:
   comment: select newform
-  sage: "f = N[0] # Warning: the index may be different"
+  sage: |
+    {sage_traces}
+    f = next(g for g in N if [g.coefficient(i+1).trace() for i in range({sage_trace_bound})] == traces)
   pari: |
     f = lf[1] \\ Warning: the index may be different
 

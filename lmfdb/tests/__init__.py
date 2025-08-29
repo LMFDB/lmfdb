@@ -157,3 +157,7 @@ class LmfdbTest(unittest.TestCase):
           to implement subsequent checks.
         """
         return self.check_sage_compiles_and_extract_variables(sage_code)[my_name]
+
+    def check_snippets(self, code, labels, path):
+        # TODO: extract path from other data, eg. yaml
+        pass

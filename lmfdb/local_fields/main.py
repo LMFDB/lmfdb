@@ -37,8 +37,7 @@ NEW_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
@@ -1211,7 +1210,7 @@ def dynamic_statistics():
         "dynamic_stats.html",
         info=info,
         title=title,
-        bread=get_bread([("Dynamic Statistics", " ")]),
+        bread=get_bread([("Dynamic statistics", " ")]),
         learnmore=learnmore_list(),
     )
 

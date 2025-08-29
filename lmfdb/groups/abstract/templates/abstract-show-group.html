@@ -22,29 +22,36 @@
   </p>
 {% endif %}
 
+<p>{{ place_code('code_description', is_top_snippet=True) }}</p>
 
 <h2>Group information</h2>
 <p>
   <table>
     <tr><td>{{KNOWL('group.name', title='Description:')}}</td><td>${{gp.tex_name}}$  </td></tr>
-    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(gp.order)|safe}} </td></tr>
-    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(gp.exponent)|safe}} </td></tr>
-    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.show_aut_group()|safe}} {% if not gp.live() and gp.aut_gens_flag() %} (<a href="{{url_for('.auto_gens', label=gp.label)}}">generators</a>){% endif %}</td></tr>
-    <tr><td>{{KNOWL('group.outer_aut', 'Outer automorphisms')}}:</td><td>{{gp.show_outer_group()|safe}}</td></tr>
+    <tr><td>{{KNOWL('group.order',title='Order:')}}</td><td> {{info.pos_int_and_factor(gp.order)|safe}} </td> <td>{{ place_code('order') }}</td> </tr>
+    <tr><td>{{KNOWL('group.exponent',title='Exponent:')}}</td><td> {{info.pos_int_and_factor(gp.exponent)|safe}} </td> <td>{{ place_code('exponent') }}  </td></tr>
+    <tr><td>{{KNOWL('group.automorphism', 'Automorphism group')}}:</td><td>{{gp.aut_group_knowl()|safe}}</td><td>{{ place_code('automorphism_group') }}  </td></tr>
     {% if not gp.live() %}
-      <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td></tr>
+      <tr><td>{{KNOWL('group.chief_series', 'Composition factors')}}:</td><td>{{gp.show_composition_factors()|safe}}</td><td>{{ place_code('composition_factors') }}  </td></tr>
     {% endif %}
     {% if gp.nilpotent %}
-      <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td><td>${{gp.nilpotency_class}}$  </td></tr>
+      <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td><td>${{gp.nilpotency_class}}$  </td> <td>{{ place_code('nilpotency_class') }}  </td></tr>
     {% endif %}
-    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{gp.derived_length}}$  </td></tr>
+    <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{gp.derived_length}}$  </td> <td>{{ place_code('derived_length') }}  </td></tr>
   </table>
 </p>
 <p>
   {{info.boolean_characteristics_string | safe}}
 </p>
+<p>
+  {{ place_code('is_abelian') }} {{ place_code('is_cyclic') }} {{ place_code('is_nilpotent') }} {{ place_code('is_solvable') }}
+  {{ place_code('is_supersolvable') }} {{ place_code('is_simple') }} {{ place_code('perfect') }} {{ place_code('polycyclic') }} 
+</p> 
 
 <h2>Group statistics</h2>
+
+<p>{{ place_code('group_statistics') }}</p>
+
 <p> {% if gp.order_stats != None %} 
   <div class="table-scroll-wrapper">
    <table class="ntdata onesticky" style="margin-left:0;">
@@ -78,6 +85,7 @@
         <td>{{ c[1] }}</a></td>
         {% endfor %}
         <td class="border-left">{{ gp.number_conjugacy_classes }}</td>
+        <td> {{ place_code('num_conjugacy_classes') }} </td>
       </tr>
       {% endif %}
       {% if not gp.live() %}
@@ -126,6 +134,8 @@ Statistics about orders of elements in this group have not been computed.
 </p>
 
 {% if gp.live() or gp.rational_characters %} {# for now, there are a few groups with p>511 dividing the order that do not have rational character tables #}
+
+<p>{{ place_code('character_statistics') }}</p>
 
 <p>
   <div class="table-scroll-wrapper"> 
@@ -241,10 +251,12 @@ Statistics about orders of elements in this group have not been computed.
     {% if gp.abelian %}
       <td>{{KNOWL('group.primary_decomposition', 'Primary decomposition')}}:</td>
       <td>${{gp.abelian_quot_primary()}}$</td>
+      <td>{{ place_code('primary_decomposition') }}</td>
     {% else %}
       <td>{{KNOWL('group.abelianization', 'Abelianization')}}:</td>
       <td> <a href="{{url_for('.by_abelian_label', label=gp.abelianization_label())}}">${{gp.abelian_quot()}} {% if gp.smith_abelian_invariants != gp.primary_abelian_invariants %} \simeq {{gp.abelian_quot_primary()}}{% endif %}$</a></td>
-    {% endif %}
+      <td>{{ place_code('abelianization') }}</td>
+      {% endif %}
   </tr>
   {% if not gp.live() %}
   <tr>
@@ -254,6 +266,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
       <td><a href="{{url_for('.by_abelian_label', label=gp.schur_multiplier_label())}}">${{gp.schur_multiplier_text() | safe}}$</a></td>
     {% endif %}
+    <td>{{ place_code('schur_multiplier') }}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_length', 'Commutator length')}}:</td>
@@ -261,11 +274,14 @@ Statistics about orders of elements in this group have not been computed.
       <td>${{gp.commutator_count}}$</td>
     {% elif gp.abelian %} <td>$0$</td>
     {% else %} <td>not computed</td> {% endif %}
+    <td>{{ place_code('commutator_length') }}</td>
   </tr>
   {% endif %}
 </table>
 
 <h2> Subgroups </h2>
+
+{{ place_code('subgroups') }}
 
 {% if gp.live() %}
 
@@ -300,6 +316,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
     <td>not computed</td>
     {% endif %}
+    <td>{{ place_code('center') }}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.commutator_subgroup',title='Commutator')}}:</td>
@@ -311,6 +328,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
     <td>not computed</td>
     {% endif %}
+    <td>{{ place_code('commutator_subgroup') }}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.frattini_subgroup',title='Frattini')}}:</td>
@@ -322,6 +340,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
     <td> not computed</td>
     {% endif %}
+    <td>{{ place_code('frattini_subgroup') }}</td>
   </tr>
  <tr>
     <td>{{KNOWL('group.fitting_subgroup',title='Fitting')}}:</td>
@@ -331,6 +350,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
     <td> not computed</td>
     {% endif %}
+    <td>{{ place_code('fitting_subgroup') }}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.radical',title='Radical')}}:</td>
@@ -340,6 +360,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
     <td>not computed</td>
     {% endif %}
+    <td>{{ place_code('radical') }}</td>
   </tr>
   <tr>
     <td>{{KNOWL('group.socle',title='Socle')}}:</td>
@@ -349,6 +370,7 @@ Statistics about orders of elements in this group have not been computed.
     {% else %}
     <td> not computed</td>
     {% endif %}
+    <td>{{ place_code('socle') }}</td>
   </tr>
     {% for p, subgp in gp.sylow_subgroups() %}
       <tr>
@@ -466,7 +488,8 @@ Statistics about orders of elements in this group have not been computed.
         <span class="{{sub.spanclass()}} series" data-sgseries="{{spandata}}" data-sgid="{{sub.short_label}}">${{sub.subgroup_tex}}$</span></td>
       {% endfor %}
     {% endif %}
-  </tr>
+    <td colspan="1000" style="text-align: right;">{{ place_code(kwl.split('.')[1]) }}</td>
+  </tr> 
   {% endfor %}
 </table>
 
@@ -532,7 +555,7 @@ Statistics about orders of elements in this group have not been computed.
 <h2> Character theory </h2>
 <p>
 
-
+{{ place_code('character_table') }}
 
 {% if not gp.rational_characters and gp.number_conjugacy_classes == None %}
 

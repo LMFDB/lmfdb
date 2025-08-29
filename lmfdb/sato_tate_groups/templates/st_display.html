@@ -28,7 +28,7 @@
 {% if info['components'] > 1 %}
 <h2> {{ KNOWL('st_group.component_group', 'Component group') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('st_group.name', 'Name') }}:</td><td>${{info['component_group']}}$</td></tr>
+    <tr><td>{{ KNOWL('st_group.name', 'Name') }}:</td><td>{{info['component_group_knowl']|safe}}</td></tr>
     <tr><td>{{ KNOWL('group.order', 'Order') }}:</td><td>${{info['components']}}$</td></tr>
     <tr><td>{{ KNOWL('group.abelian', 'Abelian') }}:</td><td>{{info['abelian']}}</td></tr>
     {% if info['numgens'] > 0 %}

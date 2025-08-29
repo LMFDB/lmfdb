@@ -640,6 +640,9 @@ class StatsDisplay(UniqueRepresentation):
         data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
+        # issue when no constraints are included yet
+        if len(cols) == 0:
+            return data
         if 'row_title' not in attr:
             attr['row_title'] = self._short_display[cols[0]]
         if len(cols) == 1:

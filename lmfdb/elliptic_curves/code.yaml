@@ -165,13 +165,13 @@ bsd_formula:
   comment: BSD formula
   sage: |
     # self-contained SageMath code snippet for the BSD formula (checks rank, computes analytic sha)
-    E = EllipticCurve(%s); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
+    E = EllipticCurve({ainvs}); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
     Lr1 = E.lseries().dokchitser().derivative(1,r)/r.factorial(); sha = E.sha().an_numerical();
     omega = E.period_lattice().omega(); reg = E.regulator(); tam = E.tamagawa_product(); tor = E.torsion_order();
     assert r == ar; print("analytic sha: " + str(RR(Lr1) * tor^2 / (omega * reg * tam)))
   magma: |
     /* self-contained Magma code snippet for the BSD formula (checks rank, computes analytic sha) */
-    E := EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
+    E := EllipticCurve({ainvs}); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
     sha := MordellWeilShaInformation(E); omega := RealPeriod(E) * (Discriminant(E) gt 0 select 2 else 1);
     reg := Regulator(E); tam := &*TamagawaNumbers(E); tor := #TorsionSubgroup(E);
     assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
@@ -243,3 +243,12 @@ padicreg:
 isogenies:
   comment: Isogenies
   pari: ellisomat(E)
+
+snippet_test:
+  test11a3: 
+    label: 11.a3
+    url: EllipticCurve/Q/11/a/3/download/{lang}?label=11.a3
+  test37a1: 
+    label: 37.a1
+    url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1
+  

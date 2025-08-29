@@ -526,16 +526,29 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
 
 .code, .prompt {
     font-family: monospace;
-    white-space: pre;
+    white-space: preserve nowrap;
+    display: inline-flex;
+    align-items: center;
 }
 
 .code {
     margin: 2px;
-    margin-right: 20px;
+    margin-right: 5px;
     margin-left: 0px;
+    cursor: text;
+    padding-left: .3em;
+    user-select: text;
+    flex: 1;
+
+    /* For scrollable code snippets */
+    overflow-x: auto;
+    scrollbar-color: #bbbaba #ffffff;
+    scrollbar-width: thin; 
+    scrollbar-gutter: stable;
 }
 
 .prompt {
+    color: gray;
     margin: 2px;
     margin-right: 0px;
 }

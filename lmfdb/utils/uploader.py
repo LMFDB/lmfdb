@@ -16,7 +16,7 @@ import csv
 import io
 import codecs
 import tempfile
-from datetime import datetime
+from lmfdb.utils.datetime_utils import utc_now_naive
 from flask import request, flash, send_file, render_template
 from flask_login import current_user
 from sage.misc.lazy_attribute import lazy_attribute
@@ -323,7 +323,7 @@ class UploadSection():
             columns = ["section", "status", "submitter", "data", "submitted", "verified", "reviewed", "processed", "updated", "version", "comment"]
             types = ["text", "smallint", "text", "jsonb", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "timestamp without time zone", "smallint", "text"]
             _ = F.write("|".join(columns) + "\n" + "|".join(types) + "\n\n")
-            timestamp = datetime.utcnow().isoformat()
+            timestamp = utc_now_naive().isoformat()
             for rec in data:
                 _ = F.write(f"{self.name}|0|{current_user.id}|{copy_dumps(rec, 'jsonb')}|{timestamp}|\\N|\\N|\\N|{timestamp}|{self.version}|\n")
             F.close()
@@ -424,7 +424,7 @@ class Uploader():
                 elif new_status in [2, -2] and not all(status == 1 for status in db.data_uploads.search({"id":{"$in":ids}}, "status")):
                     flash_error("You must select only rows that need review")
                 else:
-                    t0 = datetime.utcnow()
+                    t0 = utc_now_naive()
                     payload = {"status": new_status, "reviewed": t0, "updated": t0}
                     if comment:
                         payload["comment"] = comment

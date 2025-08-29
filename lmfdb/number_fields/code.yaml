@@ -35,7 +35,7 @@ field:
   pari: K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
   oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
-
+  
 poly:
   comment: Defining polynomial
   sage:  K.defining_polynomial()
@@ -96,6 +96,12 @@ class_group:
   pari:  K.clgp
   magma: ClassGroup(K); 
   oscar: class_group(K)
+
+narrow_class_group:
+  comment: Narrow class group
+  sage:  K.narrow_class_group().invariants()
+  pari:  bnfnarrow(K)
+  magma: NarrowClassGroup(K);
 
 unit_group:
   comment: Unit group
@@ -190,3 +196,22 @@ prime_cycle_types:
   oscar: |
     # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
     p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
+
+# specify which code snippets to test
+snippet_test:                   
+  testQ: 
+    label: 1.1.1.1
+    langs:
+      - sage
+      - magma
+      - oscar
+      - gp
+    url: NumberField/1.1.1.1/download/{lang}
+  testQi: 
+    label: 2.0.4.1
+    langs:
+      - sage
+      - magma
+      - oscar
+      - gp
+    url: NumberField/2.0.4.1/download/{lang}
