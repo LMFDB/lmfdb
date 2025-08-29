@@ -356,7 +356,7 @@ class LMFDBSearchTable(PostgresSearchTable):
             """Return the amount of space available on the devmirror postgres filesystem"""
             editor_password = self._db.config.postgresql_options["password"]
             import pexpect
-            child = pexpect.spawn(f"ssh dfuser_ssh@devmirror.lmfdb.xyz")
+            child = pexpect.spawn("ssh dfuser_ssh@devmirror.lmfdb.xyz")
             _ = child.expect("password:")
             _ = child.sendline(editor_password)
             _ = child.expect(pexpect.EOF)
@@ -426,7 +426,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         # Devmirror stores everything in one place
         dm_space_claimed = sum(dm_space_claimed.values()) + size_guess
         # Determine how much space is available
-        dm_available = get_space_available(devmirror)
+        dm_available = devmirror_space_available()
         # Check that there is sufficient space in all tablespaces
         check_space(dm_space_claimed, dm_available, "devmirror.lmfdb.xyz", dm_ops)
 
