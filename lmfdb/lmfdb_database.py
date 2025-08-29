@@ -406,7 +406,7 @@ class LMFDBSearchTable(PostgresSearchTable):
                 raise OSError(f"Not enough space on {location}: {needGB:.2f}GB (+50%+100GB) needed, {avGB:.2f}GB available.  This table estimated at {guessGB:.2f}GB{op_summary}.")
 
         # Find the operations that have been logged on grace.
-        op_cmd = SQL("SELECT logid, finishing, space_impact, tablespace, time, table, op, user FROM userdb.ongoing_operations ORDER BY time")
+        op_cmd = SQL("SELECT logid, finishing, space_impact, tablespace, time, tablename, operation, username FROM userdb.ongoing_operations ORDER BY time")
         grace_ops = list(self._execute(op_cmd))
         # grace_finished is a set with logids that have finished on grace; grace_space_claimed is a dictionary (by tablespace) of how much space the in-progress operations might need
         grace_finished, grace_space_claimed = get_space_needed(grace_ops)
@@ -436,7 +436,7 @@ class LMFDBSearchTable(PostgresSearchTable):
             self._execute(SQL("DELETE FROM userdb.ongoing_operations WHERE logid IN %s"), [delete_logids])
 
         # Insert this operation
-        logid = self._execute(SQL("INSERT INTO userdb.ongoing_operations (finishing, space_impact, tablespace, time, table, op, user) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING logid"), [False, size_guess, tablespace, utc_now_naive(), self.search_table, changetype, self._db.login()]).fetchone()[0]
+        logid = self._execute(SQL("INSERT INTO userdb.ongoing_operations (finishing, space_impact, tablespace, time, tablename, operation, username) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING logid"), [False, size_guess, tablespace, utc_now_naive(), self.search_table, changetype, self._db.login()]).fetchone()[0]
 
         return logid
 
