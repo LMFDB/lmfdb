@@ -503,7 +503,7 @@ class LMFDBDatabase(PostgresDatabase):
         if operation not in _nolog_changetypes:
             # This table is used by _check_locks to determine if there is enough space to execute an upload
             inserter = SQL(
-                "INSERT INTO userdb.ongoing_operations (logid, finishing, time, table, op, user) "
+                "INSERT INTO userdb.ongoing_operations (logid, finishing, time, tablename, operation, username) "
                 "VALUES (%s, %s, %s, %s, %s, %s)"
             )
             self._execute(inserter, [logid, True, utc_now_naive(), tablename, operation, uid])
