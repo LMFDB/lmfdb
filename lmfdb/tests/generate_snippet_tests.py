@@ -121,7 +121,7 @@ def _eval_code_file(data, lang, proc, logfile):
 
             try:
                 proc.run_command(line, timeout=60*3)
-            except:
+            except Exception:
                 print("Timeout while running line:")
                 print(line)
 
