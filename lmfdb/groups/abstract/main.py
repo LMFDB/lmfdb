@@ -1969,6 +1969,9 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
+    code = gp.code_snippets()
+    if code and len(code['prompt']) == 0:  # no codes
+        code = None
 
     return render_template(
         "abstract-show-group.html",
@@ -1976,7 +1979,7 @@ def render_abstract_group(label, data=None):
         bread=bread,
         info=info,
         gp=gp,
-        code=gp.code_snippets(),
+        code=code,
         properties=gp.properties(),
         friends=friends,
         learnmore=learnmore_list_add(*learnmore_gp_picture),
