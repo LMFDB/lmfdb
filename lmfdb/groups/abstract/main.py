@@ -2954,7 +2954,7 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
         number_divisions = TextBox(
-            name="number_divisions ",
+            name="number_divisions",
             label="Number of divisions",
             knowl="group.division",
             example="3",
@@ -3119,16 +3119,16 @@ class SubgroupSearchArray(SearchArray):
 
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
-            [normal, characteristic, perfect, maximal, central, nontrivproper],
-            [ambient, ambient_order, direct, split, hall, sylow],
+            [normal, characteristic, perfect, maximal, central],
+            [ambient, ambient_order, direct, split],
             [
                 quotient,
                 quotient_order,
                 quotient_cyclic,
                 quotient_abelian,
                 quotient_solvable,
-                minimal_normal,
             ],
+            [minimal_normal, nontrivproper, hall, sylow],
         ]
 
     def search_types(self, info):
