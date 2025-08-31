@@ -49,7 +49,7 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
 )
-from lmfdb.utils.search_parsing import (parse_multiset, search_parser)
+from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
@@ -104,6 +104,7 @@ def yesno(val):
 
 def deTeX_name(s):
     s = re.sub(r"[{}\\$]", "", s)
+    s = s.replace("Orth", "O").replace("Unitary", "U")
     return s
 
 @cached_function
@@ -114,20 +115,25 @@ def group_families(deTeX=False):
     # Here, we're directly adding the individual Chevalley group families (i.e. 'A(n,q)', 'B(n,q)', ...) to the group families list
     # (doing this here to avoid manually adding new families to the data; this avoids re-duplicating data which is already stored in the database)
     chev_index = [t[0] for t in L].index("Chev")+1
-    for f in ['An','Bn','Cn','Dn','En','F4', 'G2']:
+    for f in ['An','Bn','Cn','Dn','En','F4','G2']:
         L.insert(chev_index, ("Chev"+f[0], "$"+f[0]+"({"+f[1]+"}, {q})$"))
         chev_index += 1
     twistchev_index = [t[0] for t in L].index("TwistChev")+1
     for f in ['2An','2B2','2Dn','3D4','2E6','2F4','2G2']:
         L.insert(twistchev_index, ("TwistChev"+f[:2], "$^{"+f[0]+"}{"+f[1]+"}({"+f[2]+"},{q})$"))
         twistchev_index += 1
+    # Adding the individual irreducible Coxeter group families
+    cox_index = [t[0] for t in L].index("Cox")+1
+    for f in ['A','B','D','E','F']:
+        L.insert(cox_index, ("Cox"+f[0], "$W("+f+"_{{n}})$"))
+        cox_index += 1
 
     if deTeX:
         # Used for constructing the dropdown
         return [(fam, deTeX_name(name)) for (fam, name) in L]
 
     def hidden(fam):
-        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic"]
+        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic", "Cox"]
     L = [(fam, name, "fam_more" if hidden(fam) else "fam_always", hidden(fam)) for (fam, name) in L]
     return L
 
@@ -203,6 +209,16 @@ def parse_family(inp, query, qfield):
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Chev", 'parameters.fam':inp[4]}, projection='label'))}
     elif inp[:9] == 'TwistChev' and len(inp) == 11:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"TwistChev", 'parameters.twist':int(inp[9]), 'parameters.fam':inp[10]}, projection='label'))}
+    # Searching for Coxeter families should include all dihedral groups and all symmetric S_n for n >= 2
+    elif inp == 'Cox':
+        labels = list(db.gps_special_names.search({'family': {'$or': ['Cox', 'CoxH']}}, projection='label'))
+        collapse_ors(["$or", [{"dihedral":True}, {"label": {"$in": labels}}]], query)
+    # Case of CoxI2 (return all dihedral groups D_n)
+    elif inp == 'CoxI':
+        query["dihedral"] = True
+    # Case to check if family is one of the individual irreducible Coxeter families
+    elif inp[:3] == 'Cox' and inp[3] != "H":
+        query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Cox", 'parameters.fam':inp[3]}, projection='label'))}
 
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
@@ -659,6 +675,8 @@ def create_boolean_string(gp, type="normal"):
     unknown = [prop for prop in overall_order if getattr(gp, prop, None) is None]
     if {'ab_simple', 'nab_simple'} <= set(unknown):
         unknown.remove('ab_simple')
+    if gp.abelian and gp.monomial is None:  #if abelian then monomial
+        unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
@@ -716,6 +734,11 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
         unknown.remove('nonabelian')
     if {'solvable', 'nonsolvable'} <= set(unknown):
         unknown.remove('nonsolvable')
+    prop = 'pgroup'  # if p-group, we know it is nilpotent, solvable, and supersolvable
+    if getattr(gp,prefix+prop,None) > 1:
+        unknown.remove('nilpotent')
+        unknown.remove('solvable')
+        unknown.remove('supersolvable')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
@@ -1109,14 +1132,56 @@ def group_jump(info):
     elif len(labs) == 2:
         return redirect(url_for(".index", name=jump.replace(" ", "")))
     # by special name
+
+    def int_try(x):
+        if x.isdigit():
+            return int(x)
+        return x
+
+    def valid_params(fam, params):
+        n = ZZ(params.get("n"))
+        q = ZZ(params.get("q"))
+        if fam in ["Q", "SD", "OD"]:
+            return n.is_power_of(2)
+        if fam == "F":
+            return n.is_prime_power()
+        elif fam == "He":
+            return n > 2 and n.is_prime()
+        elif fam in ["Sp", "PSp", "SOPlus", "SOMinus", "GOPlus", "GOMinus", "OmegaPlus", "OmegaMinus", "PSOPlus", "PSOMinus", "PGOPlus", "PGOMinus", "POmegaPlus", "POmegaMinus", "SpinPlus", "SpinMinus", "CSp", "CSOPlus", "CSOMinus", "COPlus", "COMinus", "PSigmaSp", "ASigmaSp"]:
+            return n % 2 == 0
+        elif fam in ["SO", "PSO", "GO", "Omega", "PGO", "POmega", "Spin", "CSO", "CO"]:
+            return n % 2 == 1
+        elif fam == "CoxH":
+            return n in [3,4]
+        elif fam in ["Cox", "Chev"]:
+            if params["fam"] == "E":
+                return n in [6,7,8]
+            elif params["fam"] == "F":
+                return n == 4
+            elif params["fam"] == "G":
+                return n == 2
+        elif fam == "TwistChev":
+            if params["fam"] == "A":
+                return params["twist"] == 2
+            elif params["fam"] == "B":
+                return n == 2 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
+            elif params["fam"] == "D":
+                return params["twist"] == 2 or (params["twist"] == 3 and n == 4)
+            elif params["fam"] == "E":
+                return n == 6 and params["twist"] == 2
+            elif params["fam"] == "F":
+                return n == 4 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
+            elif params["fam"] == "G":
+                return n == 2 and params["twist"] == 2 and q.is_power_of(3) and not q.is_power_of(9)
     for family in db.gps_families.search():
         m = re.fullmatch(family["input"], jump)
         if m:
-            m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
+            m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items()) # convert string to int
             lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")
             if lab:
                 return redirect(url_for(".by_label", label=lab))
-            else:
+            elif valid_params(family["family"], m_dict):
+                # Only display this messages for groups that exist
                 flash_error("The group %s has not yet been added to the database." % jump)
                 return redirect(url_for(".index"))
     flash_error("%s is not a valid name for a group or subgroup; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
@@ -1230,18 +1295,23 @@ def group_postprocess(res, info, query):
     for rec in res:
         rec["tex_cache"] = tex_cache
     if "family" in info:
-        if info["family"] == "any":
+        family = info["family"]
+        if family == "any":
             fquery = {}
 
         # Special case to convert the family "ChevX" (for X = A..G) to just "Chev" for the database query
-        elif info["family"][:4] == "Chev":
+        elif family[:4] == "Chev":
             fquery = {"family": "Chev"}
         # Also special case to convert the family "TwistChevNX" to just "TwistChev" for the database query
-        elif info["family"][:9] == "TwistChev":
+        elif family[:9] == "TwistChev":
             fquery = {"family": "TwistChev"}
-
+        # Convert "CoxX" to: ("Cox" or "S" or "D") for database query
+        elif family == "Cox":
+            fquery = {"family": {"$or": ["Cox", "CoxH", "CoxI"]}}
+        elif family[:3] == "Cox" and family[3] not in "HI":
+            fquery = {"family": "Cox"}
         else:
-            fquery = {"family": info["family"]}
+            fquery = {"family": family}
         fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
         fquery["label"] = {"$in":[rec["label"] for rec in res]}
         special_names = defaultdict(list)
@@ -1255,11 +1325,14 @@ def group_postprocess(res, info, query):
 
             # Special case to deal with individual Chevalley families
             # (e.g. querying the "A(n,q)" family should ensure the "B(n,q)" family names don't show up under "Family name" search column)
-            if (info["family"][:4] == "Chev") and (len(info["family"]) == 5):
-                if name[0] != info["family"][4]:
+            if (family[:4] == "Chev") and (len(family) == 5):
+                if name[0] != family[4]:
                     continue
-            if (info["family"][:9] == "TwistChev") and (len(info["family"]) == 11):
-                if name[3:5] != info["family"][9:11]:
+            elif (family[:9] == "TwistChev") and (len(family) == 11):
+                if name[3:5] != family[9:11]:
+                    continue
+            elif (fam == "Cox" and family[:3] == "Cox" and len(family) == 4):
+                if params["fam"] != family[3]:
                     continue
 
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
@@ -1657,7 +1730,7 @@ def cc_postprocess(res, info, query):
         info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
     info["group_factors"] = common_support if common_support else []
     complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
-    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
+    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroup_search.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
     highlight_col = {}
     for rec in res:
         label = rec.get("label")
@@ -1896,6 +1969,9 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
+    code = gp.code_snippets()
+    if code and len(code['prompt']) == 0:  # no codes
+        code = None
 
     return render_template(
         "abstract-show-group.html",
@@ -1903,7 +1979,7 @@ def render_abstract_group(label, data=None):
         bread=bread,
         info=info,
         gp=gp,
-        code=gp.code_snippets(),
+        code=code,
         properties=gp.properties(),
         friends=friends,
         learnmore=learnmore_list_add(*learnmore_gp_picture),
@@ -2125,7 +2201,7 @@ def gp_data(label):
         group_counter = int(group_counter)
     else:
         group_counter = class_to_int(group_counter) + 1  # we start labeling at 1
-    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])
+    return datapage([label, [group_order, group_counter], label, label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroup_search", "gps_subgroup_data"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient", "ambient"])
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
@@ -2137,9 +2213,9 @@ def sgp_data(label):
     if data is None:
         return abort(404)
     if data["quotient"] is None:
-        return datapage([label, data["subgroup"], data["ambient"]], ["gps_subgroups", "gps_groups", "gps_groups"], bread=bread, title=title)
+        return datapage([label, label, data["subgroup"], data["ambient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups"], bread=bread, title=title)
     else:
-        return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
+        return datapage([label, label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
 # need to write characters in GAP or Magma formats for downloads
@@ -2887,7 +2963,7 @@ class GroupsSearchArray(SearchArray):
         )
         family = SelectBox(
             name="family",
-            options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
+            options=[("", ""), ("any", "any")] + group_families(deTeX=True),
             knowl="group.families",
             label="Family",
         )
