@@ -1,5 +1,5 @@
 import re
-
+from typing import Any
 from flask import render_template, url_for, request, redirect, abort
 
 from sage.misc.cachefunc import cached_function
@@ -794,7 +794,7 @@ class Belyi_stats(StatsDisplay):
         "orbit_size": "belyi.orbit_size",
         "g": "belyi.genus",
     }
-    stat_list = [
+    stat_list: list[dict[str, Any]] = [
         {"cols": col, "totaler": {"avg": True}} for col in ["deg", "orbit_size", "g"]
     ]
     stat_list += [

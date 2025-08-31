@@ -1,3 +1,4 @@
+from typing import Any
 
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
@@ -304,7 +305,7 @@ class WebBelyiGalmap():
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},
                                                     projection="portrait")
         plot_link = '<a href="{0}"><img src="{0}" width="200" height="200" style="background-color: white;"/></a>'.format(self.plot)
-        properties = [("Label", galmap["label"])]
+        properties: list[tuple[Any, Any]] = [("Label", galmap["label"])]
         if triple:
             properties += [("Triple", "$%s$" % triple)]
         if self.plot:
