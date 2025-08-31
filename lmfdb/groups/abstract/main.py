@@ -2954,7 +2954,7 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
         number_divisions = TextBox(
-            name="number_divisions ",
+            name="number_divisions",
             label="Number of divisions",
             knowl="group.division",
             example="3",
