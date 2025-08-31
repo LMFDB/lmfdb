@@ -28,6 +28,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
 
+
 def maxq(g, p):
     # This should eventually move to stats
     maxspec = {
@@ -42,7 +43,9 @@ def maxq(g, p):
     else:
         return maxgen[g]
 
+
 logger = make_logger("abvarfq")
+
 
 #########################
 #   Label manipulation
@@ -68,6 +71,7 @@ def validate_label(label):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with g=%s components" % (g))
     if not all(c.isalpha() and c == c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
+
 
 class AbvarFq_isoclass():
     """
@@ -170,11 +174,11 @@ class AbvarFq_isoclass():
             pts.append((x, y))
         L = Graphics()
         xmax = len(S)
-        ymax = ZZ(len(S)/2)
-        L += polygon(pts+[(0,ymax)],alpha=0.1)
-        for i in range(xmax+1):
+        ymax = ZZ(len(S) / 2)
+        L += polygon(pts + [(0, ymax)], alpha=0.1)
+        for i in range(xmax + 1):
             L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
-        for j in range(ymax+1):
+        for j in range(ymax + 1):
             L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
         L += line(pts, thickness=2)
         for v in pts:
@@ -258,8 +262,8 @@ class AbvarFq_isoclass():
             poly = coeff_to_poly(self.poly, "T")
             if self.r > 1:
                 poly = poly.subs(poly.parent().gen()**self.r)
-            poly = str(poly).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
-            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g*self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
+            poly = str(poly).replace(" ", "").replace("**", "%5E").replace("*", "").replace("+", "%2B")
+            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2 * self.g * self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
         return friends
 
     def frob_angles(self):
@@ -344,7 +348,7 @@ class AbvarFq_isoclass():
             return r"\F_{%s^{%s}}" % (self.p, n)
 
     def display_generator_explanation(self):
-        return getattr(self, "curves", None) and any(['a' in curve for curve in self.curves])
+        return getattr(self, "curves", None) and any('a' in curve for curve in self.curves)
 
     @cached_method
     def endo_extensions(self):
@@ -473,9 +477,11 @@ class AbvarFq_isoclass():
         else:
             return ""
 
+
 @app.context_processor
 def ctx_decomposition():
     return {"av_data": av_data}
+
 
 def describe_end_algebra(p, extension_label):
     # This should eventually be done with a join, but okay for now
@@ -520,6 +526,7 @@ def describe_end_algebra(p, extension_label):
         ans[1] += "\n"
     return ans
 
+
 def primeideal_display(p, prime_ideal):
     ans = "($ {0} $".format(p)
     if prime_ideal == ["0"]:
@@ -528,6 +535,7 @@ def primeideal_display(p, prime_ideal):
     else:
         ans += "," + web_latex(coeff_to_poly(prime_ideal, "pi")) + ")"
         return ans
+
 
 def decomposition_display(factors):
     if len(factors) == 1 and factors[0][1] == 1:
@@ -541,8 +549,10 @@ def decomposition_display(factors):
             factor_str += "<sup> {0} </sup>".format(factor[1])
     return factor_str
 
+
 def no_endo_data():
     return "The endomorphism data for this class is not currently in the database."
+
 
 def g2_table(field, entry, is_bold):
     if is_bold:
@@ -552,12 +562,14 @@ def g2_table(field, entry, is_bold):
     ans += '<table class="g2" style="margin-top: 5px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
     return ans
 
+
 def matrix_display(factor, end_alg):
     if end_alg[0] == "K" and end_alg[1] != factor[0] + ".":
         ans = r"$\mathrm{{M}}_{{{0}}}(${1}$)$".format(factor[1], end_alg[1][:-1])
     else:
         ans = r"$\mathrm{{M}}_{{{0}}}({1})$, where ${1}$ is {2}".format(factor[1], end_alg[0], end_alg[1])
     return ans
+
 
 def non_simple_loop(p, factors):
     ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'

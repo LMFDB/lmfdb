@@ -44,7 +44,7 @@ def cycle_string(lis):
 
 def get_bread(breads=[]):
     bc = [("Artin representations", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():

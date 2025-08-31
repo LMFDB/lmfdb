@@ -35,7 +35,7 @@ def get_bread(*breads):
         ("Abelian varieties", url_for(".abelian_varieties")),
         ("Fq", url_for(".abelian_varieties")),
     ]
-    bc.extend(z for z in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
