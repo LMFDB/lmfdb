@@ -1,6 +1,7 @@
+from flask import render_template, request, Response, make_response
+from typing import Any
 
 from lmfdb.api2 import api2_page
-from flask import render_template, request, Response, make_response
 from lmfdb.api2.searchers import searchers, singletons
 from . import utils
 
@@ -49,7 +50,7 @@ def live_page_pg(db):
 
 @api2_page.route("/pretty/<path:path_var>")
 def prettify_live(path_var):
-    bread = []
+    bread: list[Any] = []
     return render_template('view.html', data_url=path_var, bread=bread)
 
 
