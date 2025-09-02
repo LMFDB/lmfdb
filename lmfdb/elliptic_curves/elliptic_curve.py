@@ -473,9 +473,11 @@ ec_columns = SearchColumns([
     ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
 ])
 
+
 class ECDownloader(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
+
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"

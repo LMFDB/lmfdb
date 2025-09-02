@@ -116,9 +116,9 @@ def local_algebra_data(labels):
             l = str(f['new_label'])
         else:
             l = str(f['old_label'])
-        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
+        ans += '<tr><td><a href="%s">%s</a><td>' % (url_for_label(l), l)
         ans += format_coeffs(f['coeffs'])
-        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'],f['f'],f['c'])
+        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'], f['f'], f['c'])
         ans += transitive_group_display_knowl(f['galois_label'])
         if f.get('slopes') and f.get('t') and f.get('u'):
             ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
@@ -1527,6 +1527,7 @@ class FamilySearchArray(EmbeddedSearchArray):
         ("s", "top slope", ['top_slope', 'ctr_subfamily', 'ctr']),
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr_subfamily', 'ctr']),
     ]
+
     def __init__(self, fam):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
         if fam.packet_count is None:
