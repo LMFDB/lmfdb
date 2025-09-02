@@ -1004,6 +1004,9 @@ def char_table(label):
     if "cc_highlight" in info and info["cc_highlight"] not in [c.label for c in gp.conjugacy_classes]:
         flash_error(f"There is no conjugacy class of {label} with label {info['cc_highlight']}.")
         del info["cc_highlight"]
+    if "cc_highlight" in info and "cc_highlight_i" not in info:
+        # I don't see any paths to produce urls like this, but they are showing up in the flasklog and we can easily look up cc_highlight_i
+        info["cc_highlight_i"] = [c.counter for c in gp.conjugacy_classes if c.label == info["cc_highlight"]][0]
     return render_template(
         "character_table_page.html",
         gp=gp,
