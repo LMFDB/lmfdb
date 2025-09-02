@@ -3038,6 +3038,7 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient_counter', 'quotient_order', 'counter']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient_counter', 'counter']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient_counter', 'counter'])]
+
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")
@@ -3142,6 +3143,7 @@ class SubgroupSearchArray(SearchArray):
 class ComplexCharSearchArray(SearchArray):
     sorts = [("", "group", ['group_order', 'group_counter', 'dim', 'label']),
              ("dim", "degree", ['dim', 'group_order', 'group_counter', 'label'])]
+
     def __init__(self):
         faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
         dim = TextBox(
@@ -3216,6 +3218,7 @@ class ComplexCharSearchArray(SearchArray):
             [center_order, center_index] #, nt]
 
         ]
+
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
@@ -3251,8 +3254,9 @@ class ConjugacyClassSearchArray(SearchArray):
         )
 
         self.refine_array = [
-            [group,order,size]
+            [group, order, size]
         ]
+
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ConjugacyClasses", "Search again")]
