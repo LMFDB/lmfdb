@@ -76,6 +76,7 @@ class HomePageTest(LmfdbTest):
         self.check_args("/EllipticCurve/Q/?jump=4x%5E3+%2B+4x+%2B+1", '91a1')
     #
     # Various search combinations
+
     def test_search(self):
         r"""
         Check that various search combinations work.

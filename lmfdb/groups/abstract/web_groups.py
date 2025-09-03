@@ -3546,7 +3546,7 @@ class WebAbstractSubgroup(WebObj):
     @lazy_attribute
     def _others(self):
         """
-        Get information from gps_subgroups for each of the other subgroups referred to
+        Get information from gps_subgroup_search for each of the other subgroups referred to
         (centralizer, complements, contained_in, contains, core, normal_closure, normalizer)
         """
         labels = []
