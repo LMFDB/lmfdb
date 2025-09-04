@@ -351,11 +351,13 @@ class UploadSection():
             cols.insert(0, StatusBox())
         return cols
 
+
 class Uploader():
     # Override in subclass
     title = None
     bread = None
     learnmore = None
+
     def __init__(self, sections):
         self.sections = sections
         self.section_lookup = {section.name: section for section in sections}
