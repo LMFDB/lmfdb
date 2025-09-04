@@ -125,6 +125,7 @@ class GG_download(Downloader):
             }
         ),
     }
+
     def modify_query(self, info, query):
         _set_show_subs(info)
 
