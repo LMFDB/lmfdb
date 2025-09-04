@@ -236,8 +236,9 @@ class WebGaloisGroup:
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            for j in range(len(self.conjugacy_classes)):
-                self.conjugacy_classes[j].force_repr(' ')
+            if self.conjugacy_classes:
+                for j in range(len(self.conjugacy_classes)):
+                    self.conjugacy_classes[j].force_repr(' ')
         cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
         inds = [n-len(z) for z in cc2]
         cc2 = [compress_cycle_type(z) for z in cc2]
