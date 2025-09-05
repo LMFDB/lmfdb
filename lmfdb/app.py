@@ -410,7 +410,6 @@ def statshealth():
     else:
         abort(503)
 
-
 @app.route("/info")
 def info():
     output = ""
