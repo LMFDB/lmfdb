@@ -235,7 +235,7 @@ def display_isogeny_label(L):
     elif g == 5:
         return any(p not in bad_primes for p in [2, 3])
     else:  # g == 6
-        return not (2 in bad_primes)
+        return 2 not in bad_primes
 
 
 def lfuncDShtml(L, fmt):
