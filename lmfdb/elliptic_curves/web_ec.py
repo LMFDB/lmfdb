@@ -823,7 +823,8 @@ class WebEC():
                 'level': adelic_level,
                 'adelic_gens': adelic_gens }
             for prop in code:
-                for lang in code[prop]:
-                    code[prop][lang] = code[prop][lang].format(**data)
+                if prop != 'snippet_test':
+                    for lang in code[prop]:
+                        code[prop][lang] = code[prop][lang].format(**data)
             self._code = code
         return self._code
