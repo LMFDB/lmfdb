@@ -3,6 +3,8 @@ import datetime
 from lmfdb.api2 import __version__
 import json
 #from bson.objectid import ObjectId
+from typing import Any
+
 from lmfdb import db
 
 api_version = __version__
@@ -424,9 +426,9 @@ def simple_search_postgres(search_dict, projection=None):
                 p2[el] = projection[el]
         projection = p2
 
-    metadata = {}
+    metadata: dict[str, Any] = {}
     C = db[search_dict['table']]
-    info = {}
+    info: dict[str, Any] = {}
     try:
         data = C.search(search_dict['query'], projection=projection,
                         limit=rcount,
