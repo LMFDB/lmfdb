@@ -17,6 +17,9 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor, convert_label
 from lmfdb.genus2_curves import g2c_logger
+from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
+from lmfdb.abvar.fq.main import url_for_label
+
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
 from flask import url_for
@@ -647,15 +650,18 @@ def mw_gens_simple_table(invs, gens, hts, pts, fh):
     return mw_gens_table(invs, gens, hts, spts, comp=comp_poly(fh))
 
 
-def local_table(N, D, tama, bad_lpolys, cluster_pics):
+def local_table(N, D, tama, bad_lpolys, bad_lfactors, cluster_pics, root_numbers):
     loctab = ['<table class="ntdata">', '<thead>', '<tr>',
               th_wrap('ag.bad_prime', 'Prime'),
               th_wrap('ag.conductor', r'ord(\(N\))'),
               th_wrap('g2c.discriminant', r'ord(\(\Delta\))'),
               th_wrap('g2c.tamagawa', 'Tamagawa'),
+              None, # Set below once we know whether all root numbers proven
               th_wrap('g2c.bad_lfactors', 'L-factor'),
               th_wrap('ag.cluster_picture', 'Cluster picture'),
+              th_wrap('g2c.tame_reduction', 'Tame reduction?'),
               '</tr>', '</thead>', '<tbody>']
+    rnname = 'Root number'
     for p in integer_prime_divisors(D):
         loctab.append('  <tr>')
         cplist = [r for r in tama if r[0] == p]
@@ -668,14 +674,32 @@ def local_table(N, D, tama, bad_lpolys, cluster_pics):
             Lp = Lplist[0][1]
         else:
             Lp = '?'
+        Llist = [r for r in bad_lfactors if r[0] == p]
+        if Lplist:
+            L = Llist[0][1]
+        else:
+            L = 0
         Cluslist = [r for r in cluster_pics if r[0] == p]
         if Cluslist:
             ClusThmb = '<img src="' + Cluslist[0][2] + '" height=19 style="position: relative; top: 50%; transform: translateY(10%);" />'
             Clus = cp_display_knowl(Cluslist[0][1], img=ClusThmb)
         else:
             Clus = ''
-        loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapl(Lp),td_wrapcn(Clus)])
+        if len(L) - 1 == 4 - N.ord(p):
+            is_tame = 'yes'
+        else:
+            is_tame = 'no'
+        rootlist = [r for r in root_numbers if r[0] == p]
+        if rootlist:
+            root_number = str(rootlist[0][1])
+        else:
+            root_number = ''
+        if p == 2 or is_tame == 'no':
+            rnname = 'Root number*'
+            root_number += '^*'
+        loctab.extend([td_wrapr(p),td_wrapc(N.ord(p)),td_wrapc(D.ord(p)),td_wrapc(cp),td_wrapc(root_number),td_wrapl(Lp),td_wrapcn(Clus),td_wrapcn(is_tame)])
         loctab.append('  </tr>')
+    loctab[7] = th_wrap('g2c.local_root_number', rnname)
     loctab.extend(['</tbody>', '</table>'])
     return '\n'.join(loctab)
 
@@ -842,6 +866,8 @@ class WebG2C():
         data['lfunc_url'] = url_for("l_functions.l_function_genus2_page", cond=data['slabel'][0], x=data['slabel'][1])
         data['bad_lfactors'] = literal_eval(curve['bad_lfactors'])
         data['bad_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['bad_lfactors']]
+        read_bad_lfactors = {c[0]: c[1] for c in data['bad_lfactors_pretty']}
+        data['bad_primes_to_possibly_unavailable_l_factors'] = [(p, (read_bad_lfactors[p] if p in read_bad_lfactors.keys() else "N/A")) for p in curve['bad_primes']]
         if is_curve:
             # invariants specific to curve
             data['class'] = curve['class']
@@ -908,7 +934,8 @@ class WebG2C():
                 data['two_torsion_field_knowl'] = r"splitting field of \(%s\) with Galois group %s" % (intlist_to_poly(t[1]),transitive_group_display_knowl(f"{t[2][0]}T{t[2][1]}"))
 
             tamalist = [[item['p'], item['tamagawa_number']] for item in tama]
-            data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], clus)
+            root_numbers = [[item['p'], item['local_root_number']] for item in tama]
+            data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], data['bad_lfactors'], clus, root_numbers)
             data['galrep_table'] = galrep_table(galrep, data['torsion_order'])
 
             lmfdb_label = data['label']
@@ -931,7 +958,7 @@ class WebG2C():
                 raise KeyError("No Lfunction found in database for isogeny class of genus 2 curve %s." % curve['label'])
             if lfunc_data and lfunc_data.get('euler_factors'):
                 data['good_lfactors'] = [[nth_prime(n+1),lfunc_data['euler_factors'][n]] for n in range(len(lfunc_data['euler_factors'])) if nth_prime(n+1) < 30 and (data['cond'] % nth_prime(n+1))]
-                data['good_lfactors_pretty'] = [ (c[0], list_to_factored_poly_otherorder(c[1])) for c in data['good_lfactors']]
+                data['good_lfactors_pretty_with_label'] = [ (c[0], list_to_factored_poly_otherorder(c[1]), (Lfactor_to_label(c[1])), url_for_label(Lfactor_to_label(c[1])) if AbvarExists(2,c[0]) else '') for c in data['good_lfactors']]
 
         # Endomorphism data over QQ:
         data['gl2_statement_base'] = gl2_statement_base(endo['factorsRR_base'], r'\(\Q\)')

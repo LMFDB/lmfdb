@@ -1,3 +1,22 @@
+Quick Start using your browser
+==============================
+
+While logged into GitHub and viewing the `LMFDB/lmfdb` GitHub repository
+(or your fork of the repository), press the comma (`,`) key on your keyboard.
+
+Alternatively, click the green "Code" button, choose the "Codespaces" tab, and
+then click "Create codespace on main".
+
+After several minutes, a virtual machine will boot up and run a private
+development server. When the text `Running on http://127.0.0.1:37777` appears,
+ctrl/cmd-click the link to open it in a new tab. (Your tab will open to a URL
+similar to `random-words-97vv7x9gw9h7777-37777.app.github.dev` which only you
+have access to.)
+
+You can alternatively ctrl/cmd-click the `http://127.0.0.1:37777` URL in this
+readme file within your Codespace.
+
+
 Installation
 ============
 
@@ -52,7 +71,7 @@ Installation
      ```
      sage -pip install -r requirements.txt --upgrade
      ```
-   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to insall gap_packages
+   - For versions of macOSX after 10.15 (Catalina), Sage 9.2 is unable to install gap_packages
      (see [this](https://ask.sagemath.org/question/54252/sage92-install-gap_packages-on-macos-1015-fails/) post for some documentation on
      that). This problem does seem to be resolved for Sage 9.3beta, and it is currently
      unclear if the problem exists for Sage 9.0 or 9.1.

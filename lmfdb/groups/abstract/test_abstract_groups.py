@@ -26,11 +26,14 @@ class AbGpsTest(LmfdbTest):
         Test downloading on search results page.
         """
         response = self.tc.get("/Groups/Abstract/384.5458/download/gap")
-        self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
-        self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
+        self.assertTrue("Various presentations of this group are stored" in response.get_data(as_text=True))
+        self.assertTrue("PcGroupCode(293961739841108398509157889,384);" in response.get_data(as_text=True))
+        self.assertTrue("perfect := false," in response.get_data(as_text=True))
+        self.assertTrue("chartbl_384_5458.NrConjugacyClasses:= 240;" in response.get_data(as_text=True))
         response = self.tc.get("/Groups/Abstract/384.5458/download/magma")
-        self.assertTrue("If the group is solvable" in response.get_data(as_text=True))
-        self.assertTrue("encd:= 293961739841108398509157889" in response.get_data(as_text=True))
+        self.assertTrue("GPerm := PermutationGroup< 23 | (1,2,4,7,5,8,11,14,3,6,9,12,10,13,15,16)(18,20), (1,3)(2,6)(4,9)(5,10)(7,12)(8,13)(11,15)(14,16)(17,18)(19,20), (1,2,4,7,5,8,11,14,3,6,9,12,10,13,15,16), (21,23,22), (17,19)(18,20), (1,4,5,11,3,9,10,15)(2,7,8,14,6,12,13,16), (1,5,3,10)(2,8,6,13)(4,11,9,15)(7,14,12,16), (1,3)(2,6)(4,9)(5,10)(7,12)(8,13)(11,15)(14,16) >;" in response.get_data(as_text=True))
+        self.assertTrue("monomial := true," in response.get_data(as_text=True))
+        self.assertTrue("CR := CharacterRing(G);" in response.get_data(as_text=True))
 
     def test_conj_decode(self):
         from lmfdb.groups.abstract.web_groups import WebAbstractGroup
@@ -78,8 +81,8 @@ class AbGpsTest(LmfdbTest):
             "gps_conj_classes", "representative",
             "gps_qchar", "cdim",
             "gps_char", "indicator",
-            "gps_subgroups", "mobius_sub"])
+            "gps_subgroup_search", "mobius_sub"])
         self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
-            "gps_subgroups", "16.8.2.b1.a1",
+            "gps_subgroup_search", "16.8.2.b1.a1",
             "gps_groups", "[28776, 16577, 5167]", # perm_gens
             "[[1, 1, 1]]"]) # faithful_reps

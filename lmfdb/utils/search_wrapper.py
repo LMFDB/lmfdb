@@ -90,7 +90,7 @@ class Wrapper():
     ):
         ctx = ctx_proc_userdata()
         flash_error(
-            'The search query took longer than expected! Please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
+            'The search query took longer than expected! Please try again later, or use https://beta.lmfdb.org.  If your search still times out, please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
             % ctx["feedbackpage"]
         )
         info["err"] = str(err)

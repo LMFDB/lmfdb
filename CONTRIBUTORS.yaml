@@ -20,6 +20,10 @@ email: eran.assaf@dartmouth.edu
 affil: Dartmouth College
 url: https://www.math.dartmouth.edu/~eassaf/
 ---
+name: Edwina Aylward
+affil: University College London
+url: https://aylwarde.github.io/
+---
 name: Angelica Babei
 url: https://www.math.dartmouth.edu/~ababei/
 affil: Dartmouth College
@@ -47,7 +51,7 @@ url: https://sage.math.washington.edu/home/bober/www/
 affil: University of Bristol
 ---
 name: Raymond van Bommel
-affil: MIT
+affil: University of Bristol
 url: https://www.raymondvanbommel.nl/
 ---
 name: Andrew Booker
@@ -99,7 +103,8 @@ affil: University of Bristol and AIM
 url: https://www.aimath.org/conrey/
 ---
 name: Lewis Combes
-affil: University of Sheffield
+affil: University of Sydney
+url: https://lewismcombes.github.io
 ---
 name: Edgar Costa
 affil: MIT
@@ -350,6 +355,10 @@ name: Haluk Sengun
 affil: University of Sheffield
 url: https://sites.google.com/site/mhaluksengun/
 ---
+name: Jane Shi
+affil: MIT
+url: https://janeshi99.github.io/
+---
 name: Jerry Shurman
 affil: Reed College
 url: https://people.reed.edu/~jerry/
@@ -369,6 +378,10 @@ url: https://www.math.brown.edu/~jhs/
 name: Nils-Peter Skoruppa
 url: https://www.nskoruppa.de/
 affil: Universität Siegen
+---
+name: Harry Spencer
+url: https://hspen99.github.io/
+affil: University College, London
 ---
 name: William Stein
 url: https://wstein.org/
@@ -409,9 +422,13 @@ affil: University of Vermont
 email: christelle.vincent@uvm.edu
 url: https://www.uvm.edu/~cvincen1/
 ---
+name: Robin Visser
+affil: Charles University
+url: http://warwick.ac.uk/fac/sci/maths/people/staff/visser/
+---
 name: John Voight
-url: https://www.math.dartmouth.edu/~jvoight
-affil: Dartmouth College
+url: https://www.sydney.edu.au/science/about/our-people/academic-staff/john-voight.html
+affil: University of Sydney
 ---
 name: Lynne Walling
 affil: University of Bristol
@@ -430,6 +447,10 @@ affil: Grinnell College
 ---
 name: Jamie Weigandt
 affil: Purdue University
+---
+name: Hanneke Wiersema
+affil: University of Cambridge
+url: https://www.dpmms.cam.ac.uk/~hw600/index.html
 ---
 name: Trevor Wooley
 affil: University of Bristol

@@ -37,8 +37,7 @@ NEW_LF_RE = re.compile(r'^\d+\.\d+\.\d+\.\d+[a-z]+\d+\.\d+$')
 
 def get_bread(breads=[]):
     bc = [("$p$-adic fields", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
@@ -117,9 +116,9 @@ def local_algebra_data(labels):
             l = str(f['new_label'])
         else:
             l = str(f['old_label'])
-        ans += '<tr><td><a href="%s">%s</a><td>'%(url_for_label(l),l)
+        ans += '<tr><td><a href="%s">%s</a><td>' % (url_for_label(l), l)
         ans += format_coeffs(f['coeffs'])
-        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'],f['f'],f['c'])
+        ans += '<td>%d<td>%d<td>%d<td>' % (f['e'], f['f'], f['c'])
         ans += transitive_group_display_knowl(f['galois_label'])
         if f.get('slopes') and f.get('t') and f.get('u'):
             ans += '<td>$' + show_slope_content(f['slopes'],f['t'],f['u'])+'$'
@@ -1211,7 +1210,7 @@ def dynamic_statistics():
         "dynamic_stats.html",
         info=info,
         title=title,
-        bread=get_bread([("Dynamic Statistics", " ")]),
+        bread=get_bread([("Dynamic statistics", " ")]),
         learnmore=learnmore_list(),
     )
 
@@ -1524,10 +1523,11 @@ def common_boxes():
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
         ("", "Label", ['ctr_subfamily', 'ctr']),
-        ("gal", "Galois group", ['galT', 'ctr_subfamily', 'ctr']),
+        ("gal", "Galois group", ['gal', 'ctr_subfamily', 'ctr']),
         ("s", "top slope", ['top_slope', 'ctr_subfamily', 'ctr']),
         ("ind_of_insep", "Index of insep", ['ind_of_insep', 'ctr_subfamily', 'ctr']),
     ]
+
     def __init__(self, fam):
         degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
         if fam.packet_count is None:
@@ -1728,7 +1728,7 @@ class LFSearchArray(SearchArray):
              ("c", "discriminant exponent", ['c', 'p', 'n', 'e', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("e", "ramification index", ['n', 'e', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("f", "residue degree", ['f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
-             ("gal", "Galois group", ['n', 'galT', 'p', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
+             ("gal", "Galois group", ['n', 'gal', 'p', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("u", "Galois unramified degree", ['u', 'f', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("t", "Galois tame degree", ['t', 'e', 'n', 'p', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),
              ("s", "top slope", ['top_slope', 'p', 'n', 'e', 'c', 'ctr_family', 'ctr_subfamily', 'ctr']),

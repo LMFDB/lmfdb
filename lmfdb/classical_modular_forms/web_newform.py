@@ -13,7 +13,7 @@ from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
 from lmfdb.utils import (
-    coeff_to_power_series,
+    coeff_to_power_series, coeff_to_poly,
     display_float, display_complex, round_CBF_to_half_int, polyquo_knowl,
     display_knowl, factor_base_factorization_latex,
     integer_options, names_and_urls, web_latex_factored_integer, prop_int_pretty,
@@ -291,6 +291,11 @@ class WebNewform():
             self.properties += [('Inner twists', prop_int_pretty(self.inner_twist_count))]
         self.title = "Newform orbit %s" % (self.label)
 
+        self.base_label = [str(s) for s in [self.level, self.weight]]
+        self.ns1_label = '.'.join(self.base_label)
+        self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
+        self.ns_data = db.mf_newspaces.lookup(self.ns_label)
+
     # Breadcrumbs
     @property
     def bread(self):
@@ -340,15 +345,11 @@ class WebNewform():
     def friends(self):
         # first newspaces
         res = []
-        base_label = [str(s) for s in [self.level, self.weight]]
         cmf_base = '/ModularForm/GL2/Q/holomorphic/'
-        ns1_label = '.'.join(base_label)
-        ns1_url = cmf_base + '/'.join(base_label)
-        res.append(('Newspace ' + ns1_label, ns1_url))
-        char_letter = self.char_orbit_label
-        ns_label = '.'.join(base_label + [char_letter])
-        ns_url = cmf_base + '/'.join(base_label + [char_letter])
-        res.append(('Newspace ' + ns_label, ns_url))
+        ns1_url = cmf_base + '/'.join(self.base_label)
+        res.append(('Newspace ' + self.ns1_label, ns1_url))
+        ns_url = cmf_base + '/'.join(self.base_label + [self.char_orbit_label])
+        res.append(('Newspace ' + self.ns_label, ns_url))
         nf_url = ns_url + '/' + self.hecke_orbit_label
         if self.embedding_label is not None:
             res.append(('Newform orbit ' + self.label, nf_url))
@@ -412,11 +413,11 @@ class WebNewform():
             label = '%s.%s' % (self.label, self.embedding_label)
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
         downloads.append(
-                ('Code to Magma', url_for(".cmf_code_download", label=self.label, download_type='magma')))
+                ('Magma commands', url_for(".cmf_code_download", label=self.label, download_type='magma')))
         downloads.append(
-                ('Code to PariGP', url_for(".cmf_code_download", label=self.label, download_type='pari')))
+                ('PariGP commands', url_for(".cmf_code_download", label=self.label, download_type='pari')))
         downloads.append(
-                ('Code to SageMath', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+                ('SageMath commands', url_for(".cmf_code_download", label=self.label, download_type='sage')))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
@@ -724,9 +725,12 @@ class WebNewform():
                                                           display_knowl('cmf.newspace','newspace'),self.display_newspace())
         return desc
 
-    def defining_polynomial(self, separator=''):
+    def defining_polynomial(self, separator='', latex_only=False):
         if self.field_poly:
-            return raw_typeset_poly(self.field_poly, superscript=True, extra=separator)
+            if latex_only:
+                return r'\(%s\)' % latex(coeff_to_poly(self.field_poly))
+            else:
+                return raw_typeset_poly(self.field_poly, superscript=True, extra=separator)
         return None
 
     def Qnu(self):
@@ -870,7 +874,7 @@ function switch_basis(btype) {
                 Frac = r'\frac{1}{%s}(%s)' % (den, Num)
             return r'\(\beta = %s\)' % Frac
         elif self.hecke_ring_power_basis:
-            return r'a root \(\beta\) of the polynomial %s' % (self.defining_polynomial())
+            return r'a root \(\beta\) of the polynomial %s' % (self.defining_polynomial(latex_only=True))
         else:
             if self.dim <= 5:
                 betas = ",".join(r"\beta_%s" % (i) for i in range(1, self.dim))
@@ -1444,12 +1448,28 @@ function switch_basis(btype) {
         sage_zeta_order = conrey_chi.sage_zeta_order(self.char_order)
         vals = conrey_chi.genvalues
         sage_genvalues = get_sage_genvalues(self.level, self.char_order, vals, sage_zeta_order)
+        sage_trace_bound = self.ns_data.get('trace_bound')
+        traces_string = "traces = "+str(self.traces[0:sage_trace_bound]).replace(" ","")
+        #format string to look nice in the code box if it's long (check 3912/1/cp/a e.g.)
+        line_length = 70
+        i = 0
+        sage_traces_up_to_bound = ""
+        while i < len(traces_string):
+            sage_traces_up_to_bound += traces_string[i:i+line_length]
+            i += line_length
+            while sage_traces_up_to_bound[-1] != "," and i < len(traces_string):
+                sage_traces_up_to_bound += traces_string[i]
+                i += 1
+            if i < len(traces_string):
+                sage_traces_up_to_bound += "\n"
 
         data = { 'N': self.level,
                  'k': self.weight,
                  'conrey_index': self.conrey_index,
                  'sage_zeta_order': sage_zeta_order,
                  'sage_genvalues': sage_genvalues,
+                 'sage_trace_bound': sage_trace_bound,
+                 'sage_traces': sage_traces_up_to_bound,
                }
         for prop in code:
             if not isinstance(code[prop], dict):

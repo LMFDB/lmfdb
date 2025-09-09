@@ -1,6 +1,5 @@
 import cmath
 import math
-import datetime
 import os
 import random
 import re
@@ -574,7 +573,7 @@ def splitcoeff(coeff):
 #  display and formatting utilities
 ################################################################################
 
-def comma(x, sep=","):
+def comma(x, sep=None, mathmode=True):
     """
     Input is an integer. Output is a string of that integer with commas.
     CAUTION: this misbehaves if the input is not an integer.
@@ -585,7 +584,15 @@ def comma(x, sep=","):
     >>> comma("12345")
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000, sep), sep, (x % 1000)))
+    if sep is None:
+        sep = "{,}" if mathmode else ","
+    if x < 1000:
+        x = str(x)
+    else:
+        x = '%s%s%03d' % (comma(x // 1000, sep, False), sep, (x % 1000))
+    if mathmode:
+        x = f"${x}$"
+    return x
 
 def latex_comma(x):
     """
@@ -940,15 +947,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
-# conversion tools between timestamp different kinds of timestamp
-epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
-def datetime_to_timestamp_in_ms(dt):
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
-    return int((dt - epoch).total_seconds() * 1000000)
-
-def timestamp_in_ms_to_datetime(ts):
-    return datetime.datetime.fromtimestamp(float(int(ts)/1000000.0), datetime.timezone.utc)
 
 class WebObj:
     def __init__(self, label, data=None):

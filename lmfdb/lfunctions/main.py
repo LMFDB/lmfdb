@@ -359,12 +359,14 @@ euler_factor_columns = SearchColumns([
 
 class LfuncDownload(Downloader):
     table = db.lfunc_search
+
     def postprocess(self, rec, info, query):
         rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
-        rec['nus'] = [(0.5*r, i) for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        rec['nus'] = [(0.5 * r, i)
+                      for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
-            rec['root_number'] = 1 - int(4*rec['root_angle'])
+            rec['root_number'] = 1 - int(4 * rec['root_angle'])
         return rec
 
 @search_wrap(table=db.lfunc_search,
@@ -393,7 +395,7 @@ def l_function_search(info, query):
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
-    process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
+    process_an_constraints(info, query, qfield='dirichlet_coefficients')
 
 
 @search_parser
@@ -978,6 +980,8 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
     # thus it must be an old label, and we redirect to the orbit
     old_label = '.'.join(map(str, [level, weight, character, hecke_orbit]))
     newform_label = convert_newformlabel_from_conrey(old_label)
+    if newform_label is None:
+        return abort(404, 'Invalid label')
     level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                               char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)

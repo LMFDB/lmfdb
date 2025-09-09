@@ -828,6 +828,11 @@ class WebNumberField:
     def is_cm_field(self):
         return self._data['cm']
 
+    def maximal_cm_subfield(self):
+        max_cm = self._data.get('maximal_cm_subfield')
+        if max_cm:
+            return formatfield(max_cm)
+
     def disc_factored_latex(self):
         D = self.disc()
         s = ''
@@ -852,6 +857,23 @@ class WebNumberField:
             return [-1]
         return self._data['class_group']
 
+    def narrow_class_group_invariants(self, in_search_results=False):
+        if not self.haskey('narrow_class_group'):
+            return "n/a" if in_search_results else na_text()
+        cg_list = self._data['narrow_class_group']
+        if not cg_list:
+            invs = 'trivial'
+        else:
+            invs = cg_list
+        if in_search_results:
+            invs += " " + self.short_grh_string()
+        return invs
+
+    def narrow_class_group_invariants_raw(self):
+        if not self.haskey('narrow_class_group'):
+            return [-1]
+        return self._data['narrow_class_group']
+
     def class_group(self):
         if self.haskey('class_group'):
             cg_list = self._data['class_group']
@@ -862,6 +884,16 @@ class WebNumberField:
             return '$%s$, which has order %s' % (cg_string, self.class_number_latex())
         return na_text()
 
+    def narrow_class_group(self):
+        if self.haskey('narrow_class_group'):
+            cg_list = self._data['narrow_class_group']
+            if not cg_list:
+                return 'Trivial group, which has order $1$'
+            cg_list = [r'C_{%s}' % z for z in cg_list]
+            cg_string = r'\times '.join(cg_list)
+            return '$%s$, which has order %s' % (cg_string, self.narrow_class_number_latex())
+        return na_text()
+
     def class_number(self):
         if self.haskey('class_number'):
             return self._data['class_number']
@@ -870,6 +902,16 @@ class WebNumberField:
     def class_number_latex(self):
         if self.haskey('class_number'):
             return '$%s$' % str(self._data['class_number'])
+        return na_text()
+
+    def narrow_class_number(self):
+        if self.haskey('narrow_class_number'):
+            return self._data['narrow_class_number']
+        return na_text()
+
+    def narrow_class_number_latex(self):
+        if self.haskey('narrow_class_number'):
+            return '$%s$' % str(self._data['narrow_class_number'])
         return na_text()
 
     def can_class_number(self):

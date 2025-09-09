@@ -18,7 +18,7 @@ table.ntdata a {
   {{ KNOWL('nf.defining_polynomial', title='Defining polynomial') }}
   {% endif %}
 </h2>
-<p>{{ place_code('field') }}</p>
+<p>{{ place_code('field', is_top_snippet=True) }}</p>
 <p>{{ info.polynomial|safe }} {{ place_code('poly') }}</p>
 
 <h2> {{ KNOWL('nf.invariants', title='Invariants') }}</h2>
@@ -64,6 +64,11 @@ table.ntdata a {
     <tr><td>{{ KNOWL('nf.reflex_field', title='Reflex fields') }}:<td>&nbsp;&nbsp;<td>{{ info.reflex_fields | safe }}</tr>
   {% else %}
     <tr><td colspan="3">This is not a {{ KNOWL('nf.cm_field', title="CM field") }}.</tr>
+    {% if nf.maximal_cm_subfield() %}
+      <tr><td>{{ KNOWL('nf.maximal_cm_subfield', title="Maximal CM subfield")}}:<td>&nbsp;&nbsp;<td>{{ nf.maximal_cm_subfield() | safe }}</tr>
+    {% else %}
+      <tr><td>This field has no CM subfields.</td>
+    {% endif %}
   {% endif %}
 
           </table>
@@ -89,17 +94,14 @@ table.ntdata a {
 
         <h2> {{ KNOWL('nf.ideal_class_group', title='Class group') }} and  {{ KNOWL('nf.class_number', title='class number') }}</h2>
         <p>
-          {{ info.class_group }}
-          {{ info.grh_label|safe }}
-          {{ place_code('class_group') }}
-        </p>
+          <table>
+          <tr><td>{{ KNOWL('nf.ideal_class_group', title='Ideal class group')}}:<td>&nbsp;&nbsp;<td>{{ info.class_group }} {{ info.grh_label|safe }}<td>{{ place_code('class_group') }}
+          <tr><td>{{ KNOWL('nf.narrow_class_group', title='Narrow class group')}}:<td>&nbsp;&nbsp;<td>{{ info.narrow_class_group }} {{ info.grh_label|safe }}<td>{{ place_code('narrow_class_group') }}
           {% if nf.is_cm_field() %}
-        <p>
-          {{KNOWL('nf.relative_class_number','Relative class number')}}: {{ nf.relh() }}
-          {{ info.grh_label|safe }}
-        </p>
+          <tr><td>{{KNOWL('nf.relative_class_number','Relative class number')}}:<td>&nbsp;&nbsp;<td> {{ nf.relh() }} {{ info.grh_label|safe }}
           {% endif %}
-
+          </table>
+        </p>   
 
         <p><h2> {{ KNOWL('nf.unit_group', title='Unit group') }}</h2>
         <p>
