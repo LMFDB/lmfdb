@@ -276,7 +276,7 @@ function show_twists(number) {
     ${{ cl.zfv_plus_norm }} $</td>
   </tr>
 
-  {% if cl.singular_primes_disp %}
+  {% if cl.singular_primes %}
     {% for P in cl.singular_primes_disp %}
       <tr>
         {% if loop.first %}
@@ -295,7 +295,11 @@ function show_twists(number) {
     <tr>
       <td>{{ KNOWL('av.fq.singular_primes',title="Singular primes") }}:</td>
       <td colspan="3">
-        none
+        {% if cl.singular_primes is none %}
+          not computed
+        {% else %}
+          none
+        {% endif %}
       </td>
     </tr>
   {% endif %}
@@ -303,7 +307,11 @@ function show_twists(number) {
   <tr>
     <td>{{ KNOWL('av.fq.max_cohen_macaulay_type',title="Maximum Cohen-Macaulay type") }}:</td>
     <td colspan="3">
-      ${{ cl.cohen_macaulay_max }}$
+      {% if cl.cohen_macaulay_max is none %}
+        not computed
+      {% else %}
+        ${{ cl.cohen_macaulay_max }}$
+      {% endif %}
     </td>
   </tr>
 

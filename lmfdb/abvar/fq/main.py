@@ -135,7 +135,7 @@ def support_opts(num_primes):
 endring_columns = SearchColumns([
     ProcessedCol("label", "av.fq.lmfdb_label", "Label", lambda label: ".".join(label.split(".")[3:]), default=False),
     MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
-    ProcessedCol("singular_support", "av.fq.singular_primes", "Singular support", show_singular_support, mathmode=True, default=lambda info: "singular_support" in info),
+    ProcessedCol("singular_support", "av.fq.singular_primes", "Singular support", show_singular_support, default=lambda info: "singular_support" in info),
     MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
     MathCol("pic_size", "av.fq.picard_group", "Picard size", default=False),
     SearchCol("av_structure1", "av.fq.group_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
@@ -152,8 +152,8 @@ endring_columns = SearchColumns([
     SearchCol("name", "ag.endomorphism_ring", "Endomorphism ring"),
     MathCol("index", "av.fq.index_of_order", "Index"),
     CheckCol("is_conjugate_stable", "av.fq.conjugate_stable", "Conjugate stable", default=False),
-    CheckCol("is_Zconductor_sum", "av.fq.is_Zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
-    CheckCol("is_ZFVconductor_sum", "av.fq.is_ZFVconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
+    CheckCol("is_Zconductor_sum", "av.fq.is_zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
+    CheckCol("is_ZFVconductor_sum", "av.fq.is_zfvconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
     MathCol("conductor_disp", "av.endomorphism_ring_conductor", "Conductor"),
     CheckCol("conductor_is_Oprime", "av.endomorphism_ring_conductor", r"Conductor $\mathcal{O}$-prime", short_title="conductor O-prime", default=False),
     CheckCol("conductor_is_Sprime", "av.endomorphism_ring_conductor", "Conductor $S$-prime", short_title="conductor S-prime", default=False),
@@ -199,12 +199,12 @@ class EndringSearchArray(SearchArray):
         ZFVcond = YesNoBox(
             "ZFVcond",
             label=r"$\mathbb{Z}[F,V]$-conductor sum",
-            knowl="av.fq.is_ZFVconductor_sum",
+            knowl="av.fq.is_zfvconductor_sum",
         )
         product = YesNoBox(
             "product",
             label="Product",
-            knowl="av.fq.is_product",
+            knowl="av.is_product",
         )
         conj_stable = YesNoBox(
             "conj_stable",
@@ -233,7 +233,7 @@ class EndringSearchArray(SearchArray):
         )
         self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
                              [number_of_we, cond_index, conj_stable, ZFVcond, Sprime]]
-        if len(cl.zfv_singular_primes) > 1:
+        if hasattr(cl, "zfv_singular_primes") and len(cl.zfv_singular_primes) > 1:
             self.refine_array.append([singular_support])
 
     def search_types(self, info):
