@@ -221,11 +221,15 @@ class EndringSearchArray(SearchArray):
             label="Conductor $S$-prime",
             knowl="av.endomorphism_ring_conductor",
         )
+        if hasattr(cl, "zfv_singular_primes"):
+            singular_opts = list(support_opts(len(cl.zfv_singular_primes)))
+        else:
+            singular_opts = []
         singular_support = SelectBox(
             "singular_support",
             label="Singular support",
             knowl="av.fq.singular_primes",
-            options=list(support_opts(len(cl.zfv_singular_primes))),
+            options=singular_opts,
         )
         self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
                              [number_of_we, cond_index, conj_stable, ZFVcond, Sprime]]
