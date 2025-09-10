@@ -760,7 +760,6 @@ def WhiteListedRoutes():
         'citation',
         'contact',
         'editorial-board',
-        'editorial-board',
         'favicon.ico',
         'features',
         'forcebetasitemap',
