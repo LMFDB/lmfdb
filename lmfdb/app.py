@@ -719,6 +719,7 @@ def WhiteListedRoutes():
         'Character/calc-jacobi/Dirichlet',
         'Character/calc-kloosterman/Dirichlet',
         'Character/calc-value/Dirichlet',
+        'datasets',
         'EllipticCurve',
         'Field',
         'GaloisGroup',
@@ -747,6 +748,7 @@ def WhiteListedRoutes():
         'ModularForm/GL2/Q/Maass',
         'ModularForm/GL2/Q/holomorphic',
         'ModularForm/GL2/TotallyReal',
+        'Motive',
         'NumberField',
         'Representation/foo',  # allows /Representation but not /Representation/Galois/ModL/
         'SatoTateGroup',
