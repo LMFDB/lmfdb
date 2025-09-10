@@ -770,7 +770,6 @@ def WhiteListedRoutes():
         'knowledge',
         'lucant',
         'management',
-        'management-board',
         'padicField',
         'news',
         'not_yet_implemented',
