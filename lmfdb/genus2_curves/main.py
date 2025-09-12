@@ -579,7 +579,7 @@ class G2C_download(Downloader):
             ["eqn"],
             {
                 "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
-                "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
+                "sage": 'QQx.<x> = QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
                 "gp": 'curve = apply(Polrev, mapget(out, "eqn"));',
             }
         ),
