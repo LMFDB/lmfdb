@@ -3,6 +3,29 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='modcurve.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+<!-- 
+<style>
+/* Display code as single line with horizontal scrolling */
+.codebox {
+    display: block !important;
+    width: 100%;
+    margin: 10px 0;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.codebox .prompt {
+    display: inline;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.codebox .code {
+    display: inline;
+    font-family: monospace;
+    white-space: nowrap;
+}
+</style> -->
 
 {# Add generators here #}
 
@@ -175,12 +198,15 @@
   </table>
 {% endif %}
 
-{% set models = curve.formatted_models %}
-{% if models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
+{% if curve.formatted_models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
   <h2> {{ KNOWL('modcurve.model', 'Models') }} </h2>
-  {% if models %}
-    {% for m in models %}
+  {% set i = 0 %}
+  {% if curve.formatted_models %}
+    {% for m in curve.formatted_models %}
+      {% set model_name = "model_" + i | string %}
+      {{ CodeSnippet(code, model_name).place_code()  }}
       {{ m | safe }}
+      {% set i = i + 1 %}
     {% endfor %}
   {% elif curve.genus == 0 and not curve.pointless %}
     <p> This modular curve is isomorphic to $\mathbb{P}^1$. </p>
