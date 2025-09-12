@@ -197,6 +197,7 @@ prime_cycle_types:
     # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
     p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
 
+
 # specify which code snippets to test
 snippet_test:                   
   testQ: 

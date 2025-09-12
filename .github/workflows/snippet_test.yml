@@ -1,10 +1,9 @@
-name: Snippet Tests
+name: Test Snippet Code files
 
 on:
   schedule:
     - cron: '0 0 1,15 * *'
   workflow_dispatch: {}
-
 
 jobs:
   snippet-test:

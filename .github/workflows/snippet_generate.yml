@@ -1,4 +1,4 @@
-name: Generate Snippet Test Files
+name: Generate Snippet Code Files
 
 on:
   push:
