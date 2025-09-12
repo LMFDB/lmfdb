@@ -368,11 +368,7 @@ class LMFDBDatabase(PostgresDatabase):
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-<<<<<<< HEAD
         self._execute(inserter, [uid, datetime.datetime.now(utc), tablename, operation, data])
-=======
-        self._execute(inserter, [uid, utc_now_naive(), tablename, operation, data])
->>>>>>> 3ef61709869bf890d17ace13d4e818c2e8284eb7
 
     def verify(
         self,
