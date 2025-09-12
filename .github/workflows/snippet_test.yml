@@ -9,29 +9,32 @@ on:
 jobs:
   snippet-test:
     runs-on: ubuntu-latest
-    name: Snippet test
     steps:
-    - name: Set up environment
-      uses: ./.github/actions/snippet_setup
-    - name: Test snippets
-      if: matrix.files != 'lint'
-      shell: bash -l {0}
-      run: |
-        sage -python lmfdb/tests/generate_snippet_tests.py generate -i magma
+      - name: Checkout code
+        uses: actions/checkout@v4 # Or a specific version
 
-    - name: Check for diff
-      id: diff_check
-      run: |
-        # Get the diff and save it to a file.
-        git diff --relative --exit-code > changes.diff
+      - name: Set up environment
+        uses: ./.github/actions/snippet_setup
 
-    - name: Report diff
-      if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
-      run: echo "Nontrivial diff detected. See the 'repo-diff' artifact for details."
+      - name: Test snippets
+        if: matrix.files != 'lint'
+        shell: bash -l {0}
+        run: |
+          sage -python lmfdb/tests/generate_snippet_tests.py generate -i magma
 
-    - name: Upload diff as artifact
-      if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: repo-diff
-        path: changes.diff
+      - name: Check for diff
+        id: diff_check
+        run: |
+          # Get the diff and save it to a file.
+          git diff --relative --exit-code > changes.diff
+
+      - name: Report diff
+        if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
+        run: echo "Nontrivial diff detected. See the 'repo-diff' artifact for details."
+
+      - name: Upload diff as artifact
+        if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-diff
+          path: changes.diff
