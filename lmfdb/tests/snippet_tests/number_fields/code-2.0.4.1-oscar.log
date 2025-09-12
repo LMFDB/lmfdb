@@ -73,7 +73,7 @@ julia> subfields(K)[2:end-1]
 Tuple{AbsSimpleNumField, NumFieldHom{AbsSimpleNumField, AbsSimpleNumField, Hecke.MapDataFromAnticNumberField{AbsSimpleNumFieldElem}, Hecke.MapDataFromAnticNumberField{AbsSimpleNumFieldElem}, AbsSimpleNumFieldElem}}[]
 
 julia> G, Gtx = galois_group(K); G, transitive_group_identification(G)
-(Sym(2), (2, 1))
+(Symmetric group of degree 2, (2, 1))
 
 julia> p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
 1-element Vector{Tuple{Int64, Int64}}:
