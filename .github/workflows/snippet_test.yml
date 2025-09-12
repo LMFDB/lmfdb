@@ -1,0 +1,39 @@
+name: Test Snippet Code files
+
+on:
+  schedule:
+    - cron: '0 0 1,15 * *'
+  workflow_dispatch: {}
+
+jobs:
+  snippet-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Or a specific version
+
+      - name: Set up environment
+        uses: ./.github/actions/snippet_setup
+
+      - name: Test snippets
+        if: matrix.files != 'lint'
+        shell: bash -l {0}
+        run: |
+          sage -python lmfdb/tests/generate_snippet_tests.py generate -i magma
+
+      - name: Check for diff
+        id: diff_check
+        run: |
+          # Get the diff and save it to a file.
+          git diff --relative --exit-code > changes.diff
+
+      - name: Report diff
+        if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
+        run: echo "Nontrivial diff detected. See the 'repo-diff' artifact for details."
+
+      - name: Upload diff as artifact
+        if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-diff
+          path: changes.diff
