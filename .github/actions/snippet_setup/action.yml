@@ -43,6 +43,7 @@ runs:
       julia -e 'using Pkg; Pkg.add("Oscar"); using Oscar'
 
   - name: Run install script
+    shell: bash -l {0}
     # Only need to run install when deps has been changed
     if: steps.condacache.outputs.cache-hit != 'true'
     run: conda env create -f .environment.yml  || conda env update -f .environment.yml
