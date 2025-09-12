@@ -105,8 +105,10 @@ class UtilsTest(unittest.TestCase):
         r"""
         Checking utility: comma
         """
-        self.assertEqual(comma(123), "123")
-        self.assertEqual(comma(123456789), "123,456,789")
+        self.assertEqual(comma(123), "$123$")
+        self.assertEqual(comma(123456789), "$123{,}456{,}789$")
+        self.assertEqual(comma(123, mathmode=False), "123")
+        self.assertEqual(comma(123456789, mathmode=False), "123,456,789")
 
     def test_format_percentage(self):
         r"""

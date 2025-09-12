@@ -1004,6 +1004,9 @@ def char_table(label):
     if "cc_highlight" in info and info["cc_highlight"] not in [c.label for c in gp.conjugacy_classes]:
         flash_error(f"There is no conjugacy class of {label} with label {info['cc_highlight']}.")
         del info["cc_highlight"]
+    if "cc_highlight" in info and "cc_highlight_i" not in info:
+        # I don't see any paths to produce urls like this, but they are showing up in the flasklog and we can easily look up cc_highlight_i
+        info["cc_highlight_i"] = [c.counter for c in gp.conjugacy_classes if c.label == info["cc_highlight"]][0]
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -1730,7 +1733,7 @@ def cc_postprocess(res, info, query):
         info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
     info["group_factors"] = common_support if common_support else []
     complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
-    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
+    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroup_search.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
     highlight_col = {}
     for rec in res:
         label = rec.get("label")
@@ -2201,7 +2204,7 @@ def gp_data(label):
         group_counter = int(group_counter)
     else:
         group_counter = class_to_int(group_counter) + 1  # we start labeling at 1
-    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])
+    return datapage([label, [group_order, group_counter], label, label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroup_search", "gps_subgroup_data"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient", "ambient"])
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
@@ -2213,9 +2216,9 @@ def sgp_data(label):
     if data is None:
         return abort(404)
     if data["quotient"] is None:
-        return datapage([label, data["subgroup"], data["ambient"]], ["gps_subgroups", "gps_groups", "gps_groups"], bread=bread, title=title)
+        return datapage([label, label, data["subgroup"], data["ambient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups"], bread=bread, title=title)
     else:
-        return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
+        return datapage([label, label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
 # need to write characters in GAP or Magma formats for downloads
@@ -2954,7 +2957,7 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
         number_divisions = TextBox(
-            name="number_divisions ",
+            name="number_divisions",
             label="Number of divisions",
             knowl="group.division",
             example="3",
@@ -3035,6 +3038,7 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient_counter', 'quotient_order', 'counter']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient_counter', 'counter']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient_counter', 'counter'])]
+
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")
@@ -3119,16 +3123,16 @@ class SubgroupSearchArray(SearchArray):
 
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
-            [normal, characteristic, perfect, maximal, central, nontrivproper],
-            [ambient, ambient_order, direct, split, hall, sylow],
+            [normal, characteristic, perfect, maximal, central],
+            [ambient, ambient_order, direct, split],
             [
                 quotient,
                 quotient_order,
                 quotient_cyclic,
                 quotient_abelian,
                 quotient_solvable,
-                minimal_normal,
             ],
+            [minimal_normal, nontrivproper, hall, sylow],
         ]
 
     def search_types(self, info):
@@ -3139,6 +3143,7 @@ class SubgroupSearchArray(SearchArray):
 class ComplexCharSearchArray(SearchArray):
     sorts = [("", "group", ['group_order', 'group_counter', 'dim', 'label']),
              ("dim", "degree", ['dim', 'group_order', 'group_counter', 'label'])]
+
     def __init__(self):
         faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
         dim = TextBox(
@@ -3213,6 +3218,7 @@ class ComplexCharSearchArray(SearchArray):
             [center_order, center_index] #, nt]
 
         ]
+
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
@@ -3248,8 +3254,9 @@ class ConjugacyClassSearchArray(SearchArray):
         )
 
         self.refine_array = [
-            [group,order,size]
+            [group, order, size]
         ]
+
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ConjugacyClasses", "Search again")]

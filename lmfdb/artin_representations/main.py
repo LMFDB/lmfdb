@@ -245,9 +245,11 @@ def artin_postprocess(res, info, query):
     cache = knowl_cache(gp_labels)
     return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
 
+
 class ArtinDownload(Downloader):
     table = db.artin_reps
     title = "Artin representations"
+
     def modify_query(self, info, query):
         query['Hide'] = 0
 

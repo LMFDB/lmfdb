@@ -96,10 +96,10 @@ def valuefield_from_order(order):
 class WebCharObject():
     """ class for all characters and character groups """
     def __init__(self, **args):
-        self.type = args.get('type',None)
-        self.nflabel = args.get('number_field',None)
-        self.modlabel = args.get('modulus',None)
-        self.numlabel = args.get('number',None)
+        self.type = args.get('type')
+        self.nflabel = args.get('number_field')
+        self.modlabel = args.get('modulus')
+        self.numlabel = args.get('number')
         self.args = args
 
         self._compute()
@@ -558,14 +558,14 @@ class WebDBDirichlet(WebDirichlet):
     """
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
-        self.modulus = kwargs.get('modulus', None)
+        self.modulus = kwargs.get('modulus')
         if self.modulus:
             self.modulus = int(self.modulus)
         self.modlabel = self.modulus
         if self.modulus == 1:
             self.number = 1
         else:
-            self.number = kwargs.get('number', None)
+            self.number = kwargs.get('number')
             if self.number:
                 self.number = int(self.number)
         self.numlabel = self.number
@@ -1108,11 +1108,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
         self.isorbit = True
-        self.modulus = kwargs.get('modulus', None)
+        self.modulus = kwargs.get('modulus')
         if self.modulus:
             self.modulus = int(self.modulus)
         self.modlabel = self.modulus
-        self.number = kwargs.get('number', None)
+        self.number = kwargs.get('number')
         if self.number:
             self.number = int(self.number)
         self.numlabel = self.number
@@ -1122,7 +1122,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
         self.codelangs = ('pari', 'sage')
-        self.orbit_label = kwargs.get('orbit_label', None)  # this is what the user inserted, so might be banana
+        self.orbit_label = kwargs.get('orbit_label')  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.maxrows = 30
         self.rowtruncate = False
