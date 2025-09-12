@@ -11,7 +11,8 @@ from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 from lmfdb.logger import make_logger
 
-from sage.all import EllipticCurve, KodairaSymbol, latex, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
+from sage.all import EllipticCurve, KodairaSymbol, latex, lazy_attribute, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
+
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
@@ -804,27 +805,25 @@ class WebEC():
         ## {{data.tg.maxd}} such that...".
 
         tg['maxd'] = 24
-
+    @lazy_attribute
     def code(self):
-        if self._code is None:
-            # read in code.yaml from current directory:
-            _curdir = os.path.dirname(os.path.abspath(__file__))
-            code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-            # fill in curve data
-            if self.data['adelic_data']:
-                adelic_gens = self.data['adelic_data']['adelic_gens']
-                adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
-            else:
-                adelic_gens = adelic_level = ''
-            data = {
-                'label': "{label}",
-                'lang' : "{lang}",
-                'ainvs': self.data['ainvs'],
-                'level': adelic_level,
-                'adelic_gens': adelic_gens }
-            for prop in code:
-                if prop != 'snippet_test':
-                    for lang in code[prop]:
-                        code[prop][lang] = code[prop][lang].format(**data)
-            self._code = code
-        return self._code
+        # read in code.yaml from current directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        # fill in curve data
+        if self.data['adelic_data']:
+            adelic_gens = self.data['adelic_data']['adelic_gens']
+            adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
+        else:
+            adelic_gens = adelic_level = ''
+        data = {
+            'label': "{label}",
+            'lang' : "{lang}",
+            'ainvs': self.data['ainvs'],
+            'level': adelic_level,
+            'adelic_gens': adelic_gens }
+        for prop in code:
+            if prop != 'snippet_test':
+                for lang in code[prop]:
+                    code[prop][lang] = code[prop][lang].format(**data)
+    return code
