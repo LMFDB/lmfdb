@@ -74,13 +74,13 @@ julia> G, Gtx = galois_group(K); G, transitive_group_identification(G)
 ERROR: ArgumentError: degree must be positive, not 0
 Stacktrace:
  [1] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/TVkLv/src/Assertions.jl:602 [inlined]
+   @ ~/.julia/packages/AbstractAlgebra/T6WZD/src/Assertions.jl:602 [inlined]
  [2] has_transitive_groups(deg::Int64)
-   @ Oscar ~/.julia/packages/Oscar/T5Jnd/src/Groups/libraries/transitivegroups.jl:52
+   @ Oscar ~/.julia/packages/Oscar/6oHzG/src/Groups/libraries/transitivegroups.jl:52
  [3] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/TVkLv/src/Assertions.jl:601 [inlined]
+   @ ~/.julia/packages/AbstractAlgebra/T6WZD/src/Assertions.jl:601 [inlined]
  [4] transitive_group_identification(G::PermGroup)
-   @ Oscar ~/.julia/packages/Oscar/T5Jnd/src/Groups/libraries/transitivegroups.jl:149
+   @ Oscar ~/.julia/packages/Oscar/6oHzG/src/Groups/libraries/transitivegroups.jl:149
  [5] top-level scope
    @ none:1
 
