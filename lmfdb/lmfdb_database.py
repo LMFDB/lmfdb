@@ -359,16 +359,11 @@ class LMFDBDatabase(PostgresDatabase):
         """
         from lmfdb.utils.datetime_utils import utc_now_naive
         uid = self.login()
-        if hasattr(datetime, 'UTC'):
-            utc = datetime.UTC
-        else:
-            from datetime import timezone
-            utc = timezone.utc
         inserter = SQL(
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        self._execute(inserter, [uid, datetime.datetime.now(utc), tablename, operation, data])
+        self._execute(inserter, [uid, utc_now_naive(), tablename, operation, data])
 
     def verify(
         self,
