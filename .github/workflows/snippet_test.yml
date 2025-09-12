@@ -8,6 +8,7 @@ on:
 
 jobs:
   snippet-test:
+    description: test code snippet files
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
