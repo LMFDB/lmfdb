@@ -44,7 +44,7 @@ def cycle_string(lis):
 
 def get_bread(breads=[]):
     bc = [("Artin representations", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
@@ -245,9 +245,11 @@ def artin_postprocess(res, info, query):
     cache = knowl_cache(gp_labels)
     return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
 
+
 class ArtinDownload(Downloader):
     table = db.artin_reps
     title = "Artin representations"
+
     def modify_query(self, info, query):
         query['Hide'] = 0
 

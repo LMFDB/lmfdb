@@ -1,4 +1,3 @@
-import datetime
 import inspect
 import os
 import shutil
@@ -91,7 +90,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         - ``keep_old`` -- if true, new knowls for this table will be created from the column knowls for the old table.  Otherwise, the old knowls will be renamed, or deleted if they are not columns of this table.
         """
         from lmfdb.knowledge.knowl import knowldb
-        from lmfdb.utils.datetime import utc_now_naive
+        from lmfdb.utils.datetime_utils import utc_now_naive
         knowls = knowldb.get_column_description(other_table)
         with DelayCommit(self):
             for col, knowl in knowls.items():
@@ -358,6 +357,7 @@ class LMFDBDatabase(PostgresDatabase):
         - ``tablename`` -- the name of the table that the change is affecting
         - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
+        from lmfdb.utils.datetime_utils import utc_now_naive
         uid = self.login()
         if hasattr(datetime, 'UTC'):
             utc = datetime.UTC
@@ -368,7 +368,11 @@ class LMFDBDatabase(PostgresDatabase):
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
+<<<<<<< HEAD
         self._execute(inserter, [uid, datetime.datetime.now(utc), tablename, operation, data])
+=======
+        self._execute(inserter, [uid, utc_now_naive(), tablename, operation, data])
+>>>>>>> 3ef61709869bf890d17ace13d4e818c2e8284eb7
 
     def verify(
         self,

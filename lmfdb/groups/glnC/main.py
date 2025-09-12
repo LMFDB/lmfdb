@@ -42,7 +42,7 @@ def label_is_valid(lab):
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")), ("GLnC", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 

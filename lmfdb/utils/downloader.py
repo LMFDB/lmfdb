@@ -26,7 +26,7 @@ from io import BytesIO
 from sage.all import Integer, Rational, lazy_attribute
 
 from lmfdb.utils import plural_form, pluralize, flash_error
-from lmfdb.utils.datetime import utc_now_naive
+from lmfdb.utils.datetime_utils import utc_now_naive
 
 class DownloadLanguage():
     # We choose the most common values; override these if needed in each subclass

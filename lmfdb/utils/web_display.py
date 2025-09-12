@@ -724,35 +724,30 @@ def compress_poly_Q(rawpoly,
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
+greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
+subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
+rat_re = re.compile(r"\b(\d+)/(\d+)\b")
+exp_re = re.compile(r"\^(-\d+|\d\d+)\b")
 def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a polynomial (or other string containing polynomials)
     if not isinstance(pol_str, str):
         pol_str = str(pol_str)
-    if greek_vars:
-        greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
-        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
-    if subscript_vars:
-        subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
-        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
-    o_str = pol_str.replace('*', ' ')
-    ind_mid = o_str.find('/')
-    while ind_mid != -1:
-        ind_start = ind_mid - 1
-        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_start -= 1
-        ind_end = ind_mid + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
-            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_mid = o_str.find('/')
 
-    ind_start = o_str.find('^')
-    while ind_start != -1:
-        ind_end = ind_start + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_start = o_str.find('^', ind_end)
+    if greek_vars:
+        # Add backslashes to greek variables
+        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
+
+    if subscript_vars:
+        # If digits directly follow letter, make them subscripts
+        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
+
+    # Remove explicit multiplication symbols
+    o_str = pol_str.replace('*', ' ')
+
+    # Make a/b into a latex fraction when a and b are numbers
+    o_str = rat_re.sub(r"\\frac{\g<1>}{\g<2>}", o_str)
+
+    # Wrap negative and multidigit exponents in braces
+    o_str = exp_re.sub(r"^{\g<1>}", o_str)
 
     return o_str
 

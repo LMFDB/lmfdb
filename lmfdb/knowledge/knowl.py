@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
-from lmfdb.utils.datetime import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
+from lmfdb.utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
 import re
 import subprocess
 import time
