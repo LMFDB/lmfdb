@@ -10,6 +10,123 @@ text-align: center;
 }
 </style>
 
+<h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
+{{ place_code('rank') }}
+<p>
+{% if info.class_size==1 %} The elliptic curve {{info.curves[0].curve_label}} has
+{% else %} The elliptic curves in class {{info.class_label}} have
+{% endif %}
+{{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
+</p>
+
+{% if info.has_lfunction %}
+<h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
+<p>
+<table>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
+        <table id = "bad_lfactors_table">
+        <tr>
+            <th>Prime</th>
+            <th align="left">L-Factor</th>
+        </tr>
+        {% for c in info.bad_lfactors_pretty %}
+        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\({{ c[1] }}\)</td></tr>
+        {% endfor %}
+        </table>
+    </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td valign=top> {{ KNOWL('g2c.good_lfactors', title='Good L-factors') }}:<td>
+        <table id = "good_lfactors_table">
+        <tr>
+            <th>Prime</th>
+            <th align="left">L-Factor</th>
+            <th align="left">Isogeny Class over \(\mathbb{F}_p\)</th>
+        </tr>
+        {% for c in info.good_lfactors_pretty_with_label %}
+        <tr>
+            <td class="center">\({{ c[0] }}\)</a></td>
+            <td align="left">\( {{ c[1] }}\)</td>
+            <td>
+              {% if c[3] == '' %}
+                {{ c[2] }}
+              {% else %}
+                <a href="{{ c[3] }}">{{ c[2] }}</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        <tr><td>$\cdots$</td><td>$\cdots$</td><td>$\cdots$</td>
+        </table>
+    </tr>
+    <tr><td>&nbsp;</td></tr>
+    <tr><td colspan="2">See <a href="{{info.lfunction_link}}">L-function page</a> for more information</td></tr>
+</table>
+{% endif %}
+
+<h2>{{KNOWL('ec.complex_multiplication', title='Complex multiplication')}}</h2>
+{% if info.cm %}
+Each elliptic curve in class {{info.class_label}} has complex multiplication by an order in the imaginary quadratic field {{info.CMfield }}.
+{% else %} The elliptic curves in class {{info.class_label}} do not have complex multiplication.
+{% endif %}
+
+<h2>
+{{KNOWL('ec.q.modular_form', title='Modular form')}}
+{% if info.newform_exists_in_db %}
+<a href="{{info.newform_link}}">{{ info.newform_label }}</a>
+{% else %}
+{{ info.newform_label }}
+{% endif %}
+</h2>
+{{ place_code('q_eigenform') }}
+<div>
+    <form>
+        <div class="output">
+          <span id="modform_output">{{ info.newform | safe }}
+          </span>
+        </div>
+        <div class="emptyspace"><br>
+        </div>
+        <button id="morebutton">Show more coefficients</button>
+    </form>
+</div>
+
+<script type="text/javascript">
+  var number_of_coefficients = 20;
+  function more_handler(evt) {
+      number_of_coefficients += number_of_coefficients;
+      evt.preventDefault();
+      $("#modform_output").load("{{info.modform_display}}"+number_of_coefficients,
+          function() {
+              {# render the output #}
+              renderMathInElement($("#modform_output").get(0), katexOpts);
+          });
+  }
+  $(function() {
+      $("#morebutton").click(function(e) {more_handler(e)});
+  });
+  </script>
+  
+{% if info.class_size>1 %}
+
+<h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
+
+{{ place_code('matrix') }}
+<p>The \(i,j\) entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
+</p>
+<p>
+  \({{info.isogeny_matrix_str}}\)
+</p>
+
+<h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
+{{ place_code('plot') }}
+<p>The vertices are labelled with {{info.label_type}} labels. </p>
+<center>
+  <img src="{{info.graph_img}}" />
+</center>
+
+{% endif %}
+
 <h2>Elliptic curves in class {{info.class_label}}</h2>
 {{ place_code('curves') }}
 <table id = "isogeny_class_table">
@@ -98,123 +215,5 @@ curve {{info.optimal_label}}.{% endif %}
 {% if info.class_size>1 %}<sup>**</sup>conjecturally; proved in some cases.{% endif %}
 #}
 
-<h2>{{KNOWL('ec.rank', title='Rank')}}</h2>
-{{ place_code('rank') }}
-<p>
-{% if info.class_size==1 %} The elliptic curve {{info.curves[0].curve_label}} has
-{% else %} The elliptic curves in class {{info.class_label}} have
-{% endif %}
-{{KNOWL('ec.rank', title='rank')}} \({{ info.rank}}\).
-</p>
-
-{% if info.has_lfunction %}
-<h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
-<p>
-<table>
-    <tr><td>&nbsp;</td></tr>
-    <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
-        <table id = "bad_lfactors_table">
-        <tr>
-            <th>Prime</th>
-            <th align="left">L-Factor</th>
-        </tr>
-        {% for c in info.bad_lfactors_pretty %}
-        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\({{ c[1] }}\)</td></tr>
-        {% endfor %}
-        </table>
-    </tr>
-    <tr><td>&nbsp;</td></tr>
-    <tr><td valign=top> {{ KNOWL('g2c.good_lfactors', title='Good L-factors') }}:<td>
-        <table id = "good_lfactors_table">
-        <tr>
-            <th>Prime</th>
-            <th align="left">L-Factor</th>
-            <th align="left">Isogeny Class over \(\mathbb{F}_p\)</th>
-        </tr>
-        {% for c in info.good_lfactors_pretty_with_label %}
-        <tr>
-            <td class="center">\({{ c[0] }}\)</a></td>
-            <td align="left">\( {{ c[1] }}\)</td>
-            <td>
-              {% if c[3] == '' %}
-                {{ c[2] }}
-              {% else %}
-                <a href="{{ c[3] }}">{{ c[2] }}</a>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-        <tr><td>$\cdots$</td><td>$\cdots$</td><td>$\cdots$</td>
-        </table>
-    </tr>
-    <tr><td>&nbsp;</td></tr>
-    <tr><td colspan="2">See <a href="{{info.lfunction_link}}">L-function page</a> for more information</td></tr>
-</table>
-{% endif %}
-
-<h2>{{KNOWL('ec.complex_multiplication', title='Complex multiplication')}}</h2>
-{% if info.cm %}
-Each elliptic curve in class {{info.class_label}} has complex multiplication by an order in the imaginary quadratic field {{info.CMfield }}.
-{% else %} The elliptic curves in class {{info.class_label}} do not have complex multiplication.
-{% endif %}
-
-<h2>
-{{KNOWL('ec.q.modular_form', title='Modular form')}}
-{% if info.newform_exists_in_db %}
-<a href="{{info.newform_link}}">{{ info.newform_label }}</a>
-{% else %}
-{{ info.newform_label }}
-{% endif %}
-</h2>
-{{ place_code('q_eigenform') }}
-<div>
-    <form>
-        <div class="output">
-          <span id="modform_output">{{ info.newform | safe }}
-          </span>
-        </div>
-        <div class="emptyspace"><br>
-        </div>
-        <button id="morebutton">Show more coefficients</button>
-    </form>
-</div>
-
-{% if info.class_size>1 %}
-
-<h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
-
-{{ place_code('matrix') }}
-<p>The \(i,j\) entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
-</p>
-<p>
-  \({{info.isogeny_matrix_str}}\)
-</p>
-
-<h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
-{{ place_code('plot') }}
-<p>The vertices are labelled with {{info.label_type}} labels. </p>
-<center>
-  <img src="{{info.graph_img}}" />
-</center>
-
-{% endif %}
-
-<script type="text/javascript">
-var number_of_coefficients = 20;
-function more_handler(evt) {
-    number_of_coefficients += number_of_coefficients;
-    evt.preventDefault();
-    $("#modform_output").load("{{info.modform_display}}"+number_of_coefficients,
-        function() {
-            {# render the output #}
-            renderMathInElement($("#modform_output").get(0), katexOpts);
-        });
-}
-$(function() {
-    $("#morebutton").click(function(e) {more_handler(e)});
-});
-</script>
-
 {% endblock %}
-
 
