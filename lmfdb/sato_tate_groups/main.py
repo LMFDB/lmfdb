@@ -280,6 +280,30 @@ def comma_separated_list(lst):
     return ', '.join(lst)
 
 
+def parse_component_group_number(component_group):
+    """
+    Parse the component group label to extract the number/letter part.
+    
+    Sato-Tate group labels have the form w.d.A.c.ns where:
+    - n is the second digit of the GAP id [c,n] of the component group
+    - s is a lowercase letter used to distinguish groups
+    
+    This function handles both numeric and letter suffixes in component group labels.
+    Returns an integer if the suffix is numeric, otherwise returns the string.
+    """
+    if component_group is None:
+        return None
+    
+    try:
+        return int(component_group.split('.')[1])
+    except (ValueError, IndexError):
+        # If parsing as int fails, return the string part
+        parts = component_group.split('.')
+        if len(parts) > 1:
+            return parts[1]
+        return component_group
+
+
 def string_matrix(m):
     if len(m) == 0:
         return ''
@@ -697,7 +721,7 @@ def mu_data(n):
     if rec['component_group'] is None:
         rec['component_group'] = 'ab/%s' % n
     else:
-        rec['component_group_number'] = rec['component_group'].split('.')[1]
+        rec['component_group_number'] = parse_component_group_number(rec['component_group'])
     rec['st0_label'] = '0.1.A'
     rec['identity_component'] = 'SO(1)'
     rec['trace_zero_density'] = '0'
@@ -754,10 +778,7 @@ def su2_mu_data(w, n):
     if rec['component_group'] is None:
         rec['component_group'] = 'ab/%s' % n
     else:
-        try:
-            rec['component_group_number'] = int(rec['component_group'].split('.')[1])
-        except ValueError:
-            rec['component_group_number'] = rec['component_group'].split('.')[1]
+        rec['component_group_number'] = parse_component_group_number(rec['component_group'])
     rec['st0_label'] = '%d.2.A' % w
     rec['identity_component'] = 'SU(2)'
     rec['trace_zero_density'] = '0'
@@ -811,10 +832,7 @@ def nu1_mu_data(w,n):
     rec['component_group'] = '4.2' if n == 2 else db.gps_special_names.lucky({'family':'D','parameters':{'n':n}},projection='label')
     if rec['component_group'] is None:
         return None
-    try:
-        rec['component_group_number'] = int(rec['component_group'].split('.')[1])
-    except ValueError:
-        rec['component_group_number'] = rec['component_group'].split('.')[1]
+    rec['component_group_number'] = parse_component_group_number(rec['component_group'])
     rec['st0_label'] = '%d.2.B' % w
     rec['identity_component'] = 'U(1)'
     rec['trace_zero_density'] = '1/2'

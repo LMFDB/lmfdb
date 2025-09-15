@@ -126,7 +126,16 @@ class SatoTateGroupTest(LmfdbTest):
     def test_component_group_number_parsing(self):
         """Test that component_group_number handles both numeric and letter suffixes"""
         from sage.all import ZZ
-        from lmfdb.sato_tate_groups.main import su2_mu_data, nu1_mu_data
+        from lmfdb.sato_tate_groups.main import su2_mu_data, nu1_mu_data, parse_component_group_number
+        
+        # Test the helper function directly
+        assert parse_component_group_number('12.5') == 5
+        assert isinstance(parse_component_group_number('12.5'), int)
+        assert parse_component_group_number('13284.c') == 'c'
+        assert isinstance(parse_component_group_number('13284.c'), str)
+        assert parse_component_group_number('999.a') == 'a'
+        assert isinstance(parse_component_group_number('999.a'), str)
+        assert parse_component_group_number(None) is None
         
         # Mock database for testing different component group formats
         class MockDB:
