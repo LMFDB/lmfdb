@@ -115,3 +115,46 @@ class SatoTateGroupTest(LmfdbTest):
                 and 'gps_groups' in data and 'number_normal_subgroups' in data)
         page = self.tc.get('/SatoTateGroup/0.1.2').get_data(as_text=True)
         assert 'Underlying data' not in page
+
+    def test_large_su2_mu_label(self):
+        """Test that large SU2 mu labels don't cause ValueError in component group parsing"""
+        # This should not cause a 500 error 
+        L = self.tc.get('/SatoTateGroup/1.2.A.c13284')
+        # Should either return valid data or redirect, not error
+        assert L.status_code != 500
+
+    def test_component_group_number_parsing(self):
+        """Test that component_group_number handles both numeric and letter suffixes"""
+        from sage.all import ZZ
+        from lmfdb.sato_tate_groups.main import su2_mu_data, nu1_mu_data
+        
+        # Mock database for testing different component group formats
+        class MockDB:
+            def __init__(self, return_value):
+                self.return_value = return_value
+            def lucky(self, *args, **kwargs):
+                return self.return_value
+        
+        # Test numeric component group (should return int)
+        from lmfdb import db
+        original_db = db.gps_special_names
+        try:
+            db.gps_special_names = MockDB('12.5')
+            result = su2_mu_data(ZZ(1), ZZ(12))
+            assert result['component_group_number'] == 5
+            assert isinstance(result['component_group_number'], int)
+            
+            # Test letter component group (should return str)
+            db.gps_special_names = MockDB('13284.c')
+            result = su2_mu_data(ZZ(1), ZZ(13284))
+            assert result['component_group_number'] == 'c'
+            assert isinstance(result['component_group_number'], str)
+            
+            # Test nu1_mu_data as well
+            db.gps_special_names = MockDB('999.a')
+            result = nu1_mu_data(ZZ(1), ZZ(999))
+            assert result['component_group_number'] == 'a'
+            assert isinstance(result['component_group_number'], str)
+            
+        finally:
+            db.gps_special_names = original_db
