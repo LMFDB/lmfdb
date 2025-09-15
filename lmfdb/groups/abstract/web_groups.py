@@ -2335,7 +2335,15 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Lie":
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
-            return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
+            
+            print("****** RDATA:", rdata)
+            #code_cmd = " ".join(self.create_lie_type_snippet('testlie1')
+            #code_cmd = " ".join([self.create_lie_type_snippet('testlie1') + self.create_lie_type_snippet('testlie2')
+            code_cmd = " ".join([self.create_lie_type_snippet(rep['family']) for rep in rdata])
+
+            print("*********", code_cmd)
+
+            return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr><tr><td colspan="6">{code_cmd}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
             if not skip_head:  #add copy button in certain cases
@@ -2844,6 +2852,14 @@ class WebAbstractGroup(WebObj):
                               post="</td></tr>")
         return snippet.place_code()
 
+    # Used for creating code snipets for Lie type representations (i.e. without the <tr>)
+    def create_lie_type_snippet(self,item):
+        snippet = CodeSnippet(self.code_snippets(), item,
+                              pre=f"",
+                              post="")
+        return snippet.place_code()
+
+
     @cached_method
     def code_snippets(self):
         if self.live():
@@ -2925,6 +2941,51 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
+        # Implementing code snippets for the Lie type representations
+        # TODO: We should update groups data to use new family names
+        # For now, we'll implement a "old to new" dictionary (can delete once groups data is updated)
+        old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO:"PO",
+                                  "PGOPlus":"POPlus", "PGOMinus":"POMinus", "PGU":"PU", "CSp":"GSp", "CSO":"GSO", "CSOPlus":"GSOPlus",
+                                  "CSOMinus":"GSOMinus", "CSU":"GSU", "CO":"GOrth", "COPlus":"GOrthPlus", "COMinus":"GOrthMinus",
+                                  "CU":"GUnitary"}
+
+        # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
+        magma_lie, gap_lie, sage_lie = None, None, None   
+        magma_lie_priority, gap_lie_priority, sage_lie_priority = 1000, 1000, 1000
+        if "Lie" in self.representations:
+            # Get Magma commands for all the Lie type families
+            gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
+            magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
+            lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
+            
+            for lie_rep in self.representations["Lie"]:
+                print("********** DEBUG LIE REP:", lie_rep)
+                code[lie_rep['family']] = dict()
+                nLie = lie_rep['d']  #self.representations["Lie"][fam]["n"]
+                qLie = lie_rep['q']  #self.representations["Lie"][fam]["q"]
+                priorLie = lie_priorities[lie_rep['family']]
+                
+                new_family_name = lie_rep['family']
+                if lie_rep['family'] in old_to_new_family_name: new_family_name = old_to_new_family_name[lie_rep['family']]
+
+                code[lie_rep['family']]['magma'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
+                if priorLie < magma_lie_priority:
+                    magma_lie, magma_lie_priority = code[lie_rep['family']]['magma'], priorLie
+               
+                if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU']:
+                    code[lie_rep['family']]['gap'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
+                    if priorLie < gap_lie_priority:
+                        gap_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
+
+                if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL']:
+                    code[lie_rep['family']]['sage'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
+                    if priorLie < sage_lie_priority:
+                        sage_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
+
+
+
+                
+
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
         # to display at the top of each group page.  This is computed and stored in code['code_description'].
         # If the group is a member of a special family (i.e. Cyclic,Symmetric,Dihedral,Alternating,Dicyclic,LieType,Chevalley),
@@ -2963,6 +3024,8 @@ class WebAbstractGroup(WebObj):
                 code['code_description']['sage'] = "G = DiCyclicGroup("+str(self.order/4)+")"    # Sage Dic(n) has order 4n
             else:
                 # List of Lie Type families available in Magma  (NB: Must ensure the Magma implementation agrees with our definition!)
+                
+
                 for f in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU', 'SOPlus', 'SOMinus']:
                     if f in [t['family'] for t in self_families]:
                         fam_index = [t['family'] for t in self_families].index(f)
@@ -3061,6 +3124,8 @@ class WebAbstractGroup(WebObj):
         for lang in list(code['prompt']):
             if lang not in code['code_description']:
                 code['prompt'].pop(lang, None)
+
+        #print("***** DEBUG CODE", code)
 
         for prop in code:
             for lang in code[prop]:
