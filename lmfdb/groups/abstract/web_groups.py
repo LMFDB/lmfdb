@@ -2850,7 +2850,6 @@ class WebAbstractGroup(WebObj):
         snippet = CodeSnippet(self.code_snippets(), item)
         return snippet.place_code()
 
-
     @cached_method
     def code_snippets(self):
         if self.live():
@@ -2941,7 +2940,7 @@ class WebAbstractGroup(WebObj):
                                   "CU":"GUnitary"}
 
         # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
-        magma_top_lie, gap_top_lie, sage_top_lie = None, None, None   
+        magma_top_lie, gap_top_lie, sage_top_lie = None, None, None
         magma_lie_priority, gap_lie_priority, sage_lie_priority = 1000, 1000, 1000
         if "Lie" in self.representations:
             # Get Magma commands for all the Lie type families
@@ -2950,14 +2949,15 @@ class WebAbstractGroup(WebObj):
             gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Omega','PO','PU','POmega','PGammaL','PSigmaL']
             #gap_commands = {"PO":"PGO", "PU":"PGU"}
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
-            
+
             for lie_rep in self.representations["Lie"]:
                 #print("********** DEBUG LIE REP:", lie_rep)
                 code[lie_rep['family']] = dict()
                 nLie, qLie = lie_rep['d'], lie_rep['q']
-              
+
                 new_family_name = lie_rep['family']
-                if lie_rep['family'] in old_to_new_family_name: new_family_name = old_to_new_family_name[lie_rep['family']]
+                if lie_rep['family'] in old_to_new_family_name:
+                    new_family_name = old_to_new_family_name[lie_rep['family']]
 
                 priorLie = lie_priorities[new_family_name]
 
@@ -2974,7 +2974,6 @@ class WebAbstractGroup(WebObj):
                     code[lie_rep['family']]['sage'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
                     if priorLie < sage_lie_priority:
                         sage_top_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
-                
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
         # to display at the top of each group page.  This is computed and stored in code['code_description'].
@@ -3014,11 +3013,11 @@ class WebAbstractGroup(WebObj):
                 code['code_description']['sage'] = "G = DiCyclicGroup("+str(self.order/4)+")"    # Sage Dic(n) has order 4n
             else:
                 # Use a Lie Type matrix construction (if it exists)
-                if magma_top_lie != None:
+                if magma_top_lie is not None:
                     code['code_description']['magma'] = "G := "+magma_top_lie
-                if gap_top_lie != None:
+                if gap_top_lie is not None:
                     code['code_description']['gap'] = "G := "+gap_top_lie
-                if sage_top_lie != None:
+                if sage_top_lie is not None:
                     code['code_description']['sage'] = "G = "+sage_top_lie
         # Checking if group is in the Chevalley or Twisted Chevalley family
         if ('Chev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
