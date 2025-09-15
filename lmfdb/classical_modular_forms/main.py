@@ -357,7 +357,14 @@ def render_newform_webpage(label):
 
     info = to_dict(request.args)
     info['display_float'] = display_float
-    info['format'] = info.get('format', 'embed')
+    
+    # Validate format parameter
+    valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
+    format_param = info.get('format', 'embed')
+    if format_param not in valid_formats:
+        return abort(400, f"Invalid format parameter '{format_param}'. Valid formats are: {', '.join(valid_formats)}")
+    
+    info['format'] = format_param
 
     if label in ETAQUOTIENTS:
         info['eta_quotient'] = eta_quotient_texstring(ETAQUOTIENTS[label])
@@ -391,6 +398,13 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
         return abort(404, err.args)
     info = to_dict(request.args)
     info['display_float'] = display_float
+    
+    # Validate format parameter if provided
+    valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
+    format_param = info.get('format')
+    if format_param is not None and format_param not in valid_formats:
+        return abort(400, f"Invalid format parameter '{format_param}'. Valid formats are: {', '.join(valid_formats)}")
+    
     # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
