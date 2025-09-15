@@ -317,7 +317,7 @@ def validate_format_parameter(format_param):
         tuple: (is_valid, validated_format, error_response)
                - is_valid: boolean indicating if format is valid
                - validated_format: the format to use (defaults to 'embed' if None)
-               - error_response: Flask abort response if invalid, None if valid
+               - error_response: Flask redirect response if invalid, None if valid
     """
     valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
     
@@ -327,7 +327,8 @@ def validate_format_parameter(format_param):
         
     # Check if format is valid
     if format_param not in valid_formats:
-        error_response = abort(400, f"Invalid format parameter '{format_param}'. Valid formats are: {', '.join(valid_formats)}")
+        flash_error("Invalid format parameter '%s'. Valid formats are: %s", format_param, ', '.join(valid_formats))
+        error_response = redirect(url_for(".index"))
         return False, format_param, error_response
         
     return True, format_param, None
