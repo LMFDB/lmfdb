@@ -2944,13 +2944,13 @@ class WebAbstractGroup(WebObj):
         # Implementing code snippets for the Lie type representations
         # TODO: We should update groups data to use new family names
         # For now, we'll implement a "old to new" dictionary (can delete once groups data is updated)
-        old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO:"PO",
+        old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO":"PO",
                                   "PGOPlus":"POPlus", "PGOMinus":"POMinus", "PGU":"PU", "CSp":"GSp", "CSO":"GSO", "CSOPlus":"GSOPlus",
                                   "CSOMinus":"GSOMinus", "CSU":"GSU", "CO":"GOrth", "COPlus":"GOrthPlus", "COMinus":"GOrthMinus",
                                   "CU":"GUnitary"}
 
         # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
-        magma_lie, gap_lie, sage_lie = None, None, None   
+        magma_top_lie, gap_top_lie, sage_top_lie = None, None, None   
         magma_lie_priority, gap_lie_priority, sage_lie_priority = 1000, 1000, 1000
         if "Lie" in self.representations:
             # Get Magma commands for all the Lie type families
@@ -2963,27 +2963,25 @@ class WebAbstractGroup(WebObj):
                 code[lie_rep['family']] = dict()
                 nLie = lie_rep['d']  #self.representations["Lie"][fam]["n"]
                 qLie = lie_rep['q']  #self.representations["Lie"][fam]["q"]
-                priorLie = lie_priorities[lie_rep['family']]
                 
                 new_family_name = lie_rep['family']
                 if lie_rep['family'] in old_to_new_family_name: new_family_name = old_to_new_family_name[lie_rep['family']]
 
-                code[lie_rep['family']]['magma'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
+                priorLie = lie_priorities[new_family_name]
+
+                code[lie_rep['family']]['magma'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                 if priorLie < magma_lie_priority:
                     magma_lie, magma_lie_priority = code[lie_rep['family']]['magma'], priorLie
-               
-                if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU']:
-                    code[lie_rep['family']]['gap'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
+                # List of Lie Type families available in GAP  (NB: Must ensure the GAP implementation agrees with our definition!)
+                if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU', 'PSigmaL']:
+                    code[lie_rep['family']]['gap'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                     if priorLie < gap_lie_priority:
                         gap_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
-
+                # List of Lie Type families available in Sage (NB: Must ensure the Sage implementation agrees with our definition!)
                 if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL']:
                     code[lie_rep['family']]['sage'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
                     if priorLie < sage_lie_priority:
                         sage_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
-
-
-
                 
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
@@ -3023,29 +3021,13 @@ class WebAbstractGroup(WebObj):
                 code['code_description']['gap'] = "G := DicyclicGroup("+str(self.order)+");"     # GAP Dic(n) has order n
                 code['code_description']['sage'] = "G = DiCyclicGroup("+str(self.order/4)+")"    # Sage Dic(n) has order 4n
             else:
-                # List of Lie Type families available in Magma  (NB: Must ensure the Magma implementation agrees with our definition!)
-                
-
-                for f in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU', 'SOPlus', 'SOMinus']:
-                    if f in [t['family'] for t in self_families]:
-                        fam_index = [t['family'] for t in self_families].index(f)
-                        lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
-                        code['code_description']['magma'] = "G := "+f+"("+lie_params+");"
-                        break
-                # List of Lie Type families available in GAP  (NB: Must ensure the GAP implementation agrees with our definition!)
-                for f in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU']:
-                    if f in [t['family'] for t in self_families]:
-                        fam_index = [t['family'] for t in self_families].index(f)
-                        lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
-                        code['code_description']['gap'] = "G := "+f+"("+lie_params+");"
-                        break
-                # List of Lie Type families available in Sage (NB: Must ensure the Sage implementation agrees with our definition!)
-                for f in ['GL', 'SL', 'PSL', 'PGL']:
-                    if f in [t['family'] for t in self_families]:
-                        fam_index = [t['family'] for t in self_families].index(f)
-                        lie_params = str(self_families[fam_index]['parameters']['n'])+", "+str(self_families[fam_index]['parameters']['q'])
-                        code['code_description']['sage'] = "G = "+f+"("+lie_params+")"
-                        break
+                # Use a Lie Type matrix construction
+                if magma_top_lie != None:
+                    code['code_description']['magma'] = "G := "+magma_top_lie
+                if gap_top_lie != None:
+                    code['code_description']['gap'] = "G := "+gap_top_lie
+                if sage_top_lie != None:
+                    code['code_description']['sage'] = "G = "+sage_top_lie
         # Checking if group is in the Chevalley or Twisted Chevalley family
         if ('Chev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
             chev_index = [t['family'] for t in self_families].index("Chev")
