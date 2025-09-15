@@ -2335,14 +2335,7 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Lie":
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
-            
-            print("****** RDATA:", rdata)
-            #code_cmd = " ".join(self.create_lie_type_snippet('testlie1')
-            #code_cmd = " ".join([self.create_lie_type_snippet('testlie1') + self.create_lie_type_snippet('testlie2')
             code_cmd = " ".join([self.create_lie_type_snippet(rep['family']) for rep in rdata])
-
-            print("*********", code_cmd)
-
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr><tr><td colspan="6">{code_cmd}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
@@ -2852,11 +2845,9 @@ class WebAbstractGroup(WebObj):
                               post="</td></tr>")
         return snippet.place_code()
 
-    # Used for creating code snipets for Lie type representations (i.e. without the <tr>)
+    # Used for creating code snipets for Lie type representations
     def create_lie_type_snippet(self,item):
-        snippet = CodeSnippet(self.code_snippets(), item,
-                              pre=f"",
-                              post="")
+        snippet = CodeSnippet(self.code_snippets(), item, pre=f"", post="")
         return snippet.place_code()
 
 
@@ -2956,14 +2947,15 @@ class WebAbstractGroup(WebObj):
             # Get Magma commands for all the Lie type families
             gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
             magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
+            gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Omega','PO','PU','POmega','PGammaL','PSigmaL']
+            gap_commands = {"PO":"PGO", "PU":"PGU"}
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
             
             for lie_rep in self.representations["Lie"]:
-                print("********** DEBUG LIE REP:", lie_rep)
+                #print("********** DEBUG LIE REP:", lie_rep)
                 code[lie_rep['family']] = dict()
-                nLie = lie_rep['d']  #self.representations["Lie"][fam]["n"]
-                qLie = lie_rep['q']  #self.representations["Lie"][fam]["q"]
-                
+                nLie, qLie = lie_rep['d'], lie_rep['q']
+              
                 new_family_name = lie_rep['family']
                 if lie_rep['family'] in old_to_new_family_name: new_family_name = old_to_new_family_name[lie_rep['family']]
 
@@ -2971,17 +2963,17 @@ class WebAbstractGroup(WebObj):
 
                 code[lie_rep['family']]['magma'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                 if priorLie < magma_lie_priority:
-                    magma_lie, magma_lie_priority = code[lie_rep['family']]['magma'], priorLie
+                    magma_top_lie, magma_lie_priority = code[lie_rep['family']]['magma'], priorLie
                 # List of Lie Type families available in GAP  (NB: Must ensure the GAP implementation agrees with our definition!)
-                if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL', 'Sp', 'SO', 'SU', 'PSp', 'PSO', 'PSU', 'PSigmaL']:
+                if new_family_name in gap_families:
                     code[lie_rep['family']]['gap'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                     if priorLie < gap_lie_priority:
-                        gap_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
+                        gap_top_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
                 # List of Lie Type families available in Sage (NB: Must ensure the Sage implementation agrees with our definition!)
-                if lie_rep['family'] in ['GL', 'SL', 'PSL', 'PGL']:
+                if new_family_name in ['GL', 'SL', 'PSL', 'PGL']:
                     code[lie_rep['family']]['sage'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
                     if priorLie < sage_lie_priority:
-                        sage_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
+                        sage_top_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
                 
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
@@ -3021,7 +3013,7 @@ class WebAbstractGroup(WebObj):
                 code['code_description']['gap'] = "G := DicyclicGroup("+str(self.order)+");"     # GAP Dic(n) has order n
                 code['code_description']['sage'] = "G = DiCyclicGroup("+str(self.order/4)+")"    # Sage Dic(n) has order 4n
             else:
-                # Use a Lie Type matrix construction
+                # Use a Lie Type matrix construction (if it exists)
                 if magma_top_lie != None:
                     code['code_description']['magma'] = "G := "+magma_top_lie
                 if gap_top_lie != None:
