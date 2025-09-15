@@ -661,12 +661,17 @@ class CmfTest(LmfdbTest):
         # Test invalid format 'txt' which was causing the original issue
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/441/4/a/h/?format=txt')
         assert page.status_code == 400
-        assert "Invalid format parameter 'txt'" in page.get_data(as_text=True)
+        data = page.get_data(as_text=True)
+        assert "Invalid format parameter" in data
+        assert "txt" in data
+        assert "Valid formats are:" in data
         
         # Test another invalid format
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=invalid')
         assert page.status_code == 400
-        assert "Invalid format parameter 'invalid'" in page.get_data(as_text=True)
+        data = page.get_data(as_text=True)
+        assert "Invalid format parameter" in data
+        assert "invalid" in data
         
         # Test that valid formats still work
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=embed')

@@ -306,6 +306,33 @@ def parse_prec(info):
     return []
 
 
+def validate_format_parameter(format_param):
+    """
+    Validate the format parameter for newform display.
+    
+    Args:
+        format_param: The format parameter to validate
+        
+    Returns:
+        tuple: (is_valid, validated_format, error_response)
+               - is_valid: boolean indicating if format is valid
+               - validated_format: the format to use (defaults to 'embed' if None)
+               - error_response: Flask abort response if invalid, None if valid
+    """
+    valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
+    
+    # Default to 'embed' if format is None
+    if format_param is None:
+        return True, 'embed', None
+        
+    # Check if format is valid
+    if format_param not in valid_formats:
+        error_response = abort(400, f"Invalid format parameter '{format_param}'. Valid formats are: {', '.join(valid_formats)}")
+        return False, format_param, error_response
+        
+    return True, format_param, None
+
+
 def eta_quotient_texstring(etadata):
     r"""
     Returns a latex string representing an eta quotient.
@@ -359,12 +386,10 @@ def render_newform_webpage(label):
     info['display_float'] = display_float
     
     # Validate format parameter
-    valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
-    format_param = info.get('format', 'embed')
-    if format_param not in valid_formats:
-        return abort(400, f"Invalid format parameter '{format_param}'. Valid formats are: {', '.join(valid_formats)}")
-    
-    info['format'] = format_param
+    is_valid, validated_format, error_response = validate_format_parameter(info.get('format'))
+    if not is_valid:
+        return error_response
+    info['format'] = validated_format
 
     if label in ETAQUOTIENTS:
         info['eta_quotient'] = eta_quotient_texstring(ETAQUOTIENTS[label])
@@ -400,11 +425,11 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     info['display_float'] = display_float
     
     # Validate format parameter if provided
-    valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
-    format_param = info.get('format')
-    if format_param is not None and format_param not in valid_formats:
-        return abort(400, f"Invalid format parameter '{format_param}'. Valid formats are: {', '.join(valid_formats)}")
-    
+    is_valid, validated_format, error_response = validate_format_parameter(info.get('format'))
+    if not is_valid:
+        return error_response
+    if validated_format != 'embed':  # Only set if not the default
+        info['format'] = validated_format
     # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
