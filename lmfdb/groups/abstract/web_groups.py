@@ -2847,7 +2847,7 @@ class WebAbstractGroup(WebObj):
 
     # Used for creating code snipets for Lie type representations
     def create_lie_type_snippet(self,item):
-        snippet = CodeSnippet(self.code_snippets(), item, pre=f"", post="")
+        snippet = CodeSnippet(self.code_snippets(), item)
         return snippet.place_code()
 
 
@@ -2948,7 +2948,7 @@ class WebAbstractGroup(WebObj):
             gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
             magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
             gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Omega','PO','PU','POmega','PGammaL','PSigmaL']
-            gap_commands = {"PO":"PGO", "PU":"PGU"}
+            #gap_commands = {"PO":"PGO", "PU":"PGU"}
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
             
             for lie_rep in self.representations["Lie"]:
