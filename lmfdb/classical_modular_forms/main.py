@@ -424,13 +424,6 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
         return abort(404, err.args)
     info = to_dict(request.args)
     info['display_float'] = display_float
-    
-    # Validate format parameter if provided
-    is_valid, validated_format, error_response = validate_format_parameter(info.get('format'))
-    if not is_valid:
-        return error_response
-    if validated_format != 'embed':  # Only set if not the default
-        info['format'] = validated_format
     # errs = parse_n(info, newform, info['format'] in ['primes', 'all'])
     try:
         m = int(newform.embedding_from_embedding_label(embedding_label))
