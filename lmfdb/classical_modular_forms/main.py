@@ -314,24 +314,22 @@ def validate_format_parameter(format_param):
         format_param: The format parameter to validate
         
     Returns:
-        tuple: (is_valid, validated_format, error_response)
-               - is_valid: boolean indicating if format is valid
-               - validated_format: the format to use (defaults to 'embed' if None)
-               - error_response: Flask redirect response if invalid, None if valid
+        str: validated format parameter (defaults to 'embed' if None)
+        
+    Raises:
+        400 abort if format parameter is invalid
     """
     valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
     
     # Default to 'embed' if format is None
     if format_param is None:
-        return True, 'embed', None
+        return 'embed'
         
     # Check if format is valid
     if format_param not in valid_formats:
-        flash_error("Invalid format parameter '%s'. Valid formats are: %s", format_param, ', '.join(valid_formats))
-        error_response = redirect(url_for(".index"))
-        return False, format_param, error_response
+        abort(400, "Invalid format parameter '%s'. Valid formats are: %s" % (format_param, ', '.join(valid_formats)))
         
-    return True, format_param, None
+    return format_param
 
 
 def eta_quotient_texstring(etadata):
@@ -387,10 +385,7 @@ def render_newform_webpage(label):
     info['display_float'] = display_float
     
     # Validate format parameter
-    is_valid, validated_format, error_response = validate_format_parameter(info.get('format'))
-    if not is_valid:
-        return error_response
-    info['format'] = validated_format
+    info['format'] = validate_format_parameter(info.get('format'))
 
     if label in ETAQUOTIENTS:
         info['eta_quotient'] = eta_quotient_texstring(ETAQUOTIENTS[label])
