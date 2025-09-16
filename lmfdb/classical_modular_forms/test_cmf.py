@@ -664,22 +664,20 @@ class CmfTest(LmfdbTest):
         assert "Invalid format parameter" in data
         assert "txt" in data
         assert "Valid formats are:" in data
-        
+
         # Test another invalid format
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=invalid')
         data = page.get_data(as_text=True)
         assert "Invalid format parameter" in data
         assert "invalid" in data
-        
+
         # Test that valid formats still work
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=embed')
         data = page.get_data(as_text=True)
         assert "Valid formats are:" not in data
         assert "Invalid format parameter" not in data
-        
+
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
         data = page.get_data(as_text=True)
         assert "Valid formats are:" not in data
         assert "Invalid format parameter" not in data
-
-
