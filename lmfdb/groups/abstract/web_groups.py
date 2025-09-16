@@ -2973,7 +2973,7 @@ class WebAbstractGroup(WebObj):
                         gap_top_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
-                    lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in mats) + "]"
+                    lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
                     gap_lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_gap_mats})
                     if priorLie < gap_lie_priority:
                         gap_top_lie, gap_lie_priority = gap_lie_code_snippet, priorLie
@@ -2984,7 +2984,7 @@ class WebAbstractGroup(WebObj):
                         sage_top_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
-                    lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nFq))+")" for mat in mats])+"]"      
+                    lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"      
                     sage_lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
                     if priorLie < sage_lie_priority:
                         sage_top_lie, sage_lie_priority = sage_lie_code_snippet, priorLie
