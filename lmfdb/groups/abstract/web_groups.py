@@ -2967,7 +2967,7 @@ class WebAbstractGroup(WebObj):
                 code[lie_rep['family']]['magma'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                 if priorLie < magma_lie_priority:
                     magma_top_lie, magma_lie_priority = code[lie_rep['family']]['magma'], priorLie
-                
+
                 if new_family_name in gap_families:
                     code[lie_rep['family']]['gap'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                     if priorLie < gap_lie_priority:
@@ -2981,14 +2981,14 @@ class WebAbstractGroup(WebObj):
                         gap_lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_gap_mats})
                     if priorLie < gap_lie_priority:
                         gap_top_lie, gap_lie_priority, gap_used_lie_gens = gap_lie_code_snippet, priorLie, True
-                                   
+
                 if new_family_name in sage_families:
                     code[lie_rep['family']]['sage'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
                     if priorLie < sage_lie_priority:
                         sage_top_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
-                    lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"      
+                    lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                     if qLie.is_prime():
                         sage_lie_code_snippet = code['GLFp']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
                     else:
