@@ -314,10 +314,10 @@ def validate_format_parameter(format_param):
         format_param: The format parameter to validate
         
     Returns:
-        str: validated format parameter (defaults to 'embed' if None)
+        str: validated format parameter (defaults to 'embed' if None or invalid)
         
-    Raises:
-        400 abort if format parameter is invalid
+    Side effects:
+        Flashes error message if format parameter is invalid
     """
     valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
     
@@ -327,7 +327,8 @@ def validate_format_parameter(format_param):
         
     # Check if format is valid
     if format_param not in valid_formats:
-        abort(400, "Invalid format parameter '%s'. Valid formats are: %s" % (format_param, ', '.join(valid_formats)))
+        flash_error("Invalid format parameter '%s'. Valid formats are: %s" % (format_param, ', '.join(valid_formats)))
+        format_param = 'embed'
         
     return format_param
 

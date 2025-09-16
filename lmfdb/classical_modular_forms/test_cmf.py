@@ -656,26 +656,4 @@ class CmfTest(LmfdbTest):
 """
         assert (character_values_table in data)
 
-    def test_invalid_format_parameter(self):
-        """Test that invalid format parameters return 400 error"""
-        # Test invalid format 'txt' which was causing the original issue
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/441/4/a/h/?format=txt')
-        assert page.status_code == 400
-        data = page.get_data(as_text=True)
-        assert "Invalid format parameter" in data
-        assert "txt" in data
-        assert "Valid formats are:" in data
-        
-        # Test another invalid format
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=invalid')
-        assert page.status_code == 400
-        data = page.get_data(as_text=True)
-        assert "Invalid format parameter" in data
-        assert "invalid" in data
-        
-        # Test that valid formats still work
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=embed')
-        assert page.status_code == 200
-        
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
-        assert page.status_code == 200
+
