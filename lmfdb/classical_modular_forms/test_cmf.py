@@ -680,6 +680,7 @@ class CmfTest(LmfdbTest):
         # Page should load successfully (no need to check status code)
         
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
+        data = page.get_data(as_text=True)
         assert "Valid formats are:" not in data
         assert "txt" not in data
         assert "Valid formats are:" not in data
