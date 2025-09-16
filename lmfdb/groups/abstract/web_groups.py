@@ -2974,7 +2974,8 @@ class WebAbstractGroup(WebObj):
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
                     if qLie.is_prime():
-                        e = libgap.One(GF(qLie)); lie_gap_mats = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
+                        e = libgap.One(GF(qLie))
+                        lie_gap_mats = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
                         gap_lie_code_snippet = code['GLFp']['gap'].format(**{'LFpsplit':lie_gap_mats})
                     else:
                         lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
