@@ -309,27 +309,27 @@ def parse_prec(info):
 def validate_format_parameter(format_param):
     """
     Validate the format parameter for newform display.
-    
+
     Args:
         format_param: The format parameter to validate
-        
+
     Returns:
         str: validated format parameter (defaults to 'embed' if None or invalid)
-        
+
     Side effects:
         Flashes error message if format parameter is invalid
     """
     valid_formats = ['embed', 'analytic_embed', 'satake', 'satake_angle']
-    
+
     # Default to 'embed' if format is None
     if format_param is None:
         return 'embed'
-        
+
     # Check if format is valid
     if format_param not in valid_formats:
         flash_error("Invalid format parameter '%s'. Valid formats are: %s" % (format_param, ', '.join(valid_formats)))
         format_param = 'embed'
-        
+
     return format_param
 
 
@@ -384,7 +384,7 @@ def render_newform_webpage(label):
 
     info = to_dict(request.args)
     info['display_float'] = display_float
-    
+
     # Validate format parameter
     info['format'] = validate_format_parameter(info.get('format'))
 
