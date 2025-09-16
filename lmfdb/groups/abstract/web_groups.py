@@ -2931,7 +2931,7 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
-        # This implements code snippets for the Lie type representations
+        # This implements code snippets for the Lie type matrix representations
         # TODO: We should update groups data to use new family names
         # For now, we'll implement a "old to new" family dictionary (can delete once groups data is updated)
         old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO":"PO",
@@ -2954,9 +2954,8 @@ class WebAbstractGroup(WebObj):
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
 
             for lie_rep in self.representations["Lie"]:
-                #print("********** DEBUG LIE REP:", lie_rep)
                 code[lie_rep['family']] = dict()
-                nLie, qLie = lie_rep['d'], lie_rep['q']
+                nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
 
                 new_family_name = lie_rep['family']
                 if lie_rep['family'] in old_to_new_family_name:
@@ -2974,10 +2973,11 @@ class WebAbstractGroup(WebObj):
                         gap_top_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
-                    lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
                     if qLie.is_prime():
-                        gap_lie_code_snippet = code['GLFp']['gap'].format(**{'LFqsplit':lie_gap_mats})
+                        e = libgap.One(GF(qLie)); lie_gap_mats = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
+                        gap_lie_code_snippet = code['GLFp']['gap'].format(**{'LFpsplit':lie_gap_mats})
                     else:
+                        lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
                         gap_lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_gap_mats})
                     if priorLie < gap_lie_priority:
                         gap_top_lie, gap_lie_priority, gap_used_lie_gens = gap_lie_code_snippet, priorLie, True
@@ -2988,10 +2988,11 @@ class WebAbstractGroup(WebObj):
                         sage_top_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
-                    lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                     if qLie.is_prime():
-                        sage_lie_code_snippet = code['GLFp']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
+                        lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "Lie", ListForm=True),nLie))+")" for g in lie_rep["gens"]])+"]"
+                        sage_lie_code_snippet = code['GLFp']['sage'].format(**{'LFpsage':lie_sage_mats, 'nFp':nLie, 'Fp':qLie})
                     else:
+                        lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                         sage_lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
                     if priorLie < sage_lie_priority:
                         sage_top_lie, sage_lie_priority, sage_used_lie_gens = sage_lie_code_snippet, priorLie, True
@@ -3123,8 +3124,6 @@ class WebAbstractGroup(WebObj):
         for lang in list(code['prompt']):
             if lang not in code['code_description']:
                 code['prompt'].pop(lang, None)
-
-        print("***** DEBUG CODE", code)
 
         for prop in code:
             for lang in code[prop]:
