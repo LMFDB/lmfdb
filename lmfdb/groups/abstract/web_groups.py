@@ -2931,7 +2931,7 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
-        # Implementing code snippets for the Lie type representations
+        # This implements code snippets for the Lie type representations
         # TODO: We should update groups data to use new family names
         # For now, we'll implement a "old to new" family dictionary (can delete once groups data is updated)
         old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO":"PO",
@@ -2975,7 +2975,10 @@ class WebAbstractGroup(WebObj):
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
                     lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
-                    gap_lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_gap_mats})
+                    if qLie.is_prime():
+                        gap_lie_code_snippet = code['GLFp']['gap'].format(**{'LFqsplit':lie_gap_mats})
+                    else:
+                        gap_lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_gap_mats})
                     if priorLie < gap_lie_priority:
                         gap_top_lie, gap_lie_priority, gap_used_lie_gens = gap_lie_code_snippet, priorLie, True
                                    
@@ -2986,7 +2989,10 @@ class WebAbstractGroup(WebObj):
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
                     lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"      
-                    sage_lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
+                    if qLie.is_prime():
+                        sage_lie_code_snippet = code['GLFp']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
+                    else:
+                        sage_lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
                     if priorLie < sage_lie_priority:
                         sage_top_lie, sage_lie_priority, sage_used_lie_gens = sage_lie_code_snippet, priorLie, True
 
@@ -3073,9 +3079,9 @@ class WebAbstractGroup(WebObj):
                     if lang not in code['code_description']:
                         code['code_description'][lang] = code[code_rep][lang]
         # Finally, try using Lie constructions which required use of the generators
-        if gap_top_lie is not None:
+        if (gap_top_lie is not None) and ('gap' not in code['code_description']):
             code['code_description']['gap'] = gap_top_lie
-        if sage_top_lie is not None:
+        if (sage_top_lie is not None) and ('sage' not in code['code_description']):
             code['code_description']['sage'] = sage_top_lie
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
 
