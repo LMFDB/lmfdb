@@ -2933,7 +2933,7 @@ class WebAbstractGroup(WebObj):
 
         # Implementing code snippets for the Lie type representations
         # TODO: We should update groups data to use new family names
-        # For now, we'll implement a "old to new" dictionary (can delete once groups data is updated)
+        # For now, we'll implement a "old to new" family dictionary (can delete once groups data is updated)
         old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO":"PO",
                                   "PGOPlus":"POPlus", "PGOMinus":"POMinus", "PGU":"PU", "CSp":"GSp", "CSO":"GSO", "CSOPlus":"GSOPlus",
                                   "CSOMinus":"GSOMinus", "CSU":"GSU", "CO":"GOrth", "COPlus":"GOrthPlus", "COMinus":"GOrthMinus",
@@ -2946,8 +2946,10 @@ class WebAbstractGroup(WebObj):
             # Get Magma commands for all the Lie type families
             gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
             magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
+            # Hardcoded list of Lie Type families available in GAP and Sage  (NB: Must ensure their implementation agrees with our definition!)
             gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Omega','PO','PU','POmega','PGammaL','PSigmaL']
             #gap_commands = {"PO":"PGO", "PU":"PGU"}
+            sage_families = ['GL','SL','PSL','PGL','PSp','PSU']
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
 
             for lie_rep in self.representations["Lie"]:
@@ -2964,16 +2966,28 @@ class WebAbstractGroup(WebObj):
                 code[lie_rep['family']]['magma'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                 if priorLie < magma_lie_priority:
                     magma_top_lie, magma_lie_priority = code[lie_rep['family']]['magma'], priorLie
-                # List of Lie Type families available in GAP  (NB: Must ensure the GAP implementation agrees with our definition!)
+                
                 if new_family_name in gap_families:
                     code[lie_rep['family']]['gap'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))+";"
                     if priorLie < gap_lie_priority:
                         gap_top_lie, gap_lie_priority = code[lie_rep['family']]['gap'], priorLie
-                # List of Lie Type families available in Sage (NB: Must ensure the Sage implementation agrees with our definition!)
-                if new_family_name in ['GL', 'SL', 'PSL', 'PGL']:
+                elif "gens" in lie_rep:
+                    lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
+                    lie_gap_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in mats) + "]"
+                    gap_lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_gap_mats})
+                    if priorLie < gap_lie_priority:
+                        gap_top_lie, gap_lie_priority = gap_lie_code_snippet, priorLie
+                                   
+                if new_family_name in sage_families:
                     code[lie_rep['family']]['sage'] = magma_commands[new_family_name].replace("n,q", str(nLie)+","+str(qLie))
                     if priorLie < sage_lie_priority:
                         sage_top_lie, sage_lie_priority = code[lie_rep['family']]['sage'], priorLie
+                elif "gens" in lie_rep:
+                    lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
+                    lie_sage_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nFq))+")" for mat in mats])+"]"      
+                    sage_lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
+                    if priorLie < sage_lie_priority:
+                        sage_top_lie, sage_lie_priority = sage_lie_code_snippet, priorLie
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
         # to display at the top of each group page.  This is computed and stored in code['code_description'].
@@ -3098,7 +3112,7 @@ class WebAbstractGroup(WebObj):
             if lang not in code['code_description']:
                 code['prompt'].pop(lang, None)
 
-        #print("***** DEBUG CODE", code)
+        print("***** DEBUG CODE", code)
 
         for prop in code:
             for lang in code[prop]:
