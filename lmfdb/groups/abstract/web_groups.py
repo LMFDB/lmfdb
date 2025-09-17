@@ -2948,9 +2948,8 @@ class WebAbstractGroup(WebObj):
             gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
             magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
             # Hardcoded list of Lie Type families available in GAP and Sage  (NB: Must ensure their implementation agrees with our definition!)
-            gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Omega','PO','PU','POmega','PGammaL','PSigmaL']
-            #gap_commands = {"PO":"PGO", "PU":"PGU"}
-            sage_families = ['GL','SL','PSL','PGL','PSp','PSU']
+            gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Orth','Unitary','Omega','PO','PU','POmega','PGammaL','PSigmaL']
+            sage_families = ['GL','SL','PSL','PGL','PSp','PSU','Orth','Unitary','PU']
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
 
             for lie_rep in self.representations["Lie"]:
