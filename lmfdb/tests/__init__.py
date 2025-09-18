@@ -23,6 +23,7 @@ class CustomRedirectHandler(HTTPRedirectHandler):
         # by passing the code 307.
         return self.http_error_307(req, fp, 307, msg, headers)
 
+
 class LmfdbTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

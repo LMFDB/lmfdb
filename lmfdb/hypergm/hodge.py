@@ -1,23 +1,22 @@
-def mu_nu(hodge, signature):
+from itertools import repeat
+from sage.rings.integer import Integer
+
+
+def mu_nu(hodge, signature) -> tuple[list, list]:
     """
-        Computes the mu and nu given hodge numbers and signature
+    Compute ``mu`` and ``nu`` given Hodge numbers and signature.
+
+    Here ``hodge[p]`` is the Hodge number `h_{p,q}`.
     """
-    # hodge = [int(a) for a in hodge.split(',')]
-    motivic_weight = len(hodge) - 1
-    def hodge_index(p): return hodge[p]
-    # The hodge number p,q
+    motivic_weight = Integer(len(hodge) - 1)
 
-    def q(p): return motivic_weight - p
-
-    assert len(hodge) == motivic_weight + 1
-
-    tmp = [[(q(p) - p) / 2.] * int(hodge_index(p)) for p in range((motivic_weight + 1) // 2)]
-    nu = sum(tmp, [])
-
-    if motivic_weight % 2 == 0:
-        a = (hodge_index(motivic_weight // 2) - abs(signature)) // 2
-        tmp = [0] * a
-        nu += tmp
+    nu = []
+    for p in range((motivic_weight + 1) // 2):
+        q_p = (motivic_weight - 2 * p) / 2
+        nu.extend(repeat(q_p, int(hodge[p])))
+    if not motivic_weight % 2:
+        a = (hodge[motivic_weight // 2] - abs(signature)) // 2
+        nu.extend(repeat(0, a))
 
     if signature <= 0:
         mu = [1] * abs(signature)
