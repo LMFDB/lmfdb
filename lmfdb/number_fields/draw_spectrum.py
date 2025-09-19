@@ -1,6 +1,7 @@
 import svg
 from sage.all import (floor, round)
 
+
 class Point:
     """
     Point in (x,y)-plane adapted for drawing to svg canvas
@@ -10,8 +11,8 @@ class Point:
                  y: float,
                  girth: float = 1,
                  color: str = "black"):
-        self.x = round(x,3)
-        self.y = round(y,3)
+        self.x = round(x, 3)
+        self.y = round(y, 3)
         self.girth = girth
         self.color = color
 
@@ -21,7 +22,7 @@ class Point:
     def __str__(self):          # for debugging
         return f"Point ({self.x}, {self.y}) of girth {self.girth} and color {self.color}"
 
-    def __add__(self,other):
+    def __add__(self, other):
         return Point(self.x + other.x, self.y + other.y)
 
     def draw(self, radius):
@@ -33,6 +34,7 @@ class Point:
             stroke='black',
             stroke_width=.75)
 
+
 def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, gaga=False) -> svg.SVG:
     """ Draw the spectrum of the ring of integers of a number field,
     from data in the lmfdb.
@@ -43,7 +45,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     num_primes = min(len(frobs), num_primes)
     frobs = frobs[:num_primes]
 
-    ### Options:
+    # ## Options:
     # I've hardcoded these values instead of providing them
     # as optional arguments; feel free to change this
 
@@ -100,7 +102,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
             svg.Line(
                 stroke="black",
                 stroke_width=line_thickness,
-                x1=coords[0][0].x, # get starting point of line
+                x1=coords[0][0].x,  # get starting point of line
                 y1=bottom_line,
                 x2=coords[-1][0].x + x_spread,
                 y2=bottom_line))
@@ -139,14 +141,14 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
                         stroke_width=line_thickness,
                         fill="none",
                         d=[
-                            svg.M( x=pt_this.x, y=pt_this.y),
+                            svg.M(x=pt_this.x, y=pt_this.y),
                             svg.CubicBezier(
                                 x1=pt_next.x-dx,
                                 y1=pt_this.y,
                                 x2=pt_this.x+dx,
                                 y2=pt_next.y,
                                 x=pt_next.x,
-                                y=pt_next.y )]))
+                                y=pt_next.y)]))
 
     for n, pts in enumerate(coords):
         if not gaga:
@@ -174,15 +176,20 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
 def draw_gaga(frobs, local_alg_dict, colors=True) -> svg.SVG:
     """ Draw the spectrum of the ring of integers of a number field,
     from data in the lmfdb.
-    `frobs` is a list of lists [[p, [frob_cycle1,...,frob_cycleN]]]
-    `local_algs` is a list of strings describing ramification behaviour ['p.deg.(other stuff)', ..., ]
-    If `colors` is `True`, color classes which lie in the same Frobenius cycle
+    ``frobs`` is a list of lists [[p, [frob_cycle1,...,frob_cycleN]]]
+    ``local_algs`` is a list of strings describing ramification behaviour ['p.deg.(other stuff)', ..., ]
+    If ``colors`` is ``True``, color classes which lie
+    in the same Frobenius cycle
     """
     return draw_spec(frobs, local_alg_dict, colors=colors, gaga=True)
 
-def unram_coords(frob_cycle_list, x_coord, y_centre, spread):
+
+def unram_coords(frob_cycle_list, x_coord, y_centre, spread) -> list:
     """
-    Given list of frobenius cycle describing a fixed fibre with no ramification, evenly spread points. Returns list of `Point`s.
+    Given list of Frobenius cycle describing a fixed fibre
+    with no ramification, evenly spread points.
+
+    Returns list of :class:`Point`.
     """
     # number of points
     N = sum(l[1] for l in frob_cycle_list)
@@ -224,7 +231,7 @@ def ram_coords(local_alg_dict, p, x_coord, y_centre, spread, deg=1):
     return point_list
 
 
-def hsl_color(n, n_max, sec=[0,45]):
+def hsl_color(n, n_max, sec=[0, 45]):
     """
     Vary hue in hsl color between 0 and n_max within sector sec
     """
@@ -239,19 +246,19 @@ def hsl_color(n, n_max, sec=[0,45]):
     return f"hsl({h},{s}%,{l}%)"
 
 
-### Testing
+# ## Testing
 def test_drawspec(n=1, gaga=False):
     if n == 1:
         frobs = [[2, [[3, 2], [1, 1]]], [3, [[6, 1], [1, 1]]], [5, [[6, 1], [1, 1]]], [7, [0]], [11, [[3, 2], [1, 1]]], [13, [[2, 3], [1, 1]]], [17, [[6, 1], [1, 1]]], [19, [[6, 1], [1, 1]]], [23, [[3, 2], [1, 1]]], [29, [[1, 7]]], [31, [[6, 1], [1, 1]]], [37, [[3, 2], [1, 1]]], [41, [0]], [43, [[7, 1]]], [47, [[6, 1], [1, 1]]], [53, [[3, 2], [1, 1]]], [59, [[6, 1], [1, 1]]]]
 
-        local_algs = {"7": [[7,1]], "41": [[7,1]]}
+        local_algs = {"7": [[7, 1]], "41": [[7, 1]]}
     elif n == 2:
         frobs = [[2, [[3, 1]]], [3, [[3, 1]]], [5, [[3, 1]]], [7, [0]], [11, [[3, 1]]], [13, [[1, 3]]], [17, [[3, 1]]], [19, [[3, 1]]], [23, [[3, 1]]], [29, [[1, 3]]], [31, [[3, 1]]], [37, [[3, 1]]], [41, [[1, 3]]], [43, [[1, 3]]], [47, [[3, 1]]], [53, [[3, 1]]], [59, [[3, 1]]]]
-        local_algs = {"7": [[3,1]]}
+        local_algs = {"7": [[3, 1]]}
 
     num_primes = 7 if gaga else 100
     canvas = draw_spec(frobs, local_algs, True,
-                       gaga=gaga,num_primes=num_primes)
+                       gaga=gaga, num_primes=num_primes)
     import tempfile
     filename = tempfile.gettempdir() + ('/gaga' if gaga else '/spec') + ".svg"
     with open(filename, mode='w') as f:

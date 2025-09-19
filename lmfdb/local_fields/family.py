@@ -53,9 +53,10 @@ class pAdicSlopeFamily:
         assert p.is_prime()
         self.pw = p**w
         _, self.etame = self.e.val_unit(p)
+
     @lazy_attribute
     def scaled_rams(self):
-        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.rams, 1)]
+        return [r / (self.etame * self.p**i) for i, r in enumerate(self.rams, 1)]
 
     @lazy_attribute
     def dots(self):

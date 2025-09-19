@@ -81,8 +81,8 @@ class AbGpsTest(LmfdbTest):
             "gps_conj_classes", "representative",
             "gps_qchar", "cdim",
             "gps_char", "indicator",
-            "gps_subgroups", "mobius_sub"])
+            "gps_subgroup_search", "mobius_sub"])
         self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
-            "gps_subgroups", "16.8.2.b1.a1",
+            "gps_subgroup_search", "16.8.2.b1.a1",
             "gps_groups", "[28776, 16577, 5167]", # perm_gens
             "[[1, 1, 1]]"]) # faithful_reps

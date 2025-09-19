@@ -473,9 +473,11 @@ ec_columns = SearchColumns([
     ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
 ])
 
+
 class ECDownloader(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
+
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
@@ -582,6 +584,7 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
+    parse_ints(info, query, 'manin_constant')
     if info.get('galois_image'):
         labels = [a.strip() for a in info['galois_image'].split(',')]
         elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
@@ -1424,6 +1427,13 @@ class ECSearchArray(SearchArray):
             example="8-",
             advanced=True)
 
+        manin_constant = TextBox(
+            name="manin_constant",
+            label="Manin constant",
+            knowl="ec.q.manin_constant",
+            example="2",
+            advanced=True)
+
         count = CountBox()
 
         self.browse_array = [
@@ -1439,7 +1449,7 @@ class ECSearchArray(SearchArray):
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
             [abc_quality, szpiro_ratio],
-            [count]
+            [count, manin_constant]
             ]
 
         self.refine_array = [
@@ -1448,5 +1458,5 @@ class ECSearchArray(SearchArray):
             [class_deg, isodeg, class_size, num_int_pts],
             [sha, sha_primes, regulator, reduction, faltings_height],
             [galois_image, adelic_level, adelic_index, adelic_genus],
-            [nonmax_primes, abc_quality, szpiro_ratio],
+            [nonmax_primes, abc_quality, szpiro_ratio, manin_constant],
             ]
