@@ -359,12 +359,14 @@ euler_factor_columns = SearchColumns([
 
 class LfuncDownload(Downloader):
     table = db.lfunc_search
+
     def postprocess(self, rec, info, query):
         rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
-        rec['nus'] = [(0.5*r, i) for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        rec['nus'] = [(0.5 * r, i)
+                      for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
-            rec['root_number'] = 1 - int(4*rec['root_angle'])
+            rec['root_number'] = 1 - int(4 * rec['root_angle'])
         return rec
 
 @search_wrap(table=db.lfunc_search,
