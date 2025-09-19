@@ -17,10 +17,35 @@ jobs:
 
       - name: Test snippets
         if: matrix.files != 'lint'
+        id: testing_step
         shell: bash -l {0}
         run: |
-          sage -python lmfdb/tests/generate_snippet_tests.py generate -i magma
+          sage -python lmfdb/tests/generate_snippet_tests.py generate -i magma -e snippet_error_file.md
 
+      - name: Read error file
+        if: ${{ hashFiles('**/snippet_error_file.md') }}
+        id: read_error_file
+        run: |
+          {
+          echo 'ERROR_CONTENTS<<EOF'
+          cat snippet_error_file.md
+          echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create or update snippet error issue
+        if: ${{ hashFiles('**/snippet_error_file.md') }}
+        uses: ovsds/create-or-update-unique-issue-action@v1
+        with:
+          title: "(Auto-generated) Errors in code snippets"
+          body: ${{ steps.read_error_file.outputs.ERROR_CONTENTS }}
+          unique-title-includes: "(Auto-generated) Errors in code snippets"
+
+      - name: Delete error log file
+        if: ${{ hashFiles('**/snippet_error_file.md') }}
+        shell: bash -l {0}
+        run: |
+          rm snippet_error_file.md
+        
       - name: Check for diff
         id: diff_check
         run: |
@@ -29,7 +54,7 @@ jobs:
 
       - name: Report diff
         if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
-        run: echo "Nontrivial diff detected. See the 'repo-diff' artifact for details."
+        run: echo "::warning::Nontrivial diff detected. See the 'repo-diff' artifact for details."
 
       - name: Upload diff as artifact
         if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
