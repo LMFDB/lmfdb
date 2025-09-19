@@ -263,19 +263,10 @@ def format_model_to_code(formatted_model_data):
         sub_dict = {str(x) : g for x, g in zip(variables_used, S.gens())}
         eqnsS = [elt.substitute(**sub_dict) for elt in eqns]
         var_names = [f"y{i}" for i in range(number_variables)]
-        var_string = ",".join(var_names)
-        result = f"P<{var_string}> := ProjectiveSpace(Rationals(), {number_variables - 1});\nX := Curve(P, {eqnsS});"
+        var_string = ", ".join(var_names)
+        result = f"P< {var_string}> := ProjectiveSpace(Rationals(), {number_variables - 1});\nX := Curve(P, {eqnsS});"
         return result
-    elif model_type == 5: # Weierstrass equation
-        # For Weierstrass equations, we can still generate Magma code
-        variables_used = sorted(set(sum([elt.variables() for elt in eqns], tuple())))
-        S = PolynomialRing(ZZ, number_variables, "y")
-        sub_dict = {str(x) : g for x, g in zip(variables_used, S.gens())}
-        eqnsS = [elt.substitute(**sub_dict) for elt in eqns]
-        var_names = [f"y{i}" for i in range(number_variables)]
-        var_string = ",".join(var_names)
-        result = f"P<{var_string}> := ProjectiveSpace(Rationals(), {number_variables - 1});\nX := Curve(P, {eqnsS});"
-        return result
+
     else:
         return None
 
@@ -1175,4 +1166,6 @@ class WebModCurve(WebObj):
                 code[f"model_{i}"] = {
                     'magma': [model_code]
                 }
+        code['show'] = { lang:'' for lang in code['prompt'] }
+
         return code
