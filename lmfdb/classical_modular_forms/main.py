@@ -889,7 +889,7 @@ def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True)
 
 newform_columns = SearchColumns([
-    LinkCol("label", "cmf.label", "Label", url_for_label),
+    LinkCol("label", "cmf.labels", "Label", url_for_label),
     MathCol("level", "cmf.level", "Level", default=False),
     MathCol("weight", "cmf.weight", "Weight", default=False),
     MultiProcessedCol("character", "cmf.character", "Char",
@@ -1244,7 +1244,7 @@ def dimension_space_search(info, query):
     query['__sort__'] = []
 
 space_columns = SearchColumns([
-    LinkCol("label", "cmf.label", "Label", url_for_label),
+    LinkCol("label", "cmf.labels", "Label", url_for_label),
     FloatCol("analytic_conductor", "cmf.analytic_conductor", r"$A$", short_title="analytic conductor", align="left"),
     MultiProcessedCol("character", "cmf.character", r"$\chi$", ["level", "conrey_index"],
                       lambda level,number: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=number), level, number),
@@ -1271,7 +1271,7 @@ def space_search(info, query):
 @cmf.route("/Source")
 def how_computed_page():
     t = 'Source of classical modular form data'
-    return render_template("multi.html", kids=['rcs.source.cmf',
+    return render_template("multi.html", kids=['rcs.source.cmf_eisenstein',
                            'rcs.ack.cmf',
                            'rcs.cite.cmf'], title=t,
                            bread=get_bread(other='Source'),
@@ -1280,21 +1280,21 @@ def how_computed_page():
 @cmf.route("/Completeness")
 def completeness_page():
     t = 'Completeness of classical modular form data'
-    return render_template("single.html", kid='rcs.cande.cmf', title=t,
+    return render_template("single.html", kid='rcs.cande.cmf_eisenstein', title=t,
                            bread=get_bread(other='Completeness'),
                            learnmore=learnmore_list_remove('Completeness'))
 
 @cmf.route("/Labels")
 def labels_page():
     t = 'Labels for classical modular forms'
-    return render_template("single.html", kid='cmf.label', title=t,
+    return render_template("single.html", kid='cmf.labels', title=t,
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
 
 @cmf.route("/Reliability")
 def reliability_page():
     t = 'Reliability of classical modular form data'
-    return render_template("single.html", kid='rcs.rigor.cmf', title=t,
+    return render_template("single.html", kid='rcs.rigor.cmf_eisenstein', title=t,
                            bread=get_bread(other='Reliability'),
                            learnmore=learnmore_list_remove('Reliability'))
 
