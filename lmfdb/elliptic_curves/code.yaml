@@ -243,3 +243,12 @@ padicreg:
 isogenies:
   comment: Isogenies
   pari: ellisomat(E)
+
+snippet_test:
+  test11a3: 
+    label: 11.a3
+    url: EllipticCurve/Q/11/a/3/download/{lang}?label=11.a3
+  test37a1: 
+    label: 37.a1
+    url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1
+  
