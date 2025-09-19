@@ -786,6 +786,7 @@ def common_parse(info, query, na_check=False):
     parse_character(info, query, 'char_label', name='Character orbit', prim=False)
     parse_character(info, query, 'prim_label', name='Primitive character', prim=True)
     parse_ints(info, query, 'weight', name="Weight")
+    parse_bool(info, query, 'is_cuspidal')
     if 'weight_parity' in info:
         parity = info['weight_parity']
         if parity == 'even':
@@ -843,7 +844,7 @@ def newform_parse(info, query):
     parse_noop(info, query, 'atkin_lehner_string')
     parse_ints(info, query, 'fricke_eigenval')
     parse_bool(info, query, 'is_self_dual')
-    parse_bool(info, query, 'is_cuspidal')
+    # parse_bool(info, query, 'is_cuspidal')
     if info.get('is_maximal_largest'):
         if info['is_maximal_largest'] == 'maximal':
             query['is_maximal'] = True
@@ -1239,6 +1240,8 @@ def dimension_space_search(info, query):
         info['weight'] = '1-12'
     if 'level' not in info:
         info['level'] = '1-24'
+    if 'is_cuspidal' not in info:
+        info['is_cuspidal'] = 'yes'
     newspace_parse(info, query)
     # We don't need to sort, since the dimensions are just getting added up
     query['__sort__'] = []
