@@ -125,3 +125,14 @@ class SatoTateGroupTest(LmfdbTest):
         data = page.get_data(as_text=True)
         # Verify we get some reasonable response (not a 500 error)
         assert ('The database currently contains' in data or 'SU(2)' in data)
+        
+        # Test a few more similar cases to ensure robustness
+        test_labels = ['1.2.A.c100', '2.2.B.d50']
+        for label in test_labels:
+            page = self.tc.get(f'/SatoTateGroup/{label}')
+            data = page.get_data(as_text=True)
+            # Should not crash - either get valid page, redirect, or search page
+            # The important thing is no ValueError exception is raised
+            assert ('The database currently contains' in data or 
+                    'SU(2)' in data or 'Sato-Tate' in data or 'Browse' in data or
+                    'Redirecting' in data)
