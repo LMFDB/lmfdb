@@ -173,6 +173,11 @@ This isogeny class is {{KNOWL('av.fq.supersingular',title='supersingular')}}.
 {% endif %}
 </p>
 
+{% if cl.display_generator_explanation() %}
+<p>
+  where $a$ is a root of the {{ KNOWL('field.finite.conway_polynomial',title="Conway polynomial.") }}
+</p>
+{% endif %}
 
 <h2>{{ KNOWL('av.decomposition',title="Decomposition") }} and {{ KNOWL ('ag.endomorphism_algebra', title="endomorphism algebra") }}</h2>
 

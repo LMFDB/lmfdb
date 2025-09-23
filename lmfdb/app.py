@@ -131,7 +131,8 @@ def ctx_proc_userdata():
     # overwrite this variable when you want to customize it
     # For example, [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
     vars['bread'] = None
-
+    from lmfdb.utils import CodeSnippet
+    vars['CodeSnippet'] = CodeSnippet
     # default title
     vars['title'] = r'LMFDB'
 
@@ -712,16 +713,19 @@ def sitemap():
 def WhiteListedRoutes():
     return [
         'ArtinRepresentation',
+        'Belyi',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
         'Character/calc-jacobi/Dirichlet',
         'Character/calc-kloosterman/Dirichlet',
         'Character/calc-value/Dirichlet',
+        'datasets',
         'EllipticCurve',
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
+        'Groups/Abstract',
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
@@ -771,6 +775,7 @@ def WhiteListedRoutes():
         'news',
         'not_yet_implemented',
         'random',
+        'rcs',
         'robots.txt',
         'search',
         'sitemap',
