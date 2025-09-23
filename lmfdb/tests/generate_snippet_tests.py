@@ -135,7 +135,7 @@ def _eval_code_file(data, lang, proc, logfile):
     #     return eval_str
 
 
-def raise_error_warning(logfile, lang, error_file = None):
+def raise_error_warning(logfile, lang, error_file=None):
     with logfile.open('r') as f:
         contents = f.read()
     prompt = prompt_dict[lang]
@@ -157,7 +157,6 @@ def raise_error_warning(logfile, lang, error_file = None):
                 with open(error_file, "a") as f:
                     f.write(f"1. In [{str(logfile)}](../blob/main/{str(logfile)}#L{line}), lines {line} to {line_end}:\n\n")
                     f.write(space + text.replace('\n', '\n' + space) + '\n\n') # indent to get code blocks
-                    
 
 
 def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_langs=None, error_file=None):
@@ -276,7 +275,7 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--only", help="only languages", action='append', nargs='+', default=None)
     parser.add_argument("-f", "--file", help="run on single file", type=str)
     parser.add_argument("-e", "--error-file", help="write errors to file", type=str)
-    
+
     args = parser.parse_args()
 
     if args.file:
@@ -297,5 +296,4 @@ if __name__ == '__main__':
         if error_file.exists():
             error_file.unlink()
 
-        
     create_snippet_tests(yaml_path, ignore_langs, args.cmd == 'test', only_langs, error_file)
