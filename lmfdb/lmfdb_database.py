@@ -1,3 +1,9 @@
+import datetime
+try:
+    from datetime import UTC                # Py 3.11+
+except ImportError:                         # Py ≤3.10
+    from datetime import timezone as _tz
+    UTC = _tz.utc
 import inspect
 import os
 import shutil
@@ -363,7 +369,7 @@ class LMFDBDatabase(PostgresDatabase):
             "INSERT INTO userdb.dbrecord (username, time, tablename, operation, data) "
             "VALUES (%s, %s, %s, %s, %s)"
         )
-        self._execute(inserter, [uid, utc_now_naive(), tablename, operation, data])
+        self._execute(inserter, [uid, datetime.datetime.now(UTC), tablename, operation, data])
 
     def verify(
         self,
