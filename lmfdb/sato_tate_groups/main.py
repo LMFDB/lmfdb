@@ -754,7 +754,7 @@ def su2_mu_data(w, n):
     if rec['component_group'] is None:
         rec['component_group'] = 'ab/%s' % n
     else:
-        rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+        rec['component_group_number'] = rec['component_group'].split('.')[1] # not necessarily an integer (e.g. for cyclic groups outside GAP ID range)
     rec['st0_label'] = '%d.2.A' % w
     rec['identity_component'] = 'SU(2)'
     rec['trace_zero_density'] = '0'
@@ -808,7 +808,7 @@ def nu1_mu_data(w,n):
     rec['component_group'] = '4.2' if n == 2 else db.gps_special_names.lucky({'family':'D','parameters':{'n':n}},projection='label')
     if rec['component_group'] is None:
         return None
-    rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+    rec['component_group_number'] = rec['component_group'].split('.')[1] # not necessarily an integer (e.g. for groups outside GAP ID range)
     rec['st0_label'] = '%d.2.B' % w
     rec['identity_component'] = 'U(1)'
     rec['trace_zero_density'] = '1/2'

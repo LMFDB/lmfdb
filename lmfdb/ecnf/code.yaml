@@ -118,3 +118,14 @@ localdata:
   comment: Compute the local reduction data at primes of bad reduction
   sage:  E.local_data()
   magma: LocalInformation(E);
+
+snippet_test:
+  test11.1-a1: 
+    label: 11.1-a1
+    langs:
+    url: EllipticCurve/2.0.11.1/11.1/a/1/download/{lang}
+  test81.1-CMa1: 
+    label: 81.1-CMa1
+    langs:
+    url: EllipticCurve/2.0.3.1/81.1/CMa/1/download/{lang}
+  
