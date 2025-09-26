@@ -1,5 +1,6 @@
 # This Blueprint is about Hypergeometric motives
 # Author: John Jones
+from typing import Any
 
 from flask import render_template, url_for, redirect, request
 
@@ -18,7 +19,7 @@ def index():
     bread = get_bread([])
     #if len(request.args) != 0:
     #    return hgm_search(**request.args)
-    info = {}
+    info: dict[str, Any] = {}
     friends = [('Hypergeometric', url_for(".index2"))]
     return render_template("motive-index.html", title="Motives", bread=bread, credit=HGM_credit, info=info, friends=friends)
 
