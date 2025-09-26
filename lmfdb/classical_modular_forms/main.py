@@ -1781,12 +1781,12 @@ class CMFSearchArray(SearchArray):
 
         self.space_array = [
             [level, weight, analytic_conductor, dim, num_newforms],
-            [level_primes, character, char_primitive, char_order]
+            [level_primes, character, char_primitive, char_order, is_cuspidal]
         ]
 
         self.sd_array = [
             [level, weight, analytic_conductor, hdim, hnum_newforms],
-            [level_primes, character, char_primitive, char_order]
+            [level_primes, character, char_primitive, char_order, is_cuspidal]
         ]
 
         self.traces_array = [
