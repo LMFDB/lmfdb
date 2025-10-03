@@ -189,7 +189,7 @@ def ref_to_link(txt):
             ref = ref.replace(":", "")
             the_mr = ref[2:]    # remove the "MR"
             this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
+            this_link += '"https://mathscinet.ams.org/mathscinet-getitem?mr='
             this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
             ref = ref.replace(":", "")
