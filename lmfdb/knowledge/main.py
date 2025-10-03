@@ -197,6 +197,12 @@ def ref_to_link(txt):
             this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
             this_link += '"https://arxiv.org/abs/'
             this_link += the_arx + '")| safe}}'
+        elif ref.lower().startswith("zbl"):
+            ref = ref.replace(":", "")
+            the_zbl = ref[3:]    # remove the "Zbl"
+            this_link = '{{ LINK_EXT("' + 'Zbl:' + the_zbl + '", '
+            this_link += '"https://zbmath.org/?q=an:'
+            this_link += the_zbl + '")| safe}}'
 
         if this_link:
             if ans:
