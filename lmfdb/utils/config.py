@@ -377,14 +377,14 @@ class ConfigWrapper:
         self.postgresql_options = config_dict.get('postgresql_options', {})
         self.flask_options = config_dict.get('flask_options', {})
         self.logging_options = config_dict.get('logging_options', {'editor': ''})
-        
+
     # Add the get methods that might be expected
     def get_postgresql(self):
         return self.postgresql_options
-        
+
     def get_flask(self):
         return self.flask_options
-        
+
     def get_logging(self):
         return self.logging_options
 

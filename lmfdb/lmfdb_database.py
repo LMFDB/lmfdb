@@ -312,9 +312,9 @@ class LMFDBDatabase(PostgresDatabase):
     In addition to the attributes on PostgresDatabase:
 
     - ``is_verifying`` -- whether this database has been configured with verifications (import from lmfdb.verify if you want this to be True)
-    
+
     PARAMETERS:
-    
+
     - ``config`` -- optional configuration. Can be:
         * None (default): creates a default Configuration() object
         * dict: a dictionary with keys 'postgresql_options', 'flask_options', 'logging_options'
@@ -331,7 +331,7 @@ class LMFDBDatabase(PostgresDatabase):
             # If config is a dict, create a wrapper object with the required attributes
             config = ConfigWrapper(config)
         # else: config is already a Configuration object, use it as-is
-        
+
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
         self.__editor = config.logging_options.get("editor", "")
