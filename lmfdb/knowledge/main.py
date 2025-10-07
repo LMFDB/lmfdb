@@ -23,7 +23,7 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, utc_now_naive
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -243,7 +243,12 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl,
+            'knowl_title': knowl_title,
+            'knowl_url_prefix': knowl_url_prefix,
+            "KNOWL_EXISTS": knowl_exists,
+            "knowl_definition": knowl_definition,
+            "external_definition_link": external_definition_link}
 
 
 @app.template_filter("render_knowl")
@@ -257,6 +262,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
@@ -793,6 +799,7 @@ def render_knowl(ID, footer=None, kwargs=None,
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 

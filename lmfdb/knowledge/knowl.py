@@ -53,7 +53,7 @@ grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
-defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
+defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*|\{\{\s*DEFINES\s*\(\s*['"]([^'"]+)['"]""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -131,7 +131,7 @@ def normalize_define(term):
 
 
 def extract_defines(content):
-    return sorted({x.strip() for x in defines_finder_re.findall(content)})
+    return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -789,6 +789,46 @@ def knowl_title(kid):
 
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
+def external_definition_link(site, xid):
+    if site == "groupprops":
+        # example xid="Alternating_group"
+        return f"https://groupprops.subwiki.org/wiki/{xid}"
+    if site == "mathlib":
+        # example xid="NumberTheory/ModularForms/Basic.html#UpperHalfPlane.J"
+        return f"https://leanprover-community.github.io/mathlib4_docs/Mathlib/{xid}"
+    if site == "mathworld":
+        # example xid=HeckeOperator
+        return f"https://mathworld.wolfram.com/{xid}.html"
+    if site == "nlab":
+        # example xid="number field"
+        return f"https://ncatlab.org/nlab/show/{xid}"
+    if site == "wikidata":
+        # example xid="Q83478"
+        return f"https://www.wikidata.org/wiki/{xid}"
+    if site == "wikipedia":
+        # example xid="Group_(mathematics)"
+        return f"https://en.wikipedia.org/wiki/{xid}"
+    raise ValueError("Unknown external site")
+
+def knowl_definition(title,
+                     clarification_kid=None,
+                     kwargs={}):
+    from lmfdb.utils.web_display import display_knowl
+    if clarification_kid is None:
+        if not kwargs:
+            return f"<strong>{title}</strong>"
+        if len(kwargs) == 1:
+            try:
+                site, xid = list(kwargs.items())[0]
+                url = external_definition_link(site, xid)
+                return f'<a href="{url}"><strong>{title}</strong></a>'
+            except ValueError:
+                pass
+        return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
+    else:
+        return display_knowl(clarification_kid, title, strong=True)
+
 
 @cached_function
 def knowl_url_prefix():
