@@ -184,19 +184,25 @@ def ref_to_link(txt):
         elif ref.startswith("doi"):
             ref = ref.replace(":", "")  # could be doi:: or doi: or doi
             the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
+            this_link = '{{ LINK_EXT("DOI:' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
         elif ref.lower().startswith("mr"):
             ref = ref.replace(":", "")
             the_mr = ref[2:]    # remove the "MR"
-            this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
+            this_link = '{{ LINK_EXT("MR:' + the_mr + '", '
+            this_link += '"https://mathscinet.ams.org/mathscinet-getitem?mr='
             this_link += the_mr + '") | safe}}'
         elif ref.lower().startswith("arxiv"):
             ref = ref.replace(":", "")
             the_arx = ref[5:]    # remove the "arXiv"
-            this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
+            this_link = '{{ LINK_EXT("arXiv:' + the_arx + '", '
             this_link += '"https://arxiv.org/abs/'
             this_link += the_arx + '")| safe}}'
+        elif ref.lower().startswith("zbl"):
+            ref = ref.replace(":", "")
+            the_zbl = ref[3:]    # remove the "Zbl"
+            this_link = '{{ LINK_EXT("Zbl:' + the_zbl + '", '
+            this_link += '"https://zbmath.org/?q=an:'
+            this_link += the_zbl + '")| safe}}'
 
         if this_link:
             if ans:

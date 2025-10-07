@@ -8,8 +8,7 @@ links:
   - [ 0,0 ]
 ---
 title: Announcements
-content: <p>Continuing the <a href="https://lucant.org">LuCaNT</a> series of conferences after a successful first <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT</a> at <a href="https://icerm.brown.edu">ICERM</a>, we invite you to join us at <a href="https://icerm.brown.edu/program/topical_workshop/tw-25-lucant/">LuCaNT 2025</a> with a <a href="https://lucant.org/submissions/">call for papers</a>!<p>
-  <p>Check out the recently updated <a href="/Groups/Abstract/">abstract groups</a> database [beta].</p>
+content: <p>Check out the recently updated <a href="/Groups/Abstract/">abstract groups</a> database.</p>
   <p>Check out the new <a href="/ModularCurve/Q/">modular curves</a> database [beta].</p>
 image: announcements
 control: 0
