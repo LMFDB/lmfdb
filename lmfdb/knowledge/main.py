@@ -198,7 +198,6 @@ def ref_to_link(txt):
         ans.append()
     return "[" + ", ".join(ans) + "]" + everythingelse
 
-
 def md_latex_accents(text):
     r"""
     Convert \"o to &ouml; and similar TeX-style markup.
