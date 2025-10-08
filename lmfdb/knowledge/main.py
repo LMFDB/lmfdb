@@ -195,7 +195,7 @@ def ref_to_link(txt):
         link = f'{{{{ LINK_EXT("{disp}", "{url}") | safe}}}}'
         if fragment:
             link += f" ({fragment})"
-        ans.append()
+        ans.append(link)
     return "[" + ", ".join(ans) + "]" + everythingelse
 
 def md_latex_accents(text):
