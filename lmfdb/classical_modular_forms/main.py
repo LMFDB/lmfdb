@@ -35,6 +35,7 @@ from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.characters.main import ORBIT_MAX_MOD
+from lmfdb.number_fields.number_field import poly_to_field_label
 
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
@@ -101,6 +102,8 @@ def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
     if m and d != 2:
         return cyc_display(m, d, is_real_cyc)
     else:
+        if d == 2:
+            nf_label = poly_to_field_label(poly)
         return field_display_gen(nf_label, poly, disc, truncate=16)
 
 def display_AL(info):

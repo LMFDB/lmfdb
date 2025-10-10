@@ -62,9 +62,7 @@ class CmfTest(LmfdbTest):
         assert '248.2.E.v.d' in page.get_data(as_text=True)
         assert fr'\Q(\zeta_{{10}})' in page.get_data(as_text=True)
         assert '248.2.E.q.d' in page.get_data(as_text=True)
-        # Currently not working - we need to fix this
-        # Seems like issue is with nf_label fields not being set
-        assert fr'\Q(\sqrt{-3})' in page.get_data(as_text=True)
+        assert fr'\Q(\sqrt{{-3}})' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/248/?weight=10&level=9', follow_redirects=True)
         assert 'Results (7 matches)' in page.get_data(as_text=True)
         assert '9.10.E.c.b' in page.get_data(as_text=True)
