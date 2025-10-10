@@ -804,7 +804,7 @@ def external_definition_link(site, xid):
         return f"https://doi.org/{xid}", xid, fragment
     if site == "groupprops":
         # example xid="Alternating_group"
-        return f"https://groupprops.subwiki.org/wiki/{xid}", xid, fragment
+        return f"https://groupprops.subwiki.org/wiki/{xid}", "groupprops:" + xid, fragment
     if site == "href":
         # href contains both the link and text for displaying
         if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
@@ -851,8 +851,11 @@ def knowl_definition(title,
         if len(kwargs) == 1:
             try:
                 site, xid = list(kwargs.items())[0]
-                url = external_definition_link(site, xid)
-                return f'<a href="{url}"><strong>{title}</strong></a>'
+                url, disp, fragment = external_definition_link(site, xid)
+                link = f'<a href="{url}"><strong>{title}</strong></a>'
+                if fragment:
+                    link += f" ({fragment})"
+                return link
             except ValueError:
                 pass
         return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
