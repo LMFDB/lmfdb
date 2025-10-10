@@ -727,7 +727,7 @@ Data Validation
    You can use the `lmfdb.verify` module.  Create a python file in the
    `lmfdb/verify` folder with the same name as your postgres table,
    and a class in that file that inherits from `TableChecker` in
-   `lmdfb.verify.verification`.  You can then add tests, which should
+   `lmfdb.verify.verification`.  You can then add tests, which should
    be decorated with one of the four speed types imported from
    `lmfdb.verify.verification`.
 
