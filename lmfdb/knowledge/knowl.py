@@ -804,7 +804,7 @@ def external_definition_link(site, xid):
         return f"https://doi.org/{xid}", xid, fragment
     if site == "groupprops":
         # example xid="Alternating_group"
-        return f"https://groupprops.subwiki.org/wiki/{xid}", xid, fragment
+        return f"https://groupprops.subwiki.org/wiki/{xid}", "groupprops:" + xid, fragment
     if site == "href":
         # href contains both the link and text for displaying
         if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
