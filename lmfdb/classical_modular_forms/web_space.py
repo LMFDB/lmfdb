@@ -227,7 +227,7 @@ def convert_spacelabel_from_conrey(spacelabel_conrey):
     """
     N, k, n = map(int, spacelabel_conrey.split('.'))
     try:
-        return db.mf_newspaces_eis.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k}, projection='label')
+        return db.mf_newspaces_eis.lucky({'conrey_index': ConreyCharacter(N,n).min_conrey_conj, 'level': N, 'weight': k, 'is_cuspidal': True}, projection='label')
     except ValueError: # N and n not relatively prime
         pass
 
