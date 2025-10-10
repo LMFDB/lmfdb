@@ -352,6 +352,7 @@ class LMFDBSearchTable(PostgresSearchTable):
                 return -1
             # df returns its amounts in 1K blocks
             return 1024 * int(pieces[3])
+
         def devmirror_space_available():
             """Return the amount of space available on the devmirror postgres filesystem"""
             editor_password = self._db.config.postgresql_options["password"]
@@ -366,6 +367,7 @@ class LMFDBSearchTable(PostgresSearchTable):
                 free = extract_space(line, "/var/lib/postgresql")
                 if free >= 0:
                     return free
+
         def grace_space_available():
             """Return the amount of space on postgres and scratch on grace.mit.edu"""
             line = self._execute(SQL("SELECT run_diskfree(%s)"), ["/var/lib/postgresql"]).fetchone()[0]
@@ -391,8 +393,10 @@ class LMFDBSearchTable(PostgresSearchTable):
                 if not finishing and logid not in finished:
                     space_claimed[ts] += space_impact
             return finished, space_claimed
+
         def ts_filter(ops, ts):
             return [op for op in ops if op[3] == ts]
+
         def check_space(needed, available, location, ops):
             """Raise an informative error if there is not enough space"""
             if needed > 0 and (needed * 2 + 10**11) > available:
