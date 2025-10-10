@@ -1237,7 +1237,7 @@ class NFSearchArray(SearchArray):
             knowl="nf.narrow_class_number",
             example="5")
         narrow_class_group = TextBox(
-            name="class_group",
+            name="narrow_class_group",
             label="Narrow class group structure",
             short_label='Narrow class group',
             knowl="nf.narrow_class_group",
@@ -1277,8 +1277,8 @@ class NFSearchArray(SearchArray):
             name="completions",
             label="$p$-adic completions",
             knowl="nf.padic_completion.search",
-            example_span="2.4.10.7 or 2.4.10.7,3.2.1.2",
-            example="2.4.10.7")
+            example_span="2.1.4.10a1.5 or 2.1.4.10a1.5,3.1.2.1a1.1",
+            example="2.1.4.10a1.5")
         monogenic = YesNoMaybeBox(
             name="monogenic",
             label="Monogenic",

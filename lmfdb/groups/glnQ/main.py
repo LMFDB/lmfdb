@@ -36,9 +36,8 @@ def label_is_valid(lab):
     return glnq_label_regex.fullmatch(lab)
 
 def get_bread(breads=[]):
-    bc = [("Groups", url_for(".index")),("GLnQ", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc = [("Groups", url_for(".index")), ("GLnQ", url_for(".index"))]
+    bc.extend(breads)
     return bc
 
 @glnQ_page.route("/")

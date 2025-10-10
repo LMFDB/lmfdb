@@ -39,7 +39,7 @@ def my_latex(s):
 
 def get_bread(breads=[]):
     bc = [("mod &#x2113; modular forms", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
