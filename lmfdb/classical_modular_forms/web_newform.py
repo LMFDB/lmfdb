@@ -257,7 +257,10 @@ class WebNewform():
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
         self.properties += [('Level', prop_int_pretty(self.level)),
-                            ('Weight', prop_int_pretty(self.weight))]
+                            ('Weight', prop_int_pretty(self.weight)),
+                            ('Cuspidal', 'yes' if self.is_cuspial == 1 else 'no')
+                            ]
+
         if self.embedding_label is None:
             self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
         else:
