@@ -851,8 +851,11 @@ def knowl_definition(title,
         if len(kwargs) == 1:
             try:
                 site, xid = list(kwargs.items())[0]
-                url = external_definition_link(site, xid)
-                return f'<a href="{url}"><strong>{title}</strong></a>'
+                url, disp, fragment = external_definition_link(site, xid)
+                link = f'<a href="{url}"><strong>{title}</strong></a>'
+                if fragment:
+                    link += f" ({fragment})"
+                return link
             except ValueError:
                 pass
         return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
