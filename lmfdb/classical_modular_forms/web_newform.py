@@ -21,7 +21,7 @@ from lmfdb.utils import (
     raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp
 )
 from lmfdb.number_fields.web_number_field import nf_display_knowl
-from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.number_field import field_pretty, poly_to_field_label
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
@@ -597,6 +597,8 @@ class WebNewform():
         if m and (d != 2 or self.hecke_ring_cyclotomic_generator):
             return cyc_display(m, d, self.field_poly_is_real_cyclotomic)
         else:
+            if d == 2:
+                self.nf_label = poly_to_field_label(self.field_poly)
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
