@@ -15,7 +15,6 @@ import string
 import re
 import json
 import time
-from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
 from flask import (abort, flash, jsonify, make_response,
