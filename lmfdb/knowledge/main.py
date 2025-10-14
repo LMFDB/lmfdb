@@ -66,14 +66,6 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
         return m.group(2)
 
 
-class HashTagPattern(markdown.inlinepatterns.Pattern):
-    def handleMatch(self, m):
-        el = ElementTree.Element("a")
-        el.set('href', url_for('knowledge.index') + '?search=%23' + m.group(2))
-        el.text = '#' + m.group(2)
-        return el
-
-
 class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
         tokens = m.group(2).split("|")
@@ -93,10 +85,6 @@ md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$',
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
 md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
 md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
-
-# Tell markdown to turn hashtags into search urls
-hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
@@ -823,7 +811,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     con = md_preprocess(con)
 
     # markdown enabled
-    render_me = render_me % {'content': con,
+    render_me = render_me % {'content': md.convert(con),
                              'ID': k.id, 'review_status': review_status,
                              'kw_params': kw_params}  # , 'authors' : authors }
     # Pass the text on to markdown.  Note, backslashes need to be escaped for
@@ -835,8 +823,6 @@ def render_knowl(ID, footer=None, kwargs=None,
     # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
     try:
         data = render_template_string(render_me, k=k, **kwargs)
-        # We have to run md.convert after render_template because markdown will otherwise make invalid replacements (e.g. replacing hashtags inside string arguments to jinja macros)
-        data = md.convert(data)
         if raw:
             # note, this is just internally for the .show method, raw rendering
             # doesn't exist right now and will wrap this into a make_reponse!
