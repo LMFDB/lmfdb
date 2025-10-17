@@ -204,7 +204,7 @@ def string2list(s):
     return [int(a) for a in s.split(',')]
 
 
-def is_fundamental_discriminant(d) -> bool:
+def is_fundamental_discriminant(d):
     if d in [0, 1]:
         return False
     if integer_is_squarefree(d):
@@ -383,7 +383,7 @@ class WebNumberField:
     """
      Class for retrieving number field information from the database
     """
-    def __init__(self, label, data=None, gen_name='a') -> None:
+    def __init__(self, label, data=None, gen_name='a'):
         self.label = label
         self.gen_name = gen_name
         if data is None:
@@ -454,7 +454,7 @@ class WebNumberField:
     def _get_dbdata(self):
         return db.nf_fields.lookup(self.label)
 
-    def is_in_db(self) -> bool:
+    def is_in_db(self):
         return self._data is not None
 
     def get_label(self):
@@ -480,7 +480,7 @@ class WebNumberField:
         return na_text()
 
     # Is the polynomial polredabs'ed
-    def is_reduced(self) -> bool:
+    def is_reduced(self):
         if not self.haskey('reduced'):
             return True
         return self._data['reduced'] != 0
@@ -535,10 +535,10 @@ class WebNumberField:
             self._data['gg'] = WebGaloisGroup.from_nt(self.degree(), self.galois_t())
         return self._data['gg']
 
-    def is_galois(self) -> bool:
+    def is_galois(self):
         return self._data['is_galois']
 
-    def is_abelian(self) -> bool:
+    def is_abelian(self):
         return self.gg().is_abelian()
 
     def coeffs(self):
@@ -558,16 +558,16 @@ class WebNumberField:
     def degree(self):
         return self._data['degree']
 
-    def is_real_quadratic(self) -> bool:
+    def is_real_quadratic(self):
         return self.signature() == [2, 0]
 
-    def is_imag_quadratic(self) -> bool:
+    def is_imag_quadratic(self):
         return self.signature() == [0, 1]
 
     def poly(self, var="x"):
         return coeff_to_poly(self._data['coeffs'], var=var)
 
-    def haskey(self, key) -> bool:
+    def haskey(self, key):
         return self._data and self._data.get(key) is not None
 
     def discrootfieldcoeffs(self):
@@ -606,12 +606,12 @@ class WebNumberField:
                 return 'No'
         return 'Not computed'
 
-    def index(self) -> str:
+    def index(self):
         if self.haskey('index'):
             return r'$%d$' % self._data['index']
         return 'Not computed'
 
-    def inessentialp(self) -> str:
+    def inessentialp(self):
         if self.haskey('inessentialp'):
             inep = self._data['inessentialp']
             return ', '.join(r'$%s$' % z for z in inep) if inep else 'None'
@@ -929,7 +929,7 @@ class WebNumberField:
             return '$%s$' % str(self._data['narrow_class_number'])
         return na_text()
 
-    def can_class_number(self) -> bool:
+    def can_class_number(self):
         return self.haskey('class_number')
 
     def relh(self):
@@ -945,7 +945,7 @@ class WebNumberField:
             return self._data['used_grh']
         return False
 
-    def short_grh_string(self) -> str:
+    def short_grh_string(self):
         if self.used_grh():
             return '<span style="font-size: x-small">(GRH)</span>'
         return ''
