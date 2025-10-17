@@ -17,9 +17,23 @@
     <td>=</td>
     <td>\( {{ space.weight }} \)</td>
   </tr>
+  <tr>
+    <td> {{ KNOWL('cmf.cusp_form', title='Is cuspidal') }}: </td>
+    <td> </td>
+    <td> </td>
+    {% if space.is_cuspidal %}
+      <td>  yes </td>
+    {% else %}
+      <td>  no </td>
+    {% endif %}
+  </tr>
   {% if space.num_spaces is not none %}
   <tr>
-    <td> Nonzero {{ KNOWL('cmf.newspace', title='newspaces') }}: </td>
+    {% if space.is_cuspidal %}
+     <td> Nonzero {{ KNOWL('cmf.newspace', title='newspaces') }}: </td>
+    {% else %}
+     <td> Nonzero {{ KNOWL('cmf.eisenstein_newspace', title='newspaces') }}: </td>
+    {% endif %}
     <td></td>
     <td></td>
     <td> \( {{ space.num_spaces }} \) </td>
@@ -119,7 +133,11 @@
 
 <h2> {{ KNOWL('cmf.decomposition.new.gamma1', title='Decomposition') }} of \({{ space.new_latex() }}\)</h2>
 
+{% if space.is_cuspidal %}
 <p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.weight_parity == -1 else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( S_k^{\mathrm{new}}(N, \chi) \) we list available newforms together with their dimension.</p>
+{% else %}
+<p> We only show spaces with {{ KNOWL('character.dirichlet.parity',title="odd parity" if space.weight_parity == -1 else "even parity")}}, since no modular forms exist when this condition is not satisfied.  Within each space \( E_k^{\mathrm{new}}(N, \chi) \) we list available newforms together with their dimension.</p>
+{% endif %}
 
 <table class="mfdata">
   <thead>

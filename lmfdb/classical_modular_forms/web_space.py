@@ -283,11 +283,11 @@ class DimGrid():
     @staticmethod
     def from_db(data):
         grid = {'M':{'all':data['mf_dim'],
-                     'new':data['dim']+data['eis_new_dim'],
-                     'old':data['mf_dim']-data['dim']-data['eis_new_dim']},
+                     'new':data['cusp_new_dim']+data['eis_new_dim'],
+                     'old':data['mf_dim']-data['cusp_new_dim']-data['eis_new_dim']},
                 'S':{'all':data['cusp_dim'],
-                     'new':data['dim'],
-                     'old':data['cusp_dim']-data['dim']},
+                     'new':data['cusp_new_dim'],
+                     'old':data['cusp_dim']-data['cusp_new_dim']},
                 'E':{'all':data['eis_dim'],
                      'new':data['eis_new_dim'],
                      'old':data['eis_dim']-data['eis_new_dim']}}
@@ -406,6 +406,11 @@ class WebNewformSpace():
         self.newforms = list(db.mf_newforms_eis.search({'space_label':self.label}, projection=2))
         oldspaces = make_oldspace_data(self.label, self.char_conductor, self.prim_orbit_index)
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
+        if self.is_cuspidal:
+            data['cusp_new_dim'] = data['dim']
+        else:
+            cuspidal_label = '.'.join([str(self.level), str(self.weight), self.char_orbit_label])
+            data['cusp_new_dim'] = db.mf_newspaces_eis.lookup(cuspidal_label, 'dim')
         self.dim_grid = DimGrid.from_db(data)
         self.plot = db.mf_newspace_portraits.lookup(self.label, projection="portrait")
         # Properties
@@ -511,11 +516,23 @@ class WebNewformSpace():
     def cusp_latex_symbolic(self):
         return common_latex(*(self._vec() + ["S"]), symbolic_chi=True)
 
-    def new_latex(self):
+    def cusp_new_latex(self):
         return common_latex(*(self._vec() + ["S",0,"new"]))
 
-    def old_latex(self):
+    def new_latex(self):
+        if self.is_cuspidal:
+            return self.cusp_new_latex()
+        else:
+            return self.eis_new_latex()
+
+    def cusp_old_latex(self):
         return common_latex(*(self._vec() + ["S",0,"old"]))
+
+    def old_latex(self):
+        if self.is_cuspidal:
+            return self.cusp_old_latex()
+        else:
+            return self.eis_old_latex()
 
     def old_latex_symbolic(self):
         return common_latex(*(self._vec() + ["S",0,"old"]), symbolic_chi=True)
@@ -534,7 +551,7 @@ class WebNewformSpace():
     def ALdim_table(self):
         if not hasattr(self,'ALdims_old'):
             return ALdim_new_cusp_table(self.ALdims, self.level, self.weight)
-        aldims_data = {'dim' : vector(self.ALdims), 'cusp_dim' : vector(self.ALdims) + vector(self.ALdims_old),
+        aldims_data = {'cusp_new_dim' : vector(self.ALdims), 'cusp_dim' : vector(self.ALdims) + vector(self.ALdims_old),
                        'eis_new_dim' : vector(self.ALdims_eis_new), 'eis_dim' : vector(self.ALdims_eis_new) + vector(self.ALdims_eis_old)}
         aldims_data['mf_dim'] = aldims_data['cusp_dim'] + aldims_data['eis_dim']
         aldims = DimGrid.from_db(aldims_data)
@@ -567,6 +584,11 @@ class WebGamma1Space():
         newspaces = list(db.mf_newspaces_eis.search({'level':level, 'weight':weight, 'char_parity': self.weight_parity, 'is_cuspidal' : is_cuspidal}))
         self.oldspaces = [(sublevel, number_of_divisors(level/sublevel)) for sublevel in divisors(level) if sublevel != level]
         self.oldspaces.sort()
+        if is_cuspidal:
+            data['cusp_new_dim'] = data['dim']
+        else:
+            cuspidal_label = '.'.join([str(self.level), str(self.weight)])
+            data['cusp_new_dim'] = db.mf_gamma1_eis.lookup(cuspidal_label, 'dim')
         self.dim_grid = DimGrid.from_db(data)
         self.decomp = []
         newforms = list(db.mf_newforms_eis.search({'level':level, 'weight':weight, 'is_cuspidal' : is_cuspidal}, ['label', 'space_label', 'dim', 'level', 'char_orbit_label', 'hecke_orbit', 'char_degree']))
@@ -595,7 +617,10 @@ class WebGamma1Space():
                     space['level'] = level
                     space['conrey_index'] = char['first']
                     space['char_orbit_label'] = char['label'].split('.')[-1]
-                    space['label'] = "%s.%s.%s" % (level,weight,space['char_orbit_label'])
+                    if is_cuspidal:
+                        space['label'] = "%s.%s.%s" % (level,weight,space['char_orbit_label'])
+                    else:
+                        space['label'] = "%s.%s.E.%s" % (level,weight,space['char_orbit_label'])
                     space['char_degree'] = char['degree']
                     space['dim'] = newspace_dims_by_label[char['label']]
                     space['generate_link'] = (self.weight == 2) and (space['char_orbit_label'] != 'a')
@@ -635,7 +660,8 @@ class WebGamma1Space():
         if not match:
             raise ValueError("Invalid modular forms space label %s." % label)
         level, weight = map(int, match.groups())
-        return WebGamma1Space(level, weight)
+        is_cuspidal = not EIS_GAMMA1_RE.match(label)
+        return WebGamma1Space(level, weight, is_cuspidal=is_cuspidal)
 
     def _vec(self):
         return [self.level, self.weight, None]
@@ -655,8 +681,14 @@ class WebGamma1Space():
     def cusp_latex(self):
         return common_latex(*(self._vec() + ["S",1]))
 
-    def new_latex(self):
+    def cusp_new_latex(self):
         return common_latex(*(self._vec() + ["S",1,"new"]))
+
+    def new_latex(self):
+        if self.is_cuspidal:
+            return self.cusp_new_latex()
+        else:
+            return self.eis_new_latex()
 
     def subspace_latex(self, new=False):
         return common_latex("M", self.weight, None, "S", 1, "new" if new else "")
@@ -670,33 +702,46 @@ class WebGamma1Space():
     def header_latex(self):
         return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + r'\)'
 
-    def _link(self, N, i=None, form=None, typ="new", label=True):
+    def _link(self, N, i=None, form=None, typ="new", label=True, is_cuspidal=True):
         if form is not None:
             form = cremona_letter_code(form - 1)
         if label:
-            if i is None:
-                name = "{N}.{k}".format(N=N, k=self.weight)
-            elif form is None:
-                name = "{N}.{k}.{i}".format(N=N, k=self.weight, i=i)
-            else:
-                name = "{N}.{k}.{i}.{f}".format(N=N, k=self.weight, i=i, f=form)
+            name = "{N}.{k}".format(N=N, k=self.weight)
+            if not is_cuspidal:
+                name += ".E"
+            if not (i is None): 
+                name += ".{i}".format(i=i)
+                if not (form is None):
+                    name += ".{f}".format(f=form)
         else:
             t = 1 if i is None else 0
-            name = r"\(%s\)" % common_latex(N, self.weight, i, t=t, typ=typ)
+            name = r"\(%s\)" % common_latex(N, self.weight, i, t=t, typ=typ, S="S" if is_cuspidal else "E")
         if i is None:
-            url = url_for(".by_url_full_gammma1_space_label",
-                          level=N, weight=self.weight)
+            if is_cuspidal:
+                url = url_for(".by_url_full_gammma1_space_label",
+                              level=N, weight=self.weight)
+            else:
+                url = url_for(".by_url_full_gammma1_eisenstein_space_label",
+                              level=N, weight=self.weight)
         elif form is None:
-            url = url_for(".by_url_space_label",
-                          level=N, weight=self.weight, char_orbit_label=i)
+            if is_cuspidal:
+                url = url_for(".by_url_space_label",
+                              level=N, weight=self.weight, char_orbit_label=i)
+            else:
+                url = url_for(".by_url_eisenstein_space_label",
+                              level=N, weight=self.weight, automorphic_type="E", char_orbit_label=i)
         else:
-            url = url_for(".by_url_newform_label",
-                          level=N, weight=self.weight, char_orbit_label=i, hecke_orbit=form)
+            if is_cuspidal:
+                url = url_for(".by_url_newform_label",
+                              level=N, weight=self.weight, char_orbit_label=i, hecke_orbit=form)
+            else:
+                url = url_for(".by_url_eisenstein_newform_label",
+                              level=N, weight=self.weight, automorphic_type="E", char_orbit_label=i, hecke_orbit=form)
         return r"<a href={url}>{name}</a>".format(url=url, name=name)
 
     def oldspace_decomposition(self):
         template = r"{link}\(^{{\oplus {mult}}}\)"
-        return r"\(\oplus\)".join(template.format(link=self._link(N, label=False),
+        return r"\(\oplus\)".join(template.format(link=self._link(N, label=False, is_cuspidal=self.is_cuspidal),
                                                   mult=mult)
                                   for N, mult in self.oldspaces)
 
@@ -713,16 +758,19 @@ class WebGamma1Space():
 
             num_chi = space['char_degree']
             if space.get('generate_link', True):
-                link = self._link(space['level'], space['char_orbit_label'])
+                link = self._link(space['level'], space['char_orbit_label'], is_cuspidal=space['is_cuspidal'])
             else:
-                link = "{N}.{k}.{i}".format(N=space['level'], k=self.weight, i=space['char_orbit_label']) # Not actually a link
+                link = "{N}.{k}".format(N=space['level'], k=self.weight) # Not actually a link
+                if space['is_cuspidal']:
+                    link += ".E"
+                link += ".{i}".format(i=space['char_orbit_label']) # Not actually a link
             if forms is None:
                 ans.append((rowtype, chi_rep, num_chi, link, "n/a", space['dim'], []))
             elif not forms:
                 ans.append((rowtype, chi_rep, num_chi, link, "None", space['dim'], []))
             else:
                 dims = [form['dim'] for form in forms]
-                forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit']) for form in forms]
+                forms = [self._link(form['level'], form['char_orbit_label'], form['hecke_orbit'], is_cuspidal=self.is_cuspidal) for form in forms]
                 ans.append((rowtype, chi_rep, num_chi, link, forms[0], dims[0], list(zip(forms[1:], dims[1:]))))
         return ans
 

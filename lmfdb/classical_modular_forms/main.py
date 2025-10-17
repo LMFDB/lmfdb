@@ -1189,6 +1189,10 @@ def dimension_space_postprocess(res, info, query):
     for space in res:
         N = space['level']
         k = space['weight']
+        if space['is_cuspidal']:
+            space['cusp_new_dim'] = space['dim']
+        else:
+            space['cusp_new_dim'] = db.mf_newspaces_eis.lookup('.'.join([str(space['level']), str(space['weight']), space['char_orbit_label']]), 'dim')
         dims = DimGrid.from_db(space)
         if space.get('num_forms') is None:
             dim_dict[N,k] = False
