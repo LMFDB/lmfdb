@@ -809,13 +809,6 @@ class WebNumberField:
     def units(self):  # fundamental units
         if self.haskey('units'):
             return self._data['units']
-        # the next few lines looks very dubious
-        res = None
-        if self.unit_rank() == 0:
-            res = []
-        if res:
-            res = res.replace('\\\\', '\\')
-            return res
         return na_text()
 
     def cnf(self):
