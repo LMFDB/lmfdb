@@ -2872,8 +2872,6 @@ class WebAbstractGroup(WebObj):
             return lie_reps
         return None
 
-
-
     @cached_method
     def code_snippets(self):
         if self.live():
@@ -2955,7 +2953,7 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
-        # This implements code snippets for the Lie type matrix representations       
+        # This implements code snippets for the Lie type matrix representations
 
         # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
         magma_top_lie, gap_top_lie, sage_top_lie = None, None, None
