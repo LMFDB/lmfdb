@@ -2850,6 +2850,30 @@ class WebAbstractGroup(WebObj):
         snippet = CodeSnippet(self.code_snippets(), item)
         return snippet.place_code()
 
+    @lazy_attribute
+    def lie_representations(self):
+        # Get the Lie-type representations from the "gps_special_names" table
+        #lie_reps = list(db.gps_special_names.search({'label':self.label, 'order': {'$gte': 1}}, projection={'family','gens','priority'}))
+        #ans = {d['family']: d['priority'] for d in gps_families_data}
+
+        # TODO: We should update groups data to use new family names
+        # For now, we'll implement a "old to new" family dictionary (can delete once groups data is updated)
+        old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO":"PO",
+                                  "PGOPlus":"POPlus", "PGOMinus":"POMinus", "PGU":"PU", "CSp":"GSp", "CSO":"GSO", "CSOPlus":"GSOPlus",
+                                  "CSOMinus":"GSOMinus", "CSU":"GSU", "CO":"GOrth", "COPlus":"GOrthPlus", "COMinus":"GOrthMinus",
+                                  "CU":"GUnitary"}
+
+        # Temporary solution:  Get Lie type representations from gps_groups table  (the order here is important!)
+        if "Lie" in self.representations:
+            lie_reps = self.representations["Lie"]
+            for i in range(len(lie_reps)):
+                if lie_reps[i]['family'] in old_to_new_family_name:
+                    lie_reps[i]['family'] = old_to_new_family_name[lie_reps[i]['family']]
+            return lie_reps
+        return None
+
+
+
     @cached_method
     def code_snippets(self):
         if self.live():
@@ -2908,7 +2932,7 @@ class WebAbstractGroup(WebObj):
             LZqsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZq", ListForm=True), nZq))+")" for g in self.representations["GLZq"]["gens"]])+"]"
         else:
             nZq, Zq, LZq, LZqsplit, LZqsage = None, None, None, None, None
-# add below for GLFq implementation
+        # add below for GLFq implementation
         if "GLFq" in self.representations:
             nFq = self.representations["GLFq"]["d"]
             Fq = self.representations["GLFq"]["q"]
@@ -2932,18 +2956,15 @@ class WebAbstractGroup(WebObj):
         }
 
         # This implements code snippets for the Lie type matrix representations
-        # TODO: We should update groups data to use new family names
-        # For now, we'll implement a "old to new" family dictionary (can delete once groups data is updated)
-        old_to_new_family_name = {"GO":"Orth", "GOPlus":"OrthPlus", "GOMinus":"OrthMinus", "GU":"Unitary", "PGO":"PO",
-                                  "PGOPlus":"POPlus", "PGOMinus":"POMinus", "PGU":"PU", "CSp":"GSp", "CSO":"GSO", "CSOPlus":"GSOPlus",
-                                  "CSOMinus":"GSOMinus", "CSU":"GSU", "CO":"GOrth", "COPlus":"GOrthPlus", "COMinus":"GOrthMinus",
-                                  "CU":"GUnitary"}
+
+        print("********", self.lie_representations)
+       
 
         # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
         magma_top_lie, gap_top_lie, sage_top_lie = None, None, None
         gap_used_lie_gens, sage_used_lie_gens = False, False
         magma_lie_priority, gap_lie_priority, sage_lie_priority = 1000, 1000, 1000
-        if "Lie" in self.representations:
+        if self.lie_representations is not None:
             # Get Magma commands for all the Lie type families
             gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
             magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
@@ -2952,7 +2973,7 @@ class WebAbstractGroup(WebObj):
             sage_families = ['GL','SL','PSL','PGL','PSp','PSU','Orth','Unitary','PU']
             lie_priorities = {d['family']: d['priority'] for d in gps_families_data}
 
-            for lie_rep in self.representations["Lie"]:
+            for lie_rep in self.lie_representations:
                 code[lie_rep['family']] = dict()
                 nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
 
