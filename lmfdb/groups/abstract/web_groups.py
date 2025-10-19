@@ -2955,10 +2955,7 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
-        # This implements code snippets for the Lie type matrix representations
-
-        #print("********", self.lie_representations)
-       
+        # This implements code snippets for the Lie type matrix representations       
 
         # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
         magma_top_lie, gap_top_lie, sage_top_lie = None, None, None
@@ -2982,8 +2979,9 @@ class WebAbstractGroup(WebObj):
 
                 if lie_rep['family'] in gap_families:
                     code[lie_rep['family']]['gap'] = code[lie_rep['family']]['magma']
-                    if gap_top_lie is None:
+                    if (gap_top_lie is None) or gap_used_lie_gens:
                         gap_top_lie = code[lie_rep['family']]['gap']
+                        gap_used_lie_gens = False
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
                     if qLie.is_prime():
@@ -2998,8 +2996,9 @@ class WebAbstractGroup(WebObj):
 
                 if lie_rep['family'] in sage_families:
                     code[lie_rep['family']]['sage'] = magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
-                    if sage_top_lie is None:
+                    if (sage_top_lie is None) or sage_used_lie_gens:
                         sage_top_lie = code[lie_rep['family']]['sage']
+                        sage_used_lie_gens = False
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
                     if qLie.is_prime():
@@ -3010,6 +3009,19 @@ class WebAbstractGroup(WebObj):
                         sage_lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_sage_mats, 'nFq':nLie, 'Fq':qLie})
                     if sage_top_lie is None:
                         sage_top_lie, sage_used_lie_gens = sage_lie_code_snippet, True
+
+        # In the case no Lie type representation is implemented natively in Sage or GAP, we display the first one with gens as a matrix group
+        # as a code snippet in the "Constructions" header (and as a possible candidate for the top code snippet)
+        if (gap_top_lie is not None) and gap_used_lie_gens:
+            for lie_rep in self.lie_representations:
+                if "gens" in lie_rep:
+                    code[lie_rep['family']]['gap'] = gap_top_lie
+                    break
+        if (sage_top_lie is not None) and sage_used_lie_gens:
+            for lie_rep in self.lie_representations:
+                if "gens" in lie_rep:
+                    code[lie_rep['family']]['sage'] = sage_top_lie
+                    break
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
         # to display at the top of each group page.  This is computed and stored in code['code_description'].
