@@ -23,7 +23,7 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, utc_now_naive
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -170,41 +170,33 @@ def ref_to_link(txt):
     thecite = thecite.replace("\\", "")  # \href --> href
 
     refs = thecite.split(",")
-    ans = ""
+    ans = []
 
     # print "refs",refs
 
     for ref in refs:
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
-        this_link = ""
-        if ref.startswith("href"):
-            the_link = re.sub(r".*{([^}]+)}{.*", r"\1", ref)
-            click_on = re.sub(r".*}{([^}]+)}\s*", r"\1", ref)
-            this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
-        elif ref.startswith("doi"):
-            ref = ref.replace(":", "")  # could be doi:: or doi: or doi
-            the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
-        elif ref.lower().startswith("mr"):
-            ref = ref.replace(":", "")
-            the_mr = ref[2:]    # remove the "MR"
-            this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
-            this_link += the_mr + '") | safe}}'
-        elif ref.lower().startswith("arxiv"):
-            ref = ref.replace(":", "")
-            the_arx = ref[5:]    # remove the "arXiv"
-            this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
-            this_link += '"https://arxiv.org/abs/'
-            this_link += the_arx + '")| safe}}'
-
-        if this_link:
-            if ans:
-                ans += ", "
-            ans += this_link
-
-    return '[' + ans + ']' + everythingelse
-
+        # Special case for href (no colon by design) and for MR (no colon in many existing cases)
+        for site in ["href", "mr"]:
+            if ref.lower().startswith(site):
+                xid = ref[len(site):].lstrip(":")
+                break
+        else:
+            pieces = ref.split(":")
+            if len(pieces) != 2:
+                # Improperly formatted ref
+                continue
+            site, xid = pieces
+            site = site.lower()
+        try:
+            url, disp, fragment = external_definition_link(site, xid)
+        except ValueError:
+            continue
+        link = f'{{{{ LINK_EXT("{disp}", "{url}") | safe}}}}'
+        if fragment:
+            link += f" ({fragment})"
+        ans.append(link)
+    return "[" + ", ".join(ans) + "]" + everythingelse
 
 def md_latex_accents(text):
     r"""
@@ -243,7 +235,12 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl,
+            'knowl_title': knowl_title,
+            'knowl_url_prefix': knowl_url_prefix,
+            "KNOWL_EXISTS": knowl_exists,
+            "knowl_definition": knowl_definition,
+            "external_definition_link": external_definition_link}
 
 
 @app.template_filter("render_knowl")
@@ -257,6 +254,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
@@ -793,6 +791,7 @@ def render_knowl(ID, footer=None, kwargs=None,
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
