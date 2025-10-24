@@ -36,7 +36,7 @@ class ModCurveIsog_class():
 
             N, i, g, iso = label.split(".")
             iso_num = class_to_int(iso)+1
-            data = db.gps_gl2zhat_fine.lucky({"coarse_level" : N,
+            data = db.gps_gl2zhat.lucky({"coarse_level" : N,
                                               "coarse_index" : i,
                                               "genus" : g,
                                               "coarse_class_num" : iso_num})
@@ -68,14 +68,14 @@ class ModCurveIsog_class():
                  'coarse_class_num' : self.coarse_class_num,
                  'contains_negative_one' : True}
 
-        self.class_size = ncurves = db.gps_gl2zhat_fine.count(query)
+        self.class_size = ncurves = db.gps_gl2zhat.count(query)
 
         # Create a list of the curves in the class from the database
         number_key = 'coarse_num'
         self.curves = []
         for i in range(ncurves):
             query.update({number_key : i+1})
-            self.curves.append(db.gps_gl2zhat_fine.lucky(query))
+            self.curves.append(db.gps_gl2zhat.lucky(query))
 
         for c in self.curves:
             c['web_curve'] = WebModCurve(c['label'])
@@ -104,8 +104,13 @@ class ModCurveIsog_class():
 
         if self.conductor is not None:
             self.properties.append(('Conductor', '$' + self.web_curve.factored_conductor + '$'))
+        else:
+            self.properties.append(('Conductor', 'not computed'))
+
         if self.rank is not None:
             self.properties.append(('Analytic rank', prop_int_pretty(self.rank)))
+        else:
+            self.properties.append(('Analytic rank', 'not computed'))
 
         self.friends = self.web_curve.friends[1:]
 
@@ -143,3 +148,4 @@ class ModCurveIsog_class():
                       ('%s' % self.coarse_index, base_query + index_query),
                       ('%s' % self.genus, base_query + genus_query),
                       ('%s' % cremona_letter_code(self.coarse_class_num-1), base_query + self_query)]
+
