@@ -2852,9 +2852,8 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def lie_representations(self):
-        # Get the Lie-type representations from the "gps_special_names" table
-        #lie_reps = list(db.gps_special_names.search({'label':self.label, 'order': {'$gte': 1}}, projection={'family','gens','priority'}))
-        #ans = {d['family']: d['priority'] for d in gps_families_data}
+        # Ideally we should get the Lie-type representations from the "gps_special_names" table:
+        # lie_reps = list(db.gps_special_names.search({'label':self.label}, projection={'family','gens','parameters'}))
 
         # TODO: We should update groups data to use new family names
         # For now, we'll implement a "old to new" family dictionary (can delete once groups data is updated)
@@ -2863,7 +2862,7 @@ class WebAbstractGroup(WebObj):
                                   "CSOMinus":"GSOMinus", "CSU":"GSU", "CO":"GOrth", "COPlus":"GOrthPlus", "COMinus":"GOrthMinus",
                                   "CU":"GUnitary"}
 
-        # Temporary solution:  Get Lie type representations from gps_groups table  (the order here is important!)
+        # Temporary solution: Get Lie type representations from gps_groups table (the order here is important!)
         if "Lie" in self.representations:
             lie_reps = self.representations["Lie"]
             for i in range(len(lie_reps)):
@@ -2953,14 +2952,12 @@ class WebAbstractGroup(WebObj):
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
         }
 
-        # This implements code snippets for the Lie type matrix representations
-
-        # Keep track of a Lie type representation of highest priority for each language (for use in top code snippet)
-        magma_top_lie, gap_top_lie, sage_top_lie = None, None, None
-        gap_used_lie_gens, sage_used_lie_gens = False, False
+        # The following code implements code snippets for the Lie-type matrix representations
+        magma_top_lie, gap_top_lie, sage_top_lie = None, None, None   # Keep track of Lie-type snippet for use as a top code snippet
+        gap_used_lie_gens, sage_used_lie_gens = False, False          # Track whether we need to use generators
         if self.lie_representations is not None:
             # Get Magma commands for all the Lie type families
-            gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd','priority'}))
+            gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd'}))
             magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
             # Hardcoded list of Lie Type families available in GAP and Sage  (NB: Must ensure their implementation agrees with our definition!)
             gap_families = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Orth','Unitary','Omega','PO','PU','POmega','PGammaL','PSigmaL']
