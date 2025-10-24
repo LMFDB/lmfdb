@@ -2971,7 +2971,7 @@ class WebAbstractGroup(WebObj):
                 code[lie_rep['family']] = dict()
                 nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
 
-                code[lie_rep['family']]['magma'] = magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))+";"
+                code[lie_rep['family']]['magma'] = "G := "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))+";"
                 if magma_top_lie is None:
                     magma_top_lie = code[lie_rep['family']]['magma']
 
@@ -2993,7 +2993,7 @@ class WebAbstractGroup(WebObj):
                         gap_top_lie, gap_used_lie_gens = gap_lie_code_snippet, True
 
                 if lie_rep['family'] in sage_families:
-                    code[lie_rep['family']]['sage'] = magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
+                    code[lie_rep['family']]['sage'] = "G = "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
                     if (sage_top_lie is None) or sage_used_lie_gens:
                         sage_top_lie = code[lie_rep['family']]['sage']
                         sage_used_lie_gens = False
@@ -3060,11 +3060,11 @@ class WebAbstractGroup(WebObj):
             else:
                 # Use a Lie Type matrix construction (if it exists and the Lie type generators were not used)
                 if magma_top_lie is not None:
-                    code['code_description']['magma'] = "G := "+magma_top_lie
+                    code['code_description']['magma'] = magma_top_lie
                 if (gap_top_lie is not None) and (not gap_used_lie_gens):
-                    code['code_description']['gap'] = "G := "+gap_top_lie
+                    code['code_description']['gap'] = gap_top_lie
                 if (sage_top_lie is not None) and (not sage_used_lie_gens):
-                    code['code_description']['sage'] = "G = "+sage_top_lie
+                    code['code_description']['sage'] = sage_top_lie
         # Checking if group is in the Chevalley or Twisted Chevalley family
         if ('Chev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
             chev_index = [t['family'] for t in self_families].index("Chev")
