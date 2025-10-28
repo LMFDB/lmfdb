@@ -1849,6 +1849,10 @@ table td.title {
   padding-left: 10px;
   border-top-right-radius: 10px;
   }
+table.box td.active {
+  background: {{ color.sidebar_background_h2_hover }};
+  color: {{ color.sidebar_h2_hover }};
+  }
 table td.content {
   background: {{color.box_background_img}};
   font-size: 90%;
