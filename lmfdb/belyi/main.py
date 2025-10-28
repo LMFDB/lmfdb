@@ -490,7 +490,7 @@ class Belyi_download(Downloader):
         s += "// Magma code for Belyi map with label %s\n\n" % label
         s += "\n// Group theoretic data\n\n"
         s += "d := %s;\n" % rec["deg"]
-        s += "i := %s;\n" % int(label.split("T")[1][0])
+        s += "i := %s;\n" % int(label.split("T")[1].split("-")[0])
         s += "G := TransitiveGroup(d,i);\n"
         s += "sigmas := %s;\n" % self.perm_maker(rec, lang)
         s += "embeddings := %s;\n" % self.embedding_maker(rec, lang)
