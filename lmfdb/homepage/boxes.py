@@ -30,6 +30,8 @@ class Box():
             max_entries = 4
             content = [line.strip() for line in
                        knowldb.get_knowl("content.announcements", ["content"])["content"].split("\n")]
+            with open(os.path.expanduser("~/blue.txt"), "w") as F:
+                _ = F.write(str(content))
             # Only keep lines that are part of an unordered list
             content = [line for line in content if line.startswith("* ") or line.startswith("- ") or line.startswith("+ ")]
             overflow = len(content) > max_entries
