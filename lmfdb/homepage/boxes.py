@@ -9,24 +9,10 @@ class Box():
     def __init__(self, data):
         self.title = data["title"]
         self.img = url_for('static', filename=f'images/{data["image"]}.png')
-        self.active = False
         if self.title == "Announcements":
             # Dynamic content generated from knowl
             from lmfdb.knowledge.knowl import knowldb
             from lmfdb.knowledge.main import md
-            from lmfdb.utils.datetime_utils import utc_now_naive
-            now = utc_now_naive()
-            now_month = 12*now.year + now.month
-            # We change the background color of the Announcements title bar if one of the displayed announcements is close to now (defined as this month or an adjacent month)
-            def check_month(line):
-                m = re.match(r".*\(\s*(\d+)\s*/\s*(\d+)\s*\)", line)
-                if m:
-                    month, year = int(m.group(1)), int(m.group(2))
-                    if year < 100:
-                        year += 2000
-                    total_month = 12*year + month
-                    if abs(now_month - total_month) <= 1:
-                        self.active = True
             max_entries = 4
             content = [line.strip() for line in
                        knowldb.get_knowl("content.announcements", ["content"])["content"].split("\n")]
