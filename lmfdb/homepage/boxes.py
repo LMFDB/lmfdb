@@ -1,6 +1,5 @@
 import os
 import yaml
-import re
 from flask import url_for
 from sage.all import cached_function
 
