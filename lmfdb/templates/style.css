@@ -1814,7 +1814,6 @@ div.box-container {
   align-items: center; /* Vertically centers items */
   align-content: center; /* Centers wrapped lines vertically */
   
-  padding: 0;
   margin: 20px;
 
 }
@@ -1825,13 +1824,8 @@ div.box-container {
     background: {{color.box_background}};
 
     min-height: 175px;
-    min-width: 30vw;
+    min-width: 35vw;
 
-    /* width: 40%; */
-
-    font-size:1em;
-    
-    /* margin: auto; */
 
     line-height: 135%;
     text-align: center;
@@ -1868,30 +1862,29 @@ div.box-container {
 }
 
 div.title {
+    grid-row: 1;
+    grid-column: 2;
+
     padding-left: 10px;
     font-weight: bold;
     font-size: 110%;
     background: {{color.box_background_title}};
-    grid-row: 1;
-    grid-column: 2;
     text-align: left;
 
-    /* center vertically */
+    /* center text vertically */
     display: grid;
     align-items: center;
-
-    /* height: 2em; */
-    /* padding: 5; */
-    /* padding-left: 10px; */
 }
 
 div.content {
-    background: {{color.box_background_img}};
     grid-row: 2 ;
     grid-column: 2;
+
+    background: {{color.box_background_img}};
+
     font-size: 90%;
     text-align: left;
-    padding: 5px;
+    padding: 10px;
 }
 
 table td.content ul li {
