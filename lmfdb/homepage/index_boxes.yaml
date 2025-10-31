@@ -28,10 +28,10 @@ title: Citations and acknowledgments
 image: citations
 content: <ul>
     <li><a href="/citation">How to cite the LMFDB</a></li>
-    <li><a href="https://github.com/LMFDB/lmfdb">Source code repository</li>
-    <li><a href="/management">Editorial board</li>
-    <li><a href="/acknowledgment">Acknowledgments</li>
-    <li><a href="/acknowledgment/activities">Activities</li>
+    <li><a href="https://github.com/LMFDB/lmfdb"> </a>Source code repository</a></li>
+    <li><a href="/management">Editorial board</a></li>
+    <li><a href="/acknowledgment">Acknowledgments</a></li>
+    <li><a href="/acknowledgment/activities">Activities</a></li>
   </ul>
 control: 0
 links:
