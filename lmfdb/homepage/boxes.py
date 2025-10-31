@@ -12,7 +12,7 @@ class Box():
             # Dynamic content generated from knowl
             from lmfdb.knowledge.knowl import knowldb
             from lmfdb.knowledge.main import md
-            max_entries = 4
+            max_entries = 3
             content = [line.strip() for line in
                        knowldb.get_knowl("content.announcements", ["content"])["content"].split("\n")]
             # Only keep lines that are part of an unordered list
