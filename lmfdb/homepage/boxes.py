@@ -20,8 +20,6 @@ class Box():
             content = [line for line in content if line.startswith("* ") or line.startswith("- ") or line.startswith("+ ")]
             overflow = len(content) > max_entries
             content = content[:max_entries]
-            for line in content:
-                check_month(line)
             content = "\n".join(content)
             if overflow:
                 content += "\n* [More...](/announcements)&nbsp;&nbsp;&nbsp;&nbsp;(and [ongoing projects](/ongoing))"
