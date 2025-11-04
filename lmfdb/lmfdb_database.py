@@ -27,7 +27,7 @@ class LMFDBStatsTable(PostgresStatsTable):
 
 
 # These are the operations where we don't insert records into the ongoing_operations table since they don't take noticeable space.
-_nolog_changetypes = ["delete", "resort", "add_column", "drop_column", "create_extra_table", "move_column"]
+_nolog_changetypes = ["delete", "resort", "add_column", "drop_column", "create_table", "create_extra_table", "move_column"]
 
 
 class LMFDBSearchTable(PostgresSearchTable):
