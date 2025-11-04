@@ -366,6 +366,17 @@ def top_rcs():
     bread = [(t, " ")]
     return render_template("single.html", kid="rcs", title=t, bread=bread)
 
+@app.route("/announcements")
+def announcements():
+    t = "Announcements"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.announcements", title=t, bread=bread)
+
+@app.route("/ongoing")
+def ongoing():
+    t = "Ongoing projects"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.ongoing", title=t, bread=bread)
 
 @app.route("/health")
 @app.route("/alive")
