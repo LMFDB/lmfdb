@@ -15,7 +15,6 @@ import string
 import re
 import json
 import time
-from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
 from flask import (abort, flash, jsonify, make_response,
@@ -66,14 +65,6 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
         return m.group(2)
 
 
-class HashTagPattern(markdown.inlinepatterns.Pattern):
-    def handleMatch(self, m):
-        el = ElementTree.Element("a")
-        el.set('href', url_for('knowledge.index') + '?search=%23' + m.group(2))
-        el.text = '#' + m.group(2)
-        return el
-
-
 class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
         tokens = m.group(2).split("|")
@@ -93,10 +84,6 @@ md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$',
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
 md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
 md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
-
-# Tell markdown to turn hashtags into search urls
-hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
@@ -768,7 +755,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # the idea is to pass the keyword arguments of the knowl further along the chain
     # of links, in this case the title and the permalink!
     # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.items()))
+    kw_params = ', '.join(('%s="%s"' % (key, val) for key, val in kwargs.items()))
     logger.debug("kw_params: %s" % kw_params)
 
     # this is a very simple template based on no other template to render one single Knowl
