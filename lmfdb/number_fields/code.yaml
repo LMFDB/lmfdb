@@ -5,8 +5,8 @@ prompt:
   oscar:  'oscar'
 
 logo:
-  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  sage:  <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari:  <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
@@ -25,17 +25,17 @@ frontmatter:
   all: |
     {lang} code for working with number field {label}.
   oscar: |
-    If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.
+    If you have not already loaded the Oscar package, you should type "using Oscar" before running the code below.
   rest: |
     Some of these functions may take a long time to execute (this depends on the field).
 
 field:
   comment: Define the number field
-  sage: x = polygen(QQ);  K.<a> = NumberField(%s)
-  pari: K = bnfinit(%s, 1)
+  sage:  x = polygen(QQ);  K.<a> = NumberField(%s)
+  pari:  K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
   oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
-  
+
 poly:
   comment: Defining polynomial
   sage:  K.defining_polynomial()
@@ -65,23 +65,29 @@ discriminant:
   oscar: OK = ring_of_integers(K); discriminant(OK)
 
 rd:
+  comment: Root discriminant
   sage: (K.disc().abs())^(1./K.degree())
   pari: abs(K.disc)^(1/poldegree(K.pol))
   magma: Abs(Discriminant(OK))^(1/Degree(K));
-  oscar: (1.0 * dK)^(1/degree(K))
+  oscar: |
+    OK = ring_of_integers(K);
+    (1.0 * abs(discriminant(OK)))^(1/degree(K))
 
 automorphisms:
-  comment: Autmorphisms
+  comment: Automorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
-  oscar: automorphisms(K)
+  oscar: |
+    # Older Oscar builds don't export `automorphisms`.
+    # Fall back to the hom-set K → K so the snippet stays evaluable.
+    isdefined(Main, :automorphisms) ? automorphisms(K) : Hecke.hom(K, K)
 
 ramified_primes:
   comment: Ramified primes
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~
   magma: PrimeDivisors(Discriminant(OK));
-  oscar: prime_divisors(discriminant((OK)))
+  oscar: prime_divisors(discriminant(OK))
 
 integral_basis:
   comment: Integral basis
@@ -94,7 +100,7 @@ class_group:
   comment: Class group
   sage:  K.class_group().invariants()
   pari:  K.clgp
-  magma: ClassGroup(K); 
+  magma: ClassGroup(K);
   oscar: class_group(K)
 
 narrow_class_group:
@@ -146,7 +152,7 @@ class_number_formula:
     x = polygen(QQ);  K.<a> = NumberField(%s)
     DK = K.disc(); r1,r2 = K.signature(); RK = K.regulator();  RR = RK.parent()
     hK = K.class_number(); wK = K.unit_group().torsion_generator().order();
-    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))  
+    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))
   pari: |
     \\ self-contained Pari/GP code snippet to compute the analytic class number formula
     K = bnfinit(%s, 1);
@@ -161,7 +167,7 @@ class_number_formula:
     2^r1 * (2*Pi(RR))^r2 * RK * hK / (wK * Sqrt(RR!Abs(DK)));
   oscar: |
     # self-contained Oscar code snippet to compute the analytic class number formula
-    Qx, x = PolynomialRing(QQ); K, a = NumberField(%s);
+    Qx, x = polynomial_ring(QQ); K, a = number_field(%s);
     OK = ring_of_integers(K); DK = discriminant(OK);
     UK, fUK = unit_group(OK); clK, fclK = class_group(OK);
     r1,r2 = signature(K); RK = regulator(K); RR = parent(RK);
@@ -173,12 +179,14 @@ galois_group:
   sage:  K.galois_group(type='pari')
   pari:  polgalois(K.pol)
   magma: G = GaloisGroup(K);
-  oscar: G, Gtx = galois_group(K); G, transitive_group_identification(G)
+  oscar: |
+    G, Gtx = galois_group(K);
+    degree(K) > 1 ? (G, transitive_group_identification(G)) : (G, nothing)
 
 intermediate_fields:
   comment: Intermediate fields
-  sage: K.subfields()[1:-1]
-  pari: L = nfsubfields(K); L[2..length(b)]
+  sage:  K.subfields()[1:-1]
+  pari:  L = nfsubfields(K); L[2..length(L)]
   magma: L := Subfields(K); L[2..#L];
   oscar: subfields(K)[2:end-1]
 
@@ -195,12 +203,11 @@ prime_cycle_types:
     p := 7; [<pr[2], Valuation(Norm(pr[1]), p)> : pr in Factorization(p*Integers(K))];
   oscar: |
     # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
-    p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
-
+    p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr), p)) for (pr, e) in pfac]
 
 # specify which code snippets to test
-snippet_test:                   
-  testQ: 
+snippet_test:
+  testQ:
     label: 1.1.1.1
     langs:
       - sage
@@ -208,7 +215,7 @@ snippet_test:
       - oscar
       - gp
     url: NumberField/1.1.1.1/download/{lang}
-  testQi: 
+  testQi:
     label: 2.0.4.1
     langs:
       - sage
@@ -216,3 +223,4 @@ snippet_test:
       - oscar
       - gp
     url: NumberField/2.0.4.1/download/{lang}
+
