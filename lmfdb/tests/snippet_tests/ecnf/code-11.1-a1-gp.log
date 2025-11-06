@@ -7,9 +7,8 @@ gp> ellglobalred(E)[1]
 
 [ 0 1]
 
-gp> idealnorm(ellglobalred(E)[1])
-  ***   too few arguments: ...alnorm(ellglobalred(E)[1])
-  ***                                                  ^-
+gp> idealnorm(K, ellglobalred(E)[1])
+11
 gp> E.disc
 Mod(-11, x^2 - x + 3)
 gp> norm(E.disc)
@@ -22,4 +21,3 @@ gp> T[1]
 1
 gp> T[3]
 []
-gp> 
