@@ -46,7 +46,7 @@ cond:
 cond_norm:
   comment: Compute the norm of the conductor
   sage:  E.conductor().norm()
-  pari:  idealnorm(ellglobalred(E)[1])
+  pari:  idealnorm(K, ellglobalred(E)[1])   # <-- FIX: pass K to idealnorm
   magma: Norm(Conductor(E));
 
 disc:
@@ -128,4 +128,5 @@ snippet_test:
     label: 81.1-CMa1
     langs:
     url: EllipticCurve/2.0.3.1/81.1/CMa/1/download/{lang}
+
   
