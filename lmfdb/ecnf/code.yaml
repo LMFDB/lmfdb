@@ -12,7 +12,7 @@ not-implemented:
   sage:  |
     # (not yet implemented)
   pari:  |
-    \\\\ (not yet implemented)
+    \\ (not yet implemented)
   magma: |
     // (not yet implemented)
 
@@ -20,7 +20,7 @@ frontmatter:
   all: |
     {lang} code for working with elliptic curve {label}
     (Note that not all these functions may be available, and some may take a long time to execute.)
-    
+
 field:
   comment: Define the base number field
   sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
@@ -46,7 +46,7 @@ cond:
 cond_norm:
   comment: Compute the norm of the conductor
   sage:  E.conductor().norm()
-  pari:  idealnorm(ellglobalred(E)[1])
+  pari:  idealnorm(K, ellglobalred(E)[1])
   magma: Norm(Conductor(E));
 
 disc:
@@ -81,7 +81,7 @@ gens:
   comment: Compute the generators (of infinite order)
   sage:  gens = E.gens(); gens
   magma: |
-         gens := [P:P in Generators(E)|Order(P) eq 0]; gens;
+         gens := [P : P in Generators(E) | Order(P) eq 0]; gens;
 
 reg:
   comment: Compute the regulator
@@ -93,13 +93,13 @@ heights:
   sage:  |
          [P.height() for P in gens]
   magma: |
-         [Height(P):P in gens];
+         [Height(P) : P in gens];
 
 tors:
   comment: Compute the torsion subgroup
   sage:  T = E.torsion_subgroup(); T.invariants()
   pari:  T = elltors(E); T[2]
-  magma: T,piT := TorsionSubgroup(E); Invariants(T);
+  magma: T, piT := TorsionSubgroup(E); Invariants(T);
 
 torgens:
   comment: Compute the generators of the torsion subgroup
@@ -120,12 +120,13 @@ localdata:
   magma: LocalInformation(E);
 
 snippet_test:
-  test11.1-a1: 
+  test11.1-a1:
     label: 11.1-a1
     langs:
     url: EllipticCurve/2.0.11.1/11.1/a/1/download/{lang}
-  test81.1-CMa1: 
+  test81.1-CMa1:
     label: 81.1-CMa1
     langs:
     url: EllipticCurve/2.0.3.1/81.1/CMa/1/download/{lang}
+
   
