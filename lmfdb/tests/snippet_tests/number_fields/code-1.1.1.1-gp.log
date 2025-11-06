@@ -26,12 +26,10 @@ gp> K.reg
 gp> K = bnfinit(x, 1);
 gp> [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
 [1.0000000000000000000000000000000000000, 1.0000000000000000000000000000000000000]
-gp> L = nfsubfields(K); L[2..length(b)]
-  ***   at top-level: L=nfsubfields(K);L[2..length(b)]
-  ***                                  ^---------------
-  *** _[_.._]: inconsistent dimensions in _[..].
+gp> L = nfsubfields(K); if(#L >= 2, L[2..#L], [])
+[]
 gp> polgalois(K.pol)
 [1, 1, 1, "S1"]
 gp> p = 7; pfac = idealprimedec(K, p); vector(length(pfac), j, [pfac[j][3], pfac[j][4]])
 [[1, 1]]
-gp> 
+gp>
