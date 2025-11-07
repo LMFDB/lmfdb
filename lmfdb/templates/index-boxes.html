@@ -9,7 +9,9 @@
   {% for box in boxes %}
   <div class="parent-box">
     <div class="img-box">
+      <div class="img-container">
       <img src="{{ box.img }}"/>
+    </div>
     </div>
     <div class="title">{{ box.title }}</div>
     <div class="content">{{ box.content|safe }}</div>
