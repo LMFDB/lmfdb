@@ -5,10 +5,10 @@ prompt:
   oscar:  'oscar'
 
 logo:
-  sage:  <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width="50px">
-  pari:  <img src="https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src="https://i.stack.imgur.com/0468s.png" width="50px">
-  oscar: <img src="https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 comment:
   sage: |
@@ -24,7 +24,7 @@ not-implemented:
   sage: |
     # (not yet implemented)
   pari: |
-    \\\\ (not yet implemented)
+    \\ (not yet implemented)
   magma: |
     // (not yet implemented)
   oscar: |
@@ -43,7 +43,7 @@ curve:
 
 simple_curve:
   comment: Simplified equation
-  sage:  E.short_weierstrass_model()
+  sage: E.short_weierstrass_model()
   magma: WeierstrassModel(E);
   oscar: short_weierstrass_model(E)
 
@@ -55,7 +55,7 @@ gens:
   comment: Mordell-Weil generators
   sage:  E.gens()
   magma: Generators(E);
-  pari:  E.gen
+  pari: E.gen
 
 tors:
   comment: Torsion subgroup
@@ -92,12 +92,12 @@ jinv:
 
 cm:
   comment: Potential complex multiplication
-  sage:  E.has_cm()
+  sage: E.has_cm()
   magma: HasComplexMultiplication(E);
 
 faltings:
   comment: Faltings height
-  pari:  ellheight(E)
+  pari: ellheight(E)
   magma: FaltingsHeight(E);
   oscar: faltings_height(E)
 
@@ -115,8 +115,8 @@ rank:
 
 analytic_rank:
   comment: Analytic rank
-  sage:  E.analytic_rank()
-  pari:  ellanalyticrank(E)
+  sage: E.analytic_rank()
+  pari: ellanalyticrank(E)
   magma: AnalyticRank(E);
 
 reg:
@@ -155,10 +155,9 @@ sha:
 L1:
   comment: Special L-value
   sage:  |
-    r = E.rank();
-    E.lseries().dokchitser().derivative(1,r)/r.factorial()
+    r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()
   pari:  |
-    [r,L1r] = ellanalyticrank(E); L1r/r!
+    ar = ellanalyticrank(E); ar[2]/factorial(ar[1])
   magma: |
     Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
 
@@ -178,10 +177,11 @@ bsd_formula:
     assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
 
 qexp:
-  comment: q-expansion of modular form (first 20 terms)
+  comment: q-expansion of modular form
   sage:  E.q_eigenform(20)
-  pari:  Ser(ellqexp(E, 20), q)
-  magma: qExpansion(ModularForm(E), 20)
+  pari:  |
+    Ser(ellan(E,20),q)*q
+  magma: ModularForm(E);
 
 moddeg:
   comment: Modular degree
@@ -195,8 +195,8 @@ manin:
 
 localdata:
   comment: Local data
-  sage:  E.local_data()
-  pari:  ellglobalred(E)[5]
+  sage: E.local_data()
+  pari: ellglobalred(E)[5]
   magma: |
     [LocalInformation(E,p) : p in BadPrimes(E)];
   oscar: |
@@ -211,10 +211,10 @@ galrep:
 
 adelicimage:
   comment: Adelic image of Galois representation
-  sage:  |
+  sage:   |
     gens = {adelic_gens}
     GL(2,Integers({level})).subgroup(gens)
-  magma: |
+  magma:   |
     Gens := {adelic_gens};
     sub<GL(2,Integers({level}))|Gens>;
 
@@ -228,13 +228,13 @@ padicreg:
 
 isogenies:
   comment: Isogenies
-  pari:  ellisomat(E)
+  pari: ellisomat(E)
 
 snippet_test:
-  test11a3:
+  test11a3: 
     label: 11.a3
     url: EllipticCurve/Q/11/a/3/download/{lang}?label=11.a3
-  test37a1:
+  test37a1: 
     label: 37.a1
     url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1
 
