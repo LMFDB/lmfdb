@@ -1,14 +1,14 @@
 prompt:
-  sage: 'sage'
-  pari: 'gp'
-  magma: 'magma'
-  oscar: 'oscar'
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
+  oscar:  'oscar'
 
 logo:
-  sage: <img src="https://www.sagemath.org/pix/sage_logo_new.png" width="50px">
-  pari: <img src="https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src="https://i.stack.imgur.com/0468s.png" width="50px">
-  oscar: <img src="https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 not-implemented:
   sage: |
@@ -35,104 +35,98 @@ field:
   pari: K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
   oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
-
+  
 poly:
   comment: Defining polynomial
-  sage: K.defining_polynomial()
-  pari: K.pol
+  sage:  K.defining_polynomial()
+  pari:  K.pol
   magma: DefiningPolynomial(K);
   oscar: defining_polynomial(K)
 
 degree:
   comment: Degree over Q
-  sage: K.degree()
-  pari: poldegree(K.pol)
+  sage:  K.degree()
+  pari:  poldegree(K.pol)
   magma: Degree(K);
   oscar: degree(K)
 
 signature:
   comment: Signature
-  sage: K.signature()
-  pari: K.sign
+  sage:  K.signature()
+  pari:  K.sign
   magma: Signature(K);
   oscar: signature(K)
 
 discriminant:
   comment: Discriminant
-  sage: K.disc()
-  pari: K.disc
+  sage:  K.disc()
+  pari:  K.disc
   magma: OK := Integers(K); Discriminant(OK);
   oscar: OK = ring_of_integers(K); discriminant(OK)
 
 rd:
-  comment: Root discriminant
   sage: (K.disc().abs())^(1./K.degree())
   pari: abs(K.disc)^(1/poldegree(K.pol))
   magma: Abs(Discriminant(OK))^(1/Degree(K));
-  oscar: |
-    OK = ring_of_integers(K);
-    (1.0 * abs(discriminant(OK)))^(1/degree(K))
+  oscar: (1.0 * dK)^(1/degree(K))
 
 automorphisms:
-  comment: Automorphisms
+  comment: Autmorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
-  oscar: |
-    # Older Oscar builds may not export `automorphisms`.
-    # Fall back to the hom-set K → K so the snippet stays evaluable.
-    isdefined(Main, :automorphisms) ? automorphisms(K) : Hecke.hom(K, K)
+  oscar: automorphisms(K)
 
 ramified_primes:
   comment: Ramified primes
-  sage: K.disc().support()
-  pari: factor(abs(K.disc))[,1]~
+  sage:  K.disc().support()
+  pari:  factor(abs(K.disc))[,1]~
   magma: PrimeDivisors(Discriminant(OK));
-  oscar: prime_divisors(discriminant(OK))
+  oscar: prime_divisors(discriminant((OK)))
 
 integral_basis:
   comment: Integral basis
-  sage: K.integral_basis()
-  pari: K.zk
+  sage:  K.integral_basis()
+  pari:  K.zk
   magma: IntegralBasis(K);
   oscar: basis(OK)
 
 class_group:
   comment: Class group
-  sage: K.class_group().invariants()
-  pari: K.clgp
-  magma: ClassGroup(K);
+  sage:  K.class_group().invariants()
+  pari:  K.clgp
+  magma: ClassGroup(K); 
   oscar: class_group(K)
 
 narrow_class_group:
   comment: Narrow class group
-  sage: K.narrow_class_group().invariants()
-  pari: bnfnarrow(K)
+  sage:  K.narrow_class_group().invariants()
+  pari:  bnfnarrow(K)
   magma: NarrowClassGroup(K);
 
 unit_group:
   comment: Unit group
-  sage: UK = K.unit_group()
+  sage:  UK = K.unit_group()
   magma: UK, fUK := UnitGroup(K);
   oscar: UK, fUK = unit_group(OK)
 
 unit_rank:
   comment: Unit rank
-  sage: UK.rank()
-  pari: K.fu
+  sage:  UK.rank()
+  pari:  K.fu
   magma: UnitRank(K);
   oscar: rank(UK)
 
 unit_torsion_gen:
   comment: Generator for roots of unity
-  sage: UK.torsion_generator()
-  pari: K.tu[2]
+  sage:  UK.torsion_generator()
+  pari:  K.tu[2]
   magma: K!f(TU.1) where TU,f is TorsionUnitGroup(K);
   oscar: torsion_units_generator(OK)
 
 fundamental_units:
   comment: Fundamental units
-  sage: UK.fundamental_units()
-  pari: K.fu
+  sage:  UK.fundamental_units()
+  pari:  K.fu
   magma: |
     [K|fUK(g): g in Generators(UK)];
   oscar: |
@@ -140,8 +134,8 @@ fundamental_units:
 
 regulator:
   comment: Regulator
-  sage: K.regulator()
-  pari: K.reg
+  sage:  K.regulator()
+  pari:  K.reg
   magma: Regulator(K);
   oscar: regulator(K)
 
@@ -152,7 +146,7 @@ class_number_formula:
     x = polygen(QQ);  K.<a> = NumberField(%s)
     DK = K.disc(); r1,r2 = K.signature(); RK = K.regulator();  RR = RK.parent()
     hK = K.class_number(); wK = K.unit_group().torsion_generator().order();
-    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))
+    2^r1 * (2*RR(pi))^r2 * RK * hK / (wK * RR(sqrt(abs(DK))))  
   pari: |
     \\ self-contained Pari/GP code snippet to compute the analytic class number formula
     K = bnfinit(%s, 1);
@@ -167,7 +161,7 @@ class_number_formula:
     2^r1 * (2*Pi(RR))^r2 * RK * hK / (wK * Sqrt(RR!Abs(DK)));
   oscar: |
     # self-contained Oscar code snippet to compute the analytic class number formula
-    Qx, x = polynomial_ring(QQ); K, a = number_field(%s);
+    Qx, x = PolynomialRing(QQ); K, a = NumberField(%s);
     OK = ring_of_integers(K); DK = discriminant(OK);
     UK, fUK = unit_group(OK); clK, fclK = class_group(OK);
     r1,r2 = signature(K); RK = regulator(K); RR = parent(RK);
@@ -176,17 +170,15 @@ class_number_formula:
 
 galois_group:
   comment: Galois group
-  sage: K.galois_group(type='pari')
-  pari: polgalois(K.pol)
+  sage:  K.galois_group(type='pari')
+  pari:  polgalois(K.pol)
   magma: G = GaloisGroup(K);
-  oscar: |
-    G, Gtx = galois_group(K);
-    degree(K) > 1 ? (G, transitive_group_identification(G)) : (G, nothing)
+  oscar: G, Gtx = galois_group(K); G, transitive_group_identification(G)
 
 intermediate_fields:
   comment: Intermediate fields
   sage: K.subfields()[1:-1]
-  pari: L = nfsubfields(K); L[2..length(L)]
+  pari: L = nfsubfields(K); L[2..length(b)]
   magma: L := Subfields(K); L[2..#L];
   oscar: subfields(K)[2:end-1]
 
@@ -203,11 +195,12 @@ prime_cycle_types:
     p := 7; [<pr[2], Valuation(Norm(pr[1]), p)> : pr in Factorization(p*Integers(K))];
   oscar: |
     # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
-    p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr), p)) for (pr, e) in pfac]
+    p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
+
 
 # specify which code snippets to test
-snippet_test:
-  testQ:
+snippet_test:                   
+  testQ: 
     label: 1.1.1.1
     langs:
       - sage
@@ -215,7 +208,7 @@ snippet_test:
       - oscar
       - gp
     url: NumberField/1.1.1.1/download/{lang}
-  testQi:
+  testQi: 
     label: 2.0.4.1
     langs:
       - sage
@@ -223,4 +216,5 @@ snippet_test:
       - oscar
       - gp
     url: NumberField/2.0.4.1/download/{lang}
+
 
