@@ -24,7 +24,7 @@ not-implemented:
   sage: |
     # (not yet implemented)
   pari: |
-    \\ (not yet implemented)
+    \\\\ (not yet implemented)
   magma: |
     // (not yet implemented)
   oscar: |
