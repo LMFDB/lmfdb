@@ -20,7 +20,7 @@ frontmatter:
   all: |
     {lang} code for working with elliptic curve {label}
     (Note that not all these functions may be available, and some may take a long time to execute.)
-
+    
 field:
   comment: Define the base number field
   sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
@@ -120,11 +120,11 @@ localdata:
   magma: LocalInformation(E);
 
 snippet_test:
-  test11.1-a1:
+  test11.1-a1: 
     label: 11.1-a1
     langs:
     url: EllipticCurve/2.0.11.1/11.1/a/1/download/{lang}
-  test81.1-CMa1:
+  test81.1-CMa1: 
     label: 81.1-CMa1
     langs:
     url: EllipticCurve/2.0.3.1/81.1/CMa/1/download/{lang}
