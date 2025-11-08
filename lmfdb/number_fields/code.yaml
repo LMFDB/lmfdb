@@ -1,20 +1,20 @@
 prompt:
-  sage:   'sage'
-  pari:   'gp'
-  magma:  'magma'
-  oscar:  'oscar'
+  sage: 'sage'
+  pari: 'gp'
+  magma: 'magma'
+  oscar: 'oscar'
 
 logo:
-  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width="50px">
-  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
-  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
+  sage: <img src="https://www.sagemath.org/pix/sage_logo_new.png" width="50px">
+  pari: <img src="https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src="https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src="https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 not-implemented:
   sage: |
     # (not yet implemented)
   pari: |
-    \ (not yet implemented)
+    \\ (not yet implemented)
   magma: |
     // (not yet implemented)
   oscar: |
@@ -38,29 +38,29 @@ field:
 
 poly:
   comment: Defining polynomial
-  sage:  K.defining_polynomial()
-  pari:  K.pol
+  sage: K.defining_polynomial()
+  pari: K.pol
   magma: DefiningPolynomial(K);
   oscar: defining_polynomial(K)
 
 degree:
   comment: Degree over Q
-  sage:  K.degree()
-  pari:  poldegree(K.pol)
+  sage: K.degree()
+  pari: poldegree(K.pol)
   magma: Degree(K);
   oscar: degree(K)
 
 signature:
   comment: Signature
-  sage:  K.signature()
-  pari:  K.sign
+  sage: K.signature()
+  pari: K.sign
   magma: Signature(K);
   oscar: signature(K)
 
 discriminant:
   comment: Discriminant
-  sage:  K.disc()
-  pari:  K.disc
+  sage: K.disc()
+  pari: K.disc
   magma: OK := Integers(K); Discriminant(OK);
   oscar: OK = ring_of_integers(K); discriminant(OK)
 
@@ -84,55 +84,55 @@ automorphisms:
 
 ramified_primes:
   comment: Ramified primes
-  sage:  K.disc().support()
-  pari:  factor(abs(K.disc))[,1]~
+  sage: K.disc().support()
+  pari: factor(abs(K.disc))[,1]~
   magma: PrimeDivisors(Discriminant(OK));
   oscar: prime_divisors(discriminant(OK))
 
 integral_basis:
   comment: Integral basis
-  sage:  K.integral_basis()
-  pari:  K.zk
+  sage: K.integral_basis()
+  pari: K.zk
   magma: IntegralBasis(K);
   oscar: basis(OK)
 
 class_group:
   comment: Class group
-  sage:  K.class_group().invariants()
-  pari:  K.clgp
+  sage: K.class_group().invariants()
+  pari: K.clgp
   magma: ClassGroup(K);
   oscar: class_group(K)
 
 narrow_class_group:
   comment: Narrow class group
-  sage:  K.narrow_class_group().invariants()
-  pari:  bnfnarrow(K)
+  sage: K.narrow_class_group().invariants()
+  pari: bnfnarrow(K)
   magma: NarrowClassGroup(K);
 
 unit_group:
   comment: Unit group
-  sage:  UK = K.unit_group()
+  sage: UK = K.unit_group()
   magma: UK, fUK := UnitGroup(K);
   oscar: UK, fUK = unit_group(OK)
 
 unit_rank:
   comment: Unit rank
-  sage:  UK.rank()
-  pari:  K.fu
+  sage: UK.rank()
+  pari: K.fu
   magma: UnitRank(K);
   oscar: rank(UK)
 
 unit_torsion_gen:
   comment: Generator for roots of unity
-  sage:  UK.torsion_generator()
-  pari:  K.tu[2]
+  sage: UK.torsion_generator()
+  pari: K.tu[2]
   magma: K!f(TU.1) where TU,f is TorsionUnitGroup(K);
   oscar: torsion_units_generator(OK)
 
 fundamental_units:
   comment: Fundamental units
-  sage:  UK.fundamental_units()
-  pari:  K.fu
+  sage: UK.fundamental_units()
+  pari: K.fu
   magma: |
     [K|fUK(g): g in Generators(UK)];
   oscar: |
@@ -140,8 +140,8 @@ fundamental_units:
 
 regulator:
   comment: Regulator
-  sage:  K.regulator()
-  pari:  K.reg
+  sage: K.regulator()
+  pari: K.reg
   magma: Regulator(K);
   oscar: regulator(K)
 
@@ -176,8 +176,8 @@ class_number_formula:
 
 galois_group:
   comment: Galois group
-  sage:  K.galois_group(type='pari')
-  pari:  polgalois(K.pol)
+  sage: K.galois_group(type='pari')
+  pari: polgalois(K.pol)
   magma: G = GaloisGroup(K);
   oscar: |
     G, Gtx = galois_group(K);
@@ -223,5 +223,4 @@ snippet_test:
       - oscar
       - gp
     url: NumberField/2.0.4.1/download/{lang}
-
 
