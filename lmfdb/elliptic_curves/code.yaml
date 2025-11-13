@@ -193,7 +193,7 @@ manin:
   comment: Manin constant
   magma: ManinConstant(E);
 
-  L1:
+L1:
   comment: Special L-value
   sage:  |
     r = E.rank();
