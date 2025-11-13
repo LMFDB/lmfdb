@@ -193,6 +193,16 @@ manin:
   comment: Manin constant
   magma: ManinConstant(E);
 
+  L1:
+  comment: Special L-value
+  sage:  |
+    r = E.rank();
+    E.lseries().dokchitser().derivative(1,r)/r.factorial()
+  pari:  |
+    [r,L1r] = ellanalyticrank(E); L1r/r!
+  magma: |
+    Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
+
 localdata:
   comment: Local data
   sage: E.local_data()
@@ -237,7 +247,4 @@ snippet_test:
   test37a1: 
     label: 37.a1
     url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1
-
-
-
-  
+    
