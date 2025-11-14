@@ -7,7 +7,8 @@ from sage.misc.cachefunc import cached_function
 
 from lmfdb.app import ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
-from lmfdb.utils.utilities import flash_error, flash_info, to_dict
+from lmfdb.utils.utilities import flash_error, flash_info, flash_success, to_dict
+from lmfdb.utils.completeness import results_complete
 
 
 def use_split_ors(info, query, split_ors, offset, table):
@@ -270,7 +271,10 @@ class SearchWrapper(Wrapper):
             # Display warning message if user searched on column(s) with null values
             if query:
                 nulls = table.stats.null_counts()
-                if nulls:
+                complete, msg, caveat = results_complete(table.search_table, query, table._db, info["search_array"])
+                if complete:
+                    flash_success("The results below are complete, since the LMFDB contains all " + msg)
+                elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
                     search_columns = table._columns_searched(query)
                     nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
                     col_display = {}
@@ -295,6 +299,8 @@ class SearchWrapper(Wrapper):
                         msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
                         msg += ", ".join(nulls.values())
                         flash_info(msg)
+                if caveat:
+                    flash_info("The completeness " + caveat)
             return render_template(template, info=info, title=title, **template_kwds)
 
 
