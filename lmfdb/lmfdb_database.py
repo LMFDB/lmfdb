@@ -380,8 +380,9 @@ class LMFDBSearchTable(PostgresSearchTable):
         tablespace = self._get_tablespace()
         cur_size = self._db.table_sizes()[self.search_table]
         size_guess = cur_size["total_bytes"]
-        if datafile is None and changetype != "create_table_like":
-            size_guess = 0 # insert_many, update, upsert.  We rely on the 100GB offset to provide enough space since there is no datafile to use
+        if datafile is None:
+            if changetype != "create_table_like":
+                size_guess = 0 # insert_many, update, upsert.  We rely on the 100GB offset to provide enough space since there is no datafile to use
         else:
             size_guess = max(size_guess, os.path.getsize(datafile))
 
