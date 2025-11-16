@@ -893,12 +893,3 @@ def split_label(lab):
 
 def abvar_label(g, q, iso):
     return "%s.%s.%s" % (g, q, iso)
-
-
-lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
-
-def split_label(lab):
-    return lmfdb_label_regex.match(lab).groups()
-
-def abvar_label(g, q, iso):
-    return "%s.%s.%s" % (g, q, iso)
