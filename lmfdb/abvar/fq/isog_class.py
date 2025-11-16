@@ -84,6 +84,11 @@ class AbvarFq_isoclass():
             dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
+        # New invariants: cyclicity and noncyclic primes
+        if "is_cyclic" not in dbdata:
+            dbdata["is_cyclic"] = None       
+        if "noncyclic_primes" not in dbdata:
+            dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -231,6 +236,16 @@ class AbvarFq_isoclass():
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
+        # Cyclicity information (new)
+        if getattr(self, "is_cyclic", None) is not None:
+            props.append(("Cyclic", "yes" if self.is_cyclic else "no"))
+            primes = getattr(self, "noncyclic_primes", None)
+            if primes is not None:
+                if primes:
+                    primes_str = "{" + ", ".join(str(p) for p in primes) + "}"
+                else:
+                    primes_str = "{}"
+                props.append(("Noncyclic primes", primes_str))
         if self.has_principal_polarization != 0:
             props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
         if self.has_jacobian != 0:
@@ -589,3 +604,4 @@ def non_simple_loop(p, factors):
         ans += "</li>\n"
     ans += "</ul>\n"
     return ans
+
