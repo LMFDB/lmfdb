@@ -237,15 +237,19 @@ class AbvarFq_isoclass():
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
         # Cyclicity information (new)
-        if getattr(self, "is_cyclic", None) is not None:
-            props.append(("Cyclic", "yes" if self.is_cyclic else "no"))
-            primes = getattr(self, "noncyclic_primes", None)
-            if primes is not None:
-                if primes:
-                    primes_str = "{" + ", ".join(str(p) for p in primes) + "}"
-                else:
-                    primes_str = "{}"
-                props.append(("Noncyclic primes", primes_str))
+        ic = getattr(self, "is_cyclic", None)
+        if ic is True:
+            cyclic_val = "yes"
+        elif ic is False:
+            cyclic_val = "no"
+        else:
+            cyclic_val = "unknown"
+        props.append(("Cyclic group of points", cyclic_val))
+
+        primes = getattr(self, "noncyclic_primes", None)
+        if primes:
+            primes_str = "{" + ", ".join(str(p) for p in primes) + "}"
+            props.append(("Noncyclic primes", primes_str))
         if self.has_principal_polarization != 0:
             props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
         if self.has_jacobian != 0:
