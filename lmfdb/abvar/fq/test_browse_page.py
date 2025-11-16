@@ -12,6 +12,7 @@ class AVHomeTest(LmfdbTest):
         """
         homepage = self.tc.get("/Variety/Abelian/Fq/").get_data(as_text=True)
         assert "by dimension and base field" in homepage
+        assert "Cyclic group of points" in homepage
 
     def test_stats_page(self):
         self.check_args("/Variety/Abelian/Fq/stats","Abelian variety isogeny classes: Statistics")
@@ -279,3 +280,30 @@ class AVHomeTest(LmfdbTest):
         # Combining unknown fields on Jacobian and Principal polarization.
         self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=not_no", "3.2.a_a_ae")
         self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=yes", "3.2.a_ac_a")
+    
+    def test_search_cyclic_group(self):
+        r"""
+        Check that we can restrict to cyclic or non-cyclic groups of points
+        using the is_cyclic search parameter.
+        """
+        # We only check that the search runs and returns the usual search
+        # results page; we do not assert specific labels since the data
+        # on devmirror can change.
+        self.check_args(
+            "/Variety/Abelian/Fq/?is_cyclic=yes",
+            "Abelian variety search results"
+        )
+        self.check_args(
+            "/Variety/Abelian/Fq/?is_cyclic=no",
+            "Abelian variety search results"
+        )
+
+    def test_search_noncyclic_primes(self):
+        r"""
+        Check that the noncyclic_primes search parameter is accepted.
+        """
+        self.check_args(
+            "/Variety/Abelian/Fq/?noncyclic_primes=2",
+            "Abelian variety search results"
+        )
+
