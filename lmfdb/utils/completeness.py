@@ -157,7 +157,7 @@ class CompletenessChecker:
             if all(col in query for col in cols) and filt(query):
                 if self.extract:
                     # In this case, we use the reason specified in the list of checkers
-                    if test(db, *[query[col] for col in cols]):
+                    if test(db, [query[col] for col in cols]):
                         return True, reason, caveat
                 else:
                     # Here we delegate the reason and caveat to the test function
@@ -1782,6 +1782,9 @@ class GroupBound(ColTest):
             return True, r"groups with linear $\Q$-degree at most 6", None
         return False, None, None
 
+CompletenessChecker("lfunc_search", [
+    (("degree", "conductor"), CBound(1, 2800), "L-functions with degree 1 and conductor at most 2800"),
+    ])
 # Nothing for lfunc_search?
 CompletenessChecker("mf_newforms", [
     ("Nk2", Bound(4000), "newforms with $Nk^2$ at most 4000"),
@@ -1805,7 +1808,7 @@ CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))])
 CompletenessChecker("hgcwa_passports", [
     ("genus", Bound((2, 4)), "groups acting as automorphisms of curves of genus 2, 3 or 4"),
     (("genus", "g0"), Bound((2, 15), 0), "groups G acting as automorphisms of curves X with the genus of X at most 15 and the genus of X/G equal to 0")])
-CompletenessChecker("av_fqisog", [
+CompletenessChecker("av_fq_isog", [
     (("g", "q"), Bound(1, 499), "isogeny classes of elliptic curves over fields of cardinality less than 500"),
     (("g", "q"), Bound(2, 211), "isogeny classes of abelian varieties of dimension at most 2 over fields of cardinality at most 211"),
     (("g", "q"), Bound(3, 25), "isogeny classes of abelian varieties of dimension at most 3 over fields of cardinality at most 25"),
@@ -1862,3 +1865,4 @@ def results_complete(table, query, db, search_array=None):
     """
     if table in lookup:
         return lookup[table].check(query, db, search_array)
+    return None, None, None
