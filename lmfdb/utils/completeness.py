@@ -8,7 +8,7 @@
 # TODO: move data into postgres, write code to generate them from LMFDB when applicable
 
 from collections import defaultdict
-from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ
+from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ, ceil
 
 lookup = {}
 
@@ -115,7 +115,7 @@ class CompletenessChecker:
             return False, None, None
         query = self._standardize(query)
         if "$or" in query:
-            reasons, caveats = set()
+            reasons, caveats = set(), set()
             for D in query["$or"]:
                 D = dict(D)
                 assert len(set(D).intersection(query)) == 0
@@ -459,7 +459,7 @@ def integer_options(X, bound1=None, bound2=None, limit=None, stickelberger=None)
         ne = X.get("$ne")
         opts = X.get("$in")
         if opts is None:
-            opts = range(lb, ub)
+            opts = range(lb, ceil(ub))
         ans = []
         for N in opts:
             if lb <= N < ub and (stickelberger is None or N % 4 in stickelberger) and (ne is None or N != ne) and (N not in nin):
@@ -503,6 +503,14 @@ def cap(X, Y, k):
                 X["$lt"] = minNone(X.get("$lt"), kpow(Y["$lt"]))
             if "$in" in Y:
                 X["$lte"] = minNone(X.get("$lte"), kpow(max(Y["$in"])))
+        elif X is None:
+            X = {}
+            if "$lte" in Y:
+                X["$lte"] = kpow(Y["$lte"])
+            if "$lt" in Y:
+                X["$lt"] = kpow(Y["$lt"])
+            if "$in" in Y:
+                X["$in"] = [kpow(y) for y in Y["$in"]]
         elif ("$lte" in Y and kpow(Y["$lte"]) < X or
               "$lt" in Y and kpow(Y["$lt"]) <= X or
               "$in" in Y and kpow(max(Y["$in"])) < X):
@@ -510,6 +518,8 @@ def cap(X, Y, k):
     elif isinstance(X, dict):
         X = dict(X)
         X["$lte"] = minNone(X.get("$lte"), kpow(Y))
+    elif X is None:
+        return {"$lte": kpow(Y)}
     elif kpow(Y) < X:
         return False
     return X
@@ -1237,12 +1247,16 @@ class NFBound(ColTest):
             return ", ".join(ans)
         strings = []
         by_pattern = defaultdict(list)
+        non_incomp = []
         for reason in reasons:
             if isinstance(reason, str):
                 strings.append(reason)
+                if not reason.startswith("incompatible conditions"):
+                    non_incomp.append(reason)
             else:
                 by_pattern[tuple(i for i in range(6) if reason[i] is None)].append(reason)
-        print(by_pattern)
+        if len(non_incomp) + len(by_pattern) > 0:
+            strings = non_incomp
         return "number fields with " + "; ".join(strings + [describe(V) for V in by_pattern.values()])
 
     def clear_signatures(self, n, D, r2opts, reasons):
@@ -1316,8 +1330,9 @@ class NFBound(ColTest):
                         if not galt:
                             return True
 
+        SS = set(S)
         for T, Gs in self._nSG.get(n, []):
-            if S.issubset(T):
+            if SS.issubset(T):
                 I = galt.intersection(Gs)
                 if I:
                     reasons.add((n, None, Gs, S, None, None))
@@ -1396,8 +1411,8 @@ class NFBound(ColTest):
         return galt
 
     def rd_grd_ratio(self, n, galt):
-        if n < len(self._rdgrd) and galt <= len(self._rdgrd[n]):
-            return 1 / self._rdgrd[n][galt - 1]
+        if n < len(self._rdgrd) and max(galt) <= len(self._rdgrd[n]):
+            return max(1 / self._rdgrd[n][t - 1] for t in galt)
 
     def get_S(self, ramps, radical):
         S = None
@@ -1408,7 +1423,7 @@ class NFBound(ColTest):
                     return
                 # Now we can just fall back on ramps parsing below
             else:
-                S = set(factor(radical))
+                S = set(p for p,e in factor(radical))
         if ramps is not None:
             if isinstance(ramps, dict):
                 if "$containedin" in ramps:
@@ -1438,7 +1453,7 @@ class NFBound(ColTest):
         ub = self._upper_bound
         D, rd, grd = query.get("disc_abs"), query.get("rd"), query.get("grd")
         if ub(D, 1656109):
-            reasons.add("discriminant at most 1656109")
+            reasons.add("absolute discriminant at most 1656109")
             return True, None
         if ub(rd, 5.989):
             reasons.add("root discriminant at most 5.989")
@@ -1541,7 +1556,7 @@ class NFBound(ColTest):
 
         ## Completeness 4: degree, ramified primes, and Galois group (optional)
         # Can fill rams from discriminant range, or from radical
-        ramps, radical, nram = query.get("ramps"), query.get("radical"), query.get("num_ram")
+        ramps, radical, nram = query.get("ramps"), query.get("disc_rad"), query.get("num_ram")
         if isinstance(nram, dict):
             if "$lte" in nram:
                 nram = nram["$lte"]
@@ -1568,13 +1583,13 @@ class NFBound(ColTest):
             if opts is not None:
                 for d in opts:
                     S = tuple(p for (p,e) in factor(d))
-                    if not self.clear_S(n, S, galt, reasons, update_galt=False):
+                    if not self.clear_S(n, S, nram, galt, reasons, update_galt=False):
                         break
                 else:
                     return True, caveat
 
             # Minkowski bound (only relevant for n>12)
-            if n >= self._maxD:
+            if n >= len(self._maxD):
                 mbound = (3.14159265358979/4)**n * n**(2*n) / factorial(n)**2
                 if ub(D, mbound):
                     reasons.add(f"number fields of degree {n} with discriminant at most {floor(mbound)} (Minkowski)")
@@ -1586,7 +1601,6 @@ class NFBound(ColTest):
 
     def __call__(self, db, query):
         n = query.get("degree")
-        print("n", n)
 
         # We collect reasons that have contributed to completeness
         # These have the following format:
@@ -1618,12 +1632,9 @@ class NFBound(ColTest):
             else:
                 caveats = None
         else:
-            print("query", query)
             ok, caveats = self._one_n(db, query, reasons)
             if not ok:
                 return False, None, None
-        if len(reasons) > 1:
-            reasons = {reason for reason in reasons if not reason.startswith("incompatible conditions")}
         return True, self.display_reason(reasons), caveats
 
 

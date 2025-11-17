@@ -903,6 +903,7 @@ def number_field_search(info, query):
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
+    parse_floats(info, query, 'grd')
     parse_floats(info, query, 'regulator')
     parse_posints(info,query,'class_number')
     parse_posints(info,query,'relative_class_number')
