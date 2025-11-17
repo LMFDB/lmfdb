@@ -8,20 +8,20 @@
 # TODO: move data into postgres, write code to generate them from LMFDB when applicable
 
 from collections import defaultdict
-from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ, ceil
+from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ, ceil, floor
 
 lookup = {}
 
-def nullcount_query(query, cols):
+def nullcount_query(query, cols, recursing=False):
     """
     Returns a modified query with all reference to a given list of columns removed, and conditions added that the columns are null.
     """
     if isinstance(query, list): # can happen recursively in $or queries
-        return [remove_from_query(D, cols) for D in query]
+        return [nullcount_query(D, cols, recursing=True) for D in query]
     query = dict(query)
     for key, value in list(query.items()):
         if key in ["$not", "$and", "$or"]:
-            L = remove_from_query(value, cols)
+            L = nullcount_query(value, cols, recursing=True)
             # Remove empty items
             L = [D for D in L if D]
             if L:
@@ -31,8 +31,9 @@ def nullcount_query(query, cols):
         else:
             if key.split(".")[0] in cols:
                 del query[key]
-    for col in cols:
-        query[col] = None
+    if not recursing:
+        for col in cols:
+            query[col] = None
     return query
 
 class CompletenessChecker:
@@ -153,7 +154,6 @@ class CompletenessChecker:
         if self.fill:
             self.fill(query)
         for cols, test, reason, caveat, filt in self.checkers:
-            print(all(col in query for col in cols), filt(query))
             if all(col in query for col in cols) and filt(query):
                 if self.extract:
                     # In this case, we use the reason specified in the list of checkers
@@ -261,6 +261,7 @@ class CPrimeBound(ColTest):
 
     def __call__(self, db, Ds):
         b, D = self.bound, Ds[-1]
+        ub, lb = self._upper_bound, self._lower_bound
         return (self.constraints == Ds[:-1] and
                 (isinstance(b, tuple) and lb(D, b[0]) and ub(D, b[1]) or
                 not isinstance(b, tuple) and ub(D, b)) and
@@ -767,7 +768,7 @@ class NFBound(ColTest):
         }
 
         quartic_2_group = (1,2,3)
-        octic_2_group = gps2 = (1,2,3,4,5,6,7,8,9,10,11,15,16,17,18,19,20,21,22,26,27,28,29,30,31,35)
+        octic_2_group = (1,2,3,4,5,6,7,8,9,10,11,15,16,17,18,19,20,21,22,26,27,28,29,30,31,35)
         octwith4 = (1,2,4,6,7,8,10,12,13,14,16,17,19,20,21,23,27,28,30,38,40)
         octic_with_quartic = tup(1,25)+tup(26,33)+(35,38,39,40,44)
         octic_type_2 = (33,34,41,42,45,46,47)
@@ -1230,20 +1231,39 @@ class NFBound(ColTest):
         def describe(tups):
             ans = []
             if tups[0][0] is not None:
-                ans.append(f"degree {','.join(str(tup[0]) for tup in tups)}")
+                degs = [str(tup[0]) for tup in tups]
+                if len(set(degs)) == 1:
+                    ans.append(f"degree {degs[0]}")
+                else:
+                    ans.append(f"degree {','.join(degs)}")
             if tups[0][1] is not None:
                 sigs = [f"[{tup[0]-2*tup[1]},{tup[1]}]" for tup in tups]
-                ans.append(f"signature {','.join(sigs)}")
+                if len(set(sigs)) == 1:
+                    ans.append(f"signature {sigs[0]}")
+                else:
+                    ans.append(f"signature {','.join(sigs)}")
             if tups[0][2] is not None:
                 ts = [f"({','.join(str(t) for t in tup[2])})" if len(tup[2]) > 1 else str(tup[2][0]) for tup in tups]
                 gals = [f"{tup[0]}T{tt}" for (tup, tt) in zip(tups, ts)]
                 ans.append(f"Galois group {','.join(gals)}")
             if tups[0][3] is not None:
-                ans.append(f"unramified outside {','.join('{'+','.join(str(p) for p in tup[3])+'}' for tup in tups)}")
+                rams = ['{'+','.join(str(p) for p in tup[3])+'}' for tup in tups]
+                if len(set(rams)) == 1:
+                    ans.append(f"unramified outside {rams[0]}")
+                else:
+                    ans.append(f"unramified outside {','.join()}")
             if tups[0][4] is not None:
-                ans.append(f"absolute discriminant at most {','.join(str(tup[4]) for tup in tups)}")
+                Dbounds = [str(tup[4]) for tup in tups]
+                if len(set(Dbounds)) == 1:
+                    ans.append(f"absolute discriminant at most {Dbounds[0]}")
+                else:
+                    ans.append(f"absolute discriminant at most {','.join(Dbounds)}")
             if tups[0][5] is not None:
-                ans.append(f"Galois root discriminant at most {','.join(str(tup[5]) for tup in tups)}")
+                grd = [str(tup[5]) for tup in tups]
+                if len(set(grd)) == 1:
+                    ans.append(f"Galois root discriminant at most {grd[0]}")
+                else:
+                    ans.append(f"Galois root discriminant at most {','.join(grd)}")
             return ", ".join(ans)
         strings = []
         by_pattern = defaultdict(list)
@@ -1276,7 +1296,7 @@ class NFBound(ColTest):
                 for t in galt.intersection(Gs):
                     r2G[t][r2] = (r2, Gs, M)
         for t in galt.intersection(r2G):
-            if set(r2G[t]) == r2opts:
+            if set(r2G[t]) == set(r2opts):
                 galt.remove(t)
                 for r2, Gs, M in r2G[t].values():
                     reasons.add((n, r2, Gs, None, M, None))
@@ -1401,9 +1421,9 @@ class NFBound(ColTest):
             raise ValueError
 
         if pos_constraints:
-            galt = set()
-            for Gs in pos_constraints:
-                galt.update(Gs)
+            galt = pos_constraints[0]
+            for Gs in pos_constraints[1:]:
+                galt.intersection_update(Gs)
         else:
             galt = set(range(1, self._num_trans[n] + 1))
         for Gs in neg_constraints:
@@ -1489,7 +1509,7 @@ class NFBound(ColTest):
             C = query.get("class_group")
             if isinstance(C, list) and h is None:
                 h = prod(C)
-            if ub(h, 97) or lb(h, 99) and up(h, 100):
+            if ub(h, 97) or lb(h, 99) and ub(h, 100):
                 # Class number 98 has entries slightly outside our bounds
                 # Watkins' result is actually unconditional
                 reasons.add("signature [0,1], class number at most 100 (except 98)")

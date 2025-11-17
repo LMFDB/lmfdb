@@ -271,7 +271,7 @@ class SearchWrapper(Wrapper):
             # Display warning message if user searched on column(s) with null values
             if query:
                 nulls = table.stats.null_counts()
-                complete, msg, caveat = results_complete(table.search_table, query, table._db, info["search_array"])
+                complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
                 if complete:
                     flash_success("The results below are complete, since the LMFDB contains all " + msg)
                 elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
