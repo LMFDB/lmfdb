@@ -8,7 +8,7 @@
 # TODO: move data into postgres, write code to generate them from LMFDB when applicable
 
 from collections import defaultdict
-from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ, ceil, floor
+from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ, NN, ceil, floor, RealSet, infinity, cached_function
 
 lookup = {}
 
@@ -36,6 +36,341 @@ def nullcount_query(query, cols, recursing=False):
             query[col] = None
     return query
 
+def to_rset(query):
+    if query is None:
+        return RealSet.interval(-infinity, infinity, lower_closed=False, upper_closed=False)
+    if isinstance(query, RealSet):
+        return query
+    if isinstance(query, NumberSet):
+        return query.rset
+    if isinstance(query, (list, tuple)) and len(query) == 2: # closed and open intervals
+        return RealSet(query)
+    if isinstance(query, set):
+        return RealSet(*[RealSet.point(x) for x in query])
+    if not isinstance(query, dict):
+        return RealSet.point(query)
+    ans = RealSet((-infinity, infinity))
+    for k, val in query.items():
+        if k == "$or":
+            ans = ans.intersection(RealSet(*[to_rset(D) for D in val]))
+        elif k == "$and":
+            ans = ans.intersection(to_rset(D) for D in val)
+        elif k in ["$not", "$ne"]:
+            ans = ans.intersection(to_rset(val).complement())
+        elif k == "$lte":
+            ans = ans.intersection(RealSet.unbounded_below_closed(val))
+        elif k == "$lt":
+            ans = ans.intersection(RealSet.unbounded_below_open(val))
+        elif k == "$gte":
+            ans = ans.intersection(RealSet.unbounded_above_closed(val))
+        elif k == "$gt":
+            ans = ans.intersection(RealSet.unbounded_above_open(val))
+        elif k == "$in":
+            ans = ans.intersection(RealSet(*[RealSet.point(x) for x in val]))
+        elif k == "$nin":
+            ans = ans.intersection(RealSet(*[RealSet.point(x) for x in val]).complement())
+        else:
+            raise ValueError(f"Unsupported key {k}")
+    return ans
+
+def interval_sum(I, J):
+    # Neither I nor J can be empty since they arise from a RealSet's normalized intervals
+    if not I or not J:
+        return (0, 0) # Empty interval
+    return RealSet.interval(I.lower() + J.lower(), I.upper() + J.upper(), lower_closed=(I.lower_closed() and J.lower_closed()), upper_closed=(I.upper_closed() and J.upper_closed()))
+
+def interval_neg(I):
+    return RealSet.interval(-I.upper(), -I.lower(), lower_closed=I.upper_closed(), upper_closed=I.lower_closed())
+
+Rneg = RealSet.unbounded_below_closed(0)[0]
+Rpos = RealSet.unbounded_above_closed(0)[0]
+def interval_mul(I, J):
+    def _mul(A, B):
+        a0, a1, c0, c1 = A.lower(), A.upper(), A.lower_closed(), A.upper_closed()
+        b0, b1, d0, d1 = B.lower(), B.upper(), B.lower_closed(), B.upper_closed()
+        if a0 >= 0 and b0 >= 0: # both positive
+            return RealSet.interval(a0 * b0, a1 * b1, lower_closed=c0 and d0, upper_closed=c1 and d1)
+        elif a1 <= 0 and b0 >= 0: # A negative
+            return RealSet.interval(a0 * b1, a1 * b0, lower_closed=c0 and d1, upper_closed=c1 and d0)
+        elif a0 >= 0 and b1 <= 0: # B negative
+            return RealSet.interval(a1 * b0, a0 * b1, lower_closed=c1 and d0, upper_closed=c0 and d1)
+        else: # both negative
+            return RealSet.interval(a1 * b1, a0 * b0, lower_closed=c1 and d1, upper_closed=c0 and d0)
+
+    Ineg = I.intersection(Rneg)
+    Ipos = I.intersection(Rpos)
+    Jneg = J.intersection(Rneg)
+    Jpos = J.intersection(Rpos)
+    return RealSet(_mul(Ineg, Jneg), _mul(Ineg, Jpos), _mul(Ipos, Jneg), _mul(Ipos, Jpos))
+
+def interval_inv(I):
+    Ineg = I.intersection(Rneg)
+    Ipos = I.intersection(Rpos)
+    ans = []
+    if Ineg.lower() != 0:
+        if Ineg.upper() == 0:
+            a, c = -infinity, False
+        else:
+            a, c = 1 / Ineg.upper(), Ineg.upper_closed()
+        if Ineg.lower() == -infinity:
+            b, d = 0, False
+        else:
+            b, d = 1 / Ineg.lower(), Ineg.lower_closed()
+        ans.append(RealSet.interval(a, b, lower_closed=c, upper_closed=d)[0])
+    if Ipos.upper() != 0:
+        if Ipos.lower() == 0:
+            b, d = infinity, False
+        else:
+            b, d = 1 / Ipos.lower(), Ipos.lower_closed()
+        if Ipos.upper() != infinity:
+            a, c = 0, False
+        else:
+            a, c = 1 / Ipos.upper(), Ipos.upper_closed()
+        ans.append(RealSet.interval(a, b, lower_closed=c, upper_closed=d)[0])
+    return RealSet(*ans)
+
+def interval_abs(I):
+    return RealSet(Rpos.intersection(I), interval_neg(Rneg.intersection(I)))
+
+class NumberSet:
+    """
+    A set of real numbers, as specified either as a number or a query dictionary.
+
+    Supports arithmetic operations, union, intersection and inequalities.  The subclass IntegerSet supports iteration.
+    """
+    def __init__(self, x):
+        self.rset = to_rset(x)
+
+    def __repr__(self):
+        return repr(self.rset)
+
+    def __add__(self, other):
+        return self.__class__(RealSet(*[interval_sum(I, J) for I in self.rset for J in other.rset]))
+
+    def __neg__(self):
+        return self.__class__(RealSet(*[interval_neg(I) for I in self.rset]))
+
+    def __sub__(self, other):
+        return self.__class__(RealSet(*[interval_sum(I, interval_neg(J)) for I in self.rset for J in other.rset]))
+
+    def __mul__(self, other):
+        return self.__class__(RealSet(*[interval_mul(I, J) for I in self.rset for J in other.rset]))
+
+    def __invert__(self, other):
+        """
+        We never raise a zero division error, instead implicitly intersecting with the complement of 0
+        """
+        return NumberSet(RealSet(*[interval_inv(I) for I in self.rset]))
+
+    def __div__(self, other):
+        """
+        We never raise a zero division error, instead implicitly intersecting other with the complement of 0
+        """
+        return NumberSet(RealSet(*[interval_mul(I, interval_inv(J)) for I in self.rset for J in other.rset]))
+
+    def __abs__(self):
+        return self.__class__(RealSet(*[interval_abs(I) for I in self.rset]))
+
+    def pow_cap(self, other, k):
+        """
+        Intersection of self with (-oo,max(other)^k]
+        """
+        a = other.rset.sup()
+        if a is infinity:
+            return self
+        return self.intersection(top(a**k))
+
+    def union(self, other):
+        return self.__class__(self.rset.union(other.rset))
+
+    def intersection(self, other):
+        return self.__class__(self.rset.intersection(other.rset))
+
+    def difference(self, other):
+        return self.__class__(self.rset.difference(other.rset))
+
+    def is_subset(self, other):
+        return self.rset.is_subset(other.rset)
+
+    def __le__(self, other):
+        if not self.rset or not other.rset:
+            return True
+        a = self.rset[-1].upper()
+        b = other.rset[0].lower()
+        return a <= b
+
+    def __lt__(self, other):
+        if not self.rset or not other.rset:
+            return True
+        a = self.rset[-1].upper()
+        b = other.rset[0].lower()
+        return a < b or a == b and (not self.rset[-1].upper_closed() or not other.rset[0].lower_closed())
+
+    def bounded(self, a, b=None):
+        if b is None:
+            lower_bound, upper_bound = -infinity, a
+        else:
+            lower_bound, upper_bound = a, b
+        S = self.rset
+        return not S or lower_bound <= S[0].lower() and S[-1].upper() <= upper_bound
+
+    def restricted(self):
+        """
+        Not all of R
+        """
+        return (len(list(self.rset)), self.rset.inf(), self.rset.sup()) != (1, -infinity, infinity)
+
+    def __ge__(self, other):
+        return other.__le__(self)
+
+    def __gt__(self, other):
+        return other.__gt__(self)
+
+def integer_normalize(S):
+    """
+    INPUT:
+
+    - ``S`` -- a RealSet (normalized in the sense of real sets)
+
+    Output:
+
+    A RealSet ``T`` so that the set of integer points of S and T are the same, and
+
+        - all intervals of ``T`` have endpoints that are either infinite or integral and closed
+        - successive intervals have an integer in between
+    """
+    T = []
+    for I in S:
+        if I.lower() is -infinity:
+            a, c = -infinity, False
+        else:
+            a, c = ceil(I.lower()), True
+            if a == I.lower() and not I.lower_closed():
+                a += 1
+        if I.upper() is infinity:
+            b, d = infinity, False
+        else:
+            b, d = floor(I.upper()), True
+            if b == I.upper() and not I.upper_closed():
+                b -= 1
+        if a <= b:
+            T.append(RealSet.interval(a, b, lower_closed=c, upper_closed=d)[0])
+    if not T:
+        return RealSet()
+    TT = []
+    cur = T[0]
+    for I in T[1:]:
+        if I.lower() - cur.upper() > 1:
+            TT.append(cur)
+            cur = I
+        else:
+            cur = RealSet.interval(cur.lower(), I.upper(), lower_closed=cur.lower_closed(), upper_closed=I.upper_closed())
+    TT.append(cur)
+    return RealSet(*TT)
+
+class IntegerSet(NumberSet):
+    """
+    The set of integer points in within a real set
+    """
+    def __init__(self, x):
+        self.rset = integer_normalize(to_rset(x))
+
+    def __div__(self, other):
+        if isinstance(other, IntegerSet):
+            no_zero_neg = RealSet.unbounded_below_closed(-1)[0]
+            no_zero_pos = RealSet.unbounded_above_closed(1)[0]
+            return self.__class__(
+                RealSet(*[interval_mul(I, interval_inv(J.intersection(no_zero_neg)))
+                          for I in self.rset for J in other.rset]).union(
+                RealSet(*[interval_mul(I, interval_inv(J.intersection(no_zero_pos)))
+                          for I in self.rset for J in other.rset])))
+        return super().__div__(other)
+
+    def min(self):
+        return self.rset.inf()
+
+    def max(self):
+        return self.rset.sup()
+
+    def __le__(self, other):
+        if not self.rset or not other.rset:
+            return True
+        return self.max() <= other.min()
+
+    def __lt__(self, other):
+        if not self.rset or not other.rset:
+            return True
+        return self.max() < other.min()
+
+    def __iter__(self):
+        for I in self.rset:
+            if I.lower() is -infinity:
+                if I.upper() is infinity:
+                    yield from ZZ
+                else:
+                    b = I.upper()
+                    for n in NN:
+                        yield b - n
+            elif I.upper() is infinity:
+                a = I.lower()
+                for n in NN:
+                    yield a + n
+            else:
+                yield from range(I.lower(), I.upper() + 1)
+
+    def stickelberger(self, n, r2opts):
+        """
+        INPUT:
+
+        - ``n`` -- the degree, an integer
+        - ``r2opts`` -- an iterable with r2 options
+
+        OUTPUT:
+
+        An iterator over the possible discriminants within this set
+        """
+        if all(r2 % 2 == 1 for r2 in r2opts):
+            mod4 = [0,3]
+        elif all(r2 % 2 == 0 for r2 in r2opts):
+            mod4 = [0,1]
+        else:
+            mod4 = [0,1,3]
+        for m in self:
+            if m % 4 in mod4:
+                F = factor(m)
+                if n != 2 or all(e == 1 for (p,e) in F):
+                    yield tuple(p for (p,e) in F)
+
+    def is_finite(self):
+        return self.rset.inf() is not -infinity and self.rset.sup() is not infinity
+
+    def bound_under(self, func):
+        """
+        INPUT:
+
+        - ``func`` -- an iterable of pairs (I, v) where I is valid input to IntegerSet and v is a real number
+
+        OUTPUT:
+
+        If this set is contained in the union of the I, the minimum of the values corresponding to the I used to greedily cover this set.  If this set is not contained in the union of the I, returns None.
+        """
+        M = infinity
+        for I, v in func:
+            I = IntegerSet(I)
+            O = self.intersection(I)
+            if O:
+                M = min(M, v)
+                self = self.difference(O)
+            print("MIOS", M, I, O, self)
+            if not self.rset:
+                return M
+
+def top(x, cls=IntegerSet):
+    return cls(RealSet.interval(-infinity, x, lower_closed=False, upper_closed=True))
+
+def bottom(x, cls=IntegerSet):
+    return cls(RealSet.interval(x, infinity, lower_closed=True, upper_closed=False))
+
 class CompletenessChecker:
     """
     INPUT:
@@ -53,7 +388,7 @@ class CompletenessChecker:
 
       If all checkers have length 2 (just cols and test) will pass the full query dictionary to the __call__ method (after parsing through $or, $and, $not).  Otherwise, will extract the values of the columns before passing into __call__
     """
-    def __init__(self, table, checkers, fill=None):
+    def __init__(self, table, checkers, fill=[]):
         self.table = table
         lookup[table] = self
         self.extract = not all(len(check) == 2 for check in checkers)
@@ -83,6 +418,7 @@ class CompletenessChecker:
         If ``$or`` is present, this function moves everything into the ``$or``
         for simplified processing.
         """
+        query = dict(query)
         def merge(v1, v2):
             if v1 is None:
                 return v2
@@ -151,8 +487,8 @@ class CompletenessChecker:
             if search_columns and table.exists(nullcount_query(query, search_columns)):
                 # Query referred to a column where not all data was computed, so we cannot guarantee completeness
                 return False, None, None
-        if self.fill:
-            self.fill(query)
+        for fill in self.fill:
+            fill(query)
         for cols, test, reason, caveat, filt in self.checkers:
             if all(col in query for col in cols) and filt(query):
                 if self.extract:
@@ -170,78 +506,66 @@ class ColTest:
             return True # No constrait; for one ended intervals
         if D is None:
             return False # No information
-        if isinstance(D, dict):
-            return ("$lt" in D and D["$lt"] <= n or # For integer valued columns, this could be strengthed a bit, but $lte constraints are more common in the LMFDB because they're entered using ranges
-                     "$lte" in D and D["$lte"] <= n or
-                     "$in" in D and all(d <= n for d in D["$in"]))
-        return D <= n
+        return NumberSet(D) <= NumberSet(n)
+        #if isinstance(D, dict):
+        #    return ("$lt" in D and D["$lt"] <= n or # For integer valued columns, this could be strengthed a bit, but $lte constraints are more common in the LMFDB because they're entered using ranges
+        #             "$lte" in D and D["$lte"] <= n or
+        #             "$in" in D and all(d <= n for d in D["$in"]))
+        #return D <= n
 
     def _lower_bound(self, D, n):
         if n is None:
             return True # No constrait; for one ended intervals
         if D is None:
             return False # No information
-        if isinstance(D, dict):
-            return ("$gt" in D and D["$gt"] >= n or
-                     "$gte" in D and D["$gte"] >= n or
-                     "$in" in D and all(d >= n for d in D["$in"]))
-        return D >= n
+        return NumberSet(D) >= NumberSet(n)
+        #if isinstance(D, dict):
+        #    return ("$gt" in D and D["$gt"] >= n or
+        #             "$gte" in D and D["$gte"] >= n or
+        #             "$in" in D and all(d >= n for d in D["$in"]))
+        #return D >= n
 
 class Bound(ColTest):
     """
     Check that the inputs lie in a box.
     """
-    def __init__(self, *bounds):
-        self.bounds = bounds
+    def __init__(self, *bounds, cls=IntegerSet):
+        self.cls = cls
+        self.bounds = [cls(b) if isinstance(b, (list, tuple, RealSet)) else cls(RealSet.unbounded_below_closed(b)) for b in bounds]
 
     def __call__(self, db, Ds):
-        ub, lb = self._upper_bound, self._lower_bound
-        return all((isinstance(bound, tuple) and lb(D, bound[0]) and ub(D, bound[1]) or
-                    not isinstance(bound, tuple) and ub(D, bound))
-                   for (D, bound) in zip(Ds, self.bounds))
+        return all(self.cls(D).is_subset(B) for D, B in zip(Ds, self.bounds))
 
-class CBound(ColTest):
+class CBound(Bound):
     """
     Given constraints on a set of values, check that the last value lies in an interval
 
     Note that overlapping Bound boxes is better when applicable,
     since this test will only match queries where the constraints are specified exactly
     """
-    def __init__(self, *constraints):
-        self.constraints = constraints[:-1]
-        self.bound = constraints[-1]
+    def __init__(self, *constraints, cls=IntegerSet):
+        self.constraints = tuple(constraints[:-1])
+        super().__init__(constraints[-1], cls=cls)
 
     def __call__(self, db, Ds):
-        b, ub, lb, D = self.bound, self._upper_bound, self._lower_bound, Ds[-1]
-        return (self.constraints == Ds[:-1] and
-                (isinstance(b, tuple) and lb(D, b[0]) and ub(D, b[1]) or
-                 not isinstance(b, tuple) and ub(D, b)))
+        return self.constraints == tuple(Ds[:-1]) and super().__call__(db, [Ds[-1]])
 
-def all_prime(D):
-    if isinstance(D, dict):
-        return list(D) == ["$in"] and all(is_prime(p) for p in D["$in"])
-    return is_prime(D)
-
-class PrimeBound(ColTest):
-    def __init__(self, *bounds):
-        self.bounds = bounds
-
+class PrimeBound(Bound):
     def __call__(self, db, Ds):
-        ub, lb = self._upper_bound, self._lower_bound
-        return all((isinstance(bound, tuple) and lb(D, bound[0]) and ub(D, bound[1]) or
-                    not isinstance(bound, tuple) and ub(D, bound)) and
-                   all_prime(D)
-                   for (D, bound) in zip(Ds, self.bounds))
+        Ds = [self.cls(D) for D in Ds]
+        return all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
 
 class Smooth(ColTest):
-    def __init__(self, M):
+    def __init__(self, M, cls=IntegerSet):
+        self.cls = cls
         self.M = M
 
-    def __call__(self, db, m):
-        ub = self._upper_bound
-        m, M = ZZ(m), self.M
-        # Could improve this slightly to allow larger ranges that all happen to be smooth.
-        return ub(m, next_prime(M) - 1) or not isinstance(m, dict) and m == prod(p**m.valuation(p) for p in prime_range(M))
+    def __call__(self, db, ms):
+        M = self.M
+        P = prime_range(M)
+        def is_smooth(n):
+            return -M < n < M or n == prod(p**ZZ(n).valuation(p) for p in P)
+        return all(is_smooth(n) for n in self.cls(ms[0]))
 
 class Specific(ColTest):
     def __init__(self, *constraints):
@@ -251,21 +575,13 @@ class Specific(ColTest):
         return all(D in constraint for (D, constraint) in zip(Ds, self.constraints))
 
 
-class CPrimeBound(ColTest):
+class CPrimeBound(CBound):
     """
     Similar to CBound, but requires Ds to all be prime
     """
-    def __init__(self, *constraints):
-        self.constraints = constraints[:-1]
-        self.bound = constraints[-1]
-
     def __call__(self, db, Ds):
-        b, D = self.bound, Ds[-1]
-        ub, lb = self._upper_bound, self._lower_bound
-        return (self.constraints == Ds[:-1] and
-                (isinstance(b, tuple) and lb(D, b[0]) and ub(D, b[1]) or
-                not isinstance(b, tuple) and ub(D, b)) and
-                all_prime(D))
+        last = self.cls(Ds[-1])
+        return last.is_finite() and super().__call__(db, Ds) and all(is_prime(p) for p in last)
 
 # We cache the intervals for Maass forms, since we'll need to reimplement this function anyway if the db gets expanded (any will likely include other weights/characters)
 maxR = {
@@ -337,36 +653,151 @@ maxR = {
 }
 class MaassBound(ColTest):
     def __call__(self, db, query):
-        level = query["level"]
-        spectral_parameter = query["spectral_parameter"]
-        try:
-            Rbound = maxR[int(level)]
-            complete = self._upper_bound(spectral_parameter, Rbound)
-            if complete:
-                return True, f"Maass forms with level {level} and spectral parameter at most {Rbound:.4f}", None
-        except (TypeError, KeyError): # Level might be a dictionary, or level might not be in it
-            return False, None, None
+        level = IntegerSet(query["level"])
+        spectral_parameter = NumberSet(query["spectral_parameter"])
+        if level.is_finite() and level.max() <= 105:
+            levels = list(level)
+            if levels:
+                if all(N in maxR for N in levels):
+                    Rbound = min(maxR[N] for N in levels)
+                    if spectral_parameter.bounded(Rbound):
+                        levels = ", ".join(str(N) for N in levels)
+                        return True, f"Maass forms with level {levels} and spectral parameter at most {Rbound:.4f}", None
+            else:
+                return True, "Maass forms with specified level (empty)", None
+        return False, None, None
+
+@cached_function
+def hmf_bounds(db):
+    return {label: D["max"] for (label, D) in db.hmf_forms.stats.numstats("level_norm", "field_label").items()}
+class HMFBound(ColTest):
+    def __call__(self, db, query):
+        bounds = hmf_bounds(db)
+        level_norm = IntegerSet(query["level_norm"])
+        cols = db.hmf_forms._columns_searched(query)
+        caveat = []
+        if "is_base_change" in cols:
+            caveat.append("positive base change information computed heuristically")
+        if "is_CM" in cols:
+            caveat.append("positive CM information computed heuristically")
+        caveat = ", ".join(caveat)
+        if not caveat:
+            caveat = None
+        if "field_label" in query:
+            label = query["field_label"]
+            M = None
+            if isinstance(label, str):
+                M = bounds[label]
+                labels = label
+            elif isinstance(label, dict) and "$in" in label and label["$in"] and all(lab in bounds for lab in label["$in"]):
+                M = min(bounds[lab] for lab in label["$in"])
+                labels = ", ".join(label["$in"])
+            if M is not None and level_norm.bounded(M):
+                return True, f"Hilbert modular forms over {labels} of level norm at most {M}", caveat
+        # Missing discriminants in degree
+        # 2: up to 497 except 253, 257, 264, 309, 312
+        # 3: everything up to disc 1957 (next 2021)
+        # 4: everything up to disc 19821 (next 20032)
+        # 5: everything up to disc 195829 (next 202817)
+        # 6: everything up to disc 1997632 (next 2115281)
+        by_deg = {2: 252, 3: 2020, 4: 20031, 5: 202816, 6: 2115280}
+        if query.get("disc") is not None and query.get("deg") is not None:
+            disc = IntegerSet(query["disc"])
+            deg = IntegerSet(query["deg"])
+            if deg.is_subset(IntegerSet([2,6])): #################
+                deg = list(deg)
+                if not deg:
+                    return True, "Hilbert modular forms satisfying query (no matching degrees)", None
+                M = min(by_deg[n] for n in deg)
+                if disc.bounded(M):
+                    # query specifies only fields where we have HMFs,
+                    # now we need to find the list of discriminants satisfying the query
+                    allowed = IntegerSet({"$in":set(int(label.split(".")[2]) for label in bounds)})
+                    discs = list(disc.intersection(allowed))
+                    fields = [label for label in bounds if int(label.split(".")[0]) in deg and int(label.split(".")[2]) in discs]
+                    if fields:
+                        M = min(bounds[label] for label in fields)
+                        if level_norm.bounded(M):
+                            labels = ", ".join(fields)
+                            return True, "Hilbert modular forms over {labels} of level norm at most {M}", caveat
+                    else:
+                        return True, "Hilbert modular forms satisfying the query (no matching fields)", caveat
+        return False, None, None
+
+class FieldLabelFiller:
+    def __init__(self, ec):
+        self.ec = ec
+
+    def __call__(self, query):
+        if "field_label" in query:
+            label = query["field_label"]
+            if isinstance(label, str) and label.count(".") == 3:
+                d, r, D, i = label.split(".")
+                if d.isdigit() and r.isdigit() and D.isdigit():
+                    if "signature" not in query:
+                        query["signature"] = [int(d), int(r)]
+                    if self.ec and "abs_disc" not in query:
+                        query["abs_disc"] = int(D)
+                    elif not self.ec and "field_disc" not in query:
+                        query["field_disc"] = -int(D)
+        print("DONE", query)
+
+class MulFiller:
+    def __init__(self, n, e, f, backfill=False, cls=IntegerSet):
+        self.n, self.e, self.f = n, e, f
+        self.backfill, self.cls = backfill, cls
+
+    def __call__(self, query):
+        C = self.cls
+        n, e, f = self.n, self.e, self.f
+        if e in query and f in query:
+            query[n] = C(query.get(n)).intersection(C(query[e]) * C(query[f]))
+        if self.backfill:
+            if n in query and e in query:
+                query[f] = C(query.get(f)).intersection(C(query[n]) / C(query[e]))
+            if n in query and f in query:
+                query[e] = C(query.get(e)).intersection(C(query[n]) / C(query[f]))
+
+class SumFiller:
+    def __init__(self, a, b, c, backfill=False, cls=IntegerSet):
+        self.a, self.b, self.c = a, b, c
+        self.backfill, self.cls = backfill, cls
+
+    def __call__(self, query):
+        C = self.cls
+        a, b, c = self.a, self.b, self.c
+        if b in query and c in query:
+            query[a] = C(query.get(a)).intersection(C(query[b]) + C(query[c]))
+        if self.backfill:
+            if a in query and b in query:
+                query[c] = C(query.get(c)).intersection(C(query[a]) - C(query[b]))
+            if a in query and c in query:
+                query[b] = C(query.get(b)).intersection(C(query[a]) - C(query[c]))
+
 
 class BianchiBound(ColTest):
     def __init__(self, ec):
         self.ec = ec
 
     def __call__(self, db, query):
-        # Set degree/abs_disc or field_disc from field_label
-        # Set conductor_norm/level_norm from conductor_ideal
         if self.ec:
-            n, r = query.get("signature")
-            D = query.get("abs_disc")
-            N = query["conductor_norm"]
+            sig = query.get("signature")
+            if not (isinstance(sig, list) and len(sig) == 2):
+                return False, None, None
+            n, r = sig
+            D = IntegerSet(query.get("abs_disc")).intersection(bottom(3))
+            N = IntegerSet(query["conductor_norm"])
             caveat = "Only modular elliptic curves are included"
             def reason(n, r, D, M):
-                if r == 0:
-                    d = D // 4 if D % 4 == 0 else D
-                    return r"elliptic curves over \Q(\sqrt{-%s}) with conductor norm at most %s" % (d, M)
-                if n == r:
+                if D.max() == D.min():
+                    Ds = str(D.max())
+                else:
+                    Ds = f" in {D}"
+                if n == 2 and r == 0:
+                    return f"elliptic curves with conductor norm at most {M} over imaginary quadratic fields with absolute discriminant {Ds}"
+                if r == n:
                     if n == 2:
-                        d = D // 4 if D % 4 == 0 else d
-                        return r"elliptic curves over \Q(\sqrt{%s}) with conductor norm at most %s" % (d, M)
+                        return f"elliptic curves with conductor norm at most {M} over real quadratic fields with discriminant {Ds}"
                     if n == 3:
                         adj = "cubic"
                     elif n == 4:
@@ -375,165 +806,67 @@ class BianchiBound(ColTest):
                         adj = "quintic"
                     elif n == 6:
                         adj = "sextic"
-                    return f"elliptic curves with conductor norm at most {M} over totally real {adj} fields with discriminant at most {D}"
+                    return f"elliptic curves with conductor norm at most {M} over totally real {adj} fields with discriminant {Ds}"
                 if n == 3 and r == 1:
                     return f"elliptic curves over 3.1.23.1 with conductor norm at most {M}"
         else:
             n, r = 2, 0
-            D = query.get("field_disc")
-            if D is not None:
-                D = abs(D)
-            N = query["level_norm"]
+            D = (-IntegerSet(query.get("field_disc"))).intersection(bottom(3))
+            N = IntegerSet(query["level_norm"])
             caveat = None
             def reason(n, r, D, M):
-                d = D // 4 if D % 4 == 0 else D
-                return r"Bianchi modular forms over \Q(\sqrt{-%s}) with level norm at most %s" % (d, M)
-        ub = self._upper_bound
+                if D.max() == D.min():
+                    Ds = str(D.max())
+                else:
+                    Ds = f" in {D}"
+                return f"Bianchi modular forms with level norm at most {M} over imaginary quadratic fields with absolute discriminant {Ds}"
         if n == 2 and r == 0: # imaginary quadratic, either EC or BMF
-            if D == 3:
-                M = 150000
-            elif D == 4:
-                M = 100000
-            elif D < 12:
-                M = 50000
-            elif D in [19, 43]:
-                M = 15000
-            elif D == 67:
-                M = 10000
-            elif D in [31, 163]:
-                M = 5000
-            elif D == 23:
-                M = 3000
-            elif D < 121:
-                M = 1000
-            elif D < 700:
-                M = 100
-            else:
+            print("D", D, "N", N)
+            M = D.bound_under([
+                (3, 150000), # 3
+                (4, 100000), # 4
+                ([5,14], 50000), # 7,8,11
+                (15, 1000), # 15
+                ([16,19], 15000), # 19
+                (20, 1000), # 20
+                ([21,23], 3000), # 23
+                (24, 1000), # 24
+                ([25,34], 5000), # 31
+                ([35,40], 1000), # 35,39,40
+                ([41,46], 15000), # 43
+                ([47, 59], 1000), # 47,51,52,55,56,59
+                ([60, 67], 10000), # 67
+                ([68, 120], 1000),
+                ([121, 159], 100),
+                ([160, 163], 5000), # 163
+                ([164, 702], 100), # 703 is the first missing
+            ])
+            print("M", M)
+            if M is None or not N.bounded(M):
                 return False, None, None
-            return ub(N, M), reason(n, r, D, M), caveat
-        if n == r: # totally real, EC
+            return True, reason(n, r, D, M), caveat
+        if r == n: # totally real, EC
             if n == 2:
-                return (D <= 497) and ub(N, 5000), reason(2, 2, D, 5000), None
+                return D.bounded(497) and N.bounded(5000), reason(2, 2, 497, 5000), None
             if n == 3:
-                return (D <= 1957) and ub(N, 2059), reason(3, 3, 1957, 2059), None
+                return D.bounded(1957) and N.bounded(2059), reason(3, 3, 1957, 2059), None
             if n == 4:
-                return (D <= 19821) and ub(N, 4091), reason(4, 4, 19821, 4091), caveat
+                return D.bounded(19821) and N.bounded(4091), reason(4, 4, 19821, 4091), None
             if n == 5:
-                return (D <= 195829) and ub(N, 1013), reason(5, 5, 195829, 1013), caveat
+                return D.bounded(195829) and N.bounded(1013), reason(5, 5, 195829, 1013), None
             if n == 6:
-                return (D <= 1997632) and ub(N, 961), reason(6, 6, 1997632, 961), caveat
+                return D.bounded(1997632) and N.bounded(961), reason(6, 6, 1997632, 961), None
         if n == 3 and r == 1: # mixed case, EC
-            return (D == 23) and ub(N, 20000), reason(3, 1, D, 20000), caveat
+            return D.bounded(30) and N.bounded(20000), reason(3, 1, 23, 20000), None
         return False, None, None
 
-def minNone(*args):
-    """
-    A version of min that treats None as infinity.
-    """
-    args = [x for x in args if x is not None]
-    if args:
-        return min(args)
-
-def integer_options(X, bound1=None, bound2=None, limit=None, stickelberger=None):
-    """
-    Given a query for X, returns the list of all integers satisfying the query.  ``None`` will be returned if the result exceeds a provided limit (or if no limit is provided and result is not bounded)
-
-    INPUT:
-
-    - ``X`` -- an integer or query dictionary
-    - ``bound1`` and ``bound2`` -- if both provided, act as lower and upper bound on integers returned.  If only ``bound1`` provided, only non-negative integers at most this value will be returned.
-    - ``limit`` -- if provided, gives a maximum number of integers returned.  If too many would be returned, returns ``None`` instead.
-    - ``stickelberger`` -- if provided, only integers congruent to an element of the given list modulo 4 are returned
-    """
-    if bound2 is None:
-        lower_bound, upper_bound = 0, bound1
-    elif bound1 is not None:
-        lower_bound, upper_bound = bound1, bound2
-    else:
-        raise ValueError("Do not specify bound2 as a keyword argument")
-    if isinstance(X, dict):
-        lb = max(X.get("$gte", lower_bound), X.get("$gt", lower_bound - 1) + 1)
-        nin = set(X.get("$nin", []))
-        if upper_bound is None and "$lte" not in X and "$lt" not in X:
-            return
-        ub = minNone(upper_bound, X["$lte"] + 1 if "$lte" in X else None, X.get("$lt"))
-        ne = X.get("$ne")
-        opts = X.get("$in")
-        if opts is None:
-            opts = range(lb, ceil(ub))
-        ans = []
-        for N in opts:
-            if lb <= N < ub and (stickelberger is None or N % 4 in stickelberger) and (ne is None or N != ne) and (N not in nin):
-                ans.append(N)
-                if limit is not None and len(ans) > limit:
-                    return
-        return ans
-    elif X is None:
-        return list(range(lower_bound, upper_bound))
-    if upper_bound is not None and X >= upper_bound:
-        return []
-    if X < lower_bound:
-        return []
-    return [X]
-
-def cap(X, Y, k):
-    """
-    Return X, modified to be bounded above by Y^k.
-
-    INPUT:
-
-    - ``X`` -- a number or query dictionary
-    - ``Y`` -- a number or query dictionary
-    - ``k`` -- a positive exponent
-
-    OUTPUT:
-
-    - a number or query dictionary of numbers matching X and at most Y^k.  None indicates no constraint, False an incompatibility.
-    """
-    def kpow(a):
-        if a is not None:
-            return a**k
-    if Y is None:
-        return X
-    elif isinstance(Y, dict):
-        if isinstance(X, dict):
-            X = dict(X)
-            if "$lte" in Y:
-                X["$lte"] = minNone(X.get("$lte"), kpow(Y["$lte"]))
-            if "$lt" in Y:
-                X["$lt"] = minNone(X.get("$lt"), kpow(Y["$lt"]))
-            if "$in" in Y:
-                X["$lte"] = minNone(X.get("$lte"), kpow(max(Y["$in"])))
-        elif X is None:
-            X = {}
-            if "$lte" in Y:
-                X["$lte"] = kpow(Y["$lte"])
-            if "$lt" in Y:
-                X["$lt"] = kpow(Y["$lt"])
-            if "$in" in Y:
-                X["$in"] = [kpow(y) for y in Y["$in"]]
-        elif ("$lte" in Y and kpow(Y["$lte"]) < X or
-              "$lt" in Y and kpow(Y["$lt"]) <= X or
-              "$in" in Y and kpow(max(Y["$in"])) < X):
-            return False
-    elif isinstance(X, dict):
-        X = dict(X)
-        X["$lte"] = minNone(X.get("$lte"), kpow(Y))
-    elif X is None:
-        return {"$lte": kpow(Y)}
-    elif kpow(Y) < X:
-        return False
-    return X
-
-def display_opts(L):
+def display_opts(L, conj="or"):
     """
     Display a list of options with commas and an or
     """
     L = [str(x) for x in L]
-    if len(L) == 2:
-        L = [L[0] + " or " + L[1]]
-    elif len(L) > 1:
-        L[-1] = " or " + L[-1]
+    if len(L) > 1:
+        L[-1] = f" {conj} " + L[-1]
     return ", ".join(L)
 
 def tup(a, b):
@@ -1245,7 +1578,10 @@ class NFBound(ColTest):
             if tups[0][2] is not None:
                 ts = [f"({','.join(str(t) for t in tup[2])})" if len(tup[2]) > 1 else str(tup[2][0]) for tup in tups]
                 gals = [f"{tup[0]}T{tt}" for (tup, tt) in zip(tups, ts)]
-                ans.append(f"Galois group {','.join(gals)}")
+                if len(set(gals)) == 1:
+                    ans.append(f"Galois group {gals[0]}")
+                else:
+                    ans.append(f"Galois group {','.join(gals)}")
             if tups[0][3] is not None:
                 rams = ['{'+','.join(str(p) for p in tup[3])+'}' for tup in tups]
                 if len(set(rams)) == 1:
@@ -1280,19 +1616,21 @@ class NFBound(ColTest):
         return "number fields with " + "; ".join(strings + [describe(V) for V in by_pattern.values()])
 
     def clear_signatures(self, n, D, r2opts, reasons):
-        ub = self._upper_bound
         if 2 <= n < len(self._maxD):
+            m = infinity
             for r2 in set(r2opts):
                 M = self._maxD[n][r2]
-                if M is not None and ub(D, M):
+                if D.bounded(M):
                     r2opts.remove(r2)
                     reasons.add((n, r2, None, None, M, None))
+                m = min(m, M)
+            D = D.intersection(bottom(m + 1))
+        return D
 
     def clear_r2G(self, n, D, r2opts, galt, reasons):
-        ub = self._upper_bound
         r2G = defaultdict(dict)
         for (r2, Gs, M) in self._r2G.get(n, []):
-            if r2 in r2opts and ub(D, M):
+            if r2 in r2opts and D.bounded(M):
                 for t in galt.intersection(Gs):
                     r2G[t][r2] = (r2, Gs, M)
         for t in galt.intersection(r2G):
@@ -1302,10 +1640,9 @@ class NFBound(ColTest):
                     reasons.add((n, r2, Gs, None, M, None))
 
     def clear_grd(self, n, grd, galt, reasons):
-        ub = self._upper_bound
         by_t = {}
         for (Gs, M) in self._grd.get(n, []):
-            if ub(grd, M):
+            if grd.bounded(M):
                 for t in galt.intersection(Gs):
                     by_t[t] = (Gs, M)
         for t in galt.intersection(by_t):
@@ -1470,15 +1807,14 @@ class NFBound(ColTest):
         """
         Attempt to prove completeness without splitting on degree
         """
-        ub = self._upper_bound
-        D, rd, grd = query.get("disc_abs"), query.get("rd"), query.get("grd")
-        if ub(D, 1656109):
+        D, rd, grd = IntegerSet(query.get("disc_abs")), NumberSet(query.get("rd")), NumberSet(query.get("grd"))
+        if D.bounded(1656109):
             reasons.add("absolute discriminant at most 1656109")
             return True, None
-        if ub(rd, 5.989):
+        if rd.bounded(5.989):
             reasons.add("root discriminant at most 5.989")
             return True, None
-        if ub(grd, 5.989):
+        if grd.bounded(5.989):
             reasons.add("Galois root discriminant at most 5.989")
             return True, None
         # Can also guarantee completeness based on regulator bounds and non-CMness: see https://arxiv.org/pdf/2112.15268
@@ -1495,10 +1831,9 @@ class NFBound(ColTest):
         # TODO: improve this using Minkowski and Odlyzko bounds (which give us guarantees that there are no number fields
         if n > 25:
             return False, None
-        ub, lb = self._upper_bound, self._lower_bound
 
-        r2, D, sign, rd, grd = query.get("r2"), query.get("disc_abs"), query.get("disc_sign"), query.get("rd"), query.get("grd")
-        r2opts = integer_options(r2, n//2+1)
+        r2, D, sign, rd, grd = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign"), NumberSet(query.get("rd")), NumberSet(query.get("grd"))
+        r2opts = list(r2.intersection(IntegerSet([0, n//2])))
         if sign == 1:
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 0]
         elif sign == -1:
@@ -1509,7 +1844,8 @@ class NFBound(ColTest):
             C = query.get("class_group")
             if isinstance(C, list) and h is None:
                 h = prod(C)
-            if ub(h, 97) or lb(h, 99) and ub(h, 100):
+            h = IntegerSet(h)
+            if h.issubset(top(97).union(IntegerSet([99,100]))):
                 # Class number 98 has entries slightly outside our bounds
                 # Watkins' result is actually unconditional
                 reasons.add("signature [0,1], class number at most 100 (except 98)")
@@ -1526,18 +1862,18 @@ class NFBound(ColTest):
             caveat = None
 
         ## Completeness 1: degree, signature, discriminant ##
-        if grd is not None:
-            rd = cap(rd, grd, 1)
-            if rd is False:
+        if grd.restricted():
+            rd = rd.pow_cap(grd, 1)
+            if not rd:
                 reasons.add("incompatible conditions: root discriminant and Galois root discriminant")
                 return True, None
-        if rd is not None:
-            D = cap(D, rd, n)
-            if D is False:
+        if rd.restricted():
+            D = D.pow_cap(rd, n)
+            if not D:
                 reasons.add("incompatible conditions: root discriminant and discriminant")
                 return True, None
-        if D is not None:
-            self.clear_signatures(n, D, r2opts, reasons)
+        if D.restricted():
+            D = self.clear_signatures(n, D, r2opts, reasons)
             if not r2opts:
                 return True, caveat
 
@@ -1549,25 +1885,25 @@ class NFBound(ColTest):
             except ValueError:
                 # Parsing problem
                 return False, None
-            if D is not None:
+            if D.restricted():
                 self.clear_r2G(n, D, r2opts, galt, reasons)
                 if not galt:
                     return True, caveat
 
             ## Completeness 3: degree, Galois group, Galois root discriminant ##
-            if D is not None:
-                rd = cap(rd, D, 1/n)
-                if rd is False:
+            if D.restricted():
+                rd = rd.pow_cap(D, 1/n)
+                if not rd:
                     reasons.add("incompatible conditions: root discriminant and discriminant")
                     return True, None
-            if rd is not None:
+            if rd.restricted():
                 ratio = self.rd_grd_ratio(n, galt)
                 if ratio is not None:
-                    grd = cap(grd, rd, ratio)
-                    if grd is False:
+                    grd = grd.pow_cap(rd, ratio)
+                    if not grd:
                         reasons.add("incompatible conditions: root discriminant and Galois root discriminant")
                         return True, None
-            if grd is not None:
+            if grd.restricted():
                 self.clear_grd(n, grd, galt, reasons)
                 if not galt:
                     return True, caveat
@@ -1592,26 +1928,17 @@ class NFBound(ColTest):
                 return True, caveat
 
         # Can also iterate over valid discriminants in a discriminant range
-        if D is not None:
-            if all(r2 % 2 == 1 for r2 in r2opts):
-                stickelberger = [0,3]
-            elif all(r2 % 2 == 0 for r2 in r2opts):
-                stickelberger = [0,1]
+        if D.restricted():
+            for S in D.stickelberger(n, r2opts):
+                if not self.clear_S(n, S, nram, galt, reasons, update_galt=False):
+                    break
             else:
-                stickelberger = [0,1,3]
-            opts = integer_options(D, limit=10, stickelberger=stickelberger)
-            if opts is not None:
-                for d in opts:
-                    S = tuple(p for (p,e) in factor(d))
-                    if not self.clear_S(n, S, nram, galt, reasons, update_galt=False):
-                        break
-                else:
-                    return True, caveat
+                return True, caveat
 
             # Minkowski bound (only relevant for n>12)
             if n >= len(self._maxD):
                 mbound = (3.14159265358979/4)**n * n**(2*n) / factorial(n)**2
-                if ub(D, mbound):
+                if D.bounded(mbound):
                     reasons.add(f"number fields of degree {n} with discriminant at most {floor(mbound)} (Minkowski)")
                     return True, None
             # TODO: Odlyzko bounds
@@ -1633,15 +1960,14 @@ class NFBound(ColTest):
         if done:
             return True, self.display_reason(reasons), caveat
         if isinstance(n, dict):
-            nopts = integer_options(n, 48)
-            if nopts is None:
+            nopts = IntegerSet(n).intersection(bottom(1))
+            if nopts.max() >= 48:
                 return False, None, None
-            # Reverse order since we're less likely to have completeness in higher degree
-            nopts.sort(reverse=False)
             caveats = set()
-            for n in nopts:
+            # Reverse order since we're less likely to have completeness in higher degree
+            for n in reversed(list(nopts)):
                 nquery = dict(query)
-                nquery["n"] = n
+                nquery["degree"] = n
                 ok, caveat = self._one_n(db, nquery, reasons)
                 if not ok:
                     return False, None, None
@@ -1660,9 +1986,10 @@ class NFBound(ColTest):
 
 class ArtinBound(ColTest):
     def __call__(self, db, query):
-        group, dim, container, N = query.get("Group"), query.get("Dim"), query.get("Container"), query.get("Conductor")
-        # TODO: need to ensure dim and container aren't complicated
-        ub = self._upper_bound
+        group, dim, container, N = query.get("Group"), query.get("Dim"), query.get("Container"), IntegerSet(query.get("Conductor"))
+        if isinstance(dim, dict) or isinstance(container, dict):
+            # This could be improved, but for simplicity we just don't guarantee completeness in this case
+            return False, None, None
         bounds = {
             "2.1": [(1, "2t1", 10000)], # C2
             "3.1": [(1, "3t1", 11180)], # C3
@@ -1703,21 +2030,19 @@ class ArtinBound(ColTest):
                         dimcon = f" dimension {d},"
                     else:
                         dimcon = f" dimension {d}, container {P},"
-                    return ub(N, M), f"Artin representations with group {group},{dimcon} and conductor at most {M}", None
-            dimcon = [f"group {group},"]
+                    return N.bounded(M), f"Artin representations with group {group},{dimcon} and conductor at most {M}", None
+            dimcon = [f"group {group}"]
             if dim is not None:
-                dimcon.append(f"dimension {dim},")
+                dimcon.append(f"dimension {dim}")
             if container is not None:
-                dimcon.append(f"container {container},")
-            if len(dimcon) > 1:
-                dimcon[-1] = " and " + dimcon[-1]
-            dimcon = " ".join(dimcon)[:-1]
+                dimcon.append(f"container {container}")
+            dimcon = display_opts(dimcon, "and")
             return True, f"There are no Artin representations with {dimcon}", None
         return False, None, None
 
 class GroupBound(ColTest):
     def __call__(self, db, query):
-        N, td, pd, Qd, perfect, simple, abelian = query.get("order"), query.get("transitive_degree"), query.get("permutation_degree"), query.get("linQ_dim"), query.get("perfect"), query.get("simple"), query.get("abelian")
+        N, td, pd, Qd, perfect, simple, abelian = IntegerSet(query.get("order")), IntegerSet(query.get("transitive_degree")), IntegerSet(query.get("permutation_degree")), IntegerSet(query.get("linQ_dim")), query.get("perfect"), query.get("simple"), query.get("abelian")
         # First missing
         # PSL(2,2729) = 10162031880
         #POmega-(4,53)= 11082179160
@@ -1751,41 +2076,40 @@ class GroupBound(ColTest):
         # F(4,3)      = 5734420792816671844761600
         # PSL(7,4)    = 72736898347485916060188672000
         # PSU(8,3)    = 261303669649855006027009228800
-        ub, lb = self._upper_bound, self._lower_bound
-        if (ub(N, 511) or
-            lb(N, 513) and ub(N, 639) or
-            lb(N, 641) and ub(N, 767) or
-            lb(N, 769) and ub(N, 895) or
-            lb(N, 897) and ub(N, 1023) or
-            lb(N, 1025) and ub(N, 1151) or
-            lb(N, 1153) and ub(N, 1279) or
-            lb(N, 1281) and ub(N, 1407) or
-            lb(N, 1409) and ub(N, 1535) or
-            lb(N, 1537) and ub(N, 1663) or
-            lb(N, 1665) and ub(N, 1791) or
-            lb(N, 1793) and ub(N, 1919) or
-            lb(N, 1921) and ub(N, 2000)):
+        ord2000 = IntegerSet({"$lte": 2000, "$nin":[512,640,768,896,1024,1152,1280,1408,1536,1664,1792,1920]})
+        if N.is_subset(ord2000):
             return True, "groups of order at most 2000 except orders larger than 500 that are multiples of 128", None
-        if perfect is True and ub(N, 50000):
+        if perfect is True and N.bounded(50000):
             return True, "perfect groups of order at most 50000", None
-        if simple and abelian is False and ub(N, 10162031879):
+        if simple is True and abelian is False and N.bounded(10162031879):
             return True, "nonabelian simple groups of order less than 10162031880", None
-        if ub(td, 31):
-            return True, "groups with minimal transitive degree at most 31", None
-        if lb(td, 33) and ub(td, 47):
-            return True, "groups with minimal transitive degree between 33 and 47", None
-        if ub(td, 47) and lb(N, 40000000000):
+        td48 = IntegerSet(top(31)).union(IntegerSet([33,47]))
+        if td.is_subset(td48):
+            return True, "groups with minimal transitive degree at most 47 (except 32)", None
+        if td.bounded(47) and N.bounded(40000000000, infinity):
             return True, "groups with minimal transitive degree 32 and order at least 40 billion", None
-        if ub(pd, 15):
+        if pd.bounded(15):
             return True, "groups with minimal permutation degree at most 15", None
-        if ub(Qd, 6):
+        if Qd.bounded(6):
             return True, r"groups with linear $\Q$-degree at most 6", None
         return False, None, None
 
 CompletenessChecker("lfunc_search", [
-    (("degree", "conductor"), CBound(1, 2800), "L-functions with degree 1 and conductor at most 2800"),
+    (("degree", "rational", "conductor"), CBound(1, True, 2800), "L-functions with degree 1 and conductor at most 2800"),
     ])
-# Nothing for lfunc_search?
+
+class CMFFiller:
+    def __call__(self, query):
+        C = IntegerSet
+        if query.get("projective_image"):
+            query["weight"] = 1
+        # TODO: set weigt/level from analytic conductor
+        N, k = query.get("level"), query.get("weight")
+        if N is not None and k is not None:
+            query["Nk2"] = C(N) * C(k) * C(k)
+        if query.get("char_orbit_index") == 1 or query.get("prim_orbit_index") == 1:
+            query["char_order"] = 1
+
 CompletenessChecker("mf_newforms", [
     ("Nk2", Bound(4000), "newforms with $Nk^2$ at most 4000"),
     (("char_order", "Nk2"), CBound(1, 40000), "newforms with trivial character and $Nk^2$ at most 40000"),
@@ -1794,47 +2118,76 @@ CompletenessChecker("mf_newforms", [
     (("level", "weight"), Bound(100, 12), "newforms with level at most 100 and weight at most 12"),
     # k > 1, dim S_k^new(N,chi) <= 100, Nk2 <= 40000
     (("weight", "char_order", "level"), CBound(2, 1, 50000), "newforms with trivial character, weight 2, and level at most 50000"),
-    (("weight", "char_order", "level"), CPrimeBound(2, 1, 1000000), "newforms with trivial character, weight 2 and prime level at most a million")])
+    (("weight", "char_order", "level"), CPrimeBound(2, 1, 1000000), "newforms with trivial character, weight 2 and prime level at most a million")],
+                    fill=[CMFFiller()])
+
 CompletenessChecker("maass_rigor", [(("level", "spectral_parameter"), MaassBound())])
-# hmf_forms : upper bound on level norm by field; query from database?
-CompletenessChecker("bmf_forms", [("level_norm", BianchiBound(ec=False))])
+
+CompletenessChecker("hmf_forms", [(("level_norm"), HMFBound())])
+
+CompletenessChecker("bmf_forms", [("level_norm", BianchiBound(ec=False))], fill=[FieldLabelFiller(False)])
+
+# No completeness guarantees for Siegel modular forms
+
 CompletenessChecker("ec_curvedata", [
     ("conductor", Bound(500000), "elliptic curves with conductor at most 500000"),
     ("conductor", PrimeBound(300000000), "elliptic curves with prime conductor at most 300 million"),
-    ("conductor", Smooth(7), "elliptic curves with 7-smooth conductor")]) # TODO
-CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))])
-# Nothing for g2c_curves?
+    ("conductor", Smooth(7), "elliptic curves with 7-smooth conductor"),
+    ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000")])
+
+CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
+
+# No completeness guarantees for genus 2 curves
+
 # Skip modular curves for the moment
+
 CompletenessChecker("hgcwa_passports", [
     ("genus", Bound((2, 4)), "groups acting as automorphisms of curves of genus 2, 3 or 4"),
     (("genus", "g0"), Bound((2, 15), 0), "groups G acting as automorphisms of curves X with the genus of X at most 15 and the genus of X/G equal to 0")])
+
 CompletenessChecker("av_fq_isog", [
-    (("g", "q"), Bound(1, 499), "isogeny classes of elliptic curves over fields of cardinality less than 500"),
-    (("g", "q"), Bound(2, 211), "isogeny classes of abelian varieties of dimension at most 2 over fields of cardinality at most 211"),
+    (("g", "q"), Bound(1, RealSet((-infinity, 500), [510, 520], [620, 630], [728,732], [1022,1030])), "isogeny classes of elliptic curves over fields of cardinality less than 500 or 512, 625, 729, 1024"),
+    (("g", "q"), Bound(2, RealSet((-infinity, 212), [242, 250], [252, 256], [338, 346], [510, 520], [620, 630], [728,732], [1022,1030])), "isogeny classes of abelian varieties of dimension at most 2 over fields of cardinality at most 211 or 243, 256, 343, 512, 625, 729, 1024"),
     (("g", "q"), Bound(3, 25), "isogeny classes of abelian varieties of dimension at most 3 over fields of cardinality at most 25"),
     (("g", "q"), Bound(4, 5), "isogeny classes of abelian varieties of dimension at most 4 over fields of cardinality at most 5"),
     (("g", "q"), Bound(5, 3), "isogeny classes of abelian varieties of dimension at most 5 over GF(2) and GF(3)"),
-    (("g", "q"), Bound(6, 2), "isogeny classes of abelian varieties of dimension at most 6 over GF(2)"),
-    (("g", "q"), Specific([1], [512, 625, 729, 1024]), "isogeny classes of elliptic curves over fields of cardinality 512, 625, 729 and 1024"),
-    (("g", "q"), Specific([2], [243, 256, 343, 512, 625, 729, 1024]), "isogeny classes of abelian surfaces over fields of cardinality a power of 2, 3, 5 or 7 up to 1024")])
+    (("g", "q"), Bound(6, 2), "isogeny classes of abelian varieties of dimension at most 6 over GF(2)")],
+                    fill=[SumFiller("g", "p_rank", "p_rank_deficit"),
+                          SumFiller("g", "angle_rank", "angle_corank")])
+
 CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at most 6")])
-CompletenessChecker("nf_fields", [((), NFBound())]) # Complicated, so delegate completely
-CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")])
+
+CompletenessChecker("nf_fields", [((), NFBound())])
+
+CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[MulFiller("n", "e", "f")])
+
 CompletenessChecker("lf_families", [(("n0", "n", "p"), Bound(1, 47, 199), "families of p-adic fields of degree at most 47 and residue characteristic at most 199"),
-                                    (("n0", "n_absolute", "p"), Bound(15, 47, 199), "families of p-adic extensions with absolute degree at most 47, base degree at most 15 and residue characteristic at most 199")]) # Should update query based on relations between ns, es, fs
+                                    (("n0", "n_absolute", "p"), Bound(15, 47, 199), "families of p-adic extensions with absolute degree at most 47, base degree at most 15 and residue characteristic at most 199")],
+                    fill=[MulFiller("e_absolute", "e0", "e", backfill=True),
+                          MulFiller("f_absolute", "f0", "f", backfill=True),
+                          MulFiller("n", "e", "f"),
+                          MulFiller("n0", "e0", "f0"),
+                          MulFiller("n_absolute", "n0", "n", backfill=True),
+                          MulFiller("n_absolute", "e_absolute", "f_absolute")])
+
 CompletenessChecker("char_dirichlet", [("modulus", Bound(1000000), "Dirichlet characters with modulus at most a million")])
+
 CompletenessChecker("artin_reps", [(("Group", "Conductor"), ArtinBound())])
+
 CompletenessChecker("hgm_families", [("degree", Bound(7), "hypergeometric families with degree at most 7")])
+
 CompletenessChecker("gps_transitive", [
-    ("n", Bound(31), "transitive groups of degree at most 31"),
-    ("n", Bound((33,47)), "transitive groups of degree at between 33 and 47"),
+    ("n", Bound(RealSet((-infinity, 32), [33, 47])), "transitive groups of degree at most 47 (except 32)"),
     (("n", "order"), Bound(47, 511), "transitive groups of degree 32 and order at most 511"),
-    (("n", "order"), Bound(47, (40000000000, None)), "transitive groups of degree 32 and order at least 40 billion")])
+    (("n", "order"), Bound(47, (39999999999, infinity)), "transitive groups of degree at most 47 and order at least 40 billion")])
+
 CompletenessChecker("gps_st", [
     (("rational", "weight", "degree"), CBound(True, 1, 6), "rational Sato-Tate groups of weight at most 1 and degree at most 6"),
     (("rational", "weight", "degree"), Specific([True], [0], [1]), "rational Sato-Tate groups of weight 0 and degree 1"),
     (("weight", "degree", "components"), CBound(0, 1, 10000), "Sato-Tate groups of weight 0, degree 1 and at most 10000 components")])
-CompletenessChecker("gps_groups", [((), GroupBound())]) # delegate completely
+
+CompletenessChecker("gps_groups", [((), GroupBound())])
+
 # Nothing for lat_lattices
 
 def results_complete(table, query, db, search_array=None):
