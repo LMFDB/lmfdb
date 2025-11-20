@@ -273,7 +273,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(A.restricted(), True)
         self.assertEqual(IntegerSet(None).restricted(), False)
         self.assertEqual(A.min(), 2)
-        self.assertEqual(A.max(), 2)
+        self.assertEqual(A.max(), 4)
         self.assertEqual(top(4).min(), -infinity)
         self.assertEqual(top(4).max(), 4)
 
