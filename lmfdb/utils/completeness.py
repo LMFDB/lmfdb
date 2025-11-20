@@ -13,7 +13,7 @@ EXAMPLES::
 
 
 from collections import defaultdict
-from sage.all import factor, prod, factorial, is_prime, next_prime, prime_range, ZZ, NN, ceil, floor, RealSet, infinity, cached_function, RLF
+from sage.all import factor, prod, factorial, is_prime, prime_range, ZZ, NN, ceil, floor, RealSet, infinity, cached_function, RLF
 
 # This dictionary is filled in the __init__ method of CompletenessCheckers based on the table name;
 # specific CompletenessCheckers are created at the bottom of this file.
@@ -191,13 +191,19 @@ def interval_mul(I, J):
         a0, a1, c0, c1 = A.lower(), A.upper(), A.lower_closed(), A.upper_closed()
         b0, b1, d0, d1 = B.lower(), B.upper(), B.lower_closed(), B.upper_closed()
         if a0 >= 0 and b0 >= 0: # both positive
-            return RealSet.interval(a0 * b0, a1 * b1, lower_closed=c0 and d0, upper_closed=c1 and d1)
+            a1b1 = 0 if a1 == 0 or b1 == 0 else a1 * b1 # one could be infinity
+            return RealSet.interval(a0 * b0, a1b1, lower_closed=c0 and d0, upper_closed=c1 and d1)
         elif a1 <= 0 and b0 >= 0: # A negative
-            return RealSet.interval(a0 * b1, a1 * b0, lower_closed=c0 and d1, upper_closed=c1 and d0)
+            a0b1 = 0 if a0 == 0 or b1 == 0 else a0 * b1
+            a1b0 = 0 if a1 == 0 or b0 == 0 else a1 * b0
+            return RealSet.interval(a0b1, a1b0, lower_closed=c0 and d1, upper_closed=c1 and d0)
         elif a0 >= 0 and b1 <= 0: # B negative
-            return RealSet.interval(a1 * b0, a0 * b1, lower_closed=c1 and d0, upper_closed=c0 and d1)
+            a1b0 = 0 if a1 == 0 or b0 == 0 else a1 * b0
+            a0b1 = 0 if a0 == 0 or b1 == 0 else a0 * b1
+            return RealSet.interval(a1b0, a0b1, lower_closed=c1 and d0, upper_closed=c0 and d1)
         else: # both negative
-            return RealSet.interval(a1 * b1, a0 * b0, lower_closed=c1 and d1, upper_closed=c0 and d0)
+            a0b0 = 0 if a0 == 0 or b0 == 0 else a0 * b0
+            return RealSet.interval(a1 * b1, a0b0, lower_closed=c1 and d1, upper_closed=c0 and d0)
 
     Ineg = I.intersection(Rneg)
     Ipos = I.intersection(Rpos)

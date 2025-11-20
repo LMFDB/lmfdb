@@ -216,7 +216,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(str(A * A), "[4, 16]")
         self.assertEqual(str(A / A), "[1, 2]")
         self.assertEqual(str(-A), "[-4, -2]")
-        self.assertEqual(str(~A), "[1/4, 1/2)")
+        self.assertEqual(str(~A), "[1/4, 1/2]")
         self.assertEqual(str(A + B), "[8, 13]")
         self.assertEqual(str(A - B), "[-7, -2]")
         self.assertEqual(str(A * B), "[12, 36]")
@@ -331,7 +331,7 @@ class UtilsTest(unittest.TestCase):
                 ("nf_fields", {'degree': 14, 'r2': 1, 'disc_sign': 1}, "number fields with incompatible conditions: signature and discriminant"),
                 ("nf_fields", {'degree': 2, 'r2': 1, 'class_number': 17}, "number fields with signature [0,1], class number at most 100 (except 98)"),
                 ("nf_fields", {'degree': 2, 'r2': 1, 'class_group': [2, 2, 2, 2, 2, 2, 2]}, "number fields with signature [0,1], class group of exponent 2", "depends on GRH"),
-                ("nf_fields", {'degree': 5, 'rd': {'$gte': 40, '$lte': 60}, 'grd': {'$gte': 20, '$lte': 30}}, "number fields with degree 5, signature [1,2],[5,0],[3,1], absolute discriminant at most 12000000,100000000,12000000"),
+                ("nf_fields", {'degree': 5, 'rd': {'$gte': 40, '$lte': 60}, 'grd': {'$gte': 20, '$lte': 30}}, "number fields with incompatible conditions: root discriminant and Galois root discriminant"),
                 ("nf_fields", {'degree': 2, 'rd': {'$gte': 30, '$lte': 40}, 'disc_abs': {'$gte': 10000, '$lte': 20000}}, "number fields with absolute discriminant at most 1656109"),
                 ("nf_fields", {'degree': 6, 'r2': 0, 'galois_label': '6T11', 'disc_abs': {'$gte': 1200000000, '$lte': 1800000000}}, "number fields with degree 6, signature [6,0], Galois group 6T11, absolute discriminant at most 1838265625"),
                 ("nf_fields", {'degree': 9, 'r2': 0, 'gal_is_abelian': True, 'disc_abs': {'$gte': 1, '$lte': 1900000000000000}}, "number fields with degree 9, signature [9,0], Galois group 9T(1,2,6,7,17), absolute discriminant at most 1953125000000000"),
@@ -350,7 +350,7 @@ class UtilsTest(unittest.TestCase):
                 ("gps_groups", {'transitive_degree': {'$gte': 16, '$lte': 24}}, "groups with minimal transitive degree at most 47 (except 32)"),
                 ("gps_groups", {'transitive_degree': 32, 'order': {'$gte': 40000000000, '$lte': 100000000000}}, "groups with minimal transitive degree 32 and order at least 40 billion"),
                 ("gps_groups", {'permutation_degree': {'$gte': 10, '$lte': 14}}, "groups with minimal permutation degree at most 15"),
-                ("gps_groups", {'linQ_dim': 5}, "groups with linear $\Q$-degree at most 6"),
+                ("gps_groups", {'linQ_dim': 5}, r"groups with linear $\Q$-degree at most 6"),
                 ("ec_curvedata", {'conductor': {'$gte': 300, '$lte': 3000}}, "elliptic curves with conductor at most 500000"),
                 ("ec_curvedata", {'conductor': 1000003}, "elliptic curves with prime conductor at most 300 million"),
                 ("ec_curvedata", {'conductor': 76204800}, "elliptic curves with 7-smooth conductor"),
