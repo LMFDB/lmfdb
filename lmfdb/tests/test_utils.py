@@ -234,7 +234,7 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(str(B * B), "[36, 81]")
         self.assertEqual(str(B / B), "{1}")
         self.assertEqual(str(-B), "[-9, -6]")
-        self.assertEqual(str(~B), "[1/9, 1/6)")
+        self.assertEqual(str(~B), "[1/9, 1/6]")
         self.assertEqual(str(B + C), "[-5, 14]")
         self.assertEqual(str(B - C), "[1, 20]")
         self.assertEqual(str(B * C), "[-99, 45]")
