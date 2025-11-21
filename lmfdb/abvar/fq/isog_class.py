@@ -222,7 +222,7 @@ class AbvarFq_isoclass():
             ans.append((None, "Does not contain a Jacobian"))
         return ans
 
-    def properties(self):
+        def properties(self):
         props = [
             ("Label", self.label),
             (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
@@ -236,24 +236,16 @@ class AbvarFq_isoclass():
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
-        # Cyclicity information (new)
-        ic = getattr(self, "is_cyclic", None)
-        if ic is True:
-            cyclic_val = "yes"
-        elif ic is False:
-            cyclic_val = "no"
-        else:
-            cyclic_val = "unknown"
-        props.append(("Cyclic group of points", cyclic_val))
-
-        primes = getattr(self, "noncyclic_primes", None)
-        if primes:
-            primes_str = "{" + ", ".join(str(p) for p in primes) + "}"
-            props.append(("Noncyclic primes", primes_str))
         if self.has_principal_polarization != 0:
-            props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
+            props += [(
+                "Principally polarizable",
+                "yes" if self.has_principal_polarization == 1 else "no",
+            )]
         if self.has_jacobian != 0:
-            props += [("Contains a Jacobian", "yes" if self.has_jacobian == 1 else "no")]
+            props += [(
+                "Contains a Jacobian",
+                "yes" if self.has_jacobian == 1 else "no",
+            )]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
