@@ -40,13 +40,13 @@ class CmfTest(LmfdbTest):
         assert "character order" in page.get_data(as_text=True)
 
     def test_dynamic_stats(self):
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/dynamic_stats?is_cuspidal=1&char_order=2&col1=level&buckets1=1-1000%2C1001-10000&proportions=recurse&col2=weight&buckets2=1-8%2C9-316&search_type=DynStats")
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/dynamic_stats?is_cuspidal=yes&char_order=2&col1=level&buckets1=1-1000%2C1001-10000&proportions=recurse&col2=weight&buckets2=1-8%2C9-316&search_type=DynStats")
         data = page.get_data(as_text=True)
         # The proportions are against the unconstrained number, which now includes the Eisenstein series.
         # Therefore, we update the percentages accordingly. 
         # Eventually should allow generation of percentages with respect to imposed constraints
         # for x in ["16576", "24174", "6172", "20.90%", "30.46%", "13.26%"]:
-        for x in ["16576", "24174", "6172", "19.88%", "30.36%", "13.26%"]:
+        for x in ["16576", "24174", "6172", "14.00%", "29.36%", "13.26%"]:
             assert x in data
 
     def test_sidebar(self):
@@ -306,43 +306,43 @@ class CmfTest(LmfdbTest):
         assert '1234.2.b.c' in page.get_data(as_text=True)
 
     def test_dim_table(self):
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions&is_cuspidal=yes", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions&is_cuspidal=yes", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&is_cuspidal=yes", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
         assert '1-12' in page.get_data(as_text=True)
         assert '1-24' in page.get_data(as_text=True)
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions', follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions&is_cuspidal=yes', follow_redirects=True)
         assert '253' in page.get_data(as_text=True) # Level 23, Weight 13
         assert '229' in page.get_data(as_text=True) # Level 23, Weight 12
         assert 'Dimension search results' in page.get_data(as_text=True)
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=2-&search_type=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=2-&search_type=Dimensions&is_cuspidal=yes", follow_redirects=True)
         assert '426' in page.get_data(as_text=True) # Level 3999, Weight 1
         assert '128' in page.get_data(as_text=True) # Level 4000, Weight 1
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=1&search_type=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=3900-4100&weight=1-12&char_order=1&search_type=Dimensions&is_cuspidal=yes", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
         assert '0' in page.get_data(as_text=True)
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions", follow_redirects=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=4002&weight=1&char_order=2-&search_type=Dimensions&is_cuspidal=yes", follow_redirects=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
         assert 'n/a' in page.get_data(as_text=True)
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions&is_cuspidal=yes')
         for elt in map(str,[0,1,2,5,4,9,6,13,8,17,10]):
             assert elt in page.get_data(as_text=True)
         assert 'Dimension search results' in page.get_data(as_text=True)
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions&is_cuspidal=yes')
         assert 'Error: Table too large: must have at most 10000 entries' in page.get_data(as_text=True)
 
         #the other dim table
@@ -580,30 +580,30 @@ class CmfTest(LmfdbTest):
 
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
-        assert ('mf_gamma1' in data and 'newspace_dims' in data
+        assert ('mf_gamma1_eis' in data and 'newspace_dims' in data
                 and 'mf_gamma1_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e').get_data(as_text=True)
-        assert ('mf_newspaces' in data and 'num_forms' in data
+        assert ('mf_newspaces_eis' in data and 'num_forms' in data
                 and 'mf_newspace_portraits' in data and "data:image/png;base64" in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a').get_data(as_text=True)
-        assert ('mf_newforms' in data and 'field_disc_factorization' in data and
-                'mf_hecke_nf' in data and 'hecke_ring_character_values' in data
-                and 'mf_newspaces' in data and 'num_forms' in data
+        assert ('mf_newforms_eis' in data and 'field_disc_factorization' in data and
+                'mf_hecke_nf_eis' in data and 'hecke_ring_character_values' in data
+                and 'mf_newspaces_eis' in data and 'num_forms' in data
                 and 'mf_twists_nf' in data and 'twisting_char_label' in data
                 and 'mf_hecke_charpolys' in data and 'charpoly_factorization' in data
                 and 'mf_newform_portraits' in data and "data:image/png;base64" in data
-                and 'mf_hecke_traces' in data and 'trace_an' in data)
+                and 'mf_hecke_traces_eis' in data and 'trace_an' in data)
 
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.e.a.4.1').get_data(as_text=True)
-        assert ('mf_newforms' in data and 'field_disc_factorization' in data and
-                'mf_hecke_cc' in data and 'an_normalized' in data
-                and 'mf_newspaces' in data and 'num_forms' in data
+        assert ('mf_newforms_eis' in data and 'field_disc_factorization' in data and
+                'mf_hecke_cc_eis' in data and 'an_normalized' in data
+                and 'mf_newspaces_eis' in data and 'num_forms' in data
                 and 'mf_twists_cc' in data and 'twisting_conrey_index' in data
                 and 'mf_hecke_charpolys' in data and 'charpoly_factorization' in data
                 and 'mf_newform_portraits' in data and "data:image/png;base64" in data
-                and 'mf_hecke_traces' in data and 'trace_an' in data)
+                and 'mf_hecke_traces_eis' in data and 'trace_an' in data)
 
     def test_character_values(self):
         # A newform orbit of dimension 1

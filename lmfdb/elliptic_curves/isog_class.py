@@ -133,7 +133,7 @@ class ECisog_class():
 
         self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
-        self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
+        self.newform_exists_in_db = db.mf_newforms_eis.label_exists(self.newform_label)
         if self.newform_exists_in_db:
             char_orbit, hecke_orbit = self.newform_label.split('.')[2:]
             self.newform_link = url_for("cmf.by_url_newform_label", level=self.conductor, weight=2, char_orbit_label=char_orbit, hecke_orbit=hecke_orbit)

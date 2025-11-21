@@ -498,7 +498,7 @@ def mf_data(label):
         ocode = db.mf_newforms_eis.lookup(form_label, "hecke_orbit_code")
         if ocode is None:
             return abort(404, f"{label} not in database")
-        tables = ["mf_newforms", "mf_hecke_cc", "mf_newspaces", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces"]
+        tables = ["mf_newforms_eis", "mf_hecke_cc_eis", "mf_newspaces_eis", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces_eis"]
         labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
         label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
         title = f"Embedded newform data - {label}"

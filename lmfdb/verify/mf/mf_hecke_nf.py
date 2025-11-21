@@ -6,7 +6,7 @@ from .mf import MfChecker
 from ..verification import overall, slow, integer_types
 
 class mf_hecke_nf(MfChecker):
-    table = db.mf_hecke_nf
+    table = db.mf_hecke_nf_eis
 
     @overall
     def check_bijection(self):
@@ -14,8 +14,8 @@ class mf_hecke_nf(MfChecker):
         there should be a record present for every record in mf_newforms that has field_poly set (and no others, check count)
         """
         # TIME about 20s
-        return (self.check_crosstable_count('mf_newforms', 1, 'label')
-                + self.check_count(db.mf_newforms.count({'field_poly':{'$exists':True}})))
+        return (self.check_crosstable_count('mf_newforms_eis', 1, 'label')
+                + self.check_count(db.mf_newforms_eis.count({'field_poly':{'$exists':True}})))
 
     @overall
     def check_hecke_orbit_code_newforms(self):
@@ -23,7 +23,7 @@ class mf_hecke_nf(MfChecker):
         check that label matches hecke_orbit_code and is present in mf_newforms
         """
         # TIME about 1s
-        return self.check_crosstable('mf_newforms', 'hecke_orbit_code', 'label')
+        return self.check_crosstable('mf_newforms_eis', 'hecke_orbit_code', 'label')
 
     @overall
     def check_field_poly(self):
@@ -31,7 +31,7 @@ class mf_hecke_nf(MfChecker):
         check that field_poly matches field_poly in mf_newforms
         """
         # TIME about 10s
-        return self.check_crosstable('mf_newforms', 'field_poly', 'label')
+        return self.check_crosstable('mf_newforms_eis', 'field_poly', 'label')
 
     @overall
     def check_hecke_ring_rank(self):
@@ -71,7 +71,7 @@ class mf_hecke_nf(MfChecker):
         """
         # TIME about 2s
         # could be done with _run_crosstable from mf_newforms
-        query = SQL("SELECT t1.label FROM mf_hecke_nf t1, mf_newforms t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label")
+        query = SQL("SELECT t1.label FROM mf_hecke_nf_eis t1, mf_newforms_eis t2 WHERE NOT t2.field_poly_is_cyclotomic AND t1.hecke_ring_cyclotomic_generator > 0 AND t1.label = t2.label")
         return self._run_query(query=query)
 
     @overall

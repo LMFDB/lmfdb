@@ -989,7 +989,7 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    char_orbit_label = db.mf_newspaces_eis.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
@@ -1009,7 +1009,7 @@ def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
         flash_error("%s", 'Level and character must be coprime')
         return redirect(url_for(".index"))
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    char_orbit_label = db.mf_newspaces_eis.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     return redirect(url_for('.l_function_cmf_page',
@@ -1032,7 +1032,7 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_a1(level, weight, character):
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    char_orbit_label = db.mf_newspaces_eis.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
