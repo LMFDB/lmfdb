@@ -222,7 +222,7 @@ class AbvarFq_isoclass():
             ans.append((None, "Does not contain a Jacobian"))
         return ans
 
-        def properties(self):
+    def properties(self):
         props = [
             ("Label", self.label),
             (None, '<img src="%s" width="200" height="150"/>' % self.circle_plot()),
