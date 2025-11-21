@@ -664,7 +664,7 @@ def url_for_label(label):
     elif (len(slabel) == 3) and not has_aut_type:
         func = "cmf.by_url_space_label"
     elif (len(slabel) == 3) and has_aut_type:
-        func = "cmf.by_url_full_gamma1_eisenstein_space_label"
+        func = "cmf.by_url_space_label"
     elif len(slabel) == 2:
         func = "cmf.by_url_full_gamma1_space_label"
     elif len(slabel) == 1:

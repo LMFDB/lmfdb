@@ -721,8 +721,8 @@ class WebGamma1Space():
                 url = url_for(".by_url_full_gamma1_space_label",
                               level=N, weight=self.weight)
             else:
-                url = url_for(".by_url_full_gamma1_eisenstein_space_label",
-                              level=N, weight=self.weight, automorphic_type="E")
+                url = url_for(".by_url_space_label",
+                              level=N, weight=self.weight, char_orbit_label="E")
         elif form is None:
             if is_cuspidal:
                 url = url_for(".by_url_space_label",
