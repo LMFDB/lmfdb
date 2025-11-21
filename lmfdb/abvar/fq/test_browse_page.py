@@ -290,11 +290,11 @@ class AVHomeTest(LmfdbTest):
         # results page; we do not assert specific labels since the data
         # on devmirror can change.
         self.check_args(
-            "/Variety/Abelian/Fq/?is_cyclic=yes",
+            "/Variety/Abelian/Fq/?cyclic=yes",
             "Abelian variety search results"
         )
         self.check_args(
-            "/Variety/Abelian/Fq/?is_cyclic=no",
+            "/Variety/Abelian/Fq/?cyclic=no",
             "Abelian variety search results"
         )
 
