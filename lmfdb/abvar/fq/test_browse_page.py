@@ -15,7 +15,7 @@ class AVHomeTest(LmfdbTest):
         assert "Cyclic group of points" in homepage
 
     def test_stats_page(self):
-        self.check_args("/Variety/Abelian/Fq/stats","Abelian variety isogeny classes: Statistics")
+        self.check_args("/Variety/Abelian/Fq/stats", "Abelian variety isogeny classes: Statistics")
 
     # TODO test dynamic stats
 
@@ -44,7 +44,10 @@ class AVHomeTest(LmfdbTest):
         r"""
         Check that Variety/Abelian/Fq/?jump works
         """
-        self.check_args("/Variety/Abelian/Fq/?jump=x^6-3*x^5%2B3*x^4-2*x^3%2B6*x^2-12*x%2B8", "3.2.ad_d_ac")
+        self.check_args(
+            "/Variety/Abelian/Fq/?jump=x^6-3*x^5%2B3*x^4-2*x^3%2B6*x^2-12*x%2B8",
+            "3.2.ad_d_ac"
+        )
 
     # Various searches
     # Many things are checked twice: Once from main index/browse page, and once from the refining search page
@@ -149,7 +152,10 @@ class AVHomeTest(LmfdbTest):
         # slope not a rational number
         self.check_args("/Variety/Abelian/Fq/?newton_polygon=t", "is not a valid input")
         # slopes are not increasing
-        self.check_args("/Variety/Abelian/Fq/?start=&count=&newton_polygon=%5B1%2C1%2F2%2C0%5D", "Slopes must be increasing")
+        self.check_args(
+            "/Variety/Abelian/Fq/?start=&count=&newton_polygon=%5B1%2C1%2F2%2C0%5D",
+            "Slopes must be increasing"
+        )
 
     def test_search_initcoeffs(self):
         r"""
@@ -158,7 +164,10 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
         self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
         # there should be only one match, if ranges were supported
-        self.check_args("/Variety/Abelian/Fq/?angle_ranks=&initial_coefficients=%5B3%2C+9%2C+10%2C+87-100%5D", "Ranges not supported")
+        self.check_args(
+            "/Variety/Abelian/Fq/?angle_ranks=&initial_coefficients=%5B3%2C+9%2C+10%2C+87-100%5D",
+            "Ranges not supported"
+        )
 
     def test_search_pointcountsav(self):
         r"""
@@ -188,8 +197,14 @@ class AVHomeTest(LmfdbTest):
         Check that we can search by decomposition into isogeny factors
         """
         # [3.5.ah_y_ach,*]
-        self.check_args("/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach", "4.5.ak_by_agk_qb")
-        self.check_args("/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1", "6.2.ag_p_aw_bh_acu_ey")
+        self.check_args(
+            "/Variety/Abelian/Fq/?simple_quantifier=include&simple_factors=3.5.ah_y_ach",
+            "4.5.ak_by_agk_qb"
+        )
+        self.check_args(
+            "/Variety/Abelian/Fq/?p_rank=4&dim1_factors=2&dim2_factors=2&dim1_distinct=1&dim2_distinct=1",
+            "6.2.ag_p_aw_bh_acu_ey"
+        )
         self.check_args("/Variety/Abelian/Fq/?dim1_factors=6&dim1_distinct=1", "5 matches")
 
     def test_search_numberfield(self):
@@ -275,35 +290,42 @@ class AVHomeTest(LmfdbTest):
         self.check_args("/Variety/Abelian/Fq/?p_rank=2&initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
         self.check_args("/Variety/Abelian/Fq/?p_rank=2&initial_coefficients=%5B1%2C-1%2C3%2C9%5D", "4.3.b_ab_d_j")
         # initial coefficients and point counts of the abelian variety
-        self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D", "No matches")
-        self.check_args("/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D", "No matches")
+        self.check_args(
+            "/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D",
+            "No matches"
+        )
+        self.check_args(
+            "/Variety/Abelian/Fq/?initial_coefficients=%5B1%2C-1%2C3%2C9%5D&abvar_point_count=%5B75%2C7125%5D",
+            "No matches"
+        )
         # Combining unknown fields on Jacobian and Principal polarization.
         self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=not_no", "3.2.a_a_ae")
         self.check_args("/Variety/Abelian/Fq/?g=3&jacobian=no&polarizable=yes", "3.2.a_ac_a")
-    
+
     def test_search_cyclic_group(self):
         r"""
         Check that we can restrict to cyclic or non-cyclic groups of points
-        using the is_cyclic search parameter.
+        using the cyclic search parameter.
         """
-        # We only check that the search runs and returns the usual search
-        # results page; we do not assert specific labels since the data
-        # on devmirror can change.
-        self.check_args(
+        # 1.3.a is known to be non-cyclic (is_cyclic = False), so it should
+        # not appear in the cyclic=yes search, but should appear for cyclic=no.
+        self.not_check_args(
             "/Variety/Abelian/Fq/?cyclic=yes",
-            "Abelian variety search results"
+            "1.3.a"
         )
         self.check_args(
             "/Variety/Abelian/Fq/?cyclic=no",
-            "Abelian variety search results"
+            "1.3.a"
         )
 
     def test_search_noncyclic_primes(self):
         r"""
-        Check that the noncyclic_primes search parameter is accepted.
+        Check that the noncyclic_primes search parameter is accepted and
+        actually filters on the noncyclic_primes column.
         """
+        # 1.3.a has 2 in noncyclic_primes, so it should appear here.
         self.check_args(
             "/Variety/Abelian/Fq/?noncyclic_primes=2",
-            "Abelian variety search results"
+            "1.3.a"
         )
 
