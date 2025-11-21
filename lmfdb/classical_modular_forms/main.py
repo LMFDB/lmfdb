@@ -547,13 +547,13 @@ def by_url_level(level):
     return newform_search(info)
 
 @cmf.route("/<int:level>/<int:weight>/")
-def by_url_full_gammma1_space_label(level, weight):
+def by_url_full_gamma1_space_label(level, weight):
     label = str(level)+"."+str(weight)
     return render_full_gamma1_space_webpage(label)
 
 # We cannot directly redirect here because there is no distinction from the next one
 # @cmf.route("/<int:level>/<int:weight>/<automorphic_type>/")
-def by_url_full_gammma1_eisenstein_space_label(level, weight, automorphic_type):
+def by_url_full_gamma1_eisenstein_space_label(level, weight, automorphic_type):
     label = str(level)+"."+str(weight)+"."+automorphic_type
     if automorphic_type == 'C':
         label = str(level)+"."+str(weight)
@@ -562,7 +562,7 @@ def by_url_full_gammma1_eisenstein_space_label(level, weight, automorphic_type):
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
 def by_url_space_label(level, weight, char_orbit_label):
     if char_orbit_label in ['C', 'E']:
-        return by_url_full_gammma1_eisenstein_space_label(level, weight, char_orbit_label)
+        return by_url_full_gamma1_eisenstein_space_label(level, weight, char_orbit_label)
     label = str(level)+"."+str(weight)+"."+char_orbit_label
     return render_space_webpage(label)
 
@@ -664,9 +664,9 @@ def url_for_label(label):
     elif (len(slabel) == 3) and not has_aut_type:
         func = "cmf.by_url_space_label"
     elif (len(slabel) == 3) and has_aut_type:
-        func = "cmf.by_url_full_gammma1_eisenstein_space_label"
+        func = "cmf.by_url_full_gamma1_eisenstein_space_label"
     elif len(slabel) == 2:
-        func = "cmf.by_url_full_gammma1_space_label"
+        func = "cmf.by_url_full_gamma1_space_label"
     elif len(slabel) == 1:
         func = "cmf.by_url_level"
     else:
@@ -1172,7 +1172,7 @@ def dimension_space_postprocess(res, info, query):
         url_generator = url_generator_list
     else:
         def url_generator(N, k):
-            return url_for(".by_url_full_gammma1_space_label", level=N, weight=k)
+            return url_for(".by_url_full_gamma1_space_label", level=N, weight=k)
 
     def pick_table(entry, X, typ):
         return entry[X][typ]

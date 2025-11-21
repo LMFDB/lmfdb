@@ -67,3 +67,49 @@ class CmfTest(LmfdbTest):
         assert 'Results (7 matches)' in page.get_data(as_text=True)
         assert '9.10.E.c.b' in page.get_data(as_text=True)
         assert '1023' in page.get_data(as_text=True)
+
+    @unittest.skip("Long tests for many newform spaces, should be run & pass before any release")
+    def test_many(self):
+        from sage.all import ZZ
+        for Nk2 in range(1, 2001):
+            for N in ZZ(Nk2).divisors():
+                k = (Nk2 // N).sqrt()
+                if k in ZZ and k > 1:
+                    print("testing (N, k) = (%s, %s)" % (N, k))
+                    url = "/ModularForm/GL2/Q/holomorphic/{0}/{1}/E/".format(N, k)
+                    rv = self.tc.get(url,follow_redirects=True)
+                    self.assertTrue(rv.status_code == 200,"Request failed for {0}".format(url))
+                    assert str(N) in rv.get_data(as_text=True)
+                    assert str(k) in rv.get_data(as_text=True)
+                    assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
+
+    # 2DO - Still working on this one, add more favorites
+    @unittest.skip("in ocnstruction")
+    def test_favorite(self):
+        favorite_newform_eis_labels = [
+            [('1.4.E.a.a','First Level 1 form'),
+             ('1.6.E.a.a','First weight 6 form'),
+            ],
+            [
+            ]
+        ]
+        favorite_space_labels = [
+            [
+            ]
+        ]
+        for l in favorite_newform_labels:
+            for elt, desc in l:
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
+                # redirect to the same page
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
+        for l in favorite_space_labels:
+            for elt, desc in l:
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
+                assert elt in page.get_data(as_text=True)
+                # redirect to the same page
+                assert "Space of modular forms of " in page.get_data(as_text=True)
+                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
+                assert elt in page.get_data(as_text=True)
+                assert "Space of modular forms of " in page.get_data(as_text=True)

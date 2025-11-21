@@ -26,7 +26,7 @@ def valid_gamma1(label):
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
     links = [('level', 'Level %s', 'cmf.by_url_level'),
-             ('weight', 'Weight %s', 'cmf.by_url_full_gammma1_space_label'),
+             ('weight', 'Weight %s', 'cmf.by_url_full_gamma1_space_label'),
              ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
              ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
@@ -718,11 +718,11 @@ class WebGamma1Space():
             name = r"\(%s\)" % common_latex(N, self.weight, i, t=t, typ=typ, S="S" if is_cuspidal else "E")
         if i is None:
             if is_cuspidal:
-                url = url_for(".by_url_full_gammma1_space_label",
+                url = url_for(".by_url_full_gamma1_space_label",
                               level=N, weight=self.weight)
             else:
-                url = url_for(".by_url_full_gammma1_eisenstein_space_label",
-                              level=N, weight=self.weight)
+                url = url_for(".by_url_full_gamma1_eisenstein_space_label",
+                              level=N, weight=self.weight, automorphic_type="E")
         elif form is None:
             if is_cuspidal:
                 url = url_for(".by_url_space_label",
