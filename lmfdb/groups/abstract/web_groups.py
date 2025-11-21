@@ -2572,7 +2572,7 @@ class WebAbstractGroup(WebObj):
         if self.aut_order is None:
             return "not computed"
         aut_order = pos_int_and_factor(self.aut_order)
-        tex = self.aut_tex
+        tex = getattr(self, "aut_tex", None)
         if tex is None:
             return f'Group of order {aut_order}'
         else:
@@ -2580,10 +2580,7 @@ class WebAbstractGroup(WebObj):
         if self.aut_group is not None:
             url = url_for(".by_label", label=self.aut_group)
             return f'<a href="{url}">${tex}$</a>, of order {aut_order}'
-        if tex is None:
-            return f"Group of order {aut_order}"
-        else:
-            return f'${tex}$'
+        return f"${tex}$, of order {aut_order}"
 
     def aut_group_knowl(self):
         if self.aut_order is None:
@@ -2591,7 +2588,7 @@ class WebAbstractGroup(WebObj):
         if self.live():
             return f"Group of order {self.aut_order}"
         aut_order = pos_int_and_factor(self.aut_order)
-        tex = self.aut_tex
+        tex = getattr(self, "aut_tex", None)
         if tex is None:
             tex = "Group"
             knowl = f'<a title = "{tex} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={self.label}&func=autknowl_data">{tex}</a>'

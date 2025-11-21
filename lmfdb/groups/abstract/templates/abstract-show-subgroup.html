@@ -160,11 +160,7 @@
   <table>
     <tr><td>$\operatorname{Aut}(G)$</td><td>{{seq.amb.show_aut_group()|safe}}</td></tr>
     <tr><td>$\operatorname{Aut}(H)$</td><td>
-    {% if seq.sub|attr('show_aut_group') %}
       {{seq.sub.show_aut_group()|safe}}
-    {% else %}
-      not computed
-    {% endif %}
       </td></tr>
     {% if seq.aut_weyl_group is not none %}
       <tr><td>$\operatorname{res}({{S}})$</td><td><a href="{{url_for('.by_label', label=seq.aut_weyl_group)}}">${{seq.aut_weyl.tex_name}}$</a>, of order {{info.pos_int_and_factor(seq.aut_weyl.order) | safe}}</td></tr>
