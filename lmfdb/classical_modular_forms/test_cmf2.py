@@ -173,7 +173,7 @@ class CmfTest(LmfdbTest):
         assert 'A-L signs' in page.get_data(as_text=True)
 
     def test_traces(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&count=50&search_type=Traces', follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&count=50&search_type=Traces&is_cuspidal=yes', follow_redirects=True)
         assert "Results (18 matches)" in page.get_data(as_text=True)
         for elt in map(str,[-98,-347,739,0,147,-414,324,306,-144,0,24,-204,153,414,-344,-756,-24,164]):
             assert elt in page.get_data(as_text=True)

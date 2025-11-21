@@ -26,7 +26,7 @@ class CmfTest(LmfdbTest):
         # Therefore, we update the percentages accordingly. 
         # Eventually should allow generation of statistics with respect to imposed constraints
         # for x in ["16576", "24174", "6172", "20.90%", "30.46%", "13.26%"]:
-        for x in ["17228", "24174", "6208", "20.67%", "30.54%", "13.26%"]:
+        for x in ["19943", "24174", "6448", "30.67%", "16.84%", "13.26%"]:
             assert x in data
 
     def test_sidebar(self):
