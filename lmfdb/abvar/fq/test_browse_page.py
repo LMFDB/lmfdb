@@ -307,18 +307,27 @@ class AVHomeTest(LmfdbTest):
         Check that we can restrict to cyclic or non-cyclic groups of points
         using the cyclic search parameter.
         """
-        # Example with cyclic group of points (is_cyclic = True).
+        # 1.2.ac has cyclic group of points (is_cyclic = True)
         self.check_args(
             "/Variety/Abelian/Fq/?cyclic=yes",
-            "1.2.ac",
+            ">1.2.ac<",
         )
 
-        # Example with non-cyclic group of points (is_cyclic = False).
+        # 1.3.a has non-cyclic group of points (is_cyclic = False)
         self.check_args(
             "/Variety/Abelian/Fq/?cyclic=no",
-            "1.3.a",
+            ">1.3.a<",
         )
 
+        # And make sure they do not appear in the wrong list
+        self.not_check_args(
+            "/Variety/Abelian/Fq/?cyclic=yes",
+            ">1.3.a<",
+        )
+        self.not_check_args(
+            "/Variety/Abelian/Fq/?cyclic=no",
+            ">1.2.ac<",
+        )
 
     def test_search_noncyclic_primes(self):
         r"""
@@ -327,7 +336,8 @@ class AVHomeTest(LmfdbTest):
         """
         self.check_args(
             "/Variety/Abelian/Fq/?noncyclic_primes=2",
-            "1.3.a",
+            ">1.3.a<",
         )
+
 
 
