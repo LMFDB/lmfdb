@@ -471,11 +471,14 @@ ec_columns = SearchColumns([
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
     ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
+    MathCol("manin_constant", "ec.q.manin_constant", "Manin constant", align="center", default=lambda info: info.get("manin_constant")),
 ])
+
 
 class ECDownloader(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
+
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
