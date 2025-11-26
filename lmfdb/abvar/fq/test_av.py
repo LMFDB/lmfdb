@@ -165,4 +165,3 @@ class AVTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/9/aj_bl").get_data(as_text=True)
         assert "Cyclic" in page
-

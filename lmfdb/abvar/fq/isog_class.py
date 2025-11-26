@@ -86,7 +86,7 @@ class AbvarFq_isoclass():
             dbdata["jacobian_count"] = None
         # New invariants: cyclicity and noncyclic primes
         if "is_cyclic" not in dbdata:
-            dbdata["is_cyclic"] = None       
+            dbdata["is_cyclic"] = None
         if "noncyclic_primes" not in dbdata:
             dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
