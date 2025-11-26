@@ -187,6 +187,7 @@ def interval_mul(I, J):
     """
     if not I or not J or isinstance(I, tuple) and I == (0, 0) or isinstance(J, tuple) and J == (0, 0):
         return (0, 0) # Empty interval
+
     def _mul(A, B):
         a0, a1, c0, c1 = A.lower(), A.upper(), A.lower_closed(), A.upper_closed()
         b0, b1, d0, d1 = B.lower(), B.upper(), B.lower_closed(), B.upper_closed()
@@ -575,14 +576,14 @@ class CompletenessChecker:
             if len(check) == 2:
                 cols, test = check
                 reason = caveat = None
-                filt = lambda query: True
+                def filt(query): return True
             elif len(check) == 3:
                 cols, test, reason = check
                 caveat = None
-                filt = lambda query: True
+                def filt(query): return True
             elif len(check) == 4:
                 cols, test, reason, caveat = check
-                filt = lambda query: True
+                def filt(query): return True
             else:
                 cols, test, reason, caveat, filt = check
             if not isinstance(cols, tuple):
@@ -599,6 +600,7 @@ class CompletenessChecker:
         for simplified processing.
         """
         query = dict(query)
+
         def merge(v1, v2):
             if v1 is None:
                 return v2
@@ -727,6 +729,7 @@ class Smooth(ColTest):
     def __call__(self, db, ms):
         M = self.M
         P = prime_range(M)
+
         def is_smooth(n):
             return -M < n < M or n == prod(p**ZZ(n).valuation(p) for p in P)
         return all(is_smooth(n) for n in self.cls(ms[0]))
@@ -990,6 +993,7 @@ class BianchiBound(ColTest):
             D = IntegerSet(query.get("abs_disc")).intersection(bottom(3))
             N = IntegerSet(query["conductor_norm"])
             caveat = "Only modular elliptic curves are included"
+
             def reason(n, r, D, M):
                 if isinstance(D, int):
                     Ds = str(D)
@@ -1018,6 +1022,7 @@ class BianchiBound(ColTest):
             D = (-IntegerSet(query.get("field_disc"))).intersection(bottom(3))
             N = IntegerSet(query["level_norm"])
             caveat = None
+
             def reason(n, r, D, M):
                 if not D:
                     return "Bianchi modular forms with specified discriminant (no fields with given discriminants)"
@@ -1154,7 +1159,7 @@ class NFBound(ColTest):
             [1, 1, 1/2, 3/4, 1/2], # 4
             [1, 4/5, 4/5, 3/5, 2/5], # 5
             [1, 1, 2/3, 2/3, 1/2, 1/3, 2/3, 2/3, 1/2, 1/2, 1/3, 2/3, 1/3, 2/3, 1/2, 1/3],  #6
-	    [1, 6/7, 6/7, 6/7, 4/7, 3/7, 2/7],  # 7
+            [1, 6/7, 6/7, 6/7, 4/7, 3/7, 2/7],  # 7
             [1, 1, 1, 1, 1, 3/4, 1/2, 3/4, 1/2, 1/2, 1/2, 3/4, 3/4, 3/4, 1/2, 1/2,
              1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 3/4, 1/2, 7/8, 1/2, 1/4, 1/2, 1/2, 1/2,
              1/4, 1/2, 1/2, 1/2, 1/4, 3/4, 3/4, 1/4, 1/2, 1/2, 1/2, 3/8, 3/4, 1/4,
@@ -1449,7 +1454,6 @@ class NFBound(ColTest):
                  (5, (1,3,5,6,7), None)],
         }
 
-
         # nS[n] consists of specific sets S so that we have completeness in degree n for number fields unramified outside S.
         self._nS = {
             5: {(2,191), (3,163), (3,181), (3,211), (3,241), (3,401), (3,431), (3,461), (5,211), (5,241), (7,163), (7,181), (2,7,31), (2,7,41), (2,11,31)},
@@ -1464,8 +1468,8 @@ class NFBound(ColTest):
             3: {1: 12000, 2: 500, 3: 100, 4: 30, 5: 30, 6: 30, 7: 30, 8: 30, 9: 30, 10: 30},
             #3: {1: 12000, 2: 500, 3: 100, 4: 30, 5: 24, 6: 24, 7: 24, 8: 24, 9: 24},
             4: {1: 12000, 2: 500, 3: 100, 4: 30, 5: 14, 6: 14},
-            5: {1: 7500,  2: 150, 3: 24,  4: 8},
-            6: {1: 2000,  2: 32},
+            5: {1: 7500, 2: 150, 3: 24, 4: 8},
+            6: {1: 2000, 2: 32},
             7: {1: 192, 2: 6},
         }
 
@@ -1714,7 +1718,6 @@ class NFBound(ColTest):
                  ((3,11), (3,)),
                  ((7,11), (3,))],
         }
-
 
     def display_reason(self, reasons):
         """
@@ -2129,7 +2132,6 @@ class NFBound(ColTest):
 
         return False, None
 
-
     def __call__(self, db, query):
         n = query.get("degree")
 
@@ -2525,4 +2527,3 @@ CompletenessChecker("gps_groups", [((), GroupBound())], null_override=["transiti
 
 
 # Nothing for lat_lattices
-
