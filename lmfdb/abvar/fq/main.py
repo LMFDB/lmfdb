@@ -562,7 +562,6 @@ class AbvarSearchArray(SearchArray):
             [count],
         ]
 
-
     def search_types(self, info):
         return self._search_again(info, [
             ('List', 'List of isogeny classes'),

@@ -338,6 +338,3 @@ class AVHomeTest(LmfdbTest):
             "/Variety/Abelian/Fq/?noncyclic_primes=2",
             ">1.3.a<",
         )
-
-
-
