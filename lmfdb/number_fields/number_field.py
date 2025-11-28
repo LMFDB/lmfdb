@@ -173,11 +173,10 @@ def nf_picture_page():
     bread = bread_prefix() + [('Number Field Picture', ' ')]
     return render_template(
         "single.html",
-        kid='portrait.nf',
+        kid='nf.picture',
         title=t,
         bread=bread,
-        learnmore=learnmore_list()
-    )
+        learnmore=learnmore_list())
 
 
 @nf_page.route("/GaloisGroups")
