@@ -31,6 +31,27 @@
     {% if cl.size is not none %}
     <tr><td>{{KNOWL('av.fq.isogeny_class_size',title='Isomorphism classes')}}:</td><td>&nbsp;&nbsp;{{cl.size}}</td></tr>
     {% endif %}
+    {# --- NEW: cyclicity invariants --- #}
+    {% if cl.is_cyclic is not none %}
+      <tr>
+        <td>{{ KNOWL('av.fq.cyclic_group_points', title='Cyclic group of points') }}:</td>
+        <td>&nbsp;&nbsp;
+          {% if cl.is_cyclic %}
+            yes
+          {% else %}
+            no
+          {% endif %}
+        </td>
+      </tr>
+    {% endif %}
+
+
+    {% if cl.noncyclic_primes %}
+    <tr>
+      <td>{{ KNOWL('av.fq.noncyclic_primes', title='Non-cyclic primes') }}:</td>
+      <td>&nbsp;&nbsp;${{ cl.noncyclic_primes|join(', ') }}$</td>
+    </tr>
+    {% endif %}
 </table>
 </p>
 

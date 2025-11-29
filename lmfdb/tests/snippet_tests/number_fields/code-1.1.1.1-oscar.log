@@ -15,7 +15,7 @@ julia> signature(K)
 julia> OK = ring_of_integers(K); discriminant(OK)
 1
 
-julia> prime_divisors(discriminant((OK)))
+julia> prime_divisors(discriminant(OK))
 ZZRingElem[]
 
 julia> automorphisms(K)
@@ -49,12 +49,7 @@ julia> [K(fUK(a)) for a in gens(UK)]
 julia> regulator(K)
 1.0000
 
-julia> Qx, x = PolynomialRing(QQ); K, a = NumberField(x);
-ERROR: UndefVarError: `PolynomialRing` not defined in `Main`
-Suggestion: check for spelling errors or missing imports.
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> Qx, x = polynomial_ring(QQ); K, a = number_field(x);
 
 julia> OK = ring_of_integers(K); DK = discriminant(OK);
 
@@ -70,19 +65,10 @@ julia> 2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 julia> subfields(K)[2:end-1]
 Tuple{AbsSimpleNumField, NumFieldHom{AbsSimpleNumField, AbsSimpleNumField, Hecke.MapDataFromAnticNumberField{AbsSimpleNumFieldElem}, Hecke.MapDataFromAnticNumberField{AbsSimpleNumFieldElem}, AbsSimpleNumFieldElem}}[]
 
-julia> G, Gtx = galois_group(K); G, transitive_group_identification(G)
-ERROR: ArgumentError: degree must be positive, not 0
-Stacktrace:
- [1] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/T6WZD/src/Assertions.jl:602 [inlined]
- [2] has_transitive_groups(deg::Int64)
-   @ Oscar ~/.julia/packages/Oscar/6oHzG/src/Groups/libraries/transitivegroups.jl:52
- [3] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/T6WZD/src/Assertions.jl:601 [inlined]
- [4] transitive_group_identification(G::PermGroup)
-   @ Oscar ~/.julia/packages/Oscar/6oHzG/src/Groups/libraries/transitivegroups.jl:149
- [5] top-level scope
-   @ none:1
+julia> G, Gtx = galois_group(K);
+
+julia> degree(K) > 1 ? (G, transitive_group_identification(G)) : (G, nothing)
+(Permutation group of degree 1 and order 1, nothing)
 
 julia> p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
 1-element Vector{Tuple{Int64, Int64}}:

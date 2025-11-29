@@ -15,7 +15,7 @@ julia> signature(K)
 julia> OK = ring_of_integers(K); discriminant(OK)
 -4
 
-julia> prime_divisors(discriminant((OK)))
+julia> prime_divisors(discriminant(OK))
 1-element Vector{ZZRingElem}:
  2
 
@@ -51,12 +51,7 @@ julia> [K(fUK(a)) for a in gens(UK)]
 julia> regulator(K)
 1.0000
 
-julia> Qx, x = PolynomialRing(QQ); K, a = NumberField(x^2 + 1);
-ERROR: UndefVarError: `PolynomialRing` not defined in `Main`
-Suggestion: check for spelling errors or missing imports.
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> Qx, x = polynomial_ring(QQ); K, a = number_field(x^2 + 1);
 
 julia> OK = ring_of_integers(K); DK = discriminant(OK);
 
@@ -72,7 +67,9 @@ julia> 2^r1 * (2*pi)^r2 * RK * hK / (wK * sqrt(RR(abs(DK))))
 julia> subfields(K)[2:end-1]
 Tuple{AbsSimpleNumField, NumFieldHom{AbsSimpleNumField, AbsSimpleNumField, Hecke.MapDataFromAnticNumberField{AbsSimpleNumFieldElem}, Hecke.MapDataFromAnticNumberField{AbsSimpleNumFieldElem}, AbsSimpleNumFieldElem}}[]
 
-julia> G, Gtx = galois_group(K); G, transitive_group_identification(G)
+julia> G, Gtx = galois_group(K);
+
+julia> degree(K) > 1 ? (G, transitive_group_identification(G)) : (G, nothing)
 (Symmetric group of degree 2, (2, 1))
 
 julia> p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
