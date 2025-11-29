@@ -575,6 +575,7 @@ def eval_rational_list(s):
     """
     if s is None:
         return
+
     def split(x):
         if not x:
             return []
