@@ -61,7 +61,6 @@ class Wrapper():
 
     def make_query(self, info, random=False):
         query = {}
-        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
         except Exception as err:
@@ -70,6 +69,7 @@ class Wrapper():
                 raise
             info['err'] = str(err)
             err_title = query.pop('__err_title__', self.err_title)
+            template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
             return render_template(self.template, info=info, title=err_title, **template_kwds)
         else:
             err_title = query.pop("__err_title__", self.err_title)
