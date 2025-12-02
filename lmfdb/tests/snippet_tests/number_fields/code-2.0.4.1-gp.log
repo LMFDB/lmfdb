@@ -26,7 +26,7 @@ gp> K.reg
 gp> K = bnfinit(x^2 + 1, 1);
 gp> [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 * K.reg * K.no / (K.tu[1] * sqrt (abs (K.disc)))]
 [0.78539816339744830961566084581987572105, 0.78539816339744830961566084581987572105]
-gp> L = nfsubfields(K); L[2..length(b)]
+gp> L = nfsubfields(K); L[2..length(L)]
 [[x^2 + 1, x]]
 gp> polgalois(K.pol)
 [2, -1, 1, "S2"]
