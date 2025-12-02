@@ -180,10 +180,6 @@ qexp:
   comment: q-expansion of modular form
   sage:  E.q_eigenform(20)
   pari:  |
-    \\ actual modular form, use for small N
-    [mf,F] = mffromell(E)
-    Ser(mfcoefs(mf,20),q)
-    \\ or just the series
     Ser(ellan(E,20),q)*q
   magma: ModularForm(E);
 
@@ -251,4 +247,4 @@ snippet_test:
   test37a1: 
     label: 37.a1
     url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1
-  
+    

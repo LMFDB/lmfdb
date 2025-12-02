@@ -2,6 +2,7 @@ import inspect
 import os
 import shutil
 import signal
+import socket
 import subprocess
 from collections import Counter
 from psycopg2.sql import SQL
@@ -317,7 +318,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         super()._check_locks(changetype, datafile=datafile, suffix=suffix)
         if self._db.config.postgresql_options["user"] != "editor":
             raise RuntimeError("You must be logged in as editor to make data changes")
-        if changetype in _nolog_changetypes:
+        if changetype in _nolog_changetypes or socket.gethostname() == "proddb":
             return
 
         # The following is the definition of run_diskfree used below to find the available space on grace
@@ -380,8 +381,9 @@ class LMFDBSearchTable(PostgresSearchTable):
         tablespace = self._get_tablespace()
         cur_size = self._db.table_sizes()[self.search_table]
         size_guess = cur_size["total_bytes"]
-        if datafile is None and changetype != "create_table_like":
-            size_guess = 0 # insert_many, update, upsert.  We rely on the 100GB offset to provide enough space since there is no datafile to use
+        if datafile is None:
+            if changetype != "create_table_like":
+                size_guess = 0 # insert_many, update, upsert.  We rely on the 100GB offset to provide enough space since there is no datafile to use
         else:
             size_guess = max(size_guess, os.path.getsize(datafile))
 
@@ -510,8 +512,9 @@ class LMFDBDatabase(PostgresDatabase):
         - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
         """
         if aborted:
-            deleter = SQL("DELETE FROM userdb.ongoing_operations WHERE logid = %s")
-            self._execute(deleter, [logid])
+            if socket.gethostname() != "proddb":
+                deleter = SQL("DELETE FROM userdb.ongoing_operations WHERE logid = %s")
+                self._execute(deleter, [logid])
         else:
             from lmfdb.utils.datetime_utils import utc_now_naive
             uid = self.login()
@@ -521,7 +524,7 @@ class LMFDBDatabase(PostgresDatabase):
                 "VALUES (%s, %s, %s, %s, %s, %s)"
             )
             self._execute(inserter, [uid, utc_now_naive(), tablename, logid, operation, data])
-            if operation not in _nolog_changetypes:
+            if operation not in _nolog_changetypes and socket.gethostname() != "proddb":
                 # This table is used by _check_locks to determine if there is enough space to execute an upload
                 inserter = SQL(
                     "INSERT INTO userdb.ongoing_operations (logid, finishing, time, tablename, operation, username) "

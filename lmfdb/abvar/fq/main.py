@@ -23,6 +23,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.utils import redirect_no_cache
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, CheckCol, CheckMaybeCol
 from lmfdb.abvar.fq.download import AbvarFq_download
+from lmfdb.utils.search_parsing import parse_primes
 
 logger = make_logger("abvarfq")
 
@@ -399,8 +400,31 @@ class AbvarSearchArray(SearchArray):
         jacobian = YesNoMaybeBox(
             "jacobian",
             label="Jacobian",
-            knowl="ag.jacobian"
+            knowl="ag.jacobian",
         )
+
+        # Cyclic group of points (advanced yes/no box)
+        cyclic = YesNoBox(
+            "cyclic",
+            label="Cyclic group of points",
+            knowl="av.fq.cyclic_group_points",
+            advanced=True,
+        )
+
+        # Non-cyclic primes with mode selector (include / exactly / subset)
+        noncyclic_mode = SubsetBox(
+            "noncyclic_primes_mode",
+            advanced=True,
+        )
+        noncyclic_primes = TextBoxWithSelect(
+            "noncyclic_primes",
+            label="Non-cyclic primes",
+            select_box=noncyclic_mode,
+            knowl="av.fq.noncyclic_primes",
+            example="2 or 2,3,5",
+            advanced=True,
+        )
+
         uglabel = "Use %s in the following inputs" % display_knowl("av.decomposition", "Geometric decomposition")
         use_geom_decomp = CheckBox(
             "use_geom_decomp",
@@ -506,6 +530,7 @@ class AbvarSearchArray(SearchArray):
             [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
             [newton_elevation, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
             [angle_rank, angle_corank, geom_deg, p_corank, geom_squarefree],
+            [cyclic, noncyclic_primes],
             use_geom_refine,
             [dim1, dim2, dim3, dim4, dim5],
             [dim1d, dim2d, dim3d, number_field, galois_group],
@@ -516,6 +541,7 @@ class AbvarSearchArray(SearchArray):
             [g, geom_simple],
             [initial_coefficients, polarizable],
             [p_rank, jacobian],
+            [cyclic, noncyclic_primes],
             [p_corank, geom_squarefree],
             [jac_cnt, hyp_cnt],
             [angle_rank, angle_corank],
@@ -552,6 +578,7 @@ def common_parse(info, query):
     parse_bool(info, query, "primitive", qfield="is_primitive")
     parse_bool_unknown(info, query, "jacobian", qfield="has_jacobian")
     parse_bool_unknown(info, query, "polarizable", qfield="has_principal_polarization")
+    parse_bool(info, query, "cyclic", qfield="is_cyclic")
     parse_ints(info, query, "p_rank")
     parse_ints(info, query, "p_corank", qfield="p_rank_deficit")
     parse_ints(info, query, "angle_rank")
@@ -561,6 +588,14 @@ def common_parse(info, query):
     parse_ints(info, query, "hyp_cnt", qfield="hyp_count", name="Number of Hyperelliptic Jacobians")
     parse_ints(info, query, "twist_count")
     parse_ints(info, query, "max_twist_degree")
+    parse_primes(
+        info,
+        query,
+        "noncyclic_primes",
+        qfield="noncyclic_primes",
+        mode=info.get("noncyclic_primes_mode"),
+    )
+
     parse_ints(info, query, "size")
     parse_newton_polygon(info, query, "newton_polygon", qfield="slopes")
     parse_string_start(info, query, "initial_coefficients", qfield="poly_str", initial_segment=["1"])
@@ -680,7 +715,7 @@ abvar_columns = SearchColumns([
     ProcessedCol("number_fields", "av.fq.number_field", "Number fields", lambda nfs: ", ".join(nf_display_knowl(nf, field_pretty(nf)) for nf in nfs), default=False),
     SearchCol("galois_groups_pretty", "nf.galois_group", "Galois groups", download_col="galois_groups", default=False),
     SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw")],
-    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian"])
+    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian", "is_cyclic", "noncyclic_primes"])
 
 def abvar_postprocess(res, info, query):
     gals = set()

@@ -84,6 +84,11 @@ class AbvarFq_isoclass():
             dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
+        # New invariants: cyclicity and noncyclic primes
+        if "is_cyclic" not in dbdata:
+            dbdata["is_cyclic"] = None
+        if "noncyclic_primes" not in dbdata:
+            dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -232,9 +237,15 @@ class AbvarFq_isoclass():
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
         if self.has_principal_polarization != 0:
-            props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
+            props += [(
+                "Principally polarizable",
+                "yes" if self.has_principal_polarization == 1 else "no",
+            )]
         if self.has_jacobian != 0:
-            props += [("Contains a Jacobian", "yes" if self.has_jacobian == 1 else "no")]
+            props += [(
+                "Contains a Jacobian",
+                "yes" if self.has_jacobian == 1 else "no",
+            )]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
