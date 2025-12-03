@@ -2008,7 +2008,7 @@ class NFBound(ColTest):
             return True, None
         # For now, we just do not guarantee completeness for any degrees larger than 25.
         # TODO: improve this using Minkowski and Odlyzko bounds (which give us guarantees that there are no number fields
-        if n > 25:
+        if n is None or n > 25:
             return False, None
 
         r2, D, sign, rd, grd = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign"), NumberSet(query.get("rd")), NumberSet(query.get("grd"))
