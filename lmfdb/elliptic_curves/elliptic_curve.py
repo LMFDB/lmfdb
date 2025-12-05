@@ -190,7 +190,7 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
+        return r'Currently, the database includes {} {} over $\Q$ in {} {}, with {} at most {}.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
 
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
