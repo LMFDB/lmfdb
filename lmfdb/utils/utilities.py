@@ -596,8 +596,6 @@ def comma(x, sep=None, mathmode=True):
         x = '%s%s%03d' % (comma(x // 1000, sep, False), sep, (x % 1000))
     if mathmode:
         x = f"${x}$"
-    print("***DEBUG:", x)
-    if x=="$512{,}614$": assert(False)
     return x
 
 
