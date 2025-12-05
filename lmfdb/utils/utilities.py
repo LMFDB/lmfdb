@@ -594,11 +594,6 @@ def comma(x, sep=None, mathmode=True):
         x = f"${x}$"
     return x
 
-def latex_comma(x):
-    """
-    For latex we need to use braces around the commas to get the spacing right.
-    """
-    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
