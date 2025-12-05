@@ -579,9 +579,13 @@ def comma(x, sep=None, mathmode=True):
     CAUTION: this misbehaves if the input is not an integer.
 
     sep is an optional separator other than a comma
+    mathmode is a boolean which determines whether to include dollar signs 
+    and place curly braces around the commas (set to True by default)
 
-    Example:
-    >>> comma("12345")
+    Examples:
+    >>> comma(12345)
+    '$12{,}345$'
+    >>> comma(12345, mathmode=False)
     '12,345'
     """
     if sep is None:
@@ -592,6 +596,8 @@ def comma(x, sep=None, mathmode=True):
         x = '%s%s%03d' % (comma(x // 1000, sep, False), sep, (x % 1000))
     if mathmode:
         x = f"${x}$"
+    print("***DEBUG:", x)
+    if x=="$512{,}614$": assert(False)
     return x
 
 
