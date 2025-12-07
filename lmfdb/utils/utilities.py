@@ -579,7 +579,7 @@ def comma(x, sep=None, mathmode=True):
     CAUTION: this misbehaves if the input is not an integer.
 
     sep is an optional separator other than a comma
-    mathmode is a boolean which determines whether to include dollar signs 
+    mathmode is a boolean which determines whether to include dollar signs
     and place curly braces around the commas (set to True by default)
 
     Examples:
