@@ -546,7 +546,7 @@ class WebNewformSpace():
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
         template = r"<a href={url}>\({old}\)</a>\(^{{\oplus {mult}}}\)"
         return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, typ="new"),
-                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label=cremona_letter_code(i-1)),
+                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label_or_automorphic_type=cremona_letter_code(i-1)),
                                                   mult=mult)
                                   for N, i, conrey, mult in self.oldspaces)
 
@@ -725,11 +725,11 @@ class WebGamma1Space():
                               level=N, weight=self.weight)
             else:
                 url = url_for(".by_url_space_label",
-                              level=N, weight=self.weight, char_orbit_label="E")
+                              level=N, weight=self.weight, char_orbit_label_or_automorphic_type="E")
         elif form is None:
             if is_cuspidal:
                 url = url_for(".by_url_space_label",
-                              level=N, weight=self.weight, char_orbit_label=i)
+                              level=N, weight=self.weight, char_orbit_label_or_automorphic_type=i)
             else:
                 url = url_for(".by_url_eisenstein_space_label",
                               level=N, weight=self.weight, char_orbit_label_or_automorphic_type="E", char_orbit_label=i)

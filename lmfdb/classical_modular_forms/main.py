@@ -1176,7 +1176,7 @@ def dimension_space_postprocess(res, info, query):
         url_generator = url_generator_list
     elif query.get('char_order') == 1:
         def url_generator(N, k):
-            return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
+            return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label_or_automorphic_type="a")
     elif 'char_order' in query:
         url_generator = url_generator_list
     else:

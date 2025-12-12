@@ -23,6 +23,10 @@
     <td>\(=\)</td>
     <td> {{ space.display_character() | safe }} </td>
   </tr>
+  <tr>
+    <td> {{ KNOWL('cmf.cusp_form', title='Cuspidal') }}: </td>
+    <td>{% if space.is_cuspidal %}yes{% else %}no{% endif %}</td>
+  </tr>
   {% if space.char_orbit_index != 1 %}
   <tr>
     <td> {{ KNOWL('cmf.character', title='Character') }} {{ KNOWL('character.dirichlet.conductor', title='conductor') }}: </td>
