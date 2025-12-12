@@ -6,7 +6,7 @@ from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
-    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader)
+    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import parse_range3
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
@@ -640,8 +640,9 @@ def ctx_dirchar():
 
 
 @characters_page.route('/Dirichlet/random')
+@redirect_no_cache
 def random_Dirichletwebpage():
-    return redirect(url_for('.render_DirichletNavigation', search_type="Random"))
+    return url_for('.render_DirichletNavigation', search_type="Random")
 
 
 @characters_page.route('/Dirichlet/interesting')
