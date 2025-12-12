@@ -713,7 +713,8 @@ class WebNewform():
             return r'no (minimal twist has level %s)' % (self.minimal_twist.split('.')[0]) if self.minimal_twist else r'no'
 
     def display_newspace(self):
-        s = r'\(S_{%s}^{\mathrm{new}}('
+        e_or_s = "S" if self.is_cuspidal else "E"
+        s = r'\(' + e_or_s + '_{%s}^{\mathrm{new}}('
         if self.char_order == 1:
             s += r'\Gamma_0(%s))\)'
         else:
