@@ -717,7 +717,7 @@ class WebNewform():
 
     def display_newspace(self):
         e_or_s = "S" if self.is_cuspidal else "E"
-        s = r'\(' + e_or_s + '_{%s}^{\mathrm{new}}('
+        s = r'\(' + e_or_s + r'_{%s}^{\mathrm{new}}('
         if self.char_order == 1:
             s += r'\Gamma_0(%s))\)'
         else:

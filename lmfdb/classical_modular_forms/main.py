@@ -657,9 +657,9 @@ def url_for_label(label):
     keys = ['level', 'weight']
     keytypes = [POSINT_RE, POSINT_RE]
     has_aut_type = ('E' in slabel) or ('C' in slabel)
-    if has_aut_type:
+    if has_aut_type or (len(slabel) == 3):
         keys += ['char_orbit_label_or_automorphic_type']
-        keytypes += [AUTTYPE_RE]
+        keytypes += [ALPHA_RE]
     if (len(slabel) == 7) and has_aut_type:
         func = "cmf.by_url_eisenstein_embedded_newform_label"
     elif (len(slabel) == 6) and not has_aut_type:
@@ -680,8 +680,11 @@ def url_for_label(label):
         func = "cmf.by_url_level"
     else:
         return abort(404, "Invalid label")
-    keys += ['char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
-    keytypes += [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    if (len(slabel)!= 3):
+        keys += ['char_orbit_label'] 
+        keytypes += [ALPHA_RE]
+    keys += ['hecke_orbit', 'conrey_index', 'embedding']
+    keytypes += [ALPHA_RE, POSINT_RE, POSINT_RE]
     for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")
