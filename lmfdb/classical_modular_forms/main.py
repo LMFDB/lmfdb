@@ -40,6 +40,7 @@ from lmfdb.number_fields.number_field import poly_to_field_label
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
 AUTTYPE_RE = re.compile("[CE]")
+ALPHA_OR_AUTTYPE_RE =  re.compile("(^[a-z]+$)|[CE]")
 
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
@@ -659,7 +660,7 @@ def url_for_label(label):
     has_aut_type = ('E' in slabel) or ('C' in slabel)
     if has_aut_type or (len(slabel) == 3):
         keys += ['char_orbit_label_or_automorphic_type']
-        keytypes += [ALPHA_RE]
+        keytypes += [ALPHA_OR_AUTTYPE_RE]
     if (len(slabel) == 7) and has_aut_type:
         func = "cmf.by_url_eisenstein_embedded_newform_label"
     elif (len(slabel) == 6) and not has_aut_type:
