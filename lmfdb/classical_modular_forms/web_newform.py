@@ -301,6 +301,8 @@ class WebNewform():
         self.title = "Newform orbit %s" % (self.label)
 
         self.base_label = [str(s) for s in [self.level, self.weight]]
+        if not self.is_cuspidal:
+            self.base_label += ['E']
         self.ns1_label = '.'.join(self.base_label)
         self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
         self.ns_data = db.mf_newspaces_eis.lookup(self.ns_label)
