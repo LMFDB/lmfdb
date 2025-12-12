@@ -306,11 +306,12 @@ class WebNewform():
         self.ns1_label = '.'.join(self.base_label)
         self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
         self.ns_data = db.mf_newspaces_eis.lookup(self.ns_label)
+        self.automorphic_type = 'C' if self.is_cuspidal else 'E'
 
     # Breadcrumbs
     @property
     def bread(self):
-        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label": self.char_orbit_label,
+        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label_or_automorphic_type" : self.automorphic_type, "char_orbit_label": self.char_orbit_label,
                     "hecke_orbit": cremona_letter_code(self.hecke_orbit - 1)}
         if self.embedding_label is not None:
             kwds['embedding_label'] = self.embedding_label

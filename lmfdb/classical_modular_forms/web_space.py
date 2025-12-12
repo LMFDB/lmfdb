@@ -27,8 +27,9 @@ def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below
     links = [('level', 'Level %s', 'cmf.by_url_level'),
              ('weight', 'Weight %s', 'cmf.by_url_full_gamma1_space_label'),
-             ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_space_label'),
-             ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_newform_label'),
+             ('char_orbit_label_or_automorphic_type',  'Automorphic type %s', 'cmf.by_url_space_label'),
+             ('char_orbit_label', 'Character orbit %s', 'cmf.by_url_eisenstein_space_label'),
+             ('hecke_orbit', 'Newform orbit %s', 'cmf.by_url_eisenstein_newform_label'),
              ('embedding_label', 'Embedding %s', 'cmf.by_url_newform_conrey5')]
     bread = [('Modular forms', url_for('modular_forms')),
              ('Classical', url_for("cmf.index"))]
@@ -435,7 +436,8 @@ class WebNewformSpace():
             self.num_forms = None
 
         # Breadcrumbs
-        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label=self.char_orbit_label)
+        self.automorphic_type = 'C' if self.is_cuspidal else 'E'
+        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label_or_automorphic_type=self.automorphic_type, char_orbit_label=self.char_orbit_label)
 
         # Downloads
         self.downloads = [
@@ -644,7 +646,8 @@ class WebGamma1Space():
         self.properties.append(('Sturm bound',str(self.sturm_bound)))
         if self.trace_bound is not None:
             self.properties.append(('Trace bound',str(self.trace_bound)))
-        self.bread = get_bread(level=self.level, weight=self.weight)
+        self.automorphic_type = 'C' if self.is_cuspidal else 'E'
+        self.bread = get_bread(level=self.level, weight=self.weight, char_orbit_label_or_automorphic_type=self.automorphic_type)
         # Downloads
         self.downloads = [
             ('Trace form to text', url_for('cmf.download_traces', label=self.label)),
@@ -729,14 +732,14 @@ class WebGamma1Space():
                               level=N, weight=self.weight, char_orbit_label=i)
             else:
                 url = url_for(".by_url_eisenstein_space_label",
-                              level=N, weight=self.weight, automorphic_type="E", char_orbit_label=i)
+                              level=N, weight=self.weight, char_orbit_label_or_automorphic_type="E", char_orbit_label=i)
         else:
             if is_cuspidal:
                 url = url_for(".by_url_newform_label",
                               level=N, weight=self.weight, char_orbit_label=i, hecke_orbit=form)
             else:
                 url = url_for(".by_url_eisenstein_newform_label",
-                              level=N, weight=self.weight, automorphic_type="E", char_orbit_label=i, hecke_orbit=form)
+                              level=N, weight=self.weight, char_orbit_label_or_automorphic_type="E", char_orbit_label=i, hecke_orbit=form)
         return r"<a href={url}>{name}</a>".format(url=url, name=name)
 
     def oldspace_decomposition(self):
