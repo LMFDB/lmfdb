@@ -16,10 +16,10 @@ class RandomRedirectTest(LmfdbTest):
         random_routes = [
             '/NumberField/random',
             '/Groups/Abstract/random',
-            '/Groups/GL2/Q/random',
-            '/Groups/GL2/C/random',
+            '/Groups/GLnQ/random',
+            '/Groups/GLnC/random',
             '/Character/Dirichlet/random',
-            '/ModularForm/GL2/Q/holomorphic/random',
+            '/ModularForm/GL2/Q/holomorphic/random/',
             '/ModularForm/GL2/ImaginaryQuadratic/random',
             '/Motive/Hypergeometric/Q/random_family',
             '/Motive/Hypergeometric/Q/random_motive',
