@@ -15,14 +15,33 @@ class RandomRedirectTest(LmfdbTest):
         """
         random_routes = [
             '/NumberField/random',
-            '/Groups/Abstract/random',
-            '/Groups/GLnQ/random',
-            '/Groups/GLnC/random',
+            '/Variety/Abelian/Fq/random',
+            '/ArtinRepresentation/random',
+            '/Belyi/random',
+            '/ModularForm/GL2/ImaginaryQuadratic/random',
             '/Character/Dirichlet/random',
             '/ModularForm/GL2/Q/holomorphic/random/',
-            '/ModularForm/GL2/ImaginaryQuadratic/random',
+            '/ModularForm/GL2/Q/holomorphic/random_space/',
+            '/EllipticCurve/random/',
+            '/EllipticCurve/Q/random',
+            '/GaloisGroup/random',
+            '/Genus2Curve/Q/random/',
+            '/Groups/Abstract/random',
+            '/Groups/GLnC/random',
+            '/Groups/GLnQ/random',
+            '/HigherGenus/C/Aut/random',
+            '/ModularForm/GL2/TotallyReal/random',
+            '/random',  # homepage random
             '/Motive/Hypergeometric/Q/random_family',
             '/Motive/Hypergeometric/Q/random_motive',
+            '/Lattice/random',
+            '/L/random',
+            '/padicField/random',
+            '/ModularForm/GL2/Q/Maass/random',
+            '/ModLGaloisRepresentation/Q/random/',
+            '/ModularCurve/Q/random/',
+            '/SatoTateGroup/random',
+            '/ModularForm/GSp/Q/random',
         ]
 
         for route in random_routes:
@@ -42,6 +61,11 @@ class RandomRedirectTest(LmfdbTest):
             '/NumberField/random',
             '/Groups/Abstract/random',
             '/Character/Dirichlet/random',
+            '/EllipticCurve/Q/random',
+            '/L/random',
+            '/GaloisGroup/random',
+            '/Lattice/random',
+            '/Belyi/random',
         ]
 
         for route in random_routes:
