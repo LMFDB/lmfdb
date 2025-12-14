@@ -8,43 +8,45 @@ from lmfdb.tests import LmfdbTest
 class RandomRedirectTest(LmfdbTest):
     """Test that random routes use correct redirect behavior"""
 
+    # Dictionary mapping all random routes to expected text in the final page
+    # This is used across all tests to ensure consistency
+    RANDOM_ROUTES = {
+        '/NumberField/random': 'Discriminant',
+        '/Variety/Abelian/Fq/random': 'Abelian variety',
+        '/ArtinRepresentation/random': 'Artin representation',
+        '/Belyi/random': 'Belyi map',
+        '/ModularForm/GL2/ImaginaryQuadratic/random': 'Bianchi modular form',
+        '/Character/Dirichlet/random': 'Dirichlet character',
+        '/ModularForm/GL2/Q/holomorphic/random/': 'Newform',
+        '/ModularForm/GL2/Q/holomorphic/random_space/': 'Newspace',
+        '/EllipticCurve/random/': 'Elliptic curve',
+        '/EllipticCurve/Q/random': 'Elliptic curve',
+        '/GaloisGroup/random': 'Galois group',
+        '/Genus2Curve/Q/random/': 'Genus 2 curve',
+        '/Groups/Abstract/random': 'Group information',
+        '/Groups/GLnC/random': 'GL',
+        '/Groups/GLnQ/random': 'GL',
+        '/HigherGenus/C/Aut/random': 'Family of higher genus curves',
+        '/ModularForm/GL2/TotallyReal/random': 'Hilbert modular form',
+        '/random': 'L-functions',  # homepage random redirects to various objects
+        '/Motive/Hypergeometric/Q/random_family': 'Hypergeometric motive family',
+        '/Motive/Hypergeometric/Q/random_motive': 'Hypergeometric motive',
+        '/Lattice/random': 'Lattice',
+        '/L/random': 'L-function',
+        '/padicField/random': 'p-adic field',
+        '/ModularForm/GL2/Q/Maass/random': 'Maass form',
+        '/ModLGaloisRepresentation/Q/random/': 'mod-ℓ Galois representation',
+        '/ModularCurve/Q/random/': 'Modular curve',
+        '/SatoTateGroup/random': 'Sato-Tate group',
+        '/ModularForm/GSp/Q/random': 'Siegel modular form',
+    }
+
     def test_random_redirect_status_code(self):
         """
         Test that random routes return 307 (Temporary Redirect) status code
         instead of 301 (Permanent Redirect) to prevent browser caching.
         """
-        random_routes = [
-            '/NumberField/random',
-            '/Variety/Abelian/Fq/random',
-            '/ArtinRepresentation/random',
-            '/Belyi/random',
-            '/ModularForm/GL2/ImaginaryQuadratic/random',
-            '/Character/Dirichlet/random',
-            '/ModularForm/GL2/Q/holomorphic/random/',
-            '/ModularForm/GL2/Q/holomorphic/random_space/',
-            '/EllipticCurve/random/',
-            '/EllipticCurve/Q/random',
-            '/GaloisGroup/random',
-            '/Genus2Curve/Q/random/',
-            '/Groups/Abstract/random',
-            '/Groups/GLnC/random',
-            '/Groups/GLnQ/random',
-            '/HigherGenus/C/Aut/random',
-            '/ModularForm/GL2/TotallyReal/random',
-            '/random',  # homepage random
-            '/Motive/Hypergeometric/Q/random_family',
-            '/Motive/Hypergeometric/Q/random_motive',
-            '/Lattice/random',
-            '/L/random',
-            '/padicField/random',
-            '/ModularForm/GL2/Q/Maass/random',
-            '/ModLGaloisRepresentation/Q/random/',
-            '/ModularCurve/Q/random/',
-            '/SatoTateGroup/random',
-            '/ModularForm/GSp/Q/random',
-        ]
-
-        for route in random_routes:
+        for route in self.RANDOM_ROUTES:
             with self.subTest(route=route):
                 response = self.tc.get(route, follow_redirects=False)
                 self.assertEqual(
@@ -57,18 +59,7 @@ class RandomRedirectTest(LmfdbTest):
         """
         Test that random routes have Cache-Control headers set to prevent caching.
         """
-        random_routes = [
-            '/NumberField/random',
-            '/Groups/Abstract/random',
-            '/Character/Dirichlet/random',
-            '/EllipticCurve/Q/random',
-            '/L/random',
-            '/GaloisGroup/random',
-            '/Lattice/random',
-            '/Belyi/random',
-        ]
-
-        for route in random_routes:
+        for route in self.RANDOM_ROUTES:
             with self.subTest(route=route):
                 response = self.tc.get(route, follow_redirects=False)
                 cache_control = response.headers.get('Cache-Control', '')
@@ -88,15 +79,7 @@ class RandomRedirectTest(LmfdbTest):
         Test that random routes actually redirect to valid pages.
         This ensures the decorator doesn't break functionality.
         """
-        random_routes_and_expected_content = [
-            ('/NumberField/random', 'Discriminant'),
-            ('/Groups/Abstract/random', 'Group information'),
-            ('/Character/Dirichlet/random', 'Dirichlet character'),
-            ('/Motive/Hypergeometric/Q/random_family', 'Hypergeometric motive family'),
-            ('/Motive/Hypergeometric/Q/random_motive', 'Local information'),
-        ]
-
-        for route, expected_text in random_routes_and_expected_content:
+        for route, expected_text in self.RANDOM_ROUTES.items():
             with self.subTest(route=route):
                 response = self.tc.get(route, follow_redirects=True)
                 self.assertEqual(
