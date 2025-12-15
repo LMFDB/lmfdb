@@ -48,6 +48,7 @@ from lmfdb.utils import (
     pos_int_and_factor,
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
+    redirect_no_cache,
 )
 from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
 from lmfdb.utils.interesting import interesting_knowls
@@ -841,11 +842,10 @@ def dynamic_statistics():
 
 
 @abstract_page.route("/random")
+@redirect_no_cache
 def random_abstract_group():
     label = db.gps_groups.random(projection="label")
-    response = make_response(redirect(url_for(".by_label", label=label), 307))
-    response.headers["Cache-Control"] = "no-cache, no-store"
-    return response
+    return url_for(".by_label", label=label)
 
 
 @abstract_page.route("/interesting")
