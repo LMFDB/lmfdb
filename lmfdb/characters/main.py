@@ -22,7 +22,6 @@ from lmfdb.characters.web_character import (
     WebSmallDirichletGroup,
     WebDBDirichletOrbit
 )
-from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
 from lmfdb import db
 
