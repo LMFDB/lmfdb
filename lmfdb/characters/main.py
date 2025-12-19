@@ -22,7 +22,6 @@ from lmfdb.characters.web_character import (
     WebSmallDirichletGroup,
     WebDBDirichletOrbit
 )
-from lmfdb.characters.ListCharacters import get_character_modulus
 from lmfdb.characters import characters_page
 from lmfdb import db
 
@@ -312,24 +311,6 @@ def dirichlet_character_search(info, query):
 @characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
-    try:
-        if 'modbrowse' in request.args:
-            arg = request.args['modbrowse']
-            arg = arg.split('-')
-            modulus_start = int(arg[0])
-            modulus_end = int(arg[1])
-            info = {'args': request.args}
-            info['title'] = 'Dirichlet characters of modulus ' + str(modulus_start) + '-' + str(modulus_end)
-            info['bread'] = bread('Modulus')
-            info['learnmore'] = learn()
-            headers, entries, rows, cols = get_character_modulus(modulus_start, modulus_end, limit=8)
-            info['entries'] = entries
-            info['rows'] = list(range(modulus_start, modulus_end + 1))
-            info['cols'] = sorted({r[1] for r in entries})
-            return render_template("ModulusList.html", **info)
-    except (ValueError, IndexError) as err:
-        flash_error("Error raised in parsing: %s", err)
-
     if request.args:
         # hidden_search_type for prev/next buttons
         info = to_dict(request.args, search_array=DirichSearchArray())
