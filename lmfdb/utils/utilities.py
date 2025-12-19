@@ -579,9 +579,13 @@ def comma(x, sep=None, mathmode=True):
     CAUTION: this misbehaves if the input is not an integer.
 
     sep is an optional separator other than a comma
+    mathmode is a boolean which determines whether to include dollar signs
+    and place curly braces around the commas (set to True by default)
 
-    Example:
-    >>> comma("12345")
+    Examples:
+    >>> comma(12345)
+    '$12{,}345$'
+    >>> comma(12345, mathmode=False)
     '12,345'
     """
     if sep is None:
@@ -594,11 +598,6 @@ def comma(x, sep=None, mathmode=True):
         x = f"${x}$"
     return x
 
-def latex_comma(x):
-    """
-    For latex we need to use braces around the commas to get the spacing right.
-    """
-    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
