@@ -32,7 +32,7 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_modbrowse(self):
         W = self.tc.get('/Character/Dirichlet/?modulus=41-60')
-        assert 'Dirichlet/45/11' in W.get_data(as_text=True)
+        assert '46.d' in W.get_data(as_text=True)
 
     def test_search(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4')
