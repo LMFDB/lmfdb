@@ -2608,7 +2608,7 @@ class WebAbstractGroup(WebObj):
     # outer automorphism group
     def show_outer_group(self):
         if self.live():
-            return f"Group of order {self.order_order}"
+            return f"Group of order {self.outer_order}"
         tex = self.outer_tex
         if self.outer_group is None:
             if self.outer_order is None:
