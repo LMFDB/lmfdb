@@ -2335,7 +2335,7 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Lie":
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
-            code_cmd = " ".join([self.create_lie_type_snippet(rep['family']) for rep in rdata])
+            code_cmd = " ".join([self.create_lie_type_snippet((rep['family'], rep['d'], rep['q'])) for rep in rdata])
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr><tr><td colspan="6">{code_cmd}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
@@ -2962,17 +2962,18 @@ class WebAbstractGroup(WebObj):
 
             # Prioritise displaying the first Lie type representation which is implemented in the language
             for lie_rep in self.lie_representations:
-                code[lie_rep['family']] = dict()
                 nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
+                lie_rep_key = (lie_rep['family'], nLie, qLie)
+                code[lie_rep_key] = dict()
 
-                code[lie_rep['family']]['magma'] = "G := "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))+";"
+                code[lie_rep_key]['magma'] = "G := "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))+";"
                 if magma_top_lie is None:
-                    magma_top_lie = code[lie_rep['family']]['magma']
+                    magma_top_lie = code[lie_rep_key]['magma']
 
                 if lie_rep['family'] in gap_families:
-                    code[lie_rep['family']]['gap'] = code[lie_rep['family']]['magma']
+                    code[lie_rep_key]['gap'] = code[lie_rep_key]['magma']
                     if (gap_top_lie is None) or gap_used_lie_gens:
-                        gap_top_lie = code[lie_rep['family']]['gap']
+                        gap_top_lie = code[lie_rep_key]['gap']
                         gap_used_lie_gens = False
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
@@ -2987,9 +2988,9 @@ class WebAbstractGroup(WebObj):
                         gap_top_lie, gap_used_lie_gens = gap_lie_code_snippet, True
 
                 if lie_rep['family'] in sage_families:
-                    code[lie_rep['family']]['sage'] = "G = "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
+                    code[lie_rep_key]['sage'] = "G = "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
                     if (sage_top_lie is None) or sage_used_lie_gens:
-                        sage_top_lie = code[lie_rep['family']]['sage']
+                        sage_top_lie = code[lie_rep_key]['sage']
                         sage_used_lie_gens = False
                 elif "gens" in lie_rep:
                     lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
@@ -3007,12 +3008,12 @@ class WebAbstractGroup(WebObj):
         if (gap_top_lie is not None) and gap_used_lie_gens:
             for lie_rep in self.lie_representations:
                 if "gens" in lie_rep:
-                    code[lie_rep['family']]['gap'] = gap_top_lie
+                    code[(lie_rep['family'],lie_rep['d'],lie_rep['q'])]['gap'] = gap_top_lie
                     break
         if (sage_top_lie is not None) and sage_used_lie_gens:
             for lie_rep in self.lie_representations:
                 if "gens" in lie_rep:
-                    code[lie_rep['family']]['sage'] = sage_top_lie
+                    code[(lie_rep['family'],lie_rep['d'],lie_rep['q'])]['sage'] = sage_top_lie
                     break
 
         # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
