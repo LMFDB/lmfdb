@@ -460,7 +460,11 @@ class WebNewformSpace():
             self.dim_str = r"\(%s\)" % (self.dim)
         self.title = r"Space of modular forms of level %s, weight %s, and %s" % (self.level, self.weight, character_str)
         gamma1_link = '/ModularForm/GL2/Q/holomorphic/%d/%d' % (self.level, self.weight)
-        self.friends = [('Newspace %d.%d' % (self.level, self.weight), gamma1_link)]
+        gamma1_str = 'Newspace %d.%d' % (self.level, self.weight)
+        if not self.is_cuspidal:
+            gamma1_str += '.E'
+            gamma1_link += '/E'
+        self.friends = [(gamma1_str, gamma1_link)]
 
     @staticmethod
     def by_label(label):
