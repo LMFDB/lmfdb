@@ -267,6 +267,15 @@ def format_model_to_code(formatted_model_data):
         result = f"P< {var_string}> := ProjectiveSpace(Rationals(), {number_variables - 1});\nX := Curve(P, {eqnsS});"
         return result
 
+    elif model_type == 5:
+        ycoeffs = list(eqns[0])
+        if ycoeffs[2] == 1:
+            ycoeffs[1] *= -1
+            ycoeffs[0] *= -1
+        h = list(-ycoeffs[1])
+        f = list(ycoeffs[0])
+        result = f"X := HyperellipticCurve([{h}, {f}]);"
+        return result
     else:
         return None
 
@@ -1166,7 +1175,6 @@ class WebModCurve(WebObj):
                 code[f"model_{i}"] = {
                     'magma': [model_code]
                 }
-            print(i, model_code)
         code['show'] = { lang:'' for lang in code['prompt'] }
 
         return code
