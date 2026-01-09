@@ -335,7 +335,7 @@ $(function() {
 
 function update_start_by_count_and_submit_form(sign) {
   var startelem = $('form.re-search input[name=start]');
-  var count = parseInt($('form.re-search input[name=count]').val());
+  var count = parseInt($('form.re-search input[name=count]').val());;
   var newstart = parseInt(startelem.val())+sign*count;
   if(newstart<0)
     newstart = 0;
@@ -355,18 +355,22 @@ function increase_start_by_count_and_submit_form() {
 function get_count_of_results() {
     var address = window.location.href;
     $("#result-count").html("computing...");
-    $("#download-msg").html("Computing number of results...");
+    $("span.download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
-    address += "&result_count=1";
+    if (address.includes("?")) {
+        address += "&result_count=1";
+    } else {
+        address += "?result_count=1";
+    }
     $.ajax({url: address, success: get_count_callback});
 };
 
 function get_count_callback(res) {
     $('#result-count').html(res['nres']);
     $('#result-count2').html(res['nres']);
-    $("#download-msg").html("");
-    $("#download-form").show();
+    $("span.download-msg").html("");
+    $("span.download-form").show();
 };
 
 /**
@@ -574,7 +578,7 @@ function control_sort(S) {
   S.selectedIndex = -1;
 };
 
-function update_download_url(link) {
+function update_download_url(link, downid) {
   // console.log("before modification", link.href);
   var newval;
   var url = new URL(link.href);
@@ -588,11 +592,13 @@ function update_download_url(link) {
       params.set(keys[i], newval);
     }
   }
-  newval = $("input[name=download_row_count]").val();
+  newval = $("input[name=download_row_count"+downid+"]").val();
   console.log("newval", newval);
-  if (newval.length > 0) {
+  if (newval.length > 0 && newval != "all") {
     params.set("download_row_count", newval);
   }
+  newval = $('#downlang-select'+downid).find(":selected").val();
+  params.set("Submit", newval);
   url.search = params.toString();
   link.href = url.href;
   console.log(link.href);

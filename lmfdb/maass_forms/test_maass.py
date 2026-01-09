@@ -36,17 +36,20 @@ class MaassTest(LmfdbTest):
 
     def test_search_R_40_50(self):
         L = self.tc.get("/ModularForm/GL2/Q/Maass/?spectral_parameter=40-50")
-        assert "40.54335" in L.get_data(as_text=True) and "49.961696" in L.get_data(as_text=True)
+        assert "40.54335" in L.get_data(as_text=True) and "49.68352" in L.get_data(as_text=True)
 
     def test_search_R_1234(self):
         L = self.tc.get("/ModularForm/GL2/Q/Maass/?spectral_parameter=12.34")
         assert "12.34000" in L.get_data(as_text=True)
 
     def test_form_1234(self):
-        L = self.tc.get("/ModularForm/GL2/Q/Maass/541192fdacf756021f2c6e39")
+        L = self.tc.get("/ModularForm/GL2/Q/Maass/19.205")
+        assert "coefficients" in L.get_data(as_text=True) and "-1.236693" in L.get_data(as_text=True) and "1.858211" in L.get_data(as_text=True)
+
+    def test_form_1234_long_label(self):
+        L = self.tc.get("/ModularForm/GL2/Q/Maass/19.0.1.205.1")
         assert "coefficients" in L.get_data(as_text=True) and "-1.236693" in L.get_data(as_text=True) and "1.858211" in L.get_data(as_text=True)
 
     def test_underlying_data(self):
-        data = self.tc.get("/ModularForm/GL2/Q/Maass/data/54119c4cacf7560af58dd8ba").get_data(as_text=True)
-        assert ("maass_newforms" in data and "symmetry" in data
-                and "maass_portraits" in data and "data:image/png;base64" in data)
+        data = self.tc.get("/ModularForm/GL2/Q/Maass/data/42.42").get_data(as_text=True)
+        assert ("maass_rigor" in data and "symmetry" in data)

@@ -42,7 +42,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     typeset = f'<span class="tset-container">{typeset}</span>'
     # clean white space
     raw = re.sub(r'\s+', ' ', str(raw).strip())
-    raw = f'<textarea rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
+    raw = f'<textarea readonly rows="1" cols="{len(raw)}" class="raw-container">{raw}</textarea>'
 
     # the doublesclick behavior is set on load in javascript
     out = f"""
@@ -56,12 +56,12 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
     </span>
     <span class="raw-tset-toggle" onclick="iconrawtset(this)">
         <img alt="Toggle raw display"
-        class="tset-icon"
+        class="tset-icon">
     </span>
 </span>"""
     return out
 
-def display_knowl(kid, title=None, kwargs={}):
+def display_knowl(kid, title=None, kwargs={}, strong=False):
     """
     Allows for the construction of knowls from python code
     (to be displayed using the ``safe`` flag in jinja);
@@ -78,6 +78,8 @@ def display_knowl(kid, title=None, kwargs={}):
             if title is None:
                 return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
             else:
+                if strong:
+                    title = f"<strong>{title}</strong>"
                 return f"""<a href="{ url_for('knowledge.edit', ID=kid) }"><span class="knowl knowl-error">{title}</span></a>"""
         elif title is None:
             return f"""<span class="knowl knowl-error">'{kid}'</span>"""
@@ -90,6 +92,8 @@ def display_knowl(kid, title=None, kwargs={}):
             else:
                 title = ktitle
         if len(title) > 0:
+            if strong:
+                title = f"<strong>{title}</strong>"
             return '<a title="{0} [{1}]" knowl="{1}" kwargs="{2}">{3}</a>'.format(ktitle, kid, urlencode(kwargs), title)
         else:
             return ''
@@ -113,11 +117,14 @@ def web_latex(x, enclose=True):
     return rf"\( {latex(x)} \)" if enclose else f" {latex(x)} "
 
 
-def compress_int(n, cutoff=15, sides=2):
+def compress_int(n, cutoff=15, sides=2, negative_space=True):
     res = str(n)
     minus_width = 1 if '-' in res else 0
     if len(res) > cutoff+minus_width:
-        short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        if negative_space:
+            short = res[:sides + minus_width] + r'\!\cdots\!' + res[-sides:]
+        else:
+            short = res[:sides + minus_width] + r'\cdots ' + res[-sides:]
         return short, True
     else:
         return res, False
@@ -133,7 +140,7 @@ def bigint_knowl(n, cutoff=20, max_width=70, sides=2):
     short, shortened = compress_int(n, cutoff=cutoff, sides=sides)
     if shortened:
         lng = r"<div style='word-break: break-all'>%s</div>" % n
-        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
+        return r'<a title="[bigint]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>' % (lng, short)
     else:
         return r'\(%s\)' % n
 
@@ -190,7 +197,7 @@ def bigpoly_knowl(f, nterms_cutoff=8, bigint_cutoff=12, var='x'):
             else:
                 short += r" - \cdots"
 #        return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(lng, short)
-        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>'%(lng,short)
+        return r'<a title=&quot;[poly]&quot; knowl=&quot;dynamic_show&quot; kwargs=&quot;%s&quot;>\(%s\)</a>' % (lng,short)
     else:
         return lng
 
@@ -231,17 +238,17 @@ def pos_int_and_factor(n, factor_base=None):
     n = ZZ(n)
     if factor_base:
         factors = [(p, ZZ(n).valuation(p)) for p in factor_base]
-        factors = [(z[0],z[1]) for z in factors if z[1]>0]
+        factors = [(z[0], z[1]) for z in factors if z[1] > 0]
 
         def power_prime(p, exponent):
             if exponent == 1:
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        latexfactors = r" \cdot ".join(power_prime(p, val) for (p, val) in factors)
+        latexfactors = r" \cdot ".join(power_prime(p, val) for p, val in factors)
     else:
         factors = n.factor()
-        latexfactors=latex(factors)
+        latexfactors = latex(factors)
     if len(factors) == 1 and factors[0][1] == 1:
         return bigint_knowl(n, sides=3)
     else:
@@ -258,14 +265,14 @@ def polyquo_knowl(f, disc=None, unit=1, cutoff=None):
             quo += r" + \cdots"
         else:
             quo += r" - \cdots"
-    short = r'\mathbb{Q}[x]/(%s)'%(quo)
+    short = r'\mathbb{Q}[x]/(%s)' % (quo)
     long = r'Defining polynomial: %s' % escape(raw_typeset_poly(f))
     if disc is not None:
         if isinstance(disc, list):
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (factor_base_factorization_latex(disc))
         else:
             long += '\n<br>\nDiscriminant: \\(%s\\)' % (Factorization(disc, unit=unit)._latex_())
-    return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>'%(long, short)
+    return r'<a title="[poly]" knowl="dynamic_show" kwargs="%s">\(%s\)</a>' % (long, short)
 
 
 def web_latex_factored_integer(x, enclose=True, equals=False):
@@ -368,7 +375,6 @@ def web_latex_split_on_pm(x):
     return A
     # return web_latex_split_on(x)
 
-
 def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     r"""
     Convert input into a latex string, with splits into separate latex strings
@@ -409,35 +415,39 @@ def web_latex_split_on_re(x, r='(q[^+-]*[+-])'):
     A = A.replace(r'+\) \(O', r'+O')
     return A
 
-
-def compress_polynomial(poly, threshold, decreasing=True):
+def compress_multipolynomial(poly, threshold=100, decreasing=True):
+    R = poly.parent().base_ring()
+    assert R is ZZ
     if poly == 0:
         return '0'
     plus = r" + "
     minus = r" - "
-    var = poly.parent().gen()
-
-    d = 0 if decreasing else poly.degree()
-    assert poly[d] != 0 or decreasing
-    while poly[d]  == 0: # we only enter the loop if decreasing=True
-        d += 1
-    lastc = poly[d]
     cdots = r" + \cdots "
-    tsetend = plus if lastc > 0 else minus
-    short, shortened = compress_int(abs(lastc))
-    if abs(lastc) != 1 or d == 0:
-        tsetend += short
 
+    monomials = sorted(poly.monomials())
+    if decreasing:
+        monomials.reverse()
+    coefficients = [poly.monomial_coefficient(m) for m in monomials]
+    # figure out how much space the first and last coefficient take
+
+    last_coeff = coefficients[-1]
+    last_monomial = monomials[-1]
+    # tsetend is the typeset code coming from the last term
+    tsetend = plus if last_coeff > 0 else minus
+    if abs(last_coeff) != 1 or last_monomial == 1:
+        short, shortened = compress_int(abs(last_coeff))
+        tsetend += short
     monomial_length = 0
-    if d > 0:
-        monomial = latex(var**d)
+    if last_monomial != 1:
+        monomial = latex(last_monomial)
         tsetend += monomial
         monomial_length += len(monomial)
 
     tset = ""
-    for n in (reversed(range(d + 1, poly.degree() + 1)) if decreasing else range(d)):
-        c = poly[n]
-        if tset and len(tset) + len(tsetend) - monomial_length > threshold:
+    for c, m in zip(coefficients[:-1], monomials[:-1]):
+        #if tset and len(tset) + len(tsetend) - monomial_length > threshold:
+        if tset and len(tset) + len(tsetend) > threshold:
+
             tset += cdots
             break
 
@@ -457,10 +467,11 @@ def compress_polynomial(poly, threshold, decreasing=True):
         if abs(c) != 1:
             tset += compress_int(abs(c))[0] + " "
 
-        if n >= 1:
-            monomial = latex(var**n)
-        else:
+        if m == 1:
             monomial = "1" if abs(c) == 1 else ""
+        else:
+            monomial = latex(m)
+
         monomial_length += len(monomial)
         tset += monomial
 
@@ -469,13 +480,15 @@ def compress_polynomial(poly, threshold, decreasing=True):
         tset = tset[len(plus):]
     return tset
 
+def compress_polynomial(poly, threshold, decreasing=True):
+    return compress_multipolynomial(poly, threshold, decreasing=decreasing)
+
 def raw_typeset_int(n, cutoff=80, sides=3, extra=''):
     """
     Raw/typeset for integers with configurable parameters
     """
     compv, compb = compress_int(n, cutoff=cutoff, sides=sides)
     return raw_typeset(n, rf'\({compv}\)', extra=extra, compressed=compb)
-
 
 def raw_typeset_poly(coeffs,
                      denominator=1,
@@ -581,7 +594,7 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
 
 
 def raw_typeset_qexp(coeffs_list,
-                     compress_threshold=100,
+                     compress_threshold=200,
                      coeff_compress_threshold=30,
                      var=r"\beta",
                      final_rawvar='b',
@@ -649,7 +662,7 @@ def raw_typeset_qexp(coeffs_list,
         raw += r
         if add_to_tset:
             tset += t
-        if add_to_tset and "cdots" in tset:
+        if add_to_tset and (len(tset) > compress_threshold):
             add_to_tset = False
             lastt = None
     else:
@@ -677,9 +690,9 @@ def compress_poly_Q(rawpoly,
     d = len(coefflist)
 
     def frac_string(frac):
-        if frac.denominator()==1:
+        if frac.denominator() == 1:
             return compress_int(frac.numerator())[0]
-        return r'\frac{%s}{%s}'%(compress_int(frac.numerator())[0], compress_int(frac.denominator())[0])
+        return r'\frac{%s}{%s}' % (compress_int(frac.numerator(), negative_space=False)[0], compress_int(frac.denominator(), negative_space=False)[0])
 
     tset = ''
     for j in range(1, d + 1):
@@ -702,29 +715,30 @@ def compress_poly_Q(rawpoly,
 
 # copied here from hilbert_modular_forms.hilbert_modular_form as it
 # started to cause circular imports:
-def teXify_pol(pol_str):  # TeXify a polynomial (or other string containing polynomials)
+greek_re = re.compile(r"\b(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)\b")
+subscript_re = re.compile(r"([A-Za-z]+)(\d+)")
+rat_re = re.compile(r"\b(\d+)/(\d+)\b")
+exp_re = re.compile(r"\^(-\d+|\d\d+)\b")
+def teXify_pol(pol_str, greek_vars=False, subscript_vars=False):  # TeXify a polynomial (or other string containing polynomials)
     if not isinstance(pol_str, str):
         pol_str = str(pol_str)
-    o_str = pol_str.replace('*', '')
-    ind_mid = o_str.find('/')
-    while ind_mid != -1:
-        ind_start = ind_mid - 1
-        while ind_start >= 0 and o_str[ind_start] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_start -= 1
-        ind_end = ind_mid + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '\\frac{' + o_str[ind_start + 1:ind_mid] + '}{' + o_str[
-            ind_mid + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_mid = o_str.find('/')
 
-    ind_start = o_str.find('^')
-    while ind_start != -1:
-        ind_end = ind_start + 1
-        while ind_end < len(o_str) and o_str[ind_end] in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
-            ind_end += 1
-        o_str = o_str[:ind_start + 1] + '{' + o_str[ind_start + 1:ind_end] + '}' + o_str[ind_end:]
-        ind_start = o_str.find('^', ind_end)
+    if greek_vars:
+        # Add backslashes to greek variables
+        pol_str = greek_re.sub(r"\\\g<1>", pol_str)
+
+    if subscript_vars:
+        # If digits directly follow letter, make them subscripts
+        pol_str = subscript_re.sub(r"\g<1>_{\g<2>}", pol_str)
+
+    # Remove explicit multiplication symbols
+    o_str = pol_str.replace('*', ' ')
+
+    # Make a/b into a latex fraction when a and b are numbers
+    o_str = rat_re.sub(r"\\frac{\g<1>}{\g<2>}", o_str)
+
+    # Wrap negative and multidigit exponents in braces
+    o_str = exp_re.sub(r"^{\g<1>}", o_str)
 
     return o_str
 
@@ -784,15 +798,16 @@ def sparse_cyclotomic_to_latex(n, dat):
         # Now the coefficient
 
         if p[0] == 1:
-            ans += '+'  + zpart
+            ans += '+' + zpart
         elif p[0] == -1:
-            ans += '-'  + zpart
+            ans += '-' + zpart
         else:
-            ans += '{:+d}'.format(p[0])  + zpart
+            ans += '{:+d}'.format(p[0]) + zpart
     ans = ans.lstrip("+")
     if ans == '':
         return '0'
     return ans
+
 
 def sparse_cyclotomic_to_mathml(n, dat):
     r"""

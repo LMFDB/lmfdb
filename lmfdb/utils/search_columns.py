@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This file includes classes defining how the columns on search result pages display,
 as well as how they create content in a downloaded file.  There are two kinds of classes:
@@ -19,6 +18,7 @@ The three main entry points to ``SearchCol`` are
   (in the case of column groups).
 """
 
+import re
 from .web_display import display_knowl
 from lmfdb.utils import coeff_to_poly
 from sage.all import Rational, latex
@@ -59,7 +59,7 @@ class SearchCol:
       and the default key used when extracting data from a database record.
     - ``knowl`` -- a knowl identifier, for displaying the column header as a knowl
     - ``title`` -- the string shown for the column header, also included when describing the column
-      in a download file.
+      in a download file.  Alternatively, you can provide a function of info that produces such a string.
     - ``default`` -- either a boolean or a function taking an info dictionary as input and returning
       a boolean.  In either case, this determines whether the column is displayed initially.  See
       the ``get_default_func`` above.
@@ -99,7 +99,12 @@ class SearchCol:
         self.knowl = knowl
         self.title = title
         if short_title is None:
-            short_title = None if title is None else title.lower()
+            if title is None:
+                short_title = None
+            elif isinstance(title, str):
+                short_title = title.lower()
+            else:
+                def short_title(info): return title(info).lower()
         self.short_title = short_title
         self.default = get_default_func(default, name)
         self.mathmode = mathmode
@@ -179,13 +184,17 @@ class SearchCol:
             s = f"${s}$"
         return s
 
-    def display_knowl(self):
+    def display_knowl(self, info):
         """
         Displays the column header contents.
         """
+        if isinstance(self.title, str):
+            title = self.title
+        else:
+            title = self.title(info)
         if self.knowl:
-            return display_knowl(self.knowl, self.title)
-        return self.title
+            return display_knowl(self.knowl, title)
+        return title
 
     def show(self, info, rank=None):
         """
@@ -230,7 +239,7 @@ class SpacerCol(SearchCol):
     def display(self, rec):
         return ""
 
-    def display_knowl(self):
+    def display_knowl(self, info):
         return ""
 
     def show(self, info, rank=None):
@@ -258,6 +267,9 @@ class FloatCol(MathCol):
 
     def get(self, rec):
         val = self._get(rec)
+        if val == "":
+            # null value
+            return ""
         # We mix string processing directives so that we can use variable precision
         return f"%.{self.prec}f" % val
 
@@ -365,7 +377,7 @@ class ProcessedCol(SearchCol):
 
 class ProcessedLinkCol(ProcessedCol):
     """
-    These columns allow for funtions to be applied to the contents retrieved from the database before generating
+    These columns allow for functions to be applied to the contents retrieved from the database before generating
     a link.  They take three additional inputs:
 
     - ``url_func`` -- a function producing the url from the contents
@@ -390,7 +402,7 @@ class MultiProcessedCol(SearchCol):
 
     - ``inputs`` -- a list of column names from the search table (or that have been created in a postprocessing step)
     - ``func`` -- a function taking as input the inputs from a given row and producing a value to be displayed
-    - ``apply_download`` -- either a boolean (determing whether the function should be applied when
+    - ``apply_download`` -- either a boolean (determining whether the function should be applied when
       downloading), or a function that is applied instead when downloading.
 
     Note that ``download_col`` is still available, and provides an alternative to the use of ``apply_download``.
@@ -454,31 +466,35 @@ class ColGroup(SearchCol):
 
     def __init__(self, name, knowl, title, subcols,
                  contingent=lambda info: True, orig=None,
-                 align="center", **kwds):
+                 align="center", download_together=False, **kwds):
         if orig is None:
             orig = sum([sub.orig for sub in subcols], [])
         super().__init__(name, knowl, title, align=align, orig=orig, contingent=contingent, **kwds)
         self.subcols = subcols
+        self.download_together = download_together
         # A more complicated grouping could add more header rows, but the examples we have only need 2
         self.height = 2
 
     def show(self, info, rank=None):
         if self.contingent(info):
-            if callable(self.subcols):
-                subcols = self.subcols(info)
-            else:
-                subcols = self.subcols
-            n = 0
-            for sub in subcols:
-                if sub.name != self.name and "colgroup" not in sub.th_class:
-                    sub.th_class += f" colgroup-{self.name}"
-                if sub.default(info):
-                    n += 1
-            self.th_content = f" colspan={n}"
-            if rank is None or rank > 0:
-                yield from subcols
-            else:
+            if self.download_together and rank == -1:
                 yield self
+            else:
+                if callable(self.subcols):
+                    subcols = self.subcols(info)
+                else:
+                    subcols = self.subcols
+                n = 0
+                for sub in subcols:
+                    if sub.name != self.name and "colgroup" not in sub.th_class:
+                        sub.th_class += f" colgroup-{self.name}"
+                    if sub.default(info):
+                        n += 1
+                self.th_content = f" colspan={n}"
+                if rank is None or rank > 0:
+                    yield from subcols
+                else:
+                    yield self
 
     def download(self, rec):
         if self.download_col is not None:
@@ -532,7 +548,7 @@ class SearchColumns:
           0 (indicating the top row of the header) or a positive integer (indicating a lower row in the header).
         """
         # By default, this doesn't depend on info
-        # rank is None in the body of the table, and 0..(maxrank-1) in the header
+        # rank is None in the body of the table, 0..(maxrank-1) in the header, and -1 when downloading
         for C in self.columns:
             yield from C.show(info, rank)
 
@@ -557,6 +573,9 @@ def eval_rational_list(s):
     - once-nested lists like "[[1,2],[3,4]]" or "1,2;3,4"
     - single quotes wrapping the integers/rationals, like "['1','2','3']"
     """
+    if s is None:
+        return
+
     def split(x):
         if not x:
             return []
@@ -572,8 +591,44 @@ def eval_rational_list(s):
 
 class ListCol(ProcessedCol):
     """
+    Used for lists that may be empty.
+
+    The list may be stored in a postgres array or a postgres string
+    """
+    def __init__(self, *args, **kwds):
+        if "delim" in kwds:
+            self.delim = kwds.pop("delim")
+            assert len(self.delim) == 2
+        else:
+            self.delim = None
+        super().__init__(*args, **kwds)
+
+    def display(self, rec):
+        s = str(self.func(self.get(rec)))
+        if s == "[]":
+            s = "[&nbsp;]"
+        if self.delim:
+            s = s.replace("[", self.delim[0]).replace("]", self.delim[1])
+        if s and self.mathmode:
+            s = f"${s}$"
+        return s
+
+class RationalListCol(ListCol):
+    """
+    For lists of rational numbers.
+
     Uses the ``eval_rational_list`` function to process the column for downloading.
     """
+    def __init__(self, name, knowl, title, func=None, apply_download=False, mathmode=True, use_frac=True, **kwds):
+        self.use_frac = use_frac
+        super().__init__(name, knowl, title, func=func, apply_download=apply_download, mathmode=mathmode, **kwds)
+
+    def display(self, rec):
+        s = super().display(rec)
+        if self.use_frac:
+            s = re.sub(r"(\d+)/(\d+)", r"\\frac{\1}{\2}", s)
+        return s.replace("'", "").replace('"', '')
+
     def download(self, rec):
         s = super().download(rec)
         return eval_rational_list(s)

@@ -1,5 +1,4 @@
 
-# -*- coding: utf-8 -*-
 import re
 import time
 
@@ -50,7 +49,7 @@ def my_latex(s):
 # breadcrumbs and links for data quality entries
 
 def get_bread(tail=[]):
-    base = [("Lattice", url_for(".lattice_render_webpage"))]
+    base = [("Lattices", url_for(".lattice_render_webpage"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -363,8 +362,7 @@ def theta_display(label, number):
         number = 20
     if number < 20:
         number = 30
-    if number > 150:
-        number = 150
+    number = min(number, 150)
     data = db.lat_lattices.lookup(label, projection=['theta_series'])
     coeff = [data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)

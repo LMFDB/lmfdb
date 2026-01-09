@@ -26,6 +26,11 @@
           integrity="sha384-Nlo8b0yiGl7Dn+BgLn4mxhIIBU6We7aeeiulNCjHdUv/eKHx59s3anfSUjExbDxn"
           crossorigin="anonymous">
 
+    {% if not BETA %}
+      <!--reCAPTCHA-->
+      <script src="https://www.google.com/recaptcha/enterprise.js?render=6LchHWwpAAAAACFe52hZNEkUP5Bn5_0FfLiEuF3i&waf=session" async defer></script>
+    {% endif %}
+
 
 
 
@@ -34,10 +39,6 @@
     <script type="text/javascript" src="{{ url_for('static', filename='lmfdb.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='showdown.min.js') }}"></script>
 
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='jquery.dataTables.plugins.js') }}"></script>
-
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='raw_typeset.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='notify.min.js') }}"></script>
 
@@ -80,38 +81,56 @@ katexOpts = {
   "\\AGL": '{\\textrm{AGL}}',
   "\\ASp": '{\\textrm{ASp}}',
   "\\Sp": '{\\textrm{Sp}}',
-  "\\GSp": '{\\textrm{GSp}}',
   "\\PSp": '{\\textrm{PSp}}',
   "\\SO": '{\\textrm{SO}}',
   "\\PSO": '{\\textrm{PSO}}',
-  "\\PGO": '{\\textrm{PGO}}',
+  "\\PO": '{\\textrm{PO}}',
+    "\\PGO": '{\\textrm{PO}}',
   "\\SU": '{\\textrm{SU}}',
   "\\PSU": '{\\textrm{PSU}}',
   "\\SOPlus": '{\\textrm{SO}^+}',
   "\\SOMinus": '{\\textrm{SO}^-}',
-  "\\GO": '{\\textrm{O}}',
-  "\\GOPlus": '{\\textrm{O}^+}',
-  "\\GOMinus": '{\\textrm{O}^-}',
-  "\\GU": '{\\textrm{U}}',
-  "\\CSp": '{\\textrm{GSp}}',
-  "\\CSO": '{\\textrm{CSO}}',
-  "\\CSOPlus": '{\\textrm{CSO}^+}',
-  "\\CSOMinus": '{\\textrm{CSO}^-}',
-  "\\CSU": '{\\textrm{CSU}}',
-  "\\CO": '{\\textrm{CO}}',
-  "\\COPlus": '{\\textrm{CO}^+}',
-  "\\COMinus": '{\\textrm{CO}^-}',
-  "\\CU": '{\\textrm{CU}}',
+    "\\GO": '{\\textrm{O}}',
+  "\\Orth": '{\\textrm{O}}',
+    "\\GOPlus": '{\\textrm{O}^+}',
+  "\\OPlus": '{\\textrm{O}^+}',
+  "\\OrthPlus": '{\\textrm{O}^+}',
+    "\\GOMinus": '{\\textrm{O}^-}',
+  "\\OrthMinus": '{\\textrm{O}^-}',
+  "\\OMinus": '{\\textrm{O}^-}',
+  "\\GU": '{\\textrm{GU}}',
+  "\\Unitary": '{\\textrm{U}}',
+    "\\CSp": '{\\textrm{GSp}}',
+  "\\GSp": '{\\textrm{GSp}}',
+    "\\CSO": '{\\textrm{GSO}}',
+  "\\GSO": '{\\textrm{GSO}}',
+    "\\CSOPlus": '{\\textrm{GSO}^+}',
+  "\\GSOPlus": '{\\textrm{GSO}^+}',
+    "\\CSOMinus": '{\\textrm{GSO}^-}',
+  "\\GSOMinus": '{\\textrm{GSO}^-}',
+    "\\CSU": '{\\textrm{GSU}}',
+  "\\GSU": '{\\textrm{GSU}}',
+    "\\CO": '{\\textrm{GO}}',
+  "\\GOrth": '{\\textrm{GO}}',
+    "\\COPlus": '{\\textrm{GO}^+}',
+  "\\GOrthPlus": '{\\textrm{GO}^+}',
+    "\\COMinus": '{\\textrm{GO}^-}',
+  "\\GOrthMinus": '{\\textrm{GO}^-}',
+    "\\CU": '{\\textrm{GU}}',
+  "\\GUnitary": '{\\textrm{GU}}',
   "\\OmegaPlus": '{\\Omega^+}',
   "\\OmegaMinus": '{\\Omega^-}',
   "\\Spin": '{\\textrm{Spin}}',
   "\\SpinPlus": '{\\textrm{Spin}^+}',
   "\\SpinMinus": '{\\textrm{Spin}^-}',
   "\\PSOPlus": '{\\textrm{PSO}^+}',
-  "\\PGOPlus": '{\\textrm{PGO}^+}',
-  "\\PGU": '{\\textrm{PGU}}',
+  "\\POPlus": '{\\textrm{PO}^+}',
+    "\\PGOPlus": '{\\textrm{PO}^+}',
+  "\\PU": '{\\textrm{PU}}',
+    "\\PGU": '{\\textrm{PU}}',
   "\\PSOMinus": '{\\textrm{PSO}^-}',
-  "\\PGOMinus": '{\\textrm{PGO}^-}',
+  "\\POMinus": '{\\textrm{PO}^-}',
+    "\\PGOMinus": '{\\textrm{PO}^-}',
   "\\POmega": '{\\textrm{P}\\Omega}',
   "\\POmegaPlus": '{\\textrm{P}\\Omega^+}',
   "\\POmegaMinus": '{\\textrm{P}\\Omega^-}',
@@ -122,6 +141,7 @@ katexOpts = {
   "\\AGammaL": '{\\textrm{A}\\Gamma\\textrm{L}}',
   "\\ASigmaL": '{\\textrm{A}\\Sigma\\textrm{L}}',
   "\\ASigmaSp": '{\\textrm{A}\\Sigma\\textrm{Sp}}',
+  "\\Dic": '{\\textrm{Dic}}',
   "\\SD": '{\\textrm{SD}}',
   "\\OD": '{\\textrm{OD}}',
   "\\He": '{\\textrm{He}}',
@@ -130,6 +150,7 @@ katexOpts = {
   "\\Ru": '{\\textrm{Ru}}',
   "\\Co": '{\\textrm{Co}}',
   "\\Aut": '\\operatorname{Aut}',
+  "\\Out": '\\operatorname{Out}',
   "\\End": '\\operatorname{End}',
   "\\Gal": '\\operatorname{Gal}',
   "\\Hom": '\\operatorname{Hom}',
@@ -160,6 +181,7 @@ katexOpts = {
     {%- from "knowl-defs.html" import KNOWL with context -%}
     {%- from "knowl-defs.html" import KNOWL_LINK with context -%}
     {%- from "knowl-defs.html" import KNOWL_INC with context -%}
+    {%- from "knowl-defs.html" import DEFINES with context -%}
     {%- from "knowl-defs.html" import TEXT_DATA with context -%}
     {%- from "knowl-defs.html" import LINK_EXT with context -%}
 
@@ -173,17 +195,14 @@ katexOpts = {
       gtag('config', 'G-YVBFDNX374');
     </script>
 
-    {% if body_class == "checklist" -%}
-      <base target="page">
-      {%- endif %}
   </head>
 
   {%- if BETA -%}
   <body class="beta {{ body_class }}">
-    {%- else -%}
-    <body class="{{ body_class }}">
-      {%- endif -%}
+  {%- else -%}
+  <body class="{{ body_class }}">
+  {%- endif -%}
 
-      {% block body -%}{%- endblock body %}
-      </body>
+  {% block body -%}{%- endblock body %}
+  </body>
 </html>

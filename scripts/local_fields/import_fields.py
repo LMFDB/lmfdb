@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-r""" Import local field data.  
+r""" Import local field data.
 
 Imports from a json file directly to the database.
 
-Data is imported directly to the table lf_fields 
+Data is imported directly to the table lf_fields
 
 """
 
@@ -56,7 +56,7 @@ def top_slope(ent):
     ent['top_slope'] = make_slope_key(0)
   return ent
 
-# Let us loop over input to load into a dictionary 
+# Let us loop over input to load into a dictionary
 fnames = ['aut','c','coeffs','e','eisen', 'f', 'gal', 'galT', 'gms', 'hw', 'inertia', 'label', 'n', 'p', 'rf', 'slopes', 't', 'u', 'unram', 'subfields', 'gsm']
 
 def prep_ent(l):

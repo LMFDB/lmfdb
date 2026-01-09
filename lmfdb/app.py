@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .utils.config import get_secret_key
 import os
 from socket import gethostname
@@ -132,7 +131,8 @@ def ctx_proc_userdata():
     # overwrite this variable when you want to customize it
     # For example, [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
     vars['bread'] = None
-
+    from lmfdb.utils import CodeSnippet
+    vars['CodeSnippet'] = CodeSnippet
     # default title
     vars['title'] = r'LMFDB'
 
@@ -221,7 +221,7 @@ git_rev, git_date, _ = git_infos()
 _url_source = 'https://github.com/LMFDB/lmfdb/tree/'
 _current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 
-# Creates link to the list of revisions on the master, where the most recent commit is on top.
+# Creates link to the list of revisions on the main, where the most recent commit is on top.
 _url_changeset = 'https://github.com/LMFDB/lmfdb/commits/%s' % branch
 _latest_changeset = '<a href="%s">%s</a>' % (_url_changeset, git_date)
 
@@ -309,42 +309,6 @@ def netloc_redirect():
         return redirect(urlunparse(replaced), code=302)
 
 
-@cached_function
-def bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
-            "The Knowledge AI",
-            "Wolfram",
-            "petalbot",
-            "Bytespider",
-            "Sogou",
-            "MJ12bot",
-        ]
-    ]
-
-
-@cached_function
-def very_bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
-            "Amazonbot",
-        ]
-    ]
-
-
-@app.before_request
-def badbot():
-    ua = request.user_agent.string.lower()
-    for elt in very_bad_bots_list():
-        if elt in ua:
-            return render_template("404.html", title='Too many requests'), 429
-    for elt in bad_bots_list():
-        if elt in ua:
-            time.sleep(10)
-
-
 def timestamp():
     return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
 
@@ -396,6 +360,23 @@ def index():
 def about():
     return render_template("about.html", title="About the LMFDB")
 
+@app.route("/rcs")
+def top_rcs():
+    t = "Source, reliability, and completeness"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="rcs", title=t, bread=bread)
+
+@app.route("/announcements")
+def announcements():
+    t = "Announcements"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.announcements", title=t, bread=bread)
+
+@app.route("/ongoing")
+def ongoing():
+    t = "Ongoing projects"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.ongoing", title=t, bread=bread)
 
 @app.route("/health")
 @app.route("/alive")
@@ -439,7 +420,6 @@ def statshealth():
             return "LMFDB stats are healthy!"
     else:
         abort(503)
-
 
 @app.route("/info")
 def info():
@@ -492,17 +472,7 @@ def search():
 def modular_forms():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
-    # lm = [('History of modular forms', '/ModularForm/history')]
-    return render_template('single.html', title=t, kid='mf.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/ModularForm/history")
-
-
-def modular_forms_history():
-    t = 'Modular forms'
-    b = [(t, url_for('modular_forms'))]
-    b.append(('History', url_for("modular_forms_history")))
-    return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
 @app.route('/Variety')
@@ -510,17 +480,7 @@ def modular_forms_history():
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
-    # lm = [('History of varieties', '/Variety/history')]
-    return render_template('single.html', title=t, kid='varieties.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/Variety/history")
-
-
-def varieties_history():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    b.append(('History', url_for("varieties_history")))
-    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='varieties.about', bread=b)
 
 
 @app.route('/Field')
@@ -528,17 +488,7 @@ def varieties_history():
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    # lm = [('History of fields', '/Field/history')]
-    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Field/history")
-
-
-def fields_history():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Representation')
@@ -546,17 +496,7 @@ def fields_history():
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
-    # lm = [('History of representations', '/Representation/history')]
-    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Representation/history")
-
-
-def representations_history():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Motive')
@@ -564,17 +504,7 @@ def representations_history():
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
-    # lm = [('History of motives', '/Motives/history')]
-    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Motives/history")
-
-
-def motives_history():
-    t = 'Motives'
-    b = [(t, url_for('motives'))]
-    b.append(('History', url_for("motives_history")))
-    return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Group')
@@ -582,17 +512,12 @@ def motives_history():
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    # lm = [('History of groups', '/Group/history')]
-    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
+    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)
 
-# @app.route("/Group/history")
-
-
-def groups_history():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A brief history of groups", kid='group.history', body_class=_bc, bread=b)
+@app.route('/datasets')
+@app.route('/datasets/')
+def datasets():
+    return render_template('datasets.html', title='Auxiliary datasets', bread=[("Datasets", " ")])
 
 
 @app.route("/editorial-board")
@@ -698,17 +623,6 @@ def css():
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
 
-# the checklist is used for human testing on a high-level, supplements test.sh
-
-
-@app.route("/checklist-list")
-def checklist_list():
-    return render_template("checklist.html", body_class="checklist")
-
-
-@app.route("/checklist")
-def checklist():
-    return render_template("checklist-fs.html")
 
 ##############################
 #         Intro pages        #
@@ -809,16 +723,19 @@ def sitemap():
 def WhiteListedRoutes():
     return [
         'ArtinRepresentation',
+        'Belyi',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
         'Character/calc-jacobi/Dirichlet',
         'Character/calc-kloosterman/Dirichlet',
         'Character/calc-value/Dirichlet',
+        'datasets',
         'EllipticCurve',
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
+        'Groups/Abstract',
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
@@ -830,7 +747,6 @@ def WhiteListedRoutes():
         'L/contents',
         'L/degree',
         'L/download',
-        'L/history',
         'L/interesting',
         'L/lhash',
         'L/rational',
@@ -850,7 +766,6 @@ def WhiteListedRoutes():
         'acknowledgment',
         'alive',
         'api',
-        #'api2',
         'bigpicture',
         'callback_ajax',
         'citation',
@@ -870,6 +785,7 @@ def WhiteListedRoutes():
         'news',
         'not_yet_implemented',
         'random',
+        'rcs',
         'robots.txt',
         'search',
         'sitemap',

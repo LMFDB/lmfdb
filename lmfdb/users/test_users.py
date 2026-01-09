@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # testing users blueprint
 
 from lmfdb.tests import LmfdbTest

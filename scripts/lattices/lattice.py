@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-r""" Import integral lattices data.  
+r""" Import integral lattices data.
 
-Note: This code can be run on all files in any order. Even if you 
-rerun this code on previously entered files, it should have no affect.  
-This code checks if the entry exists, if so returns that and updates 
-with new information. If the entry does not exist then it creates it 
+Note: This code can be run on all files in any order. Even if you
+rerun this code on previously entered files, it should have no affect.
+This code checks if the entry exists, if so returns that and updates
+with new information. If the entry does not exist then it creates it
 and returns that.
 
 """
@@ -26,7 +26,7 @@ password = pw_dict['data']['password']
 C['Lattices'].authenticate('editor', password)
 lat = C.Lattices.lat
 
-saving = True 
+saving = True
 
 def sd(f):
   for k in f.keys():
@@ -48,7 +48,7 @@ def last_label(base_label, n):
     return ".".join([str(base_label),str(n)])
 
 # The following create_index command checks if there is an index on
-# label, dimension, determinant and level. 
+# label, dimension, determinant and level.
 
 lat.create_index('label')
 lat.create_index('dim')
@@ -84,7 +84,7 @@ def do_import(ll):
     data['index'] = label_lookup(blabel)
     label= last_label(blabel, data['index'])
     data['label'] = label
- 
+
     lattice = lat.find_one({'label': label})
 
     if lattice is None:

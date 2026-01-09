@@ -8,7 +8,7 @@ debug = False
 
 
 def EllipticCurve_from_hoeij_data(line):
-    """Given a line of the file "http://www.math.fsu.edu/~hoeij/files/X1N/LowDegreePlaces" 
+    """Given a line of the file "http://www.math.fsu.edu/~hoeij/files/X1N/LowDegreePlaces"
     that is actually corresponding to an elliptic curve, this function returns the elliptic
     curve corresponding to this
     """
@@ -16,7 +16,7 @@ def EllipticCurve_from_hoeij_data(line):
     x = Rx.gen(0)
     Rxy = PolynomialRing(Rx,'y')
     y = Rxy.gen(0)
-    
+
     N=ZZ(line.split(",")[0].split()[-1])
     x_rel=Rx(line.split(',')[-2][2:-4])
     assert x_rel.leading_coefficient()==1
@@ -48,10 +48,10 @@ def EllipticCurve_from_hoeij_data(line):
 def to_polredabs(K):
     """
 
-    INPUT: 
+    INPUT:
 
     * "K" - a number field
-    
+
     OUTPUT:
 
     * "phi" - an isomorphism K -> L, where L = QQ['x']/f and f a polynomial such that f = polredabs(f)
@@ -94,7 +94,7 @@ def EllipticCurve_polredabs_a_invariants(E,morphism=True):
     Input:
         - E - an elliptic curve over a number field K
     Output:
-        - [a1,a2,a3,a4,a6] - the a_invariants of E base changed along phi: K -> L 
+        - [a1,a2,a3,a4,a6] - the a_invariants of E base changed along phi: K -> L
                              where phi is the morphism from K to its polredabs field
     """
     K = E.base_field()
@@ -106,17 +106,17 @@ def EllipticCurve_polredabs_a_invariants(E,morphism=True):
     #E_polred = base_change(E,phi)
     #assert E.conductor().norm() == E_polred.conductor().norm()
     #return E_polred
-    
+
 def EllipticCurve_polredabs(E):
     """
     Input:
         - E - an elliptic curve over a number field K
     Output:
-        - E1 - the elliptic curve that is the base change of E along phi: K -> L 
+        - E1 - the elliptic curve that is the base change of E along phi: K -> L
                              where phi is the morphism from K to its polredabs field
     """
     return EllipticCurve(EllipticCurve_polredabs_a_invariants(E,False))
-    
+
 def EllipticCurve_to_ecnf_dict(E):
     """
     Make the dict that should be fed to `make_curves_line` in `lmfdb/scripts/ecnf/import_utils.py`.

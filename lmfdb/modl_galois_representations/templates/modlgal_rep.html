@@ -9,24 +9,33 @@
 <h2>Invariants</h2>
 
 <table>
+  <tr><td>{{ KNOWL('modlgal.characteristic', 'Characteristic') }}:</td><td>${{ rep.base_ring_characteristic }}$</td></tr>
   <tr><td>{{ KNOWL('modlgal.dimension', 'Dimension') }}:</td><td>${{ rep.dimension }}$</td></tr>
   <tr><td>{{ KNOWL('modlgal.conductor', 'Conductor') }}:</td><td>{{ rep.factored_conductor }}</td></tr>
   {% if rep.weight and rep.weight >= 0 %}
   {% endif %}
+  {% if rep.dimension > 1 %}
+  <tr><td>{{ KNOWL('modlgal.determinant', 'Determinant') }}:</td><td>{{ rep.determinant | safe }}</td></tr>
+  {% endif %}
   {% if not rep.is_surjective %}
   <tr><td>{{ KNOWL('modlgal.codomain', 'Codomain') }}:<td>{{ rep.codomain }}</td></tr>
   {% endif %}
-  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty | safe }} {% if rep.image_abstract %}
-    $\cong$ {{ rep.image_abstract | safe }}
-  {% endif %}
+  <tr><td>{{ KNOWL('modlgal.image', 'Image') }}:<td>{{ rep.image_pretty_with_abstract | safe }}
     </td></tr>
+  <tr><td>{{ KNOWL('modlgal.determinant_index', 'Determinant index') }}:<td>${{ rep.determinant_index }}$
+  {% if rep.determinant_index == 1 %}
+  (determinant is surjective)
+  {% else %}
+  (determinant is not surjective)
+  {% endif %}
+  </td></tr>
   {% if rep.frobenius_generators %}
-  <tr><td>{{ KNOWL('modlgal.generating_primes', 'Generators') }}:<td>${{ rep.frobenius_generators }}$</td></tr>
+  <tr><td>{{ KNOWL('modlgal.generating_primes', 'Generating primes') }}:<td>${{ rep.frobenius_primes }}$</td></tr>
   {% endif %}
   <tr><td>{{ KNOWL('modlgal.image_index', 'Image index') }}:<td>{{ rep.image_index }}</td></tr>
   <tr><td>{{ KNOWL('modlgal.image_order', 'Image order') }}:<td>{{ rep.image_order }}</td></tr>
   <tr><td>{{ KNOWL('modlgal.absolutely_irreducible', 'Absolutely irreducible') }}:</td><td>{% if rep.is_absolutely_irreducible%}yes{% else %}no{% endif %}</td></tr>
-  <tr><td>{{ KNOWL('modlgal.surjective', 'Surjective') }}:<td>{% if rep.is_surjective %}yes{% else %}no{% endif %}</td></tr>
+  <tr><td>{{ KNOWL('modlgal.surjective', 'Surjective') }}:<td>{% if rep.image_index==1 %}yes{% else %}no{% endif %}</td></tr>
   <tr><td>{{ KNOWL('modlgal.solvable', 'Solvable') }}:<td>{% if rep.is_solvable %}yes{% else %}no{% endif %}</td></tr>
   <tr><td>{{ KNOWL('modlgal.top_slope', 'Top slope') }}:</td><td>{{ rep.top_slope_rational }}</td></tr>
 </table>
@@ -34,9 +43,12 @@
 <h2>Associated number fields</h2>
 
 <table>
-  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling')}} of the {{ KNOWL('modlgal.splitting_field','splitting field') }} of $\rho$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
+  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling') }}  of the 
+  {{ KNOWL('modlgal.splitting_field', 'splitting field') }} of $\rho$:</td><td>{{ rep.kernel_sibling | safe }}</td></tr>
   {% if rep.base_ring_characteristic != 2 %}
-  <tr><td>{{ KNOWL('nf.minimal_sibling','Minimal sibling')}} of the {{ KNOWL('modlgal.splitting_field','splitting field') }} of $\mathbb{P}\rho$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
+  <tr><td> {{ KNOWL('nf.minimal_sibling','Minimal sibling') }}  of the 
+  {{ KNOWL('modlgal.splitting_field', 'splitting field') }}
+  of the {{ KNOWL('modlgal.projective_representation','projective representation') }} $\mathbb{P}\rho$:</td><td>{{ rep.projective_kernel_sibling | safe }}</td></tr>
   {% endif %}
 </table>
 
@@ -63,19 +75,30 @@
 
 {% if rep.frobenius_matrices_pretty %}
 
+<p>
+Information about $\rho(\text{Frob}_p)$ for {{ KNOWL('modlgal.frobenius_prime', 'good primes') }} $p<100$.
 {% if rep.generating_primes %}
-<p>{{ KNOWL('modlgal.generating_primes', 'Generating primes') }} are shown in bold.</p>
+{{ KNOWL('modlgal.generating_primes', 'Generating primes') }} are shown in bold.
 {% endif %}
+</p>
 
 <table class="ntdata" cellpadding=3 style="table-layout:fixed">
 <tr><th>{{ KNOWL('modlgal.frobenius_prime','Prime') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_trace','Trace') }}</th>
+    <th>{{ KNOWL('modlgal.frobenius_determinant','Determinant') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_order','Order') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_charpoly','Char poly') }}</th>
     <th>{{ KNOWL('modlgal.frobenius_matrix','Matrix') }}</th>
 </tr>
 {% for r in rep.frobenius_matrices_pretty %}
-  <tr><td align="center">${{ r[0] }}$</td><td align="center">${{ r[1] }}$</td><td align="center">${{ r[2] }}$</td><td>{{ r[3] }}</td><td>{{ r[4] }}</td></tr>
+<tr>
+  <td align="center">${{ r[0] }}$</td>
+  <td align="center">${{ r[1] }}$</td>
+  <td align="center">${{ r[2] }}$</td>
+  <td align="center">${{ r[3] }}$</td>
+  <td>{{ r[4] }}</td>
+  <td>{{ r[5] }}</td>
+</tr>
 {% endfor %}
 </table>
 {% else %}

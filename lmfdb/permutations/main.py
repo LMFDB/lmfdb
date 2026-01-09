@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about Permutations
 # Author: Sebastien Labbe
 
@@ -10,7 +9,7 @@ from lmfdb.utils import flash_error
 
 def get_bread(breads=[]):
     bc = [("Permutations", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 

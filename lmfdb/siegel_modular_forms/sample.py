@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This file provides the class Sample_Class which describes
 # a sample of a collection of Siegel modular forms.
 #

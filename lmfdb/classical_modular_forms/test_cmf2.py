@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
 
@@ -7,7 +6,7 @@ cmf_logger.setLevel(100)
 
 
 class CmfTest(LmfdbTest):
-    def runTest():
+    def runTest(self):
         pass
 
     def test_download_qexp(self):
@@ -29,7 +28,12 @@ class CmfTest(LmfdbTest):
             assert str(out) == exp
         for label in ['212.2.k.a', '887.2.a.b']:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label), follow_redirects=True)
-            assert 'No q-expansion found for {}'.format(label) in page.get_data(as_text=True)
+            assert 'q-expansion not available for newform {}'.format(label) in page.get_data(as_text=True)
+
+        # Test invalid labels return 404 with proper error message
+        for label in ['safeboating', 'invalid.label', '11.2.a', '11.2.a.a.extra']:
+            page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label), follow_redirects=True)
+            assert 'Invalid label: {}'.format(label) in page.get_data(as_text=True)
 
     def test_download(self):
         r"""
@@ -88,6 +92,8 @@ class CmfTest(LmfdbTest):
                     'q - 2*q^2 + 3*q^3 + 4*q^4 + 2*q^5 - 6*q^6 - 10*q^7 - 8*q^8 + 9*q^9 - 4*q^10 - 10*q^11 + O(q^12)'],
                 ['24.3.h.c',
                     'q + nu*q^2 + 1/4*(-nu^3 - 4*nu^2 - 2*nu - 12)*q^3 + nu^2*q^4 + (nu^3 + 2*nu)*q^5 + (-nu^3 + nu^2 - 3*nu + 4)*q^6 + 4*q^7 + nu^3*q^8 + 1/2*(-nu^3 - 10*nu - 10)*q^9 + (-4*nu^2 - 16)*q^10 + 1/2*(-3*nu^3 - 6*nu)*q^11 + O(q^12)'],
+                ['87.2.a.a',
+                    'q + nu*q^2 + q^3 + (nu - 1)*q^4 + (-2*nu + 2)*q^5 + nu*q^6 + (-2*nu - 1)*q^7 + (-2*nu + 1)*q^8 + q^9 - 2*q^10 + (2*nu + 1)*q^11 + O(q^12)'],
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModFrm_%s_%s_%s_%s' % tuple(label.split('.'))
@@ -104,9 +110,12 @@ class CmfTest(LmfdbTest):
                 ['54.2.e.b',
                     'Modular symbols space of level 54, weight 2, character $.1^16, and dimension 2 over Cyclotomic Field of order 9 and degree 6'
                     ],
+                ['87.2.a.a',
+                    'Modular symbols space for Gamma_0(87) of weight 2 and dimension 2 over Rational Field'
+                    ],
                 ['212.2.k.a',
                     'Modular symbols space of level 212, weight 2, character $.1*$.2^17, and dimension 1 over Cyclotomic Field of order 52 and degree 24'
-                    ]
+                    ],
                 ]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label)
             makenewform = 'MakeNewformModSym_%s_%s_%s_%s' % tuple(label.split('.'))
@@ -131,11 +140,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query=%7B%27num_forms%27%3A+%7B%27%24gte%27%3A+1%7D%2C+%27weight%27%3A+5%2C+%27level%27%3A+20%7D&search_type=Spaces')
         for elt in ["20.5.b", "20.5.d", "20.5.f"]:
             assert elt in page.get_data(as_text=True)
-
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+2000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
-        assert 'Error: We limit downloads of traces to' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query=%7B%27dim%27%3A+%7B%27%24gte%27%3A+30000%7D%2C+%27num_forms%27%3A+%7B%27%24exists%27%3A+True%7D%7D&search_type=SpaceTraces', follow_redirects=True)
-        assert '863.2.c' in page.get_data(as_text=True)
 
     def test_random(self):
         r"""
@@ -206,7 +210,7 @@ class CmfTest(LmfdbTest):
                 ('level=900-1000&weight=1-&projective_image=D2',
                     ['Results (26 matches)', r"\sqrt{-1}", r"\sqrt{-995}", r"\sqrt{137}"]
                     )]:
-            for s in Subsets(['has_self_twist=yes', 'has_self_twist=cm', 'has_self_twist=rm', 'projective_image_type=Dn','dim=1-4']):
+            for s in Subsets(['has_self_twist=yes', 'has_self_twist=cm', 'has_self_twist=rm', 'projective_image=Dn','dim=1-4']):
                 s = '&'.join(['/ModularForm/GL2/Q/holomorphic/?search_type=List', begin[0]] + list(s))
                 page = self.tc.get(s, follow_redirects=True)
                 for elt in begin[1]:
@@ -329,7 +333,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&char_order=1', follow_redirects=True)
         assert 'A-L signs' in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=15&search_type=Spaces', follow_redirects=True)
-        assert 'AL-dims.' in page.get_data(as_text=True)
+        assert 'AL-decomposition.' in page.get_data(as_text=True)
         assert r'$0$+$1$+$0$+$0$' in page.get_data(as_text=True)
 
     def test_Fricke_signs_search(self):

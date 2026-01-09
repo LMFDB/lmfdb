@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb import db
 from lmfdb.utils import (url_for,
     web_latex, coeff_to_poly, letters2num, num2letters, raw_typeset,
@@ -159,7 +158,7 @@ class ArtinRepresentation():
                 wc = thischar.split(r'.')
                 self._data['central_character'] = WebSmallDirichletCharacter(modulus=wc[0], number=wc[1])
                 return self._data['central_character']
-            return(thischar)
+            return thischar
         # Not in the database
         if self.dimension() == 1:
             return self.central_character()
@@ -180,8 +179,8 @@ class ArtinRepresentation():
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
-        return tmp
+
+        return r" \cdot ".join(power_prime(p, val) for p, val in self.factored_conductor())
 
     def num_ramps(self):
         return self._data["NumBadPrimes"]
@@ -425,7 +424,7 @@ class ArtinRepresentation():
         return self._data['GaloisLabel']
 
     def group(self):
-        n, t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        n, t = (int(z) for z in self._data['GaloisLabel'].split("T"))
         return group_display_short(n, t)
 
     def pretty_galois_knowl(self):

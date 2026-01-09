@@ -30,22 +30,29 @@ not-implemented:
   oscar: |
     # (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with elliptic curve {label}
+
 curve:
   comment: Define the curve
   sage:  E = EllipticCurve({ainvs})
   pari:  E = ellinit({ainvs})
   magma: E := EllipticCurve({ainvs});
-  oscar: E = EllipticCurve({ainvs})
+  oscar: E = elliptic_curve({ainvs})
 
 simple_curve:
+  comment: Simplified equation
   sage: E.short_weierstrass_model()
   magma: WeierstrassModel(E);
   oscar: short_weierstrass_model(E)
 
 mwgroup:
+  comment: Mordell-Weil group
   magma: MordellWeilGroup(E);
 
 gens:
+  comment: Mordell-Weil generators
   sage:  E.gens()
   magma: Generators(E);
   pari: E.gen
@@ -84,26 +91,30 @@ jinv:
   oscar: j_invariant(E)
 
 cm:
+  comment: Potential complex multiplication
   sage: E.has_cm()
   magma: HasComplexMultiplication(E);
 
 faltings:
+  comment: Faltings height
   pari: ellheight(E)
   magma: FaltingsHeight(E);
   oscar: faltings_height(E)
 
 stable_faltings:
+  comment: Stable Faltings height
   magma: StableFaltingsHeight(E);
   oscar: stable_faltings_height(E)
 
 rank:
-  comment: Rank
+  comment: Mordell-Weil rank
   sage:  E.rank()
   pari: |
     [lower,upper] = ellrank(E)
   magma: Rank(E);
 
 analytic_rank:
+  comment: Analytic rank
   sage: E.analytic_rank()
   pari: ellanalyticrank(E)
   magma: AnalyticRank(E);
@@ -142,6 +153,7 @@ sha:
   magma: MordellWeilShaInformation(E);
 
 L1:
+  comment: Special L-value
   sage:  |
     r = E.rank(); E.lseries().dokchitser().derivative(1,r)/r.factorial()
   pari:  |
@@ -150,15 +162,16 @@ L1:
     Lr1 where r,Lr1 := AnalyticRank(E: Precision:=12);
 
 bsd_formula:
+  comment: BSD formula
   sage: |
     # self-contained SageMath code snippet for the BSD formula (checks rank, computes analytic sha)
-    E = EllipticCurve(%s); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
+    E = EllipticCurve({ainvs}); r = E.rank(); ar = E.analytic_rank(); assert r == ar;
     Lr1 = E.lseries().dokchitser().derivative(1,r)/r.factorial(); sha = E.sha().an_numerical();
     omega = E.period_lattice().omega(); reg = E.regulator(); tam = E.tamagawa_product(); tor = E.torsion_order();
     assert r == ar; print("analytic sha: " + str(RR(Lr1) * tor^2 / (omega * reg * tam)))
   magma: |
-    /* self-contained Magma code snippet for the BSD formula (checks rank, computes analyiic sha) */
-    E := EllipticCurve(%s); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
+    /* self-contained Magma code snippet for the BSD formula (checks rank, computes analytic sha) */
+    E := EllipticCurve({ainvs}); r := Rank(E); ar,Lr1 := AnalyticRank(E: Precision := 12); assert r eq ar;
     sha := MordellWeilShaInformation(E); omega := RealPeriod(E) * (Discriminant(E) gt 0 select 2 else 1);
     reg := Regulator(E); tam := &*TamagawaNumbers(E); tor := #TorsionSubgroup(E);
     assert r eq ar; print "analytic sha:", Lr1 * tor^2 / (omega * reg * tam);
@@ -167,10 +180,6 @@ qexp:
   comment: q-expansion of modular form
   sage:  E.q_eigenform(20)
   pari:  |
-    \\ actual modular form, use for small N
-    [mf,F] = mffromell(E)
-    Ser(mfcoefs(mf,20),q)
-    \\ or just the series
     Ser(ellan(E,20),q)*q
   magma: ModularForm(E);
 
@@ -204,13 +213,14 @@ localdata:
     [(p,tamagawa_number(E,p), kodaira_symbol(E,p), reduction_type(E,p)) for p in bad_primes(E)]
 
 galrep:
-  comment: mod p Galois image
+  comment: Mod p Galois image
   sage:  |
     rho = E.galois_representation(); [rho.image_type(p) for p in rho.non_surjective()]
   magma: |
     [GaloisRepresentation(E,p): p in PrimesUpTo(20)];
 
 adelicimage:
+  comment: Adelic image of Galois representation
   sage:   |
     gens = {adelic_gens}
     GL(2,Integers({level})).subgroup(gens)
@@ -227,4 +237,14 @@ padicreg:
     [ellpadicregulator(E,p,10,G) | p <- primes([5,20])]
 
 isogenies:
+  comment: Isogenies
   pari: ellisomat(E)
+
+snippet_test:
+  test11a3: 
+    label: 11.a3
+    url: EllipticCurve/Q/11/a/3/download/{lang}?label=11.a3
+  test37a1: 
+    label: 37.a1
+    url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1
+    

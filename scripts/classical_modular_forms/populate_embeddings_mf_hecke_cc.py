@@ -3,7 +3,7 @@
 from sage.all import matrix, vector, PolynomialRing, ZZ, NumberField, ComplexField
 import  sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../.."))
-from  lmfdb.backend import db
+from  psycodict import db
 ZZx = PolynomialRing(ZZ, "x")
 
 def convert_eigenvals_to_qexp(basis, eigenvals, normalization):

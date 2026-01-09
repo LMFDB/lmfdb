@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 TODO
@@ -19,15 +18,16 @@ from lmfdb import db
 from lmfdb.app import app
 
 from sage.rings.all import Integer, QQ, RR, ZZ
-from sage.plot.all import line, points, circle, Graphics
-from sage.misc import latex
+from sage.plot.all import line, points, circle, polygon, Graphics
+from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors, teXify_pol
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
+
 
 def maxq(g, p):
     # This should eventually move to stats
@@ -43,7 +43,9 @@ def maxq(g, p):
     else:
         return maxgen[g]
 
+
 logger = make_logger("abvarfq")
+
 
 #########################
 #   Label manipulation
@@ -70,6 +72,7 @@ def validate_label(label):
     if not all(c.isalpha() and c == c.lower() for c in coeffs):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
+
 class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
@@ -77,8 +80,15 @@ class AbvarFq_isoclass():
     def __init__(self, dbdata):
         if "size" not in dbdata:
             dbdata["size"] = None
+        if "hyp_count" not in dbdata:
+            dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
+        # New invariants: cyclicity and noncyclic primes
+        if "is_cyclic" not in dbdata:
+            dbdata["is_cyclic"] = None
+        if "noncyclic_primes" not in dbdata:
+            dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -113,7 +123,7 @@ class AbvarFq_isoclass():
         if self.is_simple and QQ['x'](self.polynomial).is_irreducible():
             return ""
         else:
-            return latex.latex(QQ[['x']](self.polynomial))
+            return latex(QQ[['x']](self.polynomial))
 
     @property
     def p(self):
@@ -131,6 +141,10 @@ class AbvarFq_isoclass():
     def polygon_slopes(self):
         # Remove the multiset indicators
         return [s[:-1] for s in self.slopes]
+
+    @property
+    def pretty_slopes(self):
+        return "[" + ",".join(latex(QQ(s)) for s in self.polygon_slopes) + "]"
 
     @property
     def polynomial(self):
@@ -164,25 +178,16 @@ class AbvarFq_isoclass():
             y += c * s
             pts.append((x, y))
         L = Graphics()
-        L += line([(0, 0), (0, y + 0.2)], color="grey")
-        for i in range(1, y + 1):
-            L += line([(0, i), (0.06, i)], color="grey")
-        for i in range(1, C[0]):
-            L += line([(i, 0), (i, 0.06)], color="grey")
-        for i in range(len(pts) - 1):
-            P = pts[i]
-            Q = pts[i + 1]
-            for x in range(P[0], Q[0] + 1):
-                L += line(
-                    [(x, P[1]), (x, P[1] + (x - P[0]) * (Q[1] - P[1]) / (Q[0] - P[0]))],
-                    color="grey",
-                )
-            for y in range(P[1], Q[1]):
-                L += line(
-                    [(P[0] + (y - P[1]) * (Q[0] - P[0]) / (Q[1] - P[1]), y), (Q[0], y)],
-                    color="grey",
-                )
+        xmax = len(S)
+        ymax = ZZ(len(S) / 2)
+        L += polygon(pts + [(0, ymax)], alpha=0.1)
+        for i in range(xmax + 1):
+            L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
+        for j in range(ymax + 1):
+            L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
         L += line(pts, thickness=2)
+        for v in pts:
+            L += circle(v, 0.06, fill=True)
         L.axes(False)
         L.set_aspect_ratio(1)
         return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight")
@@ -226,15 +231,21 @@ class AbvarFq_isoclass():
             ("$p$-rank", "$%s$" % (self.p_rank)),
             # ('Weil polynomial', '$%s$'%(self.formatted_polynomial)),
             ("Ordinary", "yes" if self.is_ordinary() else "no"),
-            ("Supersingular", "yes" if self.is_supersingular() else "no"),
+            ("Supersingular", "yes" if self.is_supersingular else "no"),
             ("Simple", "yes" if self.is_simple else "no"),
             ("Geometrically simple", "yes" if self.is_geometrically_simple else "no"),
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
         if self.has_principal_polarization != 0:
-            props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
+            props += [(
+                "Principally polarizable",
+                "yes" if self.has_principal_polarization == 1 else "no",
+            )]
         if self.has_jacobian != 0:
-            props += [("Contains a Jacobian", "yes" if self.has_jacobian == 1 else "no")]
+            props += [(
+                "Contains a Jacobian",
+                "yes" if self.has_jacobian == 1 else "no",
+            )]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
@@ -262,8 +273,8 @@ class AbvarFq_isoclass():
             poly = coeff_to_poly(self.poly, "T")
             if self.r > 1:
                 poly = poly.subs(poly.parent().gen()**self.r)
-            poly = str(poly).replace(" ", "").replace("**","%5E").replace("*","").replace("+", "%2B")
-            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2*self.g*self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
+            poly = str(poly).replace(" ", "").replace("**", "%5E").replace("*", "").replace("+", "%2B")
+            friends.append(("L-functions", url_for("l_functions.rational") + f"?search_type=Euler&motivic_weight=1&degree={2 * self.g * self.r}&n={dispcols}&euler_constraints=F{self.p}%3D{poly}"))
         return friends
 
     def frob_angles(self):
@@ -283,8 +294,12 @@ class AbvarFq_isoclass():
     def is_ordinary(self):
         return self.p_rank == self.g
 
+    @property
     def is_supersingular(self):
         return all(slope == "1/2" for slope in self.polygon_slopes)
+
+    def is_almost_ordinary(self):
+        return self.newton_elevation == 1
 
     def display_slopes(self):
         return "[" + ", ".join(self.polygon_slopes) + "]"
@@ -310,6 +325,10 @@ class AbvarFq_isoclass():
             return "The Galois group of this isogeny class is not in the database."
         else:
             return transitive_group_display_knowl(self.galois_groups[0])
+
+    def galois_groups_pretty(self):
+        # Used in search result pages
+        return ", ".join(transitive_group_display_knowl(gal, cache=self.gal_cache) for gal in self.galois_groups)
 
     def decomposition_display_search(self):
         if self.is_simple:
@@ -338,6 +357,9 @@ class AbvarFq_isoclass():
             return r"\F_{%s}" % (self.p)
         else:
             return r"\F_{%s^{%s}}" % (self.p, n)
+
+    def display_generator_explanation(self):
+        return getattr(self, "curves", None) and any('a' in curve for curve in self.curves)
 
     @cached_method
     def endo_extensions(self):
@@ -448,7 +470,7 @@ class AbvarFq_isoclass():
 
     def curve_display(self):
         def show_curve(cv):
-            cv = cv.replace("*", "")
+            cv = teXify_pol(cv)
             if "=" not in cv:
                 cv = cv + "=0"
             return "  <li>$%s$</li>\n" % cv
@@ -466,9 +488,11 @@ class AbvarFq_isoclass():
         else:
             return ""
 
+
 @app.context_processor
 def ctx_decomposition():
     return {"av_data": av_data}
+
 
 def describe_end_algebra(p, extension_label):
     # This should eventually be done with a join, but okay for now
@@ -508,10 +532,11 @@ def describe_end_algebra(p, extension_label):
             ans[1] += '<td class="center">${0}$</td>'.format(inv)
         ans[1] += "</tr></table>\n"
         center_poly = db.nf_fields.lookup(center, 'coeffs')
-        center_poly = latex.latex(ZZ["x"](center_poly))
+        center_poly = latex(ZZ["x"](center_poly))
         ans[1] += r"where $\pi$ is a root of ${0}$.".format(center_poly)
         ans[1] += "\n"
     return ans
+
 
 def primeideal_display(p, prime_ideal):
     ans = "($ {0} $".format(p)
@@ -521,6 +546,7 @@ def primeideal_display(p, prime_ideal):
     else:
         ans += "," + web_latex(coeff_to_poly(prime_ideal, "pi")) + ")"
         return ans
+
 
 def decomposition_display(factors):
     if len(factors) == 1 and factors[0][1] == 1:
@@ -534,8 +560,10 @@ def decomposition_display(factors):
             factor_str += "<sup> {0} </sup>".format(factor[1])
     return factor_str
 
+
 def no_endo_data():
     return "The endomorphism data for this class is not currently in the database."
+
 
 def g2_table(field, entry, is_bold):
     if is_bold:
@@ -545,12 +573,14 @@ def g2_table(field, entry, is_bold):
     ans += '<table class="g2" style="margin-top: 5px;margin-bottom: 5px;">\n<tr><td>{0}</td></tr>\n</table>\n'.format(entry)
     return ans
 
+
 def matrix_display(factor, end_alg):
     if end_alg[0] == "K" and end_alg[1] != factor[0] + ".":
         ans = r"$\mathrm{{M}}_{{{0}}}(${1}$)$".format(factor[1], end_alg[1][:-1])
     else:
         ans = r"$\mathrm{{M}}_{{{0}}}({1})$, where ${1}$ is {2}".format(factor[1], end_alg[0], end_alg[1])
     return ans
+
 
 def non_simple_loop(p, factors):
     ans = '<ul style="margin-top: 5px;margin-bottom: 8px;">\n'

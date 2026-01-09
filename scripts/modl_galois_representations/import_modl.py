@@ -100,7 +100,7 @@ def do_import(ll):
     # convert booleans
     for ky in ['base_ring_is_field', 'conductor_is_squarefree','is_absolutely_irreducible','is_irreducible', 'is_solvable', 'is_surjective', 'projective_is_surjective']:
         data[ky] = (data[ky]>0)
-# we need still to organize this better with respect to tie breaks 
+# we need still to organize this better with respect to tie breaks
 
 #    rep = reps.lucky({'label': data['label']})
     [detlabel, charpower] = get_det(data)

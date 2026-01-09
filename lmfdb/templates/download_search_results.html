@@ -1,19 +1,27 @@
-{% set lang_text = {'gp': 'Pari/GP', 'gap' : 'GAP', 'sage': 'SageMath', 'magma': 'Magma', 'oscar': 'Oscar'} %}
+{% set lang_text = {'text': 'Text', 'gp': 'Pari/GP', 'gap' : 'GAP', 'sage': 'SageMath', 'magma': 'Magma', 'oscar': 'Oscar', 'csv': 'CSV'} %}
 {% if not languages %}
-{% set languages = ['gp', 'sage', 'magma', 'oscar'] %}
+{% set languages = ['text', 'gp', 'sage', 'magma', 'oscar', 'csv'] %}
+{% endif %}
+{% if not downid %}
+{% set downid = 1 %} {# set externally so that we can distinguish in js between the download spans at the top and bottom of the results #}
 {% endif %}
 
 &nbsp;
 {% if info.exact_count %}
-  <span id="download-form">
+  <span class="download-form">
 {% else %}
-  <span id="download-msg">
+  <span class="download-msg">
     To download results, <a href="#" title="Get exact count" onclick="get_count_of_results(); return false;">determine the number of results</a>.
   </span>
-  <span id="download-form" style="display:none;">
+  <span class="download-form" style="display:none;">
 {% endif %}
-Download displayed columns for <span id="row_selector_hidden"><a onclick="return show_row_selector();" href="#">all rows</a></span><span id="row_selector_shown"><input id="download_row_count_input" name="download_row_count" type="text" /> rows</span> to &nbsp;
-{% for lang in languages %}
-  <a class="like-button" href="{{modify_url(query_add='Submit='+lang+'&download=1&query='+(info.query|string))}}" onclick="return update_download_url(this);">{{lang_text[lang]}}</a>&nbsp;
-{% endfor %}
+<a class="like-button" href="{{modify_url(query_add='download=1&query='+(info.query|string))}}" onclick="return update_download_url(this, {{downid}});">Download</a>
+{{KNOWL('doc.search_columns', 'displayed columns')}} for
+<input class="download_row_count_input" name="download_row_count{{downid}}" type="text" value="{% if info.start == 0%}all{% else %}{{info.start+1}}-{{upper_count}}{% endif %}" /> results
+<label for="downlang-select{{downid}}">to</label>
+<select name="downlang{{downid}}" id="downlang-select{{downid}}">
+  {% for lang in languages %}
+    <option value="{{lang}}"{% if lang=='text' %} selected{% endif %}>{{lang_text[lang]}}</option>
+  {% endfor %}
+</select>
 </span>

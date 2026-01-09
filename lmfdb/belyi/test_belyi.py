@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from lmfdb.tests import LmfdbTest
 
 
@@ -40,9 +39,11 @@ class BelyiTest(LmfdbTest):
 
     # searches
 
+    # for galmaps
+
     def test_deg_range(self):
-        L = self.tc.get("/Belyi/?deg=2-7")
-        assert "5T4-5_3.1.1_3.1.1-a" in L.get_data(as_text=True)
+        self.check_args("/Belyi/?deg=2-7", "5T3-4.1_4.1_2.2.1")
+        self.not_check_args("/Belyi/?deg=2-7", "1T1-1_1_1")
 
     def test_group_search(self):
         self.check_args("/Belyi/?group=7T5", "7T5-7_7_3.3.1-a")
@@ -87,6 +88,51 @@ class BelyiTest(LmfdbTest):
         self.check_args("/Belyi/?primitivization=2T1-2_2_1.1-a", "4T1-4_4_1.1.1.1-a")
         self.not_check_args("/Belyi/?primitivization=2T1-2_2_1.1-a", "1T1-1_1_1-a")
 
+    # for passports
+
+    def test_deg_range_passports(self):
+        self.check_args("/Belyi/?hst=Passports&deg=2-7", "5T3-4.1_4.1_2.2.1")
+        self.not_check_args("/Belyi/?hst=Passports&deg=2-7", "1T1-1_1_1")
+
+    def test_group_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&group=7T5", "7T5-7_7_3.3.1")
+        self.not_check_args("/Belyi/?hst=Passports&group=7T5", "1T1-1_1_1")
+
+    def test_abc_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&abc=2-4", "6T10-4.2_4.2_3.3")
+
+    def test_abc_list_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&abc_list=[7,6,6]", "7T7-7_3.2.1.1_3.2.1.1")
+        self.not_check_args("/Belyi/?abc_list=[7,6,6]", "1T1-1_1_1")
+
+    def test_genus_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&g=2", "6T6-6_6_3.3")
+        self.not_check_args("/Belyi/?hst=Passports&g=2", "1T1-1_1_1")
+
+    def test_max_orbit_size_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&maxdegbf=10", "7T7-6.1_3.3.1_5.2")
+        self.not_check_args("/Belyi/?hst=Passports&maxdegbf=10", "1T1-1_1_1")
+
+    def test_pass_size_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&pass_size=6", "7T6-4.2.1_4.2.1_3.2.2")
+        self.not_check_args("/Belyi/?hst=Passports&pass_size=6", "1T1-1_1_1")
+
+    def test_geom_type_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&geomtype=H", "6T8-4.1.1_4.1.1_3.3")
+        self.not_check_args("/Belyi/?hst=Passports&pass_size=6", "1T1-1_1_1")
+
+    def test_count_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&count=20", "5T1-5_5_5")
+
+    def test_primitive_search_passports(self):
+        self.check_args("Belyi/?hst=Passports&is_primitive=no", "4T1-4_4_1.1.1.1")
+        self.not_check_args("Belyi/?hst=Passports&is_primitive=no", "1T1-1_1_1")
+        self.check_args("Belyi/?hst=Passports&is_primitive=yes", "1T1-1_1_1")
+
+    def test_primitivization_search_passports(self):
+        self.check_args("/Belyi/?hst=Passports&primitivization=2T1-2_2_1.1", "4T1-4_4_1.1.1.1")
+        self.not_check_args("/Belyi/?hst=Passports&primitivization=2T1-2_2_1.1", "1T1-1_1_1")
+
     # downloads
 
     def test_download(self):
@@ -108,7 +154,7 @@ class BelyiTest(LmfdbTest):
             "/Belyi/download_galmap_to_sage/7T6-7_2.2.1.1.1_3.2.2-a",
             follow_redirects=True,
         )
-        assert(
+        assert (
             "phi = 1/2*(7*nu-15)*x^7/(x^7+1/10*(28*nu+7)*x^6+1/100*(-56*nu+511)*x^5+1/40*(-672*nu-1323)*x^4+1/20*(-42*nu-63)*x^3+1/40*(1701*nu+3024)*x^2+1/200*(-6237*nu-11178))"
             in page.get_data(as_text=True)
         )

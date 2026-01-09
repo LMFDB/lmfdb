@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
@@ -296,7 +295,7 @@ class WebBelyiGalmap():
         data["lambdas"] = [str(c)[1:-1] for c in galmap["lambdas"]]
         # plane model
         if galmap.get("plane_model"):
-            data["plane_model"] = raw_typeset(compress_expression(galmap["plane_model"])+'=0', r'$\displaystyle '+belyi_latex(galmap["plane_model"])+'=0$', extra=curve_ref)
+            data["plane_model"] = raw_typeset(galmap["plane_model"]+'=0', r'$\displaystyle '+compress_expression(belyi_latex(galmap["plane_model"]))+'=0$', extra=curve_ref)
 
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']

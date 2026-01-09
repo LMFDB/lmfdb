@@ -1,14 +1,18 @@
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from lmfdb import db
 
-from sage.all import ZZ, gap, cached_function
+from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
+from flask import render_template, url_for
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
+from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+
+CC_LIMIT = 160
 
 def knowl_cache(galois_labels=None, results=None):
     """
@@ -64,8 +68,21 @@ def list_with_mult(lis, names=True, cache=None):
 
 # Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
 def cyclestrings(perm):
-    a = ['('+','.join([str(u) for u in v])+')' for v in perm]
+    a = ('(' + ','.join(str(u) for u in v) + ')' for v in perm)
     return ''.join(a)
+
+def compress_cycle_type(ct):
+    bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
+    return ','.join(z + e for z,e in bits)
+
+def quick_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return '$'+str+'$'
+
 
 ############  Galois group object
 
@@ -113,7 +130,7 @@ class WebGaloisGroup:
         return int(self._data['order'])
 
     def gens(self):
-        return(self._data['gens'])
+        return (self._data['gens'])
 
     def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty') is not None:
@@ -129,7 +146,7 @@ class WebGaloisGroup:
     def otherrep_list(self, givebound=True, cache=None):
         sibs = self._data['siblings']
         pharse = r"with degree $\leq %d$" % self.sibling_bound()
-        if len(sibs)==0 and givebound:
+        if len(sibs) == 0 and givebound:
             return "There are no siblings "+pharse
         li = list_with_mult(sibs, names=False, cache=cache)
         if givebound:
@@ -143,41 +160,139 @@ class WebGaloisGroup:
         if str(self.n()) == "1":
             return "None needed"
         gens = self.gens()
-        gens = [cyclestrings(g) for g in gens]
+        gens = ['$'+cyclestrings(g)+'$' for g in gens]
         gens = ', '.join(gens)
         return gens
 
+    def aut_knowl(self):
+        return abstract_group_display_knowl(self._data['aut_label'])
+
     def gapgroupnt(self):
         if int(self.n()) == 1:
-            G = gap.SmallGroup(1, 1)
+            G = libgap.SmallGroup(1, 1)
         else:
-            G = gap('Group(['+self.generator_string()+'])')
+            gens = [SymmetricGroup(self.n())([tuple(cyc) for cyc in g]) for g in self.gens()]
+            G = libgap.Group([g._libgap_() for g in gens])
         return G
 
     def num_conjclasses(self):
         return self._data['num_conj_classes']
 
+    @lazy_attribute
+    def portrait(self):
+        pict = db.gps_transitive_portraits.lookup(self.label, projection='portrait')
+        if pict:
+            pict_link = '<div style="align:center">'+pict+'</div>'
+            return pict_link
+        return '<div style="text-align:center"><img src="%s" style="display:inline" height="150" width="116"/></div>' % url_for('static', filename='images/Evariste_galois.jpg')
+
+    @lazy_attribute
+    def wag(self):
+        return WebAbstractGroup(self.abstract_label())
+
+    def have_isomorphism(self):
+        #if self.wag.element_repr_type == "Lie":
+        #    return False
+        return 'isomorphism' in self._data
+
+    @lazy_attribute
+    def getisom(self):
+        # assumes isomorphism is in _data
+        wag = self.wag
+        imgs = [Permutations(self.n()).unrank(z) for z in self._data['isomorphism']]
+        imgs = [libgap.PermList(z) for z in imgs]
+        return wag.G.GroupHomomorphismByImagesNC(self.gapgroupnt(), wag.G_gens(), imgs)
+
+    @lazy_attribute
+    def factors_of_order(self):
+        return [z[0] for z in list(ZZ(self.order()).factor())]
+
+    @lazy_attribute
+    def characters(self):
+        return self.wag.characters
+
+    @lazy_attribute
     def conjclasses(self):
-        if 'conjclasses' in self._data:
-            return self._data['conjclasses']
+        if self.num_conjclasses() > CC_LIMIT:
+            return None
         g = self.gapgroupnt()
         n = self.n()
-        gap.set('cycletype', 'function(el, n) local ct; ct := CycleLengths(el, [1..n]); ct := ShallowCopy(ct); Sort(ct); ct := Reversed(ct); return(ct); end;')
-        cc = g.ConjugacyClasses()
-        ccn = [x.Size() for x in cc]
-        ccc = [x.Representative() for x in cc]
+        wag = self.wag
+        self.conjugacy_classes = wag.conjugacy_classes
         if int(n) == 1:
-            cc2 = [[1]]
-            cc = ['()']
+            self.conjugacy_classes[0].force_repr('()')
+            return [['()', 1, 1, '1', '1A',0]]
+        elif self.have_isomorphism():
+            isom = self.getisom
+            cc = [z.representative for z in self.conjugacy_classes]
+            cc1 = [wag.decode(z) for z in cc]
+            cc = [isom.Image(z) for z in cc1]
+            for j in range(len(self.conjugacy_classes)):
+                self.conjugacy_classes[j].force_repr(str(cc[j]))
+            ccn = [z.size for z in self.conjugacy_classes]
+            cclabels = [z.label for z in self.conjugacy_classes]
         else:
-            cc = ccc
-            cc2 = [x.cycletype(n) for x in cc]
-        cc2 = [str(x) for x in cc2]
-        cc2 = [re.sub(r"\[", '', x) for x in cc2]
-        cc2 = [re.sub(r"\]", '', x) for x in cc2]
-        ans = [[cc[j], ccc[j].Order(), ccn[j], cc2[j]] for j in range(len(ccn))]
-        self._data['conjclasses'] = ans
+            cc = g.ConjugacyClasses()
+            ccn = [x.Size() for x in cc]
+            cclabels = ['' for z in cc]
+            cc = [x.Representative() for x in cc]
+            if self.conjugacy_classes:
+                for j in range(len(self.conjugacy_classes)):
+                    self.conjugacy_classes[j].force_repr(' ')
+        cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
+        inds = [n-len(z) for z in cc2]
+        cc2 = [compress_cycle_type(z) for z in cc2]
+        ans = [[cc[j], cc[j].Order(), ccn[j], cc2[j],cclabels[j],inds[j]] for j in range(len(cc))]
         return ans
+
+    @lazy_attribute
+    def malle_a(self):
+        ccs = self.conjclasses
+        if not ccs:
+            return None
+        inds = [z[5] for z in ccs]
+        if len(inds) == 1:
+            return 0
+        if len(inds) == 0:
+            return None
+        inds = [z for z in inds if z > 0]
+
+        return QQ(f"1/{min(inds)}")
+
+    @lazy_attribute
+    def can_chartable(self):
+        if self.num_conjclasses() > CC_LIMIT:
+            return False
+        if not db.gps_groups.lookup(self.abstract_label()):
+            return False
+        return self.wag.complex_characters_known
+
+    @lazy_attribute
+    def regulars(self):
+        t = list(db.gps_regular_polynomials.search({'label':self.label})) # it will be a short list
+        if t:
+            genknowl = display_knowl("gg.generic_polynomial", "generic")
+
+            def msg(code):
+                if code is None:
+                    return ''
+                if code == []:
+                    return f' is {genknowl} for any base field $K$'
+                if code == [0]:
+                    return fr' is {genknowl} for the base field $\Q$'
+                code = ','.join(str(z) for z in code)
+                return fr' is {genknowl} for any base field $K$ of characteristic $\neq$ {code}'
+
+            regdata = [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
+            for j, (poly, msg) in enumerate(regdata):
+                if msg:
+                    regdata[j] = (poly, f'The polynomial $f_{{{j+1}}}$ {msg}')
+            return regdata
+
+    def chartable(self):
+        self.conjclasses # called to load info in self
+        return render_template("character-table.html", gp=self,
+            info={'dispv': sparse_cyclotomic_to_mathml})
 
     def sibling_bound(self):
         return self._data['bound_siblings']
@@ -285,20 +400,20 @@ def galois_module_knowl(n, t, index):
     name = db.gps_gmodules.lucky({'n': n, 't': t, 'index': index}, 'name')
     if name is None:
         return 'Error'
-    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>'%(name, n, t, index, name)
+    return '<a title = "%s [nf.galois_group.gmodule]" knowl="nf.galois_group.gmodule" kwargs="n=%d&t=%d&ind=%d">%s</a>' % (name, n, t, index, name)
 
 
 @cached_function
 def cclasses_display_knowl(n, t, name=None):
     ncc = WebGaloisGroup.from_nt(n,t).num_conjclasses()
     if not name:
-        name = 'The %d conjugacy class representatives for '% ncc
-        if n==1 and t==1:
+        name = 'The %d conjugacy class representatives for ' % ncc
+        if n == 1 and t == 1:
             name = 'The conjugacy class representative for '
         name += group_display_short(n, t)
-    if ncc < 50:
-        return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
-    return name + ' are not computed'
+    if ncc > 5000:
+        return name + ' are not computed'
+    return '<a title = "' + name + ' [gg.conjugacy_classes.data]" knowl="gg.conjugacy_classes.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
 
 
 @cached_function
@@ -306,9 +421,7 @@ def character_table_display_knowl(n, t, name=None):
     if not name:
         name = 'Character table for '
         name += group_display_short(n, t)
-    group = WebGaloisGroup.from_nt(n, t)
-    if ZZ(group.order()) < ZZ(10000000) and group.num_conjclasses() < 21:
-        return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
+    return '<a title = "' + name + ' [gg.character_table.data]" knowl="gg.character_table.data" kwargs="n=' + str(n) + '&t=' + str(t) + '">' + name + '</a>'
     return name + ' is not computed'
 
 
@@ -327,7 +440,7 @@ def group_phrase(n, t):
         inf += "A non-solvable"
     inf += ' group of order '
     inf += str(group['order'])
-    return(inf)
+    return (inf)
 
 
 @cached_function
@@ -376,8 +489,8 @@ def galois_group_data(n, t):
         inf += ", imprimitive"
     if n < 16:
         inf += '<div>'
-        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: '%('CHM label',str(n),str(t),'CHM label')
-        inf += '%s</div>'%(group['name'])
+        inf += '<a title="%s [gg.conway_name]" knowl="gg.conway_name" kwarts="n=%s&t=%s">%s</a>: ' % ('CHM label',str(n),str(t),'CHM label')
+        inf += '%s</div>' % (group['name'])
 
     rest = '<div><h3>Generators</h3><blockquote>'
     rest += WebGaloisGroup.from_nt(n,t).generator_string()
@@ -398,7 +511,7 @@ def galois_group_data(n, t):
     rest += '</div>'
 
     if group.get('pretty', None) is not None:
-        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  "+ inf + rest
+        return group['pretty'] + "&nbsp;&nbsp;&mdash;&nbsp;&nbsp;  " + inf + rest
     return inf + rest
 
 
@@ -416,26 +529,19 @@ def group_cclasses_knowl_guts(n, t):
     rest += '<blockquote>'
     rest += cclasses(n, t)
     rest += '</blockquote></div>'
+    rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
+    wgg = WebGaloisGroup(label)
+    if wgg.malle_a:
+        rest += '$%s$' % str(wgg.malle_a)
+    else:
+        rest += 'not computed'
     return rest
 
 
 @cached_function
 def group_character_table_knowl_guts(n, t):
-    label = base_label(n, t)
-    group = db.gps_transitive.lookup(label)
-    gname = group['name']
-    gname = gname.replace('=', ' = ')
-    if group.get('pretty', None) is not None:
-        gname = group['pretty']
-    inf = '<div>Character table for '
-    inf += gname
-    inf += '<blockquote>'
-    inf += '<pre>'
-    inf += chartable(n, t)
-    inf += '</pre>'
-    inf += '</blockquote></div>'
-    return(inf)
-
+    wgg = WebGaloisGroup.from_nt(n,t)
+    return wgg.chartable()
 
 @cached_function
 def galois_module_knowl_guts(n, t, index):
@@ -452,7 +558,7 @@ def galois_module_knowl_guts(n, t, index):
     out += r"<br>Action: $$\begin{aligned}"
     for g in mymod['gens']:
         matg = list_to_latex_matrix(g[1])
-        out += "%s &\\mapsto %s \\\\" %(str(g[0]), matg)
+        out += "%s &\\mapsto %s \\\\" % (str(g[0]), matg)
     out = out[:-2]
     out += r"\end{aligned}$$"
     out += "</blockquote>"
@@ -518,7 +624,7 @@ def resolve_display(resolves):
         if deg != old_deg:
             if old_deg < 0:
                 ans += '<table><tr><th>'
-                ans += '|G/N|<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
+                ans += r'$\card{(G/N)}$<th>Galois groups for <a title = "stem field(s)" knowl="nf.stem_field">stem field(s)</a>'
             else:
                 ans += '</td></tr>'
             old_deg = deg
@@ -548,19 +654,24 @@ def group_display_inertia(code):
 
 def cclasses(n, t):
     group = WebGaloisGroup.from_nt(n,t)
-    if group.num_conjclasses() >= 50:
-        return 'not computed'
+    #if group.num_conjclasses() >= 50:
+    #    return 'not computed'
     html = """<div>
             <table class="ntdata">
-            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td><td>Representative</td></tr></thead>
+            <thead><tr><td>Cycle Type</td><td>Size</td><td>Order</td>
+            <td><a title = "' + index + ' [gg.index]" knowl="gg.index">Index</a></td>
+            <td>Representative</td></tr></thead>
             <tbody>
          """
-    cc = group.conjclasses()
+    cc = group.conjclasses
+    if not cc:
+        return None
     for c in cc:
-        html += '<tr><td>' + str(c[3]) + '</td>'
-        html += '<td>' + str(c[2]) + '</td>'
-        html += '<td>' + str(c[1]) + '</td>'
-        html += '<td>' + str(c[0]) + '</td>'
+        html += f'<tr><td>${c[3]}$</td>'
+        html += f'<td>${c[2]}$</td>'
+        html += f'<td>${c[1]}$</td>'
+        html += f'<td>${c[5]}$</td>'
+        html += f'<td>${c[0]}$</td>'
     html += """</tr></tbody>
              </table>
           """
@@ -568,13 +679,7 @@ def cclasses(n, t):
 
 
 def chartable(n, t):
-    group = WebGaloisGroup.from_nt(n,t)
-    G = group.gapgroupnt()
-    ctable = str(G.CharacterTable().Display())
-    ctable = re.sub("^.*\n", '', ctable)
-    ctable = re.sub("^.*\n", '', ctable)
-    return ctable
-
+    return WebGaloisGroup.from_nt(n,t).chartable()
 
 def group_alias_table():
     aliases = get_aliases()
@@ -615,7 +720,7 @@ def complete_group_code(code):
         n = int(rematch.group(1))
         t = int(rematch.group(2))
         return [(n, t)]
-    # covert GAP code to abstract group label
+    # convert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
         code = "%s.%s" % (rematch.group(1), rematch.group(2))
@@ -869,9 +974,92 @@ def get_aliases():
     }
     for ky in aliases:
         nt = aliases[ky][0]
-        label = "%sT%s"% nt
+        label = "%sT%s" % nt
         aliases[ky] = siblings[label][:]
         if nt not in aliases[ky]:
             aliases[ky].append(nt)
         aliases[ky].sort()
     return aliases
+
+# These dictionaries are used by number field parsing code when user requests a dihedral galois group
+dihedral_gal = {
+    2: "2T1",
+    4: "4T2",
+    6: "6T2",
+    8: "8T4",
+    10: "10T2",
+    12: "12T3",
+    14: "14T2",
+    16: "16T13",
+    18: "18T5",
+    20: "20T4",
+    22: "22T2",
+    24: "24T13",
+    26: "26T2",
+    28: "28T4",
+    30: "30T3",
+    32: "32T31",
+    34: "34T2",
+    36: "36T10",
+    38: "38T2",
+    40: "40T12",
+    42: "42T5",
+    44: "44T4",
+    46: "46T2",
+}
+
+dihedral_ngal = {
+    3: "3T2",
+    4: "4T3",
+    5: "5T2",
+    6: "6T3",
+    7: "7T2",
+    8: "8T6",
+    9: "9T3",
+    10: "10T3",
+    11: "11T2",
+    12: "12T12",
+    13: "13T2",
+    14: "14T3",
+    15: "15T2",
+    16: "16T56",
+    17: "17T2",
+    18: "18T13",
+    19: "19T2",
+    20: "20T10",
+    21: "21T5",
+    22: "22T3",
+    23: "23T2",
+    24: "24T34",
+    25: "25T4",
+    26: "26T3",
+    27: "27T8",
+    28: "28T10",
+    29: "29T2",
+    30: "30T14",
+    31: "31T2",
+    32: "32T374",
+    33: "33T3",
+    34: "34T3",
+    35: "35T4",
+    36: "36T47",
+    37: "37T2",
+    38: "38T3",
+    39: "39T4",
+    40: "40T46",
+    41: "41T2",
+    42: "42T11",
+    43: "43T2",
+    44: "44T9",
+    45: "45T4",
+    46: "46T3",
+    47: "47T2",
+}
+
+multiquad = {
+    2: "2T1",
+    4: "4T2",
+    8: "8T3",
+    16: "16T4",
+    32: "32T39",
+}

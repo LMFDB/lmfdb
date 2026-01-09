@@ -1,23 +1,21 @@
-# -*- coding: utf-8 -*-
 #
 # AUTHOR: Jonathan Bober <jwbober@gmail.com>
 #
 # Simple Python module for extracting lists of zeros from Dave Platt's
 # tables of zeros of the zeta function.
 #
-
+from pathlib import Path
 import sqlite3
-import os
 import struct
 import sys
-from math import log
+from math import log2
 
 import mpmath
 mpmath.mp.prec = 300
 
-zeta_folder = os.path.expanduser('/home/lmfdb/data/zeros/zeta/')
-data_location = os.path.join(zeta_folder, 'data/')
-db_location = os.path.join(zeta_folder, 'index.db')
+zeta_folder = Path('/home/lmfdb/data/zeros/zeta/').expanduser()
+data_location = zeta_folder / 'data'
+db_location = zeta_folder / 'index.db'
 
 
 def list_zeros(filename,
@@ -33,39 +31,36 @@ def list_zeros(filename,
     figure out what file and offset to start with.
 
     INPUT:
-        - filename: the name of the file that we are going to grab the
-                    data from
-        - offset: the position to seek to in the file to get the start
-                  of the block that we are going to grab initial data
-                  from
-        - block_number: the index of this block in this file. (We need
-                        to know this because at least one of the files
-                        has some sort of garbage at the end, and so we
-                        might run out of blocks before we run out of
-                        file
-        - number of zeros: the number of zeros to return
-        - t_start/N_start: where to start the listing from. Either the
-                           height t_start or the N-th zero. If both are
-                           specified, then whichever comes last will
-                           be used.
 
+    - filename: the name of the file that we are going to grab the
+                data from
+    - offset: the position to seek to in the file to get the start
+              of the block that we are going to grab initial data
+              from
+    - block_number: the index of this block in this file. (We need
+                    to know this because at least one of the files
+                    has some sort of garbage at the end, and so we
+                    might run out of blocks before we run out of
+                    file
+    - number of zeros: the number of zeros to return
+    - t_start/N_start: where to start the listing from. Either the
+                       height t_start or the N-th zero. If both are
+                       specified, then whichever comes last will
+                       be used.
     """
-
     db = sqlite3.connect(db_location)
     c = db.cursor()
 
-    eps = mpmath.mpf(2) ** (-101)     # The (absolute!) precision to which
-                                    # the zeros are stored.
+    eps = mpmath.mpf(2) ** (-101)
+    # The (absolute!) precision to which the zeros are stored.
 
-    infile = open(os.path.join(data_location, filename), 'rb')
-
+    infile = (data_location / filename).open('rb')
     # infile is the file that actually contains the data that we want.
     # It is in a compressed binary format that we aren't going to
     # describe completely here. See [TODO].
 
-    number_of_blocks = struct.unpack('Q', infile.read(8))[0]  # The first 8 bytes of the
-                                                             # the file are a 64-bit
-                                                             # unsigned integer.
+    number_of_blocks = struct.unpack('Q', infile.read(8))[0]
+    # The first 8 bytes of the file are a 64-bit unsigned integer.
 
     # We move to the beginning of the block that we are interested in...
     infile.seek(offset, 0)
@@ -77,24 +72,24 @@ def list_zeros(filename,
     # Nt0 = N(t0), the number of zeros with imaginary part < t0, and similarly
     # for t1. So the number of zeros in this block is Nt1 - Nt0.
 
-    mpmath.mp.prec = log(t1, 2) + 10 + 101  # We make sure that the working precision
-                                            # is large enough. Note that we are adding
-                                            # a little too much here, so when these
-                                            # numbers are printed, they will have too
-                                            # many digits.
+    mpmath.mp.prec = log2(t1) + 10 + 101
+    # We make sure that the working precision is large enough. Note
+    # that we are adding a little too much here, so when these numbers
+    # are printed, they will have too many digits.
 
     t0 = mpmath.mpf(t0)
 
-    Z = 0   # Z is going to be a python integer that holds the
-            # difference gamma - t0, where gamma is a zero of
-            # the zeta function. Z will be a 104+ bit positive integer,
-            # and the difference is interpreted as Z * eps == Z * 2^(-101).
+    Z = 0
+    # Z is going to be a python integer that holds the
+    # difference gamma - t0, where gamma is a zero of
+    # the zeta function. Z will be a 104+ bit positive integer,
+    # and the difference is interpreted as Z * eps == Z * 2^(-101).
 
     count = 0   # the number of zeros we have found so far
     N = Nt0     # the index of the next zero
 
     # FIXME THIS VARIABLE IS NEVER USED
-    #L = []      # the zeros we have found so far
+    # L = []      # the zeros we have found so far
 
     # now we start finding zeros
     while count < number_of_zeros:
@@ -125,7 +120,7 @@ def list_zeros(filename,
                     return
                 t0, N0, filename, offset, block_number = result
 
-                infile = open(os.path.join(data_location, filename), 'rb')
+                infile = (data_location / filename).open('rb')
                 if not infile:
                     return
                 number_of_blocks = struct.unpack('Q', infile.read(8))[0]
@@ -137,7 +132,7 @@ def list_zeros(filename,
             #
             header = infile.read(8 * 4)
             t0, t1, Nt0, Nt1 = struct.unpack('ddQQ', header)
-            mpmath.mp.prec = log(t1, 2) + 10 + 101
+            mpmath.mp.prec = log2(t1) + 10 + 101
             t0 = mpmath.mpf(t0)
             Z = 0
 
@@ -162,8 +157,7 @@ def list_zeros(filename,
 
 
 def zeros_starting_at_t(t, number_of_zeros=1000):
-    if t < 14:
-        t = 14
+    t = max(t, 14)
     query = 'select * from zero_index where t <= ? order by t desc limit 1'
     c = sqlite3.connect(db_location).cursor()
     c.execute(query, (float(t),))
@@ -173,14 +167,14 @@ def zeros_starting_at_t(t, number_of_zeros=1000):
 
 def zeros_starting_at_N(N, number_of_zeros=1000):
     N = int(N)
-    if N < 0:
-        N = 0
+    N = max(N, 0)
 
     query = 'select * from zero_index where N <= ? order by N desc limit 1'
     c = sqlite3.connect(db_location).cursor()
     c.execute(query, (N,))
     t0, N0, filename, offset, block_number = c.fetchone()
     return list_zeros(filename, offset, block_number, number_of_zeros=number_of_zeros, N_start=N)
+
 
 if __name__ == "__main__":
     t = float(sys.argv[1])

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about elliptic curves over number Fields
 # Authors: Harald Schilly and John Cremona
 
@@ -10,13 +9,13 @@ from flask import render_template, request, url_for, redirect, make_response, ab
 from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
     to_dict, flash_error, display_knowl, Downloader,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer
+    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer, CodeSnippet
     )
 from lmfdb.utils.search_parsing import search_parser
 
@@ -201,7 +200,7 @@ def show_ecnf1(nf):
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -224,7 +223,7 @@ def show_ecnf_conductor(nf, conductor_label):
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -302,7 +301,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
-                           KNOWL_ID="ec.%s"%label,
+                           KNOWL_ID="ec.%s" % label,
                            learnmore=learnmore_list())
 
 @ecnf_page.route("/data/<label>")
@@ -344,7 +343,7 @@ def make_cm_query(cm_disc_str):
 def parse_cm_list(inp, query, qfield):
     query[qfield] = {'$in': make_cm_query(inp)}
 
-Ra=PolynomialRing(QQ,'a')
+Ra = PolynomialRing(QQ,'a')
 
 ecnf_columns = SearchColumns([
     MultiProcessedCol("label", "ec.curve_label", "Label", ["short_label", "field_label", "conductor_label", "iso_label", "number"],
@@ -365,20 +364,20 @@ ecnf_columns = SearchColumns([
     ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center", default=False),
     FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5, default=False),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes",
-                 lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
+                 lambda primes: ", ".join(''.join(str(p.replace('w', 'a')).split('*')) for p in primes) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
-                      lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
+                      lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s" % (rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
                       mathmode=True, align="center"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                 lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
-    ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
+                 lambda tors: r"\oplus".join(r"\Z/%s\Z" % n for n in tors) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
+    ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$" % ("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
                  short_title="CM discriminant", mathmode=True, align="center"),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
-                 lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
-                 short_title="Sato-Tate group", align="center", orig="cm_type", apply_download=lambda v: '1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
+                 lambda v: st_display_knowl('1.2.A.1.1a' if v == 0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
+                 short_title="Sato-Tate group", align="center", orig="cm_type", apply_download=lambda v: '1.2.A.1.1a' if v == 0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
     CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve", default=False),
     CheckCol("base_change", "ec.base_change", "Base change", default=False),
     CheckCol("semistable", "ec.semistable", "Semistable", default=False),
@@ -387,7 +386,7 @@ ecnf_columns = SearchColumns([
                  short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
-                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
+                 short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
     MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш", default=False),
     ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", default=False),
     ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left", default=False),
@@ -524,7 +523,7 @@ def elliptic_curve_search(info, query):
                     modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
-                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if l.strip() not in max_primes]
                     max_primes.sort(key=int)
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'
@@ -548,7 +547,7 @@ def browse():
     data = ECNF_stats().sigs_by_deg
     # We could use the dict directly but then could not control the order
     # of the keys (degrees), so we use a list
-    info = [[d,['%s,%s'%sig for sig in data[d]]] for d in sorted(data.keys())]
+    info = [[d,['%s,%s' % sig for sig in data[d]]] for d in sorted(data.keys())]
     t = 'Elliptic curves over number fields'
     bread = [('Elliptic curves', url_for("ecnf.index")),
              ('Browse', ' ')]
@@ -556,7 +555,7 @@ def browse():
 
 @ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
-    if d==1:
+    if d == 1:
         return redirect(url_for("ec.statistics"))
     info = {}
 
@@ -574,19 +573,19 @@ def statistics_by_degree(d):
         return [f,counts_by_field[f]]
 
     def sig_counts(sig):
-        return ['%s,%s'%sig, counts_by_sig[sig], [field_counts(f) for f in fields_by_sig[sig]]]
+        return ['%s,%s' % sig, counts_by_sig[sig], [field_counts(f) for f in fields_by_sig[sig]]]
 
     info['summary'] = ECNF_stats().degree_summary(d)
     info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[d]]
-    if d==2:
+    if d == 2:
         t = 'Elliptic curves over quadratic number fields'
-    elif d==3:
+    elif d == 3:
         t = 'Elliptic curves over cubic number fields'
-    elif d==4:
+    elif d == 4:
         t = 'Elliptic curves over quartic number fields'
-    elif d==5:
+    elif d == 5:
         t = 'Elliptic curves over quintic number fields'
-    elif d==6:
+    elif d == 6:
         t = 'Elliptic curves over sextic number fields'
     else:
         t = 'Elliptic curves over number fields of degree {}'.format(d)
@@ -597,7 +596,7 @@ def statistics_by_degree(d):
 
 @ecnf_page.route("/browse/<int:d>/<int:r>/")
 def statistics_by_signature(d,r):
-    if d==1:
+    if d == 1:
         return redirect(url_for("ec.statistics"))
 
     info = {}
@@ -611,7 +610,7 @@ def statistics_by_signature(d,r):
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
-    if r not in range(d%2,d+1,2):
+    if r not in range(d % 2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
     if not info['summary']:
@@ -681,18 +680,10 @@ def ecnf_code(**args):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     lang = args['download_type']
-    if lang=='gp':
-        lang = 'pari'
 
-    from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode = make_code(label, lang)
-    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
-    for k in sorted_code_names:
-        if Ecode[k]:
-            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
-    return code
+    from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
+    code = CodeSnippet(make_code(label))
+    return code.export_code(label, lang, sorted_code_names)
 
 
 def disp_tor(t):
@@ -792,8 +783,8 @@ class ECNFSearchArray(SearchArray):
             )
 
         tor_opts = ([("", ""),
-                     ("[]", "trivial")] +
-                    [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
+                     ("[]", "trivial")]
+                    + [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
         torsion_structure = SelectBox(
             name="torsion_structure",
             label="Torsion structure",

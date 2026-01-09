@@ -113,13 +113,13 @@ def Dict(*f, **kwargs):
         pass
 
     def initConstantValueTypes(self, x):
-        tmp = {(f[0])(k): (f[1])(v) for (k, v) in x.items()}
-        # tmp = dict([(wrapper(f[0])(k), wrapper(f[1])(v)) for (k,v) in x.items()])
+        tmp = {(f[0])(k): (f[1])(v) for k, v in x.items()}
+        # tmp = dict([(wrapper(f[0])(k), wrapper(f[1])(v)) for k, v in x.items()])
         dict.__init__(self, tmp)
 
     def initVariableValueTypes(self, x):
-        # tmp = dict([(k,wrapper(f[0][k])(v)) for (k,v) in x.items()])
-        tmp = {k: (f[0][k])(v) for (k, v) in x.items()}
+        # tmp = dict([(k,wrapper(f[0][k])(v)) for k, v in x.items()])
+        tmp = {k: (f[0][k])(v) for k, v in x.items()}
         dict.__init__(self, tmp)
 
     if len(f) == 2:

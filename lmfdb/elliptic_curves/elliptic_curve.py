@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import os
 import re
@@ -14,14 +13,14 @@ from lmfdb.elliptic_curves.web_ec import latex_equation
 
 from lmfdb import db
 from lmfdb.app import app
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.api import datapage
@@ -68,7 +67,9 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
-            ('Congruent number curves', url_for(".render_congruent_number_data"))]
+            ('Congruent number curves', url_for(".render_congruent_number_data")),
+            ('Stein-Watkins dataset', url_for(".render_sw_ecdb")),
+            ('BHKSSW dataset', url_for(".render_bhkssw"))]
 
 
 def learnmore_list_add(learnmore_label, learnmore_url):
@@ -189,13 +190,13 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
+        return r'Currently, the database includes {} {} over $\Q$ in {} {}, with {} at most {}.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
 
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
 
     knowls = {'rank': 'ec.rank',
-              'sha': 'ec.q.analytic_sha_order',
+              'sha': 'ec.analytic_sha_order',
               'torsion_structure': 'ec.torsion_order'}
 
     top_titles = {'rank': 'rank',
@@ -210,7 +211,7 @@ class ECstats(StatsDisplay):
 
     stat_list = [
         {'cols': 'rank', 'totaler': {'avg': True}},
-        {'cols': 'torsion_structure'},
+        {'cols': 'torsion_structure', 'totaler': {'avg': False}},
         {'cols': 'sha', 'totaler': {'avg': False}},
     ]
 
@@ -232,6 +233,10 @@ def ctx_elliptic_curve_summary():
 def ctx_gl2_subgroup():
     return {'gl2_subgroup_data': gl2_subgroup_data}
 
+@app.context_processor
+def ctx_ec_reduction_type():
+    return {'ec_reduction_type': lambda x: ["nonsplit multiplicative","additive","split multiplicative","good"][x+1] if x >= -1 and x <= 2 else "unknown" }
+
 @ec_page.route("/stats")
 def statistics():
     title = r'Elliptic curves over $\Q$: Statistics'
@@ -247,7 +252,7 @@ def by_conductor(conductor):
     if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
-            return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
+            return redirect(url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['conductor'] = conductor
@@ -395,28 +400,13 @@ modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
 modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
 modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
-class EC_download(Downloader):
-    table = db.ec_curvedata
-    title = "Elliptic curves"
-    inclusions = {
-        "curve": (
-            ["ainvs"],
-            {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
-                "magma": 'curve := EllipticCurve(out`ainvs);',
-                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
-            }
-        )
-    }
-
 def ec_postprocess(res, info, query):
     labels = [rec["lmfdb_label"] for rec in res]
     mwgens = {rec["lmfdb_label"]: rec["gens"] for rec in db.ec_mwbsd.search({"lmfdb_label":{"$in":labels}}, ["lmfdb_label", "gens"])}
     for rec in res:
         gens = mwgens.get(rec["lmfdb_label"])
         if gens is not None:
-            gens = [(a/c, b/c) for (a,b,c) in gens]
+            gens = [(a / c, b / c) for a, b, c in gens]
         rec["mwgens"] = gens
     return res
 
@@ -444,14 +434,14 @@ ec_columns = SearchColumns([
                        default=lambda info: info.get("discriminant"), align="center", apply_download=lambda s, a: s*a),
     MathCol("rank", "ec.rank", "Rank"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                  lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
     ProcessedCol("geom_end_alg", "ag.endomorphism_algebra", r"$\textrm{End}^0(E_{\overline\Q})$",
-                  lambda v: r"$\Q$" if not v else r"$\Q(\sqrt{%d})$"%(integer_squarefree_part(v)),
+                  lambda v: r"$\Q$" if not v else r"$\Q(\sqrt{%d})$" % (integer_squarefree_part(v)),
                   short_title="Qbar-end algebra", align="center", orig="cm", default=False),
     ProcessedCol("cm_discriminant", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else v,
                   short_title="CM discriminant", mathmode=True, align="center", orig="cm"),
-    ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else '1.2.B.2.1a'),
-                  short_title="Sato-Tate group", align="center", orig="cm", apply_download=lambda v:'1.2.A.1.1a' if v==0 else '1.2.B.2.1a', default=False),
+    ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate", lambda v: st_display_knowl('1.2.A.1.1a' if v == 0 else '1.2.B.2.1a'),
+                  short_title="Sato-Tate group", align="center", orig="cm", apply_download=lambda v:'1.2.A.1.1a' if v == 0 else '1.2.B.2.1a', default=False),
     CheckCol("semistable", "ec.reduction", "Semistable", default=False),
     CheckCol("potential_good_reduction", "ec.reduction", "Potentially good", default=False),
     ProcessedCol("nonmax_primes", "ec.maximal_elladic_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join([str(p) for p in primes]),
@@ -470,23 +460,50 @@ ec_columns = SearchColumns([
     MathCol("num_int_pts", "ec.q.integral_points", "Integral points",
              default=lambda info: info.get("num_int_pts"), align="center"),
     MathCol("degree", "ec.q.modular_degree", "Modular degree", align="center", default=False),
-    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f"%(RealField(20)(v)), short_title="Faltings height",
+    ProcessedCol("faltings_height", "ec.q.faltings_height", "Faltings height", lambda v: "%.6f" % (RealField(20)(v)), short_title="Faltings height",
                   default=lambda info: info.get("faltings_height"), mathmode=True, align="right"),
-    ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$"%(v[0],v[1]) if v[1] > 1 else r"$%s$"%v[0],
+    ProcessedCol("jinv", "ec.q.j_invariant", "j-invariant", lambda v: r"$%s/%s$" % (v[0],v[1]) if v[1] > 1 else r"$%s$" % v[0],
                   short_title="j-invariant", align="center", default=False),
+    FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
+    FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
-    MathCol("mwgens", "ec.mordell_weil_group", "MW-generators", default=False),
+    ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
+    MathCol("manin_constant", "ec.q.manin_constant", "Manin constant", align="center", default=lambda info: info.get("manin_constant")),
 ])
+
 
 class ECDownloader(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
+
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
+
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
+                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+            }
+        )
+    }
+
+    def postprocess(self, row, info, query):
+        # Unfortunately, I don't see a good way to batch these database calls
+        # given how the download iterator works
+        if "mwgens" in info.get("showcol", "").split("."):
+            gens = db.ec_mwbsd.lucky({"lmfdb_label": row["lmfdb_label"]}, "gens")
+            if gens is not None:
+                gens = [(ZZ(a) / c, ZZ(b) / c) for a, b, c in gens]
+            row["mwgens"] = gens
+        return row
 
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
@@ -510,13 +527,15 @@ def elliptic_curve_search(info, query):
             query['num_bad_primes'] = 1
         elif info['conductor_type'] == 'squarefree':
             query['semistable'] = True
-        elif info['conductor_type'] == 'divides':
+        elif info['conductor_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('conductor'), int):
                 err = "You must specify a single conductor"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
+            else:
+                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
     parse_ints(info,query,'adelic_level')
@@ -532,7 +551,9 @@ def elliptic_curve_search(info, query):
             flash_error(err)
             raise ValueError(err)
     parse_floats(info,query,'regulator','regulator')
-    parse_floats(info, query, 'faltings_height', 'faltings_height')
+    parse_floats(info,query,'faltings_height','faltings_height')
+    parse_floats(info,query,'abc_quality')
+    parse_floats(info,query,'szpiro_ratio')
     if info.get('reduction'):
         if info['reduction'] == 'semistable':
             query['semistable'] = True
@@ -564,6 +585,7 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
+    parse_ints(info, query, 'manin_constant')
     if info.get('galois_image'):
         labels = [a.strip() for a in info['galois_image'].split(',')]
         elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
@@ -600,7 +622,7 @@ def elliptic_curve_search(info, query):
                     modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
-                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if l.strip() not in max_primes]
                     max_primes.sort(key=int)
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'
@@ -716,7 +738,7 @@ def render_isogeny_class(iso_class):
                            bread=class_data.bread,
                            title=class_data.title,
                            friends=class_data.friends,
-                           KNOWL_ID="ec.q.%s"%iso_class,
+                           KNOWL_ID="ec.q.%s" % iso_class,
                            downloads=class_data.downloads,
                            learnmore=learnmore_list_add(*learnmore_isog_picture) if class_data.class_size > 1 else learnmore_list())
 
@@ -727,10 +749,8 @@ def modular_form_display(label, number):
         number = int(number)
     except ValueError:
         number = 10
-    if number < 10:
-        number = 10
-    if number > 1000:
-        number = 1000
+    number = max(number, 10)
+    number = min(number, 1000)
     ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
@@ -757,20 +777,21 @@ def render_curve_webpage_by_label(label):
     code = data.code()
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
-    T =  render_template("ec-curve.html",
-                         properties=data.properties,
-                         data=data,
-                         # set default show names but actually code snippets are filled in only when needed
-                         code=code,
-                         bread=data.bread, title=data.title,
-                         friends=data.friends,
-                         downloads=data.downloads,
-                         KNOWL_ID="ec.q.%s"%lmfdb_label,
-                         BACKUP_KNOWL_ID="ec.q.%s"%data.lmfdb_iso,
-                         learnmore=learnmore_list_add(*learnmore_curve_picture))
-    ec_logger.debug("Total walltime: %ss"%(time.time() - t0))
-    ec_logger.debug("Total cputime: %ss"%(cputime(cpt0)))
+    T = render_template("ec-curve.html",
+                        properties=data.properties,
+                        data=data,
+                        # set default show names but actually code snippets are filled in only when needed
+                        code=code,
+                        bread=data.bread, title=data.title,
+                        friends=data.friends,
+                        downloads=data.downloads,
+                        KNOWL_ID="ec.q.%s" % lmfdb_label,
+                        BACKUP_KNOWL_ID="ec.q.%s" % data.lmfdb_iso,
+                        learnmore=learnmore_list_add(*learnmore_curve_picture))
+    ec_logger.debug("Total walltime: %ss" % (time.time() - t0))
+    ec_logger.debug("Total cputime: %ss" % (cputime(cpt0)))
     return T
+
 
 @ec_page.route("/data/<label>")
 def EC_data(label):
@@ -914,14 +935,14 @@ def render_congruent_number_data():
         return redirect(url_for(".render_single_congruent_number", n=info['lookup']))
     learnmore = learnmore_list_remove('Congruent numbers and curves')
     t = 'Congruent numbers and congruent number curves'
-    bread = get_bread(t)
+    bread = [("Datasets", url_for("datasets")), (t, " ")]
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
             return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
-            return redirect(url_for(".rational_elliptic_curves"))
+            return redirect(url_for(".render_congruent_number_data"))
 
     return render_template("congruent_number_data.html", info=info, title=t, bread=bread, learnmore=learnmore)
 
@@ -935,34 +956,113 @@ def render_single_congruent_number(n):
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
+@ec_page.route("/stein-watkins")
+def render_sw_ecdb():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('Stein-Watkins dataset')
+    t = 'Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("Stein-Watkins dataset", " ")]
+    if 'Fetch' in info:
+        errors = []
+        if info.get("ctype") == "all":
+            fname = "a.{:03d}"
+            kmax = 999
+        elif info.get("ctype") == "prime":
+            fname = "p.{:02d}"
+            kmax = 99
+        else:
+            errors.append("Invalid conductor type")
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a nonnegative integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/stein_watkins_ecdb/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("sw_ecdb.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
+
+@ec_page.route("/BHKSSW")
+def render_bhkssw():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('BHKSSW dataset')
+    t = 'Balakrishnan-Ho-Kaplan-Spicer-Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("BHKSSW dataset", " ")]
+    #if 'filename' in info:
+    #    filepath = os.path.join(os.path.expanduser('~/data/bhkssw_ecdb/' + info['filename']))
+    #    if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+    #        return send_file(filepath, as_attachment=True)
+    #    else:
+    #        flash_error('File {} not found'.format(info['filename']))
+    #        return redirect(url_for(".render_bhkssw"))
+    # This format was nice, but not possible with the 30-second timeout limitation
+    #info['files'] = [ # number of curves, size in MB, lower bound, upper bound, filename
+    #    (2249362, 151, "0", r"1 \cdot 10^8", "1e8db.txt"),
+    #    (1758056, 123, r"1 \cdot 10^8", r"2 \cdot 10^8", "2e8db.txt"),
+    #    (11300506, 798, r"2 \cdot 10^8", r"1 \cdot 10^9", "1e9db.txt"),
+    #    (11982016, 866, r"1 \cdot 10^9", r"2 \cdot 10^9", "2e9db.txt"),
+    #    (10976368, 800, r"2 \cdot 10^9", r"3 \cdot 10^9", "3e9db.txt"),
+    #    (10395560, 768, r"3 \cdot 10^9", r"4 \cdot 10^9", "4e9db.txt"),
+    #    (9932368, 744, r"4 \cdot 10^9", r"5 \cdot 10^9", "5e9db.txt"),
+    #    (9584588, 720, r"5 \cdot 10^9", r"6 \cdot 10^9", "6e9db.txt"),
+    #    (9385318, 707, r"6 \cdot 10^9", r"7 \cdot 10^9", "7e9db.txt"),
+    #    (9071666, 685, r"7 \cdot 10^9", r"8 \cdot 10^9", "8e9db.txt"),
+    #    (8975214, 679, r"8 \cdot 10^9", r"9 \cdot 10^9", "9e9db.txt"),
+    #    (8788686, 666, r"9 \cdot 10^9", r"1.0 \cdot 10^{10}", "10e9db.txt"),
+    #    (8642210, 664, r"1.0 \cdot 10^{10}", r"1.1 \cdot 10^{10}", "11e9db.txt"),
+    #    (8477024, 652, r"1.1 \cdot 10^{10}", r"1.2 \cdot 10^{10}", "12e9db.txt"),
+    #    (8383290, 645, r"1.2 \cdot 10^{10}", r"1.3 \cdot 10^{10}", "13e9db.txt"),
+    #    (8275108, 638, r"1.3 \cdot 10^{10}", r"1.4 \cdot 10^{10}", "14e9db.txt"),
+    #    (8143456, 628, r"1.4 \cdot 10^{10}", r"1.5 \cdot 10^{10}", "15e9db.txt"),
+    #    (8106334, 626, r"1.5 \cdot 10^{10}", r"1.6 \cdot 10^{10}", "16e9db.txt"),
+    #    (7959996, 615, r"1.6 \cdot 10^{10}", r"1.7 \cdot 10^{10}", "17e9db.txt"),
+    #    (7903210, 611, r"1.7 \cdot 10^{10}", r"1.8 \cdot 10^{10}", "18e9db.txt"),
+    #    (7849564, 607, r"1.8 \cdot 10^{10}", r"1.9 \cdot 10^{10}", "19e9db.txt"),
+    #    (7781996, 602, r"1.9 \cdot 10^{10}", r"2.0 \cdot 10^{10}", "20e9db.txt"),
+    #    (7822372, 605, r"2.0 \cdot 10^{10}", r"2.1 \cdot 10^{10}", "21e9db.txt"),
+    #    (7636198, 591, r"2.1 \cdot 10^{10}", r"2.2 \cdot 10^{10}", "22e9db.txt"),
+    #    (7562706, 586, r"2.2 \cdot 10^{10}", r"2.3 \cdot 10^{10}", "23e9db.txt"),
+    #    (7593218, 588, r"2.3 \cdot 10^{10}", r"2.4 \cdot 10^{10}", "24e9db.txt"),
+    #    (7505566, 582, r"2.4 \cdot 10^{10}", r"2.5 \cdot 10^{10}", "25e9db.txt"),
+    #    (7409408, 575, r"2.5 \cdot 10^{10}", r"2.6 \cdot 10^{10}", "26e9db.txt"),
+    #    (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
+    #]
+    if 'Fetch' in info:
+        fname = "{}.txt"
+        kmax = 2699
+        errors = []
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a positive integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/bhkssw_split/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("bhkssw.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
+
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
-code_names = {'curve': 'Define the curve',
-                 'simple_curve': 'Simplified equation',
-                 'mwgroup': 'Mordell-Weil group',
-                 'gens': 'Mordell-Weil generators',
-                 'tors': 'Torsion subgroup',
-                 'intpts': 'Integral points',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'jinv': 'j-invariant',
-                 'cm': 'Potential complex multiplication',
-                 'faltings': 'Faltings height',
-                 'stable_faltings': 'Stable Faltings height',
-                 'rank': 'Mordell-Weil rank',
-                 'analytic_rank': 'Analytic rank',
-                 'reg': 'Regulator',
-                 'real_period': 'Real Period',
-                 'cp': 'Tamagawa numbers',
-                 'ntors': 'Torsion order',
-                 'sha': 'Order of Sha',
-                 'L1': 'Special L-value',
-                 'bsd_formula': 'BSD formula',
-                 'qexp': 'q-expansion of modular form',
-                 'moddeg': 'Modular degree',
-                 'manin': 'Manin constant',
-                 'localdata': 'Local data',
-                 'galrep': 'mod p Galois image'}
 
 Fullname = {
     'magma': 'Magma',
@@ -980,20 +1080,10 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
     Ecode = E.code()
     lang = args['download_type']
-    if not lang in Fullname:
+    if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
-    name = Fullname[lang]
-    if lang=='gp':
-        lang = 'pari'
-    comment = Ecode.pop('comment').get(lang).strip()
-    code = f"{comment} {name} code for working with elliptic curve {label}\n\n"
-    for k in Ecode: # OrderedDict
-        if 'comment' not in Ecode[k] or lang not in Ecode[k]:
-            continue
-        code += f"\n{comment} {Ecode[k]['comment']}: \n"
-        code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
-
-    return code
+    code = CodeSnippet(Ecode)
+    return code.export_code(label, lang, sorted_code_names)
 
 
 def tor_struct_search_Q(prefill="any"):
@@ -1008,7 +1098,7 @@ def tor_struct_search_Q(prefill="any"):
 
     gps = [[fix(""), "any"], [fix("[]"), "trivial"]]
     for n in range(2,13):
-        if n!=11:
+        if n != 11:
             gps.append(cyc(n))
     for n in range(1,5):
         gps.append(cyc2(2,2*n))
@@ -1141,7 +1231,9 @@ class ECSearchArray(SearchArray):
              ("adelic_level", "adelic level", ["adelic_level", "adelic_index", "adelic_genus"]),
              ("adelic_index", "adelic index", ["adelic_index", "adelic_level", "adelic_genus"]),
              ("adelic_genus", "adelic genus", ["adelic_genus", "adelic_level", "adelic_index"]),
-             ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"])]
+             ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("abc_quality", "$abc$ quality", ["abc_quality", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"])]
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
@@ -1160,6 +1252,7 @@ class ECSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             min_width=85)
         cond = TextBoxWithSelect(
@@ -1199,7 +1292,7 @@ class ECSearchArray(SearchArray):
             options=torsion_opts)
         cm_opts = ([('', ''), ('noCM', 'no potential CM'), ('CM', 'potential CM')]
                    + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
+                   + [('-%d' % d, 'CM discriminant -%d' % d) for d in [3,4,7,8,11,12,16,19,27,28,43,67,163]])
         cm = SelectBox(
             name="cm",
             label="Complex multiplication",
@@ -1322,6 +1415,25 @@ class ECSearchArray(SearchArray):
             knowl="ec.galois_rep_adelic_image",
             example="3",
             advanced=True)
+        abc_quality = TextBox(
+            name="abc_quality",
+            label="$abc$ quality",
+            knowl="ec.q.abc_quality",
+            example="1.5-",
+            advanced=True)
+        szpiro_ratio = TextBox(
+            name="szpiro_ratio",
+            label="Szpiro ratio",
+            knowl="ec.q.szpiro_ratio",
+            example="8-",
+            advanced=True)
+
+        manin_constant = TextBox(
+            name="manin_constant",
+            label="Manin constant",
+            knowl="ec.q.manin_constant",
+            example="2",
+            advanced=True)
 
         count = CountBox()
 
@@ -1337,7 +1449,8 @@ class ECSearchArray(SearchArray):
             [galois_image, nonmax_primes],
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
-            [count]
+            [abc_quality, szpiro_ratio],
+            [count, manin_constant]
             ]
 
         self.refine_array = [
@@ -1345,5 +1458,6 @@ class ECSearchArray(SearchArray):
             [bad_primes, optimal, cm, torsion],
             [class_deg, isodeg, class_size, num_int_pts],
             [sha, sha_primes, regulator, reduction, faltings_height],
-            [galois_image, nonmax_primes, adelic_level, adelic_index, adelic_genus]
+            [galois_image, adelic_level, adelic_index, adelic_genus],
+            [nonmax_primes, abc_quality, szpiro_ratio, manin_constant],
             ]

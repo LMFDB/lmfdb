@@ -14,11 +14,23 @@
     <td>{% for g in info.stats.gs %} <a href="?g={{g}}">{{g}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('ag.base_field', 'base field cardinality') }}:</td>
-    <td>{% for q in info.q_ranges %} <a href="?q={{q}}">{{q}}</a>&nbsp; {% endfor %}</td>
+    <td colspan="3">{% for q in info.q_ranges %} <a href="?q={{q}}">{{q}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting isogeny classes</a> or a <a href="{{url_for('.random_class')}}">random isogeny class</a></td>
+    <td>By {{ KNOWL('av.fq.p_rank', '$p$-rank') }}:</td>
+    <td>{% for r in [0] + info.stats.gs %} <a href="?p_rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+    <td style="padding-left:80px;">By {{ KNOWL('av.fq.p_rank', '$p$-corank') }}:</td>
+    <td>{% for r in [0] + info.stats.gs %} <a href="?p_corank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
-    <td colspan="2">A <a href="?search_type=Counts">table</a> by dimension and base field.</td>
+    <td>By {{ KNOWL('av.fq.angle_rank', 'angle rank') }}:</td>
+    <td>{% for r in [0] + info.stats.gs %} <a href="?angle_rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+    <td style="padding-left:80px;">By {{ KNOWL('av.fq.angle_rank', 'angle corank') }}:</td>
+    <td>{% for r in [0] + info.stats.gs %} <a href="?angle_corank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td colspan="4">By <a href="?primitive=yes">primitive</a>&nbsp;&nbsp;&nbsp; <a href="?simple=yes">simple</a>&nbsp;&nbsp;&nbsp; <a href="?geom_simple=yes">geom. simple</a>&nbsp;&nbsp;&nbsp; <a href="?p_corank=0">ordinary</a>&nbsp;&nbsp;&nbsp; <a href="?newton_elevation=1">almost ordinary</a>&nbsp;&nbsp;&nbsp; <a href="?angle_rank=0">supersingular</a>&nbsp;&nbsp;&nbsp; <a href="?polarizable=yes">princ. polarizable</a>&nbsp;&nbsp;&nbsp; <a href="?jacobian=yes">Jacobian</a></td>
+  </tr><tr>
+    <td colspan="4">Some <a href="{{url_for('.interesting')}}">interesting isogeny classes</a> or a <a href="{{url_for('.random_class')}}">random isogeny class</a></td>
+  </tr><tr>
+    <td colspan="4">A <a href="?search_type=Counts">table</a> by dimension and base field.</td>
   </tr>
 </table>
 

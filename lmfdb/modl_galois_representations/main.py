@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 
 import re
 from lmfdb import db
 
-from flask import render_template, url_for, request, redirect, abort
+from psycodict.encoding import Json
+from flask import render_template, url_for, request, redirect, make_response, abort
 
 from sage.all import ZZ, QQ
 
@@ -24,6 +24,8 @@ from lmfdb.utils import (
     parse_bool,
     parse_primes,
     parse_rats,
+    parse_group_label_or_order,
+    parse_kerpol_string,
     integer_divisors,
     StatsDisplay,
     comma,
@@ -40,8 +42,8 @@ from lmfdb.api import datapage
 
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.modl_galois_representations import modlgal_page
-from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty
-from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.modl_galois_representations.web_modlgal import WebModLGalRep, get_bread, codomain, image_pretty_with_abstract
+from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_group_label_regex
 
 LABEL_RE = re.compile(r"[1-9]\d*.[1-9]\d*.[1-9]\d*.[1-9]\d*(-[1-9]\d*)?")
 
@@ -64,10 +66,10 @@ def index():
 @modlgal_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=ModLGalRepSearchArray())
-    if len(info) > 1:
+    if request.args:
         return modlgal_search(info)
     title = r"Mod-$\ell$ Galois representations"
-    codomains = ["GL,1,2,1","GL,2,2,1","GL,2,3,1","GL,2,5,1","GSp,4,2,1"]
+    codomains = ["GL,1,3,1","GL,1,5,1","GL,2,2,1","GL,2,3,1","GL,2,5,1","GSp,4,2,1"]
     info["codomain_list"] = [[codomain(*a.split(",")),a] for a in codomains]
     info["conductor_list"] = ["1-100", "101-1000", "1001-10000"]
     info["stats"] = ModLGalRep_stats()
@@ -85,7 +87,7 @@ def random_rep():
     label = db.modlgal_reps.random()
     return url_for_modlgal_label(label)
 
-@modlgal_page.route("/interesting")
+@modlgal_page.route("/Q/interesting")
 def interesting():
     return interesting_knowls(
         "modlgal",
@@ -115,6 +117,7 @@ def by_label(label):
         "modlgal_rep.html",
         rep=rep,
         properties=rep.properties,
+        downloads=rep.downloads,
         friends=rep.friends,
         bread=rep.bread,
         title=rep.title,
@@ -128,30 +131,33 @@ def modlgal_jump(info):
     return redirect(url_for_modlgal_label(info.get("jump")))
 
 def blankzeros(n):
-    return "$%o$"%n if n else ""
+    return "$%o$" % n if n else ""
 
 modlgal_columns = SearchColumns(
     [
         LinkCol("label", "modlgal.label", "Label", url_for_modlgal_label),
-        MathCol("base_ring_characteristic", "modlgal.base_ring_characteristic", r"$\ell$"),
+        MathCol("base_ring_characteristic", "modlgal.characteristic", r"$\ell$"),
         MathCol("dimension", "modlgal.dimension", "Dim", short_title="dimension"),
         ProcessedCol("conductor", "modlgal.conductor", "Conductor", web_latex_factored_integer, align="center"),
         RationalCol("top_slope_rational", "modlgal.top_slope", "Top slope", lambda x: x, align="center", default=lambda info: info.get("top_slope")),
-        MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"],
-                          image_pretty, align="center", apply_download=False),
-        SearchCol("image_index", "modgal.image_index", "Index", short_title="image index", default=False),
-        SearchCol("image_order", "modgal.image_order", "Order", short_title="image order", default=False),
-        CheckCol("is_surjective", "modlgal.is_surjective", "Surjective"),
-        CheckCol("is_absolutely_irreducible", "modlgal.is_absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
-        CheckCol("is_solvable", "modlgal.is_solvable", "Solvable", default=False),
-        LinkCol("determinant_label", "modlgal.determinant_label", "Determinant", url_for_modlgal_label, align="center", default=False),
-        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center", default=False),
-        ProcessedCol("kernel_polynomial", "modlgal.kernel_polynomial", "Kernel sibling", formatfield),
-        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective kernel", formatfield, default=False),
+        MultiProcessedCol("image", "modlgal.image", "Image", ["image_label", "is_surjective", "algebraic_group", "dimension", "base_ring_order", "base_ring_is_field", "image_abstract_group"],
+        image_pretty_with_abstract, align="center", apply_download=False),
+        MultiProcessedCol("algebraic_group", "modlgal.codomain", "Codomain", ["algebraic_group", "dimension", "base_ring_order", "base_ring_is_field"], codomain, align="center", apply_download=False, default=False),
+        SearchCol("image_index", "modlgal.image_index", "Index", short_title="image index", default=False),
+        SearchCol("image_order", "modlgal.image_order", "Order", short_title="image order", default=False),
+        CheckCol("is_surjective", "modlgal.surjective", "Surjective"),
+        CheckCol("is_absolutely_irreducible", "modlgal.absolutely_irreducible", "Abs irred", short_title="absolutely irreducible", default=False),
+        CheckCol("is_solvable", "modlgal.solvable", "Solvable", default=False),
+        LinkCol("determinant_label", "modlgal.determinant", "Determinant", url_for_modlgal_label, align="center", default=False),
+        ProcessedCol("determinant_index", "modlgal.det_surjective", "Det. surjective", lambda a: "&#x2713;" if a == 1 else "" , align="center", default=False),
+        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join(str(p) for p in ps) + "$", align="center", default=False),
+        ProcessedCol("kernel_polynomial", "modlgal.min_sib_splitting_field", "Splitting field", formatfield),
+        ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective splitting field", formatfield, default=False),
     ],
     db_cols=["label", "dimension", "base_ring_characteristic", "base_ring_order", "base_ring_is_field", "algebraic_group", "conductor", "image_label",
              "is_surjective", "is_absolutely_irreducible", "is_solvable", "determinant_label", "kernel_polynomial", "projective_kernel_polynomial",
-             "image_index", "image_order", "top_slope_rational", "generating_primes"]
+             "image_index", "image_order", "top_slope_rational",
+             "generating_primes", "determinant_index", "image_abstract_group"]
     )
 
 @search_wrap(
@@ -169,6 +175,7 @@ def modlgal_search(info, query):
     parse_ints(info, query, "conductor")
     parse_ints(info, query, "image_index")
     parse_ints(info, query, "image_order")
+    parse_ints(info, query, "base_ring_order")
     if info.get('conductor_type'):
         if info['conductor_type'] == 'prime':
             query['conductor_num_primes'] = 1
@@ -177,13 +184,15 @@ def modlgal_search(info, query):
             query['conductor_num_primes'] = 1
         elif info['conductor_type'] == 'squarefree':
             query['conductor_is_squarefree'] = True
-        elif info['conductor_type'] == 'divides':
+        elif info['conductor_type'] in ['divides', 'multiple']:
             if not isinstance(query.get('conductor'), int):
                 err = "You must specify a single level"
                 flash_error(err)
                 raise ValueError(err)
-            else:
+            elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
+            else:
+                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
     parse_primes(info, query, 'conductor_primes', name='ramified primes', mode=info.get('conductor_primes_quantifier'))
     parse_rats(info, query,'top_slope', qfield='top_slope_real',name='Top slope')
     if 'top_slope_real' in query and '/' in info['top_slope']:
@@ -199,6 +208,10 @@ def modlgal_search(info, query):
     parse_bool(info, query, "is_surjective")
     parse_bool(info, query, "is_solvable")
     parse_bool(info, query, "is_absolutely_irreducible")
+    parse_bool(info, query, "determinant_index", process=lambda a: 1 if a else {"$gt":1})
+    parse_kerpol_string(info, query, 'kernel_polynomial')
+    parse_kerpol_string(info, query, "projective_kernel_polynomial")
+    parse_group_label_or_order(info, query, "image_abstract_group", regex=abstract_group_label_regex)
 
 
 class ModLGalRepSearchArray(SearchArray):
@@ -217,6 +230,7 @@ class ModLGalRepSearchArray(SearchArray):
                      ('prime_power', 'p-power'),
                      ('squarefree', 'sq-free'),
                      ('divides','divides'),
+                     ('multiple','multiple of'),
                      ],
             )
         conductor = TextBoxWithSelect(
@@ -228,7 +242,7 @@ class ModLGalRepSearchArray(SearchArray):
             select_box=conductor_quantifier)
         base_ring_characteristic = TextBox(
             name="base_ring_characteristic",
-            knowl="modlgal.base_ring_characteristic",
+            knowl="modlgal.characteristic",
             label=r"Characteristic $\ell$",
             example="2",
             example_span="2, 3, or 5")
@@ -255,7 +269,7 @@ class ModLGalRepSearchArray(SearchArray):
             example="2",
             example_span="2 or 4/3 or 1-1.5"
         )
-        codomain_opts = ([('', ''), ('GL,1,2,1', 'GL(1,2)'), ('GL,2,2,1', 'GL(2,2)'), ('GL,2,3,1', 'GL(2,3)'), ('GL,2,5,1', 'GL(2,5)'), ('GSp,4,2,1', 'GSp(4,2)')])
+        codomain_opts = ([('', ''), ('GL,1,3,1', 'GL(1,3)'), ('GL,1,5,1', 'GL(1,5)'), ('GL,2,2,1', 'GL(2,2)'), ('GL,2,3,1', 'GL(2,3)'), ('GL,2,5,1', 'GL(2,5)'), ('GSp,4,2,1', 'GSp(4,2)')])
         codomain = SelectBox(
             name="codomain",
             knowl="modlgal.codomain",
@@ -280,6 +294,12 @@ class ModLGalRepSearchArray(SearchArray):
             label="Absolutely irreducible",
             example_col=True,
         )
+        determinant_index = YesNoBox(
+            name="determinant_index",
+            knowl="modlgal.determinant_index",
+            label="Determinant surjective",
+            example_col=True,
+        )
         image_index = TextBox(
             name="image_index",
             knowl="modlgal.image_index",
@@ -292,6 +312,25 @@ class ModLGalRepSearchArray(SearchArray):
             label="Image order",
             example="2",
             example_span="12, 10-20")
+        image_abstract_group = TextBox(
+            name="image_abstract_group",
+            knowl="modlgal.image_abstract_group",
+            label="Abstract image",
+            example="4.3")
+        kernel_field = TextBox(
+            name="kernel_polynomial",
+            knowl="modlgal.min_sib_splitting_field",
+            label="Kernel polynomial",
+            example="3.1.175.1",
+            example_span="e.g. 3.1.175.1 or x^3 - x^2 + 2*x - 3 or a "
+                + display_knowl("nf.nickname", "field nickname"))
+        projective_kernel_field = TextBox(
+            name="projective_kernel_polynomial",
+            knowl="modlgal.projective_kernel_polynomial",
+            label="Projective kernel polynomial",
+            example="2.2.8.1",
+            example_span="e.g. 2.2.8.1 or x^2 - 2 or a "
+                + display_knowl("nf.nickname", "field nickname"))
         count = CountBox()
 
         self.browse_array = [
@@ -299,17 +338,20 @@ class ModLGalRepSearchArray(SearchArray):
             [dimension, surjective],
             [conductor, absolutely_irreducible],
             [conductor_primes, solvable],
-            [top_slope, image_index],
-            [count, image_order],
+            [image_index, determinant_index],
+            [image_order, image_abstract_group],
+            [kernel_field, projective_kernel_field],
+            [count, top_slope]
         ]
 
         self.refine_array = [
             [base_ring_characteristic, dimension, conductor, conductor_primes],
             [codomain, solvable, surjective, absolutely_irreducible],
-            [top_slope, image_index, image_order]
+            [image_index, image_order, image_abstract_group, determinant_index],
+            [top_slope, kernel_field, projective_kernel_field]
         ]
 
-    sort_knowl = "modlgal.sort_order"
+    #sort_knowl = "modlgal.sort_order"
     sorts = [
         ("label", "label", ["dimension", "base_ring_order", "conductor", "num"]),
         ("conductor", "conductor", ["conductor", "dimension", "base_ring_order", "conductor", "num"]),
@@ -317,12 +359,15 @@ class ModLGalRepSearchArray(SearchArray):
         ("image_index", "image index", ["image_index", "dimension", "base_ring_order", "conductor", "num"]),
     ]
 
+
 def groupdata(group):
     parts = group.split('.')
     return [int(z) for z in parts]
 
+
 def groupformatter(group):
-  return abstract_group_display_knowl(group)
+    return abstract_group_display_knowl(group)
+
 
 class ModLGalRep_stats(StatsDisplay):
     def __init__(self):
@@ -335,7 +380,7 @@ class ModLGalRep_stats(StatsDisplay):
     def short_summary(self):
         modlgal_knowl = display_knowl("modlgal", title=r"mod-$\ell$ Galois representations")
         return (
-            fr'The database currently contains {self.nreps} {modlgal_knowl} of $\Gal_\Q$ of conductor $N\le {self.max_cond}$ and dimension $d\le {self.max_dim}$ for $\ell \le {self.max_ell}$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
+            fr'The database currently contains {self.nreps} irreducible {modlgal_knowl} of $\Gal_\Q$ of conductor $N\le {self.max_cond}$ and dimension $d\le {self.max_dim}$ for $\ell \le {self.max_ell}$.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.<br><br>'
         )
 
     @property
@@ -357,6 +402,7 @@ class ModLGalRep_stats(StatsDisplay):
               }
     short_display = {'image_abstract_group': 'image'}
     formatters = {'image_abstract_group': groupformatter}
+    query_formatters = {'image_abstract_group': lambda x: "image_abstract_group=%s" % x}
     stat_list = [
         {'cols': ['conductor', 'dimension'],
          'proportioner': proportioners.per_row_total,
@@ -382,7 +428,7 @@ def statistics():
     title = r'Mod-$\ell$ Galois representations: Statistics'
     return render_template("display_stats.html", info=ModLGalRep_stats(), title=title, bread=get_bread('Statistics'), learnmore=learnmore_list())
 
-@modlgal_page.route("/Source")
+@modlgal_page.route("/Q/Source")
 def how_computed_page():
     t = r'Source and acknowledgments for mod-$\ell$ Galois representation data'
     bread = get_bread('Source')
@@ -392,28 +438,38 @@ def how_computed_page():
                            'rcs.cite.modlgal'],
                            title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
 
-@modlgal_page.route("/Completeness")
+@modlgal_page.route("/Q/Completeness")
 def completeness_page():
     t = r'Completeness of mod-$\ell$ Galois representation data'
     bread = get_bread('Completeness')
     return render_template("single.html", kid='rcs.cande.modlgal',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
 
-@modlgal_page.route("/Reliability")
+@modlgal_page.route("/Q/Reliability")
 def reliability_page():
     t = r'Reliability of mod-$\ell$ Galois representation data'
     bread = get_bread('Reliability')
     return render_template("single.html", kid='rcs.rigor.modlgal',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
-@modlgal_page.route("/Labels")
+@modlgal_page.route("/Q/Labels")
 def labels_page():
     t = r'Labels for mod-$\ell$ Galois representations'
     bread = get_bread('Labels')
     return render_template("single.html", kid='modlgal.label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
 
-@modlgal_page.route("/data/<label>")
+@modlgal_page.route("/download_all/<label>")
+def download_modlgal_text(label):
+    data = db.modlgal_reps.lookup(label, label_col='label')
+    if data is None:
+        return r"There is no mod-$\ell$ Galois representation %s in the database" % (label)
+    data_list = [data]
+    response = make_response('\n\n'.join(Json.dumps(d) for d in data_list))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@modlgal_page.route("/Q/data/<label>")
 def modlgal_data(label):
     bread = get_bread([(label, url_for_modlgal_label(label)), ("Data", " ")])
     if LABEL_RE.fullmatch(label):

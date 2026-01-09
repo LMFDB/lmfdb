@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
@@ -140,7 +139,7 @@ class HomePageTest(LmfdbTest):
         )
         assert len(data) >= 129
         n = 0
-        print("")
+        print()
         import sys
 
         for s in data:

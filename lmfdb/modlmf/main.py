@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import ast
 import re
@@ -40,7 +39,7 @@ def my_latex(s):
 
 def get_bread(breads=[]):
     bc = [("mod &#x2113; modular forms", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
@@ -59,11 +58,11 @@ def modlmf_render_webpage():
     args = request.args
     if len(args) == 0:
         counts = get_stats().counts()
-        characteristic_list= [2,3,5,7,11]
-        max_lvl=min(counts['max_level'],150)
+        characteristic_list = [2,3,5,7,11]
+        max_lvl = min(counts['max_level'],150)
         level_list_endpoints = list(range(1, max_lvl + 1, 10))
         level_list = ["%s-%s" % (start, end - 1) for start, end in zip(level_list_endpoints[:-1], level_list_endpoints[1:])]
-        max_wt=min(counts['max_weight'], 10)
+        max_wt = min(counts['max_weight'], 10)
         weight_list = list(range(1, max_wt + 1))
         label_list = ["3.1.0.1.1","13.1.0.1.1"]
         info = {'characteristic_list': characteristic_list, 'level_list': level_list,'weight_list': weight_list, 'label_list': label_list}
@@ -115,10 +114,10 @@ def download_search(info):
 
     c = download_comment_prefix[lang]
     s = '\n'
-    s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n'%(mydate, len(res))
+    s += c + ' Mod l modular forms downloaded from the LMFDB on %s. Found %s mod l modular forms.\n\n' % (mydate, len(res))
     s += ' Each entry is given in the following format: field characteristic, field degree, level, minimal weight, conductor.\n\n'
-    list_start = '[*' if lang=='magma' else '['
-    list_end = '*]' if lang=='magma' else ']'
+    list_start = '[*' if lang == 'magma' else '['
+    list_end = '*]' if lang == 'magma' else ']'
     s += download_assignment_start[lang] + list_start + '\\\n'
     for r in res:
         for m in proj:
@@ -164,59 +163,59 @@ def render_modlmf_webpage(**args):
 
     info['friends'] = []
 
-    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
+    bread = [('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('%s' % data['label'], ' ')]
     credit = modlmf_credit
 
     for m in ['characteristic','deg','level','weight_grading', 'n_coeffs', 'min_theta_weight', 'ordinary']:
-        info[m]=int(data[m])
-    info['atkinlehner']=data['atkinlehner']
-    info['dirchar']=str(data['dirchar'])
-    info['label']=str(data['label'])
+        info[m] = int(data[m])
+    info['atkinlehner'] = data['atkinlehner']
+    info['dirchar'] = str(data['dirchar'])
+    info['label'] = str(data['label'])
     if data['reducible']:
-        info['reducible']=data['reducible']
-    info['cuspidal_lift']=data['cuspidal_lift']
-    info['cuspidal_lift_weight']=int(data['cuspidal_lift'][0])
-    info['cuspidal_lift_orbit']=str(data['cuspidal_lift'][1])
+        info['reducible'] = data['reducible']
+    info['cuspidal_lift'] = data['cuspidal_lift']
+    info['cuspidal_lift_weight'] = int(data['cuspidal_lift'][0])
+    info['cuspidal_lift_orbit'] = str(data['cuspidal_lift'][1])
 
-    if data['cuspidal_lift'][2]=='x':
-        info['cuspidal_hecke_field']=1
+    if data['cuspidal_lift'][2] == 'x':
+        info['cuspidal_hecke_field'] = 1
     else:
-        info['cuspidal_hecke_field']=latex(data['cuspidal_lift'][2])
+        info['cuspidal_hecke_field'] = latex(data['cuspidal_lift'][2])
 
-    info['cuspidal_lift_gen']=data['cuspidal_lift'][3]
+    info['cuspidal_lift_gen'] = data['cuspidal_lift'][3]
 
     if data['theta_cycle']:
-        info['theta_cycle']=data['theta_cycle']
+        info['theta_cycle'] = data['theta_cycle']
 
-    info['coeffs']=[str(s).replace('x','a').replace('*','') for s in data['coeffs']]
+    info['coeffs'] = [str(s).replace('x','a').replace('*','') for s in data['coeffs']]
 
-    if data['deg'] != int(1):
+    if data['deg'] != 1:
         try:
-            pol=str(conway_polynomial(data['characteristic'], data['deg'])).replace('x','a').replace('*','')
-            info['field']= pol
+            pol = str(conway_polynomial(data['characteristic'], data['deg'])).replace('x','a').replace('*','')
+            info['field'] = pol
         except Exception:
-            info['field']=""
+            info['field'] = ""
 
-    ncoeff=int(round(20/data['deg']))
-    av_coeffs=min(data['n_coeffs'],100)
-    info['av_coeffs']=int(av_coeffs)
+    ncoeff = int(round(20/data['deg']))
+    av_coeffs = min(data['n_coeffs'],100)
+    info['av_coeffs'] = int(av_coeffs)
     if data['coeffs'] != "":
-        coeff=[info['coeffs'][i] for i in range(ncoeff+1)]
-        info['q_exp']=my_latex(print_q_expansion(coeff))
+        coeff = [info['coeffs'][i] for i in range(ncoeff+1)]
+        info['q_exp'] = my_latex(print_q_expansion(coeff))
         info['q_exp_display'] = url_for(".q_exp_display", label=data['label'], number="")
-        p_range=prime_range(av_coeffs)
-        info['table_list']=[[p_range[i], info['coeffs'][p_range[i]]] for i in range(len(p_range))]
+        p_range = prime_range(av_coeffs)
+        info['table_list'] = [[p_range[i], info['coeffs'][p_range[i]]] for i in range(len(p_range))]
         info['download_q_exp'] = [
             (i, url_for(".render_modlmf_webpage_download", label=info['label'], lang=i)) for i in ['gp', 'magma','sage']]
 
         t = "Mod "+str(info['characteristic'])+" modular form "+info['label']
     info['properties'] = [
-        ('Label', '%s' %info['label']),
-        ('Field characteristic', '%s' %info['characteristic']),
-        ('Field degree', '%s' %info['deg']),
-        ('Level', '%s' %info['level']),
-        ('Weight grading', '%s' %info['weight_grading'])]
-    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s'%info['label'])
+        ('Label', '%s' % info['label']),
+        ('Field characteristic', '%s' % info['characteristic']),
+        ('Field degree', '%s' % info['deg']),
+        ('Level', '%s' % info['level']),
+        ('Weight grading', '%s' % info['weight_grading'])]
+    return render_template("modlmf-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), KNOWL_ID='modlmf.%s' % info['label'])
 
 
 #auxiliary function for displaying more coefficients of the theta series
@@ -226,10 +225,8 @@ def q_exp_display(label, number):
         number = int(number)
     except Exception:
         number = 20
-    if number < 20:
-        number = 20
-    if number > 150:
-        number = 150
+    number = max(number, 20)
+    number = min(number, 150)
     coeffs = db.modlmf_forms.lookup(label, projection='coeffs')[:number+1]
     return print_q_expansion(coeffs)
 
@@ -238,7 +235,7 @@ def q_exp_display(label, number):
 @modlmf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of mod &#8467; modular form data'
-    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
+    bread = [('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Completeness', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.extent',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
@@ -246,7 +243,7 @@ def completeness_page():
 @modlmf_page.route("/Source")
 def how_computed_page():
     t = 'Source of mod &#8467; modular form data'
-    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
+    bread = [('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")),('Source', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='dq.modlmf.source',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
@@ -255,7 +252,7 @@ def how_computed_page():
 def labels_page():
     t = 'Label of a mod &#x2113; modular forms'
 
-    bread=[('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
+    bread = [('Modular forms', "/ModularForm"),('mod &#x2113;', url_for(".modlmf_render_webpage")), ('Labels', '')]
     credit = modlmf_credit
     return render_template("single.html", kid='modlmf.label',
                            credit=credit, title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
@@ -275,9 +272,9 @@ def download_modlmf_full_lists(**args):
         return "No such modlmf"
     lang = args['lang']
     c = download_comment_prefix[lang]
-    outstr = c + ' List of q-expansion coefficients downloaded from the LMFDB on %s. \n\n'%(mydate)
+    outstr = c + ' List of q-expansion coefficients downloaded from the LMFDB on %s. \n\n' % (mydate)
     if lang == 'magma':
-        outstr += 'F<x>:=FiniteField(%s,%s); \n' %(res['characteristic'], res['deg'])
+        outstr += 'F<x>:=FiniteField(%s,%s); \n' % (res['characteristic'], res['deg'])
 
     elif lang == 'sage':
         outstr += 'F.<x>=GF({0}^({1}), conway_polynomial({0},{1})) \n'.format(res['characteristic'], res['deg'])

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import re
 
@@ -10,17 +9,16 @@ from lmfdb.utils import (
     flash_error, SearchArray, TextBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_subgroup_label_regex
 
 from lmfdb.groups.glnC import glnC_page
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 glnq_label_regex = re.compile(r'^(\d+)\.(\d+).*$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
 
 
 def learnmore_list():
@@ -44,7 +42,7 @@ def label_is_valid(lab):
 
 def get_bread(breads=[]):
     bc = [("Groups", url_for(".index")), ("GLnC", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 
@@ -60,9 +58,10 @@ def index():
 
 
 @glnC_page.route("/random")
+@redirect_no_cache
 def random_glnC_group():
     label = db.gps_crep.random(projection='label')
-    return redirect(url_for(".by_label", label=label))
+    return url_for(".by_label", label=label)
 
 
 @glnC_page.route("/<label>")
@@ -79,7 +78,7 @@ def by_label(label):
 def dispmat(n, mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-        rw = '& '.join([sparse_cyclotomic_to_latex(n, z) for z in row])
+        rw = '& '.join(sparse_cyclotomic_to_latex(n, z) for z in row)
         s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s
@@ -117,7 +116,7 @@ glnC_columns = SearchColumns([
     db_cols=["label", "group", "order", "dim"])
 
 
-glnC_columns.dummy_download=True
+glnC_columns.dummy_download = True
 
 
 def glnC_postprocess(res, info, query):
@@ -177,7 +176,7 @@ def render_glnC_group(args):
 
 
 def make_knowl(title, knowlid):
-    return '<a title="%s" knowl="%s">%s</a>'%(title, knowlid, title)
+    return '<a title="%s" knowl="%s">%s</a>' % (title, knowlid, title)
 
 
 @glnC_page.route("/Completeness")

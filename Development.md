@@ -17,7 +17,7 @@ Setup
 =====
 
 To set up your system for development see [Code development and sharing your
-work](https://github.com/LMFDB/lmfdb/blob/master/GettingStarted.md#running).
+work](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md#running).
 
 
 Adding material to the LMFDB
@@ -40,7 +40,7 @@ Structural Conventions
 Below, we describe several of the structural conventions used in the LMFDB. Note
 that we also have styling conventions for the content of individual pages. These
 styling conventions are described in
-[StyleSheet.md](https://github.com/LMFDB/lmfdb/blob/master/StyleSheet.md).
+[StyleGuide.md](https://github.com/LMFDB/lmfdb/blob/main/StyleGuide.md).
 
 Pages in the LMFDB
 ------------------
@@ -343,7 +343,7 @@ who are mainly involved in coding this particular python file. In practice,
 Testing
 -------
 
-- Any contribution to the master LMFDB branch must *pass all the tests*. From the lmfdb folder:
+- Any contribution to the main LMFDB branch must *pass all the tests*. From the lmfdb folder:
   ```
   ./test.sh
   ```
