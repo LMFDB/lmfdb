@@ -629,7 +629,8 @@ def raw_typeset_qexp(coeffs_list,
                 coeff_compress_threshold,
                 decreasing=True)
             if (i == 0) and (a0_denom != 1):
-                tset = f"\\frac{{" + tset + f"}}{{{a0_denom}}}"
+                # tset = f"\\frac{{" + tset + f"}}{{{a0_denom}}}"
+                tset = f"\\frac{{{tset}}}{{{a0_denom}}}"
                 raw += f"/{a0_denom}"
         if not superscript:
             raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")

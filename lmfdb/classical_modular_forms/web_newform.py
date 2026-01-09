@@ -198,11 +198,13 @@ class WebNewform():
                 for attr in hecke_cols:
                     setattr(self, attr, eigenvals.get(attr))
                 m = self.hecke_ring_cyclotomic_generator
-                if m is None or m == 0:
+                # if m is None or m == 0:
+                #    m = 0
+                #    zero = [0] * self.dim
+                # else:
+                #    zero = []
+                if m is None:
                     m = 0
-                    zero = [0] * self.dim
-                else:
-                    zero = []
                 if 'a0_num' not in eigenvals:
                     eigenvals['a0_num'] = 0 
                 a0_num = eigenvals['a0_num']
@@ -717,11 +719,7 @@ class WebNewform():
 
     def display_newspace(self):
         e_or_s = "S" if self.is_cuspidal else "E"
-<<<<<<< HEAD
-        s = r'\(' + e_or_s + '_{%s}^{\mathrm{new}}('
-=======
         s = r'\(' + e_or_s + r'_{%s}^{\mathrm{new}}('
->>>>>>> 87d8f86a15f707374c427852ce02a5e512fa44f0
         if self.char_order == 1:
             s += r'\Gamma_0(%s))\)'
         else:

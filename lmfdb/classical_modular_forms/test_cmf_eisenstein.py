@@ -84,7 +84,7 @@ class CmfTest(LmfdbTest):
                     assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
     # 2DO - Still working on this one, add more favorites
-    @unittest.skip("in ocnstruction")
+    @unittest.skip("under construction")
     def test_favorite(self):
         favorite_newform_eis_labels = [
             [('1.4.E.a.a','First Level 1 form'),
@@ -93,18 +93,18 @@ class CmfTest(LmfdbTest):
             [
             ]
         ]
-        favorite_space_labels = [
+        favorite_space_eis_labels = [
             [
             ]
         ]
-        for l in favorite_newform_labels:
+        for l in favorite_newform_eis_labels:
             for elt, desc in l:
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
                 assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
                 # redirect to the same page
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/%s" % elt, follow_redirects=True)
                 assert ("Newform orbit %s" % elt) in page.get_data(as_text=True)
-        for l in favorite_space_labels:
+        for l in favorite_space_eis_labels:
             for elt, desc in l:
                 page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % elt, follow_redirects=True)
                 assert elt in page.get_data(as_text=True)
