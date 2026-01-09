@@ -282,6 +282,8 @@ shimcurve_columns = SearchColumns(
         ProcessedCol("name", "shimcurve.standard", "Name", lambda s: name_to_latex(s) if s else "", align="center"),
         MathCol("level", "shimcurve.level", "Level"),
         MathCol("index", "shimcurve.index", "Index"),
+        MathCol("discB", "shimcurve.discb", r"$\operatorname{Disc}(B)$"),
+        MathCol("discO", "shimcurve.disco", r"$\operatorname{nrd}(O)$"),
         MathCol("genus", "shimcurve.genus", "Genus"),
         ProcessedCol("rank", "shimcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
         ProcessedCol("q_gonality_bounds", "shimcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
@@ -296,7 +298,7 @@ shimcurve_columns = SearchColumns(
         CheckCol("pointless", "shimcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "shimcurve.level_structure", r"$N_{B^{\times}}(O) \ltimes \operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$ \langle %s+%si+%sj+%sk, \begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    db_cols=["label", "name", "level", "index", "discB", "discO", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
@@ -584,6 +586,8 @@ def shimcurve_search(info, query):
     parse_family(info, query, "family", qfield="name")
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
+    parse_ints(info, query, "discB")
+    parse_ints(info, query, "discO")
     parse_ints(info, query, "rank")
     parse_ints(info, query, "genus_minus_rank")
     parse_interval(info, query, "q_gonality", quantifier_type=info.get("gonality_type", "exactly"))
@@ -672,6 +676,20 @@ class ShimCurveSearchArray(SearchArray):
             label="Genus",
             example="1",
             example_span="0, 2-3",
+        )
+        discB = TextBox(
+            name="discB",
+            knowl="shimcurve.discb",
+            label=r"Discriminant of $B$",
+            example="6",
+            example_span="6",
+        )
+        discO = TextBox(
+            name="discO",
+            knowl="shimcurve.disco",
+            label=r"Reduced discriminant of $O$",
+            example="6",
+            example_span="6",
         )
         rank = TextBox(
             name="rank",
@@ -803,6 +821,7 @@ class ShimCurveSearchArray(SearchArray):
         self.browse_array = [
             [level, index],
             [genus, rank],
+            [discB, discO],
             [genus_minus_rank, gonality],
             [nu2, nu3],
             [simple, squarefree],
@@ -814,7 +833,7 @@ class ShimCurveSearchArray(SearchArray):
         ]
 
         self.refine_array = [
-            [level, index, genus, rank, genus_minus_rank],
+            [level, index, genus, discB, discO, rank, genus_minus_rank],
             [gonality, nu2, nu3],
             [simple, squarefree, cm_discriminants, factor, covers],
             [covered_by, contains_negative_one, points, obstructions, family],
