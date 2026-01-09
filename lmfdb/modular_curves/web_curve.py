@@ -1166,6 +1166,7 @@ class WebModCurve(WebObj):
                 code[f"model_{i}"] = {
                     'magma': [model_code]
                 }
+            print(i, model_code)
         code['show'] = { lang:'' for lang in code['prompt'] }
 
         return code
