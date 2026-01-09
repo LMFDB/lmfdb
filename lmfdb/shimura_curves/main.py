@@ -45,7 +45,7 @@ from lmfdb.utils.search_columns import (
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
