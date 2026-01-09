@@ -301,14 +301,17 @@ class WebNewform():
         self.title = "Newform orbit %s" % (self.label)
 
         self.base_label = [str(s) for s in [self.level, self.weight]]
+        if not self.is_cuspidal:
+            self.base_label += ['E']
         self.ns1_label = '.'.join(self.base_label)
         self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
         self.ns_data = db.mf_newspaces_eis.lookup(self.ns_label)
+        self.automorphic_type = 'C' if self.is_cuspidal else 'E'
 
     # Breadcrumbs
     @property
     def bread(self):
-        kwds = {"level": self.level, "weight": self.weight, "automorphic_type": self.automorphic_type, "char_orbit_label": self.char_orbit_label,
+        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label_or_automorphic_type" : self.automorphic_type, "char_orbit_label": self.char_orbit_label,
                     "hecke_orbit": cremona_letter_code(self.hecke_orbit - 1)}
         if self.embedding_label is not None:
             kwds['embedding_label'] = self.embedding_label
@@ -714,7 +717,11 @@ class WebNewform():
 
     def display_newspace(self):
         e_or_s = "S" if self.is_cuspidal else "E"
+<<<<<<< HEAD
         s = r'\(' + e_or_s + '_{%s}^{\mathrm{new}}('
+=======
+        s = r'\(' + e_or_s + r'_{%s}^{\mathrm{new}}('
+>>>>>>> 87d8f86a15f707374c427852ce02a5e512fa44f0
         if self.char_order == 1:
             s += r'\Gamma_0(%s))\)'
         else:

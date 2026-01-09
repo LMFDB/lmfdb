@@ -40,6 +40,7 @@ from lmfdb.number_fields.number_field import poly_to_field_label
 POSINT_RE = re.compile("^[1-9][0-9]*$")
 ALPHA_RE = re.compile("^[a-z]+$")
 AUTTYPE_RE = re.compile("[CE]")
+ALPHA_OR_AUTTYPE_RE =  re.compile("(^[a-z]+$)|[CE]")
 
 
 _curdir = os.path.dirname(os.path.abspath(__file__))
@@ -559,19 +560,19 @@ def by_url_full_gamma1_eisenstein_space_label(level, weight, automorphic_type):
         label = str(level)+"."+str(weight)
     return render_full_gamma1_space_webpage(label)
 
-@cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/")
-def by_url_space_label(level, weight, char_orbit_label):
-    if char_orbit_label in ['C', 'E']:
-        return by_url_full_gamma1_eisenstein_space_label(level, weight, char_orbit_label)
-    label = str(level)+"."+str(weight)+"."+char_orbit_label
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label_or_automorphic_type>/")
+def by_url_space_label(level, weight, char_orbit_label_or_automorphic_type):
+    if char_orbit_label_or_automorphic_type in ['C', 'E']:
+        return by_url_full_gamma1_eisenstein_space_label(level, weight, char_orbit_label_or_automorphic_type)
+    label = str(level)+"."+str(weight)+"."+char_orbit_label_or_automorphic_type
     return render_space_webpage(label)
 
-@cmf.route("/<int:level>/<int:weight>/<automorphic_type>/<char_orbit_label>/")
-def by_url_eisenstein_space_label(level, weight, automorphic_type, char_orbit_label):
-    if not (automorphic_type in ['C', 'E']):
-        return by_url_newform_label(level, weight, automorphic_type, char_orbit_label)
-    label = ".".join(map(str, [level, weight, automorphic_type, char_orbit_label]))
-    if automorphic_type == 'C':
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label_or_automorphic_type>/<char_orbit_label>/")
+def by_url_eisenstein_space_label(level, weight, char_orbit_label_or_automorphic_type, char_orbit_label):
+    if not (char_orbit_label_or_automorphic_type in ['C', 'E']):
+        return by_url_newform_label(level, weight, char_orbit_label_or_automorphic_type, char_orbit_label)
+    label = ".".join(map(str, [level, weight, char_orbit_label_or_automorphic_type, char_orbit_label]))
+    if char_orbit_label_or_automorphic_type == 'C':
         label = ".".join(map(str, [level, weight, char_orbit_label]))
     return render_space_webpage(label)
 
@@ -583,12 +584,12 @@ def by_url_space_conreylabel(level, weight, conrey_index):
         return abort(404, "Invalid space label: not relatively prime")
     return redirect(url_for_label(label), code=301)
 
-@cmf.route("/<int:level>/<int:weight>/<automorphic_type>/<char_orbit_label>/<hecke_orbit>/")
-def by_url_eisenstein_newform_label(level, weight, automorphic_type, char_orbit_label, hecke_orbit):
-    if not (automorphic_type in ['C','E']):
-        by_url_newform_conrey5(level, weight, automorphic_type, char_orbit_label, hecke_orbit)
-    label = ".".join(map(str, [level, weight, automorphic_type, char_orbit_label, hecke_orbit]))
-    if automorphic_type == 'C':
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label_or_automorphic_type>/<char_orbit_label>/<hecke_orbit>/")
+def by_url_eisenstein_newform_label(level, weight, char_orbit_label_or_automorphic_type, char_orbit_label, hecke_orbit):
+    if not (char_orbit_label_or_automorphic_type in ['C','E']):
+        by_url_newform_conrey5(level, weight, char_orbit_label_or_automorphic_type, char_orbit_label, hecke_orbit)
+    label = ".".join(map(str, [level, weight, char_orbit_label_or_automorphic_type, char_orbit_label, hecke_orbit]))
+    if char_orbit_label_or_automorphic_type == 'C':
         label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     return render_newform_webpage(label)
 
@@ -618,6 +619,15 @@ def by_url_newform_conrey5(level, weight, char_orbit_label, hecke_orbit, embeddi
         return abort(404, "Invalid embedding label: not integers")
     return redirect(url_for("cmf.by_url_embedded_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
 
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label_or_automorphic_type>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
+def by_url_eisenstein_newform_conrey5(level, weight, char_orbit_label_or_automorphic_type, char_orbit_label, hecke_orbit, embedding_label):
+    if embedding_label.count('.') != 1:
+        return abort(404, "Invalid embedding label: periods")
+    conrey_index, embedding = embedding_label.split('.')
+    if not (conrey_index.isdigit() and embedding.isdigit()):
+        return abort(404, "Invalid embedding label: not integers")
+    return redirect(url_for("cmf.by_url_eisenstein_embedded_newform_label", level=level, weight=weight, char_orbit_label_or_automorphic_type=char_orbit_label_or_automorphic_type ,char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
+
 # Embedded modular form
 @cmf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
 def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
@@ -627,13 +637,13 @@ def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, 
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
     return render_embedded_newform_webpage(newform_label, embedding_label)
 
-@cmf.route("/<int:level>/<int:weight>/<automorphic_type>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
-def by_url_eisenstein_embedded_newform_label(level, weight, automorphic_type, char_orbit_label, hecke_orbit, conrey_index, embedding):
+@cmf.route("/<int:level>/<int:weight>/<char_orbit_label_or_automorphic_type>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
+def by_url_eisenstein_embedded_newform_label(level, weight, char_orbit_label_or_automorphic_type, char_orbit_label, hecke_orbit, conrey_index, embedding):
     if conrey_index <= 0 or embedding <= 0:
         return abort(404, "Invalid embedding label: negative values")
    
-    newform_label = ".".join(map(str, [level, weight, automorphic_type, char_orbit_label, hecke_orbit]))
-    if automorphic_type == 'C':
+    newform_label = ".".join(map(str, [level, weight, char_orbit_label_or_automorphic_type, char_orbit_label, hecke_orbit]))
+    if char_orbit_label_or_automorphic_type == 'C':
         newform_label = ".".join(map(str, [level, weight, char_orbit_label, hecke_orbit]))
     embedding_label = ".".join(map(str, [conrey_index, embedding]))
     return render_embedded_newform_webpage(newform_label, embedding_label)
@@ -648,9 +658,9 @@ def url_for_label(label):
     keys = ['level', 'weight']
     keytypes = [POSINT_RE, POSINT_RE]
     has_aut_type = ('E' in slabel) or ('C' in slabel)
-    if has_aut_type:
-        keys += ['automorphic_type']
-        keytypes += [AUTTYPE_RE]
+    if has_aut_type or (len(slabel) == 3):
+        keys += ['char_orbit_label_or_automorphic_type']
+        keytypes += [ALPHA_OR_AUTTYPE_RE]
     if (len(slabel) == 7) and has_aut_type:
         func = "cmf.by_url_eisenstein_embedded_newform_label"
     elif (len(slabel) == 6) and not has_aut_type:
@@ -671,8 +681,11 @@ def url_for_label(label):
         func = "cmf.by_url_level"
     else:
         return abort(404, "Invalid label")
-    keys += ['char_orbit_label', 'hecke_orbit', 'conrey_index', 'embedding']
-    keytypes += [ALPHA_RE, ALPHA_RE, POSINT_RE, POSINT_RE]
+    if (len(slabel)!= 3):
+        keys += ['char_orbit_label'] 
+        keytypes += [ALPHA_RE]
+    keys += ['hecke_orbit', 'conrey_index', 'embedding']
+    keytypes += [ALPHA_RE, POSINT_RE, POSINT_RE]
     for i in range(len(slabel)):
         if not keytypes[i].match(slabel[i]):
             raise ValueError("Invalid label")
@@ -1167,7 +1180,7 @@ def dimension_space_postprocess(res, info, query):
         url_generator = url_generator_list
     elif query.get('char_order') == 1:
         def url_generator(N, k):
-            return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label="a")
+            return url_for(".by_url_space_label", level=N, weight=k, char_orbit_label_or_automorphic_type="a")
     elif 'char_order' in query:
         url_generator = url_generator_list
     else:
