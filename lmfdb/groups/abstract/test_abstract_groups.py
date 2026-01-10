@@ -90,6 +90,3 @@ class AbGpsTest(LmfdbTest):
     def test_subgroups(self):
         self.check_args("/Groups/Abstract/sub/78125.1385.15625.A","Group of order 31250000")
         self.check_args("/Groups/Abstract/sub/16384.mv.8._.BQX",'The ambient group is <a title="Abelian group [group.abelian]"')
-
-
-
