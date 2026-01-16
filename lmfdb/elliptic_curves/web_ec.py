@@ -114,10 +114,10 @@ def gl2_subgroup_data(label):
     else:
         info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
-    info += row_wrap('Level', data['level'])
-    info += row_wrap('Index', data['index'])
-    info += row_wrap('Order', GL(2,Integers(data['level'])).cardinality() / data['index'])
-    info += row_wrap('Genus', data['genus'])
+    info += row_wrap("{{KNOWL('gl2.level','Level')}}", data['level'])
+    info += row_wrap("{{KNOWL('gl2.index','Index')}}", data['index'])
+    info += row_wrap("{{KNOWL('gl2.order','Order')}}", GL(2,Integers(data['level'])).cardinality() / data['index'])
+    info += row_wrap("{{KNOWL('gl2.genus','Genus')}}", data['genus'])
 
     def ratcusps(c, r):
         if not c:
