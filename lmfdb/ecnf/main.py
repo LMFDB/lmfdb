@@ -20,7 +20,7 @@ from lmfdb.utils import (
 from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol, PolynomialCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl
@@ -358,7 +358,7 @@ ecnf_columns = SearchColumns([
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree", default=False),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
     # This is a hidden column which stores the defining polynomial coefficients of the base field.  Used to construct elliptic curves when downloading search results.
-    ProcessedCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: False,  default=lambda info: 'download' in info, download_col="field_coeffs", orig=["field_coeffs"]),
+    ProcessedCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: 'download' in info, default=lambda info: 'download' in info, download_col="field_coeffs", orig=["field_coeffs"]),
     MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center", default=False),
     MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center", default=False),
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center", default=False),
@@ -399,7 +399,7 @@ ecnf_columns = SearchColumns([
                       ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
-                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left", download_col="ainvs", default=False),
+                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left", download_col="ainvs", default=lambda info: 'download' in info),
     MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", short_title="Weierstrass equation", align="left"),
 ])
 ecnf_columns.below_download = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
@@ -429,18 +429,42 @@ class ECNFDownloader(Downloader):
         from lmfdb.utils import coeff_to_poly
         poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
         row["field_coeffs"] = poly 
+
+        row['ainvs'] = [[ZZ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
+
+
+        #ainvs_string = {
+        #'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
+        #'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        #'pari': "[" + ",".join("Polrev({})".format(ai) for ai in ainvs) + "], K",
+        #}
+
+    
         #assert(False)
         #print("***TEST", row)
 
         return row
 
+
+    def get_table(self, info):
+        print("TABLE DEBUG:", self.table)
+        #assert(False)
+        return self.table
+
+
+    def modify_query(self, info, query):
+        print("QUERY DEBUG:", query)    
+        print("QUERY INFO:", info)    
+        #assert(False)
+
+
     inclusions = {
         "curve": (
             ["ainvs"],
             {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
-                "magma": 'curve := EllipticCurve(out`ainvs);',
-                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
+                "sage": 'K.<a> = NumberField(R(row["field_coeffs"]))\n    curve = EllipticCurve([K(ai) for ai in out["ainvs"]])',
+                "magma": 'K<a> := NumberField(R!(row`field_coeffs));\n    curve := EllipticCurve([K!ai : ai in out`ainvs]);',
+                "gp": 'K = nfinit(Polrev([28, -1, 1]));  curve = ellinit(mapget(out, "ainvs"));',
                 "oscar": 'curve = EllipticCurve(out["ainvs"])',
             }
         ),
