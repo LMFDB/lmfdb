@@ -357,6 +357,8 @@ ecnf_columns = SearchColumns([
     MathCol("class_size", "ec.isogeny", "Class size", short_title="isogeny class size", default=False),
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree", default=False),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
+    # This is a hidden column which stores the defining polynomial coefficients of the base field.  Used to construct elliptic curves when downloading search results.
+    ProcessedCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: False,  default=lambda info: 'download' in info, download_col="field_coeffs", orig=["field_coeffs"]),
     MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center", default=False),
     MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center", default=False),
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center", default=False),
@@ -407,12 +409,50 @@ quantities.</p>"""
 
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(\[\d+\])?')
 
+
+# Class to download ECNF search results 
+class ECNFDownloader(Downloader):
+    table = db.ec_nfcurves
+    title = "Elliptic curves over number fields"
+
+    # To create the elliptic curve object in Sage/Magma/Pari, we need to get the defining polynomial for the base field
+    # 
+    # E = db.ec_nfcurves.lookup(label, projection=['field_label', 'ainvs'])
+    # Look up the defining polynomial of the base field:
+
+    # from lmfdb.utils import coeff_to_poly
+    # poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection='coeffs'))
+
+    def postprocess(self, row, info, query):
+        #print("***DEBUG****", row)
+
+        from lmfdb.utils import coeff_to_poly
+        poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
+        row["field_coeffs"] = poly 
+        #assert(False)
+        #print("***TEST", row)
+
+        return row
+
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
+                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+            }
+        ),
+    }
+
+
 @search_wrap(table=db.ec_nfcurves,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
              columns=ecnf_columns,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':Downloader(db.ec_nfcurves)},
+                        'download':ECNFDownloader()},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')])
