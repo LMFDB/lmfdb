@@ -428,11 +428,11 @@ class ECNFDownloader(Downloader):
 
     inclusions = {
         "curve": (
-            ["ainvs"],
+            ["field_coeffs", "ainvs"],
             {
                 "sage": 'field.<a> = NumberField(ZZx(out["field_coeffs"]))\n    curve = EllipticCurve([field(ai) for ai in out["ainvs"]])',
                 "magma": 'field<a> := NumberField(ZZx!(out`field_coeffs));\n    curve := EllipticCurve([field!ai : ai in out`ainvs]);',
-                "gp": 'field = nfinit(Polrev(mapget(out, "field_coeffs")));\n    curve = ellinit(vector(#mapget(out, "ainvs"), i, Polrev(mapget(out, "ainvs")[i])));',
+                "gp": 'field = nfinit(Polrev(mapget(out, "field_coeffs")));\n    curve = ellinit(apply(Polrev, mapget(out, "ainvs")), field);',
             }
         ),
     }
