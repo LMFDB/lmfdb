@@ -221,6 +221,7 @@ def formatted_model_data(m):
         w = R4.gen()
         if "w^2" not in m["equation"][1]:
             m["equation"][1], m["equation"][0] = m["equation"]
+        assert "w^2" in m["equation"][1]
         C = R3(m["equation"][0])
         F = R4(m["equation"][1])
         if F.monomial_coefficient(w**2).constant_coefficient() > 0:
@@ -276,6 +277,11 @@ def format_model_to_code(formatted_model_data):
         f = list(ycoeffs[0])
         result = f"X := HyperellipticCurve([{h}, {f}]);"
         return result
+    elif model_type ==7:
+        gplus1 = eqns[0][0].degree()
+        wt = gplus1/2
+        result = f"P< x,y,z,w > := ProjectiveSpace(Rationals(),[1,1,1,{wt}]);\nX:=Curve(P, {eqns});"
+        return result;
     else:
         return None
 
