@@ -774,7 +774,7 @@ def render_curve_webpage_by_label(label):
 
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
-    code = data.code()
+    code = data.code
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
     T = render_template("ec-curve.html",
@@ -1078,7 +1078,7 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {})
     if E == "Curve not found":
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
-    Ecode = E.code()
+    Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
