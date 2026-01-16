@@ -521,8 +521,8 @@ def gsp4_subgroup_data(label):
     info = '<table>\n'
     info += row_wrap('Subgroup <b>%s</b>' % (label), "<small>" + ', '.join(matrix(m) for m in data['generators']) + "</small>")
     info += "<tr><td></td><td></td></tr>\n"
-    info += row_wrap("{{KNOWL('gl2.level','Level')}}", data['level'])
-    info += row_wrap("{{KNOWL('gl2.index'.'Index')}}", data['index'])
+    info += row_wrap(display_knowl('gl2.level',title='Level'), data['level'])
+    info += row_wrap(display_knowl('gl2.index',title='Index'), data['index'])
 
     info += row_wrap('Contains $-1$', "yes" if data['quadratic_twists'][0] == label else "no")
     N = ZZ(data['level'])
