@@ -415,57 +415,24 @@ class ECNFDownloader(Downloader):
     table = db.ec_nfcurves
     title = "Elliptic curves over number fields"
 
-    # To create the elliptic curve object in Sage/Magma/Pari, we need to get the defining polynomial for the base field
-    # 
-    # E = db.ec_nfcurves.lookup(label, projection=['field_label', 'ainvs'])
-    # Look up the defining polynomial of the base field:
-
-    # from lmfdb.utils import coeff_to_poly
-    # poly = coeff_to_poly(db.nf_fields.lookup(E['field_label'], projection='coeffs'))
-
     def postprocess(self, row, info, query):
-        #print("***DEBUG****", row)
-
+        # Obtain the defining polynomial coefficients for the base field
         from lmfdb.utils import coeff_to_poly
         poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
-        row["field_coeffs"] = poly 
+        row["field_coeffs"] = poly   
 
+        # Convert Weierstrass coefficients to list of list of integers
         row['ainvs'] = [[ZZ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
 
-
-        #ainvs_string = {
-        #'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
-        #'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
-        #'pari': "[" + ",".join("Polrev({})".format(ai) for ai in ainvs) + "], K",
-        #}
-
-    
-        #assert(False)
-        #print("***TEST", row)
-
         return row
-
-
-    def get_table(self, info):
-        print("TABLE DEBUG:", self.table)
-        #assert(False)
-        return self.table
-
-
-    def modify_query(self, info, query):
-        print("QUERY DEBUG:", query)    
-        print("QUERY INFO:", info)    
-        #assert(False)
-
 
     inclusions = {
         "curve": (
             ["ainvs"],
             {
-                "sage": 'K.<a> = NumberField(R(row["field_coeffs"]))\n    curve = EllipticCurve([K(ai) for ai in out["ainvs"]])',
-                "magma": 'K<a> := NumberField(R!(row`field_coeffs));\n    curve := EllipticCurve([K!ai : ai in out`ainvs]);',
-                "gp": 'K = nfinit(Polrev([28, -1, 1]));  curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+                "sage": 'ZZx.<x> = ZZ[]\n    field.<a> = NumberField(ZZx(out["field_coeffs"]))\n    curve = EllipticCurve([field(ai) for ai in out["ainvs"]])',
+                "magma": 'ZZx<x> := PolynomialRing(Integers());\n    field<a> := NumberField(ZZx!(out`field_coeffs));\n    curve := EllipticCurve([field!ai : ai in out`ainvs]);',
+                "gp": 'field = nfinit(Polrev(mapget(out, "field_coeffs")));\n    curve = ellinit(vector(#mapget(out, "ainvs"), i, Polrev(mapget(out, "ainvs")[i])));',
             }
         ),
     }
