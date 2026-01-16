@@ -826,4 +826,4 @@ class WebEC():
             if prop != 'snippet_test':
                 for lang in code[prop]:
                     code[prop][lang] = code[prop][lang].format(**data)
-    return code
+        return code
