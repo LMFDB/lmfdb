@@ -410,7 +410,7 @@ quantities.</p>"""
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(\[\d+\])?')
 
 
-# Class to download ECNF search results 
+# Class to download ECNF search results
 class ECNFDownloader(Downloader):
     table = db.ec_nfcurves
     title = "Elliptic curves over number fields"
@@ -419,7 +419,7 @@ class ECNFDownloader(Downloader):
         # Look up the defining polynomial coefficients for the base field of the curve
         from lmfdb.utils import coeff_to_poly
         poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
-        row["field_coeffs"] = poly   
+        row["field_coeffs"] = poly
 
         # Convert Weierstrass coefficients from string to a list of list of integers
         row['ainvs'] = [[ZZ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
