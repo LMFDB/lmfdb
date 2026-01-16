@@ -275,7 +275,12 @@ def format_model_to_code(formatted_model_data):
             ycoeffs[0] *= -1
         h = list(-ycoeffs[1])
         f = list(ycoeffs[0])
-        result = f"X := HyperellipticCurve([{h}, {f}]);"
+        d = ycoeffs[0].degree()
+        assert ycoeffs[1].degree() <= (d+1)//2
+        if d == 3:
+            result = f"X := EllipticCurve(Polynomial({f}), Polynomial({h}));"
+        else:
+            result = f"X := HyperellipticCurve([{f}, {h}]);"
         return result
     elif model_type ==7:
         gplus1 = eqns[0][0].degree()
