@@ -774,7 +774,7 @@ def render_curve_webpage_by_label(label):
 
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
-    code = data.code()
+    code = data.code
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
     T = render_template("ec-curve.html",
