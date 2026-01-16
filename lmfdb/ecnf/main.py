@@ -357,8 +357,8 @@ ecnf_columns = SearchColumns([
     MathCol("class_size", "ec.isogeny", "Class size", short_title="isogeny class size", default=False),
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree", default=False),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
-    # This is a hidden column which stores the defining polynomial coefficients of the base field.  Used to construct elliptic curves when downloading search results.
-    ProcessedCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: 'download' in info, default=lambda info: 'download' in info, download_col="field_coeffs", orig=["field_coeffs"]),
+    # This is a hidden column used for the defining polynomial coefficients of the base field.  Used to construct elliptic curves when downloading search results.
+    PolynomialCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: 'download' in info, default=lambda info: 'download' in info, download_col="field_coeffs"),
     MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center", default=False),
     MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center", default=False),
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center", default=False),
@@ -416,12 +416,12 @@ class ECNFDownloader(Downloader):
     title = "Elliptic curves over number fields"
 
     def postprocess(self, row, info, query):
-        # Obtain the defining polynomial coefficients for the base field
+        # Look up the defining polynomial coefficients for the base field of the curve
         from lmfdb.utils import coeff_to_poly
         poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
         row["field_coeffs"] = poly   
 
-        # Convert Weierstrass coefficients to list of list of integers
+        # Convert Weierstrass coefficients from string to a list of list of integers
         row['ainvs'] = [[ZZ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
 
         return row
@@ -430,8 +430,8 @@ class ECNFDownloader(Downloader):
         "curve": (
             ["ainvs"],
             {
-                "sage": 'ZZx.<x> = ZZ[]\n    field.<a> = NumberField(ZZx(out["field_coeffs"]))\n    curve = EllipticCurve([field(ai) for ai in out["ainvs"]])',
-                "magma": 'ZZx<x> := PolynomialRing(Integers());\n    field<a> := NumberField(ZZx!(out`field_coeffs));\n    curve := EllipticCurve([field!ai : ai in out`ainvs]);',
+                "sage": 'field.<a> = NumberField(ZZx(out["field_coeffs"]))\n    curve = EllipticCurve([field(ai) for ai in out["ainvs"]])',
+                "magma": 'field<a> := NumberField(ZZx!(out`field_coeffs));\n    curve := EllipticCurve([field!ai : ai in out`ainvs]);',
                 "gp": 'field = nfinit(Polrev(mapget(out, "field_coeffs")));\n    curve = ellinit(vector(#mapget(out, "ainvs"), i, Polrev(mapget(out, "ainvs")[i])));',
             }
         ),
