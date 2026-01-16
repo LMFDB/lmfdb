@@ -1078,7 +1078,7 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {})
     if E == "Curve not found":
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
-    Ecode = E.code()
+    Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
