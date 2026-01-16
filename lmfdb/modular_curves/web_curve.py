@@ -281,11 +281,11 @@ def format_model_to_code(formatted_model_data):
         else:
             result = f"X := HyperellipticCurve([{f}, {h}]);"
         return result
-    elif model_type ==7:
+    elif model_type == 7:
         gplus1 = eqns[0][0].degree()
         wt = gplus1/2
         result = f"P< x,y,z,w > := ProjectiveSpace(Rationals(),[1,1,1,{wt}]);\nX:=Curve(P, {eqns});"
-        return result;
+        return result
     else:
         return None
 
@@ -637,7 +637,7 @@ class WebModCurve(WebObj):
         if s:
             s = f"the {s} of"
         return s
-    
+
     def formatted_model_html(self, formatted_model_data):
         # this is only for curves with models
         # but not curves with self.has_more_models
