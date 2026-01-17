@@ -400,6 +400,7 @@ class WebNumberField:
             f = db.nf_fields.lucky({'coeffs': coeffs})
             if f is None:
                 return cls('a')  # will initialize data to None
+            f.update(db.nf_fields.extra.lookup(f['label']))
             return cls(f['label'], f)
         else:
             raise Exception('wrong type')
@@ -452,7 +453,7 @@ class WebNumberField:
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):
-        return db.nf_fields.lookup(self.label)
+        return db.nf_fields.lookup(self.label).update(db.nf_fields_extra.lookup(self.label))
 
     def is_in_db(self):
         return self._data is not None
