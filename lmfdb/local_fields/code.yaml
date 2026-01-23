@@ -1,0 +1,46 @@
+dfsdfdsfprompt:
+  sage:   'sage'
+  magma:  'magma'
+
+logo:
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+
+field:
+  comment: Define the p-adic field
+  sage:  |
+    Prec = 100  # Default precision of 100
+    base = Qp(p, Prec)
+    x = polygen(QQ)
+    K.<a> = Qp(p, Prec).extension(QQ["x"](out["coeffs"]))
+  magma: |
+    Prec := 100;  // Default precision of 100
+    base := pAdicField(out`p, Prec);
+    field := LocalField(base, PolynomialRing(base)!(out`coeffs));
+
+poly:
+  comment: Defining polynomial
+  sage:  K.defining_polynomial()
+
+degree:
+  comment: Degree over Qp
+  sage:  K.degree()
+  magma: Degree(K);
+
+ramification_index:
+  comment: Ramification index
+  sage: K.ramification_index()
+  magma:  RamificationIndex(K)
+
+inertia_degree:
+  comment: Residue field degree
+  sage: L.inertia_degree()
+  magma:  InertiaDegree(K)
+

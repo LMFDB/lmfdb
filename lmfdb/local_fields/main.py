@@ -890,6 +890,14 @@ def local_field_count(info, query):
 def local_field_search(info,query):
     common_parse(info, query)
 
+def make_code_snippets(self):
+    # read in code.yaml from local_fields directory:
+    _curdir = os.path.dirname(os.path.abspath(__file__))
+    self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+    for lang in self.code['gg']:
+        self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+    self.code['show'] = { lang:'' for lang in self.code['prompt'] }
+
 def render_field_webpage(args):
     data = None
     info = {}
