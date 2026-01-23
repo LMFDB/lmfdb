@@ -358,7 +358,7 @@ ecnf_columns = SearchColumns([
     MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree", default=False),
     ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
     # This is a hidden column used for the defining polynomial coefficients of the base field.  Used to construct elliptic curves when downloading search results.
-    PolynomialCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: 'download' in info, default=lambda info: 'download' in info, download_col="field_coeffs"),
+    PolynomialCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: 'download' in info, default=lambda info: 'download' in info),
     MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center", default=False),
     MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center", default=False),
     SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center", default=False),
@@ -400,7 +400,7 @@ ecnf_columns = SearchColumns([
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
                           web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left", download_col="ainvs", default=lambda info: 'download' in info),
-    MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", short_title="Weierstrass equation", align="left"),
+    MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", short_title="Weierstrass equation", align="left", download_desc="See description for Weierstrass coefficients above"),
 ])
 ecnf_columns.below_download = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
 not known for all curves in the database; curves for which these are
