@@ -466,6 +466,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center", default=False),
     FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
     FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
+    MathCol("intrinsic_torsion", "ec.intrinsic_torsion", "Intrinsic torsion order", align="center", default=False),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
