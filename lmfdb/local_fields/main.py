@@ -547,8 +547,8 @@ lf_columns = SearchColumns([
     hiddenswan_col(),
     aut_col(lambda info:info.get("aut")),
     # want apply_download for download conversion
-    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
-    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
+    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible") or info.get("Submit") == "sage"),
+    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible") or info.get("Submit") == "sage", mathmode=True, func=format_eisen),
     insep_col(default=lambda info: info.get("ind_of_insep")),
     assoc_col(default=lambda info: info.get("associated_inertia")),
     respoly_col(),
