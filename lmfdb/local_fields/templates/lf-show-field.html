@@ -13,9 +13,9 @@
 <h2> {{ KNOWL('lf.invariants', title='Invariants') }}</h2>
 <table>
   <tr><td>Base field:</td> <td> {{info.base|safe}}
-      <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$:</td> <td>${{info.n}}$</td></tr>
-      <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification index') }} $e$:</td> <td>${{info.e}}$</td></tr>
-      <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$:</td> <td>${{info.f}}$</td></tr>
+      <tr><td>{{ KNOWL('lf.degree', title='Degree') }} $d$:</td> <td>${{info.n}}$</td>  <td>{{ place_code('degree') }}</td> </tr>
+      <tr><td>{{ KNOWL('lf.ramification_index', title='Ramification index') }} $e$:</td> <td>${{info.e}}$</td> <td>{{ place_code('ramification_index') }}</td> </tr>
+      <tr><td>{{ KNOWL('lf.residue_field_degree', title='Residue field degree') }} $f$:</td> <td>${{info.f}}$</td> <td>{{ place_code('residue_field_degree') }}</td>  </tr>
       <tr><td>{{ KNOWL('lf.discriminant_exponent', title='Discriminant exponent') }} $c$:</td> <td>${{info.c}}$</td></tr>
       <tr><td>{{ KNOWL('lf.discriminant_root_field', title='Discriminant root field') }}:</td> <td>{{info.rf|safe}}</td></tr>
       <tr><td>{{ KNOWL('lf.root_number', title='Root number') }}:</td> <td>{{info.hw}}</td></tr>

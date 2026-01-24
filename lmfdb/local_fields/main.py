@@ -1,6 +1,9 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
+import os
+import yaml
+
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
@@ -16,7 +19,7 @@ from lmfdb.utils import (
     HiddenBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
-    redirect_no_cache, raw_typeset)
+    redirect_no_cache, raw_typeset, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.utils.search_parsing import search_parser
@@ -890,13 +893,36 @@ def local_field_count(info, query):
 def local_field_search(info,query):
     common_parse(info, query)
 
-def make_code_snippets(self):
+def make_code_snippets(data):
+    """Create code snippets dictionary for a local field.
+    
+    Args:
+        data: dictionary with field data containing 'p' and 'coeffs'
+    
+    Returns:
+        code: dictionary with code snippets for different languages
+    """
     # read in code.yaml from local_fields directory:
     _curdir = os.path.dirname(os.path.abspath(__file__))
-    self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-    for lang in self.code['gg']:
-        self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
-    self.code['show'] = { lang:'' for lang in self.code['prompt'] }
+    code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+    
+    # Format coefficients for display in code snippets
+    format_data = {
+        'p': data['p'],
+        'coeffs': str(data['coeffs'])
+    }
+    
+    # Substitute actual field data into all code snippets
+    for prop in code:
+        if isinstance(code[prop], dict):
+            for lang in code[prop]:
+                if lang != 'comment' and isinstance(code[prop][lang], str):
+                    code[prop][lang] = code[prop][lang].format(**format_data)
+    
+    # Initialize show dictionary with empty strings for each language that has prompts
+    if 'prompt' in code:
+        code['show'] = { lang:'' for lang in code['prompt'] }
+    return code
 
 def render_field_webpage(args):
     data = None
@@ -1128,6 +1154,7 @@ def render_field_webpage(args):
                                (str(n), url_for('.index', p=p, n=n)),
                                (str(cc), url_for('.index', p=p, n=n, c=cc)),
                                (data['label'], ' ')])
+        code = make_code_snippets(data)
         return render_template(
             "lf-show-field.html",
             title=title,
@@ -1138,6 +1165,7 @@ def render_field_webpage(args):
             friends=friends,
             downloads=downloads,
             learnmore=learnmore_list(),
+            code=code,
             KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 
