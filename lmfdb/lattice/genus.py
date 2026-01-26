@@ -59,7 +59,7 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Labels for integral lattices', url_for(".labels_page")),
+            ('Labels for genera of lattices', url_for(".labels_page")),
             ('History of lattices', url_for(".history_page"))]
 
 
@@ -245,15 +245,24 @@ def render_genus_webpage(**args):
     info['rank'] = int(f['rank'])
     info['det'] = int(f['det'])
     info['level'] = int(f['level'])
+    info['disc'] = int(f['disc'])
+    conway_symbol = f.get('conway_symbol', '')
+    # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
+    conway_symbol = conway_symbol.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
+    info['conway_symbol'] = conway_symbol
+    info['is_even'] = f.get('is_even', '')
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
 
 # This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
 #        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
     info['properties'] = [
+        ('Label', info['label']),
         ('Rank', prop_int_pretty(info['rank'])),
         ('Determinant', prop_int_pretty(info['det'])),
-        ('Level', prop_int_pretty(info['level']))]
+        ('Discriminant', prop_int_pretty(info['disc'])),
+        ('Level', prop_int_pretty(info['level'])),
+        ('Even/Odd', 'Even' if info['is_even'] else 'Odd')]
     downloads = [("Underlying data", url_for(".genus_data", label=lab))]
 
     t = "Genus of integral lattices "+info['label']
@@ -318,7 +327,7 @@ def reliability_page():
 def labels_page():
     t = 'Genera of integral lattice labels'
     bread = get_bread("Labels")
-    return render_template("single.html", kid='lattice.label',
+    return render_template("single.html", kid='lattice.genus_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
 @genus_page.route("/History")
