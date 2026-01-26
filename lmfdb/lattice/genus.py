@@ -121,7 +121,7 @@ def statistics():
     return render_template("display_stats.html", info=Genus_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
-lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+genus_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:((?:\.[0-9a-zA-Z]+)*))\.([0-9a-fA-F]+)')
 
 
 def split_genus_label(lab):
