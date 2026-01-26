@@ -16,7 +16,7 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
-    raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet)
+    raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache)
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -166,6 +166,17 @@ def reliability():
     bread = bread_prefix() + [('Reliability', ' ')]
     return render_template("single.html", kid='rcs.rigor.nf',
         title=t, bread=bread, learnmore=learnmore)
+
+@nf_page.route("/NumberFieldPictures")
+def nf_picture_page():
+    t = r'Pictures for number fields'
+    bread = bread_prefix() + [('Number Field Picture', ' ')]
+    return render_template(
+        "single.html",
+        kid='nf.picture',
+        title=t,
+        bread=bread,
+        learnmore=learnmore_list())
 
 
 @nf_page.route("/GaloisGroups")
@@ -676,7 +687,8 @@ def render_field_webpage(args):
             resinfo.append(('ae', dnc, len(arith_equiv[1])))
 
     info['resinfo'] = resinfo
-    learnmore = learnmore_list()
+    learnmore = learnmore_list() + [('Number field pictures', url_for(".nf_picture_page"))]
+
     title = "Number field %s" % info['label']
 
     if npr == 1:
@@ -739,12 +751,16 @@ def render_field_webpage(args):
 def url_for_label(label):
     return url_for("number_fields.by_label", label=label)
 
+@nf_page.route("/random")
+@redirect_no_cache
+def random_field():
+    return url_for_label(db.nf_fields.random())
+
 @nf_page.route("/<label>")
 def by_label(label):
     if label == "random":
-        #This version leaves the word 'random' in the URL:
-        #return render_field_webpage({'label': label})
-        return redirect(url_for_label(db.nf_fields.random()), 301)
+        # Redirect old-style /NumberField/random to the dedicated /NumberField/random route
+        return redirect(url_for(".random_field"))
     try:
         nflabel = nf_string_to_label(clean_input(label))
         if label != nflabel:
@@ -903,6 +919,7 @@ def number_field_search(info, query):
     parse_bracketed_posints(info,query,'signature',qfield=('degree','r2'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+2*L[1],L[1]))
     parse_signed_ints(info,query,'discriminant',qfield=('disc_sign','disc_abs'))
     parse_floats(info, query, 'rd')
+    parse_floats(info, query, 'grd')
     parse_floats(info, query, 'regulator')
     parse_posints(info,query,'class_number')
     parse_posints(info,query,'relative_class_number')
