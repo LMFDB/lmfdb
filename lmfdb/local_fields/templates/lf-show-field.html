@@ -26,7 +26,7 @@
       :
       {% else %}
       $=$
-      {%- set ktitle = '$\Gal(K/\Q_{' ~ info.p ~ '})$' -%}
+      {% set ktitle = '$\Gal(K/\Q_{' ~ info.p ~ '})$' %}
       {{ KNOWL('nf.galois_group', title=ktitle) }}:
       {% endif %}
       </td> 

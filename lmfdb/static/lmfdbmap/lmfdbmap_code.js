@@ -1,5 +1,5 @@
 // This is the snap.svg script way of controlling the files.
-var s = Snap("#lmdfb_map");
+var s = Snap("#lmfdb_map");
 var svg_desc = "svg_description"; // CSS selector for description div box
 var svg_examples = "svg_examples";
 var svg_element_currently_clicked = 0;

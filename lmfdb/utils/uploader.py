@@ -105,7 +105,7 @@ class UReferenceBox(UTextBox):
         if m.group("arxiv"):
             url = "https://arxiv.org/abs/" + m.group("arxiv")
         elif m.group("mr"):
-            url = "https://www.ams.org/mathscinet-getitem?mr=" + m.group("mr")
+            url = "https://mathscinet.ams.org/mathscinet-getitem?mr=" + m.group("mr")
         elif m.group("doi"):
             url = "https://doi.org/" + m.group("doi")
         return f'<a href="{url}">{value}</a>'

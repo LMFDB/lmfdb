@@ -53,7 +53,7 @@ grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
-defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
+defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*|\{\{\s*DEFINES\s*\(\s*['"]([^'"]+)['"]""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -131,7 +131,7 @@ def normalize_define(term):
 
 
 def extract_defines(content):
-    return sorted({x.strip() for x in defines_finder_re.findall(content)})
+    return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -789,6 +789,79 @@ def knowl_title(kid):
 
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
+def external_definition_link(site, xid):
+    if xid.count("@") == 1:
+        xid, fragment = xid.split("@")
+    else:
+        fragment = None
+    # If you add options here, you also need to update the knowl lmfdb.external_definitions
+    if site == "arxiv":
+        # example xid="1809.10195"
+        return f"https://arxiv.org/abs/{xid}", f"arXiv:{xid}", fragment
+    if site == "doi":
+        # example xid="10.2140/obs.2019.2.393"
+        return f"https://doi.org/{xid}", xid, fragment
+    if site == "groupprops":
+        # example xid="Alternating_group"
+        return f"https://groupprops.subwiki.org/wiki/{xid}", "groupprops:" + xid, fragment
+    if site == "href":
+        # href contains both the link and text for displaying
+        if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
+            raise ValueError("Improperly formated href")
+        url, disp = xid[1:-1].split("}{")
+        return url.strip(), disp, fragment
+    if site == "mathlib":
+        # example xid="NumberTheory/ModularForms/Basic.html#UpperHalfPlane.J"
+        if "#" in xid:
+            disp = "mathlib:" + xid.split("#")[-1]
+        else:
+            disp = "mathlib:" + xid
+        return f"https://leanprover-community.github.io/mathlib4_docs/Mathlib/{xid}", disp, fragment
+    if site == "mathworld":
+        # example xid=HeckeOperator
+        return f"https://mathworld.wolfram.com/{xid}.html", "mathworld:" + xid, fragment
+    if site == "mr":
+        # example xid="0439848"
+        return f"https://www.ams.org/mathscinet-getitem?mr={xid}", "MR:" + xid, fragment
+    if site == "nlab":
+        # example xid="number field"
+        return f"https://ncatlab.org/nlab/show/{xid}", "nlab:" + xid, fragment
+    if site == "stacks":
+        # example xid="020C"
+        return f"https://stacks.math.columbia.edu/tag/{xid}", "stacks:" + xid, fragment
+    if site == "wikidata":
+        # example xid="Q83478"
+        return f"https://www.wikidata.org/wiki/{xid}", "wikidata:" + xid, fragment
+    if site == "wikipedia":
+        # example xid="Group_(mathematics)"
+        return f"https://en.wikipedia.org/wiki/{xid}", "wiki:" + xid, fragment
+    if site == "zbl":
+        # example="0339.14028"
+        return f"https://zbmath.org/?q={xid}", "zbl:" + xid, fragment
+    raise ValueError("Unknown external site")
+
+def knowl_definition(title,
+                     clarification_kid=None,
+                     kwargs={}):
+    from lmfdb.utils.web_display import display_knowl
+    if clarification_kid is None:
+        if not kwargs:
+            return f"<strong>{title}</strong>"
+        if len(kwargs) == 1:
+            try:
+                site, xid = list(kwargs.items())[0]
+                url, disp, fragment = external_definition_link(site, xid)
+                link = f'<a href="{url}"><strong>{title}</strong></a>'
+                if fragment:
+                    link += f" ({fragment})"
+                return link
+            except ValueError:
+                pass
+        return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
+    else:
+        return display_knowl(clarification_kid, title, strong=True)
+
 
 @cached_function
 def knowl_url_prefix():
