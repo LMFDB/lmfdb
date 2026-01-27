@@ -395,6 +395,14 @@ class WebEC():
         # remove adelic image record (prime set to 0) from ell-adic data if present
         galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
         data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
+        for gd in data['galois_data']:
+            if self.cm:
+                if self.cm in [-3,-4]:
+                    gd['elladic_index'] = '?'
+                else:
+                    gd['elladic_index'] = 2
+            else:
+                gd['elladic_index'] = gd['elladic_image'].split('.')[1]
         adelic_data = [r for r in galois_data if r["prime"] == 0]
         if adelic_data:
             assert len(adelic_data) == 1
