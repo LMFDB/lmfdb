@@ -9,7 +9,7 @@ from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_list, parse_count, parse_start, clean_input,
-    search_wrap, redirect_no_cache, Downloader)
+    search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.api import datapage
@@ -166,7 +166,10 @@ def lattice_search_isometric(res, info, query):
     a list of stored matrices with same dimension and determinant
     (just compare with respect to dimension is slow)
     """
+    print("****DEBUG uqery***", query)
+    print("****DEBUG info***", info)
     if info['number'] == 0 and info.get('gram'):
+        print("****DEBUG***", query)
         A = query['gram']
         n = len(A[0])
         d = matrix(A).determinant()
@@ -191,6 +194,7 @@ genus_columns = SearchColumns([
     MathCol("rank", "genus.rank", "Rank"),
     MathCol("signature", "genus.signature", "$n_+$"),
     MathCol("det", "genus.determinant", "Determinant"),
+    MathCol("disc", "genus.discriminant", "Discriminant"),
     MathCol("level", "genus.level", "Level"),
     # MathCol("class_number", "lattice.class_number", "Class number"),
     # MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
@@ -211,16 +215,22 @@ genus_columns = SearchColumns([
              properties=lambda: [])
 def genus_search(info, query):
     for field, name in [('rank', 'Rank'), ('det', 'Determinant'), ('level', None),
-                        #('minimum', 'Minimal vector length'), ('class_number', None),
-                        #('aut', 'Group order')
-                        ]:
+                        ('disc', 'Discriminant')]:
         parse_ints(info, query, field, name)
     # Check if length of gram is triangular
-    gram = info.get('rep')
-    #if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-    #    flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
-    #    raise ValueError
-    parse_list(info, query, 'gram', process=vect_to_sym)
+    gram = info.get('gram')
+    if gram:
+        # Validate that the number of entries forms a triangular number
+        cleaned = re.sub(r"[\[\]]", "", gram)
+        entries = cleaned.split(",")
+        num_entries = len(entries)
+        # Check if num_entries = n(n+1)/2 for some integer n
+        discriminant = 1 + 8*num_entries
+        if not ZZ(discriminant).is_square():
+            flash_error("%s is not a valid input for Gram matrix. It must be a list of integer vectors of triangular length, such as [1,2,3] for a 2x2 matrix.", gram)
+            #raise ValueError("Invalid Gram matrix input")
+    parse_list(info, query, 'rep', process=vect_to_sym)
+    parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
 
 
 @genus_page.route('/<label>')
@@ -252,6 +262,21 @@ def render_genus_webpage(**args):
     info['conway_symbol'] = conway_symbol
     info['is_even'] = f.get('is_even', '')
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
+    
+    # Discriminant form data
+    discriminant_group_invs = f.get('discriminant_group_invs', [])
+    info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs) if discriminant_group_invs else 'Trivial'
+    
+    discriminant_form = f.get('discriminant_form', [])
+    if discriminant_form:
+        if isinstance(discriminant_form[0], list):
+            # Already a 2D list
+            info['discriminant_gram'] = vect_to_matrix(discriminant_form)
+        else:
+            # Flat list like 'rep'
+            info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
+    else:
+        info['discriminant_gram'] = 'Trivial'
 
 # This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
@@ -387,9 +412,10 @@ def download_genera_full_lists_g(**args):
 
 class GenusSearchArray(SearchArray):
     noun = "genus"
-    sorts = [("rank", "signature", ['rank', 'signature', 'det', 'level', 'label']),
-             ("det", "determinant", ['det', 'rank', 'signature', 'level', 'label']),
-             ("level", "level", ['level', 'rank', 'signature', 'det', 'label']),
+    sorts = [("rank", "signature", ['rank', 'signature', 'det', 'level', 'disc', 'label']),
+             ("det", "determinant", ['det', 'rank', 'signature', 'level', 'disc', 'label']),
+             ("level", "level", ['level', 'rank', 'signature', 'det', 'disc', 'label']),
+             ("disc", "discriminant", ['disc', 'rank', 'signature', 'det', 'level', 'label']),
             ]
 
     def __init__(self):
@@ -424,8 +450,27 @@ class GenusSearchArray(SearchArray):
             knowl="lattice.gram",
             example="[5,1,23]",
             example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+        discriminant = TextBox(
+            name="disc",
+            label="Discriminant",
+            knowl="lattice.discriminant",
+            example="1",
+            example_span="1 or 10-100")
+        even_odd = ParityBox(
+            name="is_even",
+            label="Even/Odd",
+            knowl="lattice.even_odd")
+        disc_invs = TextBox(
+            name="discriminant_group_invs",
+            label="Discriminant group invs",
+            knowl="lattice.discriminant_invariants",
+            example="2,4",
+            example_span="2,4 or 2,2,8")
         count = CountBox()
 
-        self.browse_array = [[rank], [signature], [det], [level], [gram], [count]]
+        self.browse_array = [[rank], [signature], [det], [level], [discriminant], [even_odd], [gram], [disc_invs], [count]]
 
-        self.refine_array = [[rank, signature, det, level, gram] ]
+        self.refine_array = [
+            [rank, signature, det, level], 
+            [discriminant, disc_invs, even_odd, gram]
+        ]
