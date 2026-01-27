@@ -166,10 +166,7 @@ def lattice_search_isometric(res, info, query):
     a list of stored matrices with same dimension and determinant
     (just compare with respect to dimension is slow)
     """
-    print("****DEBUG uqery***", query)
-    print("****DEBUG info***", info)
     if info['number'] == 0 and info.get('gram'):
-        print("****DEBUG***", query)
         A = query['gram']
         n = len(A[0])
         d = matrix(A).determinant()
@@ -215,21 +212,22 @@ genus_columns = SearchColumns([
              properties=lambda: [])
 def genus_search(info, query):
     for field, name in [('rank', 'Rank'), ('det', 'Determinant'), ('level', None),
-                        ('disc', 'Discriminant')]:
+                        #('minimum', 'Minimal vector length'), ('class_number', None),
+                        #('aut', 'Group order')
+                        ('disc', 'Discriminant')
+                        ]:
         parse_ints(info, query, field, name)
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram:
         # Validate that the number of entries forms a triangular number
-        cleaned = re.sub(r"[\[\]]", "", gram)
-        entries = cleaned.split(",")
+        entries = re.sub(r"[\[\]]", "", gram).split(",")
         num_entries = len(entries)
         # Check if num_entries = n(n+1)/2 for some integer n
-        discriminant = 1 + 8*num_entries
-        if not ZZ(discriminant).is_square():
+        if not ZZ(1 + 8*num_entries).is_square():
             flash_error("%s is not a valid input for Gram matrix. It must be a list of integer vectors of triangular length, such as [1,2,3] for a 2x2 matrix.", gram)
             #raise ValueError("Invalid Gram matrix input")
-    parse_list(info, query, 'rep', process=vect_to_sym)
+    parse_list(info, query, 'gram', process=vect_to_sym)
     parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
 
 
@@ -268,15 +266,7 @@ def render_genus_webpage(**args):
     info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs) if discriminant_group_invs else 'Trivial'
     
     discriminant_form = f.get('discriminant_form', [])
-    if discriminant_form:
-        if isinstance(discriminant_form[0], list):
-            # Already a 2D list
-            info['discriminant_gram'] = vect_to_matrix(discriminant_form)
-        else:
-            # Flat list like 'rep'
-            info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
-    else:
-        info['discriminant_gram'] = 'Trivial'
+    info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
 
 # This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
 #    if info['name'] != "" or info['comments'] !="":
