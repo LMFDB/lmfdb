@@ -349,7 +349,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         def extract_space(line, path=None):
             """Extract the space available from a line of output from df, in bytes"""
             pieces = line.split()
-            if path is not None and pieces[-1] != path:
+            if path is not None and not pieces[-1].startswith(path):
                 return -1
             # df returns its amounts in 1K blocks
             return 1024 * int(pieces[3])
