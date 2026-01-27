@@ -263,7 +263,7 @@ def render_genus_webpage(**args):
     
     # Discriminant form data
     discriminant_group_invs = f.get('discriminant_group_invs', [])
-    info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs) if discriminant_group_invs else 'Trivial'
+    info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs)
     
     discriminant_form = f.get('discriminant_form', [])
     info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
