@@ -55,6 +55,11 @@ def my_latex(s):
     return ss
 
 
+def format_conway_symbol(s):
+    # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
+    return s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
+
+
 # breadcrumbs and links for data quality entries
 
 def get_bread(tail=[]):
@@ -164,28 +169,29 @@ genus_search_projection = ['label', 'rank', 'det', 'level',
                              #'class_number', 'aut', 'minimum']
                            ]
 
-def lattice_search_isometric(res, info, query):
+def genus_search_equivalent(res, info, query):
     """
-    We check for isometric lattices if the user enters a valid gram matrix
+    We check for equivalent genuses if the user enters a valid gram matrix
     but not one stored in the database
 
     This may become slow in the future: at the moment we compare against
-    a list of stored matrices with same dimension and determinant
+    a list of stored matrices with same dimension, signature and determinant
     (just compare with respect to dimension is slow)
     """
     if info['number'] == 0 and info.get('gram'):
         A = query['gram']
         n = len(A[0])
-        d = matrix(A).determinant()
-        for gram in db.lat_lattices.search({'dim': n, 'det': int(d)}, 'gram'):
-            if isom(A, gram):
+        L = IntegralLattice(matrix(A))
+        det = matrix(A).determinant()
+        for gram in db.lat_genera.search({'dim': n, 'det': int(det)}, 'rep'):
+            L2 = IntegralLattice(Matrix(ZZ, n, n, gram))
+            if L.genus() == L2.genus():
                 query['gram'] = gram
                 proj = lattice_search_projection
                 count = parse_count(info)
                 start = parse_start(info)
-                res = db.lat_lattices.search(query, proj, limit=count, offset=start, info=info)
+                res = db.lat_genera.search(query, proj, limit=count, offset=start, info=info)
                 break
-
     return res
 
 
@@ -194,17 +200,19 @@ def url_for_label(label):
 
 
 genus_columns = SearchColumns([
-    LinkCol("label", "genus.label", "Label", url_for_label),
-    MathCol("rank", "genus.rank", "Rank"),
-    MathCol("signature", "genus.signature", "$n_+$"),
-    MathCol("det", "genus.determinant", "Determinant"),
-    MathCol("disc", "genus.discriminant", "Discriminant"),
-    MathCol("level", "genus.level", "Level"),
+    LinkCol("label", "lattice.label", "Label", url_for_label),
+    MathCol("rank", "lattice.dimension", "Rank"),
+    MathCol("signature", "lattice.signature", "Signature"),
+    MathCol("det", "lattice.determinant", "Determinant"),
+    MathCol("disc", "lattice.discriminant", "Discriminant"),
+    MathCol("level", "lattice.level", "Level"),
+    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", default=False),
+    ProcessedCol("even_odd", "lattic.even_odd", "Even/Odd"),
+    ProcessedCol("mass", "lattic.mass", "Mass", default=False),
     # MathCol("class_number", "lattice.class_number", "Class number"),
     # MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
-    #MathCol("aut", "lattice.group_order", "Aut. group order")
+    # MathCol("aut", "lattice.group_order", "Aut. group order")
     ])
-
 
 @search_wrap(table=db.lat_genera,
              title='Genera of integral lattices search results',
@@ -258,20 +266,21 @@ def render_genus_webpage(**args):
 
     bread = get_bread(f['label'])
     info['rank'] = int(f['rank'])
+    nplus = int(f['signature'])
+    nminus = info['rank'] - nplus
+    info['signature'] = (nplus, nminus)
     info['det'] = int(f['det'])
     info['level'] = int(f['level'])
     info['disc'] = int(f['disc'])
-    conway_symbol = f.get('conway_symbol', '')
-    # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
-    conway_symbol = conway_symbol.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
-    info['conway_symbol'] = conway_symbol
+    info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
     info['is_even'] = f.get('is_even', '')
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
+    info['mass'] = "not computed"
+    info['class_number'] = "not_computed"
     
     # Discriminant form data
     discriminant_group_invs = f.get('discriminant_group_invs', [])
     info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs)
-    
     discriminant_form = f.get('discriminant_form', [])
     info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
 
@@ -281,6 +290,7 @@ def render_genus_webpage(**args):
     info['properties'] = [
         ('Label', info['label']),
         ('Rank', prop_int_pretty(info['rank'])),
+        ('Signature', prop_int_pretty(info['signature'])),
         ('Determinant', prop_int_pretty(info['det'])),
         ('Discriminant', prop_int_pretty(info['disc'])),
         ('Level', prop_int_pretty(info['level'])),
@@ -300,8 +310,6 @@ def render_genus_webpage(**args):
         KNOWL_ID="lattice.%s" % info['label'])
 # friends=friends
 
-
-
 @genus_page.route('/data/<label>')
 def genus_data(label):
     if not genus_label_regex.fullmatch(label):
@@ -310,7 +318,11 @@ def genus_data(label):
     title = f"Genus data - {label}"
     return datapage(label, "lat_genera", title=title, bread=bread)
 
-# data quality pages
+
+######################
+# Data quality pages #
+######################
+
 @genus_page.route("/Source")
 def how_computed_page():
     t = 'Source and acknowledgments for integral lattices'
@@ -349,6 +361,10 @@ def history_page():
     return render_template("single.html", kid='lattice.history',
                            title=t, bread=bread, learnmore=learnmore_list_remove('History'))
 
+#################################
+# Downloads for particular data #
+#################################
+
 @genus_page.route('/<label>/download/<lang>/<obj>')
 def render_genus_webpage_download(**args):
     if args['obj'] == 'shortest_vectors':
@@ -359,10 +375,6 @@ def render_genus_webpage_download(**args):
         response = make_response(download_genera_full_lists_g(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
-
-#################################
-# Downloads for particular data #
-#################################
 
 def download_genera_full_lists_v(**args):
     label = str(args['label'])
