@@ -11,7 +11,7 @@ from lmfdb.utils import (
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
 from lmfdb.api import datapage
 from lmfdb.lattice import genus_page
 from lmfdb.lattice.isom import isom
@@ -169,7 +169,7 @@ genus_search_projection = ['label', 'rank', 'det', 'level',
                              #'class_number', 'aut', 'minimum']
                            ]
 
-def genus_search_equivalent(res, info, query):
+def genus_search_equivalence(res, info, query):
     """
     We check for equivalent genuses if the user enters a valid gram matrix
     but not one stored in the database
@@ -206,10 +206,10 @@ genus_columns = SearchColumns([
     MathCol("det", "lattice.determinant", "Determinant"),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
+    MathCol("class_number", "lattice.class_number", "Class number"),
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", default=False),
-    ProcessedCol("even_odd", "lattic.even_odd", "Even/Odd"),
-    ProcessedCol("mass", "lattic.mass", "Mass", default=False),
-    # MathCol("class_number", "lattice.class_number", "Class number"),
+    ProcessedCol("even_odd", "lattice.even_odd", "Even/Odd"),
+    ProcessedCol("mass", "lattice.mass", "Mass", lambda v: r"$%s/%s$" % (v[0],v[1]) if v[1] > 1 else r"$%s$" % v[0], default=False),
     # MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
     # MathCol("aut", "lattice.group_order", "Aut. group order")
     ])
@@ -220,7 +220,7 @@ genus_columns = SearchColumns([
              columns=genus_columns,
              shortcuts={'download': Downloader(db.lat_genera),
                         'label': lambda info: genus_by_label_or_name(info.get('label'))},
-             postprocess=lattice_search_isometric,
+             postprocess=genus_search_equivalence,
              url_for_label=url_for_label,
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
@@ -275,8 +275,8 @@ def render_genus_webpage(**args):
     info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
     info['is_even'] = f.get('is_even', '')
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
-    info['mass'] = "not computed"
-    info['class_number'] = "not_computed"
+    info['mass'] = "?"
+    info['class_number'] = "?"
     
     # Discriminant form data
     discriminant_group_invs = f.get('discriminant_group_invs', [])
@@ -290,10 +290,11 @@ def render_genus_webpage(**args):
     info['properties'] = [
         ('Label', info['label']),
         ('Rank', prop_int_pretty(info['rank'])),
-        ('Signature', prop_int_pretty(info['signature'])),
+        ('Signature', '$%s$' % str(info['signature'])),
         ('Determinant', prop_int_pretty(info['det'])),
         ('Discriminant', prop_int_pretty(info['disc'])),
         ('Level', prop_int_pretty(info['level'])),
+        ('Class Number', "?"),
         ('Even/Odd', 'Even' if info['is_even'] else 'Odd')]
     downloads = [("Underlying data", url_for(".genus_data", label=lab))]
 
@@ -461,6 +462,11 @@ class GenusSearchArray(SearchArray):
             name="is_even",
             label="Even/Odd",
             knowl="lattice.even_odd")
+        class_number = TextBox(
+            name="class_number",
+            label="Class number",
+            knowl="lattice.class_number",
+            example="1")
         disc_invs = TextBox(
             name="discriminant_group_invs",
             label="Discriminant group invs",
@@ -473,6 +479,6 @@ class GenusSearchArray(SearchArray):
         self.browse_array = [[rank], [signature], [det], [level], [discriminant], [even_odd], [gram], [disc_invs], [count]]
 
         self.refine_array = [
-            [rank, signature, det, level], 
-            [discriminant, disc_invs, even_odd, gram]
+            [rank, signature, det, discriminant, level], 
+            [class_number, disc_invs, even_odd, gram]
         ]
