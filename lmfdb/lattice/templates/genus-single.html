@@ -6,23 +6,25 @@
 
 <table>
     <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{info.rank}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{info.signature}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>${{info.disc}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.signature', title='Signature $n_+$') }}:</td><td>${{info.signature}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{% if info.is_even %}Even{% else %}Odd{% endif %}</td></tr>
+    <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>${{info.mass}}$</td></tr>
 <td>
 </table>
 
 <h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
 <p>${{info.gram}}$</p>
 
-<h2> {{ KNOWL('lattice.discriminant_form', title='Discriminant Form') }} </h2>
+<h2> {{ KNOWL('lattice.discriminant_group', title='Discriminant Group') }} </h2>
 
 <table>
-    <tr><td>{{ KNOWL('lattice.discriminant_group_inv', title='Discriminant Invariants') }}:</td><td>${{info.discriminant_group_invs}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant_gram', title='Discriminant form gram matrix') }}:</td><td>${{info.discriminant_gram}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Smith invariants') }}:</td><td>${{info.discriminant_group_invs}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>${{info.discriminant_gram}}$</td></tr>
 </table>
 
 {% endblock %}
