@@ -21,19 +21,28 @@ from lmfdb.lattice.genera_stats import Genus_stats
 
 from lmfdb import db
 
-# utilitary functions for displays
-
+#####################################
+# Utilitary functions for displays  #
+#####################################
 
 def vect_to_matrix(v):
     return str(latex(matrix(v)))
 
+def vect_to_sym(v):
+    n = ZZ(round(sqrt(len(v))))
+    M = matrix(n)
+    k = 0
+    for i in range(n):
+        for j in range(n):
+            M[i, j] = v[k]
+            k += 1
+    return [[int(M[i, j]) for i in range(n)] for j in range(n)]
 
 def print_q_expansion(lst):
     lst = [str(c) for c in lst]
     Qa = PolynomialRing(QQ, 'a')
     Qq = PowerSeriesRing(Qa, 'q')
     return web_latex_split_on_pm(Qq(lst).add_bigoh(len(lst)))
-
 
 def my_latex(s):
     ss = ""
@@ -68,7 +77,9 @@ def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
 
 
-# webpages: main, random and search results
+#############################################
+# Webpages: main, random and search results #
+#############################################
 
 @genus_page.route("/")
 def genus_render_webpage():
@@ -123,10 +134,8 @@ def statistics():
 
 genus_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:((?:\.[0-9a-zA-Z]+)*))\.([0-9a-fA-F]+)')
 
-
 def split_genus_label(lab):
     return genus_label_regex.match(lab).groups()
-
 
 def genus_by_label_or_name(lab):
     clean_lab = str(lab).replace(" ", "")
@@ -151,11 +160,9 @@ download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data
 download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
 download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
-
 genus_search_projection = ['label', 'rank', 'det', 'level',
                              #'class_number', 'aut', 'minimum']
                            ]
-
 
 def lattice_search_isometric(res, info, query):
     """
@@ -294,16 +301,6 @@ def render_genus_webpage(**args):
 # friends=friends
 
 
-def vect_to_sym(v):
-    n = ZZ(round(sqrt(len(v))))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(n):
-            M[i, j] = v[k]
-            k += 1
-    return [[int(M[i, j]) for i in range(n)] for j in range(n)]
-
 
 @genus_page.route('/data/<label>')
 def genus_data(label):
@@ -363,6 +360,9 @@ def render_genus_webpage_download(**args):
         response.headers['Content-type'] = 'text/plain'
         return response
 
+#################################
+# Downloads for particular data #
+#################################
 
 def download_genera_full_lists_v(**args):
     label = str(args['label'])
@@ -376,7 +376,6 @@ def download_genera_full_lists_v(**args):
     outstr += download_assignment_end[lang]
     outstr += '\n'
     return outstr
-
 
 def download_genera_full_lists_g(**args):
     label = str(args['label'])
@@ -453,9 +452,10 @@ class GenusSearchArray(SearchArray):
         disc_invs = TextBox(
             name="discriminant_group_invs",
             label="Discriminant group invs",
-            knowl="lattice.discriminant_invariants",
+            knowl="lattice.discriminant_group",
             example="2,4",
             example_span="2,4 or 2,2,8")
+        
         count = CountBox()
 
         self.browse_array = [[rank], [signature], [det], [level], [discriminant], [even_odd], [gram], [disc_invs], [count]]
