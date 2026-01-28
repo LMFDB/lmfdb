@@ -11,7 +11,7 @@ from lmfdb.utils import (
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.lattice import genus_page
 from lmfdb.lattice.isom import isom
@@ -92,18 +92,18 @@ def genus_render_webpage():
     if not request.args:
         stats = Genus_stats()
         dim_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        #class_number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56]
+        class_number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56]
         # det_list_endpoints = [1, 1000, 10000, 100000, 1000000, 10000000, 100000000]
         det_list_endpoints = [1, 10, 100, 1000]
         det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
         # name_list = ["A2", "Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info.update({'dim_list': dim_list, #'class_number_list': class_number_list,
+        info.update({'dim_list': dim_list, 'class_number_list': class_number_list,
                      'det_list': det_list, #'name_list': name_list
                      })
         t = 'Genera of integral lattices'
         bread = get_bread()
         info['stats'] = stats
-        #info['max_cn'] = stats.max_cn
+        info['max_cn'] = stats.max_cn
         info['max_rank'] = stats.max_rank
         info['max_det'] = stats.max_det
         return render_template("genus-index.html", info=info, title=t, learnmore=learnmore_list(), bread=bread)
@@ -202,16 +202,14 @@ def url_for_label(label):
 genus_columns = SearchColumns([
     LinkCol("label", "lattice.label", "Label", url_for_label),
     MathCol("rank", "lattice.dimension", "Rank"),
-    MathCol("signature", "lattice.signature", "Signature"),
+    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '[%s,%s]' % (signature, rank-signature ),),
     MathCol("det", "lattice.determinant", "Determinant"),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
-    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", default=False),
-    ProcessedCol("even_odd", "lattice.even_odd", "Even/Odd"),
-    ProcessedCol("mass", "lattice.mass", "Mass", lambda v: r"$%s/%s$" % (v[0],v[1]) if v[1] > 1 else r"$%s$" % v[0], default=False),
-    # MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
-    # MathCol("aut", "lattice.group_order", "Aut. group order")
+    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
+    ProcessedCol("mass", "lattice.mass", "Mass", lambda v: r"$%s/%s$" % (v[0],v[1]) if len(v) > 1 else "", default=False),
     ])
 
 @search_wrap(table=db.lat_genera,
@@ -226,12 +224,16 @@ genus_columns = SearchColumns([
              learnmore=learnmore_list,
              properties=lambda: [])
 def genus_search(info, query):
-    for field, name in [('rank', 'Rank'), ('det', 'Determinant'), ('level', None),
-                        #('minimum', 'Minimal vector length'), ('class_number', None),
-                        #('aut', 'Group order')
-                        ('disc', 'Discriminant')
-                        ]:
+    for field, name in [('rank', 'Rank'), ('det', 'Determinant'), ('level', 'Level'),
+                        ('class_number', 'Class number'), ('disc', 'Discriminant'), ('signature', 'Signature')]:
         parse_ints(info, query, field, name)
+    # Handle even/odd parity search
+    parity = info.get('is_even')
+    if parity:
+        if parity == 'even':
+            query['is_even'] = True
+        elif parity == 'odd':
+            query['is_even'] = False
     # Check if length of gram is triangular
     gram = info.get('gram')
     if gram:
@@ -275,8 +277,8 @@ def render_genus_webpage(**args):
     info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
     info['is_even'] = f.get('is_even', '')
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
-    info['mass'] = "?"
-    info['class_number'] = "?"
+    info['mass'] = f.get('mass', "?")
+    info['class_number'] = f.get('class_number', "?")
     
     # Discriminant form data
     discriminant_group_invs = f.get('discriminant_group_invs', [])
@@ -476,7 +478,7 @@ class GenusSearchArray(SearchArray):
         
         count = CountBox()
 
-        self.browse_array = [[rank], [signature], [det], [level], [discriminant], [even_odd], [gram], [disc_invs], [count]]
+        self.browse_array = [[rank], [signature], [det], [discriminant], [level], [class_number], [even_odd], [gram], [disc_invs], [count]]
 
         self.refine_array = [
             [rank, signature, det, discriminant, level], 
