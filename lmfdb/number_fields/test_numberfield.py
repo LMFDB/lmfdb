@@ -79,8 +79,8 @@ class NumberFieldTest(LmfdbTest):
 
     def test_signature_display(self):
         # Verify that signatures are displayed with parentheses, not square brackets
-        self.check_args('/NumberField/6.0.61131.1', '(0,3)')  # degree 6 field with signature (0,3)
-        self.check_args('/NumberField/7.3.1420409.1', '(3,2)')  # degree 7 field with signature (3,2)
+        self.check_args('/NumberField/6.0.61131.1', '(0, 3)')  # degree 6 field with signature (0, 3)
+        self.check_args('/NumberField/7.3.1420409.1', '(3, 2)')  # degree 7 field with signature (3, 2)
 
     def test_relative_class_number(self):
         self.check_args('/NumberField/4.0.1327873600.2', '2108')
