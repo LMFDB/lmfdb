@@ -5,10 +5,12 @@ import time
 from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
 
+#from lmfdb.local_fields.main import formatbracketcol
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
-    parse_ints, parse_posints, parse_list, parse_count, parse_start, clean_input,
+    parse_ints, parse_posints, parse_list, parse_count, 
+    parse_bracketed_posints, parse_start, clean_input,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -210,6 +212,7 @@ genus_columns = SearchColumns([
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
     ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
     ProcessedCol("mass", "lattice.mass", "Mass", lambda v: r"$%s/%s$" % (v[0],v[1]) if len(v) > 1 else "", default=False),
+    ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False)
     ])
 
 @search_wrap(table=db.lat_genera,
@@ -228,6 +231,7 @@ def genus_search(info, query):
         parse_posints(info, query, field, name)
     for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
         parse_ints(info, query, field, name)
+    parse_bracketed_posints(info, query, 'signature', qfield=('rank','signature'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
     # Handle even/odd search
     parity = info.get('is_even')
@@ -436,14 +440,12 @@ class GenusSearchArray(SearchArray):
             name="signature",
             label="Signature",
             knowl="lattice.signature",
-            example="3",
-            example_span="3 or 2-5"
-            )
+            example="[1,1]")
         det = TextBox(
             name="det",
             label="Determinant",
             knowl="lattice.determinant",
-            example="1",
+            example="10",
             example_span="1 or 10-100")
         level = TextBox(
             name="level",
@@ -461,7 +463,7 @@ class GenusSearchArray(SearchArray):
             name="disc",
             label="Discriminant",
             knowl="lattice.discriminant",
-            example="1",
+            example="10",
             example_span="1 or 10-100")
         even_odd = ParityBox(
             name="is_even",
@@ -471,19 +473,32 @@ class GenusSearchArray(SearchArray):
             name="class_number",
             label="Class number",
             knowl="lattice.class_number",
-            example="1")
+            example="5")
         disc_invs = TextBox(
             name="discriminant_group_invs",
-            label="Discriminant group invs",
+            label="Disc. group invariants",
             knowl="lattice.discriminant_group",
             example="2,4",
             example_span="2,4 or 2,2,8")
+        mass = TextBox(
+            name="mass",
+            label="Mass",
+            knowl="lattice.mass",
+            example="1/2",
+            example_span="1/2 or 1/2 or 1/2")
         
         count = CountBox()
 
-        self.browse_array = [[rank], [signature], [det], [discriminant], [level], [class_number], [even_odd], [gram], [disc_invs], [count]]
+        self.browse_array = [
+            [rank, signature], 
+            [det, discriminant],
+            [level, class_number], 
+            [disc_invs, even_odd],
+            [mass, gram],
+            [count]
+        ]
 
         self.refine_array = [
             [rank, signature, det, discriminant, level], 
-            [class_number, disc_invs, even_odd, gram]
+            [class_number, disc_invs, even_odd, mass, gram]
         ]
