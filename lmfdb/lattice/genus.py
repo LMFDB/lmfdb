@@ -90,8 +90,11 @@ def learnmore_list_remove(matchstring):
 @genus_page.route("/")
 def genus_render_webpage():
     info = to_dict(request.args, search_array=GenusSearchArray())
-    sig_list = sum([[(n-nm, nm) for nm in range(1 + (n//2))] for n in range(1, 10)], [])
-    signature_list = [str(s).replace(' ','') for s in sig_list[:16]]
+
+    # Prepare list of signatures to browse (display as round brackets, internally use square brackets)
+    sig_list = sum([[[n-nm, nm] for nm in range(1 + (n//2))] for n in range(1, 10)], [])
+    signature_list = [[str(s).replace(' ',''), str(tuple(s)).replace(' ','')] for s in sig_list[:16]]
+
     if not request.args:
         stats = Genus_stats()
         dim_list = list(range(1, 13))
