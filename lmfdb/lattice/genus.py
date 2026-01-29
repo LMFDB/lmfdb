@@ -8,7 +8,7 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
-    parse_ints, parse_list, parse_count, parse_start, clean_input,
+    parse_ints, parse_posints, parse_list, parse_count, parse_start, clean_input,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -89,16 +89,16 @@ def learnmore_list_remove(matchstring):
 @genus_page.route("/")
 def genus_render_webpage():
     info = to_dict(request.args, search_array=GenusSearchArray())
+    sig_list = sum([[[n-nm, nm] for nm in range(1 + (n//2))] for n in range(1, 10)], [])
+    signature_list = [str(s).replace(' ','') for s in sig_list[:16]]
     if not request.args:
         stats = Genus_stats()
-        dim_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        class_number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56]
-        # det_list_endpoints = [1, 1000, 10000, 100000, 1000000, 10000000, 100000000]
-        det_list_endpoints = [1, 10, 100, 1000]
-        det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        # name_list = ["A2", "Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info.update({'dim_list': dim_list, 'class_number_list': class_number_list,
-                     'det_list': det_list, #'name_list': name_list
+        dim_list = list(range(1, 13))
+        class_number_list = list(range(1, 31))
+        det_list_endpoints = [-1000, -100, -10, 1, 10, 100, 1000]
+        det_list = ["%s..%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
+        info.update({'dim_list': dim_list, 'signature_list': signature_list,
+                     'det_list': det_list, 'class_number_list': class_number_list,
                      })
         t = 'Genera of integral lattices'
         bread = get_bread()
@@ -224,11 +224,14 @@ genus_columns = SearchColumns([
              learnmore=learnmore_list,
              properties=lambda: [])
 def genus_search(info, query):
-    for field, name in [('rank', 'Rank'), ('det', 'Determinant'), ('level', 'Level'),
-                        ('class_number', 'Class number'), ('disc', 'Discriminant'), ('signature', 'Signature')]:
+    for field, name in [('rank', 'Rank'), ('level', 'Level'), ('class_number', 'Class number')]:
+        parse_posints(info, query, field, name)
+    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
         parse_ints(info, query, field, name)
-    # Handle even/odd parity search
+
+    # Handle even/odd search
     parity = info.get('is_even')
+    #assert(False)
     if parity:
         if parity == 'even':
             query['is_even'] = True
