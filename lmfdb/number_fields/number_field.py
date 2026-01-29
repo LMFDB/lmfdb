@@ -465,7 +465,7 @@ def render_field_webpage(args):
     data['class_group'] = nf.class_group()
     data['narrow_class_group'] = nf.narrow_class_group()
     data['class_group_invs'] = nf.class_group_invariants()
-    data['signature'] = nf.signature()
+    data['signature'] = nf.signature_display()
     data['coefficients'] = nf.coeffs()
     nf.make_code_snippets()
     D = nf.disc()
