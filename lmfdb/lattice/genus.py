@@ -11,6 +11,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count, 
     parse_bracketed_posints, parse_start, clean_input,
+    parse_rational_to_list,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -255,7 +256,7 @@ def genus_search(info, query):
             #raise ValueError("Invalid Gram matrix input")
     parse_list(info, query, 'gram', process=vect_to_sym)
     parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
-
+    parse_rational_to_list(info, query, 'mass', 'mass')
 
 @genus_page.route('/<label>')
 def render_genus_webpage(**args):
