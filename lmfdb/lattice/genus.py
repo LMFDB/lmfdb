@@ -56,7 +56,6 @@ def my_latex(s):
     ss += ""
     return ss
 
-
 def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
     return s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
@@ -91,7 +90,7 @@ def learnmore_list_remove(matchstring):
 @genus_page.route("/")
 def genus_render_webpage():
     info = to_dict(request.args, search_array=GenusSearchArray())
-    sig_list = sum([[[n-nm, nm] for nm in range(1 + (n//2))] for n in range(1, 10)], [])
+    sig_list = sum([[(n-nm, nm) for nm in range(1 + (n//2))] for n in range(1, 10)], [])
     signature_list = [str(s).replace(' ','') for s in sig_list[:16]]
     if not request.args:
         stats = Genus_stats()
@@ -204,7 +203,7 @@ def url_for_label(label):
 genus_columns = SearchColumns([
     LinkCol("label", "lattice.label", "Label", url_for_label),
     MathCol("rank", "lattice.dimension", "Rank"),
-    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '[%s,%s]' % (signature, rank-signature ),),
+    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
     MathCol("det", "lattice.determinant", "Determinant"),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
@@ -303,7 +302,7 @@ def render_genus_webpage(**args):
         ('Determinant', prop_int_pretty(info['det'])),
         ('Discriminant', prop_int_pretty(info['disc'])),
         ('Level', prop_int_pretty(info['level'])),
-        ('Class Number', "?"),
+        ('Class Number', info['class_number']),
         ('Even/Odd', 'Even' if info['is_even'] else 'Odd')]
     downloads = [("Underlying data", url_for(".genus_data", label=lab))]
 
