@@ -553,7 +553,7 @@ class WebNumberField:
     def signature(self):
         r2 = self._data['r2']
         n = self._data['degree']
-        return [n-2*r2, r2]
+        return '(%s,%s)' % (n-2*r2, r2)
 
     def degree(self):
         return self._data['degree']
