@@ -546,7 +546,7 @@ lf_columns = SearchColumns([
     hidden_col(default=False),
     hiddenswan_col(),
     aut_col(lambda info:info.get("aut")),
-    # want apply_download for download conversion
+    # Want apply_download for download conversion.  Sage requires both 'unram' and 'eisen' in the download files to construct p-adic fields.
     PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible") or info.get("Submit") == "sage"),
     ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible") or info.get("Submit") == "sage", mathmode=True, func=format_eisen),
     insep_col(default=lambda info: info.get("ind_of_insep")),
