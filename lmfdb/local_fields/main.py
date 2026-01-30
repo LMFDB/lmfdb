@@ -413,7 +413,7 @@ class LF_download(Downloader):
             ["p", "coeffs"],
             {
                 "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
-                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(out["p"], Prec)\n    field.<a> = base.extension(ZZx(out["coeffs"]))',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(out["p"], Prec)\n    unram = ZZx(out["unram"].replace("t","x"))\n    unram_subfield.<t> = base.extension(unram, names="t") if unram.degree() > 1 else base\n    eisen = sage_eval(out["eisen"], locals={"x":x, "t":t})\n    field.<a> = unram_subfield.extension(eisen, names="a") if eisen.degree() > 1 else unram_subfield',
                 "gp": 'field = Polrev(mapget(out, "coeffs"));',
             }
         ),
