@@ -464,8 +464,8 @@ class Downloader():
         This function is called on each result from the database.
 
         This hooks makes it possible to construct a python object wrapping the record that provides
-        additional methods for supporting search columns.  See abelian varieties and artin representations
-        for examples.
+        additional methods for supporting search columns.  See abelian varieties, artin representations
+        or ECNF for examples.
         """
         return row
 
