@@ -306,7 +306,7 @@ def render_genus_webpage(**args):
         ('Determinant', prop_int_pretty(info['det'])),
         ('Discriminant', prop_int_pretty(info['disc'])),
         ('Level', prop_int_pretty(info['level'])),
-        ('Class Number', info['class_number']),
+        ('Class Number', str(info['class_number'])),
         ('Even/Odd', 'Even' if info['is_even'] else 'Odd')]
     downloads = [("Underlying data", url_for(".genus_data", label=lab))]
 
