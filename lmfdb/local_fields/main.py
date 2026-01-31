@@ -19,7 +19,7 @@ from lmfdb.utils import (
     HiddenBox, TextBoxNoEg, CountBox, to_dict, comma,
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
-    redirect_no_cache, raw_typeset, CodeSnippet)
+    redirect_no_cache, raw_typeset)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.utils.search_parsing import search_parser
