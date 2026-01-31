@@ -894,34 +894,36 @@ def local_field_search(info,query):
     common_parse(info, query)
 
 def make_code_snippets(data):
-    """Create code snippets dictionary for a local field.
-    
-    Args:
-        data: dictionary with field data containing 'p' and 'coeffs'
-    
-    Returns:
-        code: dictionary with code snippets for different languages
+    """
+    Create code snippets dictionary for p-adic field.
     """
     # read in code.yaml from local_fields directory:
     _curdir = os.path.dirname(os.path.abspath(__file__))
     code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
     
-    # Format coefficients for display in code snippets
+    # Sage doesn't (yet) support arbitrary extensions of p-adic fields
+    # so must construct field using 'unram' and 'eisen' columns for Sage
+    sage_construct_field = ""
+    if data['e'] == 1:
+        # Unramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")"
+    elif data['f'] == 1:
+        # Totally ramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['eisen']+")"
+    else:
+        # Mixed case (construct L as maximal unramified extension)
+        sage_construct_field = "L.<t> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")\n"
+        sage_construct_field += "K.<a> = L.extension("+data['eisen']+")"
+
     format_data = {
         'p': data['p'],
-        'coeffs': str(data['coeffs'])
+        'coeffs': str(data['coeffs']),
+        'sage_construct_field' : sage_construct_field
     }
     
-    # Substitute actual field data into all code snippets
     for prop in code:
-        if isinstance(code[prop], dict):
-            for lang in code[prop]:
-                if lang != 'comment' and isinstance(code[prop][lang], str):
-                    code[prop][lang] = code[prop][lang].format(**format_data)
-    
-    # Initialize show dictionary with empty strings for each language that has prompts
-    if 'prompt' in code:
-        code['show'] = { lang:'' for lang in code['prompt'] }
+        for lang in code[prop]:
+            code[prop][lang] = code[prop][lang].format(**format_data)
     return code
 
 def render_field_webpage(args):
@@ -1154,7 +1156,6 @@ def render_field_webpage(args):
                                (str(n), url_for('.index', p=p, n=n)),
                                (str(cc), url_for('.index', p=p, n=n, c=cc)),
                                (data['label'], ' ')])
-        code = make_code_snippets(data)
         return render_template(
             "lf-show-field.html",
             title=title,
@@ -1165,7 +1166,7 @@ def render_field_webpage(args):
             friends=friends,
             downloads=downloads,
             learnmore=learnmore_list(),
-            code=code,
+            code=make_code_snippets(data),
             KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 
