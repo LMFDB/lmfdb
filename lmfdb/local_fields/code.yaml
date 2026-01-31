@@ -48,6 +48,9 @@ residue_degree:
   sage: K.absolute_f()
   magma: InertiaDegree(K);
 
+disc_exponent:
+  magma: Valuation(Discriminant(K));
+
 unramified_subfield:
   comment: Maximal unramified subextension
   sage: K.maximal_unramified_subextension()
@@ -55,4 +58,3 @@ unramified_subfield:
 roots_of_unity:
   comment: Roots of unity
   sage: len(K.roots_of_unity())
-
