@@ -107,8 +107,8 @@ class NumberFieldTest(LmfdbTest):
         # - For imaginary quadratic fields (disc < 0, degree=2): r1=0, r2=1, so signature=[0, 1]
         # - For real quadratic fields (disc > 0, degree=2): r1=2, r2=0, so signature=[2, 0]
         # The bug was that it showed [r2, degree] = [1, 2] or [0, 2] instead
-        assert '[0, 1]' in page  # imaginary quadratic field
-        assert '[2, 0]' in page  # real quadratic field
+        assert '[0,1]' in page  # imaginary quadratic field (note: no space after comma)
+        assert '[2,0]' in page  # real quadratic field (note: no space after comma)
         # Make sure we're NOT getting the buggy format [r2, degree]
-        assert '"signature": [1, 2]' not in page  # wrong format for imaginary quadratic
-        assert '"signature": [0, 2]' not in page  # wrong format for real quadratic
+        assert '"[1,2]"' not in page  # wrong format for imaginary quadratic
+        assert '"[0,2]"' not in page  # wrong format for real quadratic
