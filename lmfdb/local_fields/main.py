@@ -900,7 +900,7 @@ def make_code_snippets(data):
     # read in code.yaml from local_fields directory:
     _curdir = os.path.dirname(os.path.abspath(__file__))
     code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-    
+
     # Sage doesn't (yet) support arbitrary extensions of p-adic fields
     # so must construct field using 'unram' and 'eisen' columns for Sage
     sage_construct_field = ""
@@ -920,7 +920,7 @@ def make_code_snippets(data):
         'coeffs': str(data['coeffs']),
         'sage_construct_field' : sage_construct_field
     }
-    
+
     for prop in code:
         for lang in code[prop]:
             code[prop][lang] = code[prop][lang].format(**format_data)
