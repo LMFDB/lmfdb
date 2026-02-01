@@ -102,7 +102,13 @@ class NumberFieldTest(LmfdbTest):
         # Test that signature is downloaded as [r1, r2] not [r2, degree]
         # For degree 2 fields with negative discriminant: signature is [0, 1] (complex)
         # For degree 2 fields with positive discriminant: signature is [2, 0] (real)
-        page = self.tc.get('/NumberField/?download=1&query=%7B%27degree%27%3A+2%2C+%27%24or%27%3A+%5B%7B%27disc_sign%27%3A+-1%2C+%27disc_abs%27%3A+%7B%27%24gte%27%3A+1%2C+%27%24lte%27%3A+3%7D%2C+%27degree%27%3A+2%7D%2C+%7B%27disc_sign%27%3A+1%2C+%27disc_abs%27%3A+%7B%27%24lte%27%3A+5%2C+%27%24gte%27%3A+1%7D%2C+%27degree%27%3A+2%7D%5D%7D&degree=2&discriminant=-3-5&showcol=signature&Submit=text').get_data(as_text=True)
+        url = ('/NumberField/?download=1'
+               '&query=%7B%27degree%27%3A+2%2C+%27%24or%27%3A+%5B%7B%27disc_sign%27%3A+'
+               '-1%2C+%27disc_abs%27%3A+%7B%27%24gte%27%3A+1%2C+%27%24lte%27%3A+3%7D%2C+'
+               '%27degree%27%3A+2%7D%2C+%7B%27disc_sign%27%3A+1%2C+%27disc_abs%27%3A+'
+               '%7B%27%24lte%27%3A+5%2C+%27%24gte%27%3A+1%7D%2C+%27degree%27%3A+2%7D%5D%7D'
+               '&degree=2&discriminant=-3-5&showcol=signature&Submit=text')
+        page = self.tc.get(url).get_data(as_text=True)
         # Check that signature format is [r1, r2] where:
         # - For imaginary quadratic fields (disc < 0, degree=2): r1=0, r2=1, so signature=[0, 1]
         # - For real quadratic fields (disc > 0, degree=2): r1=2, r2=0, so signature=[2, 0]
