@@ -1,6 +1,9 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
+import os
+import yaml
+
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
@@ -890,6 +893,39 @@ def local_field_count(info, query):
 def local_field_search(info,query):
     common_parse(info, query)
 
+def make_code_snippets(data):
+    """
+    Create code snippets dictionary for p-adic field.
+    """
+    # read in code.yaml from local_fields directory:
+    _curdir = os.path.dirname(os.path.abspath(__file__))
+    code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+    
+    # Sage doesn't (yet) support arbitrary extensions of p-adic fields
+    # so must construct field using 'unram' and 'eisen' columns for Sage
+    sage_construct_field = ""
+    if data['e'] == 1:
+        # Unramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")"
+    elif data['f'] == 1:
+        # Totally ramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['eisen']+")"
+    else:
+        # Mixed case (construct L as maximal unramified extension)
+        sage_construct_field = "L.<t> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")\n"
+        sage_construct_field += "K.<a> = L.extension("+data['eisen']+")"
+
+    format_data = {
+        'p': data['p'],
+        'coeffs': str(data['coeffs']),
+        'sage_construct_field' : sage_construct_field
+    }
+    
+    for prop in code:
+        for lang in code[prop]:
+            code[prop][lang] = code[prop][lang].format(**format_data)
+    return code
+
 def render_field_webpage(args):
     data = None
     info = {}
@@ -1130,6 +1166,7 @@ def render_field_webpage(args):
             friends=friends,
             downloads=downloads,
             learnmore=learnmore_list(),
+            code=make_code_snippets(data),
             KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 
