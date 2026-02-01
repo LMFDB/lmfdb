@@ -572,10 +572,10 @@ class WebEC():
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_label, limit=1000)),
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_label)),
-                          ('Code to Magma', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
-                          ('Code to Oscar', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
-                          ('Code to PariGP', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
-                          ('Code to SageMath', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
+                          ('Magma commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='magma')),
+                          ('Oscar commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='oscar')),
+                          ('PariGP commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='gp')),
+                          ('SageMath commands', url_for(".ec_code_download", conductor=cond, iso=iso, number=num, label=self.lmfdb_label, download_type='sage')),
                           ('Underlying data', url_for(".EC_data", label=self.lmfdb_label)),
         ]
 
@@ -689,7 +689,7 @@ class WebEC():
 
         mwbsd['equal'] = r'=' if mwbsd['analytic_rank'] < 2 else r'\overset{?}{=}'
         mwbsd['rhs'] = '?' if mwbsd['sha'] == '?' else mwbsd['sha'] * mwbsd['real_period'] * mwbsd['reg'] * mwbsd['tamagawa_product'] / mwbsd['torsion']**2
-        mwbsd['formula'] = r'%0.9f \approx %s %s \frac{\# &#1064;(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \approx %0.9f' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
+        mwbsd['formula'] = r'\begin{aligned} %0.9f \approx %s & %s \frac{\# Ш(E/\Q)\cdot \Omega_E \cdot \mathrm{Reg}(E/\Q) \cdot \prod_p c_p}{\#E(\Q)_{\rm tor}^2} \\ & \approx \frac{%s \cdot %0.6f \cdot %0.6f \cdot %s}{%s^2} \\ & \approx %0.9f\end{aligned}' % tuple([mwbsd[k] for k in ['special_value', 'lder_name', 'equal','sha', 'real_period', 'reg', 'tamagawa_product', 'torsion', 'rhs']])
 
     def display_modell_image(self,label):
         return display_knowl('gl2.subgroup_data', title=label, kwargs={'label':label})
@@ -816,11 +816,15 @@ class WebEC():
                 adelic_level = self.data['adelic_data']['adelic_image'].split('.',1)[0]
             else:
                 adelic_gens = adelic_level = ''
-            data = { 'ainvs': self.data['ainvs'],
-                     'level': adelic_level,
-                     'adelic_gens': adelic_gens }
+            data = {
+                'label': "{label}",
+                'lang' : "{lang}",
+                'ainvs': self.data['ainvs'],
+                'level': adelic_level,
+                'adelic_gens': adelic_gens }
             for prop in code:
-                for lang in code[prop]:
-                    code[prop][lang] = code[prop][lang].format(**data)
+                if prop != 'snippet_test':
+                    for lang in code[prop]:
+                        code[prop][lang] = code[prop][lang].format(**data)
             self._code = code
         return self._code

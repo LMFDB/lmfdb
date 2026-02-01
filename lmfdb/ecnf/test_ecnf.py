@@ -67,9 +67,9 @@ class EllCurveTest(LmfdbTest):
         Check that the code download links work
         """
         L = self.tc.get('/EllipticCurve/2.0.4.1/5525.5/b/9')
-        assert 'Code to Magma' in L.get_data(as_text=True)
-        assert 'Code to SageMath' in L.get_data(as_text=True)
-        assert 'Code to PariGP' in L.get_data(as_text=True)
+        assert 'Magma commands' in L.get_data(as_text=True)
+        assert 'SageMath commands' in L.get_data(as_text=True)
+        assert 'PariGP commands' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/magma')
         assert 'Magma code for working with elliptic curve 2.2.89.1-81.1-a1' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/sage')

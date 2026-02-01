@@ -36,6 +36,7 @@ from lmfdb.utils import (
     to_dict,
     web_latex,
     web_latex_factored_integer,
+    CodeSnippet
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol, RationalListCol
@@ -538,26 +539,30 @@ def genus2_jump(info):
             errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
     elif jump.count('=') == 1:
         lhs_str, rhs_str = jump.split('=')
+        errmsg = "Unable to parse input %s into a polynomial"
         try:
             rhs_poly = coeff_to_poly_multi(rhs_str)
-            main_poly_str = lhs_str + "+" + str(-rhs_poly)
-            main_poly = coeff_to_poly_multi(main_poly_str)
         except Exception:
-            errmsg = "Unable to parse input %s into a polynomial"
-            flash_error(errmsg, main_poly_str)
-            return redirect(url_for(".index"))
-        try:
-            f,h = unpack_hyperelliptic_polys(main_poly)
-        except ValueError as e:
-            flash_error(str(e), main_poly)
-            return redirect(url_for(".index"))
-        new_input = str(f) + "," + str(h)
-        label, eqn_str = genus2_lookup_equation(new_input)
-        if label:
-            return redirect(url_for_curve_label(label), 301)
-        elif label is None:
-            # the input was parsed
-            errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
+            jump = rhs_str
+        else:
+            try:
+                main_poly_str = lhs_str + "+" + str(-rhs_poly)
+                main_poly = coeff_to_poly_multi(main_poly_str)
+            except Exception:
+                jump = main_poly_str
+            else:
+                try:
+                    f,h = unpack_hyperelliptic_polys(main_poly)
+                except ValueError as e:
+                    errmsg, jump = str(e), main_poly
+                else:
+                    new_input = str(f) + "," + str(h)
+                    label, eqn_str = genus2_lookup_equation(new_input)
+                    if label:
+                        return redirect(url_for_curve_label(label), 301)
+                    elif label is None:
+                        # the input was parsed
+                        errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
     else:
         errmsg = "%s is not valid input. Expected a label, e.g., 169.a.169.1"
         errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
@@ -574,7 +579,7 @@ class G2C_download(Downloader):
             ["eqn"],
             {
                 "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
-                "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
+                "sage": 'QQx.<x> = QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
                 "gp": 'curve = apply(Polrev, mapget(out, "eqn"));',
             }
         ),
@@ -916,16 +921,6 @@ def labels_page():
 
 sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
 
-code_names = {'curve': 'Define the curve',
-                 'tors': 'Torsion subgroup',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'ntors': 'Torsion order of Jacobian',
-                 'jacobian': 'Jacobian',
-                 'aut': 'Automorphism group',
-                 'mwgroup': 'Mordell-Weil group'}
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP'}
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
 def g2c_code(**args):
@@ -936,16 +931,9 @@ def g2c_code(**args):
         return genus2_jump_error(label, {}), False
     except KeyError:
         return genus2_jump_error(label, {}, missing_curve=True), False
-    Ccode = C.get_code()
     lang = args['download_type']
-    code = "%s %s code for working with genus 2 curve %s\n\n" % (Comment[lang],Fullname[lang],label)
-    if lang == 'gp':
-        lang = 'pari'
-    for k in sorted_code_names:
-        if lang in Ccode[k]:
-            code += "\n%s %s: \n" % (Comment[lang],code_names[k])
-            code += Ccode[k][lang] + ('\n' if '\n' not in Ccode[k][lang] else '')
-    return code, True
+    code = CodeSnippet(C.get_code())
+    return code.export_code(label, lang, sorted_code_names), True
 
 @g2c_page.route('/Q/<conductor>/<iso>/<discriminant>/<number>/download/<download_type>')
 def g2c_code_download(**args):

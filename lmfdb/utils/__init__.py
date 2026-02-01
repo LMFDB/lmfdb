@@ -6,7 +6,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'key_for_numerically_sort', 'an_list', 'coeff_to_poly', 'coeff_to_poly_multi',
            'coeff_to_power_series', 'display_multiset', 'pair2complex',
            'round_CBF_to_half_int', 'str_to_CBF', 'to_dict', 'display_float',
-           'display_complex', 'round_to_half_int', 'splitcoeff', 'comma', 'latex_comma',
+           'display_complex', 'round_to_half_int', 'splitcoeff', 'comma',
            'format_percentage', 'signtocolour', 'rgbtohex',
            'web_latex', 'web_latex_factored_integer', 'web_latex_ideal_fact',
            'web_latex_split_on', 'web_latex_split_on_pm',
@@ -51,7 +51,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'raw_typeset_qexp', 'raw_typeset_int', 'compress_poly_Q',
            'input_string_to_poly', 'dispZmat', 'dispcyclomat',
            'compress_expression',
-           'pos_int_and_factor', 'compress_polynomial']
+           'pos_int_and_factor', 'compress_polynomial', 'CodeSnippet']
 
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
@@ -68,7 +68,6 @@ from .utilities import (
     coeff_to_poly_multi,
     coeff_to_power_series,
     comma,
-    datetime_to_timestamp_in_ms,
     debug,
     display_complex,
     display_float,
@@ -81,7 +80,6 @@ from .utilities import (
     format_percentage,
     image_callback,
     key_for_numerically_sort,
-    latex_comma,
     letters2num,
     list_factored_to_factored_poly_otherorder,
     list_to_factored_poly_otherorder,
@@ -94,7 +92,6 @@ from .utilities import (
     signtocolour,
     splitcoeff,
     str_to_CBF,
-    timestamp_in_ms_to_datetime,
     to_dict,
     WebObj,
     plural_form,
@@ -165,3 +162,5 @@ from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url
 from .trace_hash import TraceHash, TraceHashClass
 from .random_wrap import redirect_no_cache
+from .place_code import CodeSnippet
+from .datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime

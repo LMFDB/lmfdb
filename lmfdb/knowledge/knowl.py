@@ -1,7 +1,8 @@
 # the basic knowledge object, with database awareness, …
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import timedelta
+from lmfdb.utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
 import re
 import subprocess
 import time
@@ -13,9 +14,15 @@ from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
-from lmfdb.utils import datetime_to_timestamp_in_ms
 from psycopg2.sql import SQL, Identifier, Placeholder
 from sage.all import cached_function
+from lmfdb.knowledge import logger
+
+# Timezone handling utilities for knowl system
+#
+# IMPORTANT: The knowl database stores timestamps in columns defined as
+# "timestamp without time zone". All timestamps are stored as UTC but
+# without timezone information. These utilities ensure consistent handling.
 
 
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -46,7 +53,7 @@ grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
-defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
+defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*|\{\{\s*DEFINES\s*\(\s*['"]([^'"]+)['"]""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -124,7 +131,7 @@ def normalize_define(term):
 
 
 def extract_defines(content):
-    return sorted({x.strip() for x in defines_finder_re.findall(content)})
+    return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -181,6 +188,8 @@ class KnowlBackend(PostgresBase):
         if fields is None:
             fields = ['id'] + self._default_fields
         if timestamp is not None:
+            timestamp = ensure_naive_utc(timestamp)
+            logger.debug("Fetching knowl with ID: %s and timestamp: %s", ID, timestamp)
             selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
             L = self._safe_execute(selecter, [ID, timestamp])
             if L:
@@ -408,7 +417,7 @@ class KnowlBackend(PostgresBase):
 
     def review(self, knowl, who, set_beta=False):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
-        self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
+        self._execute(updator, [0 if set_beta else 1, who, utc_now_naive(), knowl.id, knowl.timestamp])
 
     def _set_referrers(self, knowls):
         kids = [k.id for k in knowls]
@@ -426,7 +435,7 @@ class KnowlBackend(PostgresBase):
                     for D in self.code_references(k)]
 
     def needs_review(self, days):
-        now = datetime.utcnow()
+        now = utc_now_naive()
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
@@ -623,7 +632,7 @@ class KnowlBackend(PostgresBase):
         old_name = knowl.id
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
-            new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
+            new_knowl = knowl.copy(ID=new_name, timestamp=utc_now_naive(), source=knowl.id)
             new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
@@ -725,7 +734,7 @@ class KnowlBackend(PostgresBase):
         if there has been a lock in the last @delta_min minutes, returns a dictionary with the name of the user who obtained a lock and the time it was obtained; else None.
         attention, it discards all locks prior to @delta_min!
         """
-        now = datetime.utcnow()
+        now = utc_now_naive()
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
@@ -738,7 +747,7 @@ class KnowlBackend(PostgresBase):
         when a knowl is edited, a lock is created. username is the user id.
         """
         inserter = SQL("INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
-        now = datetime.utcnow()
+        now = utc_now_naive()
         self._execute(inserter, [knowl.id, now, username])
 
     def knowl_title(self, kid):
@@ -780,6 +789,79 @@ def knowl_title(kid):
 
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
+def external_definition_link(site, xid):
+    if xid.count("@") == 1:
+        xid, fragment = xid.split("@")
+    else:
+        fragment = None
+    # If you add options here, you also need to update the knowl lmfdb.external_definitions
+    if site == "arxiv":
+        # example xid="1809.10195"
+        return f"https://arxiv.org/abs/{xid}", f"arXiv:{xid}", fragment
+    if site == "doi":
+        # example xid="10.2140/obs.2019.2.393"
+        return f"https://doi.org/{xid}", xid, fragment
+    if site == "groupprops":
+        # example xid="Alternating_group"
+        return f"https://groupprops.subwiki.org/wiki/{xid}", "groupprops:" + xid, fragment
+    if site == "href":
+        # href contains both the link and text for displaying
+        if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
+            raise ValueError("Improperly formated href")
+        url, disp = xid[1:-1].split("}{")
+        return url.strip(), disp, fragment
+    if site == "mathlib":
+        # example xid="NumberTheory/ModularForms/Basic.html#UpperHalfPlane.J"
+        if "#" in xid:
+            disp = "mathlib:" + xid.split("#")[-1]
+        else:
+            disp = "mathlib:" + xid
+        return f"https://leanprover-community.github.io/mathlib4_docs/Mathlib/{xid}", disp, fragment
+    if site == "mathworld":
+        # example xid=HeckeOperator
+        return f"https://mathworld.wolfram.com/{xid}.html", "mathworld:" + xid, fragment
+    if site == "mr":
+        # example xid="0439848"
+        return f"https://www.ams.org/mathscinet-getitem?mr={xid}", "MR:" + xid, fragment
+    if site == "nlab":
+        # example xid="number field"
+        return f"https://ncatlab.org/nlab/show/{xid}", "nlab:" + xid, fragment
+    if site == "stacks":
+        # example xid="020C"
+        return f"https://stacks.math.columbia.edu/tag/{xid}", "stacks:" + xid, fragment
+    if site == "wikidata":
+        # example xid="Q83478"
+        return f"https://www.wikidata.org/wiki/{xid}", "wikidata:" + xid, fragment
+    if site == "wikipedia":
+        # example xid="Group_(mathematics)"
+        return f"https://en.wikipedia.org/wiki/{xid}", "wiki:" + xid, fragment
+    if site == "zbl":
+        # example="0339.14028"
+        return f"https://zbmath.org/?q={xid}", "zbl:" + xid, fragment
+    raise ValueError("Unknown external site")
+
+def knowl_definition(title,
+                     clarification_kid=None,
+                     kwargs={}):
+    from lmfdb.utils.web_display import display_knowl
+    if clarification_kid is None:
+        if not kwargs:
+            return f"<strong>{title}</strong>"
+        if len(kwargs) == 1:
+            try:
+                site, xid = list(kwargs.items())[0]
+                url, disp, fragment = external_definition_link(site, xid)
+                link = f'<a href="{url}"><strong>{title}</strong></a>'
+                if fragment:
+                    link += f" ({fragment})"
+                return link
+            except ValueError:
+                pass
+        return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
+    else:
+        return display_knowl(clarification_kid, title, strong=True)
+
 
 @cached_function
 def knowl_url_prefix():
@@ -831,7 +913,7 @@ class Knowl():
         # Because category is different from cat, the category will be recomputed when copying knowls.
         self.category = data.get('cat', extract_cat(ID))
         self._last_author = data.get('last_author', data.get('_last_author', ''))
-        self.timestamp = data.get('timestamp', datetime.utcnow())
+        self.timestamp = ensure_naive_utc(data.get('timestamp', utc_now_naive()))
         self.ms_timestamp = datetime_to_timestamp_in_ms(self.timestamp)
         self.links = data.get('links', [])
         self.defines = data.get('defines', [])
@@ -858,8 +940,6 @@ class Knowl():
                 self.coltype = None
                 if pieces[1] not in db.tablenames:
                     self.title += " (DEFUNCT)"
-        #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
-        #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
         if showing:
             self.comments = knowldb.get_comments(ID)
@@ -875,7 +955,7 @@ class Knowl():
             if reviewed_data and reviewed_data['status'] == 1:
                 self.reviewed_content = reviewed_data['content']
                 self.reviewed_title = reviewed_data['title']
-                self.reviewed_timestamp = reviewed_data['timestamp']
+                self.reviewed_timestamp = ensure_naive_utc(reviewed_data['timestamp'])
         if editing:
             self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
 
@@ -885,7 +965,7 @@ class Knowl():
             self.most_recent = not self.edit_history or self.edit_history[-1]['timestamp'] == self.timestamp
             #if not self.edit_history:
             #    # New knowl.  This block should be edited according to the desired behavior for diffs
-            #    self.edit_history = [{"timestamp":datetime.utcnow(),
+            #    self.edit_history = [{"timestamp":datetime.now(UTC),
             #                          "last_author":"__nobody__",
             #                          "content":"",
             #                          "status":0}]

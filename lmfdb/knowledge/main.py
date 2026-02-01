@@ -15,23 +15,21 @@ import string
 import re
 import json
 import time
-from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
-from datetime import datetime
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.knowledge import logger
-from lmfdb.utils import (datetime_to_timestamp_in_ms,
-                         timestamp_in_ms_to_datetime, flash_error)
+from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from lmfdb.utils import flash_error
 from lmfdb.knowledge import knowledge_page
 
 
@@ -67,14 +65,6 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
         return m.group(2)
 
 
-class HashTagPattern(markdown.inlinepatterns.Pattern):
-    def handleMatch(self, m):
-        el = ElementTree.Element("a")
-        el.set('href', url_for('knowledge.index') + '?search=%23' + m.group(2))
-        el.text = '#' + m.group(2)
-        return el
-
-
 class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
         tokens = m.group(2).split("|")
@@ -94,10 +84,6 @@ md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$',
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
 md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
 md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
-
-# Tell markdown to turn hashtags into search urls
-hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
@@ -171,41 +157,33 @@ def ref_to_link(txt):
     thecite = thecite.replace("\\", "")  # \href --> href
 
     refs = thecite.split(",")
-    ans = ""
+    ans = []
 
     # print "refs",refs
 
     for ref in refs:
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
-        this_link = ""
-        if ref.startswith("href"):
-            the_link = re.sub(r".*{([^}]+)}{.*", r"\1", ref)
-            click_on = re.sub(r".*}{([^}]+)}\s*", r"\1", ref)
-            this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
-        elif ref.startswith("doi"):
-            ref = ref.replace(":", "")  # could be doi:: or doi: or doi
-            the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
-        elif ref.lower().startswith("mr"):
-            ref = ref.replace(":", "")
-            the_mr = ref[2:]    # remove the "MR"
-            this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
-            this_link += the_mr + '") | safe}}'
-        elif ref.lower().startswith("arxiv"):
-            ref = ref.replace(":", "")
-            the_arx = ref[5:]    # remove the "arXiv"
-            this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
-            this_link += '"https://arxiv.org/abs/'
-            this_link += the_arx + '")| safe}}'
-
-        if this_link:
-            if ans:
-                ans += ", "
-            ans += this_link
-
-    return '[' + ans + ']' + everythingelse
-
+        # Special case for href (no colon by design) and for MR (no colon in many existing cases)
+        for site in ["href", "mr"]:
+            if ref.lower().startswith(site):
+                xid = ref[len(site):].lstrip(":")
+                break
+        else:
+            pieces = ref.split(":")
+            if len(pieces) != 2:
+                # Improperly formatted ref
+                continue
+            site, xid = pieces
+            site = site.lower()
+        try:
+            url, disp, fragment = external_definition_link(site, xid)
+        except ValueError:
+            continue
+        link = f'{{{{ LINK_EXT("{disp}", "{url}") | safe}}}}'
+        if fragment:
+            link += f" ({fragment})"
+        ans.append(link)
+    return "[" + ", ".join(ans) + "]" + everythingelse
 
 def md_latex_accents(text):
     r"""
@@ -244,7 +222,12 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl,
+            'knowl_title': knowl_title,
+            'knowl_url_prefix': knowl_url_prefix,
+            "KNOWL_EXISTS": knowl_exists,
+            "knowl_definition": knowl_definition,
+            "external_definition_link": external_definition_link}
 
 
 @app.template_filter("render_knowl")
@@ -258,6 +241,7 @@ def render_knowl_in_template(knowl_content, **kwargs):
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
@@ -294,7 +278,7 @@ def body_class():
 
 def get_bread(breads=[]):
     bc = [("Knowledge", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 
@@ -628,7 +612,7 @@ def columns():
 
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
-    time = datetime_to_timestamp_in_ms(datetime.utcnow())
+    time = datetime_to_timestamp_in_ms(utc_now_naive())
     cid = '%s.%s.comment' % (ID, time)
     return edit(ID=cid)
 
@@ -692,7 +676,7 @@ def save_form():
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
-        k.timestamp = datetime.utcnow()
+        k.timestamp = utc_now_naive()
         k.status = 0
         k.save(who=who)
     if NEWID:
@@ -771,7 +755,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # the idea is to pass the keyword arguments of the knowl further along the chain
     # of links, in this case the title and the permalink!
     # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.items()))
+    kw_params = ', '.join(('%s="%s"' % (key, val) for key, val in kwargs.items()))
     logger.debug("kw_params: %s" % kw_params)
 
     # this is a very simple template based on no other template to render one single Knowl
@@ -794,6 +778,7 @@ def render_knowl(ID, footer=None, kwargs=None,
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 

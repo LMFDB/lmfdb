@@ -48,8 +48,9 @@ from lmfdb.utils import (
     pos_int_and_factor,
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
+    redirect_no_cache,
 )
-from lmfdb.utils.search_parsing import (parse_multiset, search_parser)
+from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
@@ -104,6 +105,7 @@ def yesno(val):
 
 def deTeX_name(s):
     s = re.sub(r"[{}\\$]", "", s)
+    s = s.replace("Orth", "O").replace("Unitary", "U")
     return s
 
 @cached_function
@@ -114,20 +116,25 @@ def group_families(deTeX=False):
     # Here, we're directly adding the individual Chevalley group families (i.e. 'A(n,q)', 'B(n,q)', ...) to the group families list
     # (doing this here to avoid manually adding new families to the data; this avoids re-duplicating data which is already stored in the database)
     chev_index = [t[0] for t in L].index("Chev")+1
-    for f in ['An','Bn','Cn','Dn','En','F4', 'G2']:
+    for f in ['An','Bn','Cn','Dn','En','F4','G2']:
         L.insert(chev_index, ("Chev"+f[0], "$"+f[0]+"({"+f[1]+"}, {q})$"))
         chev_index += 1
     twistchev_index = [t[0] for t in L].index("TwistChev")+1
     for f in ['2An','2B2','2Dn','3D4','2E6','2F4','2G2']:
         L.insert(twistchev_index, ("TwistChev"+f[:2], "$^{"+f[0]+"}{"+f[1]+"}({"+f[2]+"},{q})$"))
         twistchev_index += 1
+    # Adding the individual irreducible Coxeter group families
+    cox_index = [t[0] for t in L].index("Cox")+1
+    for f in ['A','B','D','E','F']:
+        L.insert(cox_index, ("Cox"+f[0], "$W("+f+"_{{n}})$"))
+        cox_index += 1
 
     if deTeX:
         # Used for constructing the dropdown
         return [(fam, deTeX_name(name)) for (fam, name) in L]
 
     def hidden(fam):
-        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic"]
+        return fam not in ["C", "S", "D", "A", "Q", "GL", "SL", "PSL", "Sp", "SO", "Sporadic", "Cox"]
     L = [(fam, name, "fam_more" if hidden(fam) else "fam_always", hidden(fam)) for (fam, name) in L]
     return L
 
@@ -203,6 +210,16 @@ def parse_family(inp, query, qfield):
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Chev", 'parameters.fam':inp[4]}, projection='label'))}
     elif inp[:9] == 'TwistChev' and len(inp) == 11:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':"TwistChev", 'parameters.twist':int(inp[9]), 'parameters.fam':inp[10]}, projection='label'))}
+    # Searching for Coxeter families should include all dihedral groups and all symmetric S_n for n >= 2
+    elif inp == 'Cox':
+        labels = list(db.gps_special_names.search({'family': {'$or': ['Cox', 'CoxH']}}, projection='label'))
+        collapse_ors(["$or", [{"dihedral":True}, {"label": {"$in": labels}}]], query)
+    # Case of CoxI2 (return all dihedral groups D_n)
+    elif inp == 'CoxI':
+        query["dihedral"] = True
+    # Case to check if family is one of the individual irreducible Coxeter families
+    elif inp[:3] == 'Cox' and inp[3] != "H":
+        query[qfield] = {'$in':list(db.gps_special_names.search({'family':"Cox", 'parameters.fam':inp[3]}, projection='label'))}
 
     else:
         query[qfield] = {'$in':list(db.gps_special_names.search({'family':inp}, projection='label'))}
@@ -238,7 +255,9 @@ def get_bread(tail=[]):
     return base + tail
 
 def display_props(proplist, joiner="and"):
-    if len(proplist) == 1:
+    if len(proplist) == 0:
+        return ""
+    elif len(proplist) == 1:
         return proplist[0]
     elif len(proplist) == 2:
         return f" {joiner} ".join(proplist)
@@ -253,11 +272,12 @@ def find_props(
     implications,
     hence_str,
     show,
+    prefix="",
 ):
     props = []
     noted = set()
     for prop in overall_order:
-        if not getattr(gp, prop, None) or prop in noted or prop not in show:
+        if not getattr(gp, prefix+prop, None) or prop in noted or prop not in show:
             continue
         noted.add(prop)
         impl = [B for B in implications.get(prop, []) if B not in noted]
@@ -302,43 +322,42 @@ group_prop_implications = {
 }
 
 
-def get_group_prop_display(gp, cyclic_known=True):
+def get_group_prop_display(gp, prefix="", cyclic_known=True):
     # We want elementary and hyperelementary to display which primes, but only once
     elementaryp = ''
     hyperelementaryp = ''
-    if hasattr(gp, 'elementary'):
-        elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
-        hyperelementaryp = ",".join(
-            str(p)
-            for p, e in ZZ(gp.hyperelementary).factor()
-            if not p.divides(gp.elementary)
-        )
-    if (
-        gp.order == 1
-    ):  # here it will be implied from cyclic, so both are in the implication list
-        elementaryp = " (for every $p$)"
-        hyperelementaryp = ""
-    elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
-        elementaryp = hyperelementaryp = ""
-    elif gp.cyclic:  # both are in the implication list
-        if not cyclic_known: # rare case where subgroup is cyclic but not in db
-            elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
-            elementaryp = f" ($p = {elementarylist}$)"
+    if prefix == "":
+        if hasattr(gp, 'elementary'):
+            elementaryp = ",".join(str(p) for p, e in ZZ(gp.elementary).factor())
+            hyperelementaryp = ",".join(
+                str(p)
+                for p, e in ZZ(gp.hyperelementary).factor()
+                if not p.divides(gp.elementary)
+            )
+        if gp.order == 1:  # here it will be implied from cyclic, so both are in the implication list
+            elementaryp = " (for every $p$)"
             hyperelementaryp = ""
-        elif gp.elementary == gp.hyperelementary:
-            elementaryp = f" ($p = {elementaryp}$)"
-            hyperelementaryp = ""
-        else:
-            elementaryp = f" ($p = {elementaryp}$)"
-            hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
-        elementaryp = f" for $p = {elementaryp}$"
-        if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
-            hyperelementaryp = ""
-        else:
-            hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
-    elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
-        hyperelementaryp = f" for $p = {hyperelementaryp}$"
+        elif hasattr(gp, 'pgroup') and gp.pgroup:  # We don't display p since there's only one in play
+            elementaryp = hyperelementaryp = ""
+        elif gp.cyclic:  # both are in the implication list
+            if not cyclic_known: # rare case where subgroup is cyclic but not in db
+                elementarylist = str(gp.order.prime_factors()).replace("[",""). replace("]","")
+                elementaryp = f" ($p = {elementarylist}$)"
+                hyperelementaryp = ""
+            elif gp.elementary == gp.hyperelementary:
+                elementaryp = f" ($p = {elementaryp}$)"
+                hyperelementaryp = ""
+            else:
+                elementaryp = f" ($p = {elementaryp}$)"
+                hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
+        elif hasattr(gp, 'is_elementary') and gp.is_elementary:  # Now elementary is a top level implication
+            elementaryp = f" for $p = {elementaryp}$"
+            if hasattr(gp, 'hyperelementary') and gp.elementary == gp.hyperelementary:
+                hyperelementaryp = ""
+            else:
+                hyperelementaryp = f" (also for $p = {hyperelementaryp}$)"
+        elif hasattr(gp, 'hyperelementary') and gp.hyperelementary:  # Now hyperelementary is a top level implication
+            hyperelementaryp = f" for $p = {hyperelementaryp}$"
     overall_display = {
         "cyclic": display_knowl("group.cyclic", "cyclic"),
         "abelian": display_knowl("group.abelian", "abelian"),
@@ -559,6 +578,7 @@ def create_boolean_subgroup_string(sgp, type="normal"):
         unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
+
     if unknown:
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
     return main
@@ -656,10 +676,77 @@ def create_boolean_string(gp, type="normal"):
     unknown = [prop for prop in overall_order if getattr(gp, prop, None) is None]
     if {'ab_simple', 'nab_simple'} <= set(unknown):
         unknown.remove('ab_simple')
+    if gp.abelian and gp.monomial is None:  #if abelian then monomial
+        unknown.remove('monomial')
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
         main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+    return main
+
+def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphism group"):
+    overall_order = [
+        "cyclic",
+        "abelian",
+        "nonabelian",
+        "pgroup",
+        "nilpotent",
+        "supersolvable",
+        "solvable",
+        "nonsolvable",
+    ]
+    # Only things that are implied need to be included here, and there are no constraints on the order
+    impl_order = [
+        "abelian",
+        "nilpotent",
+        "solvable",
+        "supersolvable",
+        "monomial",
+        "nonsolvable",
+        "is_elementary",
+        "is_hyperelementary",
+        "metacyclic",
+        "metabelian",
+        "Zgroup",
+        "Agroup",
+        "nab_perfect",
+        "quasisimple",
+        "almost_simple",
+    ]
+
+    overall_display = get_group_prop_display(gp, prefix=prefix)
+    hence_str = display_knowl("group.properties_interdependencies", "hence")
+    props = find_props(
+        gp,
+        overall_order,
+        impl_order,
+        overall_display,
+        group_prop_implications,
+        hence_str,
+        show=overall_display,
+        prefix=prefix,
+    )
+    if type == "knowl":
+        main = f"{display_props(props)}."
+    else:
+        main = f"This {name} is {display_props(props)}."
+    unknown = [prop for prop in overall_order if getattr(gp, prefix+prop, None) is None]
+    if {'abelian', 'nonabelian'} <= set(unknown):
+        unknown.remove('nonabelian')
+    if {'solvable', 'nonsolvable'} <= set(unknown):
+        unknown.remove('nonsolvable')
+    prop = 'pgroup'  # if p-group, we know it is nilpotent, solvable, and supersolvable
+    if getattr(gp,prefix+prop,None) > 1:
+        unknown.remove('nilpotent')
+        unknown.remove('solvable')
+        unknown.remove('supersolvable')
+
+    unknown = [overall_display[prop] for prop in unknown]
+    if unknown and type != "knowl":
+        if display_props(props) == "":
+            return f"We have not determined whether the {name} is {display_props(unknown, 'or')}."
+        main += f"  Whether it is {display_props(unknown, 'or')} has not been computed."
+
     return main
 
 
@@ -755,11 +842,10 @@ def dynamic_statistics():
 
 
 @abstract_page.route("/random")
+@redirect_no_cache
 def random_abstract_group():
     label = db.gps_groups.random(projection="label")
-    response = make_response(redirect(url_for(".by_label", label=label), 307))
-    response.headers["Cache-Control"] = "no-cache, no-store"
-    return response
+    return url_for(".by_label", label=label)
 
 
 @abstract_page.route("/interesting")
@@ -833,7 +919,7 @@ def by_abelian_label(label):
         return redirect(url_for(".by_label", label=dblabel))
 
 
-@abstract_page.route("/auto_gens/<label>")
+@abstract_page.route("/auto/<label>")
 def auto_gens(label):
     label = clean_input(label)
     gp = WebAbstractGroup(label)
@@ -841,14 +927,51 @@ def auto_gens(label):
         flash_error("No group with label %s was found in the database.", label)
         return redirect(url_for(".index"))
     if gp.live() or gp.aut_gens is None:
-        flash_error("The generators for the automorphism group of the group with label %s have not been computed.", label)
+        flash_error("The automorphism group of %s has not been computed.", label)
         return redirect(url_for(".by_label", label=label))
+    info = {}
+    for gcol, prefix, name in [
+            ("aut_group", "aut_", "automorphism group"),
+            ("outer_group", "outer_", "outer automorphism group"),
+            ("central_quotient", "inner_", "inner automorphism group")]:
+        gid = getattr(gp, gcol, None)
+        if gid is None:
+            astr = create_boolean_aut_string(gp, prefix=prefix, name=name)
+        else:
+            agp = WebAbstractGroup(gid)
+            astr = create_boolean_string(agp)
+        info[prefix + "boolean_string"] = astr
+
+    props = [
+        ("Order", factor_latex(gp.aut_order)),
+        ]
+
+    def ynnc(val):
+        if val is None:
+            return "not computed"
+        if val:
+            return "yes"
+        return "no"
+    props.append(("Abelian", ynnc(gp.aut_abelian)))
+    props.append(("Solvable", ynnc(gp.aut_solvable)))
+    props.append(("Nilpotent", ynnc(gp.aut_nilpotent)))
+    if gp.outer_order is None:
+        props.append(("Outer order", "not computed"))
+    else:
+        props.append(("Outer order", factor_latex(gp.outer_order))),
+    if gp.inner_order is None:
+        props.append(("Inner order", "not computed"))
+    else:
+        props.append(("Inner order", factor_latex(gp.inner_order)))
+
     return render_template(
-        "auto_gens_page.html",
+        "auto_page.html",
+        info=info,
         gp=gp,
-        title="Generators of automorphism group for $%s$" % gp.tex_name,
-        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Automorphism group generators", " ")]),
-                        )
+        properties=props,
+        title="Automorphism group of $%s$" % gp.tex_name,
+        bread=get_bread([(gp.label_compress(), url_for(".by_label", label=label)), ("Automorphism group", " ")]),
+    )
 
 
 @abstract_page.route("/sub/<label>")
@@ -881,6 +1004,9 @@ def char_table(label):
     if "cc_highlight" in info and info["cc_highlight"] not in [c.label for c in gp.conjugacy_classes]:
         flash_error(f"There is no conjugacy class of {label} with label {info['cc_highlight']}.")
         del info["cc_highlight"]
+    if "cc_highlight" in info and "cc_highlight_i" not in info:
+        # I don't see any paths to produce urls like this, but they are showing up in the flasklog and we can easily look up cc_highlight_i
+        info["cc_highlight_i"] = [c.counter for c in gp.conjugacy_classes if c.label == info["cc_highlight"]][0]
     return render_template(
         "character_table_page.html",
         gp=gp,
@@ -1009,14 +1135,56 @@ def group_jump(info):
     elif len(labs) == 2:
         return redirect(url_for(".index", name=jump.replace(" ", "")))
     # by special name
+
+    def int_try(x):
+        if x.isdigit():
+            return int(x)
+        return x
+
+    def valid_params(fam, params):
+        n = ZZ(params.get("n"))
+        q = ZZ(params.get("q"))
+        if fam in ["Q", "SD", "OD"]:
+            return n.is_power_of(2)
+        if fam == "F":
+            return n.is_prime_power()
+        elif fam == "He":
+            return n > 2 and n.is_prime()
+        elif fam in ["Sp", "PSp", "SOPlus", "SOMinus", "GOPlus", "GOMinus", "OmegaPlus", "OmegaMinus", "PSOPlus", "PSOMinus", "PGOPlus", "PGOMinus", "POmegaPlus", "POmegaMinus", "SpinPlus", "SpinMinus", "CSp", "CSOPlus", "CSOMinus", "COPlus", "COMinus", "PSigmaSp", "ASigmaSp"]:
+            return n % 2 == 0
+        elif fam in ["SO", "PSO", "GO", "Omega", "PGO", "POmega", "Spin", "CSO", "CO"]:
+            return n % 2 == 1
+        elif fam == "CoxH":
+            return n in [3,4]
+        elif fam in ["Cox", "Chev"]:
+            if params["fam"] == "E":
+                return n in [6,7,8]
+            elif params["fam"] == "F":
+                return n == 4
+            elif params["fam"] == "G":
+                return n == 2
+        elif fam == "TwistChev":
+            if params["fam"] == "A":
+                return params["twist"] == 2
+            elif params["fam"] == "B":
+                return n == 2 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
+            elif params["fam"] == "D":
+                return params["twist"] == 2 or (params["twist"] == 3 and n == 4)
+            elif params["fam"] == "E":
+                return n == 6 and params["twist"] == 2
+            elif params["fam"] == "F":
+                return n == 4 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
+            elif params["fam"] == "G":
+                return n == 2 and params["twist"] == 2 and q.is_power_of(3) and not q.is_power_of(9)
     for family in db.gps_families.search():
         m = re.fullmatch(family["input"], jump)
         if m:
-            m_dict = dict([a, int(x)] for a, x in m.groupdict().items()) # convert string to int
+            m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items()) # convert string to int
             lab = db.gps_special_names.lucky({"family":family["family"], "parameters":m_dict}, projection="label")
             if lab:
                 return redirect(url_for(".by_label", label=lab))
-            else:
+            elif valid_params(family["family"], m_dict):
+                # Only display this messages for groups that exist
                 flash_error("The group %s has not yet been added to the database." % jump)
                 return redirect(url_for(".index"))
     flash_error("%s is not a valid name for a group or subgroup; see %s for a list of possible families" % (jump, display_knowl('group.families', 'here')))
@@ -1130,18 +1298,23 @@ def group_postprocess(res, info, query):
     for rec in res:
         rec["tex_cache"] = tex_cache
     if "family" in info:
-        if info["family"] == "any":
+        family = info["family"]
+        if family == "any":
             fquery = {}
 
         # Special case to convert the family "ChevX" (for X = A..G) to just "Chev" for the database query
-        elif info["family"][:4] == "Chev":
+        elif family[:4] == "Chev":
             fquery = {"family": "Chev"}
         # Also special case to convert the family "TwistChevNX" to just "TwistChev" for the database query
-        elif info["family"][:9] == "TwistChev":
+        elif family[:9] == "TwistChev":
             fquery = {"family": "TwistChev"}
-
+        # Convert "CoxX" to: ("Cox" or "S" or "D") for database query
+        elif family == "Cox":
+            fquery = {"family": {"$or": ["Cox", "CoxH", "CoxI"]}}
+        elif family[:3] == "Cox" and family[3] not in "HI":
+            fquery = {"family": "Cox"}
         else:
-            fquery = {"family": info["family"]}
+            fquery = {"family": family}
         fams = {rec["family"]: (rec["priority"], rec["tex_name"]) for rec in db.gps_families.search(fquery, ["family", "priority", "tex_name"])}
         fquery["label"] = {"$in":[rec["label"] for rec in res]}
         special_names = defaultdict(list)
@@ -1155,11 +1328,14 @@ def group_postprocess(res, info, query):
 
             # Special case to deal with individual Chevalley families
             # (e.g. querying the "A(n,q)" family should ensure the "B(n,q)" family names don't show up under "Family name" search column)
-            if (info["family"][:4] == "Chev") and (len(info["family"]) == 5):
-                if name[0] != info["family"][4]:
+            if (family[:4] == "Chev") and (len(family) == 5):
+                if name[0] != family[4]:
                     continue
-            if (info["family"][:9] == "TwistChev") and (len(info["family"]) == 11):
-                if name[3:5] != info["family"][9:11]:
+            elif (family[:9] == "TwistChev") and (len(family) == 11):
+                if name[3:5] != family[9:11]:
+                    continue
+            elif (fam == "Cox" and family[:3] == "Cox" and len(family) == 4):
+                if params["fam"] != family[3]:
                     continue
 
             special_names[rec["label"]].append((fams[fam][0], params.get("n"), params.get("q"), name))
@@ -1308,13 +1484,20 @@ subgroup_columns = SearchColumns([
         ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
         CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
         CheckCol("characteristic", "group.characteristic_subgroup", "char", short_title="Sub. characteristic"),
-        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic"),
-        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
-        CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable"),
         CheckCol("maximal", "group.maximal_subgroup", "max", short_title="Sub. maximal"),
-        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect"),
         CheckCol("central", "group.central", "cent", short_title="Sub. central"),
-            ]),
+        CheckCol("cyclic", "group.cyclic", "cyc", short_title="Sub. cyclic", default=False),
+        CheckCol("abelian", "group.abelian", "ab", short_title="Sub. abelian"),
+        CheckCol("nilpotent", "group.nilpotent", "nilp", short_title="Sub. nilpotent", default=False),
+        CheckCol("supersolvable", "group.supersolvable", "sup solv", short_title="Sub. supersolvable", default=False),
+        CheckCol("solvable", "group.solvable", "solv", short_title="Sub. solvable", default=False),
+        CheckCol("perfect", "group.perfect", "perf", short_title="Sub. perfect", default=False),
+        CheckCol("simple", "group.simple", "simp", short_title="Sub. simple", default=False),
+        CheckCol("Agroup", "group.a_group", "Agp", short_title="Sub. Agroup", default=False),
+        CheckCol("Zgroup", "group.z_group", "Zgp", short_title="Sub. Zgroup", default=False),
+        CheckCol("metabelian", "group.metabelian", "metab", short_title="Sub. metabelian", default=False),
+        CheckCol("metacyclic", "group.metacyclic", "metacyc", short_title="Sub. metacyclic", default=False),
+    ]),
     SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"), # Can't put the right border on "subgroup_cols" (since it wouldn't be full height) or "central" (since it might be hidden by the user)
     ColGroup("ambient_cols", None, "Ambient", [
         MultiProcessedCol("ambient_name", "group.name", "Name",
@@ -1329,11 +1512,17 @@ subgroup_columns = SearchColumns([
                           display_url,
                           short_title="Quo. name", apply_download=False),
         ProcessedCol("quotient_order", "group.quotient_size", "Size", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. size"),
+        CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal"),
         #next columns are None if non-normal so we set unknown to "-" instead of "?"
-        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic"),
+        CheckCol("quotient_cyclic", "group.cyclic", "cyc", unknown="$-$", short_title="Quo. cyclic", default=False),
         CheckCol("quotient_abelian", "group.abelian", "ab", unknown="$-$", short_title="Quo. abelian"),
-        CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable"),
-        CheckCol("minimal_normal", "group.maximal_quotient", "max", unknown="$-$", short_title="Quo. maximal")])],
+        CheckCol("quotient_nilpotent", "group.nilpotent", "nilp", unknown="$-$", short_title="Quo. nilpotent", default=False),
+        CheckCol("quotient_supersolvable", "group.supersolvable", "sup solv", unknown="$-$", short_title="Quo. supersolvable", default=False),
+        CheckCol("quotient_solvable", "group.solvable", "solv", unknown="$-$", short_title="Quo. solvable", default=False),
+        CheckCol("quotient_simple", "group.simple", "simp", unknown="$-$", short_title="Quo. simple", default=False),
+        CheckCol("quotient_Agroup", "group.a_group", "Agp", unknown="$-$", short_title="Quo. Agroup", default=False),
+        CheckCol("quotient_metabelian", "group.metabelian", "metab", unknown="$-$", short_title="Quo. metabelian", default=False),
+    ])],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
@@ -1544,7 +1733,7 @@ def cc_postprocess(res, info, query):
         info["columns"].above_table = f"<p>{gp.repr_strg(other_page=True)}</p>"
     info["group_factors"] = common_support if common_support else []
     complex_char_known = {rec["label"]: rec["complex_characters_known"] for rec in db.gps_groups.search({'label':{"$in":list(gps)}}, ["label", "complex_characters_known"])}
-    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroups.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
+    centralizer_data = {(".".join(rec["label"].split(".")[:2]), ".".join(rec["label"].split(".")[2:])): rec["subgroup_tex"] for rec in db.gps_subgroup_search.search({'label':{"$in":list(centralizers)}},["label","subgroup_tex"])}
     highlight_col = {}
     for rec in res:
         label = rec.get("label")
@@ -1783,6 +1972,9 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
+    code = gp.code_snippets()
+    if code and len(code['prompt']) == 0:  # no codes
+        code = None
 
     return render_template(
         "abstract-show-group.html",
@@ -1790,7 +1982,7 @@ def render_abstract_group(label, data=None):
         bread=bread,
         info=info,
         gp=gp,
-        code=gp.code_snippets(),
+        code=code,
         properties=gp.properties(),
         friends=friends,
         learnmore=learnmore_list_add(*learnmore_gp_picture),
@@ -2012,7 +2204,7 @@ def gp_data(label):
         group_counter = int(group_counter)
     else:
         group_counter = class_to_int(group_counter) + 1  # we start labeling at 1
-    return datapage([label, [group_order, group_counter], label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroups"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient"])
+    return datapage([label, [group_order, group_counter], label, label, label, label], ["gps_groups", "gps_conj_classes", "gps_qchar", "gps_char", "gps_subgroup_search", "gps_subgroup_data"], bread=bread, title=title, label_cols=["label", ["group_order","group_counter"], "group", "group", "ambient", "ambient"])
 
 @abstract_page.route("/sdata/<label>")
 def sgp_data(label):
@@ -2024,9 +2216,9 @@ def sgp_data(label):
     if data is None:
         return abort(404)
     if data["quotient"] is None:
-        return datapage([label, data["subgroup"], data["ambient"]], ["gps_subgroups", "gps_groups", "gps_groups"], bread=bread, title=title)
+        return datapage([label, label, data["subgroup"], data["ambient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups"], bread=bread, title=title)
     else:
-        return datapage([label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroups", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
+        return datapage([label, label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
 # need to write characters in GAP or Magma formats for downloads
@@ -2765,7 +2957,7 @@ class GroupsSearchArray(SearchArray):
             advanced=True
         )
         number_divisions = TextBox(
-            name="number_divisions ",
+            name="number_divisions",
             label="Number of divisions",
             knowl="group.division",
             example="3",
@@ -2774,7 +2966,7 @@ class GroupsSearchArray(SearchArray):
         )
         family = SelectBox(
             name="family",
-            options=[("", "")] + group_families(deTeX=True) + [("any", "any")],
+            options=[("", ""), ("any", "any")] + group_families(deTeX=True),
             knowl="group.families",
             label="Family",
         )
@@ -2846,6 +3038,7 @@ class SubgroupSearchArray(SearchArray):
     sorts = [("", "ambient order", ['ambient_order', 'ambient_counter', 'quotient_order', 'counter']),
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient_counter', 'counter']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient_counter', 'counter'])]
+
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
         cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")
@@ -2930,16 +3123,16 @@ class SubgroupSearchArray(SearchArray):
 
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
-            [normal, characteristic, perfect, maximal, central, nontrivproper],
-            [ambient, ambient_order, direct, split, hall, sylow],
+            [normal, characteristic, perfect, maximal, central],
+            [ambient, ambient_order, direct, split],
             [
                 quotient,
                 quotient_order,
                 quotient_cyclic,
                 quotient_abelian,
                 quotient_solvable,
-                minimal_normal,
             ],
+            [minimal_normal, nontrivproper, hall, sylow],
         ]
 
     def search_types(self, info):
@@ -2950,6 +3143,7 @@ class SubgroupSearchArray(SearchArray):
 class ComplexCharSearchArray(SearchArray):
     sorts = [("", "group", ['group_order', 'group_counter', 'dim', 'label']),
              ("dim", "degree", ['dim', 'group_order', 'group_counter', 'label'])]
+
     def __init__(self):
         faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
         dim = TextBox(
@@ -3024,6 +3218,7 @@ class ComplexCharSearchArray(SearchArray):
             [center_order, center_index] #, nt]
 
         ]
+
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
@@ -3059,8 +3254,9 @@ class ConjugacyClassSearchArray(SearchArray):
         )
 
         self.refine_array = [
-            [group,order,size]
+            [group, order, size]
         ]
+
     def search_types(self, info):
         # Note: since we don't access this from the browse page, info will never be None
         return [("ConjugacyClasses", "Search again")]
@@ -3398,6 +3594,38 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f'<div align="right"><a href="{quotient_url}">{quotient_label} home page</a></div>'
     return Markup(ans)
 
+def autknowl_data(label):
+    gp = WebAbstractGroup(label)
+    ans = f'Automorphism group of ${gp.tex_name}$:'
+    if gp.aut_order is None:
+        return Markup(ans + ' not computed')
+    ans += '<br />\n'
+    if gp.aut_tex is not None:
+        atex = gp.aut_tex.replace("\t", r"\t")
+        if gp.aut_group is not None:
+            ans += f'Description: <a href="{url_for_label(gp.aut_group)}">${atex}$</a><br />\n'
+        else:
+            ans += f'Description: ${atex}$<br />\n'
+    ans += f'Order: ${gp.aut_order}$<br />\n'
+    for tvar, idvar, ovar, name in [
+            (gp.outer_tex, gp.outer_group, gp.outer_order, "Outer"),
+            (gp.inner_tex, gp.central_quotient, gp.inner_order, "Inner"),
+    ]:
+        if tvar is not None:
+            tvar = tvar.replace("\t", r"\t")
+            if idvar is not None:
+                ans += f'{name} automorphism group: <a href="{url_for_label(idvar)}">${tvar}$</a>'
+            else:
+                ans += f'{name} automorphism group: ${tvar}$'
+            if ovar is not None:
+                ans += f', of order {pos_int_and_factor(ovar)}'
+            ans += '<br />\n'
+        elif ovar is not None:
+            ans += f'{name} automorphism group of order {pos_int_and_factor(ovar)}<br />\n'
+    ans += create_boolean_aut_string(gp, type="knowl") + '<br />\n'
+    ans += f'<div align="right"><a href="{url_for("abstract.auto_gens", label=label)}">Automorphism group data for {label}</div>'
+    return Markup(ans)
+
 def semidirect_data(label):
     gp = WebAbstractGroup(label)
     ans = f"Semidirect product expressions for ${gp.tex_name}$:<br />\n"
@@ -3478,6 +3706,7 @@ flist = {
     "rchar_data": rchar_data,
     "cchar_data": cchar_data,
     "group_data": group_data,
+    "autknowl_data": autknowl_data,
     "crep_data": crep_data,
     "qrep_data": qrep_data,
     "semidirect_data": semidirect_data,
@@ -3499,11 +3728,6 @@ def order_stats_list_to_string(o_list):
 
 
 sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
-
-code_names = {'presentation': 'Define the group using generators and relations',
-              'permutation': 'Define the group as a permutation group',
-              'matrix': 'Define the group as a matrix group',
-              'transitive': 'Define the group from the transitive group database'}
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}

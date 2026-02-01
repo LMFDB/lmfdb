@@ -6,8 +6,8 @@ from collections import defaultdict
 from psycopg2.extensions import QueryCanceledError
 from lmfdb import db
 from psycodict.encoding import Json
-from lmfdb.utils import flash_error
-from datetime import datetime
+from lmfdb.utils import flash_error, comma
+from lmfdb.utils.datetime_utils import utc_now_naive
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
 from lmfdb.api import api_page, api_logger
@@ -137,11 +137,11 @@ def stats():
                 'tablespace': tablespaces.get(tablename, ""),
             }
     dataSize = size - indexSize
-    info['ntables'] = len(table_sizes)
-    info['nobjects'] = nobjects
-    info['size'] = mb(size)
-    info['dataSize'] = mb(dataSize)
-    info['indexSize'] = mb(indexSize)
+    info['ntables'] = comma(len(table_sizes))
+    info['nobjects'] = comma(nobjects)
+    info['size'] = comma(mb(size))
+    info['dataSize'] = comma(mb(dataSize))
+    info['indexSize'] = comma(mb(indexSize))
     if info['sortby'] == 'name':
         sortedkeys = sorted(stats)
     elif info['sortby'] == 'objects' and info['groupby'] == 'db':
@@ -323,7 +323,7 @@ def api_query(table, id=None):
     # the collected result
     data = {
         "table": table,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": utc_now_naive().isoformat(),
         "data": data,
         "start": start,
         "offset": offset,
@@ -426,7 +426,7 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         "labels": labels,
         "tables": tables,
         "label_cols": label_cols,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": utc_now_naive().isoformat(),
         "data": data,
     }
     if format.lower() == "json":

@@ -18,7 +18,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
@@ -190,7 +190,7 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
+        return r'Currently, the database includes {} {} over $\Q$ in {} {}, with {} at most {}.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
 
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
@@ -471,11 +471,14 @@ ec_columns = SearchColumns([
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
     ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
+    MathCol("manin_constant", "ec.q.manin_constant", "Manin constant", align="center", default=lambda info: info.get("manin_constant")),
 ])
+
 
 class ECDownloader(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
+
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
@@ -582,6 +585,7 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
+    parse_ints(info, query, 'manin_constant')
     if info.get('galois_image'):
         labels = [a.strip() for a in info['galois_image'].split(',')]
         elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
@@ -1059,32 +1063,6 @@ def render_bhkssw():
 
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
-code_names = {'curve': 'Define the curve',
-                 'simple_curve': 'Simplified equation',
-                 'mwgroup': 'Mordell-Weil group',
-                 'gens': 'Mordell-Weil generators',
-                 'tors': 'Torsion subgroup',
-                 'intpts': 'Integral points',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'jinv': 'j-invariant',
-                 'cm': 'Potential complex multiplication',
-                 'faltings': 'Faltings height',
-                 'stable_faltings': 'Stable Faltings height',
-                 'rank': 'Mordell-Weil rank',
-                 'analytic_rank': 'Analytic rank',
-                 'reg': 'Regulator',
-                 'real_period': 'Real Period',
-                 'cp': 'Tamagawa numbers',
-                 'ntors': 'Torsion order',
-                 'sha': 'Order of Sha',
-                 'L1': 'Special L-value',
-                 'bsd_formula': 'BSD formula',
-                 'qexp': 'q-expansion of modular form',
-                 'moddeg': 'Modular degree',
-                 'manin': 'Manin constant',
-                 'localdata': 'Local data',
-                 'galrep': 'mod p Galois image'}
 
 Fullname = {
     'magma': 'Magma',
@@ -1104,18 +1082,8 @@ def ec_code(**args):
     lang = args['download_type']
     if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
-    name = Fullname[lang]
-    if lang == 'gp':
-        lang = 'pari'
-    comment = Ecode.pop('comment').get(lang).strip()
-    code = f"{comment} {name} code for working with elliptic curve {label}\n\n"
-    for k in Ecode: # OrderedDict
-        if 'comment' not in Ecode[k] or lang not in Ecode[k]:
-            continue
-        code += f"\n{comment} {Ecode[k]['comment']}: \n"
-        code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
-
-    return code
+    code = CodeSnippet(Ecode)
+    return code.export_code(label, lang, sorted_code_names)
 
 
 def tor_struct_search_Q(prefill="any"):
@@ -1460,6 +1428,13 @@ class ECSearchArray(SearchArray):
             example="8-",
             advanced=True)
 
+        manin_constant = TextBox(
+            name="manin_constant",
+            label="Manin constant",
+            knowl="ec.q.manin_constant",
+            example="2",
+            advanced=True)
+
         count = CountBox()
 
         self.browse_array = [
@@ -1475,7 +1450,7 @@ class ECSearchArray(SearchArray):
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
             [abc_quality, szpiro_ratio],
-            [count]
+            [count, manin_constant]
             ]
 
         self.refine_array = [
@@ -1484,5 +1459,5 @@ class ECSearchArray(SearchArray):
             [class_deg, isodeg, class_size, num_int_pts],
             [sha, sha_primes, regulator, reduction, faltings_height],
             [galois_image, adelic_level, adelic_index, adelic_genus],
-            [nonmax_primes, abc_quality, szpiro_ratio],
+            [nonmax_primes, abc_quality, szpiro_ratio, manin_constant],
             ]

@@ -11,7 +11,8 @@ from lmfdb import db
 from psycodict.base import PostgresBase
 from psycodict.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
-from datetime import datetime, timedelta
+from datetime import timedelta
+from lmfdb.utils.datetime_utils import utc_now_naive
 
 from .main import logger
 
@@ -96,7 +97,7 @@ class PostgresUserTable(PostgresBase):
         password = self.bchash(pwd)
         #TODO: use identifiers
         insertor = SQL("INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
-        self._execute(insertor, [uid, password, datetime.utcnow(), full_name, about, url])
+        self._execute(insertor, [uid, password, utc_now_naive(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
 
@@ -197,7 +198,7 @@ class PostgresUserTable(PostgresBase):
             return
 
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
-        now = datetime.utcnow()
+        now = utc_now_naive()
         tdelta = timedelta(days=1)
         exp = now + tdelta
         self._execute(insertor, [(t, exp) for t in tokens], values_list=True)
@@ -215,7 +216,7 @@ class PostgresUserTable(PostgresBase):
             logger.info("no attempt to delete old tokens, not enough privileges")
             return
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
-        now = datetime.utcnow()
+        now = utc_now_naive()
         tdelta = timedelta(days=8)
         cutoff = now - tdelta
         self._execute(deletor, [cutoff])

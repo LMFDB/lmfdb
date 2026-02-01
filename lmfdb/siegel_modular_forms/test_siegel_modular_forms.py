@@ -139,7 +139,7 @@ class HomePageTest(LmfdbTest):
         )
         assert len(data) >= 129
         n = 0
-        print("")
+        print()
         import sys
 
         for s in data:
