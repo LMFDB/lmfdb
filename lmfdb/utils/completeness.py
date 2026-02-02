@@ -159,6 +159,7 @@ def to_rset(query):
             # $mod represents an arithmetic progression (e.g., multiples of n)
             # which is unbounded, so we return the full real line
             # This will cause completeness checks to fail, as expected
+            # Note: psycodict format is {'$mod': [remainder, divisor]}
             pass
         else:
             raise ValueError(f"Unsupported key {k}")

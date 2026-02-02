@@ -312,10 +312,14 @@ class UtilsTest(unittest.TestCase):
     def test_mod_operator(self):
         """
         Test that $mod operator in queries is handled correctly
+        
+        Note: psycodict uses [remainder, divisor] format for $mod, so
+        {'$mod': [0, 7]} means "values where value % 7 == 0" (multiples of 7)
         """
         from lmfdb.utils.completeness import to_rset, IntegerSet
         
         # Test that $mod creates an unbounded set (full real line)
+        # {'$mod': [0, 7]} means multiples of 7 in psycodict format
         mod_query = {'$mod': [0, 7]}
         rset = to_rset(mod_query)
         self.assertEqual(str(rset), "(-oo, +oo)")
@@ -420,6 +424,7 @@ class UtilsTest(unittest.TestCase):
                 ("gps_transitive", {'n': 32, 'solv': 1}),
                 ("gps_st", {'rational': True, 'weight': 1, 'degree': 8}),
                 # Test $mod operator (multiples of n) - should be incomplete
+                # Note: psycodict format is [remainder, divisor], so [0, 7] means multiples of 7
                 ("ec_curvedata", {'conductor': {'$mod': [0, 7]}}),
                 ("mf_newforms", {'level': {'$mod': [0, 23]}}),
         ]:
