@@ -66,6 +66,9 @@ def class_lmfdb_label(conductor, iso_class):
 def class_cremona_label(conductor, iso_class):
     return "%s%s" % (conductor, iso_class)
 
+# This converts Cremona labels (Clabel in ECQ) to LMFDB labels
+# (lmfdb_label), leaving alone both LMFDB labels for curves over Q and
+# ECNF labels as these all contain at least one "."
 def cremona_label_to_lmfdb_label(clab):
     return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
 
