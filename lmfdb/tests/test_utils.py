@@ -309,6 +309,27 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual((A + A).bound_under(X), 50000)
         self.assertEqual((A * B).bound_under(X), 1000)
 
+    def test_mod_operator(self):
+        """
+        Test that $mod operator in queries is handled correctly
+        """
+        from lmfdb.utils.completeness import to_rset, IntegerSet
+        from sage.all import RealSet, infinity
+        
+        # Test that $mod creates an unbounded set (full real line)
+        mod_query = {'$mod': [0, 7]}
+        rset = to_rset(mod_query)
+        self.assertEqual(str(rset), "(-oo, +oo)")
+        
+        # Test that IntegerSet can be created from $mod query without error
+        iset = IntegerSet(mod_query)
+        self.assertEqual(str(iset.rset), "(-oo, +oo)")
+        
+        # Test that unbounded set is not a subset of bounded set
+        bounded = IntegerSet([1, 500000])
+        self.assertEqual(iset.is_subset(bounded), False)
+        self.assertEqual(bounded.is_subset(iset), True)
+
     def test_complete(self):
         from lmfdb import db
         for tup in [
@@ -399,5 +420,8 @@ class UtilsTest(unittest.TestCase):
                 ("hgm_families", {'degree': 8}),
                 ("gps_transitive", {'n': 32, 'solv': 1}),
                 ("gps_st", {'rational': True, 'weight': 1, 'degree': 8}),
+                # Test $mod operator (multiples of n) - should be incomplete
+                ("ec_curvedata", {'conductor': {'$mod': [0, 7]}}),
+                ("mf_newforms", {'level': {'$mod': [0, 23]}}),
         ]:
             self.assertEqual(results_complete(tbl, query, db)[0], False)
