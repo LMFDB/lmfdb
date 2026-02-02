@@ -536,6 +536,12 @@ class WebEC():
         self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
         self._code = None
 
+        # base changes in the ec_nfcurves table, allowing for these
+        # being with Cremona or LMFDB labels (as of Jan 2026):
+        bclabels = list(db.ec_nfcurves.search({'base_change': {'$contains': self.lmfdb_label}}, projection='label'))
+        bclabels.extend(list(db.ec_nfcurves.search({'base_change': {'$contains': self.Clabel}}, projection='label')))
+        bcurls = [url_for("ecnf.show_ecnf1", nf=lab) for lab in bclabels]
+
         if self.label_type == 'Cremona':
             self.class_url = url_for(".by_ec_label", label=self.Ciso)
             self.class_name = self.Ciso
@@ -553,6 +559,10 @@ class WebEC():
         if self.cm == -4:
             self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
         self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
+
+        if bclabels:
+            self.friends += [('Base changes in the database:', url_for("ecnf.index", label = {'$in': bclabels}))]
+            self.friends += [(f'{bclab}', bcurl) for (bclab, bcurl) in zip(bclabels, bcurls)]
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
