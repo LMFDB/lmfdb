@@ -416,7 +416,7 @@ class LF_download(Downloader):
             ["p", "coeffs"],
             {
                 "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
-                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(out["p"], Prec)\n    unram = ZZx(out["unram"].replace("t","x"))\n    unram_subfield.<t> = base.extension(unram, names="t") if unram.degree() > 1 else base\n    eisen = sage_eval(out["eisen"], locals={"x":x, "t":t})\n    field.<a> = unram_subfield.extension(eisen, names="a") if eisen.degree() > 1 else unram_subfield',
                 "gp": 'field = Polrev(mapget(out, "coeffs"));',
             }
         ),
@@ -549,9 +549,9 @@ lf_columns = SearchColumns([
     hidden_col(default=False),
     hiddenswan_col(),
     aut_col(lambda info:info.get("aut")),
-    # want apply_download for download conversion
-    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
-    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
+    # Want apply_download for download conversion.  Sage requires both 'unram' and 'eisen' in the download files to construct p-adic fields.
+    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible") or info.get("Submit") == "sage"),
+    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible") or info.get("Submit") == "sage", mathmode=True, func=format_eisen),
     insep_col(default=lambda info: info.get("ind_of_insep")),
     assoc_col(default=lambda info: info.get("associated_inertia")),
     respoly_col(),
