@@ -314,7 +314,6 @@ class UtilsTest(unittest.TestCase):
         Test that $mod operator in queries is handled correctly
         """
         from lmfdb.utils.completeness import to_rset, IntegerSet
-        from sage.all import RealSet, infinity
         
         # Test that $mod creates an unbounded set (full real line)
         mod_query = {'$mod': [0, 7]}
