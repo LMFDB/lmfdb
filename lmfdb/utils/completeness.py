@@ -155,6 +155,11 @@ def to_rset(query):
             ans = ans.intersection(RealSet(*[RealSet.point(x) for x in val]))
         elif k == "$nin":
             ans = ans.intersection(RealSet(*[RealSet.point(x) for x in val]).complement())
+        elif k == "$mod":
+            # $mod represents an arithmetic progression (e.g., multiples of n)
+            # which is unbounded, so we return the full real line
+            # This will cause completeness checks to fail, as expected
+            pass
         else:
             raise ValueError(f"Unsupported key {k}")
     return ans
