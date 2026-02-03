@@ -172,15 +172,8 @@ def genus_by_label_or_name(lab):
     return redirect(url_for(".genus_render_webpage"))
 
 
-# download
-download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
-download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
-download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
-download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
-genus_search_projection = ['label', 'rank', 'det', 'level',
-                             #'class_number', 'aut', 'minimum']
-                           ]
+genus_search_projection = ['label', 'rank', 'det', 'level', 'class_number']
 
 def genus_search_equivalence(res, info, query):
     """
@@ -300,7 +293,11 @@ def render_genus_webpage(**args):
     info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
     info['dual_conway_symbol'] = format_conway_symbol(f.get('dual_conway_symbol', ''))
     info['even_odd'] = 'Even' if f['is_even'] else 'Odd'
+
+    # Gram matrix (with download link)
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
+    info['download_gram'] = [
+        (i, url_for(".render_genus_webpage_download", label=info['label'], lang=i, obj='gram')) for i in ['gp', 'magma', 'sage']]
 
     # Get the mass (if positive definite)
     info['mass'] = str(f['mass'][0])+"/"+str(f['mass'][1]) if 'mass' in f else "?"
@@ -403,33 +400,23 @@ def history_page():
 # Downloads for particular data #
 #################################
 
+# Download variables
+download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
+download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
+download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
+download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
+
+
 @genus_page.route('/<label>/download/<lang>/<obj>')
 def render_genus_webpage_download(**args):
-    if args['obj'] == 'shortest_vectors':
-        response = make_response(download_genera_full_lists_v(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    elif args['obj'] == 'genus_reps':
-        response = make_response(download_genera_full_lists_g(**args))
+    if args['obj'] == 'gram':
+        response = make_response(download_gram_matrix(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
 
-def download_genera_full_lists_v(**args):
+def download_gram_matrix(**args):
     label = str(args['label'])
-    res = db.lat_genera.lookup(label)
-    mydate = time.strftime("%d %B %Y")
-    if res is None:
-        return "No such genus"
-    lang = args['lang']
-    c = download_comment_prefix[lang]
-    outstr += download_assignment_start[lang] + '\\\n'
-    outstr += download_assignment_end[lang]
-    outstr += '\n'
-    return outstr
-
-def download_genera_full_lists_g(**args):
-    label = str(args['label'])
-    res = db.lat_genera.lookup(label, projection=['genus_reps'])
+    res = db.lat_genera.lookup(label, projection=['rep'])
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -441,8 +428,9 @@ def download_genera_full_lists_g(**args):
     def entry(r):
         return "".join([mat_start, str(r), mat_end])
 
+    outstr = c + ' A representative Gram matrix for genus %s downloaded from the LMFDB on %s. \n\n' % (label, mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join(entry(r) for r in [res['rep']])
+    outstr += ",\\\n".join(entry(vect_to_sym(r)) for r in [res['rep']])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
