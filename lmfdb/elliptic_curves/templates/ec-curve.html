@@ -466,6 +466,7 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
   <th>prime $\ell$</th>
   <th>{{KNOWL('ec.galois_rep_modell_image', title='mod-$\ell$ image')}}</th>
   <th>{{KNOWL('ec.galois_rep_elladic_image', title='$\ell$-adic image')}}</th>
+  <th>{{KNOWL('gl2.label', title='$\ell$-adic index')}}</th>
   </tr>
   </thead><tbody>
   {% for pr in data.data.galois_data %}
@@ -473,6 +474,7 @@ The {{KNOWL('ec.galois_rep', title=' $\ell$-adic Galois representation')}} has {
     <td align=center>${{pr.prime}}$</td>
     <td align=center>{{data.display_modell_image(pr.modell_image) | safe}}</td>
     <td align=center>{{data.display_elladic_image(pr.elladic_image) | safe}}</td>
+    <td align=center>${{pr.elladic_index}}$</td>
     </tr>
   {% endfor %}
   </tbody>

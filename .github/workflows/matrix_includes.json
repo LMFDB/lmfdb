@@ -30,12 +30,12 @@
         "server": "devmirror"
     },
     {
-        "files": "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py",
+        "files": "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/tests/test_random_redirects.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py",
         "folders": "elliptic_curves hecke_algebras tests",
         "server": "proddb"
     },
     {
-        "files": "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py",
+        "files": "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/tests/test_random_redirects.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py",
         "folders": "elliptic_curves hecke_algebras tests",
         "server": "devmirror"
     },

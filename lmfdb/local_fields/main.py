@@ -1,6 +1,9 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
+import os
+import yaml
+
 from flask import abort, render_template, request, url_for, redirect
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
@@ -413,7 +416,7 @@ class LF_download(Downloader):
             ["p", "coeffs"],
             {
                 "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
-                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(out["p"], Prec)\n    unram = ZZx(out["unram"].replace("t","x"))\n    unram_subfield.<t> = base.extension(unram, names="t") if unram.degree() > 1 else base\n    eisen = sage_eval(out["eisen"], locals={"x":x, "t":t})\n    field.<a> = unram_subfield.extension(eisen, names="a") if eisen.degree() > 1 else unram_subfield',
                 "gp": 'field = Polrev(mapget(out, "coeffs"));',
             }
         ),
@@ -546,9 +549,9 @@ lf_columns = SearchColumns([
     hidden_col(default=False),
     hiddenswan_col(),
     aut_col(lambda info:info.get("aut")),
-    # want apply_download for download conversion
-    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
-    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
+    # Want apply_download for download conversion.  Sage requires both 'unram' and 'eisen' in the download files to construct p-adic fields.
+    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible") or info.get("Submit") == "sage"),
+    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible") or info.get("Submit") == "sage", mathmode=True, func=format_eisen),
     insep_col(default=lambda info: info.get("ind_of_insep")),
     assoc_col(default=lambda info: info.get("associated_inertia")),
     respoly_col(),
@@ -890,6 +893,39 @@ def local_field_count(info, query):
 def local_field_search(info,query):
     common_parse(info, query)
 
+def make_code_snippets(data):
+    """
+    Create code snippets dictionary for p-adic field.
+    """
+    # read in code.yaml from local_fields directory:
+    _curdir = os.path.dirname(os.path.abspath(__file__))
+    code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+    # Sage doesn't (yet) support arbitrary extensions of p-adic fields
+    # so must construct field using 'unram' and 'eisen' columns for Sage
+    sage_construct_field = ""
+    if data['e'] == 1:
+        # Unramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")"
+    elif data['f'] == 1:
+        # Totally ramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['eisen']+")"
+    else:
+        # Mixed case (construct L as maximal unramified extension)
+        sage_construct_field = "L.<t> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")\n"
+        sage_construct_field += "K.<a> = L.extension("+data['eisen']+")"
+
+    format_data = {
+        'p': data['p'],
+        'coeffs': str(data['coeffs']),
+        'sage_construct_field' : sage_construct_field
+    }
+
+    for prop in code:
+        for lang in code[prop]:
+            code[prop][lang] = code[prop][lang].format(**format_data)
+    return code
+
 def render_field_webpage(args):
     data = None
     info = {}
@@ -1130,6 +1166,7 @@ def render_field_webpage(args):
             friends=friends,
             downloads=downloads,
             learnmore=learnmore_list(),
+            code=make_code_snippets(data),
             KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 

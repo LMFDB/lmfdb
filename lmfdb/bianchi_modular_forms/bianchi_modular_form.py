@@ -8,7 +8,7 @@ from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
-    teXify_pol, search_wrap, Downloader)
+    teXify_pol, search_wrap, Downloader, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
@@ -86,12 +86,13 @@ def index():
         return bianchi_modular_form_search(info)
 
 @bmf_page.route("/random")
+@redirect_no_cache
 def random_bmf():    # Random Bianchi modular form
     res = db.bmf_forms.random(projection=['field_label', 'level_label', 'label_suffix'])
-    return redirect(url_for(".render_bmf_webpage",
+    return url_for(".render_bmf_webpage",
                     field_label=res['field_label'],
                     level_label=res['level_label'],
-                    label_suffix=res['label_suffix']), 307)
+                    label_suffix=res['label_suffix'])
 
 @bmf_page.route("/interesting")
 def interesting():

@@ -154,6 +154,7 @@ def by_label(label):
     return render_template(
         "modcurve.html",
         curve=curve,
+        code=curve.code,
         dojs=dojs,
         zip=zip,
         name_to_latex=name_to_latex,

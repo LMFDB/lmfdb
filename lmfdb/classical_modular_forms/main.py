@@ -1595,7 +1595,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.coefficient_field',
             label='Coefficient field',
             example='1.1.1.1',
-            example_span='2.0.5.1, Qsqrt5')
+            example_span='2.2.5.1, Qsqrt5')
 
         analytic_conductor = TextBox(
             name='analytic_conductor',

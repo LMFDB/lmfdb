@@ -1283,7 +1283,6 @@ class HGCWASearchArray(SearchArray):
         'full_auto': False,
     }
 
-
     def __init__(self):
         genus = TextBox(
             name="genus",
