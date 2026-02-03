@@ -237,7 +237,9 @@ lattice_columns = SearchColumns([
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     MathCol("density", "lattice.density", "Density", default=False),
     MathCol("hermite", "lattice.hermite", "Hermite", default=False),
-    MathCol("kissing", "lattice.kissing", "Kissing", default=False)
+    MathCol("kissing", "lattice.kissing", "Kissing", default=False),
+    ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
+    MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi Veniani", default=False)
 ])
 
 
@@ -255,7 +257,8 @@ lattice_columns = SearchColumns([
 def lattice_search(info, query):
     for field, name in [('rank', 'Rank'), ('level', 'Level'),  ('class_number', 'Class number'),
                         ('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
-                        ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number')]: 
+                        ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
+                         ]: 
         parse_posints(info, query, field, name)
     for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant'), ('dual_det', 'Dual determinant')]:
         parse_ints(info, query, field, name)
@@ -276,6 +279,7 @@ def lattice_search(info, query):
         flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
         raise ValueError
     parse_list(info, query, 'gram', process=vect_to_sym)
+    parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
 
 
 @lattice_page.route('/<label>')
@@ -323,6 +327,7 @@ def render_lattice_webpage(**args):
     info['kissing'] = int(f['kissing'])  if 'kissing' in info else "?"
     info['even_odd'] = 'Even' if f['is_even'] else 'Odd'
     info['mass'] = str(f_genus['mass'][0])+"/"+str(f_genus['mass'][1]) if 'mass' in f_genus else "?"
+    info['festi_veniani'] = int(f['festi_veniani_index'])  if 'festi_veniani_index' in info else "?"
 
     # Gram matrix (with download link)
     info['gram'] = vect_to_matrix(vect_to_sym2(f['gram']))
@@ -330,10 +335,9 @@ def render_lattice_webpage(**args):
         (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma', 'sage']]
 
     # Data about automorphism group
-    if 'aut_group' in f:    
-        info['aut_group'] = f['aut_group']
-        info['aut_label'] = f['aut_label']
-        info['aut_size']  = int(f['aut_size'])
+    info['aut_group'] = f.get('aut_group', "not computed")
+    info['aut_label'] = f.get('aut_label', "not computed")
+    info['aut_size']  = f.get('aut_size', "not computed")
 
     # Display Theta series
     ncoeff = 20
@@ -596,7 +600,7 @@ class LatSearchArray(SearchArray):
             name="aut_label",
             label="Automorphism group",
             short_label="Aut. group",
-            knowl="lattice.group_order",
+            knowl="lattice.automorphism_group",
             example="8.1",
             example_span="8.1")
         aut_size = TextBox(

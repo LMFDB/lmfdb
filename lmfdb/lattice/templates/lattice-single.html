@@ -14,7 +14,8 @@
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{{info.even_odd}}</td></tr>
     <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>${{ info.aut_size }}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.group_order', title='Aut group') }}:</td><td>${{ info.aut_label }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ info.aut_label }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi Veniani Index') }}:</td><td>${{ info.festi_veniani }}$</td></tr>
     {% if info.is_positive_definite %} 
         <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>   
         <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
@@ -100,7 +101,6 @@
 
 {% if info.class_number == 0 %}
     <p> The {{ KNOWL('lattice.class_number', title='Class number') }} of the integral lattice {{info.label}} is not available.</p>
-
 {% else %}
     <table>
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
@@ -126,6 +126,27 @@
         {% endif %}
     </td></tr>
     </table>
+{% endif %}
+
+{% if info.pneighbors %}
+<p>{{ KNOWL('lattice.pneighbors', title='p-Neighbors') }}</p>
+<table>
+{% for p, neighs in info.pneighbors.items() %}
+    <tr>
+        <td valign="top">$p = {{ p }}$:</td>
+        <td>
+        {% if neighs %}
+            {% for L in neighs %}
+                <a href="{{ url_for(".render_lattice_webpage", label=L) }}">{{ L }}</a>
+                {% if not loop.last %}, {% endif %}
+            {% endfor %}
+        {% else %}
+            none
+        {% endif %}
+        </td>
+    </tr>
+{% endfor %}
+</table>
 {% endif %}
 
 <br>
