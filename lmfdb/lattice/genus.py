@@ -11,6 +11,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count, 
     parse_bracketed_posints, parse_start, clean_input,
+    parse_rational_to_list,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -56,10 +57,17 @@ def my_latex(s):
     ss += ""
     return ss
 
-
 def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
     return s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
+
+def make_neighbors_graph(M):
+    """
+    Given the adjacemency matrix data, we construct a graph object to plot on the genus page
+    """
+    from sage.graphs.graph import Graph
+    G = Graph(unfill_isogeny_matrix(M), format='weighted_adjacency_matrix')
+    return G
 
 
 # breadcrumbs and links for data quality entries
@@ -91,8 +99,11 @@ def learnmore_list_remove(matchstring):
 @genus_page.route("/")
 def genus_render_webpage():
     info = to_dict(request.args, search_array=GenusSearchArray())
+
+    # Prepare list of signatures to browse (display as round brackets, internally use square brackets)
     sig_list = sum([[[n-nm, nm] for nm in range(1 + (n//2))] for n in range(1, 10)], [])
-    signature_list = [str(s).replace(' ','') for s in sig_list[:16]]
+    signature_list = [[str(s).replace(' ',''), str(tuple(s)).replace(' ','')] for s in sig_list[:16]]
+
     if not request.args:
         stats = Genus_stats()
         dim_list = list(range(1, 13))
@@ -161,15 +172,8 @@ def genus_by_label_or_name(lab):
     return redirect(url_for(".genus_render_webpage"))
 
 
-# download
-download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
-download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
-download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
-download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
-genus_search_projection = ['label', 'rank', 'det', 'level',
-                             #'class_number', 'aut', 'minimum']
-                           ]
+genus_search_projection = ['label', 'rank', 'det', 'level', 'class_number']
 
 def genus_search_equivalence(res, info, query):
     """
@@ -204,12 +208,13 @@ def url_for_label(label):
 genus_columns = SearchColumns([
     LinkCol("label", "lattice.label", "Label", url_for_label),
     MathCol("rank", "lattice.dimension", "Rank"),
-    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '[%s,%s]' % (signature, rank-signature ),),
+    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
     MathCol("det", "lattice.determinant", "Determinant"),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
     ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
     ProcessedCol("mass", "lattice.mass", "Mass", lambda v: r"$%s/%s$" % (v[0],v[1]) if len(v) > 1 else "", default=False),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False)
@@ -253,7 +258,7 @@ def genus_search(info, query):
             #raise ValueError("Invalid Gram matrix input")
     parse_list(info, query, 'gram', process=vect_to_sym)
     parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
-
+    parse_rational_to_list(info, query, 'mass', 'mass')
 
 @genus_page.route('/<label>')
 def render_genus_webpage(**args):
@@ -275,16 +280,27 @@ def render_genus_webpage(**args):
 
     bread = get_bread(f['label'])
     info['rank'] = int(f['rank'])
+
+    # Get signature and whether lattice is positive definite
     nplus = int(f['signature'])
     nminus = info['rank'] - nplus
     info['signature'] = (nplus, nminus)
+    info['is_positive_definite'] = (nminus==0)
+
     info['det'] = int(f['det'])
     info['level'] = int(f['level'])
     info['disc'] = int(f['disc'])
     info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
-    info['is_even'] = f.get('is_even', '')
+    info['dual_conway_symbol'] = format_conway_symbol(f.get('dual_conway_symbol', ''))
+    info['even_odd'] = 'Even' if f['is_even'] else 'Odd'
+
+    # Gram matrix (with download link)
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
-    info['mass'] = f.get('mass', "?")
+    info['download_gram'] = [
+        (i, url_for(".render_genus_webpage_download", label=info['label'], lang=i, obj='gram')) for i in ['gp', 'magma', 'sage']]
+
+    # Get the mass (if positive definite)
+    info['mass'] = str(f['mass'][0])+"/"+str(f['mass'][1]) if 'mass' in f else "?"
     info['class_number'] = f.get('class_number', "?")
     
     # Discriminant form data
@@ -293,9 +309,19 @@ def render_genus_webpage(**args):
     discriminant_form = f.get('discriminant_form', [])
     info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
 
-# This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
-#    if info['name'] != "" or info['comments'] !="":
-#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+    # Adjaceny graph data
+    adjacency_primes = f['adjaceny_matrix'].keys() if 'adjaceny_matrix' in f else []
+    for p in adjacency_primes:
+        info['adjacency'][p]['poly'] = f['adjaceny_polynomials'][p]
+
+        adj_mat = f['adjaceny_graph'][p]
+        graph = make_graph(adj_mat)
+        P = graph.plot(edge_labels=True)
+        #info[p]['graph'] = make_neighbors_graph
+        graph_img = encode_plot(P, transparent=True)
+        info['adjacency'][p]['graph_link'] = '<img src="%s" width="200" height="150"/>' % graph_img
+
+    # Properties box
     info['properties'] = [
         ('Label', info['label']),
         ('Rank', prop_int_pretty(info['rank'])),
@@ -303,12 +329,11 @@ def render_genus_webpage(**args):
         ('Determinant', prop_int_pretty(info['det'])),
         ('Discriminant', prop_int_pretty(info['disc'])),
         ('Level', prop_int_pretty(info['level'])),
-        ('Class Number', "?"),
-        ('Even/Odd', 'Even' if info['is_even'] else 'Odd')]
+        ('Class Number', str(info['class_number'])),
+        ('Even/Odd', info['even_odd'])]
     downloads = [("Underlying data", url_for(".genus_data", label=lab))]
 
     t = "Genus of integral lattices "+info['label']
-#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template(
         "genus-single.html",
         info=info,
@@ -375,33 +400,23 @@ def history_page():
 # Downloads for particular data #
 #################################
 
+# Download variables
+download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
+download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
+download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
+download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
+
+
 @genus_page.route('/<label>/download/<lang>/<obj>')
 def render_genus_webpage_download(**args):
-    if args['obj'] == 'shortest_vectors':
-        response = make_response(download_genera_full_lists_v(**args))
-        response.headers['Content-type'] = 'text/plain'
-        return response
-    elif args['obj'] == 'genus_reps':
-        response = make_response(download_genera_full_lists_g(**args))
+    if args['obj'] == 'gram':
+        response = make_response(download_gram_matrix(**args))
         response.headers['Content-type'] = 'text/plain'
         return response
 
-def download_genera_full_lists_v(**args):
+def download_gram_matrix(**args):
     label = str(args['label'])
-    res = db.lat_genera.lookup(label)
-    mydate = time.strftime("%d %B %Y")
-    if res is None:
-        return "No such genus"
-    lang = args['lang']
-    c = download_comment_prefix[lang]
-    outstr += download_assignment_start[lang] + '\\\n'
-    outstr += download_assignment_end[lang]
-    outstr += '\n'
-    return outstr
-
-def download_genera_full_lists_g(**args):
-    label = str(args['label'])
-    res = db.lat_genera.lookup(label, projection=['genus_reps'])
+    res = db.lat_genera.lookup(label, projection=['rep'])
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -413,8 +428,9 @@ def download_genera_full_lists_g(**args):
     def entry(r):
         return "".join([mat_start, str(r), mat_end])
 
+    outstr = c + ' A representative Gram matrix for genus %s downloaded from the LMFDB on %s. \n\n' % (label, mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join(entry(r) for r in [res['rep']])
+    outstr += ",\\\n".join(entry(vect_to_sym(r)) for r in [res['rep']])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
@@ -427,6 +443,7 @@ class GenusSearchArray(SearchArray):
              ("det", "determinant", ['det', 'rank', 'signature', 'level', 'disc', 'label']),
              ("level", "level", ['level', 'rank', 'signature', 'det', 'disc', 'label']),
              ("disc", "discriminant", ['disc', 'rank', 'signature', 'det', 'level', 'label']),
+             ("class_number", "class number", ['class_number', 'rank', 'signature', 'det', 'level', 'disc', 'label']),
             ]
 
     def __init__(self):

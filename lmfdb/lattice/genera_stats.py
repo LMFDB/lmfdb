@@ -33,8 +33,8 @@ class Genus_stats(StatsDisplay):
 
     table = db.lat_genera
     baseurl_func = ".genus_render_webpage"
-    buckets = {"rank":["1","2","3","4","5","6","7","8-15","16-31"],
-               "det":["1","2-10","11-100","101-1000","1001-10000","10001-100000","100001-1000000"],
+    buckets = {"rank":["1","2","3","4","5","6","7","8","9","10","11","12"],
+               "det":["1","2-10","11-100","101-1000"],
                "class_number":["1","2","3","4-7","8-15","16-31","32-63"],
                }
     knowls = {'rank': 'lattice.dimension',
@@ -48,7 +48,7 @@ class Genus_stats(StatsDisplay):
         {"cols": ["det", "rank"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
-        {"cols": ["class_number", "dim"],
+        {"cols": ["class_number", "rank"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
     ]
