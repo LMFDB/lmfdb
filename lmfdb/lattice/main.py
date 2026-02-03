@@ -406,7 +406,7 @@ def theta_display(label, number):
     return print_q_expansion(coeff)
 
 # auxiliary function for displaying more coefficients of the dual theta series
-# (todo: merge this with the above function)
+# (todo: merge this with the above theta_display function)
 @lattice_page.route('/dual_theta_display/<label>/<number>')
 def dual_theta_display(label, number):
     try:
@@ -569,6 +569,16 @@ class LatSearchArray(SearchArray):
             knowl="lattice.gram",
             example="[5,1,23]",
             example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+        discriminant = TextBox(
+            name="disc",
+            label="Discriminant",
+            knowl="lattice.discriminant",
+            example="10",
+            example_span="1 or 10-100")
+        even_odd = ParityBox(
+            name="is_even",
+            label="Even/Odd",
+            knowl="lattice.even_odd")
         minimum = TextBox(
             name="minimum",
             label="Minimal vector length",
@@ -579,15 +589,58 @@ class LatSearchArray(SearchArray):
             label="Class number",
             knowl="lattice.class_number",
             example="1")
-        aut = TextBox(
-            name="aut",
+        aut_label = TextBox(
+            name="aut_label",
+            label="Automorphism group",
+            short_label="Aut. group",
+            knowl="lattice.group_order",
+            example="8.1",
+            example_span="8.1")
+        aut_size = TextBox(
+            name="aut_size",
             label="Automorphism group order",
             short_label="Aut. group order",
             knowl="lattice.group_order",
             example="2",
             example_span="696729600")
+        disc_invs = TextBox(
+            name="discriminant_group_invs",
+            label="Disc. group invariants",
+            knowl="lattice.discriminant_group",
+            example="2,4",
+            example_span="2,4 or 2,2,8")
+        kissing = TextBox(
+            name="kissing_number",
+            label="Kissing number",
+            knowl="lattice.kissing",
+            example="1")
+        dual_det = TextBox(
+            name="dual_det",
+            label="Dual Determinant",
+            knowl="lattice.determinant",
+            example="1",
+            example_span="1 or 10-100")
+        dual_kissing = TextBox(
+            name="dual_kissing_number",
+            label="Dual Kissing number",
+            knowl="lattice.kissing",
+            example="1")
+
         count = CountBox()
 
-        self.browse_array = [[rank], [det], [level], [gram], [minimum], [class_number], [aut], [count]]
-
-        self.refine_array = [[rank, det, level, gram], [minimum, class_number, aut]]
+        self.browse_array = [
+            [rank, signature], 
+            [det, discriminant],
+            [level, class_number], 
+            [minimum, even_odd],
+            [aut_size, aut_label],
+            [dual_det, dual_kissing],
+            [disc_invs, gram],
+            [kissing, count]
+        ]
+  
+        self.refine_array = [
+            [rank, signature, det, discriminant, level],
+            [aut_size, aut_label, class_number, minimum, even_odd],
+            [dual_det, dual_kissing, disc_invs, kissing, gram]
+        ]

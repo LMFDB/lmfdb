@@ -76,7 +76,7 @@
 
 <h2> {{ KNOWL('lattice.dual', title='Dual Lattice') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>${{info.dual_label}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>{{info.dual_label}}</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.dual_conway_symbol}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.dual_det}}$</td></tr>
     {% if info.is_positive_definite %}
