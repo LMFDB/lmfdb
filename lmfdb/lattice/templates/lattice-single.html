@@ -2,12 +2,17 @@
 
 {% block content %}
 
-<h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }} </h2>
+<h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }}</h2>
 
 <table>
-    <tr><td>{{ KNOWL('lattice.dimension', title='Dimension') }}:</td><td>${{info.dim}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{info.rank}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{info.signature}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>${{info.disc}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{{info.even_odd}}</td></tr>
     <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>
     <tr><td>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{info.aut }}$</td></tr>
     <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
@@ -56,6 +61,12 @@
 
 <h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
 <p>${{info.gram}}$</p>
+
+
+<h2> {{ KNOWL('lattice.dual_lattice', title='Dual Lattice') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.dual_det}}$</td></tr>
+</table>
 
 
 <h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>

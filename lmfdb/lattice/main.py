@@ -28,9 +28,15 @@ from lmfdb import db
 #####################################
 
 def vect_to_matrix(v):
+    """
+    Converts a list of vectors of ints into a latex-formatted matrix string, ready for display
+    """
     return str(latex(matrix(v)))
 
 def vect_to_sym(v):
+    """
+    Converts an upper triangular vector of ints, to a full 2d list of ints
+    """
     n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
     M = matrix(n)
     k = 0
@@ -40,6 +46,22 @@ def vect_to_sym(v):
             M[j, i] = v[k]
             k += 1
     return [[int(M[i, j]) for i in range(n)] for j in range(n)]
+
+
+def vect_to_sym2(v):
+    """
+    Converts a list of n^2 ints, to a 2D n x n array
+    """
+    n = ZZ(round(sqrt(len(v))))
+    M = matrix(n)
+    k = 0
+    for i in range(n):
+        for j in range(n):
+            M[i, j] = v[k]
+            k += 1
+    return [[int(M[i, j]) for i in range(n)] for j in range(n)]
+
+
 
 def print_q_expansion(lst):
     lst = [str(c) for c in lst]
@@ -140,12 +162,12 @@ def statistics():
     return render_template("display_stats.html", info=Lattice_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
-lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+# Regex for lattice label format
+lattice_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:((?:\.[0-9a-zA-Z]+)*))\.([0-9a-fA-F]+)\.(\d+)')
 
 
 def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
-
 
 def lattice_by_label_or_name(lab):
     clean_lab = str(lab).replace(" ", "")
@@ -204,6 +226,7 @@ lattice_columns = SearchColumns([
     MathCol("rank", "lattice.dimension", "Rank"),
     MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
     MathCol("det", "lattice.determinant", "Determinant"),
+    MathCol("dual_det", "lattice.determinant", "Dual Determinant"),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
@@ -278,15 +301,19 @@ def render_lattice_webpage(**args):
 
     info['det'] = int(f['det'])
     info['level'] = int(f['level'])
+    info['disc'] = int(f['disc'])
+    info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
     info['gram'] = vect_to_matrix(f['gram'])
     info['density'] = str(f['density']) if 'density' in info else "?"
     info['hermite'] = str(f['hermite']) if 'hermite' in info else "?"
-    #info['minimum'] = int(f['minimum'])
-    #info['kissing'] = int(f['kissing'])
+    info['minimum'] = int(f['minimum'])  if 'minimum' in info else "?"
+    info['kissing'] = int(f['kissing'])  if 'kissing' in info else "?"
     info['even_odd'] = 'Even' if f['is_even'] else 'Odd'
+    #assert(False)
 
     # Information about automorphism group
-    #info['aut_group'] = (f['aut_group'])
+    if 'aut_group' in f:    
+        info['aut_group'] = f['aut_group']
 
     # Display Theta series
     ncoeff = 20
@@ -308,7 +335,7 @@ def render_lattice_webpage(**args):
         ('Even/Odd', info['even_odd'])]
     downloads = [("Underlying data", url_for(".lattice_data", label=lab))]
 
-    t = "Genus of integral lattices "+info['label']
+    t = "Integral lattice "+info['label']
     return render_template(
         "lattice-single.html",
         info=info,
