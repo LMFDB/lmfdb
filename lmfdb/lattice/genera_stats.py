@@ -12,17 +12,19 @@ class Genus_stats(StatsDisplay):
         self.max_rank = db.lat_genera.max("rank")
         self.max_det = db.lat_genera.max("det")
         self.kintegral = display_knowl('lattice.definition', 'integral lattices')
-        self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
+        self.ksignature = display_knowl('lattice.signature', 'signatures')
+        #self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
         self.kcn = display_knowl('lattice.class_number', 'class number')
-        self.kdim = display_knowl('lattice.dimension', 'dimension')
+        self.kdim = display_knowl('lattice.dimension', 'rank')
         self.kdet = display_knowl('lattice.determinant', 'determinant')
         self.kpri = display_knowl('lattice.primitive', 'primitive')
 
     @property
     def short_summary(self):
-        return 'The database currently contains {} genera of {}. The largest {} is {}, the largest {} is {}, and the largest {} is {}. Here are some <a href="{}">further statistics</a>.'.format(
+        return 'The database currently contains {} genera of {} of varying {}. The largest {} is {}, the largest {} is {}, and the largest {} is {}. Here are some <a href="{}">further statistics</a>.'.format(
             self.ngenera,
             self.kintegral,
+            self.ksignature,
             self.kcn,
             self.max_cn,
             self.kdim,

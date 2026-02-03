@@ -29,7 +29,7 @@ from lmfdb import db
 
 def vect_to_matrix(v):
     """
-    Converts a list of vectors of ints into a latex-formatted matrix string, ready for display
+    Converts a list of vectors of ints into a latex-formatted string which renders a latex pmatrix, ready for display
     """
     return str(latex(matrix(v)))
 
@@ -226,14 +226,22 @@ lattice_columns = SearchColumns([
     MathCol("rank", "lattice.dimension", "Rank"),
     MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
     MathCol("det", "lattice.determinant", "Determinant"),
-    MathCol("dual_det", "lattice.determinant", "Dual Determinant"),
+    MathCol("dual_det", "lattice.determinant", "Dual Determinant", default=False),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
     ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
-    MathCol("aut", "lattice.group_order", "Aut. group order")])
+    MathCol("aut_size", "lattice.group_order", "Aut. group order"),
+    MathCol("density", "lattice.density", "Density", default=False),
+    MathCol("hermite", "lattice.hermite", "Hermite", default=False),
+    MathCol("kissing", "lattice.kissing", "Kissing", default=False),
+
+],
+
+])
 
 
 @search_wrap(table=db.lat_lattices_new,
@@ -249,7 +257,7 @@ lattice_columns = SearchColumns([
              properties=lambda: [])
 def lattice_search(info, query):
     for field, name in [('rank', 'Rank'), ('level', 'Level'),  ('class_number', 'Class number'),
-                        ('minimum', 'Minimal vector length'), ('aut', 'Group order')]: 
+                        ('minimum', 'Minimal vector length'), ('aut_size', 'Group order')]: 
         parse_posints(info, query, field, name)
     for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
         parse_ints(info, query, field, name)
@@ -293,6 +301,11 @@ def render_lattice_webpage(**args):
     bread = get_bread(f['label'])
     info['rank'] = int(f['rank'])
 
+    # Get invariants from the genus home page (must query db)
+    genus_label = info['genus_label']
+    f_genus = db.lat_genera.lucky({'$or': [{'label': genus_label}]})
+    
+
     # Get signature and whether lattice is positive definite
     nplus = int(f['signature'])
     nminus = info['rank'] - nplus
@@ -303,17 +316,24 @@ def render_lattice_webpage(**args):
     info['level'] = int(f['level'])
     info['disc'] = int(f['disc'])
     info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
-    info['gram'] = vect_to_matrix(f['gram'])
+    info['gram'] = vect_to_matrix(vect_to_sym2(f['gram']))
     info['density'] = str(f['density']) if 'density' in info else "?"
     info['hermite'] = str(f['hermite']) if 'hermite' in info else "?"
     info['minimum'] = int(f['minimum'])  if 'minimum' in info else "?"
     info['kissing'] = int(f['kissing'])  if 'kissing' in info else "?"
     info['even_odd'] = 'Even' if f['is_even'] else 'Odd'
-    #assert(False)
+    info['mass'] = str(f_genus['mass'][0])+"/"+str(f_genus['mass'][1]) if 'mass' in f_genus else "?"
+
+    # Gram matrix (with download link)
+    info['gram'] = vect_to_matrix(vect_to_sym2(f['gram']))
+    info['download_gram'] = [
+        (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma', 'sage']]
 
     # Information about automorphism group
     if 'aut_group' in f:    
         info['aut_group'] = f['aut_group']
+        info['aut_label'] = f['aut_label']
+        info['aut_size']  = int(f['aut_size'])
 
     # Display Theta series
     ncoeff = 20
@@ -322,8 +342,23 @@ def render_lattice_webpage(**args):
         info['theta_series'] = my_latex(print_q_expansion(coeff))
         info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
-    #info['class_number'] = int(f['class_number'])
+    info['class_number'] = f.get('class_number', "?")
 
+    # Discriminant form data
+    discriminant_group_invs = f.get('discriminant_group_invs', [])
+    info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs)
+    discriminant_form = f_genus.get('discriminant_form', [])
+    info['discriminant_gram'] = vect_to_matrix(vect_to_sym2(discriminant_form))
+
+    # Information about the dual lattice
+    info['dual_conway_symbol'] = format_conway_symbol(f_genus.get('dual_conway_symbol', ''))
+    if 'dual_theta_series' in f:
+        coeff = [f['dual_theta_series'][i] for i in range(ncoeff + 1)]
+        info['dual_theta_series'] = my_latex(print_q_expansion(coeff))
+        info['dual_theta_display'] = url_for(".theta_display", label=f['label'], number="")    
+
+
+    # Properties box
     info['properties'] = [
         ('Label', '%s' % info['label']),
         ('Rank', prop_int_pretty(info['rank'])),
@@ -459,7 +494,7 @@ def download_lattice_full_lists_v(**args):
 
 def download_lattice_full_lists_g(**args):
     label = str(args['label'])
-    res = db.lat_lattices_new.lookup(label, projection=['genus_reps'])
+    res = db.lat_lattices_new.lookup(label, projection=['gram'])
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -473,7 +508,7 @@ def download_lattice_full_lists_g(**args):
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n' % (mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join(entry(r) for r in res['genus_reps'])
+    outstr += ",\\\n".join(entry(r) for r in res['gram'])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
