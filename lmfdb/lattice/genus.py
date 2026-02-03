@@ -61,6 +61,14 @@ def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
     return s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
 
+def make_neighbors_graph(M):
+    """
+    Given the adjacemency matrix data, we construct a graph object to plot on the genus page
+    """
+    from sage.graphs.graph import Graph
+    G = Graph(unfill_isogeny_matrix(M), format='weighted_adjacency_matrix')
+    return G
+
 
 # breadcrumbs and links for data quality entries
 
@@ -213,6 +221,7 @@ genus_columns = SearchColumns([
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
     ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
     ProcessedCol("mass", "lattice.mass", "Mass", lambda v: r"$%s/%s$" % (v[0],v[1]) if len(v) > 1 else "", default=False),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False)
@@ -278,16 +287,23 @@ def render_genus_webpage(**args):
 
     bread = get_bread(f['label'])
     info['rank'] = int(f['rank'])
+
+    # Get signature and whether lattice is positive definite
     nplus = int(f['signature'])
     nminus = info['rank'] - nplus
     info['signature'] = (nplus, nminus)
+    info['is_positive_definite'] = (nminus==0)
+
     info['det'] = int(f['det'])
     info['level'] = int(f['level'])
     info['disc'] = int(f['disc'])
     info['conway_symbol'] = format_conway_symbol(f.get('conway_symbol', ''))
-    info['is_even'] = f.get('is_even', '')
+    info['dual_conway_symbol'] = format_conway_symbol(f.get('dual_conway_symbol', ''))
+    info['even_odd'] = 'Even' if f['is_even'] else 'Odd'
     info['gram'] = vect_to_matrix(vect_to_sym(f['rep']))
-    info['mass'] = f.get('mass', "?")
+
+    # Get the mass (if positive definite)
+    info['mass'] = str(f['mass'][0])+"/"+str(f['mass'][1]) if 'mass' in f else "?"
     info['class_number'] = f.get('class_number', "?")
     
     # Discriminant form data
@@ -296,9 +312,19 @@ def render_genus_webpage(**args):
     discriminant_form = f.get('discriminant_form', [])
     info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
 
-# This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
-#    if info['name'] != "" or info['comments'] !="":
-#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
+    # Adjaceny graph data
+    adjacency_primes = f['adjaceny_matrix'].keys() if 'adjaceny_matrix' in f else []
+    for p in adjacency_primes:
+        info['adjacency'][p]['poly'] = f['adjaceny_polynomials'][p]
+
+        adj_mat = f['adjaceny_graph'][p]
+        graph = make_graph(adj_mat)
+        P = graph.plot(edge_labels=True)
+        #info[p]['graph'] = make_neighbors_graph
+        graph_img = encode_plot(P, transparent=True)
+        info['adjacency'][p]['graph_link'] = '<img src="%s" width="200" height="150"/>' % graph_img
+
+    # Properties box
     info['properties'] = [
         ('Label', info['label']),
         ('Rank', prop_int_pretty(info['rank'])),
@@ -307,11 +333,10 @@ def render_genus_webpage(**args):
         ('Discriminant', prop_int_pretty(info['disc'])),
         ('Level', prop_int_pretty(info['level'])),
         ('Class Number', str(info['class_number'])),
-        ('Even/Odd', 'Even' if info['is_even'] else 'Odd')]
+        ('Even/Odd', info['even_odd'])]
     downloads = [("Underlying data", url_for(".genus_data", label=lab))]
 
     t = "Genus of integral lattices "+info['label']
-#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template(
         "genus-single.html",
         info=info,
@@ -430,6 +455,7 @@ class GenusSearchArray(SearchArray):
              ("det", "determinant", ['det', 'rank', 'signature', 'level', 'disc', 'label']),
              ("level", "level", ['level', 'rank', 'signature', 'det', 'disc', 'label']),
              ("disc", "discriminant", ['disc', 'rank', 'signature', 'det', 'level', 'label']),
+             ("class_number", "class number", ['class_number', 'rank', 'signature', 'det', 'level', 'disc', 'label']),
             ]
 
     def __init__(self):

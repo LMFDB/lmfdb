@@ -12,8 +12,11 @@
     <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{% if info.is_even %}Even{% else %}Odd{% endif %}</td></tr>
-    <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>${{info.mass}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Dual Conway Symbol') }}:</td><td>${{info.dual_conway_symbol}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{{info.even_odd}}</td></tr>
+    {% if info.is_positive_definite %}
+        <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>${{info.mass}}$</td></tr>
+    {% endif %}
 <td>
 </table>
 
@@ -28,6 +31,12 @@
 
 <h2> {{ KNOWL('lattice.adjacency_data', title='Adjacency Data') }} </h2>
 <p> todo </p>
+<table>
+{% for p in info.adjacency %}
+    <tr><td>$ p = {{ p }} $:</td><td>${{info.adjacency.p.poly}}$</td></tr>
+    <tr><td>{{info.adjacency.p.graph_link}}</td></tr>
+{% endfor %}
+</table>
 
 </h2>
 
