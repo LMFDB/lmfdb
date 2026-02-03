@@ -350,10 +350,11 @@ def render_lattice_webpage(**args):
 
     # Information about the dual lattice
     info['dual_conway_symbol'] = format_conway_symbol(f_genus.get('dual_conway_symbol', ''))
+    info['dual_label'] = f.get('dual_label', "not in database")
     if 'dual_theta_series' in f:
         coeff = [f['dual_theta_series'][i] for i in range(ncoeff + 1)]
         info['dual_theta_series'] = my_latex(print_q_expansion(coeff))
-        info['dual_theta_display'] = url_for(".theta_display", label=f['label'], number="")    
+        info['dual_theta_display'] = url_for(".dual_theta_display", label=f['label'], number="")    
 
 
     # Properties box
@@ -403,6 +404,22 @@ def theta_display(label, number):
     data = db.lat_lattices_new.lookup(label, projection=['theta_series'])
     coeff = [data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
+
+# auxiliary function for displaying more coefficients of the dual theta series
+# (todo: merge this with the above function)
+@lattice_page.route('/dual_theta_display/<label>/<number>')
+def dual_theta_display(label, number):
+    try:
+        number = int(number)
+    except Exception:
+        number = 20
+    if number < 20:
+        number = 30
+    number = min(number, 150)
+    data = db.lat_lattices_new.lookup(label, projection=['dual_theta_series'])
+    coeff = [data['dual_theta_series'][i] for i in range(number+1)]
+    return print_q_expansion(coeff)
+
 
 
 ######################

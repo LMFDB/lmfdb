@@ -74,14 +74,23 @@
 
 
 
-<h2> {{ KNOWL('lattice.dual_lattice', title='Dual Lattice') }} </h2>
+<h2> {{ KNOWL('lattice.dual', title='Dual Lattice') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Conway Symbol') }}:</td><td>${{info.dual_conway_symbol}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>${{info.dual_label}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.dual_conway_symbol}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.dual_det}}$</td></tr>
     {% if info.is_positive_definite %}
         <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.dual_density }}\dots$</td></tr>
         <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.dual_hermite }}\dots$</td></tr>
         <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>${{info.dual_kissing }}$</td></tr>
+    {% endif %}
+
+    {% if info.dual_theta_series %}
+        <tr><td>{{ KNOWL('lattice.theta', title='Theta Series') }}:</td>
+        <td><form>
+        <div class="lattice-output"><span id="dual_theta_output">{{info.dual_theta_series}}</span></div>
+        </form></td>
+        <tr><td></td><td><br><button id="morebutton_dual">More coefficients</button> </td></tr>
     {% endif %}
 </table>
 
@@ -123,8 +132,6 @@
 <!--<h2><a title = "{{info.label}} [lattice.data]" knowl= "lattice.data" kwargs={{info.knowl_args}}>Comments</a></h2>-->
 <h2>Comments</h2>
 
-
-
 {% if info.name != "" %}
 <p>This {{ KNOWL('lattice.definition', title='integral lattice') }} is the {{ info.name }} lattice.</p>
 {% endif %}
@@ -137,16 +144,26 @@
 <script type="text/javascript">
 var number_of_coefficients = 20;
 function more_handler(evt) {
-    number_of_coefficients = number_of_coefficients + 10;
+    number_of_coefficients += 10;
     evt.preventDefault();
     $("#theta_output").load("{{info.theta_display}}"+number_of_coefficients,
         function() {
-            {# render the output #}
             renderMathInElement($("#theta_output").get(0), katexOpts);
         });
 }
+var dual_number_of_coefficients = 20;
+function more_handler_dual(evt) {
+    dual_number_of_coefficients += 10;
+    evt.preventDefault();
+    $("#dual_theta_output").load("{{info.dual_theta_display}}"+dual_number_of_coefficients,
+        function() {
+            renderMathInElement($("#dual_theta_output").get(0), katexOpts);
+        });
+}
+
 $(function() {
     $("#morebutton").click(function(e) {more_handler(e)});
+    $("#morebutton_dual").click(function(e) {more_handler_dual(e)});
 });
 </script>
 
