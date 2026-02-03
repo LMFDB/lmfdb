@@ -254,9 +254,10 @@ lattice_columns = SearchColumns([
              properties=lambda: [])
 def lattice_search(info, query):
     for field, name in [('rank', 'Rank'), ('level', 'Level'),  ('class_number', 'Class number'),
-                        ('minimum', 'Minimal vector length'), ('aut_size', 'Group order')]: 
+                        ('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
+                        ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number')]: 
         parse_posints(info, query, field, name)
-    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
+    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant'), ('dual_det', 'Dual determinant')]:
         parse_ints(info, query, field, name)
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','signature'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
@@ -302,6 +303,8 @@ def render_lattice_webpage(**args):
     genus_label = info['genus_label']
     f_genus = db.lat_genera.lucky({'$or': [{'label': genus_label}]})
     
+    friends = []
+    friends.append(("Genus of this lattice", "/Lattice/Genus/%s" % genus_label))
 
     # Get signature and whether lattice is positive definite
     nplus = int(f['signature'])
@@ -326,7 +329,7 @@ def render_lattice_webpage(**args):
     info['download_gram'] = [
         (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma', 'sage']]
 
-    # Information about automorphism group
+    # Data about automorphism group
     if 'aut_group' in f:    
         info['aut_group'] = f['aut_group']
         info['aut_label'] = f['aut_label']
@@ -348,7 +351,7 @@ def render_lattice_webpage(**args):
     discriminant_form = f_genus.get('discriminant_form', [])
     info['discriminant_gram'] = vect_to_matrix(vect_to_sym2(discriminant_form))
 
-    # Information about the dual lattice
+    # Data about the dual lattice
     info['dual_conway_symbol'] = format_conway_symbol(f_genus.get('dual_conway_symbol', ''))
     info['dual_label'] = f.get('dual_label', "not in database")
     if 'dual_theta_series' in f:
@@ -376,10 +379,10 @@ def render_lattice_webpage(**args):
         title=t,
         bread=bread,
         properties=info['properties'],
+        friends=friends,
         downloads=downloads,
         learnmore=learnmore_list(),
         KNOWL_ID="lattice.%s" % info['label'])
-# friends=friends
 
 
 @lattice_page.route('/data/<label>')

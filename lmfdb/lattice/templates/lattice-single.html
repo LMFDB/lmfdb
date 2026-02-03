@@ -13,7 +13,8 @@
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
     <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{{info.even_odd}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.group_order', title='Group order') }}:</td><td>${{ info.aut_size }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>${{ info.aut_size }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.group_order', title='Aut group') }}:</td><td>${{ info.aut_label }}$</td></tr>
     {% if info.is_positive_definite %} 
         <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.density }}\dots$</td></tr>   
         <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.hermite }}\dots$</td></tr>
