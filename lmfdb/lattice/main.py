@@ -340,6 +340,7 @@ def render_lattice_webpage(**args):
         info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
 
     info['class_number'] = f.get('class_number', "?")
+    info['shortest'] = f.get('shortest', '')
 
     # Discriminant form data
     discriminant_group_invs = f.get('discriminant_group_invs', [])
