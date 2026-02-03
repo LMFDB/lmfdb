@@ -131,7 +131,7 @@ def lattice_render_webpage():
         bread = get_bread()
         info['stats'] = stats
         info['max_cn'] = stats.max_cn
-        info['max_dim'] = stats.max_dim
+        info['max_rank'] = stats.max_rank
         info['max_det'] = stats.max_det
         return render_template("lattice-index.html", info=info, title=t, learnmore=learnmore_list(), bread=bread)
     else:
@@ -142,7 +142,7 @@ def lattice_render_webpage():
 @lattice_page.route("/random")
 @redirect_no_cache
 def random_lattice():
-    return url_for(".render_lattice_webpage", label=db.lat_lattices.random())
+    return url_for(".render_lattice_webpage", label=db.lat_lattices_new.random())
 
 @lattice_page.route("/interesting")
 def interesting():
@@ -237,10 +237,7 @@ lattice_columns = SearchColumns([
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     MathCol("density", "lattice.density", "Density", default=False),
     MathCol("hermite", "lattice.hermite", "Hermite", default=False),
-    MathCol("kissing", "lattice.kissing", "Kissing", default=False),
-
-],
-
+    MathCol("kissing", "lattice.kissing", "Kissing", default=False)
 ])
 
 

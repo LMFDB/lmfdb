@@ -9,16 +9,21 @@
 
 <table class="browse">
   <tr>
-    <td>By {{ KNOWL('lattice.dimension', title='dimension') }}:</td>
-    <td>{% for rnge in info.dim_list %} <a href="?dim={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %}</td>
+    <td>By {{ KNOWL('lattice.dimension', title='rank') }}:</td>
+    <td>{% for r in info.dim_list %} <a href="?rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
-    <td>{% for rnge in info.det_list %} <a href="?det={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} $\cdots$</td>
+    <td>{% for d in info.det_list %} <a href="?det={{d}}">{{d}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.signature', title='signature') }}:</td>
+    <td>{% for sig in info.signature_list %} <a href="?signature={{ sig[0] }}">{{ sig[1] }}</a>&nbsp; {% endfor %} $\cdots$</td>
   </tr><tr>
     <td>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
     <td>{% for rnge in info.class_number_list %} <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></td>
+  </tr><tr>
+    <td colspan="2">Create a <a href="Genus/">search</a> for genera of integral lattices</td>
   </tr>
 </table>
 
