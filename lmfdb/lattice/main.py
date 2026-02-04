@@ -175,8 +175,7 @@ def lattice_by_label_or_name(lab):
     for l in [lab, clean_lab, clean_and_cap]:
         label = db.lat_lattices_new.lucky(
             {'$or':
-             [{'label': l},
-              {'name': {'$contains': [l]}}]},
+             [{'label': l}]},
             'label')
         if label is not None:
             return redirect(url_for(".render_lattice_webpage", label=label))
