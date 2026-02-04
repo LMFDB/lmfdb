@@ -258,8 +258,6 @@ def b_invariants(ainvs):
 
 def c_invariants(ainvs):
     b2, b4, b6 = b_invariants(ainvs)
-    print(f"{ainvs = }")
-    print(f"{b2 = }, {b4 = }, {b6 = }")
     return (b2**2 - 24*b4, -b2**3 + 36*b2*b4 - 216*b6)
 
 # return (A,B), Pmap where the simplified (short Weierstarass)
@@ -272,9 +270,6 @@ def simplify_equation(ainvs):
     c4,c6 = c_invariants(ai)
     A = -27*c4
     B = -54*c6
-    print(f"{ainvs = }")
-    print(f"{c4 = }, {c6 = }")
-    print(f"{A = }, {B = }")
     d = ZZ(1)
     for p in A.gcd(B).prime_divisors():
         while A.valuation(p) >= 4 and B.valuation(p) >= 6:
@@ -723,9 +718,6 @@ class WebEC():
                 proj_int_pts = [(xy[0],xy[1],1) for xy in int_pts]
                 # for the short points we only pick one of each +- pair, i.e. one per x-coordinate
                 short_int_pts = [Pmap((xys[0], xys[1][0])) for xys in zip(xintcoords,yintcoords)]
-                print(f"{int_pts = }")
-                print(f"{proj_int_pts = }")
-                print(f"{short_int_pts = }")
                 mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in int_pts),
                                                   ', '.join(web_latex(P) for P in int_pts))
                 mwbsd['proj_int_points'] = raw_typeset(', '.join(proj_pt_str(P) for P in proj_int_pts),
@@ -738,9 +730,6 @@ class WebEC():
                 # equation is the same as the minimal equation
                 short_int_pts = int_pts = [(x, make_y_coords(self.ainvs,x)[0]) for x in xintcoords]
                 proj_int_pts = [(xy[0],xy[1],1) for xy in int_pts]
-                print(f"{int_pts = }")
-                print(f"{proj_int_pts = }")
-                print(f"{short_int_pts = }")
                 all_int_pts = sum([[P, (P[0],-P[1])] if P[1] else [P] for P in int_pts], [])
                 all_proj_int_pts = sum([[P, (P[0],-P[1],P[2])] if P[1] else [P] for P in proj_int_pts], [])
                 mwbsd['int_points'] = raw_typeset(', '.join(str(P) for P in all_int_pts),
