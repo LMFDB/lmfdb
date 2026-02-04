@@ -239,7 +239,7 @@ lattice_columns = SearchColumns([
     MathCol("hermite", "lattice.hermite", "Hermite", default=False),
     MathCol("kissing", "lattice.kissing", "Kissing", default=False),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
-    MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi Veniani", default=False)
+    MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ])
 
 
@@ -260,7 +260,8 @@ def lattice_search(info, query):
                         ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
                          ]: 
         parse_posints(info, query, field, name)
-    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant'), ('dual_det', 'Dual determinant')]:
+    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant'),
+                        ('dual_det', 'Dual determinant'), ('festi_veniani_index', "Festi-Veniani Index")]:
         parse_ints(info, query, field, name)
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','signature'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
@@ -617,21 +618,27 @@ class LatSearchArray(SearchArray):
             example="2,4",
             example_span="2,4 or 2,2,8")
         kissing = TextBox(
-            name="kissing_number",
+            name="kissing",
             label="Kissing number",
             knowl="lattice.kissing",
             example="1")
         dual_det = TextBox(
             name="dual_det",
-            label="Dual Determinant",
+            label="Dual determinant",
             knowl="lattice.determinant",
             example="1",
             example_span="1 or 10-100")
         dual_kissing = TextBox(
-            name="dual_kissing_number",
-            label="Dual Kissing number",
+            name="dual_kissing",
+            label="Dual kissing number",
             knowl="lattice.kissing",
             example="1")
+        festi_veniani = TextBox(
+            name="festi_veniani_index",
+            label="Festi-Veniani Index",
+            knowl="lattice.festi_veniani_index",
+            example="1")
+
 
         count = CountBox()
 
@@ -643,11 +650,13 @@ class LatSearchArray(SearchArray):
             [aut_size, aut_label],
             [dual_det, dual_kissing],
             [disc_invs, gram],
-            [kissing, count]
+            [kissing, festi_veniani],
+            [count]
         ]
   
         self.refine_array = [
             [rank, signature, det, discriminant, level],
             [aut_size, aut_label, class_number, minimum, even_odd],
-            [dual_det, dual_kissing, disc_invs, kissing, gram]
+            [dual_det, dual_kissing, disc_invs, kissing, festi_veniani],
+            [gram]
         ]
