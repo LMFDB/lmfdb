@@ -358,7 +358,7 @@ class LMFDBSearchTable(PostgresSearchTable):
             """Return the amount of space available on the devmirror postgres filesystem"""
             editor_password = self._db.config.postgresql_options["password"]
             import pexpect
-            child = pexpect.spawn('ssh -o "StrictHostKeyChecking no" dfuser_ssh@devmirror.lmfdb.xyz')
+            child = pexpect.spawn('ssh -o "StrictHostKeyChecking no" -o PubkeyAuthentication=no -o PreferredAuthentications=password dfuser_ssh@devmirror.lmfdb.xyz')
             _ = child.expect("password:")
             _ = child.sendline(editor_password)
             _ = child.expect(pexpect.EOF)
