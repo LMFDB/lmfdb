@@ -152,10 +152,11 @@ class ECNF_isoclass():
             self.friends += [('L-function not available', "")]
 
         self.properties = [('Base field', self.field_name),
-                           ('Label', self.class_label),
-                           (None, self.graph_link),
-                           ('Conductor', '%s' % self.conductor_label)
-                       ]
+                           ('Label', self.class_label)]
+        if self.class_size>1:
+            self.properties.append((None, self.graph_link))
+        self.properties.append(('Conductor', '%s' % self.conductor_label))
+
         if self.rk != '?':
             self.properties += [('Rank', '%s' % self.rk)]
         else:

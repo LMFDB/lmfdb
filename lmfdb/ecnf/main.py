@@ -52,6 +52,9 @@ def learnmore_list():
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page"))]
 
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
+
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
     return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
@@ -91,6 +94,24 @@ def labels_page():
              ('Labels', '')]
     return render_template("single.html", kid='ec.curve_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+@ecnf_page.route("/CurvePictures")
+def curve_picture_page():
+    t = r'Pictures for elliptic curves over number fields'
+    bread = get_bread('Curve Pictures')
+    return render_template(
+        "single.html", kid='portrait.ec.nf',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
+
+@ecnf_page.route("/IsogenyPictures")
+def isog_picture_page():
+    t = r'Pictures of isogeny graphs of elliptic curves over number fields'
+    bread = get_bread('Isogeny Pictures')
+    return render_template(
+        "single.html", kid='ec.isogeny_graph',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
 
 
 @ecnf_page.route("/")
@@ -255,13 +276,14 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
+    learnmore_isog_picture = ('Picture description', url_for(".isog_picture_page"))
     return render_template("ecnf-isoclass.html",
                            title=title,
                            bread=bread,
                            cl=cl,
                            properties=cl.properties,
                            friends=cl.friends,
-                           learnmore=learnmore_list())
+                           learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size>1 else learnmore_list())
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<int:number>")
@@ -291,6 +313,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
     bread.append((ec.number, ec.urls['curve']))
     code = ec.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
+    learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
+    IQF = ec.signature == [0,1]
     info = {}
     return render_template("ecnf-curve.html",
                            title=title,
@@ -302,7 +326,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            downloads=ec.downloads,
                            info=info,
                            KNOWL_ID="ec.%s" % label,
-                           learnmore=learnmore_list())
+                           learnmore = learnmore_list() if IQF else learnmore_list_add(*learnmore_curve_picture))
 
 @ecnf_page.route("/data/<label>")
 def ecnf_data(label):
