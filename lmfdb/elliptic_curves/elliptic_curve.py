@@ -487,7 +487,7 @@ class ECDownloader(Downloader):
         "curve": (
             ["ainvs"],
             {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "sage": 'curve = EllipticCurve(out["ainvs"]){attach_lmfdb_label}',
                 "magma": 'curve := EllipticCurve(out`ainvs);',
                 "gp": 'curve = ellinit(mapget(out, "ainvs"));',
                 "oscar": 'curve = EllipticCurve(out["ainvs"])',
@@ -504,6 +504,15 @@ class ECDownloader(Downloader):
                 gens = [(ZZ(a) / c, ZZ(b) / c) for a, b, c in gens]
             row["mwgens"] = gens
         return row
+
+    def createrecord_code(self, lang, column_names):
+        # We override the createrecord_code subclass to attach the lmfdb label
+        # to the elliptic curve, if lang is Sage and "lmfdb_label" is in column_name
+        code = super().createrecord_code(lang, column_names)
+        attach_lmfdb_label = '\n    curve._lmfdb_label = out["lmfdb_label"]' if "lmfdb_label" in column_names else ""
+        code = code.replace("{attach_lmfdb_label}", attach_lmfdb_label)
+        return code
+
 
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
