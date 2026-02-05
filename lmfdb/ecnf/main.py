@@ -414,6 +414,7 @@ modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(
 class ECNFDownloader(Downloader):
     table = db.ec_nfcurves
     title = "Elliptic curves over number fields"
+    short_name = "curves"
 
     def postprocess(self, row, info, query):
         # Look up the defining polynomial coefficients for the base field of the curve
