@@ -151,6 +151,7 @@ def statistics():
     return render_template("display_stats.html", info=Genus_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
+# Regex for genus lattice label format
 genus_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:((?:\.[0-9a-zA-Z]+)*))\.([0-9a-fA-F]+)')
 
 def split_genus_label(lab):
@@ -169,7 +170,7 @@ def genus_by_label_or_name(lab):
     if genus_label_regex.match(lab):
         flash_error("The genus of integral lattices %s is not recorded in the database or the label is invalid", lab)
     else:
-        flash_error("No integral lattice in the database has label or name %s", lab)
+        flash_error("No genus of integral lattice in the database has label or name %s", lab)
     return redirect(url_for(".genus_render_webpage"))
 
 
