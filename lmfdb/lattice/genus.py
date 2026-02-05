@@ -3,7 +3,8 @@ import re
 import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
+from cypari2.handle_error import PariError
+from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round, pari
 
 #from lmfdb.local_fields.main import formatbracketcol
 from lmfdb.utils import (
@@ -136,7 +137,7 @@ def interesting():
     return interesting_knowls(
         "genus",
         db.lat_genera,
-        url_for_label=url_for_label,
+        url_for_label=url_for_genus,
         title=r"Some interesting genera of lattices",
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
@@ -193,20 +194,109 @@ def genus_search_equivalence(res, info, query):
             L2 = IntegralLattice(Matrix(ZZ, n, n, gram))
             if L.genus() == L2.genus():
                 query['gram'] = gram
-                proj = lattice_search_projection
+                proj = genus_search_projection
                 count = parse_count(info)
                 start = parse_start(info)
                 res = db.lat_genera.search(query, proj, limit=count, offset=start, info=info)
                 break
     return res
 
+def lattice_search_equivalence(res, info, query):
+    """
+    We check for equivalent genuses if the user enters a valid gram matrix
+    but not one stored in the database
 
-def url_for_label(label):
+    This may become slow in the future: at the moment we compare against
+    a list of stored matrices with same dimension, signature and determinant
+    (just compare with respect to dimension is slow)
+    """
+    if info['number'] == 0 and info.get('gram'):
+        A = query['gram']
+        n = len(A[0])
+        L = IntegralLattice(matrix(A))
+        det = matrix(A).determinant()
+        for rec in db.lat_lattices_new.search({'dim': n, 'det': int(det)}, ["canonical_gram", "gram"]):
+            if rec.get("canonical_gram"):
+                gram = rec["canonical_gram"]
+            elif rec.get("gram"):
+                gram = rec["gram"][0]
+            else:
+                continue
+            L2 = IntegralLattice(Matrix(ZZ, n, n, gram))
+            try:
+                U = pari(L.gram_matrix()).qfisom(pari(L2.gram_matrix()))
+            except PariError:
+                continue
+            else:
+                proj = genus_search_projection # FIXME: should eventually be lattice_search_projection
+                query['gram'] = gram
+                count = parse_count(info)
+                search = parse_start(info)
+                res = db.lat_genera.search(query, proj, limit=count, offset=start, info=info)
+                break
+    return res
+
+
+def url_for_genus(label):
     return url_for(".render_genus_webpage", label=label)
 
+def url_for_lattice(label):
+    return url_for(".render_lattice_webpage", label=label)
+
+lattice_columns = SearchColumns([
+    LinkCol("label", "lattice.label", "Label", url_for_lattice),
+    MathCol("rank", "lattice.dimension", "Rank"),
+    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
+    MathCol("det", "lattice.determinant", "Determinant"),
+    MathCol("disc", "lattice.discriminant", "Discriminant"),
+    MathCol("level", "lattice.level", "Level"),
+    MathCol("class_number", "lattice.class_number", "Class number", default=False),
+    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
+    ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False)
+    ])
+
+@search_wrap(table=db.lat_lattices_new,
+             title='Integral lattice search results',
+             err_title='Integral lattice search error',
+             columns=lattice_columns,
+             shortcuts={'download': Downloader(db.lat_lattices_new),
+                        'label': lambda info: lattice_by_label_or_name(info.get('label'))},
+             postprocess=lattice_search_equivalence,
+             url_for_label=url_for_lattice,
+             bread=lambda: get_bread("Search results"),
+             learnmore=learnmore_list,
+             properties=lambda: [])
+def genus_search(info, query):
+    for field, name in [('rank', 'Rank'), ('level', 'Level'), ('class_number', 'Class number')]:
+        parse_posints(info, query, field, name)
+    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
+        parse_ints(info, query, field, name)
+    parse_bracketed_posints(info, query, 'signature', qfield=('rank','signature'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
+
+    # Handle even/odd search
+    parity = info.get('is_even')
+    if parity:
+        if parity == 'even':
+            query['is_even'] = True
+        elif parity == 'odd':
+            query['is_even'] = False
+    # Check if length of gram is triangular
+    gram = info.get('gram')
+    if gram:
+        # Validate that the number of entries forms a triangular number
+        entries = re.sub(r"[\[\]]", "", gram).split(",")
+        num_entries = len(entries)
+        # Check if num_entries = n(n+1)/2 for some integer n
+        if not ZZ(1 + 8*num_entries).is_square():
+            flash_error("%s is not a valid input for Gram matrix. It must be a list of integer vectors of triangular length, such as [1,2,3] for a 2x2 matrix.", gram)
+            #raise ValueError("Invalid Gram matrix input")
+    parse_list(info, query, 'gram', process=vect_to_sym)
+    parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
 
 genus_columns = SearchColumns([
-    LinkCol("label", "lattice.label", "Label", url_for_label),
+    LinkCol("label", "lattice.label", "Label", url_for_genus),
     MathCol("rank", "lattice.dimension", "Rank"),
     MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
     MathCol("det", "lattice.determinant", "Determinant"),
@@ -227,7 +317,7 @@ genus_columns = SearchColumns([
              shortcuts={'download': Downloader(db.lat_genera),
                         'label': lambda info: genus_by_label_or_name(info.get('label'))},
              postprocess=genus_search_equivalence,
-             url_for_label=url_for_label,
+             url_for_label=url_for_genus,
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              properties=lambda: [])
@@ -240,7 +330,6 @@ def genus_search(info, query):
 
     # Handle even/odd search
     parity = info.get('is_even')
-    #assert(False)
     if parity:
         if parity == 'even':
             query['is_even'] = True
@@ -349,7 +438,7 @@ def render_genus_webpage(**args):
 def genus_data(label):
     if not genus_label_regex.fullmatch(label):
         return abort(404, f"Invalid label {label}")
-    bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
+    bread = get_bread([(label, url_for_genus(label)), ("Data", " ")])
     title = f"Genus data - {label}"
     return datapage(label, "lat_genera", title=title, bread=bread)
 
