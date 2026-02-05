@@ -366,13 +366,20 @@ class CSVLanguage(DownloadLanguage):
 
     def assign_columns(self, columns, column_names):
         urlparts = urlparse(request.url)
-        urls = [urlunparse(urlparts._replace(
-            path=url_for("knowledge.show", ID=col.knowl),
-            params="",
-            query="",
-            fragment="")) for col in columns]
-        return self.write([f'=HYPERLINK("{url}", "{name}")'
-                           for url, name in zip(urls, column_names)])
+        out = []
+        for col, name in zip(columns, column_names):
+            # Make hyperlink of column name, if col.knowl exists
+            if getattr(col, "knowl", None):
+                url = urlunparse(urlparts._replace(
+                    path=url_for("knowledge.show", ID=col.knowl),
+                    params="",
+                    query="",
+                    fragment=""
+                ))
+                out.append(f'=HYPERLINK("{url}", "{name}")')
+            else:
+                out.append(name)  # Else fallback to just column name
+        return self.write(out)
 
     def assign_iter(self, name, inp):
         # For CSV downloads, we only output data rows since CSV does not support comments
