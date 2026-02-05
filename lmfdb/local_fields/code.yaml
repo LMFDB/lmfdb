@@ -1,0 +1,60 @@
+prompt:
+  sage:   'sage'
+  magma:  'magma'
+
+logo:
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+field:
+  comment: Define the p-adic field
+  sage:  |
+    Prec = 100  # Default precision of 100
+    Q{p} = Qp({p}, Prec); x = polygen(QQ)
+    {sage_construct_field}
+  magma: |
+    Prec := 100;  // Default precision of 100
+    Q{p} := pAdicField({p}, Prec);
+    K := LocalField(Q{p}, Polynomial(Q{p}, {coeffs}));
+
+poly:
+  comment: Defining polynomial
+  sage:  K.defining_polynomial()
+  magma: DefiningPolynomial(K);
+
+base_field:
+  comment: Base field Qp
+  sage: K.base()
+  magma: Q{p};
+
+degree:
+  comment: Degree over Qp
+  sage:  K.absolute_degree()
+  magma: Degree(K);
+
+ramification_index:
+  comment: Ramification index
+  sage: K.absolute_e()
+  magma:  RamificationIndex(K);
+
+residue_degree:
+  comment: Residue field degree (Inertia degree)
+  sage: K.absolute_f()
+  magma: InertiaDegree(K);
+
+disc_exponent:
+  magma: Valuation(Discriminant(K));
+
+unramified_subfield:
+  comment: Maximal unramified subextension
+  sage: K.maximal_unramified_subextension()
+
+roots_of_unity:
+  comment: Roots of unity
+  sage: len(K.roots_of_unity())
