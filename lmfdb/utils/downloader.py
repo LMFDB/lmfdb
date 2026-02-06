@@ -812,7 +812,7 @@ class Downloader():
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
                 defines_re = re.compile(r"""\{\{\s*DEFINES\(\s*"([^"]+)"[^)]*\)\s*\}\}""")
-                jinja_comment_re = re.compile(r"""\{#.*#\}""")
+                jinja_comment_re = re.compile(r"""\{#.*?#\}""")
 
                 def knowl_subber(match):
                     return match.group(1)
