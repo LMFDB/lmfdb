@@ -811,10 +811,14 @@ class Downloader():
                 from lmfdb.knowledge.knowl import knowldb
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
-                jinja_comment_re = re.compile(r"\{#.*?#\}")
+                defines_re = re.compile(r"""\{\{\s*DEFINES\(\s*"([^"]+)"[^)]*\)\s*\}\}""")
+                jinja_comment_re = re.compile(r"""\{#.*?#\}""")
 
                 def knowl_subber(match):
                     return match.group(1)
+                def defines_subber(match):
+                    word = match.group(1)
+                    return f"**{word}**"
 
             # If we haven't specified a more specific download_desc, we use the column knowl to get a string to add to the bottom of the file for each column
             for col, name in zip(cols, column_names):
@@ -822,10 +826,11 @@ class Downloader():
                     knowldata = all_knowls.get(col.knowl)
                     if knowldata is None:
                         continue
-                    # We want to remove KNOWL macros
+                    # We want to remove KNOWL and DEFINES macros
                     _, content = knowldata
                     knowl = knowl_re.sub(knowl_subber, content)
-                    # We also want to remove Jinja comments
+                    knowl = defines_re.sub(defines_subber, knowl)
+                    # We also want to remove Jinja comments (i.e. {# ... #})
                     knowl = jinja_comment_re.sub("", knowl)
                 else:
                     knowl = col.download_desc
