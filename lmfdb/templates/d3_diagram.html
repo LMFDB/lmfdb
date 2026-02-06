@@ -1,0 +1,366 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<!-- TODO: replace this with a diagram-specific search form -->
+{% include 'refine_search_form.html' %}
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.js"> </script>
+
+<!-- Container for diagram and controls -->
+<div id="diagram-container" style="position: relative;" >
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+<!-- Control panel -->
+<div style="margin-top: 20px; margin-left: 60px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; display: inline-block;">
+  <div style="margin-bottom: 15px;">
+    <label for="pointRadius">Point Radius: <span id="radiusValue">1.5</span></label>
+    <input type="range" id="pointRadius" min="0.5" max="10" value="1.5" step="0.2" style="width: 200px; margin-left: 10px; vertical-align: middle;">
+  </div>
+  <div style="display: grid; grid-template-columns: auto auto; gap: 10px 20px; margin-bottom: 15px; align-items: center;">
+    <div>
+      <label for="xMax">xMax:</label>
+      <input type="number" id="xMax" value="" step="any" style="width: 80px; margin-left: 10px;">
+    </div>
+    <div>
+      <label for="yMax">yMax:</label>
+      <input type="number" id="yMax" value="" step="any" style="width: 80px; margin-left: 10px;">
+    </div>
+    <div>
+      <label for="xMin">xMin:</label>
+      <input type="number" id="xMin" value="" step="any" style="width: 80px; margin-left: 10px;">
+    </div>
+    <div>
+      <label for="yMin">yMin:</label>
+      <input type="number" id="yMin" value="" step="any" style="width: 80px; margin-left: 10px;">
+    </div>
+  </div>
+  <div style="text-align: right;">
+    <button id="updateAxes" style="margin-right: 10px;">Update</button>
+    <button id="resetAxes">Reset</button>
+  </div>
+</div>
+
+</div><!-- End diagram-container -->
+
+<!-- TODO: allow axes to be set dynamically -->
+<!-- TODO: Prettify axes -->
+<!-- TODO: implement zoom and drag -->
+<!-- TODO: Remove "random" and sort order buttons -->
+<!-- TODO: Make the js code asynchronous, so the page can load quicker (?) -->
+<!-- TODO: Implement gridlines -->
+<!-- TODO: Set size of points -->
+<!-- TODO: Set color scheme -->
+
+
+<script>
+  // import {Legend} from "@d3/color-legend"
+  // set the dimensions and margins of the graph
+  const data = {{ info.get("d3_data") | tojson | safe }};
+  console.log(data)
+  // Convert string values to numbers to ensure proper numeric comparison
+  data.forEach(d => {
+      d.x = parseFloat(d.x);
+      d.y = parseFloat(d.y);
+      d.color = parseFloat(d.color);
+  });
+
+  var margin = {top: 30, right: 30, bottom: 40, left: 100},
+
+      width = 1000 - margin.left - margin.right,
+      height = 400 - margin.top - margin.bottom;
+
+  // append the svg object to the body of the page
+  var svg = d3.select("#my_dataviz")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+
+  // Create main chart group with transform
+  var chartGroup = svg.append("g")
+      .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+  // Add clipPath to prevent points from being drawn outside chart area
+  chartGroup.append("defs").append("clipPath")
+      .attr("id", "clip")
+      .append("rect")
+      .attr("width", width)
+      .attr("height", height);
+
+  // create a tooltip
+  var Tooltip = d3.select("#my_dataviz")
+      .append("div")
+      .style("opacity", 0)
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "2px")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
+      .style("z-index", "1000")
+  // Three functions that change the tooltip when user hover / move / leave a cell
+  var mouseover = function(d) {
+      Tooltip
+	  .style("opacity", 1)
+      d3.select(this)
+	  .style("stroke", "black")
+	  .style("opacity", 1)
+  }
+  var mousemove = function(d) {
+      Tooltip
+	  .html("Label is " + d.label)
+	  .style("left", (d3.mouse(this)[0] + 70) + "px")
+	  .style("top", (d3.mouse(this)[1] - 20) + "px")
+  }
+  var mouseleave = function(d) {
+      Tooltip
+	  .style("opacity", 0)
+      d3.select(this)
+	  .style("stroke", "none")
+	  .style("opacity", 0.8)
+  }
+  const baseUrl = window.location.origin;
+
+  // TODO: replace schemeBlues with user-selected color scheme
+  function countUnique(arr) {
+      return new Set(arr).size;
+  }
+  var numCols = countUnique(data.map(d => d.color));
+
+  const colorScale = d3.scaleSequential().domain([0, numCols]).interpolator(d3.interpolateBlues);
+  
+  var pointRad = 1.5;
+  
+  // Function to calculate default axis range with 10% leeway on both ends
+  // Returns [min, max] where min is 0 if all positive, otherwise min - 10% spread
+  // and max is max + 10% spread
+  function defaultAxisRange(data, accessor) {
+      const values = data.map(accessor);
+      const min = d3.min(values);
+      const max = d3.max(values);
+      const spread = max - min;
+      
+      // Min: 0 if all positive, otherwise min - 10% of spread
+      const axisMin = (min >= 0) ? 0 : min - (spread / 10);
+      // Max: max + 10% of spread
+      const axisMax = max + (spread / 10);
+      
+      return [axisMin, axisMax];
+  }
+  
+  // Calculate default values from data
+  const [defaultXMin, defaultXMax] = defaultAxisRange(data, d => d.x)
+  const [defaultYMin, defaultYMax] = defaultAxisRange(data, d => d.y)
+  
+  // Current values (mutable)
+  var currentXMin = defaultXMin
+  var currentXMax = defaultXMax
+  var currentYMin = defaultYMin
+  var currentYMax = defaultYMax
+
+  // Axis labels from info
+  const xAxisLabel = {{ info.get('x-axis') | tojson }}
+  const yAxisLabel = {{ info.get('y-axis') | tojson }}
+
+  // Initialize input fields with default values
+  d3.select("#xMin").property("value", currentXMin)
+  d3.select("#xMax").property("value", currentXMax)
+  d3.select("#yMin").property("value", currentYMin)
+  d3.select("#yMax").property("value", currentYMax)
+
+  // Create axis groups (so they can be cleared and redrawn)
+  var xAxisGroup = chartGroup.append("g").attr("class", "x-axis")
+  var yAxisGroup = chartGroup.append("g").attr("class", "y-axis")
+  var pointsGroup = chartGroup.append("g").attr("class", "points").attr("clip-path", "url(#clip)")
+
+  // Add X axis label
+  chartGroup.append("text")
+      .attr("x", width / 2)
+      .attr("y", height + margin.bottom - 5)
+      .style("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .style("font-family", "sans-serif")
+      .text(xAxisLabel)
+
+  // Add Y axis label at top left
+  chartGroup.append("text")
+      .attr("x", -0)
+      .attr("y", -12)
+      .style("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .style("font-family", "sans-serif")
+      .text(yAxisLabel)
+  
+  // Scales (will be updated when axes change)
+  var x, y
+
+  // Store initial domain for zoom reset
+  const initialXDomain = [currentXMin, currentXMax]
+  const initialYDomain = [currentYMin, currentYMax]
+  // Legend(d3.scaleSequential([0,100], d3.scaleBlue), {
+  //     title: "{{ info.get('color') | tojson }}"
+  // })
+  // Function to update chart with new axes
+  function updateChart() {
+      // Update scales
+      x = d3.scaleLinear()
+          .domain([currentXMin, currentXMax])
+          .range([0, width])
+
+      y = d3.scaleLinear()
+          .domain([currentYMin, currentYMax])
+          .range([height, 0])
+
+      // Update X axis
+      xAxisGroup.attr("transform", "translate(0," + height + ")")
+          .transition()
+          .duration(300)
+          .call(d3.axisBottom(x))
+
+      // Update Y axis
+      yAxisGroup.transition()
+          .duration(300)
+          .call(d3.axisLeft(y))
+
+      // Update points with new scales
+      var circles = pointsGroup.selectAll("circle")
+          .data(data)
+
+      // Update existing points
+      circles.transition()
+          .duration(300)
+          .attr("cx", d => x(d.x))
+          .attr("cy", d => y(d.y))
+
+      // Enter new points (if any)
+      circles.enter()
+          .append("circle")
+          .attr("cx", d => x(d.x))
+          .attr("cy", d => y(d.y))
+          .attr("r", pointRad)
+          .style("fill", d => colorScale(d.color))
+          .style("opacity", 0.8)
+          .on("mouseover", mouseover)
+          .on("mousemove", mousemove)
+          .on("mouseleave", mouseleave)
+          .on("click", (d) => {
+              window.location.href = `${baseUrl}/${d.path}`;
+          })
+  }
+
+  // Create zoom behavior
+  var zoom = d3.zoom()
+      .scaleExtent([0.5, 50])  // Limit zoom scale
+      .extent([[0, 0], [width, height]])
+      .on("zoom", zoomed);
+
+  // Apply zoom to the svg
+  svg.call(zoom);
+
+  // Zoom event handler
+  function zoomed() {
+      // Get transformed scales
+      var newX = d3.event.transform.rescaleX(x);
+      var newY = d3.event.transform.rescaleY(y);
+
+      // Update axes with transformed scales
+      xAxisGroup.call(d3.axisBottom(newX));
+      yAxisGroup.call(d3.axisLeft(newY));
+
+      // Update points with transformed scales
+      pointsGroup.selectAll("circle")
+          .attr("cx", d => newX(d.x))
+          .attr("cy", d => newY(d.y));
+
+      // Update current domain for input fields
+      currentXMin = newX.domain()[0];
+      currentXMax = newX.domain()[1];
+      currentYMin = newY.domain()[0];
+      currentYMax = newY.domain()[1];
+
+      // Update input fields
+      d3.select("#xMin").property("value", currentXMin);
+      d3.select("#xMax").property("value", currentXMax);
+      d3.select("#yMin").property("value", currentYMin);
+      d3.select("#yMax").property("value", currentYMax);
+  }
+
+  // Initial render
+  updateChart()
+
+  // Slider event listener to dynamically update point radius
+  d3.select("#pointRadius").on("input", function() {
+      const newRadius = +this.value;
+      d3.select("#radiusValue").text(newRadius);
+      pointRad = newRadius;
+      
+      d3.selectAll("circle")
+          .transition()
+          .duration(100)
+          .attr("r", newRadius);
+  });
+  
+  // Function to update axes from input fields
+  function updateAxesFromInputs() {
+      const newXMin = +d3.select("#xMin").property("value")
+      const newXMax = +d3.select("#xMax").property("value")
+      const newYMin = +d3.select("#yMin").property("value")
+      const newYMax = +d3.select("#yMax").property("value")
+      
+      // Validate inputs
+      if (newXMax > newXMin && newYMax > newYMin) {
+          currentXMin = newXMin
+          currentXMax = newXMax
+          currentYMin = newYMin
+          currentYMax = newYMax
+          updateChart()
+      } else {
+          alert("xMax must be > xMin and yMax must be > yMin")
+      }
+  }
+  
+  // Update button event listener
+  d3.select("#updateAxes").on("click", updateAxesFromInputs);
+  
+  // Enter key event listeners for all axis input fields
+  d3.selectAll("#xMin, #xMax, #yMin, #yMax").on("keydown", function() {
+      if (d3.event.key === "Enter" || d3.event.keyCode === 13) {
+          updateAxesFromInputs();
+      }
+  });
+  
+  // Reset button event listener
+  d3.select("#resetAxes").on("click", function() {
+      currentXMin = defaultXMin
+      currentXMax = defaultXMax
+      currentYMin = defaultYMin
+      currentYMax = defaultYMax
+      d3.select("#xMin").property("value", currentXMin)
+      d3.select("#xMax").property("value", currentXMax)
+      d3.select("#yMin").property("value", currentYMin)
+      d3.select("#yMax").property("value", currentYMax)
+      d3.select("#pointRadius").property("value", 1.5)
+      d3.select("#radiusValue").text(1.5)
+      pointRad = 1.5
+
+      // Reset zoom transform
+      svg.transition()
+          .duration(300)
+          .call(zoom.transform, d3.zoomIdentity);
+
+      updateChart()
+
+      // Update point radii
+      d3.selectAll("circle")
+          .transition()
+          .duration(100)
+          .attr("r", pointRad);
+  });
+
+</script>
+{%- endblock content %}

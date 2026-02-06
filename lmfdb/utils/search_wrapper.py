@@ -10,6 +10,9 @@ from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingEr
 from lmfdb.utils.utilities import flash_error, flash_info, flash_success, to_dict
 from lmfdb.utils.completeness import results_complete
 
+# For diagram_wrap:
+from psycodict.base import number_types
+from .search_boxes import SelectBox, CountBox
 
 def use_split_ors(info, query, split_ors, offset, table):
     """
@@ -453,7 +456,7 @@ class EmbedWrapper(Wrapper):
                 return render_template(template, info=info, title=err_title, **template_kwds)
             info["results"] = res
             return render_template(template, info=info, title=title, **template_kwds)
-
+       
 class YieldWrapper(Wrapper):
     """
     A variant on search wrapper that is intended to replace the database table with a Python function
@@ -531,6 +534,166 @@ class YieldWrapper(Wrapper):
             info["results"] = res
         return render_template(template, info=info, title=title, **template_kwds)
 
+class DiagramWrapper(Wrapper):
+    """
+    A variant on search wrapper that is intended for displaying data in d3.js
+    """
+    def __init__(
+        self,
+            f,
+            template="d3_diagram",
+            table=None,
+            title=None,
+            url_for_label=None,
+            err_title=None,
+            columns=None,
+            projection=1,
+            split_ors=None,
+            x_axis_default = None,
+            y_axis_default = None,
+            **kwds,
+    ):
+        super().__init__(f, template, table, title, err_title, **kwds)
+        self.columns = columns
+        self.split_ors = split_ors
+        self.url_for_label = url_for_label
+        self.x_axis_default = x_axis_default
+        self.y_axis_default = y_axis_default
+        
+        if columns is None:
+            self.projection = projection
+        else:
+            self.projection = columns.db_cols
+
+    def __call__(self, info):
+        info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
+        #  if search_type starts with 'Random' returns a random label
+        search_type = info.get("search_type", info.get("hst", ""))
+        info["search_type"] = search_type
+        info["columns"] = self.columns
+        
+            
+        # TODO: modify search array to remove random
+        SA = info.get("search_array")
+        numerical_fields = [(col, col) for (col, t) in self.table.col_type.items()
+                            if t in number_types.keys()]
+        binary_fields = [(col, col) for (col, t) in self.table.col_type.items() if t == "boolean"]
+
+        diagram_boxes = [
+            SelectBox(
+                name = "x-axis",
+                label = "x-axis",
+                options = numerical_fields,
+            ),
+            SelectBox(
+                name = "y-axis",
+                label = "y-axis",
+                options = numerical_fields,
+            ),
+            SelectBox(
+            name = "color",
+            label = "color",
+            options = numerical_fields + binary_fields
+            ),
+        ]
+        
+        # Add extra boxes if not already present.
+        # Checking all fields ensures that we don't add an extra
+        # set of boxes when the search is updated (which the naive solution does).
+        
+        if not any([x.name == "x-axis" for arr in SA.browse_array for x in arr]):
+            SA.browse_array.append(diagram_boxes)
+        if not any([x.name == "x-axis" for arr in SA.refine_array for x in arr]):
+            SA.refine_array.append(diagram_boxes + [CountBox()])
+        
+        info["search_array"] = SA
+
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        data = self.make_query(info, False)
+        if not isinstance(data, tuple):
+            return data
+        query, sort, table, title, err_title, template, one_per = data
+
+        # TODO: make sure we only search for fields that we actually need! 
+        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
+        # These virtual columns won't be present in the database, so we just strip them out
+        # We have to do this here since we didn't have access to the table in __init__
+        
+        proj = query.pop("__projection__", self.projection)
+        print("Projection is", proj)
+        if isinstance(proj, list):
+            proj = [col for col in proj if col in table.search_cols]
+
+        num_res = info.get("count")
+        print("\n\n INFO = ", info, "\n\n NUM_RES:", num_res)
+        count = parse_count(info, num_res) if num_res is not None else 303
+        start = parse_start(info)
+        try:
+            split_ors = not one_per and use_split_ors(info, query, self.split_ors, start, table)
+            res = table.search(
+                query,
+                proj,
+                limit=count,
+                offset=start,
+                sort=sort,
+                info=info,
+                one_per=one_per,
+                split_ors=split_ors,
+            )
+        except QueryCanceledError as err:
+            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+        except SearchParsingError as err:
+            # These can be raised when the query includes $raw keys.
+            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+        except NumericValueOutOfRange as err:
+            # This is caused when a user inputs a number that's too large for a column search type
+            return self.oob_error(info, query, err, err_title, template, template_kwds)
+        else:
+            try:
+                if self.postprocess is not None:
+                    res = self.postprocess(res, info, query)
+            except ValueError as err:
+                # Errors raised in postprocessing
+                flash_error(str(err))
+                info["err"] = str(err)
+                return render_template(
+                    template, info=info, title=err_title, **template_kwds
+                )
+            if not res:
+                return render_template(template, info=info, title=title, **template_kwds)
+            
+            def make_d3_data(info, res):
+                # TODO: this can probably be refactored
+                if "x-axis" not in info:
+                    if self.x_axis_default is not None:
+                        info["x-axis"] = self.x_axis_default
+                    else:
+                        info["x-axis"] = numerical_fields[0]
+
+                if "y-axis" not in info:
+                    if self.y_axis_default is not None:
+                        info["y-axis"] = self.y_axis_default
+                    else:
+                        info["y-axis"] = numerical_fields[1]
+
+                x_key = info["x-axis"]
+                y_key = info["y-axis"]
+                col_key = info.get("color")
+                print(info["count"])
+                return [ {"x": str(r[x_key]),
+                          "y": str(r[y_key]),
+                          "color": str(r.get(col_key)),
+                          "path": self.url_for_label(r["label"]),
+                          "label": r["label"],
+                          } for r in res ]
+
+
+            
+            info["d3_data"] = make_d3_data(info, res)
+                              
+            # Display warning message if user searched on column(s) with null values
+            return render_template(template, info=info, title=title, **template_kwds)
+
 
 @decorator_keywords
 def search_wrap(f, **kwds):
@@ -547,3 +710,7 @@ def embed_wrap(f, **kwds):
 @decorator_keywords
 def yield_wrap(f, **kwds):
     return YieldWrapper(f, **kwds)
+
+@decorator_keywords
+def diagram_wrap(f, **kwds):
+    return DiagramWrapper(f, **kwds)

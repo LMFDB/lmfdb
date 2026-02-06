@@ -49,7 +49,7 @@ from lmfdb.utils.search_parsing import (
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
-    search_wrap, list_to_factored_poly_otherorder, flash_error,
+    search_wrap, diagram_wrap, list_to_factored_poly_otherorder, flash_error,
     parse_primes, coeff_to_poly, Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
@@ -383,6 +383,19 @@ def l_function_search(info, query):
         info["title"] = "Rational L-function search results"
     common_parse(info, query)
 
+@diagram_wrap(template="d3_diagram.html",
+             table=db.lfunc_search,
+             postprocess=process_search,
+             title="L-function diagrams",
+             err_title="L-function search input error",
+             x_axis_default="conductor",
+             y_axis_default="z1",
+             columns=lfunc_columns,
+             url_for_label=url_for_lfunction,
+             learnmore=learnmore_list,
+             bread=lambda: get_bread(breads=[("Search results", " ")]))
+def diagram_search(info, query):
+    common_parse(info, query)
 
 @search_wrap(template="LfunctionTraceSearchResults.html",
              table=db.lfunc_search,
@@ -1789,6 +1802,12 @@ def browseGraphHolo():
 @l_function_page.route("/browseGraphHoloNew/")
 def browseGraphHoloNew():
     return render_browseGraphHoloNew(request.args)
+
+@l_function_page.route("/diagram/")
+def browseDiagram():
+    info = to_dict(request.args, search_array=LFunctionSearchArray())
+    return diagram_search(info)
+            
 
 ###########################################################################
 #   Functions for rendering graphs for browsing L-functions.
