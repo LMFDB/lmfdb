@@ -811,6 +811,7 @@ class Downloader():
                 from lmfdb.knowledge.knowl import knowldb
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
+                jinja_comment_re = re.compile(r"\{#.*?#\}")
 
                 def knowl_subber(match):
                     return match.group(1)
@@ -824,6 +825,8 @@ class Downloader():
                     # We want to remove KNOWL macros
                     _, content = knowldata
                     knowl = knowl_re.sub(knowl_subber, content)
+                    # We also want to remove Jinja comments
+                    knowl = jinja_comment_re.sub("", knowl)
                 else:
                     knowl = col.download_desc
                 if knowl:
