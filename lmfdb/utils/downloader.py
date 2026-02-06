@@ -816,6 +816,7 @@ class Downloader():
 
                 def knowl_subber(match):
                     return match.group(1)
+
                 def defines_subber(match):
                     word = match.group(1)
                     return f"**{word}**"
