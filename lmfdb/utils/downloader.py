@@ -268,7 +268,7 @@ class GPLanguage(DownloadLanguage):
     true = '1'
     false = '0'
     offset = 1
-    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
+    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data();"'
     function_start = '{func_name}({func_args}) =\n{{\n' # Need double bracket since we're formatting these
     function_end = '}\n'
     return_keyword = 'return('
@@ -378,7 +378,7 @@ class CSVLanguage(DownloadLanguage):
                 ))
                 out.append(f'=HYPERLINK("{url}", "{name}")')
             else:
-                out.append(name)  # Else fallback to just column name
+                out.append(name) # Else fallback to just column name
         return self.write(out)
 
     def assign_iter(self, name, inp):
