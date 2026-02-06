@@ -30,7 +30,6 @@ weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+),(-?\d+),(-?\d+),(-?\d+)\]
 short_weierstrass_eqn_regex = re.compile(r'\[(-?\d+),(-?\d+)\]')
 modm_not_computed_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\?)')
 
-
 def match_coeff_vec(lab):
     return ZLIST_RE.fullmatch(lab)
 
@@ -396,13 +395,24 @@ class WebEC():
         galois_data = list(db.ec_galrep.search({'lmfdb_label': lmfdb_label}))
         data['galois_data'] = [r for r in galois_data if r["prime"] > 0]
         for gd in data['galois_data']:
+            s = gd['elladic_image'].split('.')
             if self.cm:
-                if self.cm in [-3,-4]:
-                    gd['elladic_index'] = '?'
+                if self.cm == -3:
+                    # for j=0 nonmaximal elladic-images have index 3 for ell > 3 (see https://arxiv.org/abs/1809.02584v3 Theorem 1.4)
+                    # for ell=2,3 the index can very but is always determined by the image mod 16,27, respectively
+                    # the dictionary below lists the index of the maximal image for j=0 modulo relevant powers of 2,3
+                    j0_elladic_indices = { 2:1, 3:4, 4:4, 8:16, 9:36, 16:64, 27:324 }
+                    gd['elladic_index'] = 3 if gd["prime"] > 3 else int(s[1]) // j0_elladic_indices[int(s[0])]
+                elif self.cm == -4:
+                    # for j=1728 the elladic image is maximal except possibly at 2 (see https://arxiv.org/abs/1809.02584v3 Theorem 1.2(4))
+                    # for ell=2 the index can vary but is always determined by the image mod 16
+                    # the dictionary below lists the index of the maximal image for j=1728 modulo relevant powers of 2
+                    j1728_elladic_indices = { 2:3, 4:6, 8:24, 16:96 }
+                    gd['elladic_index'] = int(s[1]) // j1728_elladic_indices[int(s[0])]
                 else:
                     gd['elladic_index'] = 2
             else:
-                gd['elladic_index'] = gd['elladic_image'].split('.')[1]
+                gd['elladic_index'] = s[1]
         adelic_data = [r for r in galois_data if r["prime"] == 0]
         if adelic_data:
             assert len(adelic_data) == 1
