@@ -283,7 +283,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            cl=cl,
                            properties=cl.properties,
                            friends=cl.friends,
-                           learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size>1 else learnmore_list())
+                           learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size > 1 else learnmore_list())
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<int:number>")
@@ -326,7 +326,7 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            downloads=ec.downloads,
                            info=info,
                            KNOWL_ID="ec.%s" % label,
-                           learnmore = learnmore_list() if IQF else learnmore_list_add(*learnmore_curve_picture))
+                           learnmore=learnmore_list() if IQF else learnmore_list_add(*learnmore_curve_picture))
 
 @ecnf_page.route("/data/<label>")
 def ecnf_data(label):
