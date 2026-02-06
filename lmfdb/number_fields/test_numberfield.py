@@ -97,3 +97,27 @@ class NumberFieldTest(LmfdbTest):
     def test_errors(self):
         self.check_args('NumberField/18.0.10490638424...4432.1/download/sage', 'Invalid label')
         self.check_args('NumberField/4.3.2.1/download/sage', 'There is no number field with label 4.3.2.1')
+
+    def test_signature_download(self):
+        # Test that signature is downloaded as [r1, r2] not [r2, degree]
+        # For degree 2 fields with negative discriminant: signature is [0, 1] (complex)
+        # For degree 2 fields with positive discriminant: signature is [2, 0] (real)
+        url = ('/NumberField/?download=1'
+               '&query=%7B%27degree%27%3A+2%2C+%27%24or%27%3A+%5B%7B%27disc_sign%27%3A+'
+               '-1%2C+%27disc_abs%27%3A+%7B%27%24gte%27%3A+1%2C+%27%24lte%27%3A+3%7D%2C+'
+               '%27degree%27%3A+2%7D%2C+%7B%27disc_sign%27%3A+1%2C+%27disc_abs%27%3A+'
+               '%7B%27%24lte%27%3A+5%2C+%27%24gte%27%3A+1%7D%2C+%27degree%27%3A+2%7D%5D%7D'
+               '&degree=2&discriminant=-3-5&showcol=signature&Submit=text')
+        page = self.tc.get(url).get_data(as_text=True)
+        # Check that signature format is [r1, r2] where:
+        # - For imaginary quadratic fields (disc < 0, degree=2): r1=0, r2=1, so signature=[0, 1]
+        # - For real quadratic fields (disc > 0, degree=2): r1=2, r2=0, so signature=[2, 0]
+        # The bug was that it showed [r2, degree] = [1, 2] or [0, 2] instead
+        assert '[0, 1]' in page  # imaginary quadratic field (with space, no quotes)
+        assert '[2, 0]' in page  # real quadratic field (with space, no quotes)
+        # Make sure we're NOT getting the buggy format [r2, degree]
+        assert '[1, 2]' not in page  # wrong format for imaginary quadratic
+        assert '[0, 2]' not in page  # wrong format for real quadratic
+        # Also ensure we're not getting quoted strings
+        assert '"[0, 1]"' not in page
+        assert '"[2, 0]"' not in page
