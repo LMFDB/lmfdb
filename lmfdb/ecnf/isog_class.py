@@ -153,7 +153,7 @@ class ECNF_isoclass():
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label)]
-        if self.class_size>1:
+        if self.class_size > 1:
             self.properties.append((None, self.graph_link))
         self.properties.append(('Conductor', '%s' % self.conductor_label))
 

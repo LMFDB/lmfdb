@@ -276,13 +276,14 @@ def simplify_equation(ainvs):
             A = A.divide_knowing_divisible_by(p**4)
             B = B.divide_knowing_divisible_by(p**6)
             d *= p
-    
+
     b2 = a1**2 + 4*a2
+
     def Pmap(pt):
         x, y = pt
         return (3*(12*x+b2)/d**2, 108*(2*y+a1*x+a3)/d**3)
     return (A,B), Pmap
-    
+
 def short_latex_equation(AB):
     A, B = AB
     return ''.join([r'\(y^2=x^3',
@@ -760,7 +761,7 @@ class WebEC():
         mwbsd['gens_and_heights'] = list(zip(xgens, heights))
         mwbsd['proj_gens_and_heights'] = list(zip(proj_xgens, heights))
         mwbsd['short_gens_and_heights'] = list(zip(short_xgens, heights))
-        
+
         # Mordell-Weil group
         invs = [0 for a in range(self.rank)] + list(self.torsion_structure)
         mwbsd['mw_struct'] = "trivial" if len(invs) == 0 else r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
