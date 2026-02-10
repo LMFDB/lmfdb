@@ -19,12 +19,8 @@ julia> prime_divisors(discriminant(OK))
 1-element Vector{ZZRingElem}:
  2
 
-julia> automorphisms(K)
-ERROR: UndefVarError: `automorphisms` not defined in `Main`
-Suggestion: check for spelling errors or missing imports.
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> automorphism_group(K)
+(Generic group of order 2 with multiplication table, Map: generic group of order 2 with multiplication table -> set of automorphisms of K)
 
 julia> basis(OK)
 2-element Vector{AbsSimpleNumFieldOrderElem}:
