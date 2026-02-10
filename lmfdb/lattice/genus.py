@@ -18,61 +18,13 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
+from lmfdb.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genera_stats import Genus_stats
 
 # Database connection
 
 from lmfdb import db
-
-#####################################
-# Utilitary functions for displays  #
-#####################################
-
-def vect_to_matrix(v):
-    """
-    Converts a list of vectors of ints into a latex-formatted string which renders a latex pmatrix, ready for display
-    """
-    return str(latex(matrix(v)))
-
-def vect_to_sym(v):
-    """
-    Converts an upper triangular vector of ints, to a full 2d list of ints
-    """
-    n = ZZ(round(sqrt(len(v))))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(n):
-            M[i, j] = v[k]
-            k += 1
-    return [[int(M[i, j]) for i in range(n)] for j in range(n)]
-
-def vect_to_sym2(v):
-    """
-    Converts a list of n^2 ints, to a 2D n x n array
-    """
-    n = ZZ(round(sqrt(len(v))))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(n):
-            M[i, j] = v[k]
-            k += 1
-    return [[int(M[i, j]) for i in range(n)] for j in range(n)]
-
-def format_conway_symbol(s):
-    # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
-    return s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_')
-
-def make_neighbors_graph(M):
-    """
-    Given the adjacemency matrix data, we construct a graph object to plot on the genus page
-    """
-    from sage.graphs.graph import Graph
-    G = Graph(unfill_isogeny_matrix(M), format='weighted_adjacency_matrix')
-    return G
-
 
 # breadcrumbs and links for data quality entries
 
@@ -236,8 +188,8 @@ common_columns = [
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
-    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
-    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", lambda v : "$"+format_conway_symbol(v)+"$", default=False),
+    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", format_conway_symbol, default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", format_conway_symbol, default=False),
     ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
 ]
@@ -262,7 +214,7 @@ in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url
              err_title='Genera of integral lattices search error',
              columns=SearchColumns(genus_columns),
              shortcuts={'download': Downloader(db.lat_genera),
-                        'label': lambda info: genus_by_label_or_name(info.get('label'))},
+                        'jump': genus_jump},
              postprocess=genus_search_equivalence,
              url_for_label=url_for_genus,
              bread=lambda: get_bread("Search results"),
@@ -272,46 +224,6 @@ def genus_search(info, query):
     common_parse(info, query)
     parse_rational_to_list(info, query, 'mass', 'mass')
 
-def common_render(info):
-
-    # Get signature and whether lattice is positive definite
-    nplus = int(info['signature'])
-    nminus = info['rank'] - nplus
-    info['signature'] = (nplus, nminus)
-    info['is_positive_definite'] = (nminus==0)
-
-    info['conway_symbol'] = format_conway_symbol(info.get('conway_symbol', ''))
-    info['dual_conway_symbol'] = format_conway_symbol(info.get('dual_conway_symbol', ''))
-    info['even_odd'] = 'Even' if info['is_even'] else 'Odd'
-
-    # Gram matrix (with download link)
-    if 'rep' in info:
-        # A genus
-        gram = info['rep']
-    elif info.get("canonical_gram"):
-        gram = info["canonical_gram"]
-    elif info.get("gram"):
-        gram = info["gram"][0]
-    else:
-        gram = None
-    if gram:
-        info['gram'] = vect_to_matrix(vect_to_sym(gram))
-        # TODO: Switch this to using code snippets
-        info['download_gram'] = [
-            (i, url_for(".render_genus_webpage_download", label=info['label'], lang=i, obj='gram')) for i in ['gp', 'magma', 'sage']]
-
-    # Get the mass (if positive definite)
-    if info.get("mass"):
-        info["mass"] = "/".join(str(a) for a in info["mass"])
-    else:
-        info["mass"] = "not applicable"
-
-    # Discriminant form data
-    discriminant_group_invs = info.get('discriminant_group_invs', [])
-    info['discriminant_group_invs'] = ', '.join(str(inv) for inv in discriminant_group_invs)
-    discriminant_form = info.get('discriminant_form', [])
-    info['discriminant_gram'] = vect_to_matrix(vect_to_sym(discriminant_form))
-
 @lattice_page.route('/Genus/<label>')
 def render_genus_webpage(label):
     data = db.lat_genera.lookup(label)
@@ -320,37 +232,14 @@ def render_genus_webpage(label):
         flash_error("%s is not the label of a genus in the lattice database.", label)
         return redirect(url_for(".genus_index"))
     info = to_dict(request.args, search_array=InGenusSearchArray())
-    info.update(data)
-    common_render(info)
-
-    # Adjaceny graph data
-    adjacency_primes = info['adjaceny_matrix'].keys() if 'adjaceny_matrix' in info else []
-    for p in adjacency_primes:
-        info['adjacency'][p]['poly'] = info['adjaceny_polynomials'][p]
-
-        adj_mat = info['adjaceny_graph'][p]
-        graph = make_graph(adj_mat)
-        P = graph.plot(edge_labels=True)
-        #info[p]['graph'] = make_neighbors_graph
-        graph_img = encode_plot(P, transparent=True)
-        info['adjacency'][p]['graph_link'] = '<img src="%s" width="200" height="150"/>' % graph_img
-
-    info["bread"] = get_bread(info['label'])
-
-    # Properties box
-    info['properties'] = [
-        ('Label', info['label']),
-        ('Rank', prop_int_pretty(info['rank'])),
-        ('Signature', '$%s$' % str(info['signature'])),
-        ('Determinant', prop_int_pretty(info['det'])),
-        ('Discriminant', prop_int_pretty(info['disc'])),
-        ('Level', prop_int_pretty(info['level'])),
-        ('Class Number', str(info['class_number'])),
-        ('Even/Odd', info['even_odd'])]
-    info["downloads"] = [("Underlying data", url_for(".genus_data", label=label))]
-
-    info["title"] = "Genus of integral lattices "+info['label']
-    info["KNOWL_ID"] = "lattice.%s" % info['label']
+    info["genus"] = genus = WebGenus(label, data)
+    # Need to store some things in info for embed_wrap
+    info["title"] = f"Genus of integral lattices {label}"
+    info["bread"] = get_bread(label)
+    info["properties"] = genus.properties
+    info["friends"] = genus.friends
+    info["downloads"] = genus.downloads
+    info["KNOWL_ID"] = "lattice.genus.%s" % info['label']
     return render_genus(info)
 
 @embed_wrap(
@@ -368,7 +257,7 @@ def render_genus_webpage(label):
     KNOWL_ID=lambda:None,
 )
 def render_genus(info, query):
-    query["genus_label"] = info["label"]
+    query["genus_label"] = info["genus"].label
     for field, name in [('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
                         ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
                          ]:

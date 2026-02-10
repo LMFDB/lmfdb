@@ -20,6 +20,7 @@ from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genus import common_parse, common_render, set_index_info, common_columns, lat_only_columns, learnmore_list, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
 from lmfdb.lattice.lattice_stats import Lattice_stats
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus
 
 # Database connection
 
@@ -164,11 +165,13 @@ def lattice_search(info, query):
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(label):
-    info = db.lat_lattices_new.lookup(label)
-    if info is None:
+    data = db.lat_lattices_new.lookup(label)
+    if data is None:
         flash_error("%s is not the label of a lattice in the database.", label)
         return redirect(url_for(".index"))
 
+    lattice = WebLattice(label, data)
+    genus = lattice.genus
     # Update with information from the genus
     info.update(db.lat_genera.lookup(info["genus_label"], ["mass"]))
     common_render(info)
@@ -207,27 +210,15 @@ def render_lattice_webpage(label):
         info["dual_theta_series"] = "not computed"
 
 
-    # Properties box
-    info['properties'] = [
-        ('Label', '%s' % info['label']),
-        ('Rank', prop_int_pretty(info['rank'])),
-        ('Signature', '$%s$' % str(info['signature'])),
-        ('Determinant', prop_int_pretty(info['det'])),
-        ('Discriminant', prop_int_pretty(info['disc'])),
-        ('Level', prop_int_pretty(info['level'])),
-        ('Class Number', str(info['class_number'])),
-        ('Even/Odd', info['even_odd'])]
-    downloads = [("Underlying data", url_for(".lattice_data", label=label))]
-
-    t = "Integral lattice "+info['label']
     return render_template(
         "lattice-single.html",
+        lattice=lattice,
         info=info,
-        title=t,
-        bread=bread,
-        properties=info['properties'],
-        friends=friends,
-        downloads=downloads,
+        title="Integral lattice " + label,
+        bread=get_bread(label),
+        properties=lattice.properties,
+        friends=lattice.friends,
+        downloads=lattice.downloads,
         learnmore=learnmore_list(),
         KNOWL_ID="lattice.%s" % info['label'])
 
