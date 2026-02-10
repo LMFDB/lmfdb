@@ -2,11 +2,13 @@ prompt:
   sage:  'sage'
   pari:  'gp'
   magma: 'magma'
+  oscar: 'oscar'
 
 logo:
   sage:  <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
   pari:  <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 not-implemented:
   sage:  |
@@ -15,10 +17,15 @@ not-implemented:
     \\\\ (not yet implemented)
   magma: |
     // (not yet implemented)
+  oscar: |
+    # (not yet implemented)
 
 frontmatter:
   all: |
     {lang} code for working with elliptic curve {label}
+  oscar: |
+    If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.
+  rest: |
     (Note that not all these functions may be available, and some may take a long time to execute.)
     
 field:
@@ -26,12 +33,14 @@ field:
   sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
   pari:  K = nfinit(Polrev(%s));
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
 
 curve:
   comment: Define the curve
   sage:  E = EllipticCurve(%s)
   pari:  E = ellinit(%s);
   magma: E := EllipticCurve(%s);
+  oscar: E = elliptic_curve(%s)
 
 is_min:
   comment: Test whether it is a global minimal model
@@ -42,30 +51,35 @@ cond:
   sage:  E.conductor()
   pari:  ellglobalred(E)[1]
   magma: Conductor(E);
+  oscar: conductor(E)
 
 cond_norm:
   comment: Compute the norm of the conductor
   sage:  E.conductor().norm()
   pari:  idealnorm(K, ellglobalred(E)[1])
   magma: Norm(Conductor(E));
+  oscar: norm(conductor(E))
 
 disc:
   comment: Compute the discriminant
   sage:  E.discriminant()
   pari:  E.disc
   magma: Discriminant(E);
+  oscar: discriminant(E)
 
 disc_norm:
   comment: Compute the norm of the discriminant
   sage:  E.discriminant().norm()
   pari:  norm(E.disc)
   magma: Norm(Discriminant(E));
+  oscar: norm(discriminant(E))
 
 jinv:
   comment: Compute the j-invariant
   sage:  E.j_invariant()
   pari:  E.j
   magma: jInvariant(E);
+  oscar: j_invariant(E)
 
 cm:
   comment: Test for Complex Multiplication
