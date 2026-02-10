@@ -18,7 +18,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
-from lmfdb.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genera_stats import Genus_stats
 
@@ -197,7 +197,7 @@ common_columns = [
 lat_only_columns = [
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
-    ProcessedCol("theta_series", "lattice.theta", "Theta series", raw_typeset_qexp, default=False),
+    ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
     ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda v: vect_to_matrix(vect_to_sym2(v)), mathmode=True),
     MathCol("density", "lattice.density", "Density", default=False),
     MathCol("hermite", "lattice.hermite", "Hermite", default=False),
@@ -239,7 +239,7 @@ def render_genus_webpage(label):
     info["properties"] = genus.properties
     info["friends"] = genus.friends
     info["downloads"] = genus.downloads
-    info["KNOWL_ID"] = "lattice.genus.%s" % info['label']
+    info["KNOWL_ID"] = f"lattice.genus.{label}"
     return render_genus(info)
 
 @embed_wrap(
@@ -250,6 +250,7 @@ def render_genus_webpage(label):
     learnmore=learnmore_list,
     # Each of the following arguments is set here so that it is overridden when constructing template_kwds,
     # which prioritizes values found in info (which are set in render_genus_webpage() before calling render_genus)
+    genus=lambda:None,
     bread=lambda:None,
     properties=lambda:None,
     friends=lambda:None,

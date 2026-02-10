@@ -5,48 +5,47 @@
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }}</h2>
 
 <table>
-    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{info.rank}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{info.signature}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>${{info.disc}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{info.class_number}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{{info.even_odd}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ info.aut_size }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ info.aut_label | safe }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ info.festi_veniani }}</td></tr>
-    {% if info.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ info.density }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{info.hermite }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>{{info.minimum }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{info.kissing }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>${{info.mass}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{lattice.rank}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{lattice.signature}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.det_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{lattice.disc_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{lattice.level_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{lattice.class_number_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.conway_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.even_odd}}</td></tr>
+    {% if lattice.is_positive_definite %}
+        <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ lattice.aut_size_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ lattice.festi_veniani_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ lattice.density_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.hermite_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>{{lattice.minimum_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td></tr>
     {% endif %}
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Smith invariants') }}:</td><td>${{info.discriminant_group_invs}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td></tr>
     <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
-{% if info.shortest == "" %}
+{% if lattice.shortest is none %}
     not computed</td></tr>
 {% else %}
-    {% if info.rank == 1 %}
-        $({{info.shortest}})$</td></tr><tr><td></td><td>Download this vector for 
-            {% for e in info.download_shortest %} 
+    {% if lattice.rank == 1 %}
+        $({{lattice.shortest}})$</td></tr><tr><td></td><td>Download this vector for
+            {% for e in lattice.download_shortest %}
                 <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
             {% endfor %}</td></tr>
     {% else %}
         <table><tr>
-        {% for n in info.shortest %}
+        {% for n in lattice.shortest %}
             ${{n}}${% if not loop.last %},{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
         {% endfor %}
-        {% if info.all_shortest == "no" %} ... </tr></table></td><tr><td></td>
-        <td>Download the complete list for 
-            {% for e in info.download_shortest %} 
+        {% if lattice.all_shortest == "no" %} ... </tr></table></td><tr><td></td>
+        <td>Download the complete list for
+            {% for e in lattice.download_shortest %}
                 <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
             {% endfor %}</td></tr>
         {% else %}
-            </tr></table></td><tr><td></td><td>Download this {% if info.kissing == 2 %} vector {% else %} list {% endif %} for 
-            {% for e in info.download_shortest %} 
+            </tr></table></td><tr><td></td><td>Download this {% if lattice.kissing == 2 %} vector {% else %} list {% endif %} for
+            {% for e in lattice.download_shortest %}
                 <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
             {% endfor %}</td></tr>
         {% endif %}
@@ -54,79 +53,43 @@
 {% endif %}
 </table>
 
-{% if info.theta_series %}
+{% if lattice.theta_series %}
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
 
-<div>{{info.theta_series | safe}}</div>
+<div>{{lattice.theta_display | safe}}</div>
 
 {% endif %}
 
 <h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
 <table>
-    <tr><td>${{info.gram}}$</td> 
-    <td>Download this matrix for
-        {% for e in info.download_gram %} 
-        <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-        {% endfor %}
-    </td></tr>
+    <tr><td>{{lattice.gram_display}}</td></tr>
 </table>
 
 
 
 <h2> {{ KNOWL('lattice.dual', title='Dual Lattice') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>{{info.dual_label}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.dual_conway_symbol}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.dual_det}}$</td></tr>
-    {% if info.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>${{info.dual_density }}\dots$</td></tr>
-        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>${{info.dual_hermite }}\dots$</td></tr>
-        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>${{info.dual_kissing }}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>{{lattice.dual_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.dual_conway_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.dual_det_display}}</td></tr>
+    {% if lattice.is_positive_definite %}
+        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{lattice.dual_density_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.dual_hermite_display }}\dots$</td></tr>
+        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.dual_kissing_display }}</td></tr>
     {% endif %}
 
     <tr>
       <td>{{ KNOWL('lattice.theta', title='Theta Series') }}:</td>
       <td>
-        {{info.dual_theta_series | safe}}
+        {{lattice.dual_theta_display | safe}}
       </td>
 </table>
 
 
-<h2> {{ KNOWL('lattice.genus', title='Genus Structure') }} </h2>
-
-{% if info.class_number == 0 %}
-    <p> The {{ KNOWL('lattice.class_number', title='Class number') }} of the integral lattice {{info.label}} is not available.</p>
-{% else %}
-    <table>
-    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number }}$</td></tr>
-    <tr><td>&nbsp;</td></tr>
-    <tr><tdvalign=top>{{ KNOWL('lattice.genus', title='Genus representatives') }}:</td><td>
-    {% if info.dim == 1 %}
-        $({{info.genus_reps}})$</td></tr><tr><td></td><td>Download this matrix for
-            {% for e in info.download_genus_reps %}
-            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
-    {% else %}
-        {% for n in info.genus_reps %}
-            ${{n}}${% if not loop.last %},{% endif %}
-        {% endfor %}
-        {% if info.all_genus_rep == "no" %} ...
-            </td></tr><tr><td></td><td>Download the complete list for
-        {% else %}
-            </td></tr><tr><td></td><td>Download this {% if info.class_number == 1 %} matrix {% else %} list {% endif %} for
-        {% endif %}
-            {% for e in info.download_genus_reps %}
-            <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
-        {% endif %}
-    </td></tr>
-    </table>
-{% endif %}
-
-{% if info.pneighbors %}
-<p>{{ KNOWL('lattice.pneighbors', title='p-Neighbors') }}</p>
+{% if lattice.pneighbors %}
+<h2>{{ KNOWL('lattice.pneighbors', title='p-Neighbors') }}</h2>
 <table>
-{% for p, neighs in info.pneighbors.items() %}
+{% for p, neighs in lattice.pneighbors.items() %}
     <tr>
         <td valign="top">$p = {{ p }}$:</td>
         <td>
@@ -136,7 +99,7 @@
                 {% if not loop.last %}, {% endif %}
             {% endfor %}
         {% else %}
-            not computed
+            none
         {% endif %}
         </td>
     </tr>
