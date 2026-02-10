@@ -77,7 +77,7 @@ automorphisms:
   comment: Autmorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
-  oscar: automorphisms(K)
+  oscar: automorphism_group(K)
 
 ramified_primes:
   comment: Ramified primes
