@@ -1,6 +1,8 @@
 {% extends "homepage.html" %}
 {% block content %}
 
+{{ tabs(("Lattices", ".index", false), ("Genera", ".genus_index", true)) }}
+
 <div>
 {{ info.stats.short_summary | safe }}
 </div>
@@ -20,8 +22,6 @@
   </tr><tr>
     <td>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
     <td>{% for cn in info.class_number_list %} <a href="?class_number={{cn}}">{{cn}}</a>&nbsp; {% endfor %} $\cdots$</td>
-  </tr><tr>
-    <td colspan="2">Create a <a href="/Lattice/">search</a> for isometry classes of integral lattices</td>
   </tr>
 </table>
 
