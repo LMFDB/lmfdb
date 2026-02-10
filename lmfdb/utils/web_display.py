@@ -606,7 +606,7 @@ def raw_typeset_qexp(coeffs_list,
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
 
-    def rawtset_coeff(i, coeffs):
+    def rawtset_coeff(i, coeffs, first):
         poly = R(coeffs)
         if poly == 0:
             return "", ""
@@ -614,6 +614,8 @@ def raw_typeset_qexp(coeffs_list,
         tsetq = f" q^{{{i}}}" if i > 1 else " q"
         raw = str(poly)
         if poly in [1, -1]:
+            if i == 0:
+                return raw, raw
             rawq = f"q^{i}" if i > 1 else "q"
             if poly == -1:
                 return minus + rawq, minus + tsetq
@@ -635,7 +637,7 @@ def raw_typeset_qexp(coeffs_list,
             if tset.endswith(var):
                 tset += "_1"
         if poly.number_of_terms() == 1:
-            if i > 1:
+            if not first:
                 if raw.startswith('-'):
                     raw = minus + raw[1:]
                 else:
@@ -644,11 +646,12 @@ def raw_typeset_qexp(coeffs_list,
         else:
             tset = f"({tset})"
             raw = f"({raw})"
-            if i > 1:
+            if not first:
                 raw = plus + raw
                 tset = plus + tset
-        raw += rawq
-        tset += tsetq
+        if i > 0:
+            raw += rawq
+            tset += tsetq
         return raw, tset
 
     tset = ''
@@ -656,7 +659,7 @@ def raw_typeset_qexp(coeffs_list,
     add_to_tset = True
     lastt = None
     for i, coeffs in enumerate(coeffs_list):
-        r, t = rawtset_coeff(i, coeffs)
+        r, t = rawtset_coeff(i, coeffs, lastt is None)
         if t:
             lastt = t
         raw += r

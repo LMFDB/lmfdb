@@ -1,6 +1,8 @@
 {% extends "homepage.html" %}
 {% block content %}
 
+{{ tabs(("Lattices", ".index", true), ("Genera", ".genus_index", false)) }}
+
 <div>
 {{ info.stats.short_summary | safe }}
 </div>
@@ -22,8 +24,6 @@
     <td>{% for rnge in info.class_number_list %} <a href="?class_number={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting integral lattices</a> or a <a href={{url_for('.random_lattice')}}>random integral lattice</a></td>
-  </tr><tr>
-    <td colspan="2">Create a <a href="Genus/">search</a> for genera of integral lattices</td>
   </tr>
 </table>
 

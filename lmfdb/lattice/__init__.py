@@ -11,21 +11,9 @@ lattice_logger = make_logger(lattice_page)
 def body_class():
     return {'body_class': 'lattice'}
 
+from . import genus
+assert genus
 from . import main
 assert main
 
 app.register_blueprint(lattice_page, url_prefix="/Lattice")
-
-
-# Make Genus homepage
-genus_page = Blueprint("genus", __name__, template_folder='templates', static_folder="static")
-genus_logger = make_logger(genus_page)
-
-@genus_page.context_processor
-def body_class():
-    return {'body_class': 'genus'}
-
-from . import genus
-assert genus
-
-app.register_blueprint(genus_page, url_prefix="/Lattice/Genus")

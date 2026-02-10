@@ -36,7 +36,7 @@ class Lattice_stats(StatsDisplay):
         )
 
     table = db.lat_lattices_new
-    baseurl_func = ".lattice_render_webpage"
+    baseurl_func = ".index"
     buckets = {"rank":["1","2","3","4","5","6","7","8","9","10","11","12"],
                "det":["1","2-10","11-100","101-1000"],
                "minimum":["1","2","3","4-7","8-15","16-31","32-63","64-127","128-255"],
