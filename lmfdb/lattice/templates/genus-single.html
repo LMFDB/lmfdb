@@ -5,46 +5,65 @@
 <h2> {{ KNOWL('lattice.invariants', title='Genus Invariants') }} </h2>
 
 <table>
-    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{info.rank}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{info.signature}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>${{info.det}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>${{info.disc}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>${{info.level}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>${{info.class_number}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>${{info.conway_symbol}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Dual Conway Symbol') }}:</td><td>${{info.dual_conway_symbol}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.even_odd', title='Even/Odd') }}:</td><td>{{info.even_odd}}</td></tr>
-    {% if info.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>${{info.mass}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{genus.rank}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{genus.signature}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{genus.det_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{genus.disc_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{genus.level_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{genus.class_number_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{genus.conway_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Dual Conway Symbol') }}:</td><td>{{genus.dual_conway_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{genus.even_odd}}</td></tr>
+    {% if genus.is_positive_definite %}
+        <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>{{genus.mass_display}}</td></tr>
     {% endif %}
 <td>
 </table>
 
-<h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
+{% if not genus.lattices_stored %}
+<h2> {{ KNOWL('lattice.gram', title='Representative Gram Matrix') }} </h2>
 <table>
-    <tr><td>${{info.gram}}$</td> 
-    <td>Download this matrix for
-        {% for e in info.download_gram %} 
-        <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-        {% endfor %}
-    </td></tr>
+    <tr><td>{{genus.gram_display}}</td></tr>
 </table>
+{% endif %}
 
 <h2> {{ KNOWL('lattice.discriminant_group', title='Discriminant Group') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Smith invariants') }}:</td><td>${{info.discriminant_group_invs}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>${{info.discriminant_gram}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Smith invariants') }}:</td><td>${{genus.discriminant_group_invs}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>${{genus.discriminant_gram_display}}$</td></tr>
 </table>
 
 <h2> {{ KNOWL('lattice.adjacency_data', title='Adjacency Data') }} </h2>
-<p> todo </p>
-<table>
-{% for p in info.adjacency %}
-    <tr><td>$ p = {{ p }} $:</td><td>${{info.adjacency.p.poly}}$</td></tr>
-    <tr><td>{{info.adjacency.p.graph_link}}</td></tr>
+
+<div>
+  {% for p in genus.adjacency_display %}
+    <button class="adj_{{p}} gs_inactive" onclick="select_adj_mode('{{p}}'); return false;">{{p}}</button>
+  {% endfor %}
+</div>
+
+{% for p, D in genus.adjacency_display.items() %}
+  <div id="adjcont_{{p}}" class="adjcont" style="display:none;">
+    <table>
+      <tr><td>{{ KNOWL('lattice.adjacency_matrix', 'Adjacency matrix') }}:</td><td>{{D.matrix}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.adjacency_polynomial', 'Adjacency polynomial') }}:</td><td>{{D.poly}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.adjacency_graph', 'Adjacency graph') }}:</td><td>{{D.graph_link | safe}}</td></tr>
+    </table>
+  </div>
 {% endfor %}
-</table>
 
 <h2> {{ KNOWL('lattice', title='Lattices') }} </h2>
+
+<script type="text/javascript">
+  function select_adj_mode(mode) {
+    // Reuse gs_(in)active class from lf-family so we don't need to add more to style.css
+    $("button.gs_active").addClass("gs_inactive").removeClass("gs_active");
+    $("button.adj_"+mode).removeClass("gs_inactive").addClass("gs_active");
+    $("div.adjcont").hide();
+    $("#adjcont_"+mode).show();
+  }
+  {% if (genus.adjacency_display | length) > 0 %}
+  select_adj_mode('{{genus.start_p}}');
+  {% endif %}
+</script>
 
 {% endblock %}

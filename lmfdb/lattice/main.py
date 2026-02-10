@@ -10,7 +10,7 @@ from lmfdb.utils import (
     SearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count, parse_noop,
     parse_bracketed_posints, parse_start, clean_input,
-    parse_rational_to_list, raw_typeset_qexp,
+    parse_rational_to_list,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -18,8 +18,9 @@ from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
-from lmfdb.lattice.genus import common_parse, common_render, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.genus import common_parse, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list
 from lmfdb.lattice.lattice_stats import Lattice_stats
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
 
 # Database connection
 
@@ -164,72 +165,23 @@ def lattice_search(info, query):
 
 @lattice_page.route('/<label>')
 def render_lattice_webpage(label):
-    info = db.lat_lattices_new.lookup(label)
-    if info is None:
+    data = db.lat_lattices_new.lookup(label)
+    if data is None:
         flash_error("%s is not the label of a lattice in the database.", label)
         return redirect(url_for(".index"))
 
-    # Update with information from the genus
-    info.update(db.lat_genera.lookup(info["genus_label"], ["mass"]))
-    common_render(info)
+    lattice = WebLattice(label, data)
 
-    for col in ["density", "hermite", "minimum", "kissing", "festi_veniani", "class_number", "shortest", "aut_group", "aut_label", "aut_size"]:
-        if info.get(col) is None:
-            if col == "shortest":
-                info[col] = "" # handled in template
-            elif info["is_positive_definite"]:
-                info[col] = "not computed"
-            elif col in ["aut_group", "aut_label", "aut_size"]:
-                info[col] = "infinite"
-            else:
-                info[col] = "not applicable"
-        elif col == "aut_label":
-            info[col] = abstract_group_display_knowl(info[col])
-        elif col not in ["shortest", "aut_group", "aut_label"]:
-            info[col] = f"${info[col]}$"
-
-    bread = get_bread(info['label'])
-    friends = [("Genus of this lattice", "/Lattice/Genus/%s" % info["genus_label"])]
-
-    # Display Theta series
-    # TODO: Switch to how this is done for classical modular forms
-    if info.get('theta_series'):
-        info["theta_series"] = raw_typeset_qexp(info["theta_series"])
-    else:
-        info["theta_series"] = "not computed"
-
-    # Data about the dual lattice
-    info['dual_conway_symbol'] = format_conway_symbol(info.get('dual_conway_symbol', ''))
-    info['dual_label'] = info.get('dual_label', "not in database")
-    if info.get('dual_theta_series'):
-        info["dual_theta_series"] = raw_typeset_qexp(info["dual_theta_series"])
-    else:
-        info["dual_theta_series"] = "not computed"
-
-
-    # Properties box
-    info['properties'] = [
-        ('Label', '%s' % info['label']),
-        ('Rank', prop_int_pretty(info['rank'])),
-        ('Signature', '$%s$' % str(info['signature'])),
-        ('Determinant', prop_int_pretty(info['det'])),
-        ('Discriminant', prop_int_pretty(info['disc'])),
-        ('Level', prop_int_pretty(info['level'])),
-        ('Class Number', str(info['class_number'])),
-        ('Even/Odd', info['even_odd'])]
-    downloads = [("Underlying data", url_for(".lattice_data", label=label))]
-
-    t = "Integral lattice "+info['label']
     return render_template(
         "lattice-single.html",
-        info=info,
-        title=t,
-        bread=bread,
-        properties=info['properties'],
-        friends=friends,
-        downloads=downloads,
+        lattice=lattice,
+        title=f"Integral lattice {label}",
+        bread=get_bread(label),
+        properties=lattice.properties,
+        friends=lattice.friends,
+        downloads=lattice.downloads,
         learnmore=learnmore_list(),
-        KNOWL_ID="lattice.%s" % info['label'])
+        KNOWL_ID=f"lattice.{lattice.label}")
 
 
 @lattice_page.route('/data/<label>')
