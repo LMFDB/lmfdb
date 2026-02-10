@@ -34,7 +34,7 @@ class Genus_stats(StatsDisplay):
             url_for(".statistics"))
 
     table = db.lat_genera
-    baseurl_func = ".genus_render_webpage"
+    baseurl_func = ".genus_index"
     buckets = {"rank":["1","2","3","4","5","6","7","8","9","10","11","12"],
                "det":["1","2-10","11-100","101-1000"],
                "class_number":["1","2","3","4-7","8-15","16-31","32-63"],

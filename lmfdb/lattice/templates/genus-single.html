@@ -1,6 +1,6 @@
-{% extends "homepage.html" %}
+{% extends "embedded_results.html" %}
 
-{% block content %}
+{% block embedding_content %}
 
 <h2> {{ KNOWL('lattice.invariants', title='Genus Invariants') }} </h2>
 
@@ -45,6 +45,6 @@
 {% endfor %}
 </table>
 
-</h2>
+<h2> {{ KNOWL('lattice', title='Lattices') }} </h2>
 
 {% endblock %}
