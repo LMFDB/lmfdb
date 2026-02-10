@@ -33,7 +33,7 @@ field:
   sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
   pari:  K = nfinit(Polrev(%s));
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
-  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(Qx(%s))
 
 curve:
   comment: Define the curve
