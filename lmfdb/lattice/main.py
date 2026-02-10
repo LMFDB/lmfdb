@@ -8,7 +8,7 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
-    parse_ints, parse_posints, parse_list, parse_count,
+    parse_ints, parse_posints, parse_list, parse_count, parse_noop,
     parse_bracketed_posints, parse_start, clean_input,
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, redirect_no_cache, Downloader, ParityBox)
@@ -18,7 +18,7 @@ from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
-from lmfdb.lattice.genus import common_parse, common_render, set_index_info, common_columns, lat_only_columns, learnmore_list, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.genus import common_parse, common_render, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
 from lmfdb.lattice.lattice_stats import Lattice_stats
 
 # Database connection

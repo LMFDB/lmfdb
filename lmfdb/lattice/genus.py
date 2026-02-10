@@ -12,7 +12,7 @@ from lmfdb.utils import (
     SearchArray, EmbeddedSearchArray, TextBox, CountBox, prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count,
     parse_bracketed_posints, parse_start, clean_input,
-    parse_rational_to_list, raw_typeset_qexp,
+    parse_rational_to_list, raw_typeset_qexp, parse_noop,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
@@ -279,6 +279,9 @@ def common_render(info):
     nminus = info['rank'] - nplus
     info['signature'] = (nplus, nminus)
     info['is_positive_definite'] = (nminus==0)
+
+    # TEMP FIX: Get class number (if class number not in db, display "?" for now)
+    info['class_number'] = info.get('class_number', '?')
 
     info['conway_symbol'] = format_conway_symbol(info.get('conway_symbol', ''))
     info['dual_conway_symbol'] = format_conway_symbol(info.get('dual_conway_symbol', ''))
