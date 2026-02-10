@@ -458,6 +458,7 @@ class ECNFDownloader(Downloader):
                 "sage": 'field.<a> = NumberField(ZZx(out["field_coeffs"]))\n    curve = EllipticCurve([field(ai) for ai in out["ainvs"]])',
                 "magma": 'field<a> := NumberField(ZZx!(out`field_coeffs));\n    curve := EllipticCurve([field!ai : ai in out`ainvs]);',
                 "gp": 'field = nfinit(Polrev(mapget(out, "field_coeffs")));\n    curve = ellinit(apply(Polrev, mapget(out, "ainvs")), field);',
+                "oscar": 'field,a = number_field(ZZx(out["field_coeffs"]))\n    curve = elliptic_curve([field(ai) for ai in out["ainvs"]])',
             }
         ),
     }
