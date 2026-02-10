@@ -305,7 +305,7 @@ class OscarLanguage(DownloadLanguage):
     def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
         if any(isinstance(c, PolynomialCol) for c in cols):
-            return '\nRx,x = PolynomialRing(QQ)\n\n'
+            return '\nZZx,x = polynomial_ring(QQ)\n\n'
         else:
             return '\n'
 

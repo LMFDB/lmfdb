@@ -490,7 +490,7 @@ class ECDownloader(Downloader):
                 "sage": 'curve = EllipticCurve(out["ainvs"]){attach_lmfdb_label}',
                 "magma": 'curve := EllipticCurve(out`ainvs);',
                 "gp": 'curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+                "oscar": 'curve = elliptic_curve(out["ainvs"])',
             }
         )
     }
