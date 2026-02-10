@@ -280,6 +280,9 @@ def common_render(info):
     info['signature'] = (nplus, nminus)
     info['is_positive_definite'] = (nminus==0)
 
+    # TEMP FIX: Get class number (if class number not in db, display "?" for now)
+    info['class_number'] = info.get('class_number', '?')
+
     info['conway_symbol'] = format_conway_symbol(info.get('conway_symbol', ''))
     info['dual_conway_symbol'] = format_conway_symbol(info.get('dual_conway_symbol', ''))
     info['even_odd'] = 'Even' if info['is_even'] else 'Odd'
