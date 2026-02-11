@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<p>{{ place_code('lattice_definition', is_top_snippet=True) }}</p>
+
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }}</h2>
 
 <table>
@@ -62,7 +64,7 @@
 
 <h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
 <table>
-    <tr><td>{{lattice.gram_display}}</td></tr>
+    <tr><td>{{lattice.gram_display | safe}}</td></tr>
 </table>
 
 
@@ -91,7 +93,7 @@
 <table>
 {% for p, neighs in lattice.pneighbors.items() %}
     <tr>
-        <td valign="top">$p = {{ p }}$:</td>
+        <td valign="top" style="white-space: nowrap;">$p = {{ p }}$:</td>
         <td>
         {% if neighs %}
             {% for L in neighs %}

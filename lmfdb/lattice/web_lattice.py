@@ -1,20 +1,22 @@
 
+import os
+import yaml
 from collections import defaultdict
 from lmfdb import db
 from flask import url_for
-from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, latex, Factorization, PolynomialRing
-from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, encode_plot, pos_int_and_factor
+from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, latex, Factorization, PolynomialRing, flatten
+from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, encode_plot, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
 
 #####################################
 # Utilitary functions for displays  #
 #####################################
 
-def vect_to_matrix(v):
+def vect_to_matrix(v, **kwargs):
     """
     Converts a list of vectors of ints into a latex-formatted string which renders a latex pmatrix, ready for display
     """
-    return str(latex(matrix(v)))
+    return raw_typeset_matrix(matrix(v), **kwargs)
 
 def vect_to_sym(v):
     """
@@ -93,7 +95,7 @@ class WebLat(WebObj):
     def discriminant_gram_display(self):
         if self.discriminant_form is None:
             return "not computed"
-        return "$" + vect_to_matrix(vect_to_sym2(self.discriminant_form)) + "$"
+        return vect_to_matrix(vect_to_sym2(self.discriminant_form))
 
     @lazy_attribute
     def properties(self):
@@ -107,6 +109,11 @@ class WebLat(WebObj):
             ('Class Number', f'${self.class_number}$'),
             ('Parity', f'{self.even_odd}'),
         ]
+
+    def _mat_in(self, mat, lang):
+        if lang == "pari":
+            return "[" + ";".join(",".join(str(c) for c in row) for row in mat) + "]"
+        return str(flatten(mat)).replace(" ", "")
 
     # TODO: Switch this to using code snippets
     #info['download_gram'] = [
@@ -124,7 +131,7 @@ class WebGenus(WebLat):
     def gram_display(self):
         if self.rep is None:
             return "not computed"
-        return f"${vect_to_matrix(vect_to_sym2(self.rep))}$"
+        return vect_to_matrix(vect_to_sym2(self.rep))
 
     @lazy_attribute
     def mass_display(self):
@@ -141,13 +148,13 @@ class WebGenus(WebLat):
         R = PolynomialRing(ZZ, "x")
         for p, M in self.adjacency_matrix.items():
             adj_mat = matrix(ZZ, self.class_number, self.class_number, M)
-            display[p]["matrix"] = f"${latex(adj_mat)}$"
+            display[p]["matrix"] = raw_typeset_matrix(adj_mat)
             G = Graph(adj_mat, format='weighted_adjacency_matrix') # can also do format='adjacency_matrix'
             # TODO: improve layout
             img = encode_plot(G.plot(), transparent=True)
             display[p]["graph_link"] = f'<img src="{img}" width="400" height="300"/>'
-            F = Factorization([(R(f), e) for f,e in self.adjacency_polynomials[p]])
-            display[p]["poly"] = f"${latex(F)}$"
+            F = [(R(f), e) for f,e in self.adjacency_polynomials[p]]
+            display[p]["poly"] = raw_typeset_poly_factor(F)
         return display
 
     @lazy_attribute
@@ -197,7 +204,7 @@ class WebLattice(WebLat):
     def gram_display(self):
         if self.gram is None:
             return "not computed"
-        return f"${vect_to_matrix(vect_to_sym2(self.gram))}$"
+        return vect_to_matrix(vect_to_sym2(self.gram))
 
     @lazy_attribute
     def theta_display(self):
@@ -219,3 +226,13 @@ class WebLattice(WebLat):
     def downloads(self):
         return [("Underlying data", url_for(".lattice_data", label=self.label))]
 
+    @lazy_attribute
+    def code(self):
+        # read in code.yaml from lattice directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        for lang, s in code["lattice_definition"].items():
+            if lang != "comment":
+                code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(self.gram), lang))
+        code['show'] = {lang: '' for lang in code['prompt']}
+        return code

@@ -20,7 +20,7 @@ from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genus import common_parse, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list
 from lmfdb.lattice.lattice_stats import Lattice_stats
-from lmfdb.lattice.web_lattice import WebLattice, WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus, vect_to_sym, vect_to_sym2, format_conway_symbol
 
 # Database connection
 
@@ -179,6 +179,7 @@ def render_lattice_webpage(label):
         bread=get_bread(label),
         properties=lattice.properties,
         friends=lattice.friends,
+        code=lattice.code,
         downloads=lattice.downloads,
         learnmore=learnmore_list(),
         KNOWL_ID=f"lattice.{lattice.label}")

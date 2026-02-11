@@ -30,7 +30,7 @@
 <h2> {{ KNOWL('lattice.discriminant_group', title='Discriminant Group') }} </h2>
 <table>
     <tr><td>{{ KNOWL('lattice.discriminant_group', title='Smith invariants') }}:</td><td>${{genus.discriminant_group_invs}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>${{genus.discriminant_gram_display}}$</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>{{genus.discriminant_gram_display | safe}}</td></tr>
 </table>
 
 <h2> {{ KNOWL('lattice.adjacency_data', title='Adjacency Data') }} </h2>
@@ -44,8 +44,8 @@
 {% for p, D in genus.adjacency_display.items() %}
   <div id="adjcont_{{p}}" class="adjcont" style="display:none;">
     <table>
-      <tr><td>{{ KNOWL('lattice.adjacency_matrix', 'Adjacency matrix') }}:</td><td>{{D.matrix}}</td></tr>
-      <tr><td>{{ KNOWL('lattice.adjacency_polynomial', 'Adjacency polynomial') }}:</td><td>{{D.poly}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.adjacency_matrix', 'Adjacency matrix') }}:</td><td>{{D.matrix | safe}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.adjacency_polynomial', 'Adjacency polynomial') }}:</td><td>{{D.poly | safe}}</td></tr>
       <tr><td>{{ KNOWL('lattice.adjacency_graph', 'Adjacency graph') }}:</td><td>{{D.graph_link | safe}}</td></tr>
     </table>
   </div>
