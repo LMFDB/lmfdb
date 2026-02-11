@@ -24,13 +24,14 @@
   #contribs > div > div.notes { color: {{color.contrib_text_notes}}; }
 </style>
 
-<div>
-We are grateful for all of the support that has enabled the construction of the LMFDB.  
-In particular, here we acknowledge <a href="#sponsors">financial sponsors</a>, 
-<a href="#institutions">institutions</a> that have hosted workshops, semester programs, and other activities, support in the form 
-of <a href="#software">software</a> and <a href="#hosting">hardware</a>, and list the 
+<div class="narrow-body">
+<p>
+We are grateful for all of the support that has enabled the construction of the LMFDB.
+In particular, here we acknowledge <a href="#sponsors">financial sponsors</a>,
+<a href="#institutions">institutions</a> that have hosted workshops, semester programs, and other activities, support in the form
+of <a href="#software">software</a> and <a href="#hosting">hardware</a>, and list the
 <a href="#individuals">individuals</a> who have contributed to the LMFDB database or website.
-</div>
+</p>
 
 <a name="sponsors"></a>
 <h1 >Sponsors</h1>
@@ -64,6 +65,7 @@ of <a href="#software">software</a> and <a href="#hosting">hardware</a>, and lis
     {# {% if c.notes -%}<div class="notes">{{ c.notes|join(', ')|safe }}</div>{%- endif %} #}
   </div>
 {% endfor %}
+</div>
 </div>
 
 {% endblock %}

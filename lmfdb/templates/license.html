@@ -1,0 +1,20 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div class="narrow-body">
+<h1>Data license</h1>
+
+<p> The <a href="{{url_for('API.options')}}">data</a> underpinning the LMFDB is licensed under the <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Creative Commons Attribution-ShareAlike 4.0 International License</a> (CC-BY-SA).</p>
+
+<h1>Code licenses</h1>
+
+<p> The <a href="https://github.com/LMFDB/lmfdb">code</a> for generating this website is licensed under the <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GNU General Public License, version 2</a> (GPL v2).</p>
+<p> Copyright for the code used to generate the data that has been contributed to the LMFDB is held by individual contributors.  We encourage contributors to choose an <a href="https://opensource.org/licenses">open source license</a>.</p>
+
+<h1>Questions</h1>
+
+<p>If you have any questions about LMFDB licenses, please contact the <a href="{{url_for('editorial_board')}}">editorial board</a>.</p>
+</div>
+
+{% endblock %}
