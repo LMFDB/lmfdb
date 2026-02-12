@@ -182,7 +182,7 @@ def common_parse(info, query):
 
 common_columns = [
     MathCol("rank", "lattice.dimension", "Rank"),
-    MultiProcessedCol("signature", "lattice.signature", "Signature", ["signature", "rank"], lambda signature, rank: '$(%s,%s)$' % (signature, rank-signature ),  align="center"),
+    MultiProcessedCol("signature", "lattice.signature", "Signature", ["nplus", "rank"], lambda nplus, rank: '$(%s,%s)$' % (nplus, rank-nplus),  align="center"),
     MathCol("det", "lattice.determinant", "Determinant"),
     MathCol("dual_det", "lattice.determinant", "Dual Determinant", default=False),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
