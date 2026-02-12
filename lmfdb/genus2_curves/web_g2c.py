@@ -144,14 +144,18 @@ def ec_label_class(ec_label):
 
 
 def g2c_lmfdb_label(cond, alpha, num):
-    return "%s.%s.%s.%s" % (cond, alpha, num)
+    return "%s.%s%s" % (cond, alpha, num)
 
 
 g2c_lmfdb_label_regex = re.compile(r'(\d+)\.([a-z]+)(\d+)')
+g2c_lmfdb_class_label_regex = re.compile(r'(\d+)\.([a-z]+)')
 
 
 def split_g2c_lmfdb_label(lab):
-    return g2c_lmfdb_label_regex.match(lab).groups()
+    if g2c_lmfdb_label_regex.match(lab):
+        return g2c_lmfdb_label_regex.match(lab).groups()
+    else:
+        return g2c_lmfdb_class_label_regex.match(lab).groups()
 
 
 def factorsRR_raw_to_pretty(factorsRR):
