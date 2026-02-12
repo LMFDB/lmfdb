@@ -38,7 +38,7 @@ sage: K.subfields()[1:-1]
 
 ]
 sage: K.galois_group(type='pari')
-<ipython-input-111-70c79b25ed84>:1: DeprecationWarning: the different Galois types have been merged into one class
+<ipython-input-21-70c79b25ed84>:1: DeprecationWarning: the different Galois types have been merged into one class
 See https://github.com/sagemath/sage/issues/28782 for details.
   K.galois_group(type='pari')
 Galois group 1T1 (S1) with order 1 of x
