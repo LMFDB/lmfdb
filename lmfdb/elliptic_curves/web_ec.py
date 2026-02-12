@@ -399,14 +399,15 @@ class WebEC():
             if self.cm:
                 if self.cm == -3:
                     # for j=0 nonmaximal elladic-images have index 3 for ell > 3 (see https://arxiv.org/abs/1809.02584v3 Theorem 1.4)
-                    # for ell=2,3 the index can very but is always determined by the image mod 16,27, respectively
+                    # for ell=2,3 the index can vary but is always determined by the image mod 16,27, respectively
                     # the dictionary below lists the index of the maximal image for j=0 modulo relevant powers of 2,3
                     j0_elladic_indices = { 2:1, 3:4, 4:4, 8:16, 9:36, 16:64, 27:324 }
-                    gd['elladic_index'] = 3 if gd["prime"] > 3 else int(s[1]) // j0_elladic_indices[int(s[0])]
+                    gd['elladic_index'] = 3 if gd['prime'] > 3 else int(s[1]) // j0_elladic_indices[int(s[0])]
                 elif self.cm == -4:
                     # for j=1728 the elladic image is maximal except possibly at 2 (see https://arxiv.org/abs/1809.02584v3 Theorem 1.2(4))
                     # for ell=2 the index can vary but is always determined by the image mod 16
                     # the dictionary below lists the index of the maximal image for j=1728 modulo relevant powers of 2
+                    assert gd['prime'] == 2
                     j1728_elladic_indices = { 2:3, 4:6, 8:24, 16:96 }
                     gd['elladic_index'] = int(s[1]) // j1728_elladic_indices[int(s[0])]
                 else:
