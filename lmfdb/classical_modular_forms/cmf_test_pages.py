@@ -75,7 +75,7 @@ class CMFTest(LmfdbTest):
         if dim is None:
             for ns in newspaces:
                 assert ns['dim'] == 0
-            assert not(newforms)
+            assert not (newforms)
             return []
 
         try:

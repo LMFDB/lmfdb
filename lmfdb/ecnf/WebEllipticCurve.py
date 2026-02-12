@@ -680,6 +680,7 @@ class ECNF():
             eq_query = '\\overset{?}{=}'
             frac = '\\frac'
             Sha = '\\# &#1064;(E/K)'
+            Sha = '\\# Ш(E/K)'
             Om = '\\Omega(E/K)'
             Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
             prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
@@ -695,7 +696,7 @@ class ECNF():
                 rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
             rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
             rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
-            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} {eq_query} {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+            self.bsd_formula = rf'\begin{{aligned}}{BSDLvalue:0.9f} {approx} {lder_name} & {eq_query} {lhs} \\ & {approx} {rhs} \\ & {approx} {BSDLvalue_from_formula:0.9f} \end{{aligned}}'
 
         else:
             self.BSDsha = "not available"
@@ -841,7 +842,7 @@ class ECNF():
         # we want to use split_full_label but that will fail if the class code + number are '?'
         self.base_change_NFsplit = [(lab,)+split_full_label(lab.replace('?','a1')) for lab in self.base_change_NF]
         self.bcNFtext = [] # for the Base change section of the home page
-        for (lab,nf,cond,cl,num) in self.base_change_NFsplit:
+        for lab, nf, cond, cl, num in self.base_change_NFsplit:
             field_knowl = FIELD(nf).knowl()
             if '?' in lab:
                 cond_norm = cond.split(".")[0]
@@ -853,8 +854,8 @@ class ECNF():
         self._code = None # will be set if needed by get_code()
 
         self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
-        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"]]:
-            self.downloads.append(('Code to {}'.format(lang[0]),
+        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"], ["Oscar","oscar"]]:
+            self.downloads.append(('{} commands'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
         self.downloads.append(('Underlying data', url_for(".ecnf_data", label=self.label)))
@@ -887,36 +888,18 @@ sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
                      'disc', 'disc_norm', 'jinv', 'cm', 'rank',
                      'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
-code_names = {'field': 'Define the base number field',
-              'curve': 'Define the curve',
-              'is_min': 'Test whether it is a global minimal model',
-              'cond': 'Compute the conductor',
-              'cond_norm': 'Compute the norm of the conductor',
-              'disc': 'Compute the discriminant',
-              'disc_norm': 'Compute the norm of the discriminant',
-              'jinv': 'Compute the j-invariant',
-              'cm': 'Test for Complex Multiplication',
-              'rank': 'Compute the Mordell-Weil rank',
-              'ntors': 'Compute the order of the torsion subgroup',
-              'gens': 'Compute the generators (of infinite order)',
-              'heights': 'Compute the heights of the generators (of infinite order)',
-              'reg': 'Compute the regulator',
-              'tors': 'Compute the torsion subgroup',
-              'torgens': 'Compute the generators of the torsion subgroup',
-              'localdata': 'Compute the local reduction data at primes of bad reduction'
-}
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP', 'oscar': 'Oscar'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
 
 def make_code(label, lang=None):
     """Return a dict of code snippets for one curve in either one
-    language (if lang is 'pari' or 'gp', 'sage', or 'magma') or all
+    language (if lang is 'pari' or 'gp', 'sage', 'magma', or 'oscar') or all
     three (if lang is None).
     """
     if lang == 'gp':
         lang = 'pari'
-    all_langs = ['magma', 'pari', 'sage']
+    all_langs = ['magma', 'pari', 'sage', 'oscar']
 
     # Get the base field label and a-invariants:
 
@@ -951,6 +934,7 @@ def make_code(label, lang=None):
     ainvs_string = {
         'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
         'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        'oscar': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
         'pari': "[" + ",".join("Polrev({})".format(ai) for ai in ainvs) + "], K",
         }
     if lang:

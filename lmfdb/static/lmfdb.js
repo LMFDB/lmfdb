@@ -335,7 +335,7 @@ $(function() {
 
 function update_start_by_count_and_submit_form(sign) {
   var startelem = $('form.re-search input[name=start]');
-  var count = parseInt($('form.re-search input[name=count]').val());
+  var count = parseInt($('form.re-search input[name=count]').val());;
   var newstart = parseInt(startelem.val())+sign*count;
   if(newstart<0)
     newstart = 0;
@@ -358,7 +358,11 @@ function get_count_of_results() {
     $("span.download-msg").html("Computing number of results...");
     if (address.slice(-1) === "#")
         address = address.slice(0,-1);
-    address += "&result_count=1";
+    if (address.includes("?")) {
+        address += "&result_count=1";
+    } else {
+        address += "?result_count=1";
+    }
     $.ajax({url: address, success: get_count_callback});
 };
 

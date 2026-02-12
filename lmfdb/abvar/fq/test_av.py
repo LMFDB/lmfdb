@@ -152,8 +152,16 @@ class AVTest(LmfdbTest):
         page = self.tc.get('Variety/Abelian/Fq/download_curves/2.19.ae_w', follow_redirects=True)
         assert 'y^2=3*x^6+18*x^5+15*x^4+12*x^3+x^2+5*x+18' in page.get_data(as_text=True)
 
-        page = self.tc.get('Variety/Abelian/Fq/3.17.d_b_act', follow_redirects=True)
+        page = self.tc.get('Variety/Abelian/Fq/5/3/ac_e_ai_v_abl', follow_redirects=True)
         assert 'Curves to text' not in page.get_data(as_text=True)
 
-        page = self.tc.get('Variety/Abelian/Fq/download_curves/3.17.d_b_act', follow_redirects=True)
-        assert 'No curves for abelian variety isogeny class 3.17.d_b_act' in page.get_data(as_text=True)
+        page = self.tc.get('Variety/Abelian/Fq/download_curves/5.3.ac_e_ai_v_abl', follow_redirects=True)
+        assert 'No curves for abelian variety isogeny class 5.3.ac_e_ai_v_abl' in page.get_data(as_text=True)
+
+    def test_cyclic_group_of_points_display(self):
+        r"""
+        Check that the cyclic group of points information is displayed
+        on the isogeny-class page.
+        """
+        page = self.tc.get("/Variety/Abelian/Fq/2/9/aj_bl").get_data(as_text=True)
+        assert "Cyclic" in page

@@ -49,7 +49,7 @@ def my_latex(s):
 # breadcrumbs and links for data quality entries
 
 def get_bread(tail=[]):
-    base = [("Lattice", url_for(".lattice_render_webpage"))]
+    base = [("Lattices", url_for(".lattice_render_webpage"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -496,7 +496,7 @@ class LatSearchArray(SearchArray):
             label="Gram matrix",
             knowl="lattice.gram",
             example="[5,1,23]",
-            example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+            example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$")
         minimum = TextBox(
             name="minimum",
             label="Minimal vector length",

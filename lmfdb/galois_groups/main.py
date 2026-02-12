@@ -9,7 +9,7 @@ from sage.all import ZZ, latex, libgap
 from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
-    list_to_latex_matrix, flash_error, comma, latex_comma, to_dict, display_knowl,
+    list_to_latex_matrix, flash_error, comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
@@ -52,7 +52,7 @@ def learnmore_list_remove(matchstring):
 
 def get_bread(breads=[]):
     bc = [("Galois groups", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 
@@ -125,6 +125,7 @@ class GG_download(Downloader):
             }
         ),
     }
+
     def modify_query(self, info, query):
         _set_show_subs(info)
 
@@ -277,8 +278,6 @@ def render_group_webpage(args):
         data['parity'] = "$%s$" % data['parity']
         data['subinfo'] = subfield_display(n, data['subfields'])
         data['resolve'] = resolve_display(data['quotients'])
-        gp_label = data['abstract_label']
-        data['groupid'] = abstract_group_display_knowl(gp_label, gp_label)
         data['otherreps'] = wgg.otherrep_list()
         ae = data['arith_equiv']
         if ae > 0:
@@ -310,9 +309,14 @@ def render_group_webpage(args):
         friends = []
         if db.nf_fields.exists({'degree': n, 'galt': t}):
             friends.append(('Number fields with this Galois group', url_for('number_fields.number_field_render_webpage')+"?galois_group=%dT%d" % (n, t) ))
-        if db.lf_fields.exists({'n': n, 'galT': t}):
+        if db.lf_fields.exists({'n': n, 'gal': t}):
             friends.append(('$p$-adic fields with this Galois group', url_for('local_fields.index')+"?gal=%dT%d" % (n, t) ))
-        prop2 = [('Label', label),
+        if db.gps_groups.exists({'label': data['abstract_label']}):
+            friends.append(('As an abstract group', url_for('abstract.by_label', label=data['abstract_label'])))
+        prop2 = [('Label', label)]
+        if wgg.portrait:
+            prop2.append( (None, wgg.portrait) )
+        prop2 = prop2 + [
             ('Degree', prop_int_pretty(data['n'])),
             ('Order', prop_int_pretty(order)),
             ('Cyclic', yesno(data['cyc'])),
@@ -325,6 +329,8 @@ def render_group_webpage(args):
         if len(pretty) > 0:
             prop2.extend([('Group:', pretty)])
             data['pretty_name'] = pretty
+        gp_label = data['abstract_label']
+        data['groupid'] = abstract_group_display_knowl(gp_label, pretty if pretty else gp_label)
         data['name'] = re.sub(r'_(\d+)',r'_{\1}',data['name'])
         data['name'] = re.sub(r'\^(\d+)',r'^{\1}',data['name'])
         data['nilpotency'] = '$%s$' % data['nilpotency']
@@ -335,9 +341,12 @@ def render_group_webpage(args):
         data['malle_a'] = wgg.malle_a
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
-            downloads.append(('Code to {}'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
-        bread = get_bread([(label, ' ')])
+        # split the label so that breadcrumbs point to a search for this object's degree
+        parent_id, child_id = label.split("T")
+        split_label = [(parent_id, "./?n=" + parent_id), (child_id, " ")]
+        bread = get_bread(split_label)
         return render_template(
             "gg-show-group.html",
             title=title,
@@ -349,7 +358,7 @@ def render_group_webpage(args):
             friends=friends,
             downloads=downloads,
             KNOWL_ID="gg.%s" % label,
-            learnmore=learnmore_list())
+            learnmore=learnmore_list()+[('Picture description', url_for('.pictures'))])
 
 @galois_groups_page.route('/<label>/download/<download_type>')
 def gg_code(label,download_type):
@@ -433,6 +442,14 @@ def reliability():
                            title=t, bread=bread,
                            learnmore=learnmore_list_remove('Reliability'))
 
+@galois_groups_page.route("/Pictures")
+def pictures():
+    t = r'Pictures for Galois Groups'
+    bread = get_bread('Galois Group Pictures')
+    return render_template(
+        "single.html", kid='portrait.gg',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
 
 class GalSearchArray(SearchArray):
     noun = "group"
@@ -579,8 +596,8 @@ class GaloisStats(StatsDisplay):
 
     @property
     def summary(self):
-        return r"The database currently contains $%s$ transitive subgroups of $S_n$, including all subgroups (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Among the $2{,}801{,}324$ groups in degree $32$, all those with order less than $512$ or greater than $40{,}000{,}000{,}000$ are included." % latex_comma(self.ngroups)
+        return r"The database currently contains %s transitive subgroups of $S_n$, including all subgroups (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Among the $2{,}801{,}324$ groups in degree $32$, all those with order less than $512$ or greater than $40{,}000{,}000{,}000$ are included." % comma(self.ngroups)
 
     @property
     def short_summary(self):
-        return r'The database current contains $%s$ groups, including all transitive subgroups of $S_n$ (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Here are some <a href="%s">further statistics</a>.' % (latex_comma(self.ngroups), url_for(".statistics"))
+        return r'The database currently contains %s groups, including all transitive subgroups of $S_n$ (up to conjugacy) for $n \le 47$ and $n \ne 32$.  Here are some <a href="%s">further statistics</a>.' % (comma(self.ngroups), url_for(".statistics"))

@@ -118,7 +118,6 @@
       url_for: "abvarfq.abelian_varieties"
       colspan: onecolumn
     - title: Belyi maps
-      status: beta
       url_for: "belyi.index"
       colspan: onecolumn
 
@@ -202,7 +201,6 @@
     colspan: onecolumn
   - title: Abstract groups
     url_for: "abstract.index"
-    status: beta
     colspan: onecolumn
   - title: Lattices
     url_for: "lattice.lattice_render_webpage"

@@ -292,7 +292,7 @@ def expr_error(err):
     return err_msg
 
 def expr_getc():
-    global cur_expr, cur_index
+    global cur_index
     while cur_index < len(cur_expr):
         result = cur_expr[cur_index]
         cur_index += 1
@@ -545,15 +545,15 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                             group_order = int(a)*g-b
                     elif a == '':
                         group_order = g
-                    else: #ag
+                    else:  # ag
                         group_order = int(a)*g
 
                 queries.append((group_order, g))
 
-            if instance == 1: #If there is only one linear function
-                return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
+            if instance == 1:  # If there is only one linear function
+                return ['$or', [{key: gp_ord, 'genus': g} for gp_ord, g in queries]]
             else:
-                return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
+                return [[key, gp_ord, g] for gp_ord, g in queries]  # Nested list
 
         else:
             raise ValueError("It needs to be an integer (such as 25), \
@@ -1276,6 +1276,12 @@ class HGCWASearchArray(SearchArray):
     jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
     jump_knowl = "curve.highergenus.aut.search_input"
     jump_prompt = "Label"
+    null_column_explanations = { # No need to display warnings for these
+        'hyperelliptic': False,
+        'cyclic_trigonal': False,
+        'full_label': False,
+        'full_auto': False,
+    }
 
     def __init__(self):
         genus = TextBox(

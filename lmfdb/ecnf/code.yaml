@@ -2,11 +2,13 @@ prompt:
   sage:  'sage'
   pari:  'gp'
   magma: 'magma'
+  oscar: 'oscar'
 
 logo:
   sage:  <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
   pari:  <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 not-implemented:
   sage:  |
@@ -15,84 +17,129 @@ not-implemented:
     \\\\ (not yet implemented)
   magma: |
     // (not yet implemented)
+  oscar: |
+    # (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with elliptic curve {label}
+  rest: |
+    (Note that not all these functions may be available, and some may take a long time to execute.)
+    
 field:
+  comment: Define the base number field
   sage:  R.<x> = PolynomialRing(QQ);  K.<a> = NumberField(R(%s))
   pari:  K = nfinit(Polrev(%s));
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(R!%s);
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(Qx(%s))
 
 curve:
+  comment: Define the curve
   sage:  E = EllipticCurve(%s)
   pari:  E = ellinit(%s);
   magma: E := EllipticCurve(%s);
+  oscar: E = elliptic_curve(%s)
 
 is_min:
+  comment: Test whether it is a global minimal model
   sage:  E.is_global_minimal_model()
 
 cond:
+  comment: Compute the conductor
   sage:  E.conductor()
   pari:  ellglobalred(E)[1]
   magma: Conductor(E);
+  oscar: conductor(E)
 
 cond_norm:
+  comment: Compute the norm of the conductor
   sage:  E.conductor().norm()
-  pari:  idealnorm(ellglobalred(E)[1])
+  pari:  idealnorm(K, ellglobalred(E)[1])
   magma: Norm(Conductor(E));
+  oscar: norm(conductor(E))
 
 disc:
+  comment: Compute the discriminant
   sage:  E.discriminant()
   pari:  E.disc
   magma: Discriminant(E);
+  oscar: discriminant(E)
 
 disc_norm:
+  comment: Compute the norm of the discriminant
   sage:  E.discriminant().norm()
   pari:  norm(E.disc)
   magma: Norm(Discriminant(E));
+  oscar: norm(discriminant(E))
 
 jinv:
+  comment: Compute the j-invariant
   sage:  E.j_invariant()
   pari:  E.j
   magma: jInvariant(E);
+  oscar: j_invariant(E)
 
 cm:
+  comment: Test for Complex Multiplication
   sage:  E.has_cm(), E.cm_discriminant()
   magma: HasComplexMultiplication(E);
 
 rank:
+  comment: Compute the Mordell-Weil rank
   sage:  E.rank()
   magma: Rank(E);
 
 gens:
+  comment: Compute the generators (of infinite order)
   sage:  gens = E.gens(); gens
   magma: |
          gens := [P:P in Generators(E)|Order(P) eq 0]; gens;
 
 reg:
+  comment: Compute the regulator
   sage:  E.regulator_of_points(gens)
   magma: Regulator(gens);
 
 heights:
+  comment: Compute the heights of the generators (of infinite order)
   sage:  |
          [P.height() for P in gens]
   magma: |
          [Height(P):P in gens];
 
 tors:
+  comment: Compute the torsion subgroup
   sage:  T = E.torsion_subgroup(); T.invariants()
   pari:  T = elltors(E); T[2]
   magma: T,piT := TorsionSubgroup(E); Invariants(T);
 
 torgens:
+  comment: Compute the generators of the torsion subgroup
   sage:  T.gens()
   pari:  T[3]
   magma: |
          [piT(P) : P in Generators(T)];
 
 ntors:
+  comment: Compute the order of the torsion subgroup
   sage:  T.order()
   pari:  T[1]
   magma: Order(T);
 
 localdata:
+  comment: Compute the local reduction data at primes of bad reduction
   sage:  E.local_data()
   magma: LocalInformation(E);
+
+snippet_test:
+  test11.1-a1: 
+    label: 11.1-a1
+    langs:
+    url: EllipticCurve/2.0.11.1/11.1/a/1/download/{lang}
+  test81.1-CMa1: 
+    label: 81.1-CMa1
+    langs:
+    url: EllipticCurve/2.0.3.1/81.1/CMa/1/download/{lang}
+
+
+  

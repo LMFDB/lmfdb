@@ -9,17 +9,16 @@ from lmfdb.utils import (
     flash_error, SearchArray, TextBox, CountBox,
     parse_ints, clean_input, to_dict,
     # parse_gap_id, parse_bracketed_posints,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
-from lmfdb.groups.abstract.main import abstract_group_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_subgroup_label_regex
 
 from lmfdb.groups.glnQ import glnQ_page
 
 credit_string = "Michael Bush, Lewis Combes, Tim Dokchitser, John Jones, Kiran Kedlaya, Jen Paulhus, David Roberts,  David Roe, Manami Roy, Sam Schiavone, and Andrew Sutherland"
 
 glnq_label_regex = re.compile(r'^(\d+)\.(\d+).*$')
-abstract_subgroup_label_regex = re.compile(r'^(\d+)\.(([a-z]+)|(\d+))\.\d+$')
 
 def learnmore_list():
     return [ ('Completeness of the data', url_for(".completeness_page")),
@@ -37,9 +36,8 @@ def label_is_valid(lab):
     return glnq_label_regex.fullmatch(lab)
 
 def get_bread(breads=[]):
-    bc = [("Groups", url_for(".index")),("GLnQ", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc = [("Groups", url_for(".index")), ("GLnQ", url_for(".index"))]
+    bc.extend(breads)
     return bc
 
 @glnQ_page.route("/")
@@ -54,9 +52,10 @@ def index():
 
 
 @glnQ_page.route("/random")
+@redirect_no_cache
 def random_glnQ_group():
     label = db.gps_qrep.random(projection='label')
-    return redirect(url_for(".by_label", label=label))
+    return url_for(".by_label", label=label)
 
 
 @glnQ_page.route("/<label>")
@@ -73,7 +72,7 @@ def by_label(label):
 def dispmat(mat):
     s = r'\begin{pmatrix}'
     for row in mat:
-        rw = '& '.join([str(z) for z in row])
+        rw = '& '.join(str(z) for z in row)
         s += rw + '\\\\'
     s += r'\end{pmatrix}'
     return s

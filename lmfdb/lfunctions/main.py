@@ -44,7 +44,7 @@ from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
-    parse_bool, parse_ints, parse_floats, parse_noop, parse_mod1,
+    parse_bool, parse_ints, parse_ints_to_list, parse_floats, parse_noop, parse_mod1,
     parse_element_of, parse_not_element_of, search_parser)
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
@@ -349,14 +349,24 @@ lfunc_columns = SearchColumns([
                  download_col="instance_urls")],
     db_cols=['algebraic', 'analytic_conductor', 'bad_primes', 'central_character', 'conductor', 'degree', 'instance_urls', 'label', 'motivic_weight', 'mu_real', 'mu_imag', 'nu_real_doubled', 'nu_imag', 'order_of_vanishing', 'primitive', 'rational', 'root_analytic_conductor', 'root_angle', 'self_dual', 'z1'])
 
+euler_factor_columns = SearchColumns([
+    MultiProcessedCol("label", "lfunction.label", "Label",
+                         ["label", "url"],
+                         lambda label, url: '<a href="%s">%s</a>' % (url, label),
+                      download_col="label")]
+    + [MathCol("euler%s" % p, "lfunction.euler_factor", r"$F_%s(T)$" % p, default=False) for p in prime_range(100)],
+    db_cols=1)
+
 class LfuncDownload(Downloader):
     table = db.lfunc_search
+
     def postprocess(self, rec, info, query):
         rec['mus'] = list(zip(rec['mu_real'], rec['mu_imag']))
-        rec['nus'] = [(0.5*r,i) for (r,i) in zip(rec['nu_real_doubled'], rec['nu_imag'])]
+        rec['nus'] = [(0.5 * r, i)
+                      for r, i in zip(rec['nu_real_doubled'], rec['nu_imag'])]
         if info['search_array'].force_rational:
             # root_angle is either 0 or 0.5
-            rec['root_number'] = 1 - int(4*rec['root_angle'])
+            rec['root_number'] = 1 - int(4 * rec['root_angle'])
         return rec
 
 @search_wrap(table=db.lfunc_search,
@@ -385,7 +395,7 @@ def l_function_search(info, query):
 def trace_search(info, query):
     set_Trn(info, query)
     common_parse(info, query)
-    process_an_constraints(info, query, qfield='dirichlet_coefficients', nshift=lambda n: n+1)
+    process_an_constraints(info, query, qfield='dirichlet_coefficients')
 
 
 @search_parser
@@ -419,7 +429,8 @@ def parse_euler(inp, query, qfield, p=None, d=None):
              table=db.lfunc_search,
              title="L-function Euler product search",
              err_title="L-function search input error",
-             shortcuts={'jump':jump_box},
+             columns=euler_factor_columns,
+             shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              postprocess=process_euler,
              learnmore=learnmore_list,
              bread=lambda: get_bread(breads=[("Search results", " ")]))
@@ -435,6 +446,8 @@ def euler_search(info, query):
         flash_error("To search on <span style='color:black'>Euler factors</span>, you must specify one <span style='color:black'>degree</span>.")
         info['err'] = ''
         raise ValueError("To search on Euler factors, you must specify one degree")
+    p_range = parse_ints_to_list(info['n'])
+    info["showcol"] = ".".join("euler%s" % p for p in prime_range(100) if p in p_range)
     for p in prime_range(100):
         parse_euler(info, query, 'euler_constraints', qfield='euler%s' % p, p=p, d=d)
 
@@ -967,6 +980,8 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
     # thus it must be an old label, and we redirect to the orbit
     old_label = '.'.join(map(str, [level, weight, character, hecke_orbit]))
     newform_label = convert_newformlabel_from_conrey(old_label)
+    if newform_label is None:
+        return abort(404, 'Invalid label')
     level, weight, char_orbit_label, hecke_orbit = newform_label.split('.')
     return redirect(url_for('.l_function_cmf_orbit', level=level, weight=weight,
                               char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit), code=301)

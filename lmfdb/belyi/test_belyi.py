@@ -154,7 +154,7 @@ class BelyiTest(LmfdbTest):
             "/Belyi/download_galmap_to_sage/7T6-7_2.2.1.1.1_3.2.2-a",
             follow_redirects=True,
         )
-        assert(
+        assert (
             "phi = 1/2*(7*nu-15)*x^7/(x^7+1/10*(28*nu+7)*x^6+1/100*(-56*nu+511)*x^5+1/40*(-672*nu-1323)*x^4+1/20*(-42*nu-63)*x^3+1/40*(1701*nu+3024)*x^2+1/200*(-6237*nu-11178))"
             in page.get_data(as_text=True)
         )

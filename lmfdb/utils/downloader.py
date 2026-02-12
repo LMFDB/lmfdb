@@ -12,7 +12,6 @@ In particular, the languages shown available for download are set by the `langua
 
 
 import time
-import datetime
 import re
 import itertools
 import csv
@@ -27,6 +26,7 @@ from io import BytesIO
 from sage.all import Integer, Rational, lazy_attribute
 
 from lmfdb.utils import plural_form, pluralize, flash_error
+from lmfdb.utils.datetime_utils import utc_now_naive
 
 class DownloadLanguage():
     # We choose the most common values; override these if needed in each subclass
@@ -268,7 +268,7 @@ class GPLanguage(DownloadLanguage):
     true = '1'
     false = '0'
     offset = 1
-    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
+    make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data();"'
     function_start = '{func_name}({func_args}) =\n{{\n' # Need double bracket since we're formatting these
     function_end = '}\n'
     return_keyword = 'return('
@@ -305,7 +305,7 @@ class OscarLanguage(DownloadLanguage):
     def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
         if any(isinstance(c, PolynomialCol) for c in cols):
-            return '\nRx,x = PolynomialRing(QQ)\n\n'
+            return '\nZZx,x = polynomial_ring(QQ)\n\n'
         else:
             return '\n'
 
@@ -366,13 +366,20 @@ class CSVLanguage(DownloadLanguage):
 
     def assign_columns(self, columns, column_names):
         urlparts = urlparse(request.url)
-        urls = [urlunparse(urlparts._replace(
-            path=url_for("knowledge.show", ID=col.knowl),
-            params="",
-            query="",
-            fragment="")) for col in columns]
-        return self.write([f'=HYPERLINK("{url}", "{name}")'
-                           for (url, name) in zip(urls, column_names)])
+        out = []
+        for col, name in zip(columns, column_names):
+            # Make hyperlink of column name, if col.knowl exists
+            if getattr(col, "knowl", None):
+                url = urlunparse(urlparts._replace(
+                    path=url_for("knowledge.show", ID=col.knowl),
+                    params="",
+                    query="",
+                    fragment=""
+                ))
+                out.append(f'=HYPERLINK("{url}", "{name}")')
+            else:
+                out.append(name) # Else fallback to just column name
+        return self.write(out)
 
     def assign_iter(self, name, inp):
         # For CSV downloads, we only output data rows since CSV does not support comments
@@ -464,8 +471,8 @@ class Downloader():
         This function is called on each result from the database.
 
         This hooks makes it possible to construct a python object wrapping the record that provides
-        additional methods for supporting search columns.  See abelian varieties and artin representations
-        for examples.
+        additional methods for supporting search columns.  See abelian varieties, artin representations
+        or ECNF for examples.
         """
         return row
 
@@ -615,7 +622,7 @@ class Downloader():
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"out := rec<RecFormat|{','.join(pairs)}>;"]
         elif lang.name == "gap":
-            local_vars = ["out"] + [var for (var, (require, bylang)) in self.inclusions.items() if "gap" in bylang]
+            local_vars = ["out"] + [var for var, (require, bylang) in self.inclusions.items() if "gap" in bylang]
             pairs = [f"{col}:=row[{i+1}]" for i, col in enumerate(column_names)]
             lines = [f"local {', '.join(local_vars)};", f"out := rec({','.join(pairs)});"]
         elif lang.name == "gp":
@@ -663,7 +670,7 @@ class Downloader():
         table = self.get_table(info)
         self.search_array = info.get("search_array")
         filename = self.filebase
-        ts = datetime.datetime.now().strftime("%m%d_%H%M")
+        ts = utc_now_naive().strftime("%m%d_%H%M")
         filename = f"lmfdb_{filename}_{ts}"
         urlparts = urlparse(request.url)
         pieces = urlparts.query.split("&")
@@ -745,7 +752,7 @@ class Downloader():
                     seen.add(name)
             cols = [cols[i] for i in include]
             column_names = [column_names[i] for i in include]
-        data_format = [col.title for col in cols]
+        data_format = [(col.title if isinstance(col.title, str) else col.title(info)) for col in cols]
         first50 = [[col.download(rec) for col in cols] for rec in first50]
         if num_results > 10000:
             # Estimate the size of the download file.  This won't necessarily be a great estimate
@@ -804,9 +811,15 @@ class Downloader():
                 from lmfdb.knowledge.knowl import knowldb
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
+                defines_re = re.compile(r"""\{\{\s*DEFINES\(\s*"([^"]+)"[^)]*\)\s*\}\}""")
+                jinja_comment_re = re.compile(r"""\{#.*?#\}""")
 
                 def knowl_subber(match):
                     return match.group(1)
+
+                def defines_subber(match):
+                    word = match.group(1)
+                    return f"**{word}**"
 
             # If we haven't specified a more specific download_desc, we use the column knowl to get a string to add to the bottom of the file for each column
             for col, name in zip(cols, column_names):
@@ -814,16 +827,23 @@ class Downloader():
                     knowldata = all_knowls.get(col.knowl)
                     if knowldata is None:
                         continue
-                    # We want to remove KNOWL macros
+                    # We want to remove KNOWL and DEFINES macros
                     _, content = knowldata
                     knowl = knowl_re.sub(knowl_subber, content)
+                    knowl = defines_re.sub(defines_subber, knowl)
+                    # We also want to remove Jinja comments (i.e. {# ... #})
+                    knowl = jinja_comment_re.sub("", knowl)
                 else:
                     knowl = col.download_desc
                 if knowl:
-                    if name.lower() == col.title.lower():
-                        yield lang.comment(f" {col.title} --\n")
+                    if isinstance(col.title, str):
+                        title = col.title
                     else:
-                        yield lang.comment(f"{col.title} ({name}) --\n")
+                        title = col.title(info)
+                    if name.lower() == title.lower():
+                        yield lang.comment(f" {title} --\n")
+                    else:
+                        yield lang.comment(f"{title} ({name}) --\n")
                     for line in knowl.split("\n"):
                         if line.strip():
                             yield lang.comment("    " + line.rstrip() + "\n")
