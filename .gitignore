@@ -9,6 +9,9 @@ config.ini
 *.o
 *.c
 *.swp
+*.aux
+*.log
+*.dvi
 *~
 
 
@@ -34,6 +37,9 @@ LMFDBinventory.log
 LMFDBtransactions_inv.log
 
 scripts/groups/Make-images/images/*.png
+scripts/groups/Make-images/images/eqguts.tex
+scripts/groups/Make-images/prettyindex
+scripts/groups/Make-images/imagereloader
 
 smf_lmfdb
 __pycache__

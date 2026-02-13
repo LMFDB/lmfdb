@@ -2223,12 +2223,12 @@ td.highlighted {
   text-align: right;
 }
 
-#column-selector, #sort-selecter {
+#column-selector, #sort-selector {
   scrollbar-width: none; /*For Firefox*/;
   -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
   overflow-y:auto;
 }
-#column-selector:-webkit-scrollbar, #sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
+#column-selector:-webkit-scrollbar, #sort-selector:-webkit-scrollbar { /*For WebKit Browsers*/
     width: 0;
 }
 

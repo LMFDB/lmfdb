@@ -108,6 +108,8 @@ class SearchBox(TdElt):
         example_col=False,
         id=None,
         qfield=None,
+        label_td_kwds={},
+        input_td_kwds={},
     ):
         self.name = name
         self.id = id
@@ -130,6 +132,8 @@ class SearchBox(TdElt):
             width = self._default_width
         self.width = width
         self.short_width = self.width if short_width is None else short_width
+        self.label_td_kwds = label_td_kwds
+        self.input_td_kwds = input_td_kwds
 
     def _label(self, info):
         label = self.label if info is None else self.short_label
@@ -145,11 +149,11 @@ class SearchBox(TdElt):
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True) + self._label(info) + "</td>"
+        return self.td(colspan, rowspan=self.label_rowspan, nowrap=True, **self.label_td_kwds) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
         colspan = self.input_colspan if info is None else self.short_colspan
-        return self.td(colspan, rowspan=self.input_rowspan) + self._input(info) + "</td>"
+        return self.td(colspan, rowspan=self.input_rowspan, **self.input_td_kwds) + self._input(info) + "</td>"
 
     def example_html(self, info=None):
         if self.example_span:
@@ -280,6 +284,7 @@ class SelectBox(SearchBox):
         id=None,
         qfield=None,
         extra=[],
+        **kwds,
     ):
         SearchBox.__init__(
             self,
@@ -298,6 +303,7 @@ class SelectBox(SearchBox):
             example_col=example_col,
             id=id,
             qfield=qfield,
+            **kwds,
         )
         if options is None:
             options = self._options
@@ -489,7 +495,9 @@ class ColumnController(SelectBox):
             name="column_control",
             knowl="doc.select_search_columns",
             label="Select",
-            width=170)
+            width=170,
+            label_td_kwds={"id": "column-selector-label"},
+        )
 
     def _label(self, info):
         if info is None:
@@ -567,7 +575,7 @@ class SortController(SelectBox):
             '''onmouseup="this.focus();"''',
             '''onblur="blur_sort(this);"''',
             '''oninput="control_sort(this);"''',
-            '''id="sort-selecter"''',
+            '''id="sort-selector"''',
             '''style="width: 170px; position: absolute; z-index: 9999;"''',
         ]
         super().__init__(
@@ -577,6 +585,7 @@ class SortController(SelectBox):
             knowl=knowl,
             width=None,
             extra=extra,
+            label_td_kwds={"id": "sort-selector-label"},
         )
 
     #sort_box = SelectBox(
@@ -600,11 +609,18 @@ class SortController(SelectBox):
 class SearchButton(SearchBox):
     _default_width = 170
 
-    def __init__(self, value, description, **kwds):
+    def __init__(self, value, description, name=None, onclick=None, cls=None, type=None, **kwds):
         kwds['label'] = kwds.get('label', '')
         SearchBox.__init__(self, **kwds)
         self.value = value
         self.description = description
+        self.name = name
+        self.onclick = onclick
+        self.cls = cls
+        if type is None:
+            self.type = " type='submit'"
+        else:
+            self.type = type
 
     def td(self, colspan=None, **kwds):
         kwds = dict(kwds)
@@ -612,16 +628,32 @@ class SearchButton(SearchBox):
         return SearchBox.td(self, colspan, **kwds)
 
     def _input(self, info):
-        if info is None:
+        if self.name is None:
+            name = "search_type"
+        else:
+            name = self.name
+        if self.onclick is not None:
+            if callable(self.onclick):
+                onclick = self.onclick(info)
+            else:
+                onclick = self.onclick
+        elif info is None:
             onclick = ""
         else:
             onclick = " onclick='resetStart()'"
-        if self.description in ["Search again", "Generate statistics"]:
+        if self.cls is not None:
+            if callable(self.cls):
+                cls = self.cls(info)
+            else:
+                cls = self.cls
+        elif self.description in ["Search again", "Generate statistics"]:
             cls = " class='search_stale'"
         else:
             cls = " class='search_fresh'"
-        btext = "<button type='submit' name='search_type' value='{val}'{cls} style='width: {width}px;'{onclick}>{desc}</button>"
+        btext = "<button{type} name='{name}' value='{val}'{cls} style='width: {width}px;'{onclick}>{desc}</button>"
         return btext.format(
+            type=self.type,
+            name=name,
             width=self.width,
             val=self.value,
             desc=self.description,
@@ -872,6 +904,9 @@ class SearchArray(UniqueRepresentation):
         return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
 <button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
 """ % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
+
+    def is_narrowing(self, info):
+        return any(any(box.name in info for box in row) for row in self.refine_array)
 
 class EmbeddedSearchArray(SearchArray):
     """
