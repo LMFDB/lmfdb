@@ -161,7 +161,7 @@ class SearchBox(TdElt):
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
         kwds = dict(self.label_td_kwds)
-        kwds.update(self.merge_style(self.label_style))
+        kwds.update(self._merge_style(self.label_style))
         return self.td(colspan, rowspan=self.label_rowspan, nowrap=True, **kwds) + self._label(info) + "</td>"
 
     def input_html(self, info=None):
