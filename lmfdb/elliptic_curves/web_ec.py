@@ -80,17 +80,17 @@ def gl2_subgroup_data(label):
     try:
         from lmfdb.modular_curves.main import LABEL_RE, RSZB_LABEL_RE, S_LABEL_RE
         if LABEL_RE.fullmatch(label):
-            data = db.gps_gl2zhat_fine.lookup(label)
+            data = db.gps_gl2zhat.lookup(label)
         elif RSZB_LABEL_RE.fullmatch(label):
-            data = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label})
+            data = db.gps_gl2zhat.lucky({"RSZBlabel":label})
         elif S_LABEL_RE.fullmatch(label):
             r = S_LABEL_RE.fullmatch(label)
             Slevel = int(r[1])
             if r[2] != "G":
-                data = db.gps_gl2zhat_fine.lucky({'Slabel':label,'level':Slevel})
+                data = db.gps_gl2zhat.lucky({'Slabel':label,'level':Slevel})
             else:
                 # hack to handle surjective mod-ell images where the level of the image is 1 but we want to show data at level ell
-                data = db.gps_gl2zhat_fine.lucky({'level':1})
+                data = db.gps_gl2zhat.lucky({'level':1})
                 data['level'] = Slevel
                 data['generators'] = [[m.matrix()[0,0],m.matrix()[0,1],m.matrix()[1,0],m.matrix()[0,1]] for m in GL(2,Integers(Slevel)).generators()]
                 data['isogeny_orbits'] = [[Slevel,Slevel+1,1]]

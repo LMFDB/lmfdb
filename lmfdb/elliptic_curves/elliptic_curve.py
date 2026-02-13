@@ -1321,6 +1321,7 @@ class ECSearchArray(SearchArray):
             name="bad_primes",
             label="Bad primes $p$&emsp;", # trailing &emsp; prevents caption moving when toggling advanced search opts
             short_label=r"Bad$\ p$",
+            label_style={"min-width": "215px"},
             knowl="ec.q.reduction_type",
             example="5,13",
             select_box=bad_quant)
