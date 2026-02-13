@@ -17,26 +17,54 @@
     {% if curve.genus > 0 %}
       <td>{{ KNOWL("modcurve.newform_level", "Newform level:") }}</td>
       <td>${{ curve.newform_level }}$</td>
-    {% endif %}</tr>
-    <tr>
-      <td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td><td style="width:20px;"></td>
-      <td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:<td>${{ curve.psl2index }}$</td></tr>
-    <tr>
-      <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td>
-      <td> ${{ curve.genus }} = 1 + \frac{ {{curve.psl2index}} }{12} - \frac{ {{curve.nu2}} }{4} - \frac{ {{curve.nu3}} }{3} - \frac{ {{curve.cusps}} }{2}$</td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
-      <td> {{ curve.cusps_display }}</td><td style="width:20px;"></td>
-      <td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td>
-      <td>{{ curve.cusp_widths_display }}</td><td style="width:60px;"></td>
-      <td>{{ KNOWL("modcurve.cusp_orbits", "Cusp orbits") }}</td>
-      <td>{{ curve.cusp_orbits_display }}</td>
-    </tr>
-    <tr>
-      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td>
-      <td> ${{curve.nu2}}$ of order $2$ and ${{curve.nu3}}$ of order $3$ </td>
-    </tr>
+    {% endif %}
+  </tr>
+  <tr>
+    <td>{{ KNOWL("modcurve.index", "Index") }}:</td><td> ${{ curve.index }}$ </td><td style="width:20px;"></td>
+    <td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:<td>${{ curve.psl2index }}$</td></tr>
+  <tr>
+    <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td>
+    <td> ${{ curve.genus }} = 1 + \frac{ {{curve.psl2index}} }{12} - \frac{ {{curve.nu2}} }{4} - \frac{ {{curve.nu3}} }{3} - \frac{ {{curve.cusps}} }{2}$</td><td style="width:20px;"></td>
+    <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }}:</td>
+    <td> ${{curve.nu2}}$ of order $2$ and ${{curve.nu3}}$ of order $3$ </td>
+  </tr>
+  <tr>
+    <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
+    <td> {{ curve.cusps_display }}</td><td style="width:20px;"></td>
+    <td>{{ KNOWL("modcurve.cusp_widths", "Cusp widths") }}</td>
+    <td>{{ curve.cusp_widths_display }}</td><td style="width:60px;"></td>
+    <td>{{ KNOWL("modcurve.cusp_orbits", "Cusp orbits") }}</td>
+    <td>{{ curve.cusp_orbits_display }}</td>
+  </tr>
+  <tr>
+    <td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td>
+    <td> ${{ curve.q_gonality if curve.q_gonality else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$ </td><td style="width:20px;"></td>
+    <td>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}:</td>
+    <td> ${{ curve.qbar_gonality if curve.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$ </td>
+  </tr>
+  <tr>
+    <td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td>
+    <td> ${{ curve.rational_cusps }}$ </td><td style="width:20px;"></td>
+    <td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td>
+    <td> {{ "yes $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td>
+  </tr>
+  <tr>
+    <td>{{ KNOWL('modcurve.agreeable', 'Agreeable closure') }}:</td>
+    <td><a href="/ModularCurve/Q/{{curve.agreeable_closure}}">{{curve.agreeable_closure}}</a>
+    {% if curve.agreeable %} (itself) {% endif %}
+    </td><td style="width:20px;"></td>
+    <td>{{ KNOWL('modcurve.agreeable', 'Agreeable quotient') }}:</td>
+    <td>{{ curve.format_agreeable_quotient()}}</td>
+  </tr>
+  <tr>
+    <td>{{ KNOWL('modcurve.entanglement_index', 'Entanglement index') }}:</td>
+    <td>${{ curve.entanglement_index }}$</td>
+  {% if curve.entanglement_quotient %}
+    <td style="width:20px;"></td>
+    <td>{{ KNOWL('modcurve.entanglement_index', 'Entanglement quotient') }}:</td>
+    <td>{{ curve.show_entanglement_quotient() | safe}}</td>
+  </tr>
+  {% endif %}
   {% if curve.genus > 0 %}
       <tr>
         <td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td>
@@ -44,20 +72,10 @@
       </tr>
   {% endif %}
   <tr>
-    <td>{{ KNOWL("modcurve.gonality", "$\Q$-gonality")}}:</td>
-    <td> ${{ curve.q_gonality if curve.q_gonality else "%s \\le \\gamma \\le %s"%(curve.q_gonality_bounds[0],curve.q_gonality_bounds[1]) }}$ </td>
-  </tr>
-  <tr>
-    <td>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}:</td>
-    <td> ${{ curve.qbar_gonality if curve.qbar_gonality else "%s \\le \\gamma \\le %s"%(curve.qbar_gonality_bounds[0],curve.qbar_gonality_bounds[1]) }}$ </td>
-  </tr>
-  <tr>
-    <td>{{ KNOWL("modcurve.cusps", "Rational cusps") }}:</td>
-    <td> ${{ curve.rational_cusps }}$ </td>
-  </tr>
-  <tr>
-    <td>{{ KNOWL("modcurve.cm_discriminants", "Rational CM points") }}:</td>
-    <td> {{ "yes $\quad(D =$ $%s$)"%(curve.cm_discriminant_list) if curve.cm_discriminants else "none" }} </td>
+    <td>{{ KNOWL('modcurve.minimal_twist', 'Minimal twist') }}:</td>
+    <td><a href="/ModularCurve/Q/{{curve.minimal_twist}}">{{curve.minimal_twist}}</a>
+    {% if curve.twist_minimal %} (itself) {% endif %}
+    </td>
   </tr>
 </table>
 
@@ -133,6 +151,10 @@
       <td>{{ KNOWL('modcurve.level_structure', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td>
       <td>${{ curve.full_torsion_field_degree() }}$</td>
     </tr>
+    <tr>
+      <td>{{ KNOWL('modcurve.agreeable', 'Full '+(curve.level|string)+'-torsion field degree') }}:</td>
+      <td>${{ curve.full_torsion_field_degree() }}$</td>
+    </tr>
   </table>
 {% endif %}
 
@@ -170,11 +192,29 @@
     <tr>
       <td>{{ KNOWL('modcurve.decomposition', 'Decomposition') }}:</td><td> {{ curve.formatted_dims }} </td>
     </tr>
+    {% if (curve.newforms_by_dimrank|length) == 1 %}
     <tr>
       <td>{{ KNOWL('modcurve.decomposition', 'Newforms') }}:</td><td> {{ curve.formatted_newforms | safe }} </td>
     </tr>
+    {% endif %}
   </table>
-{% endif %}
+  {% if (curve.newforms_by_dimrank|length) > 1 %}
+    <table class="ntdata" style="margin-left:0">
+      <tr>
+        <th>{{ KNOWL('cmf.dimension', 'Dimension') }}</th>
+        <th>{{ KNOWL('cmf.analytic_rank', 'Rank') }}</th>
+        <th>{{ KNOWL('modcurve.decomposition', 'Newforms') }}</th>
+      </tr>
+      {% for dim, rank, newforms in curve.newforms_by_dimrank %}
+        <tr>
+          <td>${{ dim }}$</td>
+          <td>${{ rank }}$</td>
+          <td style="white-space:wrap;">{{ newforms | safe }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %} {# (curve.newforms_by_dimrank|length) > 1 #}
+{% endif %} {# curve.genus > 0 and curve.dims is not none #}
 
 {% if curve.formatted_models or (curve.genus == 0 and not curve.pointless) or curve.has_more_models %}
   <h2> {{ KNOWL('modcurve.model', 'Models') }} </h2>
@@ -233,7 +273,7 @@
 {% endif %}
 
 {#
-We are removing this section until we have more sources of non-rational points.  You can still search for them 
+We are removing this section until we have more sources of non-rational points.  You can still search for them
 
 <h2> {{ KNOWL('modcurve.nonrational_point', 'Non-rational points') }}</h2>
 
@@ -406,7 +446,7 @@ We are removing this section until we have more sources of non-rational points. 
       <div class="subgroup_diagram">
         <a href="{{url_for('.lat_diagram', label=curve.label)}}">See a full page version of the diagram</a>
       </div>
-    {% endif %} 
+    {% endif %}
     {# wide #}
 
     <script type="text/javascript">
@@ -415,7 +455,7 @@ We are removing this section until we have more sources of non-rational points. 
       sdiagram.draw();
     </script>
 
-  {% endif %} 
+  {% endif %}
   {# curve.lattice_labels #}
 
   {% if curve.fiber_product_of %}

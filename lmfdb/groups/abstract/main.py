@@ -3485,14 +3485,15 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        # dealing with groups identified in magma but not in gap so can't do live pages˚
-        ord = label.split(".")[0]
-        if missing_subs(label) and gp.source == "Missing":
-            ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
-                label,
-                f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
-                "subgroups with this order")
-            return Markup(ans)
+        # dealing with groups identified in magma but not in gap so can't do live pages
+        if not label.startswith("ab/"):
+            ord = label.split(".")[0]
+            if missing_subs(label) and gp.source == "Missing":
+                ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
+                    label,
+                    f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
+                    "subgroups with this order")
+                return Markup(ans)
         ans = f"Group ${gp.tex_name}$: "
         ans += create_boolean_string(gp, type="knowl")
         ans += f"<br />Label: {gp.label}<br />"

@@ -41,20 +41,20 @@ if len(sys.argv) == 3:
     j = int(sys.argv[2])
     assert k > j
     assert j >= 0
-    _min_id = db.mf_hecke_cc.min_id()
-    _max_id = db.mf_hecke_cc.max_id()
+    _min_id = db.mf_hecke_cc_eis.min_id()
+    _max_id = db.mf_hecke_cc_eis.max_id()
     chunk_size = (_max_id - _min_id )/k + 1
     start_time = time.time()
     counter = 0
     minid = _min_id + j*chunk_size
     maxid = _min_id + (j+1)*chunk_size
     query = {'id':{'$gte': minid, '$lt': maxid}}
-    total = db.mf_hecke_cc.count(query)
+    total = db.mf_hecke_cc_eis.count(query)
     print("%d: %d rows to check" % (j, total))
     if total > 0:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'../../logs/check_ap2_amn.%d.log' % j), 'w') as F:
             while counter < total:
-                for rec in db.mf_hecke_cc.search(query, ['id','lfunction_label', 'an_normalized[0:1000]'], sort = ['id'], limit = 1000):
+                for rec in db.mf_hecke_cc_eis.search(query, ['id','lfunction_label', 'an_normalized[0:1000]'], sort = ['id'], limit = 1000):
                     counter += 1
                     if not check_amn_slow(rec):
                         F.write('%s:amn\n' % rec['lfunction_label'])

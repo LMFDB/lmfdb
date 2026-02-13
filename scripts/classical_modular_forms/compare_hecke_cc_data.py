@@ -102,7 +102,7 @@ with open(filename, 'r') as F:
                 lfun_label = linesplit[1].split('.')
                 lfun_label[-2] = str(1)
                 linesplit[1] = '.'.join(lfun_label)
-            hc = db.mf_hecke_cc.lucky({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
+            hc = db.mf_hecke_cc_eis.lucky({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
             if hc is None:
                 print({'hecke_orbit_code': linesplit[0], 'lfunction_label' : linesplit[1]})
                 assert False

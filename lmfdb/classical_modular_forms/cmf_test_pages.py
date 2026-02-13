@@ -46,7 +46,7 @@ class CMFTest(LmfdbTest):
         res = []
         errors = []
         n = 0
-        for nf in list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'dim'])):
+        for nf in list(db.mf_newforms_eis.search({'level':level,'weight':weight}, ['label', 'dim'])):
             n += 1
             r = self.newform(nf['label'], nf['dim'])
             res.append(r)
@@ -69,8 +69,8 @@ class CMFTest(LmfdbTest):
         res = []
         n = 0
         url = '/ModularForm/GL2/Q/holomorphic/%d/%d/' % (level, weight)
-        newspaces = list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':-1 if bool(weight % 2) else 1}, ['label', 'dim']))
-        newforms = list(db.mf_newforms.search({'level':level,'weight':weight}, ['label', 'space_label', 'dim']))
+        newspaces = list(db.mf_newspaces_eis.search({'level':level,'weight':weight,'char_parity':-1 if bool(weight % 2) else 1,'is_cuspidal':True}, ['label', 'dim']))
+        newforms = list(db.mf_newforms_eis.search({'level':level,'weight':weight,'is_cuspidal':True}, ['label', 'space_label', 'dim']))
         dim = gp("mfdim([%s,%s,-1],0)" % (level,weight))
         if dim is None:
             for ns in newspaces:
@@ -130,7 +130,7 @@ class CMFTest(LmfdbTest):
                 res.append((None, url))
 
         #test wrong parity newspaces
-        for ns in list(db.mf_newspaces.search({'level':level,'weight':weight, 'char_parity':1 if bool(weight % 2) else -1}, ['label', 'dim'])):
+        for ns in list(db.mf_newspaces_eis.search({'level':level,'weight':weight, 'char_parity':1 if bool(weight % 2) else -1, 'is_cuspidal':True}, ['label', 'dim'])):
             label = ns['label']
             dim = ns['dim']
             url = '/ModularForm/GL2/Q/holomorphic/' + label.replace('.','/') + '/'
@@ -159,7 +159,7 @@ class CMFTest(LmfdbTest):
     def test_all(self):
         todo = []
         from lmfdb import db
-        maxNk2 = db.mf_newforms.max('Nk2')
+        maxNk2 = db.mf_newforms_eis.max('Nk2')
         for Nk2 in range(1, maxNk2 + 1):
             for N in ZZ(Nk2).divisors():
                 k = sqrt(Nk2/N)

@@ -1,0 +1,43 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+{{ tabs(("Lattices", ".index", false), ("Genera", ".genus_index", true)) }}
+
+<div>
+{{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('lattice.dimension', title='rank') }}:</td>
+    <td>{% for r in info.dim_list %} <a href="?rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
+    <td>{% for d in info.det_list %} <a href="?det={{d}}">{{d}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.signature', title='signature') }}:</td>
+    <td>{% for sig in info.signature_list %} <a href="?signature={{ sig[0] }}">{{ sig[1] }}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr><tr>
+    <td>By {{ KNOWL('lattice.class_number', title='class number') }}:</td>
+    <td>{% for cn in info.class_number_list %} <a href="?class_number={{cn}}">{{cn}}</a>&nbsp; {% endfor %} $\cdots$</td>
+  </tr>
+</table>
+
+<h2> {{ KNOWL('intro.search', 'Search') }} </h2>
+
+<form class='search'>
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+<table><tr><td>{{KNOWL('genus.search_input','Label or name')}}</td><td>
+<input type='text' name='jump' placeholder='3.3.4.01.6e'></td><td>
+<button type='submit'>Label</button></td></tr>
+<tr><td colspan="2"><span class="formexample">e.g. 3.3.4.01.6e</span></td></tr></table>
+</form>
+
+{% endblock %}

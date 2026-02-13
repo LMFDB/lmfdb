@@ -8,86 +8,45 @@ from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqr
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
     SearchArray, TextBox, CountBox, prop_int_pretty,
-    parse_ints, parse_list, parse_count, parse_start, clean_input,
-    search_wrap, redirect_no_cache, Downloader)
+    parse_ints, parse_posints, parse_list, parse_count, parse_noop,
+    parse_bracketed_posints, parse_start, clean_input,
+    parse_rational_to_list,
+    search_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
+from lmfdb.lattice.genus import common_parse, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list
 from lmfdb.lattice.lattice_stats import Lattice_stats
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus, vect_to_sym, vect_to_sym2, format_conway_symbol
 
 # Database connection
 
 from lmfdb import db
 
-# utilitary functions for displays
-
-
-def vect_to_matrix(v):
-    return str(latex(matrix(v)))
-
-
-def print_q_expansion(lst):
-    lst = [str(c) for c in lst]
-    Qa = PolynomialRing(QQ, 'a')
-    Qq = PowerSeriesRing(Qa, 'q')
-    return web_latex_split_on_pm(Qq(lst).add_bigoh(len(lst)))
-
-
-def my_latex(s):
-    ss = ""
-    ss += re.sub(r'x\d', 'x', s)
-    ss = re.sub(r"\^(\d+)", r"^{\1}", ss)
-    ss = re.sub(r'\*', '', ss)
-    ss = re.sub(r'zeta(\d+)', r'zeta_{\1}', ss)
-    ss = re.sub('zeta', r'\\zeta', ss)
-    ss += ""
-    return ss
-
-
 # breadcrumbs and links for data quality entries
 
 def get_bread(tail=[]):
-    base = [("Lattices", url_for(".lattice_render_webpage"))]
+    base = [("Lattices", url_for(".index"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
 
 
-def learnmore_list():
-    return [('Source and acknowledgments', url_for(".how_computed_page")),
-            ('Completeness of the data', url_for(".completeness_page")),
-            ('Reliability of the data', url_for(".reliability_page")),
-            ('Labels for integral lattices', url_for(".labels_page")),
-            ('History of lattices', url_for(".history_page"))]
-
-
-# Return the learnmore list with the matchstring entry removed
-def learnmore_list_remove(matchstring):
-    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
-
-
-# webpages: main, random and search results
+#############################################
+# Webpages: main, random and search results #
+#############################################
 
 @lattice_page.route("/")
-def lattice_render_webpage():
+def index():
     info = to_dict(request.args, search_array=LatSearchArray())
+
     if not request.args:
-        stats = Lattice_stats()
-        dim_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 24]
-        class_number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50, 51, 52, 54, 55, 56]
-        det_list_endpoints = [1, 1000, 10000, 100000, 1000000, 10000000, 100000000]
-        det_list = ["%s-%s" % (start, end - 1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
-        name_list = ["A2", "Z2", "D3", "D3*", "3.1942.3884.56.1", "A5", "E8", "A14", "Leech"]
-        info.update({'dim_list': dim_list, 'class_number_list': class_number_list,
-                     'det_list': det_list, 'name_list': name_list})
+        set_index_info(info, Lattice_stats())
         t = 'Integral lattices'
         bread = get_bread()
-        info['stats'] = stats
-        info['max_cn'] = stats.max_cn
-        info['max_dim'] = stats.max_dim
-        info['max_det'] = stats.max_det
         return render_template("lattice-index.html", info=info, title=t, learnmore=learnmore_list(), bread=bread)
     else:
         return lattice_search(info)
@@ -97,20 +56,18 @@ def lattice_render_webpage():
 @lattice_page.route("/random")
 @redirect_no_cache
 def random_lattice():
-    return url_for(".render_lattice_webpage", label=db.lat_lattices.random())
-
+    return url_for(".render_lattice_webpage", label=db.lat_lattices_new.random())
 
 @lattice_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "lattice",
-        db.lat_lattices,
+        db.lat_lattices_new,
         url_for_label=url_for_label,
         title=r"Some interesting Lattices",
         bread=get_bread("Interesting"),
         learnmore=learnmore_list()
     )
-
 
 @lattice_page.route("/stats")
 def statistics():
@@ -119,39 +76,28 @@ def statistics():
     return render_template("display_stats.html", info=Lattice_stats(), title=title, bread=bread, learnmore=learnmore_list())
 
 
-lattice_label_regex = re.compile(r'(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d*)')
+# Regex for lattice label format
+lattice_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:((?:\.[0-9a-zA-Z]+)*))\.([0-9a-fA-F]+)\.(\d+)')
 
 
 def split_lattice_label(lab):
     return lattice_label_regex.match(lab).groups()
 
-
-def lattice_by_label_or_name(lab):
-    clean_lab = str(lab).replace(" ", "")
-    clean_and_cap = str(clean_lab).capitalize()
-    for l in [lab, clean_lab, clean_and_cap]:
-        label = db.lat_lattices.lucky(
-            {'$or':
-             [{'label': l},
-              {'name': {'$contains': [l]}}]},
-            'label')
-        if label is not None:
-            return redirect(url_for(".render_lattice_webpage", label=label))
-    if lattice_label_regex.match(lab):
-        flash_error("The integral lattice %s is not recorded in the database or the label is invalid", lab)
-    else:
-        flash_error("No integral lattice in the database has label or name %s", lab)
-    return redirect(url_for(".lattice_render_webpage"))
+def lattice_jump(info):
+    jump = info["jump"]
+    # by label
+    if lattice_label_regex.fullmatch(jump):
+        return redirect(url_for_label(jump))
+    # by name - could improve this by reordering
+    label = db.lat_lattices_new.lucky({"name": jump}, "label")
+    if label is not None:
+        return redirect(url_for_label(label))
+    flash_error("No integral lattice in the database has label or name %s", jump)
+    return redirect(url_for(".index"))
 
 
-# download
-download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
-download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
-download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
-download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
-
-lattice_search_projection = ['label', 'dim', 'det', 'level',
+lattice_search_projection = ['label', 'rank', 'det', 'level',
                              'class_number', 'aut', 'minimum']
 
 
@@ -168,13 +114,20 @@ def lattice_search_isometric(res, info, query):
         A = query['gram']
         n = len(A[0])
         d = matrix(A).determinant()
-        for gram in db.lat_lattices.search({'dim': n, 'det': int(d)}, 'gram'):
+        for rec in db.lat_lattices_new.search({'dim': n, 'det': int(d)}, ["canonical_gram", "gram"]):
+            if rec.get("canonical_gram"):
+                gram = rec["canonical_gram"]
+            elif rec.get("gram"):
+                gram = rec["gram"][0]
+            else:
+                continue
+            # TODO: isom only works for positive definite gram matrices
             if isom(A, gram):
                 query['gram'] = gram
                 proj = lattice_search_projection
                 count = parse_count(info)
                 start = parse_start(info)
-                res = db.lat_lattices.search(query, proj, limit=count, offset=start, info=info)
+                res = db.lat_lattices_new.search(query, proj, limit=count, offset=start, info=info)
                 break
 
     return res
@@ -184,230 +137,73 @@ def url_for_label(label):
     return url_for(".render_lattice_webpage", label=label)
 
 
-lattice_columns = SearchColumns([
-    LinkCol("label", "lattice.label", "Label", url_for_label),
-    MathCol("dim", "lattice.dimension", "Dimension"),
-    MathCol("det", "lattice.determinant", "Determinant"),
-    MathCol("level", "lattice.level", "Level"),
-    MathCol("class_number", "lattice.class_number", "Class number"),
-    MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
-    MathCol("aut", "lattice.group_order", "Aut. group order")])
+lattice_columns = [
+    LinkCol("label", "lattice.label", "Label", url_for_label)
+] + common_columns + lat_only_columns
 
-
-@search_wrap(table=db.lat_lattices,
+@search_wrap(table=db.lat_lattices_new,
              title='Integral lattices search results',
              err_title='Integral lattices search error',
-             columns=lattice_columns,
-             shortcuts={'download': Downloader(db.lat_lattices),
-                        'label': lambda info: lattice_by_label_or_name(info.get('label'))},
+             columns=SearchColumns(lattice_columns),
+             shortcuts={'download': Downloader(db.lat_lattices_new),
+                        'jump': lattice_jump},
              postprocess=lattice_search_isometric,
              url_for_label=url_for_label,
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              properties=lambda: [])
 def lattice_search(info, query):
-    for field, name in [('dim', 'Dimension'), ('det', 'Determinant'), ('level', None),
-                        ('minimum', 'Minimal vector length'), ('class_number', None),
-                        ('aut', 'Group order')]:
+    common_parse(info, query)
+    for field, name in [('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
+                        ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
+                         ]:
+        parse_posints(info, query, field, name)
+    for field, name in [('dual_det', 'Dual determinant'), ('festi_veniani_index', "Festi-Veniani Index")]:
         parse_ints(info, query, field, name)
-    # Check if length of gram is triangular
-    gram = info.get('gram')
-    if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
-        raise ValueError
-    parse_list(info, query, 'gram', process=vect_to_sym)
+    parse_noop(info, query, "aut_label")
 
 
 @lattice_page.route('/<label>')
-def render_lattice_webpage(**args):
-    f = None
-    if 'label' in args:
-        lab = clean_input(args.get('label'))
-        if lab != args.get('label'):
-            return redirect(url_for('.render_lattice_webpage', label=lab), 301)
-        f = db.lat_lattices.lucky({'$or': [{'label': lab}, {'name': {'$contains': [lab]}}]})
-    if f is None:
-        t = "Integral lattice search error"
-        bread = get_bread()
-        flash_error("%s is not a valid label or name for an integral lattice in the database.", lab)
-        return render_template("lattice-error.html", title=t, properties=[], bread=bread, learnmore=learnmore_list())
-    info = {}
-    info.update(f)
+def render_lattice_webpage(label):
+    data = db.lat_lattices_new.lookup(label)
+    if data is None:
+        flash_error("%s is not the label of a lattice in the database.", label)
+        return redirect(url_for(".index"))
 
-    info['friends'] = []
+    lattice = WebLattice(label, data)
 
-    bread = get_bread(f['label'])
-    info['dim'] = int(f['dim'])
-    info['det'] = int(f['det'])
-    info['level'] = int(f['level'])
-    info['gram'] = vect_to_matrix(f['gram'])
-    info['density'] = str(f['density'])
-    info['hermite'] = str(f['hermite'])
-    info['minimum'] = int(f['minimum'])
-    info['kissing'] = int(f['kissing'])
-    info['aut'] = int(f['aut'])
-
-    if f['shortest'] == "":
-        info['shortest'] = f['shortest']
-    else:
-        if f['dim'] == 1:
-            info['shortest'] = str(f['shortest']).strip('[').strip(']')
-        else:
-            if info['dim']*info['kissing'] < 100:
-                info['shortest'] = [str([tuple(v)]).strip('[').strip(']').replace('),', '), ') for v in f['shortest']]
-            else:
-                max_vect_num = min(int(round(100/(info['dim']))), int(round(info['kissing']/2))-1)
-                info['shortest'] = [str([tuple(f['shortest'][i])]).strip('[').strip(']').replace('),', '), ') for i in range(max_vect_num+1)]
-                info['all_shortest'] = "no"
-        info['download_shortest'] = [
-            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma', 'sage']]
-
-    if f['name'] == ['Leech']:
-        info['shortest'] = [str([1,-2,-2,-2,2,-1,-1,3,3,0,0,2,2,-1,-1,-2,2,-2,-1,-1,0,0,-1,2]),
-str([1,-2,-2,-2,2,-1,0,2,3,0,0,2,2,-1,-1,-2,2,-1,-1,-2,1,-1,-1,3]), str([1,-2,-2,-1,1,-1,-1,2,2,0,0,2,2,0,0,-2,2,-1,-1,-1,0,-1,-1,2])]
-        info['all_shortest'] = "no"
-        info['download_shortest'] = [
-            (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='shortest_vectors')) for i in ['gp', 'magma','sage']]
-
-    ncoeff = 20
-    if f['theta_series']:
-        coeff = [f['theta_series'][i] for i in range(ncoeff + 1)]
-        info['theta_series'] = my_latex(print_q_expansion(coeff))
-        info['theta_display'] = url_for(".theta_display", label=f['label'], number="")
-
-    info['class_number'] = int(f['class_number'])
-
-    if f['dim'] == 1:
-        info['genus_reps'] = str(f['genus_reps']).strip('[').strip(']')
-    else:
-        if info['dim']*info['class_number'] < 50:
-            info['genus_reps'] = [vect_to_matrix(n) for n in f['genus_reps']]
-        else:
-            max_matrix_num = min(int(round(25/(info['dim']))), info['class_number'])
-            info['all_genus_rep'] = "no"
-            info['genus_reps'] = [vect_to_matrix(f['genus_reps'][i]) for i in range(max_matrix_num+1)]
-    info['download_genus_reps'] = [
-        (i, url_for(".render_lattice_webpage_download", label=info['label'], lang=i, obj='genus_reps')) for i in ['gp', 'magma', 'sage']]
-
-    if f['name']:
-        if f['name'] == str(f['name']):
-            info['name'] = str(f['name'])
-        else:
-            info['name'] = str(", ".join(str(i) for i in f['name']))
-    else:
-        info['name'] = ""
-    info['comments'] = str(f['comments'])
-    if 'Leech' in info['comments']:  # no need to duplicate as it is in the name
-        info['comments'] = ''
-    if info['name'] == "":
-        t = "Integral lattice %s" % info['label']
-    else:
-        t = "Integral lattice "+info['label']+" ("+info['name']+")"
-# This part code was for the dynamic knowl with comments, since the test is displayed this is redundant
-#    if info['name'] != "" or info['comments'] !="":
-#        info['knowl_args']= "name=%s&report=%s" %(info['name'], info['comments'].replace(' ', '-space-'))
-    info['properties'] = [
-        ('Dimension', prop_int_pretty(info['dim'])),
-        ('Determinant', prop_int_pretty(info['det'])),
-        ('Level', prop_int_pretty(info['level']))]
-    if info['class_number'] == 0:
-        info['properties'] = [('Class number', 'not available')]+info['properties']
-    else:
-        info['properties'] = [('Class number', prop_int_pretty(info['class_number']))]+info['properties']
-    info['properties'] = [('Label', '%s' % info['label'])]+info['properties']
-    downloads = [("Underlying data", url_for(".lattice_data", label=lab))]
-
-    if info['name']:
-        info['properties'] = [('Name', '%s' % info['name'])] + info['properties']
-#    friends = [('L-series (not available)', ' ' ),('Half integral weight modular forms (not available)', ' ')]
     return render_template(
         "lattice-single.html",
-        info=info,
-        title=t,
-        bread=bread,
-        properties=info['properties'],
-        downloads=downloads,
+        lattice=lattice,
+        title=f"Integral lattice {label}",
+        bread=get_bread(label),
+        properties=lattice.properties,
+        friends=lattice.friends,
+        code=lattice.code,
+        downloads=lattice.downloads,
         learnmore=learnmore_list(),
-        KNOWL_ID="lattice.%s" % info['label'])
-# friends=friends
-
-
-def vect_to_sym(v):
-    n = ZZ(round((-1+sqrt(1+8*len(v)))/2))
-    M = matrix(n)
-    k = 0
-    for i in range(n):
-        for j in range(i, n):
-            M[i, j] = v[k]
-            M[j, i] = v[k]
-            k += 1
-    return [[int(M[i, j]) for i in range(n)] for j in range(n)]
+        KNOWL_ID=f"lattice.{lattice.label}")
 
 
 @lattice_page.route('/data/<label>')
 def lattice_data(label):
     if not lattice_label_regex.fullmatch(label):
         return abort(404, f"Invalid label {label}")
+    genus_label = ".".join(label.split(".")[:-1])
     bread = get_bread([(label, url_for_label(label)), ("Data", " ")])
     title = f"Lattice data - {label}"
-    return datapage(label, "lat_lattices", title=title, bread=bread)
+    return datapage([label, genus_label], ["lat_lattices_new", "lat_genera"], title=title, bread=bread)
 
 
-# auxiliary function for displaying more coefficients of the theta series
-@lattice_page.route('/theta_display/<label>/<number>')
-def theta_display(label, number):
-    try:
-        number = int(number)
-    except Exception:
-        number = 20
-    if number < 20:
-        number = 30
-    number = min(number, 150)
-    data = db.lat_lattices.lookup(label, projection=['theta_series'])
-    coeff = [data['theta_series'][i] for i in range(number+1)]
-    return print_q_expansion(coeff)
+#################################
+# Downloads for particular data #
+#################################
 
-
-# data quality pages
-@lattice_page.route("/Source")
-def how_computed_page():
-    t = 'Source and acknowledgments for integral lattices'
-    bread = get_bread("Source")
-    return render_template("double.html", kid='rcs.source.lattice', kid2='rcs.ack.lattice',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
-
-
-@lattice_page.route("/Completeness")
-def completeness_page():
-    t = 'Completeness of integral lattice data'
-    bread = get_bread("Completeness")
-    return render_template("single.html", kid='rcs.cande.lattice',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
-
-
-@lattice_page.route("/Reliability")
-def reliability_page():
-    t = 'Reliability of integral lattice data'
-    bread = get_bread("Reliability")
-    return render_template("single.html", kid='rcs.rigor.lattice',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
-
-
-@lattice_page.route("/Labels")
-def labels_page():
-    t = 'Integral lattice labels'
-    bread = get_bread("Labels")
-    return render_template("single.html", kid='lattice.label',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
-
-
-@lattice_page.route("/History")
-def history_page():
-    t = 'A brief history of lattices'
-    bread = get_bread("History")
-    return render_template("single.html", kid='lattice.history',
-                           title=t, bread=bread, learnmore=learnmore_list_remove('History'))
-
+# Download variables
+download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
+download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
+download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
+download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):
@@ -423,7 +219,7 @@ def render_lattice_webpage_download(**args):
 
 def download_lattice_full_lists_v(**args):
     label = str(args['label'])
-    res = db.lat_lattices.lookup(label)
+    res = db.lat_lattices_new.lookup(label)
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -442,7 +238,7 @@ def download_lattice_full_lists_v(**args):
 
 def download_lattice_full_lists_g(**args):
     label = str(args['label'])
-    res = db.lat_lattices.lookup(label, projection=['genus_reps'])
+    res = db.lat_lattices_new.lookup(label, projection=['gram'])
     mydate = time.strftime("%d %B %Y")
     if res is None:
         return "No such lattice"
@@ -456,7 +252,7 @@ def download_lattice_full_lists_g(**args):
 
     outstr = c + ' Full list of genus representatives downloaded from the LMFDB on %s. \n\n' % (mydate)
     outstr += download_assignment_start[lang] + '[\\\n'
-    outstr += ",\\\n".join(entry(r) for r in res['genus_reps'])
+    outstr += ",\\\n".join(entry(r) for r in res['gram'])
     outstr += ']'
     outstr += download_assignment_end[lang]
     outstr += '\n'
@@ -465,57 +261,32 @@ def download_lattice_full_lists_g(**args):
 
 class LatSearchArray(SearchArray):
     noun = "lattice"
-    sorts = [("", "dimension", ['dim', 'det', 'level', 'class_number', 'label']),
-             ("det", "determinant", ['det', 'dim', 'level', 'class_number', 'label']),
-             ("level", "level", ['level', 'dim', 'det', 'class_number', 'label']),
-             ("class_number", "class number", ['class_number', 'dim', 'det', 'level', 'label']),
-             ("minimum", "minimal vector length", ['minimum', 'dim', 'det', 'level', 'class_number', 'label']),
-             ("aut", "automorphism group", ['aut', 'dim', 'det', 'level', 'class_number', 'label'])]
+    sorts = [("", "rank", ['rank', 'det', 'level', 'class_number', 'label']),
+             ("det", "determinant", ['det', 'rank', 'level', 'class_number', 'label']),
+             ("level", "level", ['level', 'rank', 'det', 'class_number', 'label']),
+             ("class_number", "class number", ['class_number', 'rank', 'det', 'level', 'label']),
+             ("minimum", "minimal vector length", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
+             ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
-        dim = TextBox(
-            name="dim",
-            label="Dimension",
-            knowl="lattice.dimension",
-            example="3",
-            example_span="3 or 2-5")
-        det = TextBox(
-            name="det",
-            label="Determinant",
-            knowl="lattice.determinant",
-            example="1",
-            example_span="1 or 10-100")
-        level = TextBox(
-            name="level",
-            label="Level",
-            knowl="lattice.level",
-            example="48",
-            example_span="48 or 40-100")
-        gram = TextBox(
-            name="gram",
-            label="Gram matrix",
-            knowl="lattice.gram",
-            example="[5,1,23]",
-            example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$")
-        minimum = TextBox(
-            name="minimum",
-            label="Minimal vector length",
-            knowl="lattice.minimal_vector",
-            example="1")
-        class_number = TextBox(
-            name="class_number",
-            label="Class number",
-            knowl="lattice.class_number",
-            example="1")
-        aut = TextBox(
-            name="aut",
-            label="Automorphism group order",
-            short_label="Aut. group order",
-            knowl="lattice.group_order",
-            example="2",
-            example_span="696729600")
+        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
         count = CountBox()
 
-        self.browse_array = [[dim], [det], [level], [gram], [minimum], [class_number], [aut], [count]]
+        self.browse_array = [
+            [rank, signature],
+            [det, discriminant],
+            [level, class_number],
+            [minimum, even_odd],
+            [aut_size, aut_label],
+            [dual_det, dual_kissing],
+            [disc_invs, gram],
+            [kissing, festi_veniani],
+            [count]
+        ]
 
-        self.refine_array = [[dim, det, level, gram], [minimum, class_number, aut]]
+        self.refine_array = [
+            [rank, signature, det, discriminant, level],
+            [aut_size, aut_label, class_number, minimum, even_odd],
+            [dual_det, dual_kissing, disc_invs, kissing, festi_veniani],
+            [gram]
+        ]

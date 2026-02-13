@@ -222,6 +222,7 @@ class TableChecker():
                                 raise TooManyFailures
                         if row_time >= check.report_slow:
                             log.write('%s: %s (%d/%d) ok but took %.2fs\n' % (name, rec[self.label_col], rec_no, total, row_time))
+                            log.flush()
                             check_slow += 1
                             if check_slow >= check.max_slow:
                                 raise TimeoutError

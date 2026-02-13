@@ -10,7 +10,7 @@ from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Sp
 
 
 class CMF_download(Downloader):
-    table = db.mf_newforms
+    table = db.mf_newforms_eis
     title = 'Classical modular forms'
     data_format = ['N=level', 'k=weight', 'dim', 'analytic conductor', 'defining polynomial', 'number field label', 'CM discriminants', 'RM discriminants', 'first few traces - a2,a3,a5,a7']
     columns = ['level', 'weight', 'dim', 'analytic_conductor', 'field_poly', 'nf_label', 'cm_discs', 'rm_discs', 'trace_display']
@@ -18,10 +18,10 @@ class CMF_download(Downloader):
     def _get_hecke_nf(self, label):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
         print(label)
-        data = db.mf_hecke_nf.lucky({'label':label}, proj)
+        data = db.mf_hecke_nf_eis.lucky({'label':label}, proj)
         print(data)
         if data is None:
-            f = db.mf_newforms.lookup(label,projection=["level","char_orbit_label","dim","traces"])
+            f = db.mf_newforms_eis.lookup(label,projection=["level","char_orbit_label","dim","traces"])
             if f["dim"] == 1:
                 vals = ConreyCharacter(f["level"], db.char_dirichlet.lookup("%s.%s" % (f["level"],f["char_orbit_label"]),projection="first")).values_gens
                 vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
@@ -37,11 +37,11 @@ class CMF_download(Downloader):
 
     def _get_traces(self, label):
         if label.count('.') == 1:
-            traces = db.mf_gamma1.lookup(label, projection=['traces'])
+            traces = db.mf_gamma1_eis.lookup(label, projection=['traces'])
         elif label.count('.') == 2:
-            traces = db.mf_newspaces.lookup(label, projection=['traces'])
+            traces = db.mf_newspaces_eis.lookup(label, projection=['traces'])
         elif label.count('.') == 3:
-            traces = db.mf_newforms.lookup(label, projection=['traces'])
+            traces = db.mf_newforms_eis.lookup(label, projection=['traces'])
         else:
             return abort(404, "Invalid label: %s" % label)
         if traces is None:
@@ -223,17 +223,17 @@ class CMF_download(Downloader):
         lang = self.languages.get(lang, self.languages['sage'])
         query = literal_eval(info.get('query', '{}'))
         if spaces:
-            count = db.mf_newspaces.count(query)
+            count = db.mf_newspaces_eis.count(query)
         else:
-            count = db.mf_newforms.count(query)
+            count = db.mf_newforms_eis.count(query)
         limit = 1000
         if count > limit:
             flash_error("We limit downloads of traces to %s forms", limit)
             return redirect(url_for('.index'))
         if spaces:
-            res = list(db.mf_newspaces.search(query, projection=['label', 'traces']))
+            res = list(db.mf_newspaces_eis.search(query, projection=['label', 'traces']))
         else:
-            res = list(db.mf_newforms.search(query, projection=['label', 'traces']))
+            res = list(db.mf_newforms_eis.search(query, projection=['label', 'traces']))
         s = ""
         c = lang.comment_prefix
         s += c + ' Query "%s" returned %d %s.\n\n' % (str(info.get('query')), len(res), 'spaces' if spaces else 'forms')
@@ -288,7 +288,7 @@ class CMF_download(Downloader):
 #        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
     def download_embedding(self, label, lang='text'):
-        data = db.mf_hecke_cc.lucky({'label':label},
+        data = db.mf_hecke_cc_eis.lucky({'label':label},
                                     ['label',
                                      'embedding_root_real',
                                      'embedding_root_imag',
@@ -306,7 +306,7 @@ class CMF_download(Downloader):
                           title='Coefficient data for embedded newform %s,' % label)
 
     def download_newform(self, label, lang='text'):
-        data = db.mf_newforms.lookup(label)
+        data = db.mf_newforms_eis.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
@@ -324,7 +324,7 @@ class CMF_download(Downloader):
         Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'pari': 'Pari/GP'}
         if lang not in Fullname:
             abort(404,"Invalid code language specified: " + lang)
-        data = db.mf_newforms.lookup(label)
+        data = db.mf_newforms_eis.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
@@ -339,7 +339,7 @@ class CMF_download(Downloader):
         return script
 
     def download_newspace(self, label, lang='text'):
-        data = db.mf_newspaces.lookup(label)
+        data = db.mf_newspaces_eis.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s" % label)
         space = WebNewformSpace(data)
@@ -373,7 +373,7 @@ class CMF_download(Downloader):
         lang = self.languages.get(lang, self.languages['sage'])
         query = literal_eval(info.get('query', '{}'))
         proj = ['label', 'analytic_conductor', 'conrey_index', 'char_order']
-        spaces = list(db.mf_newspaces.search(query, projection=proj))
+        spaces = list(db.mf_newspaces_eis.search(query, projection=proj))
         s = ""
         c = lang.comment_prefix
         s += c + ' Query "%s" returned %d spaces.\n\n' % (str(info.get('query')), len(spaces))
@@ -651,7 +651,7 @@ class CMF_download(Downloader):
                 ]
 
     def download_newform_to_magma(self, label, lang='magma'):
-        data = db.mf_newforms.lookup(label)
+        data = db.mf_newforms_eis.lookup(label)
         if data is None:
             return abort(404, "Label not found: %s" % label)
         newform = WebNewform(data)
