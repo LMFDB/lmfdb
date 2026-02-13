@@ -125,7 +125,7 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
 {% if info.class_size > 1 %}
 <p>The vertices are labelled with {{info.label_type}} labels. </p>
 {% endif %}
-<div id="isogeny-graph" style="margin: 0 auto;"></div>
+<div id="isogeny-graph"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js"></script>
 <script src="{{ url_for('static', filename='isogeny_graph.js') }}"></script>
