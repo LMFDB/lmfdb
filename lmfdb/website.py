@@ -101,6 +101,8 @@ from . import modular_curves
 assert modular_curves
 from . import shimura_curves
 assert shimura_curves
+from . import hilbert_modular_surfaces
+assert hilbert_modular_surfaces
 from .homepage import random
 assert random
 
