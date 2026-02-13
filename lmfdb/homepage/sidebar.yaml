@@ -83,7 +83,7 @@
     url_for: "groups"
   parts:
   - title: Lattices
-    url_for: "lattice.lattice_render_webpage"
+    url_for: "lattice.index"
     status: beta
     colspan: onecolumn
 
