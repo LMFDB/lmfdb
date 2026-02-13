@@ -99,6 +99,8 @@ from . import maass_forms
 assert maass_forms
 from . import modular_curves
 assert modular_curves
+from . import shimura_curves
+assert shimura_curves
 from .homepage import random
 assert random
 
