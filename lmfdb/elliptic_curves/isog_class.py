@@ -235,7 +235,7 @@ def make_graph(M, vertex_labels=None):
     # once other isogeny classes are implemented.
     if n == 1:
         # one vertex
-        pass
+        G.set_pos(pos={0:[0,0]})
     elif n == 2:
         # one edge, two vertices.  We align horizontally and put
         # the lower number on the left vertex.
@@ -262,7 +262,7 @@ def make_graph(M, vertex_labels=None):
             # square
             opp = [i for i in range(1,4) if not MM[0,i].is_prime()][0]
             other = [i for i in range(1,4) if i != opp]
-            G.set_pos(pos={0:[1,1],other[0]:[-1,1],opp:[-1,-1],other[1]:[1,-1]})
+            G.set_pos(pos={0:[0.5,0.5],other[0]:[-0.5,0.5],opp:[-0.5,-0.5],other[1]:[0.5,-0.5]})
         elif maxdegree == 8:
             # 8>o--o<8
             centers = [i for i in range(6) if list(MM.row(i)).count(2) == 3]
@@ -292,10 +292,10 @@ def make_graph(M, vertex_labels=None):
             right = []
             for i in range(3):
                 right.append([j for j in range(8) if MM[centers[1],j] == 2 and MM[left[i],j] == 3][0])
-            G.set_pos(pos={centers[0]:[-0.3,0],centers[1]:[0.3,0],
-                           left[0]:[-0.14,0.15], right[0]:[0.14,0.15],
-                           left[1]:[-0.14,-0.15],right[1]:[0.14,-0.15],
-                           left[2]:[-0.14,-0.3],right[2]:[0.14,-0.3]})
+            G.set_pos(pos={centers[0]:[-0.5,0],centers[1]:[0.5,0],
+                           left[0]:[-1.5,1], right[0]:[1.5,1],
+                           left[1]:[-1.5,0],right[1]:[1.5,0],
+                           left[2]:[-1.5,-1],right[2]:[1.5,-1]})
 
     if vertex_labels:
         G.relabel(vertex_labels)

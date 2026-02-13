@@ -29,30 +29,33 @@ function initIsogenyGraph(containerId, elements) {
     var container = document.getElementById(containerId);
     if (!container || !elements || elements.length === 0) return;
 
-    // Check if preset positions are provided
+    // Count nodes and check if preset positions are provided
+    var nNodes = 0;
     var hasPositions = false;
     var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (var i = 0; i < elements.length; i++) {
-        if (elements[i].group === 'nodes' && elements[i].position) {
-            hasPositions = true;
-            var p = elements[i].position;
-            if (p.x < minX) minX = p.x;
-            if (p.x > maxX) maxX = p.x;
-            if (p.y < minY) minY = p.y;
-            if (p.y > maxY) maxY = p.y;
+        if (elements[i].group === 'nodes') {
+            nNodes++;
+            if (elements[i].position) {
+                hasPositions = true;
+                var p = elements[i].position;
+                if (p.x < minX) minX = p.x;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.y > maxY) maxY = p.y;
+            }
         }
     }
 
-    if (hasPositions) {
+    if (nNodes === 1) {
+        container.style.width = '200px';
+        container.style.height = '80px';
+    } else if (hasPositions) {
         var graphW = maxX - minX;
         var graphH = maxY - minY;
         container.style.width = Math.min(600, Math.max(200, graphW + 160)) + 'px';
-        container.style.height = Math.min(400, Math.max(80, graphH + 100)) + 'px';
+        container.style.height = Math.min(400, Math.max(60, graphH + 100)) + 'px';
     } else {
-        var nNodes = 0;
-        for (var i = 0; i < elements.length; i++) {
-            if (elements[i].group === 'nodes') nNodes++;
-        }
         var side = Math.min(600, Math.max(250, nNodes * 40));
         container.style.width = side + 'px';
         container.style.height = side + 'px';
@@ -112,18 +115,30 @@ function initIsogenyGraph(containerId, elements) {
         ]
     });
 
-    cy.fit(30);
-
-    // Minimum size enforcement: if the graph is too small, zoom out a bit
-    var bb = cy.elements().boundingBox();
-    if (bb.w < 80 && bb.h < 80) {
-        cy.zoom(cy.zoom() * 0.7);
+    if (nNodes === 1) {
+        // Single node: match the apparent node size of small multi-node graphs
+        cy.zoom(1.2);
         cy.center();
+        cy.nodes().ungrabify();
+    } else {
+        cy.fit(30);
+
+        // Minimum size enforcement: if the graph is too small, zoom out a bit
+        var bb = cy.elements().boundingBox();
+        if (bb.w < 80 && bb.h < 80) {
+            cy.zoom(cy.zoom() * 0.7);
+            cy.center();
+        }
     }
 
     // Save original container dimensions for preset restore
     var origWidth = container.style.width;
     var origHeight = container.style.height;
+
+    // Skip layout controls for trivial graphs
+    if (nNodes <= 1) {
+        // still set up tooltip and click handlers below
+    } else {
 
     // Layout selector for testing
     var layouts = {
@@ -205,6 +220,8 @@ function initIsogenyGraph(containerId, elements) {
     controls.appendChild(label);
     container.parentNode.insertBefore(controls, container);
 
+    } // end nNodes > 1
+
     // Create tooltip element
     var tooltip = document.createElement('div');
     tooltip.className = 'isogeny-tooltip';
@@ -228,6 +245,7 @@ function initIsogenyGraph(containerId, elements) {
         if (d.torsion !== undefined) _isoTooltipLine(tooltip, 'Torsion: ' + d.torsion);
         if (d.degree !== undefined && d.degree !== 0) _isoTooltipLine(tooltip, 'Modular degree: ' + d.degree);
         if (d.faltings_height !== undefined) _isoTooltipLine(tooltip, 'Faltings height: ' + d.faltings_height);
+        if (d.cm !== undefined) _isoTooltipLine(tooltip, 'CM: ' + d.cm);
         if (d.optimal) _isoTooltipEmphasis(tooltip, 'Optimal curve');
 
         tooltip.style.display = 'block';
@@ -240,6 +258,20 @@ function initIsogenyGraph(containerId, elements) {
 
     cy.on('mouseout', 'node', function() {
         tooltip.style.display = 'none';
+    });
+
+    // Prevent dragging nodes outside the visible area
+    cy.on('drag', 'node', function(evt) {
+        var node = evt.target;
+        var pos = node.position();
+        var ext = cy.extent();
+        var hw = node.width() / 2;
+        var hh = node.height() / 2;
+        var x = Math.max(ext.x1 + hw, Math.min(ext.x2 - hw, pos.x));
+        var y = Math.max(ext.y1 + hh, Math.min(ext.y2 - hh, pos.y));
+        if (x !== pos.x || y !== pos.y) {
+            node.position({ x: x, y: y });
+        }
     });
 
     // Click: navigate to curve page
