@@ -992,16 +992,13 @@ def graph_to_svg(G, width=200, height=150):
     if n == 0:
         return Markup('<svg width="%d" height="%d"></svg>' % (width, height))
 
-    # For single vertex, center it; for missing positions, use circular layout
+    # Compute positions if not set by make_graph
+    if pos is None or len(pos) < n:
+        pos = G.layout_spring()
+
+    # For single vertex, center it
     if n == 1:
         coords = {v: (width / 2, height / 2) for v in vertices}
-    elif pos is None or len(pos) < n:
-        cx0, cy0 = width / 2, height / 2
-        r0 = min(width, height) / 2 - 20
-        coords = {}
-        for i, v in enumerate(vertices):
-            angle = 2 * math.pi * i / n - math.pi / 2
-            coords[v] = (cx0 + r0 * math.cos(angle), cy0 + r0 * math.sin(angle))
     else:
         xs = [pos[v][0] for v in vertices]
         ys = [pos[v][1] for v in vertices]
@@ -1009,7 +1006,7 @@ def graph_to_svg(G, width=200, height=150):
         min_y, max_y = min(ys), max(ys)
         range_x = max_x - min_x if max_x != min_x else 1
         range_y = max_y - min_y if max_y != min_y else 1
-        pad = 30
+        pad = 15
         coords = {}
         for v in vertices:
             cx = pad + (pos[v][0] - min_x) / range_x * (width - 2 * pad)
@@ -1024,20 +1021,13 @@ def graph_to_svg(G, width=200, height=150):
         x2, y2 = coords[v]
         parts.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" '
                      'stroke="#888" stroke-width="1.5"/>' % (x1, y1, x2, y2))
-        # Edge label at midpoint
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-        parts.append('<text x="%.1f" y="%.1f" text-anchor="middle" '
-                     'font-size="10" fill="#555" dy="-3">%s</text>' % (mx, my, str(label)))
 
     # Draw nodes
-    r = 14
+    r = 5
     for v in vertices:
         cx, cy = coords[v]
-        parts.append('<circle cx="%.1f" cy="%.1f" r="%d" fill="#fff" '
-                     'stroke="#333" stroke-width="1.5"/>' % (cx, cy, r))
-        parts.append('<text x="%.1f" y="%.1f" text-anchor="middle" '
-                     'dominant-baseline="central" font-size="9" '
-                     'fill="#333">%s</text>' % (cx, cy, str(v)))
+        parts.append('<circle cx="%.1f" cy="%.1f" r="%d" fill="#333" '
+                     'stroke="#333" stroke-width="1"/>' % (cx, cy, r))
 
     parts.append('</svg>')
     return Markup('\n'.join(parts))

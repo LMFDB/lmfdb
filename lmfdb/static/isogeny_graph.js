@@ -29,7 +29,7 @@ function initIsogenyGraph(containerId, elements) {
     var container = document.getElementById(containerId);
     if (!container || !elements || elements.length === 0) return;
 
-    // Check if positions are provided (preset layout) or need auto-layout
+    // Check if preset positions are provided
     var hasPositions = false;
     var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (var i = 0; i < elements.length; i++) {
@@ -49,7 +49,6 @@ function initIsogenyGraph(containerId, elements) {
         container.style.width = Math.min(600, Math.max(200, graphW + 160)) + 'px';
         container.style.height = Math.min(400, Math.max(80, graphH + 100)) + 'px';
     } else {
-        // Count nodes to scale container for auto-layout
         var nNodes = 0;
         for (var i = 0; i < elements.length; i++) {
             if (elements[i].group === 'nodes') nNodes++;
@@ -59,10 +58,8 @@ function initIsogenyGraph(containerId, elements) {
         container.style.height = side + 'px';
     }
 
-    var layoutOpts = hasPositions
-        ? { name: 'preset' }
-        : { name: 'cose', animate: false, nodeRepulsion: function() { return 8000; },
-            idealEdgeLength: function() { return 80; }, padding: 30 };
+    var elkStress = { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } };
+    var layoutOpts = hasPositions ? { name: 'preset' } : elkStress;
 
     var cy = cytoscape({
         container: container,
@@ -123,6 +120,90 @@ function initIsogenyGraph(containerId, elements) {
         cy.zoom(cy.zoom() * 0.7);
         cy.center();
     }
+
+    // Save original container dimensions for preset restore
+    var origWidth = container.style.width;
+    var origHeight = container.style.height;
+
+    // Layout selector for testing
+    var layouts = {
+        // Built-in
+        'preset': { name: 'preset' },
+        'cose': { name: 'cose', animate: false, padding: 30 },
+        'circle': { name: 'circle', animate: false, padding: 30 },
+        'concentric': { name: 'concentric', animate: false, padding: 30,
+            concentric: function(node) { return node.degree(); },
+            levelWidth: function() { return 2; } },
+        'breadthfirst': { name: 'breadthfirst', animate: false, padding: 30 },
+        'grid': { name: 'grid', animate: false, padding: 30 },
+        'random': { name: 'random', animate: false, padding: 30 },
+        // Extensions
+        'fcose': { name: 'fcose', animate: false, padding: 30 },
+        'cola': { name: 'cola', animate: false, padding: 30 },
+        'dagre': { name: 'dagre', animate: false, padding: 30 },
+        'avsdf': { name: 'avsdf', animate: false, padding: 30 },
+        'cise': { name: 'cise', animate: false, padding: 30 },
+        'klay': { name: 'klay', animate: false, padding: 30 },
+        'cose-bilkent': { name: 'cose-bilkent', animate: false, padding: 30 },
+        'elk (layered)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'layered' } },
+        'elk (mrtree)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'mrtree' } },
+        'elk (stress)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } },
+        'elk (force)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'force' } }
+    };
+
+    var controls = document.createElement('div');
+    controls.style.cssText = 'margin: 8px 0;';
+    var label = document.createElement('label');
+    label.textContent = 'Layout: ';
+    label.style.fontWeight = 'bold';
+    var select = document.createElement('select');
+    var defaultLayout = hasPositions ? 'preset' : 'elk (stress)';
+    var layoutNames = Object.keys(layouts);
+    for (var li = 0; li < layoutNames.length; li++) {
+        if (layoutNames[li] === 'preset' && !hasPositions) continue;
+        var opt = document.createElement('option');
+        opt.value = layoutNames[li];
+        opt.textContent = layoutNames[li];
+        if (layoutNames[li] === defaultLayout) opt.selected = true;
+        select.appendChild(opt);
+    }
+    select.addEventListener('change', function() {
+        if (select.value === 'preset') {
+            // Restore original positions and container size
+            for (var ei = 0; ei < elements.length; ei++) {
+                if (elements[ei].group === 'nodes' && elements[ei].position) {
+                    cy.getElementById(elements[ei].data.id).position(elements[ei].position);
+                }
+            }
+            container.style.width = origWidth;
+            container.style.height = origHeight;
+            cy.resize();
+            cy.fit(30);
+        } else {
+            // Ensure enough room for computed layouts
+            container.style.width = '500px';
+            container.style.height = '400px';
+            cy.resize();
+            try {
+                cy.layout(layouts[select.value]).run();
+                cy.fit(30);
+            } catch (e) {
+                console.warn('Layout "' + select.value + '" failed:', e.message);
+                // Show inline error
+                var msg = document.createElement('div');
+                msg.textContent = 'Layout "' + select.value + '" not available: ' + e.message;
+                msg.style.cssText = 'color:#c00; font-size:13px; margin-top:4px;';
+                if (controls.querySelector('.layout-error')) {
+                    controls.removeChild(controls.querySelector('.layout-error'));
+                }
+                msg.className = 'layout-error';
+                controls.appendChild(msg);
+            }
+        }
+    });
+    label.appendChild(select);
+    controls.appendChild(label);
+    container.parentNode.insertBefore(controls, container);
 
     // Create tooltip element
     var tooltip = document.createElement('div');
