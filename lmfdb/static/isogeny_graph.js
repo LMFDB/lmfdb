@@ -29,10 +29,12 @@ function initIsogenyGraph(containerId, elements) {
     var container = document.getElementById(containerId);
     if (!container || !elements || elements.length === 0) return;
 
-    // Auto-size container based on actual graph positions
+    // Check if positions are provided (preset layout) or need auto-layout
+    var hasPositions = false;
     var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (var i = 0; i < elements.length; i++) {
         if (elements[i].group === 'nodes' && elements[i].position) {
+            hasPositions = true;
             var p = elements[i].position;
             if (p.x < minX) minX = p.x;
             if (p.x > maxX) maxX = p.x;
@@ -40,16 +42,32 @@ function initIsogenyGraph(containerId, elements) {
             if (p.y > maxY) maxY = p.y;
         }
     }
-    var graphW = (maxX > -Infinity) ? maxX - minX : 0;
-    var graphH = (maxY > -Infinity) ? maxY - minY : 0;
-    // Padding accounts for node size (60x30) + edge labels + margin
-    container.style.width = Math.min(600, Math.max(200, graphW + 160)) + 'px';
-    container.style.height = Math.min(400, Math.max(80, graphH + 100)) + 'px';
+
+    if (hasPositions) {
+        var graphW = maxX - minX;
+        var graphH = maxY - minY;
+        container.style.width = Math.min(600, Math.max(200, graphW + 160)) + 'px';
+        container.style.height = Math.min(400, Math.max(80, graphH + 100)) + 'px';
+    } else {
+        // Count nodes to scale container for auto-layout
+        var nNodes = 0;
+        for (var i = 0; i < elements.length; i++) {
+            if (elements[i].group === 'nodes') nNodes++;
+        }
+        var side = Math.min(600, Math.max(250, nNodes * 40));
+        container.style.width = side + 'px';
+        container.style.height = side + 'px';
+    }
+
+    var layoutOpts = hasPositions
+        ? { name: 'preset' }
+        : { name: 'cose', animate: false, nodeRepulsion: function() { return 8000; },
+            idealEdgeLength: function() { return 80; }, padding: 30 };
 
     var cy = cytoscape({
         container: container,
         elements: elements,
-        layout: { name: 'preset' },
+        layout: layoutOpts,
         userZoomingEnabled: false,
         userPanningEnabled: false,
         boxSelectionEnabled: false,
