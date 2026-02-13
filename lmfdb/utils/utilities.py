@@ -978,40 +978,65 @@ def graph_to_cytoscape_json(G):
     return elements
 
 
-def graph_to_svg(G, width=200, height=150):
+def graph_to_svg(G, max_width=200, max_height=150):
     """Generate a compact SVG string for the properties box sidebar.
 
     Produces a lightweight inline SVG from a Sage Graph with positions,
-    suitable for embedding directly in HTML.
+    suitable for embedding directly in HTML.  Dimensions are computed
+    adaptively from the graph layout to avoid excess whitespace.
     """
     from markupsafe import Markup
     pos = G.get_pos()
     vertices = G.vertices()
     n = len(vertices)
+    pad = 15
+    r = 5
 
     if n == 0:
-        return Markup('<svg width="%d" height="%d"></svg>' % (width, height))
+        return Markup('<svg width="0" height="0"></svg>')
 
     # Compute positions if not set by make_graph
     if pos is None or len(pos) < n:
         pos = G.layout_spring()
 
-    # For single vertex, center it
     if n == 1:
-        coords = {v: (width / 2, height / 2) for v in vertices}
+        width = height = 2 * pad
+        coords = {vertices[0]: (width / 2, height / 2)}
     else:
-        xs = [pos[v][0] for v in vertices]
-        ys = [pos[v][1] for v in vertices]
+        xs = [float(pos[v][0]) for v in vertices]
+        ys = [float(pos[v][1]) for v in vertices]
         min_x, max_x = min(xs), max(xs)
         min_y, max_y = min(ys), max(ys)
-        range_x = max_x - min_x if max_x != min_x else 1
-        range_y = max_y - min_y if max_y != min_y else 1
-        pad = 15
-        coords = {}
-        for v in vertices:
-            cx = pad + (pos[v][0] - min_x) / range_x * (width - 2 * pad)
-            cy = pad + (max_y - pos[v][1]) / range_y * (height - 2 * pad)
-            coords[v] = (cx, cy)
+        range_x = max_x - min_x
+        range_y = max_y - min_y
+
+        if range_x == 0 and range_y == 0:
+            width = height = 2 * pad
+            coords = {v: (width / 2, height / 2) for v in vertices}
+        elif range_y == 0:
+            # Horizontal layout (e.g. path graphs)
+            width = max_width
+            height = 2 * pad
+            coords = {v: (pad + (pos[v][0] - min_x) / range_x * (width - 2 * pad),
+                          height / 2) for v in vertices}
+        elif range_x == 0:
+            # Vertical layout
+            width = 2 * pad
+            height = min(max_height, max_width)
+            coords = {v: (width / 2,
+                          pad + (max_y - pos[v][1]) / range_y * (height - 2 * pad))
+                      for v in vertices}
+        else:
+            # General case: fit to max_width, scale height by aspect ratio
+            aspect = range_y / range_x
+            width = max_width
+            draw_w = width - 2 * pad
+            height = min(max_height, int(draw_w * aspect + 2 * pad))
+            height = max(height, 2 * pad)
+            draw_h = height - 2 * pad
+            coords = {v: (pad + (pos[v][0] - min_x) / range_x * draw_w,
+                          pad + (max_y - pos[v][1]) / range_y * draw_h)
+                      for v in vertices}
 
     parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d">' % (width, height)]
 
@@ -1023,7 +1048,6 @@ def graph_to_svg(G, width=200, height=150):
                      'stroke="#888" stroke-width="1.5"/>' % (x1, y1, x2, y2))
 
     # Draw nodes
-    r = 5
     for v in vertices:
         cx, cy = coords[v]
         parts.append('<circle cx="%.1f" cy="%.1f" r="%d" fill="#333" '
