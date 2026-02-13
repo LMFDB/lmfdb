@@ -29,6 +29,23 @@ function initIsogenyGraph(containerId, elements) {
     var container = document.getElementById(containerId);
     if (!container || !elements || elements.length === 0) return;
 
+    // Auto-size container based on actual graph positions
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (var i = 0; i < elements.length; i++) {
+        if (elements[i].group === 'nodes' && elements[i].position) {
+            var p = elements[i].position;
+            if (p.x < minX) minX = p.x;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.y > maxY) maxY = p.y;
+        }
+    }
+    var graphW = (maxX > -Infinity) ? maxX - minX : 0;
+    var graphH = (maxY > -Infinity) ? maxY - minY : 0;
+    // Padding accounts for node size (60x30) + edge labels + margin
+    container.style.width = Math.min(600, Math.max(200, graphW + 160)) + 'px';
+    container.style.height = Math.min(400, Math.max(80, graphH + 100)) + 'px';
+
     var cy = cytoscape({
         container: container,
         elements: elements,
