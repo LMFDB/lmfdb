@@ -34,3 +34,6 @@ LMFDBinventory.log
 LMFDBtransactions_inv.log
 
 scripts/groups/Make-images/images/*.png
+
+smf_lmfdb
+__pycache__

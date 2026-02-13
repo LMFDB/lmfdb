@@ -596,7 +596,7 @@ class WebEC():
         data['newform'] = raw_typeset(rawnewform, web_latex(PowerSeriesRing(QQ, 'q')(data['an'], 20, check=True)))
         data['newform_label'] = self.newform_label = ".".join( [str(cond), str(2), 'a', iso] )
         self.newform_link = url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
-        self.newform_exists_in_db = db.mf_newforms.label_exists(self.newform_label)
+        self.newform_exists_in_db = db.mf_newforms_eis.label_exists(self.newform_label)
         self._code = None
 
         if self.label_type == 'Cremona':

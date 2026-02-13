@@ -12,7 +12,7 @@ def sturm_bound1(level, weight):
     return floor(weight * Gamma1(level).index()/12)
 
 class mf_gamma1(MfChecker):
-    table = db.mf_gamma1
+    table = db.mf_gamma1_eis
     label = ['level', 'weight']
     uniqueness_constraints = [[table._label_col], label]
 
@@ -113,7 +113,7 @@ class mf_gamma1(MfChecker):
         if num_forms is set verify that it is equal to the sum of num_forms over newspaces with matching level and weight
         """
         # TIME about 2s
-        return self.check_crosstable_sum('mf_newspaces', 'num_forms', ['level', 'weight'])
+        return self.check_crosstable_sum('mf_newspaces_eis', 'num_forms', ['level', 'weight'])
 
     @overall
     def check_newspaces_hecke_orbit_dims(self):
@@ -121,7 +121,7 @@ class mf_gamma1(MfChecker):
         if hecke_orbit_dims is set, verify that it is equal to the (sorted) concatenation of dim over newspaces with matching level and weight
         """
         # TIME about 10s
-        return self.check_crosstable_aggregate('mf_newforms', 'hecke_orbit_dims', ['level', 'weight'], 'dim', sort=['char_orbit_index', 'hecke_orbit'])
+        return self.check_crosstable_aggregate('mf_newforms_eis', 'hecke_orbit_dims', ['level', 'weight'], 'dim', sort=['char_orbit_index', 'hecke_orbit'])
 
     @overall
     def check_newspaces_newspace_dims(self):
@@ -129,7 +129,7 @@ class mf_gamma1(MfChecker):
         check that newspace_dims is equal to the (sorted) concatenation of dim over newspaces with this level and weight
         """
         # TIME about 5s
-        return self.check_crosstable_aggregate('mf_newspaces', 'newspace_dims', ['level', 'weight'], 'dim', sort=['char_orbit_index'])
+        return self.check_crosstable_aggregate('mf_newspaces_eis', 'newspace_dims', ['level', 'weight'], 'dim', sort=['char_orbit_index'])
 
     @overall
     def check_newspaces_num_spaces(self):
@@ -138,7 +138,7 @@ class mf_gamma1(MfChecker):
         """
         # TIME about 2s
         # TODO: check that the number of char_orbits of level N and weight k is the same as the number of rows in mf_newspaces with this weight and level.  The following doesn't work since num_spaces counts spaces with positive dimension
-        return self._run_crosstable(SQL("COUNT(*)"), 'mf_newspaces', 'num_spaces', ['level', 'weight'], extra=SQL(" AND t2.dim > 0"))
+        return self._run_crosstable(SQL("COUNT(*)"), 'mf_newspaces_eis', 'num_spaces', ['level', 'weight'], extra=SQL(" AND t2.dim > 0"))
 
     ### mf_gamma1_portraits ###
     @overall
