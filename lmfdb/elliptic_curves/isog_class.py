@@ -1,5 +1,5 @@
 from flask import url_for
-from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
+from lmfdb.utils import graph_to_cytoscape_json, graph_to_svg, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
 from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
@@ -127,9 +127,22 @@ class ECisog_class():
         # Create isogeny graph with appropriate vertex labels:
 
         self.graph = make_graph(M, [c['short_label'] for c in self.curves])
-        P = self.graph.plot(edge_labels=True, vertex_size=1000)
-        self.graph_img = encode_plot(P, transparent=True)
-        self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
+        self.graph_data = graph_to_cytoscape_json(self.graph)
+        # Attach curve metadata to nodes for tooltip display
+        curve_by_label = {c['short_label']: c for c in self.curves}
+        for el in self.graph_data:
+            if el['group'] == 'nodes':
+                label = el['data']['label']
+                c = curve_by_label.get(label)
+                if c:
+                    el['data']['url'] = c['curve_url_lmfdb']
+                    el['data']['torsion'] = str(c['torsion_structure'])
+                    el['data']['degree'] = c['degree']
+                    el['data']['faltings_height'] = str(c['FH'])
+                    el['data']['optimal'] = bool(c.get('optimal'))
+                    el['data']['j_inv'] = str(c['j_inv'])
+        # SVG for properties sidebar
+        self.graph_link = graph_to_svg(self.graph)
 
         self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
@@ -170,8 +183,7 @@ class ECisog_class():
                            ('CM', '%s' % self.CMfield),
                            ('Rank', prop_int_pretty(self.rank))
                            ]
-        if ncurves > 1:
-            self.properties += [('Graph', ''),(None, self.graph_link)]
+        self.properties += [('Graph', ''), (None, self.graph_link)]
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_iso)),

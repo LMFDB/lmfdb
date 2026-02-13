@@ -1,6 +1,6 @@
 from flask import url_for
 from lmfdb import db
-from lmfdb.utils import encode_plot, names_and_urls, web_latex
+from lmfdb.utils import graph_to_cytoscape_json, graph_to_svg, names_and_urls, web_latex
 from lmfdb.logger import make_logger
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
@@ -85,9 +85,16 @@ class ECNF_isoclass():
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
-        P = self.graph.plot(edge_labels=True)
-        self.graph_img = encode_plot(P, transparent=True)
-        self.graph_link = '<img src="%s" width="200" height="150"/>' % self.graph_img
+        self.graph_data = graph_to_cytoscape_json(self.graph)
+        # Attach curve URLs and labels to nodes
+        for el in self.graph_data:
+            if el['group'] == 'nodes':
+                idx = int(el['data']['id']) - 1  # 1-indexed labels
+                if 0 <= idx < len(self.db_curves):
+                    c = self.db_curves[idx]
+                    el['data']['url'] = curve_url(c)
+                    el['data']['label'] = c['short_label']
+        self.graph_link = graph_to_svg(self.graph)
         self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 
         self.field = FIELD(self.field_label)
@@ -152,10 +159,10 @@ class ECNF_isoclass():
             self.friends += [('L-function not available', "")]
 
         self.properties = [('Base field', self.field_name),
-                           ('Label', self.class_label)]
-        if self.class_size > 1:
-            self.properties.append((None, self.graph_link))
-        self.properties.append(('Conductor', '%s' % self.conductor_label))
+                           ('Label', self.class_label),
+                           ('Graph', ''),
+                           (None, self.graph_link),
+                           ('Conductor', '%s' % self.conductor_label)]
 
         if self.rk != '?':
             self.properties += [('Rank', '%s' % self.rk)]
