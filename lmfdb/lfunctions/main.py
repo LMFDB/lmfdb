@@ -27,7 +27,8 @@ from .Lfunction import (
     Lfunction_from_db,
     # on the fly L-functions
     Lfunction_HMF, ArtinLfunction,
-    Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+    Lfunction_Maass, 
+    # Lfunction_SMF2_scalar_valued,
     DedekindZeta,
     SymmetricPowerLfunction, HypergeometricMotiveLfunction,
 )
@@ -1112,10 +1113,10 @@ def l_function_maass_gln_page(group, level, char, R, ap_id):
 def l_function_siegel_specimen_page(weight, orbit, number):
     return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
 
-@l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
-def l_function_siegel_page(weight, orbit, number):
-    args = {'weight': weight, 'orbit': orbit, 'number': number}
-    return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
+# @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
+# def l_function_siegel_page(weight, orbit, number):
+#     args = {'weight': weight, 'orbit': orbit, 'number': number}
+#     return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
 
 
 # L-function of Number field    ################################################

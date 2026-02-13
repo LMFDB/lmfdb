@@ -37,3 +37,4 @@ scripts/groups/Make-images/images/*.png
 
 smf_lmfdb
 __pycache__
+create_input_data.py
