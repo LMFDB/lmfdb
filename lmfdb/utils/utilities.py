@@ -951,6 +951,91 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     return "data:image/png;base64," + quote(b64encode(buf))
 
 
+def graph_to_cytoscape_json(G):
+    """Convert a Sage Graph with positions to Cytoscape.js elements format.
+
+    The graph should have positions set via set_pos() (as done by make_graph
+    in the isogeny class modules). Returns a list of dicts suitable for
+    passing to cytoscape({elements: ...}).
+    """
+    pos = G.get_pos()
+    elements = []
+    for v in G.vertices():
+        if pos and v in pos:
+            x, y = pos[v]
+        else:
+            x, y = 0, 0
+        elements.append({
+            "group": "nodes",
+            "data": {"id": str(v), "label": str(v)},
+            "position": {"x": float(x * 150), "y": float(-y * 150)},
+        })
+    for u, v, label in G.edges():
+        elements.append({
+            "group": "edges",
+            "data": {"source": str(u), "target": str(v), "label": str(label)},
+        })
+    return elements
+
+
+def graph_to_svg(G, width=200, height=150):
+    """Generate a compact SVG string for the properties box sidebar.
+
+    Produces a lightweight inline SVG from a Sage Graph with positions,
+    suitable for embedding directly in HTML.
+    """
+    from markupsafe import Markup
+    pos = G.get_pos()
+    vertices = G.vertices()
+    n = len(vertices)
+
+    if n == 0:
+        return Markup('<svg width="%d" height="%d"></svg>' % (width, height))
+
+    # For single vertex, center it
+    if pos is None or n == 1:
+        coords = {v: (width / 2, height / 2) for v in vertices}
+    else:
+        xs = [pos[v][0] for v in vertices]
+        ys = [pos[v][1] for v in vertices]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        range_x = max_x - min_x if max_x != min_x else 1
+        range_y = max_y - min_y if max_y != min_y else 1
+        pad = 30
+        coords = {}
+        for v in vertices:
+            cx = pad + (pos[v][0] - min_x) / range_x * (width - 2 * pad)
+            cy = pad + (max_y - pos[v][1]) / range_y * (height - 2 * pad)
+            coords[v] = (cx, cy)
+
+    parts = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d">' % (width, height)]
+
+    # Draw edges
+    for u, v, label in G.edges():
+        x1, y1 = coords[u]
+        x2, y2 = coords[v]
+        parts.append('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" '
+                     'stroke="#888" stroke-width="1.5"/>' % (x1, y1, x2, y2))
+        # Edge label at midpoint
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        parts.append('<text x="%.1f" y="%.1f" text-anchor="middle" '
+                     'font-size="10" fill="#555" dy="-3">%s</text>' % (mx, my, str(label)))
+
+    # Draw nodes
+    r = 14
+    for v in vertices:
+        cx, cy = coords[v]
+        parts.append('<circle cx="%.1f" cy="%.1f" r="%d" fill="#fff" '
+                     'stroke="#333" stroke-width="1.5"/>' % (cx, cy, r))
+        parts.append('<text x="%.1f" y="%.1f" text-anchor="middle" '
+                     'dominant-baseline="central" font-size="9" '
+                     'fill="#333">%s</text>' % (cx, cy, str(v)))
+
+    parts.append('</svg>')
+    return Markup('\n'.join(parts))
+
+
 class WebObj:
     def __init__(self, label, data=None):
         self.label = label
