@@ -68,8 +68,7 @@ Rank not yet determined.
 {% if cl.isogeny_matrix %}
 <div id="isogeny-graph"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js"></script>
-<script src="{{ url_for('static', filename='isogeny_graph.js') }}"></script>
+{% include "cytoscape_scripts.html" %}
 <script>
   initIsogenyGraph('isogeny-graph', {{ cl.graph_data | tojson }});
 </script>

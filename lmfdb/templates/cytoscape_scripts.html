@@ -1,0 +1,23 @@
+{# Shared Cytoscape.js scripts for interactive isogeny graphs.
+   Include this template where needed, then call:
+     initIsogenyGraph('container-id', elementsJSON);
+#}
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js"></script>
+{# Layout extension dependencies (engines must load before their adapters) #}
+<script src="https://cdn.jsdelivr.net/npm/layout-base/layout-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cose-base/cose-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/avsdf-base/avsdf-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/webcola/WebCola/cola.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/klayjs@0.4.1/klay.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/elkjs/lib/elk.bundled.js"></script>
+{# Layout extensions #}
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-fcose@2/cytoscape-fcose.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-cola@2/cytoscape-cola.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2/cytoscape-dagre.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-avsdf@1/cytoscape-avsdf.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-cise@1/cytoscape-cise.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-klay@3/cytoscape-klay.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4/cytoscape-cose-bilkent.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-elk/dist/cytoscape-elk.js"></script>
+<script src="{{ url_for('static', filename='isogeny_graph.js') }}"></script>
