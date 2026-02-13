@@ -959,17 +959,17 @@ def graph_to_cytoscape_json(G):
     passing to cytoscape({elements: ...}).
     """
     pos = G.get_pos()
+    has_pos = pos is not None and len(pos) == len(G.vertices())
     elements = []
     for v in G.vertices():
-        if pos and v in pos:
-            x, y = pos[v]
-        else:
-            x, y = 0, 0
-        elements.append({
+        node = {
             "group": "nodes",
             "data": {"id": str(v), "label": str(v)},
-            "position": {"x": float(x * 150), "y": float(-y * 150)},
-        })
+        }
+        if has_pos:
+            x, y = pos[v]
+            node["position"] = {"x": float(x * 150), "y": float(-y * 150)}
+        elements.append(node)
     for u, v, label in G.edges():
         elements.append({
             "group": "edges",
@@ -992,9 +992,16 @@ def graph_to_svg(G, width=200, height=150):
     if n == 0:
         return Markup('<svg width="%d" height="%d"></svg>' % (width, height))
 
-    # For single vertex, center it
-    if pos is None or n == 1:
+    # For single vertex, center it; for missing positions, use circular layout
+    if n == 1:
         coords = {v: (width / 2, height / 2) for v in vertices}
+    elif pos is None or len(pos) < n:
+        cx0, cy0 = width / 2, height / 2
+        r0 = min(width, height) / 2 - 20
+        coords = {}
+        for i, v in enumerate(vertices):
+            angle = 2 * math.pi * i / n - math.pi / 2
+            coords[v] = (cx0 + r0 * math.cos(angle), cy0 + r0 * math.sin(angle))
     else:
         xs = [pos[v][0] for v in vertices]
         ys = [pos[v][1] for v in vertices]

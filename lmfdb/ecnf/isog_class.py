@@ -156,6 +156,7 @@ class ECNF_isoclass():
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),
+                           ('Number of curves', str(self.class_size)),
                            ('Graph', ''),
                            (None, self.graph_link),
                            ('Conductor', '%s' % self.conductor_label)]
