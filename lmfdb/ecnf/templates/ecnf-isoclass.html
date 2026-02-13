@@ -66,9 +66,12 @@ Rank not yet determined.
 
 <h2>{{ KNOWL('ec.isogeny_graph',title='Isogeny graph') }}</h2>
 {% if cl.isogeny_matrix %}
-<center>
-  <img src="{{cl.graph_img}}" />
-</center>
+<div id="isogeny-graph"></div>
+
+{% include "cytoscape_scripts.html" %}
+<script>
+  initIsogenyGraph('isogeny-graph', {{ cl.graph_data | tojson }});
+</script>
 {% else %}
 <p>Not available.</p>
 {% endif %}

@@ -1,0 +1,254 @@
+/**
+ * Interactive isogeny graph rendering using Cytoscape.js
+ *
+ * Usage: initIsogenyGraph('container-id', elementsJSON)
+ */
+
+function _isoTooltipLine(parent, text, isMath) {
+    var span = document.createElement('span');
+    span.textContent = text;
+    parent.appendChild(span);
+    parent.appendChild(document.createElement('br'));
+}
+
+function _isoTooltipBold(parent, text) {
+    var b = document.createElement('strong');
+    b.textContent = text;
+    parent.appendChild(b);
+    parent.appendChild(document.createElement('br'));
+}
+
+function _isoTooltipEmphasis(parent, text) {
+    var em = document.createElement('em');
+    em.textContent = text;
+    parent.appendChild(em);
+    parent.appendChild(document.createElement('br'));
+}
+
+function initIsogenyGraph(containerId, elements) {
+    var container = document.getElementById(containerId);
+    if (!container || !elements || elements.length === 0) return;
+
+    // Check if preset positions are provided
+    var hasPositions = false;
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (var i = 0; i < elements.length; i++) {
+        if (elements[i].group === 'nodes' && elements[i].position) {
+            hasPositions = true;
+            var p = elements[i].position;
+            if (p.x < minX) minX = p.x;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.y > maxY) maxY = p.y;
+        }
+    }
+
+    if (hasPositions) {
+        var graphW = maxX - minX;
+        var graphH = maxY - minY;
+        container.style.width = Math.min(600, Math.max(200, graphW + 160)) + 'px';
+        container.style.height = Math.min(400, Math.max(80, graphH + 100)) + 'px';
+    } else {
+        var nNodes = 0;
+        for (var i = 0; i < elements.length; i++) {
+            if (elements[i].group === 'nodes') nNodes++;
+        }
+        var side = Math.min(600, Math.max(250, nNodes * 40));
+        container.style.width = side + 'px';
+        container.style.height = side + 'px';
+    }
+
+    var elkStress = { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } };
+    var layoutOpts = hasPositions ? { name: 'preset' } : elkStress;
+
+    var cy = cytoscape({
+        container: container,
+        elements: elements,
+        layout: layoutOpts,
+        userZoomingEnabled: false,
+        userPanningEnabled: false,
+        boxSelectionEnabled: false,
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'label': 'data(label)',
+                    'text-valign': 'center',
+                    'text-halign': 'center',
+                    'font-size': '12px',
+                    'font-family': 'sans-serif',
+                    'background-color': '#fff',
+                    'border-width': 2,
+                    'border-color': '#555',
+                    'width': 60,
+                    'height': 30,
+                    'shape': 'round-rectangle',
+                    'color': '#333',
+                    'cursor': 'pointer'
+                }
+            },
+            {
+                selector: 'node[?optimal]',
+                style: {
+                    'border-width': 3,
+                    'border-color': '#0055a2',
+                    'background-color': '#e8f0fe'
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'label': 'data(label)',
+                    'font-size': '11px',
+                    'text-background-color': '#fff',
+                    'text-background-opacity': 0.85,
+                    'text-background-padding': '2px',
+                    'line-color': '#888',
+                    'width': 1.5,
+                    'curve-style': 'bezier',
+                    'color': '#555'
+                }
+            }
+        ]
+    });
+
+    cy.fit(30);
+
+    // Minimum size enforcement: if the graph is too small, zoom out a bit
+    var bb = cy.elements().boundingBox();
+    if (bb.w < 80 && bb.h < 80) {
+        cy.zoom(cy.zoom() * 0.7);
+        cy.center();
+    }
+
+    // Save original container dimensions for preset restore
+    var origWidth = container.style.width;
+    var origHeight = container.style.height;
+
+    // Layout selector for testing
+    var layouts = {
+        // Built-in
+        'preset': { name: 'preset' },
+        'cose': { name: 'cose', animate: false, padding: 30 },
+        'circle': { name: 'circle', animate: false, padding: 30 },
+        'concentric': { name: 'concentric', animate: false, padding: 30,
+            concentric: function(node) { return node.degree(); },
+            levelWidth: function() { return 2; } },
+        'breadthfirst': { name: 'breadthfirst', animate: false, padding: 30 },
+        'grid': { name: 'grid', animate: false, padding: 30 },
+        'random': { name: 'random', animate: false, padding: 30 },
+        // Extensions
+        'fcose': { name: 'fcose', animate: false, padding: 30 },
+        'cola': { name: 'cola', animate: false, padding: 30 },
+        'dagre': { name: 'dagre', animate: false, padding: 30 },
+        'avsdf': { name: 'avsdf', animate: false, padding: 30 },
+        'cise': { name: 'cise', animate: false, padding: 30 },
+        'klay': { name: 'klay', animate: false, padding: 30 },
+        'cose-bilkent': { name: 'cose-bilkent', animate: false, padding: 30 },
+        'elk (layered)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'layered' } },
+        'elk (mrtree)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'mrtree' } },
+        'elk (stress)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } },
+        'elk (force)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'force' } }
+    };
+
+    var controls = document.createElement('div');
+    controls.style.cssText = 'margin: 8px 0;';
+    var label = document.createElement('label');
+    label.textContent = 'Layout: ';
+    label.style.fontWeight = 'bold';
+    var select = document.createElement('select');
+    var defaultLayout = hasPositions ? 'preset' : 'elk (stress)';
+    var layoutNames = Object.keys(layouts);
+    for (var li = 0; li < layoutNames.length; li++) {
+        if (layoutNames[li] === 'preset' && !hasPositions) continue;
+        var opt = document.createElement('option');
+        opt.value = layoutNames[li];
+        opt.textContent = layoutNames[li];
+        if (layoutNames[li] === defaultLayout) opt.selected = true;
+        select.appendChild(opt);
+    }
+    select.addEventListener('change', function() {
+        if (select.value === 'preset') {
+            // Restore original positions and container size
+            for (var ei = 0; ei < elements.length; ei++) {
+                if (elements[ei].group === 'nodes' && elements[ei].position) {
+                    cy.getElementById(elements[ei].data.id).position(elements[ei].position);
+                }
+            }
+            container.style.width = origWidth;
+            container.style.height = origHeight;
+            cy.resize();
+            cy.fit(30);
+        } else {
+            // Ensure enough room for computed layouts
+            container.style.width = '500px';
+            container.style.height = '400px';
+            cy.resize();
+            try {
+                cy.layout(layouts[select.value]).run();
+                cy.fit(30);
+            } catch (e) {
+                console.warn('Layout "' + select.value + '" failed:', e.message);
+                // Show inline error
+                var msg = document.createElement('div');
+                msg.textContent = 'Layout "' + select.value + '" not available: ' + e.message;
+                msg.style.cssText = 'color:#c00; font-size:13px; margin-top:4px;';
+                if (controls.querySelector('.layout-error')) {
+                    controls.removeChild(controls.querySelector('.layout-error'));
+                }
+                msg.className = 'layout-error';
+                controls.appendChild(msg);
+            }
+        }
+    });
+    label.appendChild(select);
+    controls.appendChild(label);
+    container.parentNode.insertBefore(controls, container);
+
+    // Create tooltip element
+    var tooltip = document.createElement('div');
+    tooltip.className = 'isogeny-tooltip';
+    tooltip.style.cssText = 'display:none; position:absolute; background:#fff; ' +
+        'border:1px solid #ccc; border-radius:4px; padding:8px 12px; ' +
+        'font-size:13px; line-height:1.5; box-shadow:0 2px 8px rgba(0,0,0,0.15); ' +
+        'z-index:1000; pointer-events:none; max-width:280px;';
+    container.style.position = 'relative';
+    container.appendChild(tooltip);
+
+    // Hover: show tooltip with curve metadata
+    cy.on('mouseover', 'node', function(evt) {
+        var node = evt.target;
+        var d = node.data();
+
+        // Clear previous content safely
+        while (tooltip.firstChild) tooltip.removeChild(tooltip.firstChild);
+
+        _isoTooltipBold(tooltip, d.label);
+        if (d.j_inv !== undefined) _isoTooltipLine(tooltip, 'j-invariant: ' + d.j_inv);
+        if (d.torsion !== undefined) _isoTooltipLine(tooltip, 'Torsion: ' + d.torsion);
+        if (d.degree !== undefined && d.degree !== 0) _isoTooltipLine(tooltip, 'Modular degree: ' + d.degree);
+        if (d.faltings_height !== undefined) _isoTooltipLine(tooltip, 'Faltings height: ' + d.faltings_height);
+        if (d.optimal) _isoTooltipEmphasis(tooltip, 'Optimal curve');
+
+        tooltip.style.display = 'block';
+
+        // Position tooltip near the node
+        var pos = node.renderedPosition();
+        tooltip.style.left = (pos.x + 15) + 'px';
+        tooltip.style.top = (pos.y - 10) + 'px';
+    });
+
+    cy.on('mouseout', 'node', function() {
+        tooltip.style.display = 'none';
+    });
+
+    // Click: navigate to curve page
+    cy.on('tap', 'node', function(evt) {
+        var url = evt.target.data('url');
+        if (url) {
+            window.location.href = url;
+        }
+    });
+
+    return cy;
+}
