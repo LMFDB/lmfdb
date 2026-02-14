@@ -366,6 +366,17 @@ def top_rcs():
     bread = [(t, " ")]
     return render_template("single.html", kid="rcs", title=t, bread=bread)
 
+@app.route("/announcements")
+def announcements():
+    t = "Announcements"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.announcements", title=t, bread=bread)
+
+@app.route("/ongoing")
+def ongoing():
+    t = "Ongoing projects"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.ongoing", title=t, bread=bread)
 
 @app.route("/health")
 @app.route("/alive")
@@ -409,7 +420,6 @@ def statshealth():
             return "LMFDB stats are healthy!"
     else:
         abort(503)
-
 
 @app.route("/info")
 def info():
@@ -713,16 +723,19 @@ def sitemap():
 def WhiteListedRoutes():
     return [
         'ArtinRepresentation',
+        'Belyi',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
         'Character/calc-jacobi/Dirichlet',
         'Character/calc-kloosterman/Dirichlet',
         'Character/calc-value/Dirichlet',
+        'datasets',
         'EllipticCurve',
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
+        'Groups/Abstract',
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
@@ -772,6 +785,7 @@ def WhiteListedRoutes():
         'news',
         'not_yet_implemented',
         'random',
+        'rcs',
         'robots.txt',
         'search',
         'sitemap',

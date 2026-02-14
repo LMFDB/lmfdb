@@ -573,6 +573,9 @@ def eval_rational_list(s):
     - once-nested lists like "[[1,2],[3,4]]" or "1,2;3,4"
     - single quotes wrapping the integers/rationals, like "['1','2','3']"
     """
+    if s is None:
+        return
+
     def split(x):
         if not x:
             return []

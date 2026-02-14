@@ -24,8 +24,6 @@ not-implemented:
 frontmatter:
   all: |
     {lang} code for working with number field {label}.
-  oscar: |
-    If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.
   rest: |
     Some of these functions may take a long time to execute (this depends on the field).
 
@@ -35,7 +33,7 @@ field:
   pari: K = bnfinit(%s, 1)
   magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
   oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
-
+  
 poly:
   comment: Defining polynomial
   sage:  K.defining_polynomial()
@@ -65,23 +63,26 @@ discriminant:
   oscar: OK = ring_of_integers(K); discriminant(OK)
 
 rd:
+  comment: Root discriminant
   sage: (K.disc().abs())^(1./K.degree())
   pari: abs(K.disc)^(1/poldegree(K.pol))
   magma: Abs(Discriminant(OK))^(1/Degree(K));
-  oscar: (1.0 * dK)^(1/degree(K))
+  oscar: |
+    OK = ring_of_integers(K);
+    (1.0 * abs(discriminant(OK)))^(1/degree(K))
 
 automorphisms:
   comment: Autmorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
-  oscar: automorphisms(K)
+  oscar: automorphism_group(K)
 
 ramified_primes:
   comment: Ramified primes
   sage:  K.disc().support()
   pari:  factor(abs(K.disc))[,1]~
   magma: PrimeDivisors(Discriminant(OK));
-  oscar: prime_divisors(discriminant((OK)))
+  oscar: prime_divisors(discriminant(OK))
 
 integral_basis:
   comment: Integral basis
@@ -161,7 +162,7 @@ class_number_formula:
     2^r1 * (2*Pi(RR))^r2 * RK * hK / (wK * Sqrt(RR!Abs(DK)));
   oscar: |
     # self-contained Oscar code snippet to compute the analytic class number formula
-    Qx, x = PolynomialRing(QQ); K, a = NumberField(%s);
+    Qx, x = polynomial_ring(QQ); K, a = number_field(%s);
     OK = ring_of_integers(K); DK = discriminant(OK);
     UK, fUK = unit_group(OK); clK, fclK = class_group(OK);
     r1,r2 = signature(K); RK = regulator(K); RR = parent(RK);
@@ -173,12 +174,15 @@ galois_group:
   sage:  K.galois_group(type='pari')
   pari:  polgalois(K.pol)
   magma: G = GaloisGroup(K);
-  oscar: G, Gtx = galois_group(K); G, transitive_group_identification(G)
+  oscar: |
+    G, Gtx = galois_group(K);
+    degree(K) > 1 ? (G, transitive_group_identification(G)) : (G, nothing)
+
 
 intermediate_fields:
   comment: Intermediate fields
   sage: K.subfields()[1:-1]
-  pari: L = nfsubfields(K); L[2..length(b)]
+  pari: L = nfsubfields(K); L[2..length(L)]
   magma: L := Subfields(K); L[2..#L];
   oscar: subfields(K)[2:end-1]
 
@@ -196,3 +200,25 @@ prime_cycle_types:
   oscar: |
     # to obtain a list of [e_i,f_i] for the factorization of the ideal pO_K for p=7 in Oscar:
     p = 7; pfac = factor(ideal(ring_of_integers(K), p)); [(e, valuation(norm(pr),p)) for (pr,e) in pfac]
+
+
+# specify which code snippets to test
+snippet_test:                   
+  testQ: 
+    label: 1.1.1.1
+    langs:
+      - sage
+      - magma
+      - oscar
+      - gp
+    url: NumberField/1.1.1.1/download/{lang}
+  testQi: 
+    label: 2.0.4.1
+    langs:
+      - sage
+      - magma
+      - oscar
+      - gp
+    url: NumberField/2.0.4.1/download/{lang}
+
+

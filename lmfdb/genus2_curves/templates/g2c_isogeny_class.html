@@ -5,26 +5,6 @@
 p {padding-left: 1ch;}
 </style>
 
-<style type="text/css">
-#isogeny_class_table th, #isogeny_class_table td {
-padding : 4px;
-text-align: center;
-}
-</style>
-
-<h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{data.label}}</h2>
-<table id = "isogeny_class_table">
-<tr>
-<th>{{ KNOWL('g2c.label', title='Label')}}</th>
-<th>{{ KNOWL('g2c.minimal_equation', title='Equation') }}</th>
-</tr>
-{% for c in data.curves %}
-<tr>
-<td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
-<td align="center">\({{c.equation_formatted}}\)</td>
-{% endfor %}
-</table>
-
 <h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
 
 <p>
@@ -118,5 +98,25 @@ text-align: center;
 -->
 
 <!-- <h2>{{ KNOWL('av.isogeny', title='Isogenies') }}</h2> -->
+
+<style type="text/css">
+  #isogeny_class_table th, #isogeny_class_table td {
+  padding : 4px;
+  text-align: center;
+  }
+  </style>
+  
+  <h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{data.label}}</h2>
+  <table id = "isogeny_class_table">
+  <tr>
+  <th>{{ KNOWL('g2c.label', title='Label')}}</th>
+  <th>{{ KNOWL('g2c.minimal_equation', title='Equation') }}</th>
+  </tr>
+  {% for c in data.curves %}
+  <tr>
+  <td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
+  <td align="center">\({{c.equation_formatted}}\)</td>
+  {% endfor %}
+  </table>
 
 {% endblock %}

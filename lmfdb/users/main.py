@@ -227,7 +227,7 @@ def register_new():
 def register(N=10):
     N = min(N, 100)
     import random
-    tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
+    tokens = [str(random.randrange(int(1e20), int(1e21))) for _ in range(N)]
     userdb.create_tokens(tokens)
     urls = ["%s%s" % (base_url, url_for(".register_token", token=t)) for t in tokens]
     resp = make_response('\n'.join(urls))

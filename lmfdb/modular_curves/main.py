@@ -154,6 +154,7 @@ def by_label(label):
     return render_template(
         "modcurve.html",
         curve=curve,
+        code=curve.code,
         dojs=dojs,
         zip=zip,
         name_to_latex=name_to_latex,
@@ -1096,6 +1097,7 @@ class RatPointSearchArray(SearchArray):
              ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
              ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
              ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"])]
+
     def __init__(self):
         curve = TextBox(
             name="curve",

@@ -201,7 +201,6 @@
     colspan: onecolumn
   - title: Abstract groups
     url_for: "abstract.index"
-    status: beta
     colspan: onecolumn
   - title: Lattices
     url_for: "lattice.lattice_render_webpage"

@@ -81,8 +81,12 @@ class AbGpsTest(LmfdbTest):
             "gps_conj_classes", "representative",
             "gps_qchar", "cdim",
             "gps_char", "indicator",
-            "gps_subgroups", "mobius_sub"])
+            "gps_subgroup_search", "mobius_sub"])
         self.check_args("/Groups/Abstract/sdata/16.8.2.b1.a1", [
-            "gps_subgroups", "16.8.2.b1.a1",
+            "gps_subgroup_search", "16.8.2.b1.a1",
             "gps_groups", "[28776, 16577, 5167]", # perm_gens
             "[[1, 1, 1]]"]) # faithful_reps
+
+    def test_subgroups(self):
+        self.check_args("/Groups/Abstract/sub/78125.1385.15625.A","Group of order 31250000")
+        self.check_args("/Groups/Abstract/sub/16384.mv.8._.BQX",'The ambient group is <a title="Abelian group [group.abelian]"')
