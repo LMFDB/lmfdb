@@ -521,7 +521,6 @@ def elliptic_curve_search(info, query):
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
     if 'Qcurves' in info:
-        print("Qcurves")
         if info['Qcurves'] == 'Q-curve':
             query['q_curve'] = True
         elif info['Qcurves'] == 'base-change':
@@ -534,6 +533,13 @@ def elliptic_curve_search(info, query):
         elif info['Qcurves'] == 'non-base-change-Q-curve':
             query['q_curve'] = True
             query['base_change'] = []
+    if 'base_change_label' in info:
+        if "Qcurves" in info and info['Qcurves'][:3] == 'non':
+            err = "Incompatible base change query options, you cannot simultaneous exclude base changes and specify a base change label."
+            flash_error(err)
+            raise ValueError(err)
+        query['q_curve'] = True
+        query['base_change'] = { '$contains': info['base_change_label'] }
 
     parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
 
@@ -907,6 +913,11 @@ class ECNFSearchArray(SearchArray):
             label="Isogeny class degree",
             knowl="ec.isogeny",
             example="16")
+        base_change_label = TextBox(
+            name="base_change_label",
+            label="Base change of",
+            knowl="ec.base_change",
+            example="11a.1")
         count = CountBox()
 
         self.browse_array = [
@@ -919,13 +930,15 @@ class ECNFSearchArray(SearchArray):
             [isodeg, one],
             [class_size, class_deg],
             [galois_image, nonmax_primes],
+            [base_change_label, reduction],
             [jinv],
-            [count, reduction],
+            [count]
             ]
 
         self.refine_array = [
             [field, conductor_norm, rank, torsion, cm_disc],
             [deg_sig, bad_primes, Qcurves, torsion_structure, include_cm],
             [sha, isodeg, class_size, reduction, galois_image],
-            [jinv, regulator, one, class_deg, nonmax_primes],
+            [base_change_label, regulator, one, class_deg, nonmax_primes],
+            [jinv],
             ]
