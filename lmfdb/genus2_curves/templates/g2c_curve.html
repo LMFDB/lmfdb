@@ -55,7 +55,7 @@ function show_eqns(invstyle) {
 <tr><td>{{KNOWL("ag.conductor", "Conductor")}}:</td><td> \( N \) </td><td>&nbsp;\(=\)&nbsp;</td> <td>\({{ data.cond }}\)</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.cond_factor_latex }}</td>
     <td>{{place_code('cond')}}</td>
 </tr>
-<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}:</td><td> \( \Delta \) </td> <td>&nbsp;\(=\)&nbsp;</td> <td>\({{ data.disc }}\)</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
+<tr><td>{{KNOWL("g2c.discriminant", "Discriminant")}}:</td><td> \( \Delta \) </td> <td>&nbsp;\(=\)&nbsp;</td> <td>{{ data.disc_pretty|safe }}</td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.disc_factor_latex }}</td>
     <td>{{place_code('disc')}}</td>
 </tr>
 </table>
@@ -66,39 +66,39 @@ function show_eqns(invstyle) {
 
 <table>
     <tr class='igusa_clebsch'>
-        <td> \( I_2 \) </td> <td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[0] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( I_2 \) </td> <td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_clebsch_pretty[0]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[0] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[1] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( I_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_clebsch_pretty[1]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[1] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[2] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( I_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_clebsch_pretty[2]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[2] }}</td>
     </tr>
     <tr class='igusa_clebsch'>
-        <td> \( I_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa_clebsch[3]}}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( I_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_clebsch_pretty[3]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_clebsch_factor_latex[3] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_2 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[0] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( J_2 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_pretty[0]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[0] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[1] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( J_4 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_pretty[1]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[1] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[2] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( J_6 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_pretty[2]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[2] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_8 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[3] }}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( J_8 \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_pretty[3]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[3] }}</td>
     </tr>
     <tr class='igusa nodisplay'>
-        <td> \( J_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>\({{ data.igusa[4]}}\)</td><td>&nbsp;\(=\)&nbsp;</td>
+        <td> \( J_{10} \) </td><td>&nbsp;\(=\)&nbsp;</td><td>{{ data.igusa_pretty[4]|safe }}</td><td>&nbsp;\(=\)&nbsp;</td>
         <td>{{ data.igusa_factor_latex[4] }}</td>
     </tr>
     <tr class='G2 nodisplay'>
@@ -145,17 +145,24 @@ function show_eqns(invstyle) {
 
 <p>{{place_code('rat_pts')}}{{place_code('rat_pts_simp')}}</p>
 
+{% if data.num_rat_pts or not data.rat_pts_v %}
 <p>Number of rational {{ KNOWL('g2c.num_rat_wpts', 'Weierstrass points') }}: \({{data.num_rat_wpts}}\)</p>
 <p>{{place_code('num_rat_wpts')}}</p>
+{% endif %}
 
-<p>This curve is {{ KNOWL('g2c.locally_solvable', 'locally solvable') }} {{data.non_solvable_places}}.</p>
+{% if data.non_solvable_places %}
+<p>This curve is not {{ KNOWL('g2c.locally_solvable', 'locally solvable') }}, {{data.non_solvable_places}}</p>
+{% else %}
+<p>This curve is {{ KNOWL('g2c.locally_solvable', 'locally solvable') }}.</p>
+{% endif %}
 <p>{{place_code('locally_solvable')}}</p>
 
+{% if data.mw_group %}
 <h2> {{KNOWL('ag.mordell_weil', 'Mordell-Weil group of the Jacobian')}} </h2>
 
 <p>
 {{ KNOWL('ag.mordell_weil', 'Group structure') }}: {{data.mw_group}}
-{% if not data.mw_rank_proved %} ({{ KNOWL('g2c.conditional_mw_group','conditional')}}) {% endif %}
+{% if not data.mw_gens_v %} ({{ KNOWL('g2c.conditional_mw_group','conditional')}}) {% endif %}
 </p>
 <p>{{place_code('mw_group')}}</p>
 
@@ -164,7 +171,9 @@ function show_eqns(invstyle) {
 <div class='proj_eqn nodisplay'><td>{{ data.mw_gens_table | safe }}</div>
 <div class='simp_eqn nodisplay'><td>{{ data.mw_gens_simple_table | safe }}</div>
 {% endif %}
+{% endif %}
 
+<!--
 <p>{{ KNOWL('g2c.two_torsion_field', '2-torsion field') }}: {{data.two_torsion_field_knowl|safe}}</p>
 <p>{{place_code('two_torsion_field')}}</p>
 
@@ -192,11 +201,15 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('g2c.has_square_sha', 'Order of &#1064;') }}:</td><td>{{data.has_square_sha}}</td></tr>
 </table>
 </p>
+-->
 
+<!--
 <h2> {{KNOWL('g2c.local_invariants', 'Local invariants')}} </h2>
 
 <p>{{ data.local_table | safe }}</p>
+-->
 
+<!--
 <h2> {{KNOWL('g2c.galois_rep', 'Galois representations')}} </h2>
 
 <p>
@@ -220,6 +233,7 @@ function show_eqns(invstyle) {
         <p>{{ data.galrep_table | safe }}</p>
     {% endif %}
 </p>
+-->
 
 <h2> {{KNOWL('g2c.st_group', 'Sato-Tate group') }} </h2>
 
@@ -230,39 +244,47 @@ function show_eqns(invstyle) {
 </table>
 </p>
 
-<h2 style="display: inline"> {{ KNOWL('g2c.decomposition', 'Decomposition of the Jacobian') }} </h2>
+<!-- <h2 style="display: inline"> {{ KNOWL('g2c.decomposition', 'Decomposition of the Jacobian') }} </h2> -->
 
-<!-- Description of a splitting field of minimal degree: -->
+<!-- Description of a splitting field of minimal degree:
 <p>{{data.split_field_statement|safe}}</p>
+-->
 
-<!-- Description of the splittings themselves. -->
+<!-- Description of the splittings themselves.
 <p>{{data.split_statement|safe}}</p>
+-->
 
-<!-- Code snippet -->
+<!-- Code snippet
 <p>{{place_code('decomp')}}</p>
+-->
 
-<h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2>
+<!-- <h2 style="display: inline"> {{ KNOWL('g2c.jac_endomorphisms', 'Endomorphisms of the Jacobian') }} </h2> -->
 
-<!-- Description over QQ: -->
+<!-- Description over QQ:
 <p>{{data.gl2_statement_base}}</p>
 <p>{{data.end_statement_base|safe}}</p>
+ -->
 
-<!-- Description of field of definition: -->
+<!-- Description of field of definition: 
 <p>{{data.end_field_statement|safe}}</p>
+-->
 
-<!-- Description over QQbar: -->
+<!-- Description over QQbar: 
 <p>{{data.gl2_statement_geom}}</p>
 <p>{{data.end_statement_geom|safe}}</p>
+-->
 
-<!-- Remainder of the lattice: -->
+<!-- Remainder of the lattice:
 {% if data.end_lattice_statement %}
 <h3 style="display: inline"> Remainder of the {{ KNOWL('g2c.jac_end_lattice', 'endomorphism lattice') }} by field</h3>
 <p>{{data.end_lattice_statement|safe}}</p>
 {% endif %}
+-->
 
-<!-- Code snippet -->
+<!-- Code snippet 
 <p>{{place_code('endos0')}}</p>
 <p>{{place_code('endos1')}}</p>
 <p>{{place_code('endos2')}}</p>
+-->
 
 {% endblock %}
