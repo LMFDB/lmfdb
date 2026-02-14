@@ -1694,6 +1694,16 @@ div.maassformplot img {
     color: {{color.sidebar_text_beta}};
 }
 
+#sidebar .alpha {
+    color: #8c1f21;
+    display: inherit;
+}
+
+
+#sidebar .alpha a {
+    color: #8c1f21;
+}
+
 
 #sidebar table td .parts {
     padding-left: 15px;

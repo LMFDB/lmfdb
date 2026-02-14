@@ -15,18 +15,33 @@ def linked_name(item, level=""):
             return ''.join(['<h2>',item['title'],'</h2>\n'])
 
     else:
-        if 'url_for' in item and not ('status' in item and item['status'] == 'future'):
+        if 'url_for' in item and item['show']:
             url = url_for(item['url_for'],**item.get('url_args',{}))
             this_entry = ''.join(['<a href="',url,'">',item['title'],'</a>'])
         else:
             this_entry = item['title']
         if this_entry == 'dummy':
             this_entry = '&nbsp;'
-        if 'status' in item and item['status'] == 'future':
+        if not item['show'] and 'status' in item and item['status'] == 'future':
             this_entry = ''.join(['<div class="future">',this_entry,'</div>'])
     if 'status' in item and item['status'] == 'beta':
         this_entry = ''.join(['<div class="beta">', this_entry, '</div>'])
+    elif item['show'] and 'status' in item and item['status'] == 'future':
+        this_entry = ''.join(['<div class="alpha">', this_entry, '</div>'])
     return this_entry
+
+def set_url(item):
+    from lmfdb.app import is_beta, is_alpha, alpha_blueprints
+    if is_alpha():
+        sections = alpha_blueprints()
+        if "url_for" in item:
+            u = item["url_for"]
+            item['show'] = (u == "l_functions.contents") or ("." not in u) or (u in sections)
+        else:
+            item["show"] = False
+    else:
+        item['show'] = (not item.get('status')) or (is_beta() and item['status'] == 'beta')
+    item['url'] = linked_name(item)
 
 # The unique instance of the class SideBar:
 
@@ -55,28 +70,28 @@ class SideBar():
         def heading(k): return linked_name(self.toc_dic[k]['heading'],'heading')
         self.data = [(k,heading(k),self.toc_dic[k]) for k in self.main_headings]
 
-        for _, _, data in self.data:
+        for k, _, data in self.data:
             if data['type'] == 'L':
                 for item in data['firstpart']['entries']:
-                    item['url'] = linked_name(item)
+                    set_url(item)
                 for item in data['secondpart']['parts']:
-                    item['url'] = linked_name(item)
+                    set_url(item)
 
             if data['type'] == '2 column':
                 for entry in data['parts']:
-                    entry['url'] = linked_name(entry)
+                    set_url(entry)
                 if 'part2' in entry:
                     for pt2 in entry['part2']:
-                        pt2['url'] = linked_name(pt2)
+                        set_url(pt2)
                         for item in pt2['parts']:
-                            item['url'] = linked_name(item)
+                            set_url(item)
 
             if data['type'] in ['multilevel', 'simple']:
                 for entry in data['parts']:
-                    entry['url'] = linked_name(entry)
+                    set_url(entry)
                     if 'part2' in entry:
                         for pt2 in entry['part2']:
-                            pt2['url'] = linked_name(pt2)
+                            set_url(pt2)
                             if 'part3' in pt2:
                                 for item in pt2['part3']:
-                                    item['url'] = linked_name(item)
+                                    set_url(item)

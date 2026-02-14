@@ -64,6 +64,9 @@ def set_beta_state():
 def is_beta():
     return g.BETA
 
+def is_alpha():
+    return True # hardwired for alpha branch
+
 
 app.is_running = False
 
@@ -147,7 +150,7 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
-    vars['ALPHA'] = True # hardwired for alpha branch
+    vars['ALPHA'] = is_alpha()
 
     def modify_url(**replace):
         url = request.url
@@ -302,13 +305,18 @@ def netloc_redirect():
         return redirect(url, code=301)
     elif (
         urlparts.netloc == "www.lmfdb.org"
-
         and not white_listed(urlparts.path)
         and valid_bread(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
-
+    elif (
+        urlparts.netloc == "alpha.lmfdb.org"
+        and not alpha_listed(urlparts.path)
+        and valid_bread(urlparts.path)
+    ):
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=302)
 
 def timestamp():
     return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -833,6 +841,74 @@ def white_listed(url):
     else:
         return False
 
+@cached_function
+def alpha_blueprints():
+    # This is the row you need to change to add or remove entries from the alpha.lmfdb.org sidebar
+    # You should list endpoints giving the top level url for the sections to be included (this is usually what is shown in sidebar.yaml)
+    return ["cmf.index", "smf.index", "modcurve.index", "shimcurve.index", "hmsurface.index", "abvarfq.abelian_varieties", "modlgal.index", "lattice.index", # adjust these to change sidebar
+            "users.list", "knowledge.index", "API.index"] # Should always allow these for usability
+
+@cached_function
+def BasicRoutes():
+    return [
+        "datasets",
+        "L/contents",
+        "Group",
+        "Motive",
+        "Representation",
+        "Field",
+        "Variety",
+        "ModularForm",
+        "about",
+        "acknowledgement",
+        "alive",
+        "bigpicture",
+        "callback_ajax",
+        "citation",
+        "contact",
+        "editorial-board",
+        "favicon.ico",
+        "features",
+        "forcebetasitemap",
+        "health",
+        "humans.txt",
+        "info",
+        "intro",
+        "management",
+        "news",
+        "rcs",
+        "robots.txt",
+        "search",
+        "sitemap",
+        "statshealth",
+        "style.css",
+        "universe",
+        "whitelistedsitemap",
+    ]
+
+@cached_function
+def AlphaListedRoutes():
+    return ([urlparse(url_for(endpoint)).path.strip("/") for endpoint in alpha_blueprints()] +
+            ["static"])
+
+@cached_function
+def AlphaListedBreads():
+    res = set()
+    for elt in AlphaListedRoutes():
+        pieces = elt.split("/")
+        for i in range(1, len(pieces)):
+            res.add("/".join(pieces[:i]))
+    res.update(BasicRoutes())
+    return res
+
+@cached_function
+def alpha_listed(url):
+    url = url.strip("/")
+    if not url:
+        return True
+    if any(url.startswith(elt) for elt in AlphaListedRoutes()) or url in AlphaListedBreads():
+        return True
+    return False
 
 @cached_function
 def NotWhiteListedBreads():
