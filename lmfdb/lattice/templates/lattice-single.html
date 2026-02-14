@@ -7,25 +7,25 @@
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }}</h2>
 
 <table>
-    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{lattice.rank}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{lattice.signature}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.det_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{lattice.disc_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{lattice.level_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{lattice.class_number_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.conway_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.even_odd}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{lattice.rank}}$</td><td>{{ place_code('rank') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{lattice.signature}}$</td><td>{{ place_code('signature') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.det_display}}</td><td>{{ place_code('determinant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{lattice.disc_display}}</td><td>{{ place_code('discriminant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{lattice.level_display}}</td><td>{{ place_code('level') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{lattice.class_number_display}}</td><td>{{ place_code('class_number') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.conway_display}}</td><td>{{ place_code('conway_symbol') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.even_odd}}</td><td>{{ place_code('parity') }}</td></tr>
     {% if lattice.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ lattice.aut_size_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ lattice.festi_veniani_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ lattice.density_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.hermite_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>{{lattice.minimum_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ lattice.aut_size_display }}</td><td>{{ place_code('automorphism_group_order') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td><td>{{ place_code('automorphism_group') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ lattice.festi_veniani_display }}</td><td>{{ place_code('festi_veniani') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ lattice.density_display }}</td><td>{{ place_code('density') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.hermite_display }}</td><td>{{ place_code('hermite') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>{{lattice.minimum_display }}</td><td>{{ place_code('minimum') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td><td>{{ place_code('kissing') }}</td></tr>
     {% endif %}
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td><td>{{ place_code('discriminant_group') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td><td>{{ place_code('minimal_vectors') }}</td>
 <td>
 {% if lattice.shortest is none %}
     not computed</td></tr>
@@ -57,31 +57,33 @@
 
 {% if lattice.theta_series %}
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
-
+{{ place_code('theta_series') }}
 <div>{{lattice.theta_display | safe}}</div>
 
 {% endif %}
 
 <h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
+{{ place_code('gram') }}
 <table>
     <tr><td>{{lattice.gram_display | safe}}</td></tr>
 </table>
 
 
-
 <h2> {{ KNOWL('lattice.dual', title='Dual Lattice') }} </h2>
+{{ place_code('dual') }}
 <table>
     <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>{{lattice.dual_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.dual_conway_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.dual_det_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.dual_conway_display}}</td><td>{{ place_code('dual_conway') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.dual_det_display}}</td><td>{{ place_code('dual_det') }}</td></tr>
     {% if lattice.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{lattice.dual_density_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.dual_hermite_display }}\dots$</td></tr>
-        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.dual_kissing_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{lattice.dual_density_display }}</td><td>{{ place_code('dual_density') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.dual_hermite_display }}\dots$</td><td>{{ place_code('dual_hermite') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.dual_kissing_display }}</td><td>{{ place_code('dual_kissing') }}</td></tr>
     {% endif %}
 
     <tr>
       <td>{{ KNOWL('lattice.theta', title='Theta Series') }}:</td>
+      {{ place_code('dual_theta') }}
       <td>
         {{lattice.dual_theta_display | safe}}
       </td>
