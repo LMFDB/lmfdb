@@ -917,13 +917,14 @@ def make_code_snippets(data):
         sage_construct_field += "K.<a> = L.extension("+data['eisen']+")"
 
     format_data = {
+        'label': "{label}", 'lang': "{lang}",
         'p': data['p'],
         'coeffs': str(data['coeffs']),
         'sage_construct_field' : sage_construct_field
     }
 
     for prop in code:
-        if prop != "frontmatter":
+        if prop != "snippet_test":
             for lang in code[prop]:
                 code[prop][lang] = code[prop][lang].format(**format_data)
     return code
