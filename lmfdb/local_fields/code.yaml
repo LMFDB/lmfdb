@@ -12,6 +12,10 @@ not-implemented:
   magma: |
     // (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with p-adic field {label}.
+
 field:
   comment: Define the p-adic field
   sage:  |
@@ -49,6 +53,7 @@ residue_degree:
   magma: InertiaDegree(K);
 
 disc_exponent:
+  comment: Discriminant exponent
   magma: Valuation(Discriminant(K));
 
 unramified_subfield:

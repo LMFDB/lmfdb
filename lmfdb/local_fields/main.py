@@ -4,7 +4,7 @@
 import os
 import yaml
 
-from flask import abort, render_template, request, url_for, redirect
+from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
 from sage.plot.all import line, points, text, Graphics, polygon
@@ -20,6 +20,7 @@ from lmfdb.utils import (
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
+from lmfdb.utils.place_code import CodeSnippet
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.utils.search_parsing import search_parser
@@ -922,8 +923,9 @@ def make_code_snippets(data):
     }
 
     for prop in code:
-        for lang in code[prop]:
-            code[prop][lang] = code[prop][lang].format(**format_data)
+        if prop != "frontmatter":
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**format_data)
     return code
 
 def render_field_webpage(args):
@@ -1141,7 +1143,10 @@ def render_field_webpage(args):
                 lstr = data["old_label"]
             friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+f"?completions={lstr}"))
-        downloads = [('Underlying data', url_for('.lf_data', label=label))]
+        downloads = []
+        for lang in [("Magma", "magma"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".lf_code_download", label=label, download_type=lang[1])))
+        downloads.append(('Underlying data', url_for('.lf_data', label=label)))
 
         if data.get('new_label'):
             _, _, _, fam, i = data['new_label'].split(".")
@@ -1214,6 +1219,34 @@ def lf_data(label):
         return datapage(label, "lf_families", title=title, bread=bread)
     else:
         return abort(404, f"Invalid label {label}")
+
+sorted_code_names = ['field', 'poly', 'base_field', 'degree', 'ramification_index', 'residue_degree', 'disc_exponent', 'unramified_subfield', 'roots_of_unity']
+
+def lf_code(**args):
+    label = args['label']
+    if not (NEW_LF_RE.fullmatch(label) or OLD_LF_RE.fullmatch(label)):
+        raise ValueError(f"Invalid label {label}")
+    lang = args['download_type']
+    # fetch field data
+    if NEW_LF_RE.fullmatch(label):
+        data = db.lf_fields.lucky({"new_label": label})
+    else:
+        data = db.lf_fields.lucky({"old_label": label})
+    if data is None:
+        raise ValueError(f"There is no local field with label {label}")
+    code = CodeSnippet(make_code_snippets(data))
+    return code.export_code(label, lang, sorted_code_names)
+
+
+@local_fields_page.route('/<label>/download/<download_type>')
+def lf_code_download(**args):
+    typ = args['download_type']
+    try:
+        response = make_response(lf_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @local_fields_page.route("/random")
 @redirect_no_cache
