@@ -845,7 +845,7 @@ def white_listed(url):
 def alpha_blueprints():
     # This is the row you need to change to add or remove entries from the alpha.lmfdb.org sidebar
     # You should list endpoints giving the top level url for the sections to be included (this is usually what is shown in sidebar.yaml)
-    return ["cmf.index", "g2c.index", "smf.index", "modcurve.index", "shimcurve.index", "hmsurface.index", "abvarfq.abelian_varieties", "modlgal.index", "lattice.index", # adjust these to change sidebar
+    return ["cmf.index", "g2c.index_Q", "smf.index", "modcurve.index", "shimcurve.index", "hmsurface.index", "abvarfq.abelian_varieties", "modlgal.index", "lattice.index", # adjust these to change sidebar
             "users.list", "knowledge.index", "API.index"] # Should always allow these for usability
 
 @cached_function
