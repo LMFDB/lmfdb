@@ -63,3 +63,19 @@ unramified_subfield:
 roots_of_unity:
   comment: Roots of unity
   sage: len(K.roots_of_unity())
+
+
+# specify which code snippets to test
+snippet_test:                   
+  testQ2: 
+    label: 2.1.1.0a1.1
+    langs:
+      - sage
+      - magma
+    url: padicField/2.1.1.0a1.1/download/{lang}
+  testQ2i: 
+    label: 2.1.2.2a1.1
+    langs:
+      - sage
+      - magma
+    url: padicField/2.1.2.2a1.1/download/{lang}
