@@ -360,20 +360,24 @@ def render_group_webpage(args):
             KNOWL_ID="gg.%s" % label,
             learnmore=learnmore_list()+[('Picture description', url_for('.pictures'))])
 
+
+sorted_code_names = ['gg', 'n', 't', 'primitive', 'even', 'nilpotent', 'auts', 'gens', 'ccs', 'order', 'cyclic', 'abelian', 'solvable', 'id', 'char_table']
+
+def gg_code(label, download_type):
+    gg = WebGaloisGroup(label)
+    if gg.is_null():
+        raise ValueError(f"There is no transitive group with label {label}")
+    gg.make_code_snippets()
+    code = CodeSnippet(gg.code)
+    return code.export_code(label, lang, sorted_code_names)
+
 @galois_groups_page.route('/<label>/download/<download_type>')
-def gg_code(label,download_type):
-    if download_type == "magma":
-        s = "// Magma code for creating transitive group " + label + "\n\n"
-        s += "G := TransitiveGroup(%s,%s);\n" % tuple(label.split("T"))
-    elif download_type == "oscar":
-        s = "# Oscar code for creating transitive group " + label + "\n\n"
-        s += "G = transitive_group(%s,%s)\n" % tuple(label.split("T"))
-    elif download_type == "sage":
-        s = "# Sage code for creating transitive group " + label + "\n\n"
-        s += "G = TransitiveGroup(%s,%s)\n" % tuple(label.split("T"))
-    else:
-        return abort(404, f"Invalid download type {download_type}")
-    response = make_response(s)
+def gg_code_download(**args):
+    typ = args['download_type']
+    try:
+        response = make_response(gg_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 
