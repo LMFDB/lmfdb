@@ -163,7 +163,7 @@ def common_parse(info, query):
     # TODO: fix handling of sign here (e.g. -100..-11 currently fails)
     for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
         parse_ints(info, query, field, name)
-    parse_bracketed_posints(info, query, 'signature', qfield=('rank','signature'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
+    parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
     # Handle even/odd search
     parity = info.get('is_even')
