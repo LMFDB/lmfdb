@@ -13,7 +13,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
-    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache)
+    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
@@ -341,7 +341,7 @@ def render_group_webpage(args):
         data['malle_a'] = wgg.malle_a
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
-            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code_download", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         # split the label so that breadcrumbs point to a search for this object's degree
         parent_id, child_id = label.split("T")
@@ -365,15 +365,14 @@ sorted_code_names = ['gg', 'n', 't', 'primitive', 'even', 'nilpotent', 'auts', '
 
 def gg_code(label, download_type):
     gg = WebGaloisGroup(label)
-    if gg.is_null():
-        raise ValueError(f"There is no transitive group with label {label}")
+    #if gg.is_null():
+    #    raise ValueError(f"There is no transitive group with label {label}")
     gg.make_code_snippets()
     code = CodeSnippet(gg.code)
     return code.export_code(label, lang, sorted_code_names)
 
 @galois_groups_page.route('/<label>/download/<download_type>')
 def gg_code_download(**args):
-    typ = args['download_type']
     try:
         response = make_response(gg_code(**args))
     except Exception as err:
