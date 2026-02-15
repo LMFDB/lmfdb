@@ -305,8 +305,9 @@ class WebGaloisGroup:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
-        for lang in self.code['gg']:
-            self.code['gg'][lang] = self.code['gg'][lang].format(**{'n':self.n(), 't':self.t()})
+        for prop in ['gg', 'auts']:
+            for lang in self.code[prop]:
+                self.code[prop][lang] = self.code[prop][lang].format(**{'n':self.n(), 't':self.t()})
         self.code['show'] = { lang:'' for lang in self.code['prompt'] }
 
 ############  Misc Functions
