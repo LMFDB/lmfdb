@@ -476,7 +476,11 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                     return redirect(url_for(".render_DirichletNavigation"))
 
                 info['show_orbit_label'] = True
-                info['downloads'] = [('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))]
+                downloads = []
+                for lang in [("PariGP", "gp"), ("SageMath", "sage")]:
+                    downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_download", label=label, download_type=lang[1])))
+                downloads.append(('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))
+                info['downloads'] = downloads
                 info['learnmore'] = learn()
                 info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
                 info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names

@@ -1,0 +1,94 @@
+prompt:
+  sage: 'sage'
+  pari: 'gp'
+
+logo:
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+
+comment:
+  sage: |
+    #
+  pari: |
+    \\
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\ (not yet implemented)
+
+
+character_init:
+  sage: |
+    from sage.modular.dirichlet import DirichletCharacter',
+    H = DirichletGroup({modulus}, base_ring=CyclotomicField({zeta_order}))'.format(self.modulus, ),
+    M = H._module',
+    chi = DirichletCharacter(H, M([{sage_format}]))
+  pari: |
+    [g,chi] = znchar(Mod({number}, {modulus}))
+
+conductor:
+  sage: chi.conductor()
+  pari: znconreyconductor(g,chi)
+
+order:
+  sage: chi.multiplicative_order()
+  pair: charorder(g,chi)
+
+is_primitive:
+  sage: chi.is_primitive()'
+  pair:  #znconreyconductor(g,chi)==1
+
+parity:
+  sage: chi.is_odd()
+  pari: zncharisodd(g,chi)
+
+symbol:
+  sage: kronecker_character({symbol_num})
+  pair: znchartokronecker(g,chi)
+
+galois_orbit:
+  sage: chi.galois_orbit()
+  pair: |
+    order = charorder(g,chi)
+    [ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]
+
+gauss_sum:
+  sage: chi.gauss_sum(a)
+  pair: znchargauss(g,chi,a)
+
+jacobi_sum:
+  sage: chi.jacobi_sum(n)
+
+kloosterman_sum:
+  sage: chi.kloosterman_sum(a,b)
+
+value:
+  sage: chi(x) # x integer
+  pari: chareval(g,chi,x) \\\\ x integer, value in Q/Z'
+
+
+# Code snippets for Dirichlet character group
+character_group:
+  sage: H = DirichletGroup({modulus})
+  pair: g = idealstar(,{modulus},2)
+
+group_order:
+  sage: G.order()
+  pair: g.no
+
+group_gens:
+  sage: H.gens()
+  pair: g.gen
+
+group_structure:
+  sage: H.invariants()
+  pari: g.cyc
+
+
+
+
+
+
+
