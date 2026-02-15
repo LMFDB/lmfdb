@@ -903,9 +903,12 @@ def make_code_snippets(data):
     code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
     # Sage doesn't (yet) support arbitrary extensions of p-adic fields
-    # so must construct field using 'unram' and 'eisen' columns for Sage
+    # so must manually construct field using 'unram' and 'eisen' columns for Sage
     sage_construct_field = ""
-    if data['e'] == 1:
+    if data['e'] == 1 and data['f'] == 1:
+        # Trivial case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])
+    elif data['e'] == 1:
         # Unramified case
         sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")"
     elif data['f'] == 1:
@@ -917,14 +920,13 @@ def make_code_snippets(data):
         sage_construct_field += "K.<a> = L.extension("+data['eisen']+")"
 
     format_data = {
-        'label': "{label}", 'lang': "{lang}",
         'p': data['p'],
         'coeffs': str(data['coeffs']),
         'sage_construct_field' : sage_construct_field
     }
 
     for prop in code:
-        if prop != "snippet_test":
+        if prop not in ['frontmatter', 'snippet_test']:
             for lang in code[prop]:
                 code[prop][lang] = code[prop][lang].format(**format_data)
     return code
@@ -1226,17 +1228,16 @@ sorted_code_names = ['field', 'poly', 'base_field', 'degree', 'ramification_inde
 
 def lf_code(**args):
     label = args['label']
-    if not (NEW_LF_RE.fullmatch(label) or OLD_LF_RE.fullmatch(label)):
-        raise ValueError(f"Invalid label {label}")
-    lang = args['download_type']
-    # fetch field data
     if NEW_LF_RE.fullmatch(label):
         data = db.lf_fields.lucky({"new_label": label})
-    else:
+    elif OLD_LF_RE.fullmatch(label):
         data = db.lf_fields.lucky({"old_label": label})
+    else:
+        raise ValueError(f"Invalid label {label}")
     if data is None:
         raise ValueError(f"There is no local field with label {label}")
     code = CodeSnippet(make_code_snippets(data))
+    lang = args['download_type']
     return code.export_code(label, lang, sorted_code_names)
 
 @local_fields_page.route('/<label>/download/<download_type>')
