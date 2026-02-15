@@ -365,11 +365,9 @@ sorted_code_names = ['gg', 'n', 't', 'primitive', 'even', 'nilpotent', 'auts', '
 
 def gg_code(label, download_type):
     gg = WebGaloisGroup(label)
-    #if gg.is_null():
-    #    raise ValueError(f"There is no transitive group with label {label}")
     gg.make_code_snippets()
     code = CodeSnippet(gg.code)
-    return code.export_code(label, lang, sorted_code_names)
+    return code.export_code(label, download_type, sorted_code_names)
 
 @galois_groups_page.route('/<label>/download/<download_type>')
 def gg_code_download(**args):
