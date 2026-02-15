@@ -1221,7 +1221,8 @@ def lf_data(label):
     else:
         return abort(404, f"Invalid label {label}")
 
-sorted_code_names = ['field', 'poly', 'base_field', 'degree', 'ramification_index', 'residue_degree', 'disc_exponent', 'unramified_subfield', 'roots_of_unity']
+sorted_code_names = ['field', 'poly', 'base_field', 'degree', 'ramification_index', 'residue_degree',
+                     'disc_exponent', 'unramified_subfield', 'roots_of_unity']
 
 def lf_code(**args):
     label = args['label']
@@ -1238,10 +1239,8 @@ def lf_code(**args):
     code = CodeSnippet(make_code_snippets(data))
     return code.export_code(label, lang, sorted_code_names)
 
-
 @local_fields_page.route('/<label>/download/<download_type>')
 def lf_code_download(**args):
-    typ = args['download_type']
     try:
         response = make_response(lf_code(**args))
     except Exception as err:
