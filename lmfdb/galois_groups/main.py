@@ -361,7 +361,8 @@ def render_group_webpage(args):
             learnmore=learnmore_list()+[('Picture description', url_for('.pictures'))])
 
 
-sorted_code_names = ['gg', 'n', 't', 'primitive', 'even', 'nilpotent', 'auts', 'gens', 'ccs', 'order', 'cyclic', 'abelian', 'solvable', 'id', 'char_table']
+sorted_code_names = ['gg', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
+                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs',  'char_table']
 
 def gg_code(label, download_type):
     gg = WebGaloisGroup(label)

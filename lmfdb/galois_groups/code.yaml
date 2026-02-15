@@ -46,7 +46,7 @@ t:
   sage: G.transitive_number()
 
 primitive:
-  comment:  Whether the group si primitive
+  comment:  Determine if group is primitive
   magma: IsPrimitive(G);
   sage: G.is_primitive()
   oscar: is_primitive(G)
@@ -57,7 +57,7 @@ even:
   oscar: is_even(G)
 
 nilpotent:
-  comment: Nilpotenty class
+  comment: Nilpotency class
   magma: NilpotencyClass(G);
   oscar: nilpotency_class(G)
 
@@ -83,7 +83,7 @@ order:
   oscar: order(G)
 
 cyclic:
-  comment:  Determine if the group is cyclic
+  comment: Determine if group is cyclic
   magma: IsCyclic(G);
   sage: G.is_cyclic()
   oscar: is_cyclic(G)
