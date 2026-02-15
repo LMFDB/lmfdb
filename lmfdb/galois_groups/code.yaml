@@ -122,4 +122,4 @@ snippet_test:
     url: GaloisGroup/4T2/download/{lang}
   test11T5: 
     label: 11T5
-    url: GaloisGroup/11T6/download/{lang}
+    url: GaloisGroup/11T5/download/{lang}
