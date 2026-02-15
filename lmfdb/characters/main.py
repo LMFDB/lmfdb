@@ -477,9 +477,9 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 
                 info['show_orbit_label'] = True
                 downloads = []
-                for lang in [("PariGP", "gp"), ("SageMath", "sage")]:
-                    downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_download", label=label, download_type=lang[1])))
-                downloads.append(('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}"))
+                #for lang in [("PariGP", "gp"), ("SageMath", "sage")]:
+                #    downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_download", label=f"{modulus}.{orbit_label}", download_type=lang[1])))
+                downloads.append(('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}")))
                 info['downloads'] = downloads
                 info['learnmore'] = learn()
                 info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
@@ -549,6 +549,26 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
+
+
+sorted_code_names = ['dc', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
+                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs',  'char_table']
+
+def dirchar_code(label, download_type):
+    dc = WebGaloisGroup(label)
+    dc.make_code_snippets()
+    code = CodeSnippet(dc.code)
+    return code.export_code(label, download_type, sorted_code_names)
+
+@characters_page.route('/<label>/download/<download_type>')
+def dirchar_code_download(**args):
+    try:
+        response = make_response(dirchar_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 
 @characters_page.route("/Dirichlet/data/<label>")
 def dirchar_data(label):

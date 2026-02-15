@@ -24,6 +24,9 @@ not-implemented:
   magma: |
     // (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with Dirichlet character {label}
 
 character_init:
   comment: Define the Dirichlet character
