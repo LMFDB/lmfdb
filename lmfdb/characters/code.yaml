@@ -37,6 +37,9 @@ character_init:
     chi = DirichletCharacter(H, M([{sage_format}]))
   pari: |
     [g,chi] = znchar(Mod({number}, {modulus}))
+  magma: |
+    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    chi := DirichletCharacter("{modulus}.{number}");
 
 modulus:
   comment: Modulus
@@ -59,7 +62,7 @@ order:
 is_primitive:
   comment: If the character is primitive
   sage: chi.is_primitive()
-  pari:  #znconreyconductor(g,chi)==1
+  pari: #znconreyconductor(g,chi)==1
   magma: IsPrimitive(chi);
 
 parity:
@@ -127,7 +130,14 @@ group_structure:
   magma: PrimaryInvariants(G);
 
 
-
+# Code snippet tests
+snippet_test:
+  test1.1:
+    label: 1.1
+    url: Character/Dirichlet/1/1/download/{lang}
+  test5.2:
+    label: 5.2
+    url: Character/Dirichlet/5/2/download/{lang}
 
 
 
