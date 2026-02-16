@@ -27,6 +27,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
+from lmfdb.elliptic_curves.web_ec import cremona_label_to_lmfdb_label
 
 from lmfdb.ecnf.WebEllipticCurve import (ECNF, web_ainvs, LABEL_RE,
                                          CLASS_LABEL_RE,
@@ -539,7 +540,7 @@ def elliptic_curve_search(info, query):
             flash_error(err)
             raise ValueError(err)
         query['q_curve'] = True
-        query['base_change'] = { '$contains': info['base_change_label'] }
+        query['base_change'] = { '$contains': cremona_label_to_lmfdb_label(info['base_change_label']) }
 
     parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
 
