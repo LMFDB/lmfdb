@@ -206,9 +206,10 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def gram_display(self):
-        if self.gram is None:
+        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        if gram is None:
             return "not computed"
-        return vect_to_matrix(vect_to_sym2(self.gram))
+        return vect_to_matrix(vect_to_sym2(gram))
 
     @lazy_attribute
     def theta_display(self):
