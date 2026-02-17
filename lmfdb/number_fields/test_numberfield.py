@@ -74,8 +74,12 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/stats', 'Class number')
 
     def test_signature_search(self):
+        # Square brackets
         self.check_args('/NumberField/?start=0&degree=6&signature=%5B0%2C3%5D&count=100', '6.0.61131.1')
         self.check_args('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', '7.3.1420409.1')
+        # Round brackets
+        self.check_args('/NumberField/?start=0&degree=6&signature=%280%2C3%29&count=100', '6.0.61131.1')
+        self.check_args('/NumberField/?start=0&degree=7&signature=%283%2C2%29&count=100', '7.3.1420409.1')
 
     def test_signature_display(self):
         # Verify that signatures are displayed with parentheses, not square brackets
