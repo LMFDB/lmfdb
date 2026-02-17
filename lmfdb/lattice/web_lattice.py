@@ -235,8 +235,19 @@ class WebLattice(WebLat):
         # read in code.yaml from lattice directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        for lang, s in code["lattice_definition"].items():
-            if lang != "comment":
-                code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(self.gram), lang))
+        if self.canonical_gram is not None:
+            gram = self.canonical_gram
+        elif self.gram is not None and len(self.gram) > 0:
+            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        else:
+            gram = None
+        if gram is not None:
+            for lang, s in code["lattice_definition"].items():
+                if lang != "comment":
+                    code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(gram), lang))
+        else:
+            for lang in code["lattice_definition"]:
+                if lang != "comment":
+                    code["lattice_definition"][lang] = code["not-implemented"][lang]
         code['show'] = {lang: '' for lang in code['prompt']}
         return code
