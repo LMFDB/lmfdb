@@ -6,6 +6,18 @@
 {% endif %}
 {% endmacro %}
 
+{% macro tabs() %}
+  <div class="tab-container">
+    {% for arg in varargs %}
+      {% if arg[2] %}
+        <span class="tab-active">{{arg[0]}}</span>
+      {% else %}
+        <span class="tab-inactive"><a href="{{url_for(arg[1])}}">{{arg[0]}}</a></span>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endmacro %}
+
 {% block body -%}
 <div id="header">
     <div id="logo"><a href="{{ url_for('index') }}">
