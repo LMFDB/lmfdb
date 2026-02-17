@@ -23,7 +23,7 @@
 {% if not genus.lattices_stored %}
 <h2> {{ KNOWL('lattice.gram', title='Representative Gram Matrix') }} </h2>
 <table>
-    <tr><td>{{genus.gram_display}}</td></tr>
+    <tr><td>{{genus.gram_display | safe}}</td></tr>
 </table>
 {% endif %}
 

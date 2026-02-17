@@ -125,6 +125,10 @@ class WebGenus(WebLat):
     def __init__(self, label, data=None):
         super().__init__(label, data)
         self._mathwrap(["det", "disc", "level"], ["class_number"])
+        if self.adjacency_matrix is None:
+            self.adjacency_matrix = {}
+        if self.adjacency_polynomials is None:
+            self.adjacency_polynomials = {}
         X = self.adjacency_display
 
     @lazy_attribute
