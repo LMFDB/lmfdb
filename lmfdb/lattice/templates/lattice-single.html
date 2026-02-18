@@ -25,6 +25,8 @@
         <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td><td>{{ place_code('kissing') }}</td></tr>
     {% endif %}
     <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td><td>{{ place_code('discriminant_group') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.successive_minima', title='Succesive minima') }}:</td><td>{{lattice.succesive_minima}}</td><td>{{ place_code('succesive_minima') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.universal', title='Is universal') }}:</td><td>{{lattice.is_universal}}</td></tr>
     <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td><td>{{ place_code('minimal_vectors') }}</td>
 <td>
 {% if lattice.shortest is none %}
@@ -69,6 +71,13 @@
 </table>
 
 
+<h2> {{ KNOWL('lattice.quadratic_form', title='Quadratic form') }} </h2>
+{{ place_code('quadratic_form') }}
+<table>
+    <tr><td>{{lattice.quadratic_form | safe}}</td></tr>
+</table>
+
+
 <h2> {{ KNOWL('lattice.dual', title='Dual Lattice') }} </h2>
 {{ place_code('dual') }}
 <table>
@@ -83,15 +92,35 @@
 
     <tr>
       <td>{{ KNOWL('lattice.theta', title='Theta Series') }}:</td>
-      {{ place_code('dual_theta') }}
       <td>
         {{lattice.dual_theta_display | safe}}
       </td>
+      <td>{{ place_code('dual_theta') }}</td>
 </table>
+
+<h2> {{ KNOWL('lattice.decompositions', title='Decompositions') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('lattice.is_indecomposable', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.is_additively_indecomposable', title='Is additively indecomposable') }}:</td><td>{{lattice.is_additively_indecomposable}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Orthogonal decomposition') }}:</td><td>{{lattice.orthogonal_decomposition}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.tensor_decomposition', title='Tensor decomposition') }}:</td><td>{{lattice.tensor_decomposition}}</td></tr>
+</table>
+
+<h2> {{ KNOWL('lattice.special_sublattices', title='Special sublattices') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('lattice.root_sublattice', title='Root sublattice') }}:</td><td>{{lattice.root_sublattice}}</td><td>{{ place_code('root_sublattice') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.root_sublattice', title='Complement of root sublattice') }}:</td><td>{{lattice.root_sublattice_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.even_sublattice', title='Even sublattice') }}:</td><td>{{lattice.even_sublattice}}</td><td>{{ place_code('even_sublattice') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.even_sublattice', title='Complement of even sublattice') }}:</td><td>{{lattice.even_sublattice_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Norm 1 sublattice') }}:</td><td>{{lattice.norm1_sublattice}}</td><td>{{ place_code('norm1_sublattice') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Complement of norm 1 sublattice') }}:</td><td>{{lattice.norm1_sublattice_complement}}</td></tr>
+</table>
+
 
 
 {% if lattice.pneighbors %}
 <h2>{{ KNOWL('lattice.pneighbors', title='p-Neighbors') }}</h2>
+{{ place_code('pneighbors') }}
 <table>
 {% for p, neighs in lattice.pneighbors.items() %}
     <tr>

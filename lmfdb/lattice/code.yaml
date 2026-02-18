@@ -64,10 +64,12 @@ discriminant:
 level:
   comment: Level
   magma: Level(L);
+  sage: L.genus().level()
 
 class_number:
   comment: Class number
-  magma: #Genus(L);
+  magma: |
+    #Genus(L);
 
 conway_symbol:
   comment: Conway symbol
@@ -82,10 +84,12 @@ parity:
 automorphism_group:
   comment: Automorphism group
   magma: AutomorphismGroup(L);
+  sage: L.automorphisms()
 
 automorphism_group_order:
   comment: Order of the automorphism group
   magma: Order(AutomorphismGroup(L));
+  sage: L.automorphisms().order()
   oscar: automorphism_group_order(L)
 
 density:
@@ -119,6 +123,10 @@ discriminant_group:
 minimal_vectors:
   comment: Minimal vectors
   magma: ShortestVectors(L);
+
+mass:
+  comment: Mass
+  magma: Mass(L);
 
 theta_series:
   comment: Theta series
@@ -172,3 +180,18 @@ genus:
   sage: L.genus()
   magma: Genus(L);
 
+pneighbors:
+  comment: p-Neighbors of the lattice
+  magma: Neighbors(p, L);
+
+orthogonal_decomposition:
+  comment: Orthogonal decomposition
+  magma: OrthogonalDecomposition(L);
+
+even_sublattice:
+  comment: Even sublattice
+  magma: EvenSublattice(L);
+
+succesive_minima:
+  comment: Succesive minima
+  magma: SuccesiveMinima(L);
