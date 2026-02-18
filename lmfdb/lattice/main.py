@@ -11,7 +11,7 @@ from lmfdb.utils import (
     parse_ints, parse_posints, parse_list, parse_count, parse_noop,
     parse_bracketed_posints, parse_start, clean_input,
     parse_rational_to_list,
-    search_wrap, redirect_no_cache, Downloader, ParityBox)
+    search_wrap, redirect_no_cache, Downloader, ParityBox, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl
@@ -205,6 +205,16 @@ download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data
 download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
 download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
+# Code snippet names to export
+sorted_code_names = [
+    'lattice_definition', 'rank', 'signature', 'determinant', 'discriminant', 'level',
+    'class_number', 'conway_symbol', 'parity', 'automorphism_group', 'automorphism_group_order',
+    'density', 'hermite', 'minimum', 'kissing', 'discriminant_group', 'gram', 'dual',
+    'dual_det', 'dual_conway', 'dual_density', 'dual_hermite', 'dual_kissing', 'dual_theta',
+    'quadratic_form', 'theta_series', 'succesive_minima', 'genus', 'pneighbors',
+    'orthogonal_decomposition', 'even_sublattice', 'festi_veniani', 'mass', 'minimal_vectors'
+]
+
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):
     if args['obj'] == 'shortest_vectors':
@@ -261,13 +271,30 @@ def download_lattice_full_lists_g(**args):
 
 @lattice_page.route('/<label>/download/<download_type>')
 def lattice_code_download(**args):
+    label = args['label']
+    lang = args['download_type']
     try:
         lat = WebLattice(label)
-        #gg.make_code_snippets()
         code = CodeSnippet(lat.code)
-        response = code.export_code(label, download_type, sorted_code_names)
+        response_code = code.export_code(label, lang, sorted_code_names)
     except Exception as err:
         return abort(404, str(err))
+    response = make_response(response_code)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
+@lattice_page.route('/Genus/<label>/download/<download_type>')
+def genus_code_download(**args):
+    label = args['label']
+    lang = args['download_type']
+    try:
+        genus = WebGenus(label)
+        code = CodeSnippet(genus.code)
+        response_code = code.export_code(label, lang, sorted_code_names)
+    except Exception as err:
+        return abort(404, str(err))
+    response = make_response(response_code)
     response.headers['Content-type'] = 'text/plain'
     return response
 
