@@ -326,7 +326,7 @@ def statistics():
                  for r2 in range(12)]
     nsig = [[{'cnt': comma(nsig[nn][r2]),
              'prop': format_percentage(nsig[nn][r2], n[nn]),
-             'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]' % (nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+             'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=(%d,%d)' % (nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
     h = [{'cnt': comma(h[j]),
           'prop': format_percentage(h[j], has_h),
           'label': '$10^{' + str(j - 1) + r'}<h\leq 10^{' + str(j) + '}$',
@@ -342,7 +342,7 @@ def statistics():
     sigclass1 = [[{'cnt': comma(sigclass1.get((nn+1,r2),0)),
                    'prop': format_percentage(sigclass1.get((nn+1,r2),0), sighasclass.get((nn+1,r2),0)) if sighasclass.get((nn+1,r2),0) > 0 else 0,
                    'show': sighasclass.get((nn+1,r2),0) > 0,
-                   'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
+                   'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=(%d,%d)&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
                   for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
 
     n = [{'cnt': comma(n[nn]),
@@ -1185,7 +1185,7 @@ class NFSearchArray(SearchArray):
             name="signature",
             label="Signature",
             knowl="nf.signature",
-            example="[1,1]")
+            example="(1,1)")
         discriminant = TextBox(
             name="discriminant",
             label="Discriminant",
