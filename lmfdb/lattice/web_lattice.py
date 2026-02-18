@@ -215,6 +215,7 @@ class WebGenus(WebLat):
             for lang in code["lattice_definition"]:
                 if lang != "comment":
                     code["genus_definition"][lang] = code["not-implemented"][lang]
+        code["genus_definition"]["comment"] = "Define a representative lattice in the genus"
         code['show'] = {lang: '' for lang in code['prompt']}
         return code
 

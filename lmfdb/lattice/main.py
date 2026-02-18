@@ -215,6 +215,12 @@ sorted_code_names = [
     'orthogonal_decomposition', 'even_sublattice', 'festi_veniani', 'mass', 'minimal_vectors'
 ]
 
+# Code snippet names to export for genus pages
+genus_sorted_code_names = [
+    'genus_definition', 'rank', 'signature', 'determinant', 'discriminant', 'level',
+    'class_number', 'conway_symbol', 'parity', 'mass'
+]
+
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):
     if args['obj'] == 'shortest_vectors':
@@ -291,7 +297,7 @@ def genus_code_download(**args):
     try:
         genus = WebGenus(label)
         code = CodeSnippet(genus.code)
-        response_code = code.export_code(label, lang, sorted_code_names)
+        response_code = code.export_code(label, lang, genus_sorted_code_names)
     except Exception as err:
         return abort(404, str(err))
     response = make_response(response_code)
