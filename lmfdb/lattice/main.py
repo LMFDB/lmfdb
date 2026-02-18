@@ -211,7 +211,7 @@ sorted_code_names = [
     'class_number', 'conway_symbol', 'parity', 'automorphism_group', 'automorphism_group_order',
     'density', 'hermite', 'minimum', 'kissing', 'discriminant_group', 'gram', 'dual',
     'dual_det', 'dual_conway', 'dual_density', 'dual_hermite', 'dual_kissing', 'dual_theta',
-    'quadratic_form', 'theta_series', 'succesive_minima', 'genus', 'pneighbors',
+    'quadratic_form', 'theta_series', 'successive_minima', 'genus', 'pneighbors',
     'orthogonal_decomposition', 'even_sublattice', 'festi_veniani', 'mass', 'minimal_vectors'
 ]
 
