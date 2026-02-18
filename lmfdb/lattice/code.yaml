@@ -101,6 +101,11 @@ kissing:
   magma: KissingNumber(L);
   oscar: kissing_number(L)
 
+festi_veniani:
+  comment: Festi-Veniani index
+  magma: |
+    // (not yet implemented)
+
 minimum:
   comment: Minimum
   magma: Minimum(L);

@@ -125,6 +125,10 @@ class WebGenus(WebLat):
     def __init__(self, label, data=None):
         super().__init__(label, data)
         self._mathwrap(["det", "disc", "level"], ["class_number"])
+        if self.adjacency_matrix is None:
+            self.adjacency_matrix = {}
+        if self.adjacency_polynomials is None:
+            self.adjacency_polynomials = {}
         X = self.adjacency_display
 
     @lazy_attribute
@@ -202,9 +206,10 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def gram_display(self):
-        if self.gram is None:
+        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        if gram is None:
             return "not computed"
-        return vect_to_matrix(vect_to_sym2(self.gram))
+        return vect_to_matrix(vect_to_sym2(gram))
 
     @lazy_attribute
     def theta_display(self):
@@ -231,8 +236,19 @@ class WebLattice(WebLat):
         # read in code.yaml from lattice directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        for lang, s in code["lattice_definition"].items():
-            if lang != "comment":
-                code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(self.gram), lang))
+        if self.canonical_gram is not None:
+            gram = self.canonical_gram
+        elif self.gram is not None and len(self.gram) > 0:
+            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        else:
+            gram = None
+        if gram is not None:
+            for lang, s in code["lattice_definition"].items():
+                if lang != "comment":
+                    code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(gram), lang))
+        else:
+            for lang in code["lattice_definition"]:
+                if lang != "comment":
+                    code["lattice_definition"][lang] = code["not-implemented"][lang]
         code['show'] = {lang: '' for lang in code['prompt']}
         return code
