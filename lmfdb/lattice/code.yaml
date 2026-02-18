@@ -179,6 +179,8 @@ genus:
   comment: Genus
   sage: L.genus()
   magma: Genus(L);
+  oscar: genus(L)
+  pari: 
 
 pneighbors:
   comment: p-Neighbors of the lattice
@@ -192,9 +194,9 @@ even_sublattice:
   comment: Even sublattice
   magma: EvenSublattice(L);
 
-succesive_minima:
-  comment: Succesive minima
-  magma: SuccesiveMinima(L);
+successive_minima:
+  comment: Successive minima
+  magma: SuccessiveMinima(L);
 
 
 # Specify which code snippets to test

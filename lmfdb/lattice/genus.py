@@ -238,6 +238,7 @@ def render_genus_webpage(label):
     info["bread"] = get_bread(label)
     info["properties"] = genus.properties
     info["friends"] = genus.friends
+    info["code"] = genus.code
     info["downloads"] = genus.downloads
     info["KNOWL_ID"] = f"lattice.genus.{label}"
     return render_genus(info)

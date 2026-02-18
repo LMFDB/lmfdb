@@ -187,6 +187,38 @@ class WebGenus(WebLat):
         downloads.append(("Underlying data", url_for(".genus_data", label=self.label)))
         return downloads
 
+   
+    @lazy_attribute
+    def code(self):
+        # read in code.yaml from lattice directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+        # Get a representative gram matrix
+        if self.rep is not None:
+            gram = self.rep
+        elif self.canonical_gram is not None:
+            gram = self.canonical_gram
+        elif self.gram is not None and len(self.gram) > 0:
+            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        else:
+            gram = None
+
+        code["genus_definition"] = dict()
+        if gram is not None:
+            for lang, s in code["lattice_definition"].items():
+                if lang != "comment":
+                    code["genus_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(gram), lang))
+                    if code["genus"][lang] is not None:
+                        code["genus_definition"][lang] += "\n"+code["genus"][lang]
+        else:
+            for lang in code["lattice_definition"]:
+                if lang != "comment":
+                    code["genus_definition"][lang] = code["not-implemented"][lang]
+        code['show'] = {lang: '' for lang in code['prompt']}
+        return code
+
+
 class WebLattice(WebLat):
     table = db.lat_lattices_new
 
