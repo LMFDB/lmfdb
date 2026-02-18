@@ -181,7 +181,11 @@ class WebGenus(WebLat):
 
     @lazy_attribute
     def downloads(self):
-        return [("Underlying data", url_for(".genus_data", label=self.label))]
+        downloads = []
+        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "pari"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".genus_code_download", label=self.label, download_type=lang[1])))
+        downloads.append(("Underlying data", url_for(".genus_data", label=self.label)))
+        return downloads
 
 class WebLattice(WebLat):
     table = db.lat_lattices_new
@@ -229,7 +233,11 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def downloads(self):
-        return [("Underlying data", url_for(".lattice_data", label=self.label))]
+        downloads = []
+        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "pari"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".lattice_code_download", label=self.label, download_type=lang[1])))
+        downloads.append(("Underlying data", url_for(".lattice_data", label=self.label)))
+        return downloads
 
     @lazy_attribute
     def code(self):

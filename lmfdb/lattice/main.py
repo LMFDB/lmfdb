@@ -259,6 +259,19 @@ def download_lattice_full_lists_g(**args):
     return outstr
 
 
+@lattice_page.route('/<label>/download/<download_type>')
+def lattice_code_download(**args):
+    try:
+        lat = WebLattice(label)
+        #gg.make_code_snippets()
+        code = CodeSnippet(lat.code)
+        response = code.export_code(label, download_type, sorted_code_names)
+    except Exception as err:
+        return abort(404, str(err))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
 class LatSearchArray(SearchArray):
     noun = "lattice"
     sorts = [("", "rank", ['rank', 'det', 'level', 'class_number', 'label']),
