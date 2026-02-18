@@ -228,6 +228,54 @@ class WebLattice(WebLat):
         return "not computed"
 
     @lazy_attribute
+    def quadratic_form_display(self):
+        """
+        Return a latex-formatted quadratic form associated to the Gram matrix of this lattice.
+        If rank at most 7, uses variables x, y, z, t, u, v, x
+        Otherwise uses variables x_1, x_2, x_3, etc.
+        """
+
+        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = vect_to_sym2(gram)
+
+        default_vars = ["x", "y", "z", "t", "u", "v", "w"]
+        if self.rank <= len(default_vars):
+            var_names = default_vars[:self.rank]
+        else:
+            var_names = [f"x_{{{i+1}}}" for i in range(self.rank)]
+    
+        terms = []
+    
+        # Diagonal terms
+        for i in range(self.rank):
+            coeff = gram[i][i]//2 if self.is_even else gram[i][i]
+            if coeff != 0:
+                var = var_names[i]
+                if coeff == 1:
+                    terms.append(f"{var}^2")
+                elif coeff == -1:
+                    terms.append(f"-{var}^2")
+                else:
+                    terms.append(f"{coeff}{var}^2")
+    
+        # Off-diagonal terms
+        for i in range(self.rank):
+            for j in range(i+1, self.rank):
+                coeff = gram[i][j] if self.is_even else 2*gram[i][j]
+                if coeff != 0:
+                    vi, vj = var_names[i], var_names[j]
+                    if coeff == 1:
+                        terms.append(f"{vi}{vj}")
+                    elif coeff == -1:
+                        terms.append(f"-{vi}{vj}")
+                    else:
+                        terms.append(f"{coeff}{vi}{vj}")
+    
+        result = " + ".join(terms)
+        result = result.replace("+ -", "- ")
+        return "$"+result+"$"
+
+    @lazy_attribute
     def friends(self):
         return [("Genus of this lattice", f"/Lattice/Genus/{self.genus_label}")]
 

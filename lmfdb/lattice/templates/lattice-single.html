@@ -74,7 +74,7 @@
 <h2> {{ KNOWL('lattice.quadratic_form', title='Quadratic form') }} </h2>
 {{ place_code('quadratic_form') }}
 <table>
-    <tr><td>{{lattice.quadratic_form | safe}}</td></tr>
+    <tr><td>{{lattice.quadratic_form_display | safe}}</td></tr>
 </table>
 
 
@@ -102,8 +102,8 @@
 <table>
     <tr><td>{{ KNOWL('lattice.is_indecomposable', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
     <tr><td>{{ KNOWL('lattice.is_additively_indecomposable', title='Is additively indecomposable') }}:</td><td>{{lattice.is_additively_indecomposable}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Orthogonal decomposition') }}:</td><td>{{lattice.orthogonal_decomposition}}</td><td>{{ place_code('orthogonal_decomposition') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.tensor_decomposition', title='Tensor decomposition') }}:</td><td>{{lattice.tensor_decomposition}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Orthogonal decomposition') }}:</td><td>{{lattice.orthogonal_factors}}</td><td>{{ place_code('orthogonal_decomposition') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.tensor_decomposition', title='Tensor decomposition') }}:</td><td>{{lattice.tensor_decompositions}}</td></tr>
 </table>
 
 <h2> {{ KNOWL('lattice.special_sublattices', title='Special sublattices') }} </h2>
