@@ -231,7 +231,7 @@ class WebLattice(WebLat):
     def quadratic_form_display(self):
         """
         Return a latex-formatted quadratic form associated to the Gram matrix of this lattice.
-        If rank at most 7, uses variables x, y, z, t, u, v, x
+        If rank at most 7, uses variables x, y, z, t, u, v, w
         Otherwise uses variables x_1, x_2, x_3, etc.
         """
 

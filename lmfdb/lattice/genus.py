@@ -491,7 +491,7 @@ def reliability_page():
 def labels_page():
     t = 'Integral lattice labels'
     bread = get_bread("Labels")
-    return render_template("single.html", kid='lattice.label',
+    return render_template("single.html", kid='lattice.genus_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
 
