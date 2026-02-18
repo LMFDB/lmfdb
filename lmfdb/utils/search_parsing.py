@@ -18,9 +18,9 @@ SPACES_RE = re.compile(r"\d\s+\d")
 LIST_RE = re.compile(r"^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$")
 FLOAT_STR = r"(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))"
 LIST_FLOAT_RE = re.compile(r"^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$".format(FLOAT_STR))
-BRACKETED_POSINT_RE = re.compile(r"^\[\]|\[0*[1-9]\d*(,0*[1-9]\d*)*\]$")
-BRACKETED_NN_RE = re.compile(r"^\[\]|\[\d+(,\d+)*\]$")
-BRACKETED_RAT_RE = re.compile(r"^\[\]|\[-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*\]$")
+BRACKETED_POSINT_RE = re.compile(r"^[\[(][\])]|[\[(]0*[1-9]\d*(,0*[1-9]\d*)*[\])]$")
+BRACKETED_NN_RE = re.compile(r"^[\[(][\])]|[\[(]\d+(,\d+)*[\])]$")
+BRACKETED_RAT_RE = re.compile(r"^[\[(][\])]|[\[(]-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*[\])]$")
 QQ_RE = re.compile(r"^-?\d+(/\d+)?$")
 QQ_LIST_RE = re.compile(r"^-?\d+(/\d+)?(,-?\d+(/\d+)?)*$")
 # Single non-negative rational, allowing decimals, used in parse_range2rat
@@ -896,7 +896,7 @@ def parse_bracketed_posints(
         not myregex.match(inp)
         or (maxlength is not None and inp.count(",") > maxlength - 1)
         or (exactlength is not None and inp.count(",") != exactlength - 1)
-        or (exactlength is not None and inp == "[]" and exactlength > 0)
+        or (exactlength is not None and inp in ("[]", "()") and exactlength > 0)
     ):
         if exactlength == 2:
             lstr = "pair of positive integers"
@@ -921,9 +921,9 @@ def parse_bracketed_posints(
         else:
             lstr = "list of positive integers"
             example = "[1,2,3] or [5,6]"
-        raise SearchParsingError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
+        raise SearchParsingError("It needs to be a %s in square or round brackets, such as %s." % (lstr, example))
     else:
-        if (inp == "[]"):  # fixes bug in the code below (split never returns an empty list)
+        if inp in ("[]", "()"):  # fixes bug in the code below (split never returns an empty list)
             if split:
                 query[qfield] = []
             else:
@@ -995,7 +995,7 @@ def parse_bracketed_rats(
         or (maxlength is not None and inp.count(",") > maxlength - 1)
         or (minlength is not None and inp.count(",") < minlength - 1)
         or (exactlength is not None and inp.count(",") != exactlength - 1)
-        or (exactlength is not None and inp == "[]" and exactlength > 0)
+        or (exactlength is not None and inp in ("[]", "()") and exactlength > 0)
     ):
         if exactlength == 2:
             lstr = "pair of rational numbers"
@@ -1034,9 +1034,9 @@ def parse_bracketed_rats(
         else:
             lstr = "list of rational numbers"
             example = "[1/7,2,3] or [5,6/71]"
-        raise SearchParsingError("It needs to be a %s in square brackets, such as %s." % (lstr, example))
+        raise SearchParsingError("It needs to be a %s in square or round brackets, such as %s." % (lstr, example))
     else:
-        if inp == "[]":  # fixes bug in the code below (split never returns an empty list)
+        if inp in ("[]", "()"):  # fixes bug in the code below (split never returns an empty list)
             if split:
                 query[qfield] = []
             else:
