@@ -209,8 +209,8 @@ class WebGenus(WebLat):
             for lang, s in code["lattice_definition"].items():
                 if lang != "comment":
                     code["genus_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(gram), lang))
-                    if code["genus"][lang] is not None:
-                        code["genus_definition"][lang] += "\n"+code["genus"][lang]
+                    if (lang in code["genus"]) and (code["genus"][lang] is not None):
+                        code["genus_definition"][lang] += "\n"+code["genus"][lang]+"\n"
         else:
             for lang in code["lattice_definition"]:
                 if lang != "comment":

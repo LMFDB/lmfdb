@@ -133,7 +133,7 @@ theta_series:
   magma: ThetaSeries(L, 100);
 
 gram:
-  comment:  Gram matrix
+  comment: Gram matrix
   sage: L.gram_matrix()
   magma: GramMatrix(L);
   oscar: gram_matrix(L)
@@ -146,7 +146,7 @@ dual:
 
 dual_det:
   comment: Determinant of the dual lattice
-  magma:  Determinant(Dual(L));
+  magma: Determinant(Dual(L));
   sage: L.dual_lattice().determinant()
   oscar: det(dual(L))
 
