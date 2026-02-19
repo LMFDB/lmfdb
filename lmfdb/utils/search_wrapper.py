@@ -551,6 +551,7 @@ class DiagramWrapper(Wrapper):
             split_ors=None,
             x_axis_default = None,
             y_axis_default = None,
+            result_count_default=1000,
             **kwds,
     ):
         super().__init__(f, template, table, title, err_title, **kwds)
@@ -559,6 +560,7 @@ class DiagramWrapper(Wrapper):
         self.url_for_label = url_for_label
         self.x_axis_default = x_axis_default
         self.y_axis_default = y_axis_default
+        self.result_count_default = result_count_default
         
         if columns is None:
             self.projection = projection
@@ -597,15 +599,24 @@ class DiagramWrapper(Wrapper):
             ),
         ]
         
+
+        # delete extra CountBox so we can set the count manually (otherwise our box is ignored)
+        # SA.browse_array = [[x for x in arr if type(x) != type(CountBox())] for arr in SA.browse_array]
+        # SA.refine_array = [[x for x in arr if type(x) != type(CountBox())] for arr in SA.refine_array]
+        # print(info.get("search_array"))
         # Add extra boxes if not already present.
         # Checking all fields ensures that we don't add an extra
         # set of boxes when the search is updated (which the naive solution does).
-        
+
         if not any([x.name == "x-axis" for arr in SA.browse_array for x in arr]):
+            SA.browse_array = [x for x in SA.browse_array if type(x) != type(CountBox()) ]
             SA.browse_array.append(diagram_boxes)
         if not any([x.name == "x-axis" for arr in SA.refine_array for x in arr]):
+            # ensure that we only have a single countbox!
+            # SA.refine_array = [x for x in SA.refine_array if type(x) != type(CountBox()) ]
             SA.refine_array.append(diagram_boxes + [CountBox()])
-        
+        print("Refine array is now", SA.refine_array)
+        print(dir(SA))
         info["search_array"] = SA
 
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -624,21 +635,20 @@ class DiagramWrapper(Wrapper):
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
 
-        num_res = info.get("count")
-        print("\n\n INFO = ", info, "\n\n NUM_RES:", num_res)
-        count = parse_count(info, num_res) if num_res is not None else 303
-        start = parse_start(info)
+        # print("\n\n INFO = ", info, "\n\n NUM_RES:", num_res, "\n\n QUERY:", query)
+        count = parse_count(info, self.result_count_default)
+        print("Count is now", count)
         try:
-            split_ors = not one_per and use_split_ors(info, query, self.split_ors, start, table)
+            # split_ors = not one_per and use_split_ors(info, query, self.split_ors, 0, table)
             res = table.search(
                 query,
                 proj,
                 limit=count,
-                offset=start,
+                offset=0,
                 sort=sort,
                 info=info,
                 one_per=one_per,
-                split_ors=split_ors,
+                # split_ors=split_ors,
             )
         except QueryCanceledError as err:
             return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
