@@ -2,12 +2,6 @@
 
 {% block embedding_content %}
 
-{% if code %}
-<div align="right" style="float: right; margin-top:2px; margin-left:10px;">
-  {{CodeSnippet(code).show_commands_box() | safe}}
-</div><br><br>
-{% endif %}
-
 <p>{{ place_code('genus_definition', is_top_snippet=True) }}</p>
 
 <h2> {{ KNOWL('lattice.invariants', title='Genus Invariants') }} </h2>

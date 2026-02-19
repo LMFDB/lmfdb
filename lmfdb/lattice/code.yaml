@@ -180,7 +180,6 @@ genus:
   sage: L.genus()
   magma: Genus(L);
   oscar: genus(L)
-  pari: 
 
 pneighbors:
   comment: p-Neighbors of the lattice

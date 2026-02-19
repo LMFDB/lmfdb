@@ -205,20 +205,21 @@ download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data
 download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
 download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
-# Code snippet names to export
+# Code snippet names to export for lattice pages
 sorted_code_names = [
     'lattice_definition', 'rank', 'signature', 'determinant', 'discriminant', 'level',
     'class_number', 'conway_symbol', 'parity', 'automorphism_group', 'automorphism_group_order',
-    'density', 'hermite', 'minimum', 'kissing', 'discriminant_group', 'gram', 'dual',
-    'dual_det', 'dual_conway', 'dual_density', 'dual_hermite', 'dual_kissing', 'dual_theta',
-    'quadratic_form', 'theta_series', 'successive_minima', 'genus', 'pneighbors',
-    'orthogonal_decomposition', 'even_sublattice', 'festi_veniani', 'mass', 'minimal_vectors'
+    'density', 'hermite', 'minimum', 'kissing', 'discriminant_group', 'successive_minima',
+    'festi_veniani', 'gram', 'quadratic_form', 'theta_series',  
+    # Dual lattice code snippets
+    'dual', 'dual_conway', 'dual_det', 'dual_density', 'dual_hermite', 'dual_kissing', 'dual_theta',
+    'orthogonal_decomposition', 'even_sublattice', 'minimal_vectors', 'pneighbors'
 ]
 
 # Code snippet names to export for genus pages
 genus_sorted_code_names = [
     'genus_definition', 'rank', 'signature', 'determinant', 'discriminant', 'level',
-    'class_number', 'conway_symbol', 'parity', 'mass'
+    'class_number', 'conway_symbol', 'dual_conway', 'parity', 'mass'
 ]
 
 @lattice_page.route('/<label>/download/<lang>/<obj>')
@@ -288,7 +289,6 @@ def lattice_code_download(**args):
     response = make_response(response_code)
     response.headers['Content-type'] = 'text/plain'
     return response
-
 
 @lattice_page.route('/Genus/<label>/download/<download_type>')
 def genus_code_download(**args):
