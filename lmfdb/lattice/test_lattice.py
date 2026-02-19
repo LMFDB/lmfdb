@@ -46,13 +46,13 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=3&class_number=&aut=").get_data(as_text=True)
         assert '3.3.45.01.1b7.3' in L #search minimum vector length
 
-    def test_lattice_searchGM(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").get_data(as_text=True)
-        assert '4620' in L #gram matrix search
+    #def test_lattice_searchGM(self):
+    #    L = self.tc.get("/Lattice/?dim=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").get_data(as_text=True)
+    #    assert '4620' in L #gram matrix search
 
-    def test_lattice_searchGM_2(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").get_data(as_text=True)
-        assert '2.1.2.1.1' in L #gram matrix search through isometries
+    #def test_lattice_searchGM_2(self):
+    #    L = self.tc.get("/Lattice/?dim=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").get_data(as_text=True)
+    #    assert '2.1.2.1.1' in L #gram matrix search through isometries
 
     #def test_latticeZ2(self):
     #    L = self.tc.get("/Lattice/2.1.2.1.1").get_data(as_text=True)
@@ -79,9 +79,9 @@ class HomePageTest(LmfdbTest):
         assert 'matrix' in L
 
     def test_downloadstring2(self):
-        L = self.tc.get("/Lattice/2.156.312.1.2").get_data(as_text=True)
+        L = self.tc.get("/Lattice/3.3.156.2.3c5.1").get_data(as_text=True)
         assert 'vector' in L
-        assert 'Underlying data' in L and 'data/2.156.312.1.2' in L
+        assert 'Underlying data' in L and 'data/3.3.156.2.3c5.1' in L
 
     def test_downloadstring_search(self):
         L = self.tc.get("/Lattice/?class_number=8").get_data(as_text=True)

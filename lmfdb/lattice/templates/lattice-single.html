@@ -14,7 +14,7 @@
     <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{lattice.level_display}}</td><td>{{ place_code('level') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{lattice.class_number_display}}</td><td>{{ place_code('class_number') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.conway_display}}</td><td>{{ place_code('conway_symbol') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.even_odd}}</td><td>{{ place_code('parity') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.parity}}</td><td>{{ place_code('parity') }}</td></tr>
     {% if lattice.is_positive_definite %}
         <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ lattice.aut_size_display }}</td><td>{{ place_code('automorphism_group_order') }}</td></tr>
         <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td><td>{{ place_code('automorphism_group') }}</td></tr>
@@ -102,8 +102,8 @@
 
 <h2> {{ KNOWL('lattice.decompositions', title='Decompositions') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.is_indecomposable', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.is_additively_indecomposable', title='Is additively indecomposable') }}:</td><td>{{lattice.is_additively_indecomposable}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.indecomposable', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.additively_indecomposable', title='Is additively indecomposable') }}:</td><td>{{lattice.is_additively_indecomposable}}</td></tr>
     <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Orthogonal decomposition') }}:</td><td>{{lattice.orthogonal_factors}}</td><td>{{ place_code('orthogonal_decomposition') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.tensor_decomposition', title='Tensor decomposition') }}:</td><td>{{lattice.tensor_decompositions}}</td></tr>
 </table>

@@ -81,7 +81,7 @@ class WebLat(WebObj):
         return format_conway_symbol(self.dual_conway_symbol)
 
     @lazy_attribute
-    def even_odd(self):
+    def parity(self):
         return "Even" if self.is_even else "Odd"
 
     @lazy_attribute
@@ -107,7 +107,7 @@ class WebLat(WebObj):
             ('Discriminant', prop_int_pretty(self.disc)),
             ('Level', prop_int_pretty(self.level)),
             ('Class Number', f'${self.class_number}$'),
-            ('Parity', f'{self.even_odd}'),
+            ('Parity', f'{self.parity}'),
         ]
 
     def _mat_in(self, mat, lang):

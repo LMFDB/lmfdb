@@ -190,7 +190,7 @@ common_columns = [
     MathCol("class_number", "lattice.class_number", "Class number"),
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", format_conway_symbol, default=False),
     ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", format_conway_symbol, default=False),
-    ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
+    ProcessedCol("is_even", "lattice.parity", "Parity", lambda v: "Even" if v else "Odd"),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
 ]
 
@@ -200,7 +200,7 @@ lat_only_columns = [
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
     MultiProcessedCol("gram", "lattice.gram", "Gram matrix", ["canonical_gram", "gram"], lambda a,b: vect_to_matrix(vect_to_sym2(a if a else b[0]), compress_threshold=5, keep=2)),
     MathCol("density", "lattice.density", "Density", default=False),
-    MathCol("hermite", "lattice.hermite", "Hermite", default=False),
+    MathCol("hermite", "lattice.hermite_number", "Hermite", default=False),
     MathCol("kissing", "lattice.kissing", "Kissing", default=False),
     MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ]
@@ -353,10 +353,10 @@ def common_boxes():
         knowl="lattice.discriminant",
         example="10",
         example_span="1 or 10-100")
-    even_odd = ParityBox(
-        name="is_even",
-        label="Even/Odd",
-        knowl="lattice.even_odd")
+    parity = ParityBox(
+        name="parity",
+        label="Parity",
+        knowl="lattice.parity")
     class_number = TextBox(
         name="class_number",
         label="Class number",
@@ -410,7 +410,7 @@ def common_boxes():
         knowl="lattice.festi_veniani_index",
         example="1")
 
-    return rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani
+    return rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani
 
 class GenusSearchArray(SearchArray):
     noun = "genus"
@@ -422,7 +422,7 @@ class GenusSearchArray(SearchArray):
             ]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
 
         mass = TextBox(
             name="mass",
@@ -436,14 +436,14 @@ class GenusSearchArray(SearchArray):
             [rank, signature],
             [det, discriminant],
             [level, class_number],
-            [disc_invs, even_odd],
+            [disc_invs, parity],
             [mass, gram],
             [count]
         ]
 
         self.refine_array = [
             [rank, signature, det, discriminant, level],
-            [class_number, disc_invs, even_odd, mass, gram]
+            [class_number, disc_invs, parity, mass, gram]
         ]
 
 class InGenusSearchArray(EmbeddedSearchArray):
@@ -452,7 +452,7 @@ class InGenusSearchArray(EmbeddedSearchArray):
              ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
         count = CountBox()
 
         self.refine_array = [

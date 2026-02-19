@@ -315,14 +315,14 @@ class LatSearchArray(SearchArray):
              ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
         count = CountBox()
 
         self.browse_array = [
             [rank, signature],
             [det, discriminant],
             [level, class_number],
-            [minimum, even_odd],
+            [minimum, parity],
             [aut_size, aut_label],
             [dual_det, dual_kissing],
             [disc_invs, gram],
@@ -332,7 +332,7 @@ class LatSearchArray(SearchArray):
 
         self.refine_array = [
             [rank, signature, det, discriminant, level],
-            [aut_size, aut_label, class_number, minimum, even_odd],
+            [aut_size, aut_label, class_number, minimum, parity],
             [dual_det, dual_kissing, disc_invs, kissing, festi_veniani],
             [gram]
         ]
