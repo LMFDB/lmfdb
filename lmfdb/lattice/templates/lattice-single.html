@@ -27,7 +27,7 @@
     <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td><td>{{ place_code('discriminant_group') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.successive_minima', title='Successive minima') }}:</td><td>{{lattice.successive_minima}}</td><td>{{ place_code('successive_minima') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.universal', title='Is universal') }}:</td><td>{{lattice.is_universal}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td><td>{{ place_code('minimal_vectors') }}</td>
+    <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
 <td>
 {% if lattice.shortest is none %}
     not computed</td></tr>
@@ -36,7 +36,7 @@
         $({{lattice.shortest}})$</td></tr><tr><td></td><td>Download this vector for
             {% for e in lattice.download_shortest %}
                 <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
+            {% endfor %}</td>
     {% else %}
         <table><tr>
         {% for n in lattice.shortest %}
@@ -46,15 +46,17 @@
         <td>Download the complete list for
             {% for e in lattice.download_shortest %}
                 <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
+            {% endfor %}</td>
         {% else %}
             </tr></table></td><tr><td></td><td>Download this {% if lattice.kissing == 2 %} vector {% else %} list {% endif %} for
             {% for e in lattice.download_shortest %}
                 <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
+            {% endfor %}</td>
         {% endif %}
     {% endif %}
 {% endif %}
+<td>{{ place_code('minimal_vectors') }}</td>
+</tr>
 </table>
 
 {% if lattice.theta_series %}
@@ -109,11 +111,12 @@
 <h2> {{ KNOWL('lattice.special_sublattices', title='Special sublattices') }} </h2>
 <table>
     <tr><td>{{ KNOWL('lattice.root_sublattice', title='Root sublattice') }}:</td><td>{{lattice.root_sublattice}}</td><td>{{ place_code('root_sublattice') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.root_sublattice', title='Complement of root sublattice') }}:</td><td>{{lattice.root_sublattice_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.root_sublattice', title='Complement of root sublattice') }}:</td><td>{{lattice.root_complement}}</td></tr>
     <tr><td>{{ KNOWL('lattice.even_sublattice', title='Even sublattice') }}:</td><td>{{lattice.even_sublattice}}</td><td>{{ place_code('even_sublattice') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.even_sublattice', title='Complement of even sublattice') }}:</td><td>{{lattice.even_sublattice_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.even_sublattice', title='Complement of even sublattice') }}:</td><td>{{lattice.even_complement}}</td></tr>
     <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Norm 1 sublattice') }}:</td><td>{{lattice.norm1_sublattice}}</td><td>{{ place_code('norm1_sublattice') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Complement of norm 1 sublattice') }}:</td><td>{{lattice.norm1_sublattice_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Complement of norm 1 sublattice') }}:</td><td>{{lattice.norm1_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.zn_complement', title='Complement of diagonal sublattice') }}:</td><td>{{lattice.Zn_complement}}</td></tr>
 </table>
 
 
