@@ -44,7 +44,7 @@ t:
   comment: Transitive number
   magma: t, n := TransitiveGroupIdentification(G); t;
   sage: G.transitive_number()
-  oscar: transitive_group_identification(G)
+  oscar: transitive_group_identification(G)[2]
 
 primitive:
   comment: Determine if group is primitive
