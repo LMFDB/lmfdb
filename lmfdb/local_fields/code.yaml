@@ -79,3 +79,15 @@ snippet_test:
       - sage
       - magma
     url: padicField/2.1.2.2a1.1/download/{lang}
+  testQ2sqrt5:
+    label: 2.2.1.0a1.1
+    langs:
+     - sage
+     - magma
+    url: padicField/2.2.1.0a1.1/download/{lang}
+  testQ2isqrt5:
+    label: 2.2.2.4a1.1
+    langs:
+     - sage
+     - magma
+    url: padicField/2.2.2.4a1.1/download/{lang}
