@@ -20,8 +20,8 @@ julia> if is_nilpotent(G) nilpotency_class(G) end
 julia> degree(G)
 11
 
-julia> transitive_group_identification(G)
-(11, 5)
+julia> transitive_group_identification(G)[2]
+5
 
 julia> is_even(G)
 true
