@@ -1,7 +1,7 @@
 /**
  * Interactive isogeny graph rendering using Cytoscape.js
  *
- * Usage: initIsogenyGraph('container-id', elementsJSON)
+ * Usage: initIsogenyGraph('container-id', elementsJSON, enabledLayouts)
  */
 
 function _isoTooltipLine(parent, text, isMath) {
@@ -25,7 +25,22 @@ function _isoTooltipEmphasis(parent, text) {
     parent.appendChild(document.createElement('br'));
 }
 
-function initIsogenyGraph(containerId, elements) {
+// Registry of all known layouts.  Keys are the display names used in
+// the dropdown and passed from Python via graph_layouts.  To add a new
+// layout, add an entry here and load its JS in cytoscape_scripts.html.
+var LAYOUT_REGISTRY = {
+    'Preset':     { name: 'preset' },
+    'Elk-stress': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } },
+    'Circle':     { name: 'circle', animate: false, padding: 30 },
+    'Concentric': { name: 'concentric', animate: false, padding: 30,
+                    concentric: function(node) { return node.degree(); },
+                    levelWidth: function() { return 2; } },
+    'Klay':       { name: 'klay', animate: false, padding: 30 },
+    'Dagre':      { name: 'dagre', animate: false, padding: 30 },
+    'Cola':       { name: 'cola', animate: false, padding: 30 }
+};
+
+function initIsogenyGraph(containerId, elements, enabledLayouts) {
     var container = document.getElementById(containerId);
     if (!container || !elements || elements.length === 0) return;
 
@@ -61,8 +76,9 @@ function initIsogenyGraph(containerId, elements) {
         container.style.height = side + 'px';
     }
 
-    var elkStress = { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } };
-    var layoutOpts = hasPositions ? { name: 'preset' } : elkStress;
+    var layoutOpts = hasPositions
+        ? { name: 'preset' }
+        : (LAYOUT_REGISTRY['Elk-stress'] || { name: 'cose', animate: false, padding: 30 });
 
     var cy = cytoscape({
         container: container,
@@ -139,31 +155,14 @@ function initIsogenyGraph(containerId, elements) {
         // still set up tooltip and click handlers below
     } else {
 
-    // Layout selector for testing
-    var layouts = {
-        // Built-in
-        'preset': { name: 'preset' },
-        'cose': { name: 'cose', animate: false, padding: 30 },
-        'circle': { name: 'circle', animate: false, padding: 30 },
-        'concentric': { name: 'concentric', animate: false, padding: 30,
-            concentric: function(node) { return node.degree(); },
-            levelWidth: function() { return 2; } },
-        'breadthfirst': { name: 'breadthfirst', animate: false, padding: 30 },
-        'grid': { name: 'grid', animate: false, padding: 30 },
-        'random': { name: 'random', animate: false, padding: 30 },
-        // Extensions
-        'fcose': { name: 'fcose', animate: false, padding: 30 },
-        'cola': { name: 'cola', animate: false, padding: 30 },
-        'dagre': { name: 'dagre', animate: false, padding: 30 },
-        'avsdf': { name: 'avsdf', animate: false, padding: 30 },
-        'cise': { name: 'cise', animate: false, padding: 30 },
-        'klay': { name: 'klay', animate: false, padding: 30 },
-        'cose-bilkent': { name: 'cose-bilkent', animate: false, padding: 30 },
-        'elk (layered)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'layered' } },
-        'elk (mrtree)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'mrtree' } },
-        'elk (stress)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'stress' } },
-        'elk (force)': { name: 'elk', animate: false, padding: 30, elk: { algorithm: 'force' } }
-    };
+    // Build layout map from the enabled list
+    var layouts = {};
+    if (enabledLayouts) {
+        for (var ei = 0; ei < enabledLayouts.length; ei++) {
+            var key = enabledLayouts[ei];
+            if (LAYOUT_REGISTRY[key]) layouts[key] = LAYOUT_REGISTRY[key];
+        }
+    }
 
     var controls = document.createElement('div');
     controls.style.cssText = 'margin: 8px 0;';
@@ -171,10 +170,10 @@ function initIsogenyGraph(containerId, elements) {
     label.textContent = 'Layout: ';
     label.style.fontWeight = 'bold';
     var select = document.createElement('select');
-    var defaultLayout = hasPositions ? 'preset' : 'elk (stress)';
+    var defaultLayout = hasPositions ? 'Preset' : 'Elk-stress';
     var layoutNames = Object.keys(layouts);
     for (var li = 0; li < layoutNames.length; li++) {
-        if (layoutNames[li] === 'preset' && !hasPositions) continue;
+        if (layoutNames[li] === 'Preset' && !hasPositions) continue;
         var opt = document.createElement('option');
         opt.value = layoutNames[li];
         opt.textContent = layoutNames[li];
@@ -182,7 +181,7 @@ function initIsogenyGraph(containerId, elements) {
         select.appendChild(opt);
     }
     select.addEventListener('change', function() {
-        if (select.value === 'preset') {
+        if (select.value === 'Preset') {
             // Restore original positions and container size
             for (var ei = 0; ei < elements.length; ei++) {
                 if (elements[ei].group === 'nodes' && elements[ei].position) {
