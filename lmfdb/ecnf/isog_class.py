@@ -99,6 +99,8 @@ class ECNF_isoclass():
                     if c.get('cm'):
                         el['data']['cm'] = str(c['cm'])
         self.graph_link = graph_to_svg(self.graph)
+        # Layout options for the interactive graph dropdown
+        self.graph_layouts = ['Preset', 'Elk-stress', 'Circle', 'Concentric', 'Klay', 'Dagre', 'Cola']
         self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 
         self.field = FIELD(self.field_label)

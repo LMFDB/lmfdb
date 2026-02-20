@@ -143,6 +143,8 @@ class ECisog_class():
                     el['data']['j_inv'] = str(c['j_inv'])
         # SVG for properties sidebar
         self.graph_link = graph_to_svg(self.graph)
+        # Layout options for the interactive graph dropdown
+        self.graph_layouts = ['Preset', 'Elk-stress', 'Circle', 'Concentric', 'Klay', 'Dagre', 'Cola']
 
         self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])
