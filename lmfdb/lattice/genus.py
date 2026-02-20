@@ -15,7 +15,7 @@ from lmfdb.utils import (
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
@@ -166,7 +166,7 @@ def common_parse(info, query):
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
     # Handle even/odd search
-    parity = info.get('is_even')
+    parity = info.get('parity')
     if parity:
         if parity == 'even':
             query['is_even'] = True
@@ -205,7 +205,7 @@ lat_only_columns = [
     MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ]
 
-genus_columns = [LinkCol("label", "lattice.label", "Label", url_for_genus)] + common_columns
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]), default=False)]
 
 in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
 
