@@ -954,21 +954,21 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
 def graph_to_cytoscape_json(G):
     """Convert a Sage Graph with positions to Cytoscape.js elements format.
 
-    The graph should have positions set via set_pos() (as done by make_graph
-    in the isogeny class modules). Returns a list of dicts suitable for
-    passing to cytoscape({elements: ...}).
+    Positions are taken from G.get_pos() if available (as set by
+    make_graph), otherwise computed via layout_spring().  Returns a
+    list of dicts suitable for passing to cytoscape({elements: ...}).
     """
     pos = G.get_pos()
-    has_pos = pos is not None and len(pos) == len(G.vertices())
+    if pos is None or len(pos) < len(G.vertices()):
+        pos = G.layout_spring()
     elements = []
     for v in G.vertices():
+        x, y = pos[v]
         node = {
             "group": "nodes",
             "data": {"id": str(v), "label": str(v)},
+            "position": {"x": float(x * 150), "y": float(-y * 150)},
         }
-        if has_pos:
-            x, y = pos[v]
-            node["position"] = {"x": float(x * 150), "y": float(-y * 150)}
         elements.append(node)
     for u, v, label in G.edges():
         elements.append({
