@@ -72,6 +72,13 @@
     <tr><td>{{lattice.gram_display | safe}}</td></tr>
 </table>
 
+{% if lattice.is_positive_definite %}
+<h2> {{ KNOWL('lattice.basis', title='Basis') }} </h2>
+{{ place_code('basis') }}
+<table>
+    <tr><td>{{lattice.basis_display | safe}}</td></tr>
+</table>
+{% endif %}
 
 <h2> {{ KNOWL('lattice.quadratic_form', title='Quadratic form') }} </h2>
 {{ place_code('quadratic_form') }}

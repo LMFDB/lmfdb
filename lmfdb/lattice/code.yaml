@@ -175,6 +175,10 @@ quadratic_form:
   comment: Quadratic form associated to the lattice
   magma: QuadraticForm(L);
 
+basis:
+  comment: Basis
+  magma: Basis(L);
+
 genus:
   comment: Genus
   sage: L.genus()

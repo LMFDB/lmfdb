@@ -7,6 +7,7 @@ from flask import url_for
 from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, latex, Factorization, PolynomialRing, flatten
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, encode_plot, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
+import numpy as np
 
 #####################################
 # Utilitary functions for displays  #
@@ -307,6 +308,25 @@ class WebLattice(WebLat):
         result = " + ".join(terms)
         result = result.replace("+ -", "- ")
         return "$"+result+"$"
+
+    @lazy_attribute
+    def basis_display(self):
+        """
+        Return a latex-formatted explicit basis associated to the Gram matrix of this lattice.
+        """
+
+        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = vect_to_sym2(gram)
+
+        basis = np.linalg.cholesky(gram)
+
+        vectors = []
+        for i in range(basis.shape[0]):
+            entries = [f"{round(x, 3)}" for x in basis[i, :]]
+            vec_latex = "\\begin{pmatrix}\n" + " \\\\\n".join(entries) + "\n\\end{pmatrix}"
+            vectors.append(vec_latex)
+        return "\\[\n\\left\\{\n" + ",\n".join(vectors) + "\n\\right\\}\n\\]"
+
 
     @lazy_attribute
     def friends(self):
