@@ -44,9 +44,10 @@ t:
   comment: Transitive number
   magma: t, n := TransitiveGroupIdentification(G); t;
   sage: G.transitive_number()
+  oscar: transitive_group_identification(G)
 
 primitive:
-  comment:  Determine if group is primitive
+  comment: Determine if group is primitive
   magma: IsPrimitive(G);
   sage: G.is_primitive()
   oscar: is_primitive(G)
@@ -54,18 +55,20 @@ primitive:
 even:
   comment: Parity
   magma: IsEven(G);
+  sage: all(g.SignPerm() == 1 for g in libgap(G).GeneratorsOfGroup())
   oscar: is_even(G)
 
 nilpotent:
   comment: Nilpotency class
   magma: NilpotencyClass(G);
+  sage: libgap(G).NilpotencyClassOfGroup() if G.is_nilpotent() else -1
   oscar: if is_nilpotent(G) nilpotency_class(G) end
 
 auts:
   comment: Order of the centralizer of G in S_n
   magma: Order(Centralizer(SymmetricGroup(n), G));
   sage: SymmetricGroup({n}).centralizer(G).order()
-  oscar:  order(centralizer(symmetric_group({n}), G)[1])
+  oscar: order(centralizer(symmetric_group({n}), G)[1])
 
 gens:
   comment: Generators
