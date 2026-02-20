@@ -171,7 +171,7 @@ class_number_formula:
 
 galois_group:
   comment: Galois group
-  sage:  K.galois_group(type='pari')
+  sage:  K.galois_group()
   pari:  polgalois(K.pol)
   magma: G = GaloisGroup(K);
   oscar: |
