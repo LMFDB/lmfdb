@@ -127,7 +127,7 @@ class ECisog_class():
         # Create isogeny graph with appropriate vertex labels:
 
         self.graph = make_graph(M, [c['short_label'] for c in self.curves])
-        self.graph_data = graph_to_cytoscape_json(self.graph)
+        self.graph_data, has_preset = graph_to_cytoscape_json(self.graph)
         # Attach curve metadata to nodes for tooltip display
         curve_by_label = {c['short_label']: c for c in self.curves}
         for el in self.graph_data:
@@ -145,6 +145,7 @@ class ECisog_class():
         self.graph_link = graph_to_svg(self.graph)
         # Layout options for the interactive graph dropdown
         self.graph_layouts = ['Preset', 'Elk-stress', 'Circle', 'Concentric', 'Klay', 'Dagre', 'Cola']
+        self.graph_default_layout = 'Preset' if has_preset else 'Elk-stress'
 
         self.newform = raw_typeset(PowerSeriesRing(QQ, 'q')(classdata['anlist'], 20, check=True))
         self.newform_label = ".".join([str(self.conductor), str(2), 'a', self.iso_label])

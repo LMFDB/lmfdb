@@ -85,7 +85,7 @@ class ECNF_isoclass():
 
         # Create isogeny graph:
         self.graph = make_graph(self.isogeny_matrix)
-        self.graph_data = graph_to_cytoscape_json(self.graph)
+        self.graph_data, has_preset = graph_to_cytoscape_json(self.graph)
         # Attach curve URLs and labels to nodes
         for el in self.graph_data:
             if el['group'] == 'nodes':
@@ -101,6 +101,7 @@ class ECNF_isoclass():
         self.graph_link = graph_to_svg(self.graph)
         # Layout options for the interactive graph dropdown
         self.graph_layouts = ['Preset', 'Elk-stress', 'Circle', 'Concentric', 'Klay', 'Dagre', 'Cola']
+        self.graph_default_layout = 'Preset' if has_preset else 'Elk-stress'
         self.isogeny_matrix_str = latex(Matrix(self.isogeny_matrix))
 
         self.field = FIELD(self.field_label)

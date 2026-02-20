@@ -955,11 +955,14 @@ def graph_to_cytoscape_json(G):
     """Convert a Sage Graph with positions to Cytoscape.js elements format.
 
     Positions are taken from G.get_pos() if available (as set by
-    make_graph), otherwise computed via layout_spring().  Returns a
-    list of dicts suitable for passing to cytoscape({elements: ...}).
+    make_graph), otherwise computed via layout_spring().  Returns
+    ``(elements, has_preset)`` where *elements* is a list of dicts
+    suitable for ``cytoscape({elements: ...})`` and *has_preset* is
+    True when positions came from hardcoded coordinates.
     """
     pos = G.get_pos()
-    if pos is None or len(pos) < len(G.vertices()):
+    has_preset = pos is not None and len(pos) >= len(G.vertices())
+    if not has_preset:
         pos = G.layout_spring()
     elements = []
     for v in G.vertices():
@@ -975,7 +978,7 @@ def graph_to_cytoscape_json(G):
             "group": "edges",
             "data": {"source": str(u), "target": str(v), "label": str(label)},
         })
-    return elements
+    return elements, has_preset
 
 
 def graph_to_svg(G, max_width=200, max_height=150):

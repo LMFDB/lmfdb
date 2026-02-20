@@ -1,7 +1,7 @@
 /**
  * Interactive isogeny graph rendering using Cytoscape.js
  *
- * Usage: initIsogenyGraph('container-id', elementsJSON, enabledLayouts)
+ * Usage: initIsogenyGraph('container-id', elementsJSON, enabledLayouts, defaultLayout)
  */
 
 function _isoTooltipLine(parent, text, isMath) {
@@ -40,7 +40,7 @@ var LAYOUT_REGISTRY = {
     'Cola':       { name: 'cola', animate: false, padding: 30 }
 };
 
-function initIsogenyGraph(containerId, elements, enabledLayouts) {
+function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) {
     var container = document.getElementById(containerId);
     if (!container || !elements || elements.length === 0) return;
 
@@ -76,9 +76,9 @@ function initIsogenyGraph(containerId, elements, enabledLayouts) {
         container.style.height = side + 'px';
     }
 
-    var layoutOpts = hasPositions
-        ? { name: 'preset' }
-        : (LAYOUT_REGISTRY['Elk-stress'] || { name: 'cose', animate: false, padding: 30 });
+    var layoutOpts = (defaultLayout && LAYOUT_REGISTRY[defaultLayout])
+        ? LAYOUT_REGISTRY[defaultLayout]
+        : { name: 'preset' };
 
     var cy = cytoscape({
         container: container,
@@ -179,7 +179,7 @@ function initIsogenyGraph(containerId, elements, enabledLayouts) {
     label.textContent = 'Layout: ';
     label.style.fontWeight = 'bold';
     var select = document.createElement('select');
-    var defaultLayout = hasPositions ? 'Preset' : 'Elk-stress';
+    defaultLayout = defaultLayout || 'Preset';
     var layoutNames = Object.keys(layouts);
     for (var li = 0; li < layoutNames.length; li++) {
         if (layoutNames[li] === 'Preset' && !hasPositions) continue;
