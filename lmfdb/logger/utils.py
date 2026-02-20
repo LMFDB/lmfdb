@@ -48,41 +48,11 @@ class LmfdbFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-def make_logger(bp_or_name, hl=False, fmt=None, extraHandlers=[]):
+def make_logger(bp_or_name, hl=False, fmt=None, extraHandlers=None):
     """
-    creates a logger for the given blueprint. if hl is set
-    to true, the corresponding lines will be bold.
+    Returns app.logger for use in LMFDB modules.
+    The bp_or_name, hl, fmt, and extraHandlers arguments are kept only for
+    backwards compatibility.
     """
-    import flask
-    from lmfdb.utils.config import Configuration
-    config = Configuration()
-    logging_options = config.get_logging()
-    logfocus = logging_options.get('logfocus')
-    if isinstance(bp_or_name, flask.Blueprint):
-        name = bp_or_name.name
-    else:
-        assert isinstance(bp_or_name, str)
-        name = bp_or_name
-    l = logging.getLogger(name)
-    l.propagate = False
-    if logfocus is None:
-        l.setLevel(logging_options.get('loglevel', logging.INFO))
-    elif logfocus == name:
-        # this will NEVER BE TRUE, because logfocus is set AFTER
-        # we have created all of the loggers. This is ok for now,
-        # because we are setting the log level later when we set
-        # the logfocus variable.
-        #
-        # Maybe someday someone will rewrite this so that it makes
-        # sense...
-        l.setLevel(logging.DEBUG)
-    else:
-        l.setLevel(logging.WARNING)
-    if len(l.handlers) == 0:
-        formatter = LmfdbFormatter(hl=name if hl else None, fmt=fmt)
-        ch = logging.StreamHandler()
-        ch.setFormatter(formatter)
-        l.addHandler(ch)
-        for elt in extraHandlers:
-            l.addHandler(elt)
-    return l
+    from lmfdb.app import app
+    return app.logger
