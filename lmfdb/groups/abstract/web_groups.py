@@ -3759,7 +3759,7 @@ class WebAbstractConjClass(WebObj):
 
     # extract from powers list the ones corresponding to ones dividing the order
     def prime_powers(self):
-        plist=[z[0] for z in ZZ(self.group_order).factor()]
+        plist = [z[0] for z in ZZ(self.group_order).factor()]
         Nphi = self.group_order*euler_phi(self.group_order)
         plist_long = [z[0] for z in ZZ(Nphi).factor()]
         assert len(plist_long) == len(self.powers)
