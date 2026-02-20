@@ -136,7 +136,7 @@ class ECisog_class():
                 c = curve_by_label.get(label)
                 if c:
                     el['data']['url'] = c['curve_url_lmfdb']
-                    el['data']['torsion'] = str(c['torsion_structure'])
+                    el['data']['torsion'] = ' x '.join('Z/%dZ' % t for t in c['torsion_structure']) if c['torsion_structure'] else 'Trivial'
                     el['data']['degree'] = c['degree']
                     el['data']['faltings_height'] = str(c['FH'])
                     el['data']['optimal'] = bool(c.get('optimal'))

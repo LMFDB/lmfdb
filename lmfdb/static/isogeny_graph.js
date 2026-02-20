@@ -86,8 +86,7 @@ function initIsogenyGraph(containerId, elements) {
                     'width': 60,
                     'height': 30,
                     'shape': 'round-rectangle',
-                    'color': '#333',
-                    'cursor': 'pointer'
+                    'color': '#333'
                 }
             },
             {
@@ -104,7 +103,7 @@ function initIsogenyGraph(containerId, elements) {
                     'label': 'data(label)',
                     'font-size': '11px',
                     'text-background-color': '#fff',
-                    'text-background-opacity': 0.85,
+                    'text-background-opacity': 1,
                     'text-background-padding': '2px',
                     'line-color': '#888',
                     'width': 1.5,
@@ -222,15 +221,15 @@ function initIsogenyGraph(containerId, elements) {
 
     } // end nNodes > 1
 
-    // Create tooltip element
+    // Create tooltip element (appended to document.body so it is not
+    // clipped by the container's overflow)
     var tooltip = document.createElement('div');
     tooltip.className = 'isogeny-tooltip';
     tooltip.style.cssText = 'display:none; position:absolute; background:#fff; ' +
         'border:1px solid #ccc; border-radius:4px; padding:8px 12px; ' +
         'font-size:13px; line-height:1.5; box-shadow:0 2px 8px rgba(0,0,0,0.15); ' +
-        'z-index:1000; pointer-events:none; max-width:280px;';
-    container.style.position = 'relative';
-    container.appendChild(tooltip);
+        'z-index:1000; pointer-events:none; white-space:nowrap;';
+    document.body.appendChild(tooltip);
 
     // Hover: show tooltip with curve metadata
     cy.on('mouseover', 'node', function(evt) {
@@ -250,14 +249,18 @@ function initIsogenyGraph(containerId, elements) {
 
         tooltip.style.display = 'block';
 
-        // Position tooltip near the node
+        // Position tooltip near the node using page coordinates
+        var rect = container.getBoundingClientRect();
         var pos = node.renderedPosition();
-        tooltip.style.left = (pos.x + 15) + 'px';
-        tooltip.style.top = (pos.y - 10) + 'px';
+        tooltip.style.left = (rect.left + window.scrollX + pos.x + 25) + 'px';
+        tooltip.style.top = (rect.top + window.scrollY + pos.y - 10) + 'px';
+
+        $('html,body').css('cursor', 'pointer');
     });
 
     cy.on('mouseout', 'node', function() {
         tooltip.style.display = 'none';
+        $('html,body').css('cursor', 'default');
     });
 
     // Prevent dragging nodes outside the visible area
@@ -265,8 +268,8 @@ function initIsogenyGraph(containerId, elements) {
         var node = evt.target;
         var pos = node.position();
         var ext = cy.extent();
-        var hw = node.width() / 2;
-        var hh = node.height() / 2;
+        var hw = node.width() / 2 + 10;
+        var hh = node.height() / 2 + 10;
         var x = Math.max(ext.x1 + hw, Math.min(ext.x2 - hw, pos.x));
         var y = Math.max(ext.y1 + hh, Math.min(ext.y2 - hh, pos.y));
         if (x !== pos.x || y !== pos.y) {

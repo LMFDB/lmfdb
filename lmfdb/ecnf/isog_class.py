@@ -94,7 +94,8 @@ class ECNF_isoclass():
                     c = self.db_curves[idx]
                     el['data']['url'] = curve_url(c)
                     el['data']['label'] = c['iso_label'] + str(c['number'])
-                    el['data']['torsion'] = str(c.get('torsion_structure', []))
+                    ts = c.get('torsion_structure', [])
+                    el['data']['torsion'] = ' x '.join('Z/%dZ' % t for t in ts) if ts else 'Trivial'
                     if c.get('cm'):
                         el['data']['cm'] = str(c['cm'])
         self.graph_link = graph_to_svg(self.graph)
