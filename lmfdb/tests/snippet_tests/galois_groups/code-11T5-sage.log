@@ -10,10 +10,14 @@ sage: G.is_abelian()
 False
 sage: G.is_solvable()
 False
+sage: libgap(G).NilpotencyClassOfGroup() if G.is_nilpotent() else -1
+-1
 sage: G.degree()
 11
 sage: G.transitive_number()
 5
+sage: all(g.SignPerm() == 1 for g in libgap(G).GeneratorsOfGroup())
+True
 sage: G.is_primitive()
 True
 sage: SymmetricGroup(11).centralizer(G).order()
