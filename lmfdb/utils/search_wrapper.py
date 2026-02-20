@@ -5,7 +5,7 @@ from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 from sage.misc.cachefunc import cached_function
 
-from lmfdb.app import ctx_proc_userdata, is_debug_mode
+from lmfdb.app import app, ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
 from lmfdb.utils.utilities import flash_error, flash_info, flash_success, to_dict
 from lmfdb.utils.completeness import results_complete
@@ -303,12 +303,11 @@ class SearchWrapper(Wrapper):
                     if caveat:
                         flash_info("The completeness " + caveat)
                 except Exception as err:
-                    from lmfdb.logger import critical
                     import traceback
                     msg = f"There was an error in the completeness checking code, so the search results below may or may not be complete: \n{err}"
                     flash_info(msg)
                     msg += "\n" + traceback.format_exc()
-                    critical(msg)
+                    app.logger.warning(msg)
             return render_template(template, info=info, title=title, **template_kwds)
 
 
