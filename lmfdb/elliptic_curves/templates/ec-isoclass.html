@@ -130,7 +130,7 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
 {% set graph_layouts = info.graph_layouts %}
 {% include "cytoscape_scripts.html" %}
 <script>
-  initIsogenyGraph('isogeny-graph', {{ info.graph_data | tojson }}, {{ info.graph_layouts | tojson }});
+  initIsogenyGraph('isogeny-graph', {{ info.graph_data | tojson }}, {{ info.graph_layouts | tojson }}, {{ info.graph_default_layout | tojson }});
 </script>
 
 <h2>Elliptic curves in class {{info.class_label}}</h2>

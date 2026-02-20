@@ -71,7 +71,7 @@ Rank not yet determined.
 {% set graph_layouts = cl.graph_layouts %}
 {% include "cytoscape_scripts.html" %}
 <script>
-  initIsogenyGraph('isogeny-graph', {{ cl.graph_data | tojson }}, {{ cl.graph_layouts | tojson }});
+  initIsogenyGraph('isogeny-graph', {{ cl.graph_data | tojson }}, {{ cl.graph_layouts | tojson }}, {{ cl.graph_default_layout | tojson }});
 </script>
 {% else %}
 <p>Not available.</p>
