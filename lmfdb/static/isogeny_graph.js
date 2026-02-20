@@ -146,7 +146,16 @@ function initIsogenyGraph(containerId, elements, enabledLayouts) {
         }
     }
 
-    // Save original container dimensions for preset restore
+    // Save original positions and container dimensions for preset restore
+    var origPositions = {};
+    for (var pi = 0; pi < elements.length; pi++) {
+        if (elements[pi].group === 'nodes' && elements[pi].position) {
+            origPositions[elements[pi].data.id] = {
+                x: elements[pi].position.x,
+                y: elements[pi].position.y
+            };
+        }
+    }
     var origWidth = container.style.width;
     var origHeight = container.style.height;
 
@@ -183,10 +192,9 @@ function initIsogenyGraph(containerId, elements, enabledLayouts) {
     select.addEventListener('change', function() {
         if (select.value === 'Preset') {
             // Restore original positions and container size
-            for (var ei = 0; ei < elements.length; ei++) {
-                if (elements[ei].group === 'nodes' && elements[ei].position) {
-                    cy.getElementById(elements[ei].data.id).position(elements[ei].position);
-                }
+            var ids = Object.keys(origPositions);
+            for (var ri = 0; ri < ids.length; ri++) {
+                cy.getElementById(ids[ri]).position(origPositions[ids[ri]]);
             }
             container.style.width = origWidth;
             container.style.height = origHeight;
