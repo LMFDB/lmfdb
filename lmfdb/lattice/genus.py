@@ -256,6 +256,7 @@ def render_genus_webpage(label):
     properties=lambda:None,
     friends=lambda:None,
     downloads=lambda:None,
+    code=lambda:None,
     KNOWL_ID=lambda:None,
 )
 def render_genus(info, query):
