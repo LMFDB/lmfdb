@@ -13,8 +13,7 @@ from psycodict.encoding import Array
 from psycopg2.sql import SQL, Identifier, Placeholder
 from datetime import timedelta
 from lmfdb.utils.datetime_utils import utc_now_naive
-
-from .main import logger
+from lmfdb.logger import logger
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask_login import UserMixin, AnonymousUserMixin
