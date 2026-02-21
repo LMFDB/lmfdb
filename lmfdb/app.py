@@ -20,7 +20,7 @@ from sage.env import SAGE_VERSION
 from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
-from .logger import logger_file_handler, critical
+from .logger import critical
 from .homepage import load_boxes, contribs
 
 LMFDB_VERSION = "LMFDB Release 1.2.1"
@@ -79,8 +79,6 @@ def is_running():
 # Global app configuration #
 ############################
 
-
-app.logger.addHandler(logger_file_handler())
 
 # If the debug toolbar is installed then use it
 if app.debug:

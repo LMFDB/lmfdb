@@ -1,10 +1,8 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 hmf_page = Blueprint("hmf", __name__, template_folder='templates', static_folder="static")
-hmf_logger = make_logger(hmf_page)
 
 
 @hmf_page.context_processor
