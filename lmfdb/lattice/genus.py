@@ -3,15 +3,15 @@ import re
 import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from cypari2.handle_error import PariError
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round, pari
+#from cypari2.handle_error import PariError
+from sage.all import ZZ, matrix #QQ, PolynomialRing, latex,  PowerSeriesRing, sqrt, round, pari
 
 #from lmfdb.local_fields.main import formatbracketcol
 from lmfdb.utils import (
     web_latex_split_on_pm, flash_error, to_dict,
-    SearchArray, EmbeddedSearchArray, TextBox, CountBox, prop_int_pretty,
+    SearchArray, EmbeddedSearchArray, TextBox, CountBox, #prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count,
-    parse_bracketed_posints, parse_start, clean_input, parse_noop,
+    parse_bracketed_posints, parse_start, parse_noop, #clean_input, 
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
@@ -19,7 +19,7 @@ from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, Processe
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
-from lmfdb.lattice.isom import isom
+#from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genera_stats import Genus_stats
 
 # Database connection

@@ -4,7 +4,7 @@ import yaml
 from collections import defaultdict
 from lmfdb import db
 from flask import url_for
-from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, latex, Factorization, PolynomialRing, flatten
+from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten #latex, Factorization,
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, encode_plot, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
 import numpy as np
@@ -130,7 +130,7 @@ class WebGenus(WebLat):
             self.adjacency_matrix = {}
         if self.adjacency_polynomials is None:
             self.adjacency_polynomials = {}
-        X = self.adjacency_display
+        #X = self.adjacency_display
 
     @lazy_attribute
     def gram_display(self):
