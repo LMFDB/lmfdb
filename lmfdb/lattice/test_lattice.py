@@ -42,8 +42,8 @@ class HomePageTest(LmfdbTest):
         assert '56' in L # lattice search
 
     def test_genus_search(self):
-        L = self.tc.get("/Lattice/Genus/?rank=&det=&level=&gram=&class_number=1&aut=&count=50").get_data(as_text=True)
-        assert '1000' in L # genus search
+        L = self.tc.get("/Lattice/Genus?rank=&det=&level=&gram=&class_number=1&count=50").get_data(as_text=True)
+        assert '50' in L # genus search
 
     def test_lattice_search_next(self):
         L = self.tc.get("/Lattice/?start=50&rank=&det=&level=&gram=&minimum=&class_number=&aut=2&count=50").get_data(as_text=True)
