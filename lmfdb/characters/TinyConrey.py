@@ -2,8 +2,8 @@ from sage.all import (gcd, Mod, Integer, Integers, Rational, Rationals, Polynomi
                       pari,DirichletGroup, CyclotomicField, euler_phi, lcm)
 from sage.misc.cachefunc import cached_method
 from sage.modular.dirichlet import DirichletCharacter
-from lmfdb.logger import make_logger
-logger = make_logger("TinyConrey")
+import logging
+logger = logging.getLogger("lmfdb")
 
 def symbol_numerator(cond, parity):
     # Reference: Sect. 9.3, Montgomery, Hugh L; Vaughan, Robert C. (2007).

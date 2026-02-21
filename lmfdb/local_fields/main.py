@@ -3,8 +3,10 @@
 
 import os
 import yaml
+import logging
 
 from flask import abort, render_template, request, url_for, redirect, make_response
+logger = logging.getLogger("lmfdb")
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
 from sage.plot.all import line, points, text, Graphics, polygon
@@ -25,7 +27,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
-from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.local_fields import local_fields_page
 from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE, latex_content, content_unformatter
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (

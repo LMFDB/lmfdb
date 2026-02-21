@@ -1,9 +1,7 @@
 from lmfdb.app import app
 from lmfdb.utils import comma
-from lmfdb.logger import make_logger
 from lmfdb import db
 
-logger = make_logger("hecke_algebras")
 
 
 def hecke_algebras_summary():

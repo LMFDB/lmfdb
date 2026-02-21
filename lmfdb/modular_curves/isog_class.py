@@ -1,10 +1,11 @@
 from flask import url_for
 from lmfdb.utils import prop_int_pretty
-from lmfdb.modular_curves import modcurve_logger
 from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE, WebModCurve
 from lmfdb import db
 
 from sage.databases.cremona import class_to_int, cremona_letter_code
+import logging
+modcurve_logger = logging.getLogger("lmfdb")
 
 class ModCurveIsog_class():
     """

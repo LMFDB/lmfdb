@@ -45,19 +45,19 @@ The design is the following:
 from flask import url_for
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code
+import logging
+logger = logging.getLogger("lmfdb")
 from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
                       euler_phi, latex)
 from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb import db
 from lmfdb.utils import prop_int_pretty
 from lmfdb.utils.utilities import num2letters
-from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
 from lmfdb.characters.TinyConrey import (ConreyCharacter, kronecker_symbol,
                 symbol_numerator, PariConreyGroup, get_sage_genvalues)
 from lmfdb.characters.utils import url_character, complex2str
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
-logger = make_logger("DC")
 
 
 def parity_string(n):

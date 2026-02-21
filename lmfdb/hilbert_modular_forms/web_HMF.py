@@ -8,9 +8,9 @@ from sage.all import QQ, polygen
 
 from lmfdb import db
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-from lmfdb.logger import make_logger
+import logging
 
-logger = make_logger("hmf")
+logger = logging.getLogger("lmfdb")
 
 
 def construct_full_label(field_label, weight, level_label, label_suffix):

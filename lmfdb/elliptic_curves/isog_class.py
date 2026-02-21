@@ -1,6 +1,5 @@
 from flask import url_for
 from lmfdb.utils import encode_plot, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
-from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
@@ -8,6 +7,8 @@ from lmfdb.abvar.fq.main import url_for_label
 from lmfdb import db
 
 from sage.all import latex, PowerSeriesRing, QQ, ZZ, RealField, nth_prime
+import logging
+ec_logger = logging.getLogger("lmfdb")
 
 
 class ECisog_class():
