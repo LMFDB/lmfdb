@@ -1,5 +1,5 @@
 from logging import (FileHandler, getLogger, StreamHandler, Formatter,
-                     INFO, WARNING, DEBUG,
+                     INFO, WARNING,
                      info, warning)
 
 from sage.version import version as sage_version
@@ -33,5 +33,5 @@ def start_logging():
     cfg = config.get_all()
     if "postgresql_options" and "password" in cfg["postgresql_options"]:
         cfg["postgresql_options"]["password"] = "****"
-    root_logger.info("Configuration = {}".format(cfg) )
+    info("Configuration = {}".format(cfg) )
     check_sage_version()
