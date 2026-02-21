@@ -8,11 +8,22 @@ class HomePageTest(LmfdbTest):
         assert 'random' in homepage
         assert 'Gram' in homepage
 
-    def test_lattice_dim(self):
+    # The Genus page
+    def test_genus(self):
+        homepage = self.tc.get("/Lattice/Genus").get_data(as_text=True)
+        assert 'random' in homepage
+        assert 'Gram' in homepage
+
+    def test_lattice_rank(self):
         L = self.tc.get("/Lattice/9.9.8.001.76.1").get_data(as_text=True)
         assert '115712' in L #coeff in theta series
         assert '1.58740105196819947475170563927' in L #Hermite number
         assert '11612160' in L #group order
+
+    def test_genus_rank(self):
+        L = self.tc.get("/Lattice/Genus/9.9.8.001.76").get_data(as_text=True)
+        assert 'Even' in L # Parity
+        assert '11612160' in L # group order of only lattice in genus
 
     def test_lattice_classnumber(self):
         L = self.tc.get("/Lattice/?class_number=1").get_data(as_text=True)
@@ -28,30 +39,34 @@ class HomePageTest(LmfdbTest):
 
     def test_lattice_search(self):
         L = self.tc.get("/Lattice/?rank=&det=&level=&gram=&minimum=&class_number=1&aut=&count=50").get_data(as_text=True)
-        assert '56' in L #search
+        assert '56' in L # lattice search
+
+    def test_genus_search(self):
+        L = self.tc.get("/Lattice/Genus/?rank=&det=&level=&gram=&class_number=1&aut=&count=50").get_data(as_text=True)
+        assert '1000' in L # genus search
 
     def test_lattice_search_next(self):
         L = self.tc.get("/Lattice/?start=50&rank=&det=&level=&gram=&minimum=&class_number=&aut=2&count=50").get_data(as_text=True)
         assert '146' in L #search on the next page
 
-    def test_lattice_searchdim(self):
+    def test_lattice_searchrank(self):
         L = self.tc.get("/Lattice/?rank=3").get_data(as_text=True)
-        assert '3.1.1000.3.3.3b.1' in L #dimension search
+        assert '3.1.1000.3.3.3b.1' in L # rank search
 
     def test_lattice_searchlevel(self):
-        L = self.tc.get("/Lattice/?start=&dim=&det=&level=90&gram=&minimum=&class_number=&aut=").get_data(as_text=True)
+        L = self.tc.get("/Lattice/?start=&rank=&det=&level=90&gram=&minimum=&class_number=&aut=").get_data(as_text=True)
         assert '1.1.45.01.3b.1' in L #level search
 
     def test_lattice_searchminvectlength(self):
-        L = self.tc.get("/Lattice/?dim=&det=&level=&gram=&minimum=3&class_number=&aut=").get_data(as_text=True)
+        L = self.tc.get("/Lattice/?rank=&det=&level=&gram=&minimum=3&class_number=&aut=").get_data(as_text=True)
         assert '3.3.45.01.1b7.3' in L #search minimum vector length
 
     #def test_lattice_searchGM(self):
-    #    L = self.tc.get("/Lattice/?dim=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").get_data(as_text=True)
+    #    L = self.tc.get("/Lattice/?rank=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").get_data(as_text=True)
     #    assert '4620' in L #gram matrix search
 
     #def test_lattice_searchGM_2(self):
-    #    L = self.tc.get("/Lattice/?dim=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").get_data(as_text=True)
+    #    L = self.tc.get("/Lattice/?rank=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").get_data(as_text=True)
     #    assert '2.1.2.1.1' in L #gram matrix search through isometries
 
     #def test_latticeZ2(self):
@@ -73,6 +88,12 @@ class HomePageTest(LmfdbTest):
         assert 'redirected automatically' in L # random lattice
         L = self.tc.get("/Lattice/random", follow_redirects=True)
         assert 'Normalized minimal vectors' in L.get_data(as_text=True) # check redirection
+
+    def test_genus_random(self):
+        L = self.tc.get("/Lattice/Genus/random").get_data(as_text=True)
+        assert 'redirected automatically' in L # random genus page
+        L = self.tc.get("/Lattice/Genus/random", follow_redirects=True)
+        assert 'Genus Invariants' in L.get_data(as_text=True) # check redirection
 
     def test_downloadstring(self):
         L = self.tc.get("/Lattice/5.1.648.3.4.46.1").get_data(as_text=True)
