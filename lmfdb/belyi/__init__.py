@@ -1,12 +1,10 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 belyi_page = Blueprint(
     "belyi", __name__, template_folder="templates", static_folder="static"
 )
-belyi_logger = make_logger(belyi_page)
 
 
 @belyi_page.context_processor

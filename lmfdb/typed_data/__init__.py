@@ -1,7 +1,4 @@
 
-from lmfdb.logger import make_logger
-typed_data_logger = make_logger("typed_data_logger", hl=True)
-
 from . import type_generation
 assert type_generation
 from . import standard_types

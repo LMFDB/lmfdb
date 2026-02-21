@@ -25,7 +25,6 @@ from lmfdb.galois_groups.transitive_group import (
     group_pretty_and_nTj)
 
 from lmfdb.artin_representations import artin_representations_page
-#from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
     ArtinRepresentation, num2letters, artin_label_pretty)
 
@@ -338,8 +337,6 @@ def render_artin_representation_webpage(label):
 
     label = newlabel
     bread = get_bread([(artin_label_pretty(label), ' ')])
-
-    #artin_logger.info("Found %s" % (the_rep._data))
 
     if case == 'rep':
         title = "Artin representation %s" % label

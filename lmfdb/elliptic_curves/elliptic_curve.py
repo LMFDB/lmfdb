@@ -23,8 +23,9 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
+from lmfdb.logger import logger
 from lmfdb.api import datapage
-from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.elliptic_curves import ec_page
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
@@ -679,7 +680,7 @@ def by_triple_label(conductor,iso_label,number):
 
 @ec_page.route("/<label>/")
 def by_ec_label(label):
-    ec_logger.debug(label)
+    logger.debug(label)
 
     # First see if we have an LMFDB label of a curve or class:
     try:
@@ -690,12 +691,12 @@ def by_ec_label(label):
             return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
     except AttributeError:
-        ec_logger.debug("%s not a valid lmfdb label, trying cremona")
+        logger.debug("%s not a valid lmfdb label, trying cremona")
         # Next see if we have a Cremona label of a curve or class:
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
-            ec_logger.debug("%s not a valid cremona label either, trying Weierstrass")
+            logger.debug("%s not a valid cremona label either, trying Weierstrass")
             eqn = label.replace(" ","")
             if weierstrass_eqn_regex.match(eqn) or short_weierstrass_eqn_regex.match(eqn):
                 return by_weierstrass(eqn)
@@ -710,7 +711,7 @@ def by_ec_label(label):
         data = db.ec_curvedata.lucky({label_type: label})
         if data is None:
             return elliptic_curve_jump_error(label, {}, missing_curve=True)
-        ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
+        logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         if number:
             return render_curve_webpage_by_label(label)
         else:
@@ -799,8 +800,8 @@ def render_curve_webpage_by_label(label):
                         KNOWL_ID="ec.q.%s" % lmfdb_label,
                         BACKUP_KNOWL_ID="ec.q.%s" % data.lmfdb_iso,
                         learnmore=learnmore_list_add(*learnmore_curve_picture))
-    ec_logger.debug("Total walltime: %ss" % (time.time() - t0))
-    ec_logger.debug("Total cputime: %ss" % (cputime(cpt0)))
+    logger.debug("Total walltime: %ss" % (time.time() - t0))
+    logger.debug("Total cputime: %ss" % (cputime(cpt0)))
     return T
 
 

@@ -1,11 +1,8 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 ec_page = Blueprint("ec", __name__, template_folder='templates', static_folder="static")
-ec_logger = make_logger(ec_page)
-#ec_logger.info("Initializing elliptic curves blueprint")
 
 
 @ec_page.context_processor
