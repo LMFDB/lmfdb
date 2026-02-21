@@ -3,12 +3,13 @@
 import math
 from flask import url_for
 from lmfdb import db
-from lmfdb.lfunctions import logger
 from sage.all import prod
 from sage.arith.srange import srange
 from lmfdb.utils import signtocolour
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.characters.TinyConrey import ConreyCharacter
+import logging
+logger = logging.getLogger("lmfdb")
 
 
 def svgBegin():

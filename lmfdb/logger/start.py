@@ -1,5 +1,5 @@
 from logging import (FileHandler, getLogger, StreamHandler, Formatter,
-                     INFO, WARNING, DEBUG,
+                     INFO, WARNING,
                      info, warning)
 
 from sage.version import version as sage_version
@@ -24,10 +24,6 @@ def start_logging():
 
     file_handler = FileHandler(logging_options['logfile'])
     file_handler.setLevel(WARNING)
-
-    if 'logfocus' in logging_options:
-        logfocus = logging_options['logfocus']
-        getLogger(logfocus).setLevel(DEBUG)
 
     root_logger = getLogger()
     root_logger.setLevel(logging_options.get('loglevel', INFO))

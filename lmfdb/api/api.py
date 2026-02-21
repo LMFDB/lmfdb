@@ -8,9 +8,11 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma
 from lmfdb.utils.datetime_utils import utc_now_naive
+import logging
+api_logger = logging.getLogger("lmfdb")
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
-from lmfdb.api import api_page, api_logger
+from lmfdb.api import api_page
 
 
 buffer = memoryview

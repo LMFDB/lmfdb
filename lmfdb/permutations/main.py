@@ -2,9 +2,11 @@
 # Author: Sebastien Labbe
 
 from flask import render_template, request, url_for, redirect
-from lmfdb.permutations import permutations_page, logger
+from lmfdb.permutations import permutations_page
 from sage.all import Permutation, Integer
 from lmfdb.utils import flash_error
+import logging
+logger = logging.getLogger("lmfdb")
 
 
 def get_bread(breads=[]):

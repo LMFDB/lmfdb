@@ -3,6 +3,8 @@ import math
 import re
 
 from flask import url_for
+import logging
+logger = logging.getLogger("lmfdb")
 from sage.all import (
     ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
     PowerSeriesRing, Integer, primes, CDF, I, real_part, imag_part,
@@ -12,7 +14,6 @@ from lmfdb.utils import (
     display_complex, list_to_factored_poly_otherorder, make_bigint,
     list_factored_to_factored_poly_otherorder, coeff_to_poly)
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl_C1_as_trivial
-from lmfdb.lfunctions import logger
 from sage.databases.cremona import cremona_letter_code
 from lmfdb.abvar.fq.main import url_for_label
 from lmfdb.abvar.fq.stats import AbvarFqStats

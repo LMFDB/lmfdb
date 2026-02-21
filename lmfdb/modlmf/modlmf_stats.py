@@ -1,10 +1,10 @@
 from lmfdb.app import app
 from lmfdb import db
 from lmfdb.utils import comma
-from lmfdb.logger import make_logger
 from sage.misc.cachefunc import cached_method
+import logging
 
-logger = make_logger("modlmfs")
+logger = logging.getLogger("lmfdb")
 
 the_modlmf_stats = None
 

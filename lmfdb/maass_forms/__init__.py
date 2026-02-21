@@ -1,11 +1,9 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 
 maass_forms_page = Blueprint("maass_forms", __name__, template_folder='templates')
-logger = make_logger(maass_forms_page)
 
 
 @maass_forms_page.context_processor

@@ -1,15 +1,15 @@
 from lmfdb import db
-from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label
 from lmfdb.nfutils.psort import primes_iter, ideal_from_label, ideal_label, prime_key
 from lmfdb.utils import web_latex, names_and_urls, prop_int_pretty
+import logging
+logger = logging.getLogger("lmfdb")
 from lmfdb.lfunctions.LfunctionDatabase import (get_lfunction_by_url,
         get_instances_by_Lhash_and_trace_hash)
 from flask import url_for
 from sage.all import QQ, PolynomialRing, NumberField
 
-logger = make_logger("bmf")
 
 # BMFs which have no elliptic curve: since 2025-03-31 there is a
 # column 'curve_status' in table bmf_forms containing

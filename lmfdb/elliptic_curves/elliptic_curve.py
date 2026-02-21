@@ -14,6 +14,8 @@ from lmfdb.elliptic_curves.web_ec import latex_equation
 from lmfdb import db
 from lmfdb.app import app
 from psycodict.encoding import Json
+import logging
+ec_logger = logging.getLogger("lmfdb")
 from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
@@ -24,7 +26,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, Processe
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.api import datapage
-from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.elliptic_curves import ec_page
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
