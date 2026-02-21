@@ -205,7 +205,9 @@ lat_only_columns = [
     MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ]
 
-genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]), default=False)]
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns 
+# Display column for mass
+genus_columns.append(RationalCol("mass", "lattice.mass", "Mass", lambda v: "" if not v else (str(v[0])+"/"+str(v[1]) if isinstance(v, (list, tuple)) else v), default=False))
 
 in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
 
