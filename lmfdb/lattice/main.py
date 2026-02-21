@@ -3,24 +3,23 @@ import re
 import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round
+from sage.all import matrix #round, ZZ, QQ, PolynomialRing, latex, PowerSeriesRing, sqrt, round
 
 from lmfdb.utils import (
-    web_latex_split_on_pm, flash_error, to_dict,
-    SearchArray, TextBox, CountBox, prop_int_pretty,
-    parse_ints, parse_posints, parse_list, parse_count, parse_noop,
-    parse_bracketed_posints, parse_start, clean_input,
-    parse_rational_to_list,
-    search_wrap, redirect_no_cache, Downloader, ParityBox)
+    flash_error, to_dict, #web_latex_split_on_pm,
+    SearchArray, CountBox, #TextBox, prop_int_pretty,
+    parse_ints, parse_posints, parse_count, parse_noop, #parse_list,
+    parse_start, #clean_input,
+    search_wrap, redirect_no_cache, Downloader, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
-from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl
+from lmfdb.utils.search_columns import SearchColumns, LinkCol #MathCol, ProcessedCol, MultiProcessedCol
+#from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genus import common_parse, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list
 from lmfdb.lattice.lattice_stats import Lattice_stats
-from lmfdb.lattice.web_lattice import WebLattice, WebGenus, vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus #vect_to_sym, vect_to_sym2, format_conway_symbol
 
 # Database connection
 
@@ -205,6 +204,23 @@ download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data
 download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
 download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
 
+# Code snippet names to export for lattice pages
+sorted_code_names = [
+    'lattice_definition', 'rank', 'signature', 'determinant', 'discriminant', 'level',
+    'class_number', 'conway_symbol', 'parity', 'automorphism_group', 'automorphism_group_order',
+    'density', 'hermite', 'minimum', 'kissing', 'discriminant_group', 'successive_minima',
+    'festi_veniani', 'gram', 'quadratic_form', 'theta_series',  
+    # Dual lattice code snippets
+    'dual', 'dual_conway', 'dual_det', 'dual_density', 'dual_hermite', 'dual_kissing', 'dual_theta',
+    'orthogonal_decomposition', 'even_sublattice', 'minimal_vectors', 'pneighbors'
+]
+
+# Code snippet names to export for genus pages
+genus_sorted_code_names = [
+    'genus_definition', 'rank', 'signature', 'determinant', 'discriminant', 'level',
+    'class_number', 'conway_symbol', 'dual_conway', 'parity', 'mass'
+]
+
 @lattice_page.route('/<label>/download/<lang>/<obj>')
 def render_lattice_webpage_download(**args):
     if args['obj'] == 'shortest_vectors':
@@ -259,6 +275,35 @@ def download_lattice_full_lists_g(**args):
     return outstr
 
 
+@lattice_page.route('/<label>/download/<download_type>')
+def lattice_code_download(**args):
+    label = args['label']
+    lang = args['download_type']
+    try:
+        lat = WebLattice(label)
+        code = CodeSnippet(lat.code)
+        response_code = code.export_code(label, lang, sorted_code_names)
+    except Exception as err:
+        return abort(404, str(err))
+    response = make_response(response_code)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@lattice_page.route('/Genus/<label>/download/<download_type>')
+def genus_code_download(**args):
+    label = args['label']
+    lang = args['download_type']
+    try:
+        genus = WebGenus(label)
+        code = CodeSnippet(genus.code)
+        response_code = code.export_code(label, lang, genus_sorted_code_names)
+    except Exception as err:
+        return abort(404, str(err))
+    response = make_response(response_code)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+
 class LatSearchArray(SearchArray):
     noun = "lattice"
     sorts = [("", "rank", ['rank', 'det', 'level', 'class_number', 'label']),
@@ -269,14 +314,14 @@ class LatSearchArray(SearchArray):
              ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
         count = CountBox()
 
         self.browse_array = [
             [rank, signature],
             [det, discriminant],
             [level, class_number],
-            [minimum, even_odd],
+            [minimum, parity],
             [aut_size, aut_label],
             [dual_det, dual_kissing],
             [disc_invs, gram],
@@ -286,7 +331,7 @@ class LatSearchArray(SearchArray):
 
         self.refine_array = [
             [rank, signature, det, discriminant, level],
-            [aut_size, aut_label, class_number, minimum, even_odd],
+            [aut_size, aut_label, class_number, minimum, parity],
             [dual_det, dual_kissing, disc_invs, kissing, festi_veniani],
             [gram]
         ]

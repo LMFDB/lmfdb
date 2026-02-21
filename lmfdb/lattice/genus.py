@@ -3,23 +3,23 @@ import re
 import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from cypari2.handle_error import PariError
-from sage.all import ZZ, QQ, PolynomialRing, latex, matrix, PowerSeriesRing, sqrt, round, pari
+#from cypari2.handle_error import PariError
+from sage.all import ZZ, matrix, Matrix, IntegralLattice #QQ, PolynomialRing, latex,  PowerSeriesRing, sqrt, round, pari
 
 #from lmfdb.local_fields.main import formatbracketcol
 from lmfdb.utils import (
-    web_latex_split_on_pm, flash_error, to_dict,
-    SearchArray, EmbeddedSearchArray, TextBox, CountBox, prop_int_pretty,
+    flash_error, to_dict, #web_latex_split_on_pm, 
+    SearchArray, EmbeddedSearchArray, TextBox, CountBox, #prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count,
-    parse_bracketed_posints, parse_start, clean_input, parse_noop,
+    parse_bracketed_posints, parse_start, parse_noop, #clean_input, 
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
-from lmfdb.lattice.isom import isom
+#from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genera_stats import Genus_stats
 
 # Database connection
@@ -166,7 +166,7 @@ def common_parse(info, query):
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
     # Handle even/odd search
-    parity = info.get('is_even')
+    parity = info.get('parity')
     if parity:
         if parity == 'even':
             query['is_even'] = True
@@ -190,7 +190,7 @@ common_columns = [
     MathCol("class_number", "lattice.class_number", "Class number"),
     ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", format_conway_symbol, default=False),
     ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", format_conway_symbol, default=False),
-    ProcessedCol("is_even", "lattice.even_odd", "Even/Odd", lambda v: "Even" if v else "Odd"),
+    ProcessedCol("is_even", "lattice.parity", "Parity", lambda v: "Even" if v else "Odd"),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
 ]
 
@@ -200,12 +200,12 @@ lat_only_columns = [
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
     MultiProcessedCol("gram", "lattice.gram", "Gram matrix", ["canonical_gram", "gram"], lambda a,b: vect_to_matrix(vect_to_sym2(a if a else b[0]), compress_threshold=5, keep=2)),
     MathCol("density", "lattice.density", "Density", default=False),
-    MathCol("hermite", "lattice.hermite", "Hermite", default=False),
+    MathCol("hermite", "lattice.hermite_number", "Hermite", default=False),
     MathCol("kissing", "lattice.kissing", "Kissing", default=False),
     MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ]
 
-genus_columns = [LinkCol("label", "lattice.label", "Label", url_for_genus)] + common_columns
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]), default=False)]
 
 in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
 
@@ -238,6 +238,7 @@ def render_genus_webpage(label):
     info["bread"] = get_bread(label)
     info["properties"] = genus.properties
     info["friends"] = genus.friends
+    info["code"] = genus.code
     info["downloads"] = genus.downloads
     info["KNOWL_ID"] = f"lattice.genus.{label}"
     return render_genus(info)
@@ -255,6 +256,7 @@ def render_genus_webpage(label):
     properties=lambda:None,
     friends=lambda:None,
     downloads=lambda:None,
+    code=lambda:None,
     KNOWL_ID=lambda:None,
 )
 def render_genus(info, query):
@@ -352,10 +354,10 @@ def common_boxes():
         knowl="lattice.discriminant",
         example="10",
         example_span="1 or 10-100")
-    even_odd = ParityBox(
-        name="is_even",
-        label="Even/Odd",
-        knowl="lattice.even_odd")
+    parity = ParityBox(
+        name="parity",
+        label="Parity",
+        knowl="lattice.parity")
     class_number = TextBox(
         name="class_number",
         label="Class number",
@@ -409,7 +411,7 @@ def common_boxes():
         knowl="lattice.festi_veniani_index",
         example="1")
 
-    return rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani
+    return rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani
 
 class GenusSearchArray(SearchArray):
     noun = "genus"
@@ -421,7 +423,7 @@ class GenusSearchArray(SearchArray):
             ]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
 
         mass = TextBox(
             name="mass",
@@ -435,14 +437,14 @@ class GenusSearchArray(SearchArray):
             [rank, signature],
             [det, discriminant],
             [level, class_number],
-            [disc_invs, even_odd],
+            [disc_invs, parity],
             [mass, gram],
             [count]
         ]
 
         self.refine_array = [
             [rank, signature, det, discriminant, level],
-            [class_number, disc_invs, even_odd, mass, gram]
+            [class_number, disc_invs, parity, mass, gram]
         ]
 
 class InGenusSearchArray(EmbeddedSearchArray):
@@ -451,7 +453,7 @@ class InGenusSearchArray(EmbeddedSearchArray):
              ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, even_odd, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
         count = CountBox()
 
         self.refine_array = [
@@ -491,7 +493,7 @@ def reliability_page():
 def labels_page():
     t = 'Integral lattice labels'
     bread = get_bread("Labels")
-    return render_template("single.html", kid='lattice.label',
+    return render_template("single.html", kid='lattice.genus_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
 
 

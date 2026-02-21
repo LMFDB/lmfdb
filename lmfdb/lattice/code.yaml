@@ -48,15 +48,17 @@ signature:
   sage: L.signature_pair()
   magma: Signature(L);
   oscar: signature_tuple(L)
+  pari: qfsign(L)
 
 determinant:
   comment: Determinant
   sage: L.determinant()
   magma: Determinant(L);
   oscar: det(L)
+  pari: matdet(L)
 
 discriminant:
-  comment: Discrimnant
+  comment: Discriminant
   sage: L.discriminant()
   magma: Discriminant(L);
   oscar: discriminant(L)
@@ -64,10 +66,12 @@ discriminant:
 level:
   comment: Level
   magma: Level(L);
+  sage: L.genus().level()
 
 class_number:
   comment: Class number
-  magma: #Genus(L);
+  magma: |
+    #Genus(L);
 
 conway_symbol:
   comment: Conway symbol
@@ -82,11 +86,15 @@ parity:
 automorphism_group:
   comment: Automorphism group
   magma: AutomorphismGroup(L);
+  sage: L.automorphisms()
+  pari: qfauto(L)
 
 automorphism_group_order:
   comment: Order of the automorphism group
   magma: Order(AutomorphismGroup(L));
+  sage: L.automorphisms().order()
   oscar: automorphism_group_order(L)
+  pari: qfauto(L)[1]
 
 density:
   comment: Density
@@ -120,12 +128,16 @@ minimal_vectors:
   comment: Minimal vectors
   magma: ShortestVectors(L);
 
+mass:
+  comment: Mass
+  magma: Mass(L);
+
 theta_series:
   comment: Theta series
   magma: ThetaSeries(L, 100);
 
 gram:
-  comment:  Gram matrix
+  comment: Gram matrix
   sage: L.gram_matrix()
   magma: GramMatrix(L);
   oscar: gram_matrix(L)
@@ -138,7 +150,7 @@ dual:
 
 dual_det:
   comment: Determinant of the dual lattice
-  magma:  Determinant(Dual(L));
+  magma: Determinant(Dual(L));
   sage: L.dual_lattice().determinant()
   oscar: det(dual(L))
 
@@ -166,9 +178,48 @@ dual_theta:
 quadratic_form:
   comment: Quadratic form associated to the lattice
   magma: QuadraticForm(L);
+  pari: qfeval(L, [x,y])
+
+basis:
+  comment: Basis
+  magma: Basis(L);
+  pari: qfcholesky(L)
 
 genus:
   comment: Genus
   sage: L.genus()
   magma: Genus(L);
+  oscar: genus(L)
+
+pneighbors:
+  comment: p-Neighbors of the lattice
+  magma: Neighbors(p, L);
+
+orthogonal_decomposition:
+  comment: Orthogonal decomposition
+  magma: OrthogonalDecomposition(L);
+
+even_sublattice:
+  comment: Even sublattice
+  magma: EvenSublattice(L);
+
+successive_minima:
+  comment: Successive minima
+  magma: SuccessiveMinima(L);
+
+
+# Specify which code snippets to test (include both positive definite and indefinite)
+snippet_test:
+  testI1:
+    label: 1.1.1.3.1
+    url: Lattice/1.1.1.3.1/download/{lang}
+  testI3:
+    label: 3.3.1.7.1
+    url: Lattice/3.3.1.7.1/download/{lang}
+  testI2-1:
+    label: 3.1.1.3.1
+    url: Lattice/3.1.1.3.1/download/{lang}
+  testI3-1:
+    label: 4.2.1.5.1
+    url: Lattice/4.2.1.5.1/download/{lang}
 
