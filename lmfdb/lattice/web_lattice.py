@@ -129,7 +129,7 @@ class WebGenus(WebLat):
 
     def __init__(self, label, data=None):
         super().__init__(label, data)
-        self._mathwrap(["det_abs", "disc", "level"], ["class_number"])
+        self._mathwrap(["det", "disc", "level"], ["class_number"])
         if self.adjacency_matrix is None:
             self.adjacency_matrix = {}
         if self.adjacency_polynomials is None:
@@ -228,7 +228,7 @@ class WebLattice(WebLat):
 
     def __init__(self, label, data=None):
         super().__init__(label, data)
-        self._mathwrap(["det_abs", "dual_det", "disc", "level", "aut_size"], ["density", "dual_density", "hermite", "dual_hermite", "minimum", "kissing", "festi_veniani", "class_number"])
+        self._mathwrap(["det", "dual_det", "disc", "level", "aut_size"], ["density", "dual_density", "hermite", "dual_hermite", "minimum", "kissing", "festi_veniani", "class_number"])
 
     @lazy_attribute
     def dual_display(self):
