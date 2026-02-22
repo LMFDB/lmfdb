@@ -96,7 +96,7 @@ def lattice_jump(info):
 
 
 
-lattice_search_projection = ['label', 'rank', 'det', 'level',
+lattice_search_projection = ['label', 'rank', 'det_abs', 'level',
                              'class_number', 'aut', 'minimum']
 
 
@@ -113,7 +113,7 @@ def lattice_search_isometric(res, info, query):
         A = query['gram']
         n = len(A[0])
         d = matrix(A).determinant()
-        for rec in db.lat_lattices_new.search({'dim': n, 'det': int(d)}, ["canonical_gram", "gram"]):
+        for rec in db.lat_lattices_new.search({'dim': n, 'det_abs': int(d)}, ["canonical_gram", "gram"]):
             if rec.get("canonical_gram"):
                 gram = rec["canonical_gram"]
             elif rec.get("gram"):
@@ -306,20 +306,20 @@ def genus_code_download(**args):
 
 class LatSearchArray(SearchArray):
     noun = "lattice"
-    sorts = [("", "rank", ['rank', 'det', 'level', 'class_number', 'label']),
-             ("det", "determinant", ['det', 'rank', 'level', 'class_number', 'label']),
-             ("level", "level", ['level', 'rank', 'det', 'class_number', 'label']),
-             ("class_number", "class number", ['class_number', 'rank', 'det', 'level', 'label']),
-             ("minimum", "minimal vector length", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
-             ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
+    sorts = [("", "rank", ['rank', 'det_abs', 'level', 'class_number', 'label']),
+             ("det_abs", "determinant", ['det_abs', 'rank', 'level', 'class_number', 'label']),
+             ("level", "level", ['level', 'rank', 'det_abs', 'class_number', 'label']),
+             ("class_number", "class number", ['class_number', 'rank', 'det_abs', 'level', 'label']),
+             ("minimum", "minimal vector length", ['minimum', 'rank', 'det_abs', 'level', 'class_number', 'label']),
+             ("aut", "automorphism group", ['aut', 'rank', 'det_abs', 'level', 'class_number', 'label'])]
 
     def __init__(self):
-        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        rank, signature, det_abs, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
         count = CountBox()
 
         self.browse_array = [
             [rank, signature],
-            [det, discriminant],
+            [det_abs, discriminant],
             [level, class_number],
             [minimum, parity],
             [aut_size, aut_label],
@@ -330,7 +330,7 @@ class LatSearchArray(SearchArray):
         ]
 
         self.refine_array = [
-            [rank, signature, det, discriminant, level],
+            [rank, signature, det_abs, discriminant, level],
             [aut_size, aut_label, class_number, minimum, parity],
             [dual_det, dual_kissing, disc_invs, kissing, festi_veniani],
             [gram]
