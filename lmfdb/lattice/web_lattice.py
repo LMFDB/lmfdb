@@ -104,7 +104,7 @@ class WebLat(WebObj):
             ('Label', self.label),
             ('Rank', prop_int_pretty(self.rank)),
             ('Signature', f'${self.signature}$'),
-            ('Determinant', prop_int_pretty(self.det)),
+            ('Determinant', prop_int_pretty(self.det_abs)),
             ('Discriminant', prop_int_pretty(self.disc)),
             ('Level', prop_int_pretty(self.level)),
             ('Class Number', f'${self.class_number}$'),
@@ -125,7 +125,7 @@ class WebGenus(WebLat):
 
     def __init__(self, label, data=None):
         super().__init__(label, data)
-        self._mathwrap(["det", "disc", "level"], ["class_number"])
+        self._mathwrap(["det_abs", "disc", "level"], ["class_number"])
         if self.adjacency_matrix is None:
             self.adjacency_matrix = {}
         if self.adjacency_polynomials is None:
@@ -198,10 +198,8 @@ class WebGenus(WebLat):
         # Get a representative gram matrix
         if self.rep is not None:
             gram = self.rep
-        elif self.canonical_gram is not None:
-            gram = self.canonical_gram
-        elif self.gram is not None and len(self.gram) > 0:
-            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        elif self.gram is not None:
+            gram = self.gram
         else:
             gram = None
 
@@ -226,7 +224,7 @@ class WebLattice(WebLat):
 
     def __init__(self, label, data=None):
         super().__init__(label, data)
-        self._mathwrap(["det", "dual_det", "disc", "level", "aut_size"], ["density", "dual_density", "hermite", "dual_hermite", "minimum", "kissing", "festi_veniani", "class_number"])
+        self._mathwrap(["det_abs", "dual_det", "disc", "level", "aut_size"], ["density", "dual_density", "hermite", "dual_hermite", "minimum", "kissing", "festi_veniani", "class_number"])
 
     @lazy_attribute
     def dual_display(self):
@@ -244,7 +242,7 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def gram_display(self):
-        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = self.gram
         if gram is None:
             return "not computed"
         return vect_to_matrix(vect_to_sym2(gram))
@@ -269,7 +267,7 @@ class WebLattice(WebLat):
         Otherwise uses variables x_1, x_2, x_3, etc.
         """
 
-        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = self.gram
         gram = vect_to_sym2(gram)
 
         default_vars = ["x", "y", "z", "t", "u", "v", "w"]
@@ -315,7 +313,7 @@ class WebLattice(WebLat):
         Return a latex-formatted explicit basis associated to the Gram matrix of this lattice.
         """
 
-        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = self.gram
         gram = vect_to_sym2(gram)
 
         basis = np.linalg.cholesky(gram)
@@ -345,10 +343,8 @@ class WebLattice(WebLat):
         # read in code.yaml from lattice directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        if self.canonical_gram is not None:
-            gram = self.canonical_gram
-        elif self.gram is not None and len(self.gram) > 0:
-            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        if self.gram is not None and len(self.gram) > 0:
+            gram = self.gram
         else:
             gram = None
         if gram is not None:

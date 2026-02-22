@@ -198,7 +198,7 @@ lat_only_columns = [
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
-    ProcessedCol("gram", "lattice.gram", "Gram matrix", "gram", lambda a: vect_to_matrix(vect_to_sym2(a), compress_threshold=5, keep=2)),
+    #ProcessedCol("gram", "lattice.gram", "Gram matrix", "gram", lambda a: vect_to_matrix(vect_to_sym2(a), compress_threshold=5, keep=2)),
     MathCol("density", "lattice.density", "Density", default=False),
     MathCol("hermite", "lattice.hermite_number", "Hermite", default=False),
     MathCol("kissing", "lattice.kissing", "Kissing", default=False),
