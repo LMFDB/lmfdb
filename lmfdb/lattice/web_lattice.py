@@ -62,6 +62,10 @@ class WebLat(WebObj):
                 setattr(self, dcol, f"${val}$")
 
     @lazy_attribute
+    def det(self):
+        return self.det_sign * self.det_abs
+                
+    @lazy_attribute
     def nminus(self):
         return self.rank - self.nplus
 
