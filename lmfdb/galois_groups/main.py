@@ -13,7 +13,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
-    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache)
+    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
@@ -341,7 +341,7 @@ def render_group_webpage(args):
         data['malle_a'] = wgg.malle_a
         downloads = []
         for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
-            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code_download", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         # split the label so that breadcrumbs point to a search for this object's degree
         parent_id, child_id = label.split("T")
@@ -360,20 +360,22 @@ def render_group_webpage(args):
             KNOWL_ID="gg.%s" % label,
             learnmore=learnmore_list()+[('Picture description', url_for('.pictures'))])
 
+
+sorted_code_names = ['gg', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
+                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs',  'char_table']
+
+def gg_code(label, download_type):
+    gg = WebGaloisGroup(label)
+    gg.make_code_snippets()
+    code = CodeSnippet(gg.code)
+    return code.export_code(label, download_type, sorted_code_names)
+
 @galois_groups_page.route('/<label>/download/<download_type>')
-def gg_code(label,download_type):
-    if download_type == "magma":
-        s = "// Magma code for creating transitive group " + label + "\n\n"
-        s += "G := TransitiveGroup(%s,%s);\n" % tuple(label.split("T"))
-    elif download_type == "oscar":
-        s = "# Oscar code for creating transitive group " + label + "\n\n"
-        s += "G = transitive_group(%s,%s)\n" % tuple(label.split("T"))
-    elif download_type == "sage":
-        s = "# Sage code for creating transitive group " + label + "\n\n"
-        s += "G = TransitiveGroup(%s,%s)\n" % tuple(label.split("T"))
-    else:
-        return abort(404, f"Invalid download type {download_type}")
-    response = make_response(s)
+def gg_code_download(**args):
+    try:
+        response = make_response(gg_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 
