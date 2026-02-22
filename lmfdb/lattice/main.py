@@ -113,13 +113,8 @@ def lattice_search_isometric(res, info, query):
         A = query['gram']
         n = len(A[0])
         d = matrix(A).determinant()
-        for rec in db.lat_lattices_new.search({'dim': n, 'det_abs': int(d)}, ["canonical_gram", "gram"]):
-            if rec.get("canonical_gram"):
-                gram = rec["canonical_gram"]
-            elif rec.get("gram"):
-                gram = rec["gram"][0]
-            else:
-                continue
+        for rec in db.lat_lattices_new.search({'dim': n, 'det_abs': int(d)}, "gram"):
+            gram = rec["gram"]
             # TODO: isom only works for positive definite gram matrices
             if isom(A, gram):
                 query['gram'] = gram
