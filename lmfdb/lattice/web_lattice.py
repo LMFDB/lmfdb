@@ -212,6 +212,8 @@ class WebGenus(WebLat):
             gram = self.rep
         elif self.gram is not None:
             gram = self.gram
+            if type(gram[0]) == list:
+                gram = gram[0]
         else:
             gram = None
 
@@ -255,6 +257,8 @@ class WebLattice(WebLat):
     @lazy_attribute
     def gram_display(self):
         gram = self.gram
+        if type(gram[0]) == list:
+            gram = gram[0]
         if gram is None:
             return "not computed"
         return vect_to_matrix(vect_to_sym2(gram))
@@ -280,6 +284,8 @@ class WebLattice(WebLat):
         """
 
         gram = self.gram
+        if type(gram[0]) == list:
+            gram = gram[0]
         gram = vect_to_sym2(gram)
 
         default_vars = ["x", "y", "z", "t", "u", "v", "w"]
@@ -357,6 +363,8 @@ class WebLattice(WebLat):
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         if self.gram is not None and len(self.gram) > 0:
             gram = self.gram
+            if type(gram[0]) == list:
+                gram = gram[0]
         else:
             gram = None
         if gram is not None:
