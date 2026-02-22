@@ -362,7 +362,7 @@ def render_group_webpage(args):
 
 
 sorted_code_names = ['gg', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
-                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs',  'char_table']
+                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs', 'char_table']
 
 def gg_code(label, download_type):
     gg = WebGaloisGroup(label)
