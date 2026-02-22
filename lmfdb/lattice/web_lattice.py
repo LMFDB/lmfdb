@@ -137,6 +137,14 @@ class WebGenus(WebLat):
         #X = self.adjacency_display
 
     @lazy_attribute
+    def nminus(self):
+        return self.rank - self.nplus
+
+    @lazy_attribute
+    def signature(self):
+        return (self.nplus, self.nminus)
+        
+    @lazy_attribute
     def gram_display(self):
         if self.rep is None:
             return "not computed"
