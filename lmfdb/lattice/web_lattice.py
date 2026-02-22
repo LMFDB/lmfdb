@@ -108,7 +108,7 @@ class WebLat(WebObj):
             ('Label', self.label),
             ('Rank', prop_int_pretty(self.rank)),
             ('Signature', f'${self.signature}$'),
-            ('Determinant', prop_int_pretty(self.det_abs)),
+            ('Determinant', prop_int_pretty(self.det)),
             ('Discriminant', prop_int_pretty(self.disc)),
             ('Level', prop_int_pretty(self.level)),
             ('Class Number', f'${self.class_number}$'),
