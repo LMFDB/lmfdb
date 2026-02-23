@@ -776,7 +776,7 @@ def nf_datapage(label):
         return abort(404, f"Invalid label {label}")
     title = f"Number field data - {label}"
     bread = bread_prefix() + [(label, url_for(".by_label", label=label)), ("Data", " ")]
-    return datapage(label, "nf_fields", title=title, bread=bread)
+    return datapage(label, ["nf_fields", "nf_fields_extra"], title=title, bread=bread)
 
 @nf_page.route("/interesting")
 def interesting():
