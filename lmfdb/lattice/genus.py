@@ -4,7 +4,7 @@ import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
 #from cypari2.handle_error import PariError
-from sage.all import ZZ, matrix, Matrix, IntegralLattice #QQ, PolynomialRing, latex,  PowerSeriesRing, sqrt, round, pari
+from sage.all import ZZ, matrix, IntegralLattice
 
 #from lmfdb.local_fields.main import formatbracketcol
 from lmfdb.utils import (
