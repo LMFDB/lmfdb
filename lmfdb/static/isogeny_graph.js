@@ -253,6 +253,10 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
         if (d.faltings_height !== undefined) _isoTooltipLine(tooltip, 'Faltings height: ' + d.faltings_height);
         if (d.cm !== undefined) _isoTooltipLine(tooltip, 'CM: ' + d.cm);
         if (d.optimal) _isoTooltipEmphasis(tooltip, 'Optimal curve');
+        // Lattice-specific fields
+        if (d.minimum !== undefined) _isoTooltipLine(tooltip, 'Minimum: ' + d.minimum);
+        if (d.kissing !== undefined) _isoTooltipLine(tooltip, 'Kissing number: ' + d.kissing);
+        if (d.aut_label !== undefined) _isoTooltipLine(tooltip, 'Automorphism group: ' + d.aut_label);
 
         tooltip.style.display = 'block';
 

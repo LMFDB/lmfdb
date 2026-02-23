@@ -163,23 +163,31 @@ class WebGenus(WebLat):
     def adjacency_display(self):
         display = defaultdict(dict)
         R = PolynomialRing(ZZ, "x")
-        # Look up lattice labels for this genus (for clickable nodes)
-        lattice_labels = list(db.lat_lattices_new.search(
-            {"genus_label": self.label}, "label", sort=["label"]))
+        # Look up lattice data for this genus (for clickable nodes and tooltips)
+        lattice_data = list(db.lat_lattices_new.search(
+            {"genus_label": self.label},
+            ["label", "minimum", "kissing", "aut_label"],
+            sort=["label"]))
         for p, M in self.adjacency_matrix.items():
             adj_mat = matrix(ZZ, self.class_number, self.class_number, M)
             display[p]["matrix"] = raw_typeset_matrix(adj_mat)
             G = Graph(adj_mat, format='weighted_adjacency_matrix')
             G.relabel(list(range(1, self.class_number + 1)))
             elements, has_preset = graph_to_cytoscape_json(G)
-            # Attach lattice URLs to nodes if labels are available
-            if lattice_labels and len(lattice_labels) == self.class_number:
+            # Attach lattice metadata to nodes if available
+            if lattice_data and len(lattice_data) == self.class_number:
                 for elt in elements:
                     if elt["group"] == "nodes":
                         idx = int(elt["data"]["id"]) - 1
-                        lbl = lattice_labels[idx]
-                        elt["data"]["label"] = lbl.split(".")[-1]
-                        elt["data"]["url"] = url_for(".render_lattice_webpage", label=lbl)
+                        c = lattice_data[idx]
+                        elt["data"]["label"] = c["label"].split(".")[-1]
+                        elt["data"]["url"] = url_for(".render_lattice_webpage", label=c["label"])
+                        if c.get("minimum") is not None:
+                            elt["data"]["minimum"] = c["minimum"]
+                        if c.get("kissing") is not None:
+                            elt["data"]["kissing"] = c["kissing"]
+                        if c.get("aut_label") is not None:
+                            elt["data"]["aut_label"] = c["aut_label"]
             display[p]["graph_data"] = elements
             display[p]["graph_default_layout"] = 'Elk-stress'
             F = [(R(f), e) for f,e in self.adjacency_polynomials[p]]
