@@ -24,7 +24,7 @@
     <tr>
       <td></td><td>{{KNOWL('group.conjugacy_class.power_classes',"{} P".format(p))}}</td>
       {% for c in gp.conjugacy_class_divisions %}
-        <td>{{ gp.conjugacy_classes[c.classes.0.powers[ploop.index0]-1].division.label }}</td>
+        <td>{{ gp.conjugacy_classes[c.classes.0.prime_powers()[ploop.index0]-1].division.label }}</td>
       {% endfor %}
     </tr>
   {% endfor %}

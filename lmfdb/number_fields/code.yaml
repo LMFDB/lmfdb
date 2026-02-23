@@ -24,8 +24,6 @@ not-implemented:
 frontmatter:
   all: |
     {lang} code for working with number field {label}.
-  oscar: |
-    If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.
   rest: |
     Some of these functions may take a long time to execute (this depends on the field).
 
@@ -77,7 +75,7 @@ automorphisms:
   comment: Autmorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
-  oscar: automorphisms(K)
+  oscar: automorphism_group(K)
 
 ramified_primes:
   comment: Ramified primes
@@ -173,7 +171,7 @@ class_number_formula:
 
 galois_group:
   comment: Galois group
-  sage:  K.galois_group(type='pari')
+  sage:  K.galois_group()
   pari:  polgalois(K.pol)
   magma: G = GaloisGroup(K);
   oscar: |

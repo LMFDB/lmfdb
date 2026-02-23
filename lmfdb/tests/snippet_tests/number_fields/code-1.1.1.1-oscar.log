@@ -18,12 +18,8 @@ julia> OK = ring_of_integers(K); discriminant(OK)
 julia> prime_divisors(discriminant(OK))
 ZZRingElem[]
 
-julia> automorphisms(K)
-ERROR: UndefVarError: `automorphisms` not defined in `Main`
-Suggestion: check for spelling errors or missing imports.
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> automorphism_group(K)
+(Generic group of order 1 with multiplication table, Map: generic group of order 1 with multiplication table -> set of automorphisms of K)
 
 julia> basis(OK)
 1-element Vector{AbsSimpleNumFieldOrderElem}:
