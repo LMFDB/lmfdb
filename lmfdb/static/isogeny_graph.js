@@ -271,9 +271,9 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
         tooltip.style.left = (rect.left + window.scrollX + pos.x + 25) + 'px';
         tooltip.style.top = (rect.top + window.scrollY + pos.y - 10) + 'px';
 
-        // Typeset any LaTeX in the tooltip
-        if (typeof MathJax !== 'undefined' && MathJax.typeset) {
-            MathJax.typeset([tooltip]);
+        // Typeset any LaTeX in the tooltip (LMFDB uses KaTeX)
+        if (typeof renderMathInElement !== 'undefined' && typeof katexOpts !== 'undefined') {
+            renderMathInElement(tooltip, katexOpts);
         }
 
         $('html,body').css('cursor', 'pointer');
