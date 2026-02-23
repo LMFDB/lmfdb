@@ -145,7 +145,7 @@ def genus_search_equivalence(res, info, query):
     """
     if info['number'] == 0 and info.get('gram_matrix'):
         A = info['gram_matrix']
-        query.pop('gram', None)
+        query.pop('rep', None)
         n = len(A)
         L = IntegralLattice(matrix(A))
         det = matrix(A).determinant()
@@ -217,9 +217,6 @@ def common_parse(info, query):
                             raise ValueError("Non-symmetric Gram matrix")
             # Store 2D matrix in info for postprocessors (isometry/genus comparison)
             info['gram_matrix'] = mat
-            # Store flat n² list in query for direct DB matching
-            n = len(mat)
-            query['gram'] = [mat[i][j] for i in range(n) for j in range(n)]
     parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
 
 common_columns_prefix = [
@@ -271,6 +268,11 @@ in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url
              properties=lambda: [])
 def genus_search(info, query):
     common_parse(info, query)
+    # Store flat gram in query['rep'] for direct DB matching (lat_genera has rep, not gram)
+    if 'gram_matrix' in info:
+        mat = info['gram_matrix']
+        n = len(mat)
+        query['rep'] = [mat[i][j] for i in range(n) for j in range(n)]
     parse_rational_to_list(info, query, 'mass', 'mass')
 
 @lattice_page.route('/Genus/<label>')

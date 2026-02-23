@@ -82,6 +82,51 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/?gram=[1%2C1%2C1]&gram_format=diagonal").get_data(as_text=True)
         assert '3.3.1' in L
 
+    def test_lattice_searchGM_auto_1x1(self):
+        # length 1 is both a perfect square and triangular; should work either way
+        L = self.tc.get("/Lattice/?gram=[1]&gram_format=").get_data(as_text=True)
+        assert '1.1.1.3.1' in L
+
+    def test_lattice_searchGM_auto_full(self):
+        # 4 entries → auto-detect as full 2×2 matrix
+        L = self.tc.get("/Lattice/?gram=[8%2C2%2C2%2C13]&gram_format=").get_data(as_text=True)
+        assert '2.2.100.01.01.627.1' in L
+
+    def test_lattice_searchGM_upper_offdiag(self):
+        # upper tri [8,2,13] → [[8,2],[2,13]]
+        L = self.tc.get("/Lattice/?gram=[8%2C2%2C13]&gram_format=upper").get_data(as_text=True)
+        assert '2.2.100.01.01.627.1' in L
+
+    def test_lattice_searchGM_nonsymmetric_error(self):
+        # [1,2,3,4] as full matrix is not symmetric → error
+        L = self.tc.get("/Lattice/?gram=[1%2C2%2C3%2C4]&gram_format=full").get_data(as_text=True)
+        assert 'not a symmetric matrix' in L
+
+    def test_lattice_searchGM_invalid_length_upper(self):
+        # 2 entries is not a triangular number → error
+        L = self.tc.get("/Lattice/?gram=[1%2C2]&gram_format=upper").get_data(as_text=True)
+        assert 'not a triangular number' in L
+
+    def test_lattice_searchGM_invalid_length_full(self):
+        # 3 entries is not a perfect square → error for full format
+        L = self.tc.get("/Lattice/?gram=[1%2C2%2C3]&gram_format=full").get_data(as_text=True)
+        assert 'not a perfect square' in L
+
+    def test_lattice_searchGM_noninteger_error(self):
+        # non-integer entries → error
+        L = self.tc.get("/Lattice/?gram=[1.5%2C2%2C3]&gram_format=upper").get_data(as_text=True)
+        assert 'Entries must be integers' in L
+
+    def test_lattice_searchGM_auto_invalid_length(self):
+        # 5 entries: not square, not triangular → error in auto mode
+        L = self.tc.get("/Lattice/?gram=[1%2C2%2C3%2C4%2C5]&gram_format=").get_data(as_text=True)
+        assert 'neither a perfect square nor a triangular number' in L
+
+    def test_genus_searchGM(self):
+        # genus search with gram matrix (auto upper tri)
+        L = self.tc.get("/Lattice/Genus?gram=[2%2C0%2C5]&gram_format=").get_data(as_text=True)
+        assert '2.2.10' in L
+
     #def test_latticeZ2(self):
     #    L = self.tc.get("/Lattice/2.1.2.1.1").get_data(as_text=True)
     #    assert r'0.785398163397448309615660845820\dots' in L #Z2 lattice

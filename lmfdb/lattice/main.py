@@ -154,6 +154,11 @@ lattice_columns = [
              properties=lambda: [])
 def lattice_search(info, query):
     common_parse(info, query)
+    # Store flat gram in query for direct DB matching (lat_lattices_new has a gram column)
+    if 'gram_matrix' in info:
+        mat = info['gram_matrix']
+        n = len(mat)
+        query['gram'] = [mat[i][j] for i in range(n) for j in range(n)]
     for field, name in [('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
                         ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
                          ]:
