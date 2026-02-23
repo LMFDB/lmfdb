@@ -188,7 +188,6 @@ def common_parse(info, query):
 common_columns = [
     MathCol("rank", "lattice.dimension", "Rank"),
     MultiProcessedCol("signature", "lattice.signature", "Signature", ["nplus", "rank"], lambda nplus, rank: '$(%s,%s)$' % (nplus, rank-nplus),  align="center"),
-    MultiProcessedCol("det", "lattice.determinant", "Determinant", ["det_abs", "det_sign"], lambda det_abs, det_sign: '$%s$' % (det_sign*det_abs), align="center"),
     MathCol("dual_det", "lattice.determinant", "Dual Determinant", default=False),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
@@ -200,6 +199,7 @@ common_columns = [
 ]
 
 lat_only_columns = [
+    MultiProcessedCol("det", "lattice.determinant", "Determinant", ["det_abs", "det_sign"], lambda det_abs, det_sign: '$%s$' % (det_sign*det_abs), align="center"),
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
@@ -210,7 +210,7 @@ lat_only_columns = [
     MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ]
 
-genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False)]
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus), MathCol("det", "lattice.determinant", "Determinant")] + common_columns + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False)]
 
 in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
 
