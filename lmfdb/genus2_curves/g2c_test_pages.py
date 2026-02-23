@@ -11,7 +11,7 @@ class Genus2Test(LmfdbTest):
     def test_all_pages(self):
         errors = []
         n = 0
-        for c in db.g2c_curves.search({}, ['label','class']):
+        for c in db.g2c_curves_new.search({}, ['label','class']):
             l = c['label'].split('.')
             url = "Genus2Curve/Q/%s/%s/%s/%s" % (l[0],l[1],l[2],l[3])
             print("Checking home page for genus 2 curve " + c['label'])

@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from markupsafe import escape
 from sage.all import (
     Factorization,
+    Integer,
     latex,
     ZZ,
     QQ,
@@ -563,6 +564,7 @@ def raw_typeset_poly(coeffs,
 
 def raw_typeset_poly_factor(factors, # list of pairs (f,e)
                             compress_threshold=20, # this is per factor
+                            total_threshold=80, # this is the total length
                             decreasing=True,
                             **kwargs):
     if len(factors) == 0:
@@ -578,19 +580,62 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
             **kwargs)
     raw = []
     tset = []
+    total = 0
     for f, e in factors:
-        rawf = str(f)
+        if e == 0:
+            continue
+        elif e == 1:
+            eraw = etset = ""
+        else:
+            eraw = f"^{e}"
+            etset = f"^{{{e}}}"
+        rawf = str(f).replace(" ", "")
         tsetf = compress_polynomial(f, compress_threshold, decreasing)
         if '+' in rawf or '-' in rawf:
-            raw.append(f'({rawf})^{e}')
-            tset.append(f'({tsetf})^{{{e}}}')
+            raw.append(f'({rawf}){eraw}')
+            tset.append(f'({tsetf}){etset}')
         else:
-            raw.append(f'{rawf}^{e}')
-            tset.append(f'{tsetf}^{{{e}}}')
+            raw.append(f'{rawf}{eraw}')
+            tset.append(f'{tsetf}{etset}')
+        total += len(tset[-1])
 
+    if len(tset) > 2 and total > total_threshold:
+        total = len(tset[0]) + len(tset[-1])
+        for i, tsetfe in enumerate(tset[1:-1], 1):
+            total += len(tsetfe)
+            if total > total_threshold:
+                break
+        tset[i:-1] = [r"\cdots"]
     tset = " ".join(tset)
-    raw = " ".join(raw)
+    raw = "*".join(raw)
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
+
+def raw_typeset_matrix(M, # matrix
+                       compress_threshold=10, # compression if the number of rows/cols is larger than this
+                       keep=5, # if compressed, keep this number of initial rows/cols
+                       **kwargs):
+    # For now, we don't compress individual entries
+    raw = "[[" + "],\n[".join(",".join(str(c) for c in row) for row in M) + "]]"
+    if M.nrows() <= compress_threshold and M.ncols() <= compress_threshold:
+        return raw_typeset(raw, rf'\( {latex(M)} \)', compressed=False, **kwargs)
+    tset = []
+    if M.nrows() > compress_threshold:
+        rows = list(M)[:keep] + [M[-1]]
+    else:
+        rows = list(M)
+    if M.ncols() > compress_threshold:
+        rows = [[str(c) for c in row[:keep]] + [r"\cdots"] + [str(row[-1])] for row in rows]
+        ncols = keep + 2
+    else:
+        rows = [[str(c) for c in row] for row in rows]
+        ncols = M.ncols()
+    if M.nrows() > compress_threshold:
+        if M.ncols() > compress_threshold:
+            rows[-1:-1] = [[r"\vdots"] * keep + [r"\ddots", r"\vdots"]]
+        else:
+            rows[-1:-1] = [[r"\vdots"] * M.ncols()]
+    tset = r"\left(\begin{array}{%s}%s\end{array}\right)" % ("r"*ncols, " \\\\\n".join(" & ".join(row) for row in rows))
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=True, **kwargs)
 
 
 def raw_typeset_qexp(coeffs_list,
@@ -599,6 +644,7 @@ def raw_typeset_qexp(coeffs_list,
                      var=r"\beta",
                      final_rawvar='b',
                      superscript=False,
+                     a0_denom=1,
                      **kwargs):
     plus = r" + "
     minus = r" - "
@@ -606,18 +652,18 @@ def raw_typeset_qexp(coeffs_list,
     rawvar = var.lstrip("\\")
     R = PolynomialRing(ZZ, rawvar)
 
-    def rawtset_coeff(i, coeffs):
+    def rawtset_coeff(i, coeffs, pivot=1):
         poly = R(coeffs)
         if poly == 0:
             return "", ""
-        rawq = f" * q^{i}" if i > 1 else " * q"
-        tsetq = f" q^{{{i}}}" if i > 1 else " q"
+        rawq = f" * q^{i}" if i > 1 else " * q" if i == 1 else ""
+        tsetq = f" q^{{{i}}}" if i > 1 else " q" if i == 1 else ""
         raw = str(poly)
-        if poly in [1, -1]:
+        if poly in [1, -1] and (i > 0):
             rawq = f"q^{i}" if i > 1 else "q"
             if poly == -1:
                 return minus + rawq, minus + tsetq
-            elif i > 1:
+            elif i > pivot:
                 return plus + rawq, plus + tsetq
             else:
                 return rawq, tsetq
@@ -626,6 +672,10 @@ def raw_typeset_qexp(coeffs_list,
                 poly,
                 coeff_compress_threshold,
                 decreasing=True)
+            if (i == 0) and (a0_denom != 1):
+                # tset = f"\\frac{{" + tset + f"}}{{{a0_denom}}}"
+                tset = f"\\frac{{{tset}}}{{{a0_denom}}}"
+                raw += f"/{a0_denom}"
         if not superscript:
             raw = raw.replace('^', '').replace(rawvar + " ", rawvar + "1 ")
             tset = tset.replace('^', '_').replace(var + " ", var + "_1 ")
@@ -635,7 +685,7 @@ def raw_typeset_qexp(coeffs_list,
             if tset.endswith(var):
                 tset += "_1"
         if poly.number_of_terms() == 1:
-            if i > 1:
+            if i > pivot:
                 if raw.startswith('-'):
                     raw = minus + raw[1:]
                 else:
@@ -644,19 +694,28 @@ def raw_typeset_qexp(coeffs_list,
         else:
             tset = f"({tset})"
             raw = f"({raw})"
-            if i > 1:
+            if i > pivot:
                 raw = plus + raw
                 tset = plus + tset
-        raw += rawq
-        tset += tsetq
+        if i > 0:
+            raw += rawq
+            tset += tsetq
         return raw, tset
 
     tset = ''
     raw = ''
     add_to_tset = True
     lastt = None
+    # finding the pivot - for new cusp forms this will always be 1,
+    # but for Eisenstein series and perhaps other power series, could differ.
     for i, coeffs in enumerate(coeffs_list):
-        r, t = rawtset_coeff(i, coeffs)
+        if not (coeffs is None):
+            if (type(coeffs) == list and not all([c == 0 for c in coeffs])) or (type(coeffs) in [int, Integer] and (coeffs != 0)):
+                pivot = i
+                break
+
+    for i, coeffs in enumerate(coeffs_list):
+        r, t = rawtset_coeff(i, coeffs, pivot=pivot)
         if t:
             lastt = t
         raw += r

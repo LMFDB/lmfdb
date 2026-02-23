@@ -274,7 +274,7 @@ class WebBMF():
                 bc_urls = [url_for("cmf.by_url_newform_label", level=cond, weight=2, char_orbit_label='a', hecke_orbit=iso)
                            for cond, iso, num in curve_bc_parts]
                 bc_labels = [".".join( [str(cond), str(2), 'a', iso] ) for cond,iso,_ in curve_bc_parts]
-                bc_exists = [db.mf_newforms.label_exists(lab) for lab in bc_labels]
+                bc_exists = [db.mf_newforms_eis.label_exists(lab) for lab in bc_labels]
                 self.bc_forms = [{'exists':ex, 'label':lab, 'url':url} for ex,lab,url in zip(bc_exists, bc_labels, bc_urls)]
         if self.ec_status is None:
             if self.bct or self.label in bmfs_with_no_curve:

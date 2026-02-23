@@ -21,7 +21,7 @@ from lmfdb.utils import (
     raw_typeset_poly, raw_typeset_poly_factor, raw_typeset_qexp
 )
 from lmfdb.number_fields.web_number_field import nf_display_knowl
-from lmfdb.number_fields.number_field import field_pretty
+from lmfdb.number_fields.number_field import field_pretty, poly_to_field_label
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
@@ -29,18 +29,19 @@ from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display
 LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[0-9]+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 INTEGER_RANGE_RE = re.compile(r"^([0-9]+)-([0-9]+)$")
-
+LABEL_EIS_RE = re.compile(r"^[0-9]+\.[0-9]+\.E\.[a-z]+\.[a-z]+$")
+EMB_LABEL_EIS_RE = re.compile(r"^[0-9]+\.[0-9]+\.E\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
 
 # we may store alpha_p with p <= 3000
 primes_for_angles = prime_range(3000)
 
 
 def valid_label(label):
-    return bool(LABEL_RE.match(label))
+    return bool(LABEL_RE.match(label)) or bool(LABEL_EIS_RE.match(label))
 
 
 def valid_emb_label(label):
-    return bool(EMB_LABEL_RE.match(label))
+    return bool(EMB_LABEL_RE.match(label)) or bool(EMB_LABEL_EIS_RE.match(label))
 
 
 def decode_hecke_orbit(code):
@@ -79,7 +80,7 @@ def convert_newformlabel_from_conrey(newformlabel_conrey):
 
 
 def newform_conrey_exists(newformlabel_conrey):
-    return db.mf_newforms.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
+    return db.mf_newforms_eis.label_exists(convert_newformlabel_from_conrey(newformlabel_conrey))
 
 
 def quad_field_knowl(disc):
@@ -147,7 +148,7 @@ class WebNewform():
         # Need to set level, weight, character, num_characters, degree, has_exact_qexp, has_complex_qexp, hecke_ring_index, is_twist_minimal
 
         # Make up for db_backend currently deleting Nones
-        for elt in db.mf_newforms.col_type:
+        for elt in db.mf_newforms_eis.col_type:
             if elt not in data:
                 data[elt] = None
         self.__dict__.update(data)
@@ -181,27 +182,34 @@ class WebNewform():
         self.has_exact_qexp = False
         self.hecke_ring_cyclotomic_generator = None # in case there is no data in mf_hecke_nf
         if self.embedding_label is None:
-            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp']
+            hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp', 'a0_num', 'a0_denom']
             if self.dim == 1:
                 # avoid using mf_hecke_nf when the dimension is 1
                 vals = ConreyCharacter(self.level, db.char_dirichlet.lookup("%s.%s" % (self.level,self.char_orbit_label),projection="first")).values_gens
                 # ConreyCharacter.values_gens returns the exponent of character values,
                 # But we need the character values themselves here when hecke_ring_cyclotomic_generator is unspecified.
                 vals = [[v[0],[1] if v[1] == 0 else [-1]] for v in vals]
-                eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces }
+                eigenvals = { 'hecke_ring_cyclotomic_generator': 0, 'hecke_ring_character_values': vals, 'hecke_ring_power_basis': True, 'maxp': previous_prime(len(self.traces)+1), 'an': self.traces, 'a0_num' : self.trace_a0_num, 'a0_denom' : self.a0_denom }
+                
             else:
-                eigenvals = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
+                eigenvals = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols)
             if eigenvals and eigenvals.get('an'):
                 self.has_exact_qexp = True
                 for attr in hecke_cols:
                     setattr(self, attr, eigenvals.get(attr))
                 m = self.hecke_ring_cyclotomic_generator
-                if m is None or m == 0:
+                # if m is None or m == 0:
+                #    m = 0
+                #    zero = [0] * self.dim
+                # else:
+                #    zero = []
+                if m is None:
                     m = 0
-                    zero = [0] * self.dim
-                else:
-                    zero = []
-                self.qexp = [zero] + eigenvals['an']
+                if 'a0_num' not in eigenvals:
+                    eigenvals['a0_num'] = 0 
+                a0_num = eigenvals['a0_num']
+                # This is only the numerator, has to add the denominator
+                self.qexp = [a0_num] + eigenvals['an']
                 self.qexp_prec = len(self.qexp)
                 self.single_generator = self.hecke_ring_power_basis or (self.dim == 2)
                 # This is not enough, for some reason
@@ -214,7 +222,7 @@ class WebNewform():
                     self.show_hecke_ring_basis = self.dim > 2 and m == 0 and not self.hecke_ring_power_basis
         else:
             hecke_cols = ['hecke_ring_cyclotomic_generator', 'hecke_ring_power_basis']
-            hecke_data = db.mf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, hecke_cols)
+            hecke_data = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code': self.hecke_orbit_code}, hecke_cols)
             if hecke_data:
                 for attr in hecke_cols:
                     setattr(self, attr, hecke_data.get(attr))
@@ -251,7 +259,10 @@ class WebNewform():
             self.properties += [(None, '<img src="{0}" width="200" height="200"/>'.format(self.plot))]
 
         self.properties += [('Level', prop_int_pretty(self.level)),
-                            ('Weight', prop_int_pretty(self.weight))]
+                            ('Weight', prop_int_pretty(self.weight)),
+                            ('Cuspidal', 'yes' if self.is_cuspidal == 1 else 'no')
+                            ]
+
         if self.embedding_label is None:
             self.properties.append(('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)))
         else:
@@ -292,14 +303,17 @@ class WebNewform():
         self.title = "Newform orbit %s" % (self.label)
 
         self.base_label = [str(s) for s in [self.level, self.weight]]
+        if not self.is_cuspidal:
+            self.base_label += ['E']
         self.ns1_label = '.'.join(self.base_label)
         self.ns_label = '.'.join(self.base_label + [self.char_orbit_label])
-        self.ns_data = db.mf_newspaces.lookup(self.ns_label)
+        self.ns_data = db.mf_newspaces_eis.lookup(self.ns_label)
+        self.automorphic_type = 'C' if self.is_cuspidal else 'E'
 
     # Breadcrumbs
     @property
     def bread(self):
-        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label": self.char_orbit_label,
+        kwds = {"level": self.level, "weight": self.weight, "char_orbit_label_or_automorphic_type" : self.automorphic_type, "char_orbit_label": self.char_orbit_label,
                     "hecke_orbit": cremona_letter_code(self.hecke_orbit - 1)}
         if self.embedding_label is not None:
             kwds['embedding_label'] = self.embedding_label
@@ -381,7 +395,7 @@ class WebNewform():
         res += names_and_urls(related_objects)
 
         # finally L-functions
-        if (self.weight <= 200) and not ((self.level > 10000) and (self.weight == 2)): # L-functions for the weight 2 and level > 10000 forms haven't been computed as of 2024/04/11.
+        if (self.weight <= 200) and not ((self.level > 10000) and (self.weight == 2)) and (self.is_cuspidal): # L-functions for the weight 2 and level > 10000 forms haven't been computed as of 2024/04/11.
             if (self.dim == 1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
                 res.append(('L-function ' + self.label, '/L' + nf_url))
             if self.embedding_label is None and len(self.conrey_orbit) * self.rel_dim > 50:
@@ -499,7 +513,10 @@ class WebNewform():
         if format in angles_formats:
             cc_proj.append(angles_projection)
 
-        cc_data = list(db.mf_hecke_cc.search(query, projection=cc_proj))
+        # !! TODO - Satake parameters for eisenstein newforms are still incorrect !!
+        # Write a test for these
+        cc_data = list(db.mf_hecke_cc_eis.search(query, projection=cc_proj))
+        
         if not cc_data:
             self.has_complex_qexp = False
         else:
@@ -545,7 +562,7 @@ class WebNewform():
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
-        data = db.mf_newforms.lookup(label)
+        data = db.mf_newforms_eis.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
             N, k, a, x = label.split('.')
@@ -585,6 +602,8 @@ class WebNewform():
         if m and (d != 2 or self.hecke_ring_cyclotomic_generator):
             return cyc_display(m, d, self.field_poly_is_real_cyclotomic)
         else:
+            if d == 2:
+                self.nf_label = poly_to_field_label(self.field_poly)
             return field_display_gen(self.nf_label, self.field_poly, self.field_disc_factorization)
 
     @property
@@ -699,7 +718,8 @@ class WebNewform():
             return r'no (minimal twist has level %s)' % (self.minimal_twist.split('.')[0]) if self.minimal_twist else r'no'
 
     def display_newspace(self):
-        s = r'\(S_{%s}^{\mathrm{new}}('
+        e_or_s = "S" if self.is_cuspidal else "E"
+        s = r'\(' + e_or_s + r'_{%s}^{\mathrm{new}}('
         if self.char_order == 1:
             s += r'\Gamma_0(%s))\)'
         else:
@@ -1226,14 +1246,14 @@ function switch_basis(btype) {
                         out[e] += c
                     return out
                 coeffs = [to_list(data) for data in self.qexp[:prec]]
-                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z')
+                return raw_typeset_qexp(coeffs, superscript=True, var=self._zeta_print, final_rawvar='z', a0_denom=self.a0_denom)
             elif self.single_generator:
                 var = str(self._PrintRing.gen(0))
-                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0])
+                return raw_typeset_qexp(self.qexp[:prec], superscript=True, var=var, final_rawvar=var[0], a0_denom=self.a0_denom)
             else:
                 # in this case str(self._PrintRing.gen(0)) = beta1
                 # and thus the extra case
-                return raw_typeset_qexp(self.qexp[:prec])
+                return raw_typeset_qexp(self.qexp[:prec], a0_denom=self.a0_denom)
 
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()

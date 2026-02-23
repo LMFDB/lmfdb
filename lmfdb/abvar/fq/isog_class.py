@@ -9,7 +9,7 @@ TODO
 """
 
 from flask import url_for
-from collections import Counter
+from collections import defaultdict, Counter
 
 from lmfdb.utils import encode_plot, display_float
 from lmfdb.logger import make_logger
@@ -17,13 +17,15 @@ from lmfdb.logger import make_logger
 from lmfdb import db
 from lmfdb.app import app
 
+from sage.all import Factorization, FreeAlgebra
 from sage.rings.all import Integer, QQ, RR, ZZ
 from sage.plot.all import line, points, circle, polygon, Graphics
 from sage.misc.latex import latex
 from sage.misc.cachefunc import cached_method
 from sage.misc.lazy_attribute import lazy_attribute
 
-from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors, teXify_pol
+from lmfdb.groups.abstract.web_groups import abstract_group_display_knowl, abelian_group_display_knowl
+from lmfdb.utils import list_to_factored_poly_otherorder, coeff_to_poly, web_latex, integer_divisors, teXify_pol, display_knowl
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.abvar.fq.web_abvar import av_display_knowl, av_data  # , av_knowl_guts
@@ -73,22 +75,62 @@ def validate_label(label):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
 
+
+def show_singular_support(n):
+    if n == 0:
+        return r"$\varnothing$"
+    elif not n:
+        return "not computed"
+    return r"$\{" + ",".join(fr"\mathfrak{{P}}_{{ {i} }}" for (i, b) in enumerate(ZZ(n).bits(), 1) if b) + r"\}$"
+
+
+def diagram_js(layers, display_opts):
+    ll = [
+        [
+            node.label, # grp.subgroup
+            node.label, # grp.short_label
+            node.tex, # grp.subgroup_tex
+            1, # grp.count (never want conjugacy class counts)
+            node.rank, # grp.subgroup_order
+            node.img,
+            node.x, # grp.diagramx[0] if aut else (grp.diagramx[2] if grp.normal else grp.diagramx[1])
+            [node.x, node.x, node.x, node.x], # grp.diagram_aut_x if aut else grp.diagram_x
+        ]
+        for node in layers[0]
+    ]
+    if len(ll) == 0:
+        display_opts["w"] = display_opts["h"] = 0
+        return [], [], 0
+    ranks = [node[4] for node in ll]
+    rank_ctr = Counter(ranks)
+    ranks = sorted(rank_ctr)
+    # We would normally make rank_lookup a dictionary, but we're passing it to the horrible language known as javascript
+    # The format is for compatibility with subgroup lattices
+    rank_lookup = [[r, r, 0] for r in ranks]
+    max_width = max(rank_ctr.values())
+    display_opts["w"] = min(100 * max_width, 20000)
+    display_opts["h"] = 160 * len(ranks)
+
+    return [ll, layers[1]], rank_lookup, len(ranks)
+
+
 class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
     """
+    name = "isogeny"
+
+    select_line = rf"""
+            Click on an {display_knowl('ag.endomorphism_ring', 'endomorphism ring')},
+            with the {display_knowl('av.fq.endomorphism_ring_notation', 'notation') }
+            $[\mathrm{{index}}]_{{i}}^{{\# \mathrm{{weak}} \cdot \# \mathrm{{Pic}}}}$,
+            in the diagram to see information about it.
+"""
+
     def __init__(self, dbdata):
-        if "size" not in dbdata:
-            dbdata["size"] = None
-        if "hyp_count" not in dbdata:
-            dbdata["hyp_count"] = None
-        if "jacobian_count" not in dbdata:
-            dbdata["jacobian_count"] = None
-        # New invariants: cyclicity and noncyclic primes
-        if "is_cyclic" not in dbdata:
-            dbdata["is_cyclic"] = None
-        if "noncyclic_primes" not in dbdata:
-            dbdata["noncyclic_primes"] = []
+        for col in ["size", "zfv_is_bass", "zfv_is_maximal", "zfv_index", "zfv_index_factorization", "zfv_plus_index", "zfv_plus_index_factorization", "zfv_plus_norm", "hyp_count", "jacobian_count", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "principal_polarization_count", "singular_primes", "is_cyclic", "noncyclic_primes"]:
+            if col not in dbdata:
+                dbdata[col] = None
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -124,6 +166,14 @@ class AbvarFq_isoclass():
             return ""
         else:
             return latex(QQ[['x']](self.polynomial))
+
+    @lazy_attribute
+    def zfv_index_factorization_latex(self):
+        return latex(Factorization(self.zfv_index_factorization))
+
+    @lazy_attribute
+    def zfv_plus_index_factorization_latex(self):
+        return latex(Factorization(self.zfv_plus_index_factorization))
 
     @property
     def p(self):
@@ -209,6 +259,265 @@ class AbvarFq_isoclass():
         P.axes(False)
         P.set_aspect_ratio(1)
         return encode_plot(P, pad=0, pad_inches=None, transparent=True, axes_pad=0.04)
+
+    @lazy_attribute
+    def weak_equivalence_classes(self):
+        return list(db.av_fq_weak_equivalences.search({"isog_label": self.label}))
+
+    def filtered_mrings(self, query):
+        query["is_invertible"] = True
+        query["isog_label"] = self.label
+        if len(query) == 2:
+            return set(self.endring_data)
+        return set(db.av_fq_weak_equivalences.search(query, "multiplicator_ring"))
+
+    @lazy_attribute
+    def endring_data(self):
+        inv = {}
+        ninv = defaultdict(list)
+        for rec in self.weak_equivalence_classes:
+            mring = rec["multiplicator_ring"]
+            if rec["is_invertible"]:
+                inv[mring] = rec
+            else:
+                ninv[mring].append(rec)
+        return {mring: [inv[mring]] + ninv[mring] for mring in inv}
+
+    @cached_method(key=lambda self, query: str(query))
+    def endring_poset(self, query={}):
+        # The poset of endomorphism rings for abelian varieties in this isogeny class
+        # For ordinary isogeny classes, these are precisely the sub-orders of the maximal order that contain the Frobenius order
+        included_in_query = self.filtered_mrings(query)
+        class LatNode:
+            def __init__(self, label):
+                self.label = label
+                self.index = ZZ(label.split(".")[0])
+                if label in included_in_query:
+                    self.tex = tex[label]
+                else:
+                    self.tex = r"\cdot"
+                if self.tex in texlabels:
+                    self.img = texlabels[self.tex]
+                else:
+                    self.img = texlabels["?"]
+                self.rank = sum(e for (p,e) in self.index.factor())
+                self.x = xcoord[label]
+        parents = {}
+        pic_size = {}
+        num_wes = Counter()
+        num_ind = Counter()
+        xcoord = {}
+        for R, wes in self.endring_data.items():
+            N = ZZ(R.split(".")[0])
+            num_wes[R] = len(wes)
+            num_ind[N] += 1
+            parents[R] = wes[0]['minimal_overorders']
+            pic_size[R] = wes[0]['pic_size']
+            xcoord[R] = wes[0]['diagramx']
+        if not pic_size:
+            return [], [] # no weak equivalence class data for this isogeny class
+        tex = {}
+        texlabels = set(["?", r"\cdot"])
+        for R, npic in pic_size.items():
+            N, i = R.split(".")
+            N = ZZ(N)
+            if N == 1:
+                factored_index = "1"
+            else:
+                factored_index = r"\cdot".join((f"{p}^{{{e}}}" if e > 1 else f"{p}") for (p, e) in N.factor())
+            istr = f"_{{{i}}}" if num_ind[N] > 1 else ""
+            we_pic = rf"{num_wes[R]}\cdot{pic_size[R]}" if num_wes[R] > 1 else f"{pic_size[R]}"
+            tex[R] = "[%s]^{%s}%s" % (factored_index, we_pic, istr)
+            texlabels.add(tex[R])
+        texlabels = {rec["label"]: rec["image"] for rec in db.av_fq_teximages.search({"label": {"$in": list(texlabels)}})}
+        nodes = [LatNode(lab) for lab in pic_size]
+        edges = []
+        if nodes:
+            maxrank = max(node.rank for node in nodes)
+            for node in nodes:
+                node.rank = maxrank - node.rank
+                edges.extend([[node.label, lab] for lab in parents[node.label]])
+        return nodes, edges
+
+
+    def diagram_js(self, query):
+        display_opts = {}
+        graph, rank_lookup, num_layers = diagram_js(self.endring_poset(query), display_opts)
+        return {
+            'string': f'var [sdiagram,graph] = make_sdiagram("subdiagram", "{self.label}", {graph}, {rank_lookup}, {num_layers});',
+            'display_opts': display_opts
+        }
+
+
+
+    @lazy_attribute
+    def endring_select_line(self):
+        return self.select_line
+
+    @cached_method
+    def endring_disp(self, endring):
+        we = self.endring_data[endring]
+        max_index = max(L[0]["index"] for L in self.endring_data.values())
+        disp = {}
+        rec = we[0]
+
+        R = FreeAlgebra(ZZ, ["F", "V"])
+        F, V = R.gens()
+        pows = [V**i for i in reversed(range(0, self.g))] + [F**i for i in range(1, self.g + 1)]
+        def to_R(num):
+            assert len(num) == len(pows)
+            return sum(c*p for c, p in zip(num, pows))
+
+        # Conductor display
+        if rec["conductor"]:
+            # conductor
+            M, d, num = rec["conductor"]
+            num = to_R(num)
+            if num != 0:
+                conductor = latex(num)
+                if d != 1:
+                    conductor = r"\frac{1}{%s}(%s)" % (d, conductor)
+                conductor = fr"\langle {M},{conductor}\rangle_{{\mathcal{{O}}_{{\mathbb{{Q}}(F)}}}}"
+            else:
+                conductor = r"\mathcal{O}_{\mathbb{Q}[F]}"
+                if M != 1:
+                    conductor = f"{M} {conductor}"
+        else:
+            conductor = "not computed"
+
+        # Ring display
+        short_names = []
+        long_names = []
+        if rec["index"] == 1:
+            short_names.append(conductor)
+            long_names.append(conductor)
+        elif rec.get("is_Zconductor_sum") and rec["index"] != max_index: # Don't write for Z[F,V] itself
+            short_names.append(r"\mathbb{Z} + \mathfrak{f}_R")
+            if rec["conductor"]:
+                long_names.append(r"\mathbb{Z} + " + conductor)
+        elif rec.get("is_ZFVconductor_sum") and rec["index"] != max_index: # Don't write for Z[F,V] itself
+            short_names.append(r"\mathbb{Z}[F, V] + \mathfrak{f}_R")
+            if rec["conductor"]:
+                long_names.append(r"\mathbb{Z}[F, V] + " + conductor)
+        gen = rec.get("generator_over_ZFV")
+        if gen:
+            d, num = gen
+            num = to_R(num)
+            gens = ["F", "V"]
+            if num != 0:
+                s = latex(num)
+                if d != 1:
+                    s = r"\frac{1}{%s}(%s)" % (d, s)
+                gens.append(s)
+            gen_name = fr"\mathbb{{Z}}[{','.join(gens)}]"
+            short_names.append(gen_name)
+            long_names.append(gen_name)
+
+        if rec["conductor"]:
+            conductor = f"${conductor}$"
+
+        pic_size = rec["pic_size"]
+        if rec["pic_invs"] is not None:
+            pic_disp = abelian_group_display_knowl(rec['pic_invs'])
+        elif rec["pic_size"] is not None:
+            pic_disp = f"Abelian group of order {pic_size}"
+        else:
+            pic_disp = "not computed"
+
+        av_structure = defaultdict(Counter)
+        for w in we:
+            av_structure[1][tuple(w["rational_invariants"])] += pic_size
+            for n in range(2, 11):
+                av_structure[n][tuple(w["higher_invariants"][n-2])] += pic_size
+        for n in range(1, 11):
+            if len(av_structure[n]) == 1:
+                disp[f"av_structure{n}"] = abelian_group_display_knowl(next(iter(av_structure[n])))
+            else:
+                gps = sorted((-cnt, invs) for (invs, cnt) in av_structure[n].items())
+                disp[f"av_structure{n}"] = ",".join("%s ($%s$)" % (abelian_group_display_knowl(invs), -m) for (m, invs) in gps)
+
+        dimensions = Counter()
+        for w in we:
+            dimensions[tuple(w["dimensions"])] += pic_size
+        if len(dimensions) == 1:
+            disp["dimensions"] = f"${list(next(iter(dimensions)))}$"
+        else:
+            dimensions = sorted((-cnt, dims) for (dims, cnt) in dimensions.items())
+            disp["dimensions"] = ",".join("$[%s]$ ($%s$)" % (",".join(str(c) for c in dims), -m) for (m, dims) in dimensions)
+
+        disp["short_names"] = short_names
+        disp["long_names"] = long_names
+        disp["index"] = int(endring.split(".")[0])
+        disp["conductor"] = conductor
+        disp["pic"] = pic_disp
+        disp["av_count"] = len(we) * pic_size
+        return disp
+
+    @lazy_attribute
+    def _group_structures(self):
+        av_structure = defaultdict(Counter)
+        for we in self.endring_data.values():
+            pic_size = we[0]["pic_size"]
+            for w in we:
+                av_structure[1][tuple(w["rational_invariants"])] += pic_size
+                for n in range(2, 6):
+                    av_structure[n][tuple(w["higher_invariants"][n-2])] += pic_size
+        return av_structure
+
+    @lazy_attribute
+    def group_structures(self):
+        N = self.most_group_structures
+        av_structure = self._group_structures
+        disp = [[] for _ in range(N)]
+        for n in range(1, 6):
+            if len(av_structure[n]) == 1:
+                disp[0].append(abelian_group_display_knowl(next(iter(av_structure[n]))))
+                nextj = 1
+            else:
+                gps = sorted((-cnt, invs) for (invs, cnt) in av_structure[n].items())
+                for j, (m, invs) in enumerate(gps):
+                    disp[j].append("%s ($%s$)" % (abelian_group_display_knowl(invs), -m))
+                nextj = len(gps)
+            for j in range(nextj, N):
+                disp[j].append("")
+        return disp
+
+    @lazy_attribute
+    def most_group_structures(self):
+        return max(len(opts) for opts in self._group_structures.values())
+
+    def endringinfo(self, endring):
+        rec = self.endring_data[endring][0]
+        disp = self.endring_disp(endring)
+
+        num_we = len(self.endring_data[endring])
+        names = "=".join(["R"] + disp["short_names"])
+
+        if rec["cohen_macaulay_type"] is None:
+            cm_type = "not computed"
+        else:
+            cm_type = "$%s$" % rec["cohen_macaulay_type"]
+
+        ans = [
+            f'Information on the {display_knowl("ag.endomorphism_ring", "endomorphism ring")} ${names}$<br>',
+            "<table>",
+            f"<tr><td>{display_knowl('av.fq.lmfdb_label', 'Label')}:</td><td>{'.'.join(rec['label'].split('.')[3:])}</td></tr>",
+            fr"<tr><td>{display_knowl('av.fq.index_of_order', 'Index')} $[\mathcal{{O}}_{{\mathbb{{Q}}[F]}}:R]$:</td><td>${disp['index']}$</td></tr>",
+            fr"<tr><td>{display_knowl('av.endomorphism_ring_conductor', 'Conductor')} $\mathfrak{{f}}_R$:</td><td>{disp['conductor']}</td></tr>",
+            f"<tr><td>{display_knowl('ag.cohen_macaulay_type', 'Cohen-Macaulay type')}:</td><td>{cm_type}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.singular_primes', 'Singular support')}:</td><td>${show_singular_support(rec['singular_support'])}$</td></tr>",
+            f"<tr><td>{display_knowl('ag.fq.point_counts', 'Group structure')}:</td><td>{disp['av_structure1']}</td></tr>",
+            f"<tr><td>{display_knowl('av.fq.picard_of_order', 'Picard group')}:</td><td>{disp['pic']}</td></tr>",
+            fr"<tr><td>$\# \{{${display_knowl('av.fq.weak_equivalence_class', 'weak equivalence classes')}$\}}$:</td><td>${num_we}$</td></tr>",
+            "</table>"
+        ]
+        # Might also want to add rational point structure for varieties in this class, link to search page for polarized abvars...
+        return "\n".join(ans)
+
+    @lazy_attribute
+    def singular_primes_disp(self):
+        disp = [",".join(teXify_pol(f) for f in P.split(",")) for P in self.singular_primes]
+        return [fr"\langle {P} \rangle" for P in disp]
 
     def _make_jacpol_property(self):
         ans = []
@@ -487,6 +796,59 @@ class AbvarFq_isoclass():
             return s
         else:
             return ""
+
+
+    header_polarized_varieties = [
+        ('label', 'av.fq.lmfdb_label', 'Label'),
+        ('degree', 'av.polarization', 'Degree'),
+        ('aut_group', 'ag.aut_group', 'Automorphism Group'),
+        #('geom_aut_group', 'av.geom_aut_group', 'Geometric automorphism group'),
+        ('endomorphism_ring', 'ag.endomorphism_ring', 'Endomorphism ring'),
+        ('kernel', 'av.polarization', 'Kernel'),
+    ]
+
+    @lazy_attribute
+    def polarized_abelian_varieties(self):
+        cols = [elt for elt, _ ,_ in self.header_polarized_varieties]
+        return list(db.av_fq_pol.search({"isog_label": self.label}, cols, sort=['degree']))
+
+    def display_header_polarizations(self):
+        ths = "\n".join(
+            f'<th class="sticky-head dark">{display_knowl(kwl, title=title)}</th>' for _, kwl, title in self.header_polarized_varieties)
+
+        return f'<thead><tr>\n{ths}\n</tr></thead>'
+
+
+    def display_rows_polarizations(self, query=None):
+        polarized_columns_display = {
+        'aut_group': lambda x : abstract_group_display_knowl(x['aut_group']),
+        'degree': lambda x : web_latex(x['degree']),
+        'endomorphism_ring': lambda x : x['endomorphism_ring'],
+        # 'geom_aut_group' : lambda x: abstract_group_display_knowl(x['geom_aut_group']),
+        'isom_label' : lambda x : x['isom_label'],
+        'kernel' : lambda x : abelian_group_display_knowl(x['kernel']),
+        'label' : lambda x : x['label'],
+        }
+        res = ""
+        #FIXME filter by query
+        for i,elt in enumerate(self.polarized_abelian_varieties):
+            shade = 'dark' if i%2 == 0 else 'light'
+            res += f'<tr class="{shade}">\n' + "\n".join([f"<td>{polarized_columns_display[col](elt)}</td>" for col, _, _ in self.header_polarized_varieties]) + "</tr>\n"
+        return f'<tbody>\n{res}</tbody>'
+
+    def display_polarizations(self, query=None):
+        return rf"""
+        <table class="ntdata">
+          {self.display_header_polarizations()}
+          {self.display_rows_polarizations()}
+        </table>
+"""
+    @lazy_attribute
+    def number_principal_polarizations(self):
+        if self.polarized_abelian_varieties:
+            return sum(1 for elt in self.polarized_abelian_varieties if elt['degree'] == 1)
+        else:
+            return None
 
 
 @app.context_processor

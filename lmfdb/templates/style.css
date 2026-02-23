@@ -1698,6 +1698,16 @@ div.maassformplot img {
     color: {{color.sidebar_text_beta}};
 }
 
+#sidebar .alpha {
+    color: #8c1f21;
+    display: inherit;
+}
+
+
+#sidebar .alpha a {
+    color: #8c1f21;
+}
+
 
 #sidebar table td .parts {
     padding-left: 15px;
@@ -2227,12 +2237,12 @@ td.highlighted {
   text-align: right;
 }
 
-#column-selector, #sort-selecter {
+#column-selector, #sort-selector {
   scrollbar-width: none; /*For Firefox*/;
   -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
   overflow-y:auto;
 }
-#column-selector:-webkit-scrollbar, #sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
+#column-selector:-webkit-scrollbar, #sort-selector:-webkit-scrollbar { /*For WebKit Browsers*/
     width: 0;
 }
 
@@ -2334,4 +2344,25 @@ button.search_stale, button.search_stale:hover {
 }
 button.search_fresh {
   background: {{color.button_background}};
+}
+
+div.tab-container {
+  display: inline-block;
+  border-radius: 5px;
+  overflow: hidden;
+  font-weight: bold;
+}
+
+span.tab-active {
+  padding: 10px;
+  background: #0D47A1;
+  color: white;
+}
+span.tab-inactive {
+  padding: 10px;
+  background: #90CAF9;
+}
+span.tab-inactive a, span.tab-inactive a:hover {
+  background: #90CAF9;
+  color: #0D47A1;
 }

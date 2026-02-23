@@ -160,7 +160,7 @@ Database Interface
 
    ```python
    sage: from psycodict import db, SQL
-   sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
+   sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms_eis WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
    sage: cur.rowcount
    2
    sage: list(cur)
@@ -759,7 +759,7 @@ Data Validation
    version of the database with verification enabled (it is not
    enabled by default since the verification checks are vulnerable to
    SQL injection and should not be available when the website is
-   running).  Then use, for example, `db.mf_newforms.verify()`.
+   running).  Then use, for example, `db.mf_newforms_eis.verify()`.
 
    You can specify a particular speedtype to run
    (e.g. `speedtype="slow"` or `speedtype="overall"`), a specific
