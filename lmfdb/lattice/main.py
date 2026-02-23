@@ -19,7 +19,7 @@ from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genus import common_parse, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list
 from lmfdb.lattice.lattice_stats import Lattice_stats
-from lmfdb.lattice.web_lattice import WebLattice, WebGenus #vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus, flat_to_matrix #vect_to_sym, vect_to_sym2, format_conway_symbol
 
 # Database connection
 
@@ -109,19 +109,25 @@ def lattice_search_isometric(res, info, query):
     a list of stored matrices with same dimension and determinant
     (just compare with respect to dimension is slow)
     """
-    if info['number'] == 0 and info.get('gram'):
-        A = query['gram']
-        n = len(A[0])
+    if info['number'] == 0 and info.get('gram_matrix'):
+        A = info['gram_matrix']
+        query.pop('gram', None)
+        n = len(A)
         d = matrix(A).determinant()
-        for rec in db.lat_lattices_new.search({'dim': n, 'det_abs': int(d)}, "gram"):
-            gram = rec["gram"]
+        # String projection returns the value directly (not a dict)
+        for gram_val in db.lat_lattices_new.search({'rank': n, 'det_abs': int(abs(d))}, "gram"):
+            # Handle the [[flat_list]] wrapper format stored in the DB
+            if gram_val and isinstance(gram_val[0], list):
+                flat = gram_val[0]
+            else:
+                flat = gram_val
+            gram_2d = flat_to_matrix(flat)
             # TODO: isom only works for positive definite gram matrices
-            if isom(A, gram):
-                query['gram'] = gram
-                proj = lattice_search_projection
+            if isom(A, gram_2d):
+                query['gram'] = gram_val
                 count = parse_count(info)
                 start = parse_start(info)
-                res = db.lat_lattices_new.search(query, proj, limit=count, offset=start, info=info)
+                res = db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
                 break
 
     return res

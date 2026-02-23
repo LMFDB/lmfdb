@@ -61,13 +61,26 @@ class HomePageTest(LmfdbTest):
         L = self.tc.get("/Lattice/?rank=&det=&level=&gram=&minimum=3&class_number=&aut=").get_data(as_text=True)
         assert '3.3.45.01.1b7.3' in L #search minimum vector length
 
-    #def test_lattice_searchGM(self):
-    #    L = self.tc.get("/Lattice/?rank=&det=&level=&gram=[17%2C6%2C138]&minimum=&class_number=&aut=").get_data(as_text=True)
-    #    assert '4620' in L #gram matrix search
+    def test_lattice_searchGM(self):
+        # auto-detect: 3 entries is triangular → upper tri → [[2,0],[0,5]]
+        L = self.tc.get("/Lattice/?gram=[2%2C0%2C5]&gram_format=").get_data(as_text=True)
+        assert '2.2.10.7b.1' in L
 
-    #def test_lattice_searchGM_2(self):
-    #    L = self.tc.get("/Lattice/?rank=&det=&level=&gram=5%2C3%2C2&minimum=&class_number=&aut=").get_data(as_text=True)
-    #    assert '2.1.2.1.1' in L #gram matrix search through isometries
+    def test_lattice_searchGM_upper(self):
+        L = self.tc.get("/Lattice/?gram=[2%2C0%2C5]&gram_format=upper").get_data(as_text=True)
+        assert '2.2.10.7b.1' in L
+
+    def test_lattice_searchGM_full(self):
+        L = self.tc.get("/Lattice/?gram=[2%2C0%2C0%2C5]&gram_format=full").get_data(as_text=True)
+        assert '2.2.10.7b.1' in L
+
+    def test_lattice_searchGM_lower(self):
+        L = self.tc.get("/Lattice/?gram=[2%2C0%2C5]&gram_format=lower").get_data(as_text=True)
+        assert '2.2.10.7b.1' in L
+
+    def test_lattice_searchGM_diagonal(self):
+        L = self.tc.get("/Lattice/?gram=[1%2C1%2C1]&gram_format=diagonal").get_data(as_text=True)
+        assert '3.3.1' in L
 
     #def test_latticeZ2(self):
     #    L = self.tc.get("/Lattice/2.1.2.1.1").get_data(as_text=True)
