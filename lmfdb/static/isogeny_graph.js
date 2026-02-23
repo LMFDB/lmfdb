@@ -256,7 +256,12 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
         // Lattice-specific fields
         if (d.minimum !== undefined) _isoTooltipLine(tooltip, 'Minimum: ' + d.minimum);
         if (d.kissing !== undefined) _isoTooltipLine(tooltip, 'Kissing number: ' + d.kissing);
-        if (d.aut_label !== undefined) _isoTooltipLine(tooltip, 'Automorphism group: ' + d.aut_label);
+        if (d.aut_name !== undefined) {
+            var autSpan = document.createElement('span');
+            autSpan.innerHTML = 'Aut. group: \\(' + d.aut_name + '\\)';
+            tooltip.appendChild(autSpan);
+            tooltip.appendChild(document.createElement('br'));
+        }
 
         tooltip.style.display = 'block';
 
@@ -265,6 +270,11 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
         var pos = node.renderedPosition();
         tooltip.style.left = (rect.left + window.scrollX + pos.x + 25) + 'px';
         tooltip.style.top = (rect.top + window.scrollY + pos.y - 10) + 'px';
+
+        // Typeset any LaTeX in the tooltip
+        if (typeof MathJax !== 'undefined' && MathJax.typeset) {
+            MathJax.typeset([tooltip]);
+        }
 
         $('html,body').css('cursor', 'pointer');
     });

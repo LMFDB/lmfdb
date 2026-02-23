@@ -168,6 +168,10 @@ class WebGenus(WebLat):
             {"genus_label": self.label},
             ["label", "minimum", "kissing", "aut_label"],
             sort=["label"]))
+        # Batch-fetch automorphism group tex_names
+        aut_labels = list({c["aut_label"] for c in lattice_data if c.get("aut_label")})
+        aut_tex = {r["label"]: r["tex_name"] for r in db.gps_groups.search(
+            {"label": {"$in": aut_labels}}, ["label", "tex_name"])} if aut_labels else {}
         for p, M in self.adjacency_matrix.items():
             adj_mat = matrix(ZZ, self.class_number, self.class_number, M)
             display[p]["matrix"] = raw_typeset_matrix(adj_mat)
@@ -187,7 +191,7 @@ class WebGenus(WebLat):
                         if c.get("kissing") is not None:
                             elt["data"]["kissing"] = c["kissing"]
                         if c.get("aut_label") is not None:
-                            elt["data"]["aut_label"] = c["aut_label"]
+                            elt["data"]["aut_name"] = aut_tex.get(c["aut_label"], c["aut_label"])
             display[p]["graph_data"] = elements
             display[p]["graph_default_layout"] = 'Elk-stress'
             F = [(R(f), e) for f,e in self.adjacency_polynomials[p]]
