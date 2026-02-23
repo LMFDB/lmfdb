@@ -628,6 +628,9 @@ class WebEC():
             self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
         self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
 
+        if db.ec_nfcurves.count({'q_curve':True,'base_change':{'$contains':self.lmfdb_label}}) > 0:
+            self.friends.append(('Base changes ', url_for('ecnf.index', base_change_label=self.lmfdb_label)))
+
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
 
