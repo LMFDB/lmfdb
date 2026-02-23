@@ -178,7 +178,7 @@ class WebGenus(WebLat):
                     if elt["group"] == "nodes":
                         idx = int(elt["data"]["id"]) - 1
                         lbl = lattice_labels[idx]
-                        elt["data"]["label"] = lbl
+                        elt["data"]["label"] = lbl.split(".")[-1]
                         elt["data"]["url"] = url_for(".render_lattice_webpage", label=lbl)
             display[p]["graph_data"] = elements
             display[p]["graph_default_layout"] = 'Elk-stress'
