@@ -62,6 +62,10 @@ class WebLat(WebObj):
                 setattr(self, dcol, f"${val}$")
 
     @lazy_attribute
+    def det(self):
+        return self.det_sign * self.det_abs
+                
+    @lazy_attribute
     def nminus(self):
         return self.rank - self.nplus
 
@@ -133,6 +137,14 @@ class WebGenus(WebLat):
         #X = self.adjacency_display
 
     @lazy_attribute
+    def nminus(self):
+        return self.rank - self.nplus
+
+    @lazy_attribute
+    def signature(self):
+        return (self.nplus, self.nminus)
+        
+    @lazy_attribute
     def gram_display(self):
         if self.rep is None:
             return "not computed"
@@ -198,10 +210,10 @@ class WebGenus(WebLat):
         # Get a representative gram matrix
         if self.rep is not None:
             gram = self.rep
-        elif self.canonical_gram is not None:
-            gram = self.canonical_gram
-        elif self.gram is not None and len(self.gram) > 0:
-            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        elif self.gram is not None:
+            gram = self.gram
+            if type(gram[0]) == list:
+                gram = gram[0]
         else:
             gram = None
 
@@ -244,7 +256,9 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def gram_display(self):
-        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = self.gram
+        if type(gram[0]) == list:
+            gram = gram[0]
         if gram is None:
             return "not computed"
         return vect_to_matrix(vect_to_sym2(gram))
@@ -269,7 +283,9 @@ class WebLattice(WebLat):
         Otherwise uses variables x_1, x_2, x_3, etc.
         """
 
-        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = self.gram
+        if type(gram[0]) == list:
+            gram = gram[0]
         gram = vect_to_sym2(gram)
 
         default_vars = ["x", "y", "z", "t", "u", "v", "w"]
@@ -315,7 +331,7 @@ class WebLattice(WebLat):
         Return a latex-formatted explicit basis associated to the Gram matrix of this lattice.
         """
 
-        gram = self.canonical_gram if self.canonical_gram is not None else self.gram[0] if self.gram is not None and len(self.gram) > 0 else None
+        gram = self.gram
         gram = vect_to_sym2(gram)
 
         basis = np.linalg.cholesky(gram)
@@ -345,10 +361,10 @@ class WebLattice(WebLat):
         # read in code.yaml from lattice directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        if self.canonical_gram is not None:
-            gram = self.canonical_gram
-        elif self.gram is not None and len(self.gram) > 0:
-            gram = self.gram[0] if isinstance(self.gram[0], list) else self.gram
+        if self.gram is not None and len(self.gram) > 0:
+            gram = self.gram
+            if type(gram[0]) == list:
+                gram = gram[0]
         else:
             gram = None
         if gram is not None:

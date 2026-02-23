@@ -198,7 +198,7 @@ lat_only_columns = [
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
-    MultiProcessedCol("gram", "lattice.gram", "Gram matrix", ["canonical_gram", "gram"], lambda a,b: vect_to_matrix(vect_to_sym2(a if a else b[0]), compress_threshold=5, keep=2)),
+    ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda a: vect_to_matrix(vect_to_sym2(a), compress_threshold=5, keep=2) if a and type(a[0])==int else ''),
     MathCol("density", "lattice.density", "Density", default=False),
     MathCol("hermite", "lattice.hermite_number", "Hermite", default=False),
     MathCol("kissing", "lattice.kissing", "Kissing", default=False),
@@ -207,7 +207,7 @@ lat_only_columns = [
 
 genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns 
 # Display column for mass
-genus_columns.append(RationalCol("mass", "lattice.mass", "Mass", lambda v: "" if not v else (str(v[0])+"/"+str(v[1]) if isinstance(v, (list, tuple)) else v), default=False))
+genus_columns.append(RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False))
 
 in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
 

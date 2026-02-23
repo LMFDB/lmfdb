@@ -10,7 +10,7 @@ class Lattice_stats(StatsDisplay):
         self.nlats = comma(db.lat_lattices_new.count())
         self.max_cn = db.lat_lattices_new.max("class_number")
         self.max_rank = db.lat_lattices_new.max("rank")
-        self.max_det = db.lat_lattices_new.max("det")
+        self.max_det = db.lat_lattices_new.max("det_abs")
         self.kintegral = display_knowl('lattice.definition', 'integral lattices')
         self.ksignature = display_knowl('lattice.signature', 'signatures')
         #self.kcatalogue = display_knowl('lattice.catalogue_of_lattices', 'Catalogue of Lattices')
