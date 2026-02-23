@@ -251,6 +251,7 @@ def render_genus_webpage(label):
     info["code"] = genus.code
     info["downloads"] = genus.downloads
     info["KNOWL_ID"] = f"lattice.genus.{label}"
+    info["graph_layouts"] = genus.graph_layouts
     return render_genus(info)
 
 @embed_wrap(
@@ -268,6 +269,7 @@ def render_genus_webpage(label):
     downloads=lambda:None,
     code=lambda:None,
     KNOWL_ID=lambda:None,
+    graph_layouts=lambda:[],
 )
 def render_genus(info, query):
     query["genus_label"] = info["genus"].label
