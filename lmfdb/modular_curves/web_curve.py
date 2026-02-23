@@ -1,6 +1,6 @@
 
 import re
-from collections import Counter
+from collections import defaultdict, Counter
 from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
@@ -187,7 +187,17 @@ def formatted_newforms(newforms, mults):
         return "not computed"
     if not newforms:
         return ""
-    return ", ".join(f'<a href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
+    return ", ".join(f'<a style="display: inline;" href="{url_for_mf_label(label)}">{label}</a>{showexp(c)}' for label, c in zip(newforms, mults))
+
+def newforms_by_dimrank(newforms, mults, dims, ranks):
+    if newforms is None or mults is None or dims is None or ranks is None:
+        # We return an empty list so that the template falls back on formatted_newforms
+        return []
+    by_dimrank = defaultdict(list)
+    for mf, m, d, r in zip(newforms, mults, dims, ranks):
+        by_dimrank[d,r].append((mf, m))
+    return [(d, r, formatted_newforms(*zip(*by_dimrank[d,r])))
+            for d, r in sorted(by_dimrank)]
 
 
 def formatted_model_data(m):
@@ -376,13 +386,19 @@ def modcurve_link(label):
     return '<a href="%s">%s</a>' % (url_for("modcurve.by_label",label=label),label)
 
 def combined_data(label):
-    data = db.gps_gl2zhat_fine.lookup(label)
+    data = db.gps_gl2zhat.lookup(label)
     if data is None:
         return
     if not data["contains_negative_one"]:
-        coarse = db.gps_gl2zhat_fine.lookup(data["coarse_label"], ["parents", "newforms", "obstructions", "traces"])
+        coarse = db.gps_gl2zhat.lookup(data["coarse_label"], ["parents", "obstructions", "traces"])
         data["coarse_parents"] = coarse.pop("parents")
         data.update(coarse)
+    data["gassman_class"] = gassman_class = ".".join(data["coarse_label"].split(".")[:4])
+    decomp = db.modcurve_decomposition.lookup(gassman_class)
+    if decomp is None:
+        data["newforms"] = data["dims"] = data["mults"] = data["analytic_ranks"] = None
+    else:
+        data.update(decomp)
     return data
 
 def learnmore_list():
@@ -392,7 +408,7 @@ def learnmore_list():
             ('Modular curve labels', url_for(".labels_page"))]
 
 class WebModCurve(WebObj):
-    table = db.gps_gl2zhat_fine
+    table = db.gps_gl2zhat
 
     # We have to modify _get_dbdata, since we need to also include information from the coarse modular curve
     def _get_dbdata(self):
@@ -494,6 +510,10 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def formatted_newforms(self):
         return formatted_newforms(self.newforms, self.mults)
+
+    @lazy_attribute
+    def newforms_by_dimrank(self):
+        return newforms_by_dimrank(self.newforms, self.mults, self.dims, self.analytic_ranks)
 
     @lazy_attribute
     def obstruction_primes(self):
@@ -756,7 +776,7 @@ class WebModCurve(WebObj):
         res = []
         if maps:
             codomain_labels = [m["codomain_label"] for m in maps]
-            codomains = list(db.gps_gl2zhat_fine.search(
+            codomains = list(self.table.search(
                 {"label": {"$in": codomain_labels}},
                 ["label","name"]))
             # Do not display maps for which the codomain model has dont_display = False
@@ -810,6 +830,18 @@ class WebModCurve(WebObj):
         if self.Glabel:
             return abstract_group_display_knowl(self.Glabel)
         return ""
+
+    def show_entanglement_quotient(self):
+        if self.entanglement_quotient:
+            return abstract_group_display_knowl(self.entanglement_quotient)
+        return ""
+
+    def format_agreeable_quotient(self):
+        if self.agreeable_quotient is None:
+            return "not computed"
+        if self.agreeable_quotient:  # non-empty list
+            return r" $\oplus$ ".join(r"$\Z/{%s}\Z$" % n for n in self.agreeable_quotient)
+        return "trivial"
 
     def _curvedata(self, query, flip=False):
         # Return display data for covers/covered by/factorization
@@ -1147,7 +1179,7 @@ class WebModCurve(WebObj):
             return [], []
         parents = {}
         names = {}
-        for rec in db.gps_gl2zhat_fine.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
+        for rec in self.table.search({"label": {"$in": self.lattice_labels}}, ["label", "parents", "name"]):
             if rec["name"] and db.modcurve_teximages.count({"label":rec["name"]}):
                 names[rec["label"]] = rec["name"]
             parents[rec["label"]] = rec["parents"]

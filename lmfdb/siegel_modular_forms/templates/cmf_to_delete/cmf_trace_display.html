@@ -1,0 +1,28 @@
+{%- from "knowl-defs.html" import KNOWL with context -%}
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('cmf.label', title='Label') }}</th>
+      <th>{{ KNOWL('cmf.dimension', title='Dim') }}</th>
+      {% for n in info.Tr_n %}
+      {% if n >= 1 and n <= 1000 %}
+      <th class="right"> \(a_{ {{n}} }\) </th>
+      {% endif %}
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for res in info.results %}
+    <tr>
+      <td> <a href="{{info.mf_url(res) }}"> {{ res.label }} </a> </td>
+      <td class="mjx_basic right border-right"> {{ res.dim }} </td>
+      {% for n in info.Tr_n %}
+      {% if n >= 1 and n <= 1000 %}
+      <td class="mjx_basic right"> {{ info.bigint_knowl(res.tr_an[n]) | safe}} </td>
+      {% endif %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+

@@ -65,5 +65,4 @@ class modcurve_modelmaps(TableChecker):
                 if not all(Pol(f_str)(pt_on_codomain_as_list) == 0
                            for f_str in equation):
                     return False
-
         return True

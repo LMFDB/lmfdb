@@ -4,7 +4,7 @@ from lmfdb.tests import LmfdbTest
 from . import cmf_logger
 cmf_logger.setLevel(100)
 
-
+    
 class CmfTest(LmfdbTest):
     def runTest(self):
         pass
@@ -173,7 +173,7 @@ class CmfTest(LmfdbTest):
         assert 'A-L signs' in page.get_data(as_text=True)
 
     def test_traces(self):
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&count=50&search_type=Traces', follow_redirects=True)
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&count=50&search_type=Traces&is_cuspidal=yes', follow_redirects=True)
         assert "Results (18 matches)" in page.get_data(as_text=True)
         for elt in map(str,[-98,-347,739,0,147,-414,324,306,-144,0,24,-204,153,414,-344,-756,-24,164]):
             assert elt in page.get_data(as_text=True)
@@ -182,7 +182,7 @@ class CmfTest(LmfdbTest):
         for elt in map(str,[-6,-68, 3224, 206, 4240, -408, -598, 1058]):
             assert elt in page.get_data(as_text=True)
 
-        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=7&weight=7&search_type=Traces&n=1-10&n_primality=all")
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?is_cuspidal=yes&weight_parity=odd&level=7&weight=7&search_type=Traces&n=1-10&n_primality=all")
         assert "Results (4 matches)" in page.get_data(as_text=True)
         for elt in map(str,[17,0,-80,60,3780,-1200]):
             assert elt in page.get_data(as_text=True)
@@ -193,7 +193,7 @@ class CmfTest(LmfdbTest):
                 ('level=10&weight=1-20&dim=1',
                     ['Results (21 matches)', '171901114', 'No', '10.723', 'A-L signs']
                     ),
-                ('level=10%2C13%2C17&weight=1-8&dim=1',
+                ('level=10%2C13%2C17&weight=1-8&dim=1&is_cuspidal=yes',
                     ['Results (12 matches)', '1373', 'No', '0.136']
                     )]:
             for s in Subsets(['has_self_twist=no', 'is_self_dual=yes', 'nf_label=1.1.1.1','char_order=1','inner_twist_count=1']):
@@ -247,7 +247,7 @@ class CmfTest(LmfdbTest):
         assert 'Results (7 matches)' in page.get_data(as_text=True)
         assert r'\Q(\sqrt{2}, \sqrt{-3})' in page.get_data(as_text=True)
 
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?dim=8&char_order=20&cm=no&rm=no')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?is_cuspidal=yes&dim=8&char_order=20&cm=no&rm=no')
         assert "Results (17 matches)" in page.get_data(as_text=True)
         assert r"Q(\zeta_{20})" in page.get_data(as_text=True)
 

@@ -10,6 +10,7 @@
 {% if info.columns.languages %}
 {% set languages = info.columns.languages %}
 {% endif %}
+{% endif %}
 
 <form class='re-search'>
   {{ info.search_array.html(info) | safe }}
@@ -19,6 +20,7 @@
   <input type="hidden" name="sort_dir" value="{{info.sort_dir}}" />
 </form>
 
+{% if info.number > 0 %}
 {# requires info to contain number (number of results), count (max number of results possible), start (where to start in the list of results) and exact_count (boolean, indicating whether the count is exact) #}
 
 {% if info.number == 'infinity' or info.number >= info.start + info.count %}
@@ -27,7 +29,7 @@
   {% set upper_count = info.number %}
 {% endif %}
 <br>
-<div>
+<div class="results-line">
   {% if info.number > info.count or info.start != 0 or info.show_count -%}
     <h2 style="display: inline; color: #1565C0; font-weight: bold; font-family: sans-serif; text-decoration: none; font-size: 120%; text-align: left;">
     Showing {% if info.number <= info.count and info.start == 0 -%}
@@ -61,5 +63,15 @@
 {% block post_results_content %}
 
 {% endblock %}
+
+{% if info.search_array.is_narrowing(info) %}
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function() {
+    $([document.documentElement, document.body]).animate({
+        scrollTop: $("form.re-search").offset().top
+    }, 200);
+  });
+</script>
+{% endif %}
 
 {% endblock %}
