@@ -183,7 +183,7 @@ class ECisog_class():
                       ('%s' % self.iso_label, ' ')]
         self.code = {}
         self.code['show'] = {'sage':''} # use default show names
-        self.code['class'] = {'sage':'E = EllipticCurve("%s1")\n' % (self.iso_label) + 'E.isogeny_class()\n'}
+        self.code['class'] = {'sage':'E = EllipticCurve(%s)\n' % (self.ainvs) + 'E.isogeny_class()\n'}
         self.code['curves'] = {'sage':'E.isogeny_class().curves'}
         self.code['rank'] = {'sage':'E.rank()'}
         self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}

@@ -347,7 +347,7 @@ def common_boxes():
         label="Gram matrix",
         knowl="lattice.gram",
         example="[5,1,23]",
-        example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+        example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$")
     discriminant = TextBox(
         name="disc",
         label="Discriminant",
