@@ -326,7 +326,7 @@ def statistics():
                  for r2 in range(12)]
     nsig = [[{'cnt': comma(nsig[nn][r2]),
              'prop': format_percentage(nsig[nn][r2], n[nn]),
-             'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]' % (nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
+             'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=(%d,%d)' % (nn+1,nn+1-2*r2,r2)} for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
     h = [{'cnt': comma(h[j]),
           'prop': format_percentage(h[j], has_h),
           'label': '$10^{' + str(j - 1) + r'}<h\leq 10^{' + str(j) + '}$',
@@ -342,7 +342,7 @@ def statistics():
     sigclass1 = [[{'cnt': comma(sigclass1.get((nn+1,r2),0)),
                    'prop': format_percentage(sigclass1.get((nn+1,r2),0), sighasclass.get((nn+1,r2),0)) if sighasclass.get((nn+1,r2),0) > 0 else 0,
                    'show': sighasclass.get((nn+1,r2),0) > 0,
-                   'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=[%d,%d]&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
+                   'query': url_for(".number_field_render_webpage")+'?degree=%d&signature=(%d,%d)&class_number=1' % (nn + 1, nn + 1 - 2*r2, r2)}
                   for r2 in range(len(nsig[nn]))] for nn in range(len(nsig))]
 
     n = [{'cnt': comma(n[nn]),
@@ -373,8 +373,8 @@ def statistics():
 @nf_page.route("/")
 def number_field_render_webpage():
     info = to_dict(request.args, search_array=NFSearchArray())
-    sig_list = sum([[[d - 2 * r2, r2] for r2 in range(
-        1 + (d // 2))] for d in range(1, 11)], []) + sum([[[d, 0]] for d in range(11, 21)], [])
+    sig_list = sum([[(d - 2 * r2, r2) for r2 in range(
+        1 + (d // 2))] for d in range(1, 11)], []) + sum([[(d, 0)] for d in range(11, 21)], [])
     sig_list = [str(s).replace(' ','') for s in sig_list[:16]]
     if not request.args:
         init_nf_count()
@@ -465,7 +465,7 @@ def render_field_webpage(args):
     data['class_group'] = nf.class_group()
     data['narrow_class_group'] = nf.narrow_class_group()
     data['class_group_invs'] = nf.class_group_invariants()
-    data['signature'] = nf.signature()
+    data['signature'] = nf.signature_display()
     data['coefficients'] = nf.coeffs()
     nf.make_code_snippets()
     D = nf.disc()
@@ -776,7 +776,7 @@ def nf_datapage(label):
         return abort(404, f"Invalid label {label}")
     title = f"Number field data - {label}"
     bread = bread_prefix() + [(label, url_for(".by_label", label=label)), ("Data", " ")]
-    return datapage(label, "nf_fields", title=title, bread=bread)
+    return datapage(label, ["nf_fields", "nf_fields_extra"], title=title, bread=bread)
 
 @nf_page.route("/interesting")
 def interesting():
@@ -850,7 +850,7 @@ nf_columns = SearchColumns([
                  lambda label: '<a href="%s">%s</a>' % (url_for_label(label), nf_label_pretty(label))),
     PolynomialCol("coeffs", "nf.defining_polynomial", "Polynomial"),
     MathCol("degree", "nf.degree", "Degree", align="center", default=False),
-    MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '[%s,%s]' % (degree - 2*r2, r2 ), apply_download=False, align="center", default=False),
+    MultiProcessedCol("signature", "nf.signature", "Signature", ["r2", "degree"], lambda r2, degree: '(%s, %s)' % (degree - 2*r2, r2 ), apply_download=lambda r2, degree: [degree - 2*r2, r2], align="center", default=False),
     DiscriminantCol("disc", "nf.discriminant", "Discriminant", ['disc_sign', 'disc_abs'], func=None, align="left"),
     MathCol("num_ram", "nf.ramified_primes", "Ram. prime count", short_title="ramified prime count", default=False),
     MathCol("rd", "nf.root_discriminant", "Root discriminant", default=False),
@@ -888,6 +888,7 @@ class NFDownloader(Downloader):
                 "sage": 'poly = ZZx(out["coeffs"])',
                 "magma": 'poly := ZZx!(out`coeffs);',
                 "gp": 'poly = Polrev(mapget(out, "coeffs"));',
+                "oscar": 'poly = ZZx(out["coeffs"])',
             }
         ),
         "field": (
@@ -896,6 +897,7 @@ class NFDownloader(Downloader):
                 "sage": 'field.<a> = NumberField(poly)',
                 "magma": 'field<a> := NumberField(poly);',
                 "gp": 'field = nfinit(poly);',
+                "oscar": 'field,a = number_field(poly)',
             }
         ),
     }
@@ -1183,7 +1185,7 @@ class NFSearchArray(SearchArray):
             name="signature",
             label="Signature",
             knowl="nf.signature",
-            example="[1,1]")
+            example="(1,1)")
         discriminant = TextBox(
             name="discriminant",
             label="Discriminant",

@@ -1,58 +1,128 @@
 prompt:
-    magma:  'magma'
+  magma: 'magma'
+  sage:  'sage'
+  oscar: 'oscar'
 
 logo:
-    magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
+
+comment:
+  sage: |
+    #
+  magma: |
+    //
+  oscar: |
+    #
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  magma: |
+    // (not yet implemented)
+  oscar: |
+    # (not yet implemented)
+
+frontmatter:
+  all: |
+    {lang} code for working with transitive group {label}
 
 gg:
-    magma: G := TransitiveGroup(%s, %s);
+  comment: Define the Galois group
+  magma: G := TransitiveGroup({n}, {t});
+  sage: G = TransitiveGroup({n}, {t})  
+  oscar: G = transitive_group({n}, {t})
 
 n:
-    magma: t, n := TransitiveGroupIdentification(G); n;
+  comment: Degree
+  magma: t, n := TransitiveGroupIdentification(G); n;
+  sage: G.degree()
+  oscar: degree(G)
 
 t:
-    magma: t, n := TransitiveGroupIdentification(G); t;
+  comment: Transitive number
+  magma: t, n := TransitiveGroupIdentification(G); t;
+  sage: G.transitive_number()
+  oscar: transitive_group_identification(G)[2]
 
 primitive:
-    magma: IsPrimitive(G);
+  comment: Determine if group is primitive
+  magma: IsPrimitive(G);
+  sage: G.is_primitive()
+  oscar: is_primitive(G)
 
 even:
-    magma: IsEven(G);
+  comment: Parity
+  magma: IsEven(G);
+  sage: all(g.SignPerm() == 1 for g in libgap(G).GeneratorsOfGroup())
+  oscar: is_even(G)
 
 nilpotent:
-    magma: NilpotencyClass(G);
+  comment: Nilpotency class
+  magma: NilpotencyClass(G);
+  sage: libgap(G).NilpotencyClassOfGroup() if G.is_nilpotent() else -1
+  oscar: if is_nilpotent(G) nilpotency_class(G) end
 
 auts:
-    magma: Order(Centralizer(SymmetricGroup(n), G));
+  comment: Order of the centralizer of G in S_n
+  magma: Order(Centralizer(SymmetricGroup(n), G));
+  sage: SymmetricGroup({n}).centralizer(G).order()
+  oscar: order(centralizer(symmetric_group({n}), G)[1])
 
 gens:
-    magma: Generators(G);
+  comment: Generators
+  magma: Generators(G);
+  sage: G.gens()
+  oscar: gens(G)
 
 ccs:
-    magma: ConjugacyClasses(G);
+  comment: Conjugacy classes
+  magma: ConjugacyClasses(G);
+  sage: G.conjugacy_classes()
+  oscar: conjugacy_classes(G)
 
 order:
-    magma: Order(G);
+  comment: Order
+  magma: Order(G);
+  sage: G.order()
+  oscar: order(G)
 
 cyclic:
-    magma: IsCyclic(G);
+  comment: Determine if group is cyclic
+  magma: IsCyclic(G);
+  sage: G.is_cyclic()
+  oscar: is_cyclic(G)
 
 abelian:
-    magma: IsAbelian(G);
+  comment: Determine if group is abelian
+  magma: IsAbelian(G);
+  sage: G.is_abelian()
+  oscar: is_abelian(G)
 
 solvable:
-    magma: IsSolvable(G);
+  comment: Determine if group is solvable
+  magma: IsSolvable(G);
+  sage: G.is_solvable()
+  oscar: is_solvable(G)
 
 id:
-    magma: IdentifyGroup(G);
+  comment: Abstract group ID
+  magma: IdentifyGroup(G);
+  sage: G.id()
 
 char_table:
-    magma: CharacterTable(G);
+  comment: Character table
+  magma: CharacterTable(G);
+  sage: G.character_table()
+  oscar: character_table(G)
 
+
+# specify which code snippets to test
 snippet_test:
   test4T2: 
     label: 4T2
     url: GaloisGroup/4T2/download/{lang}
-  test11T6: 
-    label: 11T6
-    url: GaloisGroup/11T6/download/{lang}
+  test11T5: 
+    label: 11T5
+    url: GaloisGroup/11T5/download/{lang}

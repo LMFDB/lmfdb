@@ -129,10 +129,10 @@ def maass_data(label):
              ("Maass", url_for(".index")),
              (label, url_for(".by_label", label=label)),
              ("Data", " ")]
-    tables = ["maass_rigor", "maass_rigor_portraits"]
-    label_cols = ["maass_label", "maass_label"]
+    tables = ["maass_rigor", "maass_rigor_coefficients", "maass_rigor_portraits"]
+    label_cols = ["maass_label", "maass_label", "maass_label"]
     return datapage(
-        [label, label], tables,
+        label, tables,
         bread=bread, title=title, label_cols=label_cols
     )
 
