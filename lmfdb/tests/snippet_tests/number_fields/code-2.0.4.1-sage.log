@@ -39,10 +39,7 @@ sage: K.subfields()[1:-1]
 [
 
 ]
-sage: K.galois_group(type='pari')
-<ipython-input-43-70c79b25ed84>:1: DeprecationWarning: the different Galois types have been merged into one class
-See https://github.com/sagemath/sage/issues/28782 for details.
-  K.galois_group(type='pari')
+sage: K.galois_group()
 Galois group 2T1 (S2) with order 2 of x^2 + 1
 sage: p = 7; [(e, pr.norm().valuation(p)) for pr,e in K.factor(p)]
 [(1, 2)]

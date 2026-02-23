@@ -24,6 +24,7 @@ from sage.all import (
     is_prime,
     cartesian_product_iterator,
     exists,
+    euler_phi,
 )
 from sage.libs.gap.libgap import libgap
 from sage.libs.gap.element import GapElement
@@ -3762,6 +3763,14 @@ class WebAbstractConjClass(WebObj):
         newrep = newrep.replace(' ','')
         self.representative = newrep
         self.force_repr_elt = True
+
+    # extract from powers list the ones corresponding to ones dividing the order
+    def prime_powers(self):
+        plist = [z[0] for z in ZZ(self.group_order).factor()]
+        Nphi = self.group_order*euler_phi(self.group_order)
+        plist_long = [z[0] for z in ZZ(Nphi).factor()]
+        assert len(plist_long) == len(self.powers)
+        return [self.powers[plist_long.index(p)] for p in plist]
 
     def display_knowl(self, name=None):
         if not name:
