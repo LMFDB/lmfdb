@@ -5,7 +5,7 @@ from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 from sage.misc.cachefunc import cached_function
 
-from lmfdb.app import ctx_proc_userdata, is_debug_mode
+from lmfdb.app import app, ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
 from lmfdb.utils.utilities import flash_error, flash_info, flash_success, to_dict
 from lmfdb.utils.completeness import results_complete
@@ -271,36 +271,43 @@ class SearchWrapper(Wrapper):
             # Display warning message if user searched on column(s) with null values
             if query:
                 nulls = table.stats.null_counts()
-                complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
-                if complete:
-                    flash_success("The results below are complete, since the LMFDB contains all " + msg)
-                elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
-                    search_columns = table._columns_searched(query)
-                    nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
-                    col_display = {}
-                    if "search_array" in info:
-                        for row in info["search_array"].refine_array:
-                            if isinstance(row, (list, tuple)):
-                                for item in row:
-                                    if hasattr(item, "name") and hasattr(item, "label"):
-                                        col_display[item.name] = item.label
-                        for col, cnt in list(nulls.items()):
-                            override = info["search_array"].null_column_explanations.get(col)
-                            if override is False:
-                                del nulls[col]
-                            elif override:
-                                nulls[col] = override
-                            else:
-                                nulls[col] = f"{col_display.get(col, col)} ({cnt} objects)"
-                    else:
-                        for col, cnt in list(nulls.items()):
-                            nulls[col] = f"{col} ({cnt} objects)"
-                    if nulls:
-                        msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
-                        msg += ", ".join(nulls.values())
-                        flash_info(msg)
-                if caveat:
-                    flash_info("The completeness " + caveat)
+                try:
+                    complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                    if complete:
+                        flash_success("The results below are complete, since the LMFDB contains all " + msg)
+                    elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
+                        search_columns = table._columns_searched(query)
+                        nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
+                        col_display = {}
+                        if "search_array" in info:
+                            for row in info["search_array"].refine_array:
+                                if isinstance(row, (list, tuple)):
+                                    for item in row:
+                                        if hasattr(item, "name") and hasattr(item, "label"):
+                                            col_display[item.name] = item.label
+                            for col, cnt in list(nulls.items()):
+                                override = info["search_array"].null_column_explanations.get(col)
+                                if override is False:
+                                    del nulls[col]
+                                elif override:
+                                    nulls[col] = override
+                                else:
+                                    nulls[col] = f"{col_display.get(col, col)} ({cnt} objects)"
+                        else:
+                            for col, cnt in list(nulls.items()):
+                                nulls[col] = f"{col} ({cnt} objects)"
+                        if nulls:
+                            msg = 'Search results may be incomplete due to <a href="Completeness">uncomputed quantities</a>: '
+                            msg += ", ".join(nulls.values())
+                            flash_info(msg)
+                    if caveat:
+                        flash_info("The completeness " + caveat)
+                except Exception as err:
+                    import traceback
+                    msg = f"There was an error in the completeness checking code, so the search results below may or may not be complete: \n{err}"
+                    flash_info(msg)
+                    msg += "\n" + traceback.format_exc()
+                    app.logger.warning(msg)
             return render_template(template, info=info, title=title, **template_kwds)
 
 

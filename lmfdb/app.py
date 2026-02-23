@@ -544,6 +544,12 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
+@app.route("/license")
+def license():
+    t = "LMFDB Data and Code Licenses"
+    b = [("LMFDB Licenses", " ")]
+    return render_template('license.html', title=t, bread=b)
+
 
 @app.route("/contact")
 def contact():
