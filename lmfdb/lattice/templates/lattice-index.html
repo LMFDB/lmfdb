@@ -15,7 +15,7 @@
     <td>{% for r in info.dim_list %} <a href="?rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
   </tr><tr>
     <td>By {{ KNOWL('lattice.determinant', title='determinant') }}:</td>
-    <td>{% for d in info.det_list %} <a href="?det={{d}}">{{d}}</a>&nbsp; {% endfor %} $\cdots$</td>
+    <td>{% for d in info.det_list %} <a href="?det_abs={{d}}">{{d}}</a>&nbsp; {% endfor %} $\cdots$</td>
   </tr><tr>
     <td>By {{ KNOWL('lattice.signature', title='signature') }}:</td>
     <td>{% for sig in info.signature_list %} <a href="?signature={{ sig[0] }}">{{ sig[1] }}</a>&nbsp; {% endfor %} $\cdots$</td>
