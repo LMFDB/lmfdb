@@ -3,10 +3,10 @@ import re
 import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from sage.all import matrix #round, ZZ, QQ, PolynomialRing, latex, PowerSeriesRing, sqrt, round
+from sage.all import matrix, ZZ, IntegralLattice
 
 from lmfdb.utils import (
-    flash_error, to_dict, #web_latex_split_on_pm,
+    flash_error, flash_info, to_dict, #web_latex_split_on_pm,
     SearchArray, CountBox, #TextBox, prop_int_pretty,
     parse_ints, parse_posints, parse_count, parse_noop, #parse_list,
     parse_start, #clean_input,
@@ -100,35 +100,91 @@ lattice_search_projection = ['label', 'rank', 'det_abs', 'level',
                              'class_number', 'aut', 'minimum']
 
 
+def _show_genus(query, info, genus_label):
+    """Show all lattices in the given genus with an informational flash message."""
+    genus_url = url_for(".render_genus_webpage", label=genus_label)
+    flash_info("The exact Gram matrix was not found in the database, "
+               "but the lattice belongs to genus <a href='%s'>%s</a>. "
+               "Showing all lattices in that genus." % (genus_url, genus_label))
+    query.pop('gram', None)
+    query['genus_label'] = genus_label
+    count = parse_count(info)
+    start = parse_start(info)
+    return db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+
+
 def lattice_search_isometric(res, info, query):
     """
     We check for isometric lattices if the user enters a valid gram matrix
-    but not one stored in the database
+    but not one stored in the database.
 
-    This may become slow in the future: at the moment we compare against
-    a list of stored matrices with same dimension and determinant
-    (just compare with respect to dimension is slow)
+    Strategy:
+    1. Compute the genus of the input matrix and find the matching genus in the DB.
+    2. Use the user's other search constraints to narrow candidates within the genus.
+    3. If only one candidate matches, it must be the lattice — return it directly.
+    4. Otherwise try isometry against each candidate, with a time budget.
+    5. If no match is found (or the time budget is exceeded), show all lattices
+       in the genus with an informational message.
     """
+    ISOM_TIME_LIMIT = 20.0  # seconds
+
     if info['number'] == 0 and info.get('gram_matrix'):
         A = info['gram_matrix']
         query.pop('gram', None)
-        n = len(A)
-        d = matrix(A).determinant()
-        # String projection returns the value directly (not a dict)
-        for gram_val in db.lat_lattices_new.search({'rank': n, 'det_abs': int(abs(d))}, "gram"):
-            # Handle the [[flat_list]] wrapper format stored in the DB
-            if gram_val and isinstance(gram_val[0], list):
-                flat = gram_val[0]
-            else:
-                flat = gram_val
-            gram_2d = flat_to_matrix(flat)
-            # TODO: isom only works for positive definite gram matrices
-            if isom(A, gram_2d):
-                query['gram'] = gram_val
-                count = parse_count(info)
-                start = parse_start(info)
-                res = db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+        M = matrix(ZZ, A)
+        count = parse_count(info)
+        start = parse_start(info)
+        t0 = time.time()
+
+        try:
+            L = IntegralLattice(M)
+            input_genus = L.genus()
+        except Exception:
+            return res
+
+        # Use genus invariants to narrow the DB search
+        genus_query = {
+            'rank': int(input_genus.rank()),
+            'det': int(input_genus.det()),
+            'level': int(input_genus.level()),
+            'nplus': int(input_genus.signature()),
+            'is_even': bool(input_genus.is_even()),
+        }
+
+        for rep in db.lat_genera.search(genus_query, ['rep', 'label']):
+            if time.time() - t0 > ISOM_TIME_LIMIT:
                 break
+            rep_2d = flat_to_matrix(rep['rep'])
+            L2 = IntegralLattice(matrix(ZZ, rep_2d))
+            if input_genus == L2.genus():
+                genus_label = rep['label']
+                query['genus_label'] = genus_label
+
+                # Count candidates matching all user constraints within this genus
+                n_candidates = db.lat_lattices_new.count(query)
+
+                if n_candidates == 1:
+                    # Unique match — must be this lattice
+                    res = db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+                    return res
+
+                if n_candidates > 1:
+                    # Try isometry against each candidate, with time limit
+                    for gram_val in db.lat_lattices_new.search(query, 'gram'):
+                        if time.time() - t0 > ISOM_TIME_LIMIT:
+                            break
+                        if gram_val and isinstance(gram_val[0], list):
+                            flat = gram_val[0]
+                        else:
+                            flat = gram_val
+                        gram_2d = flat_to_matrix(flat)
+                        if isom(A, gram_2d):
+                            query['gram'] = gram_val
+                            res = db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+                            return res
+
+                # No isometric match, time exceeded, or no candidates — show genus
+                return _show_genus(query, info, genus_label)
 
     return res
 
