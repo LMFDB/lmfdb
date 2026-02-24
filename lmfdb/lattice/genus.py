@@ -215,8 +215,8 @@ lat_only_columns = [
 
 common_columns = common_columns_prefix + common_columns_suffix
 
-genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns_prefix + [MathCol("det", "lattice.determinant", "Determinant")] + common_columns_suffix + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False)]
-# Display column for mass
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns_prefix + [MathCol("det", "lattice.determinant", "Determinant")] + common_columns_suffix
+# Display genus column for mass
 genus_columns.append(RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False))
 
 in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
