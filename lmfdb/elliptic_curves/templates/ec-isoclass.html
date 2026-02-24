@@ -107,7 +107,7 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
   });
   </script>
   
-{% if info.class_size>1 %}
+{% if info.class_size > 1 %}
 
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
@@ -118,14 +118,20 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
   \({{info.isogeny_matrix_str}}\)
 </p>
 
+{% endif %}
+
 <h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
 {{ place_code('plot') }}
+{% if info.class_size > 1 %}
 <p>The vertices are labelled with {{info.label_type}} labels. </p>
-<center>
-  <img src="{{info.graph_img}}" />
-</center>
-
 {% endif %}
+<div id="isogeny-graph"></div>
+
+{% set graph_layouts = info.graph_layouts %}
+{% include "cytoscape_scripts.html" %}
+<script>
+  initIsogenyGraph('isogeny-graph', {{ info.graph_data | tojson }}, {{ info.graph_layouts | tojson }}, {{ info.graph_default_layout | tojson }});
+</script>
 
 <h2>Elliptic curves in class {{info.class_label}}</h2>
 {{ place_code('curves') }}
