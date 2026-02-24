@@ -102,7 +102,7 @@ automorphism_group_order:
 density:
   comment: Density
   magma: Density(L);
-  #oscar: center_density(L)
+  #oscar: density(L)
 
 hermite:
   comment: Hermite number
