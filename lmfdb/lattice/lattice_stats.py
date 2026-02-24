@@ -38,7 +38,7 @@ class Lattice_stats(StatsDisplay):
     table = db.lat_lattices_new
     baseurl_func = ".index"
     buckets = {"rank":["1","2","3","4","5","6","7","8","9","10","11","12"],
-               "det":["1","2-10","11-100","101-1000"],
+               "det_abs":["1","2-10","11-100","101-1000"],
                "minimum":["1","2","3","4-7","8-15","16-31","32-63","64-127","128-255"],
                "class_number":["1","2","3","4-7","8-15","16-31","32-63"],
                "aut_size":["2","4","8","12","16","24","32","33-128", "129-512","513-2048","2049-16384","16385-262144","262145-8388608","8388609-191102976"]}
@@ -48,13 +48,13 @@ class Lattice_stats(StatsDisplay):
               'class_number': 'lattice.class_number',
               'aut_size': 'lattice.group_order'}
     short_display = {'dim': 'dimension',
-                     'det': 'determinant',
+                     'det_abs': 'absolute determinant',
                      'minimum': 'minimal length',
                      'aut_size': 'automorphism order'}
     top_titles = {'minimum': 'minimal vector length',
                   'aut_size': 'automorphism group order'}
     stat_list = [
-        {"cols": ["det", "rank"],
+        {"cols": ["det_abs", "rank"],
          "proportioner": proportioners.per_col_total,
          "totaler": totaler()},
         {"cols": ["minimum", "rank"],
