@@ -73,7 +73,7 @@
 </table>
 
 {% if lattice.is_positive_definite %}
-<h2> {{ KNOWL('lattice.basis', title='Euclidean basis') }} </h2>
+<h2> {{ KNOWL('lattice.euclidean_basis', title='Euclidean basis') }} </h2>
 {{ place_code('basis') }}
 <table>
     <tr><td>{{lattice.basis_display | safe}}</td></tr>
@@ -109,13 +109,13 @@
 
 <h2> {{ KNOWL('lattice.decompositions', title='Decompositions') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.indecomposable', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
     <tr><td>{{ KNOWL('lattice.additively_indecomposable', title='Is additively indecomposable') }}:</td><td>{{lattice.is_additively_indecomposable}}</td></tr>
     <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Orthogonal decomposition') }}:</td><td>{{lattice.orthogonal_factors}}</td><td>{{ place_code('orthogonal_decomposition') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.tensor_decomposition', title='Tensor decomposition') }}:</td><td>{{lattice.tensor_decompositions}}</td></tr>
 </table>
 
-<h2> {{ KNOWL('lattice.special_sublattices', title='Special sublattices') }} </h2>
+<h2> {{ KNOWL('lattice.sublattice', title='Special sublattices') }} </h2>
 <table>
     <tr><td>{{ KNOWL('lattice.root_sublattice', title='Root sublattice') }}:</td><td>{{lattice.root_sublattice}}</td><td>{{ place_code('root_sublattice') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.root_sublattice', title='Complement of root sublattice') }}:</td><td>{{lattice.root_complement}}</td></tr>
