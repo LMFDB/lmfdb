@@ -182,7 +182,7 @@ quadratic_form:
 
 basis:
   comment: Basis
-  magma: Basis(L);
+  magma: Basis(Cholesky(L));
   pari: qfcholesky(L)
 
 genus:

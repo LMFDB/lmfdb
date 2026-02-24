@@ -52,14 +52,19 @@ def learnmore_list_remove(matchstring):
 # Webpages: main, random and search results #
 #############################################
 
+def buckets_from_endpoints(endpoints):
+    return [("%s..%s" % (start, end - 1 if end != 1 else -1) if start != end-1 else "%s" % start) for start, end in zip(endpoints[:-1], endpoints[1:])]
+
 def set_index_info(info, stats):
     # Prepare list of signatures to browse (display as round brackets, internally use square brackets)
     sig_list = sum([[[n-nm, nm] for nm in range(1 + (n//2))] for n in range(1, 10)], [])
     signature_list = [[str(s).replace(' ',''), str(tuple(s)).replace(' ','')] for s in sig_list[:16]]
-    dim_list = list(range(1, 13))
-    class_number_list = list(range(1, 31))
-    det_list_endpoints = [-1000, -100, -10, 1, 10, 100, 1000]
-    det_list = ["%s..%s" % (start, end - 1 if end != 1 else -1) for start, end in zip(det_list_endpoints[:-1], det_list_endpoints[1:])]
+    dim_list_endpoints = [1, 2, 3, 4] + [8*i for i in range(1,stats.max_rank//8 + 1)] + [stats.max_rank+1]
+    dim_list = buckets_from_endpoints(dim_list_endpoints)
+    cn_list_endpoints = [1, 2, 3, 4, 10, 100, stats.max_cn+1]
+    class_number_list = buckets_from_endpoints(cn_list_endpoints)
+    det_list_endpoints = [1, 10, 100, stats.max_det+1]
+    det_list = buckets_from_endpoints(det_list_endpoints)
     info.update({'dim_list': dim_list, 'signature_list': signature_list,
                  'det_list': det_list, 'class_number_list': class_number_list,
                  })
@@ -180,10 +185,12 @@ def common_parse(info, query):
     parse_list(info, query, 'gram', process=vect_to_sym)
     parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
 
-common_columns = [
+common_columns_prefix = [
     MathCol("rank", "lattice.dimension", "Rank"),
     MultiProcessedCol("signature", "lattice.signature", "Signature", ["nplus", "rank"], lambda nplus, rank: '$(%s,%s)$' % (nplus, rank-nplus),  align="center"),
-    MathCol("det", "lattice.determinant", "Determinant"),
+]
+
+common_columns_suffix = [
     MathCol("dual_det", "lattice.determinant", "Dual Determinant", default=False),
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
@@ -195,17 +202,20 @@ common_columns = [
 ]
 
 lat_only_columns = [
+    MultiProcessedCol("det", "lattice.determinant", "Determinant", ["det_abs", "det_sign"], lambda det_abs, det_sign: '$%s$' % (det_sign*det_abs), align="center"),
     MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
-    ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda a: vect_to_matrix(vect_to_sym2(a), compress_threshold=5, keep=2) if a and type(a[0])==int else ''),
+    ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda a: vect_to_matrix(vect_to_sym2(a if type(a[0])==int else a[0]), compress_threshold=5, keep=2) if a else ''),
     MathCol("density", "lattice.density", "Density", default=False),
     MathCol("hermite", "lattice.hermite_number", "Hermite", default=False),
     MathCol("kissing", "lattice.kissing", "Kissing", default=False),
     MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
 ]
 
-genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns 
+common_columns = common_columns_prefix + common_columns_suffix
+
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns_prefix + [MathCol("det", "lattice.determinant", "Determinant")] + common_columns_suffix + [RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False)]
 # Display column for mass
 genus_columns.append(RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False))
 
@@ -243,6 +253,7 @@ def render_genus_webpage(label):
     info["code"] = genus.code
     info["downloads"] = genus.downloads
     info["KNOWL_ID"] = f"lattice.genus.{label}"
+    info["graph_layouts"] = genus.graph_layouts
     return render_genus(info)
 
 @embed_wrap(
@@ -260,6 +271,7 @@ def render_genus_webpage(label):
     downloads=lambda:None,
     code=lambda:None,
     KNOWL_ID=lambda:None,
+    graph_layouts=lambda:[],
 )
 def render_genus(info, query):
     query["genus_label"] = info["genus"].label

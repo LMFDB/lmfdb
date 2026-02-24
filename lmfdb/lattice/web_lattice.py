@@ -5,7 +5,7 @@ from collections import defaultdict
 from lmfdb import db
 from flask import url_for
 from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten #latex, Factorization,
-from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, encode_plot, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix
+from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
 import numpy as np
 
@@ -163,16 +163,55 @@ class WebGenus(WebLat):
     def adjacency_display(self):
         display = defaultdict(dict)
         R = PolynomialRing(ZZ, "x")
+        # Look up lattice data for this genus (for clickable nodes and tooltips)
+        lattice_data = list(db.lat_lattices_new.search(
+            {"genus_label": self.label},
+            ["label", "minimum", "kissing", "aut_label"],
+            sort=["label"]))
+        # Batch-fetch automorphism group tex_names
+        aut_labels = list({c["aut_label"] for c in lattice_data if c.get("aut_label")})
+        aut_tex = {r["label"]: r["tex_name"] for r in db.gps_groups.search(
+            {"label": {"$in": aut_labels}}, ["label", "tex_name"])} if aut_labels else {}
         for p, M in self.adjacency_matrix.items():
             adj_mat = matrix(ZZ, self.class_number, self.class_number, M)
             display[p]["matrix"] = raw_typeset_matrix(adj_mat)
-            G = Graph(adj_mat, format='weighted_adjacency_matrix') # can also do format='adjacency_matrix'
-            # TODO: improve layout
-            img = encode_plot(G.plot(), transparent=True)
-            display[p]["graph_link"] = f'<img src="{img}" width="400" height="300"/>'
+            G = Graph(adj_mat, format='weighted_adjacency_matrix')
+            G.relabel(list(range(1, self.class_number + 1)))
+            elements, has_preset = graph_to_cytoscape_json(G)
+            # Attach lattice metadata to nodes if available
+            if lattice_data and len(lattice_data) == self.class_number:
+                for elt in elements:
+                    if elt["group"] == "nodes":
+                        idx = int(elt["data"]["id"]) - 1
+                        c = lattice_data[idx]
+                        elt["data"]["label"] = c["label"].split(".")[-1]
+                        elt["data"]["url"] = url_for(".render_lattice_webpage", label=c["label"])
+                        if c.get("minimum") is not None:
+                            elt["data"]["minimum"] = c["minimum"]
+                        if c.get("kissing") is not None:
+                            elt["data"]["kissing"] = c["kissing"]
+                        if c.get("aut_label") is not None:
+                            elt["data"]["aut_name"] = aut_tex.get(c["aut_label"], c["aut_label"])
+            display[p]["graph_data"] = elements
+            display[p]["graph_default_layout"] = 'Elk-stress'
             F = [(R(f), e) for f,e in self.adjacency_polynomials[p]]
             display[p]["poly"] = raw_typeset_poly_factor(F)
         return display
+
+    @lazy_attribute
+    def adjacency_graph_json(self):
+        """Graph data suitable for JSON serialization (used by the template)."""
+        result = {}
+        for p, D in self.adjacency_display.items():
+            result[p] = {
+                "graph_data": D["graph_data"],
+                "graph_default_layout": D["graph_default_layout"],
+            }
+        return result
+
+    @lazy_attribute
+    def graph_layouts(self):
+        return list(GRAPH_LAYOUTS)
 
     @lazy_attribute
     def start_p(self):

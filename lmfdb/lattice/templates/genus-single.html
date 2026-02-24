@@ -48,20 +48,36 @@
     <table>
       <tr><td>{{ KNOWL('lattice.adjacency_matrix', 'Adjacency matrix') }}:</td><td>{{D.matrix | safe}}</td></tr>
       <tr><td>{{ KNOWL('lattice.adjacency_polynomial', 'Adjacency polynomial') }}:</td><td>{{D.poly | safe}}</td></tr>
-      <tr><td>{{ KNOWL('lattice.adjacency_graph', 'Adjacency graph') }}:</td><td>{{D.graph_link | safe}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.adjacency_graph', 'Adjacency graph') }}:</td><td>
+        <div id="adj-graph-{{p}}" style="border:1px solid #ddd;"></div>
+      </td></tr>
     </table>
   </div>
 {% endfor %}
 
 <h2> {{ KNOWL('lattice', title='Lattices') }} </h2>
 
+{% if genus.adjacency_display | length > 0 %}
+{% include "cytoscape_scripts.html" %}
+{% endif %}
+
 <script type="text/javascript">
+  var adjGraphData = {{ genus.adjacency_graph_json | tojson }};
+  var adjGraphLayouts = {{ graph_layouts | tojson }};
+  var adjInitialized = {};
+
   function select_adj_mode(mode) {
     // Reuse gs_(in)active class from lf-family so we don't need to add more to style.css
     $("button.gs_active").addClass("gs_inactive").removeClass("gs_active");
     $("button.adj_"+mode).removeClass("gs_inactive").addClass("gs_active");
     $("div.adjcont").hide();
     $("#adjcont_"+mode).show();
+    // Lazy-init: render the Cytoscape graph on first show
+    if (!adjInitialized[mode] && adjGraphData[mode]) {
+      adjInitialized[mode] = true;
+      var d = adjGraphData[mode];
+      initIsogenyGraph('adj-graph-' + mode, d.graph_data, adjGraphLayouts, d.graph_default_layout);
+    }
   }
   {% if (genus.adjacency_display | length) > 0 %}
   select_adj_mode('{{genus.start_p}}');

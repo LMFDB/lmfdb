@@ -559,6 +559,11 @@ class WebNumberField:
         n = self._data['degree']
         return [n-2*r2, r2]
 
+    def signature_display(self):
+        """Return signature formatted for display with parentheses."""
+        r1, r2 = self.signature()
+        return '(%s, %s)' % (r1, r2)
+
     def degree(self):
         return self._data['degree']
 

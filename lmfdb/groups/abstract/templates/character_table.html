@@ -43,9 +43,9 @@
       <td></td><td class="right">{{KNOWL('group.conjugacy_class.power_classes',"{} P".format(p))}}</td>
       {% for c in ccs %}
        {% if loop.index ==  highlight_i %}
-      <td class="highlighted">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+      <td class="highlighted">{{ ccs[c.prime_powers()[ploop.index-1]-1].label }}</td>
       {% else %}
-<td class="right">{{ ccs[c['powers'][ploop.index-1]-1].label }}</td>
+<td class="right">{{ ccs[c.prime_powers()[ploop.index-1]-1].label }}</td>
       {% endif %}
       {% endfor %}
     </tr>
