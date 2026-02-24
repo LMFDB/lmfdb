@@ -4,7 +4,7 @@ import yaml
 from collections import defaultdict
 from lmfdb import db
 from flask import url_for
-from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten #latex, Factorization,
+from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer #latex, Factorization,
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
 import numpy as np
@@ -44,6 +44,79 @@ def vect_to_sym2(v):
             M[i, j] = v[k]
             k += 1
     return [[int(M[i, j]) for i in range(n)] for j in range(n)]
+
+def flat_to_matrix(v):
+    """Convert a flat list of n² integers to a 2D n×n list (row by row)."""
+    n = Integer(len(v)).isqrt()
+    if n * n != len(v):
+        raise ValueError(f"Length {len(v)} is not a perfect square")
+    return [[int(v[i * n + j]) for j in range(n)] for i in range(n)]
+
+def upper_triangular_to_matrix(v):
+    """Convert n(n+1)/2 upper-triangular entries to a symmetric 2D n×n list (row by row in upper triangle)."""
+    k = len(v)
+    # Solve n(n+1)/2 = k, i.e. n = (-1 + sqrt(1+8k))/2
+    disc = 1 + 8 * k
+    sq = Integer(disc).isqrt()
+    if sq * sq != disc or (sq - 1) % 2 != 0:
+        raise ValueError(f"Length {k} is not a triangular number")
+    n = int((sq - 1) // 2)
+    M = [[0] * n for _ in range(n)]
+    idx = 0
+    for i in range(n):
+        for j in range(i, n):
+            M[i][j] = int(v[idx])
+            M[j][i] = int(v[idx])
+            idx += 1
+    return M
+
+def lower_triangular_to_matrix(v):
+    """Convert n(n+1)/2 lower-triangular entries to a symmetric 2D n×n list (row by row in lower triangle)."""
+    k = len(v)
+    disc = 1 + 8 * k
+    sq = Integer(disc).isqrt()
+    if sq * sq != disc or (sq - 1) % 2 != 0:
+        raise ValueError(f"Length {k} is not a triangular number")
+    n = int((sq - 1) // 2)
+    M = [[0] * n for _ in range(n)]
+    idx = 0
+    for i in range(n):
+        for j in range(i + 1):
+            M[i][j] = int(v[idx])
+            M[j][i] = int(v[idx])
+            idx += 1
+    return M
+
+def diagonal_to_matrix(v):
+    """Convert n diagonal entries to a diagonal 2D n×n list."""
+    n = len(v)
+    if n == 0:
+        raise ValueError("Empty diagonal vector")
+    M = [[0] * n for _ in range(n)]
+    for i in range(n):
+        M[i][i] = int(v[i])
+    return M
+
+def auto_detect_gram_format(v):
+    """Auto-detect format from length: perfect square → full matrix, triangular → upper triangular."""
+    k = len(v)
+    if k == 0:
+        raise ValueError("Empty vector")
+    # Check perfect square
+    n = Integer(k).isqrt()
+    is_square = (n * n == k)
+    # Check triangular number
+    disc = 1 + 8 * k
+    sq = Integer(disc).isqrt()
+    is_triangular = (sq * sq == disc and (sq - 1) % 2 == 0)
+    if is_square and is_triangular:
+        # Only overlaps at k=1, result is identical either way
+        return flat_to_matrix(v)
+    if is_square:
+        return flat_to_matrix(v)
+    if is_triangular:
+        return upper_triangular_to_matrix(v)
+    raise ValueError(f"Length {k} is neither a perfect square nor a triangular number; please select a format explicitly")
 
 def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
