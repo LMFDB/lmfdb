@@ -1,0 +1,114 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<h2> Defining parameters </h2>
+
+<table>
+  <tr>
+    <td> {{ KNOWL('mf.siegel.family', title='Family') }}: </td>
+    <td>{{ space.family_str }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.siegel.level', title='Level') }}: </td>
+    <td> \( N \) </td>
+    <td>\(=\)</td>
+    <td>{{ space.factored_level }}</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('mf.siegel.weight', title='Weight') }}: </td>
+    <td> \( (k,j) \) </td>
+    <td>\(=\)</td>
+    <td>\({{ space.weight_str }}\)</td>
+  </tr>
+  <tr>
+    <td> {{ KNOWL('character.dirichlet.galois_orbit_label', title='Character orbit')}}: </td>
+    <td> \([\chi]\) </td>
+    <td>\(=\)</td>
+    <td> {{ space.display_character() | safe }} </td>
+  </tr>
+</table>
+
+<h2> Dimensions </h2>
+
+{% if space.degree == 2 and space.weight[0] == 1 %}
+
+<p> There are no modular forms of weight \( (k,j) = {{ space.weight_str }} \) when \( k = 1 \). </p>
+
+{% elif space.degree == 2 and space.weight_parity == -1 and space.char_parity == 1 %}
+
+<p> There are no modular forms of weight \( (k,j) = {{ space.weight_str }} \) and character {{ space.char_orbit_link | safe }} since \( j \) is odd while the character is {{ KNOWL('character.dirichlet.parity',title='even') }}.</p>
+
+{% elif space.degree == 2 and space.weight_parity == 1 and space.char_parity == -1 %}
+
+<p> There are no modular forms of weight \( (k,j) = {{ space.weight }} \) and character {{ space.char_orbit_link | safe }} since \( j \) is even while the character is {{ KNOWL('character.dirichlet.parity',title='odd') }}.</p>
+
+{% elif space.dim_grid.has_eis_dim() %}
+
+<p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.mf_latex()}}\).</p>
+
+{% else %}
+
+<p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.cusp_latex()}}\).</p>
+
+
+<table class="dimgrid">
+  <thead>
+    <tr>
+      <th class="blank"></th>
+      <th> Subspace </th>
+      <th> New </th>
+      <th> Total New </th>
+      <th> Old </th>
+      <th> Total Old </th>
+      <th> Dimension </th>
+      <th> Total </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for X in space.dim_grid.disp_keys() %}
+    <tr>
+      <th rowspan={{info.subspace_num[X]+1}} class="left"> {{info.space_type[X]}} </td>
+      <td></td>
+      {% for typ in ['new', 'old', 'all'] %} 
+      <td></td>
+      <td rowspan={{info.subspace_num[X]+1}} class="center"> {{ space.dim_grid[X][typ]  }} </td>
+      {% endfor %}
+    </tr>
+    {% for Y in info.subspace_type[X] %}
+    <tr>
+      <th class="left"> {{info.subspace_type[X][Y]}} </td>
+      {% for typ in ['new', 'old', 'all'] %} 
+      <td class="center"> {{ space.dim_grid[Y][typ] }} </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endif %}
+
+{% if space.trivial_character and space.new_cusp_dim > 0 and space.ALdims %}
+<p>The following table gives the dimensions of the cuspidal new subspaces with specified eigenvalues for the {{ KNOWL('mf.siegel.atkin-lehner',title='Atkin-Lehner operators') }}{% if space.factored_level %} and the {{ KNOWL('mf.siegel.fricke',title='Fricke involution') }}{% endif %}.</p>
+
+{{ space.ALdim_table() | safe }}
+{% endif %}
+
+{% if space.is_display_decomp %}
+
+{% if space.dim_grid.has_eis_dim() %}
+
+<h2> {{ KNOWL('mf.siegel.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.new_latex() }}\) into {{ KNOWL('mf.siegel.newform_subspace',title='newform subspaces') }}</h2>
+
+{% else %}
+
+<h2> {{ KNOWL('mf.siegel.decomposition.new.gamma0chi', title='Decomposition') }} of \({{ space.cusp_new_latex() }}\) into {{ KNOWL('mf.siegel.newform_subspace',title='newform subspaces') }}</h2>
+
+{% endif %}
+
+{% include 'search_results_table.html' %}
+
+{% endif %}
+
+{% endblock %}

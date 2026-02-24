@@ -2,6 +2,15 @@
 This script is used to run verification jobs in parallel.
 For more options (such as verifying only a single check or a single object)
 see the verify method of PosgresTable in lmfdb/lmfdb_database.py.
+
+In general, however, the script is run from the top level directory as follows:
+
+sage -python lmfdb/verify/verify_tables.py LOGDIR TABLENAME TYPE -j 8
+
+where LOGDIR is the directory to store the log files, TABLENAME is the name of the
+table to verify, and TYPE is the type of verification to run.
+
+The -j 8 option is optional and specifies the number of parallel jobs to run.
 """
 
 import argparse
@@ -18,11 +27,15 @@ except NameError:
     pass
 from lmfdb.verify import db
 
-def directory(path):
-    if not os.path.isdir(path):
-        raise TypeError('Not a directory')
+def prepare_logdir(path):
+    if os.path.exists(path):
+        if not os.path.isdir(path):
+            raise TypeError(f"{path} exists and is not a directory")
+        # Leave existing directory as is
     else:
-        return path
+        # Create directory only if it doesn't exist
+        os.makedirs(path)
+    return path
 
 def find_validated_tables():
     curdir = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'logdir',
         metavar='LOGDIR',
-        type=directory,
+        type=prepare_logdir,
         help='log directory')
 
     parser.add_argument(

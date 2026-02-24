@@ -1,11 +1,12 @@
 
 import re
 from collections import Counter
+from itertools import combinations
 from lmfdb import db
 
 from flask import render_template, url_for, request, redirect, abort
 
-from sage.all import ZZ
+from sage.all import ZZ, gcd
 
 from lmfdb.utils import (
     SearchArray,
@@ -29,6 +30,7 @@ from lmfdb.utils import (
     parse_floats,
     parse_interval,
     parse_element_of,
+    parse_group_label_or_order,
     parse_bool_unknown,
     parse_nf_string,
     parse_nf_jinv,
@@ -60,6 +62,8 @@ from lmfdb.modular_curves.family import ModCurveFamily
 from lmfdb.modular_curves.upload import ModularCurveUploader
 from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
+from lmfdb.groups.abstract.main import abstract_group_label_regex
+
 from sage.databases.cremona import class_to_int
 
 RSZB_LABEL_RE = re.compile(r"\d+\.\d+\.\d+\.\d+")
@@ -69,6 +73,7 @@ SZ_LABEL_RE = re.compile(r"\d+[A-Z]\d+-\d+[a-z]")
 RZB_LABEL_RE = re.compile(r"X\d+[a-z]*")
 S_LABEL_RE = re.compile(r"(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+){0,3}")
 NAME_RE = re.compile(r"X_?(0|1|NS|NS\^?\+|SP|SP\^?\+|S4|ARITH)?\(\d+\)")
+LIST_OF_AB_GP_STRUCT_INTS_RE = re.compile(r"^\[\s*([2-9]\d*|[1-9]\d{2,})(\s*,\s*([2-9]\d*|[1-9]\d{2,}))*\s*\]$")
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -78,6 +83,24 @@ def learnmore_list_remove(matchstring):
 def learnmore_list_add(learnmore_label, learnmore_url):
     return learnmore_list() + [(learnmore_label, learnmore_url)]
 
+def is_pairwise_coprime(numbers):
+
+    if len(numbers) < 2:
+        raise ValueError("At least two numbers are required to check for pairwise coprimality.")
+
+    for a, b in combinations(numbers, 2):
+        if gcd(a, b) != 1:
+            return False
+    return True
+
+def check_increasing_divisibility(L):
+    """
+    Check if the list L is increasing in divisibility.
+    """
+    for i in range(len(L) - 1):
+        if L[i] % L[i + 1] != 0:
+            return False
+    return True
 
 @modcurve_page.route("/")
 def index():
@@ -104,14 +127,14 @@ def index_Q():
 @modcurve_page.route("/Q/random/")
 @redirect_no_cache
 def random_curve():
-    label = db.gps_gl2zhat_fine.random()
+    label = db.gps_gl2zhat.random()
     return url_for_modcurve_label(label)
 
 @modcurve_page.route("/interesting")
 def interesting():
     return interesting_knowls(
         "modcurve",
-        db.gps_gl2zhat_fine,
+        db.gps_gl2zhat,
         url_for_modcurve_label,
         title="Some interesting modular curves",
         bread=get_bread("Interesting"),
@@ -127,7 +150,7 @@ def modcurve_link(label):
 @modcurve_page.route("/Q/<label>/")
 def by_label(label):
     if RSZB_LABEL_RE.fullmatch(label):
-        label = db.gps_gl2zhat_fine.lucky({"RSZBlabel":label},projection="label")
+        label = db.gps_gl2zhat.lucky({"RSZBlabel":label},projection="label")
     if not LABEL_RE.fullmatch(label):
         if not ISO_CLASS_RE.fullmatch(label):
             flash_error("Invalid label %s", label)
@@ -236,6 +259,9 @@ def curveinfo(label):
     ans += "</table>"
     return ans
 
+def url_for_group_label(label):
+    return url_for("abstract.by_label", label=label)
+
 def url_for_modcurve_label(label):
     return url_for("modcurve.by_label", label=label)
 
@@ -252,22 +278,22 @@ def modcurve_lmfdb_label(label):
         lmfdb_label = label
     elif RSZB_LABEL_RE.fullmatch(label):
         label_type = "RSZB label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RSZBlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"RSZBlabel": label}, "label")
     elif CP_LABEL_RE.fullmatch(label):
         label_type = "CP label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"CPlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"CPlabel": label}, "label")
     elif SZ_LABEL_RE.fullmatch(label):
         label_type = "SZ label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"SZlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"SZlabel": label}, "label")
     elif RZB_LABEL_RE.fullmatch(label):
         label_type = "RZB label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"RZBlabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"RZBlabel": label}, "label")
     elif S_LABEL_RE.fullmatch(label):
         label_type = "S label"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"Slabel": label}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"Slabel": label}, "label")
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
-        lmfdb_label = db.gps_gl2zhat_fine.lucky({"name": canonicalize_name(label)}, "label")
+        lmfdb_label = db.gps_gl2zhat.lucky({"name": canonicalize_name(label)}, "label")
     else:
         label_type = "label"
         lmfdb_label = None
@@ -283,15 +309,19 @@ def modcurve_jump(info):
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
     lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.a.1"]
+    levels_not_X1 = [ZZ(x.split('.')[0]) for x in lmfdb_labels_not_X1]
     if len(lmfdb_labels) == 1:
         label = lmfdb_labels[0]
         return redirect(url_for_modcurve_label(label))
     elif len(lmfdb_labels_not_X1) == 1:
         label = lmfdb_labels_not_X1[0]
         return redirect(url_for_modcurve_label(label))
+    elif not is_pairwise_coprime(levels_not_X1):
+        flash_error("The levels of the modular curves in the fiber product decomposition are not pairwise coprime")
+        return redirect(url_for(".index"))
     else:
         # Get factorization for each label
-        factors = list(db.gps_gl2zhat_fine.search({"label": {"$in": lmfdb_labels_not_X1}},
+        factors = list(db.gps_gl2zhat.search({"label": {"$in": lmfdb_labels_not_X1}},
                                                   ["label","factorization"]))
         factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
                    for f in factors]
@@ -299,9 +329,17 @@ def modcurve_jump(info):
         if len(factors) != len(lmfdb_labels_not_X1):
             flash_error("Fiber product decompositions cannot contain repeated terms")
             return redirect(url_for(".index"))
-        # Get list of all factors, lexicographically sorted
-        factors = sorted(sum(factors, []), key=key_for_numerically_sort)
-        label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
+
+        # The new factorization scheme contains X1 as a factor
+        # so this needs to be handled carefully. The following
+        # effectively dedupes 1.1.0.a.1.
+        factors = sum(factors, [])
+        factors = [f for f in factors if f != '1.1.0.a.1']
+        factors = ['1.1.0.a.1'] + factors
+
+        # Sort lexicographically
+        factors = sorted(factors, key=key_for_numerically_sort)
+        label = db.gps_gl2zhat.lucky({'factorization': factors}, "label")
         if label is None:
             flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
             return redirect(url_for(".index"))
@@ -343,15 +381,27 @@ modcurve_columns = SearchColumns(
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True, default=False),
         CheckCol("simple", "modcurve.simple", "Simple", default=False),
         CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
-        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
-        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
+        CheckCol("agreeable", "modcurve.agreeable", "Agreeable", default=False),
+        CheckCol("refinable", "modcurve.quadratic_refinements", "Refinable", default=False),
+        CheckCol("twist_minimal", "modcurve.minimal_twist", "Twist minimal", default=False),
+        LinkCol("agreeable_closure", "modcurve.agreeable", "Agreeable Closure", url_for_modcurve_label, default=False),
+        ProcessedCol("agreeable_quotient", "modcurve.agreeable", "Agreeable Quotient",
+                  lambda tors: r"\oplus".join([r"\Z/%s\Z" % n for n in tors]) if tors else r"\mathsf{trivial}", mathmode=True, align="center", default=lambda info: info.get("agreeable_quotient")),
+        CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=lambda info: info.get("contains_negative_one")),
+        MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=lambda info: info.get("dims")),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
         MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", default=False),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
+        MathCol("entanglement_index", "modcurve.entanglement", "Entanglement Index", default=lambda info: info.get("entanglement_index")),
+        LinkCol("entanglement_quotient", "modcurve.entanglement", "Entanglement Quotient", url_for_group_label, default=lambda info: info.get("entanglement_quotient")),
+        LinkCol("minimal_twist", "modcurve.minimal_twist", "Minimal twist", url_for_modcurve_label, default=False),
     ],
-    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps", "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
-
+    db_cols=["label", "RSZBlabel", "RZBlabel", "CPlabel", "Slabel", "SZlabel", "name", "level", "index", "genus", "rank", "q_gonality_bounds", "cusps",
+             "rational_cusps", "cm_discriminants", "conductor", "simple", "squarefree", "agreeable", "agreeable_closure", "agreeable_quotient",
+             "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators", "entanglement_index",
+             "entanglement_quotient", "minimal_twist", "refinable", "twist_minimal"]
+    )
 @search_parser
 def parse_family(inp, query, qfield):
     if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "Xarith1", "Xarithpm1", "Xsym", "Xarith", "any"]:
@@ -421,7 +471,7 @@ def parse_family(inp, query, qfield):
     #'factored'
 
 class ModCurve_download(Downloader):
-    table = db.gps_gl2zhat_fine
+    table = db.gps_gl2zhat
     title = "Modular curves"
     inclusions = {
         "subgroup": (
@@ -640,7 +690,7 @@ def modcurve_text_download(label):
 def modcurve_Gassmann_download(request, lang):
     query_dict = to_dict(request.args)
     print("query_dict", query_dict)
-    ncurves = db.gps_gl2zhat_fine.count(query_dict)
+    ncurves = db.gps_gl2zhat.count(query_dict)
     info = {}
     info["Submit"] = lang
     info["query"] = str(query_dict)
@@ -648,8 +698,8 @@ def modcurve_Gassmann_download(request, lang):
     info["results"] = []
     for i in range(ncurves):
         query_dict.update({'coarse_num' : i+1})
-        info["results"].append(db.gps_gl2zhat_fine.lucky(query_dict))
-    info["search_table"] = db.gps_gl2zhat_fine
+        info["results"].append(db.gps_gl2zhat.lucky(query_dict))
+    info["search_table"] = db.gps_gl2zhat
     info["columns"] = modcurve_columns
     info["showcol"] = ".".join(["CPlabel", "RSZBlabel", "RZBlabel", "SZlabel", "Slabel", "rank", "cusps", "conductor", "simple", "squarefree", "decomposition", "models", "j-points", "local obstruction", "generators"])
     return ModCurve_download()(info)
@@ -667,7 +717,7 @@ def modcurve_Gassmann_text_download():
     return modcurve_Gassmann_download(request, lang="text")
 
 @search_wrap(
-    table=db.gps_gl2zhat_fine,
+    table=db.gps_gl2zhat,
     title="Modular curve search results",
     err_title="Modular curves search input error",
     shortcuts={"jump": modcurve_jump, "download": ModCurve_download()},
@@ -689,7 +739,7 @@ def modcurve_search(info, query):
             if not isinstance(query.get('level'), int):
                 err = "You must specify a single level"
                 flash_error(err)
-                raise ValueError(err)
+                return redirect(url_for(".index"))
             elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
@@ -713,6 +763,9 @@ def modcurve_search(info, query):
     parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
+    parse_bool(info, query, "agreeable")
+    parse_bool(info, query, "refinable")
+    parse_bool(info, query, "twist_minimal")
     parse_bool(info, query, "contains_negative_one")
     if "cm_discriminants" in info:
         if info["cm_discriminants"] == "yes":
@@ -732,22 +785,66 @@ def modcurve_search(info, query):
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     if "covered_by" in info:
         # sort of hacky
-        lmfdb_label, label_type = modcurve_lmfdb_label(info["covered_by"])
+        lmfdb_label, _ = modcurve_lmfdb_label(info["covered_by"].strip())
         if lmfdb_label is None:
             parents = None
         else:
             if "-" in lmfdb_label:
                 # fine label
-                rec = db.gps_gl2zhat_fine.lookup(lmfdb_label, ["parents", "coarse_label"])
-                parents = [rec["coarse_label"]] + rec["parents"]
+                rec = db.gps_gl2zhat.lookup(lmfdb_label, ["parents", "coarse_label"])
+                if rec is None:
+                    parents = None
+                else:
+                    parents = [rec["coarse_label"]] + rec["parents"]
             else:
                 # coarse label
-                parents = db.gps_gl2zhat_fine.lookup(lmfdb_label, "parents")
+                parents = db.gps_gl2zhat.lookup(lmfdb_label, "parents")
         if parents is None:
             msg = "%s not the label of a modular curve in the database"
             flash_error(msg, info["covered_by"])
-            raise ValueError(msg % info["covered_by"])
+            return redirect(url_for(".index"))
         query["label"] = {"$in": parents}
+    if "agreeable_closure" in info:
+        lmfdb_label, _ = modcurve_lmfdb_label(info["agreeable_closure"].strip())
+        if lmfdb_label is None:
+            msg = "%s not the label of a modular curve in the database"
+            flash_error(msg, info["agreeable_closure"])
+            return redirect(url_for(".index"))
+        query["agreeable_closure"] = lmfdb_label
+    if "minimal_twist" in info:
+        lmfdb_label, _ = modcurve_lmfdb_label(info["minimal_twist"].strip())
+        if lmfdb_label is None:
+            msg = "%s not the label of a modular curve in the database"
+            flash_error(msg, info["minimal_twist"])
+            return redirect(url_for(".index"))
+        query["minimal_twist"] = lmfdb_label
+    if "agreeable_quotient" in info:
+        possible_demanded_agreeable_quotients = re.findall(r"\[[^\[\]]*\]", info["agreeable_quotient"].replace(" ", ""))
+        if not possible_demanded_agreeable_quotients:  # means this is the empty list
+            msg = "%s not a valid input. It must either be a list of integers (if you only want to search for one) " \
+            "or a list of list of integers (if you want to search for one of several). They also have to be increasingly " \
+            "divisible. For example, '[[2,4], [6]]' is a valid input."
+            flash_error(msg, info["agreeable_quotient"])
+            return redirect(url_for(".index"))
+        print(f"possible_demanded_agreeable_quotients = {possible_demanded_agreeable_quotients}")
+        if all(LIST_OF_AB_GP_STRUCT_INTS_RE.match(x) for x in possible_demanded_agreeable_quotients):
+            if all(check_increasing_divisibility([int(a) for a in poss[1:-1].split(",")]) for poss in possible_demanded_agreeable_quotients):
+                # possible_demanded_agreeable_quotients = [[2,2], [6]]
+                if len(possible_demanded_agreeable_quotients) == 1:
+                    query["agreeable_quotient"] = [int(x) for x in possible_demanded_agreeable_quotients[0][1:-1].split(",")]
+                else:
+                    possible_quotients_list = [[int(a) for a in poss[1:-1].split(",")] for poss in possible_demanded_agreeable_quotients]
+                    query["agreeable_quotient"] = {"$in": possible_quotients_list}
+            else:
+                msg = "One of your lists ain't increasingly divisible. Your input was: %s"
+                flash_error(msg, info["agreeable_quotient"])
+                return redirect(url_for(".index"))
+        else:
+            msg = "%s not a valid list of integers"
+            flash_error(msg, info["agreeable_quotient"])
+            return redirect(url_for(".index"))
+    parse_ints(info, query, "entanglement_index")
+    parse_group_label_or_order(info, query, "entanglement_quotient", regex=abstract_group_label_regex)
 
 modcurve_sorts = [
     ("", "level", ["level", "index", "genus", "label"]),
@@ -780,12 +877,14 @@ class ModCurveSearchArray(SearchArray):
             label="Level",
             example="11",
             example_span="2, 11-23",
+            example_style={"min-width": "91px"},
+            label_style={"min-width": "191px"},
             select_box=level_quantifier,
         )
         index = TextBox(
             name="index",
             knowl="modcurve.index",
-            label="Index",
+            label="Index&emsp;",
             example="6",
             example_span="6, 12-100",
         )
@@ -861,18 +960,21 @@ class ModCurveSearchArray(SearchArray):
             knowl="modcurve.fiber_product",
             label="Fiber product with",
             example="3.4.0.a.1",
+            advanced=True
         )
         covers = TextBox(
             name="covers",
             knowl="modcurve.modular_cover",
             label="Minimally covers",
             example="1.1.0.a.1",
+            advanced=True
         )
         covered_by = TextBox(
             name="covered_by",
             knowl="modcurve.modular_cover",
             label="Minimally covered by",
             example="6.12.0.a.1",
+            advanced=True
         )
         simple = YesNoBox(
             name="simple",
@@ -894,7 +996,8 @@ class ModCurveSearchArray(SearchArray):
             options=cm_opts,
             knowl="modcurve.cm_discriminants",
             label="CM points",
-            example="yes, no, CM discriminant -3"
+            example_col=True,
+            advanced=True
         )
         contains_negative_one = YesNoBox(
             name="contains_negative_one",
@@ -918,6 +1021,7 @@ class ModCurveSearchArray(SearchArray):
             label="Points",
             example="0, 3-5",
             select_box=points_type,
+            advanced=True,
         )
         obstructions = SelectBox(
             name="has_obstruction",
@@ -926,7 +1030,64 @@ class ModCurveSearchArray(SearchArray):
                      ("not_yes", "No known obstruction"),
                      ("no", "No obstruction")],
             knowl="modcurve.local_obstruction",
-            label="Obstructions")
+            label="Obstructions",
+            advanced=True)
+        agreeable = YesNoBox(
+            name="agreeable",
+            knowl="modcurve.agreeable",
+            label="Agreeable",
+            example_col=True,
+            advanced=True
+        )
+        refinable = YesNoBox(
+            name="refinable",
+            knowl="modcurve.quadratic_refinements",
+            label="Refinable",
+            example_col=True,
+            advanced=True
+        )
+        twist_minimal = YesNoBox(
+            name="twist_minimal",
+            knowl="modcurve.minimal_twist",
+            label="Twist minimal",
+            example_col=True,
+            advanced=True
+        )
+        agreeable_closure = TextBox(
+            name="agreeable_closure",
+            knowl="modcurve.agreeable",
+            label="Agreeable closure",
+            example="6.12.0.a.1",
+            advanced=True
+        )
+        agreeable_quotient = TextBox(
+            name="agreeable_quotient",
+            knowl="modcurve.agreeable",
+            label="Agreeable quotient",
+            example="2",
+            advanced=True
+        )
+        entanglement_index = TextBox(
+            name="entanglement_index",
+            knowl="modcurve.entanglement",
+            label="Entanglement index",
+            example="12",
+            advanced=True
+        )
+        entanglement_quotient = TextBox(
+            name="entanglement_quotient",
+            knowl="modcurve.entanglement",
+            label="Entanglement quotient",
+            example="18.5",
+            advanced=True
+        )
+        minimal_twist = TextBox(
+            name="minimal_twist",
+            knowl="modcurve.minimal_twist",
+            label="Minimal twist",
+            example="6.12.0.a.1",
+            advanced=True
+        )
         family = SelectBox(
             name="family",
             options=[("", ""),
@@ -961,19 +1122,25 @@ class ModCurveSearchArray(SearchArray):
             [cusps, rational_cusps],
             [nu2, nu3],
             [simple, squarefree],
+            [contains_negative_one, family],
+            # below this are the advanced options
             [cm_discriminants, factor],
             [covers, covered_by],
-            [contains_negative_one, family],
             [points, obstructions],
+            [agreeable, agreeable_closure],
+            [agreeable_quotient, entanglement_index],
+            [entanglement_quotient, minimal_twist],
+            [refinable, twist_minimal],
             [count],
         ]
 
         self.refine_array = [
             [level, index, genus, rank, genus_minus_rank],
             [gonality, cusps, rational_cusps, nu2, nu3],
-            [simple, squarefree, cm_discriminants, factor, covers],
-            [covered_by, contains_negative_one, points, obstructions, family],
-            [CPlabel],
+            [simple, squarefree, contains_negative_one, family, cm_discriminants],
+            [covers, covered_by, points, obstructions, factor],
+            [agreeable, agreeable_closure, agreeable_quotient, entanglement_index, entanglement_quotient],
+            [CPlabel, minimal_twist, refinable, twist_minimal]
         ]
 
     sorts = modcurve_sorts
@@ -1003,7 +1170,7 @@ def family_page(name):
     return render_family(info)
 
 @embed_wrap(
-    table=db.gps_gl2zhat_fine,
+    table=db.gps_gl2zhat,
     template="modcurve_family.html",
     err_title="Modular curve family error",
     columns=modcurve_columns,
@@ -1041,7 +1208,7 @@ ratpoint_columns = SearchColumns([
 
 def ratpoint_postprocess(res, info, query):
     labels = list({rec["curve_label"] for rec in res})
-    RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat_fine.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
+    RSZBlabels = {rec["label"]: rec["RSZBlabel"] for rec in db.gps_gl2zhat.search({"label":{"$in":labels}}, ["label", "RSZBlabel"])}
     for rec in res:
         rec["curve_RSZBlabel"] = RSZBlabels.get(rec["curve_label"], "")
     return res
@@ -1196,8 +1363,8 @@ class RatPointSearchArray(SearchArray):
 
 class ModCurve_stats(StatsDisplay):
     def __init__(self):
-        self.ncurves = comma(db.gps_gl2zhat_fine.count())
-        self.max_level = db.gps_gl2zhat_fine.max("level")
+        self.ncurves = comma(db.gps_gl2zhat.count())
+        self.max_level = db.gps_gl2zhat.max("level")
 
     @property
     def short_summary(self):
@@ -1213,7 +1380,7 @@ class ModCurve_stats(StatsDisplay):
             fr'The database currently contains {self.ncurves} {modcurve_knowl} of level $N\le {self.max_level}$ parameterizing elliptic curves $E/\Q$.'
         )
 
-    table = db.gps_gl2zhat_fine
+    table = db.gps_gl2zhat
     baseurl_func = ".index"
     buckets = {'level': ['1-4', '5-8', '9-12', '13-16', '17-20', '21-'],
                'genus': ['0', '1', '2', '3', '4-6', '7-20', '21-100', '101-'],
@@ -1288,25 +1455,25 @@ def labels_page():
 # !! TODO - overlapping code between the two options coming from different merges
 @modcurve_page.route("/data/<label>")
 def modcurve_data(label):
-    coarse_label = db.gps_gl2zhat_fine.lookup(label, "coarse_label")
+    coarse_label = db.gps_gl2zhat.lookup(label, "coarse_label")
     bread = get_bread([(label, url_for_modcurve_label(label)), ("Data", " ")])
     if not LABEL_RE.fullmatch(label):
         if not ISO_CLASS_RE.fullmatch(label):
             return abort(404)
         N, i, g, iso = label.split(".")
         iso_num = class_to_int(iso)+1
-        labels = db.gps_gl2zhat_fine.search({"coarse_level" : N,
+        labels = db.gps_gl2zhat.search({"coarse_level" : N,
                                              "coarse_index" : i,
                                              "genus" : g,
                                              "coarse_class_num" : iso_num,
                                              "contains_negative_one" : "yes"},
                                             "label")
         labels = list(labels)
-        label_tables_cols = [(label, "gps_gl2zhat_fine", "label") for label in labels]
+        label_tables_cols = [(label, "gps_gl2zhat", "label") for label in labels]
     else:
-        label_tables_cols = [(label, "gps_gl2zhat_fine", "label")]
+        label_tables_cols = [(label, "gps_gl2zhat", "label")]
         if label != coarse_label:
-            label_tables_cols.append((coarse_label, "gps_gl2zhat_fine", "label"))
+            label_tables_cols.append((coarse_label, "gps_gl2zhat", "label"))
         # modcurve_models
         label_tables_cols.append((coarse_label, "modcurve_models", "modcurve"))
         # modcurve_modelmaps

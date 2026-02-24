@@ -41,7 +41,7 @@ text-align: center;
     <th>{{ KNOWL("modcurve.gonality", "$\overline{\Q}$-gonality")}}</th>
     <th>{{ KNOWL("modcurve.cm_discriminants", "CM points") }}</th>
   </tr>
-  
+
   {% for curve in iso_class.curves %}
   <td class="center"><a href="/ModularCurve/Q/{{curve.label}}">{{curve.label}}</a></td>
   {% if iso_class.name %}
@@ -108,7 +108,10 @@ text-align: center;
 {% if iso_class.genus > 0 and iso_class.dims is not none %}
 <table>
   <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ iso_class.rank }}$ </td></tr>
-  <tr><td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td><td> ${{ iso_class.web_curve.factored_conductor }}$ </td></tr>
+  <tr>
+    <td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td>
+    <td>{% if iso_class.conductor is not none %}${{ iso_class.web_curve.factored_conductor }}${% else %}not computed{% endif %}</td>
+  </tr>
   <tr>
     <td>
       {{ KNOWL('av.simple', 'Simple') }}:

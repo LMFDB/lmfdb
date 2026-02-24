@@ -1,0 +1,44 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+  {{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse </h2>
+
+<p>
+  By {{ KNOWL('nf.discriminant', 'discriminant') }} of the base field:
+  {% for discr in info.discr_list %}
+  <a href="?field_discr={{discr}}&sort_order=field_discr">{{discr}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  By {{ KNOWL('hmsurface.levelnorm', 'norm of the level ideal') }}:  
+  {% for lvl in info.level_norm_list %}
+  <a href="?level_norm={{lvl}}&sort_order=level_norm">{{lvl}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<p>
+  By {{ KNOWL('hmsurface.kodaira_dimension', 'Kodaira dimension') }}:
+  {% for dim in info.kodaira_list %}
+  <a href="?kodaira_quantifier=exactly&kodaira_dims={{dim}}">{{dim}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+<h2 id='search_h2'> {{ KNOWL('intro.search', 'Search') }} <button id="advancedtoggle" href="#">Advanced search options</button></h2>
+
+<form id='search' onsubmit="cleanSubmit(this.id)">
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+<script> show_advancedQ(); </script>
+{% endblock %}

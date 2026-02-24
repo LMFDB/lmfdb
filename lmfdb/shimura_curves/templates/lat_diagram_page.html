@@ -1,0 +1,83 @@
+
+{% extends "base.html" %}
+
+{% block body %}
+
+
+{# An invisible span to get the select color in the diagram into the DOM #}
+<div>
+<span id="group-diagram-selected" style="display:none;">Hi</span>
+</div>
+
+<script type="text/javascript" src="{{ url_for('static', filename='shimcurve.js') }}"></script>
+<script type="text/javascript">
+  function getcanvas()
+  {
+    return $("#subdiagram")[0].getContext('2d').canvas;
+  }
+  function newh(amt)
+  {
+    var ctx = getcanvas();
+    var h = ctx.height;
+    var w = ctx.width;
+    ctx.height = h+amt;
+    ctx.width = w;
+    sdiagram.setSize();
+    sdiagram.draw();
+  }
+
+  function neww(amt)
+  {
+    var ctx = getcanvas();
+    var h = ctx.height;
+    var w = ctx.width;
+    ctx.height = h;
+    ctx.width = w+amt;
+    sdiagram.setSize();
+    sdiagram.draw();
+  }
+  function togglemovement()
+  {
+    can_move_vertically = $("#allMove").prop('checked');
+  }
+  function toggleheight()
+  {
+    mytoggleheights($("#orderForHeight").prop('checked'));
+  }
+</script>
+
+<script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
+
+<h3>{{title|safe}}<h3>
+
+
+<canvas id="subdiagram" width="1500" height="500" style="border: 0px solid black">
+  Sorry, your browser does not support the subgroup diagram.
+</canvas>
+
+<script type="text/javascript">
+{{ dojs|safe }}
+  sdiagram.setSize();
+  sdiagram.draw();
+</script>
+
+<div>
+<button onclick="newh(100)">More height</button>
+<button onclick="newh(-100)">Less height</button>
+<button onclick="neww(100)">More width</button>
+<button onclick="neww(-100)">Less width</button>
+</div>
+<br />
+<div>
+Curves can be dragged in all directions?
+<input type="checkbox" id="allMove" onchange="togglemovement()" />
+</div>
+</div>
+
+<h4>Subgroup information</h4>
+<div class="selectedsub">
+Click on a Shimura curve in the diagram to see information about it.
+</div>
+
+
+{% endblock %}

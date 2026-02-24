@@ -3,6 +3,7 @@ import re
 
 from flask import abort, render_template, url_for, request, redirect
 from sage.rings.all import ZZ
+from sage.combinat.subset import Subsets
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
@@ -11,16 +12,16 @@ from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_newton_polygon, parse_submultiset, parse_bool, parse_bool_unknown,
-    search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
+    search_wrap, count_wrap, embed_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.api import datapage
 from . import abvarfq_page
 from .search_parsing import parse_nf_string, parse_galgrp
-from .isog_class import validate_label, AbvarFq_isoclass
+from .isog_class import validate_label, AbvarFq_isoclass, show_singular_support
 from .stats import AbvarFqStats
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
-from lmfdb.utils import redirect_no_cache
+from lmfdb.utils import redirect_no_cache, SearchButton
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, CheckCol, CheckMaybeCol
 from lmfdb.abvar.fq.download import AbvarFq_download
 from lmfdb.utils.search_parsing import parse_primes
@@ -104,6 +105,144 @@ def abelian_varieties_by_gq(g, q):
     )
     return abelian_variety_search(D)
 
+def endring_postprocess(res, info, query):
+    # In addition to the normal postprocessing, we can put code here for determining induced inclusion relations on the poset
+    # Need to add index to schema
+    # Need to set name, av_count, av_structure*, conductor_disp, dimensions_disp, pic_disp
+    cl = info["cl"]
+    # We can access all weak equivalence classes from cl; res contains only the endomorphism rings being displayed
+    for rec in res:
+        disp = cl.endring_disp(rec["multiplicator_ring"])
+        rec["name"] = "<br/>".join(f"${name}$" for name in disp["long_names"])
+        for col in ["av_count"] + [f"av_structure{n}" for n in range(1, 11)]:
+            rec[col] = disp[col]
+        for col in ["conductor", "dimensions", "pic"]:
+            rec[col+"_disp"] = disp[col]
+    return res
+
+def support_opts(num_primes):
+    for w in range(num_primes, 0, -1):
+        for S in Subsets(range(num_primes), w):
+            S = sorted(S)
+            if w > 1:
+                N = sum(2**c for c in S)
+                if w == num_primes:
+                    key = ""
+                else:
+                    key = ",".join(str(c) for c in range(N+1) if (c & N == c))
+                yield (key, "any of " + ", ".join(f"P{i+1}" for i in S))
+            yield ("0," + ",".join(str(2**c) for c in S), ("one of " if w > 1 else "") + ", ".join(f"P{i+1}" for i in S))
+
+endring_columns = SearchColumns([
+    ProcessedCol("label", "av.fq.lmfdb_label", "Label", lambda label: ".".join(label.split(".")[3:]), default=False),
+    MathCol("av_count", "av.fq.isogeny_class_size", "Num. iso"),
+    ProcessedCol("singular_support", "av.fq.singular_primes", "Singular support", show_singular_support, default=lambda info: "singular_support" in info),
+    MathCol("number_of_we", "av.fq.weak_equivalence_class", "Num. weak equivalence classes", default=False),
+    MathCol("pic_size", "av.fq.picard_group", "Picard size", default=False),
+    SearchCol("av_structure1", "av.fq.group_structure", r"$A(\mathbb{F}_q)$-structure", short_title="q-structure"),
+    SearchCol("av_structure2", "av.fq.group_structure", r"$A(\mathbb{F}_{q^2})$-structure", short_title="q^2-structure", default=False),
+    SearchCol("av_structure3", "av.fq.group_structure", r"$A(\mathbb{F}_{q^3})$-structure", short_title="q^3-structure", default=False),
+    SearchCol("av_structure4", "av.fq.group_structure", r"$A(\mathbb{F}_{q^4})$-structure", short_title="q^4-structure", default=False),
+    SearchCol("av_structure5", "av.fq.group_structure", r"$A(\mathbb{F}_{q^5})$-structure", short_title="q^5-structure", default=False),
+    SearchCol("av_structure6", "av.fq.group_structure", r"$A(\mathbb{F}_{q^6})$-structure", short_title="q^6-structure", default=False),
+    SearchCol("av_structure7", "av.fq.group_structure", r"$A(\mathbb{F}_{q^7})$-structure", short_title="q^7-structure", default=False),
+    SearchCol("av_structure8", "av.fq.group_structure", r"$A(\mathbb{F}_{q^8})$-structure", short_title="q^8-structure", default=False),
+    SearchCol("av_structure9", "av.fq.group_structure", r"$A(\mathbb{F}_{q^9})$-structure", short_title="q^9-structure", default=False),
+    SearchCol("av_structure10", "av.fq.group_structure", r"$A(\mathbb{F}_{q^{10}})$-structure", short_title="q^10-structure", default=False),
+    CheckCol("is_product", "av.fq.is_product", "Product", default=False),
+    SearchCol("name", "ag.endomorphism_ring", "Endomorphism ring"),
+    MathCol("index", "av.fq.index_of_order", "Index"),
+    CheckCol("is_conjugate_stable", "av.fq.conjugate_stable", "Conjugate stable", default=False),
+    CheckCol("is_Zconductor_sum", "av.fq.is_zconductor_sum", r"$\mathbb{Z}$-conductor sum", short_title="Z-conductor sum", default=False),
+    CheckCol("is_ZFVconductor_sum", "av.fq.is_zfvconductor_sum", r"$\mathbb{Z}[F,V]$-conductor sum", short_title="Z[F,V]-conductor sum", default=False),
+    MathCol("conductor_disp", "av.endomorphism_ring_conductor", "Conductor"),
+    CheckCol("conductor_is_Oprime", "av.endomorphism_ring_conductor", r"Conductor $\mathcal{O}$-prime", short_title="conductor O-prime", default=False),
+    CheckCol("conductor_is_Sprime", "av.endomorphism_ring_conductor", "Conductor $S$-prime", short_title="conductor S-prime", default=False),
+    MathCol("cohen_macaulay_type", "ag.cohen_macaulay_type", "Cohen-Macaulay type"),
+    SearchCol("dimensions_disp", "av.fq.singular_dimensions", "Singular dimensions", default=False),
+    SearchCol("pic_disp", "av.fq.picard_group", "Picard group")],
+    db_cols=["cohen_macaulay_type", "conductor", "conductor_Oindex", "conductor_Sindex", "conductor_is_Oprime", "conductor_is_Sprime", "dimensions", "generator_over_ZFV", "higher_invariants", "index", "is_ZFVconductor_sum", "is_Zconductor_sum", "is_conjugate_stable", "is_product", "label", "multiplicator_ring", "pic_invs", "pic_size", "rational_invariants", "number_of_we", "singular_support"])
+
+class EndringSearchArray(SearchArray):
+    sorts = [("", "index", ["isog_label", "index", "multiplicator_ring"]),
+             ("cohen_macaulay", "cohen_macaulay", ["isog_label", "cohen_macaulay_type", "index", "multiplicator_ring"])]
+    def __init__(self, cl):
+        self.cl = cl
+        cohen_macaulay = TextBox(
+            "cohen_macaulay",
+            label="Cohen-Macaulay type",
+            knowl="ag.cohen_macaulay_type",
+            example="3"
+        )
+        pic_size = TextBox(
+            "pic_size",
+            label="Picard group order",
+            knowl="av.fq.picard_group",
+            example="1"
+        )
+        number_of_we = TextBox(
+            "number_of_we",
+            label="Num. weak equiv. classes",
+            knowl="av.fq.weak_equivalence_class",
+            example="2"
+        )
+        cond_index = TextBox(
+            "cond_index",
+            label=r"Conductor $\mathcal{O}$-index",
+            knowl="av.endomorphism_ring_conductor",
+            example="100-200"
+        )
+        Zcond = YesNoBox(
+            "Zcond",
+            label=r"$\mathbb{Z}$-conductor sum",
+            knowl="av.fq.is_Zconductor_sum",
+        )
+        ZFVcond = YesNoBox(
+            "ZFVcond",
+            label=r"$\mathbb{Z}[F,V]$-conductor sum",
+            knowl="av.fq.is_zfvconductor_sum",
+        )
+        product = YesNoBox(
+            "product",
+            label="Product",
+            knowl="av.is_product",
+        )
+        conj_stable = YesNoBox(
+            "conj_stable",
+            label="Conjugate stable",
+            knowl="av.fq.conjugate_stable",
+        )
+        Oprime = YesNoBox(
+            "OPrime",
+            label=r"Conductor $\mathcal{O}$-prime",
+            knowl="av.endomorphism_ring_conductor",
+        )
+        Sprime = YesNoBox(
+            "SPrime",
+            label="Conductor $S$-prime",
+            knowl="av.endomorphism_ring_conductor",
+        )
+        if hasattr(cl, "zfv_singular_primes"):
+            singular_opts = list(support_opts(len(cl.zfv_singular_primes)))
+        else:
+            singular_opts = []
+        singular_support = SelectBox(
+            "singular_support",
+            label="Singular support",
+            knowl="av.fq.singular_primes",
+            options=singular_opts,
+        )
+        self.refine_array = [[pic_size, cohen_macaulay, product, Zcond, Oprime],
+                             [number_of_we, cond_index, conj_stable, ZFVcond, Sprime]]
+        if hasattr(cl, "zfv_singular_primes") and len(cl.zfv_singular_primes) > 1:
+            self.refine_array.append([singular_support])
+
+    def search_types(self, info):
+        if len(self.cl.endring_data) == 1:
+            return [("", "Search again")]
+        else:
+            return [(info.get("search_type", "lattice"), "Search again"), SearchButton("", "Lattice mode", type="", name="switch", onclick=" onclick='switch_endring_mode(); return false;'", cls="")]
+
 @abvarfq_page.route("/<int:g>/<int:q>/<iso>")
 def abelian_varieties_by_gqi(g, q, iso):
     label = abvar_label(g, q, iso)
@@ -116,6 +255,7 @@ def abelian_varieties_by_gqi(g, q, iso):
         cl = AbvarFq_isoclass.by_label(label)
     except ValueError:
         return abort(404, "Isogeny class %s is not in the database." % label)
+    info = to_dict(request.args, search_array=EndringSearchArray(cl), cl=cl)
     bread = get_bread(
         (str(g), url_for(".abelian_varieties_by_g", g=g)),
         (str(q), url_for(".abelian_varieties_by_gq", g=g, q=q)),
@@ -129,18 +269,57 @@ def abelian_varieties_by_gqi(g, q, iso):
     if hasattr(cl, "curves") and cl.curves:
         downloads.append(('Curves to text', url_for('.download_curves', label=label)))
     downloads.append(("Underlying data", url_for('.AV_data', label=label)))
+    info['title'] = 'Abelian variety isogeny class %s over $%s$' % (label, cl.field())
+    info['bread'] = bread
+    info['properties'] = cl.properties()
+    info['friends'] = cl.friends()
+    info['downloads'] = downloads
+    info['KNOWL_ID'] = 'av.fq.%s' % label
+    return render_abvar(info)
 
-    return render_template(
-        "show-abvarfq.html",
-        properties=cl.properties(),
-        friends=cl.friends(),
-        downloads=downloads,
-        title='Abelian variety isogeny class %s over $%s$' % (label, cl.field()),
-        bread=bread,
-        cl=cl,
-        learnmore=learnmore_list(),
-        KNOWL_ID='av.fq.%s' % label
-    )
+def endring_parse(info, query):
+    cl = info["cl"]
+    query["is_invertible"] = True
+    query["isog_label"] = cl.label
+    parse_ints(info, query, "cohen_macaulay", qfield="cohen_macaulay_type")
+    parse_ints(info, query, "pic_size")
+    parse_ints(info, query, "number_of_we")
+    parse_ints(info, query, "cond_index", qfield="conductor_Oindex")
+    parse_ints(info, query, "singular_support")
+    parse_bool(info, query, "Zcond", qfield="is_Zconductor_sum")
+    parse_bool(info, query, "ZFVcond", qfield="is_ZFVconductor_sum")
+    parse_bool(info, query, "product", qfield="is_product")
+    parse_bool(info, query, "conj_stable", qfield="is_conjugate_stable")
+    parse_bool(info, query, "OPrime", qfield="conductor_is_Oprime")
+    parse_bool(info, query, "SPrime", qfield="conductor_is_Sprime")
+
+@embed_wrap(
+    table=db.av_fq_weak_equivalences,
+    template="show-abvarfq.html",
+    err_title="Endomorphism ring search error",
+    columns=endring_columns,
+    learnmore=learnmore_list,
+    postprocess=endring_postprocess,
+    # Each of the following arguments is set here so that it is overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in family_page() before calling render_family)
+    bread=lambda:None,
+    properties=lambda:None,
+    cl=lambda:None,
+    friends=lambda:None,
+    downloads=lambda:None,
+    KNOWL_ID=lambda:None,
+)
+def render_abvar(info, query):
+    endring_parse(info, query)
+
+isogeny_class_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
+mring_regex = re.compile(r"(\d+)\.(\d+)")
+
+def split_label(lab):
+    return isogeny_class_label_regex.match(lab).groups()
+
+def abvar_label(g, q, iso):
+    return "%s.%s.%s" % (g, q, iso)
 
 def url_for_label(label):
     label = label.replace(" ", "")
@@ -154,7 +333,7 @@ def url_for_label(label):
 
 @abvarfq_page.route("/data/<label>")
 def AV_data(label):
-    if not lmfdb_label_regex.fullmatch(label):
+    if not isogeny_class_label_regex.fullmatch(label):
         return abort(404, f"Invalid label {label}")
     bread = get_bread((label, url_for_label(label)), ("Data", " "))
     extension_labels = list(db.av_fq_endalg_factors.search({"base_label": label}, "extension_label", sort=["extension_degree"]))
@@ -174,6 +353,8 @@ class AbvarSearchArray(SearchArray):
              ("elevation", "Newton elevation", ['newton_elevation', 'g', 'q', 'poly']),
              ("curve_count", "curve points", ['curve_count', 'g', 'q', 'poly']),
              ("abvar_count", "abvar points", ['abvar_count', 'g', 'q', 'poly']),
+             ("size", "Unpol. isom. count", ['size', 'g', 'q', 'poly']),
+             ("principal_polarization_count", "Num. princ. pol", ['principal_polarization_count', 'g', 'q', 'poly']),
              ("jacobian_count", "Jacobian count", ['jacobian_count', 'g', 'q', 'poly']),
              ("hyp_count", "Hyp. Jacobian count", ['hyp_count', 'g', 'q', 'poly']),
              ("twist_count", "Num .twists", ['twist_count', 'g', 'q', 'poly']),
@@ -522,12 +703,84 @@ class AbvarSearchArray(SearchArray):
             example="1.2.b,1.2.b,2.2.a_b",
             advanced=True,
         )
+
+        all_product = YesNoBox(
+            "all_product",
+            label="All pol. products",
+            knowl="av.fq.all_polarizations_product",
+            example_col=False,
+            advanced=True,
+        )
+        cohen_macaulay_max = TextBox(
+            "cohen_macaulay_max",
+            label="Max Cohen-Macaulay type",
+            knowl="av.fq.max_cohen_macaulay_type",
+            example="3",
+            example_span="3 or 1-2",
+            advanced=True,
+        )
+        end_ring_count = TextBox(
+            "end_ring_count",
+            label="Num. End. rings",
+            knowl="ag.endomorphism_ring",
+            example="10-",
+            example_span="1 or 10-",
+        )
+        weak_equiv_count = TextBox(
+            "weak_equiv_count",
+            label="Num. weak equiv. classes",
+            knowl="av.fq.weak_equivalence_class",
+            example="15-",
+            example_span="1 or 15-",
+            advanced=True,
+        )
+        sing_prime_count = TextBox(
+            "sing_prime_count",
+            label=r"Num. sing. primes of \Z[F,V]",
+            knowl="av.fq.singular_primes",
+            example="3",
+            example_span="3 or 1-2",
+            advanced=True,
+        )
+        distinct_groups = TextBox(
+            "distinct_groups",
+            label="Distinct groups",
+            knowl="ag.fq.point_counts",
+            example="4-",
+            example_span="1 or 4-",
+            advanced=True,
+        )
+        zfv_pic_size = TextBox(
+            "zfv_pic_size",
+            label=r"$\#\Pic(\Z[F,V])$",
+            knowl="av.fq.picard_group",
+            example="1",
+            example_span="1 or 1000-",
+            advanced=True,
+        )
+        size = TextBox(
+            "size",
+            label="Unpol. isom. classes",
+            knowl="av.fq.isogeny_class_size",
+            example="1-10",
+            example_span="6 or 1-10",
+        )
+        ppcount = TextBox(
+            "ppcount",
+            label="Num. principal pol.",
+            knowl="av.princ_polarizable",
+            example="100-120",
+            example_span="0 or 10-20",
+        )
+
         count = CountBox()
 
         self.refine_array = [
             [q, p, g, p_rank, initial_coefficients],
             [simple, geom_simple, primitive, polarizable, jacobian],
-            [newton_polygon, abvar_point_count, curve_point_count, simple_factors],
+            [size, ppcount, newton_polygon, abvar_point_count, curve_point_count],
+            [simple_factors, distinct_groups, zfv_pic_size, all_product],
+            [cohen_macaulay_max, end_ring_count, weak_equiv_count, sing_prime_count],
             [newton_elevation, jac_cnt, hyp_cnt, twist_count, max_twist_degree],
             [angle_rank, angle_corank, geom_deg, p_corank, geom_squarefree],
             [cyclic, noncyclic_primes],
@@ -542,6 +795,7 @@ class AbvarSearchArray(SearchArray):
             [initial_coefficients, polarizable],
             [p_rank, jacobian],
             [cyclic, noncyclic_primes],
+            [size, ppcount],
             [p_corank, geom_squarefree],
             [jac_cnt, hyp_cnt],
             [angle_rank, angle_corank],
@@ -551,6 +805,10 @@ class AbvarSearchArray(SearchArray):
             [abvar_point_count],
             [curve_point_count],
             [simple_factors],
+            [distinct_groups, zfv_pic_size],
+            [cohen_macaulay_max, all_product],
+            [weak_equiv_count, end_ring_count],
+            [sing_prime_count],
             use_geom_index,
             [dim1, dim1d],
             [dim2, dim2d],
@@ -638,6 +896,15 @@ def common_parse(info, query):
         elif info['geom_squarefree'] == 'NotGeom':
             query['is_geometrically_squarefree'] = False
 
+    parse_bool(info, query, "all_product", qfield="all_polarized_product")
+    parse_ints(info, query, "cohen_macaulay_max")
+    parse_ints(info, query, "end_ring_count", qfield="endomorphism_ring_count")
+    parse_ints(info, query, "weak_equiv_count", qfield="weak_equivalence_count")
+    parse_ints(info, query, "sing_prime_count", qfield="zfv_singular_count")
+    parse_ints(info, query, "distinct_groups", qfield="group_structure_count")
+    parse_ints(info, query, "zfv_pic_size")
+    parse_ints(info, query, "ppcount", qfield="principal_polarization_count")
+
 def jump(info):
     jump_box = info["jump"].strip() # only called when this present
     try:
@@ -698,24 +965,33 @@ abvar_columns = SearchColumns([
     CheckMaybeCol("has_jacobian", "ag.jacobian", "Jacobian", default=False),
     MathCol("formatted_polynomial", "av.fq.l-polynomial", "L-polynomial", short_title="L-polynomial", download_col="polynomial"),
     MathCol("pretty_slopes", "lf.newton_polygon", "Newton slopes", default=False),
-    MathCol("newton_elevation", "av.fq.newton_elevation", "Newton elevation", default=False),
+    MathCol("newton_elevation", "av.fq.newton_elevation", "Newton elevation", default=lambda info: "newton_elevation" in info),
     MathCol("p_rank", "av.fq.p_rank", "$p$-rank"),
     MathCol("p_rank_deficit", "av.fq.p_rank", "$p$-corank", default=False),
-    MathCol("angle_rank", "av.fq.angle_rank", "Angle rank", default=False),
-    MathCol("angle_corank", "av.fq.angle_rank", "Angle corank", default=False),
-    MathCol("curve_count", "av.fq.curve_point_counts", r"$\mathbb{F}_q$ points on curve", short_title="Fq points on curve", default=False),
+    MathCol("size", "av.fq.isogeny_class_size", "Unpol. isom. classes"),
+    MathCol("principal_polarization_count", "av.princ_polarizable", "Num princ. pol."),
+    CheckCol("all_polarized_product", "av.fq.all_polarizations_decomposable", "All pol. decomposable", default=lambda info: "all_product" in info),
+    MathCol("cohen_macaulay_max", "av.fq.max_cohen_macaulay_type", "Max Cohen-Macaulay type", default=lambda info: "cohen_macaulay_max" in info),
+    MathCol("endomorphism_ring_count", "ag.endomorphism_ring", "Num. End. rings", default=lambda info: "end_ring_count" in info),
+    MathCol("weak_equivalence_count", "av.fq.weak_equivalence_class", "Num. weak equiv. classes", default=lambda info: "weak_equiv_count" in info),
+    MathCol("zfv_singular_count", "av.fq.singular_primes", "Num. sing. primes", default=lambda info: "sing_prime_count" in info),
+    MathCol("group_structure_count", "ag.fq.point_counts", "Distinct groups", default=lambda info: "distinct_groups" in info),
+    MathCol("zfv_pic_size", "av.fq.picard_group", r"$\#\Pic(\Z[F,V])$", default=lambda info: "zfv_pic_size" in info),
+    MathCol("angle_rank", "av.fq.angle_rank", "Angle rank", default=lambda info: "angle_rank" in info),
+    MathCol("angle_corank", "av.fq.angle_rank", "Angle corank", default=lambda info: "angle_corank" in info),
+    MathCol("curve_count", "av.fq.curve_point_counts", r"$\mathbb{F}_q$ points on curve", short_title="Fq points on curve", default=lambda info: "curve_count" in info),
     MathCol("curve_counts", "av.fq.curve_point_counts", r"$\mathbb{F}_{q^k}$ points on curve", short_title="Fq^k points on curve", default=False),
-    MathCol("abvar_count", "ag.fq.point_counts", r"$\mathbb{F}_q$ points on variety", short_title="Fq points on variety", default=False),
+    MathCol("abvar_count", "ag.fq.point_counts", r"$\mathbb{F}_q$ points on variety", short_title="Fq points on variety", default=lambda info: "abvar_count" in info),
     MathCol("abvar_counts", "ag.fq.point_counts", r"$\mathbb{F}_{q^k}$ points on variety", short_title="Fq^k points on variety", default=False),
-    MathCol("jacobian_count", "av.jacobian_count", "Jacobians", default=False),
-    MathCol("hyp_count", "av.hyperelliptic_count", "Hyperelliptic Jacobians", default=False),
-    MathCol("twist_count", "av.twist", "Num. twists", default=False),
-    MathCol("max_twist_degree", "av.twist", "Max. twist degree", default=False),
-    MathCol("geometric_extension_degree", "av.endomorphism_field", "End. degree", default=False),
+    MathCol("jacobian_count", "av.jacobian_count", "Jacobians", default=lambda info: "jac_cnt" in info),
+    MathCol("hyp_count", "av.hyperelliptic_count", "Hyperelliptic Jacobians", default=lambda info: "hyp_cnt" in info),
+    MathCol("twist_count", "av.twist", "Num. twists", default=lambda info: "twist_count" in info),
+    MathCol("max_twist_degree", "av.twist", "Max. twist degree", default=lambda info: "max_twist_degree" in info),
+    MathCol("geometric_extension_degree", "av.endomorphism_field", "End. degree", default=lambda info: "geom_deg" in info),
     ProcessedCol("number_fields", "av.fq.number_field", "Number fields", lambda nfs: ", ".join(nf_display_knowl(nf, field_pretty(nf)) for nf in nfs), default=False),
     SearchCol("galois_groups_pretty", "nf.galois_group", "Galois groups", download_col="galois_groups", default=False),
     SearchCol("decomposition_display_search", "av.decomposition", "Isogeny factors", download_col="decompositionraw")],
-    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian", "is_cyclic", "noncyclic_primes"])
+    db_cols=["label", "g", "q", "poly", "p_rank", "p_rank_deficit", "is_simple", "is_geometrically_simple", "simple_distinct", "simple_multiplicities", "is_primitive", "primitive_models", "curve_count", "curve_counts", "abvar_count", "abvar_counts", "jacobian_count", "hyp_count", "number_fields", "galois_groups", "slopes", "newton_elevation", "twist_count", "max_twist_degree", "geometric_extension_degree", "angle_rank", "angle_corank", "is_supersingular", "has_principal_polarization", "has_jacobian", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "size", "principal_polarization_count", "is_cyclic", "noncyclic_primes"])
 
 def abvar_postprocess(res, info, query):
     gals = set()
@@ -795,6 +1071,48 @@ def abelian_variety_browse(info):
         bread=get_bread(),
         learnmore=learnmore_list(),
     )
+
+@abvarfq_page.route("/endrings/<label>")
+def endring_diagram(label):
+    if not isogeny_class_label_regex.fullmatch(label):
+        flash_error("Invalid label %s", label)
+        return redirect(url_for(".abelian_varieties"))
+    try:
+        isoclass = AbvarFq_isoclass.by_label(label)
+    except ValueError:
+        flash_error("There is no isogeny class %s in the database", label)
+        return redirect(url_for(".abelian_varieties"))
+    info = to_dict(request.args, cl=isoclass)
+    query = {}
+    endring_parse(info, query)
+    return render_template(
+        "endring_diagram_page.html",
+        cl=isoclass,
+        query=query,
+        title="Diagram of endomorphism rings for %s" % label,
+        bread=get_bread(("Endomorphism ring diagram", " ")),
+        learnmore=learnmore_list(),
+    )
+
+
+
+
+
+@abvarfq_page.route("/endringinfo/<label>/<endring>")
+def endringinfo(label, endring):
+    if not (isogeny_class_label_regex.fullmatch(label) and mring_regex.fullmatch(endring)):
+        return ""
+    try:
+        isoclass = AbvarFq_isoclass.by_label(label)
+    except ValueError:
+        return ""
+    return isoclass.endringinfo(endring)
+
+
+@abvarfq_page.route("/endringinfo/")
+def endring_select_line():
+    return AbvarFq_isoclass.select_line
+
 
 def search_input_error(info=None, bread=None):
     if info is None:
@@ -906,11 +1224,3 @@ def labels_page():
         bread=bread,
         learnmore=learnmore_list_remove("Labels"),
     )
-
-lmfdb_label_regex = re.compile(r"(\d+)\.(\d+)\.([a-z_]+)")
-
-def split_label(lab):
-    return lmfdb_label_regex.match(lab).groups()
-
-def abvar_label(g, q, iso):
-    return "%s.%s.%s" % (g, q, iso)

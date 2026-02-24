@@ -1,0 +1,139 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<h2> Real quadratic field {{ surface.field.knowl()|safe }} </h2>
+<p>
+ {{ KNOWL('nf.generator', 'Generator') }} \({{
+ surface.field.generator_name() }}\), with {{
+ KNOWL('nf.minimal_polynomial', 'minimal polynomial') }}
+ \({{surface.field.poly()}}\); {{ KNOWL('nf.narrow_class_number', 'narrow class number')
+ }} \({{surface.narrow_class_nb}}\) and {{ KNOWL('nf.class_number', 'class number')
+ }} \({{surface.field.class_number()}}\).
+</p>
+
+<h2> {{KNOWL('hmsurface.congruence_subgroup', 'Congruence subgroup')}} </h2>
+
+<table>
+  <tr><td>{{ KNOWL("hmsurface.standard_hmsurfaces", "Type") }}:</td>
+    <td> ${{ surface.formatted_subgroup_type }}$ </td>
+    <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.component_ideal", "Component ideal") }}:</td>
+    <td>${{ surface.formatted_component }}$</td></tr>
+  <tr><td>{{ KNOWL("hmsurface.level", "Level ideal") }}:</td>
+    <td> ${{ surface.formatted_level }}$ </td>
+    <td style="width:20px;"></td><td>{{ KNOWL("hmsurface.levelnorm", "Level norm") }}:</td>
+    <td>${{ surface.level_norm }}$</td></tr>
+</table>
+
+
+<h2> {{ KNOWL('hmsurface.invariants', 'Invariants') }} </h2>
+<table>
+  <tr><td>{{ KNOWL("hmsurface.hodge_numbers", "Hodge diamond") }}:</td>
+    <td><table> 
+        <tr> <td></td><td>
+          </td><td align="center"> $1$ </td><td></td><td></td></tr>
+        <tr> <td></td>
+            <td align="center"> $0$ </td><td></td><td align="center"> $0$ </td><td></td></tr>
+        <tr> <td align="center"> ${{surface.h20}}$ </td><td></td>
+            <td align="center"> ${{ surface.h11 }}$ </td>
+            <td></td><td align="center"> ${{surface.h20}}$ </td></tr>
+        <tr> <td></td>
+            <td align="center"> $0$ </td><td></td><td align="center"> $0$ </td><td></td></tr>
+        <tr> <td></td><td></td><td align="center"> $1$ </td><td></td><td></td></tr>
+    </table></td></tr>
+  <tr>
+    <td>{{ KNOWL("ag.holomorphic_euler_char", "Holomorphic Euler characteristic") }}:</td>
+    <td>${{ surface.chi }}$</td></tr>
+  <tr>
+    <td>{{ KNOWL("ag.arithmetic_genus", "Arithmetic genus") }}:</td>
+    <td>${{ surface.chi-1 }}$</td></tr>
+  <tr>
+    <td>{{ KNOWL("hmsurface.k2", "Self-intersection $K^2$") }}:</td>
+    <td>${{ surface.K2 }}$</td></tr>
+  <tr>
+    <td>{{ KNOWL("hmsurface.euler_number", "Euler number") }}:</td>
+    <td>${{ surface.euler_nb }}$</td></tr>    
+</table>
+
+<p>
+  The {{ KNOWL('ag.kodaira_dimension', 'Kodaira dimension') }} of this surface is 
+  {% if surface.kodaira_is_known %}
+  known to be {{ surface.kodaira_dims[0] }}.
+  {% if surface.kodaira_dims[0] == 2 %}
+  This surface is of general type.
+  {% elif surface.kodaira_dims[0] == -1 %}
+  This surface is rational.
+  {% elif surface.kodaira_dims[0] == 0 %}
+  {% if surface.chi == 2 %}
+  This surface is a K3.
+  {% else %}
+  This surface is an Enriques surface.
+  {% endif %}
+  {% endif %}
+  {% else %}
+  unknown, the possibilities being ${{ surface.kodaira_dims }}$.
+  {% endif %}
+</p>
+
+<h2> {{ KNOWL('hmsurface.cusps', 'Cusps') }} </h2>
+
+<p>
+  This Hilbert modular surface has
+  {% if surface.nb_cusps == 1 %}
+  exactly one cusp.
+  {% else %}
+  {{ surface.nb_cusps }} cusps.
+  {% endif %}
+</p>
+
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('hmsurface.cusp_M','Ideal $\mathfrak{M}$') }}</th>
+      <th>{{ KNOWL('hmsurface.cusps', 'Coordinates') }}</th>
+      <th>{{ KNOWL('hmsurface.cusp_resolution', 'Self-intersection numbers') }}</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for label, a, c, seq, rep in surface.formatted_cusps %}
+  <tr>
+    <td align="center">${{ label }}$</td>
+    <td align="center">$({{ a }}: {{ c }})$</td>
+    <td align="left">${{ seq }} ^ {{ rep }}$</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2> {{ KNOWL('hmsurface.cusps', 'Elliptic points') }} </h2>
+
+<p>
+  This Hilbert modular surface has
+  {% if surface.nb_elliptic_pts == 0 %}
+  no elliptic points.
+  {% elif surface.nb_elliptic_pts == 1 %}
+  exactly one elliptic point.
+  {% else %}
+  {{ surface.nb_elliptic_pts }} elliptic points.
+  {% endif %}
+</p>
+
+{% if surface.nb_elliptic_pts > 0 %}
+<table class="ntdata">
+  <thead>
+    <tr>
+      <th>{{ KNOWL('hmsurface.rotation_type','Rotation type') }}</th>
+      <th> Number </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for rot, nb in surface.formatted_elliptic_pts %}
+  <tr>
+    <td align="center">${{ rot }}$</td>
+    <td align="center">${{ nb }}$</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% endblock %}

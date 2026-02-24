@@ -155,10 +155,12 @@ class Genus2Test(LmfdbTest):
         assert "448.a.448.1" in L.get_data(as_text=True)
 
     def test_automorphism_group_search(self):
+        self.check_args('/Genus2Curve/Q/?aut_grp=12.4', '196.a.21952.1')
         self.check_args('/Genus2Curve/Q/?aut_grp_label=12.4', '196.a.21952.1')
         self.check_args('/Genus2Curve/Q/?aut_grp_id=%5B2,1%5D', '295.a.295.2')
 
     def test_geometric_automorphism_group_search(self):
+        self.check_args('/Genus2Curve/Q/?geom_aut_grp=48.29', '4096.b.65536.1')
         self.check_args('/Genus2Curve/Q/?geom_aut_grp_label=48.29', '4096.b.65536.1')
         self.check_args('/Genus2Curve/Q/?geom_aut_grp_id=%5B2,1%5D', '363.a.43923.1')
 

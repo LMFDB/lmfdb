@@ -281,6 +281,13 @@ def abelian_gp_display(invs):
         for q, e in Counter(invs).items()
     )
 
+def abelian_group_display_knowl(invs):
+    if len(invs) == 0:
+        return abstract_group_display_knowl("1.1", "$C_1$")
+    label = "ab/" + ".".join(str(c) for c in invs)
+    name = "$" + abelian_gp_display(invs) + "$"
+    return abstract_group_display_knowl(label, name)
+
 def product_sort_key(sub):
     s = sub.subgroup_tex_parened + sub.quotient_tex_parened
     s = (
