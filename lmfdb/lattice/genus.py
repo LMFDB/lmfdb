@@ -217,7 +217,7 @@ def common_parse(info, query):
                             raise ValueError("Non-symmetric Gram matrix")
             # Store 2D matrix in info for postprocessors (isometry/genus comparison)
             info['gram_matrix'] = mat
-    parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
+    parse_bracketed_ints(info, query, 'discriminant_group_invs')
 
 common_columns_prefix = [
     MathCol("rank", "lattice.dimension", "Rank"),
