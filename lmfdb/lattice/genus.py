@@ -237,7 +237,7 @@ common_columns_suffix = [
 
 lat_only_columns = [
     MultiProcessedCol("det", "lattice.determinant", "Determinant", ["det_abs", "det_sign"], lambda det_abs, det_sign: '$%s$' % (det_sign*det_abs), align="center"),
-    MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
+    MathCol("minimum", "lattice.minimum", "Minimum"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
     ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda a: vect_to_matrix(vect_to_sym2(a if type(a[0])==int else a[0]), compress_threshold=5, keep=2) if a else ''),
@@ -432,8 +432,8 @@ def common_boxes():
 
     minimum = TextBox(
         name="minimum",
-        label="Minimal vector length",
-        knowl="lattice.minimal_vector",
+        label="Minimum",
+        knowl="lattice.minimum",
         example="1")
     aut_label = TextBox(
         name="aut_label",
@@ -509,8 +509,8 @@ class GenusSearchArray(SearchArray):
 
 class InGenusSearchArray(EmbeddedSearchArray):
     noun = "lattice"
-    sorts = [("minimum", "minimal vector length", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
-             ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
+    sorts = [("minimum", "minimum", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
+             ("aut_size", "aut. group order", ['aut_size', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
         rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()

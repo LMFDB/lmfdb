@@ -372,8 +372,8 @@ class LatSearchArray(SearchArray):
              ("det_abs", "determinant", ['det_abs', 'rank', 'level', 'class_number', 'label']),
              ("level", "level", ['level', 'rank', 'det_abs', 'class_number', 'label']),
              ("class_number", "class number", ['class_number', 'rank', 'det_abs', 'level', 'label']),
-             ("minimum", "minimal vector length", ['minimum', 'rank', 'det_abs', 'level', 'class_number', 'label']),
-             ("aut", "automorphism group", ['aut', 'rank', 'det_abs', 'level', 'class_number', 'label'])]
+             ("minimum", "minimum", ['minimum', 'rank', 'det_abs', 'level', 'class_number', 'label']),
+             ("aut_size", "aut. group order", ['aut_size', 'rank', 'det_abs', 'level', 'class_number', 'label'])]
 
     def __init__(self):
         rank, signature, det_abs, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
