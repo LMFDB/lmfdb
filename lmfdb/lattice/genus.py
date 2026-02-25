@@ -217,7 +217,7 @@ def common_parse(info, query):
                             raise ValueError("Non-symmetric Gram matrix")
             # Store 2D matrix in info for postprocessors (isometry/genus comparison)
             info['gram_matrix'] = mat
-    parse_bracketed_ints(info, query, 'discriminant_group_invs')
+    parse_bracketed_posints(info, query, 'discriminant_group_invs')
 
 common_columns_prefix = [
     MathCol("rank", "lattice.dimension", "Rank"),
@@ -427,8 +427,8 @@ def common_boxes():
         name="discriminant_group_invs",
         label="Disc. group invariants",
         knowl="lattice.discriminant_group",
-        example="2,4",
-        example_span="2,4 or 2,2,8")
+        example="[2,4]",
+        example_span="[2,4] or [2,2,8]")
 
     minimum = TextBox(
         name="minimum",
@@ -490,7 +490,7 @@ class GenusSearchArray(SearchArray):
             label="Mass",
             knowl="lattice.mass",
             example="1/2",
-            example_span="1/2 or 1/2 or 1/2")
+            example_span="1/2 or 3/4 or 1/60")
         count = CountBox()
 
         self.browse_array = [
