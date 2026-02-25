@@ -9,9 +9,9 @@
 <table>
     <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{genus.rank}}$</td><td>{{ place_code('rank') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{genus.signature}}$</td><td>{{ place_code('signature') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{genus.det_display}}</td><td>{{ place_code('determinant') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{genus.disc_display}}</td><td>{{ place_code('discriminant') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{genus.level_display}}</td><td>{{ place_code('level') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{genus.det_display | safe}}</td><td>{{ place_code('determinant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{genus.disc_display | safe}}</td><td>{{ place_code('discriminant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{genus.level_display | safe}}</td><td>{{ place_code('level') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{genus.class_number_display}}</td><td>{{ place_code('class_number') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{genus.conway_display}}</td><td>{{ place_code('conway_symbol') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_symbol', title='Dual Conway Symbol') }}:</td><td>{{genus.dual_conway_display}}</td><td>{{ place_code('dual_conway') }}</td></tr>
