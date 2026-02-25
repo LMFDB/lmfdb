@@ -54,11 +54,11 @@ class HomePageTest(LmfdbTest):
         assert '3.1.1000.3.3.3b.1' in L # rank search
 
     def test_lattice_searchlevel(self):
-        L = self.tc.get("/Lattice/?start=&rank=&det=&level=90&gram=&minimum=&class_number=&aut=").get_data(as_text=True)
+        L = self.tc.get("/Lattice/?start=&rank=&det=&level=90&gram=&minimum=&class_number=&aut_size=").get_data(as_text=True)
         assert '1.1.45.01.3b.1' in L #level search
 
     def test_lattice_searchminvectlength(self):
-        L = self.tc.get("/Lattice/?rank=&det=&level=&gram=&minimum=3&class_number=&aut=").get_data(as_text=True)
+        L = self.tc.get("/Lattice/?rank=&det=&level=&gram=&minimum=3&class_number=&aut_size=").get_data(as_text=True)
         assert '3.3.45.01.1b7.3' in L #search minimum vector length
 
     def test_lattice_searchGM(self):
