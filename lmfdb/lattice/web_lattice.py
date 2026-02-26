@@ -4,7 +4,7 @@ import yaml
 from collections import defaultdict
 from lmfdb import db
 from flask import url_for
-from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer #latex, Factorization,
+from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer, pi, gamma #latex, Factorization,
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
 import numpy as np
@@ -386,6 +386,29 @@ class WebLattice(WebLat):
         if self.dual_theta_series:
             return raw_typeset_qexp(self.dual_theta_series)
         return "not computed"
+
+    @lazy_attribute
+    def center_density_display(self):
+        """
+        Calculate the center density as density / volume of n-dimensional unit ball.
+        The volume of an n-dimensional unit ball is pi^(n/2) / gamma(n/2 + 1).
+        """
+        if self.density is None:
+            return "not computed"
+        # Volume of n-dimensional unit ball: pi^(n/2) / gamma(n/2 + 1)
+        n = self.rank
+        volume_ball = (pi**(n/2))/gamma(n/2 + 1)
+        center_density = (self.density / volume_ball).n(50)
+        return f"${center_density}$"
+    
+    @lazy_attribute
+    def dual_center_density_display(self):
+        if self.dual_density is None:
+            return "not computed"
+        n = self.rank
+        volume_ball = (pi**(n/2))/gamma(n/2 + 1)
+        dual_center_density = (self.dual_density / volume_ball).n(50)
+        return f"${dual_center_density}$"
 
     @lazy_attribute
     def quadratic_form_display(self):
