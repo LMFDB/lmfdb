@@ -2,7 +2,9 @@
 # Author: Anne Schilling (lead), Mike Hansen, Harald Schilly
 
 from flask import render_template, request, url_for, make_response, redirect
-from lmfdb.crystals import crystals_page, logger
+from lmfdb.crystals import crystals_page
+import logging
+logger = logging.getLogger("lmfdb")
 
 
 def get_bread(breads=[]):

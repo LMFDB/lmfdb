@@ -5,7 +5,6 @@
 import flask
 from functools import wraps
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 from lmfdb.utils import flash_error, to_dict
@@ -13,11 +12,12 @@ from lmfdb.utils.uploader import Uploader
 from markupsafe import Markup
 
 from lmfdb import db
+import logging
 assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-logger = make_logger(login_page)
+logger = logging.getLogger("lmfdb")
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")

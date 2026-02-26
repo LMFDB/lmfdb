@@ -9,10 +9,9 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
-from lmfdb.logger import make_logger
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, lazy_attribute, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
-
+import logging
 
 RR = RealField(100) # reals in the database were computed to 100 bits (30 digits) but stored with 128 bits which must be truncated
 
@@ -68,7 +67,7 @@ def class_cremona_label(conductor, iso_class):
 def cremona_label_to_lmfdb_label(clab):
     return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
 
-logger = make_logger("ec")
+logger = logging.getLogger("lmfdb")
 
 # S_LABEL_RE assumes surjective determinant, but we need extended Slabels for EC/NF
 # This can be removed if/when we add modular curves with non-surjective determinant to the modular curves database

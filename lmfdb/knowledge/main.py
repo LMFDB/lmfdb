@@ -17,6 +17,8 @@ import json
 import time
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
+import logging
+logger = logging.getLogger("lmfdb")
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
                    request, url_for)
@@ -27,7 +29,6 @@ from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
-from lmfdb.knowledge import logger
 from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error
 from lmfdb.knowledge import knowledge_page

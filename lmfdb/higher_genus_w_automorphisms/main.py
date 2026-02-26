@@ -8,11 +8,12 @@ import re
 from io import BytesIO
 import yaml
 
-from lmfdb.logger import make_logger
 from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
 
 from lmfdb import db
+import logging
+logger = logging.getLogger("lmfdb")
 from lmfdb.utils import (
     flash_error, to_dict, Downloader,
     SearchArray, TextBox, ExcludeOnlyBox, CountBox,
@@ -27,7 +28,6 @@ from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
 from collections import defaultdict
 
-logger = make_logger("hgcwa")
 
 #Parsing group order
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\))))(,(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\)))))*$')

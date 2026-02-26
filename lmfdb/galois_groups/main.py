@@ -8,6 +8,8 @@ from sage.all import ZZ, latex, libgap
 
 from lmfdb import db
 from lmfdb.app import app
+import logging
+logger = logging.getLogger("lmfdb")
 from lmfdb.utils import (
     list_to_latex_matrix, flash_error, comma, to_dict, display_knowl,
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
@@ -18,7 +20,7 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import modules2string
-from lmfdb.galois_groups import galois_groups_page, logger
+from lmfdb.galois_groups import galois_groups_page
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from .transitive_group import (
     galois_module_knowl_guts, group_display_short,
@@ -27,7 +29,6 @@ from .transitive_group import (
     group_alias_table, WebGaloisGroup, knowl_cache)
 
 # Test to see if this gap installation knows about transitive groups
-# logger = make_logger("GG")
 
 try:
     G = libgap.TransitiveGroup(9, 2)

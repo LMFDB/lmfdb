@@ -4,6 +4,8 @@ import os
 import re
 import yaml
 from lmfdb import db
+import logging
+g2c_logger = logging.getLogger("lmfdb")
 from lmfdb.utils import (key_for_numerically_sort, encode_plot, prop_int_pretty,
                          list_to_factored_poly_otherorder, make_bigint, names_and_urls,
                          display_knowl, web_latex_factored_integer, integer_squarefree_part, integer_prime_divisors)
@@ -16,7 +18,6 @@ from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor, convert_label
-from lmfdb.genus2_curves import g2c_logger
 from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
 from lmfdb.abvar.fq.main import url_for_label
 
