@@ -184,7 +184,7 @@ class WebLat(WebObj):
             mod_string = r"\mathrm{mod}\ \mathbb{Z}"
 
         disc_gram_latex = rf"$\dfrac{{1}}{{{disc_exponent}}} {mat_latex} \quad ({mod_string})$"
-        print("***", disc_gram_latex)
+        #print("***", disc_gram_latex)
         return disc_gram_latex
 
     @lazy_attribute
