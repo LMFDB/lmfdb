@@ -4,7 +4,7 @@ import yaml
 from collections import defaultdict
 from lmfdb import db
 from flask import url_for
-from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer, pi, gamma #latex, Factorization,
+from sage.all import latex, lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer, pi, gamma #latex, Factorization,
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
 import numpy as np
@@ -176,14 +176,16 @@ class WebLat(WebObj):
 
         # Exponent of the discriminant group
         disc_exponent = max(self.discriminant_group_invs)
-        mat_latex = vect_to_matrix(vect_to_sym2(self.discriminant_form))
+        mat_latex = latex(matrix(vect_to_sym2(self.discriminant_form)))
         # Determine modulus (either mod Z or mod 2Z depending on parity)
         if self.is_even:
             mod_string = r"\mathrm{mod}\ 2\mathbb{Z}"
         else:
             mod_string = r"\mathrm{mod}\ \mathbb{Z}"
 
-        return rf"$\frac{{1}}{{{disc_exponent}}} {mat_latex} \quad ({mod_string})$"
+        disc_gram_latex = rf"$\dfrac{{1}}{{{disc_exponent}}} {mat_latex} \quad ({mod_string})$"
+        print("***", disc_gram_latex)
+        return disc_gram_latex
 
     @lazy_attribute
     def properties(self):
