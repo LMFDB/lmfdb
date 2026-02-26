@@ -20,7 +20,7 @@
         <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td><td>{{ place_code('automorphism_group') }}</td></tr>
         <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ lattice.festi_veniani_display }}</td><td>{{ place_code('festi_veniani') }}</td></tr>
         <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ lattice.density_display }}</td><td>{{ place_code('density') }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.center_density', title='Center density') }}:</td><td>{{ lattice.center_density_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Center density') }}:</td><td>{{ lattice.center_density_display }}</td></tr>
         <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.hermite_display }}</td><td>{{ place_code('hermite') }}</td></tr>
         <tr><td>{{ KNOWL('lattice.minimum', title='Minimum')}}:</td><td>{{lattice.minimum_display }}</td><td>{{ place_code('minimum') }}</td></tr>
         <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td><td>{{ place_code('kissing') }}</td></tr>
@@ -98,7 +98,7 @@
     <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.dual_det_display | safe}}</td><td>{{ place_code('dual_det') }}</td></tr>
     {% if lattice.is_positive_definite %}
         <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{lattice.dual_density_display }}</td><td>{{ place_code('dual_density') }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.center_density', title='Center density') }}:</td><td>{{ lattice.dual_center_density_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Center density') }}:</td><td>{{ lattice.dual_center_density_display }}</td></tr>
         <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.dual_hermite_display }}</td><td>{{ place_code('dual_hermite') }}</td></tr>
         <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.dual_kissing_display }}</td><td>{{ place_code('dual_kissing') }}</td></tr>
     {% endif %}
