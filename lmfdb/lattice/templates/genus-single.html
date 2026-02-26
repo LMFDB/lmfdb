@@ -35,7 +35,7 @@
     <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>{{genus.discriminant_gram_display | safe}}</td></tr>
 </table>
 
-<h2> {{ KNOWL('lattice.adjacency_data', title='Adjacency Data') }} </h2>
+<h2> {{ KNOWL('lattice.pneighbor_adjacency', title='$p$-Neighbor Graphs') }} </h2>
 
 <div>
   {% for p in genus.adjacency_display %}
@@ -46,9 +46,9 @@
 {% for p, D in genus.adjacency_display.items() %}
   <div id="adjcont_{{p}}" class="adjcont" style="display:none;">
     <table>
-      <tr><td>{{ KNOWL('lattice.adjacency_matrix', 'Adjacency matrix') }}:</td><td>{{D.matrix | safe}}</td></tr>
-      <tr><td>{{ KNOWL('lattice.adjacency_polynomial', 'Adjacency polynomial') }}:</td><td>{{D.poly | safe}}</td></tr>
-      <tr><td>{{ KNOWL('lattice.adjacency_graph', 'Adjacency graph') }}:</td><td>
+      <tr><td>{{ KNOWL('lattice.pneighbor_adjacency', 'Adjacency matrix') }}:</td><td>{{D.matrix | safe}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.pneighbor_adjacency', 'Adjacency polynomial') }}:</td><td>{{D.poly | safe}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.pneighbor_adjacency', 'Adjacency graph') }}:</td><td>
         <div id="adj-graph-{{p}}" style="border:1px solid #ddd;"></div>
       </td></tr>
     </table>
