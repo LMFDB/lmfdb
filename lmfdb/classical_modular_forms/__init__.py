@@ -1,11 +1,9 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 cmf_page = Blueprint("cmf", __name__, template_folder='templates', static_folder="static")
 cmf = cmf_page
-cmf_logger = make_logger(cmf_page)
 
 from . import main
 assert main # silence pyflakes
