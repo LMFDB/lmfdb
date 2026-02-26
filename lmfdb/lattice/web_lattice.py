@@ -173,7 +173,17 @@ class WebLat(WebObj):
     def discriminant_gram_display(self):
         if self.discriminant_form is None:
             return "not computed"
-        return vect_to_matrix(vect_to_sym2(self.discriminant_form))
+
+        # Exponent of the discriminant group
+        disc_exponent = max(self.discriminant_group_invs)
+        mat_latex = vect_to_matrix(vect_to_sym2(self.discriminant_form))
+        # Determine modulus (either mod Z or mod 2Z depending on parity)
+        if self.is_even:
+            mod_string = r"\mathrm{mod}\ 2\mathbb{Z}"
+        else:
+            mod_string = r"\mathrm{mod}\ \mathbb{Z}"
+
+        return rf"$\frac{{1}}{{{disc_exponent}}} {mat_latex} \quad ({mod_string})$"
 
     @lazy_attribute
     def properties(self):
