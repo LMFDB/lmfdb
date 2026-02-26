@@ -209,7 +209,8 @@ class LatticeDownloader(Downloader):
             {
                 "sage": 'lattice = IntegralLattice(Matrix(ZZ, out["rank"], out["rank"], out["gram"]))',
                 "magma": 'lattice := LatticeWithGram(out["rank"], out["gram"]);',
-                "oscar": 'lattice = integer_lattice(gram = matrix(ZZ, out["rank"], out["rank"], out["gram"]))'
+                "oscar": 'lattice = integer_lattice(gram = matrix(ZZ, out["rank"], out["rank"], out["gram"]))',
+                "gp": 'lattice = matrix(mapget(out, "rank"), mapget(out, "rank"), i, j, mapget(out, "gram")[(i-1)*mapget(out, "rank") + j]);'
             }
         ),
     }
