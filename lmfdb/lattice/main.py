@@ -197,11 +197,28 @@ lattice_columns = [
     LinkCol("label", "lattice.label", "Label", url_for_label)
 ] + common_columns + lat_only_columns
 
+
+# Class to download lattice search results
+class LatticeDownloader(Downloader):
+    table = db.lat_lattices_new
+    title = "Integral lattices"
+
+    inclusions = {
+        "lattice": (
+            ["rank", "gram"],
+            {
+                "sage": 'lattice = IntegralLattice(Matrix(ZZ, out["rank"], out["rank"], out["gram"]))',
+                "magma": 'lattice := LatticeWithGram(out["rank"], out["gram"]);',
+                "oscar": 'lattice = integer_lattice(gram = matrix(QQ, out["rank"], out["rank"], out["gram"]))'
+            }
+        ),
+    }
+
 @search_wrap(table=db.lat_lattices_new,
              title='Integral lattices search results',
              err_title='Integral lattices search error',
              columns=SearchColumns(lattice_columns),
-             shortcuts={'download': Downloader(db.lat_lattices_new),
+             shortcuts={'download': LatticeDownloader(),
                         'jump': lattice_jump},
              postprocess=lattice_search_isometric,
              url_for_label=url_for_label,
