@@ -13,8 +13,8 @@
     <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{genus.disc_display | safe}}</td><td>{{ place_code('discriminant') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{genus.level_display | safe}}</td><td>{{ place_code('level') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{genus.class_number_display}}</td><td>{{ place_code('class_number') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{genus.conway_display}}</td><td>{{ place_code('conway_symbol') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Dual Conway Symbol') }}:</td><td>{{genus.dual_conway_display}}</td><td>{{ place_code('dual_conway') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway genus symbol') }}:</td><td>{{genus.conway_display}}</td><td>{{ place_code('conway_symbol') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Dual Conway genus symbol') }}:</td><td>{{genus.dual_conway_display}}</td><td>{{ place_code('dual_conway') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{genus.parity}}</td><td>{{ place_code('parity') }}</td></tr>
     {% if genus.is_positive_definite %}
         <tr><td>{{ KNOWL('lattice.mass', title='Mass') }}:</td><td>{{genus.mass_display}}</td><td>{{ place_code('mass') }}</td></tr>
