@@ -18,7 +18,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, diagram_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
@@ -514,6 +514,22 @@ class ECDownloader(Downloader):
         code = code.replace("{attach_lmfdb_label}", attach_lmfdb_label)
         return code
 
+
+@diagram_wrap(template="d3_diagram.html",
+              table=db.ec_curvedata,
+              postprocess=ec_postprocess,
+              title="Elliptic curve diagrams",
+              err_title="Elliptic curve search input error",
+              x_axis_default="conductor",
+              y_axis_default="regulator",
+              columns=ec_columns,
+              url_for_label=url_for_label,
+              learnmore=learnmore_list,
+              bread=lambda: get_bread('Diagram search'))
+def diagram_search(info, query):
+    # run function below without the decorator
+    elliptic_curve_search.f(info, query)
+    
 
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
@@ -1071,6 +1087,11 @@ def render_bhkssw():
             flash_error(err)
 
     return render_template("bhkssw.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
+
+@ec_page.route("/diagram/")
+def browseDiagram():
+    info = to_dict(request.args, search_array=ECSearchArray())
+    return diagram_search(info)
 
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 

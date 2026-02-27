@@ -33,7 +33,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'parse_start', 'parse_ints_to_list_flash', 'integer_options',
            'unparse_range',
            'nf_string_to_label', 'clean_input', 'prep_ranges',
-           'search_wrap', 'count_wrap', 'embed_wrap', 'yield_wrap',
+           'search_wrap', 'count_wrap', 'embed_wrap', 'yield_wrap', 'diagram_wrap',
            'SearchArray', 'EmbeddedSearchArray', 'TextBox', 'TextBoxNoEg', 'TextBoxWithSelect', 'BasicSpacer',
            'SkipBox', 'CheckBox', 'CheckboxSpacer', 'DoubleSelectBox', 'HiddenBox',
            'SearchButton', 'SearchButtonWithSelect', 'RowSpacer',
@@ -148,7 +148,7 @@ from .search_parsing import (
     unparse_range,
     clean_input, prep_ranges, input_string_to_poly)
 
-from .search_wrapper import search_wrap, count_wrap, embed_wrap, yield_wrap
+from .search_wrapper import search_wrap, count_wrap, embed_wrap, yield_wrap, diagram_wrap
 from .search_boxes import (
     SearchArray, EmbeddedSearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
