@@ -1171,7 +1171,7 @@ class G2CSearchArray(SearchArray):
              ]
 
     def jump_box(self, info):
-        info["jump_example"] = "121.a.1"
+        info["jump_example"] = "121.a1"
         info["jump_egspan"] = "e.g. 121.a.1 or 169.a or 1088.b"
         info["jump_egspan"] += " or x^5 + 1 or x^5, x^2 + x + 1"
         info["jump_egspan"] += " or b^2 = k^5 + 1 or m^2 + m*(x^2 + x + 1) = x^5"
