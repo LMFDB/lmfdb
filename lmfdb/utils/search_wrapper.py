@@ -615,8 +615,6 @@ class DiagramWrapper(Wrapper):
             # ensure that we only have a single countbox!
             # SA.refine_array = [x for x in SA.refine_array if type(x) != type(CountBox()) ]
             SA.refine_array.append(diagram_boxes + [CountBox()])
-        print("Refine array is now", SA.refine_array)
-        print(dir(SA))
         info["search_array"] = SA
 
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -631,7 +629,6 @@ class DiagramWrapper(Wrapper):
         # We have to do this here since we didn't have access to the table in __init__
         
         proj = query.pop("__projection__", self.projection)
-        print("Projection is", proj)
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
 
@@ -689,12 +686,15 @@ class DiagramWrapper(Wrapper):
                 x_key = info["x-axis"]
                 y_key = info["y-axis"]
                 col_key = info.get("color")
-                print(info["count"])
+
+                # Elliptic curves have "lmfdb_label" and "Clabel"
+                label_str = "lmfdb_label" if res[0].get("label") is None  else "label"
+                
                 return [ {"x": str(r[x_key]),
                           "y": str(r[y_key]),
                           "color": str(r.get(col_key)),
-                          "path": self.url_for_label(r["label"]),
-                          "label": r["label"],
+                          "path": self.url_for_label(r[label_str]),
+                          "label": r[label_str],
                           } for r in res ]
 
 

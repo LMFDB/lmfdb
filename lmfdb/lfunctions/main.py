@@ -384,16 +384,16 @@ def l_function_search(info, query):
     common_parse(info, query)
 
 @diagram_wrap(template="d3_diagram.html",
-             table=db.lfunc_search,
-             postprocess=process_search,
-             title="L-function diagrams",
-             err_title="L-function search input error",
-             x_axis_default="conductor",
-             y_axis_default="z1",
-             columns=lfunc_columns,
-             url_for_label=url_for_lfunction,
-             learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]))
+              table=db.lfunc_search,
+              postprocess=process_search,
+              title="L-function diagrams",
+              err_title="L-function search input error",
+              x_axis_default="conductor",
+              y_axis_default="z1",
+              columns=lfunc_columns,
+              url_for_label=url_for_lfunction,
+              learnmore=learnmore_list,
+              bread=lambda: get_bread(breads=[("Search results", " ")]))
 def diagram_search(info, query):
     common_parse(info, query)
 
