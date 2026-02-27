@@ -515,7 +515,7 @@ class ECDownloader(Downloader):
               columns=ec_columns,
               url_for_label=url_for_label,
               learnmore=learnmore_list,
-              bread=lambda: get_bread('Search results'))
+              bread=lambda: get_bread('Diagram search'))
 def diagram_search(info, query):
     # run function below without the decorator
     elliptic_curve_search.f(info, query)

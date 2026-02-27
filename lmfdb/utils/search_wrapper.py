@@ -1,6 +1,6 @@
 from random import randrange
 from flask import render_template, jsonify, redirect
-from psycopg2.extensions import QueryCanceledError
+from psycopg2.extensions import QueryCanceledError, binary_types
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 from sage.misc.cachefunc import cached_function
@@ -13,6 +13,7 @@ from lmfdb.utils.completeness import results_complete
 # For diagram_wrap:
 from psycodict.base import number_types
 from .search_boxes import SelectBox, CountBox
+
 
 def use_split_ors(info, query, split_ors, offset, table):
     """
@@ -30,15 +31,24 @@ def use_split_ors(info, query, split_ors, offset, table):
         split_ors is not None
         and len(query.get("$or", [])) > 1
         and any(field in opt for field in split_ors for opt in query["$or"])
-
- # We don't support large offsets since sorting in Python requires
- # fetching all records, starting from 0
+        # We don't support large offsets since sorting in Python requires
+        # fetching all records, starting from 0
         and offset < table._count_cutoff
     )
 
 
-class Wrapper():
-    def __init__(self, f, template, table, title, err_title, postprocess=None, one_per=None, **kwds):
+class Wrapper:
+    def __init__(
+        self,
+        f,
+        template,
+        table,
+        title,
+        err_title,
+        postprocess=None,
+        one_per=None,
+        **kwds,
+    ):
         self.f = f
         self.template = template
         self.table = table
@@ -52,13 +62,20 @@ class Wrapper():
         sort = query.pop("__sort__", None)
         SA = info.get("search_array")
         if sort is None and SA is not None and SA.sorts is not None:
-            sorts = SA.sorts.get(SA._st(info), []) if isinstance(SA.sorts, dict) else SA.sorts
-            sord = info.get('sort_order', '')
-            sop = info.get('sort_dir', '')
+            sorts = (
+                SA.sorts.get(SA._st(info), [])
+                if isinstance(SA.sorts, dict)
+                else SA.sorts
+            )
+            sord = info.get("sort_order", "")
+            sop = info.get("sort_dir", "")
             for name, display, S in sorts:
                 if name == sord:
-                    if sop == 'op':
-                        return [(col, -1) if isinstance(col, str) else (col[0], -col[1]) for col in S]
+                    if sop == "op":
+                        return [
+                            (col, -1) if isinstance(col, str) else (col[0], -col[1])
+                            for col in S
+                        ]
                     return S
         return sort
 
@@ -71,9 +88,11 @@ class Wrapper():
             # Errors raised in parsing; these should mostly be SearchParsingErrors
             if is_debug_mode():
                 raise
-            info['err'] = str(err)
-            err_title = query.pop('__err_title__', self.err_title)
-            return render_template(self.template, info=info, title=err_title, **template_kwds)
+            info["err"] = str(err)
+            err_title = query.pop("__err_title__", self.err_title)
+            return render_template(
+                self.template, info=info, title=err_title, **template_kwds
+            )
         else:
             err_title = query.pop("__err_title__", self.err_title)
         if errpage is not None:
@@ -104,17 +123,22 @@ class Wrapper():
         )
 
     def raw_parsing_error(self, info, query, err, err_title, template, template_kwds):
-        flash_error('Error parsing %s.', str(err))
-        info['err'] = str(err)
-        info['query'] = dict(query)
-        return render_template(template, info=info, title=self.err_title, **template_kwds)
+        flash_error("Error parsing %s.", str(err))
+        info["err"] = str(err)
+        info["query"] = dict(query)
+        return render_template(
+            template, info=info, title=self.err_title, **template_kwds
+        )
 
     def oob_error(self, info, query, err, err_title, template, template_kwds):
         # The error string is long and ugly, so we just describe the type of issue
-        flash_error('Input number larger than allowed by integer type in database.')
-        info['err'] = str(err)
-        info['query'] = dict(query)
-        return render_template(template, info=info, title=self.err_title, **template_kwds)
+        flash_error("Input number larger than allowed by integer type in database.")
+        info["err"] = str(err)
+        info["query"] = dict(query)
+        return render_template(
+            template, info=info, title=self.err_title, **template_kwds
+        )
+
 
 class SearchWrapper(Wrapper):
     def __init__(
@@ -134,7 +158,7 @@ class SearchWrapper(Wrapper):
         postprocess=None,
         split_ors=None,
         random_projection=0,  # i.e., the label_column
-        **kwds
+        **kwds,
     ):
         Wrapper.__init__(
             self, f, template, table, title, err_title, postprocess, **kwds
@@ -202,7 +226,9 @@ class SearchWrapper(Wrapper):
         count = parse_count(info, self.per_page)
         start = parse_start(info)
         try:
-            split_ors = not one_per and use_split_ors(info, query, self.split_ors, start, table)
+            split_ors = not one_per and use_split_ors(
+                info, query, self.split_ors, start, table
+            )
             if random:
                 # Ignore __projection__: it's intended for searches
                 if split_ors:
@@ -245,10 +271,14 @@ class SearchWrapper(Wrapper):
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+            return self.query_cancelled_error(
+                info, query, err, err_title, template, template_kwds
+            )
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
-            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+            return self.raw_parsing_error(
+                info, query, err, err_title, template, template_kwds
+            )
         except NumericValueOutOfRange as err:
             # This is caused when a user inputs a number that's too large for a column search type
             return self.oob_error(info, query, err, err_title, template, template_kwds)
@@ -274,12 +304,19 @@ class SearchWrapper(Wrapper):
             # Display warning message if user searched on column(s) with null values
             if query:
                 nulls = table.stats.null_counts()
-                complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                complete, msg, caveat = results_complete(
+                    table.search_table, query, table._db, info.get("search_array")
+                )
                 if complete:
-                    flash_success("The results below are complete, since the LMFDB contains all " + msg)
-                elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
+                    flash_success(
+                        "The results below are complete, since the LMFDB contains all "
+                        + msg
+                    )
+                elif nulls:  # TODO: We already run a version of this inside results_complete.  Should be combined
                     search_columns = table._columns_searched(query)
-                    nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
+                    nulls = {
+                        col: cnt for col, cnt in nulls.items() if col in search_columns
+                    }
                     col_display = {}
                     if "search_array" in info:
                         for row in info["search_array"].refine_array:
@@ -288,13 +325,17 @@ class SearchWrapper(Wrapper):
                                     if hasattr(item, "name") and hasattr(item, "label"):
                                         col_display[item.name] = item.label
                         for col, cnt in list(nulls.items()):
-                            override = info["search_array"].null_column_explanations.get(col)
+                            override = info[
+                                "search_array"
+                            ].null_column_explanations.get(col)
                             if override is False:
                                 del nulls[col]
                             elif override:
                                 nulls[col] = override
                             else:
-                                nulls[col] = f"{col_display.get(col, col)} ({cnt} objects)"
+                                nulls[col] = (
+                                    f"{col_display.get(col, col)} ({cnt} objects)"
+                                )
                     else:
                         for col, cnt in list(nulls.items()):
                             nulls[col] = f"{col} ({cnt} objects)"
@@ -324,16 +365,18 @@ class CountWrapper(Wrapper):
         err_title,
         postprocess=None,
         overall=None,
-        **kwds
+        **kwds,
     ):
         Wrapper.__init__(
             self, f, template, table, title, err_title, postprocess=postprocess, **kwds
         )
         self.groupby = groupby
         if postprocess is None and overall is None:
+
             @cached_function
             def overall():
                 return table.stats.column_counts(groupby)
+
         self.overall = overall
 
     def __call__(self, info):
@@ -353,7 +396,9 @@ class CountWrapper(Wrapper):
                 sgroupby = sorted(groupby)
                 if sgroupby != groupby:
                     perm = [sgroupby.index(col) for col in groupby]
-                    res = {tuple(key[i] for i in perm): val for (key, val) in res.items()}
+                    res = {
+                        tuple(key[i] for i in perm): val for (key, val) in res.items()
+                    }
         except QueryCanceledError as err:
             return self.query_cancelled_error(
                 info, query, err, err_title, template, template_kwds
@@ -370,7 +415,9 @@ class CountWrapper(Wrapper):
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
-                info['count'] = 50 # put count back in so that it doesn't show up as none in url
+                info["count"] = (
+                    50  # put count back in so that it doesn't show up as none in url
+                )
 
             except ValueError as err:
                 # Errors raised in postprocessing
@@ -389,17 +436,18 @@ class EmbedWrapper(Wrapper):
 
     For an example, see families of modular curves.
     """
+
     def __init__(
         self,
-            f,
-            template,
-            table,
-            title=None,
-            err_title=None,
-            per_page=50,
-            columns=None,
-            projection=1,
-            **kwds,
+        f,
+        template,
+        table,
+        title=None,
+        err_title=None,
+        per_page=50,
+        columns=None,
+        projection=1,
+        **kwds,
     ):
         super().__init__(f, template, table, title, err_title, **kwds)
         self.per_page = per_page
@@ -435,13 +483,17 @@ class EmbedWrapper(Wrapper):
                 offset=start,
                 sort=sort,
                 info=info,
-                one_per=one_per
+                one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+            return self.query_cancelled_error(
+                info, query, err, err_title, template, template_kwds
+            )
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
-            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+            return self.raw_parsing_error(
+                info, query, err, err_title, template, template_kwds
+            )
         except NumericValueOutOfRange as err:
             # This is caused when a user inputs a number that's too large for a column search type
             return self.oob_error(info, query, err, err_title, template, template_kwds)
@@ -453,10 +505,13 @@ class EmbedWrapper(Wrapper):
                 raise
                 flash_error(str(err))
                 info["err"] = str(err)
-                return render_template(template, info=info, title=err_title, **template_kwds)
+                return render_template(
+                    template, info=info, title=err_title, **template_kwds
+                )
             info["results"] = res
             return render_template(template, info=info, title=title, **template_kwds)
-       
+
+
 class YieldWrapper(Wrapper):
     """
     A variant on search wrapper that is intended to replace the database table with a Python function
@@ -464,9 +519,10 @@ class YieldWrapper(Wrapper):
 
     The Python function should also accept a boolean random keyword (though it's allowed to raise an error)
     """
+
     def __init__(
         self,
-        f, # still a function that parses info into a query dictionary
+        f,  # still a function that parses info into a query dictionary
         template="search_results.html",
         yielder=None,
         title=None,
@@ -474,7 +530,7 @@ class YieldWrapper(Wrapper):
         per_page=50,
         columns=None,
         url_for_label=None,
-        **kwds
+        **kwds,
     ):
         Wrapper.__init__(
             self, f, template, yielder, title, err_title, postprocess=None, **kwds
@@ -534,25 +590,27 @@ class YieldWrapper(Wrapper):
             info["results"] = res
         return render_template(template, info=info, title=title, **template_kwds)
 
+
 class DiagramWrapper(Wrapper):
     """
     A variant on search wrapper that is intended for displaying data in d3.js
     """
+
     def __init__(
         self,
-            f,
-            template="d3_diagram",
-            table=None,
-            title=None,
-            url_for_label=None,
-            err_title=None,
-            columns=None,
-            projection=1,
-            split_ors=None,
-            x_axis_default = None,
-            y_axis_default = None,
-            result_count_default=1000,
-            **kwds,
+        f,
+        template="d3_diagram",
+        table=None,
+        title=None,
+        url_for_label=None,
+        err_title=None,
+        columns=None,
+        projection=1,
+        split_ors=None,
+        x_axis_default=None,
+        y_axis_default=None,
+        result_count_default=1000,
+        **kwds,
     ):
         super().__init__(f, template, table, title, err_title, **kwds)
         self.columns = columns
@@ -561,7 +619,7 @@ class DiagramWrapper(Wrapper):
         self.x_axis_default = x_axis_default
         self.y_axis_default = y_axis_default
         self.result_count_default = result_count_default
-        
+
         if columns is None:
             self.projection = projection
         else:
@@ -569,52 +627,72 @@ class DiagramWrapper(Wrapper):
 
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
-        #  if search_type starts with 'Random' returns a random label
         search_type = info.get("search_type", info.get("hst", ""))
         info["search_type"] = search_type
         info["columns"] = self.columns
-        
-            
+
         # TODO: modify search array to remove random
         SA = info.get("search_array")
-        numerical_fields = [(col, col) for (col, t) in self.table.col_type.items()
-                            if t in number_types.keys()]
-        binary_fields = [(col, col) for (col, t) in self.table.col_type.items() if t == "boolean"]
 
+        def flatten(L):         # flatten nested list
+            return [x for xs in L for x in xs]
+
+        diagram_fields = {box.name: box.label for box in
+                            flatten(SA.browse_array) +
+                            flatten(SA.refine_array)}
+        
+        # Get numerical and binary fields only
+        valid_fields = self.table.col_type
+        
+        numerical_fields = [(name, label) for (name,label) in diagram_fields.items()
+                            if valid_fields.get(name) in number_types.keys()]
+        binary_fields = [(name, label) for (name, label) in diagram_fields.items()
+                            if valid_fields.get(name) == "boolean"]
+
+        print("\t diagram fields are:", diagram_fields)
+        
         diagram_boxes = [
             SelectBox(
-                name = "x-axis",
-                label = "x-axis",
-                options = numerical_fields,
+                name="x-axis",
+                label="x-axis",
+                options=numerical_fields,
             ),
             SelectBox(
-                name = "y-axis",
-                label = "y-axis",
-                options = numerical_fields,
+                name="y-axis",
+                label="y-axis",
+                options=numerical_fields,
             ),
             SelectBox(
-            name = "color",
-            label = "color",
-            options = numerical_fields + binary_fields
+                name="color", label="color", options=numerical_fields + binary_fields
             ),
         ]
-        
 
-        # delete extra CountBox so we can set the count manually (otherwise our box is ignored)
-        # SA.browse_array = [[x for x in arr if type(x) != type(CountBox())] for arr in SA.browse_array]
-        # SA.refine_array = [[x for x in arr if type(x) != type(CountBox())] for arr in SA.refine_array]
-        # print(info.get("search_array"))
-        # Add extra boxes if not already present.
+        # Add diagram-specific boxes if not already present.
         # Checking all fields ensures that we don't add an extra
         # set of boxes when the search is updated (which the naive solution does).
 
-        if not any([x.name == "x-axis" for arr in SA.browse_array for x in arr]):
-            SA.browse_array = [x for x in SA.browse_array if type(x) != type(CountBox()) ]
+        if not any(x.name == "x-axis" for arr in SA.browse_array for x in arr):
+            SA.browse_array = [
+                x for x in SA.browse_array if not isinstance(x, CountBox)
+            ]
             SA.browse_array.append(diagram_boxes)
-        if not any([x.name == "x-axis" for arr in SA.refine_array for x in arr]):
-            # ensure that we only have a single countbox!
-            # SA.refine_array = [x for x in SA.refine_array if type(x) != type(CountBox()) ]
+        if not any(x.name == "x-axis" for arr in SA.refine_array for x in arr):
             SA.refine_array.append(diagram_boxes + [CountBox()])
+
+        # Override hidden() to exclude "count" from hidden inputs, since we
+        # have a visible CountBox in refine_array.  Without this, the form
+        # would contain both a hidden <input name="count"> (from hidden_inputs)
+        # and the visible CountBox <input name="count">, causing the hidden
+        # one to silently override the user's value on re-search.
+        original_hidden = SA.hidden
+
+        def hidden_without_count(info):
+            return [
+                (name, val) for name, val in original_hidden(info) if name != "count"
+            ]
+
+        SA.hidden = hidden_without_count
+
         info["search_array"] = SA
 
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
@@ -623,20 +701,17 @@ class DiagramWrapper(Wrapper):
             return data
         query, sort, table, title, err_title, template, one_per = data
 
-        # TODO: make sure we only search for fields that we actually need! 
+        # TODO: make sure we only search for fields that we actually need!
+
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
         # These virtual columns won't be present in the database, so we just strip them out
         # We have to do this here since we didn't have access to the table in __init__
-        
         proj = query.pop("__projection__", self.projection)
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
 
-        # print("\n\n INFO = ", info, "\n\n NUM_RES:", num_res, "\n\n QUERY:", query)
         count = parse_count(info, self.result_count_default)
-        print("Count is now", count)
         try:
-            # split_ors = not one_per and use_split_ors(info, query, self.split_ors, 0, table)
             res = table.search(
                 query,
                 proj,
@@ -645,13 +720,16 @@ class DiagramWrapper(Wrapper):
                 sort=sort,
                 info=info,
                 one_per=one_per,
-                # split_ors=split_ors,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(info, query, err, err_title, template, template_kwds)
+            return self.query_cancelled_error(
+                info, query, err, err_title, template, template_kwds
+            )
         except SearchParsingError as err:
             # These can be raised when the query includes $raw keys.
-            return self.raw_parsing_error(info, query, err, err_title, template, template_kwds)
+            return self.raw_parsing_error(
+                info, query, err, err_title, template, template_kwds
+            )
         except NumericValueOutOfRange as err:
             # This is caused when a user inputs a number that's too large for a column search type
             return self.oob_error(info, query, err, err_title, template, template_kwds)
@@ -667,8 +745,10 @@ class DiagramWrapper(Wrapper):
                     template, info=info, title=err_title, **template_kwds
                 )
             if not res:
-                return render_template(template, info=info, title=title, **template_kwds)
-            
+                return render_template(
+                    template, info=info, title=title, **template_kwds
+                )
+
             def make_d3_data(info, res):
                 # TODO: this can probably be refactored
                 if "x-axis" not in info:
@@ -685,11 +765,12 @@ class DiagramWrapper(Wrapper):
 
                 x_key = info["x-axis"]
                 y_key = info["y-axis"]
+
                 col_key = info.get("color")
 
                 # Elliptic curves have "lmfdb_label" and "Clabel"
-                label_str = "lmfdb_label" if res[0].get("label") is None  else "label"
-                
+                label_str = "lmfdb_label" if res[0].get("label") is None else "label"
+                print("\t Keys for result:", res[0].keys())
                 return [ {"x": str(r[x_key]),
                           "y": str(r[y_key]),
                           "color": str(r.get(col_key)),
@@ -697,10 +778,11 @@ class DiagramWrapper(Wrapper):
                           "label": r[label_str],
                           } for r in res ]
 
-
-            
             info["d3_data"] = make_d3_data(info, res)
-                              
+            # label names for printing above the axes
+            info["x-axis-label"] = diagram_fields[info["x-axis"]]
+            info["y-axis-label"] = diagram_fields[info["y-axis"]]
+
             # Display warning message if user searched on column(s) with null values
             return render_template(template, info=info, title=title, **template_kwds)
 
@@ -709,17 +791,21 @@ class DiagramWrapper(Wrapper):
 def search_wrap(f, **kwds):
     return SearchWrapper(f, **kwds)
 
+
 @decorator_keywords
 def count_wrap(f, **kwds):
     return CountWrapper(f, **kwds)
+
 
 @decorator_keywords
 def embed_wrap(f, **kwds):
     return EmbedWrapper(f, **kwds)
 
+
 @decorator_keywords
 def yield_wrap(f, **kwds):
     return YieldWrapper(f, **kwds)
+
 
 @decorator_keywords
 def diagram_wrap(f, **kwds):

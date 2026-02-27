@@ -14,35 +14,50 @@
 <!-- Create a div where the graph will take place -->
 <div id="my_dataviz"></div>
 
-<!-- Control panel -->
-<div style="margin-top: 20px; margin-left: 60px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; display: inline-block;">
-  <div style="margin-bottom: 15px;">
-    <label for="pointRadius">Point Radius: <span id="radiusValue">1.5</span></label>
-    <input type="range" id="pointRadius" min="0.5" max="10" value="1.5" step="0.2" style="width: 200px; margin-left: 10px; vertical-align: middle;">
+  <!-- Control panel -->
+  <div style="margin-top: 20px; margin-left: 60px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; display: inline-block;">
+    <div style="margin-bottom: 15px;">
+      <label for="pointRadius">Point Radius: <span id="radiusValue">1.5</span></label>
+      <input type="range" id="pointRadius" min="0.5" max="10" value="1.5" step="0.2" style="width: 200px; margin-left: 10px; vertical-align: middle;">
+    </div>
+    <div style="display: grid; grid-template-columns: auto auto auto; gap: 10px 20px; margin-bottom: 15px; align-items: start;">
+      <div>
+        <label for="xMax">xMax:</label>
+        <input type="number" id="xMax" value="" step="any" style="width: 80px; margin-left: 10px;">
+      </div>
+      <div>
+        <label for="yMax">yMax:</label>
+        <input type="number" id="yMax" value="" step="any" style="width: 80px; margin-left: 10px;">
+      </div>
+      <div style="grid-row: span 2;">
+        <label for="colorScheme" style="display: block; margin-bottom: 5px;">Color Scheme:</label>
+        <select id="colorScheme" style="width: 150px;">
+          <option value="viridis">Viridis</option>
+          <option value="plasma">Plasma</option>
+          <option value="inferno">Inferno</option>
+          <option value="cubehelix">Cubehelix</option>
+          <option value="warm">Warm</option>
+        </select>
+        <div id="colorPreview" style="margin-top: 8px; height: 20px; border: 1px solid #ccc; border-radius: 3px;"></div>
+        <div id="binaryLabels" style="margin-top: 5px; font-size: 11px; color: #666; display: none;">
+          <span style="float: left;">0</span>
+          <span style="float: right;">1</span>
+        </div>
+      </div>
+      <div>
+        <label for="xMin">xMin:</label>
+        <input type="number" id="xMin" value="" step="any" style="width: 80px; margin-left: 10px;">
+      </div>
+      <div>
+        <label for="yMin">yMin:</label>
+        <input type="number" id="yMin" value="" step="any" style="width: 80px; margin-left: 10px;">
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <button id="updateAxes" style="margin-right: 10px;">Update</button>
+      <button id="resetAxes">Reset</button>
+    </div>
   </div>
-  <div style="display: grid; grid-template-columns: auto auto; gap: 10px 20px; margin-bottom: 15px; align-items: center;">
-    <div>
-      <label for="xMax">xMax:</label>
-      <input type="number" id="xMax" value="" step="any" style="width: 80px; margin-left: 10px;">
-    </div>
-    <div>
-      <label for="yMax">yMax:</label>
-      <input type="number" id="yMax" value="" step="any" style="width: 80px; margin-left: 10px;">
-    </div>
-    <div>
-      <label for="xMin">xMin:</label>
-      <input type="number" id="xMin" value="" step="any" style="width: 80px; margin-left: 10px;">
-    </div>
-    <div>
-      <label for="yMin">yMin:</label>
-      <input type="number" id="yMin" value="" step="any" style="width: 80px; margin-left: 10px;">
-    </div>
-  </div>
-  <div style="text-align: right;">
-    <button id="updateAxes" style="margin-right: 10px;">Update</button>
-    <button id="resetAxes">Reset</button>
-  </div>
-</div>
 
 </div><!-- End diagram-container -->
 
@@ -61,10 +76,12 @@
   const data = {{ info.get("d3_data") | tojson | safe }};
   console.log(data)
   // Convert string values to numbers to ensure proper numeric comparison
+  console.log(data[1].color)
   data.forEach(d => {
       d.x = parseFloat(d.x);
       d.y = parseFloat(d.y);
-      d.color = parseFloat(d.color);
+      const parsedColor = parseFloat(d.color);
+      d.color = isNaN(parsedColor) ? (d.color === "true" ? 1 : 0) : parsedColor;
   });
 
   var margin = {top: 30, right: 30, bottom: 40, left: 100},
@@ -125,16 +142,129 @@
   }
   const baseUrl = window.location.origin;
 
-  // TODO: replace schemeBlues with user-selected color scheme
+  // Color scheme definitions
+  const colorSchemes = {
+      viridis: {
+          interpolator: d3.interpolateViridis,
+          binary: ['#440154', '#FDE725']
+      },
+      plasma: {
+          interpolator: d3.interpolatePlasma,
+          binary: ['#0D0887', '#F0F921']
+      },
+      inferno: {
+          interpolator: d3.interpolateInferno,
+          binary: ['#000004', '#FCFFA4']
+      },
+      cubehelix: {
+          interpolator: d3.interpolateCubehelixDefault,
+          binary: ['#000000', '#e0ffff']
+      },
+      warm: {
+          interpolator: d3.interpolateWarm,
+          binary: ['#6e40aa', '#fbb11b']
+      }
+  };
+
   function countUnique(arr) {
       return new Set(arr).size;
   }
-  var numCols = countUnique(data.map(d => d.color));
 
-  const colorScale = d3.scaleSequential().domain([0, numCols]).interpolator(d3.interpolateBlues);
-  
+  // Check if data is binary (only 2 unique integer values)
+  function isBinaryData(data) {
+      const uniqueValues = [...new Set(data.map(d => d.color))];
+      if (uniqueValues.length !== 2) return false;
+      // Check if both are integers
+      return uniqueValues.every(v => Number.isInteger(v));
+  }
+
+  var numColors = countUnique(data.map(d => d.color));
+  var isBinary = isBinaryData(data);
+  var currentScheme = 'viridis';
+
+  // Get actual extent of color data for continuous scales
+  const colorExtent = d3.extent(data, d => d.color);
+
+  // Create color scale based on data type
+  function getColorScale(schemeName) {
+      const scheme = colorSchemes[schemeName];
+      if (numColors === 1) {
+          return d3.scaleOrdinal().range(['black']);
+      } else if (isBinary) {
+          return d3.scaleOrdinal()
+              .domain([0, 1])
+              .range(scheme.binary);
+      } else {
+          return d3.scaleSequential()
+              .domain(colorExtent)
+              .interpolator(scheme.interpolator);
+      }
+  }
+
+  var colorScale = getColorScale(currentScheme);
+
+  // Update color preview based on current scheme and data type
+  function updateColorPreview() {
+      const preview = d3.select("#colorPreview");
+      const labels = d3.select("#binaryLabels");
+      const scheme = colorSchemes[currentScheme];
+
+      if (numColors === 1) {
+          // Single value: black
+          preview.style("background", 'black');
+          labels.style("display", "none");
+      } else if (isBinary) {
+          // Binary: show two color swatches side by side
+          preview.style("background", `linear-gradient(to right, ${scheme.binary[0]} 50%, ${scheme.binary[1]} 50%)`);
+          labels.style("display", "block");
+      } else {
+          // Continuous: show gradient
+          const canvas = document.createElement('canvas');
+          canvas.width = 150;
+          canvas.height = 20;
+          const ctx = canvas.getContext('2d');
+          const gradient = ctx.createLinearGradient(0, 0, 150, 0);
+
+          for (let i = 0; i <= 10; i++) {
+              const t = i / 10;
+              gradient.addColorStop(t, scheme.interpolator(t));
+          }
+
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, 150, 20);
+          preview.style("background", `url(${canvas.toDataURL()})`);
+          preview.style("background-size", "100% 100%");
+          labels.style("display", "none");
+      }
+  }
+
+  // Initialize color preview
+  updateColorPreview();
+
+  // Hide color controls if single value
+  if (numColors === 1) {
+      d3.select("#colorScheme").style("display", "none");
+  }
+
+  // Color scheme change handler
+  d3.select("#colorScheme").on("change", function() {
+      currentScheme = this.value;
+      colorScale = getColorScale(currentScheme);
+      updateColorPreview();
+
+      // Update all points with new colors
+      pointsGroup.selectAll("circle")
+          .transition()
+          .duration(300)
+          .style("fill", d => colorScale(d.color));
+  });
+
   var pointRad = 1.5;
-  
+
+  // Reset slider to default on page load (prevent browser from remembering previous value)
+  d3.select("#pointRadius").property("value", 1.5);
+  d3.select("#radiusValue").text(1.5);
+
   // Function to calculate default axis range with 10% leeway on both ends
   // Returns [min, max] where min is 0 if all positive, otherwise min - 10% spread
   // and max is max + 10% spread
@@ -144,8 +274,8 @@
       const max = d3.max(values);
       const spread = max - min;
       
-      // Min: 0 if all positive, otherwise min - 10% of spread
-      const axisMin = (min >= 0) ? 0 : min - (spread / 10);
+      // Min: always data min - 10% of spread for proper alignment
+      const axisMin = min - (spread / 10);
       // Max: max + 10% of spread
       const axisMax = max + (spread / 10);
       
@@ -163,8 +293,8 @@
   var currentYMax = defaultYMax
 
   // Axis labels from info
-  const xAxisLabel = {{ info.get('x-axis') | tojson }}
-  const yAxisLabel = {{ info.get('y-axis') | tojson }}
+  const xAxisLabel = {{ info.get('x-axis-label') | tojson }}
+  const yAxisLabel = {{ info.get('y-axis-label') | tojson }}
 
   // Initialize input fields with default values
   d3.select("#xMin").property("value", currentXMin)
@@ -347,6 +477,12 @@
       d3.select("#radiusValue").text(1.5)
       pointRad = 1.5
 
+      // Reset color scheme
+      currentScheme = 'viridis'
+      d3.select("#colorScheme").property("value", currentScheme)
+      colorScale = getColorScale(currentScheme)
+      updateColorPreview()
+
       // Reset zoom transform
       svg.transition()
           .duration(300)
@@ -354,11 +490,12 @@
 
       updateChart()
 
-      // Update point radii
+      // Update point radii and colors
       d3.selectAll("circle")
           .transition()
           .duration(100)
-          .attr("r", pointRad);
+          .attr("r", pointRad)
+          .style("fill", d => colorScale(d.color));
   });
 
 </script>
