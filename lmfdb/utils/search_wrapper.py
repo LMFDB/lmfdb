@@ -751,13 +751,13 @@ class DiagramWrapper(Wrapper):
                     if self.x_axis_default is not None:
                         info["x-axis"] = self.x_axis_default
                     else:
-                        info["x-axis"] = numerical_fields[0]
+                        info["x-axis"] = numerical_fields[0][0]
 
                 if "y-axis" not in info:
                     if self.y_axis_default is not None:
                         info["y-axis"] = self.y_axis_default
                     else:
-                        info["y-axis"] = numerical_fields[1]
+                        info["y-axis"] = numerical_fields[1][0]
 
                 x_key = info["x-axis"]
                 y_key = info["y-axis"]
