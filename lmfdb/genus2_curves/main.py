@@ -358,6 +358,7 @@ def G2C_data(label):
 ################################################################################
 
 ### Regex patterns used in lookup
+OLD_LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
 LABEL_RE = re.compile(r"\d+\.[a-z]+\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")
@@ -471,6 +472,11 @@ def genus2_jump(info):
         return redirect(url_for_curve_label(jump), 301)
     elif ISOGENY_LABEL_RE.fullmatch(jump):
         return redirect(url_for_isogeny_class_label(jump), 301)
+    elif OLD_LABEL_RE.fullmatch(jump):
+        s = jump.split(".")
+        print(len(s))
+        jump = s[0] + "." + s[1] + s[3]
+        return redirect(url_for_curve_label(jump), 301)
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves_new.lucky({"Lhash": jump[1:].strip()}, projection="class")
@@ -512,7 +518,7 @@ def genus2_jump(info):
                         # the input was parsed
                         errmsg = f"unable to find equation {eqn_str} (interpreted from %s) in the genus 2 curve database"
     else:
-        errmsg = "%s is not valid input. Expected a label, e.g., 121.a.1"
+        errmsg = "%s is not valid input. Expected a label, e.g., 121.a1"
         errmsg += ", or a univariate polynomial, e.g., x^5 + 1"
         errmsg += ", or a Weierstrass equation, e.g., y^2=x^5 + 1."
     flash_error(errmsg, jump)
