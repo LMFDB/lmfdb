@@ -466,6 +466,7 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center", default=False),
     FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
     FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
+    MathCol("intrinsic_torsion", "ec.intrinsic_torsion", "Intrinsic torsion order", align="center", default=False),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
@@ -487,10 +488,10 @@ class ECDownloader(Downloader):
         "curve": (
             ["ainvs"],
             {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
+                "sage": 'curve = EllipticCurve(out["ainvs"]){attach_lmfdb_label}',
                 "magma": 'curve := EllipticCurve(out`ainvs);',
                 "gp": 'curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
+                "oscar": 'curve = elliptic_curve(out["ainvs"])',
             }
         )
     }
@@ -520,6 +521,15 @@ def diagram_search(info, query):
     # run function below without the decorator
     elliptic_curve_search.f(info, query)
     
+    def createrecord_code(self, lang, column_names):
+        # We override the createrecord_code subclass to attach the lmfdb label
+        # to the elliptic curve, if lang is Sage and "lmfdb_label" is in column_name
+        code = super().createrecord_code(lang, column_names)
+        attach_lmfdb_label = '\n    curve._lmfdb_label = out["lmfdb_label"]' if "lmfdb_label" in column_names else ""
+        code = code.replace("{attach_lmfdb_label}", attach_lmfdb_label)
+        return code
+
+
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
@@ -569,6 +579,7 @@ def elliptic_curve_search(info, query):
     parse_floats(info,query,'faltings_height','faltings_height')
     parse_floats(info,query,'abc_quality')
     parse_floats(info,query,'szpiro_ratio')
+    parse_ints(info,query,'intrinsic_torsion')
     if info.get('reduction'):
         if info['reduction'] == 'semistable':
             query['semistable'] = True
@@ -789,7 +800,7 @@ def render_curve_webpage_by_label(label):
 
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
-    code = data.code()
+    code = data.code
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
     T = render_template("ec-curve.html",
@@ -1098,7 +1109,7 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {})
     if E == "Curve not found":
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
-    Ecode = E.code()
+    Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
         abort(404,"Invalid code language specified: " + lang)
@@ -1253,7 +1264,8 @@ class ECSearchArray(SearchArray):
              ("adelic_genus", "adelic genus", ["adelic_genus", "adelic_level", "adelic_index"]),
              ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("abc_quality", "$abc$ quality", ["abc_quality", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"])]
+             ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("intrinsic torsion", "Intrinsic torsion order", ["intrinsic_torsion", "conductor", "iso_nlabel", "lmfdb_number"])]
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
@@ -1447,6 +1459,12 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.szpiro_ratio",
             example="8-",
             advanced=True)
+        intrinsic_torsion = TextBox(
+            name="intrinsic_torsion",
+            label="Intrinsic torsion order",
+            knowl="ec.intrinsic_torsion",
+            example="3",
+            advanced=True)
 
         manin_constant = TextBox(
             name="manin_constant",
@@ -1470,7 +1488,8 @@ class ECSearchArray(SearchArray):
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
             [abc_quality, szpiro_ratio],
-            [count, manin_constant]
+            [intrinsic_torsion, manin_constant],
+            [count]
             ]
 
         self.refine_array = [
@@ -1480,4 +1499,5 @@ class ECSearchArray(SearchArray):
             [sha, sha_primes, regulator, reduction, faltings_height],
             [galois_image, adelic_level, adelic_index, adelic_genus],
             [nonmax_primes, abc_quality, szpiro_ratio, manin_constant],
+            [intrinsic_torsion]
             ]

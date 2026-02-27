@@ -400,6 +400,7 @@ class WebNumberField:
             f = db.nf_fields.lucky({'coeffs': coeffs})
             if f is None:
                 return cls('a')  # will initialize data to None
+            f.update(db.nf_fields_extra.lookup(f['label']))
             return cls(f['label'], f)
         else:
             raise Exception('wrong type')
@@ -452,7 +453,10 @@ class WebNumberField:
         return cls.from_coeffs(coeffs)
 
     def _get_dbdata(self):
-        return db.nf_fields.lookup(self.label)
+        data1 = db.nf_fields.lookup(self.label)
+        if data1 is not None:
+            data1.update(db.nf_fields_extra.lookup(self.label))
+        return data1
 
     def is_in_db(self):
         return self._data is not None
@@ -554,6 +558,11 @@ class WebNumberField:
         r2 = self._data['r2']
         n = self._data['degree']
         return [n-2*r2, r2]
+
+    def signature_display(self):
+        """Return signature formatted for display with parentheses."""
+        r1, r2 = self.signature()
+        return '(%s, %s)' % (r1, r2)
 
     def degree(self):
         return self._data['degree']

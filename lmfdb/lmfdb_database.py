@@ -349,7 +349,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         def extract_space(line, path=None):
             """Extract the space available from a line of output from df, in bytes"""
             pieces = line.split()
-            if path is not None and pieces[-1] != path:
+            if path is not None and not pieces[-1].startswith(path):
                 return -1
             # df returns its amounts in 1K blocks
             return 1024 * int(pieces[3])
@@ -358,7 +358,7 @@ class LMFDBSearchTable(PostgresSearchTable):
             """Return the amount of space available on the devmirror postgres filesystem"""
             editor_password = self._db.config.postgresql_options["password"]
             import pexpect
-            child = pexpect.spawn('ssh -o "StrictHostKeyChecking no" dfuser_ssh@devmirror.lmfdb.xyz')
+            child = pexpect.spawn('ssh -o "StrictHostKeyChecking no" -o PreferredAuthentications=password dfuser_ssh@devmirror.lmfdb.xyz')
             _ = child.expect("password:")
             _ = child.sendline(editor_password)
             _ = child.expect(pexpect.EOF)
