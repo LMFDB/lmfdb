@@ -188,7 +188,7 @@ def in_small_gp_db(order):
     if order <= 2000:
         return True
     label = db.gps_groups.lucky({"order":order}, "label")
-    return label.split(".")[0].isdigit()
+    return label.split(".")[1].isdigit()
 
 # This is the version we eventually want
 # mimics magma IsInSmallGroupDatabase
