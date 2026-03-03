@@ -23,7 +23,7 @@ from sage.all import (
     lcm,
     is_prime,
     cartesian_product_iterator,
-    exists,
+    #exists,
     euler_phi,
 )
 from sage.libs.gap.libgap import libgap
