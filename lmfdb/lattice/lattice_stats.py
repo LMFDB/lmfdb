@@ -44,14 +44,14 @@ class Lattice_stats(StatsDisplay):
                "aut_size":["2","4","8","12","16","24","32","33-128", "129-512","513-2048","2049-16384","16385-262144","262145-8388608","8388609-191102976"]}
     knowls = {'rank': 'lattice.dimension',
               'det': 'lattice.determinant',
-              'minimum': 'lattice.minimal_vector',
+              'minimum': 'lattice.minimum',
               'class_number': 'lattice.class_number',
               'aut_size': 'lattice.group_order'}
     short_display = {'dim': 'dimension',
                      'det_abs': 'absolute determinant',
-                     'minimum': 'minimal length',
+                     'minimum': 'minimum',
                      'aut_size': 'automorphism order'}
-    top_titles = {'minimum': 'minimal vector length',
+    top_titles = {'minimum': 'minimum',
                   'aut_size': 'automorphism group order'}
     stat_list = [
         {"cols": ["det_abs", "rank"],

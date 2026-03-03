@@ -4,21 +4,22 @@ import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
 #from cypari2.handle_error import PariError
-from sage.all import ZZ, matrix, Matrix, IntegralLattice #QQ, PolynomialRing, latex,  PowerSeriesRing, sqrt, round, pari
+from sage.all import ZZ, matrix, IntegralLattice
 
 #from lmfdb.local_fields.main import formatbracketcol
 from lmfdb.utils import (
-    flash_error, to_dict, #web_latex_split_on_pm, 
-    SearchArray, EmbeddedSearchArray, TextBox, CountBox, #prop_int_pretty,
+    flash_error, to_dict, #web_latex_split_on_pm,
+    SearchArray, EmbeddedSearchArray, TextBox, TextBoxWithSelect, SelectBox, CountBox, #prop_int_pretty,
     parse_ints, parse_posints, parse_list, parse_count,
-    parse_bracketed_posints, parse_start, parse_noop, #clean_input, 
+    parse_bracketed_posints, parse_start, parse_noop, #clean_input,
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
-from lmfdb.lattice.web_lattice import WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.web_lattice import (WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol,
+    flat_to_matrix, upper_triangular_to_matrix, lower_triangular_to_matrix, diagonal_to_matrix, auto_detect_gram_format)
 #from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genera_stats import Genus_stats
 
@@ -142,19 +143,20 @@ def genus_search_equivalence(res, info, query):
     a list of stored matrices with same dimension, signature and determinant
     (just compare with respect to dimension is slow)
     """
-    if info['number'] == 0 and info.get('gram'):
-        A = query['gram']
-        n = len(A[0])
+    if info['number'] == 0 and info.get('gram_matrix'):
+        A = info['gram_matrix']
+        query.pop('rep', None)
+        n = len(A)
         L = IntegralLattice(matrix(A))
         det = matrix(A).determinant()
-        for gram in db.lat_genera.search({'dim': n, 'det': int(det)}, 'rep'):
-            L2 = IntegralLattice(Matrix(ZZ, n, n, gram))
+        for rep in db.lat_genera.search({'rank': n, 'det': int(det)}, 'rep'):
+            rep_2d = flat_to_matrix(rep)
+            L2 = IntegralLattice(matrix(ZZ, rep_2d))
             if L.genus() == L2.genus():
-                query['gram'] = gram
-                proj = genus_search_projection
+                query['rep'] = rep
                 count = parse_count(info)
                 start = parse_start(info)
-                res = db.lat_genera.search(query, proj, limit=count, offset=start, info=info)
+                res = db.lat_genera.search(query, limit=count, offset=start, info=info)
                 break
     return res
 
@@ -177,13 +179,45 @@ def common_parse(info, query):
             query['is_even'] = True
         elif parity == 'odd':
             query['is_even'] = False
-    # Check if length of gram is triangular
-    gram = info.get('gram')
-    if gram and not (9 + 8*ZZ(gram.count(','))).is_square():
-        flash_error("%s is not a valid input for Gram matrix.  It must be a list of integer vectors of triangular length, such as [1,2,3].", gram)
-        raise ValueError("Invalid Gram matrix size")
-    parse_list(info, query, 'gram', process=vect_to_sym)
-    parse_list(info, query, 'discriminant_group_invs', process=lambda x: x)
+    # Parse Gram matrix with format selection
+    gram_str = info.get('gram')
+    if gram_str:
+        gram_format = info.get('gram_format', '')
+        # Strip brackets and whitespace, parse as list of integers
+        s = gram_str.strip().strip('[]')
+        if s:
+            try:
+                entries = [int(x.strip()) for x in s.split(',')]
+            except ValueError:
+                flash_error("%s is not a valid input for Gram matrix. Entries must be integers.", gram_str)
+                raise ValueError("Invalid Gram matrix entries")
+            converters = {
+                'full': flat_to_matrix,
+                'upper': upper_triangular_to_matrix,
+                'lower': lower_triangular_to_matrix,
+                'diagonal': diagonal_to_matrix,
+                '': auto_detect_gram_format,
+            }
+            converter = converters.get(gram_format)
+            if converter is None:
+                flash_error("Unknown Gram matrix format: %s", gram_format)
+                raise ValueError("Unknown Gram matrix format")
+            try:
+                mat = converter(entries)
+            except ValueError as e:
+                flash_error("%s is not a valid input for Gram matrix: %s", gram_str, str(e))
+                raise
+            # Validate symmetry for full matrix format
+            if gram_format == 'full':
+                n = len(mat)
+                for i in range(n):
+                    for j in range(i + 1, n):
+                        if mat[i][j] != mat[j][i]:
+                            flash_error("%s is not a symmetric matrix.", gram_str)
+                            raise ValueError("Non-symmetric Gram matrix")
+            # Store 2D matrix in info for postprocessors (isometry/genus comparison)
+            info['gram_matrix'] = mat
+    parse_bracketed_posints(info, query, 'discriminant_group_invs')
 
 common_columns_prefix = [
     MathCol("rank", "lattice.dimension", "Rank"),
@@ -203,7 +237,7 @@ common_columns_suffix = [
 
 lat_only_columns = [
     MultiProcessedCol("det", "lattice.determinant", "Determinant", ["det_abs", "det_sign"], lambda det_abs, det_sign: '$%s$' % (det_sign*det_abs), align="center"),
-    MathCol("minimum", "lattice.minimal_vector", "Minimal vector"),
+    MathCol("minimum", "lattice.minimum", "Minimum"),
     MathCol("aut_size", "lattice.group_order", "Aut. group order"),
     ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
     ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda a: vect_to_matrix(vect_to_sym2(a if type(a[0])==int else a[0]), compress_threshold=5, keep=2) if a else ''),
@@ -234,6 +268,11 @@ in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url
              properties=lambda: [])
 def genus_search(info, query):
     common_parse(info, query)
+    # Store flat gram in query['rep'] for direct DB matching (lat_genera has rep, not gram)
+    if 'gram_matrix' in info:
+        mat = info['gram_matrix']
+        n = len(mat)
+        query['rep'] = [mat[i][j] for i in range(n) for j in range(n)]
     parse_rational_to_list(info, query, 'mass', 'mass')
 
 @lattice_page.route('/Genus/<label>')
@@ -356,12 +395,19 @@ def common_boxes():
         knowl="lattice.level",
         example="48",
         example_span="48 or 40-100")
-    gram = TextBox(
+    gram_format_select = SelectBox(
+        name="gram_format",
+        options=[('', 'auto'), ('full', 'full matrix'),
+                 ('upper', 'upper tri.'), ('lower', 'lower tri.'),
+                 ('diagonal', 'diagonal')],
+        min_width=100)
+    gram = TextBoxWithSelect(
         name="gram",
         label="Gram matrix",
         knowl="lattice.gram",
         example="[5,1,23]",
-        example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$")
+        example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$",
+        select_box=gram_format_select)
     discriminant = TextBox(
         name="disc",
         label="Discriminant",
@@ -381,13 +427,13 @@ def common_boxes():
         name="discriminant_group_invs",
         label="Disc. group invariants",
         knowl="lattice.discriminant_group",
-        example="2,4",
-        example_span="2,4 or 2,2,8")
+        example="[2,4]",
+        example_span="[2,4] or [2,2,8]")
 
     minimum = TextBox(
         name="minimum",
-        label="Minimal vector length",
-        knowl="lattice.minimal_vector",
+        label="Minimum",
+        knowl="lattice.minimum",
         example="1")
     aut_label = TextBox(
         name="aut_label",
@@ -444,7 +490,7 @@ class GenusSearchArray(SearchArray):
             label="Mass",
             knowl="lattice.mass",
             example="1/2",
-            example_span="1/2 or 1/2 or 1/2")
+            example_span="1/2 or 3/4 or 1/60")
         count = CountBox()
 
         self.browse_array = [
@@ -463,8 +509,8 @@ class GenusSearchArray(SearchArray):
 
 class InGenusSearchArray(EmbeddedSearchArray):
     noun = "lattice"
-    sorts = [("minimum", "minimal vector length", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
-             ("aut", "automorphism group", ['aut', 'rank', 'det', 'level', 'class_number', 'label'])]
+    sorts = [("minimum", "minimum", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
+             ("aut_size", "aut. group order", ['aut_size', 'rank', 'det', 'level', 'class_number', 'label'])]
 
     def __init__(self):
         rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()

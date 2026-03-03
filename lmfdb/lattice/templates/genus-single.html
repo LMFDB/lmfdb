@@ -9,9 +9,9 @@
 <table>
     <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{genus.rank}}$</td><td>{{ place_code('rank') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{genus.signature}}$</td><td>{{ place_code('signature') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{genus.det_display}}</td><td>{{ place_code('determinant') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{genus.disc_display}}</td><td>{{ place_code('discriminant') }}</td></tr>
-    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{genus.level_display}}</td><td>{{ place_code('level') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{genus.det_display | safe}}</td><td>{{ place_code('determinant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{genus.disc_display | safe}}</td><td>{{ place_code('discriminant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{genus.level_display | safe}}</td><td>{{ place_code('level') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{genus.class_number_display}}</td><td>{{ place_code('class_number') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_genus_symbol', title='Conway genus symbol') }}:</td><td>{{genus.conway_display}}</td><td>{{ place_code('conway_genus_symbol') }}</td></tr>
     <tr><td>{{ KNOWL('lattice.conway_genus_symbol', title='Dual Conway genus symbol') }}:</td><td>{{genus.dual_conway_display}}</td><td>{{ place_code('dual_conway') }}</td></tr>
@@ -29,13 +29,13 @@
 </table>
 {% endif %}
 
-<h2> {{ KNOWL('lattice.discriminant_group', title='Discriminant Group') }} </h2>
+<h2> {{ KNOWL('lattice.discriminant_group', title='Discriminant Form') }} </h2>
 <table>
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Smith invariants') }}:</td><td>${{genus.discriminant_group_invs}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant form gram matrix') }}:</td><td>{{genus.discriminant_gram_display | safe}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Disc. group structure') }}:</td><td>{{genus.discriminant_group_display | safe}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Gram matrix of disc. form') }}:</td><td style="padding-top:8px;">{{genus.discriminant_gram_display | safe}}</td></tr>
 </table>
 
-<h2> {{ KNOWL('lattice.adjacency_data', title='Adjacency Data') }} </h2>
+<h2> {{ KNOWL('lattice.pneighbor_adjacency', title='$p$-Neighbor Graphs') }} </h2>
 
 <div>
   {% for p in genus.adjacency_display %}
@@ -46,9 +46,9 @@
 {% for p, D in genus.adjacency_display.items() %}
   <div id="adjcont_{{p}}" class="adjcont" style="display:none;">
     <table>
-      <tr><td>{{ KNOWL('lattice.adjacency_matrix', 'Adjacency matrix') }}:</td><td>{{D.matrix | safe}}</td></tr>
-      <tr><td>{{ KNOWL('lattice.adjacency_polynomial', 'Adjacency polynomial') }}:</td><td>{{D.poly | safe}}</td></tr>
-      <tr><td>{{ KNOWL('lattice.adjacency_graph', 'Adjacency graph') }}:</td><td>
+      <tr><td>{{ KNOWL('lattice.pneighbor_adjacency', 'Adjacency matrix') }}:</td><td>{{D.matrix | safe}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.pneighbor_adjacency', 'Adjacency polynomial') }}:</td><td>{{D.poly | safe}}</td></tr>
+      <tr><td>{{ KNOWL('lattice.pneighbor_adjacency', 'Adjacency graph') }}:</td><td>
         <div id="adj-graph-{{p}}" style="border:1px solid #ddd;"></div>
       </td></tr>
     </table>

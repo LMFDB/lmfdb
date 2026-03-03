@@ -3,10 +3,10 @@ import re
 import time
 
 from flask import abort, render_template, request, url_for, redirect, make_response
-from sage.all import matrix #round, ZZ, QQ, PolynomialRing, latex, PowerSeriesRing, sqrt, round
+from sage.all import matrix, ZZ, IntegralLattice
 
 from lmfdb.utils import (
-    flash_error, to_dict, #web_latex_split_on_pm,
+    flash_error, flash_info, to_dict, #web_latex_split_on_pm,
     SearchArray, CountBox, #TextBox, prop_int_pretty,
     parse_ints, parse_posints, parse_count, parse_noop, #parse_list,
     parse_start, #clean_input,
@@ -19,7 +19,7 @@ from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom
 from lmfdb.lattice.genus import common_parse, set_index_info, common_columns,  common_boxes, lat_only_columns, learnmore_list
 from lmfdb.lattice.lattice_stats import Lattice_stats
-from lmfdb.lattice.web_lattice import WebLattice, WebGenus #vect_to_sym, vect_to_sym2, format_conway_symbol
+from lmfdb.lattice.web_lattice import WebLattice, WebGenus, flat_to_matrix #vect_to_sym, vect_to_sym2, format_conway_symbol
 
 # Database connection
 
@@ -100,29 +100,91 @@ lattice_search_projection = ['label', 'rank', 'det_abs', 'level',
                              'class_number', 'aut', 'minimum']
 
 
+def _show_genus(query, info, genus_label):
+    """Show all lattices in the given genus with an informational flash message."""
+    genus_url = url_for(".render_genus_webpage", label=genus_label)
+    flash_info("The exact Gram matrix was not found in the database, "
+               "but the lattice belongs to genus <a href='%s'>%s</a>. "
+               "Showing all lattices in that genus." % (genus_url, genus_label))
+    query.pop('gram', None)
+    query['genus_label'] = genus_label
+    count = parse_count(info)
+    start = parse_start(info)
+    return db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+
+
 def lattice_search_isometric(res, info, query):
     """
     We check for isometric lattices if the user enters a valid gram matrix
-    but not one stored in the database
+    but not one stored in the database.
 
-    This may become slow in the future: at the moment we compare against
-    a list of stored matrices with same dimension and determinant
-    (just compare with respect to dimension is slow)
+    Strategy:
+    1. Compute the genus of the input matrix and find the matching genus in the DB.
+    2. Use the user's other search constraints to narrow candidates within the genus.
+    3. If only one candidate matches, it must be the lattice — return it directly.
+    4. Otherwise try isometry against each candidate, with a time budget.
+    5. If no match is found (or the time budget is exceeded), show all lattices
+       in the genus with an informational message.
     """
-    if info['number'] == 0 and info.get('gram'):
-        A = query['gram']
-        n = len(A[0])
-        d = matrix(A).determinant()
-        for rec in db.lat_lattices_new.search({'dim': n, 'det_abs': int(d)}, "gram"):
-            gram = rec["gram"]
-            # TODO: isom only works for positive definite gram matrices
-            if isom(A, gram):
-                query['gram'] = gram
-                proj = lattice_search_projection
-                count = parse_count(info)
-                start = parse_start(info)
-                res = db.lat_lattices_new.search(query, proj, limit=count, offset=start, info=info)
+    ISOM_TIME_LIMIT = 20.0  # seconds
+
+    if info['number'] == 0 and info.get('gram_matrix'):
+        A = info['gram_matrix']
+        query.pop('gram', None)
+        M = matrix(ZZ, A)
+        count = parse_count(info)
+        start = parse_start(info)
+        t0 = time.time()
+
+        try:
+            L = IntegralLattice(M)
+            input_genus = L.genus()
+        except Exception:
+            return res
+
+        # Use genus invariants to narrow the DB search
+        genus_query = {
+            'rank': int(input_genus.rank()),
+            'det': int(input_genus.det()),
+            'level': int(input_genus.level()),
+            'nplus': int(input_genus.signature()),
+            'is_even': bool(input_genus.is_even()),
+        }
+
+        for rep in db.lat_genera.search(genus_query, ['rep', 'label']):
+            if time.time() - t0 > ISOM_TIME_LIMIT:
                 break
+            rep_2d = flat_to_matrix(rep['rep'])
+            L2 = IntegralLattice(matrix(ZZ, rep_2d))
+            if input_genus == L2.genus():
+                genus_label = rep['label']
+                query['genus_label'] = genus_label
+
+                # Count candidates matching all user constraints within this genus
+                n_candidates = db.lat_lattices_new.count(query)
+
+                if n_candidates == 1:
+                    # Unique match — must be this lattice
+                    res = db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+                    return res
+
+                if n_candidates > 1:
+                    # Try isometry against each candidate, with time limit
+                    for gram_val in db.lat_lattices_new.search(query, 'gram'):
+                        if time.time() - t0 > ISOM_TIME_LIMIT:
+                            break
+                        if gram_val and isinstance(gram_val[0], list):
+                            flat = gram_val[0]
+                        else:
+                            flat = gram_val
+                        gram_2d = flat_to_matrix(flat)
+                        if isom(A, gram_2d):
+                            query['gram'] = gram_val
+                            res = db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
+                            return res
+
+                # No isometric match, time exceeded, or no candidates — show genus
+                return _show_genus(query, info, genus_label)
 
     return res
 
@@ -135,11 +197,29 @@ lattice_columns = [
     LinkCol("label", "lattice.label", "Label", url_for_label)
 ] + common_columns + lat_only_columns
 
+
+# Class to download lattice search results
+class LatticeDownloader(Downloader):
+    table = db.lat_lattices_new
+    title = "Integral lattices"
+
+    inclusions = {
+        "lattice": (
+            ["rank", "gram"],
+            {
+                "sage": 'lattice = IntegralLattice(Matrix(ZZ, out["rank"], out["rank"], out["gram"]))',
+                "magma": 'lattice := LatticeWithGram(out["rank"], out["gram"]);',
+                "oscar": 'lattice = integer_lattice(gram = matrix(ZZ, out["rank"], out["rank"], out["gram"]))',
+                "gp": 'lattice = matrix(mapget(out, "rank"), mapget(out, "rank"), i, j, mapget(out, "gram")[(i-1)*mapget(out, "rank") + j]);'
+            }
+        ),
+    }
+
 @search_wrap(table=db.lat_lattices_new,
              title='Integral lattices search results',
              err_title='Integral lattices search error',
              columns=SearchColumns(lattice_columns),
-             shortcuts={'download': Downloader(db.lat_lattices_new),
+             shortcuts={'download': LatticeDownloader(),
                         'jump': lattice_jump},
              postprocess=lattice_search_isometric,
              url_for_label=url_for_label,
@@ -148,6 +228,11 @@ lattice_columns = [
              properties=lambda: [])
 def lattice_search(info, query):
     common_parse(info, query)
+    # Store flat gram in query for direct DB matching (lat_lattices_new has a gram column)
+    if 'gram_matrix' in info:
+        mat = info['gram_matrix']
+        n = len(mat)
+        query['gram'] = [mat[i][j] for i in range(n) for j in range(n)]
     for field, name in [('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
                         ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
                          ]:
@@ -305,8 +390,8 @@ class LatSearchArray(SearchArray):
              ("det_abs", "determinant", ['det_abs', 'rank', 'level', 'class_number', 'label']),
              ("level", "level", ['level', 'rank', 'det_abs', 'class_number', 'label']),
              ("class_number", "class number", ['class_number', 'rank', 'det_abs', 'level', 'label']),
-             ("minimum", "minimal vector length", ['minimum', 'rank', 'det_abs', 'level', 'class_number', 'label']),
-             ("aut", "automorphism group", ['aut', 'rank', 'det_abs', 'level', 'class_number', 'label'])]
+             ("minimum", "minimum", ['minimum', 'rank', 'det_abs', 'level', 'class_number', 'label']),
+             ("aut_size", "aut. group order", ['aut_size', 'rank', 'det_abs', 'level', 'class_number', 'label'])]
 
     def __init__(self):
         rank, signature, det_abs, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
