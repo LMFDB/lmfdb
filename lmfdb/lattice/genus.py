@@ -195,8 +195,8 @@ common_columns_suffix = [
     MathCol("disc", "lattice.discriminant", "Discriminant"),
     MathCol("level", "lattice.level", "Level"),
     MathCol("class_number", "lattice.class_number", "Class number"),
-    ProcessedCol("conway_symbol", "lattice.conway_symbol", "Conway Symbol", format_conway_symbol, default=False),
-    ProcessedCol("dual_conway_symbol", "lattice.conway_symbol", "Dual Conway Symbol", format_conway_symbol, default=False),
+    ProcessedCol("conway_symbol", "lattice.conway_genus_symbol", "Conway Symbol", format_conway_symbol, default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_genus_symbol", "Dual Conway Symbol", format_conway_symbol, default=False),
     ProcessedCol("is_even", "lattice.parity", "Parity", lambda v: "Even" if v else "Odd"),
     ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
 ]
