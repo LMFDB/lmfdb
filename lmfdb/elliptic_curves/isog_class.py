@@ -215,4 +215,3 @@ class ECisog_class():
                 self.has_lfunction = False
         else:
             self.has_lfunction = False
-
