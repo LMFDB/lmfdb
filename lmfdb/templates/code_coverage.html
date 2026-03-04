@@ -1,0 +1,83 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+<h2>Code snippet coverage by module and CAS</h2>
+
+<p>Each code.yaml file defines code snippets for various computer algebra systems.
+The table below shows how many of the available code sections have a snippet for each CAS.</p>
+
+<style>
+  .cov-table { border-collapse: collapse; margin: 1em 0; }
+  .cov-table th, .cov-table td { border: 1px solid #ccc; padding: 4px 10px; text-align: center; }
+  .cov-table th { background: #f0f0f0; }
+  .cov-full { background: #c6efce; }
+  .cov-partial { background: #ffeb9c; }
+  .cov-low { background: #ffc7ce; }
+  .cov-none { background: #eee; color: #999; }
+</style>
+
+<table class="cov-table">
+<thead>
+<tr>
+  <th style="text-align:left">Module</th>
+  {% for cas in cas_order %}
+  <th>{{ cas_display.get(cas, cas) }}</th>
+  {% endfor %}
+  <th>Total sections</th>
+</tr>
+</thead>
+<tbody>
+{% for mod in modules %}
+<tr>
+  <td style="text-align:left" title="{{ mod.file }}">{{ mod.name }}</td>
+  {% for cas in cas_order %}
+    {% if cas in mod.cas_list %}
+      {% set count = mod.per_cas.get(cas, 0) %}
+      {% set total = mod.total %}
+      {% if total > 0 %}
+        {% set pct = (100 * count / total)|int %}
+      {% else %}
+        {% set pct = 0 %}
+      {% endif %}
+      {% if pct == 100 %}
+        {% set cls = "cov-full" %}
+      {% elif pct >= 50 %}
+        {% set cls = "cov-partial" %}
+      {% else %}
+        {% set cls = "cov-low" %}
+      {% endif %}
+      <td class="{{ cls }}">{{ count }}/{{ total }}</td>
+    {% else %}
+      <td class="cov-none">&mdash;</td>
+    {% endif %}
+  {% endfor %}
+  <td>{{ mod.total }}</td>
+</tr>
+{% endfor %}
+</tbody>
+<tfoot>
+<tr style="font-weight:bold">
+  <td style="text-align:left">Total</td>
+  {% for cas in cas_order %}
+    {% set count = totals[cas][0] %}
+    {% set total = totals[cas][1] %}
+    {% if total > 0 %}
+      {% set pct = (100 * count / total)|int %}
+    {% else %}
+      {% set pct = 0 %}
+    {% endif %}
+    {% if pct == 100 %}
+      {% set cls = "cov-full" %}
+    {% elif pct >= 50 %}
+      {% set cls = "cov-partial" %}
+    {% else %}
+      {% set cls = "cov-low" %}
+    {% endif %}
+    <td class="{{ cls }}">{{ count }}/{{ total }}</td>
+  {% endfor %}
+  <td>{{ grand_total }}</td>
+</tr>
+</tfoot>
+</table>
+
+{% endblock %}
