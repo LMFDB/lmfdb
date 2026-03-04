@@ -12,7 +12,7 @@ def circle_drops(A, B):
     """
     Drops going around the unit circle for those A and B.
 
-    See http://user.math.uzh.ch/dehaye/thesis_students/Nicolas_Wider-Integrality_of_factorial_ratios.pdf
+    See https://user.math.uzh.ch/dehaye/thesis_students/Nicolas_Wider-Integrality_of_factorial_ratios.pdf
 
     for longer description (not original, better references exist)
     """

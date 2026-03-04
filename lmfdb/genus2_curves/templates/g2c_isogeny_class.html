@@ -5,26 +5,6 @@
 p {padding-left: 1ch;}
 </style>
 
-<style type="text/css">
-#isogeny_class_table th, #isogeny_class_table td {
-padding : 4px;
-text-align: center;
-}
-</style>
-
-<h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{data.label}}</h2>
-<table id = "isogeny_class_table">
-<tr>
-<th>{{ KNOWL('g2c.label', title='Label')}}</th>
-<th>{{ KNOWL('g2c.minimal_equation', title='Equation') }}</th>
-</tr>
-{% for c in data.curves %}
-<tr>
-<td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
-<td align="center">\({{c.equation_formatted}}\)</td>
-{% endfor %}
-</table>
-
 <h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
 
 <p>
@@ -46,7 +26,7 @@ text-align: center;
             <th>Prime</th>
             <th align="left">L-Factor</th>
         </tr>
-        {% for c in data.bad_lfactors_pretty %}
+        {% for c in data.bad_primes_to_possibly_unavailable_l_factors %}
         <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
         {% endfor %}
         </table>
@@ -57,11 +37,22 @@ text-align: center;
         <tr>
             <th>Prime</th>
             <th align="left">L-Factor</th>
+            <th align="left">Isogeny Class over \(\mathbb{F}_p\)</th>
         </tr>
-        {% for c in data.good_lfactors_pretty %}
-        <tr><td class="center">\({{ c[0] }}\)</a></td><td align="left">\( {{ c[1] }}\)</td></tr>
+        {% for c in data.good_lfactors_pretty_with_label %}
+        <tr>
+            <td class="center">\({{ c[0] }}\)</a></td>
+            <td align="left">\( {{ c[1] }}\)</td>
+            <td>
+              {% if c[3] == '' %}
+                {{ c[2] }}
+              {% else %}
+                <a href="{{ c[3] }}">{{ c[2] }}</a>
+              {% endif %}
+            </td>
+          </tr>
         {% endfor %}
-        <tr><td>$\cdots$</td><td>$\cdots$</td>
+        <tr><td>$\cdots$</td><td>$\cdots$</td><td>$\cdots$</td>
         </table>
     </tr>
     <tr><td>&nbsp;</td></tr>
@@ -101,5 +92,25 @@ text-align: center;
 <p>More complete information on endomorphism algebras and rings can be found on the pages of the individual curves in the isogeny class.</p>
 
 <!-- <h2>{{ KNOWL('av.isogeny', title='Isogenies') }}</h2> -->
+
+<style type="text/css">
+  #isogeny_class_table th, #isogeny_class_table td {
+  padding : 4px;
+  text-align: center;
+  }
+  </style>
+  
+  <h2>Genus 2 curves in {{KNOWL("g2c.isogeny_class", title="isogeny class" )}} {{data.label}}</h2>
+  <table id = "isogeny_class_table">
+  <tr>
+  <th>{{ KNOWL('g2c.label', title='Label')}}</th>
+  <th>{{ KNOWL('g2c.minimal_equation', title='Equation') }}</th>
+  </tr>
+  {% for c in data.curves %}
+  <tr>
+  <td class="center"><a href="{{c.url}}">{{c.label}}</a></td>
+  <td align="center">\({{c.equation_formatted}}\)</td>
+  {% endfor %}
+  </table>
 
 {% endblock %}

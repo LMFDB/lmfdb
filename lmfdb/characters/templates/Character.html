@@ -106,7 +106,7 @@
 function value_handler(evt) {
     evt.preventDefault();
     var val = $("#calc-value-input").val();
-    $("#calc-value-output").load("{{ url_character(type=type, calc='value', number_field = nflabel, modulus = modlabel, number=numlabel) }}" + "?val=" + val,
+    $("#calc-value-output").load("{{ url_character(type=type, calc='value', modulus = modlabel, number=numlabel) }}" + "?val=" + val,
      function() {
         {# render the output #}
         renderMathInElement($("#calc-value-output").get(0), katexOpts);

@@ -36,7 +36,7 @@ def compute_ug_data():
         # rows for g0 = 0 table on unique groups page
         comp_info = compdb.lucky({'genus': genus},sort=[])
         group_stats_0 = hgcwa.count({'genus':genus, 'g0': 0}, ['group'])
-        for group, gen_vectors in group_stats_0.items():        
+        for group, gen_vectors in group_stats_0.items():
             grp = group[0]
             grp_print = grp.replace('[','{').replace(']','}')
             labels = hgcwa.distinct('label', {'genus':genus, 'g0': 0, 'group': grp})
@@ -46,9 +46,9 @@ def compute_ug_data():
                     topological += len(hgcwa.distinct('topological', {'label': label}))
                     braid += len(hgcwa.distinct('braid', {'label': label}))
                 data.append([grp_print, genus, "f", "\\N", gen_vectors, topological, braid])
-            else:    
+            else:
                 data.append([grp_print, genus,  "f", "\\N", gen_vectors, "\\N", "\\N"])
-                
+
         # rows for g0 > 0 table on unique groups page
         if comp_info['g0_gt0_compute']:
             group_stats_gt0 = hgcwa.count({'genus':genus, 'g0':{'$gt':0}}, ['group'])

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
@@ -72,9 +71,9 @@ class SatoTateGroupTest(LmfdbTest):
         import sys
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=2')
         assert '3 matches' in L.get_data(as_text=True)
-        data = list(db.gps_st.search({'weight':int(1),'degree':int(2)}, projection='label'))
+        data = list(db.gps_st.search({'weight': 1, 'degree': 2}, projection='label'))
         assert len(data) == 3
-        print("")
+        print()
         for label in data:
             sys.stdout.write("{}...".format(label))
             sys.stdout.flush()
@@ -82,7 +81,7 @@ class SatoTateGroupTest(LmfdbTest):
             assert label in L.get_data(as_text=True) and 'Moment sequences' in L.get_data(as_text=True)
         L = self.tc.get('/SatoTateGroup/?weight=1&degree=4')
         assert 'of 52' in L.get_data(as_text=True)
-        data = list(db.gps_st.search({'weight':int(1),'degree':int(4)}, projection='label'))
+        data = list(db.gps_st.search({'weight': 1, 'degree': 4}, projection='label'))
         assert len(data) == 52
 
         for label in data:
@@ -116,3 +115,11 @@ class SatoTateGroupTest(LmfdbTest):
                 and 'gps_groups' in data and 'number_normal_subgroups' in data)
         page = self.tc.get('/SatoTateGroup/0.1.2').get_data(as_text=True)
         assert 'Underlying data' not in page
+
+    def test_issue_6691_fixed(self):
+        """Test that issue #6691 is fixed: labels with non-numeric component group parts don't crash"""
+        # The specific URL from issue #6691 that was causing ValueError
+        page = self.tc.get('/SatoTateGroup/1.2.A.c13284')
+        data = page.get_data(as_text=True)
+        # Check that the page loads correctly and shows a supergroup
+        assert '1.2.A.c26568' in data

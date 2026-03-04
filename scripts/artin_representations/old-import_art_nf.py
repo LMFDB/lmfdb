@@ -57,7 +57,7 @@ def artrepload(l):
     old += 1
     if (count+old) % 100==0:
       print("%s new, %s old" %(str(count),str(old)))
-    return 
+    return
   l['Conductor'] = ZZ(l['Conductor'])
   l['GaloisConjugates'] = [fix_local_factors(z) for z in l['GaloisConjugates']]
   # Extract containing representation from the label
@@ -85,7 +85,7 @@ def nfgalload(l):
     old += 1
     if (count+old) % 100==0:
       print("%s new, %s old" %(str(count),str(old)))
-    return 
+    return
 
   artreps=l['ArtinReps']
   artreps=[{'Baselabel': z[0][0], 'GalConj': z[0][1], 'CharacterField': z[1],

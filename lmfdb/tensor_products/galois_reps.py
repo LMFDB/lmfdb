@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 r"""
 
 AUTHORS: Alberto Camara, Mark Watkins, Chris Wuthrich, 2014
@@ -138,7 +137,7 @@ class GaloisRepresentation( Lfunction):
             self.init_tensor_product(thingy[0], thingy[1])
 
         else:
-            raise ValueError("GaloisRepresentations are currently not implemented for that type (%s) of objects"%type(thingy))
+            raise ValueError("GaloisRepresentations are currently not implemented for that type (%s) of objects" % type(thingy))
 
         # set a few common variables
         self.level = self.conductor
@@ -160,7 +159,7 @@ class GaloisRepresentation( Lfunction):
         self.dim = 2
         self.motivic_weight = 1
         self.conductor = E.conductor()
-        self.bad_semistable_primes = [ fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
+        self.bad_semistable_primes = [ fa[0] for fa in self.conductor.factor() if fa[1] == 1 ]
         self.bad_pot_good = [p for p in self.conductor.prime_factors() if E.j_invariant().valuation(p) > 0 ]
         self.sign = E.root_number()
         self.mu_fe = []
@@ -303,7 +302,7 @@ class GaloisRepresentation( Lfunction):
         self.weight = ZZ(F.weight)
         self.motivic_weight = ZZ(F.weight) - 1
         self.conductor = ZZ(F.level)
-        self.bad_semistable_primes = [fa[0] for fa in self.conductor.factor() if fa[1]==1 ]
+        self.bad_semistable_primes = [fa[0] for fa in self.conductor.factor() if fa[1] == 1 ]
         # should be including primes of bad red that are pot good
         # however I don't know how to recognise them
         self.bad_pot_good = []
@@ -377,8 +376,8 @@ class GaloisRepresentation( Lfunction):
             Wans = W.algebraic_coefficients(50)
             CC = ComplexField()
             if ((Vans[2] in ZZ and Wans[2] in ZZ
-                    and all(Vans[n] == Wans[n] for n in range(1, 50)) ) or
-                    all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
+                    and all(Vans[n] == Wans[n] for n in range(1, 50)) )
+                    or all(CC(Vans[n]) == CC(Wans[n]) for n in range(1, 50)) ):
                 raise NotImplementedError("It seems you are asking to tensor a "
                                           "Galois representation with its dual "
                                           "which results in the L-function having "
@@ -508,11 +507,10 @@ class GaloisRepresentation( Lfunction):
             self.set_dokchitser_Lfunction()
         # note the following line only sets all the variables in the
         # gp session of Dokchitser
-        self.ld._gp_eval("MaxImaginaryPart = %s"%self.max_imaginary_part)
+        self.ld._gp_eval("MaxImaginaryPart = %s" % self.max_imaginary_part)
         self.numcoeff = self.ld.num_coeffs()
         # to be on the safe side, we make sure to have a min of terms
-        if self.numcoeff < 50:
-            self.numcoeff = 50
+        self.numcoeff = max(self.numcoeff, 50)
 
 ## produce coefficients
 
@@ -633,9 +631,9 @@ def tensor_get_an(L1, L2, d1, d2, BadPrimeInfo):
     other as 1-t. If one of L1 and L2 is deg 1, then this calls
     a special function, with a different BadPrime methodology.
     """
-    if d1==1:
+    if d1 == 1:
         return tensor_get_an_deg1(L2,L1,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
-    if d2==1:
+    if d2 == 1:
         return tensor_get_an_deg1(L1,L2,[[bpi[0],tensor_local_factors(bpi[1],bpi[2],d1*d2)] for bpi in BadPrimeInfo])
     return tensor_get_an_no_deg1(L1,L2,d1,d2,BadPrimeInfo)
 
@@ -644,7 +642,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
     """
     Same as the above in the case no dimension is 1
     """
-    if d1==1 or d2==1:
+    if d1 == 1 or d2 == 1:
         raise ValueError('min(d1,d2) should not be 1, use direct method then')
     s1 = len(L1)
     s2 = len(L2)
@@ -652,9 +650,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
         S = s1
     if s2 <= s1:
         S = s2
-    BadPrimes = []
-    for bpi in BadPrimeInfo:
-        BadPrimes.append(bpi[0])
+    BadPrimes = [bpi[0] for bpi in BadPrimeInfo]
     P = prime_range(S+1)
     Z = S * [1]
     S = RealField()(S)
@@ -665,7 +661,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
         E2 = []
         if p not in BadPrimes:
             for i in range(f):
-                q=q*p
+                q = q*p
                 E1.append(L1[q-1])
                 E2.append(L2[q-1])
             e1 = list_to_euler_factor(E1,f+1)
@@ -689,7 +685,7 @@ def tensor_get_an_no_deg1(L1, L2, d1, d2, BadPrimeInfo):
         q = 1
         for i in range(f):
             q = q*p
-            Z[q-1]=A[i]
+            Z[q-1] = A[i]
     all_an_from_prime_powers(Z)
     return Z
 
@@ -705,9 +701,7 @@ def tensor_get_an_deg1(L, D, BadPrimeInfo):
         S = s1
     if s2 <= s1:
         S = s2
-    BadPrimes = []
-    for bpi in BadPrimeInfo:
-        BadPrimes.append(bpi[0])
+    BadPrimes = [bpi[0] for bpi in BadPrimeInfo]
     P = prime_range(S+1)
     Z = S * [1]
     S = RealField()(S) # fix bug
@@ -750,7 +744,7 @@ def all_an_from_prime_powers(L):
         for _ in range(f):
             q = q*p
             for m in range(2, 1+(S//q)):
-                if (m%p) != 0:
+                if (m % p) != 0:
                     L[m*q-1] = L[m*q-1] * L[q-1]
 
 
@@ -820,7 +814,7 @@ def tensor_local_factors(f1, f2, d):
             raise ValueError
     f1 = R(f1)
     f2 = R(f2)
-    if f1==1 or f2==1:
+    if f1 == 1 or f2 == 1:
         f = R(1)
         f = f.add_bigoh(d+1)
         return f
@@ -845,7 +839,7 @@ def tensor_local_factors(f1, f2, d):
 ## test functions to check if the above agrees with magma
 
 def test_tensprod_121_chi():
-    C121=[1,2,-1,2,1,-2,2,0,-2,2,0,-2,-4,4,-1,-4,2,-4,0,2,-2,0,
+    C121 = [1,2,-1,2,1,-2,2,0,-2,2,0,-2,-4,4,-1,-4,2,-4,0,2,-2,0,
     -1,0,-4,-8,5,4,0,-2,7,-8,0,4,2,-4,3,0,4,0,8,-4,6,0,-2,-2,
     8,4,-3,-8,-2,-8,-6,10,0,0,0,0,5,-2,-12,14,-4,-8,-4,0,-7,4,
     1,4,-3,0,-4,6,4,0,0,8,10,-4,1,16,6,-4,2,12,0,0,15,-4,-8,
@@ -854,7 +848,7 @@ def test_tensprod_121_chi():
     -14,5,0,-7,2,-10,4,-8,-6,0,8,0,-8,3,6,10,8,-2,0,-4,0,7,8,
     -7,20,6,-8,-2,2,4,16,0,12,12,0,3,4,0,12,6,0,-8,0,-5,30,
     -15,-4,7,-16,12,0,3,-14,0,16,10,0,17,8,-4,-14,4,-6,2,0,0,0]
-    chi=[1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,
+    chi = [1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,
     1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,
     -1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,
     1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,
@@ -863,7 +857,7 @@ def test_tensprod_121_chi():
     -1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,
     -1,-1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1,1,1,1,-1,-1,
     -1,1,-1,0,1,-1,1,1,1,-1,-1,-1,1,-1,0,1,-1]
-    ANS=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,
+    ANS = [1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,
     -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,
     2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,
     1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,
@@ -874,14 +868,14 @@ def test_tensprod_121_chi():
     -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
     R = PowerSeriesRing(ZZ, "T")
     T = R.gens()[0]
-    assert ANS==tensor_get_an_deg1(C121,chi,[[11,1-T]])
-    assert ANS==tensor_get_an(C121,chi,2,1,[[11,1-T,1-T]])
-    assert get_euler_factor(ANS,2)==(1+2*T+2*T**2+O(T**8))
-    assert get_euler_factor(ANS,3)==(1+T+3*T**2+O(T**5))
-    assert get_euler_factor(ANS,5)==(1-T+5*T**2+O(T**4))
+    assert ANS == tensor_get_an_deg1(C121,chi,[[11,1-T]])
+    assert ANS == tensor_get_an(C121,chi,2,1,[[11,1-T,1-T]])
+    assert get_euler_factor(ANS,2) == (1+2*T+2*T**2+O(T**8))
+    assert get_euler_factor(ANS,3) == (1+T+3*T**2+O(T**5))
+    assert get_euler_factor(ANS,5) == (1-T+5*T**2+O(T**4))
 
 def test_tensprod_11a_17a():
-    C11=[1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,
+    C11 = [1,-2,-1,2,1,2,-2,0,-2,-2,1,-2,4,4,-1,-4,-2,4,0,2,2,-2,
     -1,0,-4,-8,5,-4,0,2,7,8,-1,4,-2,-4,3,0,-4,0,-8,-4,-6,2,-2,
     2,8,4,-3,8,2,8,-6,-10,1,0,0,0,5,-2,12,-14,4,-8,4,2,-7,-4,
     1,4,-3,0,4,-6,4,0,-2,8,-10,-4,1,16,-6,4,-2,12,0,0,15,4,-8,
@@ -890,7 +884,7 @@ def test_tensprod_11a_17a():
     5,0,-7,-2,10,-4,-8,6,4,8,0,-8,3,6,-10,-8,2,0,4,4,7,-8,-7,
     20,6,8,2,-2,4,-16,-1,12,-12,0,3,4,0,-12,-6,0,8,-4,-5,-30,
     -15,-4,7,16,-12,0,3,14,-2,16,-10,0,17,8,4,14,-4,-6,-2,4,0,0]
-    C17=[1,-1,0,-1,-2,0,4,3,-3,2,0,0,-2,-4,0,-1,1,3,-4,2,0,0,4,
+    C17 = [1,-1,0,-1,-2,0,4,3,-3,2,0,0,-2,-4,0,-1,1,3,-4,2,0,0,4,
     0,-1,2,0,-4,6,0,4,-5,0,-1,-8,3,-2,4,0,-6,-6,0,4,0,6,-4,0,
     0,9,1,0,2,6,0,0,12,0,-6,-12,0,-10,-4,-12,7,4,0,4,-1,0,8,
     -4,-9,-6,2,0,4,0,0,12,2,9,6,-4,0,-2,-4,0,0,10,-6,-8,-4,0,
@@ -899,7 +893,7 @@ def test_tensprod_11a_17a():
     -8,8,0,4,0,3,-12,6,0,2,-10,0,-16,-12,-3,0,-8,0,-2,-12,0,10,
     16,-9,24,6,0,4,-4,0,-9,2,12,-4,22,0,-4,0,0,-10,12,-6,-2,8,
     0,12,4,0,0,0,0,-8,-16,0,2,-2,0,-9,-18,0,-20,-3]
-    ANS=[1,2,0,2,-2,0,-8,8,15,-4,0,0,-8,-16,0,12,-2,30,0,-4,0,0,
+    ANS = [1,2,0,2,-2,0,-8,8,15,-4,0,0,-8,-16,0,12,-2,30,0,-4,0,0,
     -4,0,29,-16,0,-16,0,0,28,-8,0,-4,16,30,-6,0,0,-16,48,0,-24,
     0,-30,-8,0,0,22,58,0,-16,-36,0,0,-64,0,0,-60,0,-120,56,-120,
     -8,16,0,-28,-4,0,32,12,120,-24,-12,0,0,0,0,-120,-24,144,96,
@@ -911,9 +905,9 @@ def test_tensprod_11a_17a():
     -14,128,0,-32,12,0,0,0,0,0,-272,0,8,-28,0,44,36,0,0,232]
     R = PowerSeriesRing(ZZ, "T")
     T = R.gens()[0]
-    B11=[11,1-T,1+11*T**2]
-    B17=[17,1+2*T+17*T**2,1-T]
-    assert ANS==tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
+    B11 = [11,1-T,1+11*T**2]
+    B17 = [17,1+2*T+17*T**2,1-T]
+    assert ANS == tensor_get_an_no_deg1(C11,C17,2,2,[B11,B17])
 
 ### comparison with previous implementation.
 

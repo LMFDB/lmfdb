@@ -52,6 +52,7 @@ The table below lists all collections that are larger than {{info.minsize}} MiB,
   <th>Index (MiB)</th>
   <th>Objects</th>
   <th>Average Size (B)</th>
+  <th>Tablespace</th>
 </tr>
 </thead>
 
@@ -64,6 +65,7 @@ The table below lists all collections that are larger than {{info.minsize}} MiB,
     <td>{{x.indexSize}}</td>
     <td>{{x.nrows}}</td>
     <td>{{x.avgObjSize}}</td>
+    <td>{{x.tablespace}}</td>
 </tr>
 {% endfor %}
 </tbody>

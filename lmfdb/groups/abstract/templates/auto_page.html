@@ -1,0 +1,228 @@
+
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<h2>Automorphism group information</h2>
+
+<p>
+<table>
+  <tr>
+    <td>{{KNOWL('group.name', title='Description:')}}</td>
+    <td>{{gp.show_aut_group()|safe}}</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.order',title='Order:')}}</td>
+    <td>${{gp.aut_order}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.aut_phi_ratio',title='$\\phi$-ratio')}}</td>
+    {% if gp.aut_phi_ratio %}<td>${{gp.aut_phi_ratio}}$</td>
+    {% else %}  <td> not computed </td>  {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    {% if gp.aut_exponent %}<td>${{gp.aut_exponent}}$</td>
+     {% else %} 	<td> not computed </td>	 {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td>
+    {% if gp.aut_nilpotency_class %}<td>${{gp.aut_nilpotency_class}}$</td>
+     {% else %} 	<td> not computed </td>	 {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.derived_series', title='Derived length:')}}</td>
+    {% if gp.aut_derived_length %}<td>${{gp.aut_derived_length}}$</td>
+     {% else %} 	<td> not computed </td>	 {% endif %}
+  </tr>
+ <tr>
+    <td>{{KNOWL('group.permutation_degree', title='Permutation degree:')}}</td>
+    {% if gp.aut_permdeg %}<td>${{gp.aut_permdeg}}$</td>
+     {% else %}         <td> not computed </td>  {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.automorphism', 'Underlying group')}}</td>
+    <td><a href="{{url_for('.by_label', label=gp.label)}}">${{gp.tex_name}}$</a></td>
+  </tr>
+</table>
+</p>
+<p>
+  {{info.aut_boolean_string | safe}}
+</p>
+
+<h4>Generators</h4>
+<p>
+  Each row represents an {{KNOWL('group.automorphism', 'automorphism')}} given by its image on a set of {{KNOWL('group.generators','generators')}} of the group (listed as the headers of the columns).
+</p>
+
+<p>
+{{gp.repr_strg(other_page=True) | safe}}
+</p>
+
+<p>
+  {% set inner = aut_data.inners %}
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+	{% if gp.aut_gen_orders %}
+        <th>{{KNOWL('group.element_order','Order')}}</th>
+	{% endif %}
+        {% for c in gp.auto_gens_list()[0] %}
+        <th>${{c}}$</th>
+        {% endfor %}
+
+	{% if gp.aut_perms %}
+	 <th>{{KNOWL('group.permutation_representation', 'Permutation reps')}}</th>
+	{% endif %}
+      </tr></thead>
+      <tbody>
+	{% for i in range(1,gp.auto_gens_list()|length) %}
+	<tr>
+	     {% if gp.aut_gen_orders %}
+      <td align="center"> {{ gp.aut_gen_orders[i-1] }} </td> {% endif %}
+	{% for j in gp.auto_gens_list()[i] %}
+      <td>${{j}}$ </td>
+      {% endfor %}
+      {% if gp.aut_perms %}
+        <td> {{gp.auto_perms_list()[i-1]}} </td>
+	{% endif %}
+	</tr>
+	  {% endfor %}
+      </tbody>
+    </table>
+</p>
+
+
+
+<h2>Outer automorphism group information</h2>
+
+<p>
+<table>
+  <tr>
+    <td>{{KNOWL('group.name', title='Description:')}}</td>
+    <td>{{gp.show_outer_group()|safe}}</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.order',title='Order:')}}</td>
+    <td>${{gp.outer_order}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    {% if gp.outer_exponent %}
+    <td>${{gp.outer_exponent}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.permutation_degree',title='Permutation degree:')}}</td>
+    {% if gp.outer_permdeg %}
+    <td>${{gp.outer_permdeg}}$</td>
+    {% else %} <td>not computed</td> {% endif %}
+  </tr>
+</table>
+</p>
+<p>
+  {{info.outer_boolean_string | safe}}
+</p>
+
+
+{% if gp.outer_gens %}
+<h4>Generators</h4>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>{% if gp.outer_gen_orders %}
+        <th>{{KNOWL('group.element_order','Order in $\\Out(G)$')}}</th> {% endif %}
+        {% for c in gp.auto_gens_list()[0] %}
+        <th>${{c}}$</th>
+        {% endfor %}
+	{% if gp.outer_perms %}
+        <th>{{KNOWL('group.permutation_representation', 'Permutation reps')}} </th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(gp.outer_gens|length) %}
+      <tr>{% if gp.outer_gen_orders %}
+        <td align="center"> {{ gp.outer_gen_orders[i] }} </td> {% endif %}
+        {% for g in gp.outer_gens[i] %}
+        <td>${{ gp.decode(g, as_str=True) }}$ </td>
+        {% endfor %}
+	   {% if gp.outer_perms %}
+	<td> {{gp.outer_perms_list()[i-1]}} </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+</p>
+{% endif %}
+
+
+
+
+<h2>Inner automorphism group information</h2>
+
+{% if gp.inner_order %}
+
+<p>
+<table>
+  <tr>
+    <td>{{KNOWL('group.name', title='Description:')}}</td>
+    <td>{{gp.show_inner_group()|safe}}</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.order',title='Order:')}}</td>
+    <td>${{gp.inner_order}}$</td>
+  </tr>
+  <tr>
+    <td>{{KNOWL('group.exponent',title='Exponent:')}}</td>
+    {% if gp.inner_exponent %}    <td>${{gp.inner_exponent}}$</td>
+    {% else %} <td> not computed </td> {% endif %}
+  </tr>
+</table>
+</p>
+<p>
+  {{info.inner_boolean_string | safe}}
+</p>
+
+
+{% if inner_gens %}
+
+<h4>Generators</h4>
+
+<p>
+  <table class="ntdata" style="margin-left:0;">
+    <thead>
+      <tr>
+        <th>{{KNOWL('group.element_order','Order')}}</th>
+        <th>{{KNOWL('group.inner_automorphism','Inner by')}}</th>
+        {% for c in gp.auto_gens_list()[0] %}
+        <th>${{c}}$</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(gp.inner_gens|length) %}
+      <tr>
+        <td align="center"> {{ gp.inner_gen_orders[i] }} </td>
+        <td> ${{ gp.auto_gens_list()[0][i] }}$ </td>
+	{% for g in gp.inner_gens[i] %}
+        <td>${{ gp.decode(g, as_str=True) }}$ </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+</p>
+
+{% endif %}
+
+{% else %}
+
+No data about inner automorphisms has been computed.
+
+
+{% endif %}
+
+{% endblock %}

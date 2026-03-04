@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .utils.config import get_secret_key
 import os
 from socket import gethostname
@@ -21,7 +20,7 @@ from sage.env import SAGE_VERSION
 from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
-from .logger import logger_file_handler, critical
+from .logger import critical
 from .homepage import load_boxes, contribs
 
 LMFDB_VERSION = "LMFDB Release 1.2.1"
@@ -81,8 +80,6 @@ def is_running():
 ############################
 
 
-app.logger.addHandler(logger_file_handler())
-
 # If the debug toolbar is installed then use it
 if app.debug:
     try:
@@ -110,6 +107,15 @@ app.jinja_env.add_extension('jinja2.ext.do')
 #  * meta_description, shortthanks, feedbackpage
 #  * DEBUG and BETA variables storing whether running in each mode
 
+# try:
+#     # In order to support running under gunicorn with gevent workers,
+#     # we try to patch psycopg2 to add an appropriate callback function
+#     from psycogreen.gevent import patch_psycopg
+#     patch_psycopg()
+# except Exception:
+#     app.logger.info("Exception in psycogreen; not running with gevent support")
+# else:
+#     app.logger.info("Gevent support enabled")
 
 @app.context_processor
 def ctx_proc_userdata():
@@ -123,7 +129,8 @@ def ctx_proc_userdata():
     # overwrite this variable when you want to customize it
     # For example, [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
     vars['bread'] = None
-
+    from lmfdb.utils import CodeSnippet
+    vars['CodeSnippet'] = CodeSnippet
     # default title
     vars['title'] = r'LMFDB'
 
@@ -141,7 +148,17 @@ def ctx_proc_userdata():
     #vars['ALPHA'] = True # hardwired for alpha branch
 
     def modify_url(**replace):
-        urlparts = urlparse(request.url)
+        url = request.url
+        if url.startswith("https, "):
+            # Cocalc weirdness that lets them serve pages on https from within a project
+            url = url[7:]
+        urlparts = urlparse(url)
+        if "query_add" in replace:
+            assert "query" not in replace
+            if urlparts.query:
+                replace["query"] = replace.pop("query_add") + "&" + urlparts.query
+            else:
+                replace["query"] = replace.pop("query_add")
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
     vars['modify_url'] = modify_url
@@ -163,7 +180,7 @@ def ctx_proc_userdata():
 @app.context_processor
 def inject_sidebar():
     from .homepage import get_sidebar
-    return dict(sidebar=get_sidebar())
+    return {"sidebar": get_sidebar()}
 
 ##############################
 # Bottom link to google code #
@@ -202,7 +219,7 @@ git_rev, git_date, _ = git_infos()
 _url_source = 'https://github.com/LMFDB/lmfdb/tree/'
 _current_source = '<a href="%s%s">%s</a>' % (_url_source, git_rev, "Source")
 
-# Creates link to the list of revisions on the master, where the most recent commit is on top.
+# Creates link to the list of revisions on the main, where the most recent commit is on top.
 _url_changeset = 'https://github.com/LMFDB/lmfdb/commits/%s' % branch
 _latest_changeset = '<a href="%s">%s</a>' % (_url_changeset, git_date)
 
@@ -249,6 +266,10 @@ def urlencode(kwargs):
 #    Redirects and errors    #
 ##############################
 
+# @app.after_request
+# def print_done(T):
+#     app.logger.info(f"done with     = {request.url}")
+#     return T
 
 @app.before_request
 def netloc_redirect():
@@ -261,6 +282,7 @@ def netloc_redirect():
     from urllib.parse import urlparse, urlunparse
 
     urlparts = urlparse(request.url)
+    # app.logger.info(f"Requested url = {request.url}")
 
     if urlparts.netloc in ["lmfdb.org", "lmfdb.com", "www.lmfdb.com"]:
         replaced = urlparts._replace(netloc="www.lmfdb.org", scheme="https")
@@ -283,25 +305,6 @@ def netloc_redirect():
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
-
-
-@cached_function
-def bad_bots_list():
-    return [
-        elt.lower()
-        for elt in [
-            "The Knowledge AI",
-            "Wolfram",
-        ]
-    ]
-
-
-@app.before_request
-def badbot():
-    ua = request.user_agent.string.lower()
-    for elt in bad_bots_list():
-        if elt in ua:
-            time.sleep(5)
 
 
 def timestamp():
@@ -355,6 +358,23 @@ def index():
 def about():
     return render_template("about.html", title="About the LMFDB")
 
+@app.route("/rcs")
+def top_rcs():
+    t = "Source, reliability, and completeness"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="rcs", title=t, bread=bread)
+
+@app.route("/announcements")
+def announcements():
+    t = "Announcements"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.announcements", title=t, bread=bread)
+
+@app.route("/ongoing")
+def ongoing():
+    t = "Ongoing projects"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.ongoing", title=t, bread=bread)
 
 @app.route("/health")
 @app.route("/alive")
@@ -398,7 +418,6 @@ def statshealth():
             return "LMFDB stats are healthy!"
     else:
         abort(503)
-
 
 @app.route("/info")
 def info():
@@ -451,17 +470,7 @@ def search():
 def modular_forms():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
-    # lm = [('History of modular forms', '/ModularForm/history')]
-    return render_template('single.html', title=t, kid='mf.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/ModularForm/history")
-
-
-def modular_forms_history():
-    t = 'Modular forms'
-    b = [(t, url_for('modular_forms'))]
-    b.append(('History', url_for("modular_forms_history")))
-    return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
 @app.route('/Variety')
@@ -469,17 +478,7 @@ def modular_forms_history():
 def varieties():
     t = 'Varieties'
     b = [(t, url_for('varieties'))]
-    # lm = [('History of varieties', '/Variety/history')]
-    return render_template('single.html', title=t, kid='varieties.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/Variety/history")
-
-
-def varieties_history():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    b.append(('History', url_for("varieties_history")))
-    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='varieties.about', bread=b)
 
 
 @app.route('/Field')
@@ -487,17 +486,7 @@ def varieties_history():
 def fields():
     t = 'Fields'
     b = [(t, url_for('fields'))]
-    # lm = [('History of fields', '/Field/history')]
-    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Field/history")
-
-
-def fields_history():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Representation')
@@ -505,17 +494,7 @@ def fields_history():
 def representations():
     t = 'Representations'
     b = [(t, url_for('representations'))]
-    # lm = [('History of representations', '/Representation/history')]
-    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Representation/history")
-
-
-def representations_history():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Motive')
@@ -523,17 +502,7 @@ def representations_history():
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
-    # lm = [('History of motives', '/Motives/history')]
-    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Motives/history")
-
-
-def motives_history():
-    t = 'Motives'
-    b = [(t, url_for('motives'))]
-    b.append(('History', url_for("motives_history")))
-    return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
+    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)
 
 
 @app.route('/Group')
@@ -541,17 +510,12 @@ def motives_history():
 def groups():
     t = 'Groups'
     b = [(t, url_for('groups'))]
-    # lm = [('History of groups', '/Group/history')]
-    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
+    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)
 
-# @app.route("/Group/history")
-
-
-def groups_history():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A brief history of groups", kid='group.history', body_class=_bc, bread=b)
+@app.route('/datasets')
+@app.route('/datasets/')
+def datasets():
+    return render_template('datasets.html', title='Auxiliary datasets', bread=[("Datasets", " ")])
 
 
 @app.route("/editorial-board")
@@ -568,6 +532,12 @@ def citation():
     t = "Citing the LMFDB"
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
+
+@app.route("/license")
+def license():
+    t = "LMFDB Data and Code Licenses"
+    b = [("LMFDB Licenses", " ")]
+    return render_template('license.html', title=t, bread=b)
 
 
 @app.route("/contact")
@@ -638,7 +608,7 @@ def add_colors():
         if color is None:
             from .utils.config import Configuration
             color = Configuration().get_color()
-    return dict(color=all_color_schemes[color].dict())
+    return {"color": all_color_schemes[color].dict()}
 
 
 @app.route("/style.css")
@@ -657,17 +627,54 @@ def css():
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
 
-# the checklist is used for human testing on a high-level, supplements test.sh
 
+@app.route("/CodeCoverage")
+def code_coverage():
+    import glob
+    import yaml
+    lmfdb_dir = os.path.dirname(os.path.abspath(__file__))
+    yaml_files = sorted(glob.glob(os.path.join(lmfdb_dir, "**/code*.yaml"), recursive=True))
+    metadata_keys = {'prompt', 'logo', 'comment', 'not-implemented', 'frontmatter', 'snippet_test', 'top_matter'}
+    cas_display = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+    all_cas = set()
+    modules = []
+    for yf in yaml_files:
+        with open(yf) as f:
+            data = yaml.safe_load(f)
+        if not data:
+            continue
+        cas_list = list(data.get('prompt', {}).keys())
+        all_cas.update(cas_list)
+        sections = {k: v for k, v in data.items() if k not in metadata_keys and isinstance(v, dict)}
+        total = len(sections)
+        per_cas = {}
+        for cas in cas_list:
+            per_cas[cas] = sum(1 for s in sections.values() if cas in s)
+        rel = os.path.relpath(yf, lmfdb_dir)
+        module_name = rel.split(os.sep)[0].replace('_', ' ').capitalize()
+        basename = os.path.basename(yf)
+        if basename != 'code.yaml':
+            suffix = basename.replace('code-', '').replace('code', '').replace('.yaml', '')
+            module_name += f' ({suffix})'
+        modules.append({'name': module_name, 'file': rel, 'total': total, 'per_cas': per_cas, 'cas_list': cas_list})
+    cas_order = [c for c in ['sage', 'pari', 'magma', 'oscar', 'gap'] if c in all_cas]
+    totals = {}
+    grand_total = 0
+    for cas in cas_order:
+        count = sum(m['per_cas'].get(cas, 0) for m in modules if cas in m['cas_list'])
+        applicable = sum(m['total'] for m in modules if cas in m['cas_list'])
+        totals[cas] = (count, applicable)
+    grand_total = sum(m['total'] for m in modules)
+    bread = [("Code Coverage", '')]
+    return render_template("code_coverage.html",
+                           title="Code Snippet Coverage",
+                           bread=bread,
+                           modules=modules,
+                           cas_order=cas_order,
+                           cas_display=cas_display,
+                           totals=totals,
+                           grand_total=grand_total)
 
-@app.route("/checklist-list")
-def checklist_list():
-    return render_template("checklist.html", body_class="checklist")
-
-
-@app.route("/checklist")
-def checklist():
-    return render_template("checklist-fs.html")
 
 ##############################
 #         Intro pages        #
@@ -768,16 +775,19 @@ def sitemap():
 def WhiteListedRoutes():
     return [
         'ArtinRepresentation',
+        'Belyi',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
         'Character/calc-jacobi/Dirichlet',
         'Character/calc-kloosterman/Dirichlet',
         'Character/calc-value/Dirichlet',
+        'datasets',
         'EllipticCurve',
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
+        'Groups/Abstract',
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
@@ -789,7 +799,6 @@ def WhiteListedRoutes():
         'L/contents',
         'L/degree',
         'L/download',
-        'L/history',
         'L/interesting',
         'L/lhash',
         'L/rational',
@@ -809,7 +818,6 @@ def WhiteListedRoutes():
         'acknowledgment',
         'alive',
         'api',
-        #'api2',
         'bigpicture',
         'callback_ajax',
         'citation',
@@ -829,6 +837,7 @@ def WhiteListedRoutes():
         'news',
         'not_yet_implemented',
         'random',
+        'rcs',
         'robots.txt',
         'search',
         'sitemap',

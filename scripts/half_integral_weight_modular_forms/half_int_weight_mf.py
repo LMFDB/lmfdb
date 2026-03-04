@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-r""" Import half-integral weight modular form data.  
+r""" Import half-integral weight modular form data.
 
-Note: This code can be run on all files in any order. Even if you 
-rerun this code on previously entered files, it should have no affect.  
-This code checks if the entry exists, if so returns that and updates 
-with new information. If the entry does not exist then it creates it 
+Note: This code can be run on all files in any order. Even if you
+rerun this code on previously entered files, it should have no affect.
+This code checks if the entry exists, if so returns that and updates
+with new information. If the entry does not exist then it creates it
 and returns that.
 
 The rest of this should be updated for modular forms:
@@ -42,7 +42,7 @@ C['halfintegralmf'].authenticate('editor', password)
 forms = C.forms
 
 
-saving = True 
+saving = True
 
 def sd(f):
   for k in f.keys():
@@ -73,7 +73,7 @@ def do_import(ll):
         entry = {'mf_label' : mf_label, 'nf_label' : nf_label, 'dim_image' : dim_image, 'half_forms' : half_forms}
         newpart.append(entry)
     data['newpart'] = newpart
-        
+
     label = base_label(data['level'],data['weight'],data['character'])
     data['label'] = label
     form = forms.find_one({'label': label})

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Blueprint for tensor product pages
 # Author: Martin Dickson
 
@@ -17,17 +16,19 @@ from lmfdb.lfunctions.main import render_lfunction_exception
 
 # The method "show" shows the page for the Lfunction of a tensor product object.  This is registered on to the tensor_products_page blueprint rather than going via the l_function blueprint, hence the idiosyncrasies.  Sorry about that.  The reason is due to a difference in implementation; the tensor products are not (currently) in the database and the current L functions framewo
 
+
 def get_bread(breads=[]):
     bc = [("L-functions", url_for("l_functions.index")),
           ("Tensor Products", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(breads)
     return bc
+
 
 @tensor_products_page.route("/")
 def index():
     bread = get_bread()
     return render_template("tensor_products_index.html", title="Tensor Products", bread=bread)
+
 
 @tensor_products_page.route("/navigate/")
 def navigate():
@@ -38,11 +39,12 @@ def navigate():
     type2 = args.get('type2')
     return render_template("tensor_products_navigate.html", title="Tensor Products Navigation", bread=bread, type1=type1, type2=type2)
 
+
 @tensor_products_page.route("/show/")
 def show():
     args = request.args
 
-    objLinks = args # an immutable dict of links to objects to tp
+    objLinks = args  # an immutable dict of links to objects to tp
 
     objPaths = []
     for _, v in objLinks.items():
@@ -52,7 +54,7 @@ def show():
     for p in objPaths:
         galoisRepObjs.append(galois_rep_from_path(p))
 
-    if len(galoisRepObjs)==1:
+    if len(galoisRepObjs) == 1:
         gr = galoisRepObjs[0]
         gr.lfunction()
 
@@ -66,7 +68,7 @@ def show():
         return render_template('Lfunction.html', **info)
 
     # currently only implemented tp of two things
-    if len(galoisRepObjs)==2:
+    if len(galoisRepObjs) == 2:
 
         try:
             tp = GaloisRepresentation([galoisRepObjs[0], galoisRepObjs[1]])
@@ -78,13 +80,13 @@ def show():
             info['functionalequation'] = lfuncFEtex(tp, "analytic")
             info['functionalequationSelberg'] = lfuncFEtex(tp, "selberg")
 
-            properties = [('Root number', '$'+str(tp.root_number()).replace('*','').replace('I','i')+'$'),
-                           ('Dimension', '$'+str(tp.dimension())+'$'),
-                           ('Conductor', '$'+str(tp.cond())+'$')]
+            properties = [('Root number', '$' + str(tp.root_number()).replace('*', '').replace('I', 'i') + '$'),
+                          ('Dimension', '$' + str(tp.dimension()) + '$'),
+                          ('Conductor', '$' + str(tp.cond()) + '$')]
             info['properties'] = properties
 
             if (tp.numcoeff > len(tp.dirichlet_coefficients)+10):
-                info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' %(len(tp.dirichlet_coefficients), tp.numcoeff)
+                info['zeroswarning'] = 'These zeros may be inaccurate because we use only %s terms rather than the theoretically required %s terms' % (len(tp.dirichlet_coefficients), tp.numcoeff)
                 info['svwarning'] = 'These special values may also be inaccurate, for the same reason.'
             else:
                 info['zeroswarning'] = ''
@@ -102,13 +104,15 @@ def show():
             info['eulerproduct'] = r'L(s, V \otimes W) = \prod_{p} \det(1 - Frob_p p^{-s} | (V \otimes W)^{I_p})^{-1}'
             info['bread'] = get_bread()
             return render_template('Lfunction.html', **info)
-        except (KeyError,ValueError,RuntimeError,NotImplementedError) as err:
+        except (KeyError, ValueError, RuntimeError, NotImplementedError) as err:
             return render_lfunction_exception(err)
     else:
         return render_template("not_yet_implemented.html")
 
+
 def zeros(L):
-    website_zeros = L.compute_heuristic_zeros()          # This depends on mathematical information, all below is formatting
+    website_zeros = L.compute_heuristic_zeros()
+    # This depends on mathematical information, all below is formatting
     # More semantic this way
     # Allow 10 seconds
 
@@ -124,37 +128,39 @@ def zeros(L):
             positiveZeros.append(zero)
 
     # Format the html string to render
-    positiveZeros = str(positiveZeros)
-    negativeZeros = str(negativeZeros)
-    if len(positiveZeros) > 2 and len(negativeZeros) > 2:  # Add comma and empty space between negative and positive
-        negativeZeros = negativeZeros.replace("]", ", ]")
+    positiveZeros_str = str(positiveZeros)[1:-1]
+    negativeZeros_str = str(negativeZeros)[1:-1]
+    if positiveZeros and negativeZeros:
+        # Add comma and empty space between negative and positive
+        negativeZeros_str += ", "
 
-    return "<span class='redhighlight'>{0}</span><span class='bluehighlight'>{1}</span>".format(
-        negativeZeros[1:len(negativeZeros) - 1], positiveZeros[1:len(positiveZeros) - 1])
+    return f"<span class='redhighlight'>{negativeZeros_str}</span><span class='bluehighlight'>{positiveZeros_str}</span>"
+
 
 def galois_rep_from_path(p):
-    if p[0]=='EllipticCurve':
+    if p[0] == 'EllipticCurve':
         # create the sage elliptic curve then create Galois rep object
-        ainvs = db.ec_curvedata.lucky({'lmfdb_label':p[2]+"."+p[3]+p[4]}, 'ainvs')
+        ainvs = db.ec_curvedata.lucky({'lmfdb_label': p[2]+"."+p[3]+p[4]}, 'ainvs')
         E = EllipticCurve(ainvs)
         return GaloisRepresentation(E)
 
-    elif (p[0]=='Character' and p[1]=='Dirichlet'):
-        dirichletArgs = {'type':'Dirichlet', 'modulus':int(p[2]), 'number':int(p[3])}
+    elif (p[0] == 'Character' and p[1] == 'Dirichlet'):
+        dirichletArgs = {'type': 'Dirichlet', 'modulus': int(p[2]),
+                         'number': int(p[3])}
         chi = WebSmallDirichletCharacter(**dirichletArgs)
         return GaloisRepresentation(chi)
 
-    elif (p[0]=='ModularForm'):
+    elif (p[0] == 'ModularForm'):
         level = int(p[4])
         weight = int(p[5])
-        conrey_label = p[6] # this should be zero; TODO check this is the case
-        hecke_orbit = p[7] # this is a, b, c, etc.; chooses the galois orbit
-        embedding = p[8] # this is the embedding of that galois orbit
+        conrey_label = p[6]  # this should be zero; TODO check this is the case
+        hecke_orbit = p[7]  # this is a, b, c, etc.; chooses the Galois orbit
+        embedding = p[8]  # this is the embedding of that Galois orbit
         label = convert_newformlabel_from_conrey(str(level)+"."+str(weight)+"."+str(conrey_label)+"."+hecke_orbit)
         form = WebNewform(label)
         return GaloisRepresentation([form, ZZ(embedding)])
 
-    elif (p[0]=='ArtinRepresentation'):
+    elif (p[0] == 'ArtinRepresentation'):
         dim = p[1]
         conductor = p[2]
         index = p[3]

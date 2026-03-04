@@ -2,6 +2,14 @@
 
 {% block content %}
 
+<script type="text/javascript">
+  function maass_switch(r) {
+    $(".maassrow").hide();
+    $(".maassrow" + r).show();
+    return false;
+  }
+</script>
+
 <h2>{{ KNOWL('mf.maass.mwf', 'Maass form') }} invariants</h2>
 
 <table>
@@ -29,21 +37,18 @@
   {% endif %}
   <tr>
     <td> {{ KNOWL('mf.maass.mwf.spectralparameter', title='Spectral parameter') }}: </td>
-    <td>\( {{ mf.spectral_parameter }} \)</td>
+    <td> {{ mf.web_spectral_line | safe }} </td>
   </tr>
 </table>
 
 <h2>Maass form {{KNOWL('mf.maass.mwf.coefficients','coefficients')}}</h2>
-{{ mf.coefficient_table(info.rows, info.cols) | safe }}
 
-<form id='coefficient_table'>
-  <table>
-    <tr>
-      <td>Rows: <input type='text' name='edit_rows' style="width: 40px" value="{{info.rows}}"></td>
-      <td>Cols: <input type='text' name='edit_cols' style="width: 40px" value="{{info.cols}}"></td>
-      <td><button id="refresh_coefficient_table">Refresh table</button></td>
-    </tr>
-  </table>
-</form>
+<p>
+  The coefficients here are shown to at most $8$ digits of precision.
+  Full precision coefficients are available in the downloads.
+</p>
+
+
+{{ mf.coefficient_table(20, 3) | safe }}
 
 {% endblock content %}

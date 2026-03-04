@@ -3,7 +3,7 @@
 import math
 from flask import url_for
 from lmfdb import db
-from lmfdb.lfunctions import logger
+from lmfdb.logger import logger
 from sage.all import prod
 from sage.arith.srange import srange
 from lmfdb.utils import signtocolour
@@ -12,8 +12,8 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 
 
 def svgBegin():
-    return ("<svg  xmlns='http://www.w3.org/2000/svg'"
-            " xmlns:xlink='http://www.w3.org/1999/xlink'>\n")
+    return ("<svg  xmlns='https://www.w3.org/2000/svg'"
+            " xmlns:xlink='https://www.w3.org/1999/xlink'>\n")
 
 
 def svgEnd():
@@ -25,7 +25,7 @@ def svgEnd():
 
 # ============
 # url to add all degree-3, level-4 dots on one plot
-#   http://localhost:37777/L/browseGraph?group=GL3&level=4
+#   https://localhost:37777/L/browseGraph?group=GL3&level=4
 # =========
 
 
@@ -65,7 +65,7 @@ def getAllMaassGraphHtml(degree, signature=""):
             l = groups[i][1][j]
             ans += getOneGraphHtml([g, l])
 
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the header and information about the Gamma-factors for the
@@ -164,7 +164,7 @@ def getGroupHtml(group):
     else:
         ans = ""
 
-    return(ans)
+    return ans
 
 
 # ============================================
@@ -187,10 +187,10 @@ def getOneGraphHtml(gls):
             + str(graphInfo['width'])
             + "' height='" + str(graphInfo['height'])
             + "' type='image/svg+xml' "
-            + "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+            + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the url and width and height of the svg-file for
@@ -212,7 +212,7 @@ def getGraphInfo(gls):
     ans['width'] = width
     ans['height'] = height
 
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the width and height of the svg-file for
@@ -234,17 +234,15 @@ def getWidthAndHeight(gls):
     for origin in db.lfunc_lfunctions.search({'group': gls[0], 'conductor': gls[1]}, 'origin'):
         splitId = origin.split('/')[6].split('_')
 
-        if float(splitId[0]) > xMax:
-            xMax = float(splitId[0])
-        if float(splitId[1]) > yMax:
-            yMax = float(splitId[1])
+        xMax = max(float(splitId[0]), xMax)
+        yMax = max(float(splitId[1]), yMax)
 
     xMax = math.ceil(xMax)
     yMax = math.ceil(yMax)
     width = int(xfactor * xMax + extraSpace)
     height = int(yfactor * yMax + extraSpace)
 
-    return((width, height))
+    return ((width, height))
 
 # ============================================
 # Returns the contents (as a string) of the svg-file for
@@ -277,10 +275,8 @@ def paintSvgFileAll(glslist):  # list of group and level
             splitId = R.split('_')
             paralist.append((splitId[0], splitId[1], l['origin'], group, level,
                              char, R, ap_id, l['root_number']))
-            if float(splitId[0]) > xMax:
-                xMax = float(splitId[0])
-            if float(splitId[1]) > yMax:
-                yMax = float(splitId[1])
+            xMax = max(float(splitId[0]), xMax)
+            yMax = max(float(splitId[1]), yMax)
 
     xMax = int(math.ceil(xMax))
     yMax = int(math.ceil(yMax))
@@ -288,7 +284,7 @@ def paintSvgFileAll(glslist):  # list of group and level
     height = yfactor * yMax + extraSpace
 
     ans += paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength)
-    for (x, y, lid, group, level, char, R, ap_id, sign) in paralist:
+    for x, y, lid, group, level, char, R, ap_id, sign in paralist:
         if float(x) > 0 and float(y) > 0:  # Only one of dual pair
             try:
                 linkurl = url_for('.l_function_maass_gln_page', group=group,
@@ -304,7 +300,7 @@ def paintSvgFileAll(glslist):  # list of group and level
             ans += "</circle></a>\n"
 
     ans += svgEnd()
-    return(ans)
+    return ans
 
 # ============================================
 # Returns the svg-code for a simple coordinate system.
@@ -359,7 +355,7 @@ def paintCS(width, height, xMax, yMax, xfactor, yfactor, ticlength):
                              + "' y2='" + str(height - i * yfactor)
                              + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 # ============================================
 # Returns the svg-code for a simple coordinate system.
@@ -416,7 +412,7 @@ def paintCSNew(width, height, xMax, yMax, xfactor, yfactor, ticlength, xMin=5, y
                              + str(height - i * ysign * yfactor)
                              + "' style='stroke:rgb(0,0,0);'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 
 ###############################################################################
@@ -438,10 +434,10 @@ def getOneGraphHtmlHolo(condmax):
         pic = (url_for('.browseGraphHoloNew', **{'condmax': condmax}), 1010, 600)
     logger.debug(pic[0])
     ans = ("<embed  src='%s' width='%s' height='%s' type='image/svg+xml' " % pic
-           + "pluginspage='http://www.adobe.com/svg/viewer/install/'/>\n")
+           + "pluginspage='https://www.adobe.com/svg/viewer/install/'/>\n")
     ans += "<br/>\n"
 
-    return(ans)
+    return ans
 
 
 # TODO cleanup here
@@ -492,8 +488,7 @@ def paintSvgHoloNew(condmax):
                                     projection=['analytic_conductor', 'label', 'level', 'weight', 'conrey_index', 'dim', 'char_degree'],
                                     sort=[('analytic_conductor', 1)]):
         _, k, _, hecke_letter = nf['label'].split('.')
-        if int(k) > max_k:
-            max_k = int(k)
+        max_k = max(int(k), max_k)
         if nf['weight'] not in values:
             values[nf['weight']] = []
         if nf['dim'] == 1:
@@ -502,7 +497,7 @@ def paintSvgHoloNew(condmax):
             if z1 is not None:
                 values[nf['weight']].append([nf['label'].split('.'), z1, lfun_url, nf["analytic_conductor"]])
         else:
-            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit
+            conrey_orbit = ConreyCharacter(modulus=nf['level'],number=nf['conrey_index']).galois_orbit(100)
             for character in conrey_orbit:
                 for j in range(nf['dim'] // nf['char_degree']):
                     label = nf['label'].split('.') + [str(character), str(j + 1)]
@@ -522,10 +517,8 @@ def paintSvgHoloNew(condmax):
             k = label[1]
             x = x_scale*float(Nk2)
             y = y_scale*z1
-            if y > y_max:
-                y_max = y
-            if x > x_max:
-                x_max = x
+            y_max = max(y, y_max)
+            x_max = max(x, x_max)
             points.append((x, y, lfun_url, ".".join(map(str, label)), k))
 
     # Begin drawing
@@ -725,7 +718,7 @@ def paintCSHolo(width, height, xMax, yMax, xfactor, yfactor, ticlength):
                                  + "' y2='" + str(height - i * yfactor)
                                  + "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 
 ###############################################################################
@@ -796,7 +789,6 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             dimensioninfo['dotradius'] = radius
             dimensioninfo['connectinglinewidth'] = dimensioninfo['dotradius'] / 1.5
             dimensioninfo['firstdotoffset'] = [0.0, 0.0]
-#
             appearanceinfo = {}
             # appearanceinfo['edgewidth'] = dimensioninfo['dotspacing'][0]/1.0  #just a guess
             appearanceinfo['edgewidth'] = [0, 0]  # remove the sector edges
@@ -804,12 +796,10 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             appearanceinfo['edgecolor'] = 'rgb(202,202,102)'
             appearanceinfo['fontsize'] = 'font-size:11px'
             appearanceinfo['fontweight'] = ""
-#
             urlinfo = {'base': '/L/ModularForm/GL2/Q/holomorphic?'}
             urlinfo['space'] = {'weight': y}
             urlinfo['space']['level'] = x
             urlinfo['space']['character'] = 0
-#
             # scale = 1 # not used
             # Symmetry types: +1 or -1
             symmetrytype = [1, -1]
@@ -840,16 +830,17 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
                         dimensioninfo['firstdotoffset'] = [0.5 * (dimensioninfo['dotspacing'][0] * dimensioninfo['edge'][0][0] + dimensioninfo['dotspacing'][1] * dimensioninfo['edge'][1][0]), 0]
                         signcolour = signtocolour(signfe)
                         appearanceinfo['edgecolor'] = signcolour
-                        orbitdescriptionlist = []
-                        for n in range(numberwithlabel):
-                            orbitdescriptionlist.append({'label': label, 'number': n, 'color': signcolour})
+                        orbitdescriptionlist = [{'label': label,
+                                                 'number': n,
+                                                 'color': signcolour}
+                                                for n in range(numberwithlabel)]
                         urlinfo['space']['orbits'].append(orbitdescriptionlist)
                 # urlinfo['space']['orbits'][0][0]['color'] = signtocolour(-1)
                 # appearanceinfo['orbitcolor'] = 'rgb(102,102,102)'
                     ans += plotsector(dimensioninfo, appearanceinfo, urlinfo)
 
     ans += svgEnd()
-    return(ans)
+    return ans
 
 # =====================
 
@@ -878,7 +869,6 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
     xmlText = xmlText + ("<line x1='0' y1='" + str(
         height) + "' x2='0' y2='0' style='stroke:rgb(0,0,0);'/>\n")  # draw vertical axis
     xmlText += "<text x='50.0' y='491.0' font-style='italic'>level</text>"
-#
     # xmlText += mytext("level", [0,height], [xfactor, yfactor], [0.2, 0.7],
     # "", 'font-size:11px', "", 'rgb(0,0,0)')
     xmlText += "<text x='33.0' y='411.0' transform='rotate(270 33, 411)' font-style='italic'>weight</text>"
@@ -924,7 +914,7 @@ def paintCSHoloTMP(width, height, xMax, yMax, xfactor, yfactor, ticlength):
         #                 "' y2='" + str(height - i*yfactor) +
         #                 "' style='stroke:rgb(204,204,204);stroke-dasharray:3,3;'/>\n")
 
-    return(xmlText)
+    return (xmlText)
 
 
 # ============================================
@@ -993,7 +983,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
             ans += "\n"
             dotlocation = lincomb(1, dotlocation, dotspacing[1], edge[1])
         orbitbase = lincomb(1, orbitbase, dotspacing[0], edge[0])
-    return(ans)
+    return ans
 
 # ==================
 # addlists:  adds two lists as if they were vectors
@@ -1001,7 +991,7 @@ def plotsector(dimensioninfo, appearanceinfo, urlinfo):
 
 
 def addlists(list1, list2):
-    return([list1[j] + list2[j] for j in range(len(list1))])
+    return ([list1[j] + list2[j] for j in range(len(list1))])
 
 # ==================
 # lincomb:  adds a v1 + b v2 as if lists v1, v2 were vectors
@@ -1009,7 +999,7 @@ def addlists(list1, list2):
 
 
 def lincomb(scalar1, list1, scalar2, list2):
-    return([scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1))])
+    return ([scalar1 * list1[j] + scalar2 * list2[j] for j in range(len(list1))])
 
 
 # ============================================
@@ -1025,7 +1015,7 @@ def mydot(offset, scale, startpt, radius, color, shape, title):
     ans += ">"
     ans += "<title>" + str(title) + "</title>"
     ans += "</circle>"
-    return(ans)
+    return ans
 
 
 # ============================================
@@ -1045,7 +1035,7 @@ def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcol
     ans += ">"
     ans += str(thetext)
     ans += "</text>"
-    return(ans)
+    return ans
 
 
 # ============================================
@@ -1056,7 +1046,7 @@ def mytext(thetext, offset, scale, startpt, endpt, fontsize, fontweight, fontcol
 # ============================================
 def myline(offset, scale, startpt, endpt, width, style, color):
     if startpt == endpt:
-        return("")
+        return ("")
     ans = "<line "
     mystartpt = scoord(offset, scale, startpt)
     ans += "x1='" + str(mystartpt[0]) + "' "
@@ -1071,7 +1061,7 @@ def myline(offset, scale, startpt, endpt, width, style, color):
         ans += style + "; "
     ans += "'"
     ans += "/>"
-    return(ans)
+    return ans
 
 
 # =================
@@ -1082,4 +1072,4 @@ def myline(offset, scale, startpt, endpt, width, style, color):
 # ================
 def scoord(base, scale, wc):
     rescaled = [base[j] + scale[j] * wc[j] for j in range(len(scale))]
-    return(rescaled)
+    return (rescaled)

@@ -109,9 +109,9 @@ def selberg_to_hodge(wt, R, C):
     """
     inverse of the above
     """
-    S = []
-    for r in R:  # weight must be even in any case
-        S.append(r-ZZ(wt)/2)
+    S = [r - ZZ(wt) / 2 for r in R]
+    # weight must be even in any case
+
     for c in C:
         S.append(c-ZZ(wt)/2)
         S.append(c-ZZ(wt)/2+1)

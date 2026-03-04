@@ -83,9 +83,9 @@ def handle_singletons(path_var):
 
 @api2_page.route("/description/searchers")
 def list_searchers():
-    names=[]
-    h_names=[]
-    descs=[]
+    names = []
+    h_names = []
+    descs = []
     for el in searchers:
         names.append(el)
         h_names.append(searchers[el].get_name())

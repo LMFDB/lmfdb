@@ -1,35 +1,33 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about elliptic curves over number Fields
 # Authors: Harald Schilly and John Cremona
 
 import ast
 import re
-from io import BytesIO
-import time
 from urllib.parse import quote, unquote
 
-from flask import render_template, request, url_for, redirect, send_file, make_response, abort
+from flask import render_template, request, url_for, redirect, make_response, abort
 from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
-from lmfdb.backend.encoding import Json
+from psycodict.encoding import Json
 from lmfdb.utils import (
-    to_dict, flash_error, display_knowl,
+    to_dict, flash_error, display_knowl, Downloader,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
-    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer
+    search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer, CodeSnippet
     )
 from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol, PolynomialCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
-from lmfdb.number_fields.web_number_field import nf_display_knowl, WebNumberField
+from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
+from lmfdb.elliptic_curves.web_ec import cremona_label_to_lmfdb_label
 
 from lmfdb.ecnf.WebEllipticCurve import (ECNF, web_ainvs, LABEL_RE,
                                          CLASS_LABEL_RE,
@@ -54,6 +52,9 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page"))]
+
+def learnmore_list_add(learnmore_label, learnmore_url):
+    return learnmore_list() + [(learnmore_label, learnmore_url)]
 
 # Return the learnmore list with the matchstring entry removed
 def learnmore_list_remove(matchstring):
@@ -94,6 +95,24 @@ def labels_page():
              ('Labels', '')]
     return render_template("single.html", kid='ec.curve_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
+
+@ecnf_page.route("/CurvePictures")
+def curve_picture_page():
+    t = r'Pictures for elliptic curves over number fields'
+    bread = get_bread('Curve Pictures')
+    return render_template(
+        "single.html", kid='portrait.ec.nf',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
+
+@ecnf_page.route("/IsogenyPictures")
+def isog_picture_page():
+    t = r'Pictures of isogeny graphs of elliptic curves over number fields'
+    bread = get_bread('Isogeny Pictures')
+    return render_template(
+        "single.html", kid='ec.isogeny_graph',
+        title=t, bread=bread, learnmore=learnmore_list(),
+    )
 
 
 @ecnf_page.route("/")
@@ -203,7 +222,7 @@ def show_ecnf1(nf):
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -226,7 +245,7 @@ def show_ecnf_conductor(nf, conductor_label):
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
            ('conductor_norm' in request.args and request.args['conductor_norm'] != conductor_norm):
-            return redirect (url_for(".index", **request.args), 307)
+            return redirect(url_for(".index", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['field'] = nf_label
@@ -258,13 +277,14 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
     bread.append((class_label, url_for(".show_ecnf_isoclass", nf=nf_label, conductor_label=quote(conductor_label), class_label=class_label)))
+    learnmore_isog_picture = ('Picture description', url_for(".isog_picture_page"))
     return render_template("ecnf-isoclass.html",
                            title=title,
                            bread=bread,
                            cl=cl,
                            properties=cl.properties,
                            friends=cl.friends,
-                           learnmore=learnmore_list())
+                           learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size > 1 else learnmore_list())
 
 
 @ecnf_page.route("/<nf>/<conductor_label>/<class_label>/<int:number>")
@@ -294,6 +314,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
     bread.append((ec.number, ec.urls['curve']))
     code = ec.code()
     code['show'] = {'magma':'','pari':'','sage':''} # use default show names
+    learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
+    IQF = ec.signature == [0,1]
     info = {}
     return render_template("ecnf-curve.html",
                            title=title,
@@ -304,8 +326,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
                            friends=ec.friends,
                            downloads=ec.downloads,
                            info=info,
-                           KNOWL_ID="ec.%s"%label,
-                           learnmore=learnmore_list())
+                           KNOWL_ID="ec.%s" % label,
+                           learnmore=learnmore_list() if IQF else learnmore_list_add(*learnmore_curve_picture))
 
 @ecnf_page.route("/data/<label>")
 def ecnf_data(label):
@@ -314,81 +336,6 @@ def ecnf_data(label):
     bread = get_bread((label, url_for_label(label)), ("Data", " "))
     title = f"Elliptic curve data - {label}"
     return datapage(label, "ec_nfcurves", title=title, bread=bread)
-
-def download_search(info):
-    dltype = info['Submit']
-    delim = 'bracket'
-    com = ''   # single line comment start
-    com1 = ''  # multiline comment start
-    com2 = ''  # multiline comment end
-    eol = ''   # line continuation (only needed for gp)
-    filename = 'elliptic_curves.txt'
-    mydate = time.strftime("%d %B %Y")
-    if dltype == 'gp':
-        filename = 'elliptic_curves.gp'
-        com = r'\\'
-        eol = '\\'
-    if dltype == 'sage':
-        com = '#'
-        filename = 'elliptic_curves.sage'
-    if dltype == 'magma':
-        com1 = '/*'
-        com2 = '*/'
-        delim = 'magma'
-        filename = 'elliptic_curves.m'
-    elif dltype == 'oscar':
-        com1 = '#='
-        com2 = '=#'
-        filename = 'elliptic_curves.jl'
-    s = com1 + "\n"
-    s += com + ' Elliptic curves downloaded from the LMFDB downloaded on %s.\n'%(mydate)
-    s += com + ' Below is a list called data. Each entry has the form:\n'
-    s += com + '   [[field_poly],[Weierstrass Coefficients, constant first in increasing degree]]\n'
-    s += '\n' + com2
-    s += '\n'
-
-    if dltype == 'magma':
-        s += 'P<x> := PolynomialRing(Rationals()); \n'
-        s += 'data := ['
-    elif dltype == 'sage':
-        s += 'R.<x> = QQ[]; \n'
-        s += 'data = [ '
-    elif dltype == 'oscar':
-        s += 'R,x = PolynomialRing(QQ);\n'
-        s += 'data = ['
-    else:
-        s += 'data = [ '
-    s += eol + '\n'
-    nf_dict = {}
-    for f in db.ec_nfcurves.search(ast.literal_eval(info["query"]), ['field_label', 'ainvs']):
-        nf = str(f['field_label'])
-        # look up number field and see if we already have the min poly
-        if nf in nf_dict:
-            poly = nf_dict[nf]
-        else:
-            poly = str(WebNumberField(f['field_label']).poly())
-            nf_dict[nf] = poly
-        entry = str(f['ainvs'])
-        entry = entry.replace('u','')
-        entry = entry.replace('\'','')
-        entry = entry.replace(';','],[')
-        s += '[[' + poly + '], [[' + entry + ']]],'+eol+'\n'
-    s = s[:-2-len(eol)]
-    s += ']\n'
-
-    if delim == 'brace':
-        s = s.replace('[', '{')
-        s = s.replace(']', '}')
-    if delim == 'magma':
-        s = s.replace('[', '[*')
-        s = s.replace(']', '*]')
-        s += ';'
-    strIO = BytesIO()
-    strIO.write(s.encode('utf-8'))
-    strIO.seek(0)
-    return send_file(strIO,
-                     download_name=filename,
-                     as_attachment=True)
 
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
@@ -421,62 +368,64 @@ def make_cm_query(cm_disc_str):
 def parse_cm_list(inp, query, qfield):
     query[qfield] = {'$in': make_cm_query(inp)}
 
-Ra=PolynomialRing(QQ,'a')
+Ra = PolynomialRing(QQ,'a')
 
 ecnf_columns = SearchColumns([
     MultiProcessedCol("label", "ec.curve_label", "Label", ["short_label", "field_label", "conductor_label", "iso_label", "number"],
                       lambda label, field, conductor, iso, number: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number), label),
-                      default=True, align="center"),
+                      align="center", download_col="short_label"),
     MultiProcessedCol("iso_class", "ec.isogeny_class", "Class", ["field_label", "conductor_label", "iso_label", "short_class_label"],
                       lambda field, conductor, iso, short_class_label: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf_isoclass', nf=field, conductor_label=conductor, class_label=iso), short_class_label),
-                      short_title="isogeny class", default=True, align="center"),
-    MathCol("class_size", "ec.isogeny", "Class size", short_title="isogeny class size"),
-    MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree"),
-    ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), default=True, align="center"),
-    MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center"),
-    MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center"),
-    SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center"),
-    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), default=True, align="center"),
-    ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
-    FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5),
+                      short_title="isogeny class", align="center", download_col="short_class_label"),
+    MathCol("class_size", "ec.isogeny", "Class size", short_title="isogeny class size", default=False),
+    MathCol("class_deg", "ec.isogeny", "Class degree", short_title="isogeny class degree", default=False),
+    ProcessedCol("field_label", "nf", "Base field", lambda field: nf_display_knowl(field, field_pretty(field)), align="center"),
+    # This is a hidden column used for the defining polynomial coefficients of the base field.  Used to construct elliptic curves when downloading search results.
+    PolynomialCol("field_coeffs", None, "Base field defining polynomial", contingent=lambda info: 'download' in info, default=lambda info: 'download' in info),
+    MathCol("degree", "nf.degree", "Field degree", short_title="base field degree", align="center", default=False),
+    MathCol("signature", "nf.signature", "Field signature", short_title="base field signature", align="center", default=False),
+    SearchCol("conductor_label", "ec.conductor_label", "Conductor", align="center", default=False),
+    ProcessedCol("conductor_norm", "ec.conductor", "Conductor norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center"),
+    ProcessedCol("normdisc", "ec.discriminant", "Discriminant norm", lambda v: web_latex_factored_integer(ZZ(v)), align="center", default=False),
+    FloatCol("root_analytic_conductor", "lfunction.root_analytic_conductor", "Root analytic conductor", prec=5, default=False),
     ProcessedCol("bad_primes", "ec.bad_reduction", "Bad primes",
-                 lambda primes: ", ".join([''.join(str(p.replace('w','a')).split('*')) for p in primes]) if primes else r"\textsf{none}",
+                 lambda primes: ", ".join(''.join(str(p.replace('w', 'a')).split('*')) for p in primes) if primes else r"\textsf{none}",
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
-                      lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s"%(rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
-                      mathmode=True, align="center", default=True),
+                      lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s" % (rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
+                      mathmode=True, align="center"),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
-                 lambda tors: r"\oplus".join([r"\Z/%s\Z"%n for n in tors]) if tors else r"\mathsf{trivial}", default=True, mathmode=True, align="center"),
-    ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$"%("no" if v == 0 else ("potential" if v < 0 else "yes")),
+                 lambda tors: r"\oplus".join(r"\Z/%s\Z" % n for n in tors) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
+    ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$" % ("no" if v == 0 else ("potential" if v < 0 else "yes")),
                  default=lambda info: info.get("include_cm") and info.get("include_cm") != "noPCM", short_title="has CM", align="center", orig="cm_type"),
     ProcessedCol("cm", "ec.complex_multiplication", "CM", lambda v: "" if v == 0 else -abs(v),
-                 default=True, short_title="CM discriminant", mathmode=True, align="center"),
+                 short_title="CM discriminant", mathmode=True, align="center"),
     ProcessedCol("sato_tate_group", "st_group.definition", "Sato-Tate",
-                 lambda v: st_display_knowl('1.2.A.1.1a' if v==0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
-                 short_title="Sato-Tate group", align="center", orig="cm_type"),
-    CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve"),
-    CheckCol("base_change", "ec.base_change", "Base change"),
-    CheckCol("semistable", "ec.semistable", "Semistable"),
-    CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good"),
+                 lambda v: st_display_knowl('1.2.A.1.1a' if v == 0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
+                 short_title="Sato-Tate group", align="center", orig="cm_type", apply_download=lambda v: '1.2.A.1.1a' if v == 0 else ('1.2.B.2.1a' if v < 0 else '1.2.B.1.1a')),
+    CheckCol("q_curve", "ec.q_curve", r"$\Q$-curve", short_title="Q-curve", default=False),
+    CheckCol("base_change", "ec.base_change", "Base change", default=False),
+    CheckCol("semistable", "ec.semistable", "Semistable", default=False),
+    CheckCol("potential_good_reduction", "ec.potential_good_reduction", "Potentially good", default=False),
     ProcessedCol("nonmax_primes", "ec.maximal_galois_rep", r"Nonmax $\ell$", lambda primes: ", ".join(str(p) for p in primes),
                  short_title="nonmaximal primes", default=lambda info: info.get("nonmax_primes"), mathmode=True, align="center"),
     ProcessedCol("galois_images", "ec.galois_rep_modell_image", r"mod-$\ell$ images",
                  lambda v: ", ".join(display_knowl('gl2.subgroup_data', title=s, kwargs={'label':s}) for s in v),
-                 short_title="mod-ℓ images", default=lambda info: info.get ("nonmax_primes") or info.get("galois_image"), align="center"),
-    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш"),
-    ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center"),
-    ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left"),
-    ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left"),
-    ProcessedCol("Lvalue", "lfunction.leading_coeff", "Leading coeff", lambda v: str(v)[:11], short_title="leading coefficient", align="left"),
-    ProcessedCol("jinv", "ec.j_invariant", "j-invariant", lambda v: web_latex(Ra([QQ(s) for s in v.split(',')])), align="left"),
+                 short_title="mod-ℓ images", default=lambda info: info.get("nonmax_primes") or info.get("galois_image"), align="center"),
+    MathCol("sha", "ec.analytic_sha_order", r"$Ш_{\textrm{an}}$", short_title="analytic Ш", default=False),
+    ProcessedCol("tamagawa_product", "ec.tamagawa_number", "Tamagawa", lambda v: web_latex(factor(v)), short_title="Tamagawa product", align="center", default=False),
+    ProcessedCol("reg", "ec.regulator", "Regulator", lambda v: str(v)[:11], mathmode=True, align="left", default=False),
+    ProcessedCol("omega", "ec.period", "Period", lambda v: str(v)[:11], mathmode=True, align="left", default=False),
+    ProcessedCol("Lvalue", "lfunction.leading_coeff", "Leading coeff", lambda v: str(v)[:11], short_title="leading coefficient", align="left", default=False),
+    ProcessedCol("jinv", "ec.j_invariant", "j-invariant", lambda v: web_latex(Ra([QQ(s) for s in v.split(',')])), align="left", default=False),
     MultiProcessedCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients",
                       ["field_label", "conductor_label", "iso_label", "number", "ainvs"],
                       lambda field, conductor, iso, number, ainvs: '<a href="%s">%s</a>' % (
                           url_for('.show_ecnf', nf=field, conductor_label=conductor, class_label=iso, number=number),
-                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left"),
-    MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", default=True, short_title="Weierstrass equation", align="left"),
+                          web_ainvs(field, ainvs)), short_title="Weierstrass coeffs", align="left", download_col="ainvs", default=lambda info: 'download' in info),
+    MathCol("equation", "ec.weierstrass_coeffs", "Weierstrass equation", short_title="Weierstrass equation", align="left", download_desc="See description for Weierstrass coefficients above"),
 ])
 ecnf_columns.below_download = """<p>&nbsp;&nbsp;*The rank, regulator and analytic order of &#1064; are
 not known for all curves in the database; curves for which these are
@@ -485,12 +434,43 @@ quantities.</p>"""
 
 modell_image_label_regex = re.compile(r'(\d+)(G|B|Cs|Cn|Ns|Nn|A4|S4|A5)(\.\d+)*(\[\d+\])?')
 
+
+# Class to download ECNF search results
+class ECNFDownloader(Downloader):
+    table = db.ec_nfcurves
+    title = "Elliptic curves over number fields"
+    short_name = "curves"
+
+    def postprocess(self, row, info, query):
+        # Look up the defining polynomial coefficients for the base field of the curve
+        from lmfdb.utils import coeff_to_poly
+        poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
+        row["field_coeffs"] = poly
+
+        # Convert Weierstrass coefficients from string to a list of list of integers
+        row['ainvs'] = [[ZZ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
+
+        return row
+
+    inclusions = {
+        "curve": (
+            ["field_coeffs", "ainvs"],
+            {
+                "sage": 'field.<a> = NumberField(ZZx(out["field_coeffs"]))\n    curve = EllipticCurve([field(ai) for ai in out["ainvs"]])',
+                "magma": 'field<a> := NumberField(ZZx!(out`field_coeffs));\n    curve := EllipticCurve([field!ai : ai in out`ainvs]);',
+                "gp": 'field = nfinit(Polrev(mapget(out, "field_coeffs")));\n    curve = ellinit(apply(Polrev, mapget(out, "ainvs")), field);',
+                "oscar": 'field,a = number_field(ZZx(out["field_coeffs"]))\n    curve = elliptic_curve([field(ai) for ai in out["ainvs"]])',
+            }
+        ),
+    }
+
+
 @search_wrap(table=db.ec_nfcurves,
              title='Elliptic curve search results',
              err_title='Elliptic curve search input error',
              columns=ecnf_columns,
              shortcuts={'jump':elliptic_curve_jump,
-                        'download':download_search},
+                        'download':ECNFDownloader()},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
              bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')])
@@ -542,7 +522,6 @@ def elliptic_curve_search(info, query):
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
     if 'Qcurves' in info:
-        print("Qcurves")
         if info['Qcurves'] == 'Q-curve':
             query['q_curve'] = True
         elif info['Qcurves'] == 'base-change':
@@ -555,6 +534,13 @@ def elliptic_curve_search(info, query):
         elif info['Qcurves'] == 'non-base-change-Q-curve':
             query['q_curve'] = True
             query['base_change'] = []
+    if 'base_change_label' in info:
+        if "Qcurves" in info and info['Qcurves'][:3] == 'non':
+            err = "Incompatible base change query options, you cannot simultaneous exclude base changes and specify a base change label."
+            flash_error(err)
+            raise ValueError(err)
+        query['q_curve'] = True
+        query['base_change'] = { '$contains': cremona_label_to_lmfdb_label(info['base_change_label']) }
 
     parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
 
@@ -601,7 +587,7 @@ def elliptic_curve_search(info, query):
                     modell_labels = [a for a in modell_labels if a not in max_labels]
                     max_primes = [modell_image_label_regex.match(a)[1] for a in max_labels]
                     if info.get('nonmax_primes'):
-                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if not l.strip() in max_primes]
+                        max_primes += [l.strip() for l in info['nonmax_primes'].split(',') if l.strip() not in max_primes]
                     max_primes.sort(key=int)
                     info['nonmax_primes'] = ','.join(max_primes)
                     info['nonmax_quantifier'] = 'exclude'
@@ -625,7 +611,7 @@ def browse():
     data = ECNF_stats().sigs_by_deg
     # We could use the dict directly but then could not control the order
     # of the keys (degrees), so we use a list
-    info = [[d,['%s,%s'%sig for sig in data[d]]] for d in sorted(data.keys())]
+    info = [[d,['%s,%s' % sig for sig in data[d]]] for d in sorted(data.keys())]
     t = 'Elliptic curves over number fields'
     bread = [('Elliptic curves', url_for("ecnf.index")),
              ('Browse', ' ')]
@@ -633,7 +619,7 @@ def browse():
 
 @ecnf_page.route("/browse/<int:d>/")
 def statistics_by_degree(d):
-    if d==1:
+    if d == 1:
         return redirect(url_for("ec.statistics"))
     info = {}
 
@@ -651,19 +637,19 @@ def statistics_by_degree(d):
         return [f,counts_by_field[f]]
 
     def sig_counts(sig):
-        return ['%s,%s'%sig, counts_by_sig[sig], [field_counts(f) for f in fields_by_sig[sig]]]
+        return ['%s,%s' % sig, counts_by_sig[sig], [field_counts(f) for f in fields_by_sig[sig]]]
 
     info['summary'] = ECNF_stats().degree_summary(d)
     info['sig_stats'] = [sig_counts(sig) for sig in sigs_by_deg[d]]
-    if d==2:
+    if d == 2:
         t = 'Elliptic curves over quadratic number fields'
-    elif d==3:
+    elif d == 3:
         t = 'Elliptic curves over cubic number fields'
-    elif d==4:
+    elif d == 4:
         t = 'Elliptic curves over quartic number fields'
-    elif d==5:
+    elif d == 5:
         t = 'Elliptic curves over quintic number fields'
-    elif d==6:
+    elif d == 6:
         t = 'Elliptic curves over sextic number fields'
     else:
         t = 'Elliptic curves over number fields of degree {}'.format(d)
@@ -674,7 +660,7 @@ def statistics_by_degree(d):
 
 @ecnf_page.route("/browse/<int:d>/<int:r>/")
 def statistics_by_signature(d,r):
-    if d==1:
+    if d == 1:
         return redirect(url_for("ec.statistics"))
 
     info = {}
@@ -688,7 +674,7 @@ def statistics_by_signature(d,r):
     s = (d-r)//2
     sig = (r,s)
     info['sig'] = '%s,%s' % sig
-    if r not in range(d%2,d+1,2):
+    if r not in range(d % 2,d+1,2):
         info['error'] = "Invalid signature %s" % info['sig']
     info['summary'] = ECNF_stats().signature_summary(sig)
     if not info['summary']:
@@ -758,18 +744,10 @@ def ecnf_code(**args):
     if not LABEL_RE.fullmatch(label):
         return abort(404)
     lang = args['download_type']
-    if lang=='gp':
-        lang = 'pari'
 
-    from lmfdb.ecnf.WebEllipticCurve import make_code, Comment, Fullname, code_names, sorted_code_names
-    Ecode = make_code(label, lang)
-    code = "{} {} code for working with elliptic curve {}\n\n".format(Comment[lang],Fullname[lang],label)
-    code += "{} (Note that not all these functions may be available, and some may take a long time to execute.)\n".format(Comment[lang])
-    for k in sorted_code_names:
-        if Ecode[k]:
-            code += "\n{} {}: \n".format(Comment[lang],code_names[k])
-            code += Ecode[k] + ('\n' if '\n' not in Ecode[k] else '')
-    return code
+    from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
+    code = CodeSnippet(make_code(label))
+    return code.export_code(label, lang, sorted_code_names)
 
 
 def disp_tor(t):
@@ -869,8 +847,8 @@ class ECNFSearchArray(SearchArray):
             )
 
         tor_opts = ([("", ""),
-                     ("[]", "trivial")] +
-                    [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
+                     ("[]", "trivial")]
+                    + [disp_tor(tuple(t)) for t in ECNF_stats().torsion_counts if t])
         torsion_structure = SelectBox(
             name="torsion_structure",
             label="Torsion structure",
@@ -936,6 +914,11 @@ class ECNFSearchArray(SearchArray):
             label="Isogeny class degree",
             knowl="ec.isogeny",
             example="16")
+        base_change_label = TextBox(
+            name="base_change_label",
+            label="Base change of",
+            knowl="ec.base_change",
+            example="11a.1")
         count = CountBox()
 
         self.browse_array = [
@@ -948,13 +931,15 @@ class ECNFSearchArray(SearchArray):
             [isodeg, one],
             [class_size, class_deg],
             [galois_image, nonmax_primes],
+            [base_change_label, reduction],
             [jinv],
-            [count, reduction],
+            [count]
             ]
 
         self.refine_array = [
             [field, conductor_norm, rank, torsion, cm_disc],
             [deg_sig, bad_primes, Qcurves, torsion_structure, include_cm],
             [sha, isodeg, class_size, reduction, galois_image],
-            [jinv, regulator, one, class_deg, nonmax_primes],
+            [base_change_label, regulator, one, class_deg, nonmax_primes],
+            [jinv],
             ]

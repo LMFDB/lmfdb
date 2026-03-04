@@ -27,7 +27,7 @@ function show_eqns(invstyle) {
 </script>
 
 {#
-<script src="http://aleph.sagemath.org/embedded_sagecell.js"></script>
+<script src="https://aleph.sagemath.org/embedded_sagecell.js"></script>
 #}
 
 <h2 class='min_eqn' style='margin-top:0px;'>            {{ KNOWL('g2c.minimal_equation', 'Minimal equation') }} </h2>
@@ -48,7 +48,7 @@ function show_eqns(invstyle) {
     <td>(<a onclick="show_eqns('proj_eqn'); return false" href='#'>homogenize</a>, <a onclick="show_eqns('min_eqn'); return false" href='#'>minimize</a>)</td>
 <tr>
 </table>
-<p>{{place_code('curve')}}{{place_code('simple_curve')}}</p>
+<p>{{ place_code('curve', is_top_snippet=True) }}{{place_code('simple_curve')}}</p>
 
 <h2> {{ KNOWL('g2c.invariants', 'Invariants') }} </h2>
 <table>
@@ -202,7 +202,7 @@ function show_eqns(invstyle) {
 <p>
     {% if data.exists_nonsurj_data %}
         The {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}}
-        has {{KNOWL('ec.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
+        has {{KNOWL('g2c.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
         for all primes \( \ell \)
     
         {% if data.nonmax_primes %} {# there are non-maximal primes #}
@@ -214,10 +214,9 @@ function show_eqns(invstyle) {
             .
         {% endif %}
     {% else %}
-        For primes $\ell \ge 5$ the Galois representation data has not been computed for this curve since it is
-        not generic.
+        For primes $\ell \ge 5$ the Galois representation data has not been computed for this curve since it is not generic.
 
-        <p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not the maximal image $\GSp(4,\F_\ell)$. </p>
+        <p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not all of $\GSp(4,\F_\ell)$. </p>
         <p>{{ data.galrep_table | safe }}</p>
     {% endif %}
 </p>

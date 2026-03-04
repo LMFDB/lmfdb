@@ -1,11 +1,9 @@
 
 from mpmath import nstr, inf
 from sage.all import floor, log
-from lmfdb.logger import make_logger
 from flask import render_template, request, url_for, Blueprint, Response
 
 ZetaZeros = Blueprint("zeta zeros", __name__, template_folder="templates")
-logger = make_logger(ZetaZeros)
 
 from .platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 
@@ -37,7 +35,7 @@ def zetazeros():
         return list_zeros(N=N, t=t, limit=limit)
     else:
         title = r"Zeros of $\zeta(s)$"
-        bread = [("L-functions", url_for("l_functions.index")), (r'Zeros of $\zeta(s)$', ' ')]
+        bread = [("Datasets", url_for("datasets")), (r'Zeros of $\zeta(s)$', ' ')]
         return render_template('zeta.html', N=N, t=t, limit=limit, title=title, bread=bread, learnmore=learnmore_list(), friends=friends_list(), downloads=downloads())
 
 
@@ -79,10 +77,8 @@ def list_zeros(N=None,
     if limit < 0:
         limit = 100
     if N is not None:  # None is < 0!! WHAT THE WHAT!
-        if N < 0:
-            N = 0
-    if t < 0:
-        t = 0
+        N = max(N, 0)
+    t = max(t, 0)
 
     if limit > 100000:
         # limit = 100000
@@ -97,7 +93,7 @@ def list_zeros(N=None,
         zeros = zeros_starting_at_t(t, limit)
 
     if fmt == 'plain':
-        response = Response(("%d %s\n" % (n, nstr(z,31+floor(log(z,10))+1,strip_zeros=False,min_fixed=-inf,max_fixed=+inf)) for (n, z) in zeros))
+        response = Response("%d %s\n" % (n, nstr(z,31+floor(log(z,10))+1,strip_zeros=False,min_fixed=-inf,max_fixed=+inf)) for n, z in zeros)
         response.headers['content-type'] = 'text/plain'
         if download == "yes":
             response.headers['content-disposition'] = 'attachment; filename=zetazeros'

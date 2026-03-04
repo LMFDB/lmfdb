@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
 # Copyright (C) 2010-2012 by the LMFDB authors
 #
@@ -18,33 +17,27 @@ via optional command-line arguments.
 import argparse
 import getpass
 import os
-import sys
 import random
 import string
 import __main__
 from requests import get
 import socket
 from contextlib import closing
+from logging import INFO
 
 COCALC_port = 0
 root_lmfdb_path = os.path.abspath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 )
 
-# We don't want to trigger the lmfdb/__init__.py
-working_dir = sys.path[0]
-sys.path[0] = os.path.join(root_lmfdb_path, 'lmfdb', 'backend')
-from config import Configuration as _Configuration
-sys.path[0] = working_dir
+from psycodict.config import Configuration as _Configuration
 
 
 def is_port_open(host, port):
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.settimeout(1)
-        if sock.connect_ex((host, port)) == 0:
-            return True
-        else:
-            return False
+        return sock.connect_ex((host, port)) == 0
+
 
 def abs_path_lmfdb(filename):
     return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
@@ -153,7 +146,12 @@ class Configuration(_Configuration):
         )
 
         logginggroup.add_argument(
-            "--logfocus", help="name of a logger to focus on", default=argparse.SUPPRESS
+            "--loglevel",
+            help="loglevel for flask [default: %(default)s]",
+            dest="logging_loglevel",
+            metavar="LEVEL",
+            type=int,
+            default=INFO,
         )
 
         logginggroup.add_argument(
@@ -334,9 +332,8 @@ class Configuration(_Configuration):
             "slowcutoff": opts["logging"]["slowcutoff"],
             "slowlogfile": opts["logging"]["slowlogfile"],
             "editor": opts["logging"]["editor"],
+            "loglevel": opts["logging"]["loglevel"],
         }
-        if "logfocus" in extopts:
-            self.logging_options["logfocus"] = extopts["logfocus"]
 
     def get_all(self):
         return {
@@ -359,6 +356,28 @@ class Configuration(_Configuration):
 
     def get_postgresql(self):
         return self.postgresql_options
+
+    def get_logging(self):
+        return self.logging_options
+
+
+class ConfigWrapper:
+    """
+    A wrapper class that provides the same interface as Configuration
+    but is initialized from a dictionary of options.
+    """
+    def __init__(self, config_dict):
+        # Set default values and update with provided config
+        self.postgresql_options = config_dict.get('postgresql_options', {})
+        self.flask_options = config_dict.get('flask_options', {})
+        self.logging_options = config_dict.get('logging_options', {'editor': ''})
+
+    # Add the get methods that might be expected
+    def get_postgresql(self):
+        return self.postgresql_options
+
+    def get_flask(self):
+        return self.flask_options
 
     def get_logging(self):
         return self.logging_options

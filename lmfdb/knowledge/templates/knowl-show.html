@@ -4,7 +4,7 @@
 {% from "knowl-defs.html" import knowlbar with context %}
 {{ knowlbar(show_kid=True) }}
 
-{% if k.type == 2 %}
+{% if k.type == 2 and k.coltype %}
   <p>
     Postgres column type: {{ k.coltype }}
   </p>

@@ -1,0 +1,42 @@
+{% extends 'embedded_results.html' %}
+
+{% block embedding_content %}
+
+<p>{{ KNOWL_INC(family.knowl_ID) }}</p>
+
+<h2> {{ KNOWL('modcurve.invariants', 'Invariants') }} </h2>
+<table>
+    <tr>
+      {% if family.notation %}
+         <p>Some of the invariants below will use the following notation:
+         <br>{{ family.notation|safe }}</br></p>
+      {% endif %}
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.psl2index", "$\PSL_2$-index") }}:</td>
+      <td>${{ family.psl2index | safe }}$</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 2:</td>
+      <td>{{ family.nu2 | safe }}</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.elliptic_points", "Elliptic points") }} of order 3:</td>
+      <td>{{ family.nu3 | safe }}</td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.cusps", "Cusps") }}:</td>
+      <td> {{ family.cusps | safe }}</td><td style="width:20px;"></td>
+    </tr>
+    <tr>
+      <td>{{ KNOWL("modcurve.genus", "Genus") }}:</td><td>{{ family.genus_formula | safe }}</td>
+    </tr>
+</table>
+
+{% if Knowl(family.knowl_ID_remarks).content  %}
+<h2> Remarks </h2>
+
+ <p>{{ KNOWL_INC(family.knowl_ID_remarks) }}</p> 
+{% endif %}
+
+{% endblock %}

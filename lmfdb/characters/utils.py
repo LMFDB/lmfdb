@@ -12,7 +12,7 @@ def evalpolelt(label,gen,genlabel='a'):
         ( '*' and '**' are removed )
     """
     res = 0
-    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?'%genlabel
+    regexp = r'([+-]?)([+-]?\d*o?\d*)(%s\d*)?' % genlabel
     for m in re.finditer(regexp,label):
         s, c, e = m.groups()
         if c == '' and e is None:
@@ -53,13 +53,13 @@ def url_character(**kwargs):
         return url_for('characters.render_characterNavigation')
     elif kwargs['type'] == 'Dirichlet':
         del kwargs['type']
-        if kwargs.get('calc',None):
+        if kwargs.get('calc'):
             return url_for('characters.dc_calc',**kwargs)
         else:
             return url_for('characters.render_Dirichletwebpage',**kwargs)
     elif kwargs['type'] == 'Hecke':
         del kwargs['type']
-        if kwargs.get('calc',None):
+        if kwargs.get('calc'):
             return url_for('characters.hc_calc',**kwargs)
         else:
             return url_for('characters.render_Heckewebpage',**kwargs)

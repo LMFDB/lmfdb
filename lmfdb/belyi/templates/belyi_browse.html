@@ -11,8 +11,12 @@
   <tr>
     <td>By {{ KNOWL('belyi.degree', title='degree')}}:</td>
     <td>{% for rnge in info.degree_list %} <a href="?deg={{rnge}}">{{rnge}}</a>&nbsp; {% endfor %} </td>
-  </tr><tr>
+  </tr>
+  <tr>
     <td colspan="2">Some <a href="{{url_for('.interesting')}}">interesting Belyi maps</a> or a <a href={{url_for('.random_belyi_galmap')}}>random Belyi map</a></td>
+  </tr>
+  <tr>
+    <td>Search for <a href="{{url_for('.index', search_type='Passports')}}">passports</a></td>
   </tr>
 </table>
 

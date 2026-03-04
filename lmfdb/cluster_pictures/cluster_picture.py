@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
 
-from flask import Markup
+from markupsafe import Markup
 
 from lmfdb.app import app
 from lmfdb.cluster_pictures.web_cluster_picture import (
     cp_knowl_guts)
-
-# assert cp_logger
 
 CP_credit = 'Alex Best, Raymond van Bommel'
 Completename = 'Completeness of the data'

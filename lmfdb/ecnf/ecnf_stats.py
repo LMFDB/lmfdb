@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 from lmfdb.app import app
 from lmfdb.utils import comma, StatsDisplay, proportioners, totaler
-from lmfdb.logger import make_logger
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb import db
 from flask import url_for
@@ -25,8 +23,6 @@ def sort_field(F):
     Returns data to sort by, from field label.
     """
     return [int(c) for c in F.split(".")]
-
-logger = make_logger("ecnf")
 
 def latex_tor(t):
     if isinstance(t, str):
@@ -213,11 +209,11 @@ class ECNF_stats(StatsDisplay):
         ncurves = stats['ncurves']
         nclasses = stats['nclasses']
         max_norm = stats['max_norm']
-        ec_knowl = self.ec_knowl if ncurves==1 else self.ec_knowls
-        iso_knowl = self.iso_knowl if ncurves==1 else self.iso_knowls
-        nf_knowl = self.nf_knowl if ncurves==1 else self.nf_knowls
-        cond_knowl = self.cond_knowl if ncurves==1 else self.cond_knowls
-        s = '' if max_norm==1 else 'up to '
+        ec_knowl = self.ec_knowl if ncurves == 1 else self.ec_knowls
+        iso_knowl = self.iso_knowl if ncurves == 1 else self.iso_knowls
+        nf_knowl = self.nf_knowl if ncurves == 1 else self.nf_knowls
+        cond_knowl = self.cond_knowl if ncurves == 1 else self.cond_knowls
+        s = '' if max_norm == 1 else 'up to '
         norm_phrase = ' of norm {}{}.'.format(s, max_norm)
         return ''.join([r'The database currently contains {} '.format(ncurves),
                         ec_knowl,

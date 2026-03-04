@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 # This Blueprint is about adding a Knowledge Base to the LMFDB website.
 # referencing content, dynamically inserting information into the website, …
 #
 # This is more than just a web of entries in a wiki, because content is "transcluded".
 # Transclusion is an actual concept, you can read about it here:
-# http://en.wikipedia.org/wiki/Transclusion
+# https://en.wikipedia.org/wiki/Transclusion
 #
 # a "Knowl" (see knowl.py) is our base class for any bit of "knowledge". we might
 # subclass it into "theorem", "proof", "description", and much more if necessary
@@ -16,23 +15,21 @@ import string
 import re
 import json
 import time
-from xml.etree import ElementTree
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
-from datetime import datetime
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
-from lmfdb.knowledge import logger
-from lmfdb.utils import (datetime_to_timestamp_in_ms,
-                         timestamp_in_ms_to_datetime, flash_error)
+from lmfdb.logger import logger
+from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from lmfdb.utils import flash_error
 from lmfdb.knowledge import knowledge_page
 
 
@@ -68,14 +65,6 @@ class IgnorePattern(markdown.inlinepatterns.Pattern):
         return m.group(2)
 
 
-class HashTagPattern(markdown.inlinepatterns.Pattern):
-    def handleMatch(self, m):
-        el = ElementTree.Element("a")
-        el.set('href', url_for('knowledge.index') + '?search=%23' + m.group(2))
-        el.text = '#' + m.group(2)
-        return el
-
-
 class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
     def handleMatch(self, m):
         tokens = m.group(2).split("|")
@@ -88,17 +77,13 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
 
 # Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
-                       extension_configs={'wikilinks': [('base_url', 'http://wiki.l-functions.org/')]})
+                       extension_configs={'wikilinks': [('base_url', 'https://wiki.l-functions.org/')]})
 # priority above escape (180), but below backtick (190)
 # Prevent $..$, $$..$$, \(..\), \[..\] blocks from being processed by Markdown
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\\$])(\$[^\$].*?\$)'), 'math$', 186)
 md.inlinePatterns.register(IgnorePattern(r'(?<![\\])(\$\$.+?\$\$)'), 'math$$', 185)
 md.inlinePatterns.register(IgnorePattern(r'(\\\(.+?\\\))'), 'math\\(', 184)
 md.inlinePatterns.register(IgnorePattern(r'(\\\[.+?\\\])'), 'math\\[', 183)
-
-# Tell markdown to turn hashtags into search urls
-hashtag_keywords_rex = r'#([a-zA-Z][a-zA-Z0-9-_]{1,})\b'
-md.inlinePatterns.register(HashTagPattern(hashtag_keywords_rex), 'hashtag', 182)
 
 # Tells markdown to process "wikistyle" knowls with optional title
 # should cover [[[ KID ]]] and [[[ KID | title ]]]
@@ -172,41 +157,33 @@ def ref_to_link(txt):
     thecite = thecite.replace("\\", "")  # \href --> href
 
     refs = thecite.split(",")
-    ans = ""
+    ans = []
 
     # print "refs",refs
 
     for ref in refs:
         ref = ref.strip()    # because \cite{A, B, C,D} can have spaces
-        this_link = ""
-        if ref.startswith("href"):
-            the_link = re.sub(r".*{([^}]+)}{.*", r"\1", ref)
-            click_on = re.sub(r".*}{([^}]+)}\s*", r"\1", ref)
-            this_link = '{{ LINK_EXT("' + click_on + '","' + the_link + '") | safe}}'
-        elif ref.startswith("doi"):
-            ref = ref.replace(":", "")  # could be doi:: or doi: or doi
-            the_doi = ref[3:]    # remove the "doi"
-            this_link = '{{ LINK_EXT("' + the_doi + '","https://doi.org/' + the_doi + '")| safe }}'
-        elif ref.lower().startswith("mr"):
-            ref = ref.replace(":", "")
-            the_mr = ref[2:]    # remove the "MR"
-            this_link = '{{ LINK_EXT("' + 'MR:' + the_mr + '", '
-            this_link += '"https://www.ams.org/mathscinet-getitem?mr='
-            this_link += the_mr + '") | safe}}'
-        elif ref.lower().startswith("arxiv"):
-            ref = ref.replace(":", "")
-            the_arx = ref[5:]    # remove the "arXiv"
-            this_link = '{{ LINK_EXT("' + 'arXiv:' + the_arx + '", '
-            this_link += '"https://arxiv.org/abs/'
-            this_link += the_arx + '")| safe}}'
-
-        if this_link:
-            if ans:
-                ans += ", "
-            ans += this_link
-
-    return '[' + ans + ']' + everythingelse
-
+        # Special case for href (no colon by design) and for MR (no colon in many existing cases)
+        for site in ["href", "mr"]:
+            if ref.lower().startswith(site):
+                xid = ref[len(site):].lstrip(":")
+                break
+        else:
+            pieces = ref.split(":")
+            if len(pieces) != 2:
+                # Improperly formatted ref
+                continue
+            site, xid = pieces
+            site = site.lower()
+        try:
+            url, disp, fragment = external_definition_link(site, xid)
+        except ValueError:
+            continue
+        link = f'{{{{ LINK_EXT("{disp}", "{url}") | safe}}}}'
+        if fragment:
+            link += f" ({fragment})"
+        ans.append(link)
+    return "[" + ", ".join(ans) + "]" + everythingelse
 
 def md_latex_accents(text):
     r"""
@@ -245,7 +222,12 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl, 'knowl_title': knowl_title, 'knowl_url_prefix': knowl_url_prefix, "KNOWL_EXISTS": knowl_exists}
+    return {'Knowl': Knowl,
+            'knowl_title': knowl_title,
+            'knowl_url_prefix': knowl_url_prefix,
+            "KNOWL_EXISTS": knowl_exists,
+            "knowl_definition": knowl_definition,
+            "external_definition_link": external_definition_link}
 
 
 @app.template_filter("render_knowl")
@@ -254,11 +236,12 @@ def render_knowl_in_template(knowl_content, **kwargs):
     This function does the actual rendering, for render and the template_filter
     render_knowl_in_template (ultimately for KNOWL_INC)
     """
-    render_me = u"""\
+    render_me = """\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
@@ -295,8 +278,7 @@ def body_class():
 
 def get_bread(breads=[]):
     bc = [("Knowledge", url_for(".index"))]
-    for b in breads:
-        bc.append(b)
+    bc.extend(breads)
     return bc
 
 
@@ -351,14 +333,10 @@ def edit(ID):
     elif knowl.type == 0:
         title = "Edit Knowl '%s'" % ID
     elif knowl.type == 2:
-        pieces = ID.split(".")
-        title = f"Edit column information for '{pieces[2]}' in '{pieces[1]}'"
-        knowl.title = f"Column {pieces[2]} of table {pieces[1]}"
-        from lmfdb import db
-        if pieces[1] in db.tablenames:
-            knowl.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
+        if knowl.source:
+            title = f"Edit column information for '{knowl.source_name}' in '{knowl.source}'"
         else:
-            knowl.coltype = "DEFUNCT"
+            title = f"Edit description for '{knowl.source_name}'"
     else:
         ann_type = 'Top' if knowl.type == 1 else 'Bottom'
         title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
@@ -410,7 +388,7 @@ def show(ID):
         caturl = url_for('.index', category=k.category)
     b = get_bread([(k.category, caturl), ('%s' % title, url_for('.show', ID=ID))])
 
-    return render_template(u"knowl-show.html",
+    return render_template("knowl-show.html",
                            title=title,
                            k=k,
                            cur_username=current_user.get_id(),
@@ -612,7 +590,7 @@ def columns():
         else:
             bad_cat.append(k)
     missing_tables = {tbl: sorted(db[tbl].search_cols) + sorted(db[tbl].extra_cols) for tbl in db.tablenames if tbl not in knowls}
-    bad_tables = {tbl: klist for (tbl, klist) in knowls.items() if tbl not in db.tablenames}
+    bad_tables = {tbl: klist for tbl, klist in knowls.items() if tbl not in db.tablenames}
     for tbl in bad_tables:
         del knowls[tbl]
     missing_knowls = defaultdict(list)
@@ -634,7 +612,7 @@ def columns():
 
 @knowledge_page.route("/new_comment/<ID>")
 def new_comment(ID):
-    time = datetime_to_timestamp_in_ms(datetime.utcnow())
+    time = datetime_to_timestamp_in_ms(utc_now_naive())
     cid = '%s.%s.comment' % (ID, time)
     return edit(ID=cid)
 
@@ -686,6 +664,9 @@ def save_form():
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
     new_title = request.form['title']
+    if not new_title.strip():
+        flash_error("Title required.")
+        return redirect(url_for(".show", ID=ID))
     new_content = request.form['content']
     who = current_user.get_id()
     if new_title != k.title or new_content != k.content:
@@ -695,7 +676,7 @@ def save_form():
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
         k.title = new_title
         k.content = new_content
-        k.timestamp = datetime.now()
+        k.timestamp = utc_now_naive()
         k.status = 0
         k.save(who=who)
     if NEWID:
@@ -748,7 +729,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     include *just* the string and not the response object.
     """
     # logger.debug("kwargs: %s", request.args)
-    kwargs = kwargs or dict(((k, v) for k, v in request.args.items()))
+    kwargs = kwargs or dict(request.args.items())
     # logger.debug("kwargs: %s" , kwargs)
     if timestamp is None:
         # fetch and convert the ms timestamp to datetime
@@ -774,7 +755,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # the idea is to pass the keyword arguments of the knowl further along the chain
     # of links, in this case the title and the permalink!
     # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (k, v) for k, v in kwargs.items()))
+    kw_params = ', '.join(('%s="%s"' % (key, val) for key, val in kwargs.items()))
     logger.debug("kw_params: %s" % kw_params)
 
     # this is a very simple template based on no other template to render one single Knowl
@@ -792,11 +773,12 @@ def render_knowl(ID, footer=None, kwargs=None,
     #    (url_for('users.profile', userid=a['_id']), a['full_name'] or a['_id'] ))
     # authors = ', '.join(authors)
 
-    render_me = u"""\
+    render_me = """\
   {%% include "knowl-defs.html" %%}
   {%% from "knowl-defs.html" import KNOWL with context %%}
   {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
   {%% from "knowl-defs.html" import KNOWL_INC with context %%}
+  {%% from "knowl-defs.html" import DEFINES with context %%}
   {%% from "knowl-defs.html" import TEXT_DATA with context %%}
   {%% from "knowl-defs.html" import LINK_EXT with context %%}
 
@@ -901,8 +883,8 @@ def index():
             knowls.append(k)
 
     def first_char(k):
-        t = k['title']
-        if len(t) == 0 or t[0] not in string.ascii_letters:
+        t = k['title'].replace("$", "").replace("\\", "")
+        if len(t) == 0 or t[0] not in string.ascii_letters + string.digits:
             return "?"
         return t[0].upper()
 
@@ -913,11 +895,13 @@ def index():
         '''sort knowls, special chars at the end'''
         if cur_cat == "columns":
             return knowl['id']
-        title = knowl['title']
+        title = knowl['title'].replace("$", "").replace("\\", "")
         if title and title[0] in string.ascii_letters:
             return (0, title.lower())
-        else:
+        elif title and title[0] in string.digits:
             return (1, title.lower())
+        else:
+            return (2, title.lower())
 
     knowls = sorted(knowls, key=knowl_sort_key)
     from itertools import groupby

@@ -32,7 +32,7 @@ def import_all_data_fix_perm_primes(n, fileprefix=None, ferrors=None, test=True)
     nstr = str(n)
 
     if fileprefix is None:
-        fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr 
+        fileprefix = "/home/jvoight/Elements/ModFrmHilDatav1/Data/" + nstr
     ff = open(fileprefix + "/dir.tmp", 'r')
     files = ff.readlines()
     files = [f[:-1] for f in files]

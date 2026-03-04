@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import linecache
 from flask import url_for
@@ -9,17 +8,22 @@ from sage.all import EllipticCurve, QQ
 
 congruent_number_data_directory = os.path.expanduser('~/data/congruent_number_curves')
 
+
 def CNfilename(file_suffix):
     return os.path.join(congruent_number_data_directory, "CN.{}".format(file_suffix))
+
 
 def get_CN_data_old(fs, n):
     with open(CNfilename(fs)) as data:
         return data.readlines()[n-1].split()
 
+
 def get_CN_data_new(fs, n):
     return linecache.getline(CNfilename(fs), n).split()
 
+
 get_CN_data = get_CN_data_new
+
 
 def parse_gens_string(s):
     if s == '[]':
@@ -58,11 +62,11 @@ def get_congruent_number_data(n):
         XplusY = 2*(x+n).sqrt()
         XminusY = 2*(x-n).sqrt()
         X = (XplusY+XminusY)/2
-        Y = XplusY -X
-        assert X*X+Y*Y==Z*Z
+        Y = XplusY - X
+        assert X*X+Y*Y == Z*Z
         assert X*Y == 2*n
-        assert X>0 and Y>0 and Z>0
-        if X>Y:
+        assert X > 0 and Y > 0 and Z > 0
+        if X > Y:
             X,Y = Y,X
         info['triangle'] = {'X':X, 'Y':Y, 'Z':Z}
 

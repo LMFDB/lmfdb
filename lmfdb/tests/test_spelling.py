@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 
 
 from lmfdb.tests import LmfdbTest
-import unittest2
+import unittest
 
 
 class SpellingTest(LmfdbTest):
     # this tests the spelling on the website
 
-    @unittest2.skip("Tests for 'zeroes' should be 'zeros', but fails at the moment because of other errors")
+    @unittest.skip("Tests for 'zeroes' should be 'zeros', but fails at the moment because of other errors")
     def test_zeroes_spelling(self):
         """
             'zeroes' should be 'zeros'
@@ -19,7 +18,7 @@ class SpellingTest(LmfdbTest):
                 try:
                     tc = self.app.test_client()
                     res = tc.get(rule.rule)
-                    assert not ("zeroes" in res.get_data(as_text=True)), "rule %s failed " % rule
+                    assert "zeroes" not in res.get_data(as_text=True), "rule %s failed " % rule
                 except KeyError:
                     pass
 

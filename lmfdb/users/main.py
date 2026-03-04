@@ -1,4 +1,3 @@
-# -*- encoding: utf-8 -*-
 # this holds all the flask-login specific logic (+ url mapping an rendering templates)
 # for the user management
 # author: harald schilly <harald.schilly@univie.ac.at>
@@ -6,11 +5,11 @@
 import flask
 from functools import wraps
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
-from flask_login import login_required, login_user, current_user, logout_user, LoginManager, __version__ as FLASK_LOGIN_VERSION
-from distutils.version import StrictVersion
-from lmfdb.utils import flash_error
+from flask_login import login_required, login_user, current_user, logout_user, LoginManager
+from lmfdb.utils import flash_error, to_dict
+from lmfdb.utils.uploader import Uploader
+from lmfdb.logger import logger
 from markupsafe import Markup
 
 from lmfdb import db
@@ -18,15 +17,12 @@ assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-logger = make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
 
 login_manager = LoginManager()
 
-# We log a warning if the version of flask-login is less than FLASK_LOGIN_LIMIT
-FLASK_LOGIN_LIMIT = '0.3.0'
 from .pwdmanager import userdb, LmfdbUser, LmfdbAnonymousUser
 
 base_url = "http://beta.lmfdb.org"
@@ -64,10 +60,7 @@ def ctx_proc_userdata():
         userdata['userid'] = 'anon' if current_user.is_anonymous() else current_user._uid
         userdata['username'] = 'Anonymous' if current_user.is_anonymous() else current_user.name
 
-        if StrictVersion(FLASK_LOGIN_VERSION) > StrictVersion(FLASK_LOGIN_LIMIT):
-            userdata['user_is_authenticated'] = current_user.is_authenticated
-        else:
-            userdata['user_is_authenticated'] = current_user.is_authenticated()
+        userdata['user_is_authenticated'] = current_user.is_authenticated
 
         userdata['user_is_admin'] = current_user.is_admin()
         userdata['user_can_review_knowls'] = current_user.is_knowl_reviewer()
@@ -103,8 +96,8 @@ def list():
     users = userdb.get_user_list()
     # attempt to sort by last name
     users = sorted(users, key=lambda x: x[1].strip().split(" ")[-1].lower())
-    if len(users)%COLS:
-        users += [{} for i in range(COLS-len(users)%COLS)]
+    if len(users) % COLS:
+        users += [{} for i in range(COLS-len(users) % COLS)]
     n = len(users)//COLS
     user_rows = tuple(zip(*[users[i*n: (i + 1)*n] for i in range(COLS)]))
     bread = base_bread()
@@ -231,9 +224,9 @@ def register_new():
 @login_page.route("/register/new/<int:N>")
 @admin_required
 def register(N=10):
-    N = 100 if N > 100 else N
+    N = min(N, 100)
     import random
-    tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
+    tokens = [str(random.randrange(int(1e20), int(1e21))) for _ in range(N)]
     userdb.create_tokens(tokens)
     urls = ["%s%s" % (base_url, url_for(".register_token", token=t)) for t in tokens]
     resp = make_response('\n'.join(urls))
@@ -325,7 +318,6 @@ def admin():
 @app.route("/restartserver")
 @admin_required
 def restart():
-    import sys
     from subprocess import Popen, PIPE
     from urllib.parse import urlparse
     urlparts = urlparse(request.url)
@@ -336,10 +328,41 @@ def restart():
     else:
         command = None
     if command:
-        if sys.version_info[0] == 3:
-            out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
-        else:
-            out = Popen(command, stdout=PIPE).communicate()[0]
+        out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
         return out.replace('\n', '<br>')
     else:
         return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
+
+
+class Reviewer(Uploader):
+    """
+    This uploader is used to collect UploadSection objects from different sections of the LMFDB that use them.
+    """
+    def __init__(self):
+        from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC, MultiKnowl
+        super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
+
+
+@login_page.route("/uploads", methods=["GET", "POST"])
+@login_required
+def review_uploads():
+    uploader = Reviewer()
+    reviewer = current_user.is_knowl_reviewer()
+    if request.method == "POST":
+        info = to_dict(request.form)
+        uploader.review(info, reviewer, current_user.id)
+    else:
+        info = to_dict(request.args)
+
+    user_shown = info.get("user_shown", "" if reviewer else current_user.id)
+    reviewing = (reviewer and not user_shown)
+    results, statuses = uploader.show_uploads(info, reviewing, user_shown)
+
+    return render_template(
+        "user-uploads.html",
+        title="Review data uploads",
+        uploader=uploader,
+        statuses=statuses,
+        results=results,
+        user_shown=user_shown,
+    )

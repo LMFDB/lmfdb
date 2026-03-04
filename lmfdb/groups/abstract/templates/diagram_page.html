@@ -52,6 +52,11 @@
   {
     mytoggleheights($("#orderForHeight").prop('checked'));
   }
+  function togglevert()
+  {
+    mytogglevert($("#flipVert").prop('checked'));
+  }
+
 </script>
 
 <script type="text/javascript" src="{{ url_for('static', filename='graphs/graph.js') }}"></script>
@@ -64,18 +69,8 @@
 </canvas>
 
 <script type="text/javascript">
-{{ info.dojs|safe }}
-
-{% if info.type == "aut" %}
-  whoisshowing=1;
-  type="A";
-  {% else %}
-  whoisshowing=0;
-  type="C";
-{% endif %}
-  sdiagram.newgraph(glist[whoisshowing]);
-  sdiagram.setSize();
-  sdiagram.draw();
+  {{ info.dojs|safe }}
+  show_info("{{ info.style }}");
 </script>
 
 <div>
@@ -93,6 +88,11 @@ Subgroups can be dragged in all directions?
 Each subgroup order has its own level?
 <input type="checkbox" id="orderForHeight" onchange="toggleheight()" />
 </div>
+<div>
+Flip vertically (Galois theory view)?
+<input type="checkbox" id="orderForHeight" onchange="togglevert()" />
+</div>
+
 
 <h4>Subgroup information</h4>
 <div class="selectedsub">

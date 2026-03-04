@@ -5,7 +5,7 @@ from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
 from .utilities import format_percentage
 from .web_display import display_knowl
-from lmfdb.backend.utils import KeyedDefaultDict, range_formatter
+from psycodict.utils import KeyedDefaultDict, range_formatter
 
 class formatters():
     @classmethod
@@ -291,7 +291,7 @@ class totaler():
                         # Make the sums available for the column proportions
                         stats._total_grid[i].append({'count':overall})
                 proportion = _format_percentage(total, overall) if col_proportions else ''
-                D = {'count':total, 'query':query, 'proportion':proportion}
+                D = {'count':total, 'query':query, 'proportion':proportion, 'extraclass':'totalcol', 'propclass':'totalcol'}
                 row.append(D)
         if col_counts:
             row_headers.append(col_total_label)
@@ -300,8 +300,12 @@ class totaler():
             row = []
             for i, col in enumerate(zip(*grid)):
                 # We've already totaled rows, so have to skip if we don't want the corner
-                if not corner_count and i == num_cols:
-                    break
+                if i == num_cols:
+                    if not corner_count:
+                        break
+                    extraclasses = {'extraclass': 'totalcorner', 'propclass': 'totalcol'}
+                else:
+                    extraclasses = {'extraclass': 'totalrow'}
                 total = sum(elt['count'] for elt in col)
                 if total == 0:
                     query = None
@@ -313,6 +317,7 @@ class totaler():
                     overall = sum(D['count'] for D in total_grid_cols[i])
                 proportion = _format_percentage(total, overall) if (col_proportions and i != num_cols or corner_prop and i == num_cols) else ''
                 D = {'count':total, 'query':query, 'proportion':proportion}
+                D.update(extraclasses)
                 row.append(D)
             grid.append(row)
         #if corner_count and row_counts and not col_counts:
@@ -475,14 +480,14 @@ class StatsDisplay(UniqueRepresentation):
         - ``table`` -- a ``PostgresStatsTable``
         - ``cols`` -- a list of column names
         - ``constraint`` -- a dictionary giving constraints on other columns.
-            Only rows satsifying those constraints are included in the counts.
+            Only rows satisfying those constraints are included in the counts.
         - ``avg`` -- whether to include the average value of cols[0]
             (cols must be of length 1 with no bucketing)
         - ``buckets`` -- a dictionary whose keys are columns, and whose values are lists of strings such as '5' or '2-7'.
         - ``totaler`` -- (1d-case) a query giving the denominator for the proportions.
                       -- (2d-case) a function taking inputs the grid, row headers, col headers
                          and this object, which adds some totals to the grid
-        - ``proprotioner`` -- a function for adding proportions
+        - ``proportioner`` -- a function for adding proportions
             See examples at the top of display_stats.py.
         - ``baseurl_func`` -- a base url, to which url_for is applied and then col=value tags are appended.
             Defaults to the url for ``self.baseurl_func``.
@@ -539,6 +544,7 @@ class StatsDisplay(UniqueRepresentation):
             col = cols[0]
             split_list = self._split_lists[col]
             headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
+            old_headers = headers  ## Preserve the original headers for later lookups
             if not buckets:
                 if show_total or proportioner is None:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
@@ -552,8 +558,13 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 raise ValueError("Bucket keys must be subset of columns")
             counts = [counts[val] for val in headers]
-            for D, val in zip(counts, headers):
+
+            for D, val, old_val in zip(counts, headers, old_headers):
                 D['value'] = val
+                if 'addl_row_title' in kwds.keys():
+                    addl_row_title = kwds['addl_row_title']
+                    D['value2'] = formatter[addl_row_title](old_val)
+
             if proportioner is None or show_total:
                 self._overall = total
             if proportioner is None or isinstance(proportioner, dict):
@@ -570,7 +581,7 @@ class StatsDisplay(UniqueRepresentation):
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
-                    total['value'] = r'\(\mathrm{avg}\ %.2f\)'%avg
+                    total['value'] = r'\(\mathrm{avg}\ %.2f\)' % avg
                 counts.append(total)
             return {'counts': counts}
         elif len(cols) == 2:
@@ -629,8 +640,12 @@ class StatsDisplay(UniqueRepresentation):
         data = self.display_data(**attr)
         attr['intro'] = attr.get('intro',[])
         data['attribute'] = attr
-        if len(cols) == 1:
+        # issue when no constraints are included yet
+        if len(cols) == 0:
+            return data
+        if 'row_title' not in attr:
             attr['row_title'] = self._short_display[cols[0]]
+        if len(cols) == 1:
             max_rows = attr.get('max_rows',6)
             counts = data['counts']
             rows = [counts[i:i+10] for i in range(0, len(counts), 10)]
@@ -641,8 +656,8 @@ class StatsDisplay(UniqueRepresentation):
             else:
                 data['divs'] = [(rows, "short_table", "none")]
         elif len(cols) == 2:
-            attr['row_title'] = self._short_display[cols[0]]
-            attr['col_title'] = self._short_display[cols[1]]
+            if 'col_title' not in attr:
+                attr['col_title'] = self._short_display[cols[1]]
         return data
 
     @lazy_attribute
@@ -737,7 +752,7 @@ class StatsDisplay(UniqueRepresentation):
                 raise
         info["d"] = self.prep(attr)
         info["stats"] = self
-        info["get_bucket"] = (lambda i: info.get("buckets%s"%i, ""))
-        info["get_col"] = (lambda i: info.get("col%s"%i, "none"))
-        info["get_total"] = (lambda i: info.get("totals%s"%i, False))
+        info["get_bucket"] = (lambda i: info.get("buckets%s" % i, ""))
+        info["get_col"] = (lambda i: info.get("col%s" % i, "none"))
+        info["get_total"] = (lambda i: info.get("totals%s" % i, False))
         info["search_type"] = "DynStats"

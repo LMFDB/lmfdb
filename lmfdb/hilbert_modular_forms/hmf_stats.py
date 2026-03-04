@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma
 from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
-from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from sage.misc.cachefunc import cached_method
 
-logger = make_logger("hmf")
 
 class HMFstats(StatsDisplay):
     """
@@ -63,12 +60,12 @@ class HMFstats(StatsDisplay):
     def counts(self):
         counts = {}
 
-        counts['nforms']  = self.nforms
-        counts['nforms_c']  = comma(self.nforms)
+        counts['nforms'] = self.nforms
+        counts['nforms_c'] = comma(self.nforms)
 
         attrs = ["degree", "discriminant", "label"]
         fields = list(db.hmf_fields.search({}, attrs, sort=attrs))
-        degrees = sorted(set(F["degree"] for F in fields))
+        degrees = sorted({F["degree"] for F in fields})
         by_deg = {d: [F for F in fields if F["degree"] == d] for d in degrees}
         counts["degrees"] = degrees
         counts["nfields"] = len(fields)

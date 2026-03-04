@@ -33,7 +33,7 @@ class SymmetricPowerLFunction(SageObject):
         from .sympowlmfdb import sympowlmfdb
         bad_primes, conductor, root_number = sympowlmfdb.local_data(E, m)
         self.bad_prime_euler = {}
-        self.bad_primes = [i for (i, _) in bad_primes]
+        self.bad_primes = [i for i, _ in bad_primes]
         for j in bad_primes:
             a, b = j
             self.bad_prime_euler[a] = b
@@ -137,7 +137,7 @@ def symmetricEulerFactor(E, m, p):
 
     bad_primes, conductor, root_number = sympowlmfdb.local_data(E, m)
     bad_P_poly = {}
-    bad_P_list = [i for (i, _) in bad_primes]
+    bad_P_list = [i for i, _ in bad_primes]
     for j in bad_primes:
         a, b = j
         bad_P_poly[a] = b
