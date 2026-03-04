@@ -1,11 +1,9 @@
 
 from mpmath import nstr, inf
 from sage.all import floor, log
-from lmfdb.logger import make_logger
 from flask import render_template, request, url_for, Blueprint, Response
 
 ZetaZeros = Blueprint("zeta zeros", __name__, template_folder="templates")
-logger = make_logger(ZetaZeros)
 
 from .platt_zeros import zeros_starting_at_N, zeros_starting_at_t
 

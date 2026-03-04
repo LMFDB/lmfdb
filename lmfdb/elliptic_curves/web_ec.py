@@ -9,7 +9,6 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
-from lmfdb.logger import make_logger
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, lazy_attribute, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 
@@ -67,8 +66,6 @@ def class_cremona_label(conductor, iso_class):
 
 def cremona_label_to_lmfdb_label(clab):
     return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
-
-logger = make_logger("ec")
 
 # S_LABEL_RE assumes surjective determinant, but we need extended Slabels for EC/NF
 # This can be removed if/when we add modular curves with non-surjective determinant to the modular curves database
@@ -329,7 +326,6 @@ class WebEC():
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         self.make_curve()
         assert 'ainvs' in self.data
@@ -627,6 +623,9 @@ class WebEC():
         if self.cm == -4:
             self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
         self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
+
+        if db.ec_nfcurves.count({'q_curve':True,'base_change':{'$contains':self.lmfdb_label}}) > 0:
+            self.friends.append(('Base changes ', url_for('ecnf.index', base_change_label=self.lmfdb_label)))
 
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
