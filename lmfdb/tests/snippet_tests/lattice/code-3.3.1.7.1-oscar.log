@@ -10,8 +10,8 @@ with gram matrix
 julia> rank(L)
 3
 
-julia> signature_tuple(L)
-(3, 0, 0)
+julia> signature_tuple(L)[[1,3]]
+(3, 0)
 
 julia> det(L)
 1
@@ -19,10 +19,14 @@ julia> det(L)
 julia> discriminant(L)
 -1
 
-julia> iseven(L)
+julia> is_even(L)
 false
 
-julia> automorphism_group_order(L)
+julia> isometry_group(L)
+Matrix group of degree 3
+  over rational field
+
+julia> order(isometry_group(L))
 48
 
 julia> minimum(L)
@@ -39,6 +43,9 @@ Bilinear value module: Q/Z
 Quadratic value module: Q/Z
 Gram matrix quadratic form: 
 0 by 0 empty matrix
+
+julia> j = last(image_in_Oq(L)); divexact(order(codomain(j)), order(domain(j)))
+1
 
 julia> gram_matrix(L)
 [1   0   0]
@@ -57,5 +64,24 @@ julia> det(dual(L))
 
 julia> kissing_number(dual(L))
 6
+
+julia> irreducible_components(L)
+3-element Vector{ZZLat}:
+ Integer lattice of rank 1 and degree 3
+ Integer lattice of rank 1 and degree 3
+ Integer lattice of rank 1 and degree 3
+
+julia> even_sublattice(L)
+Integer lattice of rank 3 and degree 3
+with gram matrix
+[4   2   2]
+[2   2   1]
+[2   1   2]
+
+julia> shortest_vectors(L)
+3-element Vector{Vector{ZZRingElem}}:
+ [0, 0, 1]
+ [0, 1, 0]
+ [1, 0, 0]
 
 julia> 

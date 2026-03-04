@@ -13,7 +13,6 @@ from lmfdb.utils import (
     TextBox,
     TextBoxWithSelect,
     SelectBox,
-    SneakyTextBox,
     YesNoBox,
     YesNoMaybeBox,
     CountBox,
@@ -41,7 +40,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import (
-    SearchColumns, MathCol, FloatCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
+    SearchColumns, MathCol, FloatCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol,
 )
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
@@ -54,6 +53,7 @@ from lmfdb.shimura_curves.web_curve import (
     WebShimCurve, get_bread, canonicalize_name, name_to_latex, factored_conductor,
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
 )
+from lmfdb.modular_curves.main import CP_LABEL_GENUS_RE
 
 coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+\.[a-z]+\.\d+"
 fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+\.\d+\.[a-z]+\.\d+\.\d+"
@@ -875,7 +875,7 @@ ratpoint_columns = SearchColumns([
 ])
 
 def ratpoint_postprocess(res, info, query):
-    labels = list({rec["curve_label"] for rec in res})
+    #labels = list({rec["curve_label"] for rec in res})
     return res
 
 @search_wrap(
