@@ -1,11 +1,9 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 characters_page = Blueprint("characters", __name__, template_folder='templates',
     static_folder="static")
-logger = make_logger(characters_page)
 
 
 @characters_page.context_processor

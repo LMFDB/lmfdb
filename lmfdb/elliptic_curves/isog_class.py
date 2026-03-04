@@ -1,6 +1,5 @@
 from flask import url_for
 from lmfdb.utils import make_graph, setup_isogeny_graph, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
-from lmfdb.elliptic_curves import ec_logger
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
 from lmfdb.number_fields.web_number_field import field_pretty
 from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
@@ -20,7 +19,6 @@ class ECisog_class():
 
             - dbdata: the data from the database
         """
-        ec_logger.debug("Constructing an instance of ECisog_class")
         self.__dict__.update(dbdata)
         self.make_class()
 
@@ -97,6 +95,7 @@ class ECisog_class():
                 c['optimal'] = None
                 c['optimality_known'] = False
         for c in self.curves:
+            c.setdefault('degree', 0)
             c['ai'] = c['ainvs']
             c['curve_url_lmfdb'] = url_for(".by_ec_label", label=c['lmfdb_label'])
             c['curve_url_cremona'] = url_for(".by_ec_label", label=c['Clabel']) if self.conductor < CREMONA_BOUND else "N/A"
@@ -216,4 +215,3 @@ class ECisog_class():
                 self.has_lfunction = False
         else:
             self.has_lfunction = False
-
