@@ -20,7 +20,7 @@ from sage.env import SAGE_VERSION
 from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
-from .logger import logger_file_handler, critical
+from .logger import critical
 from .homepage import load_boxes, contribs
 
 LMFDB_VERSION = "LMFDB Release 1.2.1"
@@ -79,8 +79,6 @@ def is_running():
 # Global app configuration #
 ############################
 
-
-app.logger.addHandler(logger_file_handler())
 
 # If the debug toolbar is installed then use it
 if app.debug:
@@ -535,6 +533,12 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
+@app.route("/license")
+def license():
+    t = "LMFDB Data and Code Licenses"
+    b = [("LMFDB Licenses", " ")]
+    return render_template('license.html', title=t, bread=b)
+
 
 @app.route("/contact")
 def contact():
@@ -622,6 +626,54 @@ def css():
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
+
+
+@app.route("/CodeCoverage")
+def code_coverage():
+    import glob
+    import yaml
+    lmfdb_dir = os.path.dirname(os.path.abspath(__file__))
+    yaml_files = sorted(glob.glob(os.path.join(lmfdb_dir, "**/code*.yaml"), recursive=True))
+    metadata_keys = {'prompt', 'logo', 'comment', 'not-implemented', 'frontmatter', 'snippet_test', 'top_matter'}
+    cas_display = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+    all_cas = set()
+    modules = []
+    for yf in yaml_files:
+        with open(yf) as f:
+            data = yaml.safe_load(f)
+        if not data:
+            continue
+        cas_list = list(data.get('prompt', {}).keys())
+        all_cas.update(cas_list)
+        sections = {k: v for k, v in data.items() if k not in metadata_keys and isinstance(v, dict)}
+        total = len(sections)
+        per_cas = {}
+        for cas in cas_list:
+            per_cas[cas] = sum(1 for s in sections.values() if cas in s)
+        rel = os.path.relpath(yf, lmfdb_dir)
+        module_name = rel.split(os.sep)[0].replace('_', ' ').capitalize()
+        basename = os.path.basename(yf)
+        if basename != 'code.yaml':
+            suffix = basename.replace('code-', '').replace('code', '').replace('.yaml', '')
+            module_name += f' ({suffix})'
+        modules.append({'name': module_name, 'file': rel, 'total': total, 'per_cas': per_cas, 'cas_list': cas_list})
+    cas_order = [c for c in ['sage', 'pari', 'magma', 'oscar', 'gap'] if c in all_cas]
+    totals = {}
+    grand_total = 0
+    for cas in cas_order:
+        count = sum(m['per_cas'].get(cas, 0) for m in modules if cas in m['cas_list'])
+        applicable = sum(m['total'] for m in modules if cas in m['cas_list'])
+        totals[cas] = (count, applicable)
+    grand_total = sum(m['total'] for m in modules)
+    bread = [("Code Coverage", '')]
+    return render_template("code_coverage.html",
+                           title="Code Snippet Coverage",
+                           bread=bread,
+                           modules=modules,
+                           cas_order=cas_order,
+                           cas_display=cas_display,
+                           totals=totals,
+                           grand_total=grand_total)
 
 
 ##############################

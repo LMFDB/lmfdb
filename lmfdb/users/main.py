@@ -5,11 +5,11 @@
 import flask
 from functools import wraps
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.utils.uploader import Uploader
+from lmfdb.logger import logger
 from markupsafe import Markup
 
 from lmfdb import db
@@ -17,7 +17,6 @@ assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-logger = make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
@@ -227,7 +226,7 @@ def register_new():
 def register(N=10):
     N = min(N, 100)
     import random
-    tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
+    tokens = [str(random.randrange(int(1e20), int(1e21))) for _ in range(N)]
     userdb.create_tokens(tokens)
     urls = ["%s%s" % (base_url, url_for(".register_token", token=t)) for t in tokens]
     resp = make_response('\n'.join(urls))

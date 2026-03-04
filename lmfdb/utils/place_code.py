@@ -109,6 +109,10 @@ class CodeSnippet():
         for key in ['all', lang, 'rest']:
             frmt += codefrmt[key] if key in codefrmt else ""
 
+            # Include message to load Oscar package (if lang is Oscar)
+            if key == 'oscar':
+                frmt += 'If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'
+
         frmt = frmt.replace('\n', '\n' + cmt + " ", frmt.count("\n")-1)
         return frmt.format(lang=self.full_names[lang], label=label) + "\n"
 

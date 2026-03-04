@@ -1,0 +1,26 @@
+{# Shared Cytoscape.js scripts for interactive isogeny graphs.
+   Set graph_layouts before including this template, then call:
+     initIsogenyGraph('container-id', elementsJSON, layoutsList);
+
+   To add layout extensions, load the required JS here (guarded by
+   a check on graph_layouts) and register the layout in the
+   LAYOUT_REGISTRY in isogeny_graph.js.
+#}
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js"></script>
+{% if 'Elk-stress' in graph_layouts %}
+<script src="https://cdn.jsdelivr.net/npm/elkjs/lib/elk.bundled.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-elk/dist/cytoscape-elk.js"></script>
+{% endif %}
+{% if 'Klay' in graph_layouts %}
+<script src="https://cdn.jsdelivr.net/npm/klayjs@0.4.1/klay.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-klay@3/cytoscape-klay.min.js"></script>
+{% endif %}
+{% if 'Dagre' in graph_layouts %}
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2/cytoscape-dagre.js"></script>
+{% endif %}
+{% if 'Cola' in graph_layouts %}
+<script src="https://cdn.jsdelivr.net/npm/webcola/WebCola/cola.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-cola@2/cytoscape-cola.min.js"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='isogeny_graph.js') }}"></script>
