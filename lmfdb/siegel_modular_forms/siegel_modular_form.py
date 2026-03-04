@@ -29,7 +29,7 @@ from lmfdb.api import datapage
 from lmfdb.siegel_modular_forms.web_newform import (
     WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
     quad_field_knowl, cyc_display, field_display_gen)
-from lmfdb.siegel_modular_forms import smf
+from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms.web_space import (
     aut_rep_type_sort_key, family_str_to_char, family_char_to_str,
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
@@ -176,7 +176,7 @@ def set_info_funcs(info):
     info['download_spaces'] = lambda results: any(space['dim'] > 1 for space in results)
     info['bigint_knowl'] = bigint_knowl
 
-@smf.route("/")
+@smf_page.route("/")
 def index():
     # print("routed to index")
     info = to_dict(request.args, search_array=SMFSearchArray())
@@ -214,21 +214,21 @@ def index():
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
-@smf.route("/random/")
+@smf_page.route("/random/")
 @redirect_no_cache
 def random_form():
     # print("routed to random")
     label = db.smf_newforms.random()
     return url_for_label(label)
 
-@smf.route("/random_space/")
+@smf_page.route("/random_space/")
 @redirect_no_cache
 def random_space():
     # print("routed to random_space")
     label = db.smf_newspaces.random()
     return url_for_label(label)
 
-@smf.route("/interesting_newforms")
+@smf_page.route("/interesting_newforms")
 def interesting_newforms():
     # print("routed to interesting_newforms")
     return interesting_knowls(
@@ -241,7 +241,7 @@ def interesting_newforms():
         learnmore=learnmore_list()
     )
 
-@smf.route("/interesting_spaces")
+@smf_page.route("/interesting_spaces")
 def interesting_spaces():
     # print("routed to interesting_spaces")
     return interesting_knowls(
@@ -429,7 +429,7 @@ def render_full_gamma1_space_webpage(label):
                            title=space.title,
                            friends=space.friends)
 
-@smf.route("/data/<label>")
+@smf_page.route("/data/<label>")
 def mf_data(label):
     # print("routed to mf_data")
     slabel = label.split(".")
@@ -491,7 +491,7 @@ def check_valid_weight(weight, degree):
         return (False, "Invalid weight: not integers")
     return (True, "")
 
-@smf.route("/<int:degree>/")
+@smf_page.route("/<int:degree>/")
 def by_url_degree(degree):
     # print("routed to by_url_degree")
     if not POSINT_RE.match(str(degree)):
@@ -507,7 +507,7 @@ def by_url_degree(degree):
         info['degree'] = degree
     return newform_search(info)
 
-@smf.route("/<int:degree>/<family>/")
+@smf_page.route("/<int:degree>/<family>/")
 def by_url_family_label(degree, family):
     # print("routed to by_url_family_label")
     valid_family = check_valid_family(family)
@@ -519,7 +519,7 @@ def by_url_family_label(degree, family):
     info = to_dict(request.args, search_array=SMFSearchArray())
     return newform_search(info)
 
-@smf.route("/<int:degree>/<family>/<int:level>/")
+@smf_page.route("/<int:degree>/<family>/<int:level>/")
 def by_url_level(degree, family, level):
     # print("routed to by_url_level")
     valid_family = check_valid_family(family)
@@ -534,7 +534,7 @@ def by_url_level(degree, family, level):
         info['level'] = level
     return newform_search(info)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/")
+@smf_page.route("/<int:degree>/<family>/<int:level>/<weight>/")
 def by_url_full_space_label(degree, family, level, weight):
     # print("routed to by_url_full_space_label")
     valid_family = check_valid_family(family)
@@ -549,7 +549,7 @@ def by_url_full_space_label(degree, family, level, weight):
     info = to_dict(request.args, search_array=SMFSearchArray())
     return newform_search(info)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
+@smf_page.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/")
 def by_url_space_label(degree, family, level, weight, char_orbit_label):
     # raise ValueError("routed to by_url_space_label")
     valid_weight = check_valid_weight(weight, degree)
@@ -558,7 +558,7 @@ def by_url_space_label(degree, family, level, weight, char_orbit_label):
     label = ".".join([str(w) for w in [degree, family, level, weight, char_orbit_label]])
     return render_space_webpage(label)
 
-@smf.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
+@smf_page.route("/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
 def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_orbit):
     # print("routed to by_url_newform_label")
     valid_weight = check_valid_weight(weight, degree)
@@ -568,7 +568,7 @@ def by_url_newform_label(degree, family, level, weight, char_orbit_label, hecke_
     return render_newform_webpage(label)
 
 # Utility redirect for bread and links from embedding table
-@smf.route("/<int:degree>/<family>/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
+@smf_page.route("/<int:degree>/<family>/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<embedding_label>/")
 def by_url_newform_conrey5(degree, family, level, weight, char_orbit_label, hecke_orbit, embedding_label):
     # print("routed to by_url_newform_conrey5")
     if embedding_label.count('.') != 1:
@@ -579,7 +579,7 @@ def by_url_newform_conrey5(degree, family, level, weight, char_orbit_label, heck
     return redirect(url_for("smf.by_url_embedded_newform_label", level=level, weight=weight, char_orbit_label=char_orbit_label, hecke_orbit=hecke_orbit, conrey_index=conrey_index, embedding=embedding), code=301)
 
 # Embedded modular form
-@smf.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
+@smf_page.route("/<int:level>/<int:weight>/<char_orbit_label>/<hecke_orbit>/<int:conrey_index>/<int:embedding>/")
 def by_url_embedded_newform_label(level, weight, char_orbit_label, hecke_orbit, conrey_index, embedding):
     # print("routed to by_url_embedded_newform_label")
     if conrey_index <= 0 or embedding <= 0:
@@ -693,33 +693,33 @@ def jump_box(info):
 #                           bread=bread,
 #                           info=info)
 
-@smf.route("/download_qexp/<label>")
+@smf_page.route("/download_qexp/<label>")
 def download_qexp(label):
     # print("routed to download_qexp")
     return SMF_download().download_qexp(label, lang='sage')
 
-@smf.route("/download_traces/<label>")
+@smf_page.route("/download_traces/<label>")
 def download_traces(label):
     # print("routed to download_traces")
     return SMF_download().download_traces(label)
 
-@smf.route("/download_newform_to_magma/<label>")
+@smf_page.route("/download_newform_to_magma/<label>")
 def download_newform_to_magma(label):
     # print("routed to download_newform_to_magma")
     return SMF_download().download_newform_to_magma(label)
 
-@smf.route("/download_newform/<label>")
+@smf_page.route("/download_newform/<label>")
 def download_newform(label):
     # print("routed to download_newform")
     return SMF_download().download_newform(label)
 
-@smf.route("/download_embedded_newform/<label>")
+@smf_page.route("/download_embedded_newform/<label>")
 def download_embedded_newform(label):
     # print("routed to download_embedded_newform")
     return SMF_download().download_embedding(label)
 
 
-@smf.route("/download_newspace/<label>")
+@smf_page.route("/download_newspace/<label>")
 def download_newspace(label):
     # print("routed to download_newspace")
     return SMF_download().download_newspace(label)
@@ -749,7 +749,7 @@ def download_newspace(label):
 #                           info=info
 #                           )
 
-@smf.route("/download_full_space/<label>")
+@smf_page.route("/download_full_space/<label>")
 def download_full_space(label):
     # print("routed to download_full_space")
     return SMF_download().download_full_space(label)
@@ -1402,7 +1402,7 @@ def space_search(info, query):
     print(info)
     set_info_funcs(info)
 
-@smf.route("/Source")
+@smf_page.route("/Source")
 def how_computed_page():
     # print("routed to how_computed_page")
     t = 'Source of Siegel modular form data'
@@ -1412,7 +1412,7 @@ def how_computed_page():
                            bread=get_bread(other='Source'),
                            learnmore=learnmore_list_remove('Source'))
 
-@smf.route("/Completeness")
+@smf_page.route("/Completeness")
 def completeness_page():
     # print("routed to completeness_page")
     t = 'Completeness of Siegel modular form data'
@@ -1420,7 +1420,7 @@ def completeness_page():
                            bread=get_bread(other='Completeness'),
                            learnmore=learnmore_list_remove('Completeness'))
 
-@smf.route("/Labels")
+@smf_page.route("/Labels")
 def labels_page():
     # print("routed to labels_page")
     t = 'Labels for Siegel modular forms'
@@ -1428,7 +1428,7 @@ def labels_page():
                            bread=get_bread(other='Labels'),
                            learnmore=learnmore_list_remove('labels'))
 
-@smf.route("/Reliability")
+@smf_page.route("/Reliability")
 def reliability_page():
     # print("routed to reliability_page")
     t = 'Reliability of Siegel modular form data'
@@ -1541,13 +1541,13 @@ class SMF_stats(StatsDisplay):
     # we stick to what we have
     dynamic_cols = ['level', 'weight', 'dim']
 
-@smf.route("/stats")
+@smf_page.route("/stats")
 def statistics():
     # print("routed to statistics")
     title = 'Siegel modular forms: Statistics'
     return render_template("display_stats.html", info=SMF_stats(), title=title, bread=get_bread(other='Statistics'), learnmore=learnmore_list())
 
-@smf.route("/dynamic_stats")
+@smf_page.route("/dynamic_stats")
 def dynamic_statistics():
     # print("routed to dynamic_statistics")
     info = to_dict(request.args, search_array=SMFSearchArray())
