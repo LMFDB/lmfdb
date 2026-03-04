@@ -685,7 +685,7 @@ class WebShimCurve(WebObj):
 
     def show_torsion(self):
         if self.torsion:
-            return r"$"+"\oplus".join(["\Z / %s \Z" % t for t in self.torsion]) + "$"
+            return r"$"+r"\oplus".join([r"\Z / %s \Z" % t for t in self.torsion]) + "$"
         return "trivial"
 
     def _curvedata(self, query, flip=False):
@@ -898,18 +898,6 @@ class WebShimCurve(WebObj):
                     desc = r'This Shimura curve has infinitely many rational points but none with conductor small enough to be contained within the <a href="%s">database of elliptic curves over $\Q$</a>.' % url_for('ec.rational_elliptic_curves')
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 if curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
-                    desc = 'This Shimura curve has rational points, including %s, %s and <a href="%s">%s</a>.' % (
-                        pluralize(len(curve.cm_discriminants), "rational CM point"),
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
-                        pluralize(curve.known_degree1_noncm_points, "known non-CM point"))
-                elif curve.cm_discriminants:
-                    desc = 'This Shimura curve has %s and %s, but no other known rational points.' % (
-                        pluralize(len(curve.cm_discriminants), "rational CM point"))
-                elif curve.known_degree1_noncm_points > 0:
-                    desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>.' % (
-                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
-                        pluralize(curve.known_degree1_noncm_points, "known non-CM point"))
-                elif curve.cm_discriminants and curve.known_degree1_noncm_points > 0:
                     desc = 'This Shimura curve has rational points, including %s and <a href="%s">%s</a>.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"),
                         url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
@@ -917,10 +905,10 @@ class WebShimCurve(WebObj):
                 elif curve.cm_discriminants:
                     desc = 'This Shimura curve has %s but no other known rational points.' % (
                         pluralize(len(curve.cm_discriminants), "rational CM point"))
-                elif curve.known_degree1_points > 0:
-                    desc = 'This Shimura curve has <a href="%s">%s</a> but no rational CM points.' % (
-                        url_for('.low_degree_points', curve=curve.label, degree=1),
-                        pluralize(curve.known_degree1_points, "known rational point"))
+                elif curve.known_degree1_noncm_points > 0:
+                    desc = 'This Shimura curve has rational points, including <a href="%s">%s</a>.' % (
+                        url_for('.low_degree_points', curve=curve.label, degree=1, cm='noCM'),
+                        pluralize(curve.known_degree1_noncm_points, "known non-CM point"))
         elif curve.obstructions is not None:
             if curve.obstructions == [0]:
                 desc = 'This Shimura curve has no real points, and therefore no rational points.'
