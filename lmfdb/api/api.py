@@ -8,9 +8,10 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma
 from lmfdb.utils.datetime_utils import utc_now_naive
+from lmfdb.logger import logger
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
-from lmfdb.api import api_page, api_logger
+from lmfdb.api import api_page
 
 
 buffer = memoryview
@@ -221,7 +222,7 @@ def api_query(table, id=None):
         if offset:
             return apierror("Cannot include offset with id")
         single_object = True
-        api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
+        logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
         else:

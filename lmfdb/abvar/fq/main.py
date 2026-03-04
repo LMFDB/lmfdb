@@ -7,7 +7,6 @@ from sage.combinat.subset import Subsets
 from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
-from lmfdb.logger import make_logger
 from lmfdb.utils import (
     to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
@@ -25,8 +24,6 @@ from lmfdb.utils import redirect_no_cache, SearchButton
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, CheckCol, CheckMaybeCol
 from lmfdb.abvar.fq.download import AbvarFq_download
 from lmfdb.utils.search_parsing import parse_primes
-
-logger = make_logger("abvarfq")
 
 #########################
 #    Top level

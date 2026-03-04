@@ -7,77 +7,100 @@
 <h2> {{ KNOWL('lattice.invariants', title='Lattice Invariants') }}</h2>
 
 <table>
-    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{lattice.rank}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{lattice.signature}}$</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.det_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{lattice.disc_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{lattice.level_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{lattice.class_number_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.conway_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.even_odd}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.dimension', title='Rank') }}:</td><td>${{lattice.rank}}$</td><td>{{ place_code('rank') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.signature', title='Signature') }}:</td><td>${{lattice.signature}}$</td><td>{{ place_code('signature') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.det_display | safe}}</td><td>{{ place_code('determinant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant', title='Discriminant') }}:</td><td>{{lattice.disc_display | safe}}</td><td>{{ place_code('discriminant') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.level', title='Level') }}:</td><td>{{lattice.level_display | safe}}</td><td>{{ place_code('level') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.class_number', title='Class number') }}:</td><td>{{lattice.class_number_display}}</td><td>{{ place_code('class_number') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_genus_symbol', title='Conway genus symbol') }}:</td><td>{{lattice.conway_display}}</td><td>{{ place_code('conway_symbol') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.parity', title='Parity') }}:</td><td>{{lattice.parity}}</td><td>{{ place_code('parity') }}</td></tr>
     {% if lattice.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ lattice.aut_size_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ lattice.festi_veniani_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ lattice.density_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.hermite_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.minimal_vector', title='Minimal vector length')}}:</td><td>{{lattice.minimum_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.group_order', title='Aut group order') }}:</td><td>{{ lattice.aut_size_display }}</td><td>{{ place_code('automorphism_group_order') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.automorphism_group', title='Aut group') }}:</td><td>{{ lattice.aut_display | safe }}</td><td>{{ place_code('automorphism_group') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.festi_veniani_index', title='Festi-Veniani Index') }}:</td><td>{{ lattice.festi_veniani_display }}</td><td>{{ place_code('festi_veniani') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{ lattice.density_display }}</td><td>{{ place_code('density') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Center density') }}:</td><td>{{ lattice.center_density_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.hermite_display }}</td><td>{{ place_code('hermite') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.minimum', title='Minimum')}}:</td><td>{{lattice.minimum_display }}</td><td>{{ place_code('minimum') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.kissing_display }}</td><td>{{ place_code('kissing') }}</td></tr>
     {% endif %}
-    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
-<td>
-{% if lattice.shortest is none %}
-    not computed</td></tr>
-{% else %}
-    {% if lattice.rank == 1 %}
-        $({{lattice.shortest}})$</td></tr><tr><td></td><td>Download this vector for
-            {% for e in lattice.download_shortest %}
-                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
-    {% else %}
-        <table><tr>
-        {% for n in lattice.shortest %}
-            ${{n}}${% if not loop.last %},{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
-        {% endfor %}
-        {% if lattice.all_shortest == "no" %} ... </tr></table></td><tr><td></td>
-        <td>Download the complete list for
-            {% for e in lattice.download_shortest %}
-                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
+    <tr><td>{{ KNOWL('lattice.discriminant_group', title='Discriminant group') }}:</td><td>{{lattice.discriminant_group_display}}</td><td>{{ place_code('discriminant_group') }}</td></tr>
+    {% if lattice.is_positive_definite %}
+        <tr><td>{{ KNOWL('lattice.successive_minima', title='Successive minima') }}:</td><td>{{lattice.successive_minima}}</td><td>{{ place_code('successive_minima') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.quadratic_form', title='Is universal') }}:</td><td>{{lattice.is_universal}}</td></tr>
+        <tr><td>{{ KNOWL('lattice.normalized_minimal_vector', title='Normalized minimal vectors')}}:</td>
+        <td>
+        {% if lattice.shortest is none %}
+            not computed</td></tr>
         {% else %}
-            </tr></table></td><tr><td></td><td>Download this {% if lattice.kissing == 2 %} vector {% else %} list {% endif %} for
-            {% for e in lattice.download_shortest %}
-                <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
-            {% endfor %}</td></tr>
+            {% if lattice.rank == 1 %}
+                $({{lattice.shortest}})$</td></tr><tr><td></td><td>Download this vector for
+                    {% for e in lattice.download_shortest %}
+                        <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+                    {% endfor %}</td>
+            {% else %}
+                <table><tr>
+                {% for n in lattice.shortest %}
+                    ${{n}}${% if not loop.last %},{% endif %}{% if loop.index % 3 == 0 %}</tr><tr>{% endif %}
+                {% endfor %}
+                {% if lattice.all_shortest == "no" %} ... </tr></table></td><tr><td></td>
+                <td>Download the complete list for
+                    {% for e in lattice.download_shortest %}
+                        <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+                    {% endfor %}</td>
+                {% else %}
+                    </tr></table></td><tr><td></td><td>Download this {% if lattice.kissing == 2 %} vector {% else %} list {% endif %} for
+                    {% for e in lattice.download_shortest %}
+                        <a href="{{e[1]}}">{{e[0]}}</a>{% if not loop.last %},  {% endif %}
+                    {% endfor %}</td>
+                {% endif %}
+            {% endif %}
         {% endif %}
+        <td>{{ place_code('minimal_vectors') }}</td>
+        </tr>
     {% endif %}
-{% endif %}
 </table>
 
 {% if lattice.theta_series %}
 <h2> {{ KNOWL('lattice.theta', title='Theta Series') }} </h2>
-
+{{ place_code('theta_series') }}
 <div>{{lattice.theta_display | safe}}</div>
 
 {% endif %}
 
 <h2> {{ KNOWL('lattice.gram', title='Gram Matrix') }} </h2>
+{{ place_code('gram') }}
 <table>
     <tr><td>{{lattice.gram_display | safe}}</td></tr>
 </table>
 
+{% if lattice.is_positive_definite %}
+<h2> {{ KNOWL('lattice.euclidean_basis', title='Euclidean basis') }} </h2>
+{{ place_code('basis') }}
+<table>
+    <tr><td>{{lattice.basis_display | safe}}</td></tr>
+</table>
+{% endif %}
+
+<h2> {{ KNOWL('lattice.quadratic_form', title='Quadratic form') }} </h2>
+{{ place_code('quadratic_form') }}
+<table>
+    <tr><td>{{lattice.quadratic_form_display | safe}}</td></tr>
+</table>
 
 
-<h2> {{ KNOWL('lattice.dual', title='Dual Lattice') }} </h2>
+<h2> {{ KNOWL('lattice.dual', title='Rescaled dual lattice') }} </h2>
+{{ place_code('dual') }}
 <table>
     <tr><td>{{ KNOWL('lattice.dual', title='Label') }}:</td><td>{{lattice.dual_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.conway_symbol', title='Conway Symbol') }}:</td><td>{{lattice.dual_conway_display}}</td></tr>
-    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.dual_det_display}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.conway_genus_symbol', title='Conway genus symbol') }}:</td><td>{{lattice.dual_conway_display}}</td><td>{{ place_code('dual_conway') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.determinant', title='Determinant') }}:</td><td>{{lattice.dual_det_display}}</td><td>{{ place_code('dual_det') }}</td></tr>
     {% if lattice.is_positive_definite %}
-        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{lattice.dual_density_display }}</td></tr>
-        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.dual_hermite_display }}\dots$</td></tr>
-        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.dual_kissing_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Density') }}:</td><td>{{lattice.dual_density_display }}</td><td>{{ place_code('dual_density') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.density', title='Center density') }}:</td><td>{{ lattice.dual_center_density_display }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.hermite_number', title='Hermite number') }}:</td><td>{{lattice.dual_hermite_display }}</td><td>{{ place_code('dual_hermite') }}</td></tr>
+        <tr><td>{{ KNOWL('lattice.kissing', title='Kissing number') }}:</td><td>{{lattice.dual_kissing_display }}</td><td>{{ place_code('dual_kissing') }}</td></tr>
     {% endif %}
 
     <tr>
@@ -85,11 +108,34 @@
       <td>
         {{lattice.dual_theta_display | safe}}
       </td>
+      <td>{{ place_code('dual_theta') }}</td>
+</table>
+
+<h2> {{ KNOWL('lattice.decompositions', title='Decompositions') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Is orthogonally indecomposable') }}:</td><td>{{lattice.is_indecomposable}}</td></tr>
+    {% if lattice.is_positive_definite %}
+        <tr><td>{{ KNOWL('lattice.additively_indecomposable', title='Is additively indecomposable') }}:</td><td>{{lattice.is_additively_indecomposable}}</td></tr>
+    {% endif %}
+    <tr><td>{{ KNOWL('lattice.orthogonal_decomposition', title='Orthogonal decomposition') }}:</td><td>{{lattice.orthogonal_factors}}</td><td>{{ place_code('orthogonal_decomposition') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.tensor_decomposition', title='Tensor decomposition') }}:</td><td>{{lattice.tensor_decompositions}}</td></tr>
+</table>
+
+<h2> {{ KNOWL('lattice.sublattice', title='Special sublattices') }} </h2>
+<table>
+    <tr><td>{{ KNOWL('lattice.root_sublattice', title='Root sublattice') }}:</td><td>{{lattice.root_sublattice}}</td><td>{{ place_code('root_sublattice') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.root_sublattice', title='Complement of root sublattice') }}:</td><td>{{lattice.root_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.even_sublattice', title='Even sublattice') }}:</td><td>{{lattice.even_sublattice}}</td><td>{{ place_code('even_sublattice') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Norm 1 sublattice') }}:</td><td>{{lattice.norm1_sublattice}}</td><td>{{ place_code('norm1_sublattice') }}</td></tr>
+    <tr><td>{{ KNOWL('lattice.norm1_sublattice', title='Complement of norm 1 sublattice') }}:</td><td>{{lattice.norm1_complement}}</td></tr>
+    <tr><td>{{ KNOWL('lattice.zn_complement', title='Complement of diagonal sublattice') }}:</td><td>{{lattice.Zn_complement}}</td></tr>
 </table>
 
 
+
 {% if lattice.pneighbors %}
-<h2>{{ KNOWL('lattice.pneighbors', title='p-Neighbors') }}</h2>
+<h2>{{ KNOWL('lattice.pneighbor', title='p-Neighbors') }}</h2>
+{{ place_code('pneighbors') }}
 <table>
 {% for p, neighs in lattice.pneighbors.items() %}
     <tr>

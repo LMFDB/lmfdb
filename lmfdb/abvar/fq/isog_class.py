@@ -12,7 +12,6 @@ from flask import url_for
 from collections import defaultdict, Counter
 
 from lmfdb.utils import encode_plot, display_float
-from lmfdb.logger import make_logger
 
 from lmfdb import db
 from lmfdb.app import app
@@ -44,9 +43,6 @@ def maxq(g, p):
         return maxspec[p][g]
     else:
         return maxgen[g]
-
-
-logger = make_logger("abvarfq")
 
 
 #########################

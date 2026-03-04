@@ -28,12 +28,10 @@ from lmfdb.galois_groups.transitive_group import (
     group_character_table_knowl_guts, group_alias_table,
     dihedral_gal, dihedral_ngal, multiquad)
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
-from lmfdb.number_fields import nf_page, nf_logger
+from lmfdb.number_fields import nf_page
 from lmfdb.number_fields.web_number_field import (
     field_pretty, WebNumberField, nf_knowl_guts, factor_base_factor,
     factor_base_factorization_latex, fake_label, formatfield)
-
-assert nf_logger
 
 def bread_prefix(): return [('Number fields', url_for(".number_field_render_webpage"))]
 
@@ -209,10 +207,6 @@ def render_discriminants_page():
 @nf_page.route("/QuadraticImaginaryClassGroups")
 def render_class_group_data():
     info = to_dict(request.args)
-    #nf_logger.info('******************* ')
-    #for k in info.keys():
-    # nf_logger.info(str(k) + ' ---> ' + str(info[k]))
-    #nf_logger.info('******************* ')
     learnmore = learnmore_list_remove('Quadratic imaginary')
     t = 'Class groups of quadratic imaginary fields'
     bread = [("Datasets", url_for("datasets")), (t, ' ')]
