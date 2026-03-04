@@ -4,9 +4,10 @@ import yaml
 from collections import defaultdict
 from lmfdb import db
 from flask import url_for
-from sage.all import lazy_attribute, matrix, ZZ, sqrt, round, Graph, latex, Factorization, PolynomialRing, flatten
-from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, encode_plot, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix
+from sage.all import latex, lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer, pi, gamma #latex, Factorization,
+from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
+import numpy as np
 
 #####################################
 # Utilitary functions for displays  #
@@ -44,6 +45,79 @@ def vect_to_sym2(v):
             k += 1
     return [[int(M[i, j]) for i in range(n)] for j in range(n)]
 
+def flat_to_matrix(v):
+    """Convert a flat list of n² integers to a 2D n×n list (row by row)."""
+    n = Integer(len(v)).isqrt()
+    if n * n != len(v):
+        raise ValueError(f"Length {len(v)} is not a perfect square")
+    return [[int(v[i * n + j]) for j in range(n)] for i in range(n)]
+
+def upper_triangular_to_matrix(v):
+    """Convert n(n+1)/2 upper-triangular entries to a symmetric 2D n×n list (row by row in upper triangle)."""
+    k = len(v)
+    # Solve n(n+1)/2 = k, i.e. n = (-1 + sqrt(1+8k))/2
+    disc = 1 + 8 * k
+    sq = Integer(disc).isqrt()
+    if sq * sq != disc or (sq - 1) % 2 != 0:
+        raise ValueError(f"Length {k} is not a triangular number")
+    n = int((sq - 1) // 2)
+    M = [[0] * n for _ in range(n)]
+    idx = 0
+    for i in range(n):
+        for j in range(i, n):
+            M[i][j] = int(v[idx])
+            M[j][i] = int(v[idx])
+            idx += 1
+    return M
+
+def lower_triangular_to_matrix(v):
+    """Convert n(n+1)/2 lower-triangular entries to a symmetric 2D n×n list (row by row in lower triangle)."""
+    k = len(v)
+    disc = 1 + 8 * k
+    sq = Integer(disc).isqrt()
+    if sq * sq != disc or (sq - 1) % 2 != 0:
+        raise ValueError(f"Length {k} is not a triangular number")
+    n = int((sq - 1) // 2)
+    M = [[0] * n for _ in range(n)]
+    idx = 0
+    for i in range(n):
+        for j in range(i + 1):
+            M[i][j] = int(v[idx])
+            M[j][i] = int(v[idx])
+            idx += 1
+    return M
+
+def diagonal_to_matrix(v):
+    """Convert n diagonal entries to a diagonal 2D n×n list."""
+    n = len(v)
+    if n == 0:
+        raise ValueError("Empty diagonal vector")
+    M = [[0] * n for _ in range(n)]
+    for i in range(n):
+        M[i][i] = int(v[i])
+    return M
+
+def auto_detect_gram_format(v):
+    """Auto-detect format from length: perfect square → full matrix, triangular → upper triangular."""
+    k = len(v)
+    if k == 0:
+        raise ValueError("Empty vector")
+    # Check perfect square
+    n = Integer(k).isqrt()
+    is_square = (n * n == k)
+    # Check triangular number
+    disc = 1 + 8 * k
+    sq = Integer(disc).isqrt()
+    is_triangular = (sq * sq == disc and (sq - 1) % 2 == 0)
+    if is_square and is_triangular:
+        # Only overlaps at k=1, result is identical either way
+        return flat_to_matrix(v)
+    if is_square:
+        return flat_to_matrix(v)
+    if is_triangular:
+        return upper_triangular_to_matrix(v)
+    raise ValueError(f"Length {k} is neither a perfect square nor a triangular number; please select a format explicitly")
+
 def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
     return "$" + s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_') + "$"
@@ -60,6 +134,10 @@ class WebLat(WebObj):
             else:
                 setattr(self, dcol, f"${val}$")
 
+    @lazy_attribute
+    def det(self):
+        return self.det_sign * self.det_abs
+                
     @lazy_attribute
     def nminus(self):
         return self.rank - self.nplus
@@ -81,7 +159,7 @@ class WebLat(WebObj):
         return format_conway_symbol(self.dual_conway_symbol)
 
     @lazy_attribute
-    def even_odd(self):
+    def parity(self):
         return "Even" if self.is_even else "Odd"
 
     @lazy_attribute
@@ -95,7 +173,19 @@ class WebLat(WebObj):
     def discriminant_gram_display(self):
         if self.discriminant_form is None:
             return "not computed"
-        return vect_to_matrix(vect_to_sym2(self.discriminant_form))
+
+        # Exponent of the discriminant group
+        disc_exponent = max(self.discriminant_group_invs)
+        mat_latex = latex(matrix(vect_to_sym2(self.discriminant_form)))
+        # Determine modulus (either mod Z or mod 2Z depending on parity)
+        if self.is_even:
+            mod_string = r"\mathrm{mod}\ 2\mathbb{Z}"
+        else:
+            mod_string = r"\mathrm{mod}\ \mathbb{Z}"
+
+        disc_gram_latex = rf"$\dfrac{{1}}{{{disc_exponent}}} {mat_latex} \quad ({mod_string})$"
+        #print("***", disc_gram_latex)
+        return disc_gram_latex
 
     @lazy_attribute
     def properties(self):
@@ -107,7 +197,7 @@ class WebLat(WebObj):
             ('Discriminant', prop_int_pretty(self.disc)),
             ('Level', prop_int_pretty(self.level)),
             ('Class Number', f'${self.class_number}$'),
-            ('Parity', f'{self.even_odd}'),
+            ('Parity', f'{self.parity}'),
         ]
 
     def _mat_in(self, mat, lang):
@@ -125,8 +215,20 @@ class WebGenus(WebLat):
     def __init__(self, label, data=None):
         super().__init__(label, data)
         self._mathwrap(["det", "disc", "level"], ["class_number"])
-        X = self.adjacency_display
+        if self.adjacency_matrix is None:
+            self.adjacency_matrix = {}
+        if self.adjacency_polynomials is None:
+            self.adjacency_polynomials = {}
+        #X = self.adjacency_display
 
+    @lazy_attribute
+    def nminus(self):
+        return self.rank - self.nplus
+
+    @lazy_attribute
+    def signature(self):
+        return (self.nplus, self.nminus)
+        
     @lazy_attribute
     def gram_display(self):
         if self.rep is None:
@@ -146,16 +248,55 @@ class WebGenus(WebLat):
     def adjacency_display(self):
         display = defaultdict(dict)
         R = PolynomialRing(ZZ, "x")
+        # Look up lattice data for this genus (for clickable nodes and tooltips)
+        lattice_data = list(db.lat_lattices_new.search(
+            {"genus_label": self.label},
+            ["label", "minimum", "kissing", "aut_label"],
+            sort=["label"]))
+        # Batch-fetch automorphism group tex_names
+        aut_labels = list({c["aut_label"] for c in lattice_data if c.get("aut_label")})
+        aut_tex = {r["label"]: r["tex_name"] for r in db.gps_groups.search(
+            {"label": {"$in": aut_labels}}, ["label", "tex_name"])} if aut_labels else {}
         for p, M in self.adjacency_matrix.items():
             adj_mat = matrix(ZZ, self.class_number, self.class_number, M)
             display[p]["matrix"] = raw_typeset_matrix(adj_mat)
-            G = Graph(adj_mat, format='weighted_adjacency_matrix') # can also do format='adjacency_matrix'
-            # TODO: improve layout
-            img = encode_plot(G.plot(), transparent=True)
-            display[p]["graph_link"] = f'<img src="{img}" width="400" height="300"/>'
+            G = Graph(adj_mat, format='weighted_adjacency_matrix')
+            G.relabel(list(range(1, self.class_number + 1)))
+            elements, has_preset = graph_to_cytoscape_json(G)
+            # Attach lattice metadata to nodes if available
+            if lattice_data and len(lattice_data) == self.class_number:
+                for elt in elements:
+                    if elt["group"] == "nodes":
+                        idx = int(elt["data"]["id"]) - 1
+                        c = lattice_data[idx]
+                        elt["data"]["label"] = c["label"].split(".")[-1]
+                        elt["data"]["url"] = url_for(".render_lattice_webpage", label=c["label"])
+                        if c.get("minimum") is not None:
+                            elt["data"]["minimum"] = c["minimum"]
+                        if c.get("kissing") is not None:
+                            elt["data"]["kissing"] = c["kissing"]
+                        if c.get("aut_label") is not None:
+                            elt["data"]["aut_name"] = aut_tex.get(c["aut_label"], c["aut_label"])
+            display[p]["graph_data"] = elements
+            display[p]["graph_default_layout"] = 'Elk-stress'
             F = [(R(f), e) for f,e in self.adjacency_polynomials[p]]
             display[p]["poly"] = raw_typeset_poly_factor(F)
         return display
+
+    @lazy_attribute
+    def adjacency_graph_json(self):
+        """Graph data suitable for JSON serialization (used by the template)."""
+        result = {}
+        for p, D in self.adjacency_display.items():
+            result[p] = {
+                "graph_data": D["graph_data"],
+                "graph_default_layout": D["graph_default_layout"],
+            }
+        return result
+
+    @lazy_attribute
+    def graph_layouts(self):
+        return list(GRAPH_LAYOUTS)
 
     @lazy_attribute
     def start_p(self):
@@ -177,7 +318,44 @@ class WebGenus(WebLat):
 
     @lazy_attribute
     def downloads(self):
-        return [("Underlying data", url_for(".genus_data", label=self.label))]
+        downloads = []
+        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "pari"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".genus_code_download", label=self.label, download_type=lang[1])))
+        downloads.append(("Underlying data", url_for(".genus_data", label=self.label)))
+        return downloads
+
+   
+    @lazy_attribute
+    def code(self):
+        # read in code.yaml from lattice directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+        # Get a representative gram matrix
+        if self.rep is not None:
+            gram = self.rep
+        elif self.gram is not None:
+            gram = self.gram
+            if type(gram[0]) == list:
+                gram = gram[0]
+        else:
+            gram = None
+
+        code["genus_definition"] = dict()
+        if gram is not None:
+            for lang, s in code["lattice_definition"].items():
+                if lang != "comment":
+                    code["genus_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(gram), lang))
+                    if (lang in code["genus"]) and (code["genus"][lang] is not None):
+                        code["genus_definition"][lang] += "\n"+code["genus"][lang]+"\n"
+        else:
+            for lang in code["lattice_definition"]:
+                if lang != "comment":
+                    code["genus_definition"][lang] = code["not-implemented"][lang]
+        code["genus_definition"]["comment"] = "Define a representative lattice in the genus"
+        code['show'] = {lang: '' for lang in code['prompt']}
+        return code
+
 
 class WebLattice(WebLat):
     table = db.lat_lattices_new
@@ -202,9 +380,12 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def gram_display(self):
-        if self.gram is None:
+        gram = self.gram
+        if type(gram[0]) == list:
+            gram = gram[0]
+        if gram is None:
             return "not computed"
-        return vect_to_matrix(vect_to_sym2(self.gram))
+        return vect_to_matrix(vect_to_sym2(gram))
 
     @lazy_attribute
     def theta_display(self):
@@ -219,20 +400,127 @@ class WebLattice(WebLat):
         return "not computed"
 
     @lazy_attribute
+    def center_density_display(self):
+        """
+        Calculate the center density as density / volume of n-dimensional unit ball.
+        The volume of an n-dimensional unit ball is pi^(n/2) / gamma(n/2 + 1).
+        """
+        if self.density is None:
+            return "not computed"
+        # Volume of n-dimensional unit ball: pi^(n/2) / gamma(n/2 + 1)
+        n = self.rank
+        volume_ball = (pi**(n/2))/gamma(n/2 + 1)
+        center_density = (self.density / volume_ball).n(50)
+        return f"${center_density}$"
+    
+    @lazy_attribute
+    def dual_center_density_display(self):
+        if self.dual_density is None:
+            return "not computed"
+        n = self.rank
+        volume_ball = (pi**(n/2))/gamma(n/2 + 1)
+        dual_center_density = (self.dual_density / volume_ball).n(50)
+        return f"${dual_center_density}$"
+
+    @lazy_attribute
+    def quadratic_form_display(self):
+        """
+        Return a latex-formatted quadratic form associated to the Gram matrix of this lattice.
+        If rank at most 7, uses variables x, y, z, t, u, v, w
+        Otherwise uses variables x_1, x_2, x_3, etc.
+        """
+
+        gram = self.gram
+        if type(gram[0]) == list:
+            gram = gram[0]
+        gram = vect_to_sym2(gram)
+
+        default_vars = ["x", "y", "z", "t", "u", "v", "w"]
+        if self.rank <= len(default_vars):
+            var_names = default_vars[:self.rank]
+        else:
+            var_names = [f"x_{{{i+1}}}" for i in range(self.rank)]
+    
+        terms = []
+    
+        # Diagonal terms
+        for i in range(self.rank):
+            coeff = gram[i][i]//2 if self.is_even else gram[i][i]
+            if coeff != 0:
+                var = var_names[i]
+                if coeff == 1:
+                    terms.append(f"{var}^2")
+                elif coeff == -1:
+                    terms.append(f"-{var}^2")
+                else:
+                    terms.append(f"{coeff}{var}^2")
+    
+        # Off-diagonal terms
+        for i in range(self.rank):
+            for j in range(i+1, self.rank):
+                coeff = gram[i][j] if self.is_even else 2*gram[i][j]
+                if coeff != 0:
+                    vi, vj = var_names[i], var_names[j]
+                    if coeff == 1:
+                        terms.append(f"{vi}{vj}")
+                    elif coeff == -1:
+                        terms.append(f"-{vi}{vj}")
+                    else:
+                        terms.append(f"{coeff}{vi}{vj}")
+    
+        result = " + ".join(terms)
+        result = result.replace("+ -", "- ")
+        return "$"+result+"$"
+
+    @lazy_attribute
+    def basis_display(self):
+        """
+        Return a latex-formatted explicit basis associated to the Gram matrix of this lattice.
+        """
+
+        gram = self.gram
+        gram = vect_to_sym2(gram)
+
+        basis = np.linalg.cholesky(gram)
+
+        vectors = []
+        for i in range(basis.shape[0]):
+            entries = [f"{round(x, 3)}" for x in basis[i, :]]
+            vec_latex = "\\begin{pmatrix}\n" + " \\\\\n".join(entries) + "\n\\end{pmatrix}"
+            vectors.append(vec_latex)
+        return "\\[\n\\left\\{\n" + ",\n".join(vectors) + "\n\\right\\}\n\\]"
+
+
+    @lazy_attribute
     def friends(self):
         return [("Genus of this lattice", f"/Lattice/Genus/{self.genus_label}")]
 
     @lazy_attribute
     def downloads(self):
-        return [("Underlying data", url_for(".lattice_data", label=self.label))]
+        downloads = []
+        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("PariGP", "pari"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".lattice_code_download", label=self.label, download_type=lang[1])))
+        downloads.append(("Underlying data", url_for(".lattice_data", label=self.label)))
+        return downloads
 
     @lazy_attribute
     def code(self):
         # read in code.yaml from lattice directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        for lang, s in code["lattice_definition"].items():
-            if lang != "comment":
-                code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(self.gram), lang))
+        if self.gram is not None and len(self.gram) > 0:
+            gram = self.gram
+            if type(gram[0]) == list:
+                gram = gram[0]
+        else:
+            gram = None
+        if gram is not None:
+            for lang, s in code["lattice_definition"].items():
+                if lang != "comment":
+                    code["lattice_definition"][lang] = s.format(n=self.rank, gram=self._mat_in(vect_to_sym2(gram), lang))
+        else:
+            for lang in code["lattice_definition"]:
+                if lang != "comment":
+                    code["lattice_definition"][lang] = code["not-implemented"][lang]
         code['show'] = {lang: '' for lang in code['prompt']}
         return code

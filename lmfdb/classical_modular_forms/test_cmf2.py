@@ -1,10 +1,7 @@
 
 from lmfdb.tests import LmfdbTest
 
-from . import cmf_logger
-cmf_logger.setLevel(100)
 
-    
 class CmfTest(LmfdbTest):
     def runTest(self):
         pass

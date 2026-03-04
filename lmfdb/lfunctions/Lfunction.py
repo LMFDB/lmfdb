@@ -64,7 +64,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
-from lmfdb.lfunctions import logger
+from lmfdb.logger import logger
 from .Lfunctionutilities import (
     string2number,
     compute_local_roots_SMF2_scalar_valued,)

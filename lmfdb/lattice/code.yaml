@@ -35,3 +35,205 @@ lattice_definition:
   pari: L = {gram}
   magma: L := LatticeWithGram({n}, {gram});
   oscar: L = integer_lattice(gram = matrix(QQ, {n}, {n}, {gram}))
+
+
+rank:
+  comment: Rank
+  sage: L.rank()
+  magma:  Rank(L);
+  oscar: rank(L)
+
+signature:
+  comment: Signature
+  sage: L.signature_pair()
+  magma: Signature(L);
+  oscar: signature_tuple(L)[[1,3]]
+  pari: qfsign(L)
+
+determinant:
+  comment: Determinant
+  sage: L.determinant()
+  magma: Determinant(L);
+  oscar: det(L)
+  pari: matdet(L)
+
+discriminant:
+  comment: Discriminant
+  sage: L.discriminant()
+  magma: Discriminant(L);
+  oscar: discriminant(L)
+
+level:
+  comment: Level
+  magma: Level(L);
+  sage: L.genus().level()
+  #oscar: level(L)
+
+class_number:
+  comment: Class number
+  magma: |
+    #Genus(L);
+
+conway_symbol:
+  comment: Conway symbol
+  magma: ConwaySymbol(Genus(L));
+  #oscar: canonical_symbol(genus(L)) 
+
+parity:
+  comment: Parity
+  sage: L.is_even()
+  magma: IsEven(L);
+  oscar: is_even(L)
+
+automorphism_group:
+  comment: Automorphism group
+  magma: AutomorphismGroup(L);
+  sage: L.automorphisms()
+  pari: qfauto(L)
+  oscar: isometry_group(L)
+
+automorphism_group_order:
+  comment: Order of the automorphism group
+  magma: Order(AutomorphismGroup(L));
+  sage: L.automorphisms().order()
+  oscar: order(isometry_group(L))
+  pari: qfauto(L)[1]
+
+density:
+  comment: Density
+  magma: Density(L);
+  #oscar: density(L)
+
+hermite:
+  comment: Hermite number
+  magma: HermiteNumber(L);
+  #oscar: hermite_number(L)
+
+kissing:
+  comment: Kissing number
+  magma: KissingNumber(L);
+  oscar: kissing_number(L)
+
+festi_veniani:
+  comment: Festi-Veniani index
+  magma: |
+    // (not yet implemented)
+  oscar: j = last(image_in_Oq(L)); divexact(order(codomain(j)), order(domain(j)))
+
+minimum:
+  comment: Minimum
+  magma: Minimum(L);
+  oscar: minimum(L)
+
+discriminant_group:
+  comment: Discriminant group
+  sage: L.discriminant_group()
+  oscar: discriminant_group(L)
+
+minimal_vectors:
+  comment: Minimal vectors
+  magma: ShortestVectors(L);
+  oscar: shortest_vectors(L)
+
+mass:
+  comment: Mass
+  magma: Mass(L);
+  oscar: mass(L)
+
+theta_series:
+  comment: Theta series
+  magma: ThetaSeries(L, 100);
+
+gram:
+  comment: Gram matrix
+  sage: L.gram_matrix()
+  magma: GramMatrix(L);
+  oscar: gram_matrix(L)
+
+dual:
+  comment: Dual lattice
+  sage: L.dual_lattice()
+  magma: Dual(L);
+  oscar: dual(L)
+
+dual_det:
+  comment: Determinant of the dual lattice
+  magma: Determinant(Dual(L));
+  sage: L.dual_lattice().determinant()
+  oscar: det(dual(L))
+
+dual_conway:
+  comment: Conway symbol of the dual lattice
+  magma: ConwaySymbol(Genus(Dual(L)));
+  #oscar: canonical_symbol(first(Hecke.reduced_genus_with_data(genus(dual(L))))) 
+
+dual_density:
+  comment: Density of the dual lattice
+  magma: Density(Dual(L));
+  #oscar: center_density(dual(L))
+
+dual_kissing:
+  comment: Kissing number of the dual lattice
+  magma: Kissing(Dual(L));
+  oscar: kissing_number(dual(L))
+
+dual_hermite:
+  comment: Hermite number of the dual lattice
+  magma: Hermite(Dual(L));
+  #oscar: hermite_number(dual(L))
+
+dual_theta:
+  comment: Theta series of the dual lattice
+  magma: ThetaSeries(Dual(L));
+  
+quadratic_form:
+  comment: Quadratic form associated to the lattice
+  magma: QuadraticForm(L);
+  pari: qfeval(L, [x,y])
+
+basis:
+  comment: Basis
+  magma: Basis(Cholesky(L));
+  pari: qfcholesky(L)
+
+genus:
+  comment: Genus
+  sage: L.genus()
+  magma: Genus(L);
+  oscar: genus(L)
+
+pneighbors:
+  comment: p-Neighbors of the lattice
+  magma: Neighbors(p, L);
+  #oscar: neighbours(L, p)
+
+orthogonal_decomposition:
+  comment: Orthogonal decomposition
+  magma: OrthogonalDecomposition(L);
+  oscar: irreducible_components(L)
+
+even_sublattice:
+  comment: Even sublattice
+  magma: EvenSublattice(L);
+  oscar: even_sublattice(L)
+
+successive_minima:
+  comment: Successive minima
+  magma: SuccessiveMinima(L);
+
+
+# Specify which code snippets to test (include both positive definite and indefinite)
+snippet_test:
+  testI1:
+    label: 1.1.1.3.1
+    url: Lattice/1.1.1.3.1/download/{lang}
+  testI3:
+    label: 3.3.1.7.1
+    url: Lattice/3.3.1.7.1/download/{lang}
+  testI2-1:
+    label: 3.1.1.3.1
+    url: Lattice/3.1.1.3.1/download/{lang}
+  testI3-1:
+    label: 4.2.1.5.1
+    url: Lattice/4.2.1.5.1/download/{lang}
+
