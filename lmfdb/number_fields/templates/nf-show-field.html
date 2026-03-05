@@ -128,7 +128,7 @@ table.ntdata a {
             <td>{{ place_code('regulator') }}
            </tr>
            {% if nf.signature()[0] > 0 %}
-           <tr><td>{{ KNOWL('nf.unit_signature_rank', title='Unit signature rank') }}:<td>&nbsp;&nbsp;<td>${{info.unit_signature_rank}}$
+           <tr><td>{{ KNOWL('nf.unit_signature_rank', title='Unit signature rank') }}:<td>&nbsp;&nbsp;<td>{{info.unit_signature_rank}}
           {{ info.grh_label|safe }}
             <td>{{ place_code('unit_signature_rank') }}
            </tr>
