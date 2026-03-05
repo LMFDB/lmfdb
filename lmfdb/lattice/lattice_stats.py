@@ -19,7 +19,7 @@ class Lattice_stats(StatsDisplay):
 
     @property
     def short_summary(self):
-        return 'The database currently contains {} {} of varying {}. The largest {} is {}, the largest {} is {}, and the largest {} is {}. Here are some <a href="{}">further statistics</a>.'.format(
+        return 'The database currently contains {} {} of varying {}. The largest {} is {}, the largest {} is {}, and the largest {} is {}. Here are some <a href="{}">further statistics</a>. <b>Data here is being actively recomputed as we refine the schema and user interface.  Labels are likely to change, and we intend to include more lattices and genera before moving to beta.</b>'.format(
             self.nlats,
             self.kintegral,
             self.ksignature,

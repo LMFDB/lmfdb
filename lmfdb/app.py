@@ -356,12 +356,11 @@ def get_menu_cookie():
 
 @app.route("/")
 def index():
-    return render_template('index-boxes.html',
+    # Changed for alpha branch.
+    return render_template('alpha.html',
                            titletag="The L-functions and modular forms database",
-                           title="The L-functions and modular forms database (LMFDB)",
-                           bread=None,
-                           boxes=load_boxes())
-
+                           title="The L-functions and modular forms database (Alpha version)",
+                           bread=None)
 
 @app.route("/about")
 def about():
