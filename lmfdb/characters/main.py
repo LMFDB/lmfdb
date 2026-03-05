@@ -1,12 +1,12 @@
 from lmfdb.app import app
 import re
-from flask import render_template, url_for, request, redirect, abort
+from flask import render_template, url_for, request, redirect, abort, make_response
 from sage.all import euler_phi, PolynomialRing, QQ, gcd, ZZ
 from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
-    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader, redirect_no_cache)
+    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import parse_range3
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
@@ -16,6 +16,7 @@ from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.characters.web_character import (
     valuefield_from_order,
+    WebCharObject,
     WebSmallDirichletCharacter,
     WebDBDirichletCharacter,
     WebDBDirichletGroup,
@@ -452,23 +453,29 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         if orbit_label is None:
 
             if modulus <= ORBIT_MAX_MOD:
-                info = WebDBDirichletGroup(**args).to_dict()
+                webgroup = WebDBDirichletGroup(**args)
+                info = webgroup.to_dict()
                 info['show_orbit_label'] = True
             else:
-                info = WebSmallDirichletGroup(**args).to_dict()
+                webgroup = WebSmallDirichletGroup(**args)
+                info = webgroup.to_dict()
 
             info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
             info['bread'] = bread([('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
             info['learnmore'] = learn()
-            info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
-            info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
+            downloads = []
+            for lang in [("PariGP", "gp"), ("SageMath", "sage"), ("Magma", "magma")]:
+                downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_code_download", label=f"{modulus}", download_type=lang[1])))
+            downloads.append(('Underlying data', url_for('.dirchar_data', label=f"{modulus}")))
+            info['downloads'] = downloads
             if 'gens' in info:
                 info['generators'] = ', '.join(r'<a href="%s">$\chi_{%s}(%s,\cdot)$' % (url_for(".render_Dirichletwebpage", modulus=modulus, number=g), modulus, g) for g in info['gens'])
             return render_template('CharGroup.html', **info)
         else:
             if modulus <= ORBIT_MAX_MOD:
                 try:
-                    info = WebDBDirichletOrbit(**args).to_dict()
+                    weborbit = WebDBDirichletOrbit(**args)
+                    info = weborbit.to_dict()
                 except ValueError:
                     flash_error(
                         "No Galois orbit of Dirichlet characters with label %s.%s was found in the database.", modulus, orbit_label
@@ -477,13 +484,11 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 
                 info['show_orbit_label'] = True
                 downloads = []
-                #for lang in [("PariGP", "gp"), ("SageMath", "sage")]:
-                #    downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_download", label=f"{modulus}.{orbit_label}", download_type=lang[1])))
+                for lang in [("PariGP", "gp"), ("SageMath", "sage"), ("Magma", "magma")]:
+                    downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_code_download", label=f"{modulus}.{orbit_label}", download_type=lang[1])))
                 downloads.append(('Underlying data', url_for('.dirchar_data', label=f"{modulus}.{orbit_label}")))
                 info['downloads'] = downloads
                 info['learnmore'] = learn()
-                info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
-                info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
                 info['bread'] = bread(
                     [('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus)),
                      ('%s' % orbit_label, url_for(".render_Dirichletwebpage", modulus=modulus, orbit_label=orbit_label))])
@@ -526,7 +531,10 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
                                         orbit_label=real_orbit_label,
                                         number=number))
         args['orbit_label'] = real_orbit_label
-        downloads = [('Underlying data', url_for(".dirchar_data", label=f"{modulus}.{real_orbit_label}.{number}"))]
+        downloads = []
+        for lang in [("PariGP", "gp"), ("SageMath", "sage"), ("Magma", "magma")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_code_download", label=f"{modulus}.{real_orbit_label}.{number}", download_type=lang[1])))
+        downloads.append(('Underlying data', url_for(".dirchar_data", label=f"{modulus}.{real_orbit_label}.{number}")))
     else:
         if orbit_label is not None:
             flash_warning(
@@ -545,26 +553,38 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     info['bread'] = bread_crumbs
     info['learnmore'] = learn()
     info['downloads'] = downloads
-    info['code'] = {k[4:]: info[k] for k in info if k[0:4] == "code"}
-    info['code']['show'] = {lang: '' for lang in info['codelangs']}  # use default show names
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
     return render_template('Character.html', **info)
 
-
-sorted_code_names = ['dc', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
-                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs',  'char_table']
-
-def dirchar_code(label, download_type):
-    dc = WebGaloisGroup(label)
-    dc.make_code_snippets()
-    code = CodeSnippet(dc.code)
-    return code.export_code(label, download_type, sorted_code_names)
-
-@characters_page.route('/<label>/download/<download_type>')
-def dirchar_code_download(**args):
+@characters_page.route('/Dirichlet/<label>/download/<download_type>')
+def dirchar_code_download(label, download_type):
+    """
+    Render a text page to download all Magma/Sage/PariGP code snippets for the various Dirichlet character pages
+    """
     try:
-        response = make_response(dirchar_code(**args))
+        if label.count(".") == 0:
+            # Group of Dirichlet characters
+            dc = make_webchar({'type':'Dirichlet', 'modulus':label})
+            sorted_code_names = ['character_group', 'group_order', 'group_structure', 'group_gens']
+        elif label.count(".") == 1:
+            # Orbit of Dirichlet characters
+            modulus, orbit_label = label.split(".")
+            dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label})
+            sorted_code_names = ['character_orbit']
+        elif label.count(".") == 2:
+            # Individual Dirichlet character
+            print("********sdfsdfsdf")
+            modulus, orbit_label, number = label.split(".")
+            dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label, 'number':number})
+            sorted_code_names = ['dc', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
+                                 'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs', 'char_table']
+        else:
+            return abort(404, f"Invalid label {label}")
+        code = CodeSnippet(dc.code_snippets())
+        sorted_code_names = ['modulus']
+        response = make_response(code.export_code(label, download_type, sorted_code_names))
     except Exception as err:
+        print("***", err)
         return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response

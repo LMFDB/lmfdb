@@ -42,6 +42,7 @@ The design is the following:
 
 """
 
+import os, yaml
 from flask import url_for
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code
@@ -111,6 +112,7 @@ class WebCharObject():
             d[k] = getattr(self, k, None)
             if d[k] is None:
                 logger.debug('[DC warning] ### key[%s] is None' % k)
+        d["code"] = self.code_snippets()
         logger.info('[DC] collected for %s' % self.__class__.__name__)
         return d
 
@@ -159,9 +161,14 @@ class WebCharObject():
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
 
-        data = {'modulus': self.modulus, 'number' : self.number, 'zeta_order' : self.chi.sage_zeta_order(self.order)}
+        data = {'modulus': self.modulus, 'number' : "asdsd", 'zeta_order' :  "asdsds", # self.chi.sage_zeta_order(self.order),
+                'sage_format' : "sdfsdf" }
+
+        #data = self._code_data()
+        for prop in self._code_data():
+            data[prop] = self._code_data()[prop]
         
-        for prop in code:
+        for prop in ["character_init"]:
             for lang in code[prop]:
                 code[prop][lang] = code[prop][lang].format(**data)
         return code
@@ -993,6 +1000,13 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def next(self):
         return None
 
+    def _code_data(self):
+        return {
+            'modulus': self.modulus,
+            'orbit_label': self.orbit_label,
+        }
+
+
 
 class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     """
@@ -1178,6 +1192,12 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             self.groupelts = [1]
         else:
             self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
+
+    def _code_data(self):
+        return {
+            'modulus': self.modulus,
+            'orbit_label': self.orbit_label,
+        }
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):

@@ -62,7 +62,8 @@ order:
 is_primitive:
   comment: If the character is primitive
   sage: chi.is_primitive()
-  pari: #znconreyconductor(g,chi)==1
+  pari: |
+    #znconreyconductor(g,chi)==1
   magma: IsPrimitive(chi);
 
 parity:
