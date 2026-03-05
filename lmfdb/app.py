@@ -21,7 +21,7 @@ from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
 from .logger import critical
-from .homepage import load_boxes, contribs
+from .homepage import contribs
 
 LMFDB_VERSION = "LMFDB Release 1.2.1"
 
