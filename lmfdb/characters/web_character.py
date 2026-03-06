@@ -991,13 +991,14 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def code_snippets(self):
         code = super().code_snippets()
 
-        if modulus==1:
-            self._genvalues_for_code = 1
-
+        # Sage code in special case for modulus 1
+        if self.modulus == 1:
+            self._genvalues_for_code = []
+            
         data = {'modulus': self.modulus, 'number' : self.number,
                 'symbol_num' : self.symbol_numerator(),
                 'sage_zeta_order' : self.chi.sage_zeta_order(self.order),
-                'sage_dirichlet_format' : ','.join(str(val) for val in self._genvalues_for_code)}
+                'sage_dirichlet_gens' : ','.join(str(val) for val in self._genvalues_for_code)}
 
         for prop in ["character_init", "kronecker_symbol"]:
             for lang in code[prop]:
@@ -1203,7 +1204,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         data = {'modulus': self.modulus, 'number' : self.exnum,
                 'symbol_num' : self.symbol_numerator(),
                 'sage_zeta_order' : sage_zeta_order,
-                'sage_dirichlet_format' : ','.join(str(val) for val in self._genvalues_for_code)}
+                'sage_dirichlet_gens' : ','.join(str(val) for val in self._genvalues_for_code)}
 
         for prop in ["character_init", "kronecker_symbol"]:
             for lang in code[prop]:

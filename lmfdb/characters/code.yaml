@@ -34,7 +34,7 @@ character_init:
     from sage.modular.dirichlet import DirichletCharacter
     H = DirichletGroup({modulus}, base_ring=CyclotomicField({sage_zeta_order}))
     M = H._module
-    chi = DirichletCharacter(H, M([{sage_dirichlet_format}]))
+    chi = DirichletCharacter(H, M([{sage_dirichlet_gens}]))
   pari: |
     [g,chi] = znchar(Mod({number}, {modulus}))
   magma: |
