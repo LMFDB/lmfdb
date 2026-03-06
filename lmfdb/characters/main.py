@@ -466,7 +466,6 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
             downloads = []
             for lang in [("PariGP", "gp"), ("SageMath", "sage"), ("Magma", "magma")]:
                 downloads.append(('{} commands'.format(lang[0]), url_for(".dirchar_code_download", label=f"{modulus}", download_type=lang[1])))
-            downloads.append(('Underlying data', url_for('.dirchar_data', label=f"{modulus}")))
             info['downloads'] = downloads
             if 'gens' in info:
                 info['generators'] = ', '.join(r'<a href="%s">$\chi_{%s}(%s,\cdot)$' % (url_for(".render_Dirichletwebpage", modulus=modulus, number=g), modulus, g) for g in info['gens'])
@@ -561,31 +560,30 @@ def dirchar_code_download(label, download_type):
     """
     Render a text page to download all Magma/Sage/PariGP code snippets for the various Dirichlet character pages
     """
-    try:
+    #try:
+    if (1==1):
         if label.count(".") == 0:
             # Group of Dirichlet characters
-            dc = make_webchar({'type':'Dirichlet', 'modulus':label})
-            sorted_code_names = ['character_group', 'group_order', 'group_structure', 'group_gens']
+            M = int(label)
+            dc = WebDBDirichletGroup(modulus=M) if M <= ORBIT_MAX_MOD else WebSmallDirichletGroup(modulus=M)
+            sorted_code_names = ['group_init', 'group_order', 'group_structure', 'group_gens']
         elif label.count(".") == 1:
             # Orbit of Dirichlet characters
             modulus, orbit_label = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label})
-            sorted_code_names = ['character_orbit']
+            sorted_code_names = ['orbit_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_primitive', 'parity']
         elif label.count(".") == 2:
             # Individual Dirichlet character
-            print("********sdfsdfsdf")
             modulus, orbit_label, number = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label, 'number':number})
-            sorted_code_names = ['dc', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
-                                 'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs', 'char_table']
+            sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_primitive', 'parity', 'galois_orbit']
         else:
             return abort(404, f"Invalid label {label}")
         code = CodeSnippet(dc.code_snippets())
-        sorted_code_names = ['modulus']
         response = make_response(code.export_code(label, download_type, sorted_code_names))
-    except Exception as err:
-        print("***", err)
-        return abort(404, str(err))
+    #except Exception as err:
+    #    print("***", err)
+    #    return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 

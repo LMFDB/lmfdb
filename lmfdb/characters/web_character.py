@@ -161,16 +161,17 @@ class WebCharObject():
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
 
-        data = {'modulus': self.modulus, 'number' : "asdsd", 'zeta_order' :  "asdsds", # self.chi.sage_zeta_order(self.order),
-                'sage_format' : "sdfsdf" }
+        #data = {'modulus': self.modulus, 'number' : "asdsd", 'zeta_order' :  "asdsds", # self.chi.sage_zeta_order(self.order),
+        #        'sage_format' : "sdfsdf" }
 
         #data = self._code_data()
-        for prop in self._code_data():
-            data[prop] = self._code_data()[prop]
+        #for prop in self._code_data():
+        #    data[prop] = self._code_data()[prop]
         
-        for prop in ["character_init"]:
-            for lang in code[prop]:
-                code[prop][lang] = code[prop][lang].format(**data)
+        for prop in ["group_init"]:
+            for lang in code["group_init"]:
+                print(prop, lang)
+                code["group_init"][lang] = code["group_init"][lang].format(**{'modulus': self.modulus})
         return code
 
 #############################################################################
@@ -186,7 +187,6 @@ class WebDirichlet(WebCharObject):
     def _compute(self):
         if self.modlabel:
             self.modulus = int(self.modlabel)
-        self.codelangs = ('pari', 'sage')
 
     def _char_desc(self, c, mod=None, prim=None):
         """ num is the number """
@@ -418,20 +418,19 @@ class WebChar(WebCharObject):
     """
     Class for presenting a character on a web page
     """
-    _keys = [ 'title', 'codelangs', 'type',
+    _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol',
+              'number', 'numlabel', 'texname',
+              'symbol',
               'conductor',
-              'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
+              'isprimitive', 
               'inducing',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'indlabel', 'order', 'parity',
+              'isreal', 'generators', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
+              'charsums']
 
     def __init__(self, **args):
         self.maxcols = 10
@@ -571,7 +570,6 @@ class WebDBDirichlet(WebDirichlet):
                 self.chi = ConreyCharacter(self.modulus, self.number)
         if not self.maxcols:
             self.maxcols = 30
-        self.codelangs = ('pari', 'sage')
         self._compute()
 
     @lazy_attribute
@@ -697,10 +695,10 @@ class WebCharGroup(WebCharObject):
     self.G is the underlying group
     """
     headers = [ 'order', 'primitive']
-    _keys = [ 'title', 'codelangs', 'type',
-            'modulus', 'modlabel', 'texname', 'codeinit',
-            'structure', 'structure_group_knowl', 'codestruct', 'order',
-            'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
+    _keys = [ 'title', 'type',
+            'modulus', 'modlabel', 'texname',
+            'structure', 'structure_group_knowl', 'order',
+            'gens', 'generators', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties', 'friends', 'rowtruncate', 'coltruncate']
 
@@ -895,27 +893,25 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         ]
         return values
 
-
 class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
     character orbits with modulus up to 100,000.
     """
-    _keys = [ 'title', 'codelangs', 'type',
+    _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol',
+              'number', 'numlabel', 'texname', 
+              'symbol', 
               'conductor',
-              'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
+              'condlabel',
+              'isprimitive',
               'inducing',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'indlabel', 'order', 'parity',
+              'isreal', 'generators', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'galoisorbit', 
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal']
+              'charsums', 'orbit_label', 'orbit_index', 'isminimal']
 
     def __init__(self, **kwargs):
         self.maxcols = 30
@@ -1000,12 +996,19 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def next(self):
         return None
 
-    def _code_data(self):
-        return {
-            'modulus': self.modulus,
-            'orbit_label': self.orbit_label,
-        }
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
 
+        data = {'modulus': self.modulus, 'number' : self.number,
+                'symbol_num' : self.symbol_numerator(),
+                'sage_zeta_order' : self.chi.sage_zeta_order(self.order),
+                'sage_dirichlet_format' : ','.join(str(val) for val in self._genvalues_for_code)}
+
+        for prop in ["character_init", "kronecker_symbol"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**data)
+        return code
 
 
 class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
@@ -1016,20 +1019,19 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     headers = ['Character']
 
-    _keys = [ 'title', 'codelangs', 'type',
+    _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol','headers',
-              'conductor', 'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
+              'number', 'numlabel', 'texname', 
+              'symbol', 'headers',
+              'conductor', 'condlabel', 
+              'isprimitive', 
               'inducing','rowtruncate','ind_orbit_label',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'indlabel', 'order', 'parity', 
+              'isreal', 'generators', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal', 'isorbit', 'degree']
+              'charsums', 'orbit_label', 'orbit_index', 'isminimal', 'isorbit', 'degree']
 
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
@@ -1047,7 +1049,6 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             self.H = PariConreyGroup(self.modulus)
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
-        self.codelangs = ('pari', 'sage')
         self.orbit_label = kwargs.get('orbit_label')  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.maxrows = 30
@@ -1193,11 +1194,32 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         else:
             self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
 
-    def _code_data(self):
-        return {
-            'modulus': self.modulus,
-            'orbit_label': self.orbit_label,
-        }
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
+
+        self.exnum = self.galorbnums[0]
+        self.exchi = ConreyCharacter(self.modulus, self.exnum)
+        vals = self.exchi.genvalues
+
+        sage_zeta_order = self.exchi.sage_zeta_order(self.order)
+        self._genvalues_for_code = get_sage_genvalues(self.modulus,
+                                    self.order, vals, sage_zeta_order)
+
+        data = {'modulus': self.modulus, 'number' : self.exnum,
+                'symbol_num' : self.symbol_numerator(),
+                'sage_zeta_order' : sage_zeta_order,
+                'sage_dirichlet_format' : ','.join(str(val) for val in self._genvalues_for_code)}
+
+        for prop in ["character_init", "kronecker_symbol"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**data)
+
+        # Code snippet to construct orbit of Dirichlet character
+        code["orbit_init"] = {'comment': "Construct the Dirichlet character orbit"}
+        for lang in code["prompt"]:
+            code["orbit_init"][lang] = code["character_init"][lang]+code["galois_orbit"][lang]+"\n"
+        return code
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
@@ -1206,7 +1228,6 @@ class WebSmallDirichletGroup(WebDirichletGroup):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = Integers(m).unit_group()
-        self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
     def contents(self):
@@ -1232,7 +1253,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         self.modulus = int(self.modlabel)
         self.number = int(self.numlabel)
         self.chi = ConreyCharacter(self.modulus, self.number)
-        self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
     def conductor(self):

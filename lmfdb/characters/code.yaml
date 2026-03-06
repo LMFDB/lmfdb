@@ -32,9 +32,9 @@ character_init:
   comment: Define the Dirichlet character
   sage: |
     from sage.modular.dirichlet import DirichletCharacter
-    H = DirichletGroup({modulus}, base_ring=CyclotomicField({zeta_order}))
+    H = DirichletGroup({modulus}, base_ring=CyclotomicField({sage_zeta_order}))
     M = H._module
-    chi = DirichletCharacter(H, M([{sage_format}]))
+    chi = DirichletCharacter(H, M([{sage_dirichlet_format}]))
   pari: |
     [g,chi] = znchar(Mod({number}, {modulus}))
   magma: |
@@ -54,10 +54,16 @@ conductor:
   magma: Conductor(chi);
 
 order:
-  coment: Order
+  comment: Order
   sage: chi.multiplicative_order()
   pari: charorder(g,chi)
   magma: Order(chi);
+
+is_real:
+  comment: Whether the character is real
+  sage: chi.multiplicative_order() <= 2
+  pari: charorder(g,chi) <= 2
+  magma: Order(chi) le 2;
 
 is_primitive:
   comment: If the character is primitive
@@ -84,6 +90,9 @@ galois_orbit:
   pari: |
     order = charorder(g,chi)
     [ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]
+  magma: |
+    order := Order(chi);
+    { chi^k : k in [1..order-1] | GCD(k,order) eq 1 };
 
 gauss_sum:
   comment: Gauss sum
@@ -106,7 +115,7 @@ value:
 
 
 # Code snippets for Dirichlet character group
-character_group:
+group_init:
   comment: Define the Dirichlet group
   sage: G = DirichletGroup({modulus})
   pari: g = idealstar(,{modulus},2)
@@ -118,28 +127,37 @@ group_order:
   pari: g.no
   magma: Order(G);
 
-group_gens:
-  comment: Generators
-  sage: G.gens()
-  pari: g.gen
-  magma: Generators(G);
-
 group_structure:
   comment: Group structure
   sage: G.invariants()
   pari: g.cyc
   magma: PrimaryInvariants(G);
 
+group_gens:
+  comment: Generators
+  sage: G.gens()
+  pari: g.gen
+  magma: Generators(G);
 
-# Code snippet tests
+
+# Code snippet tests (testing characters, orbits, and group pages)
 snippet_test:
-  test1.1:
-    label: 1.1
-    url: Character/Dirichlet/1/1/download/{lang}
-  test5.2:
-    label: 5.2
-    url: Character/Dirichlet/5/2/download/{lang}
-
-
-
+  test1a1:
+    label: 1.a.1
+    url: Character/Dirichlet/1.a.1/download/{lang}
+  test5c2:
+    label: 5.c.2
+    url: Character/Dirichlet/5.c.2/download/{lang}
+  test3b:
+    label: 3.b
+    url: Character/Dirichlet/3.b/download/{lang}
+  test7c:
+    label: 7.c
+    url: Character/Dirichlet/7.c/download/{lang}
+  test11:
+    label: 11
+    url: Character/Dirichlet/11/download/{lang}
+  test100:
+    label: 100
+    url: Character/Dirichlet/100/download/{lang}
 
