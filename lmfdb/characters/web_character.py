@@ -161,8 +161,9 @@ class WebCharObject():
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
         
-        for lang in code["group_init"]:
-            code["group_init"][lang] = code["group_init"][lang].format(**{'modulus': self.modulus})
+        for prop in ["group_init", "group_structure"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**{'modulus': self.modulus})
         return code
 
 #############################################################################
