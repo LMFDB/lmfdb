@@ -2,44 +2,8 @@
 sage: G = DirichletGroup(11)
 sage: G.order()
 10
-sage: G.invariants()
-[0;31m---------------------------------------------------------------------------[0m
-[0;31mKeyError[0m                                  Traceback (most recent call last)
-File [0;32m/scratch/sage/sage-10.3/src/sage/structure/category_object.pyx:855[0m, in [0;36msage.structure.category_object.CategoryObject.getattr_from_category[0;34m()[0m
-[1;32m    854[0m try:
-[0;32m--> 855[0m     return self._cached_methods[name]
-[1;32m    856[0m except KeyError:
-
-[0;31mKeyError[0m: 'invariants'
-
-During handling of the above exception, another exception occurred:
-
-[0;31mAttributeError[0m                            Traceback (most recent call last)
-Cell [0;32mIn[107], line 1[0m
-[0;32m----> 1[0m [43mG[49m[38;5;241;43m.[39;49m[43minvariants[49m()
-
-File [0;32m/scratch/sage/sage-10.3/src/sage/structure/category_object.pyx:849[0m, in [0;36msage.structure.category_object.CategoryObject.__getattr__[0;34m()[0m
-[1;32m    847[0m         AttributeError: 'PrimeNumbers_with_category' object has no attribute 'sadfasdf'...
-[1;32m    848[0m     """
-[0;32m--> 849[0m     return self.getattr_from_category(name)
-[1;32m    850[0m 
-[1;32m    851[0m cdef getattr_from_category(self, name) noexcept:
-
-File [0;32m/scratch/sage/sage-10.3/src/sage/structure/category_object.pyx:864[0m, in [0;36msage.structure.category_object.CategoryObject.getattr_from_category[0;34m()[0m
-[1;32m    862[0m     cls = self._category.parent_class
-[1;32m    863[0m 
-[0;32m--> 864[0m attr = getattr_from_other_class(self, cls, name)
-[1;32m    865[0m self._cached_methods[name] = attr
-[1;32m    866[0m return attr
-
-File [0;32m/scratch/sage/sage-10.3/src/sage/cpython/getattr.pyx:357[0m, in [0;36msage.cpython.getattr.getattr_from_other_class[0;34m()[0m
-[1;32m    355[0m     dummy_error_message.cls = type(self)
-[1;32m    356[0m     dummy_error_message.name = name
-[0;32m--> 357[0m     raise AttributeError(dummy_error_message)
-[1;32m    358[0m cdef PyObject* attr = instance_getattr(cls, name)
-[1;32m    359[0m if attr is NULL:
-
-[0;31mAttributeError[0m: 'DirichletGroup_class_with_category' object has no attribute 'invariants'
+sage: Integers(11).unit_group().invariants()
+(10,)
 sage: G.gens()
 (Dirichlet character modulo 11 of conductor 11 mapping 2 |--> zeta10,)
 sage: 
