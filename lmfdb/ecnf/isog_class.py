@@ -1,3 +1,4 @@
+import os, yaml
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import make_graph, setup_isogeny_graph, names_and_urls, web_latex
@@ -28,6 +29,20 @@ class ECNF_isoclass():
         """
         self.__dict__.update(dbdata)
         self.make_class()
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+        # For now, only Sage support elliptic curve isogeny classes over number fields
+        code['prompt']
+
+        for prop in ["curve"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**{'ainvs': self.ainvs})
+        return code
+
 
     @staticmethod
     def by_label(label):
@@ -156,6 +171,11 @@ class ECNF_isoclass():
             self.friends += [('L-function', self.urls['Lfunction'])]
         else:
             self.friends += [('L-function not available', "")]
+
+        self.downloads = []
+        for lang in [("SageMath", "sage")]:
+            self.downloads.append(('{} commands'.format(lang[0]), url_for(".ecnf_code_download", label=f"{modulus}", download_type=lang[1])))
+        self.code = self.make_code_snippets()
 
         self.properties = [('Base field', self.field_name),
                            ('Label', self.class_label),

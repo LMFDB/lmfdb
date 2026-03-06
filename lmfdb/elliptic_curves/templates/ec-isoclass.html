@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{{ place_code('class') }}
+{{ place_code('isogeny_class') }}
 
 <style type="text/css">
 #isogeny_class_table th, #isogeny_class_table td {
@@ -76,7 +76,7 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
 {{ info.newform_label }}
 {% endif %}
 </h2>
-{{ place_code('q_eigenform') }}
+{{ place_code('qexp') }}
 <div>
     <form>
         <div class="output">
@@ -109,7 +109,7 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
 
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
-{{ place_code('matrix') }}
+{{ place_code('isogeny_matrix') }}
 <p>The \((i,j)\)-th entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
 </p>
 <p>
@@ -119,9 +119,9 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
 {% endif %}
 
 <h2> {{ KNOWL('ec.isogeny_graph', title='Isogeny graph') }} </h2>
-{{ place_code('plot') }}
+{{ place_code('isogeny_graph') }}
 {% if info.class_size > 1 %}
-<p>The vertices are labelled with {{info.label_type}} labels. </p>
+<p>The vertices are labelled with {{info.label_type}} labels, and the \( \Gamma_0(N) \)-optimal curve is highlighted in blue.</p>
 {% endif %}
 <div id="isogeny-graph"></div>
 

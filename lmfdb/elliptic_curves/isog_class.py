@@ -1,3 +1,4 @@
+import os, yaml
 from flask import url_for
 from lmfdb.utils import make_graph, setup_isogeny_graph, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
@@ -55,6 +56,21 @@ class ECisog_class():
         if data:
             return ECisog_class(data)
         return "Class not found" # caller must catch this and raise an error
+
+    def make_code_snippets(self):
+        # read in code.yaml from current directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+        for lang in code["curve"]:
+            code["curve"][lang] = code["curve"][lang].format(**{'ainvs': self.ainvs})
+
+        # Create top code snippet to construct elliptic curve isogeny class
+        for lang in code["isogeny_class"]:
+            code["isogeny_class"][lang] = code["curve"][lang]+code["isogeny_class"][lang]
+
+        return code
+
 
     def make_class(self):
         # Extract the size of the isogeny class from the database
@@ -184,20 +200,16 @@ class ECisog_class():
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
                           ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_iso)),
-                          ('Underlying data', url_for(".EC_data", label=self.lmfdb_iso))]
+        for lang in [("PariGP", "gp"), ("SageMath", "sage"), ("Magma", "magma")]:
+            self.downloads.append(('{} commands'.format(lang[0]), url_for(".ec_code_download", label=f"{modulus}", download_type=lang[1])))
+        self.downloads.append(('Underlying data', url_for(".EC_data", label=self.lmfdb_iso)))
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),
                       (r'$\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % self.conductor, url_for(".by_conductor", conductor=self.conductor)),
                       ('%s' % self.iso_label, ' ')]
-        self.code = {}
-        self.code['show'] = {'sage':''} # use default show names
-        self.code['class'] = {'sage':'E = EllipticCurve(%s)\n' % (self.ainvs) + 'E.isogeny_class()\n'}
-        self.code['curves'] = {'sage':'E.isogeny_class().curves'}
-        self.code['rank'] = {'sage':'E.rank()'}
-        self.code['q_eigenform'] = {'sage':'E.q_eigenform(10)'}
-        self.code['matrix'] = {'sage':'E.isogeny_class().matrix()'}
-        self.code['plot'] = {'sage':'E.isogeny_graph().plot(edge_labels=True)'}
+
+        self.code = self.make_code_snippets()
 
         lfunc_url = self.lfunction_link
         origin_url = lfunc_url.lstrip('/L/').rstrip('/')

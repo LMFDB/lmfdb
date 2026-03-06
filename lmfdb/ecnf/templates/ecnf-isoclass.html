@@ -42,6 +42,7 @@ function show_code(system) {
 
 
 <h2>{{ KNOWL('ec.rank',title='Rank') }}</h2>
+{{ place_code('rank') }}
 <p>
 {% if cl.rk == "?" %}
   {% if cl.rk_bnds != "not recorded" %}
@@ -60,7 +61,7 @@ function show_code(system) {
 </p>
 
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
-
+{{ place_code('isogeny_matrix') }}
 {% if cl.isogeny_matrix %}
 <p>
   \({{cl.isogeny_matrix_str}}\)
@@ -70,6 +71,7 @@ function show_code(system) {
 {% endif %}
 
 <h2>{{ KNOWL('ec.isogeny_graph',title='Isogeny graph') }}</h2>
+{{ place_code('isogeny_graph') }}
 {% if cl.isogeny_matrix %}
 <div id="isogeny-graph"></div>
 
@@ -82,7 +84,8 @@ function show_code(system) {
 <p>Not available.</p>
 {% endif %}
 
-<h2>Elliptic curves in class {{cl.short_class_label}} over   {{ cl.field_knowl|safe }}</h2>
+<h2>Elliptic curves in class {{cl.short_class_label}} over {{ cl.field_knowl|safe }}</h2>
+{{ place_code('curves') }}
 <p>
 Isogeny class {{cl.short_class_label}} contains
 {% if cl.class_size==1 %}
