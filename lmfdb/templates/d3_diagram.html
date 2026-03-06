@@ -1,7 +1,6 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-<!-- TODO: replace this with a diagram-specific search form -->
 {% include 'refine_search_form.html' %}
 
 <!-- Load d3.js -->
@@ -11,8 +10,8 @@
 <!-- Container for diagram and controls -->
 <div id="diagram-container" style="position: relative;" >
 
-<!-- Create a div where the graph will take place -->
-<div id="my_dataviz"></div>
+  <!-- Create a div where the graph will take place -->
+  <div id="my_dataviz"></div>
 
   <!-- Control panel -->
   <div style="margin-top: 20px; margin-left: 60px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; display: inline-block;">
@@ -73,8 +72,7 @@
 <script>
   // import {Legend} from "@d3/color-legend"
   // set the dimensions and margins of the graph
-  const data = {{ info.get("d3_data") | tojson | safe }};
-  console.log(data)
+  let data = {{ info.get("d3_data") | tojson | safe }};
   // Convert string values to numbers to ensure proper numeric comparison
   console.log(data[1].color)
   data.forEach(d => {
@@ -84,7 +82,38 @@
       d.color = isNaN(parsedColor) ? (d.color === "true" ? 1 : 0) : parsedColor;
   });
 
-  var margin = {top: 30, right: 30, bottom: 40, left: 100},
+  // Deduplicate data by (x, y) coordinates and count multiplicities
+  const pointMap = new Map();
+  data.forEach(d => {
+      const key = `${d.x},${d.y}`;
+      if (pointMap.has(key)) {
+          const existing = pointMap.get(key);
+          existing.multpl += 1;
+          existing.labels.push(d.label);
+      } else {
+          pointMap.set(key, {
+              x: d.x,
+              y: d.y,
+              color: d.color,
+              label: d.label,
+              labels: [d.label],
+              multpl: 1,
+              path: d.path
+          });
+      }
+  });
+  
+  // Convert map back to array and calculate multiplicity scale
+  data = Array.from(pointMap.values());
+  
+  // Calculate multiplicity scale (1 to 2 based on multiplicity)
+  const maxMultpl = Math.max(...data.map(d => d.multpl));
+  data.forEach(d => {
+      // Scale from 1 to 2 based on multiplicity
+      d.multplScale = maxMultpl === 1 ? 1 : 1 + (d.multpl - 1) / (maxMultpl - 1);
+  });
+
+  var margin = {top: 50, right: 30, bottom: 40, left: 100},
 
       width = 1000 - margin.left - margin.right,
       height = 400 - margin.top - margin.bottom;
@@ -102,10 +131,10 @@
 
   // Add clipPath to prevent points from being drawn outside chart area
   chartGroup.append("defs").append("clipPath")
-      .attr("id", "clip")
-      .append("rect")
-      .attr("width", width)
-      .attr("height", height);
+    .attr("id", "clip")
+    .append("rect")
+    .attr("width", width)
+    .attr("height", height);
 
   // create a tooltip
   var Tooltip = d3.select("#my_dataviz")
@@ -119,19 +148,33 @@
       .style("border-radius", "5px")
       .style("padding", "5px")
       .style("z-index", "1000")
+      .style("pointer-events", "none")
+      .style("user-select", "none")
   // Three functions that change the tooltip when user hover / move / leave a cell
   var mouseover = function(d) {
+      let html = "";
+      if (d.multpl > 1) {
+	  // remove styling from horizontal rule - this looks nicer
+          html += d.multpl + " results<hr style='all: revert;'/>";
+      }
+      // Show first 5 labels
+      const labelsToShow = d.labels.slice(0, 5);
+      html += labelsToShow.join("<br/>");
+      if (d.labels.length > 5) {
+          html += "<br/>...";
+      }
       Tooltip
+	  .html(html)
 	  .style("opacity", 1)
       d3.select(this)
 	  .style("stroke", "black")
 	  .style("opacity", 1)
   }
   var mousemove = function(d) {
+      const [mx, my] = d3.mouse(this);
       Tooltip
-	  .html("Label is " + d.label)
-	  .style("left", (d3.mouse(this)[0] + 70) + "px")
-	  .style("top", (d3.mouse(this)[1] - 20) + "px")
+	  .style("left", (mx + 140) + "px")
+	  .style("top", (my - 20) + "px")
   }
   var mouseleave = function(d) {
       Tooltip
@@ -145,8 +188,8 @@
   // Color scheme definitions
   const colorSchemes = {
       viridis: {
-          interpolator: d3.interpolateViridis,
-          binary: ['#440154', '#FDE725']
+	  interpolator: d3.interpolateViridis,
+	  binary: ['#440154', '#FDE725']
       },
       plasma: {
           interpolator: d3.interpolatePlasma,
@@ -192,12 +235,12 @@
           return d3.scaleOrdinal().range(['black']);
       } else if (isBinary) {
           return d3.scaleOrdinal()
-              .domain([0, 1])
-              .range(scheme.binary);
+	      .domain([0, 1])
+	      .range(scheme.binary);
       } else {
-          return d3.scaleSequential()
-              .domain(colorExtent)
-              .interpolator(scheme.interpolator);
+	  return d3.scaleSequential()
+	      .domain(colorExtent)
+	      .interpolator(scheme.interpolator);
       }
   }
 
@@ -210,31 +253,33 @@
       const scheme = colorSchemes[currentScheme];
 
       if (numColors === 1) {
-          // Single value: black
-          preview.style("background", 'black');
-          labels.style("display", "none");
+	  // Single value: black
+	  preview.style("background", 'black');
+	  labels.style("display", "none");
       } else if (isBinary) {
-          // Binary: show two color swatches side by side
-          preview.style("background", `linear-gradient(to right, ${scheme.binary[0]} 50%, ${scheme.binary[1]} 50%)`);
-          labels.style("display", "block");
+	  // Binary: show two color swatches side by side
+	  preview.style("background", `linear-gradient(to right, ${scheme.binary[0]} 50%, ${scheme.binary[1]} 50%)`);
+	  labels.style("display", "block");
       } else {
-          // Continuous: show gradient
-          const canvas = document.createElement('canvas');
-          canvas.width = 150;
-          canvas.height = 20;
-          const ctx = canvas.getContext('2d');
-          const gradient = ctx.createLinearGradient(0, 0, 150, 0);
+	  // Continuous: show gradient
+	  const canvas = document.createElement('canvas');
+	  canvas.width = 150;
+	  canvas.height = 20;
+	  const ctx = canvas.getContext('2d');
+	  const gradient = ctx.createLinearGradient(0, 0, 150, 0);
 
-          for (let i = 0; i <= 10; i++) {
-              const t = i / 10;
-              gradient.addColorStop(t, scheme.interpolator(t));
-          }
+	  for (let i = 0; i <= 10; i++) {
+	      const t = i / 10;
+	      gradient.addColorStop(t, scheme.interpolator(t));
+	  }
 
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, 150, 20);
-          preview.style("background", `url(${canvas.toDataURL()})`);
-          preview.style("background-size", "100% 100%");
-          labels.style("display", "none");
+	  ctx.fillStyle = gradient;
+	  ctx.fillRect(0, 0, 150, 20);
+	  preview.style("background", `url(${canvas.toDataURL()})`);
+	  preview.style("background-size", "100% 100%");
+	  preview.style("margin-top", "20px");
+
+	  labels.style("display", "none");
       }
   }
 
@@ -254,9 +299,9 @@
 
       // Update all points with new colors
       pointsGroup.selectAll("circle")
-          .transition()
-          .duration(300)
-          .style("fill", d => colorScale(d.color));
+	  .transition()
+	  .duration(300)
+	  .style("fill", d => colorScale(d.color));
   });
 
   var pointRad = 1.5;
@@ -266,17 +311,21 @@
   d3.select("#radiusValue").text(1.5);
 
   // Function to calculate default axis range with 10% leeway on both ends
-  // Returns [min, max] where min is 0 if all positive, otherwise min - 10% spread
-  // and max is max + 10% spread
+  // Returns [min, max] where min is minimum value - 10% spread
+  // and max is maximum value + 10% spread
+
+  // If 0 is contained in the 10% minimum spread, then we snap it to 0 instead; this looks better (e.g. on group pages)
+
   function defaultAxisRange(data, accessor) {
       const values = data.map(accessor);
       const min = d3.min(values);
       const max = d3.max(values);
       const spread = max - min;
       
-      // Min: always data min - 10% of spread for proper alignment
-      const axisMin = min - (spread / 10);
-      // Max: max + 10% of spread
+      let axisMin = min - (spread / 10);
+      if (axisMin <= 0 && 0 <= min) {
+	  axisMin = 0;
+      }
       const axisMax = max + (spread / 10);
       
       return [axisMin, axisMax];
@@ -309,21 +358,21 @@
 
   // Add X axis label
   chartGroup.append("text")
-      .attr("x", width / 2)
-      .attr("y", height + margin.bottom - 5)
-      .style("text-anchor", "middle")
-      .style("font-weight", "bold")
-      .style("font-family", "sans-serif")
-      .text(xAxisLabel)
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom - 5)
+    .style("text-anchor", "middle")
+    .style("font-weight", "bold")
+    .style("font-family", "sans-serif")
+    .text(xAxisLabel)
 
   // Add Y axis label at top left
   chartGroup.append("text")
-      .attr("x", -0)
-      .attr("y", -12)
-      .style("text-anchor", "middle")
-      .style("font-weight", "bold")
-      .style("font-family", "sans-serif")
-      .text(yAxisLabel)
+    .attr("x", -0)
+    .attr("y", -12)
+    .style("text-anchor", "middle")
+    .style("font-weight", "bold")
+    .style("font-family", "sans-serif")
+    .text(yAxisLabel)
   
   // Scales (will be updated when axes change)
   var x, y
@@ -338,53 +387,56 @@
   function updateChart() {
       // Update scales
       x = d3.scaleLinear()
-          .domain([currentXMin, currentXMax])
-          .range([0, width])
+	  .domain([currentXMin, currentXMax])
+	  .range([0, width])
 
       y = d3.scaleLinear()
-          .domain([currentYMin, currentYMax])
-          .range([height, 0])
+	  .domain([currentYMin, currentYMax])
+	  .range([height, 0])
 
       // Update X axis
       xAxisGroup.attr("transform", "translate(0," + height + ")")
-          .transition()
-          .duration(300)
-          .call(d3.axisBottom(x))
+	  .transition()
+	  .duration(300)
+	  .call(d3.axisBottom(x))
 
       // Update Y axis
       yAxisGroup.transition()
-          .duration(300)
-          .call(d3.axisLeft(y))
+	  .duration(300)
+	  .call(d3.axisLeft(y))
 
       // Update points with new scales
       var circles = pointsGroup.selectAll("circle")
-          .data(data)
+	  .data(data)
 
       // Update existing points
       circles.transition()
-          .duration(300)
-          .attr("cx", d => x(d.x))
-          .attr("cy", d => y(d.y))
+	  .duration(300)
+	  .attr("cx", d => x(d.x))
+	  .attr("cy", d => y(d.y))
+	  .attr("r", d => pointRad * d.multplScale)
 
       // Enter new points (if any)
       circles.enter()
-          .append("circle")
-          .attr("cx", d => x(d.x))
-          .attr("cy", d => y(d.y))
-          .attr("r", pointRad)
-          .style("fill", d => colorScale(d.color))
-          .style("opacity", 0.8)
-          .on("mouseover", mouseover)
-          .on("mousemove", mousemove)
-          .on("mouseleave", mouseleave)
-          .on("click", (d) => {
-              window.location.href = `${baseUrl}/${d.path}`;
-          })
+	  .append("circle")
+	  .attr("cx", d => x(d.x))
+	  .attr("cy", d => y(d.y))
+	  .attr("r", d => pointRad * d.multplScale)
+	  .style("fill", d => colorScale(d.color))
+	  .style("opacity", 0.8)
+	  .style("cursor", "pointer")
+	  .style("pointer-events", "all")
+	  .on("mouseover", mouseover)
+	  .on("mousemove", mousemove)
+	  .on("mouseleave", mouseleave)
+	  .on("click", (d) => {
+	      window.location.href = `${baseUrl}/${d.path}`;
+	  })
   }
 
   // Create zoom behavior
   var zoom = d3.zoom()
-      .scaleExtent([0.5, 50])  // Limit zoom scale
+      .scaleExtent([0.8, 20])  // Limit zoom scale
       .extent([[0, 0], [width, height]])
       .on("zoom", zoomed);
 
@@ -403,8 +455,8 @@
 
       // Update points with transformed scales
       pointsGroup.selectAll("circle")
-          .attr("cx", d => newX(d.x))
-          .attr("cy", d => newY(d.y));
+	  .attr("cx", d => newX(d.x))
+	  .attr("cy", d => newY(d.y));
 
       // Update current domain for input fields
       currentXMin = newX.domain()[0];
@@ -429,9 +481,9 @@
       pointRad = newRadius;
       
       d3.selectAll("circle")
-          .transition()
-          .duration(100)
-          .attr("r", newRadius);
+	  .transition()
+	  .duration(100)
+	  .attr("r", d => newRadius * d.multplScale);
   });
   
   // Function to update axes from input fields
@@ -443,13 +495,13 @@
       
       // Validate inputs
       if (newXMax > newXMin && newYMax > newYMin) {
-          currentXMin = newXMin
-          currentXMax = newXMax
-          currentYMin = newYMin
-          currentYMax = newYMax
-          updateChart()
+	  currentXMin = newXMin
+	  currentXMax = newXMax
+	  currentYMin = newYMin
+	  currentYMax = newYMax
+	  updateChart()
       } else {
-          alert("xMax must be > xMin and yMax must be > yMin")
+	  alert("xMax must be > xMin and yMax must be > yMin")
       }
   }
   
@@ -459,7 +511,7 @@
   // Enter key event listeners for all axis input fields
   d3.selectAll("#xMin, #xMax, #yMin, #yMax").on("keydown", function() {
       if (d3.event.key === "Enter" || d3.event.keyCode === 13) {
-          updateAxesFromInputs();
+	  updateAxesFromInputs();
       }
   });
   
@@ -485,17 +537,17 @@
 
       // Reset zoom transform
       svg.transition()
-          .duration(300)
-          .call(zoom.transform, d3.zoomIdentity);
+	  .duration(300)
+	  .call(zoom.transform, d3.zoomIdentity);
 
       updateChart()
 
       // Update point radii and colors
       d3.selectAll("circle")
-          .transition()
-          .duration(100)
-          .attr("r", pointRad)
-          .style("fill", d => colorScale(d.color));
+	  .transition()
+	  .duration(100)
+	  .attr("r", d => pointRad * d.multplScale)
+	  .style("fill", d => colorScale(d.color));
   });
 
 </script>
