@@ -16,7 +16,6 @@ from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.characters.web_character import (
     valuefield_from_order,
-    WebCharObject,
     WebSmallDirichletCharacter,
     WebDBDirichletCharacter,
     WebDBDirichletGroup,
@@ -453,12 +452,10 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         if orbit_label is None:
 
             if modulus <= ORBIT_MAX_MOD:
-                webgroup = WebDBDirichletGroup(**args)
-                info = webgroup.to_dict()
+                info = WebDBDirichletGroup(**args).to_dict()
                 info['show_orbit_label'] = True
             else:
-                webgroup = WebSmallDirichletGroup(**args)
-                info = webgroup.to_dict()
+                info = WebSmallDirichletGroup(**args).to_dict()
 
             info['title'] = 'Group of Dirichlet characters of modulus ' + str(modulus)
             info['bread'] = bread([('%s' % modulus, url_for(".render_Dirichletwebpage", modulus=modulus))])
@@ -473,8 +470,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
         else:
             if modulus <= ORBIT_MAX_MOD:
                 try:
-                    weborbit = WebDBDirichletOrbit(**args)
-                    info = weborbit.to_dict()
+                    info = WebDBDirichletOrbit(**args).to_dict()
                 except ValueError:
                     flash_error(
                         "No Galois orbit of Dirichlet characters with label %s.%s was found in the database.", modulus, orbit_label
@@ -560,8 +556,7 @@ def dirchar_code_download(label, download_type):
     """
     Render a text page to download all Magma/Sage/PariGP code snippets for the various Dirichlet character pages
     """
-    #try:
-    if (1==1):
+    try:
         if label.count(".") == 0:
             # Group of Dirichlet characters
             M = int(label)
@@ -571,19 +566,18 @@ def dirchar_code_download(label, download_type):
             # Orbit of Dirichlet characters
             modulus, orbit_label = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label})
-            sorted_code_names = ['orbit_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_primitive', 'parity']
+            sorted_code_names = ['orbit_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity']
         elif label.count(".") == 2:
             # Individual Dirichlet character
             modulus, orbit_label, number = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label, 'number':number})
-            sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_primitive', 'parity', 'galois_orbit']
+            sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity', 'galois_orbit']
         else:
             return abort(404, f"Invalid label {label}")
         code = CodeSnippet(dc.code_snippets())
         response = make_response(code.export_code(label, download_type, sorted_code_names))
-    #except Exception as err:
-    #    print("***", err)
-    #    return abort(404, str(err))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 

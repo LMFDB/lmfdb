@@ -160,18 +160,9 @@ class WebCharObject():
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
-
-        #data = {'modulus': self.modulus, 'number' : "asdsd", 'zeta_order' :  "asdsds", # self.chi.sage_zeta_order(self.order),
-        #        'sage_format' : "sdfsdf" }
-
-        #data = self._code_data()
-        #for prop in self._code_data():
-        #    data[prop] = self._code_data()[prop]
         
-        for prop in ["group_init"]:
-            for lang in code["group_init"]:
-                print(prop, lang)
-                code["group_init"][lang] = code["group_init"][lang].format(**{'modulus': self.modulus})
+        for lang in code["group_init"]:
+            code["group_init"][lang] = code["group_init"][lang].format(**{'modulus': self.modulus})
         return code
 
 #############################################################################
@@ -422,7 +413,7 @@ class WebChar(WebCharObject):
               'modulus', 'modlabel',
               'number', 'numlabel', 'texname',
               'symbol',
-              'conductor',
+              'conductor', 'condlabel',
               'isprimitive', 
               'inducing',
               'indlabel', 'order', 'parity',
@@ -999,6 +990,9 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     @cached_method
     def code_snippets(self):
         code = super().code_snippets()
+
+        if modulus==1:
+            self._genvalues_for_code = 1
 
         data = {'modulus': self.modulus, 'number' : self.number,
                 'symbol_num' : self.symbol_numerator(),
