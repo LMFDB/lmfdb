@@ -2,8 +2,8 @@
 sage: G = DirichletGroup(100)
 sage: G.order()
 40
-sage: Integers(100).unit_group().invariants()
-(2, 20)
+sage: sorted(g.order() for g in G.gens())
+[2, 20]
 sage: G.gens()
 (Dirichlet character modulo 100 of conductor 4 mapping 51 |--> -1, 77 |--> 1,
  Dirichlet character modulo 100 of conductor 25 mapping 51 |--> 1, 77 |--> zeta20)

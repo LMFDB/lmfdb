@@ -2,8 +2,8 @@
 sage: G = DirichletGroup(11)
 sage: G.order()
 10
-sage: Integers(11).unit_group().invariants()
-(10,)
+sage: sorted(g.order() for g in G.gens())
+[10]
 sage: G.gens()
 (Dirichlet character modulo 11 of conductor 11 mapping 2 |--> zeta10,)
 sage: 

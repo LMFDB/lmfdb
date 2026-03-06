@@ -129,7 +129,7 @@ group_order:
 
 group_structure:
   comment: Group structure
-  sage: Integers({modulus}).unit_group().invariants()
+  sage: sorted(g.order() for g in G.gens())
   pari: g.cyc
   magma: PrimaryInvariants(G);
 
