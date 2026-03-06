@@ -567,7 +567,7 @@ def dirchar_code_download(label, download_type):
             # Orbit of Dirichlet characters
             modulus, orbit_label = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label})
-            sorted_code_names = ['orbit_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity']
+            sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity']
         elif label.count(".") == 2:
             # Individual Dirichlet character
             modulus, orbit_label, number = label.split(".")

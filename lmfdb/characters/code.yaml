@@ -155,9 +155,9 @@ snippet_test:
     label: 7.c
     url: Character/Dirichlet/7.c/download/{lang}
   test11:
-    label: 11
+    label: mod11
     url: Character/Dirichlet/11/download/{lang}
   test100:
-    label: 100
+    label: mod100
     url: Character/Dirichlet/100/download/{lang}
 

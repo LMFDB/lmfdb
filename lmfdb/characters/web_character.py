@@ -1211,10 +1211,11 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
                 code[prop][lang] = code[prop][lang].format(**data)
 
         # Adjust some code snippets to construct orbit of Dirichlet character
-        code["frontmatter"]["all"].replace("character", "character orbit")
-        code["character_init"]["comment"].replace("character", "character orbit")
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("character", "character orbit")
+        code["character_init"]["comment"] = code["character_init"]["comment"].replace("character", "character orbit")
         for lang in code["character_init"]:
-            code["character_init"][lang] += code["galois_orbit"][lang]+"\n"
+            if lang != "comment":
+                code["character_init"][lang] += code["galois_orbit"][lang] +"\n"
         return code
 
 
