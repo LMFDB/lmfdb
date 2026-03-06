@@ -555,6 +555,7 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
 def dirchar_code_download(label, download_type):
     """
     Render a text page to download all Magma/Sage/PariGP code snippets for the various Dirichlet character pages
+    Returns code snippets for either the individual Dirichet character, character orbit, or character group, depending on label
     """
     try:
         if label.count(".") == 0:
@@ -574,6 +575,8 @@ def dirchar_code_download(label, download_type):
             sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity', 'galois_orbit']
         else:
             return abort(404, f"Invalid label {label}")
+        if label.count(".") > 0 and dc.symbol_numerator() is None:
+            sorted_code_names.remove('kronecker_symbol')
         code = CodeSnippet(dc.code_snippets())
         response = make_response(code.export_code(label, download_type, sorted_code_names))
     except Exception as err:

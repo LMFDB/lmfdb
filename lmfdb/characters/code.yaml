@@ -44,7 +44,7 @@ character_init:
 modulus:
   comment: Modulus
   sage: chi.modulus()
-  pari: modulus(chi)
+  pari: g[1][1]
   magma: Modulus(chi);
 
 conductor:
