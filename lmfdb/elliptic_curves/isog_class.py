@@ -62,13 +62,17 @@ class ECisog_class():
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
+        # We don't have Oscar code snippets for elliptic curve isog classes (for now)
+        code["prompt"].pop("oscar")
+
         for lang in code["curve"]:
             code["curve"][lang] = code["curve"][lang].format(**{'ainvs': self.ainvs})
 
         # Create top code snippet to construct elliptic curve isogeny class
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("curve", "curve isogeny class")
         for lang in code["isogeny_class"]:
-            code["isogeny_class"][lang] = code["curve"][lang]+code["isogeny_class"][lang]
-
+            if lang != "comment":
+                code["isogeny_class"][lang] = code["curve"][lang]+"\n"+code["isogeny_class"][lang]+"\n"
         return code
 
 
@@ -199,9 +203,9 @@ class ECisog_class():
         self.properties += [('Graph', ''), (None, self.graph_link)]
 
         self.downloads = [('q-expansion to text', url_for(".download_EC_qexp", label=self.lmfdb_iso, limit=1000)),
-                          ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_iso)),
+                          ('All stored data to text', url_for(".download_EC_all", label=self.lmfdb_iso))]
         for lang in [("PariGP", "gp"), ("SageMath", "sage"), ("Magma", "magma")]:
-            self.downloads.append(('{} commands'.format(lang[0]), url_for(".ec_code_download", label=f"{modulus}", download_type=lang[1])))
+            self.downloads.append(('{} commands'.format(lang[0]), url_for(".ec_isog_code_download", conductor=self.conductor, iso=self.iso_label, label=self.lmfdb_iso, download_type=lang[1])))
         self.downloads.append(('Underlying data', url_for(".EC_data", label=self.lmfdb_iso)))
 
         self.bread = [('Elliptic curves', url_for("ecnf.index")),

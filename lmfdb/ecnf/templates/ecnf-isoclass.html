@@ -2,35 +2,8 @@
 
 {% block content %}
 
-<script type="text/javascript">
-var cur_system = null;
-function show_code(system) {
-    $('.sage').hide();
-    $('.pari').hide();
-    $('.magma').hide();
-    if (cur_system == null) {
-      $('.'+system).show();
-      cur_system = system;
-    } else {
-      $('.'+system).hide();
-      cur_system = null;
-    }
-}
-</script>
-
-<!--
-        <div align="right">
-          Show commands for:
-          <a onclick="show_code('sage'); return false" href='#'>sage</a>
-        </div>
-        <div class='sage nodisplay code'>
-          sage: E = EllipticCurve('{{info.lmfdb_iso}}1')<br>
-          sage: E.isogeny_class()
-        </div>
--->
-
-
 <h2> {{KNOWL('ag.base_field','Base field')}} {{ cl.field.knowl()|safe }} </h2>
+{{ place_code('field', is_top_snippet=True) }}
 <p>
  {{ KNOWL('nf.generator', 'Generator') }} \({{
  cl.field.generator_name() }}\), with {{
@@ -38,8 +11,7 @@ function show_code(system) {
  {{cl.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
  }} \({{cl.field.class_number()}}\).
 </p>
-    {{ place_code('field', is_top_snippet=True) }}
-
+{{ place_code('isogeny_class', is_top_snippet=True) }}    
 
 <h2>{{ KNOWL('ec.rank',title='Rank') }}</h2>
 {{ place_code('rank') }}

@@ -760,7 +760,7 @@ def ecnf_isog_code_download(**args):
     return response
 
 def ecnf_isog_code(**args):
-    label = "-".join([args['nf'], args['conductor_label'], args['class_label']]
+    label = "-".join([args['nf'], args['conductor_label'], args['class_label']])
     if not CLASS_LABEL_RE.fullmatch(label):
         return abort(404)
     lang = args['download_type']

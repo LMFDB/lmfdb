@@ -1,6 +1,7 @@
 import os, yaml
 from flask import url_for
 from lmfdb import db
+from urllib.parse import quote
 from lmfdb.utils import make_graph, setup_isogeny_graph, names_and_urls, web_latex
 from lmfdb.ecnf.WebEllipticCurve import web_ainvs, FIELD
 from lmfdb.number_fields.web_number_field import field_pretty, nf_display_knowl
@@ -35,12 +36,22 @@ class ECNF_isoclass():
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
 
-        # For now, only Sage support elliptic curve isogeny classes over number fields
-        code['prompt']
+        # For now, only Sage supports elliptic curve isogeny classes over number fields
+        code['prompt'] = {'sage':'sage'}
 
-        for prop in ["curve"]:
-            for lang in code[prop]:
-                code[prop][lang] = code[prop][lang].format(**{'ainvs': self.ainvs})
+        # Look up the defining polynomial of the base field:
+        from lmfdb.utils import coeff_to_poly
+        poly = coeff_to_poly(db.nf_fields.lookup(self.field_label, projection='coeffs'))
+        for lang in code["field"]:
+            code['field'] = code['field'] % str(poly.list())
+
+        # Fill in curve coefficients:
+        ainvs = [f"[{ai}]" for ai in E['ainvs'].split(";")]
+        ainvs_string = {
+            'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        }
+        code['curve']['sage'] = code['curve']['sage'] % ainvs_string['sage']
+
         return code
 
 
@@ -174,7 +185,8 @@ class ECNF_isoclass():
 
         self.downloads = []
         for lang in [("SageMath", "sage")]:
-            self.downloads.append(('{} commands'.format(lang[0]), url_for(".ecnf_code_download", label=f"{modulus}", download_type=lang[1])))
+            self.downloads.append(('{} commands'.format(lang[0]), url_for(".ecnf_isog_code_download", nf=self.field_label,
+                                   conductor_label=quote(self.conductor_label), class_label=self.iso_label, download_type=lang[1])))
         self.code = self.make_code_snippets()
 
         self.properties = [('Base field', self.field_name),
