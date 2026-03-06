@@ -21,9 +21,7 @@ text-align: center;
 
 {% if info.has_lfunction %}
 <h2>{{KNOWL('g2c.lfunction', title='L-function')}} data</h2>
-<p>
 <table>
-    <tr><td>&nbsp;</td></tr>
     <tr><td valign=top> {{ KNOWL('g2c.bad_lfactors', title='Bad L-factors') }}:<td>
         <table id = "bad_lfactors_table">
         <tr>
@@ -56,7 +54,7 @@ text-align: center;
             </td>
           </tr>
         {% endfor %}
-        <tr><td>$\cdots$</td><td>$\cdots$</td><td>$\cdots$</td>
+        <tr><td class="center">$\cdots$</td><td>$\cdots$</td><td>$\cdots$</td>
         </table>
     </tr>
     <tr><td>&nbsp;</td></tr>
@@ -112,7 +110,7 @@ Each elliptic curve in class {{info.class_label}} has complex multiplication by 
 <h2>{{ KNOWL('ec.isogeny_matrix',title='Isogeny matrix') }}</h2>
 
 {{ place_code('matrix') }}
-<p>The \(i,j\) entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
+<p>The \((i,j)\)-th entry is the smallest degree of a cyclic isogeny between the \(i\)-th and \(j\)-th curve in the isogeny class, in the {{info.label_type}} numbering.
 </p>
 <p>
   \({{info.isogeny_matrix_str}}\)
