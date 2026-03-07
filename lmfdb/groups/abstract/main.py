@@ -42,6 +42,7 @@ from lmfdb.utils import (
     dispZmat,
     dispcyclomat,
     search_wrap,
+    diagram_wrap,
     web_latex,
     pluralize,
     Downloader,
@@ -1409,6 +1410,21 @@ group_columns = SearchColumns([
 def group_search(info, query={}):
     group_parse(info, query)
 
+@diagram_wrap(template="d3_diagram.html",
+              table=db.gps_groups,
+              postprocess=group_postprocess,
+              title="Abstract group diagrams",
+              err_title="Abstract group search input error",
+              x_axis_default=None,
+              y_axis_default=None,
+              columns=group_columns,
+              url_for_label=url_for_label,
+              learnmore=learnmore_list,
+              bread=lambda: get_bread('Diagram search'))
+def diagram_search(info, query):
+    # run function below without the decorator
+    group_search.f(info, query)
+
 
 def group_parse(info, query):
     parse_ints(info, query, "order", "order")
@@ -2565,6 +2581,10 @@ def download_group(**args):
     #strIO.seek(0)
     #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
+@abstract_page.route("/search_diagram/")
+def browseDiagram():
+    info = to_dict(request.args, search_array=GroupsSearchArray())
+    return diagram_search(info)
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
