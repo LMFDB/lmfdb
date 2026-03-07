@@ -94,7 +94,7 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
                     'label': 'data(label)',
                     'text-valign': 'center',
                     'text-halign': 'center',
-                    'font-size': '13px',
+                    'font-size': '14px',
                     'font-family': 'sans-serif',
                     'background-color': '#ffd7cc',  // Sage isogeny plot is #fec7b8
                     'border-width': 2,
@@ -108,7 +108,7 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
             {
                 selector: 'node[?optimal]',
                 style: {
-                    'border-width': 3,
+                    'border-width': 4,
                     'border-color': '#0055a2',
                     'background-color': '#e8f0fe'
                 }
