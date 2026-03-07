@@ -18,13 +18,19 @@
 <p>
 {% if cl.rk == "?" %}
   {% if cl.rk_bnds != "not recorded" %}
-    <b>Rank</b> \(r\) satisfies \({{ cl.rank_bounds[0] }} \le r \le {{ cl.rank_bounds[1] }}\)
+    The {{KNOWL('ec.rank', title='rank')}} \(r\) of the 
+    {% if cl.class_size == 1 %}
+      elliptic curve {{ cl.curves[0][0] }} satisfies
+    {% else %}
+      elliptic curves in class {{ cl.short_class_label }} satisfy
+    {% endif %}
+    \({{ cl.rank_bounds[0] }} \le r \le {{ cl.rank_bounds[1] }}\).
   {% else %}
     Rank not yet determined.
   {% endif %}
 {% else %}
   {% if cl.class_size == 1 %}
-    The elliptic curve {{ cl.curves[0].curve_label }} has
+    The elliptic curve {{ cl.curves[0][0] }} has
   {% else %}
     The elliptic curves in class {{ cl.short_class_label }} have
   {% endif %}
