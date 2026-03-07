@@ -812,6 +812,11 @@ class WebNumberField:
             return 1
         return na_text()
 
+    def unit_signature_rank(self):
+        if self.haskey('unit_signature_rank'):
+            return self._data['unit_signature_rank']
+        return na_text()
+
     def units(self):  # fundamental units
         if self.haskey('units'):
             return self._data['units']
