@@ -154,12 +154,16 @@ isogeny_graph:
 snippet_test:
   test11.1-a: 
     label: 11.1-a
+    langs:
+      - sage
     url: EllipticCurve/2.0.11.1/11.1/a/download/{lang}
   test11.1-a1: 
     label: 11.1-a1
     url: EllipticCurve/2.0.11.1/11.1/a/1/download/{lang}
   test81.1-CMa: 
     label: 81.1-CMa
+    langs:
+      - sage
     url: EllipticCurve/2.0.3.1/81.1/CMa/download/{lang}
   test81.1-CMa1: 
     label: 81.1-CMa1
