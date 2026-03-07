@@ -308,7 +308,6 @@ def dirichlet_character_search(info, query):
     common_parse(info, query)
 
 
-@characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
     if request.args:
@@ -416,7 +415,6 @@ def make_webchar(args, get_bread=False):
         return WebSmallDirichletCharacter(**args)
 
 
-@characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<orbit_label>")  # orbit_label is a Cremona_letter_code identifying the orbit
