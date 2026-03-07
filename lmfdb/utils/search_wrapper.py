@@ -766,7 +766,6 @@ class DiagramWrapper(Wrapper):
 
                 # Elliptic curves have "lmfdb_label" and "Clabel"
                 label_str = "lmfdb_label" if res[0].get("label") is None else "label"
-                print("\t Keys for result:", res[0].keys())
                 return [ {"x": str(r[x_key]),
                           "y": str(r[y_key]),
                           "color": str(r.get(col_key)),

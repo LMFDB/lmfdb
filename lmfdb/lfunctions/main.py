@@ -110,6 +110,8 @@ def index():
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
         if search_type in ['List', '', 'Random']:
             return l_function_search(info)
+        elif search_type == "Diagram":
+            return diagram_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template(
@@ -130,6 +132,8 @@ def rational():
             return trace_search(info)
         elif search_type == 'Euler':
             return euler_search(info)
+        elif search_type == "Diagram":
+            return diagram_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template(
@@ -685,10 +689,12 @@ class LFunctionSearchArray(SearchArray):
             L = [('', 'List of L-functions'),
                  ('Traces', 'Traces table'),
                  ('Euler', 'Euler factors'),
-                 ('Random', 'Random L-function')]
+                 ('Random', 'Random L-function'),
+                 ('Diagram', 'Diagram search')]
         else:
             L = [('', 'List of L-functions'),
-                 ('Random', 'Random L-function')]
+                 ('Random', 'Random L-function'),
+                 ('Diagram', 'Diagram search')]
         return self._search_again(info, L)
 
     def html(self, info=None):
@@ -1803,11 +1809,6 @@ def browseGraphHolo():
 def browseGraphHoloNew():
     return render_browseGraphHoloNew(request.args)
 
-@l_function_page.route("/diagram/")
-def browseDiagram():
-    info = to_dict(request.args, search_array=LFunctionSearchArray())
-    return diagram_search(info)
-            
 
 ###########################################################################
 #   Functions for rendering graphs for browsing L-functions.

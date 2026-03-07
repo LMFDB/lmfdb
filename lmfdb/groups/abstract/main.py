@@ -791,6 +791,9 @@ def index():
         elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
             info["search_array"] = ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
+        elif search_type in ["Diagram"]:
+            return diagram_search(info)
+
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]

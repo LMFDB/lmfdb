@@ -1088,11 +1088,6 @@ def render_bhkssw():
 
     return render_template("bhkssw.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
 
-@ec_page.route("/diagram/")
-def browseDiagram():
-    info = to_dict(request.args, search_array=ECSearchArray())
-    return diagram_search(info)
-
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
 

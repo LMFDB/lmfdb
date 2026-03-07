@@ -203,6 +203,8 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=G2CSearchArray())
+    if info.get("search_type") == "Diagram":
+        return diagram_search(info)
     if request.args:
         return genus2_curve_search(info)
     info["stats"] = G2C_stats()
@@ -960,10 +962,6 @@ def g2c_code_download(**args):
         response.headers['Content-type'] = 'text/html'
     return response
 
-@g2c_page.route("/search_diagram/")
-def browseDiagram():
-    info = to_dict(request.args, search_array=G2CSearchArray())
-    return diagram_search(info)
 
 class G2CSearchArray(SearchArray):
     noun = "curve"
