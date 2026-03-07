@@ -608,6 +608,7 @@ def render_field_webpage(args):
         'unit_rank': nf.unit_rank(),
         'root_of_unity': rootofunity,
         'fund_units': myunits,
+        'unit_signature_rank': web_latex(nf.unit_signature_rank()),
         'cnf': nf.cnf(),
         'grh_label': grh_label,
         'loc_alg': loc_alg,
