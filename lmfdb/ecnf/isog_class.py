@@ -42,16 +42,18 @@ class ECNF_isoclass():
         # Look up the defining polynomial of the base field:
         from lmfdb.utils import coeff_to_poly
         poly = coeff_to_poly(db.nf_fields.lookup(self.field_label, projection='coeffs'))
-        for lang in code["field"]:
-            code['field'] = code['field'] % str(poly.list())
+        code['field']['sage'] = code['field']['sage'] % str(poly.list())
 
         # Fill in curve coefficients:
-        ainvs = [f"[{ai}]" for ai in E['ainvs'].split(";")]
-        ainvs_string = {
-            'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
-        }
-        code['curve']['sage'] = code['curve']['sage'] % ainvs_string['sage']
+        ainvs = [f"[{ai}]" for ai in self.ainvs.split(";")]
+        ainvs_sage_string = "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]"
+        code['curve']['sage'] = code['curve']['sage'] % ainvs_sage_string
 
+        # Create top code snippet to construct elliptic curve isogeny class
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("curve", "curve isogeny class")
+        for lang in code["isogeny_class"]:
+            if lang != "comment":
+                code["isogeny_class"][lang] = code["curve"][lang]+"\n"+code["isogeny_class"][lang]+"\n"
         return code
 
 
