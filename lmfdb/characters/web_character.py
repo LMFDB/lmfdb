@@ -42,7 +42,8 @@ The design is the following:
 
 """
 
-import os, yaml
+import os
+import yaml
 from flask import url_for
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code
@@ -159,7 +160,7 @@ class WebCharObject():
         _curdir = os.path.dirname(os.path.abspath(__file__))
         code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
         code['show'] = { lang:'' for lang in code['prompt'] }
-        
+
         for prop in ["group_init", "group_structure"]:
             for lang in code[prop]:
                 code[prop][lang] = code[prop][lang].format(**{'modulus': self.modulus})
@@ -414,7 +415,7 @@ class WebChar(WebCharObject):
               'number', 'numlabel', 'texname',
               'symbol',
               'conductor', 'condlabel',
-              'isprimitive', 
+              'isprimitive',
               'inducing',
               'indlabel', 'order', 'parity',
               'isreal', 'generators', 'genvalues', 'logvalues',
@@ -731,7 +732,6 @@ class WebCharGroup(WebCharObject):
             return f'<a href= %s >{self.structure}</a>' % abgp_url
         return abstract_group_display_knowl(dblabel, f"{self.structure}")
 
-
     @lazy_attribute
     def order(self):
         return euler_phi(self.modulus)
@@ -891,15 +891,15 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     """
     _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 
-              'symbol', 
+              'number', 'numlabel', 'texname',
+              'symbol',
               'conductor',
               'condlabel',
               'isprimitive',
               'inducing',
               'indlabel', 'order', 'parity',
               'isreal', 'generators', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'galoisorbit', 
+              'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
               'charsums', 'orbit_label', 'orbit_index', 'isminimal']
@@ -994,7 +994,7 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         # Sage code in special case for modulus 1
         if self.modulus == 1:
             self._genvalues_for_code = []
-            
+
         data = {'modulus': self.modulus, 'number' : self.number,
                 'symbol_num' : self.symbol_numerator(),
                 'sage_zeta_order' : self.chi.sage_zeta_order(self.order),
@@ -1016,12 +1016,12 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 
+              'number', 'numlabel', 'texname',
               'symbol', 'headers',
-              'conductor', 'condlabel', 
-              'isprimitive', 
+              'conductor', 'condlabel',
+              'isprimitive',
               'inducing','rowtruncate','ind_orbit_label',
-              'indlabel', 'order', 'parity', 
+              'indlabel', 'order', 'parity',
               'isreal', 'generators', 'genvalues', 'logvalues',
               'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
@@ -1215,7 +1215,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         code["character_init"]["comment"] = code["character_init"]["comment"].replace("character", "character orbit")
         for lang in code["character_init"]:
             if lang != "comment":
-                code["character_init"][lang] += code["galois_orbit"][lang] +"\n"
+                code["character_init"][lang] += code["galois_orbit"][lang] + "\n"
         return code
 
 
@@ -1285,4 +1285,3 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @lazy_attribute
     def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
-
