@@ -394,7 +394,6 @@ class SearchWrapper(Wrapper):
         col_types = table.col_type
 
         columns = self.columns
-        print("\n\n Columns are: ", [col.name for col in columns.columns])
         if columns is not None:
             # Build from SearchColumns - uses actual database column names
             diagram_fields = {}
@@ -515,7 +514,6 @@ class SearchWrapper(Wrapper):
                     elif fallback_fields and len(fallback_fields) > fallback_index:
                         info[key] = fallback_fields[fallback_index][0]
 
-            print("\n\nRes is", res[0])
             # Set defaults for x-axis, y-axis, and color
             set_default("x-axis", "x_axis_default", numerical_fields, 0)
             set_default("y-axis", "y_axis_default", numerical_fields, 1)
@@ -530,7 +528,6 @@ class SearchWrapper(Wrapper):
 
             # Build d3 data
             info["d3_data"] = []
-            print("\n\nLabel builder is:", label_builder)
             for r in res:
                 if label_builder is not None:
                     label = label_builder(r)
@@ -549,7 +546,6 @@ class SearchWrapper(Wrapper):
                     "path": self.url_for_label(label),
                     "label": label,
                 })
-            print("\n\nD3 data:", info["d3_data"])
             # Set axis labels for display
             info["x-axis-label"] = diagram_fields.get(info.get("x-axis", ""))
             info["y-axis-label"] = diagram_fields.get(info.get("y-axis", ""))

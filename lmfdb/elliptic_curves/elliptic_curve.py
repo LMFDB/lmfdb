@@ -529,7 +529,7 @@ class ECDownloader(Downloader):
              diagram_opts={
                  "title": "Elliptic curve diagrams",
                  "bread": lambda: get_bread("Diagram search"),
-                 "label_builder": lambda r: r["lmfbd_label"],
+                 "label_builder": lambda r: r["lmfdb_label"],
                  "x_axis_default": "conductor",
                  "y_axis_default": "regulator",
              })
