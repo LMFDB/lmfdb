@@ -358,7 +358,7 @@ def index():
             return local_field_count(info)
         elif search_type in ['Families', 'RandomFamily']:
             return families_search(info)
-        elif search_type in ['List', '', 'Random']:
+        elif search_type in ['List', '', 'Random', 'Diagram']:
             return local_field_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -890,7 +890,15 @@ def local_field_count(info, query):
              postprocess=lf_postprocess,
              bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
-             url_for_label=url_for_label)
+             url_for_label=url_for_label,
+             diagram_opts={
+                 "title": "$p$-adic field diagram search",
+                 "bread": lambda: get_bread([("Diagram search", " ")]),
+                 "label_builder": lambda r: r["new_label"],
+                 "x_axis_default": "f",
+                 "y_axis_default": "c",
+                 "color_default": "u",
+             })
 def local_field_search(info,query):
     common_parse(info, query)
 
@@ -1436,6 +1444,14 @@ def common_family_parse(info, query):
     bread=lambda:get_bread([("Families", "")]),
     postprocess=families_postprocess,
     url_for_label=url_for_family,
+    diagram_opts={
+        "title": "$p$-adic families diagram search",
+        "bread": lambda: get_bread([("Families diagram search", "")]),
+        "label_builder": lambda r: r["new_label"],
+        "x_axis_default": "f",
+        "y_axis_default": "c",
+        "color_default": "u",
+    },
 )
 def families_search(info, query):
     if "relative" in info:
@@ -1784,7 +1800,9 @@ class FamiliesSearchArray(SearchArray):
         return self._search_again(info, [
             ('Families', 'List of families'),
             ('FamilyCounts', 'Counts table'),
-            ('RandomFamily', 'Random family')])
+            ('RandomFamily', 'Random family'),
+            ('Diagram', 'Diagram search'),
+        ])
 
     def _buttons(self, info):
         if self._st(info) == "FamilyCounts":
@@ -1829,7 +1847,9 @@ class LFSearchArray(SearchArray):
         return self._search_again(info, [
             ('List', 'List of fields'),
             ('Counts', 'Counts table'),
-            ('Random', 'Random field')])
+            ('Random', 'Random field'),
+            ('Diagram', 'Diagram search'),
+        ])
 
     def _buttons(self, info):
         if self._st(info) == "Counts":

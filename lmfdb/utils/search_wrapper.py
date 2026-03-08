@@ -10,7 +10,7 @@ from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingEr
 from lmfdb.utils.utilities import flash_error, flash_info, flash_success, to_dict
 from lmfdb.utils.completeness import results_complete
 
-# For diagram_wrap:
+# For diagram search support in SearchWrapper:
 from psycodict.base import number_types
 from .search_boxes import SelectBox, CountBox
 
@@ -158,6 +158,7 @@ class SearchWrapper(Wrapper):
         postprocess=None,
         split_ors=None,
         random_projection=0,  # i.e., the label_column
+        diagram_opts=None,  # Enable diagram search with options dict
         **kwds,
     ):
         Wrapper.__init__(
@@ -175,6 +176,8 @@ class SearchWrapper(Wrapper):
         self.cleaners = cleaners
         self.split_ors = split_ors
         self.random_projection = random_projection
+        # Diagram support: diagram_opts can be {} for defaults or contain overrides
+        self.diagram_opts = diagram_opts
 
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
@@ -185,6 +188,16 @@ class SearchWrapper(Wrapper):
             search_type = ""
         info["search_type"] = search_type
         info["columns"] = self.columns
+        # Flag for SearchArray to know whether to show Diagram button
+        info["has_diagram"] = self.diagram_opts is not None
+
+        # Handle diagram search if enabled
+        if search_type == "Diagram":
+            if self.diagram_opts is None:
+                flash_error("Diagram search is not available for this object type.")
+                return redirect(info.get("referer", "/"))
+            return self._diagram_search(info)
+
         random = info["search_type"].startswith("Random")
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         for key, func in self.shortcuts.items():
@@ -341,6 +354,206 @@ class SearchWrapper(Wrapper):
                     flash_info(msg)
                     msg += "\n" + traceback.format_exc()
                     app.logger.warning(msg)
+            return render_template(template, info=info, title=title, **template_kwds)
+
+    def _diagram_search(self, info):
+        """
+        Handle diagram search mode, displaying results in d3.js visualization.
+        """
+        # Get diagram options with defaults
+        opts = self.diagram_opts or {}
+        diagram_template = opts.get("template", "d3_diagram.html")
+        result_count_default = opts.get("result_count", 1000)
+        diagram_title = opts.get("title", self.title)
+        diagram_bread = opts.get("bread")
+
+        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
+        # Override bread if diagram-specific bread is provided
+        if diagram_bread is not None:
+            if callable(diagram_bread):
+                template_kwds["bread"] = diagram_bread()
+            else:
+                template_kwds["bread"] = diagram_bread
+
+        SA = info.get("search_array")
+        if SA is None:
+            flash_error("Diagram search requires a search array.")
+            return redirect(info.get("referer", "/"))
+
+        def flatten(L):
+            """Flatten nested list, skipping non-list items like Spacer"""
+            result = []
+            for item in L:
+                if isinstance(item, (list, tuple)):
+                    result.extend(item)
+            return result
+
+        # Build field mappings from SearchColumns (which map to actual database columns)
+        # This ensures we use database column names rather than search box names
+        table = self.table
+        col_types = table.col_type
+
+        columns = self.columns
+        print("\n\n Columns are: ", [col.name for col in columns.columns])
+        if columns is not None:
+            # Build from SearchColumns - uses actual database column names
+            diagram_fields = {}
+            for col in columns.columns:
+                # Use first orig column as the database column name
+                # db_col = col.orig[0] if col.orig else col.name
+                db_col = col.name
+                if db_col in col_types:
+                    diagram_fields[db_col] = col.short_title
+        else:
+            # Fall back to search array boxes if no columns defined
+            diagram_fields = {box.name: box.short_title for box in
+                             flatten(SA.browse_array) + flatten(SA.refine_array)
+                             if hasattr(box, 'name') and hasattr(box, 'short_title')}
+
+        # Filter to numerical and binary fields based on database column types
+        numerical_fields = [(name, label) for (name, label) in diagram_fields.items()
+                           if col_types.get(name) in number_types.keys()]
+        binary_fields = [(name, label) for (name, label) in diagram_fields.items()
+                        if col_types.get(name) == "boolean"]
+        color_fields = numerical_fields + binary_fields
+
+        # Create diagram-specific search boxes
+        diagram_boxes = [
+            SelectBox(
+                name="x-axis",
+                label="x-axis",
+                options=numerical_fields,
+            ),
+            SelectBox(
+                name="y-axis",
+                label="y-axis",
+                options=numerical_fields,
+            ),
+            SelectBox(
+                name="color",
+                label="Color",
+                options=color_fields,
+            ),
+        ]
+
+        # Add diagram-specific boxes to search arrays if not already present
+        if not any(x.name == "x-axis" for arr in SA.browse_array if isinstance(arr, (list, tuple)) for x in arr):
+            SA.browse_array = [
+                x for x in SA.browse_array if not isinstance(x, CountBox)
+            ]
+            SA.browse_array.append(diagram_boxes)
+        if not any(x.name == "x-axis" for arr in SA.refine_array if isinstance(arr, (list, tuple)) for x in arr):
+            SA.refine_array.append(diagram_boxes + [CountBox()])
+
+        # Override hidden() to exclude "count" from hidden inputs
+        original_hidden = SA.hidden
+
+        def hidden_without_count(info):
+            return [(name, val) for name, val in original_hidden(info) if name != "count"]
+
+        SA.hidden = hidden_without_count
+        info["search_array"] = SA
+
+        # Build query using the same parsing function
+        data = self.make_query(info, False)
+        if not isinstance(data, tuple):
+            return data
+        query, sort, table, title, err_title, template, one_per = data
+
+        # Use diagram template instead of default
+        template = diagram_template
+        title = diagram_title
+
+        # Get projection
+        proj = query.pop("__projection__", self.projection)
+        if isinstance(proj, list):
+            proj = [col for col in proj if col in table.search_cols]
+
+        count = parse_count(info, result_count_default)
+        try:
+            res = table.search(
+                query,
+                proj,
+                limit=count,
+                offset=0,
+                sort=sort,
+                info=info,
+                one_per=one_per,
+            )
+        except QueryCanceledError as err:
+            return self.query_cancelled_error(
+                info, query, err, err_title, template, template_kwds
+            )
+        except SearchParsingError as err:
+            return self.raw_parsing_error(
+                info, query, err, err_title, template, template_kwds
+            )
+        except NumericValueOutOfRange as err:
+            return self.oob_error(info, query, err, err_title, template, template_kwds)
+        else:
+            try:
+                if self.postprocess is not None:
+                    res = self.postprocess(res, info, query)
+            except ValueError as err:
+                flash_error(str(err))
+                info["err"] = str(err)
+                return render_template(
+                    template, info=info, title=err_title, **template_kwds
+                )
+
+            if not res:
+                return render_template(
+                    template, info=info, title=title, **template_kwds
+                )
+
+            # Helper to set default for a diagram axis/color field
+            def set_default(key, opt_key, fallback_fields, fallback_index=0):
+                if key not in info:
+                    default_val = opts.get(opt_key)
+                    if default_val is not None:
+                        info[key] = default_val
+                    elif fallback_fields and len(fallback_fields) > fallback_index:
+                        info[key] = fallback_fields[fallback_index][0]
+
+            print("\n\nRes is", res[0])
+            # Set defaults for x-axis, y-axis, and color
+            set_default("x-axis", "x_axis_default", numerical_fields, 0)
+            set_default("y-axis", "y_axis_default", numerical_fields, 1)
+            set_default("color", "color_default", color_fields, 0)
+
+            x_key = info.get("x-axis")
+            y_key = info.get("y-axis")
+            col_key = info.get("color")
+
+            # Get label_builder from diagram_opts if provided (for nonstandard labeling)
+            label_builder = opts.get("label_builder")
+
+            # Build d3 data
+            info["d3_data"] = []
+            print("\n\nLabel builder is:", label_builder)
+            for r in res:
+                if label_builder is not None:
+                    label = label_builder(r)
+                elif r.get("label") is not None:
+                    label = r["label"]
+                else:
+                    # Skip results without a label
+                    # flash_error("Labels not found!")
+                    continue
+                    # break
+
+                info["d3_data"].append({
+                    "x": str(r.get(x_key)),
+                    "y": str(r.get(y_key)),
+                    "color": str(r.get(col_key)),
+                    "path": self.url_for_label(label),
+                    "label": label,
+                })
+            print("\n\nD3 data:", info["d3_data"])
+            # Set axis labels for display
+            info["x-axis-label"] = diagram_fields.get(info.get("x-axis", ""))
+            info["y-axis-label"] = diagram_fields.get(info.get("y-axis", ""))
+
             return render_template(template, info=info, title=title, **template_kwds)
 
 
@@ -587,201 +800,6 @@ class YieldWrapper(Wrapper):
         return render_template(template, info=info, title=title, **template_kwds)
 
 
-class DiagramWrapper(Wrapper):
-    """
-    A variant on search wrapper that is intended for displaying data in d3.js
-    """
-
-    def __init__(
-        self,
-        f,
-        template="d3_diagram",
-        table=None,
-        title=None,
-        url_for_label=None,
-        err_title=None,
-        columns=None,
-        projection=1,
-        split_ors=None,
-        x_axis_default=None,
-        y_axis_default=None,
-        result_count_default=1000,
-        **kwds,
-    ):
-        super().__init__(f, template, table, title, err_title, **kwds)
-        self.columns = columns
-        self.split_ors = split_ors
-        self.url_for_label = url_for_label
-        self.x_axis_default = x_axis_default
-        self.y_axis_default = y_axis_default
-        self.result_count_default = result_count_default
-
-        if columns is None:
-            self.projection = projection
-        else:
-            self.projection = columns.db_cols
-
-    def __call__(self, info):
-        info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
-        search_type = info.get("search_type", info.get("hst", ""))
-        info["search_type"] = search_type
-        info["columns"] = self.columns
-
-        # TODO: modify search array to remove random
-        SA = info.get("search_array")
-
-        def flatten(L):         # flatten nested list
-            return [x for xs in L for x in xs]
-
-        diagram_fields = {box.name: box.label for box in
-                            flatten(SA.browse_array) +
-                            flatten(SA.refine_array)}
-        
-        # Get numerical and binary fields only
-        valid_fields = self.table.col_type
-        
-        numerical_fields = [(name, label) for (name,label) in diagram_fields.items()
-                            if valid_fields.get(name) in number_types.keys()]
-        binary_fields = [(name, label) for (name, label) in diagram_fields.items()
-                            if valid_fields.get(name) == "boolean"]
-
-        print("\t diagram fields are:", diagram_fields)
-        
-        diagram_boxes = [
-            SelectBox(
-                name="x-axis",
-                label="x-axis",
-                options=numerical_fields,
-            ),
-            SelectBox(
-                name="y-axis",
-                label="y-axis",
-                options=numerical_fields,
-            ),
-            SelectBox(
-                name="color", label="color", options=numerical_fields + binary_fields
-            ),
-        ]
-
-        # Add diagram-specific boxes if not already present.
-        # Checking all fields ensures that we don't add an extra
-        # set of boxes when the search is updated (which the naive solution does).
-
-        if not any(x.name == "x-axis" for arr in SA.browse_array for x in arr):
-            SA.browse_array = [
-                x for x in SA.browse_array if not isinstance(x, CountBox)
-            ]
-            SA.browse_array.append(diagram_boxes)
-        if not any(x.name == "x-axis" for arr in SA.refine_array for x in arr):
-            SA.refine_array.append(diagram_boxes + [CountBox()])
-
-        # Override hidden() to exclude "count" from hidden inputs, since we
-        # have a visible CountBox in refine_array.  Without this, the form
-        # would contain both a hidden <input name="count"> (from hidden_inputs)
-        # and the visible CountBox <input name="count">, causing the hidden
-        # one to silently override the user's value on re-search.
-        original_hidden = SA.hidden
-
-        def hidden_without_count(info):
-            return [
-                (name, val) for name, val in original_hidden(info) if name != "count"
-            ]
-
-        SA.hidden = hidden_without_count
-
-        info["search_array"] = SA
-
-        template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
-        data = self.make_query(info, False)
-        if not isinstance(data, tuple):
-            return data
-        query, sort, table, title, err_title, template, one_per = data
-
-        # TODO: make sure we only search for fields that we actually need!
-
-        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
-        # These virtual columns won't be present in the database, so we just strip them out
-        # We have to do this here since we didn't have access to the table in __init__
-        proj = query.pop("__projection__", self.projection)
-        if isinstance(proj, list):
-            proj = [col for col in proj if col in table.search_cols]
-
-        count = parse_count(info, self.result_count_default)
-        try:
-            res = table.search(
-                query,
-                proj,
-                limit=count,
-                offset=0,
-                sort=sort,
-                info=info,
-                one_per=one_per,
-            )
-        except QueryCanceledError as err:
-            return self.query_cancelled_error(
-                info, query, err, err_title, template, template_kwds
-            )
-        except SearchParsingError as err:
-            # These can be raised when the query includes $raw keys.
-            return self.raw_parsing_error(
-                info, query, err, err_title, template, template_kwds
-            )
-        except NumericValueOutOfRange as err:
-            # This is caused when a user inputs a number that's too large for a column search type
-            return self.oob_error(info, query, err, err_title, template, template_kwds)
-        else:
-            try:
-                if self.postprocess is not None:
-                    res = self.postprocess(res, info, query)
-            except ValueError as err:
-                # Errors raised in postprocessing
-                flash_error(str(err))
-                info["err"] = str(err)
-                return render_template(
-                    template, info=info, title=err_title, **template_kwds
-                )
-            if not res:
-                return render_template(
-                    template, info=info, title=title, **template_kwds
-                )
-
-            def make_d3_data(info, res):
-                # TODO: this can probably be refactored
-                if "x-axis" not in info:
-                    if self.x_axis_default is not None:
-                        info["x-axis"] = self.x_axis_default
-                    else:
-                        info["x-axis"] = numerical_fields[0][0]
-
-                if "y-axis" not in info:
-                    if self.y_axis_default is not None:
-                        info["y-axis"] = self.y_axis_default
-                    else:
-                        info["y-axis"] = numerical_fields[1][0]
-
-                x_key = info["x-axis"]
-                y_key = info["y-axis"]
-
-                col_key = info.get("color")
-
-                # Elliptic curves have "lmfdb_label" and "Clabel"
-                label_str = "lmfdb_label" if res[0].get("label") is None else "label"
-                return [ {"x": str(r[x_key]),
-                          "y": str(r[y_key]),
-                          "color": str(r.get(col_key)),
-                          "path": self.url_for_label(r[label_str]),
-                          "label": r[label_str],
-                          } for r in res ]
-
-            info["d3_data"] = make_d3_data(info, res)
-            # label names for printing above the axes
-            info["x-axis-label"] = diagram_fields[info["x-axis"]]
-            info["y-axis-label"] = diagram_fields[info["y-axis"]]
-
-            # Display warning message if user searched on column(s) with null values
-            return render_template(template, info=info, title=title, **template_kwds)
-
-
 @decorator_keywords
 def search_wrap(f, **kwds):
     return SearchWrapper(f, **kwds)
@@ -800,8 +818,3 @@ def embed_wrap(f, **kwds):
 @decorator_keywords
 def yield_wrap(f, **kwds):
     return YieldWrapper(f, **kwds)
-
-
-@decorator_keywords
-def diagram_wrap(f, **kwds):
-    return DiagramWrapper(f, **kwds)

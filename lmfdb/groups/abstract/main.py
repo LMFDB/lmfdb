@@ -42,7 +42,6 @@ from lmfdb.utils import (
     dispZmat,
     dispcyclomat,
     search_wrap,
-    diagram_wrap,
     web_latex,
     pluralize,
     Downloader,
@@ -780,7 +779,7 @@ def index():
         info["search_type"] = search_type = info.get(
             "search_type", info.get("hst", "")
         )
-        if search_type in ["List", "", "Random"]:
+        if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
             info["search_array"] = SubgroupSearchArray()
@@ -791,8 +790,6 @@ def index():
         elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
             info["search_array"] = ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
-        elif search_type in ["Diagram"]:
-            return diagram_search(info)
 
     info["stats"] = GroupStats()
     info["count"] = 50
@@ -1409,24 +1406,13 @@ group_columns = SearchColumns([
     #  credit=lambda:credit_string,
     url_for_label=url_for_label,
     postprocess=group_postprocess,
+    diagram_opts={
+        "title": "Abstract group diagrams",
+        "bread": lambda: get_bread([("Diagram search", "")]),
+    },
 )
 def group_search(info, query={}):
     group_parse(info, query)
-
-@diagram_wrap(template="d3_diagram.html",
-              table=db.gps_groups,
-              postprocess=group_postprocess,
-              title="Abstract group diagrams",
-              err_title="Abstract group search input error",
-              x_axis_default=None,
-              y_axis_default=None,
-              columns=group_columns,
-              url_for_label=url_for_label,
-              learnmore=learnmore_list,
-              bread=lambda: get_bread('Diagram search'))
-def diagram_search(info, query):
-    # run function below without the decorator
-    group_search.f(info, query)
 
 
 def group_parse(info, query):
@@ -2587,7 +2573,8 @@ def download_group(**args):
 @abstract_page.route("/search_diagram/")
 def browseDiagram():
     info = to_dict(request.args, search_array=GroupsSearchArray())
-    return diagram_search(info)
+    info["search_type"] = "Diagram"
+    return group_search(info)
 
 class GroupsSearchArray(SearchArray):
     noun = "group"

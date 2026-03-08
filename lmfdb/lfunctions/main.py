@@ -49,7 +49,7 @@ from lmfdb.utils.search_parsing import (
 from lmfdb.utils import (
     to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
-    search_wrap, diagram_wrap, list_to_factored_poly_otherorder, flash_error,
+    search_wrap, list_to_factored_poly_otherorder, flash_error,
     parse_primes, coeff_to_poly, Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
@@ -108,10 +108,8 @@ def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
-        elif search_type == "Diagram":
-            return diagram_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template(
@@ -126,14 +124,12 @@ def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
         elif search_type == 'Euler':
             return euler_search(info)
-        elif search_type == "Diagram":
-            return diagram_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
     return render_template(
@@ -381,25 +377,19 @@ class LfuncDownload(Downloader):
              shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]))
+             bread=lambda: get_bread(breads=[("Search results", " ")]),
+             diagram_opts={
+                 "title": "L-function diagrams",
+                 "bread": lambda: get_bread(breads=[("Diagram search", " ")]),
+                 "x_axis_default": "root_analytic_conductor",
+                 "y_axis_default": "z1",
+                 "color_default": "order_of_vanishing",
+             })
 def l_function_search(info, query):
     if info.get("rational") == "yes":
         info["title"] = "Rational L-function search results"
     common_parse(info, query)
 
-@diagram_wrap(template="d3_diagram.html",
-              table=db.lfunc_search,
-              postprocess=process_search,
-              title="L-function diagrams",
-              err_title="L-function search input error",
-              x_axis_default="conductor",
-              y_axis_default="z1",
-              columns=lfunc_columns,
-              url_for_label=url_for_lfunction,
-              learnmore=learnmore_list,
-              bread=lambda: get_bread(breads=[("Search results", " ")]))
-def diagram_search(info, query):
-    common_parse(info, query)
 
 @search_wrap(template="LfunctionTraceSearchResults.html",
              table=db.lfunc_search,

@@ -33,7 +33,6 @@ from lmfdb.utils import (
     parse_primes,
     redirect_no_cache,
     search_wrap,
-    diagram_wrap,
     to_dict,
     web_latex,
     web_latex_factored_integer,
@@ -203,8 +202,6 @@ def index():
 @g2c_page.route("/Q/")
 def index_Q():
     info = to_dict(request.args, search_array=G2CSearchArray())
-    if info.get("search_type") == "Diagram":
-        return diagram_search(info)
     if request.args:
         return genus2_curve_search(info)
     info["stats"] = G2C_stats()
@@ -638,7 +635,14 @@ g2c_columns = SearchColumns([
     columns=g2c_columns,
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
-    url_for_label=lambda label: url_for(".by_label", label=label),
+    url_for_label=url_for_curve_label,
+    diagram_opts={
+        "title": "Genus 2 curve diagram search",
+        "bread": lambda: get_bread("Diagram search"),
+        "x_axis_default": "cond",
+        "y_axis_default": "regulator",
+        "color_default": "two_selmer_rank",
+    },
 )
 def genus2_curve_search(info, query):
     parse_ints(info, query, "abs_disc", "absolute discriminant")
@@ -727,21 +731,7 @@ def genus2_curve_search(info, query):
         mode=info.get("bad_quantifier"),
     )
 
-@diagram_wrap(template="d3_diagram.html",
-              table=db.g2c_curves,
-              title="Genus 2 curve diagram search",
-              err_title="Genus 2 curve search input error",
-              x_axis_default=None,
-              y_axis_default=None,
-              columns=g2c_columns,
-              url_for_label=url_for_curve_label,
-              learnmore=learnmore_list,
-              bread=lambda: get_bread('Diagram search'))
-def diagram_search(info, query):
-    # run function below without the decorator
-    genus2_curve_search.f(info, query)
 
-    
 ################################################################################
 # Statistics
 ################################################################################

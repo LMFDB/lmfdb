@@ -115,7 +115,7 @@
 
   var margin = {top: 50, right: 30, bottom: 40, left: 100},
 
-      width = 1000 - margin.left - margin.right,
+      width = 800 - margin.left - margin.right,
       height = 400 - margin.top - margin.bottom;
 
   // append the svg object to the body of the page
@@ -323,7 +323,7 @@
       const spread = max - min;
       
       let axisMin = min - (spread / 10);
-      if (axisMin <= 0 && 0 <= min) {
+      if (axisMin <= 0 && 0 < min) {
 	  axisMin = 0;
       }
       const axisMax = max + (spread / 10);
@@ -380,9 +380,6 @@
   // Store initial domain for zoom reset
   const initialXDomain = [currentXMin, currentXMax]
   const initialYDomain = [currentYMin, currentYMax]
-  // Legend(d3.scaleSequential([0,100], d3.scaleBlue), {
-  //     title: "{{ info.get('color') | tojson }}"
-  // })
   // Function to update chart with new axes
   function updateChart() {
       // Update scales

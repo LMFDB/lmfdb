@@ -13,7 +13,7 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
-    sparse_cyclotomic_to_mathml, search_wrap, diagram_wrap, redirect_no_cache, CodeSnippet)
+    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
@@ -88,8 +88,6 @@ def url_for_label(label):
 def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=GalSearchArray(), stats=GaloisStats())
-    if info.get("search_type") == "Diagram":
-        return diagram_search(info)
     if request.args:
         return galois_group_search(info)
     info['degree_list'] = list(range(1, 48))
@@ -229,21 +227,6 @@ def galois_group_search(info, query):
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
 
     _set_show_subs(info)
-
-@diagram_wrap(template="d3_diagram.html",
-              table=db.gps_transitive,
-              title="Galois group diagram search",
-              err_title="Galois group search input error",
-              x_axis_default=None,
-              y_axis_default=None,
-              columns=gg_columns,
-              url_for_label=url_for_label,
-              learnmore=learnmore_list,
-              postprocess=gg_postprocess,
-              bread=lambda: get_bread('Diagram search'))
-def diagram_search(info, query):
-    # run function below without the decorator
-    galois_group_search.f(info, query)
 
 
 def yesno(val):
