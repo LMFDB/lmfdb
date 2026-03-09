@@ -141,6 +141,7 @@ gg_columns = SearchColumns([
     MathCol("parity", "gg.parity", "Parity", align="right"),
     CheckCol("solv", "group.solvable", "Solvable"),
     MathCol("nilpotency", "group.nilpotent", "Nil. class", short_title="nilpotency class", default=False),
+    MathCol("auts", "gg.field_automorphisms", r"$\#\Aut(F/K)$", short_title="field auts"),
     MathCol("num_conj_classes", "gg.conjugacy_classes", "Conj. classes", short_title="conjugacy classes", default=False),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
@@ -151,8 +152,8 @@ gg_columns = SearchColumns([
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
                       apply_download=lambda s, b, c: [s, b])
 ],
-    db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
-gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
+    db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes","auts"])
+#gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
     # We want to cache latex forms both for the results and for any groups that show up as siblings or subfields
@@ -217,6 +218,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'order')
     parse_ints(info,query,'arith_equiv')
     parse_ints(info,query,'nilpotency')
+    parse_ints(info,query,'auts')
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
@@ -516,6 +518,12 @@ class GalSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="1..100",
             example_span="-1, or 1..3")
+        aut = TextBox(
+            name="auts",
+            label=r"$\#\Aut(F/K)$",
+            knowl="gg.field_automorphisms",
+            example="2..5",
+            example_span="3, or 4..6")
         arith_equiv = TextBox(
             name="arith_equiv",
             label="Equivalent siblings",
@@ -524,9 +532,9 @@ class GalSearchArray(SearchArray):
             example_span="1 or 2,3 or 1..5 or 1,3..10")
         count = CountBox()
 
-        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [arith_equiv], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [arith_equiv, aut], [gal], [count]]
 
-        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency]]
+        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency], [aut]]
 
 def yesone(s):
     return "yes" if s in ["yes", 1] else "no"

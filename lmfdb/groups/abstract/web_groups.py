@@ -23,7 +23,7 @@ from sage.all import (
     lcm,
     is_prime,
     cartesian_product_iterator,
-    exists,
+    #exists,
     euler_phi,
 )
 from sage.libs.gap.libgap import libgap
@@ -177,29 +177,43 @@ def gp_label_to_cc_data(gp):
     return gp_order, class_to_int(gp_counter) + 1
 
 
-# mimics magma IsInSmallGroupDatabase
+# There was a bug that caused small group labels to disagree between magma and GAP.
+# It has been fixed, but meant that we used our own labels (with letters) rather than
+# small group labels in some cases.
+# This should be fixed, but as a workaround we just check the label
+@cached_method
 def in_small_gp_db(order):
     if order == 1024:
         return False
-    if order <= 2000 or order in {2187, 6561, 3125, 2401}:
+    if order <= 2000:
         return True
-    f = factor(order)
-    if all(f[i][1] == 1 and f[i][0] < 1073741824 for i in range(len(f))):
-        return True
-    if len(f) == 2:
-        pairs, n = exists((i for i in {0,1}), lambda i: f[i][1] == 1)
-        if pairs:
-            p = f[1-n]
-            if ( p[1] <= 2 or p[0] == 2 and p[1] <= 8
-                  or p[0] == 3 and p[1] <= 6
-                  or p[0] == 5 and p[1] <= 5
-                  or p[0] == 7 and p[1] <= 4 ):
-                return True
-    if len(f) <= 3 and sum([p[1] for p in f]) == 4:
-        return True
-    if len(f) == 1 and f[0][1] <= 7:
-        return True
-    return False
+    label = db.gps_groups.lucky({"order":order}, "label")
+    return label.split(".")[1].isdigit()
+
+# This is the version we eventually want
+# mimics magma IsInSmallGroupDatabase
+#def in_small_gp_db(order):
+#    if order == 1024:
+#        return False
+#    if order <= 2000 or order in {2187, 6561, 3125, 2401}:
+#        return True
+#    f = factor(order)
+#    if all(f[i][1] == 1 and f[i][0] < 1073741824 for i in range(len(f))):
+#        return True
+#    if len(f) == 2:
+#        pairs, n = exists((i for i in {0,1}), lambda i: f[i][1] == 1)
+#        if pairs:
+#            p = f[1-n]
+#            if ( p[1] <= 2 or p[0] == 2 and p[1] <= 8
+#                  or p[0] == 3 and p[1] <= 6
+#                  or p[0] == 5 and p[1] <= 5
+#                  or p[0] == 7 and p[1] <= 4 ):
+#                return True
+#    if len(f) <= 3 and sum([p[1] for p in f]) == 4:
+#        return True
+#    if len(f) == 1 and f[0][1] <= 7:
+#        return True
+#    return False
 
 @cached_function
 def groups_from_missing_orders():
