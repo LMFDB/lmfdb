@@ -17,4 +17,6 @@ sage: chi.is_odd()
 False
 sage: chi.galois_orbit()
 [Dirichlet character modulo 1 of conductor 1]
+sage: CyclotomicField(chi.multiplicative_order())
+Cyclotomic Field of order 1 and degree 1
 sage: 

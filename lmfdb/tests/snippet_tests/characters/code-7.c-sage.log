@@ -18,4 +18,8 @@ sage: chi.is_primitive()
 True
 sage: chi.is_odd()
 False
+sage: CyclotomicField(chi.multiplicative_order())
+Cyclotomic Field of order 3 and degree 2
+sage: chi.fixed_field()
+Number Field in a with defining polynomial x^3 + x^2 - 2*x - 1
 sage: 

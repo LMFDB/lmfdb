@@ -1001,6 +1001,8 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         # Sage code in special case for modulus 1
         if self.modulus == 1:
             self._genvalues_for_code = []
+            # Sage throws error for "chi.fixed_field()" if modulus is 1
+            code['kernel_field'].pop('sage')
 
         data = {'modulus': self.modulus, 'number' : self.number,
                 'symbol_num' : self.symbol_numerator(),
