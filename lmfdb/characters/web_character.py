@@ -800,6 +800,13 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def order(self):
         return euler_phi(self.modulus)
 
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
+        # Adjust frontmatter for constructing group of Dirichlet characters
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("character", "character group of modulus")
+        return code
+
 
 class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     """
