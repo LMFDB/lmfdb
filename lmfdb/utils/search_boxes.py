@@ -702,6 +702,15 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return self.browse_array
         else:
+
+            # Hidden search box allowing multiple labels to be passed via URL
+            self.refine_array.append(
+                SneakyBox(
+                    name="labels",
+                    label="Labels"
+                )
+            )
+
             return self.refine_array
 
     def _print_table(self, grid, info, layout_type):
