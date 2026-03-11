@@ -817,6 +817,10 @@ download_makedata_comment = {
 
 
 def number_field_jump(info):
+    # Check if user provided a comma-separated list of fields
+    if ',' in info['jump']:
+        
+
     query = {'label_orig': info['jump']}
     try:
         parse_nf_string(info, query, 'jump', name="Label", qfield='label')

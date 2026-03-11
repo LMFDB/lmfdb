@@ -64,6 +64,24 @@ class Wrapper():
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
+
+            # Handle multi-label search via "?labels=" in the URL
+            labels_input = info.get("labels")
+            if labels_input:
+                labels = [L.strip() for L in labels_input.split(",")]
+    
+                if labels and hasattr(self.table, "_label_col"):
+                    label_col = self.table._label_col
+    
+                    if label_col in query and :
+                        if "$in" in query[label_col]:
+                            # Take intersection with existing label query
+                            query[label_col]["$in"] = list(set(query[label_col]["$in"]) & set(labels))
+                        else:
+                            query[label_col]["$in"] = labels
+                    else:
+                        query[label_col] = {"$in": labels}
+
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
             if is_debug_mode():
