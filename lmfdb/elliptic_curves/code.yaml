@@ -277,6 +277,7 @@ snippet_test:
     url: EllipticCurve/Q/11/a/3/download/{lang}?label=11.a3
   test37a: 
     label: 37.a
+    langs:
       - sage
       - magma
       - gp
