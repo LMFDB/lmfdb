@@ -19,4 +19,6 @@ gp> #znconreyconductor(g,chi)==1
 1
 gp> zncharisodd(g,chi)
 1
+gp> nfinit(polcyclo(charorder(g,chi)))
+[x + 1, [1, 0], 1, 1, [Mat(1), Mat(1), Mat(16), Mat(1), 1, Mat(1), [1, 0], []], [-1.0000000000000000000000000000000000000], [1], Mat(1), Mat(1)]
 gp> 

@@ -308,7 +308,6 @@ def dirichlet_character_search(info, query):
     common_parse(info, query)
 
 
-@characters_page.route("/Dirichlet")
 @characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
     if request.args:
@@ -416,7 +415,6 @@ def make_webchar(args, get_bread=False):
         return WebSmallDirichletCharacter(**args)
 
 
-@characters_page.route("/Dirichlet/<modulus>")
 @characters_page.route("/Dirichlet/<modulus>/")
 @characters_page.route("/Dirichlet/<int:modulus>/<int:number>")
 @characters_page.route("/Dirichlet/<int:modulus>/<orbit_label>")  # orbit_label is a Cremona_letter_code identifying the orbit
@@ -557,6 +555,8 @@ def dirchar_code_download(label, download_type):
     Render a text page to download all Magma/Sage/PariGP code snippets for the various Dirichlet character pages
     Returns code snippets for either the individual Dirichet character, character orbit, or character group, depending on label
     """
+    sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order',
+                         'is_real', 'is_primitive', 'parity', 'value_field', 'kernel_field']
     try:
         if label.count(".") == 0:
             # Group of Dirichlet characters
@@ -567,12 +567,11 @@ def dirchar_code_download(label, download_type):
             # Orbit of Dirichlet characters
             modulus, orbit_label = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label})
-            sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity']
         elif label.count(".") == 2:
             # Individual Dirichlet character
             modulus, orbit_label, number = label.split(".")
             dc = make_webchar({'type':'Dirichlet', 'modulus':modulus, 'orbit_label':orbit_label, 'number':number})
-            sorted_code_names = ['character_init', 'kronecker_symbol', 'modulus', 'conductor', 'order', 'is_real', 'is_primitive', 'parity', 'galois_orbit']
+            sorted_code_names.insert(8, 'galois_orbit')
         else:
             return abort(404, f"Invalid label {label}")
         if label.count(".") > 0 and dc.symbol_numerator() is None:

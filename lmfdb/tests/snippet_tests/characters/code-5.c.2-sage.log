@@ -18,4 +18,8 @@ True
 sage: chi.galois_orbit()
 [Dirichlet character modulo 5 of conductor 5 mapping 2 |--> -zeta4,
  Dirichlet character modulo 5 of conductor 5 mapping 2 |--> zeta4]
+sage: CyclotomicField(chi.multiplicative_order())
+Cyclotomic Field of order 4 and degree 2
+sage: chi.fixed_field()
+Number Field in a with defining polynomial x^4 + x^3 + x^2 + x + 1
 sage: 
