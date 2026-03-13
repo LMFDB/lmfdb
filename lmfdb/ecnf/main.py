@@ -766,7 +766,7 @@ def ecnf_isog_code(**args):
     lang = args['download_type']
 
     code = CodeSnippet(ECNF_isoclass.by_label(label).make_code_snippets())
-    sorted_isog_code_names = ['field', 'isogeny_class', 'rank', 'isogeny_matrix', 'isogeny_graph', 'curves']    
+    sorted_isog_code_names = ['field', 'isogeny_class', 'rank', 'isogeny_matrix', 'isogeny_graph', 'curves']
     return code.export_code(label, lang, sorted_isog_code_names)
 
 

@@ -1,4 +1,5 @@
-import os, yaml
+import os
+import yaml
 from flask import url_for
 from lmfdb.utils import make_graph, setup_isogeny_graph, prop_int_pretty, raw_typeset, integer_squarefree_part, list_to_factored_poly_otherorder
 from lmfdb.elliptic_curves.web_ec import split_lmfdb_label, split_cremona_label, OPTIMALITY_BOUND, CREMONA_BOUND
@@ -74,7 +75,6 @@ class ECisog_class():
             if lang != "comment":
                 code["isogeny_class"][lang] = code["curve"][lang]+"\n"+code["isogeny_class"][lang]+"\n"
         return code
-
 
     def make_class(self):
         # Extract the size of the isogeny class from the database

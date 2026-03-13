@@ -1119,7 +1119,6 @@ def ec_isog_code(**args):
     return code.export_code(label, lang, sorted_isog_code_names)
 
 
-
 def tor_struct_search_Q(prefill="any"):
     def fix(t):
         return t + ' selected = "yes"' if prefill == t else t
