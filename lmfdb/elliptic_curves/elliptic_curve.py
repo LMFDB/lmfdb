@@ -1099,7 +1099,7 @@ def ec_code(**args):
     Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
-        abort(404,"Invalid code language specified: " + lang)
+        return abort(404, "Invalid code language specified: " + lang)
     code = CodeSnippet(Ecode)
     return code.export_code(label, lang, sorted_code_names)
 
@@ -1113,7 +1113,7 @@ def ec_isog_code(**args):
     Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
-        abort(404,"Invalid code language specified: " + lang)
+        return abort(404, "Invalid code language specified: " + lang)
     code = CodeSnippet(Ecode)
     sorted_isog_code_names = ['isogeny_class', 'rank', 'qexp', 'isogeny_matrix', 'isogeny_graph', 'curves']
     return code.export_code(label, lang, sorted_isog_code_names)
