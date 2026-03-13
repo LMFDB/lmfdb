@@ -240,10 +240,47 @@ isogenies:
   comment: Isogenies
   pari: ellisomat(E)
 
+
+# Code snippets for elliptic curve isogeny class pages
+isogeny_class:
+  comment: Define the isogeny class
+  sage: E.isogeny_class()
+  magma: IsogenousCurves(E);
+  pari: ellisomat(E)
+  
+curves:
+  comment: List of curves in the isogeny class
+  sage: E.isogeny_class().curves
+  magma: IsogenousCurves(E);
+
+isogeny_matrix:
+  comment: Isogeny matrix
+  sage: E.isogeny_class().matrix()
+  pari: ellisomat(E)
+
+isogeny_graph:
+  comment: Isogeny graph
+  sage: E.isogeny_graph().plot(edge_labels=True)
+
+
+# Code snippet tests for elliptic curve pages and isogeny class pages
 snippet_test:
+  test11a: 
+    label: 11.a
+    langs:
+      - sage
+      - magma
+      - gp
+    url: EllipticCurve/Q/11/a/download/{lang}?label=11.a
   test11a3: 
     label: 11.a3
     url: EllipticCurve/Q/11/a/3/download/{lang}?label=11.a3
+  test37a: 
+    label: 37.a
+      - sage
+      - magma
+      - gp
+    url: EllipticCurve/Q/37/a/download/{lang}?label=37.a
   test37a1: 
     label: 37.a1
     url: EllipticCurve/Q/37/a/1/download/{lang}?label=37.a1

@@ -940,6 +940,12 @@ def ec_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@ec_page.route('/<conductor>/<iso>/download/<download_type>')
+def ec_isog_code_download(**args):
+    response = make_response(ec_isog_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 @ec_page.route("/CongruentNumbers")
 def render_congruent_number_data():
     info = to_dict(request.args)
@@ -1093,9 +1099,25 @@ def ec_code(**args):
     Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
-        abort(404,"Invalid code language specified: " + lang)
+        return abort(404, "Invalid code language specified: " + lang)
     code = CodeSnippet(Ecode)
     return code.export_code(label, lang, sorted_code_names)
+
+def ec_isog_code(**args):
+    label = class_lmfdb_label(args['conductor'], args['iso'])
+    E = ECisog_class.by_label(label)
+    if E == "Invalid label":
+        return elliptic_curve_jump_error(label, {})
+    if E == "Class not found":
+        return elliptic_curve_jump_error(label, {}, missing_curve=True)
+    Ecode = E.code
+    lang = args['download_type']
+    if lang not in Fullname:
+        return abort(404, "Invalid code language specified: " + lang)
+    code = CodeSnippet(Ecode)
+    sorted_isog_code_names = ['isogeny_class', 'rank', 'qexp', 'isogeny_matrix', 'isogeny_graph', 'curves']
+    return code.export_code(label, lang, sorted_isog_code_names)
+
 
 
 def tor_struct_search_Q(prefill="any"):

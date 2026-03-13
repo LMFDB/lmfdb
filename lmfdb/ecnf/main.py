@@ -282,8 +282,10 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            title=title,
                            bread=bread,
                            cl=cl,
+                           code=cl.make_code_snippets(),
                            properties=cl.properties,
                            friends=cl.friends,
+                           downloads=cl.downloads,
                            learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size > 1 else learnmore_list())
 
 
@@ -738,7 +740,6 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
@@ -748,6 +749,25 @@ def ecnf_code(**args):
     from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
     code = CodeSnippet(make_code(label))
     return code.export_code(label, lang, sorted_code_names)
+
+@ecnf_page.route('/<nf>/<conductor_label>/<class_label>/download/<download_type>')
+def ecnf_isog_code_download(**args):
+    try:
+        response = make_response(ecnf_isog_code(**args))
+    except ValueError:
+        return abort(404)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+def ecnf_isog_code(**args):
+    label = "-".join([args['nf'], args['conductor_label'], args['class_label']])
+    if not CLASS_LABEL_RE.fullmatch(label):
+        return abort(404)
+    lang = args['download_type']
+
+    code = CodeSnippet(ECNF_isoclass.by_label(label).make_code_snippets())
+    sorted_isog_code_names = ['field', 'isogeny_class', 'rank', 'isogeny_matrix', 'isogeny_graph', 'curves']    
+    return code.export_code(label, lang, sorted_isog_code_names)
 
 
 def disp_tor(t):
