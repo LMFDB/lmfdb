@@ -359,6 +359,10 @@ def url_for_label(label):
     nf, cond_label, iso_label, number = split_full_label(label.strip())
     return url_for("ecnf.show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number)
 
+def ecnf_label_builder(row):
+    """Build full ECNF label from database row fields for diagram search."""
+    return f"{row['field_label']}-{row['conductor_label']}-{row['iso_label']}{row['number']}"
+
 def make_cm_query(cm_disc_str):
     cm_list = parse_ints_to_list_flash(cm_disc_str, "CM discriminant", max_val=None)
     for d in cm_list:
@@ -475,7 +479,12 @@ class ECNFDownloader(Downloader):
                         'download':ECNFDownloader()},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
-             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')])
+             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')],
+             diagram_opts={"x_axis_default": "conductor_norm",
+                           "y_axis_default": "rank",
+                           "color_default": "torsion_order",
+                           "label_builder": ecnf_label_builder,
+                           })
 def elliptic_curve_search(info, query):
     parse_nf_string(info,query,'field',name="base number field",qfield='field_label')
     if query.get('field_label') == '1.1.1.1':

@@ -526,7 +526,14 @@ class ECDownloader(Downloader):
              shortcuts={'jump':elliptic_curve_jump,
                         'download':ECDownloader()},
              bread=lambda:get_bread('Search results'),
-             postprocess=ec_postprocess)
+             postprocess=ec_postprocess,
+             diagram_opts={
+                 "title": "Elliptic curve diagrams",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "label_builder": lambda r: r["lmfdb_label"],
+                 "x_axis_default": "conductor",
+                 "y_axis_default": "regulator",
+             })
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')
     parse_ints(info, query, 'conductor')

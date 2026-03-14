@@ -230,6 +230,7 @@ def galois_group_search(info, query):
 
     _set_show_subs(info)
 
+
 def yesno(val):
     if val:
         return 'yes'

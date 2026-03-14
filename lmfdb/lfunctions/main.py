@@ -108,7 +108,7 @@ def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -124,7 +124,7 @@ def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
@@ -377,7 +377,14 @@ class LfuncDownload(Downloader):
              shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]))
+             bread=lambda: get_bread(breads=[("Search results", " ")]),
+             diagram_opts={
+                 "title": "L-function diagrams",
+                 "bread": lambda: get_bread(breads=[("Diagram search", " ")]),
+                 "x_axis_default": "root_analytic_conductor",
+                 "y_axis_default": "z1",
+                 "color_default": "order_of_vanishing",
+             })
 def l_function_search(info, query):
     if info.get("rational") == "yes":
         info["title"] = "Rational L-function search results"
@@ -672,10 +679,12 @@ class LFunctionSearchArray(SearchArray):
             L = [('', 'List of L-functions'),
                  ('Traces', 'Traces table'),
                  ('Euler', 'Euler factors'),
-                 ('Random', 'Random L-function')]
+                 ('Random', 'Random L-function'),
+                 ('Diagram', 'Diagram search')]
         else:
             L = [('', 'List of L-functions'),
-                 ('Random', 'Random L-function')]
+                 ('Random', 'Random L-function'),
+                 ('Diagram', 'Diagram search')]
         return self._search_again(info, L)
 
     def html(self, info=None):
@@ -1789,6 +1798,7 @@ def browseGraphHolo():
 @l_function_page.route("/browseGraphHoloNew/")
 def browseGraphHoloNew():
     return render_browseGraphHoloNew(request.args)
+
 
 ###########################################################################
 #   Functions for rendering graphs for browsing L-functions.

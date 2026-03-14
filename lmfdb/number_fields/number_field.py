@@ -909,7 +909,8 @@ class NFDownloader(Downloader):
              postprocess=nf_postprocess,
              bread=lambda:[('Number fields', url_for(".number_field_render_webpage")),
                            ('Search results', '.')],
-             learnmore=learnmore_list)
+             learnmore=learnmore_list,
+             diagram_opts={"x_axis_default": "degree", "y_axis_default": "disc_abs", "color_default": "class_number"})
 def number_field_search(info, query):
     parse_posints(info,query,'degree')
     parse_galgrp(info,query, qfield=('galois_label', 'degree'))
