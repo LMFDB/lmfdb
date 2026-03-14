@@ -1,4 +1,5 @@
-import os, yaml
+import os
+import yaml
 from flask import url_for
 from lmfdb import db
 from urllib.parse import quote
@@ -55,7 +56,6 @@ class ECNF_isoclass():
             if lang != "comment":
                 code["isogeny_class"][lang] = code["curve"][lang]+"\n"+code["isogeny_class"][lang]+"\n"
         return code
-
 
     @staticmethod
     def by_label(label):
