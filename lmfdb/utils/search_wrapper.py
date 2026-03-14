@@ -416,42 +416,14 @@ class SearchWrapper(Wrapper):
                         if col_types.get(name) == "boolean"]
         color_fields = numerical_fields + binary_fields
 
-        # Create diagram-specific search boxes
-        diagram_boxes = [
-            SelectBox(
-                name="x-axis",
-                label="x-axis",
-                options=numerical_fields,
-            ),
-            SelectBox(
-                name="y-axis",
-                label="y-axis",
-                options=numerical_fields,
-            ),
-            SelectBox(
-                name="color",
-                label="Color",
-                options=color_fields,
-            ),
+        # Create SearchBox objects for diagram-specific controls
+        # These are rendered in diagram_search_form.html using the same HTML structure as other boxes
+        info["diagram_boxes"] = [
+            SelectBox(name="x-axis", label="x-axis", options=numerical_fields),
+            SelectBox(name="y-axis", label="y-axis", options=numerical_fields),
+            SelectBox(name="color", label="Color", options=color_fields),
+            CountBox(),
         ]
-
-        # Add diagram-specific boxes to search arrays if not already present
-        if not any(x.name == "x-axis" for arr in SA.browse_array if isinstance(arr, (list, tuple)) for x in arr):
-            SA.browse_array = [
-                x for x in SA.browse_array if not isinstance(x, CountBox)
-            ]
-            SA.browse_array.append(diagram_boxes)
-        if not any(x.name == "x-axis" for arr in SA.refine_array if isinstance(arr, (list, tuple)) for x in arr):
-            SA.refine_array.append(diagram_boxes + [CountBox()])
-
-        # Override hidden() to exclude "count" from hidden inputs
-        original_hidden = SA.hidden
-
-        def hidden_without_count(info):
-            return [(name, val) for name, val in original_hidden(info) if name != "count"]
-
-        SA.hidden = hidden_without_count
-        info["search_array"] = SA
 
         # Build query using the same parsing function
         data = self.make_query(info, False)

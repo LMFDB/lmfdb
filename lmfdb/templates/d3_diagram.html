@@ -1,7 +1,7 @@
 {% extends 'homepage.html' %}
 {% block content %}
 
-{% include 'refine_search_form.html' %}
+{% include 'diagram_search_form.html' %}
 
 <!-- Load d3.js -->
 <script src="https://d3js.org/d3.v4.js"></script>
@@ -73,12 +73,13 @@
   // import {Legend} from "@d3/color-legend"
   // set the dimensions and margins of the graph
   let data = {{ info.get("d3_data") | tojson | safe }};
+
   // Convert string values to numbers to ensure proper numeric comparison
-  console.log(data[1].color)
   data.forEach(d => {
       d.x = parseFloat(d.x);
       d.y = parseFloat(d.y);
       const parsedColor = parseFloat(d.color);
+      // Color can be a bool, so requires special handling
       d.color = isNaN(parsedColor) ? (d.color === "true" ? 1 : 0) : parsedColor;
   });
 
@@ -114,7 +115,6 @@
   });
 
   var margin = {top: 50, right: 30, bottom: 40, left: 100},
-
       width = 800 - margin.left - margin.right,
       height = 400 - margin.top - margin.bottom;
 
@@ -183,7 +183,28 @@
 	  .style("stroke", "none")
 	  .style("opacity", 0.8)
   }
+
+  // Resolving dot clicks to go to homepage or search table (in case of multiplicity > 1)
   const baseUrl = window.location.origin;
+
+  function goToHomepageOrSearch(d) {
+      if (d.multpl === 1) {
+	  window.location.href = `${baseUrl}/${d.path}`;
+      } else {
+	  if ('URLSearchParams' in window) {
+	      var searchParams = new URLSearchParams(window.location.search);
+	      if (searchParams.has("search_type") ) {
+		  searchParams.set("search_type", "");
+	      } else if (searchParams.has("hst")) {
+		  searchParams.set("hst", "");
+	      }
+	      searchParams.set(xAxisKey, d.x)
+	      searchParams.set(yAxisKey, d.y)
+	      searchParams.delete("count")
+	      window.location.search = searchParams.toString();
+	  }
+      }
+  }
 
   // Color scheme definitions
   const colorSchemes = {
@@ -344,7 +365,9 @@
   // Axis labels from info
   const xAxisLabel = {{ info.get('x-axis-label') | tojson }}
   const yAxisLabel = {{ info.get('y-axis-label') | tojson }}
-
+  const xAxisKey = {{ info.get('x-axis') | tojson }}
+  const yAxisKey = {{ info.get('y-axis') | tojson }}
+  
   // Initialize input fields with default values
   d3.select("#xMin").property("value", currentXMin)
   d3.select("#xMax").property("value", currentXMax)
@@ -426,9 +449,7 @@
 	  .on("mouseover", mouseover)
 	  .on("mousemove", mousemove)
 	  .on("mouseleave", mouseleave)
-	  .on("click", (d) => {
-	      window.location.href = `${baseUrl}/${d.path}`;
-	  })
+	  .on("click", d => goToHomepageOrSearch(d))
   }
 
   // Create zoom behavior
