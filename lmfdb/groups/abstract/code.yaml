@@ -377,3 +377,25 @@ character_table:
     G.character_table()  # Output not guaranteed to exactly match the LMFDB table
   sage_gap: |
     G.CharacterTable()  # Output not guaranteed to exactly match the LMFDB table
+
+
+# Code snippet tests
+snippet_test:
+  # Trivial group
+  test1.1:
+    label: 1.1
+    url: Groups/Abstract/1.1/codedownload/{lang}
+  # Symmetric group S_3
+  test6.1:
+    label: 6.1
+    url: Groups/Abstract/6.1/codedownload/{lang}
+  # Dihedral group D_4 (of order 8)
+  test8.3:
+    label: 8.3
+    url: Groups/Abstract/8.3/codedownload/{lang}
+  # Alternating group A_5
+  test60.5:
+    label 60.5
+    url: Groups/Abstract/60.5/codedownload/{lang}
+
+

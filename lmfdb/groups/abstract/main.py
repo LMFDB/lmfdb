@@ -1884,6 +1884,11 @@ def render_abstract_group(label, data=None):
     info['pos_int_and_factor'] = pos_int_and_factor
     info['conv'] = integer_to_mathml
     info['dispv'] = sparse_cyclotomic_to_mathml
+
+    code = gp.code_snippets()
+    if code and len(code['prompt']) == 0:  # no codes
+        code = None
+
     if gp.live():
         title = f"Abstract group {label}"
         friends = []
@@ -1901,10 +1906,12 @@ def render_abstract_group(label, data=None):
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-                                         ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-                #            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-                                         ("Underlying data", url_for(".gp_data", label=label)),
-        ]
+                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+                     #("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+        for lang in [("Gap", "gap"), ("Magma", "magma"), ("SageMath", "sage"), ("SageMath (using Gap)", "sage_gap")]:
+            if lang[1] in code['prompt']:
+                downloads.append(('{} commands'.format(lang[0]), url_for(".download_group_code", label=label, download_type=lang[1]))
+        downloads.append(("Underlying data", url_for(".gp_data", label=label)))
 
         # "internal" friends
         sbgp_of_url = (
@@ -1972,9 +1979,7 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
-    code = gp.code_snippets()
-    if code and len(code['prompt']) == 0:  # no codes
-        code = None
+    
 
     return render_template(
         "abstract-show-group.html",
@@ -2564,6 +2569,18 @@ def download_group(**args):
     #strIO.write(s.encode("utf-8"))
     #strIO.seek(0)
     #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
+
+@abstract_page.route("/<label>/codedownload/<download_type>")
+def download_group_code(**args):
+    try:
+        gg = WebAbstractGroup(label)
+        gg.make_code_snippets()
+        code = CodeSnippet(gg.code)
+        response = make_response(code.export_code(label, download_type, sorted_code_names))
+    except Exception as err:
+        return abort(404, str(err))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 
 class GroupsSearchArray(SearchArray):
