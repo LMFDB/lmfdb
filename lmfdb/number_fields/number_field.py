@@ -858,8 +858,9 @@ nf_columns = SearchColumns([
     ClassGroupCol("narrow_class_group_desc", "nf.narrow_class_group", "Narrow class group", download_col="narrow_class_group", default=False),
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center", default=False),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True, default=False),
-    MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False)],
-    db_cols=["class_group", "narrow_class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number"])
+    MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False),
+    MathCol("unit_signature_rank", "nf.unit_signature_rank", "Unit signature rank", align="center", default=False)],
+    db_cols=["class_group", "narrow_class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number", "unit_signature_rank"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -978,6 +979,7 @@ def number_field_search(info, query):
     parse_primes(info,query,'inessentialp',name='Inessential primes',
                  qfield='inessentialp', mode=info.get('inessential_quantifier'))
     parse_bool(info,query,'is_minimal_sibling')
+    parse_ints(info,query,'unit_signature_rank')
     info['wnf'] = WebNumberField.from_data
     info['gg_display'] = group_pretty_and_nTj
 
@@ -1314,6 +1316,11 @@ class NFSearchArray(SearchArray):
             knowl="nf.inessential_prime",
             select_box=inessential_quantifier,
             example="2,3")
+        unit_signature_rank = TextBox(
+          name="unit_signature_rank",
+          label = "Unit signature rank",
+          knowl="nf.unit_signature_rank",
+          example="2")
         count = CountBox()
 
         self.browse_array = [
@@ -1328,14 +1335,15 @@ class NFSearchArray(SearchArray):
             [completion, relative_class_number],
             [index, subfield],
             [monogenic, inessentialprimes],
-            [count, is_minimal_sibling]]
+            [unit_signature_rank, is_minimal_sibling],
+            [count]]
 
         self.refine_array = [
             [degree, signature, num_ram, ram_primes, ur_primes ],
             [gal, field_is, subfield, class_group, class_number],
             [discriminant, rd, grd, narrow_class_group, narrow_class_number],
             [cm_field, relative_class_number, regulator, completion, monogenic],
-            [index, inessentialprimes, is_minimal_sibling]]
+            [index, inessentialprimes, is_minimal_sibling, unit_signature_rank]]
 
             #[degree, signature, class_number, class_group, cm_field],
             #[num_ram, ram_primes, ur_primes, gal, field_is],
