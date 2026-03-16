@@ -280,10 +280,10 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Generate snippet tests")
     parser.add_argument("cmd", help="*generate* test files or run *test*s", choices=['generate', 'test'])
-    parser.add_argument("-i", "--ignore", help="ignore languages", action='append', nargs='+', default=[])
-    parser.add_argument("-o", "--only", help="only languages", action='append', nargs='+', default=None)
-    parser.add_argument("-f", "--file", help="run on single file", type=str)
-    parser.add_argument("-e", "--error-file", help="write errors to file", type=str)
+    parser.add_argument("-i", "--ignore", help="Ignore languages - these will not be run", action='append', nargs='+', default=[])
+    parser.add_argument("-o", "--only", help="Only languages - only these languages will be run ", action='append', nargs='+', default=None)
+    parser.add_argument("-f", "--file", help="Run test or generate on a single file", type=str)
+    parser.add_argument("-e", "--error-file", help="Specify error log file (otherwise stdout)", type=str)
 
     args = parser.parse_args()
 
