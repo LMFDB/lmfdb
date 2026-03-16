@@ -1318,7 +1318,7 @@ class NFSearchArray(SearchArray):
             example="2,3")
         unit_signature_rank = TextBox(
           name="unit_signature_rank",
-          label = "Unit signature rank",
+          label="Unit signature rank",
           knowl="nf.unit_signature_rank",
           example="2")
         count = CountBox()
