@@ -193,14 +193,19 @@
       } else {
 	  if ('URLSearchParams' in window) {
 	      var searchParams = new URLSearchParams(window.location.search);
+	      // change search type to list 
 	      if (searchParams.has("search_type") ) {
 		  searchParams.set("search_type", "");
 	      } else if (searchParams.has("hst")) {
 		  searchParams.set("hst", "");
 	      }
-	      searchParams.set(xAxisKey, d.x)
-	      searchParams.set(yAxisKey, d.y)
-	      searchParams.delete("count")
+	      // remove diagram specific parameters
+	      var diagramParams = ["x-axis", "y-axis", "color", "count"];
+	      diagramParams.map(p => searchParams.delete(p));
+	      // set search parameters based on dot
+	      searchParams.set(xAxisKey, d.x);
+	      searchParams.set(yAxisKey, d.y);
+	      // perform search
 	      window.location.search = searchParams.toString();
 	  }
       }

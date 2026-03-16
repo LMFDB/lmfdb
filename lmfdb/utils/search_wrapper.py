@@ -441,6 +441,9 @@ class SearchWrapper(Wrapper):
             proj = [col for col in proj if col in table.search_cols]
 
         count = parse_count(info, result_count_default)
+        if count > 20_000:
+            flash_error("Diagram search is currently limited to 20 000 search results.")
+            count = 20_000
         try:
             res = table.search(
                 query,
