@@ -337,7 +337,7 @@ Code Attribution
 ----------------
 
 Each file should begin with a short copyright information, mentioning the people
-who are mainly involved in coding this particular python file. In practice, 
+who are mainly involved in coding this particular python file. 
 
 
 Testing
@@ -359,6 +359,62 @@ Testing
   ./test.sh html
   ```
   it produces beautiful coverage scores in `lmfdb/cover/index.html`
+
+Code Snippets 
+-------------
+
+Many of the LMFDB pages include code snippets which describe how to generate the objects on the page using computer algebra systems such as SageMath, Magma, pari/GP or Oscar. To add code snippets to a new page, the relevant code is placed in a file named `code.yaml`. The file should always define the languages used using the `prompt` tag, for example: 
+```
+prompt:
+  sage:   'sage'
+  pari:   'gp'
+  magma:  'magma'
+  oscar:  'oscar'
+```
+
+The code snippets should be formatted as template strings, which will then be formatted in the code when the page is loaded.
+```yaml # From number_fields/code.yaml
+field:
+  comment: Define the number field
+  sage: x = polygen(QQ);  K.<a> = NumberField(%s)
+  pari: K = bnfinit(%s, 1)
+  magma: R<x> := PolynomialRing(Rationals()); K<a> := NumberField(%s);
+  oscar: Qx, x = polynomial_ring(QQ); K, a = number_field(%s)
+```
+
+### Snippet testing
+
+Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es, excluding magma. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
+
+```bash
+sage --python ./lmfdb/tests/generate_snippet_tests.py  -h
+```
+which takes a number of arguments (of which one of the positional arguments `generate` and `test` are required). 
+
+To specify which code snippets should be tested in the Github Action, add a tag of the form 
+
+```yaml
+# e.g. in /lmfdb/number_fields/code.yaml
+...
+snippet_test:                   
+  testQ: 
+    label: 1.1.1.1
+    langs:
+      - sage
+      - magma
+      - oscar
+      - gp
+    url: NumberField/1.1.1.1/download/{lang}
+```
+
+The tag `langs` here is optional, and if omitted, all (available) languages in the `prompt` tag will be used. 
+
+### Snippet test and generate Github Actions
+
+Part of the code snippet testing system is a pair of code actions to generate evaluation log files automatically. The first one runs when a change to a `code*.yaml` file is pulled to the main branch, and if so, regenerates the evaluation files. If the output is different from the previous evaluation files, it will make a pull request, allowing you to manually check that the output is as expected. The logic is in `.github/workflows/snippet_generate.yml`.
+
+Additionally, there's a second CI which runs twice a month and checks that the evaluations are consistent - it can also be run on demand. This ensures that if and when SageMath (or another CAS) deprecates a function, we'll know without having to wait for someone to update the yaml files, rerun the code or submit a bug report. If this action generates a different output than what's stored in the evaluation files, it will error, and upload the diff as an artifact. This is in `.github/workflows/snippet_test.yml`. Furthermore, it will create/update an issue (see https://github.com/LMFDB/lmfdb/issues/6810 for example) which keeps track of all the evaluation errors.
+
 
 Pro Tip: Debugging
 -------------------
