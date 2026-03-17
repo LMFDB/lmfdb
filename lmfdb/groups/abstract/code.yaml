@@ -419,6 +419,7 @@ cyclic_group:
   magma: G := CyclicGroup({ordgp});
   gap: G := CyclicGroup({ordgp});
   sage: G = CyclicPermutationGroup({ordgp})
+  sage_gap: G = libgap.eval('CyclicGroup({ordgp})')
   oscar:  G = cyclic_group({ordgp})
 
 symmetric_group:
@@ -426,6 +427,7 @@ symmetric_group:
   magma:  G := SymmetricGroup({symn});
   gap:  G := SymmetricGroup({symn});
   sage: G = SymmetricGroup({symn})
+  sage_gap: G = libgap.eval('SymmetricGroup({ordgp})')
   oscar: G = symmetric_group({symn})
 
 dihedral_group:
@@ -433,14 +435,16 @@ dihedral_group:
   magma: G := DihedralGroup({ordgp_half});    # Magma D(n) has order 2n
   gap:  G := DihedralGroup({ordgp});"         # GAP D(n) has order n
   sage:  G = DihedralGroup({ordgp_half})      # Sage D(n) has order 2n
+  sage_gap: G = libgap.eval('DihedralGroup({ordgp})')
   oscar:  G = dihedral_group({ordgp})         # Oscar D(n) has order n
 
 alternating_group:
   comment: Define group as an alternating group
   magma:  G := AlternatingGroup({altn});
   gap:  G := AlternatingGroup({altn});
-  sage: G = AlternatingGroup("+self.name[1:]+")
-  oscar: G = alternating_group(
+  sage: G = AlternatingGroup({altn})
+  sage_gap: G = libgap.eval('AlternatingGroup({altn})')
+  oscar: G = alternating_group({altn})
 
 dicyclic_group:
   comment: Define group as a dicyclic group
