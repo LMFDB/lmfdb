@@ -36,6 +36,12 @@ not-implemented:
   oscar: |
     # (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with abstract group {label}.
+  rest: |
+    Some of these functions may take a long time to execute (this depends on the group).
+
 presentation:
   comment: Define the group with the given generators and relations
   magma: G := PCGroup({pccodelist}); {gens} := Explode({used_gens}); AssignNames(~G, {magma_assign});
@@ -170,7 +176,6 @@ is_elementary_abelian:
   sage: G.is_elementary_abelian()
   sage_gap:  G.IsElementaryAbelian()
   oscar: is_elementary_abelian(G)
-
 
 is_monomial:
   comment:  Determine if the group G is a monomial group
@@ -388,10 +393,10 @@ lower_central_series:
 
 upper_central_series:
   comment: The upper central series of the group G
-  magma:  UpperCentralSeries(G);
+  magma: UpperCentralSeries(G);
   gap: UpperCentralSeriesOfGroup(G);
   sage: G.upper_central_series()
-  sage_gap:  G.UpperCentralSeriesOfGroup()
+  sage_gap: G.UpperCentralSeriesOfGroup()
   oscar: upper_central_series(G)
 
 character_table:
@@ -411,10 +416,10 @@ character_table:
 # Code snippets for special group families (used in the construction of the top code snippet)
 cyclic_group:
   comment: Define group as a cyclic group
-  magma: G := CyclicGroup({order});
-  gap: G := CyclicGroup({order});
-  sage: G = CyclicPermutationGroup("+str(self.order)+")
-  oscar:  G = cyclic_group({order});
+  magma: G := CyclicGroup({ordgp});
+  gap: G := CyclicGroup({ordgp});
+  sage: G = CyclicPermutationGroup({ordgp})
+  oscar:  G = cyclic_group({ordgp})
 
 symmetric_group:
   comment: Define group as a symmetric group
@@ -425,10 +430,10 @@ symmetric_group:
 
 dihedral_group:
   comment: Define group as a dihedral group
-  magma: G := DihedralGroup({orderq2});    # Magma D(n) has order 2n
-  gap:  G := DihedralGroup({order});"      # GAP D(n) has order n
-  sage:  G = DihedralGroup({orderq2})      # Sage D(n) has order 2n
-  oscar:  G = dihedral_group({order})      # Oscar D(n) has order n
+  magma: G := DihedralGroup({ordgp_half});    # Magma D(n) has order 2n
+  gap:  G := DihedralGroup({ordgp});"         # GAP D(n) has order n
+  sage:  G = DihedralGroup({ordgp_half})      # Sage D(n) has order 2n
+  oscar:  G = dihedral_group({ordgp})         # Oscar D(n) has order n
 
 alternating_group:
   comment: Define group as an alternating group
@@ -439,10 +444,10 @@ alternating_group:
 
 dicyclic_group:
   comment: Define group as a dicyclic group
-  magma:  G := DicyclicGroup({orderq4});"   # Magma Dic(n) has order 4n
-  gap:  G := DicyclicGroup({order});"       # GAP Dic(n) has order n
-  sage:  G = DiCyclicGroup({orderq4})"      # Sage Dic(n) has order 4n
-  oscar:  G = dicyclic_group({orderq4})     # Oscar Dic(n) has order n
+  magma:  G := DicyclicGroup({ordgp_quarter});"   # Magma Dic(n) has order 4n
+  gap:  G := DicyclicGroup({ordgp});"             # GAP Dic(n) has order n
+  sage:  G = DiCyclicGroup({ordgp_quarter})"      # Sage Dic(n) has order 4n
+  oscar:  G = dicyclic_group({ordgp})             # Oscar Dic(n) has order n
 
 chevalley_group:
   comment: Define group as a Chevalley group
@@ -463,7 +468,7 @@ abelian_group:
   oscar: G = abelian_group({abelian_invariants})
 
 
-# Code snippet tests
+# Code snippet tests for abstract group pages
 snippet_test:
   # Trivial group
   test1.1:
@@ -479,7 +484,5 @@ snippet_test:
     url: Groups/Abstract/8.3/codedownload/{lang}
   # Alternating group A_5
   test60.5:
-    label 60.5
+    label: 60.5
     url: Groups/Abstract/60.5/codedownload/{lang}
-
-

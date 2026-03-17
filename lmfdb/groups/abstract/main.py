@@ -49,6 +49,7 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
     redirect_no_cache,
+    CodeSnippet,
 )
 from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
 from lmfdb.utils.interesting import interesting_knowls
@@ -1906,11 +1907,12 @@ def render_abstract_group(label, data=None):
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma"))]
                      #("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-        for lang in [("Gap", "gap"), ("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage"), ("SageMath (using Gap)", "sage_gap")]:
+        for lang in [("Gap", "gap"), ("Magma", "magma"), ("SageMath", "sage"), ("SageMath (using Gap)", "sage_gap"), ("Oscar", "oscar")]:
             if lang[1] in code['prompt']:
-                downloads.append(('{} commands'.format(lang[0]), url_for(".download_group_code", label=label, download_type=lang[1]))
+                print("*****", label)
+                downloads.append(('{} commands'.format(lang[0]), url_for(".download_group_code", label=label, download_type=lang[1])))
         downloads.append(("Underlying data", url_for(".gp_data", label=label)))
 
         # "internal" friends
@@ -2580,13 +2582,14 @@ sorted_code_names = ["code_description", "order", "exponent", "automorphism_grou
                      "upper_central_series", "character_table"]
 
 @abstract_page.route("/<label>/codedownload/<download_type>")
-def download_group_code(**args):
-    try:
+def download_group_code(label, download_type):
+    #try:
+    if 1==1:
         grp = WebAbstractGroup(label)
         code = CodeSnippet(grp.code_snippets())
         response = make_response(code.export_code(label, download_type, sorted_code_names))
-    except Exception as err:
-        return abort(404, str(err))
+    #except Exception as err:
+    #    return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -3752,7 +3755,7 @@ def order_stats_list_to_string(o_list):
     return s
 
 
-sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
+#sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}
