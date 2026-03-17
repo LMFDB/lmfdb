@@ -3,13 +3,14 @@ prompt:
   gap: 'gap'
   sage: 'sage'
   sage_gap: 'sage'   # For implementing groups in SageMath, but using the GAP interface
+  oscar: 'oscar'
 
 logo:
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
   sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
   sage_gap: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-
+  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
 
 comment:
   magma: |
@@ -20,7 +21,8 @@ comment:
     #
   sage_gap: |
     #
-
+  oscar: |
+    #
 
 not-implemented:
   magma: |
@@ -31,7 +33,8 @@ not-implemented:
     # (not yet implemented)
   sage_gap: |
     # (not yet implemented)
-
+  oscar: |
+    # (not yet implemented)
 
 presentation:
   comment: Define the group with the given generators and relations
@@ -101,38 +104,42 @@ order:
   comment: Order of the group
   magma: Order(G);
   gap: Order(G);
-  sage:  G.order()
-  sage_gap:  G.Order()
+  sage: G.order()
+  sage_gap: G.Order()
+  oscar: order(G)
 
 exponent:
   comment: Exponent of the group
   magma: Exponent(G);
   gap: Exponent(G);
-  sage:  G.exponent()
-  sage_gap:  G.Exponent()
+  sage: G.exponent()
+  sage_gap: G.Exponent()
+  oscar: exponent(G)
 
 automorphism_group:
   comment: Automorphism group
   gap: AutomorphismGroup(G);
   magma: AutomorphismGroup(G);
   sage_gap: G.AutomorphismGroup()
+  oscar: automorphism_group(G)
 
 outer_automorphism_group:
   comment: The outer automorphism group of G
-  gap:  FactorGroup(AutomorphismGroup(G), InnerAutomorphismGroup(G));
+  gap: FactorGroup(AutomorphismGroup(G), InnerAutomorphismGroup(G));
 
 composition_factors:
   comment: Composition factors of the group
   magma: CompositionFactors(G);
-  gap:  CompositionSeries(G);
-  sage:  G.composition_series()
+  gap: CompositionSeries(G);
+  sage: G.composition_series()
   sage_gap: G.CompositionSeries()
 
 nilpotency_class:
-  comment:  Nilpotency class of the group
+  comment: Nilpotency class of the group
   magma: NilpotencyClass(G);
   gap: NilpotencyClassOfGroup(G);
   sage_gap: G.NilpotencyClassOfGroup()
+  oscar: nilpotency_class(G)
 
 derived_length:
   comment:  Derived length of the group
@@ -146,6 +153,7 @@ is_abelian:
   gap:  IsAbelian(G);
   sage: G.is_abelian()
   sage_gap:  G.IsAbelian()
+  oscar: is_abelian(G)
 
 is_cyclic:
   comment:  Determine if the group G is cyclic
@@ -153,6 +161,7 @@ is_cyclic:
   gap:  IsCyclic(G);
   sage: G.is_cyclic()
   sage_gap:  G.IsCyclic()
+  oscar: is_cyclic(G)
 
 is_elementary_abelian:
   comment:  Determine if the group G is elementary abelian
@@ -160,6 +169,8 @@ is_elementary_abelian:
   gap: IsElementaryAbelian(G);
   sage: G.is_elementary_abelian()
   sage_gap:  G.IsElementaryAbelian()
+  oscar: is_elementary_abelian(G)
+
 
 is_monomial:
   comment:  Determine if the group G is a monomial group
@@ -172,6 +183,7 @@ is_nilpotent:
   gap: IsNilpotentGroup(G);
   sage: G.is_nilpotent()
   sage_gap:  G.IsNilpotentGroup()
+  oscar: is_nilpotent(G)
 
 is_perfect:
   comment:  Determine if the group G is perfect
@@ -179,12 +191,14 @@ is_perfect:
   gap: IsPerfectGroup(G);
   sage: G.is_perfect()
   sage_gap:  G.IsPerfect()
+  oscar: is_perfect(G)
 
 is_pgroup:
   comment:  Determine if the group G is a p-group
   gap:  IsPGroup(G);
   sage: G.is_pgroup()
   sage_gap: G.IsPGroup()
+  oscar: is_pgroup(G)
 
 is_polycyclic:
   comment:  Determine if the group G is polycyclic
@@ -197,6 +211,7 @@ is_simple:
   magma: IsSimple(G);
   gap:  IsSimpleGroup(G);
   sage_gap:  G.IsSimpleGroup()
+  oscar: is_simple(G)
 
 is_solvable:
   comment: Determine if the group G is solvable
@@ -204,12 +219,14 @@ is_solvable:
   gap: IsSolvableGroup(G);
   sage:  G.is_solvable()
   sage_gap:  G.IsSolvableGroup()
+  oscar: is_solvable(G)
 
 is_supersolvable:
   comment:  Determine if the group G is supersolvable
   gap: IsSupersolvableGroup(G);
   sage: G.is_supersolvable()
   sage_gap:  G.IsSupersolvableGroup()
+  oscar: is_supersolvable(G)
 
 
 group_statistics:
@@ -251,6 +268,8 @@ conjugacy_classes:
     G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB table
   sage_gap: |
     G.ConjugacyClasses()  # Output not guaranteed to exactly match the LMFDB table
+  oscar: |
+    conjugacy_classes() # Output not guaranteed to exactly match the LMFDB table
 
 character_statistics:
   comment:  Compute statistics about the characters of G
@@ -274,6 +293,7 @@ primary_decomposition:
   magma:  PrimaryInvariants(G);
   gap:  AbelianInvariants(G);
   sage_gap: G.AbelianInvariants()
+  oscar: abelian_invariants(G)
 
 abelianization:
   comment:  The abelianization of the group
@@ -305,6 +325,7 @@ center:
   gap:  Center(G);
   sage:  G.center()
   sage_gap:  G.Center()
+  oscar: center(G)
 
 commutator_subgroup:
   comment: Commutator subgroup of the group G
@@ -332,6 +353,7 @@ radical:
   magma:  Radical(G);
   gap: SolvableRadical(G);
   sage_gap: G.SolvableRadical()
+  oscar: solvable_radical(G)
 
 socle:
   comment:  Socle of the group G
@@ -339,6 +361,7 @@ socle:
   gap:  Socle(G);
   sage:  G.socle()
   sage_gap: G.Socle()
+  oscar: socle(G)
 
 derived_series:
   comment:  Derived series of the group GF
@@ -346,12 +369,14 @@ derived_series:
   gap: DerivedSeriesOfGroup(G);
   sage: G.derived_series()
   sage_gap:  G.DerivedSeriesOfGroup()
+  oscar: derived_series(G)
 
 chief_series:
   comment:  Chief series of the group G
   magma:  ChiefSeries(G);
   gap: ChiefSeries(G);
   sage_gap:  G.ChiefSeries()
+  oscar: chief_series(G)
 
 lower_central_series:
   comment:  The lower central series of the group G
@@ -359,6 +384,7 @@ lower_central_series:
   gap: LowerCentralSeriesOfGroup(G);
   sage: G.lower_central_series()
   sage_gap:  G.LowerCentralSeriesOfGroup()
+  oscar: lower_central_series(G)
 
 upper_central_series:
   comment: The upper central series of the group G
@@ -366,6 +392,7 @@ upper_central_series:
   gap: UpperCentralSeriesOfGroup(G);
   sage: G.upper_central_series()
   sage_gap:  G.UpperCentralSeriesOfGroup()
+  oscar: upper_central_series(G)
 
 character_table:
   comment: Character table
@@ -377,6 +404,63 @@ character_table:
     G.character_table()  # Output not guaranteed to exactly match the LMFDB table
   sage_gap: |
     G.CharacterTable()  # Output not guaranteed to exactly match the LMFDB table
+  oscar: |
+    character_table(G)  # Output not guaranteed to exactly match the LMFDB table
+
+
+# Code snippets for special group families (used in the construction of the top code snippet)
+cyclic_group:
+  comment: Define group as a cyclic group
+  magma: G := CyclicGroup({order});
+  gap: G := CyclicGroup({order});
+  sage: G = CyclicPermutationGroup("+str(self.order)+")
+  oscar:  G = cyclic_group({order});
+
+symmetric_group:
+  comment: Define group as a symmetric group
+  magma:  G := SymmetricGroup({symn});
+  gap:  G := SymmetricGroup({symn});
+  sage: G = SymmetricGroup({symn})
+  oscar: G = symmetric_group({symn})
+
+dihedral_group:
+  comment: Define group as a dihedral group
+  magma: G := DihedralGroup({orderq2});    # Magma D(n) has order 2n
+  gap:  G := DihedralGroup({order});"      # GAP D(n) has order n
+  sage:  G = DihedralGroup({orderq2})      # Sage D(n) has order 2n
+  oscar:  G = dihedral_group({order})      # Oscar D(n) has order n
+
+alternating_group:
+  comment: Define group as an alternating group
+  magma:  G := AlternatingGroup({altn});
+  gap:  G := AlternatingGroup({altn});
+  sage: G = AlternatingGroup("+self.name[1:]+")
+  oscar: G = alternating_group(
+
+dicyclic_group:
+  comment: Define group as a dicyclic group
+  magma:  G := DicyclicGroup({orderq4});"   # Magma Dic(n) has order 4n
+  gap:  G := DicyclicGroup({order});"       # GAP Dic(n) has order n
+  sage:  G = DiCyclicGroup({orderq4})"      # Sage Dic(n) has order 4n
+  oscar:  G = dicyclic_group({orderq4})     # Oscar Dic(n) has order n
+
+chevalley_group:
+  comment: Define group as a Chevalley group
+  magma: G := ChevalleyGroup({chev_fam}, {chev_params});
+
+small_group:
+  comment: Define group as element of the GAP SmallGroups database
+  magma: G := SmallGroup({ordgp}, {gap_id});
+  gap: G := SmallGroup({ordgp}, {gap_id});
+  sage_gap: G = libgap.SmallGroup({ordgp}, {gap_id})
+  oscar: G = small_group({ordgp}, {gap_id})
+
+abelian_group:
+  cmoment: Define group as an abelian group
+  magma: G := AbelianGroup({abelian_invariants});
+  gap:  G := AbelianGroup({abelian_invariants});
+  sage: G = AbelianGroup({abelian_invariants})
+  oscar: G = abelian_group({abelian_invariants})
 
 
 # Code snippet tests

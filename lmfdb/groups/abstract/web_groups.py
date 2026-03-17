@@ -2884,6 +2884,120 @@ class WebAbstractGroup(WebObj):
         return None
 
     @cached_method
+    def create_top_code_snippet(self, code, top_lie, used_lie_gens):
+        """
+        Creates a top code snippet to construct the abstract group in Magma/GAP/SageMath/Oscar.
+        Stored as a dictionary in code['code_description']
+        """
+
+        # For each abstract group, we construct the (perhaps subjectively?) "best" implementation of this group as a code snippet
+        # in each language Magma/GAP/SageMath/Oscar, to display at the top of each abstract group page.
+        # This is computed and stored as a dictionary in code['code_description'].
+
+        # If the group is a member of a special family (i.e. Cyclic, Symmetric, Dihedral, Alternating, Dicyclic, LieType, Chevalley),
+        # then we give the code snippet for that family.
+        # Otherwise, if group is in GAP SmallGroups database, we use SmallGroup
+        # Otherwise, if group is abelian, we use AbelianGroup, constructed from primary invariants
+
+        # If none of the above apply, we will default to showing one of the built-in code snippet constructions for the group
+        # (i.e. either Perm, PC, or one of the matrix group constructions: GLZ, GLFp, GLZN, GLZq, or GLFq )
+
+        code['code_description'] = dict()
+        self_families = []
+
+        # Highest priority: Check if group is cyclic
+        if self.cyclic:
+            for lang in code['cyclic_group']:
+                code['code_description'][lang] = code['cyclic_group'][lang].format(**{'ordgp':self.order})
+            return
+
+        # Check if group is symmetric
+        if self.name[0] == 'S' and self.name[1:].isdigit():
+            for lang in code['symmetric_group']:
+                code['code_description'][lang] = code['symmetric_group'][lang].format(**{'n':self.name[1:]})
+            return
+
+        # Check if group is dihedral
+        if self.dihedral:
+            for lang in code['dihedral_group']:
+                code['code_description'][lang] = code['dihedral_group'][lang].format(**{'ordgp':self.order, 'ordgp_q2':self.order/2})
+            return
+
+        # Check if group is alternating
+        if self.name[0] == 'A' and self.name[1:].isdigit():
+            for lang in code['alternating_group']:
+                code['code_description'][lang] = code['alternating_group'][lang].format(**{'n':self.name[1:]})
+            return
+
+        # Otherwise, we must make a query to the database: gps_special_names (to obtain the families this group lies in)
+        self_families = list(db.gps_special_names.search({'label':self.label}, projection={'family','parameters'}))
+
+        # Check if group is dicyclic
+        if 'Dic' in [t['family'] for t in self_families]:
+            for lang in code['dicyclic_group']:
+                code['code_description'][lang] = code['dicyclic_group'][lang].format(**{'ordgp':self.order, 'ordgp_q4':self.order/4})
+            return
+
+        for lang in code['prompt']:
+            # Use a Lie Type matrix construction (if it exists and the Lie type generators were not used)
+            if (top_lie[lang] is not None) and (not used_lie_gens[lang]):
+                code['code_description'][lang] = top_lie[lang]
+                continue
+
+            # Check if group is in the Chevalley family
+            if 'Chev' in [t['family'] for t in self_families]:
+                if lang in code['chevalley_group']:
+                    chev_index = [t['family'] for t in self_families].index("Chev")
+                    chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
+                    code['code_description'][lang] = code['chevalley_group'][lang].format(**{'chev_fam' : self_families[chev_index]['parameters']['fam'], 'chev_params' : chev_params})
+                    continue
+
+            # Checking if group is in the Twisted Chevalley family
+            if 'TwistChev' in [t['family'] for t in self_families]:
+                if lang in code['chevalley_group']:
+                    chev_index = [t['family'] for t in self_families].index("TwistChev")
+                    chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
+                    code['code_description']['magma'] = code['chevalley_group'][lang].format(**{'chev_fam' : self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
+                    continue
+
+            # Check if in small groups GAP database (can then define the group G in Magma/Gap/Oscar)
+            if (self.label.split('.')[1].isdigit()):
+                gap_id = self.label.split('.')
+                if lang in code['small_group']:
+                    code['code_description'][lang] = code['small_group'][lang].format(**{'ordgp':self.order, 'gap_id':gap_id[1]})
+                    continue   
+                
+            # Check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
+            if self.abelian:
+                # Sage/Oscar's implementation of AbelianGroup seems to not support most of the usual group functions (probably better to not add this?)
+                if (lang in code['abelian_group']) and (lang not in ['sage', 'oscar']):
+                    code['code_description'][lang] = code['abelian_group'][lang].format(**{'abelian_invariants':self.primary_abelian_invariants})
+                    continue
+               
+            # Otherwise, if the group is not in a special family, we will default to showing one of the built-in group constructions
+            # (if it exists and is implemented)
+            # Highest priority: Permutation group, then PC group, then a matrix group, I guess?
+            for rep in ["Perm", "PC", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
+                if rep in self.representations:
+                    # Get the corresponding name of the code snippet in the code.yaml file, for this representation
+                    if rep == "Perm":
+                        code_rep = "permutation"
+                    elif rep == "PC":
+                        code_rep = "presentation"
+                    else:
+                        code_rep = rep
+                    code['code_description'][lang] = code[code_rep][lang]
+                    break
+
+            # Finally, try using Lie constructions which required use of the generators
+            if (top_lie[lang] is not None) and (lang not in code['code_description']):
+                code['code_description'][lang] = top_lie[lang]
+
+        # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
+        return
+ 
+
+    @cached_method
     def code_snippets(self):
         if self.live():
             return
@@ -3031,94 +3145,8 @@ class WebAbstractGroup(WebObj):
                     code[(lie_rep['family'],lie_rep['d'],lie_rep['q'])]['sage'] = sage_top_lie
                     break
 
-        # Here, we add the (perhaps subjectively?) "best" implementation of this group as a code snippet in Magma/GAP/SageMath,
-        # to display at the top of each group page.  This is computed and stored in code['code_description'].
-        # If the group is a member of a special family (i.e. Cyclic,Symmetric,Dihedral,Alternating,Dicyclic,LieType,Chevalley),
-        # then we give the code for that family.  Otherwise, if abelian, we use AbelianGroup, or otherwise use SmallGroup (if in GAP db)
-        # If none of the above apply, we will default to showing one of the built-in code snippet constructions for the group
-        # (i.e. either Perm, PC, or one of the matrix group constructions: GLZ, GLFp, GLZN, GLZq, or GLFq )
-        # TODO: I realize this big lump of code does seem somewhat hacky. Should ideally somehow implement this through the code.yaml file
-        code['code_description'] = dict()
-        self_families = []
-        # Highest priority: check if group is cyclic
-        if self.cyclic:
-            for lang in ['magma', 'gap']:
-                code['code_description'][lang] = "G := CyclicGroup("+str(self.order)+");"
-            code['code_description']['sage'] = "G = CyclicPermutationGroup("+str(self.order)+")"
-        # Check if symmetric
-        elif self.name[0] == 'S' and self.name[1:].isdigit():
-            for lang in ['magma', 'gap']:
-                code['code_description'][lang] = "G := SymmetricGroup("+self.name[1:]+");"
-            code['code_description']['sage'] = "G = SymmetricGroup("+self.name[1:]+")"
-        # Check if dihedral
-        elif self.dihedral:
-            code['code_description']['magma'] = "G := DihedralGroup("+str(self.order/2)+");" # Magma D(n) has order 2n
-            code['code_description']['gap'] = "G := DihedralGroup("+str(self.order)+");"     # GAP D(n) has order n
-            code['code_description']['sage'] = "G = DihedralGroup("+str(self.order/2)+")"    # Sage D(n) has order 2n
-        # Check if alternating
-        elif self.name[0] == 'A' and self.name[1:].isdigit():
-            for lang in ['magma', 'gap']:
-                code['code_description'][lang] = "G := AlternatingGroup("+self.name[1:]+");"
-            code['code_description']['sage'] = "G = AlternatingGroup("+self.name[1:]+")"
-        else:
-            # Otherwise, we must make a query to the database: gps_special_names  (to obtain the families this group lies in)
-            self_families = list(db.gps_special_names.search({'label':self.label}, projection={'family','parameters'}))
-            if 'Dic' in [t['family'] for t in self_families]:
-                code['code_description']['magma'] = "G := DicyclicGroup("+str(self.order/4)+");" # Magma Dic(n) has order 4n
-                code['code_description']['gap'] = "G := DicyclicGroup("+str(self.order)+");"     # GAP Dic(n) has order n
-                code['code_description']['sage'] = "G = DiCyclicGroup("+str(self.order/4)+")"    # Sage Dic(n) has order 4n
-            else:
-                # Use a Lie Type matrix construction (if it exists and the Lie type generators were not used)
-                if magma_top_lie is not None:
-                    code['code_description']['magma'] = magma_top_lie
-                if (gap_top_lie is not None) and (not gap_used_lie_gens):
-                    code['code_description']['gap'] = gap_top_lie
-                if (sage_top_lie is not None) and (not sage_used_lie_gens):
-                    code['code_description']['sage'] = sage_top_lie
-        # Checking if group is in the Chevalley or Twisted Chevalley family
-        if ('Chev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
-            chev_index = [t['family'] for t in self_families].index("Chev")
-            chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
-            code['code_description']['magma'] = 'G := ChevalleyGroup("'+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
-        if ('TwistChev' in [t['family'] for t in self_families]) and ('magma' not in code['code_description']):
-            chev_index = [t['family'] for t in self_families].index("TwistChev")
-            chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
-            code['code_description']['magma'] = 'G := ChevalleyGroup("'+str(self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam']+'", '+chev_params+");"
-        # Otherwise, check if in small groups database (can then define the group G in Magma and Gap)
-        if (self.label.split('.')[1].isdigit()):
-            gap_id = self.label.split('.')
-            for lang in ['magma', 'gap']:
-                if lang not in code['code_description']:
-                    code['code_description'][lang] = 'G := SmallGroup('+gap_id[0]+', '+gap_id[1]+');'
-            if 'sage_gap' not in code['code_description']:
-                code['code_description']['sage_gap'] = 'G = libgap.SmallGroup('+gap_id[0]+', '+gap_id[1]+')'
-        # Otherwise, check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
-        if self.abelian:
-            for lang in ['magma', 'gap']:
-                if lang not in code['code_description']:
-                    code['code_description'][lang] = 'G := AbelianGroup('+str(self.primary_abelian_invariants)+');'
-           # Sage's implementation of AbelianGroup seems to not support most of the usual group functions (probably better to not add this?)
-           #if 'sage' not in code['code_description']: code['code_description']['sage'] = 'G = AbelianGroup('+str(self.primary_abelian_invariants)+')'
-        # If the group is not in a special family, we will default to showing one of the built-in group constructions (if it exists and is implemented)
-        # Highest  priority: Permutation group, then PC group, then a matrix group, I guess?
-        for rep in ["Perm", "PC", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
-            if rep in self.representations:
-                # Get the corresponding name of the code snippet in the code.yaml file, for this representation
-                if rep == "Perm":
-                    code_rep = "permutation"
-                elif rep == "PC":
-                    code_rep = "presentation"
-                else:
-                    code_rep = rep
-                for lang in code[code_rep]:
-                    if lang not in code['code_description']:
-                        code['code_description'][lang] = code[code_rep][lang]
-        # Finally, try using Lie constructions which required use of the generators
-        if (gap_top_lie is not None) and ('gap' not in code['code_description']):
-            code['code_description']['gap'] = gap_top_lie
-        if (sage_top_lie is not None) and ('sage' not in code['code_description']):
-            code['code_description']['sage'] = sage_top_lie
-        # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
+        # Construct the top code snippet
+        create_top_code_snippet(self, code)
 
         # If no Sage top code snippet, then we resort to implementing the group G using the GAP interface in Sage
         if ('sage' in code['code_description']) and ("gap" not in code['code_description']['sage']):
