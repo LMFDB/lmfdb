@@ -58,6 +58,7 @@ permutation:
   magma: G := PermutationGroup< {deg} | {perms} >;
   gap: G := Group( {perms} );
   sage: G = PermutationGroup([{perms_sage}])
+  oscar: G = permutation_group({deg}, {perms})
 
 GLZ:
   comment: Define the group as a matrix group with coefficients in Z
@@ -105,6 +106,7 @@ transitive:
   magma: G := TransitiveGroup(d,n);
   gap: G := TransitiveGroup(d,n);
   sage: G = TransitiveGroup(d,n)
+  oscar: G = transitive_group(d, n)
 
 order:
   comment: Order of the group
@@ -185,14 +187,14 @@ is_elementary_abelian:
 is_monomial:
   comment:  Determine if the group G is a monomial group
   gap: IsMonomialGroup(G);
-  sage_gap:  G.IsMonomialGroup()
+  sage_gap: G.IsMonomialGroup()
 
 is_nilpotent:
   comment: Determine if the group G is nilpotent
   magma: IsNilpotent(G);
   gap: IsNilpotentGroup(G);
   sage: G.is_nilpotent()
-  sage_gap:  G.IsNilpotentGroup()
+  sage_gap: G.IsNilpotentGroup()
   oscar: is_nilpotent(G)
 
 is_perfect:
@@ -200,7 +202,7 @@ is_perfect:
   magma:  IsPerfect(G);
   gap: IsPerfectGroup(G);
   sage: G.is_perfect()
-  sage_gap:  G.IsPerfect()
+  sage_gap: G.IsPerfect()
   oscar: is_perfect(G)
 
 is_pgroup:
@@ -294,10 +296,11 @@ character_statistics:
     # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
     character_degrees = [c[0] for c in G.character_table()]
     [[n, character_degrees.count(n)] for n in set(character_degrees)]
-  sage_gap:
+  sage_gap: |
     # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
     G.CharacterDegrees()
-  oscar: character_degrees(G)
+  oscar: |
+    character_degrees(G)
 
 
 primary_decomposition:
@@ -308,10 +311,11 @@ primary_decomposition:
   oscar: abelian_invariants(G)
 
 abelianization:
-  comment:  The abelianization of the group
-  magma:  quo< G | CommutatorSubgroup(G) >;
-  gap:  FactorGroup(G, DerivedSubgroup(G));
-  sage:  G.quotient(G.commutator())
+  comment: The abelianization of the group
+  magma: quo< G | CommutatorSubgroup(G) >;
+  gap: FactorGroup(G, DerivedSubgroup(G));
+  sage: G.quotient(G.commutator())
+  oscar: quo(G, derived_subgroup(G)[1])
 
 schur_multiplier:
   comment:  The Schur multiplier of the group
@@ -320,39 +324,39 @@ schur_multiplier:
   sage_gap:  G.AbelianInvariantsMultiplier()
 
 commutator_length:
-  comment:  The commutator length of the group
+  comment: The commutator length of the group
   gap: CommutatorLength(G);
   sage_gap: G.CommutatorLength()
 
 subgroups:
-  comment:  List of subgroups of the group
-  magma:  Subgroups(G);
-  gap:  AllSubgroups(G);
-  sage:   G.subgroups()
+  comment: List of subgroups of the group
+  magma: Subgroups(G);
+  gap: AllSubgroups(G);
+  sage: G.subgroups()
   sage_gap: G.AllSubgroups()
   oscar: subgroups(G)
 
 center:
   comment: Center of the group
   magma: Center(G);
-  gap:  Center(G);
-  sage:  G.center()
-  sage_gap:  G.Center()
+  gap: Center(G);
+  sage: G.center()
+  sage_gap: G.Center()
   oscar: center(G)
 
 commutator_subgroup:
   comment: Commutator subgroup of the group G
-  magma:  CommutatorSubgroup(G);
-  gap:  DerivedSubgroup(G);
-  sage:  G.commutator()
-  sage_gap:  G.DerivedSubgroup()
+  magma: CommutatorSubgroup(G);
+  gap: DerivedSubgroup(G);
+  sage: G.commutator()
+  sage_gap: G.DerivedSubgroup()
   oscar: derived_subgroup(G)
 
 frattini_subgroup:
   comment: Frattini subgroup of the group G
-  magma:  FrattiniSubgroup(G);
+  magma: FrattiniSubgroup(G);
   gap: FrattiniSubgroup(G);
-  sage:  G.frattini_subgroup()
+  sage: G.frattini_subgroup()
   sage_gap: G.FrattiniSubgroup()
   oscar: frattini_subgroup(G)
 
@@ -444,11 +448,11 @@ symmetric_group:
 
 dihedral_group:
   comment: Define group as a dihedral group
-  magma: G := DihedralGroup({ordgp_half});    # Magma D(n) has order 2n
-  gap:  G := DihedralGroup({ordgp});"         # GAP D(n) has order n
-  sage:  G = DihedralGroup({ordgp_half})      # Sage D(n) has order 2n
-  sage_gap: G = libgap.eval('DihedralGroup({ordgp})')
-  oscar:  G = dihedral_group({ordgp})         # Oscar D(n) has order n
+  magma: G := DihedralGroup({ordgp_half});             # Magma D(n) has order 2n
+  gap:  G := DihedralGroup({ordgp});"                  # GAP D(n) has order n
+  sage:  G = DihedralGroup({ordgp_half})               # Sage D(n) has order 2n
+  sage_gap: G = libgap.eval('DihedralGroup({ordgp})')  # Sage GAP D(n) has order n
+  oscar:  G = dihedral_group({ordgp})                  # Oscar D(n) has order n
 
 alternating_group:
   comment: Define group as an alternating group
@@ -460,11 +464,11 @@ alternating_group:
 
 dicyclic_group:
   comment: Define group as a dicyclic group
-  magma:  G := DicyclicGroup({ordgp_quarter});"   # Magma Dic(n) has order 4n
-  gap:  G := DicyclicGroup({ordgp});"             # GAP Dic(n) has order n
-  sage:  G = DiCyclicGroup({ordgp_quarter})"      # Sage Dic(n) has order 4n
-  sage_gap: libgap.eval('DicyclicGroup({ordgp})')
-  oscar:  G = dicyclic_group({ordgp})             # Oscar Dic(n) has order n
+  magma:  G := DicyclicGroup({ordgp_quarter});"        # Magma Dic(n) has order 4n
+  gap:  G := DicyclicGroup({ordgp});"                  # GAP Dic(n) has order n
+  sage:  G = DiCyclicGroup({ordgp_quarter})"           # Sage Dic(n) has order 4n
+  sage_gap: libgap.eval('DicyclicGroup({ordgp})')      # Sage GAP Dic(n) has order n
+  oscar:  G = dicyclic_group({ordgp})                  # Oscar Dic(n) has order n
 
 chevalley_group:
   comment: Define group as a Chevalley group

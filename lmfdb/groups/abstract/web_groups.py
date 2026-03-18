@@ -2864,7 +2864,15 @@ class WebAbstractGroup(WebObj):
 
     @lazy_attribute
     def lie_representations(self):
-        # Ideally we should get the Lie-type representations from the "gps_special_names" table:
+        """
+        Return a dictionary of Lie representations for the group
+        This uses our new conventions for matrix Lie groups
+
+        E.g. here the general sympletic group has the name "GSp" (and not "CSp")
+        and the general orthogonal group has the name "GOrth" (and not "CO")
+        """
+
+        # Ideally we should get the Lie-type representations from the "gps_special_names" table (once data has been updated)
         # lie_reps = list(db.gps_special_names.search({'label':self.label}, projection={'family','gens','parameters'}))
 
         # TODO: We should update groups data to use new family names
@@ -2893,18 +2901,17 @@ class WebAbstractGroup(WebObj):
         # in each language Magma/GAP/SageMath/Oscar, to display at the top of each abstract group page.
         # This is computed and stored as a dictionary in code['code_description'].
 
-        # If the group is a member of a special family (i.e. Cyclic, Symmetric, Dihedral, Alternating, Dicyclic, LieType, Chevalley),
-        # then we give the code snippet for that family.
-        # Otherwise, if group is in GAP SmallGroups database, we use SmallGroup
-        # Otherwise, if group is abelian, we use AbelianGroup, constructed from primary invariants
+        # We first check if the group is a member of a special family.
+        # i.e. we check the following, in priority order: Cyclic, Symmetric, Dihedral, Alternating, Dicyclic, LieType, Chevalley.
+        # If the group is in such a family, then we give the code snippet corresponding to that particular family.
+        # Otherwise, if group is in GAP SmallGroups database, we use SmallGroup.
+        # Otherwise, if group is abelian, we use AbelianGroup, constructed from the primary invariants.
 
-        # If none of the above apply, we will default to showing one of the built-in code snippet constructions for the group
-        # (i.e. either Perm, PC, or one of the matrix group constructions: GLZ, GLFp, GLZN, GLZq, or GLFq )
+        # If none of the above apply, we will default to showing one of the built-in code snippet constructions for the group.
+        # i.e. we check the following, in priority order: Perm, PC, or a matrix group constructions: GLZ, GLFp, GLZN, GLZq, or GLFq.
 
-        code['code_description'] = {'comment':"Construct abstract group"}
+        code['code_description'] = {'comment':"Construction of abstract group"}
         self_families = []
-
-        print("*********TEST*********")
 
         # Highest priority: Check if group is cyclic
         if self.cyclic:
@@ -2950,7 +2957,8 @@ class WebAbstractGroup(WebObj):
                 if lang in code['chevalley_group']:
                     chev_index = [t['family'] for t in self_families].index("Chev")
                     chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
-                    code['code_description'][lang] = code['chevalley_group'][lang].format(**{'chev_fam' : self_families[chev_index]['parameters']['fam'], 'chev_params' : chev_params})
+                    chev_data = {'chev_fam': self_families[chev_index]['parameters']['fam'], 'chev_params': chev_params}
+                    code['code_description'][lang] = code['chevalley_group'][lang].format(**chev_data)
                     continue
 
             # Checking if group is in the Twisted Chevalley family
@@ -2958,7 +2966,8 @@ class WebAbstractGroup(WebObj):
                 if lang in code['chevalley_group']:
                     chev_index = [t['family'] for t in self_families].index("TwistChev")
                     chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
-                    code['code_description'][lang] = code['chevalley_group'][lang].format(**{'chev_fam' : self_families[chev_index]['parameters']['twist']+self_families[chev_index]['parameters']['fam'], 'chev_params' : chev_params})
+                    chev_data = {'chev_fam': self_families[chev_index]['parameters']['twist']+self_families[chev_index]['parameters']['fam'], 'chev_params': chev_params}
+                    code['code_description'][lang] = code['chevalley_group'][lang].format(**chev_data)
                     continue
 
             # Check if in small groups GAP database (can then define the group G in Magma/Gap/Oscar)
@@ -2987,8 +2996,9 @@ class WebAbstractGroup(WebObj):
                         code_rep = "presentation"
                     else:
                         code_rep = rep
-                    code['code_description'][lang] = code[code_rep][lang]
-                    break
+                    if lang in code[code_rep]:
+                        code['code_description'][lang] = code[code_rep][lang]
+                        break
 
             # Finally, try using Lie constructions which required use of the generators
             if (top_lie[lang] is not None) and (lang not in code['code_description']):
@@ -3137,13 +3147,13 @@ class WebAbstractGroup(WebObj):
             if (top_lie[lang] is not None) and used_lie_gens[lang]:
                 for lie_rep in self.lie_representations:
                     if "gens" in lie_rep:
-                        code[(lie_rep['family'],lie_rep['d'],lie_rep['q'])]['gap'] = top_lie[lang]
+                        code[(lie_rep['family'], lie_rep['d'], lie_rep['q'])]['gap'] = top_lie[lang]
                         break
 
         # Construct the top code snippet
         self.create_top_code_snippet(code, top_lie, used_lie_gens)
 
-        # If no Sage top code snippet, then we resort to implementing the group G using the GAP interface in Sage
+        # If there is no Sage top code snippet, then we resort to implementing the group G using the GAP interface in Sage
         if ('sage' in code['code_description']) and ("gap" not in code['code_description']['sage']):
             code['prompt'].pop('sage_gap', None)
         else:
