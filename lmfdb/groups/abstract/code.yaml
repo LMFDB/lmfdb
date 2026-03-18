@@ -427,7 +427,7 @@ symmetric_group:
   magma:  G := SymmetricGroup({symn});
   gap:  G := SymmetricGroup({symn});
   sage: G = SymmetricGroup({symn})
-  sage_gap: G = libgap.eval('SymmetricGroup({ordgp})')
+  sage_gap: G = libgap.eval('SymmetricGroup({symn})')
   oscar: G = symmetric_group({symn})
 
 dihedral_group:
@@ -451,6 +451,7 @@ dicyclic_group:
   magma:  G := DicyclicGroup({ordgp_quarter});"   # Magma Dic(n) has order 4n
   gap:  G := DicyclicGroup({ordgp});"             # GAP Dic(n) has order n
   sage:  G = DiCyclicGroup({ordgp_quarter})"      # Sage Dic(n) has order 4n
+  sage_gap: libgap.eval('DicyclicGroup({ordgp})')
   oscar:  G = dicyclic_group({ordgp})             # Oscar Dic(n) has order n
 
 chevalley_group:
@@ -465,28 +466,41 @@ small_group:
   oscar: G = small_group({ordgp}, {gap_id})
 
 abelian_group:
-  cmoment: Define group as an abelian group
+  comment: Define group as an abelian group
   magma: G := AbelianGroup({abelian_invariants});
   gap:  G := AbelianGroup({abelian_invariants});
   sage: G = AbelianGroup({abelian_invariants})
+  sage_gap: G = libgap.eval('AbelianGroup({abelian_invariants})')
   oscar: G = abelian_group({abelian_invariants})
 
 
 # Code snippet tests for abstract group pages
 snippet_test:
   # Trivial group
-  test1.1:
-    label: 1.1
+  testC1:
+    label: C1
+    langs:
+      - sage
+      - oscar
     url: Groups/Abstract/1.1/codedownload/{lang}
   # Symmetric group S_3
-  test6.1:
-    label: 6.1
+  testS3:
+    label: S3
+    langs:
+      - sage
+      - oscar
     url: Groups/Abstract/6.1/codedownload/{lang}
   # Dihedral group D_4 (of order 8)
-  test8.3:
-    label: 8.3
+  testD4:
+    label: D4
+    langs:
+      - sage
+      - oscar
     url: Groups/Abstract/8.3/codedownload/{lang}
   # Alternating group A_5
-  test60.5:
-    label: 60.5
+  testA5:
+    label: A5
+    langs:
+      - sage
+      - oscar
     url: Groups/Abstract/60.5/codedownload/{lang}
