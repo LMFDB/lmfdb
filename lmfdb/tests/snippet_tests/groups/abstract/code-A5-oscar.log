@@ -13,15 +13,15 @@ julia> automorphism_group(G)
 Automorphism group of
   alternating group of degree 5
 
-julia> nilpotency_class(G)
-ERROR: ArgumentError: The group is not nilpotent.
-Stacktrace:
- [1] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/eRqDm/src/Assertions.jl:602 [inlined]
- [2] nilpotency_class(G::PermGroup)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/sub.jl:532
- [3] top-level scope
-   @ none:1
+julia> composition_series(G)
+2-element Vector{PermGroup}:
+ Alternating group of degree 5
+ Permutation group of degree 5 and order 1
+
+julia> if is_nilpotent(G) nilpotency_class(G) end
+
+julia> derived_length(G)
+0
 
 julia> is_abelian(G)
 false
@@ -50,28 +50,38 @@ false
 julia> is_supersolvable(G)
 false
 
-julia> conjugacy_classes() # Output not guaranteed to exactly match the LMFDB table
-ERROR: MethodError: no method matching conjugacy_classes()
-The function `conjugacy_classes` exists, but no method is defined for this combination of argument types.
+julia> conjugacy_classes(G) # Output not guaranteed to exactly match the LMFDB table
+5-element Vector{GAPGroupConjClass{PermGroup, PermGroupElem}}:
+ Conjugacy class of () in G
+ Conjugacy class of (1,2)(3,4) in G
+ Conjugacy class of (1,2,3) in G
+ Conjugacy class of (1,2,3,4,5) in G
+ Conjugacy class of (1,2,3,5,4) in G
 
-Closest candidates are:
-  conjugacy_classes(!Matched::FinGenAbGroup)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/GrpAb.jl:112
-  conjugacy_classes(!Matched::Oscar.GAPGroupCharacterTable)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/group_characters.jl:243
-  conjugacy_classes(!Matched::MultTableGroup)
-   @ Hecke ~/.julia/packages/Hecke/zmlWI/src/Grp/GenGrp.jl:790
-  ...
-
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> character_degrees(G)
+MSet{ZZRingElem} with 5 elements:
+  5
+  4
+  3 : 2
+  1
 
 julia> abelian_invariants(G)
 ZZRingElem[]
 
+julia> subgroups(G)
+Base.Iterators.Flatten{Vector{GAPGroupConjClass{PermGroup, PermGroup}}}(GAPGroupConjClass{PermGroup, PermGroup}[Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G])
+
 julia> center(G)
 (Permutation group of degree 5 and order 1, Hom: permutation group -> G)
+
+julia> derived_subgroup(G)
+(Alternating group of degree 5, Hom: Alt(5) -> G)
+
+julia> frattini_subgroup(G)
+(Permutation group of degree 5 and order 1, Hom: permutation group -> G)
+
+julia> fitting_subgroup(G)
+(Permutation group of degree 5, Hom: permutation group -> G)
 
 julia> solvable_radical(G)
 (Permutation group of degree 5 and order 1, Hom: permutation group -> G)

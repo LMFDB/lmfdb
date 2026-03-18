@@ -13,7 +13,17 @@ julia> automorphism_group(G)
 Automorphism group of
   pc group of order 8
 
-julia> nilpotency_class(G)
+julia> composition_series(G)
+4-element Vector{SubPcGroup}:
+ Sub-pc group of order 8
+ Sub-pc group of order 4
+ Sub-pc group of order 2
+ Sub-pc group of order 1
+
+julia> if is_nilpotent(G) nilpotency_class(G) end
+2
+
+julia> derived_length(G)
 2
 
 julia> is_abelian(G)
@@ -43,30 +53,38 @@ true
 julia> is_supersolvable(G)
 true
 
-julia> conjugacy_classes() # Output not guaranteed to exactly match the LMFDB table
-ERROR: MethodError: no method matching conjugacy_classes()
-The function `conjugacy_classes` exists, but no method is defined for this combination of argument types.
+julia> conjugacy_classes(G) # Output not guaranteed to exactly match the LMFDB table
+5-element Vector{GAPGroupConjClass{PcGroup, PcGroupElem}}:
+ Conjugacy class of <identity> of ... in G
+ Conjugacy class of f1 in G
+ Conjugacy class of f2 in G
+ Conjugacy class of f3 in G
+ Conjugacy class of f1*f2 in G
 
-Closest candidates are:
-  conjugacy_classes(!Matched::FinGenAbGroup)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/GrpAb.jl:112
-  conjugacy_classes(!Matched::Oscar.GAPGroupCharacterTable)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/group_characters.jl:243
-  conjugacy_classes(!Matched::MultTableGroup)
-   @ Hecke ~/.julia/packages/Hecke/zmlWI/src/Grp/GenGrp.jl:790
-  ...
-
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> character_degrees(G)
+MSet{ZZRingElem} with 5 elements:
+  2
+  1 : 4
 
 julia> abelian_invariants(G)
 2-element Vector{ZZRingElem}:
  2
  2
 
+julia> subgroups(G)
+Base.Iterators.Flatten{Vector{GAPGroupConjClass{PcGroup, SubPcGroup}}}(GAPGroupConjClass{PcGroup, SubPcGroup}[Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G, Conjugacy class of sub-pc group in G])
+
 julia> center(G)
 (Sub-pc group of order 2, Hom: sub-pc group -> G)
+
+julia> derived_subgroup(G)
+(Sub-pc group of order 2, Hom: sub-pc group -> G)
+
+julia> frattini_subgroup(G)
+(Sub-pc group of order 2, Hom: sub-pc group -> G)
+
+julia> fitting_subgroup(G)
+(Sub-pc group of order 8, Hom: sub-pc group -> G)
 
 julia> solvable_radical(G)
 (Sub-pc group of order 8, Hom: sub-pc group -> G)
