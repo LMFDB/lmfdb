@@ -126,6 +126,7 @@ automorphism_group:
   comment: Automorphism group
   gap: AutomorphismGroup(G);
   magma: AutomorphismGroup(G);
+  sage: libgap(G).AutomorphismGroup()
   sage_gap: G.AutomorphismGroup()
   oscar: automorphism_group(G)
 
@@ -139,19 +140,23 @@ composition_factors:
   gap: CompositionSeries(G);
   sage: G.composition_series()
   sage_gap: G.CompositionSeries()
+  oscar: composition_series(G)
 
 nilpotency_class:
   comment: Nilpotency class of the group
   magma: NilpotencyClass(G);
   gap: NilpotencyClassOfGroup(G);
+  sage: libgap(G).NilpotencyClassOfGroup() if G.is_nilpotent() else -1
   sage_gap: G.NilpotencyClassOfGroup()
-  oscar: nilpotency_class(G)
+  oscar: if is_nilpotent(G) nilpotency_class(G) end
 
 derived_length:
   comment:  Derived length of the group
   magma:  DerivedLength(G);
   gap: DerivedLength(G);
+  sage: libgap(G).DerivedLength()
   sage_gap:  G.DerivedLength()
+  oscar: derived_length(G)
 
 is_abelian:
   comment:  Determine if the group G is abelian
@@ -215,7 +220,8 @@ is_simple:
   comment:  Determine if the group G is simple
   magma: IsSimple(G);
   gap:  IsSimpleGroup(G);
-  sage_gap:  G.IsSimpleGroup()
+  sage: G.is_simple()
+  sage_gap: G.IsSimpleGroup()
   oscar: is_simple(G)
 
 is_solvable:
@@ -274,7 +280,7 @@ conjugacy_classes:
   sage_gap: |
     G.ConjugacyClasses()  # Output not guaranteed to exactly match the LMFDB table
   oscar: |
-    conjugacy_classes() # Output not guaranteed to exactly match the LMFDB table
+    conjugacy_classes(G) # Output not guaranteed to exactly match the LMFDB table
 
 character_statistics:
   comment:  Compute statistics about the characters of G
@@ -291,6 +297,7 @@ character_statistics:
   sage_gap:
     # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
     G.CharacterDegrees()
+  oscar: character_degrees(G)
 
 
 primary_decomposition:
@@ -323,6 +330,7 @@ subgroups:
   gap:  AllSubgroups(G);
   sage:   G.subgroups()
   sage_gap: G.AllSubgroups()
+  oscar: subgroups(G)
 
 center:
   comment: Center of the group
@@ -338,6 +346,7 @@ commutator_subgroup:
   gap:  DerivedSubgroup(G);
   sage:  G.commutator()
   sage_gap:  G.DerivedSubgroup()
+  oscar: derived_subgroup(G)
 
 frattini_subgroup:
   comment: Frattini subgroup of the group G
@@ -345,6 +354,7 @@ frattini_subgroup:
   gap: FrattiniSubgroup(G);
   sage:  G.frattini_subgroup()
   sage_gap: G.FrattiniSubgroup()
+  oscar: frattini_subgroup(G)
 
 fitting_subgroup:
   comment:  Fitting subgroup of the group G
@@ -352,6 +362,7 @@ fitting_subgroup:
   gap:  FittingSubgroup(G);
   sage:  G.fitting_subgroup()
   sage_gap: G.FittingSubgroup()
+  oscar: fitting_subgroup(G)
 
 radical:
   comment: Radical of the group G
@@ -380,6 +391,7 @@ chief_series:
   comment:  Chief series of the group G
   magma:  ChiefSeries(G);
   gap: ChiefSeries(G);
+  sage: libgap(G).ChiefSeries()
   sage_gap:  G.ChiefSeries()
   oscar: chief_series(G)
 

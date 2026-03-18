@@ -230,7 +230,6 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
 
             for lang in snippet_langs:
                 url = items['url'].format(lang=lang)
-                print("****", label, lang)
                 filename = code_file.stem + "-" + label + "-" + lang + ".log"
 
                 if test:
