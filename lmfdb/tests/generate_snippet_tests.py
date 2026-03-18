@@ -18,8 +18,10 @@ sys.path.insert(0, "/".join(os.path.realpath(__file__).split("/")[0:-3]))
 exec_dict = {'sage': 'sage --simple-prompt',
              'magma': 'magma -b',
              'oscar': 'julia',
-             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q"}
-prompt_dict = {'sage': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> '}
+             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
+             'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false);'""",
+             }
+prompt_dict = {'sage': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
 comment_dict = {'magma': '//', 'sage': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
 
@@ -120,7 +122,7 @@ def _eval_code_file(data, lang, proc, logfile):
         for line in lines:
             if lang == 'magma':
                 print(line)
-
+            
             try:
                 proc.run_command(line, timeout=60*3)
             except Exception:
