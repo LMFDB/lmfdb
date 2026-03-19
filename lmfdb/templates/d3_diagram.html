@@ -60,15 +60,6 @@
 
 </div><!-- End diagram-container -->
 
-<!-- TODO: Remove "random" button -->
-<!-- TODO: Make the js code asynchronous, so the page can load quicker (?) -->
-<!-- TODO: Implement gridlines -->
-<!-- TODO: Set color scheme -->
-<!-- TODO: Fix boolean color scheme -->
-<!-- TODO:  -->
-<!-- TODO:  -->
-<!-- TODO:  -->
-
 <script>
   // import {Legend} from "@d3/color-legend"
   // set the dimensions and margins of the graph
@@ -80,7 +71,7 @@
       d.y = parseFloat(d.y);
       const parsedColor = parseFloat(d.color);
       // Color can be a bool, so requires special handling
-      d.color = isNaN(parsedColor) ? (d.color === "true" ? 1 : 0) : parsedColor;
+      d.color = isNaN(parsedColor) ? (d.color === "True" ? 1 : 0) : parsedColor;
   });
 
   // Deduplicate data by (x, y) coordinates and count multiplicities
@@ -212,26 +203,27 @@
   }
 
   // Color scheme definitions
+  // Binary colors are chosen to match each scheme's character while maintaining good contrast
   const colorSchemes = {
       viridis: {
 	  interpolator: d3.interpolateViridis,
-	  binary: ['#440154', '#FDE725']
+	  binary: ['#440154', '#21918c']  // deep purple to teal (mid-scheme)
       },
       plasma: {
           interpolator: d3.interpolatePlasma,
-          binary: ['#0D0887', '#F0F921']
+          binary: ['#0d0887', '#cc4778']  // deep blue to magenta-pink
       },
       inferno: {
           interpolator: d3.interpolateInferno,
-          binary: ['#000004', '#FCFFA4']
+          binary: ['#000004', '#bb3754']  // near-black to warm red
       },
       cubehelix: {
           interpolator: d3.interpolateCubehelixDefault,
-          binary: ['#000000', '#e0ffff']
+          binary: ['#300030', '#6abf9a']  // dark purple to seafoam green
       },
       warm: {
           interpolator: d3.interpolateWarm,
-          binary: ['#6e40aa', '#fbb11b']
+          binary: ['#6e40aa', '#e07233']  // purple to warm orange
       }
   };
 

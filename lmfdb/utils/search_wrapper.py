@@ -1,6 +1,6 @@
 from random import randrange
 from flask import render_template, jsonify, redirect
-from psycopg2.extensions import QueryCanceledError, binary_types
+from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 from sage.misc.cachefunc import cached_function
@@ -595,9 +595,8 @@ class CountWrapper(Wrapper):
                                     res[row, col] = 0
                                 else:
                                     res[row, col] = None
-                info["count"] = (
-                    50  # put count back in so that it doesn't show up as none in url
-                )
+                # put count back in so that it doesn't show up as none in url
+                info["count"] = 50
 
             except ValueError as err:
                 # Errors raised in postprocessing

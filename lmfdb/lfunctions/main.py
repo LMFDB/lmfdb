@@ -383,7 +383,7 @@ class LfuncDownload(Downloader):
                  "bread": lambda: get_bread(breads=[("Diagram search", " ")]),
                  "x_axis_default": "root_analytic_conductor",
                  "y_axis_default": "z1",
-                 "color_default": "order_of_vanishing",
+                 "color_default": "primitive",
              })
 def l_function_search(info, query):
     if info.get("rational") == "yes":
