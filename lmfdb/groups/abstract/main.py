@@ -2338,15 +2338,15 @@ def download_boolean_string(G,dltype,ul_label):
     bool_attr = ['Agroup','Zgroup','abelian', 'almost_simple','cyclic','metabelian','metacyclic','monomial','nilpotent','perfect','quasisimple','rational','solvable','supersolvable']
     for attr in bool_attr:
         if getattr(G,attr) is not None:
-            s += " "
+            s += "\n"
             s += attr + " := " + str(getattr(G,attr)).lower() + ","
     s = s[:-1]   # last comma!
 
     # close record
     if dltype == "gap":
-        s += "); "
+        s += "); \n"
     if dltype == "magma":
-        s += ">; "
+        s += ">; \n"
     return s
 
 

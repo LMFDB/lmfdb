@@ -58,6 +58,7 @@ permutation:
   magma: G := PermutationGroup< {deg} | {perms} >;
   gap: G := Group( {perms} );
   sage: G = PermutationGroup([{perms_sage}])
+  sage_gap: G = gap.new('Group( {perms} )')
   oscar: G = permutation_group({deg}, {perms})
 
 GLZ:
@@ -67,6 +68,8 @@ GLZ:
   sage: |
     MS = MatrixSpace(Integers(), {nZ}, {nZ})
     G = MatrixGroup({LZsage})
+  sage_gap: G = gap.new('Group({LZsplit})')
+  oscar: G = matrix_group({LZsplit})
 
 GLFp:
   comment: Define the group as a matrix group with coefficients in GLFp
@@ -75,6 +78,8 @@ GLFp:
   sage: |
     MS = MatrixSpace(GF({Fp}), {nFp}, {nFp})
     G = MatrixGroup({LFpsage})
+  sage_gap: G = gap.new('Group({LFpsplit})')
+  oscar: G = matrix_group({LFpsplit})
 
 GLZN:
   comment: Define the group as a matrix group with coefficients in GLZN
@@ -83,6 +88,8 @@ GLZN:
   sage: |
     MS = MatrixSpace(Integers({N}), {nZN}, {nZN})
     G = MatrixGroup({LZNsage})
+  sage_gap: G = gap.new('Group({LZNsplit})')
+  oscar: G = matrix_group({LZNsplit})
 
 GLZq:
   comment: Define the group as a matrix group with coefficients in GLZq
@@ -91,6 +98,8 @@ GLZq:
   sage: |
     MS = MatrixSpace(Integers({Zq}), {nZq}, {nZq})
     G = MatrixGroup({LZqsage})
+  sage_gap: G = gap.new('Group({LZqsplit})')
+  oscar: G = matrix_group({LZqsplit})
 
 GLFq:
   comment: Define the group as a matrix group with coefficients in GLFq
@@ -99,6 +108,8 @@ GLFq:
   sage: |
     F = GF({Fq}); al = F.0; MS = MatrixSpace(F, {nFq}, {nFq})
     G = MatrixGroup({LFqsage})
+  sage_gap: G = gap.new('Group({LFqsplit})')
+  oscar: G = matrix_group({LFqsplit})
 
 
 transitive:
@@ -149,7 +160,7 @@ nilpotency_class:
   magma: NilpotencyClass(G);
   gap: NilpotencyClassOfGroup(G);
   sage: libgap(G).NilpotencyClassOfGroup() if G.is_nilpotent() else -1
-  sage_gap: G.NilpotencyClassOfGroup()
+  sage_gap: G.NilpotencyClassOfGroup() if G.IsNilpotentGroup() else -1
   oscar: if is_nilpotent(G) nilpotency_class(G) end
 
 derived_length:
@@ -300,6 +311,7 @@ character_statistics:
     # Outputs [[d_1,c_1], [d_2,c_2], ...] where c_i is the number of irr. complex chars. of G with degree d_i
     G.CharacterDegrees()
   oscar: |
+    # Outputs an MSet containing the absolutely irreducible degrees of G and their multiplicities.
     character_degrees(G)
 
 
@@ -384,7 +396,7 @@ socle:
   oscar: socle(G)
 
 derived_series:
-  comment:  Derived series of the group GF
+  comment:  Derived series of the group G
   magma:  DerivedSeries(G);
   gap: DerivedSeriesOfGroup(G);
   sage: G.derived_series()
@@ -449,7 +461,7 @@ symmetric_group:
 dihedral_group:
   comment: Define group as a dihedral group
   magma: G := DihedralGroup({ordgp_half});             # Magma D(n) has order 2n
-  gap:  G := DihedralGroup({ordgp});"                  # GAP D(n) has order n
+  gap:  G := DihedralGroup({ordgp});                   # GAP D(n) has order n
   sage:  G = DihedralGroup({ordgp_half})               # Sage D(n) has order 2n
   sage_gap: G = libgap.eval('DihedralGroup({ordgp})')  # Sage GAP D(n) has order n
   oscar:  G = dihedral_group({ordgp})                  # Oscar D(n) has order n
@@ -464,9 +476,9 @@ alternating_group:
 
 dicyclic_group:
   comment: Define group as a dicyclic group
-  magma:  G := DicyclicGroup({ordgp_quarter});"        # Magma Dic(n) has order 4n
-  gap:  G := DicyclicGroup({ordgp});"                  # GAP Dic(n) has order n
-  sage:  G = DiCyclicGroup({ordgp_quarter})"           # Sage Dic(n) has order 4n
+  magma:  G := DicyclicGroup({ordgp_quarter});         # Magma Dic(n) has order 4n
+  gap:  G := DicyclicGroup({ordgp});                   # GAP Dic(n) has order n
+  sage:  G = DiCyclicGroup({ordgp_quarter})            # Sage Dic(n) has order 4n
   sage_gap: libgap.eval('DicyclicGroup({ordgp})')      # Sage GAP Dic(n) has order n
   oscar:  G = dicyclic_group({ordgp})                  # Oscar Dic(n) has order n
 
@@ -495,28 +507,16 @@ snippet_test:
   # Trivial group
   testC1:
     label: C1
-    langs:
-      - sage
-      - oscar
     url: Groups/Abstract/1.1/codedownload/{lang}
   # Symmetric group S_3
   testS3:
     label: S3
-    langs:
-      - sage
-      - oscar
     url: Groups/Abstract/6.1/codedownload/{lang}
   # Dihedral group D_4 (of order 8)
   testD4:
     label: D4
-    langs:
-      - sage
-      - oscar
     url: Groups/Abstract/8.3/codedownload/{lang}
   # Alternating group A_5
   testA5:
     label: A5
-    langs:
-      - sage
-      - oscar
     url: Groups/Abstract/60.5/codedownload/{lang}
