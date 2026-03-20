@@ -2,11 +2,13 @@ prompt:
   magma: 'magma'
   sage:  'sage'
   oscar: 'oscar'
+  gap:   'gap'
 
 logo:
   magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
   sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
   oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
+  gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
 
 comment:
   sage: |
@@ -14,6 +16,8 @@ comment:
   magma: |
     //
   oscar: |
+    #
+  gap: |
     #
 
 not-implemented:
@@ -23,6 +27,9 @@ not-implemented:
     // (not yet implemented)
   oscar: |
     # (not yet implemented)
+  gap: |
+    # (not yet implemented)
+
 
 frontmatter:
   all: |
@@ -33,89 +40,105 @@ gg:
   magma: G := TransitiveGroup({n}, {t});
   sage: G = TransitiveGroup({n}, {t})  
   oscar: G = transitive_group({n}, {t})
+  gap: G := TransitiveGroup({n}, {t});
 
 n:
   comment: Degree
   magma: t, n := TransitiveGroupIdentification(G); n;
   sage: G.degree()
   oscar: degree(G)
+  gap: NrMovedPoints(G);
 
 t:
   comment: Transitive number
   magma: t, n := TransitiveGroupIdentification(G); t;
   sage: G.transitive_number()
   oscar: transitive_group_identification(G)[2]
+  gap: TransitiveIdentification(G);
 
 primitive:
   comment: Determine if group is primitive
   magma: IsPrimitive(G);
   sage: G.is_primitive()
   oscar: is_primitive(G)
+  gap: IsPrimitive(G);
 
 even:
   comment: Parity
   magma: IsEven(G);
   sage: all(g.SignPerm() == 1 for g in libgap(G).GeneratorsOfGroup())
   oscar: is_even(G)
+  gap: 
 
 nilpotent:
   comment: Nilpotency class
   magma: NilpotencyClass(G);
   sage: libgap(G).NilpotencyClassOfGroup() if G.is_nilpotent() else -1
   oscar: if is_nilpotent(G) nilpotency_class(G) end
+  gap: NilpotencyClassOfGroup(G);
 
 auts:
   comment: Order of the centralizer of G in S_n
   magma: Order(Centralizer(SymmetricGroup(n), G));
   sage: SymmetricGroup({n}).centralizer(G).order()
   oscar: order(centralizer(symmetric_group({n}), G)[1])
+  gap: Order(Centralizer(SymmetricGroup({n}), G));
 
 gens:
   comment: Generators
   magma: Generators(G);
   sage: G.gens()
   oscar: gens(G)
+  gap: Gens(G);
 
 ccs:
   comment: Conjugacy classes
   magma: ConjugacyClasses(G);
   sage: G.conjugacy_classes()
   oscar: conjugacy_classes(G)
+  gap: ConjugacyClasses(G);
 
 order:
   comment: Order
   magma: Order(G);
   sage: G.order()
   oscar: order(G)
+  gap: Order(G);
 
 cyclic:
   comment: Determine if group is cyclic
   magma: IsCyclic(G);
   sage: G.is_cyclic()
   oscar: is_cyclic(G)
+  gap: IsCyclic(G);
 
 abelian:
   comment: Determine if group is abelian
   magma: IsAbelian(G);
   sage: G.is_abelian()
   oscar: is_abelian(G)
+  gap: IsAbelian(G);
 
 solvable:
   comment: Determine if group is solvable
   magma: IsSolvable(G);
   sage: G.is_solvable()
   oscar: is_solvable(G)
+  gap: IsSolvable(G);
 
 id:
   comment: Abstract group ID
   magma: IdentifyGroup(G);
   sage: G.id()
+  oscar: small_group_identification(G)
+  gap: IdentifyGroup(G);
 
 char_table:
   comment: Character table
   magma: CharacterTable(G);
   sage: G.character_table()
   oscar: character_table(G)
+  gap: CharacterTable(G);
 
 
 # specify which code snippets to test

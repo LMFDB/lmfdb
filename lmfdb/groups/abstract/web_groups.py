@@ -2985,7 +2985,7 @@ class WebAbstractGroup(WebObj):
                 if lang in code['chevalley_group']:
                     chev_index = [t['family'] for t in self_families].index("TwistChev")
                     chev_params = str(self_families[chev_index]['parameters']['n'])+", "+str(self_families[chev_index]['parameters']['q'])
-                    chev_data = {'chev_fam': self_families[chev_index]['parameters']['twist']+self_families[chev_index]['parameters']['fam'], 'chev_params': chev_params}
+                    chev_data = {'chev_fam': str(self_families[chev_index]['parameters']['twist'])+self_families[chev_index]['parameters']['fam'], 'chev_params': chev_params}
                     code['code_description'][lang] = code['chevalley_group'][lang].format(**chev_data)
                     continue
 

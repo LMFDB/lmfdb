@@ -485,7 +485,7 @@ dicyclic_group:
 
 chevalley_group:
   comment: Define group as a Chevalley group
-  magma: G := ChevalleyGroup({chev_fam}, {chev_params});
+  magma: G := ChevalleyGroup("{chev_fam}", {chev_params});
 
 small_group:
   comment: Define group as element of the GAP SmallGroups database
