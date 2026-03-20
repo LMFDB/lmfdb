@@ -2575,20 +2575,30 @@ def download_group(**args):
 sorted_code_names = ["code_description", "order", "exponent", "automorphism_group", "outer_automorphism_group", "composition_factors",
                      "nilpotency_class", "derived_length", "is_abelian", "is_cyclic", "is_elementary_abelian", "is_monomial", 
                      "is_nilpotent", "is_perfect", "is_pgroup", "is_polycyclic", "is_simple", "is_solvable", "is_supersolvable", 
-                     "group_statistics", "conjugacy_classes", "character_statistics", "presentation", "permutation", "GLZ", "GLFp",
-                     "GLZN", "GLZq", "GLFq", "primary_decomposition", "abelianization",
+                     "group_statistics", "conjugacy_classes", "character_statistics", "lie_reps_all", "presentation", "permutation",
+                     "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all", "primary_decomposition", "abelianization",
                      "schur_multiplier", "commutator_length", "subgroups", "center", "commutator_subgroup", "frattini_subgroup",
                      "fitting_subgroup", "radical", "socle", "derived_series", "chief_series", "lower_central_series", 
                      "upper_central_series", "character_table"]
 
 @abstract_page.route("/<label>/codedownload/<download_type>")
 def download_group_code(label, download_type):
-    try:
+    #try:
+    if 1==1:
         grp = WebAbstractGroup(label)
-        code = CodeSnippet(grp.code_snippets())
+        code_snippets = grp.code_snippets()
+
+        # Remove all instances of "G = " and "G := " (except for top code snippet) 
+        # This ensures all code snippets work (in sequential order) in the download files
+        for rep in ["lie_reps_all", "presentation", "permutation", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all"]:
+            if rep in code_snippets:
+                for lang in code_snippets[rep]:
+                    code_snippets[rep][lang] = code_snippets[rep][lang].replace("G = ", '').replace("G := ", '')
+
+        code = CodeSnippet(code_snippets)
         response = make_response(code.export_code(label, download_type, sorted_code_names))
-    except Exception as err:
-        return abort(404, str(err))
+    #except Exception as err:
+    #    return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 

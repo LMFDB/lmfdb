@@ -2350,7 +2350,7 @@ class WebAbstractGroup(WebObj):
         if rep_type == "Lie":
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
-            code_cmd = " ".join([self.create_lie_type_snippet((rep['family'], rep['d'], rep['q'])) for rep in rdata])
+            code_cmd = " ".join([self.create_short_snippet((rep['family'], rep['d'], rep['q'])) for rep in rdata])
             return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr><tr><td colspan="6">{code_cmd}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
@@ -2359,7 +2359,7 @@ class WebAbstractGroup(WebObj):
                 pres = raw_typeset(pres_raw,compress_pres(pres))
                 if self.live():  # skip code snippet on live group for now
                     return f'<tr><td>{display_knowl("group.presentation", "Presentation")}:<td><td colspan="5">{pres}</td></tr>'
-                code_cmd = self.create_snippet('presentation')
+                code_cmd = self.create_long_snippet('presentation')
             else:
                 pres = " $" + pres + "$"
             if self.abelian and not self.cyclic:
@@ -2377,7 +2377,7 @@ class WebAbstractGroup(WebObj):
             if self.live():  # skip code snippet on live group for now
                 code_cmd = ""
             else:
-                code_cmd = self.create_snippet('permutation')
+                code_cmd = self.create_long_snippet('permutation')
             if d >= 10:
                 gens = f"Degree ${d}$" + gens
             return f'<tr><td>{display_knowl("group.permutation_gens", "Permutation group")}:</td><td colspan="5">{gens}</td></tr>{code_cmd}'
@@ -2391,7 +2391,7 @@ class WebAbstractGroup(WebObj):
                 poly = latex(Fq.polynomial())
                 ambient += fr" = \GL_{{{d}}}(\F_{{{N}}}[\alpha]/({poly}))"
             gens = fr"$\left\langle {gens} \right\rangle \subseteq {ambient}$"
-            code_cmd = self.create_snippet(rep_type)
+            code_cmd = self.create_long_snippet(rep_type)
             if skip_head:
                 return f'<tr><td></td><td colspan="5">{gens}</td></tr>{code_cmd}'
             else:
@@ -2500,7 +2500,7 @@ class WebAbstractGroup(WebObj):
             elif rtype == "transitive":
                 if not abstract_group_label_regex.fullmatch(self.label):
                     return ""
-                return rep_line(
+                rep_content = rep_line(
                     "group.permutation_representation",
                     "Transitive group",
                     content_from_opts(self.transitive_friends,
@@ -2508,6 +2508,22 @@ class WebAbstractGroup(WebObj):
                                       False, # hide if not present
                                       display_transitive,
                                       transitive_expressions_knowl))
+                
+                # Display code snippets for transitive group representations
+                code_cmd = ' <tr> <td colspan="6"> '
+                for trans in self.transitive_friends:
+                    trans_data = {"deg":trans.split('T')[0], "t":trans.split('T')[1]}
+                    code_cmd += self.create_short_snippet('transitive').format(**trans_data)+' '
+                code_cmd += '</td> </tr> '
+                #code_cmd = ""
+
+                code_cmd = " ".join([self.create_short_snippet('transitive').format(**{"deg":trans.split('T')[0], "t":trans.split('T')[1]}) for trans in self.transitive_friends])
+                code_html = f'<tr><td colspan="6">{code_cmd}</td></tr>'
+                print("****", rep_content)
+                print("****", code_cmd)
+                print("****HTML****", code_html)
+                return rep_content + code_html
+
             elif rtype == "semidirect":
                 return rep_line(
                     "group.semidirect_product",
@@ -2850,16 +2866,19 @@ class WebAbstractGroup(WebObj):
             circles = ""
         return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="-{R} -{R} {2*R} {2*R}" width="200" height="150">\n{circles}</svg>'
 
-    def create_snippet(self,item):
+    # Used for displaying code snippets across multiple columns in a table
+    def create_long_snippet(self,item):
         col_span_val = '"6"'
         snippet = CodeSnippet(self.code_snippets(), item,
                               pre=f"<tr> <td colspan={col_span_val}>",
                               post="</td></tr>")
         return snippet.place_code()
 
-    # Used for creating code snipets for Lie type representations
-    def create_lie_type_snippet(self,item):
+    # Used for displaying (short) code snippets in the constructions table
+    # e.g. for Lie type representations or transitive groups
+    def create_short_snippet(self,item):
         snippet = CodeSnippet(self.code_snippets(), item)
+        print("****TEST***", snippet.place_code())
         return snippet.place_code()
 
     @lazy_attribute
@@ -3019,71 +3038,73 @@ class WebAbstractGroup(WebObj):
         """
 
         code["lie_reps_all"] = {lang:"" for lang in code['prompt']}
-     
-        # Get Magma commands for all the Lie type families
-        gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd'}))
-        magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
+        code["lie_reps_all"]['comment'] = "Define group as Lie representations"
 
-        # Hardcoded list of Lie Type families available in GAP, Sage and Oscar  (NB: Must ensure their implementation agrees with our definition!)
-        families = dict()
-        families['gap'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Orth','Unitary','Omega','PO','PU','POmega','PGammaL','PSigmaL']
-        families['sage'] = ['GL','SL','PSL','PGL','PSp','PSU','Orth','Unitary','PU']
-        families['oscar'] = ['GL','SL']
+        if self.lie_representations is not None:
+            # Get Magma commands for all the Lie type families
+            gps_families_data = list(db.gps_families.search(projection={'family','magma_cmd'}))
+            magma_commands = {d['family']: d['magma_cmd'] for d in gps_families_data}
 
-        # Prioritise displaying the first Lie type representation which is implemented in the language
-        for lie_rep in self.lie_representations:
-            nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
-            lie_rep_key = (lie_rep['family'], nLie, qLie)
-            code[lie_rep_key] = dict()
+            # Hardcoded list of Lie Type families available in GAP, Sage and Oscar  (NB: Must ensure their implementation agrees with our definition!)
+            families = dict()
+            families['gap'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Orth','Unitary','Omega','PO','PU','POmega','PGammaL','PSigmaL']
+            families['sage'] = ['GL','SL','PSL','PGL','PSp','PSU','Orth','Unitary','PU']
+            families['oscar'] = ['GL','SL']
 
-            # For Magma, we always have a code snippet implemented for all possible Lie representations
-            code[lie_rep_key]['magma'] = "G := "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))+";"
-            code["lie_reps_all"]['magma'] += code[lie_rep_key]['magma']+"\n"
-            if top_lie['magma'] is None:
-                top_lie['magma'] = code[lie_rep_key]['magma']
+            # Prioritise displaying the first Lie type representation which is implemented in the language
+            for lie_rep in self.lie_representations:
+                nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
+                lie_rep_key = (lie_rep['family'], nLie, qLie)
+                code[lie_rep_key] = dict()
 
-            for lang in ['gap', 'sage', 'oscar']:
-                if lie_rep['family'] in families[lang]:
-                    code[lie_rep_key][lang] = code[lie_rep_key]['magma'] if lang == 'gap' else "G = "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
-                    code["lie_reps_all"][lang] += code[lie_rep_key][lang]+"\n"
-                    if (top_lie[lang] is None) or used_lie_gens[lang]:
-                        top_lie[lang] = code[lie_rep_key][lang]
-                        used_lie_gens[lang] = False
-                elif "gens" in lie_rep:
-                    lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
-                    if qLie.is_prime():
-                        if lang == 'gap':
-                            e = libgap.One(GF(qLie))
-                            lie_mats = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
-                            lie_code_snippet = code['GLFp']['gap'].format(**{'LFpsplit':lie_mats})
-                        elif lang == 'sage':
-                            lie_mats = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "Lie", ListForm=True),nLie))+")" for g in lie_rep["gens"]])+"]"
-                            lie_code_snippet = code['GLFp']['sage'].format(**{'LFpsage':lie_mats, 'nFp':nLie, 'Fp':qLie})
-                    else:
-                        if lang == 'gap':
-                            lie_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
-                            lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_mats})
-                        elif lang == 'sage':
-                            lie_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
-                            lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_mats, 'nFq':nLie, 'Fq':qLie})
-                    if top_lie[lang] is None:
-                        top_lie[lang], used_lie_gens[lang] = lie_code_snippet, True
-
-        # In the case no Lie type representation is implemented natively in Sage or GAP, we display the first one with gens as a matrix group
-        # as a code snippet in the "Constructions" header (and as a possible candidate for the top code snippet)
-        for lang in code['prompt']:
-            if (top_lie[lang] is not None) and used_lie_gens[lang]:
-                for lie_rep in self.lie_representations:
-                    if "gens" in lie_rep:
-                        lie_rep_key = (lie_rep['family'], ZZ(lie_rep['d']), ZZ(lie_rep['q']))
-                        code[lie_rep_key][lang] = top_lie[lang]
+                # For Magma, we always have a code snippet implemented for all possible Lie representations
+                code[lie_rep_key]['magma'] = "G := "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))+";"
+                code["lie_reps_all"]['magma'] += code[lie_rep_key]['magma']+"\n"
+                if top_lie['magma'] is None:
+                    top_lie['magma'] = code[lie_rep_key]['magma']
+    
+                for lang in ['gap', 'sage', 'oscar']:
+                    if lie_rep['family'] in families[lang]:
+                        code[lie_rep_key][lang] = code[lie_rep_key]['magma'] if lang == 'gap' else "G = "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
                         code["lie_reps_all"][lang] += code[lie_rep_key][lang]+"\n"
-                        break
+                        if (top_lie[lang] is None) or used_lie_gens[lang]:
+                            top_lie[lang] = code[lie_rep_key][lang]
+                            used_lie_gens[lang] = False
+                    elif "gens" in lie_rep:
+                        lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
+                        if qLie.is_prime():
+                            if lang == 'gap':
+                                e = libgap.One(GF(qLie))
+                                lie_mats = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
+                                lie_code_snippet = code['GLFp']['gap'].format(**{'LFpsplit':lie_mats})
+                            elif lang == 'sage':
+                                lie_mats = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "Lie", ListForm=True),nLie))+")" for g in lie_rep["gens"]])+"]"
+                                lie_code_snippet = code['GLFp']['sage'].format(**{'LFpsage':lie_mats, 'nFp':nLie, 'Fp':qLie})
+                        else:
+                            if lang == 'gap':
+                                lie_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
+                                lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_mats})
+                            elif lang == 'sage':
+                                lie_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
+                                lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_mats, 'nFq':nLie, 'Fq':qLie})
+                        if top_lie[lang] is None:
+                            top_lie[lang], used_lie_gens[lang] = lie_code_snippet, True
+    
+            # In the case no Lie type representation is implemented natively in Sage or GAP, we display the first one with gens as a matrix group
+            # as a code snippet in the "Constructions" header (and as a possible candidate for the top code snippet)
+            for lang in code['prompt']:
+                if (top_lie[lang] is not None) and used_lie_gens[lang]:
+                    for lie_rep in self.lie_representations:
+                        if "gens" in lie_rep:
+                            lie_rep_key = (lie_rep['family'], ZZ(lie_rep['d']), ZZ(lie_rep['q']))
+                            code[lie_rep_key][lang] = top_lie[lang]
+                            code["lie_reps_all"][lang] += code[lie_rep_key][lang]+"\n"
+                            break
 
         # If no Lie representation can be implemented in a given language lang, remove lang from code["lie_reps_all"]
         for lang in code['prompt']:
             if code["lie_reps_all"][lang] == '':
-                code["lie_reps_all"].pop(lang)
+                code["lie_reps_all"].pop(lang, None)
 
 
     @cached_method
@@ -3103,7 +3124,7 @@ class WebAbstractGroup(WebObj):
             magma_assign = create_magma_assignment(self)
             sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
         else:
-            code.pop('presentation')
+            code['presentation'] = {}
             gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign = None, None, None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
@@ -3111,7 +3132,7 @@ class WebAbstractGroup(WebObj):
             perms_sage = "'"+("', '".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"]))+"'"
             deg = rdata["d"]
         else:
-            code.pop('permutation')
+            code['permutation'] = {}
             perms, perms_sage, deg = None, None, None
 
         if "GLZ" in self.representations:
@@ -3168,19 +3189,27 @@ class WebAbstractGroup(WebObj):
                 # Adding the Sage versions of the matrix group code snippets:
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
                 'symn': None, 'altn': None, 'ordgp_half': None, 'ordgp_quarter': None, 'chev_fam': None,
-                'chev_params': None, 'gap_id': None, 'abelian_invariants': None
+                'chev_params': None, 'gap_id': None, 'abelian_invariants': None, 'deg': None, 't': None
         }
 
         # Construct code snippets for the Lie-type matrix representations
         top_lie = {lang : None for lang in code['prompt']}                 # Keep track of Lie-type snippet for use as a top code snippet
         used_lie_gens = {lang : False for lang in code['prompt']}          # Track whether we need to use generators
-        if self.lie_representations is not None:
-            self.create_lie_code_snippets(code, top_lie, used_lie_gens)
+        self.create_lie_code_snippets(code, top_lie, used_lie_gens)
 
         # Remove representations not implemented for this group (so that the code snippet command download links work)
         for rep in ['GLZ', 'GLFp', 'GLZN', 'GLZq', 'GLFq']:
             if rep not in self.representations:
-                code.pop(rep)
+                code[rep] = {}
+
+        # Construct code snippets for transitive groups
+        code["transitive_all"] = {lang:"" for lang in code['prompt']}
+        code["transitive_all"]['comment'] = code["transitive"]["comment"]
+        
+        for trans in self.transitive_friends:
+            trans_data = 
+            code["transitive_all"]
+            
 
         # Construct the main top code snippet
         self.create_top_code_snippet(code, top_lie, used_lie_gens)
