@@ -402,7 +402,12 @@ class SearchWrapper(Wrapper):
                 # db_col = col.orig[0] if col.orig else col.name
                 db_col = col.name
                 if db_col in col_types:
-                    diagram_fields[db_col] = col.short_title
+                    # clean up short titles
+                    diagram_fields[db_col] = col.short_title.replace("$", "") \
+                                                             .replace(r"\(", "") \
+                                                             .replace(r"\)", "") \
+                                                             .replace("\\", "")
+                    
         else:
             # Fall back to search array boxes if no columns defined
             diagram_fields = {box.name: box.short_title for box in
