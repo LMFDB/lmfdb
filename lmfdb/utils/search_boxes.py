@@ -690,7 +690,8 @@ class SearchArray(UniqueRepresentation):
     def search_types(self, info):
         # Override this method to change the displayed search buttons
         # Diagram button is shown only if info["has_diagram"] is True (set by SearchWrapper)
-        has_diagram = info.get("has_diagram", True) if info else True
+        
+        has_diagram = getattr(self, "has_diagram", True) and (info.get("has_diagram", False) if info else True)
         if info is None:
             types = [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
             if has_diagram:
@@ -698,7 +699,7 @@ class SearchArray(UniqueRepresentation):
             return types
         else:
             types = [("", "Search again"), ("Random", "Random %s" % self.noun)]
-            if has_diagram:
+            if has_diagram and info.get("search_type") != "Diagram":
                 types.append(("Diagram", "Diagram search"))
             return types
 

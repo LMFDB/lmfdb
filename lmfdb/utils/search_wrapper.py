@@ -399,8 +399,8 @@ class SearchWrapper(Wrapper):
             diagram_fields = {}
             for col in columns.columns:
                 # Use first orig column as the database column name
-                # db_col = col.orig[0] if col.orig else col.name
-                db_col = col.name
+                db_col = col.orig[0] if col.orig else col.name
+                # db_col = col.name
                 if db_col in col_types:
                     # clean up short titles
                     diagram_fields[db_col] = col.short_title.replace("$", "") \
@@ -416,7 +416,7 @@ class SearchWrapper(Wrapper):
 
         # Filter to numerical and binary fields based on database column types
         numerical_fields = [(name, label) for (name, label) in diagram_fields.items()
-                           if col_types.get(name) in number_types.keys()]
+                           if col_types.get(name) in number_types]
         binary_fields = [(name, label) for (name, label) in diagram_fields.items()
                         if col_types.get(name) == "boolean"]
         color_fields = numerical_fields + binary_fields
