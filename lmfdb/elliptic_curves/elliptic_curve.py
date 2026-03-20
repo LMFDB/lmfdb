@@ -48,7 +48,7 @@ def sorting_label(lab1):
     return (int(a), class_to_int(b), int(c))
 
 def get_bread(tail=[]):
-    base = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
+    base = [('Elliptic curves', url_for("elliptic_curves")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
