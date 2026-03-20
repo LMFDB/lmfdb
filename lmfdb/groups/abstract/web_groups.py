@@ -2510,19 +2510,19 @@ class WebAbstractGroup(WebObj):
                                       transitive_expressions_knowl))
                 
                 # Display code snippets for transitive group representations
-                code_cmd = ' <tr> <td colspan="6"> '
-                for trans in self.transitive_friends:
-                    trans_data = {"deg":trans.split('T')[0], "t":trans.split('T')[1]}
-                    code_cmd += self.create_short_snippet('transitive').format(**trans_data)+' '
-                code_cmd += '</td> </tr> '
+                #code_cmd = ' <tr> <td colspan="6"> '
+                #for trans in self.transitive_friends:
+                #    trans_data = {"deg":trans.split('T')[0], "t":trans.split('T')[1]}
+                #    code_cmd += self.create_short_snippet('transitive').format(**trans_data)+' '
+                #code_cmd += '</td> </tr> '
                 #code_cmd = ""
 
-                code_cmd = " ".join([self.create_short_snippet('transitive').format(**{"deg":trans.split('T')[0], "t":trans.split('T')[1]}) for trans in self.transitive_friends])
+                code_cmd = " ".join([self.create_short_snippet(trans) for trans in self.transitive_friends])
                 code_html = f'<tr><td colspan="6">{code_cmd}</td></tr>'
-                print("****", rep_content)
-                print("****", code_cmd)
-                print("****HTML****", code_html)
-                return rep_content + code_html
+                #print("****", rep_content)
+                #print("****", code_cmd)
+                #print("****HTML****", code_html)
+                return rep_content + f'<tr><td colspan="6">{code_cmd}</td></tr>'
 
             elif rtype == "semidirect":
                 return rep_line(
@@ -3033,7 +3033,7 @@ class WebAbstractGroup(WebObj):
 
         For details on how the code logic works, see https://github.com/LMFDB/lmfdb/pull/6694
 
-        For the purposes of the code download links, all Lie representations are also
+        For the purposes of the code download command links, all Lie representations are also
         all stored together in code["lie_reps_all"]
         """
 
@@ -3106,6 +3106,29 @@ class WebAbstractGroup(WebObj):
             if code["lie_reps_all"][lang] == '':
                 code["lie_reps_all"].pop(lang, None)
 
+    def create_transitive_code_snippets(self, code):
+        """
+        Creates code snippets for the transitive group representations   
+        Each representation is stored as a dictionary in the format code[trans_label]
+
+        For the purposes of the code download command links, all the transitive group representations
+        are also all stored together in code["transitive_all"]
+        """
+
+        code["transitive_all"] = {lang:"" for lang in code['prompt']}
+        code["transitive_all"]['comment'] = code["transitive"]["comment"]
+        
+        for trans in self.transitive_friends:
+            trans_data = {"deg":trans.split('T')[0], "t":trans.split('T')[1]}
+            code[trans] = dict()
+
+            for lang in code['prompt']:
+                code[trans][lang] = code["transitive"][lang].format(**trans_data)
+                code["transitive_all"][lang] += code[trans][lang]+"\n"
+
+        for lang in code['prompt']:
+            if code["transitive_all"][lang] == '':
+                code["transitive_all"].pop(lang, None)
 
     @cached_method
     def code_snippets(self):
@@ -3201,15 +3224,9 @@ class WebAbstractGroup(WebObj):
         for rep in ['GLZ', 'GLFp', 'GLZN', 'GLZq', 'GLFq']:
             if rep not in self.representations:
                 code[rep] = {}
-
-        # Construct code snippets for transitive groups
-        code["transitive_all"] = {lang:"" for lang in code['prompt']}
-        code["transitive_all"]['comment'] = code["transitive"]["comment"]
-        
-        for trans in self.transitive_friends:
-            trans_data = 
-            code["transitive_all"]
             
+        # Construct code snippets for transitive groups
+        self.create_transitive_code_snippets(code)
 
         # Construct the main top code snippet
         self.create_top_code_snippet(code, top_lie, used_lie_gens)
