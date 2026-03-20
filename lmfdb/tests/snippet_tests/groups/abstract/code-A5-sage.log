@@ -51,6 +51,53 @@ sage: G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB 
 sage: character_degrees = [c[0] for c in G.character_table()]
 sage: [[n, character_degrees.count(n)] for n in set(character_degrees)]
 [[1, 1], [3, 2], [4, 1], [5, 1]]
+sage: SL(2,4)
+Special Linear Group of degree 2 over Finite Field in a of size 2^2
+sage: PSL(2,4)
+Permutation Group with generators [(3,4,5), (1,2,3)]
+sage: PSL(2,5)
+Permutation Group with generators [(3,5)(4,6), (1,2,5)(3,4,6)]
+sage: PGL(2,4)
+Permutation Group with generators [(3,5,4), (1,2,3)]
+sage: PSU(2,4)
+The projective special unitary group of degree 2 over Finite Field in a of size 2^2
+sage: PSU(2,5)
+The projective special unitary group of degree 2 over Finite Field of size 5
+sage: GO(3,4)
+General Orthogonal Group of degree 3 over Finite Field in a of size 2^2
+sage: PGU(2,4)
+The projective general unitary group of degree 2 over Finite Field in a of size 2^2
+sage: PermutationGroup(['(1,2,3,4,5)', '(1,2,3)'])
+Permutation Group with generators [(1,2,3), (1,2,3,4,5)]
+sage: MS = MatrixSpace(Integers(), 4, 4)
+sage: MatrixGroup([MS([[1, 1, 1, 0], [0, -1, -1, 0], [0, 1, 0, 0], [0, 0, 1, 1]]), MS([[0, 0, 0, 1], [0, -1, -1, -1], [0, 1, 0, 0], [-1, -1, 0, 0]])])
+Matrix group over Integer Ring with 2 generators (
+[ 1  1  1  0]  [ 0  0  0  1]
+[ 0 -1 -1  0]  [ 0 -1 -1 -1]
+[ 0  1  0  0]  [ 0  1  0  0]
+[ 0  0  1  1], [-1 -1  0  0]
+)
+sage: MS = MatrixSpace(GF(5), 3, 3)
+sage: MatrixGroup([MS([[2, 1, 1], [4, 0, 1], [1, 1, 3]]), MS([[1, 1, 4], [2, 0, 4], [2, 1, 3]])])
+Matrix group over Finite Field of size 5 with 2 generators (
+[2 1 1]  [1 1 4]
+[4 0 1]  [2 0 4]
+[1 1 3], [2 1 3]
+)
+sage: TransitiveGroup(5, 4)
+Transitive group number 4 of degree 5
+sage: TransitiveGroup(6, 12)
+Transitive group number 12 of degree 6
+sage: TransitiveGroup(10, 7)
+Transitive group number 7 of degree 10
+sage: TransitiveGroup(12, 33)
+Transitive group number 33 of degree 12
+sage: TransitiveGroup(15, 5)
+Transitive group number 5 of degree 15
+sage: TransitiveGroup(20, 15)
+Transitive group number 15 of degree 20
+sage: TransitiveGroup(30, 9)
+Transitive group number 9 of degree 30
 sage: G.quotient(G.commutator())
 Permutation Group with generators [()]
 sage: G.homology(2)

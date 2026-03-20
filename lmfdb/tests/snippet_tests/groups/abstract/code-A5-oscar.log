@@ -65,8 +65,66 @@ MSet{ZZRingElem} with 5 elements:
   3 : 2
   1
 
+julia> SL(2,4)
+SL(2,4)
+
+julia> permutation_group(None, (1,2,3,4,5), (1,2,3))
+ERROR: UndefVarError: `None` not defined in `Main`
+Suggestion: check for spelling errors or missing imports.
+Stacktrace:
+ [1] top-level scope
+   @ none:1
+
+julia> matrix_group([[[1, 1, 1, 0], [0, -1, -1, 0], [0, 1, 0, 0], [0, 0, 1, 1]], [[0, 0, 0, 1], [0, -1, -1, -1], [0, 1, 0, 0], [-1, -1, 0, 0]]])
+ERROR: MethodError: no method matching matrix_group(::Vector{Vector{Vector{Int64}}})
+The function `matrix_group` exists, but no method is defined for this combination of argument types.
+
+Closest candidates are:
+  matrix_group(!Matched::Int64, !Matched::Ring)
+   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/matrices/MatGrp.jl:102
+  matrix_group(!Matched::Int64, !Matched::Ring, !Matched::Any; check)
+   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/matrices/MatGrp.jl:103
+  matrix_group(!Matched::Type{CyclotomicField}, !Matched::MatrixGroup{var"#s791", T} where {var"#s791"<:QQAbFieldElem, T<:MatElem{var"#s791"}})
+   @ Oscar ~/.julia/packages/Oscar/eTXAp/experimental/GModule/src/GModule.jl:982
+  ...
+
+Stacktrace:
+ [1] top-level scope
+   @ none:1
+
+julia> matrix_group([[[ Z(5), Z(5)^0, Z(5)^0 ], [ Z(5)^2, 0*Z(5), Z(5)^0 ], [ Z(5)^0, Z(5)^0, Z(5)^3 ]], [[ Z(5)^0, Z(5)^0, Z(5)^2 ], [ Z(5), 0*Z(5), Z(5)^2 ], [ Z(5), Z(5)^0, Z(5)^3 ]]])
+ERROR: UndefVarError: `Z` not defined in `Main`
+Suggestion: check for spelling errors or missing imports.
+Stacktrace:
+ [1] top-level scope
+   @ none:1
+
+julia> transitive_group(5, 4)
+Alternating group of degree 5
+
+julia> transitive_group(6, 12)
+Permutation group of degree 6
+
+julia> transitive_group(10, 7)
+Permutation group of degree 10
+
+julia> transitive_group(12, 33)
+Permutation group of degree 12
+
+julia> transitive_group(15, 5)
+Permutation group of degree 15
+
+julia> transitive_group(20, 15)
+Permutation group of degree 20
+
+julia> transitive_group(30, 9)
+Permutation group of degree 30
+
 julia> abelian_invariants(G)
 ZZRingElem[]
+
+julia> quo(G, derived_subgroup(G)[1])
+(Permutation group of degree 1 and order 1, Hom: G -> permutation group)
 
 julia> subgroups(G)
 Base.Iterators.Flatten{Vector{GAPGroupConjClass{PermGroup, PermGroup}}}(GAPGroupConjClass{PermGroup, PermGroup}[Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G])

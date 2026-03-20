@@ -62,9 +62,55 @@ MSet{ZZRingElem} with 3 elements:
   2
   1 : 2
 
+julia> GL(2,2)
+GL(2,2)
+
+julia> SL(2,2)
+SL(2,2)
+
+julia> permutation_group(None, (2,3), (1,3,2))
+ERROR: UndefVarError: `None` not defined in `Main`
+Suggestion: check for spelling errors or missing imports.
+Stacktrace:
+ [1] top-level scope
+   @ none:1
+
+julia> matrix_group([[[0, -1], [-1, 0]], [[-1, -1], [1, 0]]])
+ERROR: MethodError: no method matching matrix_group(::Vector{Vector{Vector{Int64}}})
+The function `matrix_group` exists, but no method is defined for this combination of argument types.
+
+Closest candidates are:
+  matrix_group(!Matched::Int64, !Matched::Ring)
+   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/matrices/MatGrp.jl:102
+  matrix_group(!Matched::Int64, !Matched::Ring, !Matched::Any; check)
+   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/matrices/MatGrp.jl:103
+  matrix_group(!Matched::Type{CyclotomicField}, !Matched::MatrixGroup{var"#s791", T} where {var"#s791"<:QQAbFieldElem, T<:MatElem{var"#s791"}})
+   @ Oscar ~/.julia/packages/Oscar/eTXAp/experimental/GModule/src/GModule.jl:982
+  ...
+
+Stacktrace:
+ [1] top-level scope
+   @ none:1
+
+julia> matrix_group([[[ Z(2)^0, Z(2)^0 ], [ 0*Z(2), Z(2)^0 ]], [[ 0*Z(2), Z(2)^0 ], [ Z(2)^0, 0*Z(2) ]]])
+ERROR: UndefVarError: `Z` not defined in `Main`
+Suggestion: check for spelling errors or missing imports.
+Stacktrace:
+ [1] top-level scope
+   @ none:1
+
+julia> transitive_group(3, 2)
+Symmetric group of degree 3
+
+julia> transitive_group(6, 2)
+Permutation group of degree 6
+
 julia> abelian_invariants(G)
 1-element Vector{ZZRingElem}:
  2
+
+julia> quo(G, derived_subgroup(G)[1])
+(Pc group of order 2, Hom: G -> pc group)
 
 julia> subgroups(G)
 Base.Iterators.Flatten{Vector{GAPGroupConjClass{PermGroup, PermGroup}}}(GAPGroupConjClass{PermGroup, PermGroup}[Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G, Conjugacy class of permutation group in G])
