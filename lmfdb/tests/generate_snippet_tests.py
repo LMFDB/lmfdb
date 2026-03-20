@@ -228,7 +228,7 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
         snippet_test = contents['snippet_test']
 
         snippet_langs = {'gp' if k == 'pari' else k for k in contents['prompt'].keys()}
-        snippet_langs &= langs # intersect set with langs 
+        snippet_langs &= langs # intersect set with langs
 
         for _, items in snippet_test.items():
             label = items['label']
