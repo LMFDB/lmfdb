@@ -130,3 +130,13 @@ class NumberFieldTest(LmfdbTest):
         # Also ensure we're not getting quoted strings
         assert '"[0, 1]"' not in page
         assert '"[2, 0]"' not in page
+
+    def test_diagram_search(self):
+        """
+        Check that diagram search page loads correctly
+        """
+        L = self.tc.get('/NumberField/?degree=2&search_type=Diagram&count=100')
+        data = L.get_data(as_text=True)
+        # Check that D3 diagram template elements are present
+        assert 'my_dataviz' in data
+        assert 'pointRadius' in data
