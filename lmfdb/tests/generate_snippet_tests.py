@@ -1,5 +1,11 @@
-# Helper function for generating test files
+### CLI tools for testing consistency (but not correctness) of code snippets
+# See the heading "Code Snippets" in Development.md for more details about usage.
+#
+#
+# Author: Håvard Damm-Johnsen <havard-dj@proton.me>
+
 # NB: magma is currently not supported, run manually instead
+
 
 from pathlib import Path
 import yaml
@@ -120,7 +126,6 @@ def _eval_code_file(data, lang, proc, logfile):
         for line in lines:
             if lang == 'magma':
                 print(line)
-
             try:
                 proc.run_command(line, timeout=60*3)
             except Exception:
@@ -223,12 +228,16 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
         snippet_test = contents['snippet_test']
 
         snippet_langs = {'gp' if k == 'pari' else k for k in contents['prompt'].keys()}
-        snippet_langs &= langs # intersection of sets
+        snippet_langs &= langs # intersect set with langs 
 
         for _, items in snippet_test.items():
             label = items['label']
 
             for lang in snippet_langs:
+                test_langs = items.get('langs')
+                # If we specify languages, only test those. Should fix the problem in PR #6934
+                if test_langs is not None and lang not in test_langs:
+                    continue
                 url = items['url'].format(lang=lang)
                 filename = code_file.stem + "-" + label + "-" + lang + ".log"
 
@@ -271,10 +280,10 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Generate snippet tests")
     parser.add_argument("cmd", help="*generate* test files or run *test*s", choices=['generate', 'test'])
-    parser.add_argument("-i", "--ignore", help="ignore languages", action='append', nargs='+', default=[])
-    parser.add_argument("-o", "--only", help="only languages", action='append', nargs='+', default=None)
-    parser.add_argument("-f", "--file", help="run on single file", type=str)
-    parser.add_argument("-e", "--error-file", help="write errors to file", type=str)
+    parser.add_argument("-i", "--ignore", help="Ignore languages - these will not be run", action='append', nargs='+', default=[])
+    parser.add_argument("-o", "--only", help="Only languages - only these languages will be run ", action='append', nargs='+', default=None)
+    parser.add_argument("-f", "--file", help="Run test or generate on a single file", type=str)
+    parser.add_argument("-e", "--error-file", help="Specify error log file (otherwise stdout)", type=str)
 
     args = parser.parse_args()
 
