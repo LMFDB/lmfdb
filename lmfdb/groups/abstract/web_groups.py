@@ -3036,8 +3036,8 @@ class WebAbstractGroup(WebObj):
             # Hardcoded list of Lie Type families available in GAP, Sage and Oscar  (NB: Must ensure their implementation agrees with our definition!)
             families = dict()
             families['gap'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Orth','Unitary','Omega','PO','PU','POmega','PGammaL','PSigmaL']
-            families['sage'] = ['GL','SL','PSL','PGL','PSp','PSU','Orth','Unitary','PU']
-            families['oscar'] = ['GL','SL']
+            families['sage'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSU','Orth','Unitary','PU']
+            families['oscar'] = ['GL','SL','Sp','SO','SU','Orth','Unitary']
 
             # Prioritise displaying the first Lie type representation which is implemented in the language
             for lie_rep in self.lie_representations:
@@ -3127,6 +3127,10 @@ class WebAbstractGroup(WebObj):
 
     @cached_method
     def code_snippets(self):
+        """ 
+        Constructs a dictionary of code snippets for the group
+        """
+
         if self.live():
             return
         _curdir = os.path.dirname(os.path.abspath(__file__))

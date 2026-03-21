@@ -12,8 +12,8 @@
 [1m[34mgap> [0m[31mCompositionSeries(G);
 [0m[ Alt( [ 1 .. 5 ] ), Group(()) ]
 [1m[34mgap> [0m[31mif IsNilpotentGroup(G) then NilpotencyClassOfGroup(G); fi;
-[0m[1m[34mgap> [0m[31mDerivedLength(G);
-[0m0
+[0m[1m[34mgap> DerivedLength(G);
+[0m[31m[0m0
 [1m[34mgap> [0m[31mIsAbelian(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsCyclic(G);
@@ -24,8 +24,8 @@
 [0mfalse
 [1m[34mgap> [0m[31mIsNilpotentGroup(G);
 [0mfalse
-[1m[34mgap> [0mIsPerfectGroup(G);
-[31m[0mtrue
+[1m[34mgap> [0m[31mIsPerfectGroup(G);
+[0mtrue
 [1m[34mgap> [0m[31mIsPGroup(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsPolycyclicGroup(G);
@@ -42,8 +42,8 @@
 [0m[ 1, 2, 3, 5 ]
 [1m[34mgap> [0m[31mPrint("Orders: ", orders, "\n");
 [0mOrders: [ 1, 2, 3, 5 ]
-[1m[34mgap> [0melement_counts := List(orders, n -> Length(Filtered(element_orders, x -> x = n)));
-[31m[0m[ 1, 15, 20, 24 ]
+[1m[34mgap> [0m[31melement_counts := List(orders, n -> Length(Filtered(element_orders, x -> x = n)));
+[0m[ 1, 15, 20, 24 ]
 [1m[34mgap> [0m[31mPrint("Elements: ", element_counts, " ", Size(G), "\n");
 [0mElements: [ 1, 15, 20, 24 ] 60
 [1m[34mgap> [0m[31mcc_orders := List(ConjugacyClasses(G), cc -> Order(Representative(cc)));
@@ -92,8 +92,8 @@
 [0mGroup([ (3,5)(4,6), (1,2,5)(3,4,6) ])
 [1m[34mgap> [0m[31mGroup( (1,2,3,4,5), (1,2,3) );
 [0mGroup([ (1,2,3,4,5), (1,2,3) ])
-[1m[34mgap> Group([[[1, 1, 1, 0], [0, -1, -1, 0], [0, 1, 0, 0], [0, 0, 1, 1]], [[0, 0, 0, 1], [0, -1, -1, -1], [0, 1, 0, 0], [-1, -1, 0, 0]]]);
-[0m[31m[0m<matrix group with 2 generators>
+[1m[34mgap> [0m[31mGroup([[[1, 1, 1, 0], [0, -1, -1, 0], [0, 1, 0, 0], [0, 0, 1, 1]], [[0, 0, 0, 1], [0, -1, -1, -1], [0, 1, 0, 0], [-1, -1, 0, 0]]]);
+[0m<matrix group with 2 generators>
 [1m[34mgap> [0m[31mGroup([[[ Z(5), Z(5)^0, Z(5)^0 ], [ Z(5)^2, 0*Z(5), Z(5)^0 ], [ Z(5)^0, Z(5)^0, Z(5)^3 ]], [[ Z(5)^0, Z(5)^0, Z(5)^2 ], [ Z(5), 0*Z(5), Z(5)^2 ], [ Z(5), Z(5)^0, Z(5)^3 ]]]);
 [0mGroup([ [ [ Z(5), Z(5)^0, Z(5)^0 ], [ Z(5)^2, 0*Z(5), Z(5)^0 ], [ Z(5)^0, Z(5)^0, Z(5)^3 ] ], [ [ Z(5)^0, Z(5)^0, Z(5)^2 ], [ Z(5), 0*Z(5), Z(5)^2 ], [ Z(5), Z(5)^0, Z(5)^3 ] ] ])
 [1m[34mgap> [0m[31mTransitiveGroup(5, 4);
@@ -112,8 +112,8 @@
 [0mt30n9
 [1m[34mgap> [0m[31mAbelianInvariants(G);
 [0m[  ]
-[1m[34mgap> [0m[31mFactorGroup(G, DerivedSubgroup(G));
-[0mGroup(())
+[1m[34mgap> [0mFactorGroup(G, DerivedSubgroup(G));
+[31m[0mGroup(())
 [1m[34mgap> [0m[31mAbelianInvariantsMultiplier(G);
 [0m[ 2 ]
 [1m[34mgap> [0m[31mCommutatorLength(G);
@@ -136,10 +136,10 @@
 [0mAlt( [ 1 .. 5 ] )
 [1m[34mgap> [0m[31mDerivedSeriesOfGroup(G);
 [0m[ Alt( [ 1 .. 5 ] ) ]
-[1m[34mgap> ChiefSeries(G);
-[0m[31m[0m[ Alt( [ 1 .. 5 ] ), Group(()) ]
-[1m[34mgap> [0m[31mLowerCentralSeriesOfGroup(G);
-[0m[ Alt( [ 1 .. 5 ] ) ]
+[1m[34mgap> [0m[31mChiefSeries(G);
+[0m[ Alt( [ 1 .. 5 ] ), Group(()) ]
+[1m[34mgap> [0mLowerCentralSeriesOfGroup(G);
+[31m[0m[ Alt( [ 1 .. 5 ] ) ]
 [1m[34mgap> [0m[31mUpperCentralSeriesOfGroup(G);
 [0m[ Group(()) ]
 [1m[34mgap> [0m[31mCharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table

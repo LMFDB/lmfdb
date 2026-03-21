@@ -22,16 +22,16 @@
 [0mfalse
 [1m[34mgap> [0m[31mIsMonomialGroup(G);
 [0mtrue
-[1m[34mgap> [0m[31mIsNilpotentGroup(G);
-[0mtrue
+[1m[34mgap> [0mIsNilpotentGroup(G);
+[31m[0mtrue
 [1m[34mgap> [0m[31mIsPerfectGroup(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsPGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsPolycyclicGroup(G);
 [0mtrue
-[1m[34mgap> [0m[31mIsSimpleGroup(G);
-[0mfalse
+[1m[34mgap> IsSimpleGroup(G);
+[0m[31m[0mfalse
 [1m[34mgap> [0m[31mIsSolvableGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsSupersolvableGroup(G);
@@ -96,12 +96,12 @@ f2
 [0mGroup([ f3 ])
 [1m[34mgap> [0m[31mDerivedSeriesOfGroup(G);
 [0m[ <pc group of size 8 with 3 generators>, Group([ f3 ]), Group([  ]) ]
-[1m[34mgap> ChiefSeries(G);
-[0m[31m[0m[ Group([ f1, f2, f3 ]), Group([ f2, f3 ]), Group([ f3 ]), Group([  ]) ]
+[1m[34mgap> [0m[31mChiefSeries(G);
+[0m[ Group([ f1, f2, f3 ]), Group([ f2, f3 ]), Group([ f3 ]), Group([  ]) ]
 [1m[34mgap> [0m[31mLowerCentralSeriesOfGroup(G);
 [0m[ <pc group of size 8 with 3 generators>, Group([ f3 ]), Group([ <identity> of ... ]) ]
-[1m[34mgap> UpperCentralSeriesOfGroup(G);
-[0m[31m[0m[ Group([ f3, f1, f2 ]), Group([ f3 ]), Group([  ]) ]
+[1m[34mgap> [0m[31mUpperCentralSeriesOfGroup(G);
+[0m[ Group([ f3, f1, f2 ]), Group([ f3 ]), Group([  ]) ]
 [1m[34mgap> [0m[31mCharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
 [0mCharacterTable( <pc group of size 8 with 3 generators> )
 [1m[34mgap> [0m[31m

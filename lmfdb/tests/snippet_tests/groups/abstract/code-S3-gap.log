@@ -12,8 +12,8 @@
 [1m[34mgap> [0m[31mCompositionSeries(G);
 [0m[ Group([ (2,3), (1,2,3) ]), Group([ (1,2,3) ]), Group(()) ]
 [1m[34mgap> [0m[31mif IsNilpotentGroup(G) then NilpotencyClassOfGroup(G); fi;
-[0m[1m[34mgap> DerivedLength(G);
-[0m[31m[0m2
+[0m[1m[34mgap> [0m[31mDerivedLength(G);
+[0m2
 [1m[34mgap> [0m[31mIsAbelian(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsCyclic(G);
@@ -98,10 +98,10 @@ f2
 [0mGroup([ <an immutable 2x2 matrix over GF2>, <an immutable 2x2 matrix over GF2> ])
 [1m[34mgap> [0m[31mTransitiveGroup(3, 2);
 [0mS3
-[1m[34mgap> TransitiveGroup(6, 2);
-[0m[31m[0mD_6(6) = [3]2
-[1m[34mgap> [0m[31mAbelianInvariants(G);
-[0m[ 2 ]
+[1m[34mgap> [0m[31mTransitiveGroup(6, 2);
+[0mD_6(6) = [3]2
+[1m[34mgap> [0mAbelianInvariants(G);
+[31m[0m[ 2 ]
 [1m[34mgap> [0m[31mFactorGroup(G, DerivedSubgroup(G));
 [0m<pc group with 1 generator>
 [1m[34mgap> [0m[31mAbelianInvariantsMultiplier(G);

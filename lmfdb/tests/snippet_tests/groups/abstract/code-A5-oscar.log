@@ -137,6 +137,15 @@ MSet{ZZRingElem} with 5 elements:
 julia> SL(2,4)
 SL(2,4)
 
+julia> SO(3,4)
+GO(3,4)
+
+julia> SU(2,4)
+SU(2,4)
+
+julia> GO(3,4)
+GO(3,4)
+
 julia> @permutation_group(5, (1,2,3,4,5), (1,2,3))
 Permutation group of degree 5
 

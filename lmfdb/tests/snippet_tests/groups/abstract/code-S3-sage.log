@@ -58,6 +58,10 @@ sage: PSL(2,2)
 Permutation Group with generators [(2,3), (1,2)]
 sage: PGL(2,2)
 Permutation Group with generators [(2,3), (1,2)]
+sage: SO(3,2)
+Special Orthogonal Group of degree 3 over Finite Field of size 2
+sage: SU(2,2)
+Special Unitary Group of degree 2 over Finite Field in a of size 2^2
 sage: PSU(2,2)
 The projective special unitary group of degree 2 over Finite Field of size 2
 sage: GO(3,2)

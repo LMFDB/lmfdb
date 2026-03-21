@@ -14,8 +14,8 @@
 [1m[34mgap> [0m[31mif IsNilpotentGroup(G) then NilpotencyClassOfGroup(G); fi;
 [0m[1m[34mgap> [0m[31mDerivedLength(G);
 [0m0
-[1m[34mgap> IsAbelian(G);
-[0m[31m[0mtrue
+[1m[34mgap> [0m[31mIsAbelian(G);
+[0mtrue
 [1m[34mgap> [0m[31mIsCyclic(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsElementaryAbelian(G);
@@ -24,8 +24,8 @@
 [0mtrue
 [1m[34mgap> [0m[31mIsNilpotentGroup(G);
 [0mtrue
-[1m[34mgap> [0m[31mIsPerfectGroup(G);
-[0mtrue
+[1m[34mgap> [0mIsPerfectGroup(G);
+[31m[0mtrue
 [1m[34mgap> [0m[31mIsPGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsPolycyclicGroup(G);
@@ -34,8 +34,8 @@
 [0mfalse
 [1m[34mgap> [0m[31mIsSolvableGroup(G);
 [0mtrue
-[1m[34mgap> [0m[31mIsSupersolvableGroup(G);
-[0mtrue
+[1m[34mgap> IsSupersolvableGroup(G);
+[0m[31m[0mtrue
 [1m[34mgap> [0m[31melement_orders := List(Elements(G), g -> Order(g));
 [0m[ 1 ]
 [1m[34mgap> [0m[31morders := Set(element_orders);
@@ -46,8 +46,8 @@
 [0m[ 1 ]
 [1m[34mgap> [0m[31mPrint("Elements: ", element_counts, " ", Size(G), "\n");
 [0mElements: [ 1 ] 1
-[1m[34mgap> [0mcc_orders := List(ConjugacyClasses(G), cc -> Order(Representative(cc)));
-[31m[0m[ 1 ]
+[1m[34mgap> [0m[31mcc_orders := List(ConjugacyClasses(G), cc -> Order(Representative(cc)));
+[0m[ 1 ]
 [1m[34mgap> [0m[31mcc_counts := List(orders, n -> Length(Filtered(cc_orders, x -> x = n)));
 [0m[ 1 ]
 [1m[34mgap> [0m[31mPrint("Conjugacy classes: ", cc_counts, " ", Length(ConjugacyClasses(G)), "\n");
@@ -56,16 +56,16 @@
 [0m[ <identity> of ...^G ]
 [1m[34mgap> [0m[31mCharacterDegrees(G);
 [0m[ [ 1, 1 ] ]
-[1m[34mgap> [0m[31mGPC := PcGroupCode(0,1); 
-[0mGroup([  ])
+[1m[34mgap> GPC := PcGroupCode(0,1); 
+[0m[31m[0mGroup([  ])
 [1m[34mgap> [0m[31mTransitiveGroup(1, 1);
 [0mfail
 [1m[34mgap> [0m[31mAbelianInvariants(G);
 [0m[  ]
 [1m[34mgap> [0m[31mFactorGroup(G, DerivedSubgroup(G));
 [0m<pc group of size 1 with 0 generators>
-[1m[34mgap> AbelianInvariantsMultiplier(G);
-[0m[31m[0m[  ]
+[1m[34mgap> [0m[31mAbelianInvariantsMultiplier(G);
+[0m[  ]
 [1m[34mgap> [0m[31mCommutatorLength(G);
 [0m1
 [1m[34mgap> [0m[31mAllSubgroups(G);
@@ -82,8 +82,8 @@
 [0m<pc group of size 1 with 0 generators>
 [1m[34mgap> [0m[31mSocle(G);
 [0m<pc group of size 1 with 0 generators>
-[1m[34mgap> DerivedSeriesOfGroup(G);
-[0m[31m[0m[ <pc group of size 1 with 0 generators> ]
+[1m[34mgap> [0m[31mDerivedSeriesOfGroup(G);
+[0m[ <pc group of size 1 with 0 generators> ]
 [1m[34mgap> [0m[31mChiefSeries(G);
 [0m[ Group([  ]) ]
 [1m[34mgap> [0m[31mLowerCentralSeriesOfGroup(G);
