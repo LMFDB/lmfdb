@@ -68,7 +68,7 @@ even:
   magma: IsEven(G);
   sage: all(g.SignPerm() == 1 for g in libgap(G).GeneratorsOfGroup())
   oscar: is_even(G)
-  gap: 
+  gap: ForAll(GeneratorsOfGroup(G), g -> SignPerm(g) = 1);
 
 nilpotent:
   comment: Nilpotency class
@@ -89,7 +89,7 @@ gens:
   magma: Generators(G);
   sage: G.gens()
   oscar: gens(G)
-  gap: Gens(G);
+  gap: GeneratorsOfGroup(G);
 
 ccs:
   comment: Conjugacy classes
@@ -131,7 +131,7 @@ id:
   magma: IdentifyGroup(G);
   sage: G.id()
   oscar: small_group_identification(G)
-  gap: IdentifyGroup(G);
+  gap: IdGroup(G);
 
 char_table:
   comment: Character table

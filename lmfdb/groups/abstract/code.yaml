@@ -69,7 +69,7 @@ GLZ:
     MS = MatrixSpace(Integers(), {nZ}, {nZ})
     G = MatrixGroup({LZsage})
   sage_gap: G = gap.new('Group({LZsplit})')
-  oscar: G = matrix_group({LZsplit})
+  oscar: G = matrix_group({LZoscar})
 
 GLFp:
   comment: Define the group as a matrix group with coefficients in GLFp
@@ -79,7 +79,7 @@ GLFp:
     MS = MatrixSpace(GF({Fp}), {nFp}, {nFp})
     G = MatrixGroup({LFpsage})
   sage_gap: G = gap.new('Group({LFpsplit})')
-  oscar: G = matrix_group({LFpsplit})
+  oscar: G = matrix_group({LFposcar})
 
 GLZN:
   comment: Define the group as a matrix group with coefficients in GLZN
@@ -89,7 +89,7 @@ GLZN:
     MS = MatrixSpace(Integers({N}), {nZN}, {nZN})
     G = MatrixGroup({LZNsage})
   sage_gap: G = gap.new('Group({LZNsplit})')
-  oscar: G = matrix_group({LZNsplit})
+  oscar: G = matrix_group({LZNoscar})
 
 GLZq:
   comment: Define the group as a matrix group with coefficients in GLZq
@@ -99,7 +99,7 @@ GLZq:
     MS = MatrixSpace(Integers({Zq}), {nZq}, {nZq})
     G = MatrixGroup({LZqsage})
   sage_gap: G = gap.new('Group({LZqsplit})')
-  oscar: G = matrix_group({LZqsplit})
+  oscar: G = matrix_group({LZqoscar})
 
 GLFq:
   comment: Define the group as a matrix group with coefficients in GLFq
@@ -109,7 +109,7 @@ GLFq:
     F = GF({Fq}); al = F.0; MS = MatrixSpace(F, {nFq}, {nFq})
     G = MatrixGroup({LFqsage})
   sage_gap: G = gap.new('Group({LFqsplit})')
-  oscar: G = matrix_group({LFqsplit})
+  oscar: G = matrix_group({LFqoscar})
 
 
 transitive:

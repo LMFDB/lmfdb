@@ -3072,21 +3072,23 @@ class WebAbstractGroup(WebObj):
                             used_lie_gens[lang] = False
                     elif "gens" in lie_rep:
                         lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
+
                         if qLie.is_prime():
-                            if lang == 'gap':
-                                e = libgap.One(GF(qLie))
-                                lie_mats = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
-                                lie_code_snippet = code['GLFp']['gap'].format(**{'LFpsplit':lie_mats})
-                            elif lang == 'sage':
-                                lie_mats = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "Lie", ListForm=True),nLie))+")" for g in lie_rep["gens"]])+"]"
-                                lie_code_snippet = code['GLFp']['sage'].format(**{'LFpsage':lie_mats, 'nFp':nLie, 'Fp':qLie})
+                            # Construct Lie code snippet commands using the GLFp code snippet commands
+                            e = libgap.One(GF(qLie))
+                            LFpsplit = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
+                            LFpsage = "["+", ".join(["MS("+str(split_matrix_list(mat, nLie))+")" for mat in lie_mats])+"]"
+                            LFposcar = "["+", ".join(["matrix(GF("+str(qLie)+"), "+str(split_matrix_list(mat, nLie))+")" for mat in lie_mats])+"]"
+                            lie_data = {'LFpsplit':LFpsplit, 'LFpsage':LFpsage, 'LFposcar':LFposcar, 'nFp':nLie, 'Fp':qLie}
+                            lie_code_snippet = code['GLFp'][lang].format(**lie_data)
                         else:
-                            if lang == 'gap':
-                                lie_mats = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
-                                lie_code_snippet = code['GLFq']['gap'].format(**{'LFqsplit':lie_mats})
-                            elif lang == 'sage':
-                                lie_mats = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
-                                lie_code_snippet = code['GLFq']['sage'].format(**{'LFqsage':lie_mats, 'nFq':nLie, 'Fq':qLie})
+                            # Construct Lie code snippet commands using the GLFq code snippet commands
+                            LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
+                            LFqsage = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
+                            LFqoscar = "["+", ".join(["matrix(GF("+str(qLie)+"), "+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
+                            lie_data = {'LFqsplit':LFqsplit, 'LFqsage':LFqsage, 'LFposcar':LFposcar, 'nFq':nLie, 'Fq':qLie}
+                            lie_code_snippet = code['GLFq']['sage'].format(**lie_data)
+
                         if top_lie[lang] is None:
                             top_lie[lang], used_lie_gens[lang] = lie_code_snippet, True
     
@@ -3161,35 +3163,39 @@ class WebAbstractGroup(WebObj):
         if "GLZ" in self.representations:
             nZ = self.representations["GLZ"]["d"]
             LZ = [self.decode_as_matrix(g, "GLZ", ListForm=True) for g in self.representations["GLZ"]["gens"]]
-            LZsplit = [split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ) for g in self.representations["GLZ"]["gens"]]
-            LZsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZ", ListForm=True),nZ))+")" for g in self.representations["GLZ"]["gens"]])+"]"
+            LZsplit = [split_matrix_list(mat,nZ) for mat in LZ]
+            LZsage = "["+", ".join(["MS("+str(split_matrix_list(mat,nZ))+")" for mat in LZ])+"]"
+            LZoscar = "["+", ".join(["matrix(ZZ, "+str(split_matrix_list(mat,nZ))+")" for mat in LZ])+"]"
         else:
-            nZ, LZ, LZsplit, LZsage = None, None, None, None
+            nZ, LZ, LZsplit, LZsage, LZoscar = None, None, None, None, None
         if "GLFp" in self.representations:
             nFp = self.representations["GLFp"]["d"]
             Fp = self.representations["GLFp"]["p"]
             LFp = [self.decode_as_matrix(g, "GLFp", ListForm=True) for g in self.representations["GLFp"]["gens"]]
             e = libgap.One(GF(Fp))
             LFpsplit = [split_matrix_list_Fp(A,nFp,e) for A in LFp]
-            LFpsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLFp", ListForm=True),nFp))+")" for g in self.representations["GLFp"]["gens"]])+"]"
+            LFpsage = "["+", ".join(["MS("+str(split_matrix_list(mat,nFp))+")" for mat in LFp])+"]"
+            LFposcar = "["+", ".join(["matrix(GF("+str(Fp)+"), "+str(split_matrix_list(mat,nFp))+")" for mat in LFp])+"]"
         else:
-            nFp, Fp, LFp, LFpsplit, LFpsage = None, None, None, None, None
+            nFp, Fp, LFp, LFpsplit, LFpsage, LFposcar = None, None, None, None, None, None
         if "GLZN" in self.representations:
             nZN = self.representations["GLZN"]["d"]
             N = self.representations["GLZN"]["p"]
             LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
             LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
-            LZNsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZN", ListForm=True),nZN))+")" for g in self.representations["GLZN"]["gens"]])+"]"
+            LZNsage = "["+", ".join(["MS("+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
+            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1]"+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
         else:
-            nZN, N, LZN, LZNsplit, LZNsage = None, None, None, None, None
+            nZN, N, LZN, LZNsplit, LZNsage, LZNoscar = None, None, None, None, None, None
         if "GLZq" in self.representations:
             nZq = self.representations["GLZq"]["d"]
             Zq = self.representations["GLZq"]["q"]
             LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
-            LZqsplit = "[" + ",".join([split_matrix_list_ZN(self.decode_as_matrix(g, "GLZq", ListForm=True) , nZq, Zq) for g in self.representations["GLZq"]["gens"]]) + "]"
-            LZqsage = "["+", ".join(["MS("+str(split_matrix_list(self.decode_as_matrix(g, "GLZq", ListForm=True), nZq))+")" for g in self.representations["GLZq"]["gens"]])+"]"
+            LZqsplit = "[" + ",".join([split_matrix_list_ZN(mat, nZq, Zq) for mat in LZq]) + "]"
+            LZqsage = "["+", ".join(["MS("+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
+            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1]"+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
         else:
-            nZq, Zq, LZq, LZqsplit, LZqsage = None, None, None, None, None
+            nZq, Zq, LZq, LZqsplit, LZqsage, LZqoscar, = None, None, None, None, None, None
         # add below for GLFq implementation
         if "GLFq" in self.representations:
             nFq = self.representations["GLFq"]["d"]
@@ -3198,8 +3204,9 @@ class WebAbstractGroup(WebObj):
             LFq = ",".join(split_matrix_Fq_add_al(mat, nFq ) for mat in mats)
             LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nFq, Fq) for mat in mats) + "]"
             LFqsage = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nFq))+")" for mat in mats])+"]"
+            LFqoscar = "["+", ".join(["matrix(GF("+str(Fq)+"), "+str(split_matrix_Fq_add_al(mat, nFq))+")" for mat in mats])+"]"
         else:
-            nFq, Fq, LFq, LFqsplit, LFqsage = None, None, None, None, None
+            nFq, Fq, LFq, LFqsplit, LFqsage, LFqoscar = None, None, None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
                 'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign,
@@ -3209,10 +3216,11 @@ class WebAbstractGroup(WebObj):
                 'LZ': LZ, 'LFp': LFp, 'LZN': LZN, 'LZq': LZq, 'LFq': LFq,
                 'LZsplit': LZsplit, 'LZNsplit': LZNsplit, 'LZqsplit': LZqsplit,
                 'LFpsplit': LFpsplit, 'LFqsplit': LFqsplit, # add for GLFq GAP
-                # Adding the Sage versions of the matrix group code snippets:
+                # Adding the Sage/Oscar versions of the matrix group code snippets:
                 'LZsage': LZsage, 'LFpsage': LFpsage, 'LZNsage': LZNsage, 'LZqsage': LZqsage, 'LFqsage': LFqsage,
+                'LZoscar': LZoscar, 'LFposcar': LFposcar, 'LZNoscar': LZNoscar, 'LZqoscar': LZqoscar, 'LFqoscar': LFqoscar,
                 'symn': None, 'altn': None, 'ordgp_half': None, 'ordgp_quarter': None, 'chev_fam': None,
-                'chev_params': None, 'gap_id': None, 'abelian_invariants': None, 'deg': None, 't': None
+                'chev_params': None, 'gap_id': None, 'abelian_invariants': None, 't': None
         }
 
         # Construct code snippets for the Lie-type matrix representations

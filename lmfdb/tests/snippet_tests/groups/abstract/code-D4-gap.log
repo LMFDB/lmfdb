@@ -33,8 +33,8 @@
 [0mtrue
 [1m[34mgap> [0m[31mIsSimpleGroup(G);
 [0mfalse
-[1m[34mgap> [0m[31mIsSolvableGroup(G);
-[0mtrue
+[1m[34mgap> IsSolvableGroup(G);
+[0m[31m[0mtrue
 [1m[34mgap> [0m[31mIsSupersolvableGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31melement_orders := List(Elements(G), g -> Order(g));
@@ -55,8 +55,8 @@
 [0mConjugacy classes: [ 1, 3, 1 ] 5
 [1m[34mgap> [0m[31mConjugacyClasses(G);   # Output not guaranteed to exactly match the LMFDB table
 [0m[ <identity> of ...^G, f1^G, f2^G, f3^G, f1*f2^G ]
-[1m[34mgap> [0m[31mCharacterDegrees(G);
-[0m[ [ 1, 4 ], [ 2, 1 ] ]
+[1m[34mgap> CharacterDegrees(G);
+[0m[31m[0m[ [ 1, 4 ], [ 2, 1 ] ]
 [1m[34mgap> [0m[31mGroup([[[ Z(3), 0*Z(3) ], [ 0*Z(3), Z(3)^0 ]], [[ Z(3), 0*Z(3) ], [ 0*Z(3), Z(3) ]], [[ 0*Z(3), Z(3) ], [ Z(3), 0*Z(3) ]]]);
 [0mGroup([ [ [ Z(3), 0*Z(3) ], [ 0*Z(3), Z(3)^0 ] ], [ [ Z(3), 0*Z(3) ], [ 0*Z(3), Z(3) ] ], [ [ 0*Z(3), Z(3) ], [ Z(3), 0*Z(3) ] ] ])
 [1m[34mgap> [0m[31mPcGroupCode(294,8); a := G.1; b := G.2;
@@ -65,8 +65,8 @@ f1
 f2
 [1m[34mgap> [0m[31mGroup( (1,2), (1,3)(2,4), (1,2)(3,4) );
 [0mGroup([ (1,2), (1,3)(2,4), (1,2)(3,4) ])
-[1m[34mgap> Group([[[1, 0], [0, -1]], [[0, -1], [1, 0]]]);
-[0m[31m[0mGroup([ [ [ 1, 0 ], [ 0, -1 ] ], [ [ 0, -1 ], [ 1, 0 ] ] ])
+[1m[34mgap> [0m[31mGroup([[[1, 0], [0, -1]], [[0, -1], [1, 0]]]);
+[0mGroup([ [ [ 1, 0 ], [ 0, -1 ] ], [ [ 0, -1 ], [ 1, 0 ] ] ])
 [1m[34mgap> [0m[31mGroup([[[ 0*Z(3), Z(3)^0 ], [ Z(3)^0, 0*Z(3) ]], [[ Z(3)^0, 0*Z(3) ], [ 0*Z(3), Z(3) ]], [[ Z(3), 0*Z(3) ], [ 0*Z(3), Z(3) ]]]);
 [0mGroup([ [ [ 0*Z(3), Z(3)^0 ], [ Z(3)^0, 0*Z(3) ] ], [ [ Z(3)^0, 0*Z(3) ], [ 0*Z(3), Z(3) ] ], [ [ Z(3), 0*Z(3) ], [ 0*Z(3), Z(3) ] ] ])
 [1m[34mgap> [0m[31mTransitiveGroup(4, 3);
@@ -101,8 +101,8 @@ f2
 [0m[ Group([ f1, f2, f3 ]), Group([ f2, f3 ]), Group([ f3 ]), Group([  ]) ]
 [1m[34mgap> [0m[31mLowerCentralSeriesOfGroup(G);
 [0m[ <pc group of size 8 with 3 generators>, Group([ f3 ]), Group([ <identity> of ... ]) ]
-[1m[34mgap> [0m[31mUpperCentralSeriesOfGroup(G);
-[0m[ Group([ f3, f1, f2 ]), Group([ f3 ]), Group([  ]) ]
+[1m[34mgap> [0mUpperCentralSeriesOfGroup(G);
+[31m[0m[ Group([ f3, f1, f2 ]), Group([ f3 ]), Group([  ]) ]
 [1m[34mgap> [0m[31mCharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
 [0mCharacterTable( <pc group of size 8 with 3 generators> )
 [1m[34mgap> [0m[31m

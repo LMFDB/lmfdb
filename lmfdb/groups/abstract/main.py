@@ -2588,12 +2588,17 @@ def download_group_code(label, download_type):
         grp = WebAbstractGroup(label)
         code_snippets = grp.code_snippets()
 
-        # Remove all instances of "G = " and "G := " (except for top code snippet) 
-        # This ensures all code snippets work (in sequential order) in the download files
-        for rep in ["lie_reps_all", "presentation", "permutation", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all"]:
+        # Maybe we should remove all instances of "G = " and "G := ", except for the top code snippet
+        # This ensures all the code snippets work (in sequential order) in the code download files
+        for rep in ["lie_reps_all", "permutation", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all"]:
             if rep in code_snippets:
                 for lang in code_snippets[rep]:
                     code_snippets[rep][lang] = code_snippets[rep][lang].replace("G = ", '').replace("G := ", '')
+
+        # We need to still assign the PC representation to a variable, for this command to work
+        if "presentation" in code_snippets:
+            for lang in code_snippets["presentation"]:
+                code_snippets["presentation"][lang] = code_snippets["presentation"][lang].replace("G :=", "GPC :=").replace("G =", "GPC =").replace("G.", "GPC.").replace("G,", "GPC,")
 
         code = CodeSnippet(code_snippets)
         response = make_response(code.export_code(label, download_type, sorted_code_names))

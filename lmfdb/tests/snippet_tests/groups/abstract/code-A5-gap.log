@@ -113,10 +113,10 @@
 [0mt30n9
 [1m[34mgap> [0m[31mAbelianInvariants(G);
 [0m[  ]
-[1m[34mgap> [0mFactorGroup(G, DerivedSubgroup(G));
-[31m[0mGroup(())
-[1m[34mgap> [0m[31mAbelianInvariantsMultiplier(G);
-[0m[ 2 ]
+[1m[34mgap> [0m[31mFactorGroup(G, DerivedSubgroup(G));
+[0mGroup(())
+[1m[34mgap> AbelianInvariantsMultiplier(G);
+[0m[31m[0m[ 2 ]
 [1m[34mgap> [0m[31mCommutatorLength(G);
 [0m1
 [1m[34mgap> [0m[31mAllSubgroups(G);
@@ -139,8 +139,8 @@
 [0m[ Alt( [ 1 .. 5 ] ) ]
 [1m[34mgap> [0m[31mChiefSeries(G);
 [0m[ Alt( [ 1 .. 5 ] ), Group(()) ]
-[1m[34mgap> [0m[31mLowerCentralSeriesOfGroup(G);
-[0m[ Alt( [ 1 .. 5 ] ) ]
+[1m[34mgap> LowerCentralSeriesOfGroup(G);
+[0m[31m[0m[ Alt( [ 1 .. 5 ] ) ]
 [1m[34mgap> [0m[31mUpperCentralSeriesOfGroup(G);
 [0m[ Group(()) ]
 [1m[34mgap> [0m[31mCharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
