@@ -2510,18 +2510,7 @@ class WebAbstractGroup(WebObj):
                                       transitive_expressions_knowl))
                 
                 # Display code snippets for transitive group representations
-                #code_cmd = ' <tr> <td colspan="6"> '
-                #for trans in self.transitive_friends:
-                #    trans_data = {"deg":trans.split('T')[0], "t":trans.split('T')[1]}
-                #    code_cmd += self.create_short_snippet('transitive').format(**trans_data)+' '
-                #code_cmd += '</td> </tr> '
-                #code_cmd = ""
-
                 code_cmd = " ".join([self.create_short_snippet(trans) for trans in self.transitive_friends])
-                code_html = f'<tr><td colspan="6">{code_cmd}</td></tr>'
-                #print("****", rep_content)
-                #print("****", code_cmd)
-                #print("****HTML****", code_html)
                 return rep_content + f'<tr><td colspan="6">{code_cmd}</td></tr>'
 
             elif rtype == "semidirect":
@@ -2878,7 +2867,6 @@ class WebAbstractGroup(WebObj):
     # e.g. for Lie type representations or transitive groups
     def create_short_snippet(self,item):
         snippet = CodeSnippet(self.code_snippets(), item)
-        print("****TEST***", snippet.place_code())
         return snippet.place_code()
 
     @lazy_attribute
@@ -3074,7 +3062,7 @@ class WebAbstractGroup(WebObj):
                         lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
 
                         if qLie.is_prime():
-                            # Construct Lie code snippet commands using the GLFp code snippet commands
+                            # Construct Lie code snippets using the GLFp code snippet commands
                             e = libgap.One(GF(qLie))
                             LFpsplit = [split_matrix_list_Fp(mat, nLie, e) for mat in lie_mats]
                             LFpsage = "["+", ".join(["MS("+str(split_matrix_list(mat, nLie))+")" for mat in lie_mats])+"]"
@@ -3082,7 +3070,7 @@ class WebAbstractGroup(WebObj):
                             lie_data = {'LFpsplit':LFpsplit, 'LFpsage':LFpsage, 'LFposcar':LFposcar, 'nFp':nLie, 'Fp':qLie}
                             lie_code_snippet = code['GLFp'][lang].format(**lie_data)
                         else:
-                            # Construct Lie code snippet commands using the GLFq code snippet commands
+                            # Construct Lie code snippets using the GLFq code snippet commands
                             LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
                             LFqsage = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                             LFqoscar = "["+", ".join(["matrix(GF("+str(qLie)+"), "+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
@@ -3125,6 +3113,11 @@ class WebAbstractGroup(WebObj):
             code[trans] = dict()
 
             for lang in code['prompt']:
+
+                # Oscar currently gives error for "transitive_group(1, 1)"  (can remove once fixed)
+                if (trans == "1T1") and (lang == "oscar"):
+                    continue
+
                 code[trans][lang] = code["transitive"][lang].format(**trans_data)
                 code["transitive_all"][lang] += code[trans][lang]+"\n"
 

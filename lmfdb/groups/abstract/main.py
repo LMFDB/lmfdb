@@ -2583,8 +2583,7 @@ sorted_code_names = ["code_description", "order", "exponent", "automorphism_grou
 
 @abstract_page.route("/<label>/codedownload/<download_type>")
 def download_group_code(label, download_type):
-    #try:
-    if 1==1:
+    try:
         grp = WebAbstractGroup(label)
         code_snippets = grp.code_snippets()
 
@@ -2602,8 +2601,8 @@ def download_group_code(label, download_type):
 
         code = CodeSnippet(code_snippets)
         response = make_response(code.export_code(label, download_type, sorted_code_names))
-    #except Exception as err:
-    #    return abort(404, str(err))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 

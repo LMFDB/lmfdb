@@ -91,16 +91,6 @@ julia> character_degrees(G)
 MSet{ZZRingElem} with 1 element:
   1
 
-julia> transitive_group(1, 1)
-ERROR: ArgumentError: there are only 0 transitive groups of degree 1, not 1
-Stacktrace:
- [1] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/eRqDm/src/Assertions.jl:602 [inlined]
- [2] transitive_group(deg::Int64, i::Int64)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/libraries/transitivegroups.jl:98
- [3] top-level scope
-   @ none:1
-
 julia> abelian_invariants(G)
 ZZRingElem[]
 

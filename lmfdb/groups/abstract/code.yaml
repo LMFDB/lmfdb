@@ -109,7 +109,7 @@ GLFq:
     F = GF({Fq}); al = F.0; MS = MatrixSpace(F, {nFq}, {nFq})
     G = MatrixGroup({LFqsage})
   sage_gap: G = gap.new('Group({LFqsplit})')
-  oscar: G = matrix_group({LFqoscar})
+  oscar: F = GF({Fq}); al = gen(F); G = matrix_group({LFqoscar})
 
 
 transitive:
