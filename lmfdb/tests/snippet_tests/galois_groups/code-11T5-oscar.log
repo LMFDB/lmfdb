@@ -3,6 +3,9 @@
 julia> G = transitive_group(11, 5)
 Permutation group of degree 11
 
+julia> small_group_identification(G)
+(660, 13)
+
 julia> order(G)
 660
 

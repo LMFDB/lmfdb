@@ -50,7 +50,40 @@ true
 julia> is_supersolvable(G)
 true
 
-julia> conjugacy_classes(G) # Output not guaranteed to exactly match the LMFDB table
+julia> element_orders = [order(g) for g in elements(G)]
+1-element Vector{ZZRingElem}:
+ 1
+
+julia> orders = sort(unique(element_orders))
+1-element Vector{ZZRingElem}:
+ 1
+
+julia> println("Orders: ", orders)
+Orders: ZZRingElem[1]
+
+julia> element_counts = [count(==(n), element_orders) for n in orders]
+1-element Vector{Int64}:
+ 1
+
+julia> println("Elements: ", element_counts, " ", order(G))
+Elements: [1] 1
+
+julia> ccs = conjugacy_classes(G)
+1-element Vector{GAPGroupConjClass{PcGroup, PcGroupElem}}:
+ Conjugacy class of <identity> of ... in G
+
+julia> cc_orders = [order(representative(cc)) for cc in ccs]
+1-element Vector{ZZRingElem}:
+ 1
+
+julia> cc_counts = [count(==(n), cc_orders) for n in orders]
+1-element Vector{Int64}:
+ 1
+
+julia> println("Conjugacy classes: ", cc_counts, " ", length(ccs))
+Conjugacy classes: [1] 1
+
+julia> conjugacy_classes(G)  # Output not guaranteed to exactly match the LMFDB table
 1-element Vector{GAPGroupConjClass{PcGroup, PcGroupElem}}:
  Conjugacy class of <identity> of ... in G
 

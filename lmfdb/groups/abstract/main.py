@@ -2595,7 +2595,7 @@ def download_group_code(label, download_type):
                 for lang in code_snippets[rep]:
                     code_snippets[rep][lang] = code_snippets[rep][lang].replace("G = ", '').replace("G := ", '')
 
-        # We need to still assign the PC representation to a variable, for this command to work
+        # We need to still assign the PC representation to some variable (e.g. "GPC"), for this command to work
         if "presentation" in code_snippets:
             for lang in code_snippets["presentation"]:
                 code_snippets["presentation"][lang] = code_snippets["presentation"][lang].replace("G :=", "GPC :=").replace("G =", "GPC =").replace("G.", "GPC.").replace("G,", "GPC,")

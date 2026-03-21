@@ -46,7 +46,7 @@ sage: G.conjugacy_classes()  # Output not guaranteed to exactly match the LMFDB 
 sage: character_degrees = [c[0] for c in G.character_table()]
 sage: [[n, character_degrees.count(n)] for n in set(character_degrees)]
 [[1, 1]]
-sage: gap.new('PcGroupCode(0,1)'); 
+sage: GPC = gap.new('PcGroupCode(0,1)'); 
 sage: TransitiveGroup(1, 1)
 Transitive group number 1 of degree 1
 sage: G.quotient(G.commutator())

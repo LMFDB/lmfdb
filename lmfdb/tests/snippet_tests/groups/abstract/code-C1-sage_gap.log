@@ -34,15 +34,26 @@ sage: G.IsSolvableGroup()
 true
 sage: G.IsSupersolvableGroup()
 true
+sage: element_orders = [g.Order() for g in G.Elements()]
+sage: orders = sorted(list(set(element_orders)))
+sage: print("Orders:", orders)
+Orders: [1]
+sage: print("Elements:", [element_orders.count(n) for n in orders], G.Order())
+Elements: [1] 1
+sage: cc_orders = [cc.Representative().Order() for cc in G.ConjugacyClasses()]
+sage: print("Conjugacy classes:", [cc_orders.count(n) for n in orders], len(cc_orders))
+Conjugacy classes: [1] 1
 sage: G.ConjugacyClasses()  # Output not guaranteed to exactly match the LMFDB table
 [ <identity> of ...^G ]
 sage: G.CharacterDegrees()
 [ [ 1, 1 ] ]
-sage: gap.new('PcGroupCode(0,1)'); 
+sage: GPC = gap.new('PcGroupCode(0,1)'); 
 sage: libgap.TransitiveGroup(1, 1)
 fail
 sage: G.AbelianInvariants()
 [  ]
+sage: G.FactorGroup(G.DerivedSubgroup())
+<pc group of size 1 with 0 generators>
 sage: G.AbelianInvariantsMultiplier()
 [  ]
 sage: G.CommutatorLength()

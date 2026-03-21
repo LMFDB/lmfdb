@@ -3086,7 +3086,7 @@ class WebAbstractGroup(WebObj):
                             LFqsplit = "[" + ",".join(split_matrix_list_Fq(mat, nLie, qLie) for mat in lie_mats) + "]"
                             LFqsage = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                             LFqoscar = "["+", ".join(["matrix(GF("+str(qLie)+"), "+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
-                            lie_data = {'LFqsplit':LFqsplit, 'LFqsage':LFqsage, 'LFposcar':LFposcar, 'nFq':nLie, 'Fq':qLie}
+                            lie_data = {'LFqsplit':LFqsplit, 'LFqsage':LFqsage, 'LFqoscar':LFqoscar, 'nFq':nLie, 'Fq':qLie}
                             lie_code_snippet = code['GLFq']['sage'].format(**lie_data)
 
                         if top_lie[lang] is None:

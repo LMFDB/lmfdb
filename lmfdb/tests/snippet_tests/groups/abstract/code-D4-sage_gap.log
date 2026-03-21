@@ -34,39 +34,20 @@ sage: G.IsSolvableGroup()
 true
 sage: G.IsSupersolvableGroup()
 true
+sage: element_orders = [g.Order() for g in G.Elements()]
+sage: orders = sorted(list(set(element_orders)))
+sage: print("Orders:", orders)
+Orders: [1, 2, 4]
+sage: print("Elements:", [element_orders.count(n) for n in orders], G.Order())
+Elements: [1, 5, 2] 8
+sage: cc_orders = [cc.Representative().Order() for cc in G.ConjugacyClasses()]
+sage: print("Conjugacy classes:", [cc_orders.count(n) for n in orders], len(cc_orders))
+Conjugacy classes: [1, 3, 1] 5
 sage: G.ConjugacyClasses()  # Output not guaranteed to exactly match the LMFDB table
 [ <identity> of ...^G, f1^G, f2^G, f3^G, f1*f2^G ]
 sage: G.CharacterDegrees()
 [ [ 1, 4 ], [ 2, 1 ] ]
-sage: gap.new('PcGroupCode(294,8)'); a = G.1; b = G.2;
-[0;31m---------------------------------------------------------------------------[0m
-[0;31mGAPError[0m                                  Traceback (most recent call last)
-File [0;32m/scratch/sage/sage-10.3/src/sage/libs/gap/element.pyx:727[0m, in [0;36msage.libs.gap.element.GapElement.__getattr__[0;34m()[0m
-[1;32m    726[0m     proxy = make_GapElement_MethodProxy\
-[0;32m--> 727[0m         (self.parent(), gap_eval(name), self)
-[1;32m    728[0m except GAPError:
-
-File [0;32m/scratch/sage/sage-10.3/src/sage/libs/gap/util.pyx:364[0m, in [0;36msage.libs.gap.util.gap_eval[0;34m()[0m
-[1;32m    363[0m GAP_Enter()
-[0;32m--> 364[0m result = GAP_EvalString(cmd)
-[1;32m    365[0m # We can assume that the result object is a GAP PList (plain list)
-
-[0;31mGAPError[0m: Error, Variable: 'gen' must have a value
-
-During handling of the above exception, another exception occurred:
-
-[0;31mAttributeError[0m                            Traceback (most recent call last)
-Cell [0;32mIn[102], line 1[0m
-[0;32m----> 1[0m gap[38;5;241m.[39mnew([38;5;124m'[39m[38;5;124mPcGroupCode(294,8)[39m[38;5;124m'[39m); a [38;5;241m=[39m [43mG[49m[38;5;241;43m.[39;49m[43mgen[49m([38;5;241m1[39m); b [38;5;241m=[39m G[38;5;241m.[39mgen([38;5;241m2[39m);
-
-File [0;32m/scratch/sage/sage-10.3/src/sage/libs/gap/element.pyx:729[0m, in [0;36msage.libs.gap.element.GapElement.__getattr__[0;34m()[0m
-[1;32m    727[0m         (self.parent(), gap_eval(name), self)
-[1;32m    728[0m except GAPError:
-[0;32m--> 729[0m     raise AttributeError(f"'{name}' is not defined in GAP")
-[1;32m    730[0m if not proxy.is_function():
-[1;32m    731[0m     raise AttributeError(f"'{name}' does not define a GAP function")
-
-[0;31mAttributeError[0m: 'gen' is not defined in GAP
+sage: GPC = gap.new('PcGroupCode(294,8)'); a = GPC.1; b = GPC.2;
 sage: gap.new('Group( (1,2), (1,3)(2,4), (1,2)(3,4) )')
 Group( [ (1,2), (1,3)(2,4), (1,2)(3,4) ] )
 sage: gap.new('Group([[[1, 0], [0, -1]], [[0, -1], [1, 0]]])')
@@ -81,6 +62,8 @@ sage: libgap.TransitiveGroup(8, 4)
 D_8(8)=[4]2
 sage: G.AbelianInvariants()
 [ 2, 2 ]
+sage: G.FactorGroup(G.DerivedSubgroup())
+Group([ f1, f2, <identity> of ... ])
 sage: G.AbelianInvariantsMultiplier()
 [ 2 ]
 sage: G.CommutatorLength()

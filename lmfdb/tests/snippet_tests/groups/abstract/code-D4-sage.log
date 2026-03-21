@@ -59,18 +59,7 @@ Matrix group over Finite Field of size 3 with 3 generators (
 [2 0]  [2 0]  [0 2]
 [0 1], [0 2], [2 0]
 )
-sage: gap.new('PcGroupCode(294,8)'); a = G.1; b = G.2;
-[0;31m---------------------------------------------------------------------------[0m
-[0;31mIndexError[0m                                Traceback (most recent call last)
-Cell [0;32mIn[197], line 1[0m
-[0;32m----> 1[0m gap[38;5;241m.[39mnew([38;5;124m'[39m[38;5;124mPcGroupCode(294,8)[39m[38;5;124m'[39m); a [38;5;241m=[39m G[38;5;241m.[39mgen([38;5;241m1[39m); b [38;5;241m=[39m [43mG[49m[38;5;241;43m.[39;49m[43mgen[49m[43m([49m[38;5;241;43m2[39;49m[43m)[49m;
-
-File [0;32m/scratch/sage/sage-10.3/src/sage/groups/perm_gps/permgroup.py:1362[0m, in [0;36mPermutationGroup_generic.gen[0;34m(self, i)[0m
-[1;32m   1360[0m     [38;5;28;01melse[39;00m:
-[1;32m   1361[0m         [38;5;28;01mraise[39;00m [38;5;167;01mValueError[39;00m([38;5;124m"[39m[38;5;124myou must specify which generator you want[39m[38;5;124m"[39m)
-[0;32m-> 1362[0m [38;5;28;01mreturn[39;00m [43mgens[49m[43m[[49m[43mi[49m[43m][49m
-
-[0;31mIndexError[0m: tuple index out of range
+sage: GPC = gap.new('PcGroupCode(294,8)'); a = GPC.1; b = GPC.2;
 sage: PermutationGroup(['(1,2)', '(1,3)(2,4)', '(1,2)(3,4)'])
 Permutation Group with generators [(1,2), (1,2)(3,4), (1,3)(2,4)]
 sage: MS = MatrixSpace(Integers(), 2, 2)

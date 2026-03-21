@@ -51,7 +51,55 @@ true
 julia> is_supersolvable(G)
 true
 
-julia> conjugacy_classes(G) # Output not guaranteed to exactly match the LMFDB table
+julia> element_orders = [order(g) for g in elements(G)]
+6-element Vector{ZZRingElem}:
+ 1
+ 2
+ 2
+ 3
+ 3
+ 2
+
+julia> orders = sort(unique(element_orders))
+3-element Vector{ZZRingElem}:
+ 1
+ 2
+ 3
+
+julia> println("Orders: ", orders)
+Orders: ZZRingElem[1, 2, 3]
+
+julia> element_counts = [count(==(n), element_orders) for n in orders]
+3-element Vector{Int64}:
+ 1
+ 3
+ 2
+
+julia> println("Elements: ", element_counts, " ", order(G))
+Elements: [1, 3, 2] 6
+
+julia> ccs = conjugacy_classes(G)
+3-element Vector{GAPGroupConjClass{PermGroup, PermGroupElem}}:
+ Conjugacy class of () in G
+ Conjugacy class of (1,2) in G
+ Conjugacy class of (1,2,3) in G
+
+julia> cc_orders = [order(representative(cc)) for cc in ccs]
+3-element Vector{ZZRingElem}:
+ 1
+ 2
+ 3
+
+julia> cc_counts = [count(==(n), cc_orders) for n in orders]
+3-element Vector{Int64}:
+ 1
+ 1
+ 1
+
+julia> println("Conjugacy classes: ", cc_counts, " ", length(ccs))
+Conjugacy classes: [1, 1, 1] 3
+
+julia> conjugacy_classes(G)  # Output not guaranteed to exactly match the LMFDB table
 3-element Vector{GAPGroupConjClass{PermGroup, PermGroupElem}}:
  Conjugacy class of () in G
  Conjugacy class of (1,2) in G
@@ -68,36 +116,16 @@ GL(2,2)
 julia> SL(2,2)
 SL(2,2)
 
-julia> permutation_group(None, (2,3), (1,3,2))
-ERROR: UndefVarError: `None` not defined in `Main`
-Suggestion: check for spelling errors or missing imports.
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> @permutation_group(3, (2,3), (1,3,2))
+Permutation group of degree 3
 
-julia> matrix_group([[[0, -1], [-1, 0]], [[-1, -1], [1, 0]]])
-ERROR: MethodError: no method matching matrix_group(::Vector{Vector{Vector{Int64}}})
-The function `matrix_group` exists, but no method is defined for this combination of argument types.
+julia> matrix_group([matrix(ZZ, [[0, -1], [-1, 0]]), matrix(ZZ, [[-1, -1], [1, 0]])])
+Matrix group of degree 2
+  over integer ring
 
-Closest candidates are:
-  matrix_group(!Matched::Int64, !Matched::Ring)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/matrices/MatGrp.jl:102
-  matrix_group(!Matched::Int64, !Matched::Ring, !Matched::Any; check)
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/src/Groups/matrices/MatGrp.jl:103
-  matrix_group(!Matched::Type{CyclotomicField}, !Matched::MatrixGroup{var"#s791", T} where {var"#s791"<:QQAbFieldElem, T<:MatElem{var"#s791"}})
-   @ Oscar ~/.julia/packages/Oscar/eTXAp/experimental/GModule/src/GModule.jl:982
-  ...
-
-Stacktrace:
- [1] top-level scope
-   @ none:1
-
-julia> matrix_group([[[ Z(2)^0, Z(2)^0 ], [ 0*Z(2), Z(2)^0 ]], [[ 0*Z(2), Z(2)^0 ], [ Z(2)^0, 0*Z(2) ]]])
-ERROR: UndefVarError: `Z` not defined in `Main`
-Suggestion: check for spelling errors or missing imports.
-Stacktrace:
- [1] top-level scope
-   @ none:1
+julia> matrix_group([matrix(GF(2), [[1, 1], [0, 1]]), matrix(GF(2), [[0, 1], [1, 0]])])
+Matrix group of degree 2
+  over prime field of characteristic 2
 
 julia> transitive_group(3, 2)
 Symmetric group of degree 3

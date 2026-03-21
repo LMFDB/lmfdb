@@ -11,16 +11,15 @@
 [0m<trivial group>
 [1m[34mgap> [0m[31mCompositionSeries(G);
 [0m[ Group([  ]) ]
-[1m[34mgap> [0m[31mNilpotencyClassOfGroup(G);
-[0m0
-[1m[34mgap> [0m[31mDerivedLength(G);
+[1m[34mgap> [0m[31mif IsNilpotentGroup(G) then NilpotencyClassOfGroup(G); fi;
+[0m[1m[34mgap> [0m[31mDerivedLength(G);
 [0m0
 [1m[34mgap> [0m[31mIsAbelian(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsCyclic(G);
 [0mtrue
-[1m[34mgap> [0mIsElementaryAbelian(G);
-[31m[0mtrue
+[1m[34mgap> [0m[31mIsElementaryAbelian(G);
+[0mtrue
 [1m[34mgap> [0m[31mIsMonomialGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsNilpotentGroup(G);
@@ -53,20 +52,20 @@
 [0m[ 1 ]
 [1m[34mgap> [0m[31mPrint("Conjugacy classes: ", cc_counts, " ", Length(ConjugacyClasses(G)), "\n");
 [0mConjugacy classes: [ 1 ] 1
-[1m[34mgap> [0m[31mConjugacyClasses(G);   # Output not guaranteed to exactly match the LMFDB table
-[0m[ <identity> of ...^G ]
+[1m[34mgap> [0mConjugacyClasses(G);  # Output not guaranteed to exactly match the LMFDB table
+[31m[0m[ <identity> of ...^G ]
 [1m[34mgap> [0m[31mCharacterDegrees(G);
 [0m[ [ 1, 1 ] ]
-[1m[34mgap> PcGroupCode(0,1); 
-[0m[31m[0mGroup([  ])
+[1m[34mgap> [0m[31mGPC := PcGroupCode(0,1); 
+[0mGroup([  ])
 [1m[34mgap> [0m[31mTransitiveGroup(1, 1);
 [0mfail
 [1m[34mgap> [0m[31mAbelianInvariants(G);
 [0m[  ]
 [1m[34mgap> [0m[31mFactorGroup(G, DerivedSubgroup(G));
 [0m<pc group of size 1 with 0 generators>
-[1m[34mgap> AbelianInvariantsMultiplier(G);
-[0m[31m[0m[  ]
+[1m[34mgap> [0m[31mAbelianInvariantsMultiplier(G);
+[0m[  ]
 [1m[34mgap> [0m[31mCommutatorLength(G);
 [0m1
 [1m[34mgap> [0m[31mAllSubgroups(G);
