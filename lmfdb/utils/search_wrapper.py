@@ -388,7 +388,7 @@ class SearchWrapper(Wrapper):
                     result.extend(item)
             return result
 
-        # Build field mappings from SearchColumns (which map to actual database columns)
+        # Build field mappings from SearchColumns 
         # This ensures we use database column names rather than search box names
         table = self.table
         col_types = table.col_type
@@ -399,10 +399,10 @@ class SearchWrapper(Wrapper):
             diagram_fields = {}
             for col in columns.columns:
                 # Use first orig column as the database column name
-                db_col = col.orig[0] if col.orig else col.name
+                db_col = col.name if col.name else col.orig[0] 
                 # db_col = col.name
                 if db_col in col_types:
-                    # clean up short titles
+                    # clean up short titles - get rid of latex
                     diagram_fields[db_col] = col.short_title.replace("$", "") \
                                                              .replace(r"\(", "") \
                                                              .replace(r"\)", "") \
@@ -502,10 +502,9 @@ class SearchWrapper(Wrapper):
             x_key = info.get("x-axis")
             y_key = info.get("y-axis")
             col_key = info.get("color")
-
             # Get label_builder from diagram_opts if provided (for nonstandard labeling)
             label_builder = opts.get("label_builder")
-
+            
             # Build d3 data
             info["d3_data"] = []
             for r in res:
@@ -527,8 +526,8 @@ class SearchWrapper(Wrapper):
                     "label": label,
                 })
             # Set axis labels for display
-            info["x-axis-label"] = diagram_fields.get(info.get("x-axis", ""))
-            info["y-axis-label"] = diagram_fields.get(info.get("y-axis", ""))
+            info["x-axis-label"] = diagram_fields[x_key]
+            info["y-axis-label"] = diagram_fields[y_key]
 
             return render_template(template, info=info, title=title, **template_kwds)
 

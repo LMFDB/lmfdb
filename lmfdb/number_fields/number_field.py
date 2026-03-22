@@ -915,7 +915,13 @@ class NFDownloader(Downloader):
              bread=lambda:[('Number fields', url_for(".number_field_render_webpage")),
                            ('Search results', '.')],
              learnmore=learnmore_list,
-             diagram_opts={"x_axis_default": "degree", "y_axis_default": "disc_abs", "color_default": "class_number"})
+             diagram_opts={
+                 "title": "Number field diagram search",
+                 "bread": lambda: [('Number fields', url_for(".number_field_render_webpage")),
+                           ('Diagram search results', '.')],
+                 "x_axis_default": "disc",
+                 "y_axis_default": "regulator",
+                 "color_default": "num_ram"})
 def number_field_search(info, query):
     parse_posints(info,query,'degree')
     parse_galgrp(info,query, qfield=('galois_label', 'degree'))
@@ -1175,7 +1181,8 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, or polynomial"
-
+    has_diagram = False
+    
     def __init__(self):
         degree = TextBox(
             name="degree",
