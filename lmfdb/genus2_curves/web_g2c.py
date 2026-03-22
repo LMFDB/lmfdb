@@ -16,9 +16,9 @@ from lmfdb.cluster_pictures.web_cluster_picture import cp_display_knowl
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import transitive_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl, st_anchor, convert_label
-from lmfdb.genus2_curves import g2c_logger
 from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_label, AbvarExists
 from lmfdb.abvar.fq.main import url_for_label
+from lmfdb.logger import logger
 
 from sage.all import latex, ZZ, QQ, CC, lcm, gcd, PolynomialRing, implicit_plot, point, real, sqrt, var, nth_prime
 from sage.plot.text import text
@@ -811,16 +811,16 @@ class WebG2C():
                 raise KeyError("Genus 2 curve %s not found in database." % label)
         endo = db.g2c_endomorphisms.lookup(curve['label'])
         if not endo:
-            g2c_logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
+            logger.error("Endomorphism data for genus 2 curve %s not found in database." % label)
             raise KeyError("Endomorphism data for genus 2 curve %s not found in database." % label)
         tama = list(db.g2c_tamagawa.search({"label": curve['label']}))
         if len(tama) == 0:
-            g2c_logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
+            logger.error("Tamagawa number data for genus 2 curve %s not found in database." % label)
             raise KeyError("Tamagawa number data for genus 2 curve %s not found in database." % label)
         if len(slabel) == 4:
             ratpts = db.g2c_ratpts.lookup(curve['label'])
             if not ratpts:
-                g2c_logger.warning("No rational points data for genus 2 curve %s found in database." % label)
+                logger.warning("No rational points data for genus 2 curve %s found in database." % label)
         else:
             ratpts = {}
         clus = []
@@ -832,7 +832,7 @@ class WebG2C():
                     clusthmb = clusentry['thumbnail']
                     clus.append([x['p'], x['cluster_label'], clusthmb])
                 except Exception:
-                    g2c_logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
+                    logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
                     raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
         nonsurj = curve.get('non_maximal_primes')
         galrep = list(db.g2c_galrep.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))

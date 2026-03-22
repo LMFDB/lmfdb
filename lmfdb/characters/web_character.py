@@ -42,6 +42,8 @@ The design is the following:
 
 """
 
+import os
+import yaml
 from flask import url_for
 from collections import defaultdict
 from sage.databases.cremona import cremona_letter_code
@@ -51,13 +53,12 @@ from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb import db
 from lmfdb.utils import prop_int_pretty
 from lmfdb.utils.utilities import num2letters
-from lmfdb.logger import make_logger
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
 from lmfdb.characters.TinyConrey import (ConreyCharacter, kronecker_symbol,
                 symbol_numerator, PariConreyGroup, get_sage_genvalues)
 from lmfdb.characters.utils import url_character, complex2str
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
-logger = make_logger("DC")
+from lmfdb.logger import logger
 
 
 def parity_string(n):
@@ -111,6 +112,7 @@ class WebCharObject():
             d[k] = getattr(self, k, None)
             if d[k] is None:
                 logger.debug('[DC warning] ### key[%s] is None' % k)
+        d["code"] = self.code_snippets()
         logger.info('[DC] collected for %s' % self.__class__.__name__)
         return d
 
@@ -153,6 +155,17 @@ class WebCharObject():
     def charvalues(self, chi):
         return [ self.texlogvalue(chi.conreyangle(x), tag=True) for x in self.Gelts() ]
 
+    @cached_method
+    def code_snippets(self):
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+        code['show'] = { lang:'' for lang in code['prompt'] }
+
+        for prop in ["group_init", "group_structure"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**{'modulus': self.modulus})
+        return code
+
 #############################################################################
 ###  Dirichlet type
 
@@ -166,7 +179,6 @@ class WebDirichlet(WebCharObject):
     def _compute(self):
         if self.modlabel:
             self.modulus = int(self.modlabel)
-        self.codelangs = ('pari', 'sage')
 
     def _char_desc(self, c, mod=None, prim=None):
         """ num is the number """
@@ -325,12 +337,6 @@ class WebDirichlet(WebCharObject):
         deftex = r'\sum_{r\in %s} %s e\left(\frac{%s}{%s}\right)' % (Gtex,chitexr,n,d)
         return r"\(\displaystyle \tau_{%s}(%s) = %s = %s \)" % (val, chitex, deftex, g)
 
-    @lazy_attribute
-    def codegauss(self):
-        return {
-            'sage': ['chi.gauss_sum(a)'],
-            'pari': 'znchargauss(g,chi,a)' }
-
     def jacobi_sum(self, val):
 
         mod, num = self.modulus, self.number
@@ -365,11 +371,6 @@ class WebDirichlet(WebCharObject):
         deftex = r'\sum_{r\in %s} %s %s' % (Gtex,chitexr,psitex1r)
         return r"\( \displaystyle J(%s,%s) = %s = %s \)" % (chitex, psitex, deftex, latex(jacobi_sum))
 
-    @lazy_attribute
-    def codejacobi(self):
-        return { 'sage': ['chi.jacobi_sum(n)']
-        }
-
     def kloosterman_sum(self, arg):
         a, b = map(int, arg.split(','))
         modulus, number = self.modulus, self.number
@@ -392,10 +393,6 @@ class WebDirichlet(WebCharObject):
              \chi_{%s}(%s,r) e\left(\frac{%s r + %s r^{-1}}{%s}\right)
         = %s \)""" % (a, b, modulus, number, modulus, modulus, number, a, b, modulus, k)
 
-    @lazy_attribute
-    def codekloosterman(self):
-        return { 'sage': ['chi.kloosterman_sum(a,b)']}
-
     def value(self, val):
         val = int(val)
         chartex = self.char2tex(self.modulus, self.number, val=val, tag=False)
@@ -405,11 +402,6 @@ class WebDirichlet(WebCharObject):
             val = 0
         return r'\(%s=%s\)' % (chartex, val)
 
-    @lazy_attribute
-    def codevalue(self):
-        return { 'sage': 'chi(x) # x integer',
-                 'pari': 'chareval(g,chi,x) \\\\ x integer, value in Q/Z' }
-
 
 #############################################################################
 ###  Characters
@@ -418,20 +410,19 @@ class WebChar(WebCharObject):
     """
     Class for presenting a character on a web page
     """
-    _keys = [ 'title', 'codelangs', 'type',
+    _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol',
-              'conductor',
-              'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
+              'number', 'numlabel', 'texname',
+              'symbol',
+              'conductor', 'condlabel',
+              'isprimitive',
               'inducing',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'indlabel', 'order', 'parity',
+              'isreal', 'generators', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman']
+              'charsums']
 
     def __init__(self, **args):
         self.maxcols = 10
@@ -441,11 +432,6 @@ class WebChar(WebCharObject):
     @lazy_attribute
     def order(self):
         return self.chi.order
-
-    @lazy_attribute
-    def codeorder(self):
-        return { 'sage': 'chi.multiplicative_order()',
-                 'pari': 'charorder(g,chi)' }
 
     @lazy_attribute
     def isprimitive(self):
@@ -576,7 +562,6 @@ class WebDBDirichlet(WebDirichlet):
                 self.chi = ConreyCharacter(self.modulus, self.number)
         if not self.maxcols:
             self.maxcols = 30
-        self.codelangs = ('pari', 'sage')
         self._compute()
 
     @lazy_attribute
@@ -702,10 +687,10 @@ class WebCharGroup(WebCharObject):
     self.G is the underlying group
     """
     headers = [ 'order', 'primitive']
-    _keys = [ 'title', 'codelangs', 'type',
-            'modulus', 'modlabel', 'texname', 'codeinit',
-            'structure', 'structure_group_knowl', 'codestruct', 'order',
-            'codeorder', 'gens', 'generators', 'codegen', 'valuefield', 'vflabel',
+    _keys = [ 'title', 'type',
+            'modulus', 'modlabel', 'texname',
+            'structure', 'structure_group_knowl', 'order',
+            'gens', 'generators', 'valuefield', 'vflabel',
             'vfpol', 'headers', 'groupelts', 'contents',
             'properties', 'friends', 'rowtruncate', 'coltruncate']
 
@@ -748,18 +733,8 @@ class WebCharGroup(WebCharObject):
         return abstract_group_display_knowl(dblabel, f"{self.structure}")
 
     @lazy_attribute
-    def codestruct(self):
-        return {'sage':'G.invariants()',
-                'pari':'g.cyc'}
-
-    @lazy_attribute
     def order(self):
         return euler_phi(self.modulus)
-
-    @lazy_attribute
-    def codeorder(self):
-        return {'sage': 'G.order()',
-                'pari': 'g.no' }
 
     @lazy_attribute
     def modulus(self):
@@ -818,31 +793,19 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
         logger.debug('[DC] WebDirichletGroup Computed')
 
     @lazy_attribute
-    def codeinit(self):
-        return {
-                'sage': [
-                    'H = DirichletGroup(%i)' % (self.modulus)
-                    ],
-                'pari': 'g = idealstar(,%i,2)' % (self.modulus)
-                }
-
-    @lazy_attribute
     def title(self):
         return r"Group of Dirichlet characters of modulus %s" % (self.modulus)
 
     @lazy_attribute
-    def codegen(self):
-        return {'sage': 'H.gens()',
-                'pari': 'g.gen' }
-
-    @lazy_attribute
-    def codestruct(self):
-        return {'sage': 'H.invariants()',
-                'pari': 'g.cyc'}
-
-    @lazy_attribute
     def order(self):
         return euler_phi(self.modulus)
+
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
+        # Adjust frontmatter for constructing group of Dirichlet characters
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("character", "character group of modulus")
+        return code
 
 
 class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
@@ -928,27 +891,25 @@ class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
         ]
         return values
 
-
 class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     """
     A class using data stored in the database. Currently, this is all Dirichlet
     character orbits with modulus up to 100,000.
     """
-    _keys = [ 'title', 'codelangs', 'type',
+    _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol',
+              'number', 'numlabel', 'texname',
+              'symbol',
               'conductor',
-              'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
+              'condlabel',
+              'isprimitive',
               'inducing',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'indlabel', 'order', 'parity',
+              'isreal', 'generators', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal']
+              'charsums', 'orbit_label', 'orbit_index', 'isminimal']
 
     def __init__(self, **kwargs):
         self.maxcols = 30
@@ -1033,53 +994,25 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
     def next(self):
         return None
 
-    @lazy_attribute
-    def codeinit(self):
-        return {
-            'sage': [
-                'from sage.modular.dirichlet import DirichletCharacter',
-                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(self.modulus, self.chi.sage_zeta_order(self.order)),
-                'M = H._module',
-                'chi = DirichletCharacter(H, M([{}]))'.format(
-                    ','.join(str(val) for val in self._genvalues_for_code)
-                ),
-            ],
-            'pari': '[g,chi] = znchar(Mod(%i,%i))' % (self.number, self.modulus),
-        }
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
 
-    @lazy_attribute
-    def codeisprimitive(self):
-        return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(g,chi)==1' }
+        # Sage code in special case for modulus 1
+        if self.modulus == 1:
+            self._genvalues_for_code = []
+            # Sage throws error for "chi.fixed_field()" if modulus is 1
+            code['kernel_field'].pop('sage')
 
-    @lazy_attribute
-    def codecond(self):
-        return { 'sage': 'chi.conductor()',
-                 'pari': 'znconreyconductor(g,chi)' }
+        data = {'modulus': self.modulus, 'number' : self.number,
+                'symbol_num' : self.symbol_numerator(),
+                'sage_zeta_order' : self.chi.sage_zeta_order(self.order),
+                'sage_dirichlet_gens' : ','.join(str(val) for val in self._genvalues_for_code)}
 
-    @lazy_attribute
-    def codeparity(self):
-        return { 'sage': 'chi.is_odd()',
-                 'pari': 'zncharisodd(g,chi)' }
-
-    @lazy_attribute
-    def codesymbol(self):
-        m = self.symbol_numerator()
-        if m:
-            return { 'sage': 'kronecker_character(%i)' % m,
-                     'pari': 'znchartokronecker(g,chi)'
-                     }
-        return None
-
-    @lazy_attribute
-    def codegaloisorbit(self):
-        return {
-            'sage': ['chi.galois_orbit()'],
-            'pari': [
-                'order = charorder(g,chi)',
-                '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
-            ]
-        }
+        for prop in ["character_init", "kronecker_symbol"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**data)
+        return code
 
 
 class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
@@ -1090,20 +1023,19 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     headers = ['Character']
 
-    _keys = [ 'title', 'codelangs', 'type',
+    _keys = [ 'title', 'type',
               'modulus', 'modlabel',
-              'number', 'numlabel', 'texname', 'codeinit',
-              'symbol', 'codesymbol','headers',
-              'conductor', 'condlabel', 'codecond',
-              'isprimitive', 'codeisprimitive',
+              'number', 'numlabel', 'texname',
+              'symbol', 'headers',
+              'conductor', 'condlabel',
+              'isprimitive',
               'inducing','rowtruncate','ind_orbit_label',
-              'indlabel', 'codeind', 'order', 'codeorder', 'parity', 'codeparity',
-              'isreal', 'generators', 'codegenvalues', 'genvalues', 'logvalues',
-              'groupelts', 'values', 'codeval', 'galoisorbit', 'codegaloisorbit',
+              'indlabel', 'order', 'parity',
+              'isreal', 'generators', 'genvalues', 'logvalues',
+              'groupelts', 'values', 'galoisorbit',
               'valuefield', 'vflabel', 'vfpol', 'kerfield', 'kflabel',
               'kfpol', 'contents', 'properties', 'friends', 'coltruncate',
-              'charsums', 'codegauss', 'codejacobi', 'codekloosterman',
-              'orbit_label', 'orbit_index', 'isminimal', 'isorbit', 'degree']
+              'charsums', 'orbit_label', 'orbit_index', 'isminimal', 'isorbit', 'degree']
 
     def __init__(self, **kwargs):
         self.type = "Dirichlet"
@@ -1121,7 +1053,6 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
             self.H = PariConreyGroup(self.modulus)
             if self.number:
                 self.chi = ConreyCharacter(self.modulus, self.number)
-        self.codelangs = ('pari', 'sage')
         self.orbit_label = kwargs.get('orbit_label')  # this is what the user inserted, so might be banana
         self.label = "{}.{}".format(self.modulus, self.orbit_label)
         self.maxrows = 30
@@ -1251,15 +1182,6 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
     def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
 
-    @lazy_attribute
-    def codesymbol(self):
-        m = self.symbol_numerator()
-        if m:
-            return { 'sage': 'kronecker_character(%i)' % m,
-                     'pari': 'znchartokronecker(g,chi)'
-                     }
-        return None
-
     def _determine_values(self, valuepairs, order):
         """
         Translate the db's values into the actual values.
@@ -1276,8 +1198,10 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         else:
             self.groupelts = self.groupelts[:-1] if len(self.groupelts) < 13 else self.groupelts[:12]
 
-    @lazy_attribute
-    def codeinit(self):
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
+
         self.exnum = self.galorbnums[0]
         self.exchi = ConreyCharacter(self.modulus, self.exnum)
         vals = self.exchi.genvalues
@@ -1286,38 +1210,22 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         self._genvalues_for_code = get_sage_genvalues(self.modulus,
                                     self.order, vals, sage_zeta_order)
 
-        return {
-            'sage': [
-                'from sage.modular.dirichlet import DirichletCharacter',
-                'H = DirichletGroup({}, base_ring=CyclotomicField({}))'.format(
-                    self.modulus, sage_zeta_order),
-                'M = H._module',
-                'chi = DirichletCharacter(H, M([{}]))'.format(
-                    ','.join(str(val) for val in self._genvalues_for_code)
-                ),
-                'chi.galois_orbit()'
-            ],
-            'pari': [
-                '[g,chi] = znchar(Mod(%i,%i))' % (self.exnum, self.modulus),
-                'order = charorder(g,chi)',
-                '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]'
-            ]
-        }
+        data = {'modulus': self.modulus, 'number' : self.exnum,
+                'symbol_num' : self.symbol_numerator(),
+                'sage_zeta_order' : sage_zeta_order,
+                'sage_dirichlet_gens' : ','.join(str(val) for val in self._genvalues_for_code)}
 
-    @lazy_attribute
-    def codeisprimitive(self):
-        return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(g,chi)==1' }
+        for prop in ["character_init", "kronecker_symbol"]:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**data)
 
-    @lazy_attribute
-    def codecond(self):
-        return { 'sage': 'chi.conductor()',
-                 'pari': 'znconreyconductor(g,chi)' }
-
-    @lazy_attribute
-    def codeparity(self):
-        return { 'sage': 'chi.is_odd()',
-                 'pari': 'zncharisodd(g,chi)' }
+        # Adjust some code snippets to construct orbit of Dirichlet character
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("character", "character orbit")
+        code["character_init"]["comment"] = code["character_init"]["comment"].replace("character", "character orbit")
+        for lang in code["character_init"]:
+            if lang != "comment":
+                code["character_init"][lang] += code["galois_orbit"][lang] + "\n"
+        return code
 
 
 class WebSmallDirichletGroup(WebDirichletGroup):
@@ -1326,7 +1234,6 @@ class WebSmallDirichletGroup(WebDirichletGroup):
         if self.modlabel:
             self.modulus = m = int(self.modlabel)
             self.H = Integers(m).unit_group()
-        self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
     def contents(self):
@@ -1352,7 +1259,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         self.modulus = int(self.modlabel)
         self.number = int(self.numlabel)
         self.chi = ConreyCharacter(self.modulus, self.number)
-        self.codelangs = ('pari', 'sage')
 
     @lazy_attribute
     def conductor(self):
@@ -1368,15 +1274,6 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
             return self.chi.indlabel
 
     @lazy_attribute
-    def codeinit(self):
-        return {
-          'sage': [
-                 'H = DirichletGroup(%i)' % (self.modulus),
-                 'chi = H[%i]' % (self.number) ],
-          'pari': '[g,chi] = znchar(Mod(%i,%i))' % (self.number,self.modulus),
-          }
-
-    @lazy_attribute
     def title(self):
         return r"Dirichlet character %s" % (self.texname)
 
@@ -1385,23 +1282,8 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
         return self.char2tex(self.modulus, self.number)
 
     @lazy_attribute
-    def codeisprimitive(self):
-        return { 'sage': 'chi.is_primitive()',
-                 'pari': '#znconreyconductor(g,chi)==1 \\\\ if not primitive returns [cond,factorization]' }
-
-    @lazy_attribute
-    def codecond(self):
-        return { 'sage': 'chi.conductor()',
-                 'pari': 'znconreyconductor(g,chi)' }
-
-    @lazy_attribute
     def parity(self):
         return (parity_string(-1),parity_string(1))[self.chi.is_even()]
-
-    @lazy_attribute
-    def codeparity(self):
-        return { 'sage': 'chi.is_odd()',
-                 'pari': 'zncharisodd(g,chi)' }
 
     def symbol_numerator(self):
         """ chi is equal to a kronecker symbol if and only if it is real """
@@ -1412,19 +1294,3 @@ class WebSmallDirichletCharacter(WebChar, WebDirichlet):
     @lazy_attribute
     def symbol(self):
         return kronecker_symbol(self.symbol_numerator())
-
-    @lazy_attribute
-    def codesymbol(self):
-        m = self.symbol_numerator()
-        if m:
-            return { 'sage': 'kronecker_character(%i)' % m,
-                     'pari': 'znchartokronecker(g,chi)'
-                     }
-        return None
-
-    @lazy_attribute
-    def codegaloisorbit(self):
-        return { 'sage': ['chi.galois_orbit()'],
-                 'pari': [ 'order = charorder(g,chi)',
-                           '[ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]' ]
-                 }

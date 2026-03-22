@@ -1,11 +1,9 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 tensor_products_page = Blueprint(
     "tensor_products", __name__, template_folder='templates', static_folder="static")
-tensor_products_logger = make_logger("tensor_products", hl=True)
 
 @tensor_products_page.context_processor
 def body_class():

@@ -27,6 +27,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from lmfdb.ecnf import ecnf_page
 from lmfdb.ecnf.ecnf_stats import ECNF_stats
+from lmfdb.elliptic_curves.web_ec import cremona_label_to_lmfdb_label
 
 from lmfdb.ecnf.WebEllipticCurve import (ECNF, web_ainvs, LABEL_RE,
                                          CLASS_LABEL_RE,
@@ -281,8 +282,10 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            title=title,
                            bread=bread,
                            cl=cl,
+                           code=cl.make_code_snippets(),
                            properties=cl.properties,
                            friends=cl.friends,
+                           downloads=cl.downloads,
                            learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size > 1 else learnmore_list())
 
 
@@ -530,7 +533,6 @@ def elliptic_curve_search(info, query):
         elif info['include_Q_curves'] == 'only':
             query['q_curve'] = True
     if 'Qcurves' in info:
-        print("Qcurves")
         if info['Qcurves'] == 'Q-curve':
             query['q_curve'] = True
         elif info['Qcurves'] == 'base-change':
@@ -543,6 +545,13 @@ def elliptic_curve_search(info, query):
         elif info['Qcurves'] == 'non-base-change-Q-curve':
             query['q_curve'] = True
             query['base_change'] = []
+    if 'base_change_label' in info:
+        if "Qcurves" in info and info['Qcurves'][:3] == 'non':
+            err = "Incompatible base change query options, you cannot simultaneous exclude base changes and specify a base change label."
+            flash_error(err)
+            raise ValueError(err)
+        query['q_curve'] = True
+        query['base_change'] = { '$contains': cremona_label_to_lmfdb_label(info['base_change_label']) }
 
     parse_cm_list(info,query,field='cm_disc',qfield='cm',name="CM discriminant")
 
@@ -740,7 +749,6 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
@@ -750,6 +758,25 @@ def ecnf_code(**args):
     from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
     code = CodeSnippet(make_code(label))
     return code.export_code(label, lang, sorted_code_names)
+
+@ecnf_page.route('/<nf>/<conductor_label>/<class_label>/download/<download_type>')
+def ecnf_isog_code_download(**args):
+    try:
+        response = make_response(ecnf_isog_code(**args))
+    except ValueError:
+        return abort(404)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+def ecnf_isog_code(**args):
+    label = "-".join([args['nf'], args['conductor_label'], args['class_label']])
+    if not CLASS_LABEL_RE.fullmatch(label):
+        return abort(404)
+    lang = args['download_type']
+
+    code = CodeSnippet(ECNF_isoclass.by_label(label).make_code_snippets())
+    sorted_isog_code_names = ['field', 'isogeny_class', 'rank', 'isogeny_matrix', 'isogeny_graph', 'curves']
+    return code.export_code(label, lang, sorted_isog_code_names)
 
 
 def disp_tor(t):
@@ -916,6 +943,11 @@ class ECNFSearchArray(SearchArray):
             label="Isogeny class degree",
             knowl="ec.isogeny",
             example="16")
+        base_change_label = TextBox(
+            name="base_change_label",
+            label="Base change of",
+            knowl="ec.base_change",
+            example="11a.1")
         count = CountBox()
 
         self.browse_array = [
@@ -928,13 +960,15 @@ class ECNFSearchArray(SearchArray):
             [isodeg, one],
             [class_size, class_deg],
             [galois_image, nonmax_primes],
+            [base_change_label, reduction],
             [jinv],
-            [count, reduction],
+            [count]
             ]
 
         self.refine_array = [
             [field, conductor_norm, rank, torsion, cm_disc],
             [deg_sig, bad_primes, Qcurves, torsion_structure, include_cm],
             [sha, isodeg, class_size, reduction, galois_image],
-            [jinv, regulator, one, class_deg, nonmax_primes],
+            [base_change_label, regulator, one, class_deg, nonmax_primes],
+            [jinv],
             ]

@@ -54,7 +54,7 @@ from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
-from . import abstract_page  # , abstract_logger
+from . import abstract_page
 from .web_groups import (
     WebAbstractCharacter,
     WebAbstractConjClass,

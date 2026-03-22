@@ -13,11 +13,8 @@ from lmfdb.utils import (web_latex, coeff_to_poly,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
 from lmfdb.utils.web_display import compress_int
-from lmfdb.logger import make_logger
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 from lmfdb.number_fields.draw_spectrum import draw_spec, draw_gaga
-
-wnflog = make_logger("WNF")
 
 dir_group_size_bound = 10000
 dnc = 'data not computed'
@@ -813,6 +810,11 @@ class WebNumberField:
             return self._data['regulator']
         if self.unit_rank() == 0:
             return 1
+        return na_text()
+
+    def unit_signature_rank(self):
+        if self.haskey('unit_signature_rank'):
+            return self._data['unit_signature_rank']
         return na_text()
 
     def units(self):  # fundamental units

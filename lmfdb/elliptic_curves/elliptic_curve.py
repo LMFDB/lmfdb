@@ -23,8 +23,9 @@ from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
+from lmfdb.logger import logger
 from lmfdb.api import datapage
-from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.elliptic_curves import ec_page
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
@@ -686,7 +687,7 @@ def by_triple_label(conductor,iso_label,number):
 
 @ec_page.route("/<label>/")
 def by_ec_label(label):
-    ec_logger.debug(label)
+    logger.debug(label)
 
     # First see if we have an LMFDB label of a curve or class:
     try:
@@ -697,12 +698,12 @@ def by_ec_label(label):
             return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
     except AttributeError:
-        ec_logger.debug("%s not a valid lmfdb label, trying cremona")
+        logger.debug("%s not a valid lmfdb label, trying cremona")
         # Next see if we have a Cremona label of a curve or class:
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
-            ec_logger.debug("%s not a valid cremona label either, trying Weierstrass")
+            logger.debug("%s not a valid cremona label either, trying Weierstrass")
             eqn = label.replace(" ","")
             if weierstrass_eqn_regex.match(eqn) or short_weierstrass_eqn_regex.match(eqn):
                 return by_weierstrass(eqn)
@@ -717,7 +718,7 @@ def by_ec_label(label):
         data = db.ec_curvedata.lucky({label_type: label})
         if data is None:
             return elliptic_curve_jump_error(label, {}, missing_curve=True)
-        ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
+        logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         if number:
             return render_curve_webpage_by_label(label)
         else:
@@ -806,8 +807,8 @@ def render_curve_webpage_by_label(label):
                         KNOWL_ID="ec.q.%s" % lmfdb_label,
                         BACKUP_KNOWL_ID="ec.q.%s" % data.lmfdb_iso,
                         learnmore=learnmore_list_add(*learnmore_curve_picture))
-    ec_logger.debug("Total walltime: %ss" % (time.time() - t0))
-    ec_logger.debug("Total cputime: %ss" % (cputime(cpt0)))
+    logger.debug("Total walltime: %ss" % (time.time() - t0))
+    logger.debug("Total cputime: %ss" % (cputime(cpt0)))
     return T
 
 
@@ -943,6 +944,12 @@ def labels_page():
 @ec_page.route('/<conductor>/<iso>/<number>/download/<download_type>')
 def ec_code_download(**args):
     response = make_response(ec_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@ec_page.route('/<conductor>/<iso>/download/<download_type>')
+def ec_isog_code_download(**args):
+    response = make_response(ec_isog_code(**args))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -1099,9 +1106,24 @@ def ec_code(**args):
     Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
-        abort(404,"Invalid code language specified: " + lang)
+        return abort(404, "Invalid code language specified: " + lang)
     code = CodeSnippet(Ecode)
     return code.export_code(label, lang, sorted_code_names)
+
+def ec_isog_code(**args):
+    label = class_lmfdb_label(args['conductor'], args['iso'])
+    E = ECisog_class.by_label(label)
+    if E == "Invalid label":
+        return elliptic_curve_jump_error(label, {})
+    if E == "Class not found":
+        return elliptic_curve_jump_error(label, {}, missing_curve=True)
+    Ecode = E.code
+    lang = args['download_type']
+    if lang not in Fullname:
+        return abort(404, "Invalid code language specified: " + lang)
+    code = CodeSnippet(Ecode)
+    sorted_isog_code_names = ['isogeny_class', 'rank', 'qexp', 'isogeny_matrix', 'isogeny_graph', 'curves']
+    return code.export_code(label, lang, sorted_isog_code_names)
 
 
 def tor_struct_search_Q(prefill="any"):
