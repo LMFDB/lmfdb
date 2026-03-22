@@ -137,6 +137,7 @@ def make_order_key(order):
 gg_columns = SearchColumns([
     LinkCol("label", "gg.label", "Label", url_for_label),
     SearchCol("pretty", "gg.simple_name", "Name"),
+    MathCol("n", "gg.degree", "Degree", short_title="degree", default=False),
     MathCol("order", "group.order", "Order", align="right"),
     MathCol("parity", "gg.parity", "Parity", align="right"),
     CheckCol("solv", "group.solvable", "Solvable"),
@@ -152,7 +153,8 @@ gg_columns = SearchColumns([
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
                       apply_download=lambda s, b, c: [s, b])
 ],
-    db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes","auts"])
+
+    db_cols=["bound_siblings", "abstract_label", "label", "name", "n", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes", "auts"])
 #gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
@@ -180,7 +182,15 @@ def gg_postprocess(res, info, query):
              url_for_label=url_for_label,
              postprocess=gg_postprocess,
              learnmore=learnmore_list,
-             bread=lambda: get_bread([("Search results", ' ')]))
+             bread=lambda: get_bread([("Search results", ' ')]),
+             diagram_opts={
+                 "title": "Galois group diagram search",
+                 "bread": lambda: get_bread(breads=[("Diagram search", " ")]),
+                 "x_axis_default": "n",
+                 "y_axis_default": "num_conj_classes",
+                 "color_default": "nilpotency",
+             }
+             )
 def galois_group_search(info, query):
     if info.get('jump','').strip():
         jump_list = ["1T1", "2T1", "3T1", "4T1", "4T2", "5T1", "6T1", "7T1",
@@ -229,6 +239,7 @@ def galois_group_search(info, query):
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
 
     _set_show_subs(info)
+
 
 def yesno(val):
     if val:
