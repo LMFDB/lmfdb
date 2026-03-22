@@ -1132,8 +1132,8 @@ def nf_data(**args):
 
 sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'discriminant', 'ramified_primes', 'automorphisms',
-                     'integral_basis', 'class_group', 'unit_group',
-                     'unit_rank', 'unit_torsion_gen',
+                     'integral_basis', 'class_group', 'narrow_class_group',
+                     'unit_group', 'unit_rank', 'unit_torsion_gen',
                      'fundamental_units', 'regulator', 'class_number_formula',
                      'intermediate_fields', 'galois_group', 'prime_cycle_types']
 
