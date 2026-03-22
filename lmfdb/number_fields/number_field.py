@@ -1177,7 +1177,7 @@ class NFSearchArray(SearchArray):
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, or polynomial"
     has_diagram = False
-    
+
     def __init__(self):
         degree = TextBox(
             name="degree",
