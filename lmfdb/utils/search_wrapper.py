@@ -359,6 +359,13 @@ class SearchWrapper(Wrapper):
     def _diagram_search(self, info):
         """
         Handle diagram search mode, displaying results in d3.js visualization.
+
+        Diagram search will be available automatically on pages by default, but can be
+        disabled by adding 'has_diagram = False' to the relevant SearchArray subclass which handles search.
+
+        Additionally, one should pass 'diagram_opts = {}' as keyword argument to the @search_wrap macro, 
+        with options specifying the title, breadcrumbs, and default x/y-axes and color keys, matching numerical
+        (or in the case of 'color_default', boolean) columns in the database.
         """
         # Get diagram options with defaults
         opts = self.diagram_opts or {}

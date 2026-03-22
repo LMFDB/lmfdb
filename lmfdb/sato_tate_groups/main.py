@@ -650,13 +650,6 @@ st_columns = SearchColumns([
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
     url_for_label=lambda label: url_for(".by_label", label=label),
-    diagram_opts={
-        "title": "Sato-Tate group diagram search",
-        "bread": lambda: get_bread("Diagram search"),
-        "x_axis_default": "weight",
-        "y_axis_default": "real_dimension",
-        "color_default": "second_trace_moment",
-    },
 )
 def sato_tate_search(info, query):
     parse_ints(info, query, 'weight', 'weight')
@@ -1082,6 +1075,7 @@ class STSearchArray(SearchArray):
         'supgroup_multiplicities': False,
         'component_group_number': False,
     }
+    has_diagram = False
 
     def __init__(self):
         weight = TextBox(
