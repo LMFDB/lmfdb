@@ -219,3 +219,14 @@ class EllCurveTest(LmfdbTest):
         #        'ec_localdata' in data and 'tamagawa_number' in data and
         #        'ec_galrep' in data and "'modell_image'" in data and
         #        'ec_padic' in data and 'unit' in data)
+
+    def test_diagram_search(self):
+        """
+        Check that diagram search page loads correctly
+        """
+        # Test with a search that returns results
+        L = self.tc.get('/EllipticCurve/Q/?conductor=11-100&search_type=Diagram&count=100')
+        data = L.get_data(as_text=True)
+        # Check that D3 diagram template elements are present
+        assert 'my_dataviz' in data
+        assert 'pointRadius' in data

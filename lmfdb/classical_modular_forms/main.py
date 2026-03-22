@@ -173,7 +173,7 @@ def index():
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
 
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return newform_search(info)
         elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
@@ -1009,7 +1009,12 @@ newform_columns = SearchColumns([
              },
              url_for_label=url_for_label,
              bread=get_search_bread,
-             learnmore=learnmore_list)
+             learnmore=learnmore_list,
+             diagram_opts={"x_axis_default": "level",
+                           "y_axis_default": "weight",
+                           "color_default": "dim",
+                           "extra_fields": ["level"],
+                           })
 def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
@@ -1315,7 +1320,11 @@ space_columns = SearchColumns([
                         'download':CMF_download().download_spaces},
              url_for_label=url_for_label,
              bread=get_search_bread,
-             learnmore=learnmore_list)
+             learnmore=learnmore_list,
+             diagram_opts={"x_axis_default": "level",
+                           "y_axis_default": "weight",
+                           "color_default": "dim",
+                           })
 def space_search(info, query):
     newspace_parse(info, query)
     set_info_funcs(info)
@@ -1865,10 +1874,12 @@ class CMFSearchArray(SearchArray):
         basic = [('', 'List of forms'),
                  ('Dimensions', 'Dimension table'),
                  ('Traces', 'Traces table'),
-                 ('Random', 'Random form')]
+                 ('Random', 'Random form'),
+                 ('Diagram', 'Diagram search')]
         spaces = [('Spaces', 'List of spaces'),
                   ('SpaceDimensions', 'Dimension table'),
-                  ('RandomSpace', 'Random')]
+                  ('RandomSpace', 'Random'),
+                  ('Diagram', 'Diagram search')]
         if info is None:
             return basic
         st = self._st(info)

@@ -94,6 +94,16 @@ galois_orbit:
     order := Order(chi);
     { chi^k : k in [1..order-1] | GCD(k,order) eq 1 };
 
+value_field:
+  comment: Field of values of chi
+  sage: CyclotomicField(chi.multiplicative_order())
+  pari: nfinit(polcyclo(charorder(g,chi)))
+  magma: CyclotomicField(Order(chi));
+
+kernel_field:
+  comment: Fixed field
+  sage: chi.fixed_field()
+
 gauss_sum:
   comment: Gauss sum
   sage: chi.gauss_sum(a)
@@ -109,8 +119,9 @@ kloosterman_sum:
 
 value:
   comment: Value of chi at x
-  sage: chi(x) # x integer
-  pari: chareval(g,chi,x) \\\\ x integer, value in Q/Z'
+  sage: |
+    chi(x)  # x integer
+  pari: chareval(g,chi,x)  \\ x integer, value in Q/Z
   magma: chi(x)
 
 
