@@ -72,7 +72,7 @@ rd:
     (1.0 * abs(discriminant(OK)))^(1/degree(K))
 
 automorphisms:
-  comment: Autmorphisms
+  comment: Automorphisms
   sage: K.automorphisms()
   magma: Automorphisms(K);
   oscar: automorphism_group(K)

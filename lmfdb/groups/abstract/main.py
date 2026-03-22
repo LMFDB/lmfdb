@@ -780,7 +780,7 @@ def index():
         info["search_type"] = search_type = info.get(
             "search_type", info.get("hst", "")
         )
-        if search_type in ["List", "", "Random"]:
+        if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
             info["search_array"] = SubgroupSearchArray()
@@ -791,6 +791,7 @@ def index():
         elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
             info["search_array"] = ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
+
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -1406,6 +1407,10 @@ group_columns = SearchColumns([
     #  credit=lambda:credit_string,
     url_for_label=url_for_label,
     postprocess=group_postprocess,
+    diagram_opts={
+        "title": "Abstract group diagrams",
+        "bread": lambda: get_bread([("Diagram search", "")]),
+    },
 )
 def group_search(info, query={}):
     group_parse(info, query)
@@ -2606,6 +2611,11 @@ def download_group_code(label, download_type):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@abstract_page.route("/search_diagram/")
+def browseDiagram():
+    info = to_dict(request.args, search_array=GroupsSearchArray())
+    info["search_type"] = "Diagram"
+    return group_search(info)
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
