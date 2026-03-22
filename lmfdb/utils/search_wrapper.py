@@ -363,7 +363,7 @@ class SearchWrapper(Wrapper):
         Diagram search will be available automatically on pages by default, but can be
         disabled by adding 'has_diagram = False' to the relevant SearchArray subclass which handles search.
 
-        Additionally, one should pass 'diagram_opts = {}' as keyword argument to the @search_wrap macro, 
+        Additionally, one should pass 'diagram_opts = {}' as keyword argument to the @search_wrap macro,
         with options specifying the title, breadcrumbs, and default x/y-axes and color keys, matching numerical
         (or in the case of 'color_default', boolean) columns in the database.
         """
@@ -395,7 +395,7 @@ class SearchWrapper(Wrapper):
                     result.extend(item)
             return result
 
-        # Build field mappings from SearchColumns 
+        # Build field mappings from SearchColumns
         # This ensures we use database column names rather than search box names
         table = self.table
         col_types = table.col_type
@@ -406,7 +406,7 @@ class SearchWrapper(Wrapper):
             diagram_fields = {}
             for col in columns.columns:
                 # Use first orig column as the database column name
-                db_col = col.name if col.name else col.orig[0] 
+                db_col = col.name if col.name else col.orig[0]
                 # db_col = col.name
                 if db_col in col_types:
                     # clean up short titles - get rid of latex
@@ -414,7 +414,7 @@ class SearchWrapper(Wrapper):
                                                              .replace(r"\(", "") \
                                                              .replace(r"\)", "") \
                                                              .replace("\\", "")
-                    
+
         else:
             # Fall back to search array boxes if no columns defined
             diagram_fields = {box.name: box.short_title for box in
@@ -511,7 +511,7 @@ class SearchWrapper(Wrapper):
             col_key = info.get("color")
             # Get label_builder from diagram_opts if provided (for nonstandard labeling)
             label_builder = opts.get("label_builder")
-            
+
             # Build d3 data
             info["d3_data"] = []
             for r in res:
