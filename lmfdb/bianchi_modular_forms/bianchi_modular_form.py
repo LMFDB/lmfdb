@@ -707,7 +707,7 @@ class BMFSearchArray(SearchArray):
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
     has_diagram = False
-    
+
     def __init__(self):
         field = TextBox(
             name='field_label',
