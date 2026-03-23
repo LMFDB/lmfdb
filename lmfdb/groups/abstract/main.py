@@ -1906,8 +1906,8 @@ def render_abstract_group(label, data=None):
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-                                         ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-                #            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
+                     ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
                                          ("Underlying data", url_for(".gp_data", label=label)),
         ]
 
@@ -2268,18 +2268,18 @@ def download_cyclotomics(n,vals, dltype):
     return s
 
 
-# create preable for downloading individual group
-def download_preable(com1, com2, dltype, cc_known):
+# create preamble for downloading individual group
+def download_preamble(com1, com2, dltype, cc_known):
     if dltype == "gap":
         f = "#"
     else:
         f = ""
     s = com1
     s += f + " Various presentations of this group are stored in this file: \n"
-    s += f + "\t GPC is polycyclic presentation GPerm is permutation group \n"
+    s += f + "\t GPC is polycyclic presentation, GPerm is permutation group \n"
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
     s += f + " Many characteristics of the group are stored as booleans in a record: \n"
-    s += f + "\t Agroup, Zgroup, abelian, almost_simple,cyclic, metabelian, \n"
+    s += f + "\t Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, \n"
     s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n"
     s += f + "\t solvable, supersolvable \n \n"
     if cc_known:
@@ -2291,6 +2291,10 @@ def download_preable(com1, com2, dltype, cc_known):
             s += f + " The character table is stored as chartbl_n_i where n is the order of \n"
             s += f + " the group and i is which group of that order it is. Conjugacy classes \n"
             s += f + " are stored in the variable 'C' with elements from the group 'G'. \n"
+        if dltype == "oscar":
+            s += f + " The character table is stored as ..."
+        if dltype == "sage":
+            s += f + " The character table is stored as ..."
     s += com2
     return s
 
@@ -2306,35 +2310,29 @@ def download_construction_string(G,dltype):
     if "Perm" in G.representations:
         gp_str = str(snippet['permutation'][dltype]) + "\n"
         s += gp_str.replace("G :=", "GPerm :=")
-    if "GLZ" in G.representations:
-        gp_str = str(snippet['GLZ'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GLZ :=")
-    if "GLFp" in G.representations:
-        gp_str = str(snippet['GLFp'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GLFp :=")
-    if "GLZN" in G.representations:
-        gp_str = str(snippet['GLZN'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GLZN :=")
-    if "GLZq" in G.representations:
-        gp_str = str(snippet['GLZq'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GLZq :=")
-    if "GLFq" in G.representations:
-        gp_str = str(snippet['GLFq'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GLFq :=")
+    for rep in ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
+        if rep in G.representations:
+            gp_str = str(snippet[rep][dltype]) + "\n"
+            s += gp_str.replace("G :=", rep+" :=")
     return str(s)
 
 
 # create boolean string for downloading, G is WebAbstractGroup
 def download_boolean_string(G,dltype,ul_label):
+    bool_attr = ['Agroup','Zgroup','abelian','almost_simple','cyclic','metabelian','metacyclic','monomial','nilpotent','perfect','quasisimple','rational','solvable','supersolvable']
+
     if dltype == "magma":
-        s = "RF := recformat< Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, metacyclic, monomial, nilpotent, perfect, quasisimple, rational, solvable, supersolvable  : BoolElt >; \n"
+        s = "RF := recformat< "+", ".join([attr for attr in bool_attr])+" : BoolElt >; \n"
         s += "booleans_" + ul_label + " := rec< RF |  "
     elif dltype == "gap":
         s = "booleans_" + ul_label + " := rec( "
+    elif dltype == "oscar":
+        s = "booleans_" + ul_label + " := rec( "
+    elif dltype == "sage":
+        s = "...."
     else:
         return ""
 
-    bool_attr = ['Agroup','Zgroup','abelian', 'almost_simple','cyclic','metabelian','metacyclic','monomial','nilpotent','perfect','quasisimple','rational','solvable','supersolvable']
     for attr in bool_attr:
         if getattr(G,attr) is not None:
             s += "\n"
@@ -2346,6 +2344,11 @@ def download_boolean_string(G,dltype,ul_label):
         s += "); \n"
     if dltype == "magma":
         s += ">; \n"
+    if dltype == "oscar":
+        s += ">; \n"
+    if dltype == "sage":
+        s += ">; \n"
+
     return s
 
 
@@ -2365,16 +2368,9 @@ def download_char_table_magma(G, ul_label):
     else:
         repr_data = G.representations[gp_type]
         str_d = str(repr_data['d'])  # need later
-    if gp_type == "GLZ":
-        s = "G:= GLZ;\n"
-    if gp_type == "GLFp":
-        s = "G:= GLFp;\n"
-    if gp_type == "GLZN":
-        s = "G:= GLZN;\n"
-    if gp_type == "GLZq":
-        s = "G:= GLZq;\n"
-    if gp_type == "GLFq":
-        s = "G:= GLFq;\n"
+    for rep in ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
+        if gp_type == rep:
+            s = "G:= "+rep+";\n"
 #    if gp_type == "Lie":
 #        s = "G:= " + repr_data['family'] + "(" + str_d + "," + str(repr_data['q']) + "); \n"
 
@@ -2423,16 +2419,9 @@ def download_char_table_gap(G,ul_label):
         s += tbl + ".UnderlyingGroup:= GPC;\n"
     if gp_type == "Perm":
         s += tbl + ".UnderlyingGroup:= GPerm;\n"
-    if gp_type == "GLZ":
-        s += tbl + ".UnderlyingGroup:= GLZ;\n"
-    if gp_type == "GLFp":
-        s += tbl + ".UnderlyingGroup:= GLFp;\n"
-    if gp_type == "GLZN":
-        s += tbl + ".UnderlyingGroup:= GLZN;\n"
-    if gp_type == "GLZq":
-        s += tbl + ".UnderlyingGroup:= GLZq;\n"
-    if gp_type == "GLFq":
-        s += tbl + ".UnderlyingGroup:= GLFq;\n"
+    for rep in ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
+        if gp_type == rep:
+            s += tbl + ".UnderlyingGroup:= "+rep+";\n"
 
     s += tbl + ".Size:= " + str(G.order) + ";\n"
     s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB."; \n'
@@ -2480,11 +2469,24 @@ def download_char_table_gap(G,ul_label):
     return s
 
 
+def download_char_table_oscar(G,ul_label):
+    # todo
+
+
+def download_char_table_sage(G,ul_label):
+    # todo
+
+
+
 def download_char_table(G,dltype,ul_label):  # G is web abstract group
     if dltype == "gap":
         return download_char_table_gap(G,ul_label)
     elif dltype == "magma":
         return download_char_table_magma(G,ul_label)
+    elif dltype == "oscar":
+        return download_char_table_oscar(G,ul_label)
+    elif dltype == "sage":
+        return download_char_table_sage(G,ul_label)
     else:
         return ""
 
@@ -2496,6 +2498,10 @@ def download_trivial_construction(dltype):  #trival gp construction is different
     elif dltype == "magma":
         s = "GPC := SmallGroup(1,1); \n"
         s += "GPerm := Sym(1); \n"
+    elif dltype == "oscar":
+        s = "..."
+    elif dltype == "sage":
+        s = "...."
     else:
         s = ""
     return s
@@ -2524,10 +2530,13 @@ def download_group(**args):
         com1 = "/*"
         com2 = "*/"
         filename += ".m"
-#    elif dltype == "oscar":
-#        com = ""
-#        com1 = "#="
-#        com2 = "=#"
+    elif dltype == "oscar":
+        com1, com2 = "#=", "=#"
+        filename += ".oscar"
+    elif dltype == "sage":
+        com1, com2 = "#=", "=#"
+        filename += ".sage"
+
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
 
@@ -2543,7 +2552,7 @@ def download_group(**args):
     else:
         cc_known = True
 
-    s += download_preable(com1, com2,dltype, cc_known)
+    s += download_preamble(com1, com2,dltype, cc_known)
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 + "\n"
