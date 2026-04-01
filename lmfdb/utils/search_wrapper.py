@@ -80,9 +80,6 @@ class Wrapper:
         return sort
 
     def make_query(self, info, random=False):
-        ctx = ctx_proc_userdata()
-        beta_link = ctx["modify_url"](scheme="https", netloc="beta.lmfdb.org")
-        print("BETA_LINK", beta_link)
         query = {}
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
