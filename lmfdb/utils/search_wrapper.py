@@ -80,6 +80,9 @@ class Wrapper:
         return sort
 
     def make_query(self, info, random=False):
+        ctx = ctx_proc_userdata()
+        beta_link = ctx["modify_url"](scheme="https", netloc="beta.lmfdb.org")
+        print("BETA_LINK", beta_link)
         query = {}
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
@@ -112,10 +115,17 @@ class Wrapper:
         self, info, query, err, err_title, template, template_kwds
     ):
         ctx = ctx_proc_userdata()
-        flash_error(
-            'The search query took longer than expected! Please try again later, or use https://beta.lmfdb.org.  If your search still times out, please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
+        if ctx["BETA"]:
+            flash_error(
+                'The search query took longer than expected! Please try again later; if your search still times out, please help us improve by reporting this error <a href="%s" target=_blank>here</a>.'
             % ctx["feedbackpage"]
-        )
+            )
+        else:
+            beta_link = ctx["modify_url"](scheme="https", netloc="beta.lmfdb.org")
+            flash_error(
+                'The search query took longer than expected! The <a href="%s">same search</a> on beta.lmfdb.org may succeed (it is running on a server with faster disks).  You can also try again later; if your search still times out, please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
+                % (beta_link, ctx["feedbackpage"])
+            )
         info["err"] = str(err)
         info["query"] = dict(query)
         return render_template(
