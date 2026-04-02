@@ -143,6 +143,7 @@ gg_columns = SearchColumns([
     CheckCol("solv", "group.solvable", "Solvable"),
     MathCol("nilpotency", "group.nilpotent", "Nil. class", short_title="nilpotency class", default=False),
     MathCol("auts", "gg.field_automorphisms", r"$\#\Aut(F/K)$", short_title="field auts"),
+    MathCol("transitivity", "gg.transitivity", "Transitivity", short_title="transitivity",default=lambda info: info.get("transitivity")),
     MathCol("num_conj_classes", "gg.conjugacy_classes", "Conj. classes", short_title="conjugacy classes", default=False),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
@@ -154,7 +155,7 @@ gg_columns = SearchColumns([
                       apply_download=lambda s, b, c: [s, b])
 ],
 
-    db_cols=["bound_siblings", "abstract_label", "label", "name", "n", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes", "auts"])
+    db_cols=["bound_siblings", "abstract_label", "label", "name", "n", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes", "auts", "transitivity"])
 #gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
@@ -228,6 +229,7 @@ def galois_group_search(info, query):
     parse_ints(info,query,'order')
     parse_ints(info,query,'arith_equiv')
     parse_ints(info,query,'nilpotency')
+    parse_ints(info,query,'transitivity')
     parse_ints(info,query,'auts')
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
@@ -335,6 +337,7 @@ def render_group_webpage(args):
             ('Cyclic', yesno(data['cyc'])),
             ('Abelian', yesno(data['ab'])),
             ('Solvable', yesno(data['solv'])),
+            ('Transitivity', prop_int_pretty(data['transitivity'])),
             ('Primitive', yesno(data['prim'])),
             ('$p$-group', yesno(pgroup)),
         ]
@@ -507,6 +510,12 @@ class GalSearchArray(SearchArray):
             knowl="gg.tnumber",
             example="3",
             example_span="3 or 4,6 or 2..5 or 4,6..8")
+        transitivity = TextBox(
+            name="transitivity",
+            label="Transitivity",
+            knowl="gg.transitivity",
+            example="2",
+            example_span="2 or 4,6 or 2..5 or 4,6..8")
         order = TextBox(
             name="order",
             label="Order",
@@ -543,9 +552,9 @@ class GalSearchArray(SearchArray):
             example_span="1 or 2,3 or 1..5 or 1,3..10")
         count = CountBox()
 
-        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [arith_equiv, aut], [gal], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [arith_equiv, aut], [gal], [count, transitivity]]
 
-        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency], [aut]]
+        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency], [aut, transitivity]]
 
 def yesone(s):
     return "yes" if s in ["yes", 1] else "no"
