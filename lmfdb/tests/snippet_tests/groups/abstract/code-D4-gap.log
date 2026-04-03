@@ -22,16 +22,16 @@
 [0mfalse
 [1m[34mgap> [0m[31mIsMonomialGroup(G);
 [0mtrue
-[1m[34mgap> [0mIsNilpotentGroup(G);
-[31m[0mtrue
+[1m[34mgap> [0m[31mIsNilpotentGroup(G);
+[0mtrue
 [1m[34mgap> [0m[31mIsPerfectGroup(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsPGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsPolycyclicGroup(G);
 [0mtrue
-[1m[34mgap> IsSimpleGroup(G);
-[0m[31m[0mfalse
+[1m[34mgap> [0m[31mIsSimpleGroup(G);
+[0mfalse
 [1m[34mgap> [0m[31mIsSolvableGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsSupersolvableGroup(G);
@@ -44,8 +44,8 @@
 [0mOrders: [ 1, 2, 4 ]
 [1m[34mgap> [0m[31melement_counts := List(orders, n -> Length(Filtered(element_orders, x -> x = n)));
 [0m[ 1, 5, 2 ]
-[1m[34mgap> [0m[31mPrint("Elements: ", element_counts, " ", Size(G), "\n");
-[0mElements: [ 1, 5, 2 ] 8
+[1m[34mgap> [0mPrint("Elements: ", element_counts, " ", Size(G), "\n");
+[31m[0mElements: [ 1, 5, 2 ] 8
 [1m[34mgap> [0m[31mcc_orders := List(ConjugacyClasses(G), cc -> Order(Representative(cc)));
 [0m[ 1, 2, 4, 2, 2 ]
 [1m[34mgap> [0m[31mcc_counts := List(orders, n -> Length(Filtered(cc_orders, x -> x = n)));
@@ -92,8 +92,8 @@ f2
 [0m<pc group of size 8 with 3 generators>
 [1m[34mgap> [0m[31mSolvableRadical(G);
 [0m<pc group of size 8 with 3 generators>
-[1m[34mgap> [0m[31mSocle(G);
-[0mGroup([ f3 ])
+[1m[34mgap> Socle(G);
+[0m[31m[0mGroup([ f3 ])
 [1m[34mgap> [0m[31mDerivedSeriesOfGroup(G);
 [0m[ <pc group of size 8 with 3 generators>, Group([ f3 ]), Group([  ]) ]
 [1m[34mgap> [0m[31mChiefSeries(G);
