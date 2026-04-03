@@ -356,7 +356,7 @@ def render_group_webpage(args):
         data['dispv'] = sparse_cyclotomic_to_mathml
         data['malle_a'] = wgg.malle_a
         downloads = []
-        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
+        for lang in [("Gap", "gap"), ("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
             downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code_download", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         # split the label so that breadcrumbs point to a search for this object's degree
