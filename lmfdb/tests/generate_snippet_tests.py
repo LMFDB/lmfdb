@@ -28,8 +28,8 @@ exec_dict = {'sage': 'sage --simple-prompt',
              'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
              'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false);'""",
              }
-prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:',  'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
-comment_dict = {'magma': '//', 'sage': '#',  'sage_gap': '#',
+prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
+comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
 
 

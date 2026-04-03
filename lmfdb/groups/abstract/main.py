@@ -1985,7 +1985,6 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
-    
 
     return render_template(
         "abstract-show-group.html",
@@ -2578,12 +2577,12 @@ def download_group(**args):
 
 # Sorted list of abstract group code snippets to download
 sorted_code_names = ["code_description", "order", "exponent", "automorphism_group", "outer_automorphism_group", "composition_factors",
-                     "nilpotency_class", "derived_length", "is_abelian", "is_cyclic", "is_elementary_abelian", "is_monomial", 
-                     "is_nilpotent", "is_perfect", "is_pgroup", "is_polycyclic", "is_simple", "is_solvable", "is_supersolvable", 
+                     "nilpotency_class", "derived_length", "is_abelian", "is_cyclic", "is_elementary_abelian", "is_monomial",
+                     "is_nilpotent", "is_perfect", "is_pgroup", "is_polycyclic", "is_simple", "is_solvable", "is_supersolvable",
                      "group_statistics", "conjugacy_classes", "character_statistics", "lie_reps_all", "presentation", "permutation",
                      "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all", "primary_decomposition", "abelianization",
                      "schur_multiplier", "commutator_length", "subgroups", "center", "commutator_subgroup", "frattini_subgroup",
-                     "fitting_subgroup", "radical", "socle", "derived_series", "chief_series", "lower_central_series", 
+                     "fitting_subgroup", "radical", "socle", "derived_series", "chief_series", "lower_central_series",
                      "upper_central_series", "character_table"]
 
 @abstract_page.route("/<label>/codedownload/<download_type>")
