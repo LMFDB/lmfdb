@@ -2508,7 +2508,7 @@ class WebAbstractGroup(WebObj):
                                       False, # hide if not present
                                       display_transitive,
                                       transitive_expressions_knowl))
-                
+
                 # Display code snippets for transitive group representations
                 code_cmd = " ".join([self.create_short_snippet(trans) for trans in self.transitive_friends])
                 return rep_content + f'<tr><td colspan="6">{code_cmd}</td></tr>'
@@ -2983,14 +2983,14 @@ class WebAbstractGroup(WebObj):
                 if lang in code['small_group']:
                     code['code_description'][lang] = code['small_group'][lang].format(**{'ordgp':self.order, 'gap_id':gap_id[1]})
                     continue
-                
+
             # Check if group is abelian (then can define as product of cyclic groups from its primary decomposition)
             if self.abelian:
                 # Sage/Oscar's implementation of AbelianGroup seems to not support most of the usual group functions (probably better to not add this?)
                 if (lang in code['abelian_group']) and (lang not in ['sage', 'oscar']):
                     code['code_description'][lang] = code['abelian_group'][lang].format(**{'abelian_invariants':self.primary_abelian_invariants})
                     continue
-               
+
             # Otherwise, if the group is not in a special family, we will default to showing one of the built-in group constructions
             # (if it exists and is implemented)
             # Highest priority: Permutation group, then PC group, then a matrix group, I guess?
@@ -3016,7 +3016,7 @@ class WebAbstractGroup(WebObj):
 
     def create_lie_code_snippets(self, code, top_lie, used_lie_gens):
         """
-        Creates code snippets for the Lie type representations in Magma/GAP/SageMath/Oscar.   
+        Creates code snippets for the Lie type representations in Magma/GAP/SageMath/Oscar.
         Each Lie representation is stored as a dictionary in the format code[(lie_family, n, q)]
 
         For details on how the code logic works, see https://github.com/LMFDB/lmfdb/pull/6694
@@ -3050,7 +3050,7 @@ class WebAbstractGroup(WebObj):
                 code["lie_reps_all"]['magma'] += code[lie_rep_key]['magma']+"\n"
                 if top_lie['magma'] is None:
                     top_lie['magma'] = code[lie_rep_key]['magma']
-    
+
                 for lang in ['gap', 'sage', 'oscar']:
                     if lie_rep['family'] in families[lang]:
                         code[lie_rep_key][lang] = code[lie_rep_key]['magma'] if lang == 'gap' else "G = "+magma_commands[lie_rep['family']].replace("n,q", str(nLie)+","+str(qLie))
@@ -3079,7 +3079,7 @@ class WebAbstractGroup(WebObj):
 
                         if top_lie[lang] is None:
                             top_lie[lang], used_lie_gens[lang] = lie_code_snippet, True
-    
+
             # In the case no Lie type representation is implemented natively in Sage or GAP, we display the first one with gens as a matrix group
             # as a code snippet in the "Constructions" header (and as a possible candidate for the top code snippet)
             for lang in code['prompt']:
@@ -3098,7 +3098,7 @@ class WebAbstractGroup(WebObj):
 
     def create_transitive_code_snippets(self, code):
         """
-        Creates code snippets for the transitive group representations   
+        Creates code snippets for the transitive group representations
         Each representation is stored as a dictionary in the format code[trans_label]
 
         For the purposes of the code download command links, all the transitive group representations
@@ -3107,7 +3107,7 @@ class WebAbstractGroup(WebObj):
 
         code["transitive_all"] = {lang:"" for lang in code['prompt']}
         code["transitive_all"]['comment'] = code["transitive"]["comment"]
-        
+
         for trans in self.transitive_friends:
             trans_data = {"deg":trans.split('T')[0], "t":trans.split('T')[1]}
             code[trans] = dict()
@@ -3127,7 +3127,7 @@ class WebAbstractGroup(WebObj):
 
     @cached_method
     def code_snippets(self):
-        """ 
+        """
         Constructs a dictionary of code snippets for the group
         """
 
@@ -3229,7 +3229,7 @@ class WebAbstractGroup(WebObj):
         for rep in ['GLZ', 'GLFp', 'GLZN', 'GLZq', 'GLFq']:
             if rep not in self.representations:
                 code[rep] = {}
-            
+
         # Construct code snippets for transitive groups
         self.create_transitive_code_snippets(code)
 
