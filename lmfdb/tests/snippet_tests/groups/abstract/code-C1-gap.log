@@ -24,18 +24,18 @@
 [0mtrue
 [1m[34mgap> [0m[31mIsNilpotentGroup(G);
 [0mtrue
-[1m[34mgap> [0mIsPerfectGroup(G);
-[31m[0mtrue
+[1m[34mgap> [0m[31mIsPerfectGroup(G);
+[0mtrue
 [1m[34mgap> [0m[31mIsPGroup(G);
 [0mtrue
-[1m[34mgap> [0m[31mIsPolycyclicGroup(G);
-[0mtrue
+[1m[34mgap> [0mIsPolycyclicGroup(G);
+[31m[0mtrue
 [1m[34mgap> [0m[31mIsSimpleGroup(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsSolvableGroup(G);
 [0mtrue
-[1m[34mgap> IsSupersolvableGroup(G);
-[0m[31m[0mtrue
+[1m[34mgap> [0m[31mIsSupersolvableGroup(G);
+[0mtrue
 [1m[34mgap> [0m[31melement_orders := List(Elements(G), g -> Order(g));
 [0m[ 1 ]
 [1m[34mgap> [0m[31morders := Set(element_orders);
@@ -56,8 +56,8 @@
 [0m[ <identity> of ...^G ]
 [1m[34mgap> [0m[31mCharacterDegrees(G);
 [0m[ [ 1, 1 ] ]
-[1m[34mgap> GPC := PcGroupCode(0,1); 
-[0m[31m[0mGroup([  ])
+[1m[34mgap> [0m[31mGPC := PcGroupCode(0,1); 
+[0mGroup([  ])
 [1m[34mgap> [0m[31mTransitiveGroup(1, 1);
 [0mfail
 [1m[34mgap> [0m[31mAbelianInvariants(G);

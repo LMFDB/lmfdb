@@ -12,12 +12,12 @@
 [1m[34mgap> [0m[31mCompositionSeries(G);
 [0m[ Alt( [ 1 .. 5 ] ), Group(()) ]
 [1m[34mgap> [0m[31mif IsNilpotentGroup(G) then NilpotencyClassOfGroup(G); fi;
-[0m[1m[34mgap> DerivedLength(G);
-[0m[31m[0m0
+[0m[1m[34mgap> [0m[31mDerivedLength(G);
+[0m0
 [1m[34mgap> [0m[31mIsAbelian(G);
 [0mfalse
-[1m[34mgap> [0m[31mIsCyclic(G);
-[0mfalse
+[1m[34mgap> IsCyclic(G);
+[0m[31m[0mfalse
 [1m[34mgap> [0m[31mIsElementaryAbelian(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsMonomialGroup(G);
@@ -112,24 +112,24 @@
 [0mt30n9
 [1m[34mgap> [0m[31mAbelianInvariants(G);
 [0m[  ]
-[1m[34mgap> [0mFactorGroup(G, DerivedSubgroup(G));
-[31m[0mGroup(())
+[1m[34mgap> [0m[31mFactorGroup(G, DerivedSubgroup(G));
+[0mGroup(())
 [1m[34mgap> [0m[31mAbelianInvariantsMultiplier(G);
 [0m[ 2 ]
 [1m[34mgap> [0m[31mCommutatorLength(G);
 [0m1
 [1m[34mgap> [0m[31mAllSubgroups(G);
 [0m[ Group(()), Group([ (2,3)(4,5) ]), Group([ (2,4)(3,5) ]), Group([ (2,5)(3,4) ]), Group([ (1,2)(4,5) ]), Group([ (1,2)(3,4) ]), Group([ (1,2)(3,5) ]), Group([ (1,3)(4,5) ]), Group([ (1,3)(2,4) ]), Group([ (1,3)(2,5) ]), Group([ (1,4)(3,5) ]), Group([ (1,4)(2,3) ]), 
-  Group([ (1,4)(2,5) ]), Group([ (1,5)(3,4) ]), Group([ (1,5)(2,3) ]), Group([ (1,5)(2,4) ]), Group([ (3,4,5) ]), Group([ (2,3,4) ]), Group([ (2,5,3) ]), Group([ (2,4,5) ]), Group([ (1,2,3) ]), Group([ (1,4,2) ]), Group([ (1,2,5) ]), Group([ (1,3,4) ]), Group([ (1,5,3) ]), Group([ (1,4,5) ]), Group([ (2,3)(4,5), (2,4)(3,5) ]), Group([ (1,2)(4,5), (1,4)(2,5) ]), Group([ (1,2)(3,4), (1,3)(2,4) ]), Group([ (1,5)(2,3), (1,3)(2,5) ]), Group([ (1,5)(3,4), (1,4)(3,5) ]), Group([ (1,2,3,4,5) ]), Group([ (1,5,2,4,3) ]), Group([ (1,2,4,5,3) ]), Group([ (1,4,5,2,3) ]), Group([ (1,4,2,3,5) ]), Group([ (1,2,5,3,4) ]), Group([ (1,2)(4,5), (3,4,5) ]), Group([ (2,3)(4,5), (1,2,3) ]), Group([ (1,5)(2,3), (1,4,5) ]), Group([ (1,5)(3,4), (2,3,4) ]), Group([ (1,4)(3,5), (2,5,3) ]), 
-  Group([ (1,3)(2,5), (2,4,5) ]), Group([ (2,4)(3,5), (1,4,2) ]), Group([ (1,3)(2,4), (1,5,3) ]), Group([ (1,2)(3,4), (1,2,5) ]), Group([ (1,4)(2,5), (1,3,4) ]), Group([ (1,5)(2,4), (1,4)(3,5) ]), Group([ (1,2)(3,5), (1,4)(2,5) ]), Group([ (1,3)(2,5), (1,5)(3,4) ]), Group([ (1,2)(3,4), (1,5)(2,3) ]), Group([ (1,3)(2,4), (1,2)(4,5) ]), Group([ (1,4)(2,3), (1,3)(4,5) ]), Group([ (3,4,5), (2,4)(3,5) ]), Group([ (1,4,5), (1,4)(3,5) ]), Group([ (2,3,4), (1,3)(2,4) ]), Group([ (1,2,3), (1,3)(2,5) ]), Group([ (1,2,5), (1,4)(2,5) ]), Group([ (2,4)(3,5), (1,2,5) ]) ]
+  Group([ (1,4)(2,5) ]), Group([ (1,5)(3,4) ]), Group([ (1,5)(2,3) ]), Group([ (1,5)(2,4) ]), Group([ (3,4,5) ]), Group([ (2,3,4) ]), Group([ (2,5,3) ]), Group([ (2,4,5) ]), Group([ (1,2,3) ]), Group([ (1,4,2) ]), Group([ (1,2,5) ]), Group([ (1,3,4) ]), Group([ (1,5,3) ]), Group([ (1,4,5) ]), Group([ (2,3)(4,5), (2,4)(3,5) ]), Group([ (1,2)(4,5), (1,4)(2,5) ]), Group([ (1,2)(3,4), (1,3)(2,4) ]), Group([ (1,5)(2,3), (1,3)(2,5) ]), Group([ (1,5)(3,4), (1,4)(3,5) ]), Group([ (1,2,3,4,5) ]), Group([ (1,5,2,4,3) ]), Group([ (1,2,4,5,3) ]), Group([ (1,4,5,2,3) ]), Group([ (1,4,2,3,5) ]), Group([ (1,2,5,3,4) ]), Group([ (3,4,5), (1,2)(4,5) ]), Group([ (1,2,3), (2,3)(4,5) ]), Group([ (1,4,5), (1,5)(2,3) ]), Group([ (2,3,4), (1,5)(3,4) ]), Group([ (2,5,3), (1,4)(3,5) ]), 
+  Group([ (2,4,5), (1,3)(2,5) ]), Group([ (1,4,2), (2,4)(3,5) ]), Group([ (1,5,3), (1,3)(2,4) ]), Group([ (1,2,5), (1,2)(3,4) ]), Group([ (1,3,4), (1,4)(2,5) ]), Group([ (1,2,4,5,3), (2,3)(4,5) ]), Group([ (1,4,2,3,5), (1,5)(3,4) ]), Group([ (1,2,5,3,4), (2,4)(3,5) ]), Group([ (1,5,2,4,3), (1,3)(4,5) ]), Group([ (1,4,5,2,3), (1,4)(3,5) ]), Group([ (1,2,3,4,5), (2,5)(3,4) ]), Group([ (2,3)(4,5), (2,4)(3,5), (3,4,5) ]), Group([ (1,5)(3,4), (1,4)(3,5), (1,4,5) ]), Group([ (1,2)(3,4), (1,3)(2,4), (2,3,4) ]), Group([ (1,5)(2,3), (1,3)(2,5), (1,2,3) ]), Group([ (1,2)(4,5), (1,4)(2,5), (1,2,5) ]), Group([ (1,2,3,4,5), (3,4,5) ]) ]
 [1m[34mgap> [0m[31mCenter(G);
 [0mGroup(())
-[1m[34mgap> [0m[31mDerivedSubgroup(G);
-[0mAlt( [ 1 .. 5 ] )
+[1m[34mgap> DerivedSubgroup(G);
+[0m[31m[0mAlt( [ 1 .. 5 ] )
 [1m[34mgap> [0m[31mFrattiniSubgroup(G);
 [0mGroup(())
-[1m[34mgap> [0m[31mFittingSubgroup(G);
-[0mGroup(())
+[1m[34mgap> FittingSubgroup(G);
+[0m[31m[0mGroup(())
 [1m[34mgap> [0m[31mSolvableRadical(G);
 [0mGroup(())
 [1m[34mgap> [0m[31mSocle(G);
@@ -138,10 +138,10 @@
 [0m[ Alt( [ 1 .. 5 ] ) ]
 [1m[34mgap> [0m[31mChiefSeries(G);
 [0m[ Alt( [ 1 .. 5 ] ), Group(()) ]
-[1m[34mgap> [0mLowerCentralSeriesOfGroup(G);
-[31m[0m[ Alt( [ 1 .. 5 ] ) ]
-[1m[34mgap> [0m[31mUpperCentralSeriesOfGroup(G);
-[0m[ Group(()) ]
+[1m[34mgap> [0m[31mLowerCentralSeriesOfGroup(G);
+[0m[ Alt( [ 1 .. 5 ] ) ]
+[1m[34mgap> UpperCentralSeriesOfGroup(G);
+[0m[31m[0m[ Group(()) ]
 [1m[34mgap> [0m[31mCharacterTable(G);  # Output not guaranteed to exactly match the LMFDB table
 [0mCharacterTable( Alt( [ 1 .. 5 ] ) )
-[1m[34mgap> [0m[31m
+[1m[34mgap> [0m
