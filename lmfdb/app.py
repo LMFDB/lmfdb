@@ -473,6 +473,14 @@ def modular_forms():
     return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
+@app.route('/EllipticCurves')
+@app.route('/EllipticCurves/')
+def elliptic_curves():
+    t = 'Elliptic curves'
+    b = [(t, url_for('elliptic_curves'))]
+    return render_template('single.html', title=t, kid='ec.about', bread=b)
+
+
 @app.route('/Variety')
 @app.route('/Variety/')
 def varieties():
