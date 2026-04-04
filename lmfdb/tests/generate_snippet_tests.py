@@ -22,11 +22,14 @@ sys.path.insert(0, "/".join(os.path.realpath(__file__).split("/")[0:-3]))
 
 
 exec_dict = {'sage': 'sage --simple-prompt',
+             'sage_gap': 'sage --simple-prompt',   # Used for evaluating GAP-type group objects defined within Sage
              'magma': 'magma -b',
              'oscar': 'julia',
-             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q"}
-prompt_dict = {'sage': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> '}
-comment_dict = {'magma': '//', 'sage': '#',
+             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
+             'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false);'""",
+             }
+prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
+comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
 
 
