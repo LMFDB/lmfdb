@@ -800,6 +800,13 @@ class WebDirichletGroup(WebCharGroup, WebDirichlet):
     def order(self):
         return euler_phi(self.modulus)
 
+    @cached_method
+    def code_snippets(self):
+        code = super().code_snippets()
+        # Adjust frontmatter for constructing group of Dirichlet characters
+        code["frontmatter"]["all"] = code["frontmatter"]["all"].replace("character", "character group of modulus")
+        return code
+
 
 class WebDBDirichletGroup(WebDirichletGroup, WebDBDirichlet):
     """
@@ -994,6 +1001,8 @@ class WebDBDirichletCharacter(WebChar, WebDBDirichlet):
         # Sage code in special case for modulus 1
         if self.modulus == 1:
             self._genvalues_for_code = []
+            # Sage throws error for "chi.fixed_field()" if modulus is 1
+            code['kernel_field'].pop('sage')
 
         data = {'modulus': self.modulus, 'number' : self.number,
                 'symbol_num' : self.symbol_numerator(),
@@ -1124,7 +1133,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def contents(self):
-        logger.warning("[DC] getting content from WebDBDirichletOrbit")
+        logger.info("[DC] getting content from WebDBDirichletOrbit")
         if self._contents is None:
             self._contents = []
             self._fill_contents()

@@ -49,6 +49,7 @@ from lmfdb.utils import (
     sparse_cyclotomic_to_mathml,
     integer_to_mathml,
     redirect_no_cache,
+    CodeSnippet,
 )
 from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
 from lmfdb.utils.interesting import interesting_knowls
@@ -779,7 +780,7 @@ def index():
         info["search_type"] = search_type = info.get(
             "search_type", info.get("hst", "")
         )
-        if search_type in ["List", "", "Random"]:
+        if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
             info["search_array"] = SubgroupSearchArray()
@@ -790,6 +791,7 @@ def index():
         elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
             info["search_array"] = ConjugacyClassSearchArray()
             return conjugacy_class_search(info)
+
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -1405,6 +1407,10 @@ group_columns = SearchColumns([
     #  credit=lambda:credit_string,
     url_for_label=url_for_label,
     postprocess=group_postprocess,
+    diagram_opts={
+        "title": "Abstract group diagrams",
+        "bread": lambda: get_bread([("Diagram search", "")]),
+    },
 )
 def group_search(info, query={}):
     group_parse(info, query)
@@ -1884,6 +1890,11 @@ def render_abstract_group(label, data=None):
     info['pos_int_and_factor'] = pos_int_and_factor
     info['conv'] = integer_to_mathml
     info['dispv'] = sparse_cyclotomic_to_mathml
+
+    code = gp.code_snippets()
+    if code and len(code['prompt']) == 0:  # no codes
+        code = None
+
     if gp.live():
         title = f"Abstract group {label}"
         friends = []
@@ -1901,10 +1912,12 @@ def render_abstract_group(label, data=None):
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-                                         ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-                #            ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-                                         ("Underlying data", url_for(".gp_data", label=label)),
-        ]
+                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma"))]
+                     #("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+        for lang in [("Gap","gap"), ("Magma","magma"), ("SageMath","sage"), ("SageMath (using Gap)","sage_gap"), ("Oscar","oscar")]:
+            if lang[1] in code['prompt']:
+                downloads.append(('{} commands'.format(lang[0]), url_for(".download_group_code", label=label, download_type=lang[1])))
+        downloads.append(("Underlying data", url_for(".gp_data", label=label)))
 
         # "internal" friends
         sbgp_of_url = (
@@ -1972,9 +1985,6 @@ def render_abstract_group(label, data=None):
 
     bread = get_bread([(gp.label_compress(), "")])
     learnmore_gp_picture = ('Picture description', url_for(".picture_page"))
-    code = gp.code_snippets()
-    if code and len(code['prompt']) == 0:  # no codes
-        code = None
 
     return render_template(
         "abstract-show-group.html",
@@ -2565,6 +2575,46 @@ def download_group(**args):
     #strIO.seek(0)
     #return send_file(strIO, attachment_filename=filename, as_attachment=True, add_etags=False)
 
+# Sorted list of abstract group code snippets to download
+sorted_code_names = ["code_description", "order", "exponent", "automorphism_group", "outer_automorphism_group", "composition_factors",
+                     "nilpotency_class", "derived_length", "is_abelian", "is_cyclic", "is_elementary_abelian", "is_monomial",
+                     "is_nilpotent", "is_perfect", "is_pgroup", "is_polycyclic", "is_simple", "is_solvable", "is_supersolvable",
+                     "group_statistics", "conjugacy_classes", "character_statistics", "lie_reps_all", "presentation", "permutation",
+                     "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all", "primary_decomposition", "abelianization",
+                     "schur_multiplier", "commutator_length", "subgroups", "center", "commutator_subgroup", "frattini_subgroup",
+                     "fitting_subgroup", "radical", "socle", "derived_series", "chief_series", "lower_central_series",
+                     "upper_central_series", "character_table"]
+
+@abstract_page.route("/<label>/codedownload/<download_type>")
+def download_group_code(label, download_type):
+    try:
+        grp = WebAbstractGroup(label)
+        code_snippets = grp.code_snippets()
+
+        # Maybe we should remove all instances of "G = " and "G := ", except for the top code snippet
+        # This ensures all the code snippets work (in sequential order) in the code download files
+        for rep in ["lie_reps_all", "permutation", "GLZ", "GLFp", "GLZN", "GLZq", "GLFq", "transitive_all"]:
+            if rep in code_snippets:
+                for lang in code_snippets[rep]:
+                    code_snippets[rep][lang] = code_snippets[rep][lang].replace("G = ", '').replace("G := ", '')
+
+        # We need to still assign the PC representation to some variable (e.g. "GPC"), for this command to work
+        if "presentation" in code_snippets:
+            for lang in code_snippets["presentation"]:
+                code_snippets["presentation"][lang] = code_snippets["presentation"][lang].replace("G :=", "GPC :=").replace("G =", "GPC =").replace("G.", "GPC.").replace("G,", "GPC,")
+
+        code = CodeSnippet(code_snippets)
+        response = make_response(code.export_code(label, download_type, sorted_code_names))
+    except Exception as err:
+        return abort(404, str(err))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+@abstract_page.route("/search_diagram/")
+def browseDiagram():
+    info = to_dict(request.args, search_array=GroupsSearchArray())
+    info["search_type"] = "Diagram"
+    return group_search(info)
 
 class GroupsSearchArray(SearchArray):
     noun = "group"
@@ -3727,7 +3777,7 @@ def order_stats_list_to_string(o_list):
     return s
 
 
-sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
+#sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
 
 Fullname = {'magma': 'Magma', 'gap': 'Gap'}
 Comment = {'magma': '//', 'gap': '#'}

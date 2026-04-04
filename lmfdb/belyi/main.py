@@ -888,6 +888,7 @@ def labels_page():
 class BelyiCommonSearchArray(SearchArray):
     jump_knowl = "belyi.search_input"
     jump_label = "Label"
+    has_diagram = False
 
     def __init__(self):
         self.deg = TextBox(
