@@ -1,5 +1,6 @@
 from random import randrange
-from flask import render_template, jsonify, redirect
+from flask import render_template, jsonify, redirect, request
+from urllib.parse import urlparse
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
@@ -112,10 +113,17 @@ class Wrapper:
         self, info, query, err, err_title, template, template_kwds
     ):
         ctx = ctx_proc_userdata()
-        flash_error(
-            'The search query took longer than expected! Please try again later, or use https://beta.lmfdb.org.  If your search still times out, please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
+        if urlparse(request.url).netloc == "beta.lmfdb.org":
+            flash_error(
+                'The search query took longer than expected! Please try again later; if your search still times out, please help us improve by reporting this error <a href="%s" target=_blank>here</a>.'
             % ctx["feedbackpage"]
-        )
+            )
+        else:
+            beta_link = ctx["modify_url"](scheme="https", netloc="beta.lmfdb.org")
+            flash_error(
+                'The search query took longer than expected! The <a href="%s">same search</a> on beta.lmfdb.org may succeed (it is running on a server with faster disks).  You can also try again later; if your search still times out, please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
+                % (beta_link, ctx["feedbackpage"])
+            )
         info["err"] = str(err)
         info["query"] = dict(query)
         return render_template(
