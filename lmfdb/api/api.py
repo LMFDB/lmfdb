@@ -316,6 +316,8 @@ def api_query(table, id=None):
     next_req = dict(request.args)
     next_req["_offset"] = offset
     url_args = next_req.copy()
+    # Remove _format so that we don't specify that keyword twice
+    url_args.pop("_format", None)
     query = url_for(".api_query", table=table, **next_req)
     offset += len(data)
     next_req["_offset"] = offset

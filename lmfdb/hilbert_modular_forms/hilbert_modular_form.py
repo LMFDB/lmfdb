@@ -155,7 +155,14 @@ hmf_columns = SearchColumns([
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             properties=lambda: [])
+             properties=lambda: [],
+             diagram_opts={
+                 "title": "Hilbert modular form diagram search",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "x_axis_default": "level_norm",
+                 "y_axis_default": "dimension",
+                 "color_default": "disc",
+             })
 def hilbert_modular_form_search(info, query):
     parse_nf_string(info,query,'field_label',name="Field")
     parse_ints(info,query,'deg', name='Field degree')

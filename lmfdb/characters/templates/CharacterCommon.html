@@ -83,14 +83,13 @@
   {% if valuefield %}
   <tr>
     <td> {{KNOWL('character.dirichlet.value_field',title='Field of values')}}:</td>
-    <td> {{ valuefield | safe }} </td>
+    <td> {{ valuefield | safe }} </td> <td>{{ place_code('value_field') }}</td>
   </tr>
   {% endif %}
   {% if kerfield %}
   <tr>
     <td>{{ KNOWL('character.dirichlet.field_cut_out',title='Fixed field') }}:</td>
-    <td> {{ kerfield | safe }}
-    </td>
+    <td> {{ kerfield | safe }} </td> <td>{{ place_code('kernel_field') }}</td>
   </tr>
   {% endif %}
 </table>
