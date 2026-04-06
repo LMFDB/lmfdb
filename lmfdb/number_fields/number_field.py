@@ -859,8 +859,9 @@ nf_columns = SearchColumns([
     MathCol("torsion_order", "nf.unit_group", "Unit group torsion", align="center", default=False),
     MultiProcessedCol("unit_rank", "nf.rank", "Unit group rank", ["r2", "degree"], lambda r2, degree: degree - r2 - 1, align="center", mathmode=True, default=False),
     MathCol("regulator", "nf.regulator", "Regulator", align="left", default=False),
-    MathCol("unit_signature_rank", "nf.unit_signature_rank", "Unit signature rank", align="center", default=False)],
-    db_cols=["class_group", "narrow_class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number", "unit_signature_rank"])
+    MathCol("unit_signature_rank", "nf.unit_signature_rank", "Unit signature rank", align="center", default=False),
+    MathCol("maxp", "nf.max_p", "Max $p$", align="center", default=False)],
+    db_cols=["class_group", "narrow_class_group", "coeffs", "degree", "r2", "disc_abs", "disc_sign", "galois_label", "label", "ramps", "used_grh", "cm", "is_galois", "torsion_order", "regulator", "rd", "grd", "monogenic", "num_ram", "relative_class_number", "unit_signature_rank", "maxp"])
 
 def nf_postprocess(res, info, query):
     galois_labels = [rec["galois_label"] for rec in res if rec.get("galois_label")]
@@ -930,6 +931,7 @@ def number_field_search(info, query):
     parse_posints(info,query,'relative_class_number')
     parse_posints(info,query,'narrow_class_number')
     parse_ints(info,query,'num_ram')
+    parse_ints(info,query,'maxp')
     parse_bool(info,query,'cm_field',qfield='cm')
     fi = info.get("field_is")
     if fi == "cyc":
@@ -1173,7 +1175,8 @@ class NFSearchArray(SearchArray):
              ("num_ram", "ramified prime count", ['num_ram', 'disc_abs', 'disc_sign', 'degree', 'iso_number']),
              ("h", "class number", ['class_number', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("regulator", "regulator", ['regulator', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
-             ("galois", "Galois group", ['degree', 'galt', 'disc_abs', 'disc_sign', 'iso_number'])]
+             ("galois", "Galois group", ['degree', 'galt', 'disc_abs', 'disc_sign', 'iso_number']),
+             ("max p", "max p", ['degree', 'maxp', 'galt', 'disc_abs', 'disc_sign', 'iso_number']) ]
     jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
@@ -1185,6 +1188,11 @@ class NFSearchArray(SearchArray):
             name="degree",
             label="Degree",
             knowl="nf.degree",
+            example=3)
+        maxp = TextBox(
+            name="maxp",
+            label="Maximum ramified prime",
+            knowl="nf.max_p",
             example=3)
         signature = TextBox(
             name="signature",
@@ -1334,27 +1342,23 @@ class NFSearchArray(SearchArray):
         self.browse_array = [
             [degree, signature],
             [discriminant, rd],
+            [grd, regulator],
             [gal, field_is],
-            [num_ram, grd],
+            [num_ram, maxp],
+            [ram_primes, ur_primes],
             [class_number, class_group],
             [narrow_class_number, narrow_class_group],
-            [ram_primes, ur_primes],
-            [regulator, cm_field],
             [completion, relative_class_number],
-            [index, subfield],
+            [subfield, cm_field],
+            [index, is_minimal_sibling],
             [monogenic, inessentialprimes],
-            [unit_signature_rank, is_minimal_sibling],
+            [unit_signature_rank],
             [count]]
 
         self.refine_array = [
-            [degree, signature, num_ram, ram_primes, ur_primes ],
-            [gal, field_is, subfield, class_group, class_number],
-            [discriminant, rd, grd, narrow_class_group, narrow_class_number],
-            [cm_field, relative_class_number, regulator, completion, monogenic],
-            [index, inessentialprimes, is_minimal_sibling, unit_signature_rank]]
+            [degree, signature, discriminant, rd, grd],
+            [num_ram, ram_primes, ur_primes, maxp, gal],
+            [class_group, class_number, regulator, subfield, field_is],
+            [narrow_class_group, narrow_class_number, relative_class_number, cm_field, completion],
+            [monogenic, index, inessentialprimes, is_minimal_sibling, unit_signature_rank]]
 
-            #[degree, signature, class_number, class_group, cm_field],
-            #[num_ram, ram_primes, ur_primes, gal, field_is],
-            #[discriminant, rd, grd, regulator, subfield],
-            #[completion, is_minimal_sibling, monogenic, index, inessentialprimes],
-            #[relative_class_number]]
