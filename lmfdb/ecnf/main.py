@@ -39,7 +39,8 @@ from lmfdb.ecnf.WebEllipticCurve import (ECNF, web_ainvs, LABEL_RE,
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
 def get_bread(*breads):
-    bc = [("Elliptic curves", url_for(".index"))]
+#    bc = [("Elliptic curves", url_for(".index"))]
+    bc = [('Elliptic curves', url_for("elliptic_curves")), (r'$\Q(\alpha)$', url_for(".index"))]
     for x in breads:
         if not isinstance(x, tuple):
             x = (x, " ")
@@ -64,7 +65,8 @@ def learnmore_list_remove(matchstring):
 @ecnf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of elliptic curve data over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+#    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves', url_for("elliptic_curves")), (r'$\Q(\alpha)$', url_for(".index")),
              ('Completeness', '')]
     return render_template("single.html", kid='rcs.cande.ec',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
@@ -73,7 +75,8 @@ def completeness_page():
 @ecnf_page.route("/Source")
 def how_computed_page():
     t = 'Source of elliptic curve data over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+#    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves', url_for("elliptic_curves")), (r'$\Q(\alpha)$', url_for(".index")),
              ('Source', '')]
     return render_template("multi.html", kids=['rcs.source.ec',
                                                'rcs.ack.ec',
@@ -83,7 +86,8 @@ def how_computed_page():
 @ecnf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of elliptic curve data over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+#    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves', url_for("elliptic_curves")), (r'$\Q(\alpha)$', url_for(".index")),
              ('Source', '')]
     return render_template("single.html", kid='rcs.rigor.ec',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
@@ -91,7 +95,8 @@ def reliability_page():
 @ecnf_page.route("/Labels")
 def labels_page():
     t = 'Labels for elliptic curves over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+#    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves', url_for("elliptic_curves")), (r'$\Q(\alpha)$', url_for(".index")),
              ('Labels', '')]
     return render_template("single.html", kid='ec.curve_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
