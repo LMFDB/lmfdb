@@ -1025,7 +1025,7 @@ class ShimCurve_stats(StatsDisplay):
     def short_summary(self):
         shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
         return (
-            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A$ over $\Q$ with potential quaternionic multiplication.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A$ over $\Q$ with potential quaternionic multiplication.  You can <a href="{url_for(".statistics")}">browse further statistics</a>. <b>This data is provisional and incomplete! More will be added.</b>'
         )
 
     @property
