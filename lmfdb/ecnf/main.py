@@ -282,8 +282,10 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
                            title=title,
                            bread=bread,
                            cl=cl,
+                           code=cl.make_code_snippets(),
                            properties=cl.properties,
                            friends=cl.friends,
+                           downloads=cl.downloads,
                            learnmore=learnmore_list_add(*learnmore_isog_picture) if cl.class_size > 1 else learnmore_list())
 
 
@@ -356,6 +358,10 @@ def url_for_label(label):
         return url_for(".random")
     nf, cond_label, iso_label, number = split_full_label(label.strip())
     return url_for("ecnf.show_ecnf", nf=nf, conductor_label=cond_label, class_label=iso_label, number=number)
+
+def ecnf_label_builder(row):
+    """Build full ECNF label from database row fields for diagram search."""
+    return f"{row['field_label']}-{row['conductor_label']}-{row['iso_label']}{row['number']}"
 
 def make_cm_query(cm_disc_str):
     cm_list = parse_ints_to_list_flash(cm_disc_str, "CM discriminant", max_val=None)
@@ -473,7 +479,12 @@ class ECNFDownloader(Downloader):
                         'download':ECNFDownloader()},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
-             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')])
+             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')],
+             diagram_opts={"x_axis_default": "conductor_norm",
+                           "y_axis_default": "rank",
+                           "color_default": "torsion_order",
+                           "label_builder": ecnf_label_builder,
+                           })
 def elliptic_curve_search(info, query):
     parse_nf_string(info,query,'field',name="base number field",qfield='field_label')
     if query.get('field_label') == '1.1.1.1':
@@ -738,7 +749,6 @@ def ecnf_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
-
 def ecnf_code(**args):
     label = "".join(["-".join([args['nf'], args['conductor_label'], args['class_label']]), args['number']])
     if not LABEL_RE.fullmatch(label):
@@ -748,6 +758,25 @@ def ecnf_code(**args):
     from lmfdb.ecnf.WebEllipticCurve import make_code, sorted_code_names
     code = CodeSnippet(make_code(label))
     return code.export_code(label, lang, sorted_code_names)
+
+@ecnf_page.route('/<nf>/<conductor_label>/<class_label>/download/<download_type>')
+def ecnf_isog_code_download(**args):
+    try:
+        response = make_response(ecnf_isog_code(**args))
+    except ValueError:
+        return abort(404)
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
+def ecnf_isog_code(**args):
+    label = "-".join([args['nf'], args['conductor_label'], args['class_label']])
+    if not CLASS_LABEL_RE.fullmatch(label):
+        return abort(404)
+    lang = args['download_type']
+
+    code = CodeSnippet(ECNF_isoclass.by_label(label).make_code_snippets())
+    sorted_isog_code_names = ['field', 'isogeny_class', 'rank', 'isogeny_matrix', 'isogeny_graph', 'curves']
+    return code.export_code(label, lang, sorted_isog_code_names)
 
 
 def disp_tor(t):

@@ -1,5 +1,11 @@
-# Helper function for generating test files
+### CLI tools for testing consistency (but not correctness) of code snippets
+# See the heading "Code Snippets" in Development.md for more details about usage.
+#
+#
+# Author: Håvard Damm-Johnsen <havard-dj@proton.me>
+
 # NB: magma is currently not supported, run manually instead
+
 
 from pathlib import Path
 import yaml
@@ -16,11 +22,14 @@ sys.path.insert(0, "/".join(os.path.realpath(__file__).split("/")[0:-3]))
 
 
 exec_dict = {'sage': 'sage --simple-prompt',
+             'sage_gap': 'sage --simple-prompt',   # Used for evaluating GAP-type group objects defined within Sage
              'magma': 'magma -b',
              'oscar': 'julia',
-             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q"}
-prompt_dict = {'sage': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> '}
-comment_dict = {'magma': '//', 'sage': '#',
+             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
+             'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false);'""",
+             }
+prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
+comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
 
 
@@ -120,7 +129,6 @@ def _eval_code_file(data, lang, proc, logfile):
         for line in lines:
             if lang == 'magma':
                 print(line)
-
             try:
                 proc.run_command(line, timeout=60*3)
             except Exception:
@@ -223,12 +231,16 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
         snippet_test = contents['snippet_test']
 
         snippet_langs = {'gp' if k == 'pari' else k for k in contents['prompt'].keys()}
-        snippet_langs &= langs # intersection of sets
+        snippet_langs &= langs # intersect set with langs
 
         for _, items in snippet_test.items():
             label = items['label']
 
             for lang in snippet_langs:
+                test_langs = items.get('langs')
+                # If we specify languages, only test those. Should fix the problem in PR #6934
+                if test_langs is not None and lang not in test_langs:
+                    continue
                 url = items['url'].format(lang=lang)
                 filename = code_file.stem + "-" + label + "-" + lang + ".log"
 
@@ -271,10 +283,10 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Generate snippet tests")
     parser.add_argument("cmd", help="*generate* test files or run *test*s", choices=['generate', 'test'])
-    parser.add_argument("-i", "--ignore", help="ignore languages", action='append', nargs='+', default=[])
-    parser.add_argument("-o", "--only", help="only languages", action='append', nargs='+', default=None)
-    parser.add_argument("-f", "--file", help="run on single file", type=str)
-    parser.add_argument("-e", "--error-file", help="write errors to file", type=str)
+    parser.add_argument("-i", "--ignore", help="Ignore languages - these will not be run", action='append', nargs='+', default=[])
+    parser.add_argument("-o", "--only", help="Only languages - only these languages will be run ", action='append', nargs='+', default=None)
+    parser.add_argument("-f", "--file", help="Run test or generate on a single file", type=str)
+    parser.add_argument("-e", "--error-file", help="Specify error log file (otherwise stdout)", type=str)
 
     args = parser.parse_args()
 
