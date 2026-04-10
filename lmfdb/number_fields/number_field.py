@@ -817,9 +817,43 @@ download_makedata_comment = {
 
 
 def number_field_jump(info):
-    # Check if user provided a comma-separated list of fields
-    if ',' in info['jump']:
-        
+    jump_input = info['jump']
+    entries = [s.strip() for s in re.split(r'[\n,]+', jump_input) if s.strip()]
+
+    # Multiple entries should go to the search page, restricted by matching labels.
+    if len(entries) > 1:
+        labels = []
+        seen = set()
+        not_parsed = 0
+        not_found = 0
+        for entry in entries:
+            entry_info = {'jump': entry}
+            entry_query = {}
+            try:
+                parse_nf_string(entry_info, entry_query, 'jump', name="Label", qfield='label')
+            except ValueError:
+                not_parsed += 1
+                continue
+            label = entry_query['label']
+            if not db.nf_fields.label_exists(label):
+                not_found += 1
+                continue
+            if label not in seen:
+                labels.append(label)
+                seen.add(label)
+
+        if not labels:
+            flash_error("None of the %s entries matched a number field in the database.", len(entries))
+            return redirect(url_for(".number_field_render_webpage"))
+
+        ignored = not_parsed + not_found
+        duplicates = len(entries) - ignored - len(labels)
+        if ignored:
+            flash_info("Matched %s of %s entries; ignored %s unrecognized or missing entries.", len(labels), len(entries), ignored)
+        if duplicates > 0:
+            flash_info("Removed %s duplicate label(s).", duplicates)
+
+        return redirect(url_for(".number_field_render_webpage", labels=','.join(labels)))
 
     query = {'label_orig': info['jump']}
     try:
@@ -1172,7 +1206,7 @@ class NFSearchArray(SearchArray):
     jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
-    jump_prompt = "Label, name, or polynomial"
+    jump_prompt = "Label, name, polynomial, or comma-separated list"
 
     def __init__(self):
         degree = TextBox(

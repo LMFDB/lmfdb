@@ -65,22 +65,31 @@ class Wrapper():
         try:
             errpage = self.f(info, query)
 
-            # Handle multi-label search via "?labels=" in the URL
+            # Handle multi-label search via "?labels=" in the URL.
             labels_input = info.get("labels")
-            if labels_input:
-                labels = [L.strip() for L in labels_input.split(",")]
-    
-                if labels and hasattr(self.table, "_label_col"):
+            if labels_input and hasattr(self.table, "_label_col"):
+                labels = []
+                seen = set()
+                for label in labels_input.split(","):
+                    label = label.strip()
+                    if label and label not in seen:
+                        labels.append(label)
+                        seen.add(label)
+                if labels:
                     label_col = self.table._label_col
-    
-                    if label_col in query and :
-                        if "$in" in query[label_col]:
-                            # Take intersection with existing label query
-                            query[label_col]["$in"] = list(set(query[label_col]["$in"]) & set(labels))
-                        else:
-                            query[label_col]["$in"] = labels
-                    else:
+                    existing = query.get(label_col)
+                    if existing is None:
                         query[label_col] = {"$in": labels}
+                    elif isinstance(existing, dict):
+                        if "$in" in existing:
+                            existing["$in"] = [label for label in existing["$in"] if label in seen]
+                        else:
+                            # Keep existing constraints and add an $in constraint as well.
+                            existing["$in"] = labels
+                    else:
+                        # Existing exact match constraint: keep it only if it appears in labels.
+                        if existing not in seen:
+                            query[label_col] = {"$in": []}
 
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
