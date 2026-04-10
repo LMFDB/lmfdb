@@ -17,7 +17,7 @@ from lmfdb.utils import (
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
     raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache)
-from lmfdb.utils.search_wrapper import handle_multi_jump_search
+from lmfdb.utils.search_wrapper import multi_label_jump_search
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -818,21 +818,16 @@ download_makedata_comment = {
 
 
 def number_field_jump(info):
-    def parse_one_label(entry):
-        entry_info = {'jump': entry}
-        entry_query = {}
-        parse_nf_string(entry_info, entry_query, 'jump', name="Label", qfield='label')
-        return entry_query['label']
-
-    multi_jump = handle_multi_jump_search(
+    # If jump box input is a comma-seperated list of labels/names/polynomials, then use multi_label_jump_search to return a search page
+    multi_label_jump = multi_label_jump_search(
         info,
-        parse_one_label=parse_one_label,
+        parse_label=nf_string_to_label,
         label_exists=db.nf_fields.label_exists,
         index_endpoint=".number_field_render_webpage",
         object_name="number fields",
     )
-    if multi_jump is not None:
-        return multi_jump
+    if multi_label_jump is not None:
+        return multi_label_jump
 
     query = {'label_orig': info['jump']}
     try:

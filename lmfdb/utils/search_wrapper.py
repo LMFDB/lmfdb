@@ -35,24 +35,15 @@ def use_split_ors(info, query, split_ors, offset, table):
     )
 
 
-def handle_multi_jump_search(
-    info,
-    parse_one_label,
-    label_exists,
-    index_endpoint,
-    input_key="jump",
-    labels_key="labels",
-    separator_pattern=r"[\n,]+",
-    object_name="records",
-):
+def multi_label_jump_search(info, parse_label, label_exists, index_endpoint, input_key="jump", labels_key="labels", sep=r",", object_name="records"):
     """
-    Generic handler for jump boxes that supports comma/newline-separated input.
+    Generic handler for jump boxes that supports comma-separated input.
 
     Returns ``None`` if there is at most one entry, allowing the caller's
     single-entry jump logic to run.  Otherwise returns a redirect response.
     """
     jump_input = info.get(input_key, "")
-    entries = [s.strip() for s in re.split(separator_pattern, jump_input) if s.strip()]
+    entries = [s.strip() for s in re.split(sep, jump_input) if s.strip()]
     if len(entries) <= 1:
         return None
 
@@ -62,7 +53,7 @@ def handle_multi_jump_search(
     not_found = 0
     for entry in entries:
         try:
-            label = parse_one_label(entry)
+            label = parse_label(entry)
         except (SearchParsingError, ValueError):
             not_parsed += 1
             continue
@@ -80,16 +71,45 @@ def handle_multi_jump_search(
     ignored = not_parsed + not_found
     duplicates = len(entries) - ignored - len(labels)
     if ignored:
-        flash_info(
-            "Matched %s of %s entries; ignored %s unrecognized or missing entries.",
-            len(labels),
-            len(entries),
-            ignored,
-        )
+        flash_info("Matched %s of %s entries; ignored %s unrecognized or missing entries.", len(labels), len(entries), ignored)
     if duplicates > 0:
         flash_info("Removed %s duplicate label(s).", duplicates)
 
     return redirect(url_for(index_endpoint, **{labels_key: ",".join(labels)}))
+
+
+def apply_labels_filter(info, query, table, labels_key="labels"):
+    """
+    Apply a multi-label search filter from the URL onto an existing query.
+    """
+    labels_input = info.get(labels_key)
+    if not labels_input or not hasattr(table, "_label_col"):
+        return
+
+    labels = []
+    seen = set()
+    for label in labels_input.split(","):
+        label = label.strip()
+        if label and label not in seen:
+            labels.append(label)
+            seen.add(label)
+    if not labels:
+        return
+
+    label_col = table._label_col
+    existing = query.get(label_col)
+    if existing is None:
+        query[label_col] = {"$in": labels}
+    elif isinstance(existing, dict):
+        if "$in" in existing:
+            existing["$in"] = [label for label in existing["$in"] if label in seen]
+        else:
+            # Keep existing constraints and add an $in constraint as well.
+            existing["$in"] = labels
+    else:
+        # Existing exact match constraint: keep it only if it appears in labels.
+        if existing not in seen:
+            query[label_col] = {"$in": []}
 
 
 class Wrapper():
@@ -122,32 +142,7 @@ class Wrapper():
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
-
-            # Handle multi-label search via "?labels=" in the URL.
-            labels_input = info.get("labels")
-            if labels_input and hasattr(self.table, "_label_col"):
-                labels = []
-                seen = set()
-                for label in labels_input.split(","):
-                    label = label.strip()
-                    if label and label not in seen:
-                        labels.append(label)
-                        seen.add(label)
-                if labels:
-                    label_col = self.table._label_col
-                    existing = query.get(label_col)
-                    if existing is None:
-                        query[label_col] = {"$in": labels}
-                    elif isinstance(existing, dict):
-                        if "$in" in existing:
-                            existing["$in"] = [label for label in existing["$in"] if label in seen]
-                        else:
-                            # Keep existing constraints and add an $in constraint as well.
-                            existing["$in"] = labels
-                    else:
-                        # Existing exact match constraint: keep it only if it appears in labels.
-                        if existing not in seen:
-                            query[label_col] = {"$in": []}
+            apply_labels_filter(info, query, self.table)
 
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
