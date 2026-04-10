@@ -667,7 +667,7 @@ class SearchArray(UniqueRepresentation):
     null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
     plural_noun = "results"
-    labels_knowl = None
+    label_knowl = None
 
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
@@ -704,8 +704,7 @@ class SearchArray(UniqueRepresentation):
             return self.browse_array
         else:
             # Append a "Labels" search box allowing multiple labels to be passed via URL
-            knowl = self.labels_knowl   # (info) if callable(self.labels_knowl) else self.labels_knowl
-            return self.refine_array + [[SneakyTextBox(name="labels", label="Labels", knowl=knowl)]]
+            return self.refine_array + [[SneakyTextBox(name="labels", label="Labels", knowl=self.label_knowl)]]
 
     def _print_table(self, grid, info, layout_type):
         if not grid:

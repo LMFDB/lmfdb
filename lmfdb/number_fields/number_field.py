@@ -1168,7 +1168,7 @@ def nf_code(**args):
 
 class NFSearchArray(SearchArray):
     noun = "field"
-    labels_knowl = "nf.label"
+    label_knowl = "nf.label"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
