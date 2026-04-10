@@ -1,5 +1,6 @@
+import re
 from random import randrange
-from flask import render_template, jsonify, redirect
+from flask import render_template, jsonify, redirect, url_for
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
@@ -32,6 +33,63 @@ def use_split_ors(info, query, split_ors, offset, table):
  # fetching all records, starting from 0
         and offset < table._count_cutoff
     )
+
+
+def handle_multi_jump_search(
+    info,
+    parse_one_label,
+    label_exists,
+    index_endpoint,
+    input_key="jump",
+    labels_key="labels",
+    separator_pattern=r"[\n,]+",
+    object_name="records",
+):
+    """
+    Generic handler for jump boxes that supports comma/newline-separated input.
+
+    Returns ``None`` if there is at most one entry, allowing the caller's
+    single-entry jump logic to run.  Otherwise returns a redirect response.
+    """
+    jump_input = info.get(input_key, "")
+    entries = [s.strip() for s in re.split(separator_pattern, jump_input) if s.strip()]
+    if len(entries) <= 1:
+        return None
+
+    labels = []
+    seen = set()
+    not_parsed = 0
+    not_found = 0
+    for entry in entries:
+        try:
+            label = parse_one_label(entry)
+        except (SearchParsingError, ValueError):
+            not_parsed += 1
+            continue
+        if not label_exists(label):
+            not_found += 1
+            continue
+        if label not in seen:
+            labels.append(label)
+            seen.add(label)
+
+    if not labels:
+        flash_error("None of the %s entries matched %s in the database.", len(entries), object_name)
+        return redirect(url_for(index_endpoint))
+
+    ignored = not_parsed + not_found
+    duplicates = len(entries) - ignored - len(labels)
+    if ignored:
+        flash_info(
+            "Matched %s of %s entries; ignored %s unrecognized or missing entries.",
+            len(labels),
+            len(entries),
+            ignored,
+        )
+    if duplicates > 0:
+        flash_info("Removed %s duplicate label(s).", duplicates)
+
+    return redirect(url_for(index_endpoint, **{labels_key: ",".join(labels)}))
 
 
 class Wrapper():

@@ -17,6 +17,7 @@ from lmfdb.utils import (
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
     raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache)
+from lmfdb.utils.search_wrapper import handle_multi_jump_search
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -817,43 +818,21 @@ download_makedata_comment = {
 
 
 def number_field_jump(info):
-    jump_input = info['jump']
-    entries = [s.strip() for s in re.split(r'[\n,]+', jump_input) if s.strip()]
+    def parse_one_label(entry):
+        entry_info = {'jump': entry}
+        entry_query = {}
+        parse_nf_string(entry_info, entry_query, 'jump', name="Label", qfield='label')
+        return entry_query['label']
 
-    # Multiple entries should go to the search page, restricted by matching labels.
-    if len(entries) > 1:
-        labels = []
-        seen = set()
-        not_parsed = 0
-        not_found = 0
-        for entry in entries:
-            entry_info = {'jump': entry}
-            entry_query = {}
-            try:
-                parse_nf_string(entry_info, entry_query, 'jump', name="Label", qfield='label')
-            except ValueError:
-                not_parsed += 1
-                continue
-            label = entry_query['label']
-            if not db.nf_fields.label_exists(label):
-                not_found += 1
-                continue
-            if label not in seen:
-                labels.append(label)
-                seen.add(label)
-
-        if not labels:
-            flash_error("None of the %s entries matched a number field in the database.", len(entries))
-            return redirect(url_for(".number_field_render_webpage"))
-
-        ignored = not_parsed + not_found
-        duplicates = len(entries) - ignored - len(labels)
-        if ignored:
-            flash_info("Matched %s of %s entries; ignored %s unrecognized or missing entries.", len(labels), len(entries), ignored)
-        if duplicates > 0:
-            flash_info("Removed %s duplicate label(s).", duplicates)
-
-        return redirect(url_for(".number_field_render_webpage", labels=','.join(labels)))
+    multi_jump = handle_multi_jump_search(
+        info,
+        parse_one_label=parse_one_label,
+        label_exists=db.nf_fields.label_exists,
+        index_endpoint=".number_field_render_webpage",
+        object_name="number fields",
+    )
+    if multi_jump is not None:
+        return multi_jump
 
     query = {'label_orig': info['jump']}
     try:
@@ -1194,6 +1173,7 @@ def nf_code(**args):
 
 class NFSearchArray(SearchArray):
     noun = "field"
+    labels_knowl = "nf.label"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
