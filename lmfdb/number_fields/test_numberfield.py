@@ -40,7 +40,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/?jump=2.2.5.1%2c+3.3.49.1&search=Go', '3.3.49.1')
         # Test comma-separated list with different input formats
         self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.5.1')
-        self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.3.1')
+        self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.12.1')
 
     def test_search_disc(self):
         self.check_args('/NumberField/?discriminant=1988-2014', '401') # factor of one of the discriminants
