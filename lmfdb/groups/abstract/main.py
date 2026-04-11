@@ -738,9 +738,7 @@ def create_boolean_aut_string(gp, prefix="aut_", type="normal", name="automorphi
         unknown.remove('nonsolvable')
     prop = 'pgroup'  # if p-group, we know it is nilpotent, solvable, and supersolvable
     if getattr(gp,prefix+prop,None) > 1:
-        unknown.remove('nilpotent')
-        unknown.remove('solvable')
-        unknown.remove('supersolvable')
+        unknown=[z for z in unknown if z not in ['nilpotent','solvable','supersolvable']]
 
     unknown = [overall_display[prop] for prop in unknown]
     if unknown and type != "knowl":
