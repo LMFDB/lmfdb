@@ -17,6 +17,7 @@ from lmfdb.utils import (
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
     raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache)
+from lmfdb.utils.search_wrapper import multi_entry_jump_search
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
@@ -817,6 +818,17 @@ download_makedata_comment = {
 
 
 def number_field_jump(info):
+    # If jump box input is a comma-seperated list of labels/names/polynomials, then use multi_entry_jump_search to return a search page
+    multi_jump = multi_entry_jump_search(
+        info,
+        parse_entry=nf_string_to_label,
+        label_exists=db.nf_fields.label_exists,
+        index_endpoint=".number_field_render_webpage",
+        object_name="number fields",
+    )
+    if multi_jump is not None:
+        return multi_jump
+
     query = {'label_orig': info['jump']}
     try:
         parse_nf_string(info, query, 'jump', name="Label", qfield='label')
@@ -1165,6 +1177,7 @@ def nf_code(**args):
 
 class NFSearchArray(SearchArray):
     noun = "field"
+    label_knowl = "nf.label"
     sorts = [("", "degree", ['degree', 'disc_abs', 'disc_sign', 'iso_number']),
              ("signature", "signature", ['degree', 'r2', 'disc_abs', 'disc_sign', 'iso_number']),
              ("rd", "root discriminant", ['rd', 'degree', 'disc_abs', 'disc_sign', 'iso_number']),
@@ -1177,7 +1190,7 @@ class NFSearchArray(SearchArray):
     jump_example = "x^7 - x^6 - 3 x^5 + x^4 + 4 x^3 - x^2 - x + 1"
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
-    jump_prompt = "Label, name, or polynomial"
+    jump_prompt = "Label, name, polynomial, or comma-separated list"
     has_diagram = False
 
     def __init__(self):
