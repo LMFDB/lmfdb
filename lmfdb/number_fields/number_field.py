@@ -818,8 +818,8 @@ download_makedata_comment = {
 
 
 def number_field_jump(info):
-    # If jump box input is a comma-seperated list of labels/names/polynomials, then use multi_label_jump_search to return a search page
-    multi_label_jump = multi_label_jump_search(
+    # If jump box input is a comma-seperated list of labels/names/polynomials, then use multi_entry_jump_search to return a search page
+    multi_label_jump = multi_entry_jump_search(
         info,
         parse_label=nf_string_to_label,
         label_exists=db.nf_fields.label_exists,

@@ -39,25 +39,37 @@ def use_split_ors(info, query, split_ors, offset, table):
     )
 
 
-def multi_label_jump_search(info, parse_label, label_exists, index_endpoint, input_key="jump", labels_key="labels", sep=r",", object_name="records"):
+def multi_entry_jump_search(info, parse_entry, label_exists, index_endpoint,
+                            input_key="jump", labels_key="labels", sep=r",", object_name="records"):
     """
-    Generic handler for jump boxes that supports comma-separated input.
+    Generic handler for jump boxes that supports comma-separated input of various entries (labels/names/polynomials etc.).
 
-    Returns ``None`` if there is at most one entry, allowing the caller's
-    single-entry jump logic to run.  Otherwise returns a redirect response.
+    Returns ``None`` if there is at most one entry, allowing the caller's single-entry jump logic to run.
+    Otherwise returns a redirect to a search page of the given labels.
+
+    INPUT:
+
+    - ``info`` -- the info dictionary passed in from front end
+    - ``parse_entry`` -- a custom function which converts a string (e.g. polynomial, equation, nickname etc) to be parsed into label
+    - ``label_exists`` -- a custom function which determines whether a given label exists in the database
+    - ``index_endpoint`` -- the URL for the index homepage for this section
+    - ``input_key`` -- the dictionary key for the jump search box (default: "jump")
+    - ``labels_jey`` -- the dictionary key for the labels search query (default: "labels")
+    - ``sep`` -- A string used as the seperator for parsing the jump box input (default: ",")
+    - ``object_name`` -- The name of the objects in the database (e.g. "fields", "elliptic curves"). Used when flashing info or error messages.
     """
+
     jump_input = info.get(input_key, "")
     entries = [s.strip() for s in re.split(sep, jump_input) if s.strip()]
     if len(entries) <= 1:
         return None
 
-    labels = []
-    seen = set()
-    not_parsed = 0
-    not_found = 0
+    # For each entry given in the comma-seperated jump box input, we attempt to parse the entry (whilst skipping over duplicates)
+    labels, seen = [], set()
+    not_parsed, not_found = 0, 0
     for entry in entries:
         try:
-            label = parse_label(entry)
+            label = parse_entry(entry)
         except (SearchParsingError, ValueError):
             not_parsed += 1
             continue
@@ -68,10 +80,12 @@ def multi_label_jump_search(info, parse_label, label_exists, index_endpoint, inp
             labels.append(label)
             seen.add(label)
 
+    # Flash error if no entries succesfully parsed
     if not labels:
         flash_error("None of the %s entries matched %s in the database.", len(entries), object_name)
         return redirect(url_for(index_endpoint))
 
+    # Otherwise flash info message with number of entries we are able to parse
     ignored = not_parsed + not_found
     duplicates = len(entries) - ignored - len(labels)
     if ignored:
@@ -84,14 +98,13 @@ def multi_label_jump_search(info, parse_label, label_exists, index_endpoint, inp
 
 def parse_labels(info, query, table, labels_key="labels"):
     """
-    Apply a multi-label search filter from the URL onto an existing query.
+    Parse a list of labels from the URL "?=label=" query into a database query.
     """
     labels_input = info.get(labels_key)
     if not labels_input or not hasattr(table, "_label_col"):
         return
 
-    labels = []
-    seen = set()
+    labels, seen = [], set()
     for label in labels_input.split(","):
         label = label.strip()
         if label and label not in seen:
@@ -164,7 +177,6 @@ class Wrapper:
         try:
             errpage = self.f(info, query)
             parse_labels(info, query, self.table)
-
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
             if is_debug_mode():

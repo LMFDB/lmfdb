@@ -663,11 +663,11 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
+    label_knowl = None  # Link to knowl for label (used for "labels" SneakyBox)
     sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
     null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
     plural_noun = "results"
-    label_knowl = None
 
     def sort_order(self, info):
         # Override this method to add a dropdown for sort order
