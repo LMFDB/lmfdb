@@ -819,15 +819,15 @@ download_makedata_comment = {
 
 def number_field_jump(info):
     # If jump box input is a comma-seperated list of labels/names/polynomials, then use multi_entry_jump_search to return a search page
-    multi_label_jump = multi_entry_jump_search(
+    multi_jump = multi_entry_jump_search(
         info,
-        parse_label=nf_string_to_label,
+        parse_entry=nf_string_to_label,
         label_exists=db.nf_fields.label_exists,
         index_endpoint=".number_field_render_webpage",
         object_name="number fields",
     )
-    if multi_label_jump is not None:
-        return multi_label_jump
+    if multi_jump is not None:
+        return multi_jump
 
     query = {'label_orig': info['jump']}
     try:
