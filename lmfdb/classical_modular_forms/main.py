@@ -33,6 +33,7 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_new_cusp_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.characters.main import ORBIT_MAX_MOD
 from lmfdb.number_fields.number_field import poly_to_field_label
@@ -934,6 +935,11 @@ def _trace_col(i):
 def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True)
 
+def _sato_tate_col(is_cuspidal,sato_tate_group):
+    if not is_cuspidal:
+        return abstract_group_display_knowl(sato_tate_group) if sato_tate_group else 'not computed'
+    return st_display_knowl(sato_tate_group) if sato_tate_group else 'not computed'
+
 newform_columns = SearchColumns([
     LinkCol("label", "cmf.labels", "Label", url_for_label),
     MathCol("level", "cmf.level", "Level", default=False),
@@ -991,7 +997,7 @@ newform_columns = SearchColumns([
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
     ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
                  lambda fac: "" if fac == "" else factor_base_factorization_latex(fac), mathmode=True, align="center", default=False),
-    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group", default=False),
+    MultiProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", ["is_cuspidal", "sato_tate_group"], _sato_tate_col, short_title="Sato-Tate group", default=False),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       download_col="qexp_display")],
