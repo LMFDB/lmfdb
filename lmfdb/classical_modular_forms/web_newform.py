@@ -1208,6 +1208,8 @@ function switch_basis(btype) {
         return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
+        if not self.is_cuspidal:
+            return abstract_group_display_knowl(self.sato_tate_group) if self.sato_tate_group else 'not computed'
         return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else 'not computed'
 
     def q_expansion_cc(self, prec_max):
