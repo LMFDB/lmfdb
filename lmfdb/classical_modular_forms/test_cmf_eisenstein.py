@@ -232,3 +232,16 @@ class CmfTest(LmfdbTest):
         assert 'Space not in database' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12000/12/E/a/")
         assert 'Space 12000.12.E.a not found' in page.get_data(as_text=True)
+
+    def test_character_validation(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/E/e/")
+        assert 'Space 12.10.E.e not found' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/E/c/")
+        assert 'since the weight is even while the character is' in page.get_data(as_text=True)
+
+    def test_decomposition(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/6/12/E/", follow_redirects=True)
+        assert r'Decomposition</a> of \(E_{12}^{\mathrm{new}}(\Gamma_0(6))\)' in page.get_data(as_text=True)
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/38/9/E/')
+        for elt in map(str,[378, 120, 258, 342, 120, 222, 36]):
+            assert elt in page.get_data(as_text=True)
