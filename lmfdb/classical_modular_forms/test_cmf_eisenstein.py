@@ -221,10 +221,12 @@ class CmfTest(LmfdbTest):
         assert r'\(M_{8}(\Gamma_0(2))\)' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/E/a/")
         assert 'weight is odd while the character is ' in page.get_data(as_text=True)
-        # This does not work correctly - a problem with ALdims not being initialized for empty spaces
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/6/E/a/")
+        page_text = page.get_data(as_text=True)
         for elt in ['Decomposition', r'E_{6}^{\mathrm{old}}(\Gamma_0(12))', 'lower level spaces']:
-            assert elt in page.get_data(as_text=True)
+            assert elt in page_text
+        # Sublevel 1 contributes the weight-6 Eisenstein series E_6 as a newform.
+        assert r'E_{6}^{\mathrm{new}}(\Gamma_0(1))' in page_text
 
     def test_not_in_db(self):
         # The following redirects to "ModularForm/GL2/Q/holomorphic/12000/12/E/"

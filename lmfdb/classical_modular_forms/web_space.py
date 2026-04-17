@@ -370,14 +370,16 @@ def make_newspace_data(level, char_data, k=2, aut_type='C'):
     data['weight_parity'] = (-1)**k
     return data
 
-def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
-    # This creates enough of data to generate the oldspace decomposition on a newspace page
+def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index, is_cuspidal=True):
+    # This creates enough of data to generate the oldspace decomposition on a newspace page.
+    # When is_cuspidal, sublevels are filtered by cuspidal-new dimension; otherwise by Eisenstein-new dimension.
     level = int(newspace_label.split('.')[0])
     weight = int(newspace_label.split('.')[1])
     sub_level_list = [sub_level for sub_level in divisors(level) if (sub_level % char_conductor == 0) and sub_level != level]
     sub_chars = {char['modulus'] : char for char in db.char_dirichlet.search({'modulus':{'$in':sub_level_list}, 'conductor':char_conductor, 'primitive_orbit':prim_orbit_index})}
+    dim_col = 'dim' if is_cuspidal else 'eis_new_dim'
     if weight == 1:
-        newspace_dims = {rec['level']: rec['dim'] for rec in db.mf_newspaces_eis.search({'weight': weight, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', 'dim'])}
+        newspace_dims = {rec['level']: rec[dim_col] for rec in db.mf_newspaces_eis.search({'weight': weight, 'is_cuspidal': True, '$or': [{'level': sub_level, 'char_orbit_index': sub_chars[sub_level]['orbit']} for sub_level in sub_level_list]}, ['level', dim_col])}
     oldspaces = []
     for sub_level in sub_level_list:
         entry = {}
@@ -387,11 +389,14 @@ def make_oldspace_data(newspace_label, char_conductor, prim_orbit_index):
         entry['sub_mult'] = number_of_divisors(level/sub_level)
         # only include subspaces with positive dimension (computed on the fly unless with weight is 1)
         if weight == 1:
-            if newspace_dims[sub_level] > 0:
-                oldspaces.append(entry)
+            new_dim = newspace_dims[sub_level]
+        elif is_cuspidal:
+            new_dim = int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (sub_level, weight, entry['sub_conrey_index'], sub_level)))
         else:
-            if int(gp('mfdim([%i, %i, znchar(Mod(%i,%i))], 0)' % (sub_level, weight, entry['sub_conrey_index'], sub_level))) > 0:
-                oldspaces.append(entry)
+            # PARI has no flag for Eisenstein-new dim; use the explicit formula.
+            new_dim = QDimensionNewEisensteinForms(sub_chars[sub_level], weight)
+        if new_dim > 0:
+            oldspaces.append(entry)
     return oldspaces
 
 class WebNewformSpace():
@@ -406,7 +411,7 @@ class WebNewformSpace():
         self.char_conrey = self.conrey_index
         self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.mf_newforms_eis.search({'space_label':self.label}, projection=2))
-        oldspaces = make_oldspace_data(self.label, self.char_conductor, self.prim_orbit_index)
+        oldspaces = make_oldspace_data(self.label, self.char_conductor, self.prim_orbit_index, is_cuspidal=self.is_cuspidal)
         self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_index'], old['sub_mult']) for old in oldspaces]
         if self.is_cuspidal:
             data['cusp_new_dim'] = data['dim']
@@ -555,9 +560,16 @@ class WebNewformSpace():
 
     def oldspace_decomposition(self):
         # Returns a latex string giving the decomposition of the old part.  These come from levels M dividing N, with the conductor of the character dividing M.
+        # For an Eisenstein newspace, links and latex refer to the Eisenstein sub-newspaces; for a cuspidal newspace, to the cuspidal sub-newspaces.
         template = r"<a href={url}>\({old}\)</a>\(^{{\oplus {mult}}}\)"
-        return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, typ="new"),
-                                                  url=url_for(".by_url_space_label",level=N,weight=self.weight,char_orbit_label_or_automorphic_type=cremona_letter_code(i-1)),
+        kind = "S" if self.is_cuspidal else "E"
+        def sub_url(N, i):
+            orbit = cremona_letter_code(i - 1)
+            if self.is_cuspidal:
+                return url_for(".by_url_space_label", level=N, weight=self.weight, char_orbit_label_or_automorphic_type=orbit)
+            return url_for(".by_url_space_label", level=N, weight=self.weight, char_orbit_label_or_automorphic_type="E", char_orbit_label=orbit)
+        return r"\(\oplus\)".join(template.format(old=common_latex(N, self.weight, conrey, S=kind, typ="new"),
+                                                  url=sub_url(N, i),
                                                   mult=mult)
                                   for N, i, conrey, mult in self.oldspaces)
 
