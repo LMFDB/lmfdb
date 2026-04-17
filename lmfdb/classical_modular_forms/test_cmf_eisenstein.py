@@ -223,6 +223,5 @@ class CmfTest(LmfdbTest):
         assert 'weight is odd while the character is ' in page.get_data(as_text=True)
         # This does not work correctly - a problem with ALdims not being initialized for empty spaces
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/6/E/a/")
-        # !!! TODO - figure out what should make this work
-        # for elt in ['Decomposition', r'S_{6}^{\mathrm{old}}(\Gamma_0(12))', 'lower level spaces']:
-        #    assert elt in page.get_data(as_text=True)
+        for elt in ['Decomposition', r'E_{6}^{\mathrm{old}}(\Gamma_0(12))', 'lower level spaces']:
+            assert elt in page.get_data(as_text=True)
