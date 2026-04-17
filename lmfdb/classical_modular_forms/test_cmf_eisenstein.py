@@ -225,3 +225,10 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/6/E/a/")
         for elt in ['Decomposition', r'E_{6}^{\mathrm{old}}(\Gamma_0(12))', 'lower level spaces']:
             assert elt in page.get_data(as_text=True)
+
+    def test_not_in_db(self):
+        # The following redirects to "ModularForm/GL2/Q/holomorphic/12000/12/E/"
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12000/12/E/")
+        assert 'Space not in database' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12000/12/E/a/")
+        assert 'Space 12000.12.E.a not found' in page.get_data(as_text=True)
