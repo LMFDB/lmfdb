@@ -721,9 +721,18 @@ class WebGamma1Space():
 
     def summand_latex(self,symbolic_chi=True):
         return common_latex(self.level, self.weight, 1, "S", 0, "new", symbolic_chi=symbolic_chi)
-
-    def old_latex(self):
+    
+    def cusp_old_latex(self):
         return common_latex(*(self._vec() + ["S",1,"old"]))
+
+    def eis_old_latex(self):
+        return common_latex(*(self._vec() + ["E",1,"old"]))
+        
+    def old_latex(self):
+        if self.is_cuspidal:
+            return self.cusp_old_latex()
+        else:
+            return self.eis_old_latex()
 
     def header_latex(self):
         return r'\(' + common_latex(*(self._vec() + ["S",0,"new",True])) + r'\)'
