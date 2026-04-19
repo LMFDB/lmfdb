@@ -577,6 +577,8 @@ class CmfTest(LmfdbTest):
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=12', ['Select a', '57'])
         path = 'https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=11&k=2' # explicit link to beta since check_args prohibits external redirects
         self.check_external(path, path, '11.2.a.a.1.1') # Downloads from beta
+        path = 'https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?label=21.2.e.a' # explicit link to beta since check_args prohibits external redirects
+        self.check_external(path, path, '21.2.e.a.4.1')
 
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)

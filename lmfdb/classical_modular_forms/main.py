@@ -566,12 +566,17 @@ def mf_hecke_cc():
             elif db.mf_hecke_cc.exists({"level":N, "weight":k}):
                 if 'label' in info:
                     label = info['label']
+
                     def line_matcher(i, line):
                         return i < 2 or line.startswith(label)
                 else:
                     line_matcher = None
                 filepath = f"/home/lmfdb/data/mf_hecke_cc/{k}/{N}"
-                return send_file_from_beta(filepath, line_matcher=line_matcher, as_attachment=True)
+                if 'label' in info:
+                    download_name = f"mf_hecke_cc_{info['label']}.txt"
+                else:
+                    download_name = f"mf_hecke_cc_{N}.{k}.txt"
+                return send_file_from_beta(filepath, line_matcher=line_matcher, download_name=download_name, as_attachment=True)
             else:
                 errors.append(f"The database does not contain any newforms with weight {k} and level {N}")
         else:
