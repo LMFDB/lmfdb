@@ -41,7 +41,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
            'SneakyTextBox', 'SneakySelectBox',
-           'Downloader', 'WebObj',
+           'Downloader', 'WebObj', 'send_file_from_beta',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
            'Configuration', 'plural_form', 'pluralize',
            'names_and_urls', 'name_and_object_from_url',
@@ -165,7 +165,7 @@ from .search_boxes import (
     ParityBox, ParityMod, SubsetBox, SubsetNoExcludeBox, SelectBoxNoEg, CountBox,
     SneakyTextBox, SneakySelectBox,
     SearchButton, SearchButtonWithSelect, RowSpacer)
-from .downloader import Downloader
+from .downloader import Downloader, send_file_from_beta
 from .display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url
