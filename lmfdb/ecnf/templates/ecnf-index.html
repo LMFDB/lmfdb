@@ -2,6 +2,11 @@
 
 {% block content %}
 
+
+{{ tabs(("Q", "ec.rational_elliptic_curves", false), ("Number Fields", ".index", true)) }}
+
+
+
 <div>
   {{ info.stats.short_summary | safe}}
 </div>
