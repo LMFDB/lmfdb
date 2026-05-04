@@ -243,7 +243,26 @@ class CmfTest(LmfdbTest):
 
     def test_decomposition(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/6/12/E/", follow_redirects=True)
-        assert r'Decomposition</a> of \(E_{12}^{\mathrm{new}}(\Gamma_0(6))\)' in page.get_data(as_text=True)
+        assert r'Decomposition</a> of \(E_{12}^{\mathrm{old}}(\Gamma_1(6))\)' in page.get_data(as_text=True)
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/38/9/E/')
         for elt in map(str,[378, 120, 258, 342, 120, 222, 36]):
             assert elt in page.get_data(as_text=True)
+        for elt in ['Decomposition', r"E_{9}^{\mathrm{old}}(\Gamma_1(38))", "lower level spaces"]:
+            assert elt in page.get_data(as_text=True)
+        decomposition = r"""
+<div class="center">
+  \( E_{9}^{\mathrm{old}}(\Gamma_1(38)) \cong \) <a href=/ModularForm/GL2/Q/holomorphic/1/9/E/>\(E_{9}^{\mathrm{new}}(\Gamma_1(1))\)</a>\(^{\oplus 4}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/2/9/E/>\(E_{9}^{\mathrm{new}}(\Gamma_1(2))\)</a>\(^{\oplus 2}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/19/9/E/>\(E_{9}^{\mathrm{new}}(\Gamma_1(19))\)</a>\(^{\oplus 2}\)
+</div>
+"""
+        assert decomposition in page.get_data(as_text=True)
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/19/6/E')
+        assert r'Decomposition</a> of \(E_{6}^{\mathrm{new}}(\Gamma_1(19))\)' in page.get_data(as_text=True)
+        for elt in map(str,[84,82,2,66,0,18,16,2]):
+            assert elt in page.get_data(as_text=True)
+        for elt in ['19.6.E.a', '19.6.E.c', '19.6.E.e']:
+            assert elt in page.get_data(as_text=True)
+            if elt != '19.6.E.a':
+                assert elt + '.a' in page.get_data(as_text=True)
+                assert elt + '.b' in page.get_data(as_text=True)
+        
+       
