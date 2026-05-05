@@ -18,6 +18,7 @@ from sage.all import (
 import tempfile
 import os
 import re
+import io
 from collections import Counter
 from markupsafe import escape
 
@@ -1652,77 +1653,17 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
+        if pythonL.plot is None:
+            raise ValueError("No plot information stored for this L-function")
+        with io.BytesIO() as buf:
+            pythonL.plot.save(buf, format='png')
+            return buf.getvalue()
+
     except Exception as err:
         if is_debug_mode():
             raise
         else:
             return render_lfunction_exception(err)
-
-    # Figure out plotrange
-    plotrange = 30
-    if hasattr(pythonL, 'plotpoints'):
-        F = p2sage(pythonL.plotpoints)
-        #  F[0][0] is the lowest t-coordinated that we have a value for L
-        #  F[-1][0] is the highest t-coordinated that we have a value for L
-
-        # fix Z-plot sign so that Z(t) > 0 for t -> 0^+
-        for t, x in F:
-            if t > 0:
-                if x < 0:
-                    F = [(t, -x) for t, x in F]
-                break
-
-        plotrange = min(plotrange, -F[0][0], F[-1][0])
-        # aim to display at most 25 axis crossings
-        # if the L-function is nonprimitive
-        if (hasattr(pythonL, 'positive_zeros')
-            and hasattr(pythonL, 'primitive')
-            and not pythonL.primitive):
-            # we stored them ready to display
-            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
-            if len(zeros) >= 25:
-                zero_range = zeros[24]
-            else:
-                zero_range = zeros[-1]*25/len(zeros)
-            zero_range *= 1.2
-            plotrange = min(plotrange, zero_range)
-
-            for t, x in F:
-                if t > 0:
-                    if t < zeros[0]:
-                        assert x > 0
-                    else:
-                        break
-
-    else:
-        # obsolete, because lfunc_data comes from DB?
-        assert False # double checking my claim
-        L = pythonL.sageLfunction
-        if not hasattr(L, "hardy_z_function"):
-            return None
-        plotStep = .1
-        if pythonL._Ltype not in ["riemann", "maass"]:
-            plotrange = 12
-        F = [(i, L.hardy_z_function(i).real()) for i in srange(-1*plotrange, plotrange, plotStep)]
-
-    interpolation = spline(F)
-    F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
-    p = line(F_interp)
-
-    styleLfunctionPlot(p, 10)
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
-        p.save(filename=fn.name)
-    with open(fn.name, 'rb') as f:
-        data = f.read()
-    os.remove(fn.name)
-    return data
-
-
-def styleLfunctionPlot(p, fontsize):
-    p.fontsize(fontsize)
-    p.axes_color((0.5, 0.5, 0.5))
-    p.tick_label_color((0.5, 0.5, 0.5))
-    p.axes_width(0.2)
 
 
 def render_zerosLfunction(request, *args):

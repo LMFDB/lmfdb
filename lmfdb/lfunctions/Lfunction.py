@@ -20,6 +20,7 @@ from sage.all import (
     Integer,
     NaN,
     NumberField,
+    PolynomialRing,
     PowerSeriesRing,
     QQ,
     RIF,
@@ -40,6 +41,7 @@ from sage.all import (
     prime_pi,
     prod,
     sqrt,
+    plot,
 )
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
@@ -129,6 +131,30 @@ def an_from_data(euler_factors,upperbound=30):
 
     return result
 
+#def make_plot(extrema, zeros, derivs, extra_control, dpi=200, thickness=1):
+def make_plot(plotdata, flip=False, dpi=200, thickness=1):
+    control = sorted([(x, 0, d) for (x, d) in plotdata["zeros"]] +
+                     [(x, y, 0) for (x, y) in plotdata["extrema"]] +
+                     plotdata["extra_control"])
+    if flip:
+        # Flip x-values; also flip y-values if needed
+        control = [(-x, y, -d) for (x, y, d) in control]
+        if plotdata["dual_yflip"]:
+            control = [(x, -y, -d) for (x, y, d) in control]
+    t = PolynomialRing(QQ, 't').gen()
+    def make_cubic(x0, y0, d0, x1, y1, d1):
+        return ((y0 + (t - x0) * (d0 - 2*y0 / (x0 - x1))) * (t - x1)**2 / (x0 - x1)**2  +
+                (y1 + (t - x1) * (d1 - 2*y1 / (x1 - x0))) * (t - x0)**2 / (x1 - x0)**2)
+    p = Graphics()
+    for ((x0, y0, d0), (x1, y1, d1)) in zip(control[:-1], control[1:]):
+        p += plot(make_cubic(x0, y0, d0, x1, y1, d1), xmin=x0, xmax=x1, dpi=dpi, thickness=thickness)
+
+    p.fontsize(10)
+    p.axes_color((0.5, 0.5, 0.5))
+    p.tick_label_color((0.5, 0.5, 0.5))
+    p.axes_width(0.2)
+
+    return p
 
 # Convert the information extracted from the database to the format
 # expected by the L-functions homepage template.
@@ -329,28 +355,15 @@ def makeLfromdata(L):
     if len(L.positive_zeros) > 2 and len(L.negative_zeros) > 2:  # Add comma and empty space between negative and positive
         L.negative_zeros = L.negative_zeros + ", "
 
-    # Configure the data for the plot
-    plot_delta = float(data['plot_delta'])
-    if isinstance(data['plot_values'][0], str):
-        plot_values = [string2number(elt) for elt in data['plot_values']]
-    else:
-        plot_values = data['plot_values']
-    pos_plot = [[j * plot_delta, elt]
-                          for j, elt in enumerate( plot_values )]
-
-    if L.selfdual:
-        neg_plot = [ [-1*pt[0], L.sign * pt[1]]
-                     for pt in pos_plot ][1:]
-    else:
-        if isinstance(dual_L_data['plot_values'][0], str):
-            dual_plot_values = [string2number(elt) for elt in dual_L_data['plot_values']]
+    plot_data = db.lfunc_plot.lucky({"Lhash": L.Lhash})
+    if plot_data is None:
+        plot_data = db.lfunc_plot.lucky({"dual_Lhash": L.Lhash})
+        if plot_data is None:
+            L.plot = None
         else:
-            dual_plot_values = dual_L_data['plot_values']
-        dual_plot_delta = float(dual_L_data['plot_delta'])
-        neg_plot = [[-j * dual_plot_delta, elt]
-                for j, elt in enumerate(dual_plot_values) ][1:]
-    neg_plot.reverse()
-    L.plotpoints = neg_plot + pos_plot
+            L.plot = make_plot(plot_data, flip=True)
+    else:
+        L.plot = make_plot(plot_data, flip=False)
 
     L.trace_hash = data.get('trace_hash', None)
     L.types = data.get('types', None)
