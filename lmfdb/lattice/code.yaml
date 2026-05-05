@@ -66,8 +66,8 @@ discriminant:
 level:
   comment: Level
   magma: Level(L);
-  sage: L.genus().level()
-  #oscar: level(L)
+  #sage: to be checked
+  oscar: 2//norm(dual(L))
 
 class_number:
   comment: Class number
@@ -77,7 +77,7 @@ class_number:
 conway_symbol:
   comment: Conway symbol
   magma: ConwaySymbol(Genus(L));
-  #oscar: canonical_symbol(genus(L)) 
+  oscar: genus(L)
 
 parity:
   comment: Parity
@@ -102,12 +102,12 @@ automorphism_group_order:
 density:
   comment: Density
   magma: Density(L);
-  #oscar: density(L)
+  oscar: density(L)
 
 hermite:
   comment: Hermite number
   magma: HermiteNumber(L);
-  #oscar: hermite_number(L)
+  oscar: hermite_number(L)
 
 kissing:
   comment: Kissing number
@@ -165,12 +165,12 @@ dual_det:
 dual_conway:
   comment: Conway symbol of the dual lattice
   magma: ConwaySymbol(Genus(Dual(L)));
-  #oscar: canonical_symbol(first(Hecke.reduced_genus_with_data(genus(dual(L))))) 
+  oscar: first(Hecke.reduced_genus_with_data(genus(dual(L))))
 
 dual_density:
   comment: Density of the dual lattice
   magma: Density(Dual(L));
-  #oscar: center_density(dual(L))
+  oscar: density(dual(L))
 
 dual_kissing:
   comment: Kissing number of the dual lattice
@@ -180,7 +180,7 @@ dual_kissing:
 dual_hermite:
   comment: Hermite number of the dual lattice
   magma: Hermite(Dual(L));
-  #oscar: hermite_number(dual(L))
+  oscar: hermite_number(dual(L))
 
 dual_theta:
   comment: Theta series of the dual lattice
@@ -205,7 +205,7 @@ genus:
 pneighbors:
   comment: p-Neighbors of the lattice
   magma: Neighbors(p, L);
-  #oscar: neighbours(L, p)
+  oscar: neighbours(L, p)
 
 orthogonal_decomposition:
   comment: Orthogonal decomposition
@@ -220,7 +220,7 @@ even_sublattice:
 successive_minima:
   comment: Successive minima
   magma: SuccessiveMinima(L);
-
+  oscar: successive_minima(L)
 
 # Specify which code snippets to test (include both positive definite and indefinite)
 snippet_test:
