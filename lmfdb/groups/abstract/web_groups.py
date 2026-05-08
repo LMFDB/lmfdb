@@ -782,7 +782,7 @@ class WebAbstractGroup(WebObj):
             return r'Mathieu group $M_{24}$'
         if self.label == '17556.a':
             return r'Janko group $J_1$'
-        if self.label == '60480.a':
+        if self.label == '604800.a':
             return r'Janko group $J_2$'
         if self.label == '50232960.a':
             return r'Janko group $J_3$'
