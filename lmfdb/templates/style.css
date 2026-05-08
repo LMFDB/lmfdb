@@ -425,7 +425,7 @@ body > .debug {
 #content {
   margin-top: 10px;
   font-size: 95%;
-  line-height: 135%;
+  line-height: 1.4;
   padding-right: 10px;
 }
 
@@ -2336,23 +2336,29 @@ button.search_fresh {
   background: {{color.button_background}};
 }
 
+/* Tabs for elliptic curves & lattice pages */
 div.tab-container {
   display: inline-block;
   border-radius: 5px;
   overflow: hidden;
   font-weight: bold;
+  line-height: 1.4;
 }
 
-span.tab-active {
-  padding: 10px;
-  background: #0D47A1;
-  color: white;
+/* ">" selector is needed because a's are already styled above */
+span.tab-inactive > a {
+    color: inherit;
+    background: inherit;
 }
+
+span.tab-active, span.tab-inactive:hover {
+  padding: 10px;
+  background: {{ color.sidebar_background_h2_hover }};
+  color: {{ color.sidebar_h2_hover }};
+}
+
 span.tab-inactive {
   padding: 10px;
-  background: #90CAF9;
-}
-span.tab-inactive a, span.tab-inactive a:hover {
-  background: #90CAF9;
-  color: #0D47A1;
+  background: {{ color.sidebar_background_h2 }};
+  color: {{ color.col_sidebar_header_links }};
 }
