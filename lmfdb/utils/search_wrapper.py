@@ -1,5 +1,6 @@
+import time
 from random import randrange
-from flask import render_template, jsonify, redirect, request
+from flask import render_template, jsonify, redirect, request, url_for
 from urllib.parse import urlparse
 from psycopg2.extensions import QueryCanceledError
 from psycopg2.errors import NumericValueOutOfRange
@@ -8,7 +9,7 @@ from sage.misc.cachefunc import cached_function
 
 from lmfdb.app import app, ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
-from lmfdb.utils.utilities import flash_error, flash_info, flash_success, to_dict
+from lmfdb.utils.utilities import flash_error, flash_warning, flash_info, flash_success, to_dict
 from lmfdb.utils.completeness import results_complete
 
 # For diagram search support in SearchWrapper:
@@ -36,6 +37,136 @@ def use_split_ors(info, query, split_ors, offset, table):
         # fetching all records, starting from 0
         and offset < table._count_cutoff
     )
+
+
+def split_top_level_commas(text):
+    """
+    A function which takes an input string and returns a list of strings, splitting on commas that are not inside parentheses/brackets/braces.
+    Used as the default separator function when parsing jump box input for multiple entries.
+    """
+
+    entries = []
+    chunk = []
+    depth = 0
+    for ch in text:
+        if ch in "([{":
+            depth += 1
+            chunk.append(ch)
+        elif ch in ")]}":
+            depth = max(depth - 1, 0)
+            chunk.append(ch)
+        elif ch == "," and depth == 0:
+            entry = "".join(chunk).strip()
+            if entry:
+                entries.append(entry)
+            chunk = []
+        else:
+            chunk.append(ch)
+
+    entry = "".join(chunk).strip()
+    if entry:
+        entries.append(entry)
+    return entries
+
+
+def multi_entry_jump_search(info, parse_entry, label_exists, index_endpoint, input_key="jump", labels_key="labels",
+                            sep=split_top_level_commas, object_name="records", time_limit=20):
+    """
+    Generic handler for jump boxes that supports comma-separated input of various entries (labels/names/polynomials/equations etc.).
+
+    Returns ``None`` if there is at most one entry, allowing the caller's single-entry jump logic to run.
+    Otherwise returns a redirect to a search page of the given labels.
+
+    INPUT:
+
+    - ``info`` -- the info dictionary passed in from front end
+    - ``parse_entry`` -- a custom function which converts a string (e.g. polynomial, equation, nickname, etc.) to be parsed into a label
+    - ``label_exists`` -- a custom function which determines whether a given label exists in the database
+    - ``index_endpoint`` -- the input to "url_for" which returns the index homepage for this section
+    - ``input_key`` -- the dictionary key for the jump search box (default: "jump")
+    - ``labels_key`` -- the dictionary key for the labels search query (default: "labels")
+    - ``sep`` -- A function used to separate out jump box input into separate entries (default: split_top_level_commas)
+    - ``object_name`` -- The name of the objects in the database (e.g. "fields", "elliptic curves"). Used when flashing info or error messages.
+    - ``time_limit`` -- a time limit (in seconds) for the maximum total amount of time this query should take (default: 20)
+    """
+
+    jump_input = info.get(input_key, "")
+    entries = [s.strip() for s in sep(jump_input) if s.strip()]
+    if len(entries) <= 1:
+        return None
+
+    # For each entry given in the comma-separated jump box input, we attempt to parse the entry using parse_entry (while skipping duplicates)
+    # If the user inputs a large number of entries, this may take a long time (e.g. for number fields, this might require calling Pari's polredabs on every entry)
+    # We start a timer, and stop parsing entries if after parsing i entries, it's predicted that parsing i+1 entries will exceed the time_limit (default: 20 seconds)
+
+    labels, seen = [], set()
+    not_parsed, not_found = 0, 0
+    start_timer = time.monotonic()
+    for i in range(len(entries)):
+        # Check if doing the (i+1)-th entry will exceed the time limit
+        if (i > 0) and (time.monotonic() - start_timer > (i*time_limit)/(i+1)):
+            flash_warning("Search query timed out after processing the first %s out of %s entries in the input box. Only the first %s entries are included in the search results below.", i, len(entries), i)
+            break
+
+        # Attempt to parse entry
+        try:
+            label = parse_entry(entries[i])
+        except (SearchParsingError, ValueError):
+            not_parsed += 1
+            continue
+        if not label_exists(label):
+            not_found += 1
+            continue
+        if label not in seen:
+            labels.append(label)
+            seen.add(label)
+
+    # Flash error and return index page if no entries successfully parsed
+    if not labels:
+        flash_error("None of the %s entries matched %s in the database.", len(entries), object_name)
+        return redirect(url_for(index_endpoint))
+
+    # Otherwise flash info message with number of entries we are able to parse
+    ignored = not_parsed + not_found
+    duplicates = len(entries) - ignored - len(labels)
+    if ignored:
+        flash_info("Matched %s of %s entries; ignored %s unrecognized or missing entries.", len(labels), len(entries), ignored)
+    if duplicates > 0:
+        flash_info("Removed %s duplicate label(s).", duplicates)
+
+    return redirect(url_for(index_endpoint, **{labels_key: ",".join(labels)}))
+
+
+def parse_labels(info, query, table, labels_key="labels"):
+    """
+    Parse a list of labels from the URL "?labels=" query into a database query.
+    Mainly used when multiple entries are given in the search jump box.
+    """
+
+    labels_input = info.get(labels_key)
+    if not labels_input or not hasattr(table, "_label_col"):
+        return
+
+    # Separate out labels from input, stripping whitespace and removing duplicates while preserving order
+    labels = list(set(label.strip() for label in labels_input.split(",")))
+    seen = set(labels)
+    if not labels:
+        return
+
+    label_col = table._label_col
+    existing = query.get(label_col)
+    if existing is None:
+        query[label_col] = {"$in": labels}
+    elif isinstance(existing, dict):
+        if "$in" in existing:
+            existing["$in"] = [label for label in existing["$in"] if label in seen]
+        else:
+            # Keep existing constraints and add an $in constraint as well.
+            existing["$in"] = labels
+    else:
+        # Existing exact match constraint: keep it only if it appears in labels.
+        if existing not in seen:
+            query[label_col] = {"$in": []}
 
 
 class Wrapper:
@@ -85,6 +216,7 @@ class Wrapper:
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             errpage = self.f(info, query)
+            parse_labels(info, query, self.table)
         except Exception as err:
             # Errors raised in parsing; these should mostly be SearchParsingErrors
             if is_debug_mode():

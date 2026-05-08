@@ -4,7 +4,7 @@ import re
 import sys
 from collections import Counter
 from lmfdb.utils.utilities import flash_error, flash_info
-from sage.all import ZZ, QQ, prod, PolynomialRing, pari
+from sage.all import ZZ, QQ, QQbar, prod, PolynomialRing, pari
 from sage.misc.decorators import decorator_keywords
 from sage.repl.preparse import implicit_mul
 from sage.misc.parser import Parser
@@ -1226,13 +1226,164 @@ def input_string_to_poly(FF):
     except Exception:
         return None, F, FF
 
-def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
+
+def _strip_matching_outer_parens(s):
+    """Remove only parentheses that wrap the entire string, preserving inner grouping."""
+    while len(s) >= 2 and s[0] == "(" and s[-1] == ")":
+        depth = 0
+        wraps_all = True
+        for i, ch in enumerate(s):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+            if depth == 0 and i < len(s) - 1:
+                wraps_all = False
+                break
+        if wraps_all and depth == 0:
+            s = s[1:-1]
+        else:
+            break
+    return s
+
+
+def _nf_string_to_qqbar(s):
+    """
+    Converts a string into an algebraic element in QQbar.
+
+    Supported syntax:
+    - binary operators: +, -, *, /, ^ (exponentiation)
+    - unary operators: +, -
+    - functions: sqrt(...), root(...), cbrt(...)
+    - zeta roots of unity: zeta(...), zeta_N, zetaN
+    - imaginary unit: i
+    - golden ratio constant: phi = (1 + sqrt(5))/2
+    - shorthand radicals: sqrt5, root-3, cbrt7
+    - nth-roots via exponentiation: base^(1/n), e.g., 2^(1/3), phi^(3/4)
+    - nested parentheses and combinations of the above
+
+    The expression is safely parsed with a restricted Python AST and then evaluated as a Sage object in QQbar.
+
+    Examples: sqrt2, sqrt2 + cbrt3, zeta4 - 1/phi, sqrt(2 + 3*sqrt(2)), 2^(1/3), phi^(3/4)
+
+    """
+
+    s = s.lower().strip().replace(" ", "")
+    if not s:
+        raise SearchParsingError("The algebraic expression is empty.")
+
+    def _normalize_radicals(t):
+        # Convert shorthand like sqrt5, root-3, cbrt7 into function-call form: sqrt(5), root(-3), cbrt(7).
+        t = re.sub(r"\b(sqrt|root|cbrt)([+-]?\d+)\b", r"\1(\2)", t)
+        # Convert zeta shorthand like zeta5 or zeta_5 into zeta(5).
+        t = re.sub(r"\bzeta_?(\d+)\b", r"zeta(\1)", t)
+        # Convert ^ to ** for exponentiation (Python uses ** for exponentiation)
+        t = t.replace("^", "**")
+        return t
+
+    s = _normalize_radicals(_strip_matching_outer_parens(s))
+
+    try:
+        node = ast.parse(s, mode="eval")
+    except SyntaxError as err:
+        raise SearchParsingError(f"Could not parse algebraic expression '{s}': {err.msg}")
+
+    def _eval_ast(n):
+        if isinstance(n, ast.Expression):
+            return _eval_ast(n.body)
+        if isinstance(n, ast.Constant):
+            val = n.value
+            if isinstance(val, int):
+                return QQbar(QQ(val))
+            raise SearchParsingError("Only numeric constants are supported in algebraic expressions.")
+        if isinstance(n, ast.Name):
+            if n.id == "i":
+                return QQbar.zeta(4)
+            if n.id == "phi":
+                return (QQbar(1) + QQbar(5).sqrt()) / 2
+            raise SearchParsingError(f"Unsupported symbol '{n.id}' in algebraic expressions.")
+        if isinstance(n, ast.UnaryOp):
+            v = _eval_ast(n.operand)
+            if isinstance(n.op, ast.UAdd):
+                return v
+            if isinstance(n.op, ast.USub):
+                return -v
+            raise SearchParsingError("Unsupported unary operator in algebraic expression.")
+        if isinstance(n, ast.BinOp):
+            left = _eval_ast(n.left)
+            right = _eval_ast(n.right)
+            if isinstance(n.op, ast.Add):
+                return left + right
+            if isinstance(n.op, ast.Sub):
+                return left - right
+            if isinstance(n.op, ast.Mult):
+                return left * right
+            if isinstance(n.op, ast.Div):
+                if right == 0:
+                    raise SearchParsingError("Division by zero in algebraic expression.")
+                return left / right
+            if isinstance(n.op, ast.Pow):
+                # Support for arbitrary nth-roots via exponentiation: base^(exponent)
+                # The exponent should be a rational number for algebraic evaluation
+                try:
+                    exp_rational = QQ(right)
+                except (TypeError, ValueError):
+                    raise SearchParsingError(f"Exponent must be a rational number, got {right}.")
+                # Use QQbar's power operator to handle rational exponents
+                # This computes base^exp_rational in QQbar
+                return left ** exp_rational
+            raise SearchParsingError("Unsupported binary operator in algebraic expression.")
+        if isinstance(n, ast.Call):
+            if not isinstance(n.func, ast.Name):
+                raise SearchParsingError("Invalid function call in algebraic expression.")
+            fname = n.func.id
+            if fname not in {"sqrt", "root", "cbrt", "zeta"}:
+                raise SearchParsingError(f"Unsupported function '{fname}' in algebraic expression.")
+            if len(n.args) != 1 or n.keywords:
+                raise SearchParsingError(f"Function '{fname}' takes exactly one argument.")
+            arg = _eval_ast(n.args[0])
+            if fname in {"sqrt", "root"}:
+                return arg.sqrt()
+            if fname == "zeta":
+                try:
+                    n_q = QQ(arg)
+                    n_int = ZZ(n_q)
+                except (TypeError, ValueError):
+                    raise SearchParsingError("zeta(...) requires a positive integer argument.")
+                if n_q != n_int or n_int <= 0:
+                    raise SearchParsingError("zeta(...) requires a positive integer argument.")
+                return QQbar.zeta(n_int)
+            return arg.nth_root(3)
+        raise SearchParsingError("Unsupported syntax in algebraic expression.")
+
+    try:
+        return _eval_ast(node)
+    except SearchParsingError:
+        raise
+    except Exception as err:
+        raise SearchParsingError(f"Could not evaluate algebraic expression '{s}': {err}")
+
+
+def nf_string_to_label(FF):
+    """
+    Converts a number field nickname, polynomial, or label to the corresponding LMFDB label (in the format "d.r.D.n").
+
+    Supports custom nicknames of the form Q(s1, s2, ..., sk) where each si is a string representing an algebraic expression
+    Uses _nf_string_to_qqbar to safely parse algebraic expressions into elements in QQbar.
+    Uses number_field_elements_from_algebraics to compute the minimal number field containing the specified elements.
+
+    Examples: Q, Qsqrt2, Qsqrt-4, Qzeta5, Q(sqrt2+sqrt3), Qcbrt2, Q(sqrt(2 + 3*sqrt2)), Q(sqrt2, cbrt3), Q(2^(1/5)), etc.
+    """
+
+    # Check if the rationals Q or Q(i)
     if FF in ["q", "Q"]:
         return "1.1.1.1"
     if FF.lower() in ["qi", "q(i)"]:
         return "2.0.4.1"
 
+    # Check if input is a polynomial
     F1, F, FF = input_string_to_poly(FF)
+    F = F.replace(" ", "")
     if len(F) == 0:
         raise SearchParsingError("Entry for the field was left blank.  You need to enter a field label, field name, or a polynomial.")
     if F1 and len(str(F1.parent().gen())) == 1: # we only support single-letter variable names
@@ -1244,15 +1395,19 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
         raise SearchParsingError("%s does not define a number field in the database." % F, trim_msg_error=True)
 
     if F[0] == "q":
-        if "(" in F and ")" in F:
-            F = F.replace("(", "").replace(")", "")
-        if F[1:5] in ["sqrt", "root"]:
+        # Strip away outer parenthesis
+        Fstrip = _strip_matching_outer_parens(F[1:])
+        if len(Fstrip) == 0:
+            return "1.1.1.1"
+
+        # Case 1: Check if input is quadratic field (given in the form Qsqrt5 or Q(sqrt5))
+        if re.match(r'^(sqrt|root)[+-]?\d+$', Fstrip):
             try:
-                d = integer_squarefree_part(ZZ(str(F[5:])))
+                d = integer_squarefree_part(ZZ(str(Fstrip[4:])))
             except (TypeError, ValueError):
                 d = 0
             if d == 0:
-                raise SearchParsingError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(FF[:5]))
+                raise SearchParsingError("After {0}, the remainder must be a nonzero integer.  Use {0}5 or {0}-11 for example.".format(Fstrip[:4]))
             if d == 1:
                 return "1.1.1.1"
             if d % 4 in [2, 3]:
@@ -1262,10 +1417,10 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             absD = D.abs()
             s = 0 if D < 0 else 2
             return "2.%s.%s.1" % (s, str(absD))
-        if F[0:5] == "qzeta":
-            if "_" in F:
-                F = F.replace("_", "")
-            match_obj = re.match(r"^qzeta(\d+)(\+|plus)?$", F)
+
+        # Case 2: Check if cyclotomic field (or its maximal real subfield)
+        if Fstrip[:4] == "zeta" and re.match(r"^qzeta\d+(\+|plus)?$", F.replace("_", "")):
+            match_obj = re.match(r"^qzeta(\d+)(\+|plus)?$", F.replace("_", ""))
             if not match_obj:
                 raise SearchParsingError("After {0}, the remainder must be a positive integer or a positive integer followed by '+'.  Use {0}5 or {0}19+, for example.".format(F[:5]))
 
@@ -1273,21 +1428,41 @@ def nf_string_to_label(FF):  # parse Q, Qsqrt2, Qsqrt-4, Qzeta5, etc
             if d % 4 == 2:
                 d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
 
-            if match_obj.group(2):  # asking for the totally real field
+            # Check if matches maximal real subfield of a cyclotomic field
+            if match_obj.group(2):
                 from lmfdb.number_fields.web_number_field import rcyclolookup
 
                 if d in rcyclolookup:
                     return rcyclolookup[d]
                 else:
                     raise SearchParsingError(f"{F} is not in the database.")
-            # Now not the totally real subfield
+
+            # Check if matches cyclotomic field
             from lmfdb.number_fields.web_number_field import cyclolookup
 
             if d in cyclolookup:
                 return cyclolookup[d]
             else:
                 raise SearchParsingError(f"{F} is not in the database.")
-        raise SearchParsingError("It is not a valid field name or label, or a defining polynomial.")
+
+        # Case 3: Use generic algebraic nickname parser for Q(...), Qsqrt..., Qcbrt..., etc.
+        from lmfdb.number_fields.number_field import poly_to_field_label
+
+        # Support comma-separated generators Q(s1, s2, ..., sk).
+        pieces = [piece.strip() for piece in Fstrip.split(",")]
+        if any(not piece for piece in pieces):
+            raise SearchParsingError("Empty generator in comma-separated field nickname.")
+
+        from sage.rings.qqbar import number_field_elements_from_algebraics
+        alphas = [_nf_string_to_qqbar(piece) for piece in pieces]
+        K, _, _ = number_field_elements_from_algebraics(alphas)
+        pol = PolynomialRing(QQ, 'x')(K.defining_polynomial())
+        if pol.degree() <= 1:
+            return "1.1.1.1"
+        label = poly_to_field_label(pol)
+        if label:
+            return label
+        raise SearchParsingError("%s is not in the database." % FF)
 
     # Expand out factored labels, like 11.11.11e20.1
     from lmfdb.number_fields.number_field import FIELD_LABEL_RE
