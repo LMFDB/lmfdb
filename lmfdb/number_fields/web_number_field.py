@@ -313,9 +313,9 @@ def field_pretty(label):
         # Check that discriminant is negative
         if wnf.disc() < 0:
             # Explicitly solve for a real root of defining polynomial (using Cardano's formula):
-            d, c, b, a = wnf.poly().coefficients(sparse=False)
+            e, c, b, a = wnf.poly().coefficients(sparse=False)
             p = (3*a*c - b**2)/(3*a**2)
-            q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
+            q = (2*b**3 - 9*a*b*c + 27*a**2*e)/(27*a**3)
             r = (q**2)/4 + (p**3)/27   # r is positive if disc negative
 
             # A real root is (-q/2 + sqrt(r))^{1/3} + (-q/2 - sqrt(r))^{1/3}
