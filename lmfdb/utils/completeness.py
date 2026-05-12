@@ -776,6 +776,26 @@ class Specific(ColTest):
         return all(D in constraint for (D, constraint) in zip(Ds, self.constraints))
 
 
+class BadPrimesSubset(ColTest):
+    """
+    Check that bad_primes are restricted to a subset of {2,3,5,7}
+    """
+    def __init__(self, allowed_primes={2,3,5,7}):
+        self.allowed_primes = set(allowed_primes)
+
+    def __call__(self, db, Ds):
+        # Ds[0] should be the query value for bad_primes
+        query_val = Ds[0]
+        if isinstance(query_val, dict):
+            if '$containedin' in query_val:
+                primes = query_val['$containedin']
+                return set(primes).issubset(self.allowed_primes)
+        elif isinstance(query_val, list):
+            # Exact match case
+            return set(query_val).issubset(self.allowed_primes)
+        return False
+
+
 class CPrimeBound(CBound):
     """
     Similar to CBound, but requires Ds to all be prime
@@ -2494,7 +2514,8 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", Bound(500000), "elliptic curves with conductor at most 500000"),
     ("conductor", PrimeBound(300000000), "elliptic curves with prime conductor at most 300 million"),
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
-    ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000")])
+    ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
+    ("bad_primes", BadPrimesSubset(), "elliptic curves with bad primes in {2,3,5,7}")])
 
 
 CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
