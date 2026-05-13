@@ -454,7 +454,7 @@ class ECNFDownloader(Downloader):
         row["field_coeffs"] = poly
 
         # Convert Weierstrass coefficients from string to a list of list of integers
-        row['ainvs'] = [[ZZ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
+        row['ainvs'] = [[QQ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
 
         return row
 
