@@ -799,6 +799,60 @@ class Subset(ColTest):
         return False
 
 
+class RestrictedBadPrimesConductor(ColTest):
+    """
+    Checks completeness based on the maximum conductor for a given set of restricted bad primes.
+    E.g. can be used for elliptic curves, genus 2 curves, or general abelian varieties (e.g. see Brumer-Kramer paper).
+    
+    For an elliptic curve E, if bad primes are restricted to S, then the maximum conductor of E is
+    M = Prod_{p in S} p^{e_p}, where e_2 = 8, e_3 = 5, and e_p = 2 for p > 3.
+    (i.e. the maximum valuations of the conductor at each prime for elliptic curves).
+    
+    If M is at most conductor_bound (the upper bound of curves in the database), completeness is guaranteed.
+    
+    Args:
+        exponents: dict mapping primes to their maximum exponents in the conductor.
+                   Defaults to the elliptic curve over Q case if not provided.
+        conductor_bound: the known conductor bound for curves in the database (e.g., 500000)
+    """
+    def __init__(self, exponents, conductor_bound):
+        self.exponents = exponents
+        self.conductor_bound = conductor_bound
+    
+    def __call__(self, db, Ds):
+        query_val = Ds[0]
+        bad_primes = None
+        
+        if isinstance(query_val, dict):
+            if '$containedin' in query_val:
+                bad_primes = query_val['$containedin']
+        elif isinstance(query_val, list):
+            bad_primes = query_val
+        
+        if bad_primes is None or not bad_primes:
+            return False
+        
+        # Compute maximum conductor for this set of bad primes
+        max_conductor = 1
+        for p in bad_primes:
+            if p in self.exponents:
+                e_p = self.exponents[p]
+            elif p == 2:
+                e_p = 8
+            elif p == 3:
+                e_p = 5
+            else:
+                e_p = 2
+
+            max_conductor *= p**e_p
+
+            if max_conductor > self.conductor_bound:
+                return False  # Early exit if we already exceed the bound
+        
+        # If we get here, completeness is guaranteed
+        return True
+
+
 class CPrimeBound(CBound):
     """
     Similar to CBound, but requires Ds to all be prime
@@ -806,6 +860,7 @@ class CPrimeBound(CBound):
     def __call__(self, db, Ds):
         last = self.cls(Ds[-1])
         return last.is_finite() and super().__call__(db, Ds) and all(is_prime(p) for p in last)
+
 
 
 #################################
@@ -2518,7 +2573,8 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", PrimeBound(300000000), "elliptic curves with prime conductor at most 300 million"),
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
     ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
-    ("bad_primes", Subset({2,3,5,7}), "elliptic curves with bad primes in {2,3,5,7}")])
+    ("bad_primes", Subset({2,3,5,7}), "elliptic curves with bad primes in {2,3,5,7}"),
+    ("bad_primes", RestrictedBadPrimesConductor(500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
 
 
 CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
