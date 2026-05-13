@@ -776,23 +776,26 @@ class Specific(ColTest):
         return all(D in constraint for (D, constraint) in zip(Ds, self.constraints))
 
 
-class BadPrimesSubset(ColTest):
+class Subset(ColTest):
     """
-    Check that bad_primes are restricted to a subset of {2,3,5,7}
+    Check that a query value is a subset of some allowed set.
+    
+    Handles both exact matches (lists) and containment constraints ($containedin).
+    Useful for completeness checks on restricted sets of values (e.g., bad primes, ramified primes, etc.)
     """
-    def __init__(self, allowed_primes={2,3,5,7}):
-        self.allowed_primes = set(allowed_primes)
+    def __init__(self, allowed_set):
+        self.allowed_set = set(allowed_set)
 
     def __call__(self, db, Ds):
-        # Ds[0] should be the query value for bad_primes
+        # Ds[0] should be the query value
         query_val = Ds[0]
         if isinstance(query_val, dict):
             if '$containedin' in query_val:
-                primes = query_val['$containedin']
-                return set(primes).issubset(self.allowed_primes)
+                values = query_val['$containedin']
+                return set(values).issubset(self.allowed_set)
         elif isinstance(query_val, list):
             # Exact match case
-            return set(query_val).issubset(self.allowed_primes)
+            return set(query_val).issubset(self.allowed_set)
         return False
 
 
@@ -2515,7 +2518,7 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", PrimeBound(300000000), "elliptic curves with prime conductor at most 300 million"),
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
     ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
-    ("bad_primes", BadPrimesSubset(), "elliptic curves with bad primes in {2,3,5,7}")])
+    ("bad_primes", Subset({2,3,5,7}), "elliptic curves with bad primes in {2,3,5,7}")])
 
 
 CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
