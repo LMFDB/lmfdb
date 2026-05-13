@@ -2378,6 +2378,81 @@ class NFBound(ColTest):
         return True, self.display_reason(reasons), caveats
 
 
+#### Regulator bounds for number fields ####
+
+class RegulatorBound(ColTest):
+    """
+    Checks completeness based on regulator bounds for number fields.
+    
+    Uses the relationship R >= log(|disc|)^r, where r is the unit rank (r1 + r2 - 1).
+    If we have all fields up to discriminant D_max for a signature/Galois group,
+    then searching with regulator <= log(D_max)^r guarantees completeness.
+    """
+    def __init__(self, nf_bound):
+        """
+        Args:
+            nf_bound: An instance of NFBound with the discriminant bounds
+        """
+        self.nf_bound = nf_bound
+    
+    def __call__(self, db, query):
+        """
+        Returns (complete, reason, caveat) for regulator-bounded searches.
+        """
+        from sage.all import log, exp, RealNumber
+        
+        # Extract regulator constraint
+        regulator_query = query.get("regulator")
+        if regulator_query is None:
+            return False, None, None
+        
+        regulator_max = None
+        if isinstance(regulator_query, dict):
+            if "$lte" in regulator_query:
+                regulator_max = regulator_query["$lte"]
+            elif "$lt" in regulator_query:
+                regulator_max = regulator_query["$lt"]
+        elif isinstance(regulator_query, (int, float)):
+            regulator_max = regulator_query
+        
+        if regulator_max is None:
+            return False, None, None
+        
+        # Extract signature
+        signature = query.get("signature")
+        if not isinstance(signature, list) or len(signature) != 2:
+            return False, None, None
+        
+        r1, r2 = signature
+        n = r1 + 2*r2  # degree
+        r = r1 + r2 - 1  # unit rank
+        
+        # Check if we have discriminant bounds for this signature
+        if n < 2 or n >= len(self.nf_bound._maxD) or self.nf_bound._maxD[n] is None:
+            return False, None, None
+        
+        # Get the discriminant bound for this signature
+        maxD_list = self.nf_bound._maxD[n]
+        if r2 >= len(maxD_list):
+            return False, None, None
+        
+        D_max = maxD_list[r2]
+        
+        # Compute the regulator bound: log(D_max)^r
+        # Using log base e
+        try:
+            regulator_bound = float(log(D_max)) ** r
+        except (ValueError, OverflowError):
+            return False, None, None
+        
+        # Check if the query's regulator limit is within our completeness bound
+        if regulator_max <= regulator_bound:
+            reason = f"degree {n} number fields with signature {signature} and regulator at most {regulator_max} (completeness guaranteed up to regulator {regulator_bound:.2f})"
+            return True, reason, None
+        
+        return False, None, None
+
+
 #### Artin representations ####
 
 minimal_label = {
@@ -2715,7 +2790,11 @@ CompletenessChecker("av_fq_isog", [
 CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at most 6")])
 
 
-CompletenessChecker("nf_fields", [((), NFBound())])
+nf_bound = NFBound()
+CompletenessChecker("nf_fields", [
+    ((), nf_bound),
+    ((), RegulatorBound(nf_bound))
+])
 
 
 CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[MulFiller("n", "e", "f")])
