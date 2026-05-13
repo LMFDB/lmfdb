@@ -978,7 +978,11 @@ class RestrictedBadPrimesNFConductor(ColTest):
 
 class CPrimeBound(CBound):
     """
-    Similar to CBound, but requires Ds to all be prime
+    Similar to CBound, but requires Ds to all be prime.
+
+    Examples:
+      ("weight", "char_order", "level"), CPrimeBound(2, 1, 1000000)   -> checks that weight is 2, char_order is 1, and level is a prime at most 1000000
+
     """
     def __call__(self, db, Ds):
         last = self.cls(Ds[-1])
