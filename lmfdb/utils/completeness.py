@@ -853,6 +853,99 @@ class RestrictedBadPrimesConductor(ColTest):
         return True
 
 
+class RestrictedBadPrimesNFConductor(ColTest):
+    r"""
+    Checks completeness based on the maximum conductor norm for a given set of restricted bad primes,
+    for elliptic curves over number fields.
+    
+    For an elliptic curve E over a number field K of degree d, if bad primes are restricted to S,
+    then the maximum conductor norm of E is M = \prod_{p in S} p^{d*e_p}, where:
+    - e_2 = 8, e_3 = 5, and e_p = 2 for p > 3
+    
+    If M is at most the conductor bound M_K for the field K, completeness is guaranteed.
+    
+    Args:
+        conductor_bounds: dict mapping (degree, signature) tuples or field labels to conductor bounds.
+                         E.g. {(1, (1,0)): 150000, (2, (0,1)): 500000, ...}
+    """
+    def __init__(self, conductor_bounds):
+        self.conductor_bounds = conductor_bounds
+    
+    def __call__(self, db, query):
+        """
+        query is the full query dict (not extracted columns), since we need access to
+        both bad_primes and field information
+        """
+        # Extract bad primes from query
+        bad_primes_query = query.get("bad_primes")
+        bad_primes = None
+        
+        if isinstance(bad_primes_query, dict):
+            if '$containedin' in bad_primes_query:
+                bad_primes = bad_primes_query['$containedin']
+        elif isinstance(bad_primes_query, list):
+            bad_primes = bad_primes_query
+        
+        if bad_primes is None or not bad_primes:
+            return False, None, None
+        
+        # Extract field information and degree
+        degree = None
+        field_key = None
+        
+        # Try to get degree from signature
+        signature = query.get("signature")
+        if isinstance(signature, list) and len(signature) == 2:
+            r1, r2 = signature
+            degree = r1 + 2*r2
+            field_key = (degree, tuple(signature))
+        
+        # Try to get from field_label
+        field_label = query.get("field_label")
+        if field_label and isinstance(field_label, str):
+            parts = field_label.split(".")
+            if parts and parts[0].isdigit():
+                label_degree = int(parts[0])
+                if degree is None:
+                    degree = label_degree
+                field_key = field_label
+        
+        if degree is None or degree < 1:
+            return False, None, None
+        
+        # Look up conductor bound
+        conductor_bound = None
+        if field_key and field_key in self.conductor_bounds:
+            conductor_bound = self.conductor_bounds[field_key]
+        elif degree in self.conductor_bounds:
+            conductor_bound = self.conductor_bounds[degree]
+        
+        if conductor_bound is None:
+            return False, None, None
+        
+        # Compute maximum conductor norm for this set of bad primes
+        max_conductor_norm = 1
+        for p in bad_primes:
+            # Use standard elliptic curve exponents
+            if p == 2:
+                e_p = 8
+            elif p == 3:
+                e_p = 5
+            else:
+                e_p = 2
+            
+            max_conductor_norm *= p ** (degree * e_p)
+            
+            if max_conductor_norm > conductor_bound:
+                return False, None, None  # Early exit if we already exceed the bound
+        
+        # If we get here, completeness is guaranteed
+        # Construct a descriptive reason
+        primes_str = ", ".join(str(p) for p in sorted(bad_primes))
+        reason = f"elliptic curves over number fields of degree {degree} with bad primes in {{{primes_str}}} and conductor norm at most {conductor_bound}"
+        return True, reason, None
+
+
 class CPrimeBound(CBound):
     """
     Similar to CBound, but requires Ds to all be prime
@@ -2574,13 +2667,30 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
     ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
     ("bad_primes", Subset({2,3,5,7}), "elliptic curves with bad primes in {2,3,5,7}"),
-    ("bad_primes", RestrictedBadPrimesConductor(500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
+    ("bad_primes", RestrictedBadPrimesConductor({}, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
 
 
-CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
+CompletenessChecker("ec_nfcurves", [
+    ("conductor_norm", BianchiBound(ec=True)),
+    ("bad_primes", RestrictedBadPrimesNFConductor({
+        # Bounds extracted from BianchiBound (see lines 1242-1277)
+        # Imaginary quadratic fields: maximum bound from the discriminant ranges
+        (2, (0, 1)): 150000,
+        # Totally real quadratic fields with discriminant <= 497
+        (2, (2, 0)): 5000,
+        # Cubic fields with 1 real embedding (mixed cubic)
+        (3, (1, 1)): 20000,
+        # Totally real cubic fields
+        (3, (3, 0)): 2059,
+    }))
+], fill=[FieldLabelFiller(True)])
 
 
-# No completeness guarantees for genus 2 curves
+# For genus 2 curves, can add trivial completeness bounds as there are no genus 2 curves of conductor less than 121, assuming paramodularity
+CompletenessChecker("g2c_curves", [
+    ("conductor", Bound(120), "genus 2 curves with conductor at most 120 vacously (as there are none)", "Paramodular conjecture"),
+    ("absD", Bound(120), "genus 2 curves with minimal discriminant at most 120 vacously (as there are none)", "Paramodular conjecture")
+])
 
 
 # Skip modular curves for the moment
