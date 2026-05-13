@@ -749,12 +749,18 @@ class CBound(Bound):
 
 
 class PrimeBound(Bound):
+    """
+    Check that all queried values are finite sets of primes.
+    """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
         return all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
 
 
 class Smooth(ColTest):
+    """
+    Check that all queried integers are M-smooth.
+    """
     def __init__(self, M, cls=IntegerSet):
         self.cls = cls
         self.M = M
@@ -769,6 +775,9 @@ class Smooth(ColTest):
 
 
 class Specific(ColTest):
+    """
+    Check that each input lies in a specified allowed set.
+    """
     def __init__(self, *constraints):
         self.constraints = constraints
 
@@ -1999,6 +2008,9 @@ class NFBound(ColTest):
         return "number fields with " + "; ".join(strings + [describe(V) for V in by_pattern.values()])
 
     def clear_signatures(self, n, D, r2opts, reasons):
+        """
+        Remove signatures already certified complete, and restrict the remaining discriminant range accordingly.
+        """
         if 2 <= n < len(self._maxD):
             m = infinity
             for r2 in set(r2opts):
