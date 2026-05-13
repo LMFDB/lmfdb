@@ -997,6 +997,10 @@ class CPrimeBound(CBound):
 # These classes are used to fill entries in for a query dictionary that can be derived from other entries
 
 class FieldLabelFiller:
+    """
+    Infer signature and discriminant constraints from a field label.
+    """
+
     def __init__(self, ec):
         self.ec = ec
 
@@ -1015,6 +1019,11 @@ class FieldLabelFiller:
 
 
 class MulFiller:
+    """
+    Infer and refine constraints using the multiplicative relation n = e * f.
+    E.g. useful for certifying local fields, where n is the degree, e is the ramification index, and f is the inertia degree.
+    """
+
     def __init__(self, n, e, f, backfill=False, cls=IntegerSet):
         self.n, self.e, self.f = n, e, f
         self.backfill, self.cls = backfill, cls
@@ -1032,6 +1041,11 @@ class MulFiller:
 
 
 class SumFiller:
+    """
+    Infer and refine constraints using the relation a = b + c.
+    E.g. useful for certifying abelian varieties using relations of the form "dimension = rank + corank".
+    """
+
     def __init__(self, a, b, c, backfill=False, cls=IntegerSet):
         self.a, self.b, self.c = a, b, c
         self.backfill, self.cls = backfill, cls
@@ -1049,11 +1063,20 @@ class SumFiller:
 
 
 class CMFFiller:
+    """
+    Infers constraints for classical modular form queries.
+
+    In particular:
+     - If projective_image specified, sets weight to be 1.
+     - If level N, weight k specified, sets "Nk2" = N*k^2.
+     - If char_orbit or prim_orbit index is 1, sets char_order to 1 (i.e. trivial character).
+    """
+
     def __call__(self, query):
         C = IntegerSet
         if query.get("projective_image"):
             query["weight"] = 1
-        # TODO: set weigt/level from analytic conductor
+        # TODO: set weight/level from analytic conductor
         N, k = query.get("level"), query.get("weight")
         if N is not None and k is not None:
             query["Nk2"] = C(N) * C(k) * C(k)
@@ -2049,6 +2072,9 @@ class NFBound(ColTest):
         return D
 
     def clear_r2G(self, n, D, r2opts, galt, reasons):
+        """
+        Remove Galois groups certified complete for all remaining signatures.
+        """
         r2G = defaultdict(dict)
         for (r2, Gs, M) in self._r2G.get(n, []):
             if r2 in r2opts and D.bounded(M):
@@ -2061,6 +2087,9 @@ class NFBound(ColTest):
                     reasons.add((n, r2, Gs, None, M, None))
 
     def clear_grd(self, n, grd, galt, reasons):
+        """
+        Remove Galois groups certified complete by the root discriminant bound.
+        """
         by_t = {}
         for (Gs, M) in self._grd.get(n, []):
             if grd.bounded(M):
@@ -2124,8 +2153,12 @@ class NFBound(ColTest):
         return False
 
     def galt(self, n, gal, isgal, cyc, ab, solv):
-        pos_constraints = []
-        neg_constraints = []
+        """
+        Compute the possible degree n transitive Galois groups satisfying the given constraints.
+        """
+
+        pos_constraints = []  # Set of allowed group IDs
+        neg_constraints = []  # Set of excluded group IDs
         if isinstance(gal, str) and gal.count("T") == 1:
             N, t = gal.split("T")
             if N == str(n) and t.isdigit():
@@ -2247,6 +2280,9 @@ class NFBound(ColTest):
         return False, None
 
     def _one_n(self, db, query, reasons):
+        """
+        Check completeness for number fields of a fixed degree n.
+        """
         n = query.get("degree")
         if n == 1:
             reasons.add("degree 1")
