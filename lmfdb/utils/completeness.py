@@ -723,7 +723,13 @@ class ColTest:
 
 class Bound(ColTest):
     """
-    Check that the inputs lie in a box.
+    Check that the inputs lie in the product of the specified bounds. (i.e. in a given box).
+    Useful for checking if conductor/discriminant/level/degree/genus is in a specified range.
+
+    Examples:
+      "conductor", Bound(1000)              -> checks that conductor is at most 1000
+      "genus", Bound([2, 4])                -> checks that genus is between 2 and 4, inclusive
+      ("level", "weight"), Bound(10, 100)   -> checks that level is at most 10 and weight is at most 100 
     """
     def __init__(self, *bounds, cls=IntegerSet):
         self.cls = cls
@@ -735,10 +741,12 @@ class Bound(ColTest):
 
 class CBound(Bound):
     """
-    Given constraints on a set of values, check that the last value lies in an interval
+    Given constraints on a set of values, check that the last value lies in an interval.
 
     Note that overlapping Bound boxes is better when applicable,
     since this test will only match queries where the constraints are specified exactly
+
+    E.g. used for modular forms, Sato-Tate groups, (etc. where we want to check that the last value lies in a certain box, but only for certain values of the other parameters.)
     """
     def __init__(self, *constraints, cls=IntegerSet):
         self.constraints = tuple(constraints[:-1])
@@ -750,7 +758,12 @@ class CBound(Bound):
 
 class PrimeBound(Bound):
     """
-    Check that all queried values are finite sets of primes.
+    Check that all queried values are finite sets of primes lying in the product of the specified bounds. (i.e. primes in a given box).
+    Useful for checking if conductor/discriminant/level is prime and in a specified range.
+    
+    Examples:
+      "conductor", PrimeBound(100)                 -> checks that conductor is a prime number less than 100
+      ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is prime at most 10 and discriminant is a prime at most 100
     """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
@@ -760,6 +773,10 @@ class PrimeBound(Bound):
 class Smooth(ColTest):
     """
     Check that all queried integers are M-smooth.
+
+    Examples:
+      ("conductor", Smooth(10))   -> checks that conductor is divisble only by the prime factors 2, 3, 5, and 7.
+
     """
     def __init__(self, M, cls=IntegerSet):
         self.cls = cls
@@ -777,6 +794,10 @@ class Smooth(ColTest):
 class Specific(ColTest):
     """
     Check that each input lies in a specified allowed set.
+
+    Examples:
+      "rational", "weight", "degree"), Specific([True], [0], [1])   ->  checks that rational is True, weight is 0, and degree is 1
+
     """
     def __init__(self, *constraints):
         self.constraints = constraints
