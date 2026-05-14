@@ -6,7 +6,14 @@
 
 {# end defs #}
 
-img { border: 0; }
+
+/* ============================================================
+ *  Base elements
+ * ============================================================ */
+
+img {
+    border: 0;
+}
 
 body {
     margin: 0px;
@@ -15,18 +22,27 @@ body {
     color: {{color.body_text}};
     background-color: {{color.body_background}};
 }
+
 td.title {
     color: {{color.box_tab_text}};
 }
+
 h2.link > a {
     color: {{color.box_tab_text}};
 }
+
 .katex {
     font-size: 1em !important;
 }
+
+
+/* ============================================================
+ *  #content headings and layout
+ * ============================================================ */
+
 /* TODO: where is content?*/
-#content > h1, #content > div.narrow-body > h1
-{
+#content > h1,
+#content > div.narrow-body > h1 {
     font-size: 130%;
     font-weight: bold;
     color: {{ color.content_text }};
@@ -34,14 +50,14 @@ h2.link > a {
     text-decoration: none;
     margin: 15px 0;
 }
+
 #content > h1:first-of-type,
 #content > h2:first-of-type {
     margin-top: 0px;
     padding-top: 2px;
 }
 
-#content > h2
-{
+#content > h2 {
     font-family: sans-serif;
     text-decoration: none;
     font-size: 120%;
@@ -51,7 +67,9 @@ h2.link > a {
     padding: 5px 0;
     margin: 10px 0;
 }
-#content > h3, td.table_h2 {
+
+#content > h3,
+td.table_h2 {
     font-family: sans-serif;
     text-decoration: none;
     font-size: 110%;
@@ -62,16 +80,17 @@ h2.link > a {
     margin: 10px 0 5px 0;
 }
 
-#content > h2 a[knowl], #content > h3 a[knowl] {
+#content > h2 a[knowl],
+#content > h3 a[knowl] {
     color: {{color.col_main}};
 }
 
 #content p {
-  padding-left: 1ch;
+    padding-left: 1ch;
 }
 
 #content ul {
-  padding-left: 24px;
+    padding-left: 24px;
 }
 
 #content > h2.inline,
@@ -83,7 +102,7 @@ h2.link > a {
 }
 
 div.narrow-body {
-  max-width:700px;
+    max-width: 700px;
 }
 
 #footer {
@@ -101,6 +120,11 @@ div.narrow-body {
     margin-top: 10px;
     margin-bottom: 10px;
 }
+
+
+/* ============================================================
+ *  Links
+ * ============================================================ */
 
 /* Body links, sidebar links, and sidebar header text. */
 a {
@@ -128,6 +152,7 @@ table tbody tr.trivial {
 table tbody tr.trivial a {
     color: {{color.grey}};
 }
+
 table tbody tr.trivial a:hover {
     color: inherit;
     background: inherit;
@@ -135,14 +160,16 @@ table tbody tr.trivial a:hover {
 
 #content a {
 }
+
 #content .announce {
-  font-size: 1.2em;
-  padding: 10px 20px;
-  margin: 20px 0px;
-  border-left: 3px solid {{ color.content_border }};
-  background: {{ color.content_background }};
-  line-height: 1.5em;
+    font-size: 1.2em;
+    padding: 10px 20px;
+    margin: 20px 0px;
+    border-left: 3px solid {{ color.content_border }};
+    background: {{ color.content_background }};
+    line-height: 1.5em;
 }
+
 #content .announce.red {
     border-left: 3px solid {{color.content_border_red}};
     background: {{color.content_background_red}};
@@ -164,30 +191,40 @@ table tbody tr.trivial a:hover {
 
 /* icon in front of external links */
 #content a[target="_blank"]:before {
-  content: url("static/images/url-ext.gif");
-  padding-right: 2px;
+    content: url("static/images/url-ext.gif");
+    padding-right: 2px;
 }
 
 span.disable-links {
-  pointer-events: none;
+    pointer-events: none;
 }
 
-a:visited { color: {{color.a_text_visited}}; }
+a:visited {
+    color: {{color.a_text_visited}};
+}
+
 a:hover {
     color: {{color.a_text_hover}};
     background: {{color.a_background_hover}};
 }
 
-#logo a, #logo a:hover, body.knowl #logo a:hover {
-  background: none;
+
+/* ============================================================
+ *  #header (logo, title, breadcrumbs, top-right, nav)
+ * ============================================================ */
+
+#logo a,
+#logo a:hover,
+body.knowl #logo a:hover {
+    background: none;
 }
 
 #header {
-  background: {{color.header_background}};
+    background: {{color.header_background}};
 }
 
 body.knowl #header {
-  background: {{ color.knowl_l }};
+    background: {{ color.knowl_l }};
 }
 
 #header #logo {
@@ -196,9 +233,11 @@ body.knowl #header {
     padding-top: 8px;
     padding-left: 46px;
 }
+
 #header #logo img {
     max-height: 50px;
 }
+
 #header .right {
     margin-top: 0px;
     display: inline-block;
@@ -206,6 +245,7 @@ body.knowl #header {
     vertical-align: top;
     width: calc(100% - 210px);
 }
+
 #header #title {
     font-size: 180%;
     font-weight: bold;
@@ -214,7 +254,7 @@ body.knowl #header {
     color: {{color.header_text_title}};
 }
 
-#header #title .katex{
+#header #title .katex {
     font-weight: bold !important;
 }
 
@@ -233,75 +273,90 @@ body.knowl #header {
 }
 
 #header .topright {
-  text-align: right;
-  white-space:nowrap;
-  font-family: sans-serif;
-  font-size: 90%;
-  padding-top: 8px;
-  padding-right: 5px;
-  display: inline-block;
-  float: right;
-  clear: both;
-  color: {{color.header_text_topright}};
+    text-align: right;
+    white-space: nowrap;
+    font-family: sans-serif;
+    font-size: 90%;
+    padding-top: 8px;
+    padding-right: 5px;
+    display: inline-block;
+    float: right;
+    clear: both;
+    color: {{color.header_text_topright}};
 }
+
 #header .topright a {
     color: {{color.header_text_topright}};
 }
+
 #header .topright #communication-wrapper {
-  display: none;
-  padding: 4px;
+    display: none;
+    padding: 4px;
 }
+
 #header .undertopright {
-  text-align: right;
-  white-space:nowrap;
-  font-family: sans-serif;
-  float: right;
-  color: {{color.header_text_topright}};
+    text-align: right;
+    white-space: nowrap;
+    font-family: sans-serif;
+    float: right;
+    color: {{color.header_text_topright}};
 }
+
 #header .undertopright a {
     color: {{color.header_text_topright}};
 }
+
 #header .undertopright:first-child {
     margin-top: 0;
 }
 
 #header #navi {
-  white-space: nowrap;
-  text-align: right;
-  color: {{color.header_navi_text}};
-  font-family: sans-serif;
-  font-size: 90%;
-  padding: 2px 5px;
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  z-index: 5;
+    white-space: nowrap;
+    text-align: right;
+    color: {{color.header_navi_text}};
+    font-family: sans-serif;
+    font-size: 90%;
+    padding: 2px 5px;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    z-index: 5;
 }
+
+
+/* ============================================================
+ *  Flashes
+ * ============================================================ */
 
 /* TODO: what? */
 #flashes p {
-  border-left: 15px solid {{color.knowl_border}};
-  padding: 5px;
-  background: {{color.knowl_background}};
+    border-left: 15px solid {{color.knowl_border}};
+    padding: 5px;
+    background: {{color.knowl_background}};
 }
 
 #flashes p.error {
-  margin: 15px 0;
-  font-size: 95%;
-  border: 0;
-  border-left: 15px solid {{color.flashes_border}};
-  background: {{color.flashes_background}};
+    margin: 15px 0;
+    font-size: 95%;
+    border: 0;
+    border-left: 15px solid {{color.flashes_border}};
+    background: {{color.flashes_background}};
 }
 
 #flashes p.success {
-  border-left: 15px solid #43664a;
-  background: #e3fde8;
+    border-left: 15px solid #43664a;
+    background: #e3fde8;
 }
 
+
+/* ============================================================
+ *  #main / debug
+ * ============================================================ */
+
 #main {
-  margin:  0px 0px 0px 184px;
-  padding: 0px 0px 0px 10px;
-  min-height:600px;
+    margin:  0px 0px 0px 184px;
+    padding: 0px 0px 0px 10px;
+    min-height: 600px;
 }
 
 .debug {
@@ -314,6 +369,10 @@ body > .debug {
     padding: 5px;
 }
 
+
+/* ============================================================
+ *  Right-hand properties box / sidebar
+ * ============================================================ */
 
 /*These are the right hand side properties and sidebar stuffs.*/
 #properties {
@@ -328,138 +387,167 @@ body > .debug {
     border: 0;
     padding: 0px;
 }
-.properties-body div, .properties-body p {
-  padding: 5px;
+
+.properties-body div,
+.properties-body p {
+    padding: 5px;
 }
-.properties-body h1, .properties-body h2 {
+
+.properties-body h1,
+.properties-body h2 {
     color: {{ color.properties_header_text }};
     padding: 5px;
     margin: 0;
     margin-bottom: 0;
     background: {{ color.properties_text_h1h2 }};
 }
+
 .properties-body h1 {
     font-size: 120%;
 }
+
 .properties-body h2 {
     font-size: 110%;
     margin-top: 10px;
 }
-.properties-body h2:first-child { margin-top: 0px; }
+
+.properties-body h2:first-child {
+    margin-top: 0px;
+}
+
 .properties-body table th,
 .properties-body table td {
-  padding: 2px 10px;
+    padding: 2px 10px;
 }
+
 .properties-body table tr:last-child td {
-  padding-bottom: 7px;
+    padding-bottom: 7px;
 }
+
 .properties-body table tr:first-child td {
-  padding-top: 7px;
+    padding-top: 7px;
 }
+
 .properties-body .label {
-  font-weight: bold;
+    font-weight: bold;
 }
+
 .properties-body ul {
-  margin: 0px;
-  padding: 0px;
+    margin: 0px;
+    padding: 0px;
 }
 
 .properties-body ul:last-child li:last-child a {
-  border-bottom-left-radius: 10px;
+    border-bottom-left-radius: 10px;
 }
+
 .properties-body li {
-  display: block;
-  padding: 5px 0 0 7px;
-  margin: 0;
+    display: block;
+    padding: 5px 0 0 7px;
+    margin: 0;
 }
+
 .properties-body li:first-child {
-  padding-top: 7px;
+    padding-top: 7px;
 }
+
 .properties-body li:last-child {
-  padding-bottom: 5px;
+    padding-bottom: 5px;
 }
+
 .properties-body li a {
- display: block;
-/*
- padding: 5px;
-*/
+    display: block;
+    /*
+     padding: 5px;
+    */
 }
 
 .properties-body {
-  margin: 0px;
-  padding: 0px;
-  background: {{color.properties_body_background}};
-  min-width: 200px;
-  border-bottom-left-radius: 10px;
-  max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
-  overflow-y: auto; /* scrollbar if we overflow */
+    margin: 0px;
+    padding: 0px;
+    background: {{color.properties_body_background}};
+    min-width: 200px;
+    border-bottom-left-radius: 10px;
+    max-height: 430px; /* 21 items with padding: 22 + 21*19 + 9 */
+    overflow-y: auto;  /* scrollbar if we overflow */
 }
+
 .properties-header {
-  border-top-left-radius: 10px;
-  margin: 0;
-  padding: 5px 9px;
-  color: {{ color.properties_header_text }};
-  background: {{ color.properties_header_background }};
-  font-size: 14px;
-  cursor: pointer;
-  padding-right: 30px;
+    border-top-left-radius: 10px;
+    margin: 0;
+    padding: 5px 9px;
+    color: {{ color.properties_header_text }};
+    background: {{ color.properties_header_background }};
+    font-size: 14px;
+    cursor: pointer;
+    padding-right: 30px;
 }
+
 .properties-header ~ .properties-header {
-  margin-top: 5px;
+    margin-top: 5px;
 }
+
 #properties-collapser {
-  cursor: pointer;
-  color: {{ color.properties_collapser }};
-  font-size: 19px;
-  font-weight: bold;
-  text-align: center;
-  border: 1px solid ;
-  width: 20px;
-  height: 17px;
-  position: absolute;
-  top:   4px;
-  right: 3px;
-  {{ BORDER_RADIUS(20) }}
+    cursor: pointer;
+    color: {{ color.properties_collapser }};
+    font-size: 19px;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid ;
+    width: 20px;
+    height: 17px;
+    position: absolute;
+    top:   4px;
+    right: 3px;
+    {{ BORDER_RADIUS(20) }}
 }
 
 #content {
-  margin-top: 10px;
-  font-size: 95%;
-  line-height: 135%;
-  padding-right: 10px;
+    margin-top: 10px;
+    font-size: 95%;
+    line-height: 135%;
+    padding-right: 10px;
 }
 
-#content blockquote
-{
+#content blockquote {
 }
 
+
+/* ============================================================
+ *  #sidebar
+ * ============================================================ */
 
 #sidebar {
-  float: left;
-  width: 184px;
-  margin: 10px 0px;
-  font-family: sans-serif;
-  font-size: 85%;
-  color: {{color.sidebar_text}};
-  background: {{color.sidebar_background}};
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+    float: left;
+    width: 184px;
+    margin: 10px 0px;
+    font-family: sans-serif;
+    font-size: 85%;
+    color: {{color.sidebar_text}};
+    background: {{color.sidebar_background}};
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
+
 #sidebar .list li {
-  padding: 5px;
+    padding: 5px;
 }
+
 #sidebar .list a {
-  display: inline;
-  padding: 5px;
+    display: inline;
+    padding: 5px;
 }
+
 #sidebar h2.knowl {
-  background: {{ color.knowl_border }};
+    background: {{ color.knowl_border }};
 }
+
 #sidebar h2.knowl a {
-  color: {{ color.knowl_hyper_text }};
+    color: {{ color.knowl_hyper_text }};
 }
+
 #sidebar h2.knowl a:hover {
-  background: {{ color.knowl_hover_text }};
+    background: {{ color.knowl_hover_text }};
 }
 
 #sidebar h2 {
@@ -474,55 +562,68 @@ body > .debug {
 #sidebar ul:first-child a:first-child,
 #sidebar h2:first-child a:first-child,
 #sidebar h2:first-child {
-  margin: 0;
-  border-top-right-radius: 10px;
+    margin: 0;
+    border-top-right-radius: 10px;
 }
+
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a,
 #sidebar h2:last-child {
-  border-bottom-right-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
+
 #sidebar ul {
     margin: 0px;
     padding: 0px;
     list-style-type: none;
 }
+
 #sidebar ul li {
     display: block;
     margin: 0px;
     padding: 0px;
 }
+
 #sidebar a:hover {
     background: {{ color.sidebar_background_hover }};
 }
+
 #sidebar a {
     color: {{color.col_sidebar_links}}; /* sets header and body sidebar links.*/
     display: block;
 }
+
 #sidebar li a {
     color: {{color.col_sidebar_text}}; /* sets the text below Data */
     background: {{ color.sidebar_background_li }};
-  padding: 5px;
+    padding: 5px;
 }
+
 #sidebar h2 a {
     color: {{color.col_sidebar_header_links}}; /* sets sidebar header links*/
     padding: 5px;
 }
+
 #sidebar h2 a:hover {
     background: {{ color.sidebar_background_h2_hover }};
     color: {{ color.sidebar_h2_hover }};
 }
+
 #sidebar h2.link {
-  padding: 0px;
+    padding: 0px;
 }
 
 /* highlighting menu entries (if their respective blueprint overwrites the body_class variable!) */
-body.mwf #sidebar a.mwf { background: {{ color.sidebar_bkg_highlight }}; }
-body.cmf #sidebar a.cmf { background: {{ color.sidebar_bkg_highlight }}; }
-body.knowl #sidebar a.knowl { background: {{ color.sidebar_bkg_highlight_knowl }}; }
-body.local_fields #sidebar a.local_fields { background:  {{ color.sidebar_bkg_highlight }}; }
-body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
+body.mwf #sidebar a.mwf                   { background: {{ color.sidebar_bkg_highlight }}; }
+body.cmf #sidebar a.cmf                   { background: {{ color.sidebar_bkg_highlight }}; }
+body.knowl #sidebar a.knowl               { background: {{ color.sidebar_bkg_highlight_knowl }}; }
+body.local_fields #sidebar a.local_fields { background: {{ color.sidebar_bkg_highlight }}; }
+body.intro #sidebar a.intro               { background: {{ color.sidebar_bkg_highlight }}; }
 
+
+/* ============================================================
+ *  Visibility / code / forms helpers
+ * ============================================================ */
 
 .visible {
     visibility: visible;
@@ -533,7 +634,8 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     height: 0px;
 }
 
-.code, .prompt {
+.code,
+.prompt {
     font-family: monospace;
     white-space: preserve nowrap;
     display: inline-flex;
@@ -552,7 +654,7 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     /* For scrollable code snippets */
     overflow-x: auto;
     scrollbar-color: #bbbaba #ffffff;
-    scrollbar-width: thin; 
+    scrollbar-width: thin;
     scrollbar-gutter: stable;
 }
 
@@ -562,93 +664,103 @@ body.intro #sidebar a.intro { background: {{ color.sidebar_bkg_highlight }}; }
     margin-right: 0px;
 }
 
-
 .nodisplay {
     display: None;
 }
+
 /*TODO: where do the following show up?*/
 .formexample {
-   font-size: 80%;
-   font-style: italic;
-   color: {{color.grey}};
+    font-size: 80%;
+    font-style: italic;
+    color: {{color.grey}};
 }
 
 .errmsg {
-   font-size: 80%;
-   font-style: bold;
-   color: {{color.red}};
+    font-size: 80%;
+    font-style: bold;
+    color: {{color.red}};
 }
 
 td.forminfo {
-   font-size: 80%;
-   font-style: italic;
-   color: #333333;
-   vertical-align: top;
+    font-size: 80%;
+    font-style: italic;
+    color: #333333;
+    vertical-align: top;
 }
 
-input, textarea {
-  border: 2px solid {{color.input_border}};
-  font-size: 110%;
-  padding: 3px;
-  border-radius: 5px;
+input,
+textarea {
+    border: 2px solid {{color.input_border}};
+    font-size: 110%;
+    padding: 3px;
+    border-radius: 5px;
 }
 /* TODO: above? */
 
-button, select, a.like-button, .file-upload {
-  padding: 3px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 2px solid {{color.button_border}};
-  min-width: 75px;
+button,
+select,
+a.like-button,
+.file-upload {
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid {{color.button_border}};
+    min-width: 75px;
 }
 
 input[type=file] {
-  display: none;
+    display: none;
 }
 
 span.fileup {
-  margin-left: 10px;
+    margin-left: 10px;
 }
 
-button, a.like-button, .file-upload {
-  background: {{color.button_background}};
+button,
+a.like-button,
+.file-upload {
+    background: {{color.button_background}};
 }
 
-a.like-button, .file-upload {
-  color: {{color.black}};
-  font-size: 11px;
-  padding: 6px 16px 3px 16px;
+a.like-button,
+.file-upload {
+    color: {{color.black}};
+    font-size: 11px;
+    padding: 6px 16px 3px 16px;
 }
 
 button.like-link {
-  background: none!important;
-  border: none!important;
-  padding: 0!important;
-  cursor: pointer;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    cursor: pointer;
 
-  color: {{color.col_link}};
-  text-decoration: none;
-  font-family: sans-serif;
-  min-width: 0px;
-  font-size: 15px;
+    color: {{color.col_link}};
+    text-decoration: none;
+    font-family: sans-serif;
+    min-width: 0px;
+    font-size: 15px;
 }
+
 button.like-link:visited {
-  color: {{color.a_text_visited}};
+    color: {{color.a_text_visited}};
 }
+
 button.like-link:hover {
-  color: {{color.a_text_hover}};
-  background: {{color.a_background_hover}};
+    color: {{color.a_text_hover}};
+    background: {{color.a_background_hover}};
 }
 
 select {
-   background: {{color.select_background}};
+    background: {{color.select_background}};
 }
 
 body.knowl form button,
 body.knowl form select {
-  border: 2px solid {{color.knowl_thin_border}};
-  background: {{color.knowl_border}};
+    border: 2px solid {{color.knowl_thin_border}};
+    background: {{color.knowl_border}};
 }
+
 body.knowl form textarea,
 body.knowl form input {
     border: 2px solid {{color.knowl_thin_border}};
@@ -685,32 +797,39 @@ form table td.button {
     padding-top: 7px
 }
 
+
+/* ============================================================
+ *  Generic tables
+ * ============================================================ */
+
 table {
     border: 0;
-    border-collapse:collapse;
+    border-collapse: collapse;
 }
 
 table th {
-  color: {{color.a_text}};
-  padding-bottom: 5px;
+    color: {{color.a_text}};
+    padding-bottom: 5px;
 }
 
-table th, table td {
-  padding-left:  10px;
-  padding-right: 10px;
+table th,
+table td {
+    padding-left:  10px;
+    padding-right: 10px;
 }
 
 table.newforms {
-/* to put a table after the properties box */
+    /* to put a table after the properties box */
     clear: right;
 }
 
 table.browse td {
-  vertical-align: top;
-  padding: 7px 0px 7px 10px;
+    vertical-align: top;
+    padding: 7px 0px 7px 10px;
 }
+
 table.browse td:first-child {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 table.ntdata .knowl-header a,
@@ -719,70 +838,80 @@ table.ntdata a.knowl-link,
 table.ntdata a[knowl],
 table a.knowl-link,
 table a[knowl] {
-  display: inline;
-  padding: 0;
+    display: inline;
+    padding: 0;
 }
 
-table.ntdata td>a {
-  display: block;
+table.ntdata td > a {
+    display: block;
 }
 
 table.chardata a {
-  display: inline;
+    display: inline;
 }
 
 table td.top {
-  vertical-align:top;
+    vertical-align: top;
 }
+
 table.ntdata tr.bottom-align {
-  vertical-align:bottom;
+    vertical-align: bottom;
 }
+
 table.ntdata td {
-  white-space: nowrap;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  padding-right: 7px;
-  padding-left: 7px;
+    white-space: nowrap;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-right: 7px;
+    padding-left: 7px;
 }
 
 table a:hover {
     background: {{color.table_background_hover}};
 }
 
-
-
 table td.spacing {
-  height: 20px;
+    height: 20px;
 }
 
+
+/* ============================================================
+ *  table.ntdata
+ * ============================================================ */
 
 table.ntdata {
-  width: auto;
-  border: 3px;
-  margin-left: 5%;
-  margin-top: 15px;
-  margin-bottom: 15px;
+    width: auto;
+    border: 3px;
+    margin-left: 5%;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
+
 table.ntdata thead th {
-  background-color: {{ color.table_ntdata_background }};
+    background-color: {{ color.table_ntdata_background }};
 }
+
 table.ntdata > thead {
-  border-bottom: 2px solid {{ color.table_ntdata_border }};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
+
 table.ntdata > thead > tr.bottomlined {
-  border-bottom: 2px solid {{ color.table_ntdata_border }};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
+
 table.ntdata tr.toplined {
-  border-top: 2px solid {{ color.table_ntdata_border }};
+    border-top: 2px solid {{ color.table_ntdata_border }};
 }
 
 table.ntdata th {
-  text-align: left;
-  padding-right: 7px;
-  padding-left: 7px;
+    text-align: left;
+    padding-right: 7px;
+    padding-left: 7px;
 }
-table.ntdata.centered th, table.ntdata.centered td {
-  text-align: center;
+
+table.ntdata.centered th,
+table.ntdata.centered td {
+    text-align: center;
 }
 
 table.ntdata > tr.odd,
@@ -800,6 +929,7 @@ table.ntdata > thead > tr:first-child {
 table.ntdata > tbody > tr:last-child {
     border-bottom:  2px solid {{ color.table_ntdata_border }};
 }
+
 table.ntdata.nobottom > tbody > tr:last-child {
     border-bottom:  0px;
 }
@@ -812,43 +942,49 @@ table.ntdata > tbody > tr:nth-child(even),
 table.ntdata > thead > tr:nth-child(even) {
     background: {{color.table_ntdata_background_cn}};
 }
-table.ntdata tr.toggle { font-size: 80%; text-align: left; }
-table.ntdata tr.toggle:nth-child(2n) { 
+
+table.ntdata tr.toggle {
+    font-size: 80%;
+    text-align: left;
+}
+
+table.ntdata tr.toggle:nth-child(2n) {
     background: {{color.table_ntdata_background_c1}};
 }
+
 table.ntdata tr.toggle a:hover {
-  background: {{color.table_ntdata_background_c1}};
+    background: {{color.table_ntdata_background_c1}};
 }
 
 table.ntdata tr.line {
     border-bottom: 1px dotted {{color.table_ntdata_border_bottom}};
 }
+
 table.ntdata tr.endsection {
     border-bottom: 1px solid {{color.table_ntdata_border}};
 }
 
 table.right_align_table td {
-  text-align: right;
+    text-align: right;
 }
 
 
+/* ============================================================
+ *  table.number_table
+ * ============================================================ */
 
-
-table.number_table td
-{
-text-align:right;
-border:0px;
-cellpadding:3px;
-
+table.number_table td {
+    text-align: right;
+    border: 0px;
+    cellpadding: 3px;
 }
-
 
 table.number_table {
-  border-collapse:collapse;
-  border: 3px;
-  margin-left: 7px;
-  margin-top: 15px;
-  margin-bottom: 15px;
+    border-collapse: collapse;
+    border: 3px;
+    margin-left: 7px;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 
 table.number_table tr:nth-child(even) {
@@ -856,17 +992,21 @@ table.number_table tr:nth-child(even) {
 }
 
 table.number_table thead th {
-  border-bottom: 2px solid {{ color.table_ntdata_border }};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 
-table.number_table thead th:first-child{
-border-right: 2px solid {{ color.table_ntdata_border }};
+table.number_table thead th:first-child {
+    border-right: 2px solid {{ color.table_ntdata_border }};
 }
 
-table.number_table tbody th  {
-  border-right: 2px solid {{ color.table_ntdata_border }};
+table.number_table tbody th {
+    border-right: 2px solid {{ color.table_ntdata_border }};
 }
 
+
+/* ============================================================
+ *  Misc text helpers
+ * ============================================================ */
 
 /* TODO: where? */
 div.literature {
@@ -888,134 +1028,159 @@ div.where {
 }
 
 .bluehighlight {
-  color: blue;
+    color: blue;
 }
 
 .positivezero {
     color: {{color.black}};
 }
 
-
 .highlight {
-  /* text-decoration: underline; */
-  font-weight: bold;
+    /* text-decoration: underline; */
+    font-weight: bold;
 }
 
+
+/* ============================================================
+ *  Knowls
+ * ============================================================ */
 
 /** page wide defs for knowls, the *[knowl] is a selector for
  *  all elements, that have a knowl attribute set to any value */
 table .knowl-link {
-  display: inline;
-  border-bottom: 1px dotted {{ color.knowl_hyper_text }};
-  border-radius: 0px;
-  padding: 1px;
+    display: inline;
+    border-bottom: 1px dotted {{ color.knowl_hyper_text }};
+    border-radius: 0px;
+    padding: 1px;
 }
+
 .knowl-bar {
-  white-space: nowrap;
-  background: {{ color.knowl_background}};
-  padding: 5px 10px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid {{ color.knowl_thin_border }};
-  border-top-left-radius: 10px;
+    white-space: nowrap;
+    background: {{ color.knowl_background}};
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid {{ color.knowl_thin_border }};
+    border-top-left-radius: 10px;
 }
+
 .knowl-bar button,
 .knowl-bar input,
 .knowl-bar form {
-  font-size: small;
-  display: inline;
-  margin: 0px 2px;
+    font-size: small;
+    display: inline;
+    margin: 0px 2px;
 }
+
 #knowl-search input {
-  font-size: small;
-  background: {{ color.knowl_background }};
+    font-size: small;
+    background: {{ color.knowl_background }};
 }
+
 .knowl-bar a {
-  padding: 2px 5px;
+    padding: 2px 5px;
 }
+
 .knowl-editmode-sep {
-  padding: 5px;
-  margin: 30px 0;
-  border-bottom: 1px solid {{ color.knowl_thin_border }};
-  background: {{ color.knowl_background}};
-  color: {{ color.knowl_hyper_text }};
-  font-weight: bold;
+    padding: 5px;
+    margin: 30px 0;
+    border-bottom: 1px solid {{ color.knowl_thin_border }};
+    background: {{ color.knowl_background}};
+    color: {{ color.knowl_hyper_text }};
+    font-weight: bold;
 }
+
 .knowl-inc-edit {
-  margin-bottom: 10px;
-  border-bottom: 2px solid {{ color.knowl_border}};
-  font-size: x-small;
-  text-align: right;
-  line-height: 100%;
+    margin-bottom: 10px;
+    border-bottom: 2px solid {{ color.knowl_border}};
+    font-size: x-small;
+    text-align: right;
+    line-height: 100%;
 }
+
 .knowl-inc-edit a {
-  padding: 3px 5px 0px 5px;
-  background: {{ color.knowl_l_1 }};
-  border-top-left-radius: 5px;
+    padding: 3px 5px 0px 5px;
+    background: {{ color.knowl_l_1 }};
+    border-top-left-radius: 5px;
 }
+
 .knowl {
-  padding: 0;
+    padding: 0;
 }
+
 /* knowl-index is the big table on the main knowledge page */
 #knowl-index td div > a {
-  display: block;
-  padding: 0px;
-  position: absolute;
-  top: 12px;
+    display: block;
+    padding: 0px;
+    position: absolute;
+    top: 12px;
 }
+
 #knowl-index td div > span {
-  font-size: xx-small;
-  color: {{color.grey}};
-  position: absolute;
-  top: 2px;
-  line-height: 1em;
+    font-size: xx-small;
+    color: {{color.grey}};
+    position: absolute;
+    top: 2px;
+    line-height: 1em;
 }
+
 #knowl-index td div {
-  position: relative;
-  display: inline;
-  width: 170px;
-  height: 70px;
-  float: left;
-  min-height: 4em;
-  overflow: hidden;
-  padding: 2px;
-  margin: 1px;
-  border-radius: 2px;
+    position: relative;
+    display: inline;
+    width: 170px;
+    height: 70px;
+    float: left;
+    min-height: 4em;
+    overflow: hidden;
+    padding: 2px;
+    margin: 1px;
+    border-radius: 2px;
 }
+
 #knowl-index td div:hover {
-  background: {{ color.knowl_hover }};
-  cursor: pointer;
+    background: {{ color.knowl_hover }};
+    cursor: pointer;
 }
+
 #knowl-index td {
-  padding: 0;
+    padding: 0;
 }
+
 #knowl-index tr td:first-child {
-  width: 50px;
-  vertical-align: top;
-  text-align: center;
-  font-size: x-large;
-  color: {{color.knowl_hyper_text}};
-  padding-top: 12px;
+    width: 50px;
+    vertical-align: top;
+    text-align: center;
+    font-size: x-large;
+    color: {{color.knowl_hyper_text}};
+    padding-top: 12px;
 }
+
 body.knowl table.ntdata thead tr {
-  background: {{ color.knowl_background }};
-  border-bottom: 2px solid {{ color.knowl_underline }};
+    background: {{ color.knowl_background }};
+    border-bottom: 2px solid {{ color.knowl_underline }};
 }
+
 body.knowl table.ntdata tr:nth-child(odd) {
- background: {{ color.knowl_background }};
+    background: {{ color.knowl_background }};
 }
+
 body.knowl table.ntdata tr:nth-child(even) {
     background: {{color.white}};
 }
 
 
+/* ============================================================
+ *  table.mfdata / table.dimgrid / table.ntdata extras
+ * ============================================================ */
+
 table.mfdata {
-  width: auto;
-  border: 0;
-  margin-top: 15px;
-  margin-bottom: 15px;
+    width: auto;
+    border: 0;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
+
 table.mfdata thead tr {
-  border-bottom: 2px solid {{ color.table_ntdata_border }};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
 
 table.mfdata td {
@@ -1025,6 +1190,7 @@ table.mfdata td {
 table.mfdata tr.oddrow {
     background: {{color.table_ntdata_background_2}};
 }
+
 table.mfdata tr.evenrow {
     background: {{color.white}};
 }
@@ -1033,10 +1199,12 @@ table.dimgrid thead tr {
     background: {{color.table_ntdata_background_2}};
     border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
+
 table.dimgrid thead tr th.blank {
     background: {{color.white}};
     border-bottom: 2px solid {{color.table_ntdata_background_2}} ;
 }
+
 table.dimgrid tbody tr th.left {
     border-right: 2px solid {{ color.table_ntdata_border }};
     background: {{color.table_ntdata_background_2}};
@@ -1050,50 +1218,59 @@ table.ntdata th.left {
 }
 
 table.ntdata th.weight {
-  text-align: center;
-  background: {{color.table_ntdata_background_2}};
-  border-bottom: 2px solid {{color.table_ntdata_border}};
-  border-left: 0;
-  vertical-align: center;
+    text-align: center;
+    background: {{color.table_ntdata_background_2}};
+    border-bottom: 2px solid {{color.table_ntdata_border}};
+    border-left: 0;
+    vertical-align: center;
 }
 
 table.ntdata thead tr.space {
-  background: {{color.table_ntdata_background_2}};
-  border-bottom: 0;
+    background: {{color.table_ntdata_background_2}};
+    border-bottom: 0;
 }
 
 table.ntdata thead th.spaceleft {
-  border-right: 2px solid {{color.table_ntdata_border}};
-  vertical-align: top;
+    border-right: 2px solid {{color.table_ntdata_border}};
+    vertical-align: top;
 }
 
 table.ntdata tr.first {
-  border-top: 2px solid {{color.table_ntdata_border}};
+    border-top: 2px solid {{color.table_ntdata_border}};
 }
+
 table.ntdata .border-right {
-  border-right: 2px solid {{ color.table_ntdata_border }};
+    border-right: 2px solid {{ color.table_ntdata_border }};
 }
+
 table.ntdata .border-left {
-  border-left: 2px solid {{ color.table_ntdata_border }};
+    border-left: 2px solid {{ color.table_ntdata_border }};
 }
+
 table.ntdata .border-bottom {
-  border-bottom: 2px solid {{ color.table_ntdata_border }};
+    border-bottom: 2px solid {{ color.table_ntdata_border }};
 }
+
 table.ntdata .center {
     text-align: center;
 }
+
 div.center {
     text-align: center;
 }
+
 table.ntdata .right {
     text-align: right;
 }
+
 td.right {
     text-align: right;
 }
+
 td.center {
     text-align: center;
 }
+
 table.ntdata .middle {
     vertical-align: middle;
 }
@@ -1101,15 +1278,19 @@ table.ntdata .middle {
 table.ntdata tr.dark td {
     background: {{color.table_ntdata_background_2}};
 }
+
 table.ntdata tr.light td {
     background: white;
 }
+
 table.ntdata td.dark {
     background: {{color.table_ntdata_background_2}};
 }
+
 table.ntdata thead.dark tr {
     background: {{color.table_ntdata_background_2}};
 }
+
 table.ntdata td.light {
     background: white;
 }
@@ -1118,16 +1299,18 @@ table.knowl_review tr:nth-child(odd) td {
     background: {{color.white}};
     padding-top: 30px;
 }
+
 table.knowl_review tr:first-child td {
     padding-top: 0;
 }
+
 table.knowl_review tr:nth-child(even) {
     background: {{ color.table_ntdata_background_2 }};
 }
 
 table.euler {
-    margin-left:auto;
-    margin-right:auto;
+    margin-left:  auto;
+    margin-right: auto;
 }
 
 table.euler tr .galois {
@@ -1142,20 +1325,25 @@ table.statgrid th.rhead {
     border: 1px solid #ccc;
     border-right: 2px solid {{color.table_ntdata_border}};
 }
+
 table.statgrid th.chead {
     border: 1px solid #ccc;
     border-bottom: 2px solid {{color.table_ntdata_border}};
 }
+
 table.statgrid .totalrow {
     border-top: 2px solid {{color.table_ntdata_border}};
 }
+
 table.statgrid .totalcol {
     border-left: 2px solid {{color.table_ntdata_border}};
 }
+
 table.statgrid .totalcorner {
     border-top: 2px solid {{color.table_ntdata_border}};
     border-left: 2px solid {{color.table_ntdata_border}};
 }
+
 table.statgrid td.prop {
     border-bottom: 1px solid #ccc;
     border-right: 1px solid #ccc;
@@ -1165,50 +1353,62 @@ table.statgrid td.cnt {
     border-right: 1px solid #ccc;
 }
 
+
+/* ============================================================
+ *  Knowls (content / popups)
+ * ============================================================ */
+
 .knowl-content {
-  padding: 0 10px;
+    padding: 0 10px;
 }
+
 .knowl-content h1 {
-  margin: 0px 0px 10px 0px;
+    margin: 0px 0px 10px 0px;
 }
+
 .knowl-content h2 {
-  margin: 0px 0px 5px 0px;
+    margin: 0px 0px 5px 0px;
 }
 
 *[knowl] {
-  border-bottom: 1px dotted {{ color.knowl_underline }};
-  cursor: pointer;
-  border-radius: 0;
-  margin: 3px 0 0 0;
+    border-bottom: 1px dotted {{ color.knowl_underline }};
+    cursor: pointer;
+    border-radius: 0;
+    margin: 3px 0 0 0;
 }
+
 *[knowl]:hover,
 *[knowl].active {
-  border-bottom: 2px solid {{ color.knowl_underline }};
-  background: {{ color.knowl_hover }};
-  color: {{ color.knowl_hyper_text }};
-  margin: 0;
-  padding: 3px 0 0 0;
-  border-top-left-radius: 3px;
-  border-top-right-radius: 3px;
+    border-bottom: 2px solid {{ color.knowl_underline }};
+    background: {{ color.knowl_hover }};
+    color: {{ color.knowl_hyper_text }};
+    margin: 0;
+    padding: 3px 0 0 0;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
 }
 
 body.knowl #header {
     background: {{color.knowl_header_background}};
 }
+
 body.knowl #header #title {
     color: {{color.knowl_title_text}};
 }
+
 body.knowl #content h1,
 body.knowl #content h2,
 body.knowl #content a {
-  color: {{ color.knowl_hyper_text }};
-}
-body.knowl a:hover {
-  background: {{ color.knowl_hover }};
+    color: {{ color.knowl_hyper_text }};
 }
 
-div > *[knowl], p > *[knowl] {
-  position: relative;
+body.knowl a:hover {
+    background: {{ color.knowl_hover }};
+}
+
+div > *[knowl],
+p > *[knowl] {
+    position: relative;
 }
 
 table .knowl a {
@@ -1216,14 +1416,14 @@ table .knowl a {
 }
 
 .knowl-error {
-   color: {{color.knowl_error}};
-   border-bottom: 0;
-   text-decoration: underline;
+    color: {{color.knowl_error}};
+    border-bottom: 0;
+    text-decoration: underline;
 }
 
 .knowl-error a {
-   font-size:60%;
-   color: {{color.knowl_error}};
+    font-size: 60%;
+    color: {{color.knowl_error}};
 }
 
 /*
@@ -1266,132 +1466,160 @@ h2 > .knowl-qm {
   left: -0.4em;
 }
 */
+
 .knowl-output {
-  background: {{ color.knowl_background }};
-  border: 10px solid {{ color.knowl_border }};
-  {{ BORDER_RADIUS(10) }}
-  padding: 0px;
-  display: none;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  margin-right: 10px;
-  text-align: left;
+    background: {{ color.knowl_background }};
+    border: 10px solid {{ color.knowl_border }};
+    {{ BORDER_RADIUS(10) }}
+    padding: 0px;
+    display: none;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    margin-right: 10px;
+    text-align: left;
 }
 
 .knowl-output .knowl-output,
 .knowl-output .knowl-output.loading {
- margin-left: 0;
- margin-right: 0;
+    margin-left: 0;
+    margin-right: 0;
 }
+
 .knowl-output.loading {
- color: {{color.grey}};
- font-style: italic;
- font-size: small;
+    color: {{color.grey}};
+    font-style: italic;
+    font-size: small;
 }
+
 div.limit-height {
-  max-height: 500px;
-  overflow-y: auto;
+    max-height: 500px;
+    overflow-y: auto;
 }
-.knowl-output h1, .knowl-output h2 {
-  margin: 5px 0;
-}
-.knowl-output h1 {
-  color: {{ color.knowl_hyper_text }};
-}
+
+.knowl-output h1,
 .knowl-output h2 {
-  color: {{ color.knowl_hyper_text }};
+    margin: 5px 0;
 }
-.knowl-output a { display: inline; }
+
+.knowl-output h1 {
+    color: {{ color.knowl_hyper_text }};
+}
+
+.knowl-output h2 {
+    color: {{ color.knowl_hyper_text }};
+}
+
+.knowl-output a {
+    display: inline;
+}
 
 .knowl-footer {
-  position: relative;
-  bottom: -10px;
-  font-size: x-small;
-  line-height: 100%;
-  background: {{ color.knowl_border }};
-  color: {{ color.knowl_border_text }};
-  padding: 1px 0 1px 10px;
-  margin:  0 0 0 0;
+    position: relative;
+    bottom: -10px;
+    font-size: x-small;
+    line-height: 100%;
+    background: {{ color.knowl_border }};
+    color: {{ color.knowl_border_text }};
+    padding: 1px 0 1px 10px;
+    margin:  0 0 0 0;
 }
+
 .knowl-header {
-  position: relative;
-  top: -10px;
-  font-size: x-small;
-  line-height: 100%;
-  background: {{ color.knowl_border }};
-  color: {{color.grey}};
-  padding: 1px 0 1px 10px;
-  margin:  0 0 0 0;
+    position: relative;
+    top: -10px;
+    font-size: x-small;
+    line-height: 100%;
+    background: {{ color.knowl_border }};
+    color: {{color.grey}};
+    padding: 1px 0 1px 10px;
+    margin:  0 0 0 0;
 }
+
 .knowl-header a,
 .knowl-footer a {
     color: {{ color.knowl_border_links }};
 }
+
 .knowl-header a:hover,
 .knowl-footer a:hover {
-  background: none;
-  color: {{ color.knowl_border_hover }};
+    background: none;
+    color: {{ color.knowl_border_hover }};
 }
 
 /* end knowl */
 
+
+/* ============================================================
+ *  Character page (copied from charpage.html)
+ * ============================================================ */
+
 /* Copied from charpage.html */
 
 .dirich-output {
-    padding:10px 0 10px 10px;
+    padding: 10px 0 10px 10px;
     text-align: left;
     font-size: 115%;
 }
+
 table.navi td {
     padding: 0;
 }
+
 table.props tr td:first-child {
     width: 5em;
 }
 
 table.values {
-  width: auto;
-  border: 0;
-  margin-top: 15px;
-  margin-bottom: 15px;
+    width: auto;
+    border: 0;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
+
 table.values a {
-  display: block;
+    display: block;
 }
+
 table.values thead tr {
     border-bottom: 1px dotted gray;
 }
+
 table.values th {
-  text-align: center;
-  font-weight: normal;
+    text-align: center;
+    font-weight: normal;
 }
 
 table.values td.odd,
 table.values td:nth-child(odd),
 table.values td:first-child {
- background: {{color.chi_table_background_off}};
+    background: {{color.chi_table_background_off}};
 }
 
 table.values td.even,
 table.values td:nth-child(even) {
- background: {{color.chi_table_background}};
+    background: {{color.chi_table_background}};
 }
 
 /* end copied from charpage.html */
 
+
+/* ============================================================
+ *  Dirichlet series (HTML display)
+ * ============================================================ */
+
 /*** Dirichlet series, displayed in HTML ***/
 
 .dirichletseries {
-  font-family:"Times New Roman", Times, serif;
+    font-family: "Times New Roman", Times, serif;
 }
 
 .dirichletseries em {
-  font-style: italic;
+    font-style: italic;
 }
 
 .dirichletseries td {
-  padding-left:0;
-  padding-right:0;
+    padding-left:  0;
+    padding-right: 0;
 }
 
 /*
@@ -1401,15 +1629,20 @@ table.values td:nth-child(even) {
 */
 
 .dirichletseries span.term {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 .dirichletseries sup {
-/*  font-size: 75%;
-*/
-  font-style: italic;
-  font-family: KaTeX_Math;
+    /*  font-size: 75%;
+    */
+    font-style: italic;
+    font-family: KaTeX_Math;
 }
+
+
+/* ============================================================
+ *  Siegel / box / misc
+ * ============================================================ */
 
 /*** Tables for the Siegel corner ***/
 
@@ -1424,7 +1657,7 @@ table.values td:nth-child(even) {
     overflow: auto;
 }
 
-.small{
+.small {
     font-size: 12px;
 }
 
@@ -1437,8 +1670,7 @@ table.values td:nth-child(even) {
 }
 
 /* TODO: where?*/
-.enternumber
-{
+.enternumber {
     border: 1px solid {{color.black}};
 }
 
@@ -1447,94 +1679,107 @@ table.values td:nth-child(even) {
     color: {{color.grey}} !important;
 }
 
-
 .propertylist {
-  margin: 2em 0;
-  padding: 0;
-  border: 1px solid {{color.grey}};
+    margin: 2em 0;
+    padding: 0;
+    border: 1px solid {{color.grey}};
 }
 
 .propertylist dt {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .propertylist dd {
-  margin-bottom: 1em
+    margin-bottom: 1em
 }
 
 a.navlink {
-  color: {{color.a_nav_text}};
-  background-color: {{color.a_nav_background}};
-  font-weight: bold;
-  font-size: 11px;
-  text-align: center;
-  padding: 4px;
-  border: 1px solid {{color.a_nav_border}};
-  outline: 1px solid {{color.a_nav_background}};
-  text-decoration: none;
-  margin-left: 1px;
-  margin-top: 10px;
-  vertical-align: middle;
-  border-radius: 4px;
+    color: {{color.a_nav_text}};
+    background-color: {{color.a_nav_background}};
+    font-weight: bold;
+    font-size: 11px;
+    text-align: center;
+    padding: 4px;
+    border: 1px solid {{color.a_nav_border}};
+    outline: 1px solid {{color.a_nav_background}};
+    text-decoration: none;
+    margin-left: 1px;
+    margin-top: 10px;
+    vertical-align: middle;
+    border-radius: 4px;
 }
 
 hr {
-  border: 2px solid {{ color.hr_border }};
-  margin: 15px 0;
+    border: 2px solid {{ color.hr_border }};
+    margin: 15px 0;
 }
 /*TODO: above*/
+
 body.knowl hr {
-  border: 2px solid {{ color.knowl_border }};
+    border: 2px solid {{ color.knowl_border }};
 }
 
 /* jquery ui slider */
 .slider {
-  margin: 15px; 5px;
+    margin: 15px; 5px;
 }
+
+
+/* ============================================================
+ *  tablesorter / display tables
+ * ============================================================ */
 
 /* tables */
 /* TODO: where? do colors get used?*/
 table.tablesorter {
-    font-family:arial;
+    font-family: arial;
     background-color: {{color.light_grey_2}};
-    margin:10px 0pt 15px;
+    margin: 10px 0pt 15px;
     font-size: 8pt;
     width: 100%;
     text-align: left;
 }
-table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-  background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
-  border: 1px solid {{color.white}};
+
+table.tablesorter thead tr th,
+table.tablesorter tfoot tr th {
+    background-color: {{color.col_main_ll}};/*TODO: or really light grey?*/
+    border: 1px solid {{color.white}};
     font-size: 8pt;
     padding: 4px;
 }
+
 table.tablesorter thead tr .header {
     background-image: url("static/images/black-unsorted.gif");
     background-repeat: no-repeat;
     background-position: center right;
     cursor: pointer;
-  padding-left: 4px;
-  padding-right: 15px;
+    padding-left: 4px;
+    padding-right: 15px;
 }
+
 table.tablesorter tbody td {
     color: {{color.dark_grey}};
     padding: 4px;
     background-color: {{color.white}};
     vertical-align: top;
 }
+
 table.tablesorter tbody tr.odd td {
-    background-color:{{color.knowl_background}};
+    background-color: {{color.knowl_background}};
 }
+
 table.tablesorter thead tr .headerSortUp {
     background-image: url("static/images/black-asc.gif");
 }
+
 table.tablesorter thead tr .headerSortDown {
     background-image: url("static/images/black-desc.gif");
 }
-table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+
+table.tablesorter thead tr .headerSortDown,
+table.tablesorter thead tr .headerSortUp {
     background-color: {{color.light_grey_2}};
 }
-
 
 table.display {
     margin: 0 auto;
@@ -1589,7 +1834,9 @@ table.display td.center {
 }
 
 
-
+/* ============================================================
+ *  Boxes / Maass plot
+ * ============================================================ */
 
 /* TODO: div? */
 div.box {
@@ -1610,8 +1857,6 @@ div.codebox {
     box-shadow: 3px 3px 3px {{color.knowl_shadow}};
 }
 
-
-
 /* Styling of Maass form plot */
 
 div.maassformplot {
@@ -1624,9 +1869,9 @@ div.maassformplot {
 }
 
 div.maassformplot img {
-    width:100%;
-    height:auto;
-/*    position: absolute;
+    width: 100%;
+    height: auto;
+    /*    position: absolute;
     top: -200px;
     left: -870px;*/
 }
@@ -1634,6 +1879,9 @@ div.maassformplot img {
 /* End of styling of Maass form plot */
 
 
+/* ============================================================
+ *  Sidebar (continued)
+ * ============================================================ */
 
 /*Sidebar style*/
 
@@ -1678,7 +1926,7 @@ div.maassformplot img {
     padding: 2px 0px;
 }
 
-#sidebar table td.full .future  {
+#sidebar table td.full .future {
     padding: 2px 5px;
 }
 
@@ -1687,17 +1935,14 @@ div.maassformplot img {
     display: inherit;
 }
 
-
 #sidebar .beta {
     color: {{color.sidebar_text_beta}};
     display: inherit;
 }
 
-
 #sidebar .beta a {
     color: {{color.sidebar_text_beta}};
 }
-
 
 #sidebar table td .parts {
     padding-left: 15px;
@@ -1707,7 +1952,9 @@ div.maassformplot img {
     padding-right: 15px;
 }
 
-#sidebar table td.rotation { overflow: hidden; }
+#sidebar table td.rotation {
+    overflow: hidden;
+}
 
 #sidebar li a {
     background: inherit;
@@ -1717,12 +1964,13 @@ div.maassformplot img {
     display: block;
     background: none;
     padding: 0px;
-
 }
-#sidebar h2 {
-    margin: 5px 0px 0px;}
 
-p.rotation  {
+#sidebar h2 {
+    margin: 5px 0px 0px;
+}
+
+p.rotation {
     transform: rotate(270deg);
 }
 
@@ -1731,12 +1979,13 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
     transform: rotate(0deg)
 }
 
-#sidebar table th, #sidebar table td {
+#sidebar table th,
+#sidebar table td {
     text-align: left;
     padding: 2px;
 }
 
-#sidebar table.short{
+#sidebar table.short {
     width: 100%;
     table-layout: fixed;
     border-width: 2px;
@@ -1748,19 +1997,20 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
     border-collapse: separate;
 }
 
-#sidebar table.short td.bor{
+#sidebar table.short td.bor {
     text-align: left;
 }
 
-#sidebar table.short td.nbor{
-    padding: 0px; text-align: left;
+#sidebar table.short td.nbor {
+    padding: 0px;
+    text-align: left;
 }
 
-#sidebar table.short td.borc{
+#sidebar table.short td.borc {
     text-align: center;
 }
 
-#sidebar table.short td.full{
+#sidebar table.short td.full {
     text-align: left;
 }
 
@@ -1769,80 +2019,73 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
     background: {{color.sidebar_background_off}};
 }
 
-
-
 #sidebar ul:first-child a:first-child,
 #sidebar h2:first-child a:first-child,
 #sidebar h2:first-child {
-  margin: 0;
-  padding-top: 3px;
+    margin: 0;
+    padding-top: 3px;
 }
 
 #sidebar ul:last-child li:last-child,
 #sidebar ul:last-child li:last-child a {
-  border-bottom-right-radius: 0px;
+    border-bottom-right-radius: 0px;
 }
 
 #sidebar .list li {
-  padding: 2px 0px;
+    padding: 2px 0px;
 }
 
 #sidebar .list a {
-  padding: 0px;
+    padding: 0px;
 }
 
-#sidebar table.short2{
+#sidebar table.short2 {
     width: 100%;
-    table-layout:fixed;
+    table-layout: fixed;
     padding: 10px;
     border-spacing: 0px;
     border-color: {{color.sidebar_background}};
     border-collapse: collapse;
 }
 
-#sidebar table.short2 td{
+#sidebar table.short2 td {
     padding-left: 10px;
 }
 
 /*End of Sidebar style*/
 
 
-
+/* ============================================================
+ *  Front-page boxes
+ * ============================================================ */
 
 /* Boxes on front page*/
 
-
 .box-container {
-  display: grid;
-
-  gap: 2.5vw 2.5vw;
-  
-  justify-content: space-evenly;
-  
-  align-items: top; 
-  grid-template-columns: 1fr 1fr;
-  
-  margin: 20px;
-
+    display: grid;
+    gap: 2.5vw 2.5vw;
+    justify-content: space-evenly;
+    align-items: top;
+    grid-template-columns: 1fr 1fr;
+    margin: 20px;
 }
 
 /* small screen layout; 720p or mobile */
 @media (max-width: 1000px) {
-  .box-container {
-    grid-template-columns: 1fr;
-  }
+    .box-container {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* 1440p monitor, */
 @media (min-width: 2550px) {
-  .box-container {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-  }
+    .box-container {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
 }
 
 .parent-box {
     background: {{color.box_background}};
-
     line-height: 135%;
     text-align: center;
 
@@ -1912,7 +2155,6 @@ div.content {
     padding-right: 8px;
 }
 
-
 div.user {
     font-size: 90%;
     padding: 0px;
@@ -1924,12 +2166,17 @@ div.user ul li {
 
 /*End table boxes front page*/
 
+
+/* ============================================================
+ *  Scroll wrappers / misc utilities
+ * ============================================================ */
+
 p.short {
-  margin: 0px;
+    margin: 0px;
 }
 
 .table-scroll-wrapper {
-    overflow-y:auto;
+    overflow-y: auto;
 }
 
 .table-scroll-wrapper table {
@@ -1937,16 +2184,19 @@ p.short {
     margin-bottom: 1px;
     border-collapse: collapse;
 }
+
 .table-scroll-wrapper th {
     position: -webkit-sticky; top: 0;
     position: sticky; top: 0;
-    z-index:1;
-    background:{{color.table_ntdata_background_2}};
+    z-index: 1;
+    background: {{color.table_ntdata_background_2}};
     background-clip: padding-box;
 }
+
 .cmf-dim-table th.level {
     padding-left: 80px;
 }
+
 th.weight-label {
     padding-left: 5px;
     padding-right: 0px;
@@ -1955,31 +2205,36 @@ th.weight-label {
 div.table-scroll-wrapper thead tr {
     border-bottom: 0;
 }
+
 div.table-scroll-wrapper thead > tr:last-child > th {
     border-bottom: 2px solid {{ color.table_ntdata_border}};
 }
 
-.table-scroll-wrapper td.border-right, .table-scroll-wrapper th.border-right {
+.table-scroll-wrapper td.border-right,
+.table-scroll-wrapper th.border-right {
     border-right: 0; /* We need to put the border on td:after for scrolling */
 }
+
 .table-scroll-wrapper .border-right:after {
-    content:'';
-    position:absolute;
+    content: '';
+    position: absolute;
     right: 0;
     top: 0;
-    height:100%;
+    height: 100%;
     border-right: 2px solid {{ color.table_ntdata_border}};
 }
+
 .table-scroll-wrapper .sticky-col {
     position: -webkit-sticky; left: 0;
     position: sticky; left: 0;
-    z-index:2;
+    z-index: 2;
     background-clip: padding-box;
 }
+
 .table-scroll-wrapper th.sticky-head {
     position: -webkit-sticky; left: 0; top: 0;
     position: sticky; left: 0; top: 0;
-    z-index:3;
+    z-index: 3;
 }
 
 /* Automate embedding-wrap, sticky-col and border-right for scrollable tables with one sticky header column */
@@ -1988,46 +2243,54 @@ div.table-scroll-wrapper table.onesticky :is(th:first-child, td:first-child) {
     padding: 0;
     position: -webkit-sticky; left: 0;
     position: sticky; left: 0;
-    z-index:2;
+    z-index: 2;
     background-clip: padding-box;
 }
+
 div.table-scroll-wrapper table.onesticky tr:nth-child(even) :is(th:first-child, td:first-child) {
-  background-color: {{color.table_ntdata_background_2}};
+    background-color: {{color.table_ntdata_background_2}};
 }
+
 div.table-scroll-wrapper table.onesticky tr:nth-child(odd) :is(th:first-child, td:first-child) {
-  background-color: white;
+    background-color: white;
 }
+
 div.table-scroll-wrapper table.onesticky thead > tr:last-child > th:first-child {
-  padding-bottom: 2px;
-  border-bottom: 2px solid {{ color.table_ntdata_border}};
+    padding-bottom: 2px;
+    border-bottom: 2px solid {{ color.table_ntdata_border}};
 }
 
 /* :is doesn't work for pseudo-elements */
-div.table-scroll-wrapper table.onesticky th:first-child::after, div.table-scroll-wrapper table.onesticky td:first-child::after {
-    content:'';
-    position:absolute;
+div.table-scroll-wrapper table.onesticky th:first-child::after,
+div.table-scroll-wrapper table.onesticky td:first-child::after {
+    content: '';
+    position: absolute;
     right: 0;
     top: 0;
-    height:100%;
+    height: 100%;
     border-right: 2px solid {{ color.table_ntdata_border}};
 }
 
-
 table.nowrap td {
-    white-space:nowrap;
+    white-space: nowrap;
 }
-td.nowrap, th.nowrap, span.nowrap {
-    white-space:nowrap;
+
+td.nowrap,
+th.nowrap,
+span.nowrap {
+    white-space: nowrap;
 }
+
 table.ntdata td.nowrap a {
     display: inline;
 }
 
 .float-right {
-    float:right;
+    float: right;
 }
+
 .float-left {
-    float:left;
+    float: left;
 }
 
 #complex_embeddings {
@@ -2047,6 +2310,7 @@ table.coeff_ring_basis td.LHS {
     margin-right: 0;
     padding-right: 0;
 }
+
 table.coeff_ring_basis td.eq {
     text-align: center;
     margin-right: 0;
@@ -2054,6 +2318,7 @@ table.coeff_ring_basis td.eq {
     margin-left: 0;
     padding-left: 2px;
 }
+
 table.coeff_ring_basis td.RHS {
     text-align: left;
     margin-left: 0;
@@ -2066,12 +2331,14 @@ table.complex-cols td.real {
     margin-right: 0;
     padding-right: 0;
 }
+
 table.complex-cols td.imag {
     font-family: MJX_Math;
     text-align: left;
     margin-left: 0;
     padding-left: 0;
 }
+
 td.op {
     font-family: MJX_Math;
     text-align: center;
@@ -2085,11 +2352,13 @@ table.ntdata td.embedding-wrap {
     margin: 0;
     padding: 0;
 }
+
 .table-scroll-wrapper table.sticky-embeddings {
     margin: 0;
     padding: 0;
     min-width: 55px;
 }
+
 table.sticky-embeddings td.vstrut {
     margin-left: 0;
     padding-left: 0;
@@ -2103,6 +2372,7 @@ table.qexp-table td.fdef {
     padding-right: 0;
     vertical-align: top;
 }
+
 table.qexp-table td.op {
     vertical-align: top;
 }
@@ -2110,6 +2380,7 @@ table.qexp-table td.op {
 td.topspace {
     padding-top: 15px;
 }
+
 table.qexp-table td.qexp-output {
     margin-left: 0;
     padding-left: 0;
@@ -2125,31 +2396,31 @@ input::placeholder {
 }
 
 .table_rotate {
-   /* see the word "Weight" on the left edge of the table in
-        /ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&dim=1
-   */
-  transform: rotate(180deg);
-
-  writing-mode: vertical-lr;
-  white-space: nowrap;
+    /* see the word "Weight" on the left edge of the table in
+       /ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&dim=1
+    */
+    transform: rotate(180deg);
+    writing-mode: vertical-lr;
+    white-space: nowrap;
 }
 
 /* an horizontal list with bullet points */
 ul.horizontal-list {
-  display:inline-block;
-  padding:0;
-  margin: 0.5em;
-  margin-block-start: 0;
+    display: inline-block;
+    padding: 0;
+    margin: 0.5em;
+    margin-block-start: 0;
 }
-ul.horizontal-list li {
-  display: inline;
-  white-space: nowrap;
-}
-ul.horizontal-list li:after {
 
-  content:" ";
-  letter-spacing:1em;
-  background: center center no-repeat url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xMkMEa+wAAAAnSURBVBhXY/Dz89MA4sNA/B9Ka4AEYQIwfBgkiCwAxjhVopnppwEApxQqhnyQ+VkAAAAASUVORK5CYII=);
+ul.horizontal-list li {
+    display: inline;
+    white-space: nowrap;
+}
+
+ul.horizontal-list li:after {
+    content: " ";
+    letter-spacing: 1em;
+    background: center center no-repeat url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAABl0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMC4xMkMEa+wAAAAnSURBVBhXY/Dz89MA4sNA/B9Ka4AEYQIwfBgkiCwAxjhVopnppwEApxQqhnyQ+VkAAAAASUVORK5CYII=);
 }
 
 input.color_selecter {
@@ -2166,7 +2437,8 @@ span.normgp {
 
 span.activesubgp {
     background: {{color.col_main_ll}};
-    }
+}
+
 /* the button to show advanced search options */
 #advancedtoggle {
     margin-left: 20px;
@@ -2178,10 +2450,11 @@ span.activesubgp {
 }
 
 #row_selector_shown {
-  display: none;
+    display: none;
 }
+
 input.download_row_count_input {
-  width: 75px;
+    width: 75px;
 }
 
 span.chargp {
@@ -2196,46 +2469,56 @@ span.activesubgp {
     background: {{color.col_main_ll}};
 }
 
-
 #group-diagram-selected {
     color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
     background-color: {{ color.sidebar_background_h2 }};/*same as sidebar tabs*/
 }
 
 div.sub_divider {
-  display: inline-block;
-  margin-right: 20px;
+    display: inline-block;
+    margin-right: 20px;
 }
 
-button.sub_active, button.dia_active, button.gs_active {
-  background: {{color.lf_an_button_bkg}};
-  border: 2px solid {{color.lf_an_button_brd}};
-  cursor: pointer;
+button.sub_active,
+button.dia_active,
+button.gs_active {
+    background: {{color.lf_an_button_bkg}};
+    border: 2px solid {{color.lf_an_button_brd}};
+    cursor: pointer;
 }
 
-button.sub_inactive, button.dia_inactive, button.gs_inactive {
-  background: {{color.lf_ar_button_bkg}};
-  border: 1px solid {{color.lf_ar_button_brd}};
+button.sub_inactive,
+button.dia_inactive,
+button.gs_inactive {
+    background: {{color.lf_ar_button_bkg}};
+    border: 1px solid {{color.lf_ar_button_brd}};
 }
 
 tr.highlighted {
-  background-color: {{color.col_main_ll}};
+    background-color: {{color.col_main_ll}};
 }
 
 td.highlighted {
-  background-color: {{color.col_main_ll}};
-  text-align: right;
+    background-color: {{color.col_main_ll}};
+    text-align: right;
 }
 
-#column-selector, #sort-selecter {
-  scrollbar-width: none; /*For Firefox*/;
-  -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
-  overflow-y:auto;
+#column-selector,
+#sort-selecter {
+    scrollbar-width: none;     /*For Firefox*/;
+    -ms-overflow-style: none;  /*For Internet Explorer 10+*/;
+    overflow-y: auto;
 }
-#column-selector:-webkit-scrollbar, #sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
+
+#column-selector:-webkit-scrollbar,
+#sort-selecter:-webkit-scrollbar { /*For WebKit Browsers*/
     width: 0;
 }
 
+
+/* ============================================================
+ *  raw type set styling
+ * ============================================================ */
 
 /*************** raw type set styling ****************/
 
@@ -2245,11 +2528,15 @@ td.highlighted {
 span.raw-tset-copy-btn > img {
     content: url({{url_for('static', filename='images/copy.svg')}});
 }
-span.raw-tset-copy-btn > img, span.raw-tset-toggle > img {
+
+span.raw-tset-copy-btn > img,
+span.raw-tset-toggle > img {
     vertical-align: top;
     height: 11px;
 }
-span.raw-tset-copy-btn, span.raw-tset-toggle {
+
+span.raw-tset-copy-btn,
+span.raw-tset-toggle {
     box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), inset 0 1px 0 rgba(255,255,255,0.25);
     display: inline-block;
     padding: 2px;
@@ -2264,7 +2551,9 @@ span.raw-tset-copy-btn, span.raw-tset-toggle {
     transition-property: color,background-color,border-color;
     color: rgb(36, 41, 47);
 }
-span.raw-tset-copy-btn:active, span.raw-tset-toggle:active {
+
+span.raw-tset-copy-btn:active,
+span.raw-tset-toggle:active {
     box-shadow: inset 0 0.1em 0.2em rgba(27,31,36,0.15), 0 0 0 0.1em rgba(9,105,218,0.3);
 }
 
@@ -2286,29 +2575,29 @@ span.raw-tset-container.compressed > .raw-container {
 
 /* non static */
 
-
 /* hide the opposite class enable */
 span.raw-tset-container.tset > .raw-container {
     display: none;
 }
+
 span.raw-tset-container.raw > .tset-container {
     display: none;
 }
 
 /* proper icon  based on the mode */
 span.raw-tset-container.tset > span.raw-tset-toggle > img.tset-icon {
-  content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
+    content: url({{url_for('static', filename='images/tset_to_raw.svg')}});
 }
 
 span.raw-tset-container.raw > span.raw-tset-toggle > img.tset-icon {
-  content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
+    content: url({{url_for('static', filename='images/raw_to_tset.svg')}});
 }
 
 /* do not show toggle buttons in general */
 span.raw-tset-container > span.raw-tset-toggle,
 span.raw-tset-container > span.raw-tset-copy-btn {
-  visibility: hidden;
-  position:relative;
+    visibility: hidden;
+    position: relative;
 }
 
 /* when to show them */
@@ -2316,12 +2605,12 @@ span.raw-tset-container.all > span.raw-tset-toggle,
 span.raw-tset-container.raw > span.raw-tset-copy-btn,
 span.raw-tset-container:hover > span.raw-tset-toggle,
 span.raw-tset-container:hover > span.raw-tset-copy-btn {
-  visibility: visible;
-  cursor: pointer;
+    visibility: visible;
+    cursor: pointer;
 }
 
 div.upload_section {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
 }
 
 /* hidge google badge */
@@ -2329,9 +2618,11 @@ div.upload_section {
     visibility: hidden;
 }
 
-button.search_stale, button.search_stale:hover {
-  background: {{color.select_background}};
+button.search_stale,
+button.search_stale:hover {
+    background: {{color.select_background}};
 }
+
 button.search_fresh {
-  background: {{color.button_background}};
+    background: {{color.button_background}};
 }
