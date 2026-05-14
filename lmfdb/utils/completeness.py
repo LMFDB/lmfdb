@@ -768,7 +768,7 @@ class PrimeBound(Bound):
     
     Examples:
       "conductor", PrimeBound(1000)                 -> checks that conductor is a prime number less than 1000
-      ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is prime at most 10 and discriminant is a prime at most 100
+      ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is a prime at most 10 and discriminant is a prime at most 100
     """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
@@ -781,6 +781,7 @@ class Smooth(ColTest):
 
     Examples:
       *  "conductor", Smooth(10)  -> checks that conductor is divisble only by the prime factors 2, 3, 5, and 7.
+      *  "absD", Smooth(100)      -> checks that absolute disc is divisble only by prime factors less than 100.
     """
     def __init__(self, M, cls=IntegerSet):
         self.cls = cls
@@ -1045,7 +1046,7 @@ class MulFiller:
 
 class SumFiller:
     """
-    Infer and refine constraints using the relation a = b + c.
+    Infer and refine constraints using the additive relation a = b + c.
     E.g. useful for certifying abelian varieties using relations of the form "dimension = rank + corank".
     """
 
@@ -1558,6 +1559,7 @@ class NFBound(ColTest):
             23: [((1,2), od)],
         }
 
+        # Sets of transitive group IDs with specified Galois group or subfield structure
         quartic_2_group = (1,2,3)
         octic_2_group = (1,2,3,4,5,6,7,8,9,10,11,15,16,17,18,19,20,21,22,26,27,28,29,30,31,35)
         octwith4 = (1,2,4,6,7,8,10,12,13,14,16,17,19,20,21,23,27,28,30,38,40)
@@ -1990,21 +1992,26 @@ class NFBound(ColTest):
 
         #### Regulator completeness bounds for number fields ####
 
-        # For a non-CM field K, the regulator Reg_K has a lower bound of the form Reg_K >= A*(logD)^B
-        # where D is the discriminant and A and B are effectively computable constants depending only on the degree of K.
+        # For a non-CM field K, the regulator Reg_K has a lower bound of the form Reg_K >= A*(logD)^B,
+        # where D is the discriminant and A and B are effectively computable constants depending only on the degree/signature of K.
 	
-        # For some explicit small signatures, we give explicit lower bounds (with referneces) below:
-        # These make use of hardcoded discriminantn completeness bounds given above in self._maxD
+        # For certain explicit small signatures, we give explicit lower bounds (with referneces) below:
+        # These make use of hardcoded discriminantn completeness bounds given above, in self._maxD
         # Some bounds furthermore require whether field is primitive or impritive. (e.g. this can be detected if Galois group is given)
 
-        regbound_s20 =                                        # Real quadratic
-        regbound_s30 = (1/16)*ln(self._maxD[]/4)**2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
-        regbound_s12 = (1/3) * ln(self._maxD[]/27)                      # Complex cubic case  (see Cusick 1983 Theorem 3)
-        regbound_s40_prim = 1/(80*sqrt(10)) * ln(self._maxD[]/16)**3    # Totally real quartic case (see Cusick 1983 Theorem 2)
-        regbound_s40_imprim = 1/(80*sqrt(10)) * ln(self._maxD[]/16)**2  # Totally real quartic case (see Vusick 1983, Theorem 2b)
-        regbound_s02_prim = (1/4)*ln(self._maxD[]/16)**3                # Totally complex quartic case  (see Vusick 1983, Theorem 4)
-       regbound_s50_cyclic = (1/25) * log(self._maxD[]/16)**4           # Cyclic quintic fields (see Schoof-Washington 1988)
+        regbound_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
+        regbound_s30 = (1/16) * log(self._maxD[3][0]/4)**2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
+        regbound_s11 = (1/3) * log(self._maxD[3][1]/27)                      # Complex cubic case  (see Cusick 1983 Theorem 3)
+        regbound_s40_prim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**3    # Totally real quartic case (see Cusick 1983 Theorem 2)
+        regbound_s40_imprim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**2  # Totally real quartic case (see Cusick 1983, Theorem 2b)
+        regbound_s02_prim = (1/4) * log(self._maxD[4][2]/16)**3                # Totally complex quartic case  (see Cusick 1983, Theorem 4)
+        regbound_s50_cyclic = (1/25) * log(self._maxD[5][0]/16)**4           # Cyclic quintic fields (see Schoof-Washington 1988)
+        regbound_s70 = 19.19                                            # Totally real deg 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)  
         regbound_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
+        regbound_s80 = 28.43                                            # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 12a)
+        regbound_s90 = 37.2                                             # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 13)
+
+        # TODO: Add more regulator bounds for other signatures
 
 
     def display_reason(self, reasons):
@@ -2291,7 +2298,8 @@ class NFBound(ColTest):
 
     def _initial(self, db, query, reasons):
         """
-        Attempt to prove completeness without splitting on degree
+        Attempt to prove completeness without splitting on degree,
+        using global completeness bounds for absolute disc, root disc, and Galois root disc.
         """
         D, rd, grd = IntegerSet(query.get("disc_abs")), NumberSet(query.get("rd")), NumberSet(query.get("grd"))
         if D.bounded(1656109):
@@ -2311,7 +2319,9 @@ class NFBound(ColTest):
     def _one_n(self, db, query, reasons):
         """
         Check completeness for number fields of a fixed degree n.
+        This is done by succesively applying discriminant, signature, Galois, and ramification bounds.
         """
+
         n = query.get("degree")
         if n == 1:
             reasons.add("degree 1")
@@ -2866,7 +2876,8 @@ CompletenessChecker("ec_nfcurves", [
 ], fill=[FieldLabelFiller(True)])
 
 
-# For genus 2 curves, we can add trivial completeness bounds for now, as there are no genus 2 curves of conductor less than 121, assuming paramodularity
+# For genus 2 curves, we can just add trivial completeness bounds for now.
+# The smallest conductor of a genus 2 curve over Q is 121, assuming paramodularity.
 CompletenessChecker("g2c_curves", [
     ("conductor", Bound(120), "genus 2 curves with conductor at most 120 vacously (as there are none)", "Paramodular conjecture"),
     ("absD", Bound(120), "genus 2 curves with minimal discriminant at most 120 vacously (as there are none)", "Paramodular conjecture")
