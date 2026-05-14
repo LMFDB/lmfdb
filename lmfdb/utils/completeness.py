@@ -723,13 +723,14 @@ class ColTest:
 
 class Bound(ColTest):
     """
-    Check that the inputs lie in the product of the specified bounds. (i.e. in a given box).
+    Check that each queried value lies within its corresponding bound. (i.e. in a given box).
     Useful for checking if conductor/discriminant/level/degree/genus is in a specified range.
 
     Examples:
-      "conductor", Bound(1000)              -> checks that conductor is at most 1000
-      "genus", Bound([2, 4])                -> checks that genus is between 2 and 4, inclusive
-      ("level", "weight"), Bound(10, 100)   -> checks that level is at most 10 and weight is at most 100 
+      *  "conductor", Bound(1000)                     -> checks that conductor is at most 1000
+      *  "genus", Bound([2, 4])                       -> checks that genus is between 2 and 4, inclusive
+      *  ("level", "weight"), Bound(10, 100)          -> checks that level is at most 10 and weight is at most 100 
+      *  ("g","q"), Bound(3, RealSet([-5,5], [7,9]))  -> checks that g is at most 3 and q is either between -5 and 5 inclusive, or between 7 and 9 inclusive.
     """
     def __init__(self, *bounds, cls=IntegerSet):
         self.cls = cls
@@ -744,9 +745,13 @@ class CBound(Bound):
     Given constraints on a set of values, check that the last value lies in an interval.
 
     Note that overlapping Bound boxes is better when applicable,
-    since this test will only match queries where the constraints are specified exactly
+    since this test will only match queries where the constraints are specified exactly.
 
-    E.g. used for modular forms, Sato-Tate groups, (etc. where we want to check that the last value lies in a certain box, but only for certain values of the other parameters.)
+    E.g. Useful for when we want to check that some parameter lies in a fixed interval, but only for certain values of the other parameters.
+    Examples:
+      *  ("genus", "level"), CBound(5, 100),                         -> checks that genus is 5, and level is at most 100
+      *  ("degree", "rational", "conductor"), CBound(1, True, 2800)  -> checks that degree is 1, rational is True, and conductor at most 2800
+      *  ("weight", "char_order", "level"), CBound(2, 1, 50000)      -> checks that weight is 2, char_order is 1, and level is at most 50000
     """
     def __init__(self, *constraints, cls=IntegerSet):
         self.constraints = tuple(constraints[:-1])
@@ -758,11 +763,11 @@ class CBound(Bound):
 
 class PrimeBound(Bound):
     """
-    Check that all queried values are finite sets of primes lying in the product of the specified bounds. (i.e. primes in a given box).
+    Check that all queried values are finite sets of primes lying within its corresponding bound. (i.e. primes in a given box).
     Useful for checking if conductor/discriminant/level is prime and in a specified range.
     
     Examples:
-      "conductor", PrimeBound(100)                 -> checks that conductor is a prime number less than 100
+      "conductor", PrimeBound(1000)                 -> checks that conductor is a prime number less than 1000
       ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is prime at most 10 and discriminant is a prime at most 100
     """
     def __call__(self, db, Ds):
@@ -772,11 +777,10 @@ class PrimeBound(Bound):
 
 class Smooth(ColTest):
     """
-    Check that all queried integers are M-smooth.
+    Check that all queried integers are M-smooth (i.e. only contains prime factors which are at most M).
 
     Examples:
-      ("conductor", Smooth(10))   -> checks that conductor is divisble only by the prime factors 2, 3, 5, and 7.
-
+      *  "conductor", Smooth(10)  -> checks that conductor is divisble only by the prime factors 2, 3, 5, and 7.
     """
     def __init__(self, M, cls=IntegerSet):
         self.cls = cls
@@ -796,8 +800,7 @@ class Specific(ColTest):
     Check that each input lies in a specified allowed set.
 
     Examples:
-      "rational", "weight", "degree"), Specific([True], [0], [1])   ->  checks that rational is True, weight is 0, and degree is 1
-
+      *  ("rational", "weight", "degree"), Specific([True], [0], [1])   ->  checks that rational is True, weight is 0, and degree is 1
     """
     def __init__(self, *constraints):
         self.constraints = constraints
@@ -811,7 +814,7 @@ class Subset(ColTest):
     Check that a query value is a subset of some allowed set.
     
     Handles both exact matches (lists) and containment constraints ($containedin).
-    Useful for completeness checks on restricted sets of values (e.g., bad primes, ramified primes, etc.)
+    Useful for completeness checks on restricted sets of values (e.g. bad primes, ramified primes, etc.)
     """
     def __init__(self, allowed_set):
         self.allowed_set = set(allowed_set)
@@ -1984,6 +1987,26 @@ class NFBound(ColTest):
                  ((7,11), (3,))],
         }
 
+
+        #### Regulator completeness bounds for number fields ####
+
+        # For a non-CM field K, the regulator Reg_K has a lower bound of the form Reg_K >= A*(logD)^B
+        # where D is the discriminant and A and B are effectively computable constants depending only on the degree of K.
+	
+        # For some explicit small signatures, we give explicit lower bounds (with referneces) below:
+        # These make use of hardcoded discriminantn completeness bounds given above in self._maxD
+        # Some bounds furthermore require whether field is primitive or impritive. (e.g. this can be detected if Galois group is given)
+
+        regbound_s20 =                                        # Real quadratic
+        regbound_s30 = (1/16)*ln(self._maxD[]/4)**2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
+        regbound_s12 = (1/3) * ln(self._maxD[]/27)                      # Complex cubic case  (see Cusick 1983 Theorem 3)
+        regbound_s40_prim = 1/(80*sqrt(10)) * ln(self._maxD[]/16)**3    # Totally real quartic case (see Cusick 1983 Theorem 2)
+        regbound_s40_imprim = 1/(80*sqrt(10)) * ln(self._maxD[]/16)**2  # Totally real quartic case (see Vusick 1983, Theorem 2b)
+        regbound_s02_prim = (1/4)*ln(self._maxD[]/16)**3                # Totally complex quartic case  (see Vusick 1983, Theorem 4)
+       regbound_s50_cyclic = (1/25) * log(self._maxD[]/16)**4           # Cyclic quintic fields (see Schoof-Washington 1988)
+        regbound_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
+
+
     def display_reason(self, reasons):
         """
         Convert a set of collected reasons into a single string to display.
@@ -2225,10 +2248,16 @@ class NFBound(ColTest):
         return galt
 
     def rd_grd_ratio(self, n, galt):
+        """
+        Return the maximum possible root-discriminant for the given Galois groups.
+        """
         if n < len(self._rdgrd) and max(galt) <= len(self._rdgrd[n]):
             return max(1 / self._rdgrd[n][t - 1] for t in galt)
 
     def get_S(self, ramps, radical):
+        """
+        Extract a finite set S of allowed primes from radical and ramified primes constraints.
+        """
         S = None
         if radical is not None:
             if isinstance(radical, dict):
@@ -2392,6 +2421,9 @@ class NFBound(ColTest):
                 return True, None
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
+
+        # Completess case : TODO:  now try using queries on regulators to show completeness ?
+
 
         # Can also iterate over valid discriminants in a discriminant range
         if D.restricted():
@@ -2834,7 +2866,7 @@ CompletenessChecker("ec_nfcurves", [
 ], fill=[FieldLabelFiller(True)])
 
 
-# For genus 2 curves, can add trivial completeness bounds as there are no genus 2 curves of conductor less than 121, assuming paramodularity
+# For genus 2 curves, we can add trivial completeness bounds for now, as there are no genus 2 curves of conductor less than 121, assuming paramodularity
 CompletenessChecker("g2c_curves", [
     ("conductor", Bound(120), "genus 2 curves with conductor at most 120 vacously (as there are none)", "Paramodular conjecture"),
     ("absD", Bound(120), "genus 2 curves with minimal discriminant at most 120 vacously (as there are none)", "Paramodular conjecture")
