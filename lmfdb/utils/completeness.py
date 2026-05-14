@@ -13,7 +13,9 @@ EXAMPLES::
 
 
 from collections import defaultdict
-from sage.all import factor, prod, factorial, is_prime, prime_range, ZZ, NN, ceil, floor, RealSet, infinity, cached_function, RLF
+from sage.all import (
+    factor, prod, factorial, is_prime, prime_range, ZZ, NN,
+    ceil, floor, RealSet, infinity, cached_function, RLF, log, sqrt)
 
 # This dictionary is filled in the __init__ method of CompletenessCheckers based on the table name;
 # specific CompletenessCheckers are created at the bottom of this file.
@@ -1990,29 +1992,32 @@ class NFBound(ColTest):
         }
 
 
-        #### Regulator completeness bounds for number fields ####
+        # Regulator bounds are implemented in NFBound.regulator_threshold().
 
-        # For a non-CM field K, the regulator Reg_K has a lower bound of the form Reg_K >= A*(logD)^B,
-        # where D is the discriminant and A and B are effectively computable constants depending only on the degree/signature of K.
-	
-        # For certain explicit small signatures, we give explicit lower bounds (with referneces) below:
-        # These make use of hardcoded discriminantn completeness bounds given above, in self._maxD
-        # Some bounds furthermore require whether field is primitive or impritive. (e.g. this can be detected if Galois group is given)
-
-        regbound_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
-        regbound_s30 = (1/16) * log(self._maxD[3][0]/4)**2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
-        regbound_s11 = (1/3) * log(self._maxD[3][1]/27)                      # Complex cubic case  (see Cusick 1983 Theorem 3)
-        regbound_s40_prim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**3    # Totally real quartic case (see Cusick 1983 Theorem 2)
-        regbound_s40_imprim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**2  # Totally real quartic case (see Cusick 1983, Theorem 2b)
-        regbound_s02_prim = (1/4) * log(self._maxD[4][2]/16)**3                # Totally complex quartic case  (see Cusick 1983, Theorem 4)
-        regbound_s50_cyclic = (1/25) * log(self._maxD[5][0]/16)**4           # Cyclic quintic fields (see Schoof-Washington 1988)
-        regbound_s70 = 19.19                                            # Totally real deg 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)  
+        regbound_s20 = log((sqrt(self._maxD[2][0] - 4) + sqrt(self._maxD[2][0])) / 2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
+        regbound_s30 = (1/16) * log(self._maxD[3][0] / 4) ** 2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
+        regbound_s11 = (1/3) * log(self._maxD[3][1] / 27)                          # Complex cubic case  (see Cusick 1983 Theorem 3)
+        regbound_s40_prim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0] / 16) ** 3    # Totally real quartic case (see Cusick 1983 Theorem 2)
+        regbound_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0] / 16) ** 2  # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
+        regbound_s02_prim = (1 / 4) * log(self._maxD[4][2] / 16) ** 3                # Totally complex quartic case (see Cusick 1983, Theorem 4)
+        regbound_s50_cyclic = (1 / 25) * log(self._maxD[5][0] / 16) ** 4           # Cyclic quintic fields (see Schoof-Washington 1988)
+        regbound_s70 = 19.19                                            # Totally real degree 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)
         regbound_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
         regbound_s80 = 28.43                                            # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 12a)
         regbound_s90 = 37.2                                             # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 13)
 
-        # TODO: Add more regulator bounds for other signatures
-
+        self._maxReg = {
+            (2, 0): regbound_s20,
+            (3, 0): regbound_s30,
+            (3, 1): regbound_s11,
+            (4, 0): (regbound_s40_imprim, regbound_s40_prim),
+            (4, 2): regbound_s02_prim,
+            (5, 0): regbound_s50_cyclic,
+            (5, 1): regbound_s51,
+            (7, 0): regbound_s70,
+            (8, 0): regbound_s80,
+            (9, 0): regbound_s90,
+        }
 
     def display_reason(self, reasons):
         """
@@ -2179,6 +2184,113 @@ class NFBound(ColTest):
                     galt.difference_update(I)
                     if not galt:
                         return True
+
+        return False
+
+    def regulator_threshold(self, n, r2, galt, cm):
+        """
+        Return a lower bound on the regulator for the specified signature and Galois constraints.
+
+        If the query may include CM fields and the lower bound only applies to non-CM fields,
+        return None so that completeness cannot be inferred from regulator alone.
+        """
+        if n < 2 or n >= len(self._maxD) or self._maxD[n] is None or r2 < 0 or r2 >= len(self._maxD[n]):
+            return None
+        D_max = self._maxD[n][r2]
+        if D_max is None:
+            return None
+
+        from sage.all import log, sqrt
+
+        r1 = n - 2*r2
+        if r1 < 0:
+            return None
+        if r1 == 0 and cm is not False:
+            return None
+
+        explicit = None
+        if n == 2 and r2 == 0:
+            explicit = log((sqrt(D_max - 4) + sqrt(D_max)) / 2)
+        elif n == 3:
+            if r2 == 0:
+                explicit = (1 / 16) * log(D_max / 4) ** 2
+            elif r2 == 1:
+                explicit = (1 / 3) * log(D_max / 27)
+        elif n == 4:
+            if r2 == 0:
+                bound_prim = 1 / (80 * sqrt(10)) * log(D_max / 16) ** 3
+                bound_imprim = 1 / (80 * sqrt(10)) * log(D_max / 16) ** 2
+                if galt is None:
+                    explicit = bound_imprim
+                else:
+                    primitive_groups = {4, 5}
+                    if galt.issubset(primitive_groups):
+                        explicit = bound_prim
+                    elif galt.isdisjoint(primitive_groups):
+                        explicit = bound_imprim
+                    else:
+                        explicit = min(bound_prim, bound_imprim)
+            elif r2 == 2:
+                primitive_groups = {4, 5}
+                if galt is None or not galt.issubset(primitive_groups):
+                    explicit = None
+                else:
+                    explicit = (1 / 4) * log(D_max / 16) ** 3
+        elif n == 5 and r2 == 0:
+            cyclic_groups = {1}
+            if galt is None or galt.issubset(cyclic_groups):
+                explicit = (1 / 25) * log(D_max / 16) ** 4
+        elif n == 7 and r2 == 0:
+            explicit = 19.19
+        elif n == 5 and r2 == 1:
+            explicit = 3.2
+        elif n == 8 and r2 == 0:
+            explicit = 28.43
+        elif n == 9 and r2 == 0:
+            explicit = 37.2
+
+        rank = r1 + r2 - 1
+        if rank <= 0:
+            return explicit
+
+        generic = log(D_max) ** rank
+        if explicit is None:
+            return generic
+        return max(generic, explicit)
+
+    def clear_galois_regulator(self, n, r2opts, query, galt, cm, reasons):
+        regulator_query = query.get("regulator")
+        if regulator_query is None:
+            return False
+
+        regulator_max = None
+        if isinstance(regulator_query, dict):
+            if "$lte" in regulator_query:
+                regulator_max = regulator_query["$lte"]
+            elif "$lt" in regulator_query:
+                regulator_max = regulator_query["$lt"]
+        elif isinstance(regulator_query, (int, float)):
+            regulator_max = regulator_query
+        if regulator_max is None:
+            return False
+
+        thresholds = []
+        for r2 in r2opts:
+            threshold = self.regulator_threshold(n, r2, galt, cm)
+            if threshold is None:
+                return False
+            thresholds.append(threshold)
+        if not thresholds:
+            return False
+
+        if regulator_max <= min(thresholds):
+            if len(r2opts) == 1:
+                r1 = n - 2 * r2opts[0]
+                signature = [r1, r2opts[0]]
+                reasons.add(f"degree {n}, signature {signature}, regulator at most {regulator_max}")
+            else:
+                reasons.add(f"degree {n}, regulator at most {regulator_max}")
+            return True
 
         return False
 
@@ -2432,8 +2544,9 @@ class NFBound(ColTest):
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
 
-        # Completess case : TODO:  now try using queries on regulators to show completeness ?
-
+        # Completeness case : try using queries on regulators to show completeness
+        if self.clear_galois_regulator(n, r2opts, query, galt, query.get("cm"), reasons):
+            return True, caveat
 
         # Can also iterate over valid discriminants in a discriminant range
         if D.restricted():
@@ -2493,82 +2606,6 @@ class NFBound(ColTest):
         return True, self.display_reason(reasons), caveats
 
 
-#### Regulator bounds for number fields ####
-
-class RegulatorBound(ColTest):
-    """
-    Checks completeness based on regulator bounds for number fields.
-    
-    Uses the relationship R >= log(|disc|)^r, where r is the unit rank (r1 + r2 - 1).
-    If we have all fields up to discriminant D_max for a signature/Galois group,
-    then searching with regulator <= log(D_max)^r guarantees completeness.
-    """
-    def __init__(self, nf_bound):
-        """
-        Args:
-            nf_bound: An instance of NFBound with the discriminant bounds
-        """
-        self.nf_bound = nf_bound
-    
-    def __call__(self, db, query):
-        """
-        Returns (complete, reason, caveat) for regulator-bounded searches.
-        """
-        from sage.all import log, exp, RealNumber
-        
-        # Extract regulator constraint
-        regulator_query = query.get("regulator")
-        if regulator_query is None:
-            return False, None, None
-        
-        regulator_max = None
-        if isinstance(regulator_query, dict):
-            if "$lte" in regulator_query:
-                regulator_max = regulator_query["$lte"]
-            elif "$lt" in regulator_query:
-                regulator_max = regulator_query["$lt"]
-        elif isinstance(regulator_query, (int, float)):
-            regulator_max = regulator_query
-        
-        if regulator_max is None:
-            return False, None, None
-        
-        # Extract signature
-        signature = query.get("signature")
-        if not isinstance(signature, list) or len(signature) != 2:
-            return False, None, None
-        
-        r1, r2 = signature
-        n = r1 + 2*r2  # degree
-        r = r1 + r2 - 1  # unit rank
-        
-        # Check if we have discriminant bounds for this signature
-        if n < 2 or n >= len(self.nf_bound._maxD) or self.nf_bound._maxD[n] is None:
-            return False, None, None
-        
-        # Get the discriminant bound for this signature
-        maxD_list = self.nf_bound._maxD[n]
-        if r2 >= len(maxD_list):
-            return False, None, None
-        
-        D_max = maxD_list[r2]
-        
-        # Compute the regulator bound: log(D_max)^r
-        # Using log base e
-        try:
-            regulator_bound = float(log(D_max)) ** r
-        except (ValueError, OverflowError):
-            return False, None, None
-        
-        # Check if the query's regulator limit is within our completeness bound
-        if regulator_max <= regulator_bound:
-            reason = f"degree {n} number fields with signature {signature} and regulator at most {regulator_max} (completeness guaranteed up to regulator {regulator_bound:.2f})"
-            return True, reason, None
-        
-        return False, None, None
-
-
-#### Artin representations ####
 
 minimal_label = {
     '2T1': '2T1',
@@ -2856,7 +2893,7 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", PrimeBound(300000000), "elliptic curves with prime conductor at most 300 million"),
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
     ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
-    ("bad_primes", Subset({2,3,5,7}), "elliptic curves with bad primes in {2,3,5,7}"),
+    ("bad_primes", Subset({2,3,5,7}), "elliptic curves with good reduction away from {2,3,5,7}"),
     ("bad_primes", RestrictedBadPrimesConductor({}, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
 
 
@@ -2879,8 +2916,8 @@ CompletenessChecker("ec_nfcurves", [
 # For genus 2 curves, we can just add trivial completeness bounds for now.
 # The smallest conductor of a genus 2 curve over Q is 121, assuming paramodularity.
 CompletenessChecker("g2c_curves", [
-    ("conductor", Bound(120), "genus 2 curves with conductor at most 120 vacously (as there are none)", "Paramodular conjecture"),
-    ("absD", Bound(120), "genus 2 curves with minimal discriminant at most 120 vacously (as there are none)", "Paramodular conjecture")
+    ("cond", Bound(120), "genus 2 curves with conductor at most 120 (as there are none)", "depends on the paramodular conjecture"),
+    ("abs_disc", Bound(120), "genus 2 curves with minimal discriminant at most 120 (as there are none)", "depends on the paramodular conjecture")
 ])
 
 
@@ -2909,7 +2946,6 @@ CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at
 nf_bound = NFBound()
 CompletenessChecker("nf_fields", [
     ((), nf_bound),
-    ((), RegulatorBound(nf_bound))
 ])
 
 
