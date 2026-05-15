@@ -4,11 +4,9 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
 from psycodict.utils import range_formatter
-from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
 
-logger = make_logger("abvarfq")
 def yn(t):
     return "yes" if (t and t != "no") else "no"
 def ynu(t):

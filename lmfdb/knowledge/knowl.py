@@ -16,7 +16,7 @@ from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 from sage.all import cached_function
-from lmfdb.knowledge import logger
+from lmfdb.logger import logger
 
 # Timezone handling utilities for knowl system
 #

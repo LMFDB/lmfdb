@@ -12,7 +12,6 @@ from flask import url_for
 from collections import Counter
 
 from lmfdb.utils import encode_plot, display_float
-from lmfdb.logger import make_logger
 
 from lmfdb import db
 from lmfdb.app import app
@@ -42,9 +41,6 @@ def maxq(g, p):
         return maxspec[p][g]
     else:
         return maxgen[g]
-
-
-logger = make_logger("abvarfq")
 
 
 #########################
@@ -84,6 +80,11 @@ class AbvarFq_isoclass():
             dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
+        # New invariants: cyclicity and noncyclic primes
+        if "is_cyclic" not in dbdata:
+            dbdata["is_cyclic"] = None
+        if "noncyclic_primes" not in dbdata:
+            dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -232,9 +233,15 @@ class AbvarFq_isoclass():
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
         if self.has_principal_polarization != 0:
-            props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
+            props += [(
+                "Principally polarizable",
+                "yes" if self.has_principal_polarization == 1 else "no",
+            )]
         if self.has_jacobian != 0:
-            props += [("Contains a Jacobian", "yes" if self.has_jacobian == 1 else "no")]
+            props += [(
+                "Contains a Jacobian",
+                "yes" if self.has_jacobian == 1 else "no",
+            )]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
