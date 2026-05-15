@@ -1,5 +1,4 @@
 {%- for key, heading, value in sidebar.data -%}
-{%- if (BETA and value.status == 'beta') or not value.status -%}{# an entire section may be omitted e.g. Motives #}
 
 {% if user_is_authenticated or BETA or key != '9Inv' %}
 {{heading | safe}}
@@ -8,7 +7,7 @@
   <div class="L">
   <span class="heading">{{value.firstpart.heading}}</span>
   {% for item in value.firstpart.entries %}
-    {% if (BETA and item.status == 'beta') or not item.status %}
+    {% if item.show %}
       <span class="L">{{item.url | safe}}</span>
     {% endif %}
   {% endfor %}
@@ -16,7 +15,7 @@
   <table class="short">
   <tr>
   {% for item in value.secondpart.parts %}
-    {% if (BETA and item.status == 'beta') or not item.status %}
+    {% if item.show %}
       {% if item.colspan == "onecolumn" %}<td colspan=2>{% else %}<td>{% endif %}
       {{item.url | safe}}</td>
       {%- if loop.index is even -%}</tr><tr>{%- endif -%}
@@ -29,7 +28,7 @@
 <table class="short">
 {% for entry in value.parts %}
   {%- if entry.status -%}
-    {%- if BETA and entry.status == 'beta' -%}
+    {%- if (ALPHA or BETA) and entry.status == 'beta' and entry.show -%}
       <tr>
       {%- if entry.style == "rotate" -%}
         <td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
@@ -41,7 +40,7 @@
         <table class="short2">
         <tr class="bor">
         {%- for pt2 in entry.part2 -%}
-          {% if (BETA and pt2.status =='beta') or not pt2.status %}
+          {% if pt2.show %}
             {%- if pt2.colspan == "onecolumn%" -%}
               {%- if loop.index is even -%}</tr><tr>{%- endif -%}
               <td colspan="2">
@@ -88,13 +87,13 @@
       {%- for pt2 in entry.part2 -%}
         {%- if pt2.colspan == "onecolumn"%} </tr><tr><td colspan="2"> {%- else -%}<td>{%- endif -%}
         {% if pt2.status %}
-          {%- if BETA and pt2.status == 'beta' -%}
+          {%- if (ALPHA or BETA) and pt2.status == 'beta' and pt2.show -%}
             <span class="subtitle">{{ pt2.url | safe }}</span>
             {%- if pt2.part3 -%}
               <table class="short2" border="0">
               <tr>
               {%- for pt3 in pt2.part3 -%}
-                {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
+                {%- if pt3.show -%}
                   {%- if pt3.colspan == "onecolumn" -%}
                     {%- if loop.index is even -%} </tr><tr> {%- endif -%}
                     <td colspan="2">
@@ -118,15 +117,17 @@
             <table class="short2">
             <tr>
             {%- for pt3 in pt2.part3 -%}
-              {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
+              {%- if pt3.show -%}
                 {%- if pt3.colspan == "onecolumn" -%}
                   {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
                   <td colspan="3">
                 {%- else -%}
                   <td>
                 {%- endif -%}
-                {%- if BETA and pt3.status == "beta" -%}
-                  <span class="beta",class="subtitle">{{pt3.url|safe}}</span></td>
+                {%- if (ALPHA or BETA) and pt3.status == "beta" and pt3.show -%}
+                  <span class="beta subtitle">{{pt3.url|safe}}</span></td>
+                {% elif ALPHA and p3.status == "future" -%}
+                  <span class="alpha subtitle">{{pt3.url|safe}}</span></td>
                 {%- else -%}
                   <span class="subtitle">{{ pt3.url | safe }}</span></td>
                 {%- endif -%}
@@ -161,7 +162,7 @@
       </tr><tr>
     {%- endif -%}{# if loop.index is even #}
   {%- endif -%}{# if entry.colspan == "onecolumn" #}
-  {%- if (BETA and entry.status == 'beta') or not entry.status -%}
+  {%- if entry.show -%}
     {%- if entry.colspan == "onecolumn" -%}
       <td colspan=2>
     {%- else -%}
@@ -172,17 +173,17 @@
   {%- if entry.part2 -%}
     <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
-      {%- if not BETA and pt2.status == "notonbeta" -%}
-          <span class="subtitle">{{ pt2.url | safe }}</span>
-      {%- elif (BETA and pt2.status == 'beta') or not pt2.status -%}
+      {%- if pt2.show -%}
           <span class="subtitle">{{ pt2.url | safe }}</span>
       {%- endif -%}
       {%- if pt2.part3 -%}
         <div class="parts">
           {%- for pt3 in pt2.part3 -%}
-            {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
+            {%- if pt3.show -%}
             {%- if pt3.status == "beta" -%}
-            <span class="beta", class="subitem">
+            <span class="beta subitem">
+            {% elif ALPHA and p3.status == "future" -%}
+            <span class="alpha subitem">{{pt3.url|safe}}</span></td>
             {%- else -%}
             <span class="subitem">
             {%- endif -%}
@@ -210,6 +211,5 @@
 
 {% endif %} {# if value.type == ... #}
 {%- endif -%} {# user_is_authenticated or not Knowledge #}
-{%- endif -%} {# if (BETA and value.status == 'beta') or not value.status #}
 {%- endfor -%} {# for key, heading, value in sidebar.data #}
 

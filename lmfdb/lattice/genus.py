@@ -1,0 +1,567 @@
+
+import re
+import time
+
+from flask import abort, render_template, request, url_for, redirect, make_response
+#from cypari2.handle_error import PariError
+from sage.all import ZZ, matrix, IntegralLattice
+
+#from lmfdb.local_fields.main import formatbracketcol
+from lmfdb.utils import (
+    flash_error, to_dict, #web_latex_split_on_pm,
+    SearchArray, EmbeddedSearchArray, TextBox, TextBoxWithSelect, SelectBox, CountBox, #prop_int_pretty,
+    parse_ints, parse_posints, parse_list, parse_count,
+    parse_bracketed_posints, parse_start, parse_noop, #clean_input,
+    parse_rational_to_list, raw_typeset_qexp,
+    search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
+from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
+from lmfdb.api import datapage
+from lmfdb.lattice import lattice_page
+from lmfdb.lattice.web_lattice import (WebGenus, vect_to_matrix, vect_to_sym, vect_to_sym2, format_conway_symbol,
+    flat_to_matrix, upper_triangular_to_matrix, lower_triangular_to_matrix, diagonal_to_matrix, auto_detect_gram_format)
+#from lmfdb.lattice.isom import isom
+from lmfdb.lattice.genera_stats import Genus_stats
+
+# Database connection
+
+from lmfdb import db
+
+# breadcrumbs and links for data quality entries
+
+def get_bread(tail=[]):
+    base = [("Genus", url_for(".genus_index"))]
+    if not isinstance(tail, list):
+        tail = [(tail, " ")]
+    return base + tail
+
+
+def learnmore_list():
+    return [('Source and acknowledgments', url_for(".how_computed_page")),
+            ('Completeness of the data', url_for(".completeness_page")),
+            ('Reliability of the data', url_for(".reliability_page")),
+            ('Labels for genera of lattices', url_for(".labels_page")),
+            ('History of lattices', url_for(".history_page"))]
+
+
+# Return the learnmore list with the matchstring entry removed
+def learnmore_list_remove(matchstring):
+    return [t for t in learnmore_list() if t[0].find(matchstring) < 0]
+
+
+#############################################
+# Webpages: main, random and search results #
+#############################################
+
+def buckets_from_endpoints(endpoints):
+    return [("%s..%s" % (start, end - 1 if end != 1 else -1) if start != end-1 else "%s" % start) for start, end in zip(endpoints[:-1], endpoints[1:])]
+
+def set_index_info(info, stats):
+    # Prepare list of signatures to browse (display as round brackets, internally use square brackets)
+    sig_list = sum([[[n-nm, nm] for nm in range(1 + (n//2))] for n in range(1, 10)], [])
+    signature_list = [[str(s).replace(' ',''), str(tuple(s)).replace(' ','')] for s in sig_list[:16]]
+    dim_list_endpoints = [1, 2, 3, 4] + [8*i for i in range(1,stats.max_rank//8 + 1)] + [stats.max_rank+1]
+    dim_list = buckets_from_endpoints(dim_list_endpoints)
+    cn_list_endpoints = [1, 2, 3, 4, 10, 100, stats.max_cn+1]
+    class_number_list = buckets_from_endpoints(cn_list_endpoints)
+    det_list_endpoints = [1, 10, 100, stats.max_det+1]
+    det_list = buckets_from_endpoints(det_list_endpoints)
+    info.update({'dim_list': dim_list, 'signature_list': signature_list,
+                 'det_list': det_list, 'class_number_list': class_number_list,
+                 })
+    info['stats'] = stats
+    info['max_cn'] = stats.max_cn
+    info['max_rank'] = stats.max_rank
+    info['max_det'] = stats.max_det
+
+@lattice_page.route("/Genus")
+def genus_index():
+    info = to_dict(request.args, search_array=GenusSearchArray())
+
+    if not request.args:
+        set_index_info(info, Genus_stats())
+        t = 'Genera of integral lattices'
+        bread = get_bread()
+        return render_template("genus-index.html", info=info, title=t, learnmore=learnmore_list(), bread=bread)
+    else:
+        return genus_search(info)
+
+
+# Random Lattice
+@lattice_page.route("/Genus/random")
+@redirect_no_cache
+def random_genus():
+    return url_for(".render_genus_webpage", label=db.lat_genera.random())
+
+
+@lattice_page.route("/Genus/interesting")
+def genus_interesting():
+    return interesting_knowls(
+        "lattice.genus",
+        db.lat_genera,
+        url_for_label=url_for_genus,
+        title=r"Some interesting genera of lattices",
+        bread=get_bread("Interesting"),
+        learnmore=learnmore_list()
+    )
+
+
+@lattice_page.route("/Genus/stats")
+def genus_statistics():
+    title = 'Genera of lattices: Statistics'
+    bread = get_bread('Statistics')
+    return render_template("display_stats.html", info=Genus_stats(), title=title, bread=bread, learnmore=learnmore_list())
+
+
+# Regex for genus lattice label format
+genus_label_regex = re.compile(r'^(\d+)\.(\d+)\.(\d+)(?:((?:\.[0-9a-zA-Z]+)*))\.([0-9a-fA-F]+)')
+
+def split_genus_label(lab):
+    return genus_label_regex.match(lab).groups()
+
+def genus_jump(info):
+    jump = info["jump"]
+    # by label
+    if genus_label_regex.fullmatch(jump):
+        return redirect(url_for_genus(jump))
+    # by name - could improve this by reordering
+    label = db.lat_lattices_new.lucky({"name": jump}, "genus_label")
+    if label is not None:
+        return redirect(url_for_genus(label))
+    flash_error("No genus in the database has label or name %s", jump)
+    return redirect(url_for(".genus_index"))
+
+
+genus_search_projection = ['label', 'rank', 'det', 'level', 'class_number']
+
+def genus_search_equivalence(res, info, query):
+    """
+    We check for equivalent genuses if the user enters a valid gram matrix
+    but not one stored in the database
+
+    This may become slow in the future: at the moment we compare against
+    a list of stored matrices with same dimension, signature and determinant
+    (just compare with respect to dimension is slow)
+    """
+    if info['number'] == 0 and info.get('gram_matrix'):
+        A = info['gram_matrix']
+        query.pop('rep', None)
+        n = len(A)
+        L = IntegralLattice(matrix(A))
+        det = matrix(A).determinant()
+        for rep in db.lat_genera.search({'rank': n, 'det': int(det)}, 'rep'):
+            rep_2d = flat_to_matrix(rep)
+            L2 = IntegralLattice(matrix(ZZ, rep_2d))
+            if L.genus() == L2.genus():
+                query['rep'] = rep
+                count = parse_count(info)
+                start = parse_start(info)
+                res = db.lat_genera.search(query, limit=count, offset=start, info=info)
+                break
+    return res
+
+
+def url_for_genus(label):
+    return url_for(".render_genus_webpage", label=label)
+
+def common_parse(info, query):
+    for field, name in [('rank', 'Rank'), ('level', 'Level'), ('class_number', 'Class number')]:
+        parse_posints(info, query, field, name)
+    # TODO: fix handling of sign here (e.g. -100..-11 currently fails)
+    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
+        parse_ints(info, query, field, name)
+    parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
+
+    # Handle even/odd search
+    parity = info.get('parity')
+    if parity:
+        if parity == 'even':
+            query['is_even'] = True
+        elif parity == 'odd':
+            query['is_even'] = False
+    # Parse Gram matrix with format selection
+    gram_str = info.get('gram')
+    if gram_str:
+        gram_format = info.get('gram_format', '')
+        # Strip brackets and whitespace, parse as list of integers
+        s = gram_str.strip().strip('[]')
+        if s:
+            try:
+                entries = [int(x.strip()) for x in s.split(',')]
+            except ValueError:
+                flash_error("%s is not a valid input for Gram matrix. Entries must be integers.", gram_str)
+                raise ValueError("Invalid Gram matrix entries")
+            converters = {
+                'full': flat_to_matrix,
+                'upper': upper_triangular_to_matrix,
+                'lower': lower_triangular_to_matrix,
+                'diagonal': diagonal_to_matrix,
+                '': auto_detect_gram_format,
+            }
+            converter = converters.get(gram_format)
+            if converter is None:
+                flash_error("Unknown Gram matrix format: %s", gram_format)
+                raise ValueError("Unknown Gram matrix format")
+            try:
+                mat = converter(entries)
+            except ValueError as e:
+                flash_error("%s is not a valid input for Gram matrix: %s", gram_str, str(e))
+                raise
+            # Validate symmetry for full matrix format
+            if gram_format == 'full':
+                n = len(mat)
+                for i in range(n):
+                    for j in range(i + 1, n):
+                        if mat[i][j] != mat[j][i]:
+                            flash_error("%s is not a symmetric matrix.", gram_str)
+                            raise ValueError("Non-symmetric Gram matrix")
+            # Store 2D matrix in info for postprocessors (isometry/genus comparison)
+            info['gram_matrix'] = mat
+    parse_bracketed_posints(info, query, 'discriminant_group_invs')
+
+common_columns_prefix = [
+    MathCol("rank", "lattice.dimension", "Rank"),
+    MultiProcessedCol("signature", "lattice.signature", "Signature", ["nplus", "rank"], lambda nplus, rank: '$(%s,%s)$' % (nplus, rank-nplus),  align="center"),
+]
+
+common_columns_suffix = [
+    MathCol("dual_det", "lattice.determinant", "Dual Determinant", default=False),
+    MathCol("disc", "lattice.discriminant", "Discriminant"),
+    MathCol("level", "lattice.level", "Level"),
+    MathCol("class_number", "lattice.class_number", "Class number"),
+    ProcessedCol("conway_symbol", "lattice.conway_genus_symbol", "Conway Symbol", format_conway_symbol, default=False),
+    ProcessedCol("dual_conway_symbol", "lattice.conway_genus_symbol", "Dual Conway Symbol", format_conway_symbol, default=False),
+    ProcessedCol("is_even", "lattice.parity", "Parity", lambda v: "Even" if v else "Odd"),
+    ProcessedCol("discriminant_group_invs", "lattice.discriminant_group", "Disc. Inv.", short_title="Disc. Inv.",  default=False),
+]
+
+lat_only_columns = [
+    MultiProcessedCol("det", "lattice.determinant", "Determinant", ["det_abs", "det_sign"], lambda det_abs, det_sign: '$%s$' % (det_sign*det_abs), align="center"),
+    MathCol("minimum", "lattice.minimum", "Minimum"),
+    MathCol("aut_size", "lattice.group_order", "Aut. group order"),
+    ProcessedCol("theta_series", "lattice.theta", "Theta series", lambda v: raw_typeset_qexp(v, compress_threshold=60), default=False),
+    ProcessedCol("gram", "lattice.gram", "Gram matrix", lambda a: vect_to_matrix(vect_to_sym2(a if type(a[0])==int else a[0]), compress_threshold=5, keep=2) if a else ''),
+    MathCol("density", "lattice.density", "Density", default=False),
+    MathCol("hermite", "lattice.hermite_number", "Hermite", default=False),
+    MathCol("kissing", "lattice.kissing", "Kissing", default=False),
+    MathCol("festi_veniani_index", "lattice.festi_veniani_index", "Festi-Veniani index", default=False)
+]
+
+common_columns = common_columns_prefix + common_columns_suffix
+
+genus_columns = [LinkCol("label", "lattice.genus_label", "Label", url_for_genus)] + common_columns_prefix + [MathCol("det", "lattice.determinant", "Determinant")] + common_columns_suffix
+# Display genus column for mass
+genus_columns.append(RationalCol("mass", "lattice.mass", "Mass", lambda v: str(v[0])+"/"+str(v[1]) if v else '', default=False))
+
+in_genus_columns = [LinkCol("label", "lattice.label", "Label", lambda label: url_for(".render_lattice_webpage", label=label))] + lat_only_columns
+
+@search_wrap(table=db.lat_genera,
+             title='Genera of integral lattices search results',
+             err_title='Genera of integral lattices search error',
+             columns=SearchColumns(genus_columns),
+             shortcuts={'download': Downloader(db.lat_genera),
+                        'jump': genus_jump},
+             postprocess=genus_search_equivalence,
+             url_for_label=url_for_genus,
+             bread=lambda: get_bread("Search results"),
+             learnmore=learnmore_list,
+             properties=lambda: [])
+def genus_search(info, query):
+    common_parse(info, query)
+    # Store flat gram in query['rep'] for direct DB matching (lat_genera has rep, not gram)
+    if 'gram_matrix' in info:
+        mat = info['gram_matrix']
+        n = len(mat)
+        query['rep'] = [mat[i][j] for i in range(n) for j in range(n)]
+    parse_rational_to_list(info, query, 'mass', 'mass')
+
+@lattice_page.route('/Genus/<label>')
+def render_genus_webpage(label):
+    data = db.lat_genera.lookup(label)
+    # TODO: might need an object here because of name conflicts between data in info and search inputs in info
+    if data is None:
+        flash_error("%s is not the label of a genus in the lattice database.", label)
+        return redirect(url_for(".genus_index"))
+    info = to_dict(request.args, search_array=InGenusSearchArray())
+    info["genus"] = genus = WebGenus(label, data)
+    # Need to store some things in info for embed_wrap
+    info["title"] = f"Genus of integral lattices {label}"
+    info["bread"] = get_bread(label)
+    info["properties"] = genus.properties
+    info["friends"] = genus.friends
+    info["code"] = genus.code
+    info["downloads"] = genus.downloads
+    info["KNOWL_ID"] = f"lattice.genus.{label}"
+    info["graph_layouts"] = genus.graph_layouts
+    return render_genus(info)
+
+@embed_wrap(
+    table=db.lat_lattices_new,
+    template="genus-single.html",
+    err_title="Genus error",
+    columns=SearchColumns(in_genus_columns),
+    learnmore=learnmore_list,
+    # Each of the following arguments is set here so that it is overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in render_genus_webpage() before calling render_genus)
+    genus=lambda:None,
+    bread=lambda:None,
+    properties=lambda:None,
+    friends=lambda:None,
+    downloads=lambda:None,
+    code=lambda:None,
+    KNOWL_ID=lambda:None,
+    graph_layouts=lambda:[],
+)
+def render_genus(info, query):
+    query["genus_label"] = info["genus"].label
+    for field, name in [('minimum', 'Minimal vector length'), ('aut_size', 'Group order'),
+                        ('kissing', 'Kissing number'), ('dual_kissing', 'Dual kissing number'),
+                         ]:
+        parse_posints(info, query, field, name)
+    for field, name in [('dual_det', 'Dual determinant'), ('festi_veniani_index', "Festi-Veniani Index")]:
+        parse_ints(info, query, field, name)
+    parse_noop(info, query, "aut_label")
+
+@lattice_page.route('/Genus/data/<label>')
+def genus_data(label):
+    if not genus_label_regex.fullmatch(label):
+        return abort(404, f"Invalid label {label}")
+    bread = get_bread([(label, url_for_genus(label)), ("Data", " ")])
+    title = f"Genus data - {label}"
+    return datapage(label, ["lat_genera", "lat_lattices_new"], title=title, bread=bread, label_cols=["label", "genus_label"])
+
+
+#################################
+# Downloads for particular data #
+#################################
+
+# Download variables
+download_comment_prefix = {'magma': '//', 'sage': '#', 'gp': '\\\\'}
+download_assignment_start = {'magma': 'data := ', 'sage': 'data = ', 'gp': 'data = '}
+download_assignment_end = {'magma': ';', 'sage': '', 'gp': ''}
+download_file_suffix = {'magma': '.m', 'sage': '.sage', 'gp': '.gp'}
+
+
+@lattice_page.route('/Genus/<label>/download/<lang>/<obj>')
+def render_genus_webpage_download(**args):
+    if args['obj'] == 'gram':
+        response = make_response(download_gram_matrix(**args))
+        response.headers['Content-type'] = 'text/plain'
+        return response
+
+def download_gram_matrix(**args):
+    label = str(args['label'])
+    res = db.lat_genera.lookup(label, projection=['rep'])
+    mydate = time.strftime("%d %B %Y")
+    if res is None:
+        return "No such lattice"
+    lang = args['lang']
+    c = download_comment_prefix[lang]
+    mat_start = "Mat(" if lang == 'gp' else "Matrix("
+    mat_end = "~)" if lang == 'gp' else ")"
+
+    def entry(r):
+        return "".join([mat_start, str(r), mat_end])
+
+    outstr = c + ' A representative Gram matrix for genus %s downloaded from the LMFDB on %s. \n\n' % (label, mydate)
+    outstr += download_assignment_start[lang] + '[\\\n'
+    outstr += ",\\\n".join(entry(vect_to_sym(r)) for r in [res['rep']])
+    outstr += ']'
+    outstr += download_assignment_end[lang]
+    outstr += '\n'
+    return outstr
+
+def common_boxes():
+    rank = TextBox(
+        name="rank",
+        label="Rank",
+        knowl="lattice.dimension",
+        example="3",
+        example_span="3 or 2-5")
+    signature=TextBox(
+        name="signature",
+        label="Signature",
+        knowl="lattice.signature",
+        example="[1,1]")
+    det = TextBox(
+        name="det",
+        label="Determinant",
+        knowl="lattice.determinant",
+        example="10",
+        example_span="1 or 10-100")
+    level = TextBox(
+        name="level",
+        label="Level",
+        knowl="lattice.level",
+        example="48",
+        example_span="48 or 40-100")
+    gram_format_select = SelectBox(
+        name="gram_format",
+        options=[('', 'auto'), ('full', 'full matrix'),
+                 ('upper', 'upper tri.'), ('lower', 'lower tri.'),
+                 ('diagonal', 'diagonal')],
+        min_width=100)
+    gram = TextBoxWithSelect(
+        name="gram",
+        label="Gram matrix",
+        knowl="lattice.gram",
+        example="[5,1,23]",
+        example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$",
+        select_box=gram_format_select)
+    discriminant = TextBox(
+        name="disc",
+        label="Discriminant",
+        knowl="lattice.discriminant",
+        example="10",
+        example_span="1 or 10-100")
+    parity = ParityBox(
+        name="parity",
+        label="Parity",
+        knowl="lattice.parity")
+    class_number = TextBox(
+        name="class_number",
+        label="Class number",
+        knowl="lattice.class_number",
+        example="5")
+    disc_invs = TextBox(
+        name="discriminant_group_invs",
+        label="Disc. group invariants",
+        knowl="lattice.discriminant_group",
+        example="[2,4]",
+        example_span="[2,4] or [2,2,8]")
+
+    minimum = TextBox(
+        name="minimum",
+        label="Minimum",
+        knowl="lattice.minimum",
+        example="1")
+    aut_label = TextBox(
+        name="aut_label",
+        label="Automorphism group",
+        short_label="Aut. group",
+        knowl="lattice.automorphism_group",
+        example="8.1",
+        example_span="8.1")
+    aut_size = TextBox(
+        name="aut_size",
+        label="Automorphism group order",
+        short_label="Aut. group order",
+        knowl="lattice.group_order",
+        example="2",
+        example_span="696729600")
+    kissing = TextBox(
+        name="kissing",
+        label="Kissing number",
+        knowl="lattice.kissing",
+        example="1")
+    dual_det = TextBox(
+        name="dual_det",
+        label="Dual determinant",
+        knowl="lattice.determinant",
+        example="1",
+        example_span="1 or 10-100")
+    dual_kissing = TextBox(
+        name="dual_kissing",
+        label="Dual kissing number",
+        knowl="lattice.kissing",
+        example="1")
+    festi_veniani = TextBox(
+        name="festi_veniani_index",
+        label="Festi-Veniani Index",
+        knowl="lattice.festi_veniani_index",
+        example="1")
+
+    return rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani
+
+class GenusSearchArray(SearchArray):
+    noun = "genus"
+    sorts = [("rank", "signature", ['rank', 'signature', 'det', 'level', 'disc', 'label']),
+             ("det", "determinant", ['det', 'rank', 'signature', 'level', 'disc', 'label']),
+             ("level", "level", ['level', 'rank', 'signature', 'det', 'disc', 'label']),
+             ("disc", "discriminant", ['disc', 'rank', 'signature', 'det', 'level', 'label']),
+             ("class_number", "class number", ['class_number', 'rank', 'signature', 'det', 'level', 'disc', 'label']),
+            ]
+
+    def __init__(self):
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+
+        mass = TextBox(
+            name="mass",
+            label="Mass",
+            knowl="lattice.mass",
+            example="1/2",
+            example_span="1/2 or 3/4 or 1/60")
+        count = CountBox()
+
+        self.browse_array = [
+            [rank, signature],
+            [det, discriminant],
+            [level, class_number],
+            [disc_invs, parity],
+            [mass, gram],
+            [count]
+        ]
+
+        self.refine_array = [
+            [rank, signature, det, discriminant, level],
+            [class_number, disc_invs, parity, mass, gram]
+        ]
+
+class InGenusSearchArray(EmbeddedSearchArray):
+    noun = "lattice"
+    sorts = [("minimum", "minimum", ['minimum', 'rank', 'det', 'level', 'class_number', 'label']),
+             ("aut_size", "aut. group order", ['aut_size', 'rank', 'det', 'level', 'class_number', 'label'])]
+
+    def __init__(self):
+        rank, signature, det, level, gram, discriminant, parity, class_number, disc_invs, minimum, aut_label, aut_size, kissing, dual_det, dual_kissing, festi_veniani = common_boxes()
+        count = CountBox()
+
+        self.refine_array = [
+            [minimum, aut_label, aut_size, kissing, dual_kissing],
+            [dual_det, festi_veniani, count]
+        ]
+
+######################
+# Data quality pages #
+######################
+
+@lattice_page.route("/Source")
+def how_computed_page():
+    t = 'Source and acknowledgments for integral lattices'
+    bread = get_bread("Source")
+    return render_template("double.html", kid='rcs.source.lattice', kid2='rcs.ack.lattice',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Source'))
+
+
+@lattice_page.route("/Completeness")
+def completeness_page():
+    t = 'Completeness of integral lattice data'
+    bread = get_bread("Completeness")
+    return render_template("single.html", kid='rcs.cande.lattice',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
+
+
+@lattice_page.route("/Reliability")
+def reliability_page():
+    t = 'Reliability of integral lattice data'
+    bread = get_bread("Reliability")
+    return render_template("single.html", kid='rcs.rigor.lattice',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
+
+
+@lattice_page.route("/Labels")
+def labels_page():
+    t = 'Integral lattice labels'
+    bread = get_bread("Labels")
+    return render_template("single.html", kid='lattice.genus_label',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('Labels'))
+
+
+@lattice_page.route("/History")
+def history_page():
+    t = 'A brief history of lattices'
+    bread = get_bread("History")
+    return render_template("single.html", kid='lattice.history',
+                           title=t, bread=bread, learnmore=learnmore_list_remove('History'))
+
+

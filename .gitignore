@@ -9,6 +9,9 @@ config.ini
 *.o
 *.c
 *.swp
+*.aux
+*.log
+*.dvi
 *~
 
 
@@ -37,3 +40,6 @@ scripts/groups/Make-images/images/*.png
 
 smf_lmfdb
 __pycache__
+scripts/groups/Make-images/images/eqguts.tex
+scripts/groups/Make-images/prettyindex
+scripts/groups/Make-images/imagereloader

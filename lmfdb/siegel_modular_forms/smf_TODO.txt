@@ -1,0 +1,11 @@
+* Ensure weight (k,j) = (2,0) gives all dimensions equal to zero.  (Should be automatic when newspaces table is regenerated.)
+* For forms with character epsilon, make them e.g.
+  2.P.2.8.16.a
+(instead of 2.S.2.8.16.b): we consider them on the principal group not Siegel group, and they have trivial central character.
+Eventually we will add an attribute to 'P' forms of level 2 remembering their corresponding S_6 representation.
+* Fix breadcrumbs for Siegel spaces
+* Weight search with vectors doesn't work, e.g. the browse (9,2)-(16,2) gives 
+   Query was: {'weight': {'$gte': '{9,2}', '$lte': '{16,2}'}}
+but that is interpreted in a lexicographic way.  Is that what we want?
+* Add char_parity to newspaces
+* Compare what we've done so far with our November meeting vision

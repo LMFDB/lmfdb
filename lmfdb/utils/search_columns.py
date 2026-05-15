@@ -150,11 +150,12 @@ class SearchCol:
             orig = name
         if isinstance(rec, dict):
             ans = rec.get(orig)
-            if not downloading and ans is None:
-                return ""
-            return ans
-        val = getattr(rec, name)
-        return val() if callable(val) else val
+        else:
+            val = getattr(rec, name)
+            ans = val() if callable(val) else val
+        if not downloading and ans is None:
+            return ""
+        return ans
 
     def get(self, rec):
         """

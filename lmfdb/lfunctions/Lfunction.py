@@ -60,7 +60,7 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
-from lmfdb.siegel_modular_forms.sample import Sample
+# from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
@@ -998,9 +998,7 @@ class Lfunction_HMF(Lfunction):
     def original_object(self):
         return self.f
 
-
 #############################################################################
-
 class Lfunction_SMF2_scalar_valued(Lfunction):
     """Class representing an L-function for a scalar valued Siegel modular form of degree 2
 

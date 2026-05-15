@@ -839,7 +839,7 @@ class EmbedWrapper(Wrapper):
                     template, info=info, title=err_title, **template_kwds
                 )
             info["results"] = res
-            return render_template(template, info=info, title=title, **template_kwds)
+            return render_template(template, info=info, title=title, query=query, **template_kwds)
 
 
 class YieldWrapper(Wrapper):

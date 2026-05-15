@@ -253,6 +253,15 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
         if (d.faltings_height !== undefined) _isoTooltipLine(tooltip, 'Faltings height: ' + d.faltings_height);
         if (d.cm !== undefined) _isoTooltipLine(tooltip, 'CM: ' + d.cm);
         if (d.optimal) _isoTooltipEmphasis(tooltip, 'Optimal curve');
+        // Lattice-specific fields
+        if (d.minimum !== undefined) _isoTooltipLine(tooltip, 'Minimum: ' + d.minimum);
+        if (d.kissing !== undefined) _isoTooltipLine(tooltip, 'Kissing number: ' + d.kissing);
+        if (d.aut_name !== undefined) {
+            var autSpan = document.createElement('span');
+            autSpan.innerHTML = 'Aut. group: \\(' + d.aut_name + '\\)';
+            tooltip.appendChild(autSpan);
+            tooltip.appendChild(document.createElement('br'));
+        }
 
         tooltip.style.display = 'block';
 
@@ -261,6 +270,11 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
         var pos = node.renderedPosition();
         tooltip.style.left = (rect.left + window.scrollX + pos.x + 25) + 'px';
         tooltip.style.top = (rect.top + window.scrollY + pos.y - 10) + 'px';
+
+        // Typeset any LaTeX in the tooltip (LMFDB uses KaTeX)
+        if (typeof renderMathInElement !== 'undefined' && typeof katexOpts !== 'undefined') {
+            renderMathInElement(tooltip, katexOpts);
+        }
 
         $('html,body').css('cursor', 'pointer');
     });
