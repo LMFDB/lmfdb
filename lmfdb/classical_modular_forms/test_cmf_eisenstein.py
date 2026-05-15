@@ -256,7 +256,7 @@ class CmfTest(LmfdbTest):
 </div>
 """
         assert decomposition in page.get_data(as_text=True)
-        page = self.tc.get('ModularForm/GL2/Q/holomorphic/19/6/E')
+        page = self.tc.get('ModularForm/GL2/Q/holomorphic/19/6/E', follow_redirects=True)
         assert r'Decomposition</a> of \(E_{6}^{\mathrm{new}}(\Gamma_1(19))\)' in page.get_data(as_text=True)
         for elt in map(str,[84,82,2,66,0,18,16,2]):
             assert elt in page.get_data(as_text=True)
