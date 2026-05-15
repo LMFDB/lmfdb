@@ -1,10 +1,6 @@
 from lmfdb.tests import LmfdbTest
 import unittest
 
-from . import cmf_logger
-from .web_space import WebNewformSpace
-cmf_logger.setLevel(100)
-
 class CmfTest(LmfdbTest):
     def runTest(self):
         pass
@@ -265,17 +261,6 @@ class CmfTest(LmfdbTest):
             if elt != '19.6.E.a':
                 assert elt + '.a' in page.get_data(as_text=True)
                 assert elt + '.b' in page.get_data(as_text=True)
-       
-    @unittest.skip("Skipping test_oldspace_decomposition_uses_cuspidal_subspace_links as it is not working yet.")
-    def test_oldspace_decomposition_uses_eisenstein_subspace_links(self):
-        space = WebNewformSpace.__new__(WebNewformSpace)
-        space.is_cuspidal = False
-        space.weight = 6
-        space.oldspaces = [(3, 1, 1, 2)]
-        decomposition = space.oldspace_decomposition()
-        assert r'href=/ModularForm/GL2/Q/holomorphic/3/6/E/a/' in decomposition
-        assert r'\(E_{6}^{\mathrm{new}}(\Gamma_0(3))\)' in decomposition
-        assert r'\(S_{6}^{\mathrm{new}}(\Gamma_0(3))\)' not in decomposition
 
     # is_maximal test awaits updating the column is_maximal in the table mf_newforms_eis
 

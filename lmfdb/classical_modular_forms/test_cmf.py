@@ -272,18 +272,6 @@ class CmfTest(LmfdbTest):
 """
         assert decomposition in page.get_data(as_text=True)
 
-    @unittest.skip("Skipping test_oldspace_decomposition_uses_cuspidal_subspace_links as it is not working yet.")
-    def test_oldspace_decomposition_uses_cuspidal_subspace_links(self):
-        space = WebNewformSpace.__new__(WebNewformSpace)
-        space.is_cuspidal = True
-        space.weight = 6
-        space.oldspaces = [(3, 1, 1, 2)]
-        decomposition = space.oldspace_decomposition()
-        assert r'href=/ModularForm/GL2/Q/holomorphic/3/6/a/' in decomposition
-        assert r'\(S_{6}^{\mathrm{new}}(\Gamma_0(3))\)' in decomposition
-        assert '/E/' not in decomposition
-        assert r'\(E_{6}^{\mathrm{new}}(\Gamma_0(3))\)' not in decomposition
-
     def test_convert_conreylabels(self):
         for c in [27, 31]:
             page = self.tc.get('/ModularForm/GL2/Q/holomorphic/38/9/%d/a/' % c,follow_redirects=True)
