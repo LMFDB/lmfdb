@@ -724,9 +724,6 @@ class WebGamma1Space():
     
     def cusp_old_latex(self):
         return common_latex(*(self._vec() + ["S",1,"old"]))
-
-    def eis_old_latex(self):
-        return common_latex(*(self._vec() + ["E",1,"old"]))
         
     def old_latex(self):
         if self.is_cuspidal:
