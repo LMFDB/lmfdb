@@ -2,6 +2,7 @@ from lmfdb.tests import LmfdbTest
 import unittest
 
 from . import cmf_logger
+from .web_space import WebNewformSpace
 cmf_logger.setLevel(100)
 
 class CmfTest(LmfdbTest):
@@ -247,6 +248,7 @@ class CmfTest(LmfdbTest):
         page = self.tc.get('ModularForm/GL2/Q/holomorphic/38/9/E/')
         for elt in map(str,[378, 120, 258, 342, 120, 222, 36]):
             assert elt in page.get_data(as_text=True)
+<<<<<<< HEAD
         for elt in ['Decomposition', r"E_{9}^{\mathrm{old}}(\Gamma_1(38))", "lower level spaces"]:
             assert elt in page.get_data(as_text=True)
         decomposition = r"""
@@ -266,3 +268,15 @@ class CmfTest(LmfdbTest):
                 assert elt + '.b' in page.get_data(as_text=True)
         
        
+=======
+
+    def test_oldspace_decomposition_uses_eisenstein_subspace_links(self):
+        space = WebNewformSpace.__new__(WebNewformSpace)
+        space.is_cuspidal = False
+        space.weight = 6
+        space.oldspaces = [(3, 1, 1, 2)]
+        decomposition = space.oldspace_decomposition()
+        assert r'href=/ModularForm/GL2/Q/holomorphic/3/6/E/a/' in decomposition
+        assert r'\(E_{6}^{\mathrm{new}}(\Gamma_0(3))\)' in decomposition
+        assert r'\(S_{6}^{\mathrm{new}}(\Gamma_0(3))\)' not in decomposition
+>>>>>>> 7657866b7eb9445125172546fad318eb4a4bd614
