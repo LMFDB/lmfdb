@@ -352,8 +352,7 @@ def field_pretty(label):
             primes = ZZ(D).prime_divisors()
 
             # Keep track of prime exponents and row space (over F_2) used so far
-            # For efficiency, store row_space as a set of integers, considered as bit vectors.
-            all_prime_exponents = []
+            # For fast computations, store row_space just as a set of integers, considered as vectors of bits.
             row_space = {0}  # The trivial space
 
             for D in sorted_Ds:
@@ -370,13 +369,12 @@ def field_pretty(label):
                         break
 
                     # Recompute the new row space (take prime_exp XOR everything else in row_space)
-                    all_prime_exponents.append(prime_exp)
                     old_row_space = row_space.copy()
                     for v in old_row_space:
                         row_space.add(v^prime_exp)  # here ^ is bitwise XOR
 
             return r'\(\Q('+', '.join([_sqrt_symbol(D) for D in final_Ds])+r')\)'
-    
+
     # Otherwise, if no latex form found, just return the LMFDB label
     return label
 
