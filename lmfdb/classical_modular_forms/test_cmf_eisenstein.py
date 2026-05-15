@@ -276,3 +276,57 @@ class CmfTest(LmfdbTest):
         assert r'href=/ModularForm/GL2/Q/holomorphic/3/6/E/a/' in decomposition
         assert r'\(E_{6}^{\mathrm{new}}(\Gamma_0(3))\)' in decomposition
         assert r'\(S_{6}^{\mathrm{new}}(\Gamma_0(3))\)' not in decomposition
+
+    # is_maximal test awaits updating the column is_maximal in the table mf_newforms_eis
+
+    def test_dim_table(self):
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=23&search_type=Dimensions&is_cuspidal=no", follow_redirects=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
+        assert '20' in page.get_data(as_text=True) # Level 23, Weight 12
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?weight=12&level=1-100&search_type=Dimensions&is_cuspidal=no", follow_redirects=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
+        assert '20' in page.get_data(as_text=True) # Level 23, Weight 12
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?search_type=Dimensions&is_cuspidal=no", follow_redirects=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
+        assert '1-12' in page.get_data(as_text=True)
+        assert '1-24' in page.get_data(as_text=True)
+        assert '20' in page.get_data(as_text=True) # Level 23, Weight 12
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=1-100&weight=1-20&search_type=Dimensions&is_cuspidal=no', follow_redirects=True)
+        assert '22' in page.get_data(as_text=True) # Level 23, Weight 13
+        assert '20' in page.get_data(as_text=True) # Level 23, Weight 12
+        assert 'Dimension search results' in page.get_data(as_text=True)
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=900-1100&weight=1-12&char_order=2-&search_type=Dimensions&is_cuspidal=no", follow_redirects=True)
+        assert '1120' in page.get_data(as_text=True) # Level 999, Weight 1
+        assert '512' in page.get_data(as_text=True) # Level 1000, Weight 1
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=900-1100&weight=1-12&char_order=1&search_type=Dimensions&is_cuspidal=no", follow_redirects=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
+        assert '0' in page.get_data(as_text=True)
+
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?level=1002&weight=1&char_order=2-&search_type=Dimensions&is_cuspidal=no", follow_redirects=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
+        assert 'n/a' in page.get_data(as_text=True)
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?level=7,10&weight_parity=odd&char_parity=odd&count=50&search_type=Dimensions&is_cuspidal=no')
+        for elt in map(str,[0,1,3,5,7,9,11,6]):
+            assert elt in page.get_data(as_text=True)
+        assert 'Dimension search results' in page.get_data(as_text=True)
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&level=1-1000&weight=1-100&search_type=Dimensions&is_cuspidal=no')
+        assert 'Error: Table too large: must have at most 10000 entries' in page.get_data(as_text=True)
+
+        #the other dim table
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/10/2/E/")
+        assert '7' in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/2/E/")
+        for elt in map(str,[9,4,5]):
+            assert elt in page.get_data(as_text=True)
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/59/8/E/")
+        for elt in map(str,[1044, 1042, 2, 986, 0, 58, 56]):
+            assert elt in page.get_data(as_text=True)
+        for elt in ['59.8.E.a', '59.8.E.c', '59.8.E.c.a', '59.8.E.c.b']:
+            assert elt in page.get_data(as_text=True)
