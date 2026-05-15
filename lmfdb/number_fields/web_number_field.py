@@ -263,17 +263,15 @@ def field_pretty(label):
 
         # Case 5a: Biquadratic fields Q(\sqrt{A}, \sqrt{B})
         if len(subs) == 3:  # only for V_4 fields
-            subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
-            # Abort if we don't know one of these fields
-            if not any(z._data is None for z in subs):
-                labels_str = [str(z.get_label()) for z in subs]
-                labels_split = [z.split('.') for z in labels_str]
-                # extract abs disc and signature to be good for sorting
-                labels = sorted([[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels_split])
-                # put in +/- sign
-                labels_values = [z[0] * (-1)**(1 + z[1] / 2) for z in labels]
-                labels_str = [_sqrt_symbol(z) for z in labels_values]
-                return r'\(\Q(%s, %s)\)' % (labels_str[0], labels_str[1])
+            all_Ds = []
+            for sub in subs:
+                qs = sub[0].split(',')
+                all_Ds.append(integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2])))
+
+            # Sort the Ds by absolute value (in case of tie, put positive Ds first)
+            labels_values = sorted(all_Ds, key=lambda x: (abs(x), -x))
+            labels_str = [_sqrt_symbol(z) for z in labels_values]
+            return r'\(\Q(%s, %s)\)' % (labels_str[0], labels_str[1])
 
         # Case 5b: Imprimitive quartic fields of type Q(\sqrt(A + B*\sqrt(D)))
         if len(subs) == 1:
@@ -333,9 +331,6 @@ def field_pretty(label):
                         D = D.sqrt()
                     return r'\(\Q(\sqrt[3]{%d})\)' % D
 
-    import time
-
-    """
     # Case 7: General multi-quadratic fields: Q(\sqrt{D_1}, ..., \sqrt{D_k})
     if ZZ(d).is_power_of(2):
         k = ZZ(d).valuation(2)
@@ -344,15 +339,17 @@ def field_pretty(label):
         quad_subs = [s[0] for s in all_subs if s[0].count(',') == 2]
         num_quad_subs = len(quad_subs)
         if num_quad_subs == int(d) - 1:
-            quad_labels = [str(wnf.from_coeffs(string2list(str(z))).get_label()) for z in quad_subs]
-            all_Ds = [_quad_label_to_D(qlabel) for qlabel in quad_labels]
+            all_Ds = []
+            for quad_sub in quad_subs:
+                qs = quad_sub.split(',')
+                all_Ds.append(integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2])))
 
             # Sort the Ds by absolute value (in case of tie, put positive Ds first)
             sorted_Ds = sorted(all_Ds, key=lambda x: (abs(x), -x))
             final_Ds = []
 
-            # Compute set of all primes dividing the Ds
-            primes = sorted({int(p) for D in all_Ds for p in ZZ(abs(D)).prime_divisors()})
+            # Compute set of all primes dividing the Ds (can take prime divisors of discriminant)
+            primes = ZZ(D).prime_divisors()
 
             # Keep track of prime exponents and row space (over F_2) used so far
             # For efficiency, store row_space as a set of integers, considered as bit vectors.
@@ -361,9 +358,10 @@ def field_pretty(label):
 
             for D in sorted_Ds:
                 # Convert D to a vector of prime exponents mod 2 (including sign), stored with bits as an integer
+                # D is already squarefree, so all prime exponents either 0 or 1
                 prime_exp = int(D < 0)
                 for i in range(len(primes)):
-                    prime_exp += (D.valuation(primes[i])%2) << (i+1)
+                    prime_exp += int((D%primes[i]) == 0) << (i+1)
                 if prime_exp not in row_space:
                     final_Ds.append(D)
 
@@ -375,101 +373,10 @@ def field_pretty(label):
                     all_prime_exponents.append(prime_exp)
                     old_row_space = row_space.copy()
                     for v in old_row_space:
-                        row_space.add(v^prime_exp)
+                        row_space.add(v^prime_exp)  # here ^ is bitwise XOR
 
             return r'\(\Q('+', '.join([_sqrt_symbol(D) for D in final_Ds])+r')\)'
-    """
-
     
-    # Case 7: General multi-quadratic fields: Q(\sqrt{D_1}, ..., \sqrt{D_k})
-    if ZZ(d).is_power_of(2):
-        t_case = time.perf_counter()
-
-        k = ZZ(d).valuation(2)
-
-        t = time.perf_counter()
-        wnf = WebNumberField(label)
-        print(f"WebNumberField: {time.perf_counter() - t:.4f}s")
-
-        t = time.perf_counter()
-        all_subs = wnf.subfields()
-        print(f"subfields(): {time.perf_counter() - t:.4f}s")
-
-        t = time.perf_counter()
-        quad_subs = [s[0] for s in all_subs if s[0].count(',') == 2]
-        num_quad_subs = len(quad_subs)
-        print(f"extract quadratic subfields: {time.perf_counter() - t:.4f}s")
-
-        if num_quad_subs == int(d) - 1:
-
-            t = time.perf_counter()
-            quad_labels = [
-                str(wnf.from_coeffs(string2list(str(z))).get_label())
-                for z in quad_subs
-            ]
-            print(f"convert to labels: {time.perf_counter() - t:.4f}s")
-
-            t = time.perf_counter()
-            all_Ds = [_quad_label_to_D(qlabel) for qlabel in quad_labels]
-            print(f"_quad_label_to_D: {time.perf_counter() - t:.4f}s")
-
-            t = time.perf_counter()
-            sorted_Ds = sorted(all_Ds, key=lambda x: (abs(x), -x))
-            print(f"sorting Ds: {time.perf_counter() - t:.4f}s")
-
-            final_Ds = []
-
-            t = time.perf_counter()
-            primes = sorted({
-                int(p)
-                for D in all_Ds
-                for p in ZZ(abs(D)).prime_divisors()
-            })
-            print(f"compute prime support: {time.perf_counter() - t:.4f}s")
-
-            all_prime_exponents = []
-            row_space = {0}
-
-            t_loop = time.perf_counter()
-
-            for D in sorted_Ds:
-                t_row = time.perf_counter()
-
-                # build bitmask
-                prime_exp = int(D < 0)
-                for i in range(len(primes)):
-                    prime_exp += (D.valuation(primes[i]) % 2) << (i + 1)
-
-                print(f"  build bitmask for {D}: {time.perf_counter() - t_row:.6f}s")
-
-                if prime_exp not in row_space:
-                    final_Ds.append(D)
-
-                    if len(final_Ds) == k:
-                        break
-
-                    t_update = time.perf_counter()
-                    all_prime_exponents.append(prime_exp)
-
-                    old_row_space = row_space.copy()
-                    for v in old_row_space:
-                        row_space.add(v ^ prime_exp)
-
-                    print(
-                        f"  update row space: "
-                        f"{time.perf_counter() - t_update:.6f}s"
-                    )
-
-            print(f"main loop total: {time.perf_counter() - t_loop:.4f}s")
-            print(f"total case 7: {time.perf_counter() - t_case:.4f}s")
-
-            return (
-                r'\(\Q('
-                + ', '.join([_sqrt_symbol(D) for D in final_Ds])
-                + r')\)'
-            )
-
-
     # Otherwise, if no latex form found, just return the LMFDB label
     return label
 
