@@ -1911,12 +1911,12 @@ class NFBound(ColTest):
 
         # Explicit lower bounds for the regulator from the literature:
         reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
-        reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
-        reg_s11 = (1/3) * log(self._maxD[3][1]/27)                          # Complex cubic case  (see Cusick 1983 Theorem 3)
-        reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3    # Totally real quartic case (see Cusick 1983 Theorem 2)
-        reg_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0]/16)**2  # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
-        reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                # Totally complex quartic case (see Cusick 1983, Theorem 4)
-        reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4           # Cyclic quintic fields (see Schoof-Washington 1988)
+        reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                         # Totally real cubic case  (see Cusick 1983, Theorem 1)
+        reg_s11 = (1/3) * log(self._maxD[3][1]/27)                            # Complex cubic case  (see Cusick 1983 Theorem 3)
+        reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic case (see Cusick 1983 Theorem 2)
+        reg_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0]/16)**2    # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
+        reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic case (see Cusick 1983, Theorem 4)
+        reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4               # Cyclic quintic fields (see Schoof-Washington 1988)
         reg_s70 = 19.19                                            # Totally real degree 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)
         reg_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
         reg_s80 = 28.43                                            # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 12a)
@@ -2726,6 +2726,7 @@ CompletenessChecker("ec_curvedata", [
     ("bad_primes", RestrictedBadPrimesConductor({2: 8, 3: 5}, 2, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
 
 
+# Todo: Add completeness for queries on bad primes for ECNF
 CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
 
 
