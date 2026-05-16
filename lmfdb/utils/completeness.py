@@ -804,6 +804,7 @@ class Specific(ColTest):
 
     Examples:
       *  ("rational", "weight", "degree"), Specific([True], [0], [1])   ->  checks that rational is True, weight is 0, and degree is 1
+      *  ("weight", "rational"), Specific([2, 3], [True])               ->  checks that weight is 2 or 3, and rational is True
     """
     def __init__(self, *constraints):
         self.constraints = constraints
@@ -840,19 +841,28 @@ class RestrictedBadPrimesConductor(ColTest):
     Checks completeness based on the maximum conductor for a given set of restricted bad primes.
     E.g. can be used for elliptic curves, genus 2 curves, or general abelian varieties (e.g. see Brumer-Kramer paper).
     
-    For an elliptic curve E, if bad primes are restricted to S, then the maximum conductor of E is
+    In particular, for a curve/variety X, if bad primes are restricted to S, then the maximum conductor of X is
+    M = Prod_{p in S} p^{e_p},  where e_p is looked up from "exponents" and falls back to "default_exp" for primes not listed there.
+
+    If M is at most conductor_bound, then completeness is guaranteed.
+
+    E.g. for an elliptic curve E over Q with good reduction away from S, the maximum conductor of E is
     M = Prod_{p in S} p^{e_p}, where e_2 = 8, e_3 = 5, and e_p = 2 for p > 3.
-    (i.e. the maximum valuations of the conductor at each prime for elliptic curves).
-    
-    If M is at most conductor_bound (the upper bound of curves in the database), completeness is guaranteed.
-    
+
     Args:
-        exponents: dict mapping primes to their maximum exponents in the conductor.
-                   Defaults to the elliptic curve over Q case if not provided.
-        conductor_bound: the known conductor bound for curves in the database (e.g., 500000)
+        exponents: dict mapping specific primes to their maximum exponent in the conductor.
+        default_exp: exponent to use for any prime not appearing in ``exponents``.
+        conductor_bound: the known conductor bound for curves in the database.
+
+    Examples:
+      *  Elliptic curves over Q: exponents={2: 8, 3: 5}, default_exp=2, conductor_bound=500000
+      *  Genus 2 curves over Q: exponents={2: 20, 3: 10, 5: 9}, default_exp=4
+      *  Genus 3 curves over Q: exponents={2: 28, 3: 21, 5: 11, 7: 13}, default_exp=6
     """
+
     def __init__(self, exponents, conductor_bound):
         self.exponents = exponents
+        self.default_exp = default_exp
         self.conductor_bound = conductor_bound
     
     def __call__(self, db, Ds):
@@ -871,115 +881,13 @@ class RestrictedBadPrimesConductor(ColTest):
         # Compute maximum conductor for this set of bad primes
         max_conductor = 1
         for p in bad_primes:
-            if p in self.exponents:
-                e_p = self.exponents[p]
-            elif p == 2:
-                e_p = 8
-            elif p == 3:
-                e_p = 5
-            else:
-                e_p = 2
-
+            e_p = self.exponents.get(p, self.default_exp)
             max_conductor *= p**e_p
-
             if max_conductor > self.conductor_bound:
                 return False  # Early exit if we already exceed the bound
         
         # If we get here, completeness is guaranteed
         return True
-
-
-class RestrictedBadPrimesNFConductor(ColTest):
-    r"""
-    Checks completeness based on the maximum conductor norm for a given set of restricted bad primes,
-    for elliptic curves over number fields.
-    
-    For an elliptic curve E over a number field K of degree d, if bad primes are restricted to S,
-    then the maximum conductor norm of E is M = \prod_{p in S} p^{d*e_p}, where:
-    - e_2 = 8, e_3 = 5, and e_p = 2 for p > 3
-    
-    If M is at most the conductor bound M_K for the field K, completeness is guaranteed.
-    
-    Args:
-        conductor_bounds: dict mapping (degree, signature) tuples or field labels to conductor bounds.
-                         E.g. {(1, (1,0)): 150000, (2, (0,1)): 500000, ...}
-    """
-    def __init__(self, conductor_bounds):
-        self.conductor_bounds = conductor_bounds
-    
-    def __call__(self, db, query):
-        """
-        query is the full query dict (not extracted columns), since we need access to
-        both bad_primes and field information
-        """
-        # Extract bad primes from query
-        bad_primes_query = query.get("bad_primes")
-        bad_primes = None
-        
-        if isinstance(bad_primes_query, dict):
-            if '$containedin' in bad_primes_query:
-                bad_primes = bad_primes_query['$containedin']
-        elif isinstance(bad_primes_query, list):
-            bad_primes = bad_primes_query
-        
-        if bad_primes is None or not bad_primes:
-            return False, None, None
-        
-        # Extract field information and degree
-        degree = None
-        field_key = None
-        
-        # Try to get degree from signature
-        signature = query.get("signature")
-        if isinstance(signature, list) and len(signature) == 2:
-            r1, r2 = signature
-            degree = r1 + 2*r2
-            field_key = (degree, tuple(signature))
-        
-        # Try to get from field_label
-        field_label = query.get("field_label")
-        if field_label and isinstance(field_label, str):
-            parts = field_label.split(".")
-            if parts and parts[0].isdigit():
-                label_degree = int(parts[0])
-                if degree is None:
-                    degree = label_degree
-                field_key = field_label
-        
-        if degree is None or degree < 1:
-            return False, None, None
-        
-        # Look up conductor bound
-        conductor_bound = None
-        if field_key and field_key in self.conductor_bounds:
-            conductor_bound = self.conductor_bounds[field_key]
-        elif degree in self.conductor_bounds:
-            conductor_bound = self.conductor_bounds[degree]
-        
-        if conductor_bound is None:
-            return False, None, None
-        
-        # Compute maximum conductor norm for this set of bad primes
-        max_conductor_norm = 1
-        for p in bad_primes:
-            # Use standard elliptic curve exponents
-            if p == 2:
-                e_p = 8
-            elif p == 3:
-                e_p = 5
-            else:
-                e_p = 2
-            
-            max_conductor_norm *= p ** (degree * e_p)
-            
-            if max_conductor_norm > conductor_bound:
-                return False, None, None  # Early exit if we already exceed the bound
-        
-        # If we get here, completeness is guaranteed
-        # Construct a descriptive reason
-        primes_str = ", ".join(str(p) for p in sorted(bad_primes))
-        reason = f"elliptic curves over number fields of degree {degree} with bad primes in {{{primes_str}}} and conductor norm at most {conductor_bound}"
-        return True, reason, None
 
 
 class CPrimeBound(CBound):
@@ -988,7 +896,7 @@ class CPrimeBound(CBound):
 
     Examples:
       *  ("weight", "char_order", "level"), CPrimeBound(2, 1, 1000000)  -> checks that weight is 2, char_order is 1, and level is a prime at most 1000000
-
+      *  ("rational", "conductor"), CPrimeBound(True, 1000)             -> check that rational is True and conductor is a prime at most 1000.
     """
     def __call__(self, db, Ds):
         last = self.cls(Ds[-1])
@@ -2625,6 +2533,7 @@ class NFBound(ColTest):
         return True, self.display_reason(reasons), caveats
 
 
+#### Artin representations ####
 
 minimal_label = {
     '2T1': '2T1',
@@ -2913,23 +2822,10 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
     ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
     ("bad_primes", Subset({2,3,5,7}), "elliptic curves with good reduction away from {2,3,5,7}"),
-    ("bad_primes", RestrictedBadPrimesConductor({}, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
+    ("bad_primes", RestrictedBadPrimesConductor({2: 8, 3: 5}, 2, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
 
 
-CompletenessChecker("ec_nfcurves", [
-    ("conductor_norm", BianchiBound(ec=True)),
-    ("bad_primes", RestrictedBadPrimesNFConductor({
-        # Bounds extracted from BianchiBound (see lines 1242-1277)
-        # Imaginary quadratic fields: maximum bound from the discriminant ranges
-        (2, (0, 1)): 150000,
-        # Totally real quadratic fields with discriminant <= 497
-        (2, (2, 0)): 5000,
-        # Cubic fields with 1 real embedding (mixed cubic)
-        (3, (1, 1)): 20000,
-        # Totally real cubic fields
-        (3, (3, 0)): 2059,
-    }))
-], fill=[FieldLabelFiller(True)])
+CompletenessChecker("ec_nfcurves", [("conductor_norm", BianchiBound(ec=True))], fill=[FieldLabelFiller(True)])
 
 
 # For genus 2 curves, we can just add trivial completeness bounds for now.
@@ -2962,10 +2858,7 @@ CompletenessChecker("av_fq_isog", [
 CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at most 6")])
 
 
-nf_bound = NFBound()
-CompletenessChecker("nf_fields", [
-    ((), nf_bound),
-])
+CompletenessChecker("nf_fields", [((), NFBound())])
 
 
 CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[MulFiller("n", "e", "f")])
