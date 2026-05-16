@@ -769,8 +769,8 @@ class PrimeBound(Bound):
     Useful for checking if conductor/discriminant/level is prime and in a specified range.
     
     Examples:
-      "conductor", PrimeBound(1000)                 -> checks that conductor is a prime number less than 1000
-      ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is a prime at most 10 and discriminant is a prime at most 100
+      *  "conductor", PrimeBound(1000)                -> checks that conductor is a prime number less than 1000
+      *  ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is a prime at most 10 and discriminant is a prime at most 100
     """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
@@ -987,7 +987,7 @@ class CPrimeBound(CBound):
     Similar to CBound, but requires Ds to all be prime.
 
     Examples:
-      ("weight", "char_order", "level"), CPrimeBound(2, 1, 1000000)   -> checks that weight is 2, char_order is 1, and level is a prime at most 1000000
+      *  ("weight", "char_order", "level"), CPrimeBound(2, 1, 1000000)  -> checks that weight is 2, char_order is 1, and level is a prime at most 1000000
 
     """
     def __call__(self, db, Ds):
@@ -1992,32 +1992,45 @@ class NFBound(ColTest):
         }
 
 
-        # Regulator bounds are implemented in NFBound.regulator_threshold().
+        #### Regulator completeness bounds for number fields ####
 
-        regbound_s20 = log((sqrt(self._maxD[2][0] - 4) + sqrt(self._maxD[2][0])) / 2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
-        regbound_s30 = (1/16) * log(self._maxD[3][0] / 4) ** 2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
-        regbound_s11 = (1/3) * log(self._maxD[3][1] / 27)                          # Complex cubic case  (see Cusick 1983 Theorem 3)
-        regbound_s40_prim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0] / 16) ** 3    # Totally real quartic case (see Cusick 1983 Theorem 2)
-        regbound_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0] / 16) ** 2  # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
-        regbound_s02_prim = (1 / 4) * log(self._maxD[4][2] / 16) ** 3                # Totally complex quartic case (see Cusick 1983, Theorem 4)
-        regbound_s50_cyclic = (1 / 25) * log(self._maxD[5][0] / 16) ** 4           # Cyclic quintic fields (see Schoof-Washington 1988)
-        regbound_s70 = 19.19                                            # Totally real degree 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)
-        regbound_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
-        regbound_s80 = 28.43                                            # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 12a)
-        regbound_s90 = 37.2                                             # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 13)
+        # For a non-CM field K, the regulator Reg_K has a lower bound of the form Reg_K >= A*(logD)^B,
+        # where D is the discriminant and A and B are effectively computable constants depending only on the degree/signature of K.
+	
+        # For certain explicit small signatures, we give explicit lower bounds (with referneces) below:
+        # These make use of hardcoded discriminantn completeness bounds given above, in self._maxD
+        # Some bounds furthermore require whether field is primitive or impritive. (e.g. this can be detected if Galois group is given)
 
-        self._maxReg = {
-            (2, 0): regbound_s20,
-            (3, 0): regbound_s30,
-            (3, 1): regbound_s11,
-            (4, 0): (regbound_s40_imprim, regbound_s40_prim),
-            (4, 2): regbound_s02_prim,
-            (5, 0): regbound_s50_cyclic,
-            (5, 1): regbound_s51,
-            (7, 0): regbound_s70,
-            (8, 0): regbound_s80,
-            (9, 0): regbound_s90,
-        }
+        # Explicit lower bounds for the regulator from the literature:
+        reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
+        reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                     # Totally real cubic case  (see Cusick 1983, Theorem 1)
+        reg_s11 = (1/3) * log(self._maxD[3][1]/27)                          # Complex cubic case  (see Cusick 1983 Theorem 3)
+        reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3    # Totally real quartic case (see Cusick 1983 Theorem 2)
+        reg_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0]/16)**2  # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
+        reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                # Totally complex quartic case (see Cusick 1983, Theorem 4)
+        reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4           # Cyclic quintic fields (see Schoof-Washington 1988)
+        reg_s70 = 19.19                                            # Totally real degree 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)
+        reg_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
+        reg_s80 = 28.43                                            # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 12a)
+        reg_s90 = 37.2                                             # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 13)
+
+        # maxReg[n][r2] is an integer M so that we have completeness in signature [n-2*r2, r2] as long as the regulator is at most M.
+        self._maxReg = [
+            None, # n=0
+            None, # n=1
+            [reg_s20], # n=2
+            [reg_s30, reg_s11], # n=3
+            [reg_s40_imprim, 4*10**6, 4*10**6], # n=4
+            [reg_s50], # n=5
+            [reg_s60], # n=6
+            [reg_s70, reg_s51], # n=7
+            [reg_s80], # n=8
+            [reg_s90], # n=9
+        ]
+
+        # TODO: Add more regulator bounds for other signatures
+        # Can also further bounds based on Galois group, instead of just signature
+
 
     def display_reason(self, reasons):
         """
@@ -2411,7 +2424,7 @@ class NFBound(ColTest):
     def _initial(self, db, query, reasons):
         """
         Attempt to prove completeness without splitting on degree,
-        using global completeness bounds for absolute disc, root disc, and Galois root disc.
+        using global completeness bounds for absolute disc, root disc, Galois root disc, and regulator.
         """
         D, rd, grd = IntegerSet(query.get("disc_abs")), NumberSet(query.get("rd")), NumberSet(query.get("grd"))
         if D.bounded(1656109):
@@ -2423,7 +2436,13 @@ class NFBound(ColTest):
         if grd.bounded(5.989):
             reasons.add("Galois root discriminant at most 5.989")
             return True, None
+        
         # Can also guarantee completeness based on regulator bounds and non-CMness: see https://arxiv.org/pdf/2112.15268
+        # E.g. Friedman (1989) classified all number fields with regulator at most 1/4
+        reg = NumberSet(query.get("reg"))
+        if reg.bounded(0.25):
+            reasons.add("regulator at most 0.25")
+            return True, None
 
         # TODO: use Odlyzko bounds to get upper bound on degree
         return False, None
