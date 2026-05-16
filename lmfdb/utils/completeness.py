@@ -860,7 +860,7 @@ class RestrictedBadPrimesConductor(ColTest):
       *  Genus 3 curves over Q: exponents={2: 28, 3: 21, 5: 11, 7: 13}, default_exp=6
     """
 
-    def __init__(self, exponents, conductor_bound):
+    def __init__(self, exponents, default_exp, conductor_bound):
         self.exponents = exponents
         self.default_exp = default_exp
         self.conductor_bound = conductor_bound
@@ -1910,17 +1910,31 @@ class NFBound(ColTest):
         # Some bounds furthermore use whether field is primitive or imprimitive. (e.g. this can be detected if Galois group is given)
 
         # Explicit lower bounds for the regulator from the literature:
-        reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
+        reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485) - sharp
         reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                         # Totally real cubic case  (see Cusick 1983, Theorem 1)
         reg_s11 = (1/3) * log(self._maxD[3][1]/27)                            # Complex cubic case  (see Cusick 1983 Theorem 3)
-        reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic case (see Cusick 1983 Theorem 2)
+        reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic primitive case (see Cusick 1983 Theorem 2)
         reg_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0]/16)**2    # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
-        reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic case (see Cusick 1983, Theorem 4)
+        reg_s21 = 0.51                                                        # Signature (2, 1): (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10b)
+        reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic primtiive case (see Cusick 1983, Theorem 4)
+        reg_s02 = 0.61                                                        # Totally complex quatic case (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10c)
         reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4               # Cyclic quintic fields (see Schoof-Washington 1988)
-        reg_s70 = 19.19                                            # Totally real degree 7 (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 9)
-        reg_s51 = 3.2                                              # Signature (5, 2) (see Friedman and Ramirez Raposo thesis, 2019)
-        reg_s80 = 28.43                                            # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 12a)
-        reg_s90 = 37.2                                             # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 13)
+        reg_s50 = 0.2
+        reg_s31 = 2.15        # Signature (3, 1)  (see Battistoni-Molteni 2025, Corollary 1.3)
+        reg_s12 = 0.34        # Signature (1, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 8c)
+        reg_s60 = 4.39        # Signature (6, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 11a)
+        reg_s41 = 4.60        # Signature (4, 1)  (see Battistoni-Molteni 2025, Corollary 1.4)
+        reg_s22 = 0.50        # Signature (2, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 11c)
+        reg_s03 = 0.27        # Signature (0, 3)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 11d)
+        reg_s70 = 19.19       # Totally real degree 7 (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9)
+        #reg_s51 = 3.2        # Signature (5, 1)  (see Friedman and Ramirez Raposo thesis, 2019)
+        reg_s51 = 6.10        # Signature (5, 1)  (see Battistoni-Molteni 2025, Corollary 1.5)
+        reg_s32 = 1.055       # Signature (3, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9c)
+        reg_s13 = 0.4         # Signature (1, 3)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9d)
+        reg_s80 = 28.43       # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12a)
+        reg_s04 = 0.345       # Signature (0, 4)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12b)
+        reg_s61 = 7.431       # Signature (6, 1)  (see Battistoni-Molteni 2025, Corollary 1.1)
+        reg_s90 = 37.2        # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 13)
 
         # maxReg[n][r2] is an integer M so that we have completeness in signature [n-2*r2, r2] as long as the regulator is at most M.
         self._maxReg = [
@@ -1929,12 +1943,13 @@ class NFBound(ColTest):
             [reg_s20], # n=2
             [reg_s30, reg_s11], # n=3
             [reg_s40_imprim, reg_s21, reg_s02], # n=4
-            [reg_s50], # n=5
-            [reg_s60], # n=6
-            [reg_s70, reg_s51], # n=7
-            [reg_s80], # n=8
+            [reg_s50, reg_s31, reg_s12], # n=5
+            [reg_s60, reg_s41, reg_s22, reg_s03], # n=6
+            [reg_s70, reg_s51, reg_s32, reg_s13], # n=7
+            [reg_s80, None, None, None, reg_s04], # n=8
             [reg_s90], # n=9
         ]
+        print("DEBUG:", self._maxReg)
 
         # TODO: Add more regulator bounds for other signatures.
         # Can also further refine bounds based on Galois group, instead of just signature.
@@ -2240,7 +2255,7 @@ class NFBound(ColTest):
         
         # Can also guarantee completeness based on regulator bounds and non-CMness: see https://arxiv.org/pdf/2112.15268
         # E.g. Friedman (1989) classified all number fields with regulator at most 1/4
-        reg = NumberSet(query.get("reg"))
+        reg = NumberSet(query.get("regulator"))
         if reg.bounded(0.25):
             reasons.add("regulator at most 0.25")
             return True, None
@@ -2723,7 +2738,7 @@ CompletenessChecker("ec_curvedata", [
     ("conductor", Smooth(10), "elliptic curves with 7-smooth conductor"),
     ("absD", Bound(500000), "elliptic curves with minimal discriminant at most 500000"),
     ("bad_primes", Subset({2,3,5,7}), "elliptic curves with good reduction away from {2,3,5,7}"),
-    ("bad_primes", RestrictedBadPrimesConductor({2: 8, 3: 5}, 2, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
+    ("bad_primes", RestrictedBadPrimesConductor({2:8, 3:5}, 2, 500000), "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000")])
 
 
 # Todo: Add completeness for queries on bad primes for ECNF
