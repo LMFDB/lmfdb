@@ -1906,8 +1906,8 @@ class NFBound(ColTest):
         # where D is the discriminant and A and B are effectively computable constants depending only on the degree/signature of K.
 	
         # For certain explicit small signatures, we give explicit lower bounds (with referneces) below:
-        # These make use of hardcoded discriminantn completeness bounds given above, in self._maxD
-        # Some bounds furthermore require whether field is primitive or impritive. (e.g. this can be detected if Galois group is given)
+        # These make use of hardcoded discriminantn completeness bounds given above, in self._maxD[n][r2] dictionary.
+        # Some bounds furthermore use whether field is primitive or imprimitive. (e.g. this can be detected if Galois group is given)
 
         # Explicit lower bounds for the regulator from the literature:
         reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485)
@@ -1928,7 +1928,7 @@ class NFBound(ColTest):
             None, # n=1
             [reg_s20], # n=2
             [reg_s30, reg_s11], # n=3
-            [reg_s40_imprim, 4*10**6, 4*10**6], # n=4
+            [reg_s40_imprim, reg_s21, reg_s02], # n=4
             [reg_s50], # n=5
             [reg_s60], # n=6
             [reg_s70, reg_s51], # n=7
@@ -1936,8 +1936,8 @@ class NFBound(ColTest):
             [reg_s90], # n=9
         ]
 
-        # TODO: Add more regulator bounds for other signatures
-        # Can also further bounds based on Galois group, instead of just signature
+        # TODO: Add more regulator bounds for other signatures.
+        # Can also further refine bounds based on Galois group, instead of just signature.
 
 
     def display_reason(self, reasons):
@@ -2105,113 +2105,6 @@ class NFBound(ColTest):
                     galt.difference_update(I)
                     if not galt:
                         return True
-
-        return False
-
-    def regulator_threshold(self, n, r2, galt, cm):
-        """
-        Return a lower bound on the regulator for the specified signature and Galois constraints.
-
-        If the query may include CM fields and the lower bound only applies to non-CM fields,
-        return None so that completeness cannot be inferred from regulator alone.
-        """
-        if n < 2 or n >= len(self._maxD) or self._maxD[n] is None or r2 < 0 or r2 >= len(self._maxD[n]):
-            return None
-        D_max = self._maxD[n][r2]
-        if D_max is None:
-            return None
-
-        from sage.all import log, sqrt
-
-        r1 = n - 2*r2
-        if r1 < 0:
-            return None
-        if r1 == 0 and cm is not False:
-            return None
-
-        explicit = None
-        if n == 2 and r2 == 0:
-            explicit = log((sqrt(D_max - 4) + sqrt(D_max)) / 2)
-        elif n == 3:
-            if r2 == 0:
-                explicit = (1 / 16) * log(D_max / 4) ** 2
-            elif r2 == 1:
-                explicit = (1 / 3) * log(D_max / 27)
-        elif n == 4:
-            if r2 == 0:
-                bound_prim = 1 / (80 * sqrt(10)) * log(D_max / 16) ** 3
-                bound_imprim = 1 / (80 * sqrt(10)) * log(D_max / 16) ** 2
-                if galt is None:
-                    explicit = bound_imprim
-                else:
-                    primitive_groups = {4, 5}
-                    if galt.issubset(primitive_groups):
-                        explicit = bound_prim
-                    elif galt.isdisjoint(primitive_groups):
-                        explicit = bound_imprim
-                    else:
-                        explicit = min(bound_prim, bound_imprim)
-            elif r2 == 2:
-                primitive_groups = {4, 5}
-                if galt is None or not galt.issubset(primitive_groups):
-                    explicit = None
-                else:
-                    explicit = (1 / 4) * log(D_max / 16) ** 3
-        elif n == 5 and r2 == 0:
-            cyclic_groups = {1}
-            if galt is None or galt.issubset(cyclic_groups):
-                explicit = (1 / 25) * log(D_max / 16) ** 4
-        elif n == 7 and r2 == 0:
-            explicit = 19.19
-        elif n == 5 and r2 == 1:
-            explicit = 3.2
-        elif n == 8 and r2 == 0:
-            explicit = 28.43
-        elif n == 9 and r2 == 0:
-            explicit = 37.2
-
-        rank = r1 + r2 - 1
-        if rank <= 0:
-            return explicit
-
-        generic = log(D_max) ** rank
-        if explicit is None:
-            return generic
-        return max(generic, explicit)
-
-    def clear_galois_regulator(self, n, r2opts, query, galt, cm, reasons):
-        regulator_query = query.get("regulator")
-        if regulator_query is None:
-            return False
-
-        regulator_max = None
-        if isinstance(regulator_query, dict):
-            if "$lte" in regulator_query:
-                regulator_max = regulator_query["$lte"]
-            elif "$lt" in regulator_query:
-                regulator_max = regulator_query["$lt"]
-        elif isinstance(regulator_query, (int, float)):
-            regulator_max = regulator_query
-        if regulator_max is None:
-            return False
-
-        thresholds = []
-        for r2 in r2opts:
-            threshold = self.regulator_threshold(n, r2, galt, cm)
-            if threshold is None:
-                return False
-            thresholds.append(threshold)
-        if not thresholds:
-            return False
-
-        if regulator_max <= min(thresholds):
-            if len(r2opts) == 1:
-                r1 = n - 2 * r2opts[0]
-                signature = [r1, r2opts[0]]
-                reasons.add(f"degree {n}, signature {signature}, regulator at most {regulator_max}")
-            else:
-                reasons.add(f"degree {n}, regulator at most {regulator_max}")
-            return True
 
         return False
 
@@ -2471,9 +2364,17 @@ class NFBound(ColTest):
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
 
-        # Completeness case : try using queries on regulators to show completeness
-        if self.clear_galois_regulator(n, r2opts, query, galt, query.get("cm"), reasons):
-            return True, caveat
+        ## Completeness case 5: try using queries on regulators to show completeness
+        reg = query.get("regulator")
+        if reg is not None and n < len(self._maxReg) and self._maxReg[n] is not None:
+            reg_set = NumberSet(reg)
+            maxreg = self._maxReg[n]
+            for r2 in list(r2opts):
+                if r2 < len(maxreg) and maxreg[r2] is not None and reg_set.bounded(maxreg[r2]):
+                    r2opts.remove(r2)
+                    reasons.add(f"degree {n}, signature [{n-2*r2},{r2}], regulator at most {float(maxreg[r2]):.4f}")
+            if not r2opts:
+                return True, caveat
 
         # Can also iterate over valid discriminants in a discriminant range
         if D.restricted():
@@ -2858,6 +2759,9 @@ CompletenessChecker("av_fq_isog", [
 CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at most 6")])
 
 
+# We handle Number field completeness is by a single monolithic class (rather than having individual ColTests)
+# This is because many constraints interact: e.g. a discriminant range implies a root discriminant bound,
+# which (given a Galois group) implies a Galois root discriminant bound. NFBound handles everything internally.
 CompletenessChecker("nf_fields", [((), NFBound())])
 
 
