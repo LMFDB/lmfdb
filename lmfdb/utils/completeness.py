@@ -1914,31 +1914,38 @@ class NFBound(ColTest):
         # Some bounds furthermore use whether field is primitive or imprimitive. (e.g. this can be detected if Galois group is given)
 
         # Explicit lower bounds for the regulator from the literature:
-        reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485) - sharp
-        reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                         # Totally real cubic case  (see Cusick 1983, Theorem 1)
-        reg_s11 = (1/3) * log(self._maxD[3][1]/27)                            # Complex cubic case  (see Cusick 1983 Theorem 3)
-        #reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic primitive case (see Cusick 1983 Theorem 2)
-        reg_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0]/16)**2    # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
-        reg_s21 = 0.51                                                        # Signature (2, 1): (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10b)
-        #reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic primtiive case (see Cusick 1983, Theorem 4)
-        reg_s02 = 0.61                                                        # Totally complex quartic case (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10c)
-        #reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4               # Cyclic quintic fields (see Schoof-Washington 1988)
-        reg_s50 = 0.2
-        reg_s31 = 2.15        # Signature (3, 1)  (see Battistoni-Molteni 2025, Corollary 1.3)
-        reg_s12 = 0.34        # Signature (1, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 8c)
-        reg_s60 = 4.39        # Signature (6, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 11a)
-        reg_s41 = 4.60        # Signature (4, 1)  (see Battistoni-Molteni 2025, Corollary 1.4)
-        reg_s22 = 0.50        # Signature (2, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 11c)
-        reg_s03 = 0.27        # Signature (0, 3)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 11d)
-        reg_s70 = 19.19       # Totally real degree 7 (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9)
-        #reg_s51 = 3.2        # Signature (5, 1)  (see Friedman and Ramirez Raposo thesis, 2019)
-        reg_s51 = 6.10        # Signature (5, 1)  (see Battistoni-Molteni 2025, Corollary 1.5)
-        reg_s32 = 1.055       # Signature (3, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9c)
-        reg_s13 = 0.4         # Signature (1, 3)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9d)
-        reg_s80 = 28.43       # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12a)
-        reg_s61 = 7.431       # Signature (6, 1)  (see Battistoni-Molteni 2025, Corollary 1.1)
-        reg_s04 = 0.345       # Signature (0, 4)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12b)
-        reg_s90 = 37.2        # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 13)
+        reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Po77, Satz XIII on pg 485) - sharp
+        reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                         # Totally real cubic case  (see Cu84, Theorem 1)
+        reg_s11 = (1/3) * log(self._maxD[3][1]/27)                            # Complex cubic case  (see Cu84 Theorem 3)
+        #reg_s40_prim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic primitive case (see Cu84 Theorem 2)
+        reg_s40_imprim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**2    # Totally real quartic imprimitive case (see Cu84, Theorem 2b)
+        reg_s21 = 0.51                                                        # Signature (2, 1): (see ADF16, Theorem 10b)
+        #reg_s02_prim = (1/4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic primtiive case (see Cu84, Theorem 4)
+        reg_s02 = 0.61                                                        # Totally complex quartic case (see ADF16, Theorem 10c)
+        #reg_s50_cyclic = (1/25) * log(self._maxD[5][0]/16)**4               # Cyclic quintic fields (see Schoof-Washington 1988)
+        reg_s50 = 3.55        # Totally real quintic 
+        reg_s31 = 2.15        # Signature (3, 1)  (see BM25, Corollary 1.3)
+        reg_s12 = 0.34        # Signature (1, 2)  (see ADF16, Theorem 8c)
+        reg_s60 = 4.39        # Signature (6, 0)  (see ADF16, Theorem 11a)
+        reg_s41 = 4.60        # Signature (4, 1)  (see BM25, Corollary 1.4)
+        reg_s22 = 0.50        # Signature (2, 2)  (see ADF16, Theorem 11c)
+        reg_s03 = 0.27        # Signature (0, 3)  (see ADF16, Theorem 11d)
+        reg_s70 = 19.19       # Totally real degree 7 (see ADF16, Theorem 9)
+        #reg_s51 = 3.2        # Signature (5, 1)  (see FR19)
+        reg_s51 = 6.10        # Signature (5, 1)  (see BM25, Corollary 1.5)
+        reg_s32 = 1.055       # Signature (3, 2)  (see ADF16, Theorem 9c)
+        reg_s13 = 0.4         # Signature (1, 3)  (see ADF16, Theorem 9d)
+        reg_s80 = 28.43       # Signature (8, 0)  (see ADF16, Theorem 12a)
+        reg_s61 = 7.431       # Signature (6, 1)  (see BM25, Corollary 1.1)
+        reg_s04 = 0.345       # Signature (0, 4)  (see ADF16, Theorem 12b)
+        reg_s90 = 37.2        # Signature (9, 0)  (see ADF16, Theorem 13)
+
+        # References used for regulator lower bounds:
+        # - Po77:  Pohst, Michael; Regulatorabschätzungen für total reelle algebraische Zahlkörper. J. Number Theory 9 (1977), no. 4, 459–492.  MR0460274
+        # - Cu84:  Cusick, T. W.; Lower bounds for regulators. Number theory, Noordwijkerhout 1983 (Noordwijkerhout, 1983), 63–73. Lecture Notes in Math., 1068 Springer-Verlag, Berlin, 1984 ISBN:3-540-13356-9. MR0756083
+        # - ADF16: Astudillo, Sergio; Diaz y Diaz, Francisco; Friedman, Eduardo; Sharp lower bounds for regulators of small-degree number fields. J. Number Theory 167 (2016), 232–258. MR3504045
+        # - FR19:  Friedman, Eduardo; Ramirez-Raposo, Gabriel; Filling the gap in the table of smallest regulators up to degree 7. J. Number Theory 198 (2019), 381–385. MR3912943
+        # - BM25:  Battistoni, Francesco; Molteni, Giuseppe; Generalized Pohst inequality and small regulators. Math. Comp. 94 (2025), no. 351, 475–504. MR4807818
 
         # maxReg[n][r2] is an integer M so that we have completeness in signature [n-2*r2, r2] as long as the regulator is at most M.
         self._maxReg = [
