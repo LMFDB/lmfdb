@@ -49,8 +49,6 @@ def results_complete(table, query, db, search_array=None):
     - ``caveat`` -- A string, giving any caveats (like dependence on GRH or unproven modularity theorems).  May be ``None``.
     """
 
-    print("CHECKING RESULTS COMPLETE DEBUG:", table, query, db, search_array)
-
     if table in lookup:
         return lookup[table].check(query, db, search_array)
     return None, None, None
@@ -701,7 +699,6 @@ class CompletenessChecker:
                 search_columns = {col for col in search_columns if search_array.null_column_explanations.get(col) is not False}
             if search_columns and table.exists(nullcount_query(query, search_columns)):
                 # Query referred to a column where not all data was computed, so we cannot guarantee completeness
-                print("DEBUG not computed data!")
                 return False, None, None
         for fill in self.fill:
             fill(query)
@@ -1924,7 +1921,7 @@ class NFBound(ColTest):
 
         # Explicit lower bounds for the regulator from the literature:
         reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Po77, Satz XIII on pg 485) - sharp
-        reg_s01 = 0.99                                                        # All imaginary quadratics have regulator 1
+        reg_s01 = 0.999                                                       # All imaginary quadratics have regulator 1
         reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                         # Totally real cubic case  (see Cu84, Theorem 1)
         reg_s11 = (1/3) * log(self._maxD[3][1]/27)                            # Complex cubic case  (see Cu84 Theorem 3)
         #reg_s40_prim = 1/(80*sqrt(10)) * log(self._maxD[4][0]/16)**3         # Totally real quartic primitive case (see Cu84 Theorem 2)
@@ -1970,7 +1967,6 @@ class NFBound(ColTest):
             [reg_s80, reg_s61, None, None, reg_s04], # n=8
             [reg_s90], # n=9
         ]
-        print("DEBUG:", self._maxReg)
 
         # TODO: Add more regulator bounds for other signatures.
         # Can also further refine bounds based on Galois group, instead of just signature.
@@ -2036,7 +2032,7 @@ class NFBound(ColTest):
             if tups[0][6] is not None:
                 reg_bounds = [RR(tup[6]) for tup in tups]
                 if len(set(reg_bounds)) == 1:
-                    ans.append(f"regulator at most {float(reg_bounds[0]):.3f}")
+                    ans.append(f"regulator at most {float(reg_bounds[0]):.2f}")
                 else:
                     ans.append(f"regulator at most {','.join(reg_bounds)}")
 
@@ -2361,8 +2357,6 @@ class NFBound(ColTest):
         else:
             caveat = None
 
-        print("R2OPTS DEBUG:", r2opts)
-
         ## Completeness 1: degree, signature, discriminant, regulator ##
         if grd.restricted():
             rd = rd.pow_cap(grd, 1)
@@ -2382,8 +2376,6 @@ class NFBound(ColTest):
             reg = self.clear_regulator(n, reg, r2opts, reasons)
             if not r2opts:
                 return True, caveat
-
-        print("R2OPTS DEBUG:", r2opts)
 
 
         ## Completeness 2: degree, signature, Galois group, discriminant
@@ -2473,8 +2465,6 @@ class NFBound(ColTest):
 
     def __call__(self, db, query):
         n = query.get("degree")
-
-        print("DEBUG DEBUG DEBUG!!!")
 
         # We collect reasons that have contributed to completeness
         # These have the following format:
