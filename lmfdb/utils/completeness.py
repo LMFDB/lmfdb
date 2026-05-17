@@ -48,7 +48,6 @@ def results_complete(table, query, db, search_array=None):
 
     - ``caveat`` -- A string, giving any caveats (like dependence on GRH or unproven modularity theorems).  May be ``None``.
     """
-
     if table in lookup:
         return lookup[table].check(query, db, search_array)
     return None, None, None
@@ -902,7 +901,6 @@ class CPrimeBound(CBound):
     def __call__(self, db, Ds):
         last = self.cls(Ds[-1])
         return last.is_finite() and super().__call__(db, Ds) and all(is_prime(p) for p in last)
-
 
 
 #################################
@@ -2431,18 +2429,6 @@ class NFBound(ColTest):
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
 
-        ## Completeness 5: try using queries on regulators to show completeness
-        #reg = query.get("regulator")
-        #if reg is not None and n < len(self._maxReg) and self._maxReg[n] is not None:
-        #    reg_set = NumberSet(reg)
-        #    maxreg = self._maxReg[n]
-        #    for r2 in list(r2opts):
-        #        if r2 < len(maxreg) and maxreg[r2] is not None and reg_set.bounded(maxreg[r2]):
-        #            r2opts.remove(r2)
-        #            reasons.add(f"degree {n}, signature [{n-2*r2},{r2}], regulator at most {float(maxreg[r2]):.4f}")
-        #    if not r2opts:
-        #        return True, caveat
-
         # Can also iterate over valid discriminants in a discriminant range
         if D.restricted():
             for S in D.stickelberger(n, r2opts):
@@ -2827,9 +2813,9 @@ CompletenessChecker("av_fq_isog", [
 CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at most 6")])
 
 
-# We handle Number field completeness is by a single monolithic class (rather than having individual ColTests)
+# We handle number field completeness by a single monolithic class (rather than having individual ColTests).
 # This is because many constraints interact: e.g. a discriminant range implies a root discriminant bound,
-# which (given a Galois group) implies a Galois root discriminant bound. NFBound handles everything internally.
+# which (given a Galois group) implies a Galois root discriminant bound, etc. NFBound() handles everything internally.
 CompletenessChecker("nf_fields", [((), NFBound())])
 
 

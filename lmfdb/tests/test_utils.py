@@ -360,7 +360,7 @@ class UtilsTest(unittest.TestCase):
                 ("ec_curvedata", {'absD': {'$gte': 50000, '$lte': 100000}}, "elliptic curves with minimal discriminant at most 500000"),
                 ("ec_curvedata", {'bad_primes': {'$containedin': [2, 3, 5, 7]}}, "elliptic curves with good reduction away from {2,3,5,7}"),
                 ("ec_curvedata", {'bad_primes': {'$containedin': [23, 29]}}, "elliptic curves whose maximum possible conductor (determined by bad primes) is at most 500000"),
-                ("g2c_curves", {'cond': {'$gte': 1, '$lte': 120}}, "genus 2 curves with conductor at most 120 (as there are none)"),
+                ("g2c_curves", {'cond': {'$gte': 1, '$lte': 120}}, "genus 2 curves with conductor at most 120 (as there are none)", "depends on the paramodular conjecture"),
                 ("hgcwa_passports", {'genus': 3}, "groups acting as automorphisms of curves of genus 2, 3 or 4"),
                 ("hgcwa_passports", {'genus': 11, 'g0': 0}, "groups G acting as automorphisms of curves X with the genus of X at most 15 and the genus of X/G equal to 0"),
                 ("av_fq_isog", {'g': 1, 'q': 729}, "isogeny classes of elliptic curves over fields of cardinality less than 500 or 512, 625, 729, 1024"),
