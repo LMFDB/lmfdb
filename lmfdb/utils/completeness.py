@@ -14,7 +14,7 @@ EXAMPLES::
 
 from collections import defaultdict
 from sage.all import (
-    factor, prod, factorial, is_prime, prime_range, ZZ, NN,
+    factor, prod, factorial, is_prime, prime_range, ZZ, NN, RR,
     ceil, floor, RealSet, infinity, cached_function, RLF, log, sqrt)
 
 # This dictionary is filled in the __init__ method of CompletenessCheckers based on the table name;
@@ -48,6 +48,9 @@ def results_complete(table, query, db, search_array=None):
 
     - ``caveat`` -- A string, giving any caveats (like dependence on GRH or unproven modularity theorems).  May be ``None``.
     """
+
+    print("CHECKING RESULTS COMPLETE DEBUG:", table, query, db, search_array)
+
     if table in lookup:
         return lookup[table].check(query, db, search_array)
     return None, None, None
@@ -698,6 +701,7 @@ class CompletenessChecker:
                 search_columns = {col for col in search_columns if search_array.null_column_explanations.get(col) is not False}
             if search_columns and table.exists(nullcount_query(query, search_columns)):
                 # Query referred to a column where not all data was computed, so we cannot guarantee completeness
+                print("DEBUG not computed data!")
                 return False, None, None
         for fill in self.fill:
             fill(query)
@@ -1913,12 +1917,12 @@ class NFBound(ColTest):
         reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Pohst 1977, Satz XIII on pg 485) - sharp
         reg_s30 = (1/16) * log(self._maxD[3][0]/4)**2                         # Totally real cubic case  (see Cusick 1983, Theorem 1)
         reg_s11 = (1/3) * log(self._maxD[3][1]/27)                            # Complex cubic case  (see Cusick 1983 Theorem 3)
-        reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic primitive case (see Cusick 1983 Theorem 2)
+        #reg_s40_prim = 1 / (80*sqrt(10)) * log(self._maxD[4][0]/16)**3        # Totally real quartic primitive case (see Cusick 1983 Theorem 2)
         reg_s40_imprim = 1 / (80 * sqrt(10)) * log(self._maxD[4][0]/16)**2    # Totally real quartic imprimitive case (see Cusick 1983, Theorem 2b)
         reg_s21 = 0.51                                                        # Signature (2, 1): (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10b)
-        reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic primtiive case (see Cusick 1983, Theorem 4)
-        reg_s02 = 0.61                                                        # Totally complex quatic case (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10c)
-        reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4               # Cyclic quintic fields (see Schoof-Washington 1988)
+        #reg_s02_prim = (1 / 4) * log(self._maxD[4][2]/16)**3                  # Totally complex quartic primtiive case (see Cusick 1983, Theorem 4)
+        reg_s02 = 0.61                                                        # Totally complex quartic case (see Astudillo-Diaz y Diaz-Freidman 2016, Theorem 10c)
+        #reg_s50_cyclic = (1 / 25) * log(self._maxD[5][0]/16)**4               # Cyclic quintic fields (see Schoof-Washington 1988)
         reg_s50 = 0.2
         reg_s31 = 2.15        # Signature (3, 1)  (see Battistoni-Molteni 2025, Corollary 1.3)
         reg_s12 = 0.34        # Signature (1, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 8c)
@@ -1932,8 +1936,8 @@ class NFBound(ColTest):
         reg_s32 = 1.055       # Signature (3, 2)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9c)
         reg_s13 = 0.4         # Signature (1, 3)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 9d)
         reg_s80 = 28.43       # Signature (8, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12a)
-        reg_s04 = 0.345       # Signature (0, 4)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12b)
         reg_s61 = 7.431       # Signature (6, 1)  (see Battistoni-Molteni 2025, Corollary 1.1)
+        reg_s04 = 0.345       # Signature (0, 4)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 12b)
         reg_s90 = 37.2        # Signature (9, 0)  (see Astudillo-Diaz y Diaz-Friedman 2016, Theorem 13)
 
         # maxReg[n][r2] is an integer M so that we have completeness in signature [n-2*r2, r2] as long as the regulator is at most M.
@@ -1946,7 +1950,7 @@ class NFBound(ColTest):
             [reg_s50, reg_s31, reg_s12], # n=5
             [reg_s60, reg_s41, reg_s22, reg_s03], # n=6
             [reg_s70, reg_s51, reg_s32, reg_s13], # n=7
-            [reg_s80, None, None, None, reg_s04], # n=8
+            [reg_s80, reg_s61, None, None, reg_s04], # n=8
             [reg_s90], # n=9
         ]
         print("DEBUG:", self._maxReg)
@@ -1962,15 +1966,16 @@ class NFBound(ColTest):
         INPUT:
 
         - ``reasons`` -- a set of reasons, which are either a string or
-          a tuple of the form ``(n, r2, galt, ramps, D_bound, grd_bound)``,
+          a tuple of the form ``(n, r2, galt, ramps, D_bound, grd_bound, reg)``,
           where entries are None if they are not applicable.
         """
         # Current tuples created:
-        # (n, r2, None, None, M, None)
-        # (n, r2, Gs, None, M, None)
-        # (n, None, Gs, None, None, M)
-        # (n, None, None, S, None, None)
-        # (n, None, Gs, S, None, None)
+        # (n, r2, None, None, M, None, None)
+        # (n, r2, Gs, None, M, None, None)
+        # (n, None, Gs, None, None, M, None)
+        # (n, None, None, S, None, None, None)
+        # (n, None, Gs, S, None, None, None)
+        # (n, r2, None, None, None, None, R)
         # We group by None pattern
         def describe(tups):
             ans = []
@@ -2011,6 +2016,13 @@ class NFBound(ColTest):
                     ans.append(f"Galois root discriminant at most {grd[0]}")
                 else:
                     ans.append(f"Galois root discriminant at most {','.join(grd)}")
+            if tups[0][6] is not None:
+                reg_bounds = [RR(tup[6]) for tup in tups]
+                if len(set(reg_bounds)) == 1:
+                    ans.append(f"regulator at most {float(reg_bounds[0]):.3f}")
+                else:
+                    ans.append(f"regulator at most {','.join(reg_bounds)}")
+
             return ", ".join(ans)
         strings = []
         by_pattern = defaultdict(list)
@@ -2021,14 +2033,15 @@ class NFBound(ColTest):
                 if not reason.startswith("incompatible conditions"):
                     non_incomp.append(reason)
             else:
-                by_pattern[tuple(i for i in range(6) if reason[i] is None)].append(reason)
+                by_pattern[tuple(i for i in range(7) if reason[i] is None)].append(reason)
         if len(non_incomp) + len(by_pattern) > 0:
             strings = non_incomp
         return "number fields with " + "; ".join(strings + [describe(V) for V in by_pattern.values()])
 
     def clear_signatures(self, n, D, r2opts, reasons):
         """
-        Remove signatures already certified complete, and restrict the remaining discriminant range accordingly.
+        Remove signatures (n, r2) already certified complete using the discriminant bounds in self._maxD[n][r2],
+        and restrict the remaining discriminant range accordingly.
         """
         if 2 <= n < len(self._maxD):
             m = infinity
@@ -2036,15 +2049,33 @@ class NFBound(ColTest):
                 M = self._maxD[n][r2]
                 if D.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, M, None))
+                    reasons.add((n, r2, None, None, M, None, None))
                 m = min(m, M)
             if m is not infinity:
                 D = D.intersection(bottom(m + 1))
         return D
 
+    def clear_regulator(self, n, R, r2opts, reasons):
+        """
+        Remove signatures (n, r2) already certified complete using the regulator bounds in self._maxReg[n][r2],
+        and restrict the remaining regulator range accordingly.
+        """
+
+        if 2 <= n < len(self._maxReg):
+            m = infinity
+            for r2 in set(r2opts):
+                M = self._maxReg[n][r2]
+                if R.bounded(M):
+                    r2opts.remove(r2)
+                    reasons.add((n, r2, None, None, None, None, M))
+                m = min(m, M)
+            if m is not infinity:
+                R = R.intersection(bottom(m))
+        return R
+
     def clear_r2G(self, n, D, r2opts, galt, reasons):
         """
-        Remove Galois groups certified complete for all remaining signatures.
+        Remove Galois groups certified complete using the discriminant bounds in self._r2G for all remaining signatures.
         """
         r2G = defaultdict(dict)
         for (r2, Gs, M) in self._r2G.get(n, []):
@@ -2055,11 +2086,11 @@ class NFBound(ColTest):
             if set(r2G[t]) == set(r2opts):
                 galt.remove(t)
                 for r2, Gs, M in r2G[t].values():
-                    reasons.add((n, r2, Gs, None, M, None))
+                    reasons.add((n, r2, Gs, None, M, None, None))
 
     def clear_grd(self, n, grd, galt, reasons):
         """
-        Remove Galois groups certified complete by the root discriminant bound.
+        Remove Galois groups certified complete by the root discriminant bounds in self._grd.
         """
         by_t = {}
         for (Gs, M) in self._grd.get(n, []):
@@ -2069,7 +2100,7 @@ class NFBound(ColTest):
         for t in galt.intersection(by_t):
             galt.remove(t)
             Gs, M = by_t[t]
-            reasons.add((n, None, Gs, None, None, M))
+            reasons.add((n, None, Gs, None, None, M, None))
 
     def clear_S(self, n, S, nram, galt, reasons, update_galt=True):
         """
@@ -2081,12 +2112,12 @@ class NFBound(ColTest):
             nram = len(S)
 
         if S in self._nS.get(n, {}):
-            reasons.add((n, None, None, S, None, None))
+            reasons.add((n, None, None, S, None, None, None))
             return True
 
         M = self._nSp.get(n, {}).get(nram)
         if M is not None and all(p < M for p in S):
-            reasons.add((n, None, None, S, None, None))
+            reasons.add((n, None, None, S, None, None, None))
             return True
 
         if galt is None:
@@ -2096,7 +2127,7 @@ class NFBound(ColTest):
             if all(p < M for p in S):
                 I = galt.intersection(Gs)
                 if I:
-                    reasons.add((n, None, Gs, S, None, None))
+                    reasons.add((n, None, Gs, S, None, None, None))
                     galt.difference_update(I)
                     if not galt:
                         return True
@@ -2106,7 +2137,7 @@ class NFBound(ColTest):
                 if min(S) == p0 and max(S) < M:
                     I = galt.intersection(Gs)
                     if I:
-                        reasons.add((n, None, Gs, S, None, None))
+                        reasons.add((n, None, Gs, S, None, None, None))
                         galt.difference_update(I)
                         if not galt:
                             return True
@@ -2116,7 +2147,7 @@ class NFBound(ColTest):
             if SS.issubset(T):
                 I = galt.intersection(Gs)
                 if I:
-                    reasons.add((n, None, Gs, S, None, None))
+                    reasons.add((n, None, Gs, S, None, None, None))
                     galt.difference_update(I)
                     if not galt:
                         return True
@@ -2278,7 +2309,10 @@ class NFBound(ColTest):
         if n is None or n > 25:
             return False, None
 
-        r2, D, sign, rd, grd = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign"), NumberSet(query.get("rd")), NumberSet(query.get("grd"))
+        r2, D, sign = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign")
+        rd, grd, reg = NumberSet(query.get("rd")), NumberSet(query.get("grd")), NumberSet(query.get("regulator"))
+
+        # Initialise list of r2, of possible signatures (n-2*r2, r2)
         r2opts = list(r2.intersection(IntegerSet([0, n//2])))
         if sign == 1:
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 0]
@@ -2310,7 +2344,9 @@ class NFBound(ColTest):
         else:
             caveat = None
 
-        ## Completeness 1: degree, signature, discriminant ##
+        print("R2OPTS DEBUG:", r2opts)
+
+        ## Completeness 1: degree, signature, discriminant, regulator ##
         if grd.restricted():
             rd = rd.pow_cap(grd, 1)
             if not rd:
@@ -2325,6 +2361,13 @@ class NFBound(ColTest):
             D = self.clear_signatures(n, D, r2opts, reasons)
             if not r2opts:
                 return True, caveat
+        if reg.restricted():
+            reg = self.clear_regulator(n, reg, r2opts, reasons)
+            if not r2opts:
+                return True, caveat
+
+        print("R2OPTS DEBUG:", r2opts)
+
 
         ## Completeness 2: degree, signature, Galois group, discriminant
         gal, isgal, cyc, ab, solv, = query.get("galois_label"), query.get("is_galois"), query.get("gal_is_cyclic"), query.get("gal_is_abelian"), query.get("gal_is_solvable")
@@ -2379,17 +2422,17 @@ class NFBound(ColTest):
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
 
-        ## Completeness case 5: try using queries on regulators to show completeness
-        reg = query.get("regulator")
-        if reg is not None and n < len(self._maxReg) and self._maxReg[n] is not None:
-            reg_set = NumberSet(reg)
-            maxreg = self._maxReg[n]
-            for r2 in list(r2opts):
-                if r2 < len(maxreg) and maxreg[r2] is not None and reg_set.bounded(maxreg[r2]):
-                    r2opts.remove(r2)
-                    reasons.add(f"degree {n}, signature [{n-2*r2},{r2}], regulator at most {float(maxreg[r2]):.4f}")
-            if not r2opts:
-                return True, caveat
+        ## Completeness 5: try using queries on regulators to show completeness
+        #reg = query.get("regulator")
+        #if reg is not None and n < len(self._maxReg) and self._maxReg[n] is not None:
+        #    reg_set = NumberSet(reg)
+        #    maxreg = self._maxReg[n]
+        #    for r2 in list(r2opts):
+        #        if r2 < len(maxreg) and maxreg[r2] is not None and reg_set.bounded(maxreg[r2]):
+        #            r2opts.remove(r2)
+        #            reasons.add(f"degree {n}, signature [{n-2*r2},{r2}], regulator at most {float(maxreg[r2]):.4f}")
+        #    if not r2opts:
+        #        return True, caveat
 
         # Can also iterate over valid discriminants in a discriminant range
         if D.restricted():
@@ -2414,9 +2457,11 @@ class NFBound(ColTest):
     def __call__(self, db, query):
         n = query.get("degree")
 
+        print("DEBUG DEBUG DEBUG!!!")
+
         # We collect reasons that have contributed to completeness
         # These have the following format:
-        # (n, r2, galt, ramps, D_bound, grd_bound)
+        # (n, r2, galt, ramps, D_bound, grd_bound, Reg)
         # Where entries can be None if they are not applicable
         reasons = set()
         # First check completeness without splitting on degree
