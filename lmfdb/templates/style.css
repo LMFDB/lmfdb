@@ -15,6 +15,20 @@ body {
     color: {{color.body_text}};
     background-color: {{color.body_background}};
 }
+
+/* Sticky-footer scaffold: viewport-tall flex column wrapping the page
+   content + footer. Lives on a dedicated wrapper (not body) so that
+   third-party scripts that append to body (e.g. reCAPTCHA) do not
+   become extra flex items that can push the footer off the viewport. */
+#layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+#page-wrapper {
+    flex: 1 0 auto;
+}
 td.title {
     color: {{color.box_tab_text}};
 }
@@ -301,7 +315,6 @@ body.knowl #header {
 #main {
   margin:  0px 0px 0px 184px;
   padding: 0px 0px 0px 10px;
-  min-height:600px;
 }
 
 .debug {
