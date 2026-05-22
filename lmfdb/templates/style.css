@@ -1166,8 +1166,10 @@ table.statgrid td.cnt {
 }
 
 .knowl-content {
-    padding: 15px 10px;
+    padding: 12px 10px;
     background-color: {{ color.knowl_background }};
+    max-width: 100%;
+    overflow: auto;
 }
 .knowl-content h1 {
   margin: 0px 0px 10px 0px;
