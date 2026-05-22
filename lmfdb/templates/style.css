@@ -301,7 +301,7 @@ body.knowl #header {
 #main {
   margin:  0px 0px 0px 184px;
   padding: 0px 0px 0px 10px;
-  min-height:600px;
+  min-height: 600px;
 }
 
 .debug {
@@ -1166,7 +1166,8 @@ table.statgrid td.cnt {
 }
 
 .knowl-content {
-  padding: 0 10px;
+    padding: 15px 10px;
+    background-color: {{ color.knowl_background }};
 }
 .knowl-content h1 {
   margin: 0px 0px 10px 0px;
@@ -1267,15 +1268,17 @@ h2 > .knowl-qm {
 }
 */
 .knowl-output {
-  background: {{ color.knowl_background }};
-  border: 10px solid {{ color.knowl_border }};
+  position: relative;
+  background: {{ color.knowl_border }};
+  border: 1px solid {{ color.knowl_border }};
   {{ BORDER_RADIUS(10) }}
-  padding: 0px;
+  padding: 12px 10px;
   display: none;
   margin-top: 10px;
   margin-bottom: 15px;
   margin-right: 10px;
   text-align: left;
+  overflow: hidden;
 }
 
 .knowl-output .knowl-output,
@@ -1304,24 +1307,26 @@ div.limit-height {
 .knowl-output a { display: inline; }
 
 .knowl-footer {
-  position: relative;
-  bottom: -10px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;			/* This makes the knowl open prettily*/
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
   color: {{ color.knowl_border_text }};
   padding: 1px 0 1px 10px;
-  margin:  0 0 0 0;
+  margin: 0;
 }
 .knowl-header {
-  position: relative;
-  top: -10px;
+  position: absolute;
+  top: 0px;
+  width: 100%;			/* This makes the knowl open prettily*/
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
   color: {{color.grey}};
   padding: 1px 0 1px 10px;
-  margin:  0 0 0 0;
+  margin: 0;
 }
 .knowl-header a,
 .knowl-footer a {
