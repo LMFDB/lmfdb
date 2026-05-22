@@ -1987,7 +1987,7 @@ class NFBound(ColTest):
         if n < len(self._rdgrd) and max(galt) <= len(self._rdgrd[n]):
             return max(1 / self._rdgrd[n][t - 1] for t in galt)
 
-    def get_S(self, ramps, radical):
+    def get_S(self, ramps, radical, maxp):
         S = None
         if radical is not None:
             if isinstance(radical, dict):
@@ -1997,6 +1997,14 @@ class NFBound(ColTest):
                 # Now we can just fall back on ramps parsing below
             else:
                 S = set(p for p,e in factor(radical))
+                # Next three conditions would be incompatible
+                if maxp is not None:
+                    if '$lte' in maxp and max(S)> maxp['$lte']:
+                        return []
+                    if '$gte' in maxp and max(S)< maxp['$lte']:
+                        return []
+                    if not isinstance(maxp, dict) and max(S)!= maxp:
+                        return []
         if ramps is not None:
             if isinstance(ramps, dict):
                 if "$containedin" in ramps:
@@ -2006,6 +2014,12 @@ class NFBound(ColTest):
                             return []
                     else:
                         S = ramps["$containedin"]
+                        if maxp is not None:
+                            if not isinstance(maxp, dict):
+                                S = [p for p in S if p<=maxp]
+                            elif '$lte' in maxp:
+                                S = [p for p in S if p<=maxp['$lte']]
+
                 else:
                     # $notcontains and $contains do not yield finite S
                     return
@@ -2016,6 +2030,11 @@ class NFBound(ColTest):
                         return []
                 else:
                     S = ramps
+                    if maxp is not None:
+                        if not isinstance(maxp, dict):
+                            S = [p for p in S if p<=maxp]
+                        elif '$lte' in maxp:
+                            S = [p for p in S if p<=maxp['$lte']]
         if S is not None:
             return tuple(sorted(S))
 
@@ -2134,7 +2153,7 @@ class NFBound(ColTest):
 
         ## Completeness 4: degree, ramified primes, and Galois group (optional)
         # Can fill rams from discriminant range, or from radical
-        ramps, radical, nram = query.get("ramps"), query.get("disc_rad"), query.get("num_ram")
+        ramps, radical, nram, maxp = query.get("ramps"), query.get("disc_rad"), query.get("num_ram"), query.get("maxp")
         if isinstance(nram, dict):
             if "$lte" in nram:
                 nram = nram["$lte"]
@@ -2142,10 +2161,12 @@ class NFBound(ColTest):
                 # nram is complicated, so we give up on using it
                 nram = None
         if ramps or radical:
-            S = self.get_S(ramps, radical)
+            S = self.get_S(ramps, radical, maxp)
             if S == []: # incompatible
-                reasons.add("incompatible conditions: ramps and radical")
+                reasons.add("incompatible conditions on ramifying primes")
                 return True, None
+            if S is not None:
+                nram = min([len(S), nram])
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
 
