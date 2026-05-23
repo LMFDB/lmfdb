@@ -1999,11 +1999,12 @@ class NFBound(ColTest):
                 S = set(p for p,e in factor(radical))
                 # Next three conditions would be incompatible
                 if maxp is not None:
-                    if '$lte' in maxp and max(S)> maxp['$lte']:
-                        return []
-                    if '$gte' in maxp and max(S)< maxp['$lte']:
-                        return []
-                    if not isinstance(maxp, dict) and max(S)!= maxp:
+                    if isinstance(maxp, dict):
+                        if '$lte' in maxp and max(S)> maxp['$lte']:
+                            return []
+                        if '$gte' in maxp and max(S)< maxp['$lte']:
+                            return []
+                    elif max(S)!= maxp:
                         return []
         if ramps is not None:
             if isinstance(ramps, dict):
@@ -2016,7 +2017,12 @@ class NFBound(ColTest):
                         S = ramps["$containedin"]
                         if maxp is not None:
                             if not isinstance(maxp, dict):
-                                S = [p for p in S if p<=maxp]
+                                if maxp in S:
+                                    S = [p for p in S if p<=maxp]
+                                else:
+                                    return []
+                            elif '$gte' in maxp and maxp['$gte']>max(S):
+                                return []
                             elif '$lte' in maxp:
                                 S = [p for p in S if p<=maxp['$lte']]
 
