@@ -2035,6 +2035,11 @@ class NFBound(ColTest):
                             S = [p for p in S if p<=maxp]
                         elif '$lte' in maxp:
                             S = [p for p in S if p<=maxp['$lte']]
+        if ramps is None and radical is None:
+            if not isinstance(maxp, dict):
+                S = prime_range(maxp+1)
+            elif '$lte' in maxp:
+                S = prime_range(maxp['$lte']+1)
         if S is not None:
             return tuple(sorted(S))
 
@@ -2160,12 +2165,12 @@ class NFBound(ColTest):
             else:
                 # nram is complicated, so we give up on using it
                 nram = None
-        if ramps or radical:
+        if ramps or radical or maxp:
             S = self.get_S(ramps, radical, maxp)
             if S == []: # incompatible
                 reasons.add("incompatible conditions on ramifying primes")
                 return True, None
-            if S is not None:
+            if S is not None and nram is not None:
                 nram = min([len(S), nram])
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
