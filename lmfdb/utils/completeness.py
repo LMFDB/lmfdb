@@ -819,6 +819,9 @@ class Subset(ColTest):
     
     Handles both exact matches (lists) and containment constraints ($containedin).
     Useful for completeness checks on restricted sets of values (e.g. bad primes, ramified primes, etc.)
+
+    Examples:
+      *  "bad_primes", Subset({2,3,5,7})  -> checks that bad_primes is a subset of {2,3,5,7}
     """
     def __init__(self, allowed_set):
         self.allowed_set = set(allowed_set)
@@ -838,8 +841,9 @@ class Subset(ColTest):
 
 class RestrictedBadPrimesConductor(ColTest):
     """
-    Checks completeness based on the maximum conductor for a given set of restricted bad primes.
-    E.g. can be used for elliptic curves, genus 2 curves, or general abelian varieties (e.g. see Brumer-Kramer paper).
+    Checks completeness based on the maximum conductor (or discriminant) for a given set of restricted bad primes.
+    Can be used for number fields, elliptic curves, genus 2 curves, or general abelian varieties.
+    (e.g. see paper: A. Brumer, K. Kramer, "The conductor of an abelian variety", Compositio Math. 92 (1994), no. 2, 227-248.).
     
     In particular, for a curve/variety X, if bad primes are restricted to S, then the maximum conductor of X is
     M = Prod_{p in S} p^{e_p},  where e_p is looked up from "exponents" and falls back to "default_exp" for primes not listed there.
@@ -1903,22 +1907,30 @@ class NFBound(ColTest):
 
         # For non-CM number fields K of fixed degree/signature, one has explicit lower bounds for the regulator of the form
         #
-        #     Reg_K >= A * (log |D_K|)^B,
+        #     Reg(K) >= A * (log |D_K|)^B,
         #
         # where D_K is the (absolute) discriminant of K, and A, B are effectively computable constants
         # depending only on the degree/signature of K.
 	
-        # For some small signatures (n-2*r2, r2), we can give explicit constants for A, B (with references) below.
-        # These make use of the hardcoded discriminant completeness bounds given above, in self._maxD[n][r2] dictionary.
-        # In particular, if we have all fields up to discriminant D_max for a signature/Galois group, 
-        # then searching with regulator <= A * (log |D_max|)^B guarantees completeness.
-        # For larger signatures, we can use explicit classifications of number fields with regulator up to some explicit bound.
+        # For certain small signatures (n - 2*r2, r2), we can give explicit constants for A, B (with references) below.
+
+        # Combined with the hardcoded discriminant completeness bounds stored in self._maxD[n][r2],  
+        # this gives explicit regulator completeness bounds: i.e. if all fields of a given signature  
+        # are known up to absolute discriminant D_max, then any search with
+        #
+        #     Reg(K) < A * (log D_max)^B
+        #
+        # is guaranteed to be complete.
+
+        # For larger signatures, where such explicit A, B may be too weak, we instead use
+        # known classifications of fields with regulator below some explicit constant. 
 
         # Some bounds also depend on additional structure (e.g. whether the field is primitive or imprimitive),
         # which can sometimes be inferred from Galois group data.
 
-        # Here we give explicit lower bounds for the regulator from the literature:
-        # reg_s{ij} is a real number M such that we have completeness in signature [i, j] if the regulator is strictly less than M
+        # Here we give explicit lower bounds, for each signature, for the regulator from the literature:
+        # reg_s{ij} is the largest real number M such that we have completeness in signature [i, j],
+        # if the regulator is strictly less than M
 
         reg_s20 = log((sqrt(self._maxD[2][0]-4) + sqrt(self._maxD[2][0]))/2)  # Real quadratic case (see Po77, Satz XIII on pg 485) - sharp
         reg_s01 = 1.00                                                        # All imaginary quadratics have regulator 1
@@ -1954,7 +1966,8 @@ class NFBound(ColTest):
         # - FR19:  Friedman, Eduardo; Ramirez-Raposo, Gabriel; Filling the gap in the table of smallest regulators up to degree 7. J. Number Theory 198 (2019), 381-385. MR3912943
         # - BM25:  Battistoni, Francesco; Molteni, Giuseppe; Generalized Pohst inequality and small regulators. Math. Comp. 94 (2025), no. 351, 475-504. MR4807818
 
-        # maxReg[n][r2] is a real number M so that we have completeness in signature [n-2*r2, r2] as long as the regulator is strictly less than M.
+        # maxReg[n][r2] is a real number M so that we have completeness in signature [n-2*r2, r2],
+        # as long as the regulator is strictly less than M.
         self._maxReg = [
             None, # n=0
             None, # n=1
@@ -2080,7 +2093,7 @@ class NFBound(ColTest):
                 M = self._maxReg[n][r2] - 0.00001
                 if R.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, None, None, M))
+                    reasons.add((n, r2, None, None, None, None, self._maxReg[n][r2]))
                 m = min(m, M)
             if m is not infinity:
                 R = R.intersection(bottom(m))
@@ -2241,7 +2254,8 @@ class NFBound(ColTest):
 
     def rd_grd_ratio(self, n, galt):
         """
-        Return the maximum possible root-discriminant for the given Galois groups.
+        Return max(1/r) over the Galois groups in galt, where for each Galois group nTt in galt, r is
+        a ratio (taken from self._rdgrd[n][t-1]) such that grd <= rd^(1/r) for fields with Galois group nTt.
         """
         if n < len(self._rdgrd) and max(galt) <= len(self._rdgrd[n]):
             return max(1 / self._rdgrd[n][t - 1] for t in galt)
