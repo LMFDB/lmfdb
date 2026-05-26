@@ -2092,10 +2092,13 @@ class NFBound(ColTest):
         if 2 <= n < len(self._maxReg):
             m = infinity
             for r2 in set(r2opts):
-                M = self._maxReg[n][r2] - 0.00001
+                maxReg = self._maxReg[n][r2] if r2 < len(self._maxReg[n]) else None
+                if maxReg is None:
+                    continue          # No regulator bound known for this signature
+                M = maxReg - 0.00001  # Completeness only guaranteed if R *strictly less* than M
                 if R.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, None, None, self._maxReg[n][r2]))
+                    reasons.add((n, r2, None, None, None, None, maxReg))
                 m = min(m, M)
             if m is not infinity:
                 R = R.intersection(bottom(m))
