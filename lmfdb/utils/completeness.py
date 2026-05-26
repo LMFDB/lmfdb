@@ -879,7 +879,7 @@ class RestrictedBadPrimesConductor(ColTest):
         elif isinstance(query_val, list):
             bad_primes = query_val
         
-        if bad_primes is None or not bad_primes:
+        if bad_primes is None:
             return False
         
         # Compute maximum conductor for this set of bad primes
@@ -890,8 +890,9 @@ class RestrictedBadPrimesConductor(ColTest):
             if max_conductor > self.conductor_bound:
                 return False  # Early exit if we already exceed the bound
         
-        # If we get here, completeness is guaranteed
-        return True
+        # If we get here, completeness is guaranteed if max_conductor <= conductor_bound
+        # If bad_primes is empty, must still ensure conductor_bound >= 1
+        return max_conductor <= self.conductor_bound
 
 
 class CPrimeBound(CBound):
@@ -2085,6 +2086,7 @@ class NFBound(ColTest):
         """
         Remove signatures (n-2*r2, r2) already certified complete using the regulator bounds in self._maxReg[n][r2],
         and restrict the remaining regulator range accordingly.
+        (Todo: Currently the returned regulator range for R isn't being used - this might be used in future when certifying Galois groups)
         """
 
         if 2 <= n < len(self._maxReg):
