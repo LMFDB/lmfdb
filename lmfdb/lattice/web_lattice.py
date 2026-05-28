@@ -122,6 +122,26 @@ def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
     return "$" + s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_') + "$"
 
+def name_to_latex(name):
+    if not name:
+        return ""
+    ret = ""
+    for i in range(len(name)):
+        if name[i].isdigit():
+            assert(i > 0)
+            if name[i-1].isalpha():
+                ret += '_{'
+        if name[i] == '+':
+            ret += r' \oplus '
+        elif name[i] == 'x':
+            ret += r' \otimes '
+        else:
+            ret += name[i:i+1]
+        if name[i].isdigit():
+            if (i == len(name) - 1) or ((not name[i+1].isdigit()) and (name[i+1] != '}')):
+                ret += '}'
+    return f'${ret}$'
+
 class WebLat(WebObj):
     def _mathwrap(self, fac, nofac):
         for col in fac + nofac:
@@ -203,6 +223,17 @@ class WebLat(WebObj):
             ('Parity', f'{self.parity}'),
         ]
 
+    @lazy_attribute
+    def display_name(self):
+        if self.name:
+            return name_to_latex(self.name)
+        else:
+            return self.label
+    
+    @lazy_attribute
+    def title(self):
+        return f'Integral lattice {self.display_name}'
+    
     def _mat_in(self, mat, lang):
         if lang == "pari":
             return "[" + ";".join(",".join(str(c) for c in row) for row in mat) + "]"

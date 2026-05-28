@@ -254,7 +254,7 @@ def render_lattice_webpage(label):
     return render_template(
         "lattice-single.html",
         lattice=lattice,
-        title=f"Integral lattice {label}",
+        title=lattice.title,
         bread=get_bread(label),
         properties=lattice.properties,
         friends=lattice.friends,
