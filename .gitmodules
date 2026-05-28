@@ -1,0 +1,3 @@
+[submodule "smf_lmfdb"]
+	path = smf_lmfdb
+	url = https://github.com/assaferan/smf_lmfdb.git

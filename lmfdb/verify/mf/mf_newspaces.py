@@ -19,7 +19,7 @@ def get_dirchar(char_mod, char_num):
 
 
 class mf_newspaces(MfChecker):
-    table = db.mf_newspaces
+    table = db.mf_newspaces_eis
 
     uniqueness_constraints = [
        ['label'],
@@ -198,7 +198,7 @@ class mf_newspaces(MfChecker):
         If AL_dims is set, check that AL_dims sum to dim
         """
         # TIME 0.3 s
-        query = SQL(r'SELECT label FROM mf_newspaces t1  WHERE t1.dim != (SELECT SUM(s) FROM UNNEST(t1."ALdims") s) AND  "ALdims" is not NULL')
+        query = SQL(r'SELECT label FROM mf_newspaces_eis t1  WHERE t1.dim != (SELECT SUM(s) FROM UNNEST(t1."ALdims") s) AND  "ALdims" is not NULL')
         return self._run_query(query=query)
 
     @overall

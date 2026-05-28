@@ -15,7 +15,7 @@ False
 sage: L.automorphisms()
 [0;31m---------------------------------------------------------------------------[0m
 [0;31mNotImplementedError[0m                       Traceback (most recent call last)
-Cell [0;32mIn[87], line 1[0m
+Cell [0;32mIn[262], line 1[0m
 [0;32m----> 1[0m [43mL[49m[38;5;241;43m.[39;49m[43mautomorphisms[49m[43m([49m[43m)[49m
 
 File [0;32m/usr/share/miniconda/envs/lmfdb/lib/python3.12/site-packages/sage/modules/free_quadratic_module_integer_symmetric.py:1292[0m, in [0;36mFreeQuadraticModule_integer_symmetric.orthogonal_group[0;34m(self, gens, is_finite)[0m
@@ -31,7 +31,7 @@ File [0;32m/usr/share/miniconda/envs/lmfdb/lib/python3.12/site-packages/sage/mo
 sage: L.automorphisms().order()
 [0;31m---------------------------------------------------------------------------[0m
 [0;31mNotImplementedError[0m                       Traceback (most recent call last)
-Cell [0;32mIn[88], line 1[0m
+Cell [0;32mIn[263], line 1[0m
 [0;32m----> 1[0m [43mL[49m[38;5;241;43m.[39;49m[43mautomorphisms[49m[43m([49m[43m)[49m[38;5;241m.[39morder()
 
 File [0;32m/usr/share/miniconda/envs/lmfdb/lib/python3.12/site-packages/sage/modules/free_quadratic_module_integer_symmetric.py:1292[0m, in [0;36mFreeQuadraticModule_integer_symmetric.orthogonal_group[0;34m(self, gens, is_finite)[0m

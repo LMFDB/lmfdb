@@ -225,7 +225,14 @@ class LatticeDownloader(Downloader):
              url_for_label=url_for_label,
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
-             properties=lambda: [])
+             properties=lambda: [],
+             diagram_opts={
+                 "title": "Integral lattices diagram search",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "x_axis_default": "level",
+                 "y_axis_default": "minimum",
+                 "color": "aut",
+             })
 def lattice_search(info, query):
     common_parse(info, query)
     # Store flat gram in query for direct DB matching (lat_lattices_new has a gram column)

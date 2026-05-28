@@ -610,3 +610,13 @@ class AbGpsHomeTest(LmfdbTest):
         Check that conjugacy class links work
         """
         self.check_args("/Groups/Abstract/char_table/24.7?cc_highlight=4B-1&cc_highlight_i=9", r"The column representing the conjugacy class 4B-1 is highlighted below.")
+
+    def test_diagram_search(self):
+        r"""
+        Check that diagram search page loads correctly
+        """
+        L = self.tc.get('/Groups/Abstract/?order=1-100&search_type=Diagram&count=100')
+        data = L.get_data(as_text=True)
+        # Check that D3 diagram template elements are present
+        assert 'my_dataviz' in data
+        assert 'pointRadius' in data

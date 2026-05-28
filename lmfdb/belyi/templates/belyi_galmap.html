@@ -5,6 +5,7 @@
   .toggle {margin-top:5px; margin-left:20px;}
   div.properties-body table tr td.label { vertical-align: top    ; }
   #content > h2.subhead { color:{{color.black}};}
+  #dessin-box svg { width: 100%; height: auto; display: block; }
 </style>
 
 <script>
@@ -14,6 +15,22 @@ function show_eqns(eqnstyle) {
     $('.plane_eqn').css("display", "none");
     $('.'+eqnstyle).css("display", "inline");
   }
+
+var _activeDessinRow = null;
+function viewEmbedding(idx) {
+  var $box = $('#dessin-box');
+  if (_activeDessinRow === idx) {
+    $box.hide();
+    _activeDessinRow = null;
+    return false;
+  }
+  $('.dessin-svg-item').hide();
+  $('#dessin-svg-' + idx).show();
+  $box.show();
+  $box[0].scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  _activeDessinRow = idx;
+  return false;
+}
 </script>
 
 <h2>{{ KNOWL('belyi.base_field', title='Base field')}}</h2>
@@ -107,20 +124,39 @@ function show_eqns(eqnstyle) {
       <tr>
         <td>Embedding $\nu \mapsto \nu_i \in \mathbb{C}$</td>
         <td>{{ KNOWL('belyi.permutation_triple', title="Permutation triple") }}</td>
+        {% if data.dessin_svgs %}<td>Dessin</td>{% endif %}
       </tr>
     </thead>
     <tbody>
       {% for g in data.embeddings_and_triples %}
-       <td>${{g['embedding']}}$</td>
-       <td>${{g['triple']}}$</td>
-       </tr>
-      <!-- TODO: uncomment this when embedded map pages are reactivated
-         <td><a href="{{g['triple_link']}}">${{g['embedding']}}$</a></td>
-         <td><a href="{{g['triple_link']}}">${{g['triple']}}$</a></td>
-         </tr>
-      -->
+      <tr>
+        <td>${{g['embedding']}}$</td>
+        <td>${{g['triple']}}$</td>
+        {% if data.dessin_svgs %}
+        <td><a href="#" onclick="return viewEmbedding({{ loop.index0 }});">View Embedding</a></td>
+        {% endif %}
+      </tr>
       {% endfor %}
     </tbody>
-    </table>
+  </table>
+
+{% if data.dessin_svgs %}
+  <div id="dessin-box" class="knowl-output" style="display:none; max-width:440px;">
+    <div class="knowl"><div><div class="knowl-content">
+      <strong>Dessin d&rsquo;enfant</strong>
+      {% for g in data.embeddings_and_triples %}
+        {% set svg_idx = loop.index0 if loop.index0 < data.dessin_svgs|length else 0 %}
+        <div id="dessin-svg-{{ loop.index0 }}" class="dessin-svg-item" style="display:none;">
+          {{ data.dessin_svgs[svg_idx]|safe }}
+        </div>
+      {% endfor %}
+      <p style="font-size:0.85em; margin-top:0.75em;">
+        The drawing routine is based on a C program by Gunnar Brinkmann, described in:<br>
+        G. Brinkmann, <em>Drawing maps on oriented surfaces</em>, 2025.
+        Preprint: <a href="https://arxiv.org/abs/2505.01480">arXiv:2505.01480</a>.
+      </p>
+    </div></div></div>
+  </div>
+{% endif %}
 
 {% endblock %}

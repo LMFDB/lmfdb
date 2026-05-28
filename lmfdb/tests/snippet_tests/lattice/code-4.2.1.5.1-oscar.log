@@ -11,8 +11,8 @@ with gram matrix
 julia> rank(L)
 4
 
-julia> signature_tuple(L)
-(3, 0, 1)
+julia> signature_tuple(L)[[1,3]]
+(3, 1)
 
 julia> det(L)
 -1
@@ -20,20 +20,58 @@ julia> det(L)
 julia> discriminant(L)
 -1
 
-julia> iseven(L)
+julia> is_even(L)
 false
 
-julia> automorphism_group_order(L)
-ERROR: ArgumentError: The lattice must be definite
+julia> isometry_group(L)
+ERROR: ArgumentError: Lattice must be definite or of rank at most 2
 Stacktrace:
- [1] macro expansion
-   @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
- [2] automorphism_group_order(L::ZZLat; kwargs::@Kwargs{})
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/Quad/ZLattices.jl:547
- [3] automorphism_group_order(L::ZZLat)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/Quad/ZLattices.jl:540
- [4] top-level scope
-   @ none:1
+  [1] macro expansion
+    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
+  [2] 
+    @ Oscar ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:134
+  [3] _assert_has_automorphisms_ZZLat
+    @ ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:113 [inlined]
+  [4] 
+    @ Oscar ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:54
+  [5] __compute_isometry_group__
+    @ ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:45 [inlined]
+  [6] #1673
+    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:358 [inlined]
+  [7] get!(default::Oscar.var"#1673#1674"{Symbol, Int64, Int64, Bool, Bool, ZZLat}, h::Dict{Symbol, Any}, key::Symbol)
+    @ Base ./dict.jl:458
+  [8] get_attribute!
+    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:237 [inlined]
+  [9] isometry_group(L::ZZLat)
+    @ Oscar ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:45
+ [10] top-level scope
+    @ none:1
+Some type information was truncated. Use `show(err)` to see complete types.
+
+julia> order(isometry_group(L))
+ERROR: ArgumentError: Lattice must be definite or of rank at most 2
+Stacktrace:
+  [1] macro expansion
+    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
+  [2] 
+    @ Oscar ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:134
+  [3] _assert_has_automorphisms_ZZLat
+    @ ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:113 [inlined]
+  [4] 
+    @ Oscar ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:54
+  [5] __compute_isometry_group__
+    @ ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:45 [inlined]
+  [6] #1673
+    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:358 [inlined]
+  [7] get!(default::Oscar.var"#1673#1674"{Symbol, Int64, Int64, Bool, Bool, ZZLat}, h::Dict{Symbol, Any}, key::Symbol)
+    @ Base ./dict.jl:458
+  [8] get_attribute!
+    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:237 [inlined]
+  [9] isometry_group(L::ZZLat)
+    @ Oscar ~/.julia/packages/Oscar/BRgjA/src/Groups/matrices/isometry_group.jl:45
+ [10] top-level scope
+    @ none:1
+Some type information was truncated. Use `show(err)` to see complete types.
 
 julia> minimum(L)
 ERROR: ArgumentError: Lattice must be definite
@@ -41,32 +79,28 @@ Stacktrace:
  [1] macro expansion
    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
  [2] shortest_vectors(L::ZZLat, elem_type::Type{ZZRingElem}; check::Bool)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:112
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:112
  [3] shortest_vectors (repeats 2 times)
-   @ ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:109 [inlined]
+   @ ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:109 [inlined]
  [4] minimum(L::ZZLat)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:137
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:137
  [5] top-level scope
    @ none:1
 
 julia> kissing_number(L)
-ERROR: ArgumentError: Lattice must be definite
+ERROR: ArgumentError: Lattice must have positive rank
 Stacktrace:
  [1] macro expansion
    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
- [2] shortest_vectors(L::ZZLat, elem_type::Type{ZZRingElem}; check::Bool)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:112
- [3] shortest_vectors (repeats 2 times)
-   @ ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:109 [inlined]
- [4] __compute_kissing_number__
-   @ ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:159 [inlined]
- [5] #kissing_number##0
+ [2] __compute_kissing_number__(L::ZZLat)
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:266
+ [3] #kissing_number##0
    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:358 [inlined]
- [6] get!(default::Hecke.var"#kissing_number##0#kissing_number##1"{ZZLat}, h::Dict{Symbol, Any}, key::Symbol)
+ [4] get!(default::Hecke.var"#kissing_number##0#kissing_number##1"{ZZLat}, h::Dict{Symbol, Any}, key::Symbol)
    @ Base ./dict.jl:458
- [7] kissing_number(L::ZZLat)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:157
- [8] top-level scope
+ [5] kissing_number(L::ZZLat)
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:265
+ [6] top-level scope
    @ none:1
 
 julia> discriminant_group(L)
@@ -77,6 +111,9 @@ Bilinear value module: Q/Z
 Quadratic value module: Q/Z
 Gram matrix quadratic form: 
 0 by 0 empty matrix
+
+julia> j = last(image_in_Oq(L)); divexact(order(codomain(j)), order(domain(j)))
+1
 
 julia> gram_matrix(L)
 [0   1   0   0]
@@ -96,23 +133,51 @@ julia> det(dual(L))
 -1
 
 julia> kissing_number(dual(L))
+ERROR: ArgumentError: Lattice must have positive rank
+Stacktrace:
+ [1] macro expansion
+   @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
+ [2] __compute_kissing_number__(L::ZZLat)
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:266
+ [3] #kissing_number##0
+   @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:358 [inlined]
+ [4] get!(default::Hecke.var"#kissing_number##0#kissing_number##1"{ZZLat}, h::Dict{Symbol, Any}, key::Symbol)
+   @ Base ./dict.jl:458
+ [5] kissing_number(L::ZZLat)
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:265
+ [6] top-level scope
+   @ none:1
+
+julia> irreducible_components(L)
+ERROR: ArgumentError: Lattice must be definite
+Stacktrace:
+ [1] macro expansion
+   @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
+ [2] irreducible_components(L::ZZLat)
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/Quad/ZLattices.jl:2335
+ [3] top-level scope
+   @ none:1
+
+julia> even_sublattice(L)
+Integer lattice of rank 4 and degree 4
+with gram matrix
+[0   1   0   0]
+[1   0   0   0]
+[0   0   4   2]
+[0   0   2   2]
+
+julia> shortest_vectors(L)
 ERROR: ArgumentError: Lattice must be definite
 Stacktrace:
  [1] macro expansion
    @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Assertions.jl:602 [inlined]
  [2] shortest_vectors(L::ZZLat, elem_type::Type{ZZRingElem}; check::Bool)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:112
- [3] shortest_vectors (repeats 2 times)
-   @ ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:109 [inlined]
- [4] __compute_kissing_number__
-   @ ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:159 [inlined]
- [5] #kissing_number##0
-   @ ~/.julia/packages/AbstractAlgebra/Ccm2Q/src/Attributes.jl:358 [inlined]
- [6] get!(default::Hecke.var"#kissing_number##0#kissing_number##1"{ZZLat}, h::Dict{Symbol, Any}, key::Symbol)
-   @ Base ./dict.jl:458
- [7] kissing_number(L::ZZLat)
-   @ Hecke ~/.julia/packages/Hecke/eAMEn/src/QuadForm/ShortVectors.jl:157
- [8] top-level scope
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:112
+ [3] shortest_vectors
+   @ ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:109 [inlined]
+ [4] shortest_vectors(L::ZZLat)
+   @ Hecke ~/.julia/packages/Hecke/Opfny/src/QuadForm/ShortVectors.jl:109
+ [5] top-level scope
    @ none:1
 
 julia> 

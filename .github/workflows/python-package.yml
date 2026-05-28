@@ -4,7 +4,7 @@ on:
   push:
     branches: [ '**' ]
   pull_request:
-    branches: [ main, dev, web ]
+    branches: [ main, dev, web, alpha ]
 
 jobs:
   matrix_prep:
@@ -31,6 +31,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
+    env:
+      IS_ALPHA_PR: ${{ github.event_name == 'pull_request' && github.base_ref == 'alpha' }}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
     - uses: actions/checkout@v3
@@ -90,10 +92,10 @@ jobs:
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
       # If this fails you need to update the file list above and file count
-      run: test $(find lmfdb -name 'test_*.py' -or -name '*_test.py' | wc -l) -eq 42
+      run: test $(find lmfdb -name 'test_*.py' -or -name '*_test.py' | wc -l) -eq 45
 
     - name: Config LMFDB to run tests against proddb
-      if: matrix.files != 'lint' && matrix.server == 'proddb'
+      if: matrix.files != 'lint' && matrix.server == 'proddb' && env.IS_ALPHA_PR != 'true'
       env:
         LMFDB_CI_ACCESS: ${{ secrets.LMFDB_CI_ACCESS }}
       shell: bash -l {0}
@@ -101,7 +103,7 @@ jobs:
         sage -python lmfdb/utils/config.py  --postgresql-host proddb.lmfdb.xyz  --postgresql-pass "$LMFDB_CI_ACCESS"
 
     - name: Run LMFDB tests
-      if: matrix.files != 'lint'
+      if: matrix.files != 'lint' && !(env.IS_ALPHA_PR == 'true' && matrix.server == 'proddb')
       shell: bash -l {0}
       run: tox -e tests -- ${{ matrix.files}}
 

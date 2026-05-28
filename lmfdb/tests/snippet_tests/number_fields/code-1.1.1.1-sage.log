@@ -19,6 +19,8 @@ sage: K.integral_basis()
 [1]
 sage: K.class_group().invariants()
 ()
+sage: K.narrow_class_group().invariants()
+()
 sage: UK = K.unit_group()
 sage: UK.rank()
 0

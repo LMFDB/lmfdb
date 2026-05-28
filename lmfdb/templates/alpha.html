@@ -1,0 +1,19 @@
+{% extends "homepage.html" %}
+{% block content %}
+
+<div class="narrow-body">
+  <p>Welcome to the <b>alpha version</b> of the LMFDB, the database of L-functions, modular forms, and related objects.  This site hosts pre-release sections of the LMFDB that are not yet ready for the <a href="https://beta.lmfdb.org">beta</a> or <a href="https://www.lmfdb.org">production</a> sites.</p>
+
+  <p>These sections, linked on the sidebar to the left, are still under development and should not be considered reliable enough for citation in a research publication.  In particular</p>
+  <ul>
+    <li>object labels may change,</li>
+    <li>there may be errors, both mathematical issues in the data and in the user interface,</li>
+    <li>data may not yet be computed to a desired level of completeness,</li>
+    <li>the user interface may still be in progress.</li>
+  </ul>
+  <p>Each section specifies the reasons it remains an alpha version.</p>
+
+  <p>That being said, the LMFDB Collaboration hopes that you find this preliminary data helpful, and you are welcome to <a href="{{url_for('contact')}}">contact us</a> with suggestions, errors, or to get involved.</p>
+</div>
+
+{% endblock %}

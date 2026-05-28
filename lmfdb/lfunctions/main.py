@@ -27,7 +27,8 @@ from .Lfunction import (
     Lfunction_from_db,
     # on the fly L-functions
     Lfunction_HMF, ArtinLfunction,
-    Lfunction_Maass, Lfunction_SMF2_scalar_valued,
+    Lfunction_Maass, 
+    # Lfunction_SMF2_scalar_valued,
     DedekindZeta,
     SymmetricPowerLfunction, HypergeometricMotiveLfunction,
 )
@@ -108,7 +109,7 @@ def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -124,7 +125,7 @@ def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         elif search_type == 'Traces':
             return trace_search(info)
@@ -377,7 +378,14 @@ class LfuncDownload(Downloader):
              shortcuts={'jump':jump_box, 'download': LfuncDownload()},
              url_for_label=url_for_lfunction,
              learnmore=learnmore_list,
-             bread=lambda: get_bread(breads=[("Search results", " ")]))
+             bread=lambda: get_bread(breads=[("Search results", " ")]),
+             diagram_opts={
+                 "title": "L-function diagrams",
+                 "bread": lambda: get_bread(breads=[("Diagram search", " ")]),
+                 "x_axis_default": "root_analytic_conductor",
+                 "y_axis_default": "z1",
+                 "color_default": "primitive",
+             })
 def l_function_search(info, query):
     if info.get("rational") == "yes":
         info["title"] = "Rational L-function search results"
@@ -672,10 +680,12 @@ class LFunctionSearchArray(SearchArray):
             L = [('', 'List of L-functions'),
                  ('Traces', 'Traces table'),
                  ('Euler', 'Euler factors'),
-                 ('Random', 'Random L-function')]
+                 ('Random', 'Random L-function'),
+                 ('Diagram', 'Diagram search')]
         else:
             L = [('', 'List of L-functions'),
-                 ('Random', 'Random L-function')]
+                 ('Random', 'Random L-function'),
+                 ('Diagram', 'Diagram search')]
         return self._search_again(info, L)
 
     def html(self, info=None):
@@ -989,7 +999,7 @@ def l_function_cmf_page(level, weight, char_orbit_label, hecke_orbit, character,
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/<hecke_orbit>/<int:number>/")
 def l_function_cmf_old(level, weight, character, hecke_orbit, number):
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    char_orbit_label = db.mf_newspaces_eis.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     number += 1 # There was a shift from 0-based to 1-based in the new label scheme
@@ -1009,7 +1019,7 @@ def l_function_cmf_redirect_1(level, weight, character, hecke_orbit):
         flash_error("%s", 'Level and character must be coprime')
         return redirect(url_for(".index"))
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    char_orbit_label = db.mf_newspaces_eis.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     if char_orbit_label is None:
         return abort(404, 'Invalid character label')
     return redirect(url_for('.l_function_cmf_page',
@@ -1032,7 +1042,7 @@ def l_function_cmf_orbit(level, weight, char_orbit_label, hecke_orbit):
 @l_function_page.route("/ModularForm/GL2/Q/holomorphic/<int:level>/<int:weight>/<int:character>/")
 def l_function_cmf_redirect_a1(level, weight, character):
     min_character = ConreyCharacter(modulus=level,number=character).min_conrey_conj
-    char_orbit_label = db.mf_newspaces.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
+    char_orbit_label = db.mf_newspaces_eis.lucky({'conrey_index': min_character, 'level': level, 'weight': weight}, projection='char_orbit_label')
     return redirect(url_for('.l_function_cmf_page',
                                     level=level,
                                     weight=weight,
@@ -1112,10 +1122,10 @@ def l_function_maass_gln_page(group, level, char, R, ap_id):
 def l_function_siegel_specimen_page(weight, orbit, number):
     return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
 
-@l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
-def l_function_siegel_page(weight, orbit, number):
-    args = {'weight': weight, 'orbit': orbit, 'number': number}
-    return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
+# @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
+# def l_function_siegel_page(weight, orbit, number):
+#     args = {'weight': weight, 'orbit': orbit, 'number': number}
+#     return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
 
 
 # L-function of Number field    ################################################
@@ -1789,6 +1799,7 @@ def browseGraphHolo():
 @l_function_page.route("/browseGraphHoloNew/")
 def browseGraphHoloNew():
     return render_browseGraphHoloNew(request.args)
+
 
 ###########################################################################
 #   Functions for rendering graphs for browsing L-functions.

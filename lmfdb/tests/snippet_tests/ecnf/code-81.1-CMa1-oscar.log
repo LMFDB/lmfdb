@@ -12,8 +12,7 @@ with equation
 julia> conductor(E)
 Ideal of maximal order of number field of degree 2 over QQ
   of norm 81
-  of minimum 9
-with 3-normal generators [9, 9*_a - 9]
+with 9-normal generators [81, 9*_a - 9]
 
 julia> norm(conductor(E))
 81

@@ -9,7 +9,7 @@ from .mf import MfChecker
 from ..verification import overall, overall_long, slow
 
 class mf_hecke_cc(MfChecker):
-    table = db.mf_hecke_cc
+    table = db.mf_hecke_cc_eis
     label_col = 'label'
     uniqueness_constraints = [['label']]
 
@@ -19,14 +19,14 @@ class mf_hecke_cc(MfChecker):
         check that hecke_orbit_code is present in mf_newforms
         """
         # TIME about 200s
-        return self.check_crosstable_count('mf_newforms', 1, 'hecke_orbit_code')
+        return self.check_crosstable_count('mf_newforms_eis', 1, 'hecke_orbit_code')
 
     @overall_long
     def check_dim(self):
         """
         check that we have dim embeddings per hecke_orbit_code
         """
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, COUNT(*) FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count")
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, COUNT(*) FROM mf_hecke_cc_eis GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms_eis t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT t1.dim = foo.count")
         return self._run_query(query=query)
 
     @overall_long
@@ -34,7 +34,7 @@ class mf_hecke_cc(MfChecker):
         """
         check that label is consistent with hecke_orbit_code, conrey_label, and embedding_index
         """
-        query = SQL("SELECT t1.label FROM mf_hecke_cc t1, mf_newforms t2 WHERE string_to_array(t1.label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
+        query = SQL("SELECT t1.label FROM mf_hecke_cc_eis t1, mf_newforms_eis t2 WHERE string_to_array(t1.label,'.') != string_to_array(t2.label, '.') || ARRAY[t1.conrey_index::text, t1.embedding_index::text] AND t1.hecke_orbit_code = t2.hecke_orbit_code")
         return self._run_query(query=query)
 
     @overall_long
@@ -42,7 +42,7 @@ class mf_hecke_cc(MfChecker):
         """
         check that embedding_index is consistent with conrey_label and embedding_m
         """
-        query = SQL("WITH foo AS ( SELECT label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc) SELECT label FROM foo WHERE embedding_index != row_number")
+        query = SQL("WITH foo AS ( SELECT label, embedding_index, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code, conrey_index  ORDER BY embedding_m) FROM mf_hecke_cc_eis) SELECT label FROM foo WHERE embedding_index != row_number")
         return self._run_query(query=query)
 
     @overall
@@ -51,7 +51,7 @@ class mf_hecke_cc(MfChecker):
         check that embedding_m is consistent with conrey_label and embedding_index
         """
         # About 250s
-        query = SQL("WITH foo AS ( SELECT label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc) SELECT label FROM foo WHERE embedding_m != row_number")
+        query = SQL("WITH foo AS ( SELECT label, embedding_m, ROW_NUMBER() OVER ( PARTITION BY hecke_orbit_code ORDER BY conrey_index, embedding_index) FROM mf_hecke_cc_eis) SELECT label FROM foo WHERE embedding_m != row_number")
         return self._run_query(query=query)
 
     @overall_long

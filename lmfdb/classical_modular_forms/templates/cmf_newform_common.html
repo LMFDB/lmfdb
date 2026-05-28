@@ -32,6 +32,10 @@
     <td>\(=\)</td>
     <td> {{ newform.display_character() | safe }} </td>
   </tr>
+  <tr>
+    <td> {{ KNOWL('cmf.cusp_form', title='Cuspidal') }}: </td>
+    <td>{% if newform.is_cuspidal %}yes{% else %}no{% endif %}</td>
+  </tr>
 </table>
 
 <h2> Newform invariants </h2>

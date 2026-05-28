@@ -71,6 +71,14 @@ def name_and_object_from_url(url, check_existence=False):
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
             if url_split[2] == 'Q' and url_split[3] == 'holomorphic':
+                if len(url_split) == 11:
+                    # ModularForm/GL2/Q/holomorphic/24/2/E/f/a/11/2
+                    newform_label = ".".join(url_split[-7:-2])
+                    conrey_newform_label = ".".join(url_split[-7:])
+                    name = 'Modular form ' + conrey_newform_label
+                    obj_exists = True
+                    if check_existence:
+                        obj_exists = db.mf_newforms_eis.label_exists(newform_label)
                 if len(url_split) == 10:
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a/11/2
                     newform_label = ".".join(url_split[-6:-2])
@@ -78,14 +86,21 @@ def name_and_object_from_url(url, check_existence=False):
                     name = 'Modular form ' + conrey_newform_label
                     obj_exists = True
                     if check_existence:
-                        obj_exists = db.mf_newforms.label_exists(newform_label)
+                        obj_exists = db.mf_newforms_eis.label_exists(newform_label)
+                if len(url_split) == 9:
+                    # ModularForm/GL2/Q/holomorphic/24/2/E/f/a
+                    newform_label = ".".join(url_split[-5:])
+                    name = 'Modular form ' + newform_label
+                    obj_exists = True
+                    if check_existence:
+                        obj_exists = db.mf_newforms_eis.label_exists(newform_label)
                 elif len(url_split) == 8:
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a
                     newform_label = ".".join(url_split[-4:])
                     name = 'Modular form ' + newform_label
                     obj_exists = True
                     if check_existence:
-                        obj_exists = db.mf_newforms.label_exists(newform_label)
+                        obj_exists = db.mf_newforms_eis.label_exists(newform_label)
 
             elif url_split[2] == 'TotallyReal':
                 # ModularForm/GL2/TotallyReal/2.2.140.1/holomorphic/2.2.140.1-14.1-a
@@ -126,8 +141,14 @@ def name_and_object_from_url(url, check_existence=False):
             obj_exists = True
     elif url_split[:2] == ["Character", "Dirichlet"]:
         modulus = int(url_split[2])
-        conrey = int(url_split[3])
-        name = r"Character $\chi_{%d}(%d, \cdot)$" % (modulus, conrey)
+        if url_split[3].isdigit():
+            # Character/Dirichlet/2/1
+            conrey = int(url_split[3])
+            name = r"Dirichlet character $\chi_{%d}(%d, \cdot)$" % (modulus, conrey)
+        else:
+            # Character/Dirichlet/2/a
+            orbit = url_split[3]
+            name = r"Dirichlet character orbit %d.%s" % (modulus, orbit)
         obj_exists = True
     else:
         # FIXME

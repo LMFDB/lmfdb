@@ -94,21 +94,21 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
                     'label': 'data(label)',
                     'text-valign': 'center',
                     'text-halign': 'center',
-                    'font-size': '12px',
+                    'font-size': '14px',
                     'font-family': 'sans-serif',
-                    'background-color': '#fff',
+                    'background-color': '#ffd7cc',  // Sage isogeny plot is #fec7b8
                     'border-width': 2,
-                    'border-color': '#555',
+                    'border-color': '#000',
                     'width': 60,
                     'height': 30,
                     'shape': 'round-rectangle',
-                    'color': '#333'
+                    'color': '#000'
                 }
             },
             {
                 selector: 'node[?optimal]',
                 style: {
-                    'border-width': 3,
+                    'border-width': 4,
                     'border-color': '#0055a2',
                     'background-color': '#e8f0fe'
                 }
@@ -117,14 +117,14 @@ function initIsogenyGraph(containerId, elements, enabledLayouts, defaultLayout) 
                 selector: 'edge',
                 style: {
                     'label': 'data(label)',
-                    'font-size': '11px',
+                    'font-size': '13px',
                     'text-background-color': '#fff',
                     'text-background-opacity': 1,
-                    'text-background-padding': '2px',
-                    'line-color': '#888',
+                    'text-background-padding': '3px',
+                    'line-color': '#000',
                     'width': 1.5,
                     'curve-style': 'bezier',
-                    'color': '#555'
+                    'color': '#000'
                 }
             }
         ]

@@ -1281,6 +1281,7 @@ class HGCWASearchArray(SearchArray):
         'full_label': False,
         'full_auto': False,
     }
+    has_diagram = False
 
     def __init__(self):
         genus = TextBox(
