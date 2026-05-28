@@ -5,8 +5,10 @@ from collections import defaultdict
 from lmfdb import db
 from flask import url_for
 from sage.all import latex, lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer, pi, gamma #latex, Factorization,
+from sage.modular.dirichlet import kronecker_character
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
+from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 import numpy as np
 
 #####################################
@@ -347,8 +349,13 @@ class WebGenus(WebLat):
 
     @lazy_attribute
     def friends(self):
-        # Should add things like modular forms spaces
-        return []
+        friends = []
+        weight = self.dim // 2
+        chi = kronecker_character(self.disc)
+        chi_orbit = 'a' if chi.is_trivial() else 'b'
+        mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
+        friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        return friends
 
     @lazy_attribute
     def downloads(self):
@@ -527,7 +534,13 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def friends(self):
-        return [("Genus of this lattice", f"/Lattice/Genus/{self.genus_label}")]
+        friends = [("Genus of this lattice", f"/Lattice/Genus/{self.genus_label}")]
+        weight = self.rank // 2
+        chi = kronecker_character(self.disc)
+        chi_orbit = 'a' if chi.is_trivial() else 'b'
+        mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
+        friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        return friends        
 
     @lazy_attribute
     def downloads(self):
