@@ -453,7 +453,7 @@ class ECNFDownloader(Downloader):
         poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
         row["field_coeffs"] = poly
 
-        # Convert Weierstrass coefficients from string to a list of list of integers
+        # Convert Weierstrass coefficients from string to a list of list of rationals
         row['ainvs'] = [[QQ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
 
         return row
