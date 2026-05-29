@@ -314,6 +314,13 @@ class CMF_download(Downloader):
             return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         code = form.code
+        # 'initialize-newspace-common' is only a YAML merge anchor base (see
+        # code-form.yaml): its snippet is inlined into both weight-specific
+        # keys, so emitting it on its own would duplicate that snippet. Only
+        # the weight-appropriate initialization applies to a given form.
+        code.pop('initialize-newspace-common', None)
+        code.pop('initialize-newspace-weight-not-1' if form.weight == 1
+                 else 'initialize-newspace-weight-1', None)
         comment = code.pop('comment').get(lang).strip()
         script = "%s %s code for working with modular form %s\n\n" % (comment,Fullname[lang],label)
         for k in code:
