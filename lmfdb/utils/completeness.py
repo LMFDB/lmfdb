@@ -19,6 +19,7 @@ from sage.all import factor, prod, factorial, is_prime, prime_range, ZZ, NN, cei
 # specific CompletenessCheckers are created at the bottom of this file.
 lookup = {}
 
+
 def results_complete(table, query, db, search_array=None):
     """
     Determines whether the LMFDB contains all objects satisfying the given query.
@@ -58,7 +59,7 @@ def nullcount_query(query, cols, recursing=False):
     """
     Returns a modified query with all reference to a given list of columns removed, and conditions added that the columns are null.
     """
-    if isinstance(query, list): # can happen recursively in $or queries
+    if isinstance(query, list):  # can happen recursively in $or queries
         return [nullcount_query(D, cols, recursing=True) for D in query]
     query = dict(query)
     for key, value in list(query.items()):
@@ -93,14 +94,14 @@ def tup(a, b):
     """
     range(a, b) as a tuple
     """
-    return tuple(range(a,b))
+    return tuple(range(a, b))
 
 
 def skip(a, b, L):
     """
     range(a, b) as a tuple, omitting elements of L
     """
-    return tuple(x for x in range(a,b) if x not in L)
+    return tuple(x for x in range(a, b) if x not in L)
 
 
 #################################
@@ -129,7 +130,7 @@ def to_rset(query):
         return query
     if isinstance(query, NumberSet):
         return query.rset
-    if isinstance(query, (list, tuple)) and len(query) == 2: # closed and open intervals
+    if isinstance(query, (list, tuple)) and len(query) == 2:  # closed and open intervals
         return RealSet(query)
     if isinstance(query, set):
         return RealSet(*[RealSet.point(x) for x in query])
@@ -159,50 +160,54 @@ def to_rset(query):
             raise ValueError(f"Unsupported key {k}")
     return ans
 
+
 def interval_sum(I, J):
     """
-    {i + j : i in I, j in J}
+    `{i + j : i in I, j in J}`
     """
     # Neither I nor J can be empty since they arise from a RealSet's normalized intervals
     if not I or not J:
-        return (0, 0) # Empty interval
+        return (0, 0)  # Empty interval
     return RealSet.interval(I.lower() + J.lower(), I.upper() + J.upper(), lower_closed=(I.lower_closed() and J.lower_closed()), upper_closed=(I.upper_closed() and J.upper_closed()))
+
 
 def interval_neg(I):
     """
-    {-i : i in I}
+    `{-i : i in I}`
     """
     if not I:
         return (0, 0)
     return RealSet.interval(-I.upper(), -I.lower(), lower_closed=I.upper_closed(), upper_closed=I.lower_closed())
+
 
 Rneg = RealSet.unbounded_below_closed(0)[0]
 Rpos = RealSet.unbounded_above_closed(0)[0]
 inf_mone = RealSet.unbounded_below_closed(-1)[0]
 one_inf = RealSet.unbounded_above_closed(1)[0]
 
+
 def interval_mul(I, J):
     """
-    {i * j : i in I, j in J}
+    `{i * j : i in I, j in J}`
     """
     if not I or not J or isinstance(I, tuple) and I == (0, 0) or isinstance(J, tuple) and J == (0, 0):
-        return (0, 0) # Empty interval
+        return (0, 0)  # Empty interval
 
     def _mul(A, B):
         a0, a1, c0, c1 = A.lower(), A.upper(), A.lower_closed(), A.upper_closed()
         b0, b1, d0, d1 = B.lower(), B.upper(), B.lower_closed(), B.upper_closed()
-        if a0 >= 0 and b0 >= 0: # both positive
+        if a0 >= 0 and b0 >= 0:  # both positive
             a1b1 = 0 if a1 == 0 or b1 == 0 else a1 * b1 # one could be infinity
             return RealSet.interval(a0 * b0, a1b1, lower_closed=c0 and d0, upper_closed=c1 and d1)
-        elif a1 <= 0 and b0 >= 0: # A negative
+        elif a1 <= 0 and b0 >= 0:  # A negative
             a0b1 = 0 if a0 == 0 or b1 == 0 else a0 * b1
             a1b0 = 0 if a1 == 0 or b0 == 0 else a1 * b0
             return RealSet.interval(a0b1, a1b0, lower_closed=c0 and d1, upper_closed=c1 and d0)
-        elif a0 >= 0 and b1 <= 0: # B negative
+        elif a0 >= 0 and b1 <= 0:  # B negative
             a1b0 = 0 if a1 == 0 or b0 == 0 else a1 * b0
             a0b1 = 0 if a0 == 0 or b1 == 0 else a0 * b1
             return RealSet.interval(a1b0, a0b1, lower_closed=c1 and d0, upper_closed=c0 and d1)
-        else: # both negative
+        else:  # both negative
             a0b0 = 0 if a0 == 0 or b0 == 0 else a0 * b0
             return RealSet.interval(a1 * b1, a0b0, lower_closed=c1 and d1, upper_closed=c0 and d0)
 
@@ -212,12 +217,13 @@ def interval_mul(I, J):
     Jpos = J.intersection(Rpos)
     return RealSet(_mul(Ineg, Jneg), _mul(Ineg, Jpos), _mul(Ipos, Jneg), _mul(Ipos, Jpos))
 
+
 def interval_inv(I):
     """
-    {1 / i : i in I, i != 0}
+    `{1 / i : i in I, i != 0}`
     """
     if not I or I.lower() == I.upper() == 0:
-        return (0, 0) # empty interval
+        return (0, 0)  # empty interval
     Ineg = I.intersection(Rneg)
     Ipos = I.intersection(Rpos)
     ans = []
@@ -243,11 +249,13 @@ def interval_inv(I):
         ans.append(RealSet.interval(a, b, lower_closed=c, upper_closed=d)[0])
     return RealSet(*ans)
 
+
 def interval_abs(I):
     """
-    {|i| : i in I}
+    `{|i| : i in I}`
     """
     return RealSet(Rpos.intersection(I), interval_neg(Rneg.intersection(I)))
+
 
 class NumberSet:
     """
@@ -378,6 +386,7 @@ class NumberSet:
         """
         return (len(list(self.rset)), self.rset.inf(), self.rset.sup()) != (1, -infinity, infinity)
 
+
 def integer_normalize(S):
     """
     INPUT:
@@ -427,8 +436,10 @@ def integer_normalize(S):
     TT.append(cur)
     return RealSet(*TT)
 
+
 inf_mone = RealSet.unbounded_below_closed(-1)[0]
 one_inf = RealSet.unbounded_above_closed(1)[0]
+
 
 class IntegerSet(NumberSet):
     """
@@ -531,17 +542,20 @@ class IntegerSet(NumberSet):
             if not self.rset:
                 return M
 
+
 def top(x, cls=IntegerSet):
     """
     Utility function returnin (-oo, x]
     """
     return cls(RealSet.interval(-infinity, x, lower_closed=False, upper_closed=True))
 
+
 def bottom(x, cls=IntegerSet):
     """
     Utility function returning [x, oo)
     """
     return cls(RealSet.interval(x, infinity, lower_closed=True, upper_closed=False))
+
 
 #################################
 # Completeness checker          #
@@ -556,14 +570,22 @@ class CompletenessChecker:
     INPUT:
 
     - ``table`` -- string, the name of the LMFDB table
-    - ``checkers`` -- a list of tuples, each of the form (cols, test), (cols, test, reason), (cols, test, reason, caveat) or (cols, test, reason, caveat, filter).
-      ``cols`` can be a single column name or a tuple of columns names.
-      ``reason`` is a string that describes the reason this query is complete
-      ``caveat`` is a string that describes any conjectures used, or None
-      ``filter`` is a function that takes the query as input and determines
-                 whether this test should be run
-      ``test`` will be run if all columns are present in the query and the filter (if present) passes;
-               the input will be the correponding values in the query dictionary.
+
+    - ``checkers`` -- a list of tuples, each of the form (cols, test), (cols, test, reason),
+      (cols, test, reason, caveat) or (cols, test, reason, caveat, filter):
+
+      - ``cols`` can be a single column name or a tuple of columns names.
+
+      - ``reason`` is a string that describes the reason this query is complete
+
+      - ``caveat`` is a string that describes any conjectures used, or None
+
+      - ``filter`` is a function that takes the query as input and determines
+        whether this test should be run
+
+      - ``test`` will be run if all columns are present in the query and the filter (if present) passes;
+        the input will be the correponding values in the query dictionary.
+
       The check returns true when any test passes.
 
       If all checkers have length 2 (just cols and test) will pass the full query dictionary to the __call__ method (after parsing through $or, $and, $not).  Otherwise, will extract the values of the columns before passing into __call__
@@ -576,14 +598,20 @@ class CompletenessChecker:
             if len(check) == 2:
                 cols, test = check
                 reason = caveat = None
-                def filt(query): return True
+
+                def filt(query):
+                    return True
             elif len(check) == 3:
                 cols, test, reason = check
                 caveat = None
-                def filt(query): return True
+
+                def filt(query):
+                    return True
             elif len(check) == 4:
                 cols, test, reason, caveat = check
-                def filt(query): return True
+
+                def filt(query):
+                    return True
             else:
                 cols, test, reason, caveat, filt = check
             if not isinstance(cols, tuple):
@@ -682,6 +710,7 @@ class CompletenessChecker:
                     return test(db, query)
         return False, None, None
 
+
 #################################
 # Column tests                  #
 #################################
@@ -690,6 +719,7 @@ class CompletenessChecker:
 
 class ColTest:
     pass
+
 
 class Bound(ColTest):
     """
@@ -701,6 +731,7 @@ class Bound(ColTest):
 
     def __call__(self, db, Ds):
         return all(self.cls(D).is_subset(B) for D, B in zip(Ds, self.bounds))
+
 
 class CBound(Bound):
     """
@@ -716,10 +747,12 @@ class CBound(Bound):
     def __call__(self, db, Ds):
         return self.constraints == tuple(Ds[:-1]) and super().__call__(db, [Ds[-1]])
 
+
 class PrimeBound(Bound):
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
         return all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
+
 
 class Smooth(ColTest):
     def __init__(self, M, cls=IntegerSet):
@@ -733,6 +766,7 @@ class Smooth(ColTest):
         def is_smooth(n):
             return -M < n < M or n == prod(p**ZZ(n).valuation(p) for p in P)
         return all(is_smooth(n) for n in self.cls(ms[0]))
+
 
 class Specific(ColTest):
     def __init__(self, *constraints):
@@ -749,6 +783,7 @@ class CPrimeBound(CBound):
     def __call__(self, db, Ds):
         last = self.cls(Ds[-1])
         return last.is_finite() and super().__call__(db, Ds) and all(is_prime(p) for p in last)
+
 
 #################################
 # Fillers                       #
@@ -898,6 +933,8 @@ maxR = {
     103: 5.6533,
     105: 14.7330
 }
+
+
 class MaassBound(ColTest):
     def __call__(self, db, query):
         level = IntegerSet(query["level"])
@@ -956,7 +993,7 @@ class HMFBound(ColTest):
         if query.get("disc") is not None and query.get("deg") is not None:
             disc = IntegerSet(query["disc"])
             deg = IntegerSet(query["deg"])
-            if deg.is_subset(IntegerSet([2,6])): #################
+            if deg.is_subset(IntegerSet([2, 6])):  #################
                 deg = list(deg)
                 if not deg:
                     return True, "Hilbert modular forms satisfying query (no matching degrees)", None
@@ -2288,6 +2325,8 @@ minimal_label = {
     '8T1': '8T1',
     '8T5': '8T5',
     '9T1': '9T1'}
+
+
 class ArtinBound(ColTest):
     def __call__(self, db, query):
         group, dim, container, N = query.get("GaloisLabel"), query.get("Dim"), query.get("Container"), IntegerSet(query.get("Conductor"))
@@ -2424,7 +2463,7 @@ class GroupBound(ColTest):
 
 CompletenessChecker("lfunc_search", [
     (("degree", "rational", "conductor"), CBound(1, True, 2800), "L-functions with degree 1 and conductor at most 2800"),
-    ])
+])
 
 
 CompletenessChecker("mf_newforms", [

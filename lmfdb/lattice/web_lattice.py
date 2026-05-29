@@ -5,8 +5,10 @@ from collections import defaultdict
 from lmfdb import db
 from flask import url_for
 from sage.all import latex, lazy_attribute, matrix, ZZ, sqrt, round, Graph, PolynomialRing, flatten, Integer, pi, gamma #latex, Factorization,
+from sage.modular.dirichlet import kronecker_character
 from lmfdb.utils import WebObj, raw_typeset_qexp, prop_int_pretty, pos_int_and_factor, raw_typeset_poly_factor, raw_typeset_matrix, graph_to_cytoscape_json, GRAPH_LAYOUTS
 from lmfdb.groups.abstract.web_groups import abelian_gp_display, abstract_group_display_knowl
+from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 import numpy as np
 
 #####################################
@@ -122,6 +124,26 @@ def format_conway_symbol(s):
     # Format Conway symbol so Roman numerals appear as text (upright) in LaTeX
     return "$" + s.replace('II_', r'\text{II}_').replace('I_', r'\text{I}_') + "$"
 
+def name_to_latex(name):
+    if not name:
+        return ""
+    ret = ""
+    for i in range(len(name)):
+        if name[i].isdigit():
+            assert(i > 0)
+            if name[i-1].isalpha():
+                ret += '_{'
+        if name[i] == '+':
+            ret += r' \oplus '
+        elif name[i] == 'x':
+            ret += r' \otimes '
+        else:
+            ret += name[i:i+1]
+        if name[i].isdigit():
+            if (i == len(name) - 1) or ((not name[i+1].isdigit()) and (name[i+1] != '}')):
+                ret += '}'
+    return f'${ret}$'
+
 class WebLat(WebObj):
     def _mathwrap(self, fac, nofac):
         for col in fac + nofac:
@@ -203,6 +225,17 @@ class WebLat(WebObj):
             ('Parity', f'{self.parity}'),
         ]
 
+    @lazy_attribute
+    def display_name(self):
+        if self.name:
+            return name_to_latex(self.name)
+        else:
+            return self.label
+    
+    @lazy_attribute
+    def title(self):
+        return f'Integral lattice {self.display_name}'
+    
     def _mat_in(self, mat, lang):
         if lang == "pari":
             return "[" + ";".join(",".join(str(c) for c in row) for row in mat) + "]"
@@ -316,8 +349,13 @@ class WebGenus(WebLat):
 
     @lazy_attribute
     def friends(self):
-        # Should add things like modular forms spaces
-        return []
+        friends = []
+        weight = self.dim // 2
+        chi = kronecker_character(self.disc)
+        chi_orbit = 'a' if chi.is_trivial() else 'b'
+        mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
+        friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        return friends
 
     @lazy_attribute
     def downloads(self):
@@ -496,7 +534,13 @@ class WebLattice(WebLat):
 
     @lazy_attribute
     def friends(self):
-        return [("Genus of this lattice", f"/Lattice/Genus/{self.genus_label}")]
+        friends = [("Genus of this lattice", f"/Lattice/Genus/{self.genus_label}")]
+        weight = self.rank // 2
+        chi = kronecker_character(self.disc)
+        chi_orbit = 'a' if chi.is_trivial() else 'b'
+        mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
+        friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        return friends        
 
     @lazy_attribute
     def downloads(self):

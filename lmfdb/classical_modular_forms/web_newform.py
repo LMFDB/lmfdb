@@ -438,12 +438,7 @@ class WebNewform():
 
     @lazy_attribute
     def an_cc_bound(self):
-        if self.level <= 1000:
-            return 1000
-        elif self.level <= 4000:
-            return 2000
-        else:
-            return 3000
+        return 100
 
     @lazy_attribute
     def primes_cc_bound(self):
@@ -565,7 +560,11 @@ class WebNewform():
         data = db.mf_newforms_eis.lookup(label)
         if data is None:
             # Display a different error if Nk^2 is too large
-            N, k, a, x = label.split('.')
+            split_label = label.split('.')
+            if len(split_label) == 4:
+                N, k, a, x = split_label
+            elif len(split_label) == 5:
+                N, k, aut_type, a, x = split_label
             Nk2 = int(N) * int(k) * int(k)
             nontriv = a != "a"
             from .main import Nk2_bound
@@ -1204,6 +1203,8 @@ function switch_basis(btype) {
         return '\n'.join(twists1) + '\n<div style="float: left">&emsp;&emsp;&emsp;&emsp;</div>\n' + '\n'.join(twists2) + '\n<br clear="all" />\n'
 
     def sato_tate_display(self):
+        if not self.is_cuspidal:
+            return abstract_group_display_knowl(self.sato_tate_group) if self.sato_tate_group else 'not computed'
         return st_display_knowl(self.sato_tate_group) if self.sato_tate_group else 'not computed'
 
     def q_expansion_cc(self, prec_max):

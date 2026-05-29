@@ -1,7 +1,6 @@
 
 from lmfdb.tests import LmfdbTest
 
-
 class CmfTest(LmfdbTest):
     def runTest(self):
         pass

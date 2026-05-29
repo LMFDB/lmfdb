@@ -1259,6 +1259,7 @@ class ECSearchArray(SearchArray):
     noun = "curve"
     sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
              #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
+             ("disc", "Minimal discriminant", ["absD", "signD", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("cm_discriminant", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),

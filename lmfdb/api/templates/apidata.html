@@ -23,15 +23,18 @@ Formats:
 </div>
 
 <ul class="api-entries">
-  {% for table, recs, label, label_col in zip(tables, data, labels, label_cols) %}
+  {% for table, recs, label, label_col, total in zip(tables, data, labels, label_cols, totals) %}
     <li>
-      {% if (recs|length) == 0 %}
+      {% if total == 0 %}
         {{ label_col }} {{ label }} does not appear in <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a>
-      {% elif (recs|length) == 1 %}
+      {% elif total == 1 %}
         <a href="{{ url_for('API.api_query_id', table=table, id=recs[0].get('id')) }}">{{ table }}</a> &bull; {% include "apischema.html" %} </br/>
         <code>{{ pretty(recs[0], id=False) }}</code>
       {% else %}
         <a href="{{ url_for('API.api_query', table=table) }}">{{ table }}</a> &bull; {% include "apischema.html" %} </br/>
+        {% if (recs|length) < total %}
+          Showing the first {{ recs|length }} of {{ total }} matching records in this table.
+        {% endif %}
         <ul>
           {% for entry in recs %}
             <li>

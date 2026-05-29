@@ -713,7 +713,7 @@ def raw_typeset_qexp(coeffs_list,
             if (type(coeffs) == list and not all([c == 0 for c in coeffs])) or (type(coeffs) in [int, Integer] and (coeffs != 0)):
                 pivot = i
                 break
-
+    
     for i, coeffs in enumerate(coeffs_list):
         r, t = rawtset_coeff(i, coeffs, pivot=pivot)
         if t:
