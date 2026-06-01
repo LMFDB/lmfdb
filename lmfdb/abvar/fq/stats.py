@@ -4,11 +4,9 @@ from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
 from psycodict.utils import range_formatter
-from lmfdb.logger import make_logger
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
 
-logger = make_logger("abvarfq")
 def yn(t):
     return "yes" if (t and t != "no") else "no"
 def ynu(t):
@@ -194,7 +192,7 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return r'The database currently contains %s %s of %s of dimension up to %s over finite fields.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (
+        return r'The database currently contains %s %s of %s of dimension up to %s over finite fields.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.  <b>Data on isomorphism classes, polarizations, and isogeny graphs is still provisional.  Labels may change, and we are still working to ensure the reliability of the data.</b>' % (
             self.counts["nclasses_c"],
             self.isogeny_knowl,
             self.abvar_knowl,

@@ -15,7 +15,7 @@ from lmfdb.utils import (
     flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, RowSpacer, HiddenBox, SearchButtonWithSelect,
-    SubsetBox, ParityMod, CountBox,
+    SubsetBox, ParityMod, CountBox, send_file_from_beta,
     StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
 from psycodict.utils import range_formatter
@@ -25,7 +25,7 @@ from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol
 from lmfdb.api import datapage
 from lmfdb.classical_modular_forms import cmf
 from lmfdb.classical_modular_forms.web_newform import (
-    WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
+    WebNewform, convert_newformlabel_from_conrey, LABEL_RE, EMB_LABEL_RE,
     quad_field_knowl, cyc_display, field_display_gen)
 from lmfdb.classical_modular_forms.web_space import (
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
@@ -33,6 +33,7 @@ from lmfdb.classical_modular_forms.web_space import (
     ALdim_new_cusp_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.classical_modular_forms.download import CMF_download
 from lmfdb.sato_tate_groups.main import st_display_knowl
+from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.characters.main import ORBIT_MAX_MOD
 from lmfdb.number_fields.number_field import poly_to_field_label
@@ -55,7 +56,8 @@ def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
-            ('Classical modular form labels', url_for(".labels_page"))]
+            ('Classical modular form labels', url_for(".labels_page")),
+            ('Complex Hecke eigenvalues', url_for(".mf_hecke_cc"))]
 
 
 def learnmore_list_add(learnmore_label, learnmore_url):
@@ -173,7 +175,7 @@ def index():
         # hidden_search_type for prev/next buttons
         info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
 
-        if search_type in ['List', '', 'Random']:
+        if search_type in ['List', '', 'Random', 'Diagram']:
             return newform_search(info)
         elif search_type in ['Spaces', 'RandomSpace']:
             return space_search(info)
@@ -247,7 +249,7 @@ def parse_n(info, newform, primes_only):
     info['default_nrange'] = '2-%s' % maxp
     nrange = info.get('n', '2-%s' % maxp)
     try:
-        info['CC_n'] = integer_options(nrange, newform.an_cc_bound)
+        info['CC_n'] = integer_options(nrange, 6000)
     except (ValueError, TypeError) as err:
         info['CC_n'] = list(range(2, maxp + 1))
         if err.args and err.args[0] == 'Too many options':
@@ -431,7 +433,7 @@ def render_embedded_newform_webpage(newform_label, embedding_label):
     except ValueError as err:
         return abort(404, err.args)
     info['CC_m'] = [m]
-    info['CC_n'] = [0, 1000]
+    info['CC_n'] = [0, 100]
     # errs.extend(parse_prec(info))
     errs = parse_prec(info)
     newform.setup_cc_data(info)
@@ -531,6 +533,64 @@ def mf_data(label):
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
+@cmf.route("/mf_hecke_cc/")
+def mf_hecke_cc():
+    info = to_dict(request.args)
+    t = 'Complex Hecke eigenvalues'
+    bread = get_bread()
+    learnmore = learnmore_list_remove("Hecke")
+    errors = []
+    if 'label' in info:
+        if LABEL_RE.match(info['label']) or EMB_LABEL_RE.match(info['label']):
+            N, k, _ = info['label'].split(".", 2)
+            if 'N' in info and info['N'].strip() != N:
+                errors.append("Level does not match label")
+            if 'k' in info and info['k'].strip() != k:
+                errors.append("Weight does not match label")
+            info['N'] = N
+            info['k'] = k
+        else:
+            errors.append("Invalid label format")
+    if ('N' in info or 'k' in info) and not errors:
+        N, k = info.get('N','0').strip(), info.get('k', '0').strip()
+        if N.isdigit() and k.isdigit():
+            N, k = int(N), int(k)
+            if 'N' not in info:
+                Nlist = db.mf_hecke_cc.distinct("level", {"weight": k})
+                if Nlist:
+                    Nlist = [Nlist[i:i+10] for i in range(0, len(Nlist), 10)]
+                    return render_template("mf_hecke_cc.html", k=k, Nlist=Nlist, title=t, bread=bread, learnmore=learnmore)
+                else:
+                    errors.append(f"The database does not contain any newforms with weight {k}")
+            elif 'k' not in info:
+                klist = db.mf_hecke_cc.distinct("weight", {"level": N})
+                if klist:
+                    klist = [klist[i:i+10] for i in range(0, len(klist), 10)]
+                    return render_template("mf_hecke_cc.html", N=N, klist=klist, title=t, bread=bread, learnmore=learnmore)
+                else:
+                    errors.append(f"The database does not contain any newforms with level {N}")
+            elif db.mf_hecke_cc.exists({"level":N, "weight":k}):
+                if 'label' in info:
+                    label = info['label']
+
+                    def line_matcher(i, line):
+                        return i < 2 or line.startswith(label)
+                else:
+                    line_matcher = None
+                filepath = f"/home/lmfdb/data/mf_hecke_cc/{k}/{N}"
+                if 'label' in info:
+                    download_name = f"mf_hecke_cc_{info['label']}.txt"
+                else:
+                    download_name = f"mf_hecke_cc_{N}.{k}.txt"
+                return send_file_from_beta(filepath, line_matcher=line_matcher, download_name=download_name, as_attachment=True)
+            else:
+                errors.append(f"The database does not contain any newforms with weight {k} and level {N}")
+        else:
+            errors.append(f"The weight ({k}) and level ({N}) must be positive integers")
+    if errors:
+        for err in errors:
+            flash_error(err)
+    return render_template("mf_hecke_cc.html", title=t, bread=bread, learnmore=learnmore)
 
 @cmf.route("/<level>/")
 def by_url_level(level):
@@ -934,6 +994,11 @@ def _trace_col(i):
 def _AL_col(i, p):
     return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True)
 
+def _sato_tate_col(is_cuspidal,sato_tate_group):
+    if not is_cuspidal:
+        return abstract_group_display_knowl(sato_tate_group) if sato_tate_group else 'not computed'
+    return st_display_knowl(sato_tate_group) if sato_tate_group else 'not computed'
+
 newform_columns = SearchColumns([
     LinkCol("label", "cmf.labels", "Label", url_for_label),
     MathCol("level", "cmf.level", "Level", default=False),
@@ -991,7 +1056,7 @@ newform_columns = SearchColumns([
                  contingent=display_Fricke, default=lambda info: not display_AL(info), align="center"),
     ProcessedCol("hecke_ring_index_factorization", "cmf.coefficient_ring", "Coefficient ring index",
                  lambda fac: "" if fac == "" else factor_base_factorization_latex(fac), mathmode=True, align="center", default=False),
-    ProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", st_display_knowl, short_title="Sato-Tate group", default=False),
+    MultiProcessedCol("sato_tate_group", "cmf.sato_tate", "Sato-Tate", ["is_cuspidal", "sato_tate_group"], _sato_tate_col, short_title="Sato-Tate group", default=False),
     MultiProcessedCol("qexp", "cmf.q-expansion", "$q$-expansion", ["label", "qexp_display"],
                       lambda label, disp: fr'<a href="{url_for_label(label)}">\({disp}\)</a>' if disp else "",
                       download_col="qexp_display")],
@@ -1009,7 +1074,12 @@ newform_columns = SearchColumns([
              },
              url_for_label=url_for_label,
              bread=get_search_bread,
-             learnmore=learnmore_list)
+             learnmore=learnmore_list,
+             diagram_opts={"x_axis_default": "level",
+                           "y_axis_default": "weight",
+                           "color_default": "dim",
+                           "extra_fields": ["level"],
+                           })
 def newform_search(info, query):
     newform_parse(info, query)
     set_info_funcs(info)
@@ -1315,7 +1385,11 @@ space_columns = SearchColumns([
                         'download':CMF_download().download_spaces},
              url_for_label=url_for_label,
              bread=get_search_bread,
-             learnmore=learnmore_list)
+             learnmore=learnmore_list,
+             diagram_opts={"x_axis_default": "level",
+                           "y_axis_default": "weight",
+                           "color_default": "dim",
+                           })
 def space_search(info, query):
     newspace_parse(info, query)
     set_info_funcs(info)
@@ -1679,7 +1753,7 @@ class CMFSearchArray(SearchArray):
             knowl='cmf.coefficient_field',
             label='Coefficient field',
             example='1.1.1.1',
-            example_span='2.0.5.1, Qsqrt5')
+            example_span='2.2.5.1, Qsqrt5')
 
         analytic_conductor = TextBox(
             name='analytic_conductor',
@@ -1865,10 +1939,12 @@ class CMFSearchArray(SearchArray):
         basic = [('', 'List of forms'),
                  ('Dimensions', 'Dimension table'),
                  ('Traces', 'Traces table'),
-                 ('Random', 'Random form')]
+                 ('Random', 'Random form'),
+                 ('Diagram', 'Diagram search')]
         spaces = [('Spaces', 'List of spaces'),
                   ('SpaceDimensions', 'Dimension table'),
-                  ('RandomSpace', 'Random')]
+                  ('RandomSpace', 'Random'),
+                  ('Diagram', 'Diagram search')]
         if info is None:
             return basic
         st = self._st(info)

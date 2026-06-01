@@ -92,6 +92,7 @@
       status: future
       colspan: onecolumn
     - title: Shimura curves
+      url_for: "shimcurve.index"
       status: future
       colspan: onecolumn
     - title: Modular curves
@@ -106,6 +107,10 @@
       colspan: onecolumn
     - title: K3 surfaces
       status: future
+    - title: Hilbert surfaces
+      status: future
+      url_for: "hmsurface.index"
+      colspan: onecolumn
     - title: $3^+$-d
       style: rotate
       status: future_rotated
@@ -120,6 +125,7 @@
     - title: Belyi maps
       url_for: "belyi.index"
       colspan: onecolumn
+
 
 5Fields:
   type: simple
@@ -156,7 +162,8 @@
     - title: Artin representations
       url_for: "artin_representations.index"
       colspan: onecolumn
-    - title: mod &#8467;
+    - title: mod &#8467; Galois
+      url_for:  "modlgal.index"
       status: future
       colspan: onecolumn
     - title: Weil-Deligne
@@ -203,7 +210,7 @@
     url_for: "abstract.index"
     colspan: onecolumn
   - title: Lattices
-    url_for: "lattice.lattice_render_webpage"
+    url_for: "lattice.index"
     status: beta
     colspan: onecolumn
   - title: Finite subgroups of

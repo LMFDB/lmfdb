@@ -1,7 +1,7 @@
 {% set C = info.columns %}
 {{ C.above_table | safe }}
 
-<table class="ntdata">
+<table class="ntdata" id="search-results">
   <thead>
     {% for rank in range(C.maxheight) %}
       <tr{% if C.tr_class %} class="{{C.tr_class[rank]}}"{% endif %}>

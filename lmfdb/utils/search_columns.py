@@ -150,11 +150,12 @@ class SearchCol:
             orig = name
         if isinstance(rec, dict):
             ans = rec.get(orig)
-            if not downloading and ans is None:
-                return ""
-            return ans
-        val = getattr(rec, name)
-        return val() if callable(val) else val
+        else:
+            val = getattr(rec, name)
+            ans = val() if callable(val) else val
+        if not downloading and ans is None:
+            return ""
+        return ans
 
     def get(self, rec):
         """
@@ -573,6 +574,9 @@ def eval_rational_list(s):
     - once-nested lists like "[[1,2],[3,4]]" or "1,2;3,4"
     - single quotes wrapping the integers/rationals, like "['1','2','3']"
     """
+    if s is None:
+        return
+
     def split(x):
         if not x:
             return []

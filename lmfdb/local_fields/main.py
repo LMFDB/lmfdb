@@ -1,7 +1,10 @@
 # This Blueprint is about p-adic fields (aka local number fields)
 # Author: John Jones
 
-from flask import abort, render_template, request, url_for, redirect
+import os
+import yaml
+
+from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import (
     PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
 from sage.plot.all import line, points, text, Graphics, polygon
@@ -17,11 +20,13 @@ from lmfdb.utils import (
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
+from lmfdb.utils.place_code import CodeSnippet
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
-from lmfdb.local_fields import local_fields_page, logger
+from lmfdb.logger import logger
+from lmfdb.local_fields import local_fields_page
 from lmfdb.local_fields.family import pAdicSlopeFamily, FAMILY_RE, latex_content, content_unformatter
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.galois_groups.transitive_group import (
@@ -354,7 +359,7 @@ def index():
             return local_field_count(info)
         elif search_type in ['Families', 'RandomFamily']:
             return families_search(info)
-        elif search_type in ['List', '', 'Random']:
+        elif search_type in ['List', '', 'Random', 'Diagram']:
             return local_field_search(info)
         else:
             flash_error("Invalid search type; if you did not enter it in the URL please report")
@@ -413,11 +418,15 @@ class LF_download(Downloader):
             ["p", "coeffs"],
             {
                 "magma": 'Prec := 100; // Default precision of 100\n    base := pAdicField(out`p, Prec);\n    field := LocalField(base, PolynomialRing(base)!(out`coeffs));',
-                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(p, Prec)\n    field = base.extension(QQ["x"](out["coeffs"]))',
+                "sage": 'Prec = 100 # Default precision of 100\n    base = Qp(out["p"], Prec)\n    unram = ZZx(out["unram"].replace("t","x"))\n    unram_subfield.<t> = base.extension(unram, names="t") if unram.degree() > 1 else base\n    eisen = sage_eval(out["eisen"], locals={"x":x, "t":t})\n    field.<a> = unram_subfield.extension(eisen, names="a") if eisen.degree() > 1 else unram_subfield',
                 "gp": 'field = Polrev(mapget(out, "coeffs"));',
             }
         ),
     }
+
+class LF_families_download(Downloader):
+    table = db.lf_families
+    title = '$p$-adic families'
 
 def galcolresponse(n,t,cache):
     if t is None:
@@ -546,9 +555,9 @@ lf_columns = SearchColumns([
     hidden_col(default=False),
     hiddenswan_col(),
     aut_col(lambda info:info.get("aut")),
-    # want apply_download for download conversion
-    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible")),
-    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible"), mathmode=True, func=format_eisen),
+    # Want apply_download for download conversion.  Sage requires both 'unram' and 'eisen' in the download files to construct p-adic fields.
+    PolynomialCol("unram", "lf.unramified_subfield", "Unram. Ext.", default=lambda info:info.get("visible") or info.get("Submit") == "sage"),
+    ProcessedCol("eisen", "lf.eisenstein_polynomial", "Eisen. Poly.", default=lambda info:info.get("visible") or info.get("Submit") == "sage", mathmode=True, func=format_eisen),
     insep_col(default=lambda info: info.get("ind_of_insep")),
     assoc_col(default=lambda info: info.get("associated_inertia")),
     respoly_col(),
@@ -607,7 +616,9 @@ families_columns = SearchColumns([
     MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent", default=False, contingent=lambda info: "relative" in info),
     MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
-                      pretty_link, contingent=lambda info: "relative" in info),
+                      pretty_link,
+                      apply_download=lambda base, p, n0, rf0: base,
+                      contingent=lambda info: "relative" in info),
     RationalListCol("visible", "lf.slopes", "Abs. Artin slopes",
                     show_slopes2, default=False, short_title="abs. Artin slopes"),
     RationalListCol("slopes", "lf.slopes", "Swan slopes", short_title="Swan slopes"),
@@ -886,9 +897,54 @@ def local_field_count(info, query):
              postprocess=lf_postprocess,
              bread=lambda:get_bread([("Search results", ' ')]),
              learnmore=learnmore_list,
-             url_for_label=url_for_label)
+             url_for_label=url_for_label,
+             diagram_opts={
+                 "title": "$p$-adic field diagram search",
+                 "bread": lambda: get_bread([("Diagram search", " ")]),
+                 "label_builder": lambda r: r["new_label"],
+                 "x_axis_default": "f",
+                 "y_axis_default": "c",
+                 "color_default": "u",
+             })
 def local_field_search(info,query):
     common_parse(info, query)
+
+def make_code_snippets(data):
+    """
+    Create code snippets dictionary for p-adic field.
+    """
+    # read in code.yaml from local_fields directory:
+    _curdir = os.path.dirname(os.path.abspath(__file__))
+    code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+    # Sage doesn't (yet) support arbitrary extensions of p-adic fields
+    # so must manually construct field using 'unram' and 'eisen' columns for Sage
+    sage_construct_field = ""
+    if data['e'] == 1 and data['f'] == 1:
+        # Trivial case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])
+    elif data['e'] == 1:
+        # Unramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")"
+    elif data['f'] == 1:
+        # Totally ramified case
+        sage_construct_field = "K.<a> = Q"+str(data['p'])+".extension("+data['eisen']+")"
+    else:
+        # Mixed case (construct L as maximal unramified extension)
+        sage_construct_field = "L.<t> = Q"+str(data['p'])+".extension("+data['unram'].replace('t','x')+")\n"
+        sage_construct_field += "K.<a> = L.extension("+data['eisen']+")"
+
+    format_data = {
+        'p': data['p'],
+        'coeffs': str(data['coeffs']),
+        'sage_construct_field' : sage_construct_field
+    }
+
+    for prop in code:
+        if prop not in ['frontmatter', 'snippet_test']:
+            for lang in code[prop]:
+                code[prop][lang] = code[prop][lang].format(**format_data)
+    return code
 
 def render_field_webpage(args):
     data = None
@@ -1105,7 +1161,10 @@ def render_field_webpage(args):
                 lstr = data["old_label"]
             friends.append(('Number fields with this completion',
                 url_for('number_fields.number_field_render_webpage')+f"?completions={lstr}"))
-        downloads = [('Underlying data', url_for('.lf_data', label=label))]
+        downloads = []
+        for lang in [("Magma", "magma"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".lf_code_download", label=label, download_type=lang[1])))
+        downloads.append(('Underlying data', url_for('.lf_data', label=label)))
 
         if data.get('new_label'):
             _, _, _, fam, i = data['new_label'].split(".")
@@ -1130,6 +1189,7 @@ def render_field_webpage(args):
             friends=friends,
             downloads=downloads,
             learnmore=learnmore_list(),
+            code=make_code_snippets(data),
             KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 
@@ -1177,6 +1237,32 @@ def lf_data(label):
         return datapage(label, "lf_families", title=title, bread=bread)
     else:
         return abort(404, f"Invalid label {label}")
+
+sorted_code_names = ['field', 'poly', 'base_field', 'degree', 'ramification_index', 'residue_degree',
+                     'disc_exponent', 'unramified_subfield', 'roots_of_unity']
+
+def lf_code(**args):
+    label = args['label']
+    if NEW_LF_RE.fullmatch(label):
+        data = db.lf_fields.lucky({"new_label": label})
+    elif OLD_LF_RE.fullmatch(label):
+        data = db.lf_fields.lucky({"old_label": label})
+    else:
+        raise ValueError(f"Invalid label {label}")
+    if data is None:
+        raise ValueError(f"There is no local field with label {label}")
+    code = CodeSnippet(make_code_snippets(data))
+    lang = args['download_type']
+    return code.export_code(label, lang, sorted_code_names)
+
+@local_fields_page.route('/<label>/download/<download_type>')
+def lf_code_download(**args):
+    try:
+        response = make_response(lf_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @local_fields_page.route("/random")
 @redirect_no_cache
@@ -1362,9 +1448,18 @@ def common_family_parse(info, query):
     titletag=lambda:'p-adic families search results',
     err_title='p-adic families search input error',
     learnmore=learnmore_list,
+    shortcuts={'download': LF_families_download()},
     bread=lambda:get_bread([("Families", "")]),
     postprocess=families_postprocess,
     url_for_label=url_for_family,
+    diagram_opts={
+        "title": "$p$-adic families diagram search",
+        "bread": lambda: get_bread([("Families diagram search", "")]),
+        "label_builder": lambda r: r["new_label"],
+        "x_axis_default": "f",
+        "y_axis_default": "c",
+        "color_default": "u",
+    },
 )
 def families_search(info, query):
     if "relative" in info:
@@ -1713,7 +1808,9 @@ class FamiliesSearchArray(SearchArray):
         return self._search_again(info, [
             ('Families', 'List of families'),
             ('FamilyCounts', 'Counts table'),
-            ('RandomFamily', 'Random family')])
+            ('RandomFamily', 'Random family'),
+            ('Diagram', 'Diagram search'),
+        ])
 
     def _buttons(self, info):
         if self._st(info) == "FamilyCounts":
@@ -1758,7 +1855,9 @@ class LFSearchArray(SearchArray):
         return self._search_again(info, [
             ('List', 'List of fields'),
             ('Counts', 'Counts table'),
-            ('Random', 'Random field')])
+            ('Random', 'Random field'),
+            ('Diagram', 'Diagram search'),
+        ])
 
     def _buttons(self, info):
         if self._st(info) == "Counts":

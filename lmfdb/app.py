@@ -20,8 +20,8 @@ from sage.env import SAGE_VERSION
 from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
-from .logger import logger_file_handler, critical
-from .homepage import load_boxes, contribs
+from .logger import critical
+from .homepage import contribs
 
 LMFDB_VERSION = "LMFDB Release 1.2.1"
 
@@ -64,6 +64,9 @@ def set_beta_state():
 def is_beta():
     return g.BETA
 
+def is_alpha():
+    return True # hardwired for alpha branch
+
 
 app.is_running = False
 
@@ -79,8 +82,6 @@ def is_running():
 # Global app configuration #
 ############################
 
-
-app.logger.addHandler(logger_file_handler())
 
 # If the debug toolbar is installed then use it
 if app.debug:
@@ -147,7 +148,7 @@ def ctx_proc_userdata():
     # debug mode?
     vars['DEBUG'] = is_debug_mode()
     vars['BETA'] = is_beta()
-    #vars['ALPHA'] = True # hardwired for alpha branch
+    vars['ALPHA'] = is_alpha()
 
     def modify_url(**replace):
         url = request.url
@@ -163,6 +164,7 @@ def ctx_proc_userdata():
                 replace["query"] = replace.pop("query_add")
         urlparts = urlparts._replace(**replace)
         return urlunparse(urlparts)
+    vars['urlparse'] = urlparse
     vars['modify_url'] = modify_url
     vars['zip'] = zip
     from lmfdb.utils import pluralize
@@ -301,13 +303,18 @@ def netloc_redirect():
         return redirect(url, code=301)
     elif (
         urlparts.netloc == "www.lmfdb.org"
-
         and not white_listed(urlparts.path)
         and valid_bread(urlparts.path)
     ):
         replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
         return redirect(urlunparse(replaced), code=302)
-
+    elif (
+        urlparts.netloc == "alpha.lmfdb.org"
+        and not alpha_listed(urlparts.path)
+        and valid_bread(urlparts.path)
+    ):
+        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
+        return redirect(urlunparse(replaced), code=302)
 
 def timestamp():
     return '[%s UTC]' % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -349,12 +356,11 @@ def get_menu_cookie():
 
 @app.route("/")
 def index():
-    return render_template('index-boxes.html',
+    # Changed for alpha branch.
+    return render_template('alpha.html',
                            titletag="The L-functions and modular forms database",
-                           title="The L-functions and modular forms database (LMFDB)",
-                           bread=None,
-                           boxes=load_boxes())
-
+                           title="The L-functions and modular forms database (Alpha version)",
+                           bread=None)
 
 @app.route("/about")
 def about():
@@ -535,6 +541,12 @@ def citation():
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
 
+@app.route("/license")
+def license():
+    t = "LMFDB Data and Code Licenses"
+    b = [("LMFDB Licenses", " ")]
+    return render_template('license.html', title=t, bread=b)
+
 
 @app.route("/contact")
 def contact():
@@ -622,6 +634,54 @@ def css():
 @app.route("/not_yet_implemented")
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
+
+
+@app.route("/CodeCoverage")
+def code_coverage():
+    import glob
+    import yaml
+    lmfdb_dir = os.path.dirname(os.path.abspath(__file__))
+    yaml_files = sorted(glob.glob(os.path.join(lmfdb_dir, "**/code*.yaml"), recursive=True))
+    metadata_keys = {'prompt', 'logo', 'comment', 'not-implemented', 'frontmatter', 'snippet_test', 'top_matter'}
+    cas_display = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+    all_cas = set()
+    modules = []
+    for yf in yaml_files:
+        with open(yf) as f:
+            data = yaml.safe_load(f)
+        if not data:
+            continue
+        cas_list = list(data.get('prompt', {}).keys())
+        all_cas.update(cas_list)
+        sections = {k: v for k, v in data.items() if k not in metadata_keys and isinstance(v, dict)}
+        total = len(sections)
+        per_cas = {}
+        for cas in cas_list:
+            per_cas[cas] = sum(1 for s in sections.values() if cas in s)
+        rel = os.path.relpath(yf, lmfdb_dir)
+        module_name = rel.split(os.sep)[0].replace('_', ' ').capitalize()
+        basename = os.path.basename(yf)
+        if basename != 'code.yaml':
+            suffix = basename.replace('code-', '').replace('code', '').replace('.yaml', '')
+            module_name += f' ({suffix})'
+        modules.append({'name': module_name, 'file': rel, 'total': total, 'per_cas': per_cas, 'cas_list': cas_list})
+    cas_order = [c for c in ['sage', 'pari', 'magma', 'oscar', 'gap'] if c in all_cas]
+    totals = {}
+    grand_total = 0
+    for cas in cas_order:
+        count = sum(m['per_cas'].get(cas, 0) for m in modules if cas in m['cas_list'])
+        applicable = sum(m['total'] for m in modules if cas in m['cas_list'])
+        totals[cas] = (count, applicable)
+    grand_total = sum(m['total'] for m in modules)
+    bread = [("Code Coverage", '')]
+    return render_template("code_coverage.html",
+                           title="Code Snippet Coverage",
+                           bread=bread,
+                           modules=modules,
+                           cas_order=cas_order,
+                           cas_display=cas_display,
+                           totals=totals,
+                           grand_total=grand_total)
 
 
 ##############################
@@ -832,6 +892,74 @@ def white_listed(url):
     else:
         return False
 
+@cached_function
+def alpha_blueprints():
+    # This is the row you need to change to add or remove entries from the alpha.lmfdb.org sidebar
+    # You should list endpoints giving the top level url for the sections to be included (this is usually what is shown in sidebar.yaml)
+    return ["cmf.index", "g2c.index_Q", "smf.index", "modcurve.index", "shimcurve.index", "hmsurface.index", "abvarfq.abelian_varieties", "modlgal.index", "lattice.index", # adjust these to change sidebar
+            "users.list", "knowledge.index", "API.index"] # Should always allow these for usability
+
+@cached_function
+def BasicRoutes():
+    return [
+        "datasets",
+        "L/contents",
+        "Group",
+        "Motive",
+        "Representation",
+        "Field",
+        "Variety",
+        "ModularForm",
+        "about",
+        "acknowledgement",
+        "alive",
+        "bigpicture",
+        "callback_ajax",
+        "citation",
+        "contact",
+        "editorial-board",
+        "favicon.ico",
+        "features",
+        "forcebetasitemap",
+        "health",
+        "humans.txt",
+        "info",
+        "intro",
+        "management",
+        "news",
+        "rcs",
+        "robots.txt",
+        "search",
+        "sitemap",
+        "statshealth",
+        "style.css",
+        "universe",
+        "whitelistedsitemap",
+    ]
+
+@cached_function
+def AlphaListedRoutes():
+    return ([urlparse(url_for(endpoint)).path.strip("/") for endpoint in alpha_blueprints()] +
+            ["static"])
+
+@cached_function
+def AlphaListedBreads():
+    res = set()
+    for elt in AlphaListedRoutes():
+        pieces = elt.split("/")
+        for i in range(1, len(pieces)):
+            res.add("/".join(pieces[:i]))
+    res.update(BasicRoutes())
+    return res
+
+@cached_function
+def alpha_listed(url):
+    url = url.strip("/")
+    if not url:
+        return True
+    if any(url.startswith(elt) for elt in AlphaListedRoutes()) or url in AlphaListedBreads():
+        return True
+    return False
 
 @cached_function
 def NotWhiteListedBreads():

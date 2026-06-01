@@ -9,7 +9,7 @@ from lmfdb.utils import (
     flash_error, SearchArray, TextBox, CountBox, YesNoBox,
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints,
-    search_wrap)
+    search_wrap, redirect_no_cache)
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_subgroup_label_regex
@@ -58,9 +58,10 @@ def index():
 
 
 @glnC_page.route("/random")
+@redirect_no_cache
 def random_glnC_group():
     label = db.gps_crep.random(projection='label')
-    return redirect(url_for(".by_label", label=label))
+    return url_for(".by_label", label=label)
 
 
 @glnC_page.route("/<label>")
@@ -135,7 +136,11 @@ def glnC_postprocess(res, info, query):
              bread=lambda: get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
              credit=lambda: credit_string,
-             url_for_label=url_for_label)
+             url_for_label=url_for_label,
+             diagram_opts={
+                 "title": r"$\GL(n,\C)$ subgroup diagram search",
+                 "bread": lambda: get_bread([("Diagram search", "")]),
+             })
 def group_search(info, query):
     info['group_url'] = get_url
     parse_ints(info, query, 'order', 'order')

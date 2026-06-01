@@ -579,9 +579,13 @@ def comma(x, sep=None, mathmode=True):
     CAUTION: this misbehaves if the input is not an integer.
 
     sep is an optional separator other than a comma
+    mathmode is a boolean which determines whether to include dollar signs
+    and place curly braces around the commas (set to True by default)
 
-    Example:
-    >>> comma("12345")
+    Examples:
+    >>> comma(12345)
+    '$12{,}345$'
+    >>> comma(12345, mathmode=False)
     '12,345'
     """
     if sep is None:
@@ -594,11 +598,6 @@ def comma(x, sep=None, mathmode=True):
         x = f"${x}$"
     return x
 
-def latex_comma(x):
-    """
-    For latex we need to use braces around the commas to get the spacing right.
-    """
-    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
@@ -789,6 +788,10 @@ def flash_info(errmsg, *args):
     """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
     flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
 
+def flash_success(msg, *args):
+    """ flash information in green with args in black; msg may contain markup, including latex math mode"""
+    flash(Markup(msg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)), "success")
+
 
 ################################################################################
 #  Ajax utilities
@@ -970,6 +973,8 @@ class WebObj:
         return self._data is None
 
 def plural_form(noun):
+    if noun == "genus":
+        return "genera"
     if noun and noun[-1] != "s":
         noun += "s"
     return noun

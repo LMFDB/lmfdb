@@ -1,0 +1,18 @@
+{% extends 'smf_refine_search.html' %}
+
+{% block show_results %}
+
+{% include 'matches.html' %}
+{% if info.number %}
+
+<p> The following table gives {{ KNOWL('mf.siegel.trace_form', title='traces') }} of \(a_n\) for the search results. </p>
+
+{% include 'smf_trace_display.html' %}
+
+{% include 'forward_back.html' %}
+{% if info.number <= 1000 %}
+{% include 'download_search_results.html' %}
+{% endif %}
+{% endif %}
+
+{% endblock %}

@@ -512,3 +512,90 @@ class ModCrvTest(LmfdbTest):
             '40.720.49.1139'
             ]:
             assert gassmann_data in data
+
+    def test_combined_data_display(self):
+        """Test that all data from combined_data is correctly displayed on the page"""
+        L = self.tc.get("/ModularCurve/Q/11.12.1.a.1", follow_redirects=True)
+        data = L.get_data(as_text=True)
+
+        # Test basic curve information
+        assert "Label" in data
+        assert "11.12.1.a.1" in data
+        assert "Level" in data
+        assert "11" in data
+        assert "Index" in data
+        assert "12" in data
+        assert "Genus" in data
+        assert "1" in data
+
+        # Test cusp information
+        assert "Cusps" in data
+        assert "Rational cusps" in data
+
+        # Test newform data
+        assert "Newforms" in data
+        assert "11.2.1.a" in data
+
+        # Test model information
+        assert "Canonical model" in data
+        assert "Weierstrass model" in data
+
+        # Test maps to other curves
+        assert "Maps to other modular curves" in data
+
+    def test_download_functionality(self):
+        """Test that downloads work correctly with combined_data"""
+        # Test Magma download
+        L = self.tc.get("/ModularCurve/download_to_magma/11.12.1.a.1")
+        data = L.get_data(as_text=True)
+        assert "Magma code for modular curve with label 11.12.1.a.1" in data
+        assert "// Curve name" in data
+        assert "// Cummins-Pauli label" in data
+
+        # Test Sage download
+        L = self.tc.get("/ModularCurve/download_to_sage/11.12.1.a.1")
+        data = L.get_data(as_text=True)
+        assert "Sage code for modular curve with label 11.12.1.a.1" in data
+
+        # Test text download
+        L = self.tc.get("/ModularCurve/download_to_text/11.12.1.a.1")
+        data = L.get_data(as_text=True)
+        assert "Data for modular curve with label 11.12.1.a.1" in data
+        assert '"label": "11.12.1.a.1"' in data
+        assert '"level": 11' in data
+        assert '"index": 12' in data
+
+    def test_combined_data_edge_cases(self):
+        """Test edge cases and special conditions in combined_data"""
+        # Test curve with no newforms
+        L = self.tc.get("/ModularCurve/Q/1.1.0.a.1", follow_redirects=True)
+        data = L.get_data(as_text=True)
+        assert "Newforms" in data
+        assert "not computed" in data
+
+        # Test curve with multiple newforms
+        L = self.tc.get("/ModularCurve/Q/48.576.21-48.bqz.1.2", follow_redirects=True)
+        data = L.get_data(as_text=True)
+        assert "Newforms" in data
+        assert "48.2.a.a" in data
+
+        # Test curve with no models
+        L = self.tc.get("/ModularCurve/Q/2.3.0.a.1", follow_redirects=True)
+        data = L.get_data(as_text=True)
+        assert "Models" in data
+        assert "not computed" in data
+
+    def test_combined_data_related_objects(self):
+        """Test that related objects are correctly displayed"""
+        L = self.tc.get("/ModularCurve/Q/11.12.1.a.1", follow_redirects=True)
+        data = L.get_data(as_text=True)
+
+        # Test related objects section
+        assert "Related objects" in data
+        assert "Modular form" in data
+        assert "L-function" in data
+
+        # Test links to related objects
+        assert "href=" in data
+        assert "ModularForm" in data
+        assert "L/" in data
