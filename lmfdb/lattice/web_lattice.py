@@ -350,7 +350,7 @@ class WebGenus(WebLat):
     @lazy_attribute
     def friends(self):
         friends = []
-        weight = self.dim // 2
+        weight = self.rank // 2
         chi = kronecker_character(self.disc)
         chi_orbit = 'a' if chi.is_trivial() else 'b'
         mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
