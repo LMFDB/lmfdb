@@ -65,7 +65,7 @@ class CmfTest(LmfdbTest):
         assert '9.10.E.c.b' in page.get_data(as_text=True)
         assert '1023' in page.get_data(as_text=True)
 
-    # @unittest.skip("Long tests for many newform spaces, should be run & pass before any release")
+    @unittest.skip("Long tests for many newform spaces, should be run & pass before any release")
     def test_many(self):
         from sage.all import ZZ
         for Nk2 in range(1, 2001):
@@ -80,12 +80,12 @@ class CmfTest(LmfdbTest):
                     assert str(k) in rv.get_data(as_text=True)
                     assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
-    # @unittest.skip("under construction")
+    # 2DO - Still working on this one, add more favorites
     def test_favorite(self):
         favorite_newform_eis_labels = [
-            [('1.4.E.a.a','First Level 1 holomorphic Eisenstein series'),
-             ('1.6.E.a.a','First weight 6 holomorphic Eisenstein series'),
-             ('2.2.E.a.a','First weight 2 holomorphic Eisenstein series'),
+            [('1.4.E.a.a','First Level 1 form'),
+             ('1.6.E.a.a','First weight 6 form'),
+             ('2.2.E.a.a','First weight 2 form'),
             ],
             [
             ]
@@ -111,22 +111,6 @@ class CmfTest(LmfdbTest):
                 assert elt in page.get_data(as_text=True)
                 assert "Space of modular forms of " in page.get_data(as_text=True)
 
-<<<<<<< HEAD
-    @unittest.skip("under construction")
-    # Issue - we did not generate trace hashes for Eisenstein series
-    # For cusp forms we used the L function hash for the trace hash ?
-    def test_tracehash(self):
-            for t, l in [[1329751273693490116,'1.4.E.a.a'],[1294334189658968734, '1.6.E.a.a'],[0,'not found']]:
-                page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%%23%d" % t, follow_redirects=True)
-                assert l in page.get_data(as_text=True)
-
-    @unittest.skip("under construction")
-    # need to have jump when is_cuspidal is false to direct to the first form
-    def test_jump(self):
-        for j, l in [['1','1.4.E.a.a'], ['2.2.E.1.a', '2.2.E.a.a'], ['55.3.E.a', '55.3.E.a'], ['55.3.E.54', '55.3.E.d'], ['20.5.E', '20.5.E'], ['yes&weight=2&is_cuspidal=no','2.2.E.a.a']]:
-            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % j, follow_redirects=True)
-            assert l in page.get_data(as_text=True)
-=======
     @unittest.skip("Needs to check the hash on traces here - so far have not produced trace hashes for Eisenstein series")
     def test_tracehash(self):
         for t, l in [[-121597739728372579,'867.2.E.i.bb'],[-67108865, '1.4.E.a.a'],[0,'not found']]:
@@ -337,4 +321,3 @@ class CmfTest(LmfdbTest):
         assert 'since the weight is even while the character is' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/E/a/")
         assert 'since the weight is odd while the character is' in page.get_data(as_text=True)
->>>>>>> 3a4c465410cd0ff57c91828bdaf9465d24df4bb6
