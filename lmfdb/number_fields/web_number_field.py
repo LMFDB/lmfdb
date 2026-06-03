@@ -221,7 +221,7 @@ def field_pretty(label):
      - cyclotomic fields and their maximal real subfields, and general multi-quadratic fields.
     """
 
-    d, r, D, _ = label.split('.')
+    d, r, disc, _ = label.split('.')
 
     # Case 1: The rationals Q
     if d == '1':  # Q
@@ -239,8 +239,9 @@ def field_pretty(label):
         return 'i' if z == -1 else r'\sqrt{%d}' % z
 
     # Case 2: Quadratic fields Q(\sqrt{D})
+    # (note that we give the pretty name for 2.0.4.1 as \Q(\sqrt{-1}), and not \Q(i))
     if d == '2':
-        D = ZZ(int(D))
+        D = ZZ(disc)
         if r == '0':
             D = -D
         # Don't prettify invalid quadratic field labels
@@ -349,7 +350,7 @@ def field_pretty(label):
             final_Ds = []
 
             # Compute set of all primes dividing the Ds (can take prime divisors of discriminant)
-            primes = ZZ(D).prime_divisors()
+            primes = ZZ(disc).prime_divisors()
 
             # Keep track of prime exponents and row space (over F_2) used so far
             # For fast computations, store row_space just as a set of integers, considered as vectors of bits.
