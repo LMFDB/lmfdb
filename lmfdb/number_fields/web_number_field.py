@@ -4,7 +4,7 @@ import yaml
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, RR, pi, gcd, euler_phi, CyclotomicField, gap, RealField, sqrt, prod, matrix, vector, GF,
+    Set, ZZ, RR, pi, gcd, euler_phi, CyclotomicField, gap, RealField, sqrt, prod,
     QQ, NumberField, QuadraticField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -221,7 +221,7 @@ def field_pretty(label):
      - cyclotomic fields and their maximal real subfields, and general multi-quadratic fields.
     """
 
-    d, r, D, _ = label.split('.')
+    d, r, disc, _ = label.split('.')
 
     # Case 1: The rationals Q
     if d == '1':  # Q
@@ -239,8 +239,9 @@ def field_pretty(label):
         return 'i' if z == -1 else r'\sqrt{%d}' % z
 
     # Case 2: Quadratic fields Q(\sqrt{D})
+    # (note that we give the pretty name for 2.0.4.1 as \Q(\sqrt{-1}), and not \Q(i))
     if d == '2':
-        D = ZZ(int(D))
+        D = ZZ(disc)
         if r == '0':
             D = -D
         # Don't prettify invalid quadratic field labels
@@ -263,17 +264,15 @@ def field_pretty(label):
 
         # Case 5a: Biquadratic fields Q(\sqrt{A}, \sqrt{B})
         if len(subs) == 3:  # only for V_4 fields
-            subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
-            # Abort if we don't know one of these fields
-            if not any(z._data is None for z in subs):
-                labels_str = [str(z.get_label()) for z in subs]
-                labels_split = [z.split('.') for z in labels_str]
-                # extract abs disc and signature to be good for sorting
-                labels = sorted([[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels_split])
-                # put in +/- sign
-                labels_values = [z[0] * (-1)**(1 + z[1] / 2) for z in labels]
-                labels_str = [_sqrt_symbol(z) for z in labels_values]
-                return r'\(\Q(%s, %s)\)' % (labels_str[0], labels_str[1])
+            all_Ds = []
+            for sub in subs:
+                qs = sub[0].split(',')
+                all_Ds.append(integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2])))
+
+            # Sort the Ds by absolute value (in case of tie, put positive Ds first)
+            labels_values = sorted(all_Ds, key=lambda x: (abs(x), -x))
+            labels_str = [_sqrt_symbol(z) for z in labels_values]
+            return r'\(\Q(%s, %s)\)' % (labels_str[0], labels_str[1])
 
         # Case 5b: Imprimitive quartic fields of type Q(\sqrt(A + B*\sqrt(D)))
         if len(subs) == 1:
@@ -341,33 +340,39 @@ def field_pretty(label):
         quad_subs = [s[0] for s in all_subs if s[0].count(',') == 2]
         num_quad_subs = len(quad_subs)
         if num_quad_subs == int(d) - 1:
-            quad_labels = [str(wnf.from_coeffs(string2list(str(z))).get_label()) for z in quad_subs]
-            all_Ds = [_quad_label_to_D(qlabel) for qlabel in quad_labels]
+            all_Ds = []
+            for quad_sub in quad_subs:
+                qs = quad_sub.split(',')
+                all_Ds.append(integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2])))
 
             # Sort the Ds by absolute value (in case of tie, put positive Ds first)
             sorted_Ds = sorted(all_Ds, key=lambda x: (abs(x), -x))
             final_Ds = []
 
-            # Compute set of all primes dividing the Ds
-            primes = sorted({int(p) for D in all_Ds for p in ZZ(abs(D)).prime_divisors()})
+            # Compute set of all primes dividing the Ds (can take prime divisors of discriminant)
+            primes = ZZ(disc).prime_divisors()
 
-            # Keep track of prime exponents and row space used so far
-            all_prime_exponents = []
-            row_space = matrix(GF(2), all_prime_exponents).row_space()
+            # Keep track of prime exponents and row space (over F_2) used so far
+            # For fast computations, store row_space just as a set of integers, considered as vectors of bits.
+            row_space = {0}  # The trivial space
 
             for D in sorted_Ds:
-                # Convert D to a vector of prime exponents mod 2 (including sign)
-                prime_exp = [int(D < 0)]+[D.valuation(p)%2 for p in primes]
-                if vector(prime_exp) not in row_space:
+                # Convert D to a vector of prime exponents mod 2 (including sign), stored with bits as an integer
+                # D is already squarefree, so all prime exponents either 0 or 1
+                prime_exp = int(D < 0)
+                for i in range(len(primes)):
+                    prime_exp += int((D%primes[i]) == 0) << (i+1)
+                if prime_exp not in row_space:
                     final_Ds.append(D)
 
                     # Break out once rank is full
                     if len(final_Ds) == k:
                         break
 
-                    # Recompute row space
-                    all_prime_exponents.append(prime_exp)
-                    row_space = matrix(GF(2), all_prime_exponents).row_space()
+                    # Recompute the new row space (take prime_exp XOR everything else in row_space)
+                    old_row_space = row_space.copy()
+                    for v in old_row_space:
+                        row_space.add(v^prime_exp)  # here ^ is bitwise XOR
 
             return r'\(\Q('+', '.join([_sqrt_symbol(D) for D in final_Ds])+r')\)'
 

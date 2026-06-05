@@ -319,7 +319,15 @@ class CMF_download(Downloader):
         for k in code:
             if 'comment' not in code[k] or lang not in code[k]:
                 continue
-            script += "\n%s %s: \n" % (comment,code[k]['comment'])
+
+            # Remove duplicates, in particular those introduced by tags
+            # initialize-newspace-weight-1 and initialize-newspace-weight-not-1
+            # which inherit the same magma code snippet from initalize-newspace-common.
+            # This solves #7003.
+            if code[k][lang] in script:
+                continue
+
+            script += "\n%s %s: \n" % (comment, code[k]['comment'])
             script += code[k][lang] + ('\n' if '\n' not in code[k][lang] else '')
         return script
 

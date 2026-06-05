@@ -424,6 +424,10 @@ class LF_download(Downloader):
         ),
     }
 
+class LF_families_download(Downloader):
+    table = db.lf_families
+    title = '$p$-adic families'
+
 def galcolresponse(n,t,cache):
     if t is None:
         return 'not computed'
@@ -612,7 +616,9 @@ families_columns = SearchColumns([
     MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent", default=False, contingent=lambda info: "relative" in info),
     MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
-                      pretty_link, contingent=lambda info: "relative" in info),
+                      pretty_link,
+                      apply_download=lambda base, p, n0, rf0: base,
+                      contingent=lambda info: "relative" in info),
     RationalListCol("visible", "lf.slopes", "Abs. Artin slopes",
                     show_slopes2, default=False, short_title="abs. Artin slopes"),
     RationalListCol("slopes", "lf.slopes", "Swan slopes", short_title="Swan slopes"),
@@ -1442,6 +1448,7 @@ def common_family_parse(info, query):
     titletag=lambda:'p-adic families search results',
     err_title='p-adic families search input error',
     learnmore=learnmore_list,
+    shortcuts={'download': LF_families_download()},
     bread=lambda:get_bread([("Families", "")]),
     postprocess=families_postprocess,
     url_for_label=url_for_family,
