@@ -6,6 +6,8 @@ from lmfdb.utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime
 import re
 import subprocess
 import time
+import yaml
+import difflib
 
 from psycodict.base import PostgresBase
 from psycodict import DelayCommit
@@ -208,11 +210,17 @@ class KnowlBackend(PostgresBase):
         if L:
             return dict(zip(fields, L[0]))
 
-    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2]):
+    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2], ids=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        L = self._safe_execute(selecter, [0, types])
+        if ids is None:
+            where = SQL("WHERE status >= %s AND type = ANY(%s)")
+            values = [0, types]
+        else:
+            where = SQL("WHERE status >= %s AND id = ANY(%s)")
+            values = [0, ids]
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls {1} ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)), where)
+        L = self._safe_execute(selecter, values)
         return [dict(zip(fields, res)) for res in L]
 
     def get_all_defines(self):
@@ -324,6 +332,99 @@ class KnowlBackend(PostgresBase):
             inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
+
+    def yaml_export(self, filename, ids=0, fields=None):
+        """
+        Write the given knowls to a yaml file; you can then edit that file and reload using update_from_yaml.
+        You should usually not change the first output, which records the timestamp that this
+        This function is not currently exposed to the web interface, so must be run manually (a connection to devmirror is sufficient, so it does not need to be run by an LMFDB editor).
+
+        INPUT:
+
+        - ``filename`` -- the filename to write output
+        - ``ids`` -- either a list of knowl IDs or an integer/list of integers (in which case all knowls with that type will be output)
+        - ``fields`` -- include these fields; if not specified will use id plus the default fields.
+
+        OUTPUT:
+
+        - the file will be created with a list of dictionaries.  The first will be a dictionary storing the time the file was written; the rest of the records hold the knowl data.
+        """
+        timestamp = utc_now_naive()
+        if fields is None:
+            fields = ['id', 'content', 'title']
+        if isinstance(ids, int):
+            ids = [ids]
+        if all(isinstance(n, int) for n in ids):
+            knowls = self.get_all_knowls(fields, types=ids)
+        elif all(isinstance(kid, str) for kid in ids):
+            knowls = self.get_all_knowls(fields, ids=ids)
+        else:
+            raise ValueError("ids must either be a list of integers or a list of ids")
+        with open(filename, "w", encoding="utf-8") as F:
+            yaml.safe_dump([{"written": timestamp}] + knowls, F, default_flow_style=False, sort_keys=False)
+
+    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False):
+        """
+        This function provides a mechanism for updating many knowls at once from a yaml file.
+        It is not currently exposed to the web interface, so must be run manually by an LMFDB editor.
+        """
+        with open(filename, encoding="utf-8") as F:
+            records = yaml.safe_load(F)
+        timestamp = records[0]["written"]
+        records = {rec['id']: rec for rec in records[1:]}
+        knowls = self.get_all_knowls(['id'] + self._default_fields, ids=list(records))
+        existing = set(rec['id'] for rec in knowls)
+        creating = {kid: rec for kid, rec in records.items() if kid not in existing}
+        too_new = [rec["id"] for rec in knowls if rec["timestamp"] >= timestamp]
+        knowls = [rec for rec in knowls if rec["timestamp"] < timestamp]
+        updated = [dict(rec) for rec in knowls]
+        for knowl in updated:
+            knowl.update(records[knowl["id"]])
+        count = 0
+        for old, new in zip(knowls, updated):
+            assert old['id'] == new['id']
+            if old != new:
+                if dryrun:
+                    print(f"Updating {old['id']}:")
+                    for col, oval in old.items():
+                        if col != "content":
+                            nval = new[col]
+                            if nval != oval:
+                                print(f'  Changing {col} from "{oval}" to "{nval}"')
+                    if 'content' in old:
+                        ncontent, ocontent = new['content'], old['content']
+                        if ncontent != ocontent:
+                            diff = difflib.ndiff(ocontent.split("\n"), ncontent.split("\n"))
+                            print("  " + "\n  ".join(diff))
+                else:
+                    if not straight_to_production:
+                        new['status'] = 0
+                    new['timestamp'] = utc_now_naive()
+                    self.save(Knowl(new['id'], data=new), who, most_recent=Knowl(old['id'], data=old))
+                count += 1
+        ccount = 0
+        if creating:
+            from lmfdb.knowledge.main import allowed_id
+            for kid, rec in creating.items():
+                if not allowed_id(kid):
+                    print(f"{kid} not a valid knowl id")
+                    continue
+                if not ("content" in rec and "title" in rec):
+                    print(f"{kid} missing required content/title")
+                    continue
+                if dryrun:
+                    print(f"Creating {kid}")
+                else:
+                    rec['status'] = 0
+                    rec['timestamp'] = utc_now_naive()
+                    self.save(Knowl(kid, data=rec), who)
+                ccount += 1
+        if count:
+            print(f"{count} knowls updated")
+        if ccount:
+            print(f"{ccount} knowls created")
+        if too_new:
+            print(f"{len(too_new)} knowls have changed since the yaml file was created, and are thus not being updated:\n{','.join(too_new)}")
 
     def get_history(self, limit=25):
         """
