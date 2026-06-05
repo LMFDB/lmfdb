@@ -731,7 +731,7 @@ class Bound(ColTest):
     Examples:
       *  "conductor", Bound(1000)                     -> checks that conductor is at most 1000
       *  "genus", Bound([2, 4])                       -> checks that genus is between 2 and 4, inclusive
-      *  ("level", "weight"), Bound(10, 100)          -> checks that level is at most 10 and weight is at most 100 
+      *  ("level", "weight"), Bound(10, 100)          -> checks that level is at most 10 and weight is at most 100
       *  ("g","q"), Bound(3, RealSet([-5,5], [7,9]))  -> checks that g is at most 3 and q is either between -5 and 5 inclusive, or between 7 and 9 inclusive.
     """
     def __init__(self, *bounds, cls=IntegerSet):
@@ -767,7 +767,7 @@ class PrimeBound(Bound):
     """
     Check that all queried values are finite sets of primes lying within its corresponding bound. (i.e. primes in a given box).
     Useful for checking if conductor/discriminant/level is prime and in a specified range.
-    
+
     Examples:
       *  "conductor", PrimeBound(1000)                -> checks that conductor is a prime number less than 1000
       *  ("conductor", "disc"), PrimeBound(10, 100)   -> checks that conductor is a prime at most 10 and discriminant is a prime at most 100
@@ -816,7 +816,7 @@ class Specific(ColTest):
 class Subset(ColTest):
     """
     Check that a query value is a subset of some allowed set.
-    
+
     Handles both exact matches (lists) and containment constraints ($containedin).
     Useful for completeness checks on restricted sets of values (e.g. bad primes, ramified primes, etc.)
 
@@ -844,7 +844,7 @@ class RestrictedBadPrimesConductor(ColTest):
     Checks completeness based on the maximum conductor (or discriminant) for a given set of restricted bad primes.
     Can be used for number fields, elliptic curves, genus 2 curves, or general abelian varieties.
     (e.g. see paper: A. Brumer, K. Kramer, "The conductor of an abelian variety", Compositio Math. 92 (1994), no. 2, 227-248.).
-    
+
     In particular, for a curve/variety X, if bad primes are restricted to S, then the maximum conductor of X is
     M = Prod_{p in S} p^{e_p},  where e_p is looked up from "exponents" and falls back to "default_exp" for primes not listed there.
 
@@ -868,20 +868,20 @@ class RestrictedBadPrimesConductor(ColTest):
         self.exponents = exponents
         self.default_exp = default_exp
         self.conductor_bound = conductor_bound
-    
+
     def __call__(self, db, Ds):
         query_val = Ds[0]
         bad_primes = None
-        
+
         if isinstance(query_val, dict):
             if '$containedin' in query_val:
                 bad_primes = query_val['$containedin']
         elif isinstance(query_val, list):
             bad_primes = query_val
-        
+
         if bad_primes is None:
             return False
-        
+
         # Compute maximum conductor for this set of bad primes
         max_conductor = 1
         for p in bad_primes:
@@ -889,7 +889,7 @@ class RestrictedBadPrimesConductor(ColTest):
             max_conductor *= p**e_p
             if max_conductor > self.conductor_bound:
                 return False  # Early exit if we already exceed the bound
-        
+
         # If we get here, completeness is guaranteed if max_conductor <= conductor_bound
         # If bad_primes is empty, must still ensure conductor_bound >= 1
         return max_conductor <= self.conductor_bound
@@ -1903,7 +1903,6 @@ class NFBound(ColTest):
                  ((7,11), (3,))],
         }
 
-
         #### Regulator completeness bounds for number fields ####
 
         # For non-CM number fields K of fixed degree/signature, one has explicit lower bounds for the regulator of the form
@@ -1912,11 +1911,11 @@ class NFBound(ColTest):
         #
         # where D_K is the (absolute) discriminant of K, and A, B are effectively computable constants
         # depending only on the degree/signature of K.
-	
+
         # For certain small signatures (n - 2*r2, r2), we can give explicit constants for A, B (with references) below.
 
-        # Combined with the hardcoded discriminant completeness bounds stored in self._maxD[n][r2],  
-        # this gives explicit regulator completeness bounds: i.e. if all fields of a given signature  
+        # Combined with the hardcoded discriminant completeness bounds stored in self._maxD[n][r2],
+        # this gives explicit regulator completeness bounds: i.e. if all fields of a given signature
         # are known up to absolute discriminant D_max, then any search with
         #
         #     Reg(K) < A * (log D_max)^B
@@ -1924,7 +1923,7 @@ class NFBound(ColTest):
         # is guaranteed to be complete.
 
         # For larger signatures, where such explicit A, B may be too weak, we instead use
-        # known classifications of fields with regulator below some explicit constant. 
+        # known classifications of fields with regulator below some explicit constant.
 
         # Some bounds also depend on additional structure (e.g. whether the field is primitive or imprimitive),
         # which can sometimes be inferred from Galois group data.
@@ -1984,7 +1983,6 @@ class NFBound(ColTest):
 
         # TODO: Add more regulator bounds for other signatures.
         # Can also further refine bounds based on Galois group, instead of just signature.
-
 
     def display_reason(self, reasons):
         """
@@ -2281,11 +2279,11 @@ class NFBound(ColTest):
                 # Next three conditions would be incompatible
                 if maxp is not None:
                     if isinstance(maxp, dict):
-                        if '$lte' in maxp and max(S)> maxp['$lte']:
+                        if '$lte' in maxp and max(S) > maxp['$lte']:
                             return []
-                        if '$gte' in maxp and max(S)< maxp['$lte']:
+                        if '$gte' in maxp and max(S) < maxp['$lte']:
                             return []
-                    elif max(S)!= maxp:
+                    elif max(S) != maxp:
                         return []
         if ramps is not None:
             if isinstance(ramps, dict):
@@ -2299,13 +2297,13 @@ class NFBound(ColTest):
                         if maxp is not None:
                             if not isinstance(maxp, dict):
                                 if maxp in S:
-                                    S = [p for p in S if p<=maxp]
+                                    S = [p for p in S if p <= maxp]
                                 else:
                                     return []
-                            elif '$gte' in maxp and maxp['$gte']>max(S):
+                            elif '$gte' in maxp and maxp['$gte'] > max(S):
                                 return []
                             elif '$lte' in maxp:
-                                S = [p for p in S if p<=maxp['$lte']]
+                                S = [p for p in S if p <= maxp['$lte']]
 
                 else:
                     # $notcontains and $contains do not yield finite S
@@ -2319,9 +2317,9 @@ class NFBound(ColTest):
                     S = ramps
                     if maxp is not None:
                         if not isinstance(maxp, dict):
-                            S = [p for p in S if p<=maxp]
+                            S = [p for p in S if p <= maxp]
                         elif '$lte' in maxp:
-                            S = [p for p in S if p<=maxp['$lte']]
+                            S = [p for p in S if p <= maxp['$lte']]
         if ramps is None and radical is None:
             if not isinstance(maxp, dict):
                 S = prime_range(maxp+1)
@@ -2345,7 +2343,7 @@ class NFBound(ColTest):
         if grd.bounded(5.989):
             reasons.add("Galois root discriminant at most 5.989")
             return True, None
-        
+
         # Can also guarantee completeness based on regulator bounds and non-CMness: see https://arxiv.org/pdf/2112.15268
         # E.g. Friedman (1989) classified all number fields with regulator at most 1/4
         reg = NumberSet(query.get("regulator"))
@@ -2425,7 +2423,6 @@ class NFBound(ColTest):
             reg = self.clear_regulator(n, reg, r2opts, reasons)
             if not r2opts:
                 return True, caveat
-
 
         ## Completeness 2: degree, signature, Galois group, discriminant
         gal, isgal, cyc, ab, solv, = query.get("galois_label"), query.get("is_galois"), query.get("gal_is_cyclic"), query.get("gal_is_abelian"), query.get("gal_is_solvable")
