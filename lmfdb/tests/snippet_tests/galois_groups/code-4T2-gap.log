@@ -14,8 +14,8 @@
 [1m[34mgap> [0m[31mif IsNilpotentGroup(G) then NilpotencyClassOfGroup(G); fi;
 [0m[1m[34mgap> [0m[31mNrMovedPoints(G);
 [0m4
-[1m[34mgap> [0m[31mTransitiveIdentification(G);
-[0m2
+[1m[34mgap> [0mTransitiveIdentification(G);
+[31m[0m2
 [1m[34mgap> [0m[31mForAll(GeneratorsOfGroup(G), g -> SignPerm(g) = 1);
 [0mtrue
 [1m[34mgap> [0m[31mIsPrimitive(G);
@@ -28,4 +28,4 @@
 [0m[ ()^G, (1,2)(3,4)^G, (1,3)(2,4)^G, (1,4)(2,3)^G ]
 [1m[34mgap> [0m[31mCharacterTable(G);
 [0mCharacterTable( E(4) = 2[x]2 )
-[1m[34mgap> 
+[1m[34mgap> [0m[31m

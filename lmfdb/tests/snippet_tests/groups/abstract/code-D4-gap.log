@@ -20,18 +20,18 @@
 [0mfalse
 [1m[34mgap> [0m[31mIsElementaryAbelian(G);
 [0mfalse
-[1m[34mgap> [0m[31mIsMonomialGroup(G);
-[0mtrue
-[1m[34mgap> [0mIsNilpotentGroup(G);
+[1m[34mgap> [0mIsMonomialGroup(G);
 [31m[0mtrue
+[1m[34mgap> [0m[31mIsNilpotentGroup(G);
+[0mtrue
 [1m[34mgap> [0m[31mIsPerfectGroup(G);
 [0mfalse
 [1m[34mgap> [0m[31mIsPGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsPolycyclicGroup(G);
 [0mtrue
-[1m[34mgap> IsSimpleGroup(G);
-[0m[31m[0mfalse
+[1m[34mgap> [0m[31mIsSimpleGroup(G);
+[0mfalse
 [1m[34mgap> [0m[31mIsSolvableGroup(G);
 [0mtrue
 [1m[34mgap> [0m[31mIsSupersolvableGroup(G);
@@ -40,8 +40,8 @@
 [0m[ 1, 2, 4, 2, 2, 2, 4, 2 ]
 [1m[34mgap> [0m[31morders := Set(element_orders);
 [0m[ 1, 2, 4 ]
-[1m[34mgap> [0m[31mPrint("Orders: ", orders, "\n");
-[0mOrders: [ 1, 2, 4 ]
+[1m[34mgap> Print("Orders: ", orders, "\n");
+[0m[31m[0mOrders: [ 1, 2, 4 ]
 [1m[34mgap> [0m[31melement_counts := List(orders, n -> Length(Filtered(element_orders, x -> x = n)));
 [0m[ 1, 5, 2 ]
 [1m[34mgap> [0m[31mPrint("Elements: ", element_counts, " ", Size(G), "\n");
@@ -84,8 +84,8 @@ f2
 [0m[ Group([  ]), Group([ f3 ]), Group([ f1 ]), Group([ f1*f3 ]), Group([ f1*f2 ]), Group([ f1*f2*f3 ]), Group([ f3, f1 ]), Group([ f3, f2 ]), Group([ f3, f1*f2 ]), Group([ f3, f1, f2 ]) ]
 [1m[34mgap> [0m[31mCenter(G);
 [0mGroup([ f3 ])
-[1m[34mgap> [0m[31mDerivedSubgroup(G);
-[0mGroup([ f3 ])
+[1m[34mgap> DerivedSubgroup(G);
+[0m[31m[0mGroup([ f3 ])
 [1m[34mgap> [0m[31mFrattiniSubgroup(G);
 [0mGroup([ f3 ])
 [1m[34mgap> [0m[31mFittingSubgroup(G);
