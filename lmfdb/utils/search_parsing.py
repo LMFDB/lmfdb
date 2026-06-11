@@ -1231,6 +1231,11 @@ def parse_padicsubfields(inp, query, qfield):
                 fail = True
         else:
             fail = True
+        if not fail:
+            splitlab = labellist[indx].split('.')
+            if splitlab[1]=='1':
+                p = splitlab[0]
+                raise SearchParsingError('$\Q_{%s}$ is not considered a proper intermediate field'%str(p))
 
     if fail:
         raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
