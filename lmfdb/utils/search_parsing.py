@@ -1212,6 +1212,36 @@ def parse_padicfields(inp, query, qfield, flag_unramified=False):
         flash_info("Search results may be incomplete.  Given $p$-adic completions contain an <a title='unramified' knowl='nf.unramified_prime'>unramified</a> field and completions are only searched for <a title='ramified' knowl='nf.ramified_primes'>ramified primes</a>.")
     query[qfield] = {"$contains": labellist}
 
+@search_parser(clean_info=True)
+def parse_padicsubfields(inp, query, qfield):
+    from lmfdb.local_fields.main import NEW_LF_RE, OLD_LF_RE
+    labellist = inp.split(",")
+    fail = False
+    for indx, label in enumerate(labellist):
+        if OLD_LF_RE.fullmatch(label):
+            pass
+        elif NEW_LF_RE.fullmatch(label):
+            from lmfdb import db
+            oldlabel = db.lf_fields.lucky({'new_label':label})
+            if oldlabel:
+                oldlabel=oldlabel.get('old_label',None)
+            if oldlabel:
+                labellist[indx] = oldlabel
+            else:
+                fail = True
+        else:
+            fail = True
+        if not fail:
+            splitlab = labellist[indx].split('.')
+            if splitlab[1]=='1':
+                p = splitlab[0]
+                raise SearchParsingError('$\Q_{%s}$ is not considered a proper intermediate field'%str(p))
+
+    if fail:
+        raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
+    else:
+        query[qfield] = {"$contains": labellist}
+
 def input_string_to_poly(FF):
     # Change unicode dash with minus sign
     FF = FF.replace("\u2212", "-")
