@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from lmfdb.tests import LmfdbTest
 import unittest
 
@@ -408,3 +410,116 @@ class CmfTest(LmfdbTest):
             follow_redirects=True)
         data = page.get_data(as_text=True)
         assert "Invalid format parameter" not in data
+
+    def test_download_search_eisenstein(self):
+        r"""
+        Search-result downloads with ``is_cuspidal=no`` (twin of ``test_cmf2.test_download_search``).
+        """
+        q = {'level': 1, 'weight': 4, 'is_cuspidal': False}
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query='
+            + quote(str(q))
+            + '&search_type=Traces',
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert '1.4.E.a.a' in page
+        assert '[1, 9, 28, 73, 126' in page
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?Submit=sage&download=1&query='
+            + quote(str(q)),
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert '1.4.E.a.a' in page
+        assert '"1.4.E.a.a"' in page or "'1.4.E.a.a'" in page
+        assert '1.1.1.1' in page
+        assert '[9, 28, 126, 344]' in page
+
+        qspaces = {'level': 4, 'weight': 2, 'is_cuspidal': False}
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?Submit=gp&download=1&query='
+            + quote(str(qspaces))
+            + '&search_type=Spaces',
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert '4.2.E.a' in page
+        assert '4.2.E.b' in page
+
+    def test_random_eisenstein(self):
+        r"""
+        Random newform pages constrained to Eisenstein (twin of ``test_cmf2.test_random``).
+        """
+
+        def check(page):
+            data = page.get_data(as_text=True)
+            assert 'Newform orbit' in data, data[:200]
+            assert 'parameters' in data, data[:200]
+            assert 'Properties' in data, data[:200]
+            assert 'Newform' in data, data[:200]
+            assert 'expansion' in data, data[:200]
+            assert '.E.' in data, data[:500]
+
+        for _ in range(15):
+            page = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/?is_cuspidal=no&search_type=Random',
+                follow_redirects=True,
+            )
+            check(page)
+
+        for w in ('2', '4'):
+            page = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/?weight=%s&is_cuspidal=no&search_type=Random'
+                % w,
+                follow_redirects=True,
+            )
+            check(page)
+
+        for lev in ('2-20',):
+            page = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/?level=%s&is_cuspidal=no&search_type=Random'
+                % lev,
+                follow_redirects=True,
+            )
+            check(page)
+
+    def test_trivial_searches_eisenstein(self):
+        r"""
+        Small stable list searches with ``is_cuspidal=no`` (subset of ``test_cmf2.test_trivial_searches``).
+        """
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?search_type=List&level=2&weight=2&is_cuspidal=no',
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert 'Results' in page
+        assert '2.2.E.a.a' in page
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?search_type=List&level=1&weight=4&is_cuspidal=no',
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert 'Results' in page
+        assert '1.4.E.a.a' in page
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?search_type=List&level=3&weight=3&is_cuspidal=no',
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert 'Results' in page
+        assert '3.3.E.b.a' in page
+
+    def test_download_magma_eisenstein(self):
+        r"""
+        Magma download payload for Eisenstein newforms (twin of ``test_cmf2.test_download_magma``).
+
+        We check that the generated script contains the expected function name and q-expansion
+        machinery. Running ``MakeNewformModFrm_*`` in Magma still uses a cuspidal ambient space in
+        the template and is not expected to succeed for Eisenstein forms until that is adjusted
+        separately in ``download.py``.
+        """
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/1.4.E.a.a',
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert 'MakeNewformModFrm_1_4_E_a_a' in page
+        assert 'function qexpCoeffs()' in page
+        assert 'MakeCharacter_1_a' in page
