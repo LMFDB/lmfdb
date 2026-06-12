@@ -356,6 +356,39 @@ class CmfTest(LmfdbTest):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/').get_data(as_text=True)
         assert '<h2>Character values</h2>' not in data
 
+    def test_hecke_charpolys_eisenstein(self):
+        r"""
+        Hecke characteristic polynomial block on Eisenstein newform pages
+        (cf. ``test_cmf2.test_hecke_charpolys``).
+
+        On current LMFDB mirrors, ``mf_hecke_charpolys`` has **no** rows whose
+        ``hecke_orbit_code`` comes from ``mf_newforms_eis`` with ``is_cuspidal=false``
+        (empty SQL inner join). Then ``WebNewform.display_hecke_char_polys``
+        returns ``None`` and the knowl heading is omitted—same mechanism as when
+        the polynomial table is empty for a cuspidal form.
+
+        When Eisenstein Hecke char polynomials are stored for some orbits, extend
+        this test with ``\(T \pm \cdots\)`` substring checks for fixed labels, as in
+        the cuspidal ``test_data`` dict in ``test_cmf2``.
+        """
+        # Cuspidal control: the section title must appear on a classical newform
+        # that has ``mf_hecke_charpolys`` data (so we are not testing a dead string).
+        ref = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/11/2/a/a/',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Hecke characteristic polynomials' in ref
+
+        for url_path in [
+                '/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/',   # dim 1, trivial character
+                '/ModularForm/GL2/Q/holomorphic/11/2/E/a/a/',
+                '/ModularForm/GL2/Q/holomorphic/13/2/E/e/a/',  # dim 2, nontrivial character
+                '/ModularForm/GL2/Q/holomorphic/47/2/E/c/a/',  # large dim (no q-exp row)
+                ]:
+            page = self.tc.get(url_path, follow_redirects=True)
+            assert page.status_code == 200, url_path
+            t = page.get_data(as_text=True)
+            assert 'Hecke characteristic polynomials' not in t, url_path
+
     def test_stats(self):
         r"""
         Statistics page loads for CMF (includes Eisenstein in global counts).
