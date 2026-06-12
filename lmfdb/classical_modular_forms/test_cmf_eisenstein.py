@@ -321,3 +321,92 @@ class CmfTest(LmfdbTest):
         assert 'since the weight is even while the character is' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/E/a/")
         assert 'since the weight is odd while the character is' in page.get_data(as_text=True)
+
+    def test_stats(self):
+        r"""
+        Statistics page loads for CMF (includes Eisenstein in global counts).
+        """
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/stats")
+        data = page.get_data(as_text=True)
+        assert "Classical modular forms: Statistics" in data
+        assert "Distribution" in data
+        assert "proportion" in data
+
+    def test_download_qexp_eisenstein(self):
+        r"""
+        Sage q-expansion downloads compile and match stored coefficients (cf. test_cmf2.test_download_qexp).
+        """
+        for label, exp in [
+                ['1.4.E.a.a', '[9, 28, 73, 126]'],
+                ['2.2.E.a.a', '[1, 4, 1, 6]'],
+                ]:
+            sage_code = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label,
+                follow_redirects=True).get_data(as_text=True)
+            assert "make_data" in sage_code
+            assert "aps_data" in sage_code
+            sage_code += "\n\nout = str(make_data().list()[2:6])\n"
+            out = self.check_sage_compiles_and_extract_var(sage_code, 'out')
+            assert str(out) == exp, (label, out, exp)
+        # nontrivial coefficient field: only require successful compilation
+        label = '13.2.E.e.a'
+        sage_code = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label,
+            follow_redirects=True).get_data(as_text=True)
+        assert "make_data" in sage_code
+        sage_code += "\n\nout = str(make_data().O(20))\n"
+        out = self.check_sage_compiles_and_extract_var(sage_code, 'out')
+        assert 'q' in out and len(out) > 10
+
+    def test_download_qexp_eisenstein_invalid_label(self):
+        for label in ['safeboating', 'invalid.label', '11.2.E', '11.2.E.a']:
+            page = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label,
+                follow_redirects=True)
+            assert 'Invalid label: {}'.format(label) in page.get_data(as_text=True)
+
+    def test_download_newform_eisenstein(self):
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_newform/1.4.E.a.a',
+            follow_redirects=True).get_data(as_text=True)
+        assert '"label": "1.4.E.a.a"' in page
+        assert '"level": 1' in page
+        assert '"weight": 4' in page
+
+    def test_download_traces_eisenstein(self):
+        r"""
+        Trace downloads for Gamma1 labels and Eisenstein newspaces (cf. test_cmf2.test_download).
+        """
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_traces/248.2',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Trace form for 248.2' in page
+        assert '[0, 1020,' in page
+
+    def test_download_traces_eisenstein_errors(self):
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_traces/13.2.E.e.a',
+            follow_redirects=True)
+        assert page.status_code == 404
+        assert 'Invalid label' in page.get_data(as_text=True)
+
+    def test_expression_level_eisenstein(self):
+        r"""
+        Arithmetic level expressions work for Eisenstein searches (cf. test_cmf2.test_expression_level).
+        """
+        self.check_args(
+            '/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000&is_cuspidal=no',
+            '40.2.E.f.a')
+
+    def test_invalid_format_parameter_eisenstein(self):
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/?format=txt',
+            follow_redirects=True)
+        data = page.get_data(as_text=True)
+        assert "Invalid format parameter" in data
+        assert "txt" in data
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/2/2/E/a/a/?format=embed',
+            follow_redirects=True)
+        data = page.get_data(as_text=True)
+        assert "Invalid format parameter" not in data
