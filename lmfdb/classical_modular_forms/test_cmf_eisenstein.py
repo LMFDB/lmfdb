@@ -311,6 +311,51 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/3/E/a/")
         assert 'since the weight is odd while the character is' in page.get_data(as_text=True)
 
+    def test_character_values_eisenstein(self):
+        r"""
+        Character values table on Eisenstein newform pages for nontrivial Dirichlet character
+        (cf. ``test_cmf.test_character_values``). For trivial character the table is omitted
+        by the template (``char_order == 1``).
+
+        Embedded Eisenstein pages with nontrivial character are not asserted here: the
+        embedded template can fail before the character-values block (separate issue).
+        """
+        # Dimension 1, quadratic character: one generator for \((\mathbb Z/9\mathbb Z)^\times\).
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/3/3/E/b/a/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(2\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert character_values_table in data
+
+        # Dimension 2, order-6 character: value on a generator mod 13.
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/E/e/a/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(2\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(\zeta_{6}\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert character_values_table in data
+
+        # Trivial character: no "Character values" section.
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/').get_data(as_text=True)
+        assert '<h2>Character values</h2>' not in data
+
     def test_stats(self):
         r"""
         Statistics page loads for CMF (includes Eisenstein in global counts).
