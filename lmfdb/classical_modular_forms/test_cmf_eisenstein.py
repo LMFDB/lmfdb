@@ -435,6 +435,44 @@ class CmfTest(LmfdbTest):
         for lab in ['1.4.E.a.a', '1.6.E.a.a', '1.8.E.a.a', '1.10.E.a.a']:
             assert lab in page
 
+    def test_underlying_data_eisenstein(self):
+        r"""
+        Raw ``/data/<label>`` pages for Eisenstein labels (``mf_data`` route).
+
+        Eisenstein uses ``N.k.E.\cdots`` with 2--7 dot-separated segments; the
+        route must dispatch to the same ``mf_*_eis`` tables as the HTML
+        newform pages (cf. ``test_cmf.test_underlying_data``). Portrait rows
+        may be absent on thin mirrors, so we do not require embedded PNGs.
+        """
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/1.4').get_data(as_text=True)
+        assert 'mf_gamma1_eis' in data and 'newspace_dims' in data
+        assert 'mf_gamma1_portraits' in data
+
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/1.4.E.a').get_data(as_text=True)
+        assert ('mf_newspaces_eis' in data and 'num_forms' in data
+                and 'mf_newspace_portraits' in data)
+
+        # Rational level-1 orbit omits ``hecke_ring_character_values`` in ``mf_hecke_nf_eis``; use a nontrivial field example.
+        # ``mf_twists_nf`` / ``mf_hecke_charpolys`` may have no rows on thin mirrors; only require the table links.
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2.E.e.a').get_data(as_text=True)
+        assert ('mf_newforms_eis' in data and 'field_disc_factorization' in data
+                and 'mf_hecke_nf_eis' in data and 'hecke_ring_character_values' in data
+                and 'mf_newspaces_eis' in data and 'num_forms' in data
+                and 'mf_twists_nf' in data and 'mf_hecke_charpolys' in data
+                and 'mf_newform_portraits' in data
+                and 'mf_hecke_traces_eis' in data and 'trace_an' in data)
+
+        # Embedded label has seven segments: ``N.k.E.char.hecke.conrey.embedding``.
+        data = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/data/13.2.E.e.a.4.1').get_data(as_text=True)
+        assert ('mf_newforms_eis' in data and 'field_disc_factorization' in data
+                and 'mf_hecke_cc_eis' in data and 'an_normalized' in data
+                and 'mf_newspaces_eis' in data and 'num_forms' in data
+                and 'mf_twists_cc' in data and 'source_label' in data
+                and 'mf_hecke_charpolys' in data
+                and 'mf_newform_portraits' in data
+                and 'mf_hecke_traces_eis' in data and 'trace_an' in data)
+
     def test_stats(self):
         r"""
         Statistics page loads for CMF (includes Eisenstein in global counts).
