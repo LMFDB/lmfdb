@@ -1,5 +1,5 @@
 from ast import literal_eval
-from sage.all import prime_range, previous_prime
+from sage.all import QQ, ZZ, prime_range, previous_prime
 from flask import url_for, redirect, abort
 from lmfdb import db
 from psycodict.encoding import Json
@@ -22,9 +22,7 @@ class CMF_download(Downloader):
 
     def _get_hecke_nf(self, label):
         proj = ['ap', 'hecke_ring_rank', 'hecke_ring_power_basis','hecke_ring_numerators', 'hecke_ring_denominators', 'field_poly','hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'maxp']
-        print(label)
         data = db.mf_hecke_nf_eis.lucky({'label':label}, proj)
-        print(data)
         if data is None:
             f = db.mf_newforms_eis.lookup(label,projection=["level","char_orbit_label","dim","traces"])
             if f["dim"] == 1:
@@ -581,12 +579,16 @@ class CMF_download(Downloader):
                     '// The default sign is -1.  You can change this with the optional parameter "sign".'
         ]
         self.explain += explain
+        if newform.is_cuspidal:
+            ms_sub = "CuspidalSubspace(ModularSymbols(chi,%d,sign))" % (k,)
+        else:
+            ms_sub = "EisensteinSubspace(ModularSymbols(chi,%d,sign))" % (k,)
         return explain + [
                 "function MakeNewformModSym_%s( : sign := -1)" % (newform.label.replace(".","_"), ),
                 "    R<x> := PolynomialRing(Rationals());",
                 "    chi := MakeCharacter_%d_%s();" % (N, o),
                 "    // SetVerbose(\"ModularSymbols\", true);",
-                "    Snew := NewSubspace(CuspidalSubspace(ModularSymbols(chi,%d,sign)));" % (k, ),
+                "    Snew := NewSubspace(%s);" % ms_sub,
                 "    Vf := Kernel(%s,Snew);" % (cutters,),
                 "    return Vf;",
                 "end function;",
@@ -609,6 +611,12 @@ class CMF_download(Downloader):
         so in particular v[0] = 0 and v[1] = 1,
         returns a string containing magma code to create the newform
         as a representative q-expansion (type ModFrm) in magma.
+
+        Cuspidal forms use ``CuspidalSubspace`` and a truncated coefficient
+        vector starting with `a_0 = 0`.  Eisenstein forms use
+        ``EisensteinSubspace`` and include the stored constant term `a_0`
+        (rational, or a power-basis / cyclotomic row passed through
+        ``ConvertToHeckeField``) so ``Solution`` matches Magma's basis.
         """
         explain = [
                 '// To make the newform (type ModFrm), type "MakeNewformModFrm_%s();".' % (newform.label.replace(".", "_"), ),
@@ -617,18 +625,57 @@ class CMF_download(Downloader):
                 '// This guess is increased enough to uniquely determine the newform.'
         ]
         self.explain += explain
-        return explain + [
+        if newform.is_cuspidal:
+            mf_sub = "CuspidalSubspace(ModularForms(chi, %d))" % (newform.weight,)
+        else:
+            mf_sub = "EisensteinSubspace(ModularForms(chi, %d))" % (newform.weight,)
+        magma = self.languages['magma']
+        fn_lines = [
                 'function MakeNewformModFrm_%s(:prec:=%d)' % (newform.label.replace(".","_"), newform.dim),
                 '    chi := MakeCharacter_%d_%s();' % (newform.level, newform.char_orbit_label),
                 '    f_vec := qexpCoeffs();',
                 '    Kf := Universe(f_vec);',
+        ]
+        if not newform.is_cuspidal:
+            a0_num = newform.qexp[0]
+            a0_den = getattr(newform, 'a0_denom', None)
+            if a0_den is None:
+                a0_den = ZZ(1)
+            # ``a0_num`` is either a rational (dim 1) or a coefficient in the
+            # Hecke field: power basis coordinates (list of integers) or
+            # cyclotomic pairs ``[[c,e], ...]`` matching ``ConvertToHeckeField``.
+            if isinstance(a0_num, (list, tuple)) and a0_num and isinstance(
+                    a0_num[0], (list, tuple)):
+                raw_a0_rows = [a0_num]
+            elif isinstance(a0_num, (list, tuple)):
+                row = [QQ(c) / QQ(a0_den) for c in a0_num]
+                raw_a0_rows = [row]
+            else:
+                raw_a0_rows = None
+            if raw_a0_rows is not None:
+                fn_lines.append(
+                    '    ' + magma.assign('raw_eisenstein_a0', raw_a0_rows).rstrip('\n'))
+                fn_lines.append(
+                    '    eisenstein_a0 := ConvertToHeckeField(raw_eisenstein_a0 : '
+                    'pass_field := true, Kf := Kf)[1];')
+            else:
+                a0_rat = QQ(a0_num) / QQ(a0_den)
+                fn_lines.append(
+                    '    ' + magma.assign('eisenstein_a0_rat', a0_rat).rstrip('\n'))
+                fn_lines.append('    eisenstein_a0 := Kf!eisenstein_a0_rat;')
+            trunc_vec_line = (
+                '        trunc_vec := Vector(Kf, [eisenstein_a0] cat '
+                '[f_vec[i]: i in [1..prec]]);')
+        else:
+            trunc_vec_line = '        trunc_vec := Vector(Kf, [0] cat [f_vec[i]: i in [1..prec]]);'
+        fn_lines += [
                 '    // SetVerbose("ModularForms", true);',
                 '    // SetVerbose("ModularSymbols", true);',
-                '    S := CuspidalSubspace(ModularForms(chi, %d));' % newform.weight,
+                '    S := %s;' % mf_sub,
                 '    S := BaseChange(S, Kf);',
                 '    maxprec := NextPrime(%d) - 1;' % hecke_nf['maxp'],
                 '    while true do',
-                '        trunc_vec := Vector(Kf, [0] cat [f_vec[i]: i in [1..prec]]);',
+                trunc_vec_line,
                 # weight 1 does not have NewSpace functionality, and anyway that
                 # would be an extra possibly expensive linear algebra step
                 '        B := Basis(S, prec + 1);',
@@ -644,6 +691,7 @@ class CMF_download(Downloader):
                 '    end while;',
                 'end function;'
                 ]
+        return explain + fn_lines
 
     def download_newform_to_magma(self, label, lang='magma'):
         data = db.mf_newforms_eis.lookup(label)

@@ -509,17 +509,47 @@ class CmfTest(LmfdbTest):
 
     def test_download_magma_eisenstein(self):
         r"""
-        Magma download payload for Eisenstein newforms (twin of ``test_cmf2.test_download_magma``).
+        Magma download for Eisenstein newforms (twin of ``test_cmf2.test_download_magma``).
 
-        We check that the generated script contains the expected function name and q-expansion
-        machinery. Running ``MakeNewformModFrm_*`` in Magma still uses a cuspidal ambient space in
-        the template and is not expected to succeed for Eisenstein forms until that is adjusted
-        separately in ``download.py``.
+        Covers degree-one (rational ``a_0``) and higher-dimensional (power-basis ``a_0``
+        via ``ConvertToHeckeField``). Scripts use ``EisensteinSubspace(ModularForms(...))``
+        and the stored constant term when building the truncated vector for ``Solution``.
         """
-        page = self.tc.get(
-            '/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/1.4.E.a.a',
-            follow_redirects=True,
-        ).get_data(as_text=True)
-        assert 'MakeNewformModFrm_1_4_E_a_a' in page
-        assert 'function qexpCoeffs()' in page
-        assert 'MakeCharacter_1_a' in page
+        for label, expected, extra_substrings in [
+                (
+                    '1.4.E.a.a',
+                    (
+                        '1/240 + q + 9*q^2 + 28*q^3 + 73*q^4 + 126*q^5 + 252*q^6 + '
+                        '344*q^7 + 585*q^8 + 757*q^9 + 1134*q^10 + 1332*q^11 + O(q^12)'
+                    ),
+                    (
+                        'EisensteinSubspace(ModularForms(chi, 4))',
+                        'eisenstein_a0 := Kf!eisenstein_a0_rat',
+                    ),
+                ),
+                (
+                    '7.2.E.c.a',
+                    (
+                        'q + (2*nu - 1)*q^2 + (2*nu - 1)*q^3 + (-12*nu + 21)*q^4 + '
+                        '(26*nu - 34)*q^5 + (-16*nu + 29)*q^6 + (12*nu - 11)*q^7 + '
+                        '(-32*nu + 55)*q^8 + (76*nu - 108)*q^9 + (-54*nu + 90)*q^10 + '
+                        '(-14*nu + 31)*q^11 + O(q^12)'
+                    ),
+                    (
+                        'EisensteinSubspace(ModularForms(chi, 2))',
+                        'raw_eisenstein_a0',
+                        'ConvertToHeckeField(raw_eisenstein_a0',
+                    ),
+                ),
+        ]:
+            page = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/download_newform_to_magma/%s' % label,
+                follow_redirects=True,
+            ).get_data(as_text=True)
+            makenewform = 'MakeNewformModFrm_%s' % '_'.join(label.split('.'))
+            assert makenewform in page
+            assert 'function qexpCoeffs()' in page
+            for s in extra_substrings:
+                assert s in page, 'missing %r in Magma download for %s' % (s, label)
+            magma_code = page + '\n' + '%s();\n' % makenewform
+            self.assert_if_magma(expected, magma_code, mode='equal')
