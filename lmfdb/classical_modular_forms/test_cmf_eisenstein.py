@@ -160,13 +160,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/")
         assert '1/240' in page.get_data(as_text=True)
         assert '9 q^{2}' in page.get_data(as_text=True)
-        # !!! We still don't have embedding data for Eisenstein series
-        # page = self.tc.get("/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/?format=satake")
-        # assert '0.299367' in page.get_data(as_text=True)
-        # assert '0.954138' in page.get_data(as_text=True)
-        # !!! We do not have L-functions for Eisenstein series yet
-        # page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/1/12/a/a/', follow_redirects=True)
-        # assert '0.792122' in page.get_data(as_text=True)
 
     def test_level2(self):
         r"""
@@ -175,15 +168,6 @@ class CmfTest(LmfdbTest):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/2/E/a/a/")
         assert '24' in page.get_data(as_text=True)
         assert '4 q^{3}' in page.get_data(as_text=True)
-        # We still don't have embedding data for Eisenstein series
-        # page = self.tc.get("/ModularForm/GL2/Q/holomorphic/2/2/E/a/a/?format=satake")
-        # assert r'0.707107' in page.get_data(as_text=True)
-        # assert r'0.957427' in page.get_data(as_text=True)
-        # assert r'0.223607' in page.get_data(as_text=True)
-        # assert r'0.974679' in page.get_data(as_text=True)
-        ## !!! We do not have L-functions for Eisenstein series yet
-        # page = self.tc.get('/L/ModularForm/GL2/Q/holomorphic/2/2/E/a/a/', follow_redirects=True)
-        # assert '0.253841' in page.get_data(as_text=True)
 
     def test_triv_character(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/9/4/E/a/a/")
@@ -200,8 +184,6 @@ class CmfTest(LmfdbTest):
         """
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/13/2/E/e/a/")
         assert r'\Q(\sqrt{-3})' in page.get_data(as_text=True)
-        # !!! We do not have the embedding data for Eisenstein series yet
-        # assert '0.866025' in page.get_data(as_text=True)
         assert r'7 q^{6}' in page.get_data(as_text=True)
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/25/4/E/b/a/")
         assert r'1514 q^{9}' in page.get_data(as_text=True)
@@ -390,6 +372,21 @@ class CmfTest(LmfdbTest):
         assert 'Trace form for 13.2.E.e.a' in page
         assert '[0, 2, 4, -1,' in page
 
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_newspace/11.2.E.a',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Stored data for newspace 11.2.E.a' in page
+        assert '"label": "11.2.E.a"' in page
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_traces/11.2.E.a.maria.josefina',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Invalid label' in page
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_traces/4021.2.E',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Label not found:' in page
+
     def test_expression_level_eisenstein(self):
         r"""
         Arithmetic level expressions work for Eisenstein searches (cf. test_cmf2.test_expression_level).
@@ -553,3 +550,111 @@ class CmfTest(LmfdbTest):
                 assert s in page, 'missing %r in Magma download for %s' % (s, label)
             magma_code = page + '\n' + '%s();\n' % makenewform
             self.assert_if_magma(expected, magma_code, mode='equal')
+
+    def test_satake_and_embeddings_eisenstein(self):
+        r"""
+        Satake-parameter views and embedded newform pages using ``mf_hecke_cc_eis``
+        (cf. ``test_cmf.test_satake`` for cuspidal forms).
+        """
+        # Orbit page: Satake parameters and angles (trivial character, one embedding).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/?format=satake&n=2-5',
+            follow_redirects=True)
+        assert page.status_code == 200
+        t = page.get_data(as_text=True)
+        assert 'alpha_{2}' in t
+        assert '1.00000' in t
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/?format=satake_angle&n=2-5',
+            follow_redirects=True)
+        assert page.status_code == 200
+        t = page.get_data(as_text=True)
+        assert r'\theta_{2}' in t or 'theta_{2}' in t
+
+        # Level 2 weight 2: two complex embeddings; displayed Satake magnitudes are 1 on the rows shown.
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/2/2/E/a/a/?format=satake&n=2-7',
+            follow_redirects=True)
+        assert page.status_code == 200
+        t = page.get_data(as_text=True)
+        assert '2.2.E.a.a' in t
+        assert t.count('1.00000') >= 4
+
+        # Nontrivial character: two embeddings share coefficient field \(\Q(\sqrt{-3})\).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/13/2/E/e/a/?format=satake&n=2-7',
+            follow_redirects=True)
+        assert page.status_code == 200
+        t = page.get_data(as_text=True)
+        assert '13.2.E.e.a' in t
+        assert '0.956350' in t
+
+        # Embedded newform page: complex \(q\)-expansion from cc data.
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/1/4/E/a/a/1/1/',
+            follow_redirects=True)
+        assert page.status_code == 200
+        t = page.get_data(as_text=True)
+        assert 'Embedded newform 1.4.E.a.a.1.1' in t
+        assert 'q' in t and 'O(q' in t
+
+    def test_cmf2_search_twins_eisenstein(self):
+        r"""
+        Eisenstein twins of selected ``test_cmf2`` list / search checks
+        (``test_dimension``, ``test_traces``, ``test_parity``, ``test_AL_search``,
+        ``test_Fricke_signs_search``, ``test_is_self_dual``, ``test_coefficient_fields``).
+        """
+        # Dimension-style list (level 1 has several weight-\(k\) Eisenstein lines, dim 1).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=1&weight=2-10&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (4 matches)' in page
+        assert '1.4.E.a.a' in page
+
+        # Traces search: small level range, weight 2, dim 1 (cf. ``test_traces``).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=1-3&weight=2&dim=1'
+            '&search_type=Traces&is_cuspidal=no&count=30',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (displaying both matches)' in page
+        assert '2.2.E.a.a' in page
+
+        # Parity filters (``test_parity``).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=even&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert '2.2.E.a.a' in page or '1.4.E.a.a' in page
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?weight_parity=odd&char_parity=odd&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert '3.3.E.b.a' in page
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?weight_parity=even&char_parity=even&weight=3&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'No matches' in page
+
+        # Atkin--Lehner column on a list of spaces with trivial character (``test_AL_search``).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=7&char_order=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'A-L' in page
+
+        # Fricke sign column (``test_Fricke_signs_search``).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=11&weight=2&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Fricke' in page
+
+        # Self-dual filter (``test_is_self_dual``).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?is_self_dual=yes&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results' in page
+        assert '2.2.E.a.a' in page
+
+        # Coefficient field displayed on a newspace browse page (``test_coefficient_fields``).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/7/2/E/c/',
+            follow_redirects=True).get_data(as_text=True)
+        assert r'\Q(\sqrt{-3})' in page
