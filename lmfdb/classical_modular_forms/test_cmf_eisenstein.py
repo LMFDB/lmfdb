@@ -382,13 +382,11 @@ class CmfTest(LmfdbTest):
             follow_redirects=True).get_data(as_text=True)
         assert 'Trace form for 248.2' in page
         assert '[0, 1020,' in page
-
-    def test_download_traces_eisenstein_errors(self):
         page = self.tc.get(
             '/ModularForm/GL2/Q/holomorphic/download_traces/13.2.E.e.a',
-            follow_redirects=True)
-        assert page.status_code == 404
-        assert 'Invalid label' in page.get_data(as_text=True)
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Trace form for 13.2.E.e.a' in page
+        assert '[0, 2, 4, -1,' in page
 
     def test_expression_level_eisenstein(self):
         r"""

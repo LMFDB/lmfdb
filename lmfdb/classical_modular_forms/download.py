@@ -5,7 +5,12 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.classical_modular_forms.web_newform import WebNewform, valid_label
+from lmfdb.classical_modular_forms.web_newform import (
+    WebNewform,
+    valid_label,
+    LABEL_EIS_RE,
+    EMB_LABEL_EIS_RE,
+)
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
 
@@ -42,6 +47,11 @@ class CMF_download(Downloader):
             traces = db.mf_newspaces_eis.lookup(label, projection=['traces'])
         elif label.count('.') == 3:
             traces = db.mf_newforms_eis.lookup(label, projection=['traces'])
+        elif LABEL_EIS_RE.match(label):
+            traces = db.mf_newforms_eis.lookup(label, projection=['traces'])
+        elif EMB_LABEL_EIS_RE.match(label):
+            form_label = ".".join(label.split(".")[:5])
+            traces = db.mf_newforms_eis.lookup(form_label, projection=['traces'])
         else:
             return abort(404, "Invalid label: %s" % label)
         if traces is None:
