@@ -323,6 +323,11 @@ class CmfTest(LmfdbTest):
         for label, exp in [
                 ['1.4.E.a.a', '[9, 28, 73, 126]'],
                 ['2.2.E.a.a', '[1, 4, 1, 6]'],
+                ['3.3.E.b.a', '[-3, 1, 13, -24]'],
+                ['11.2.E.a.a', '[3, 4, 7, 6]'],
+                ['25.4.E.b.a', '[9*a, -28*a, -73, 0]'],
+                ['9.4.E.a.a', '[-9, 0, 73, -126]'],
+                ['1.6.E.a.a', '[33, 244, 1057, 3126]'],
                 ]:
             sage_code = self.tc.get(
                 '/ModularForm/GL2/Q/holomorphic/download_qexp/%s' % label,
@@ -332,6 +337,11 @@ class CmfTest(LmfdbTest):
             sage_code += "\n\nout = str(make_data().list()[2:6])\n"
             out = self.check_sage_compiles_and_extract_var(sage_code, 'out')
             assert str(out) == exp, (label, out, exp)
+        for label in ['47.2.E.c.a']:
+            page = self.tc.get(
+                '/ModularForm/GL2/Q/holomorphic/download_qexp/{}'.format(label),
+                follow_redirects=True)
+            assert 'q-expansion not available for newform {}'.format(label) in page.get_data(as_text=True)
         # nontrivial coefficient field: only require successful compilation
         label = '13.2.E.e.a'
         sage_code = self.tc.get(
