@@ -82,8 +82,10 @@ class CmfTest(LmfdbTest):
                     assert str(k) in rv.get_data(as_text=True)
                     assert str(N)+'.'+str(k) in rv.get_data(as_text=True)
 
-    # 2DO - Still working on this one, add more favorites
     def test_favorite(self):
+        r"""
+        Jump box and direct URLs for canonical Eisenstein newforms and newspaces (cf. test_cmf.test_favorite).
+        """
         favorite_newform_eis_labels = [
             [('1.4.E.a.a','First Level 1 form'),
              ('1.6.E.a.a','First weight 6 form'),
@@ -94,7 +96,10 @@ class CmfTest(LmfdbTest):
         ]
         favorite_space_eis_labels = [
             [
-            ]
+                ('1.4.E.a', 'E4 trivial-character Eisenstein newspace'),
+                ('1.6.E.a', 'E6 trivial-character Eisenstein newspace'),
+                ('2.2.E.a', 'First level-2 weight-2 Eisenstein newspace'),
+            ],
         ]
         for l in favorite_newform_eis_labels:
             for elt, desc in l:
