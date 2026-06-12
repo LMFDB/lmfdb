@@ -494,7 +494,19 @@ def render_full_gamma1_space_webpage(label):
 @cmf.route("/data/<label>")
 def mf_data(label):
     slabel = label.split(".")
-    if len(slabel) == 6:
+    if len(slabel) == 7 and slabel[2] == "E":
+        # Eisenstein embedded newform N.k.E.char_orbit.hecke_orbit.conrey.embedding
+        emb_label = label
+        form_label = ".".join(slabel[:5])
+        space_label = ".".join(slabel[:4])
+        ocode = db.mf_newforms_eis.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms_eis", "mf_hecke_cc_eis", "mf_newspaces_eis", "mf_twists_cc", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces_eis"]
+        labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Embedded newform data - {label}"
+    elif len(slabel) == 6:
         emb_label = label
         form_label = ".".join(slabel[:4])
         space_label = ".".join(slabel[:3])
@@ -505,6 +517,26 @@ def mf_data(label):
         labels = [form_label, emb_label, space_label, emb_label, ocode, form_label, ocode]
         label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
         title = f"Embedded newform data - {label}"
+    elif len(slabel) == 5 and slabel[2] == "E":
+        # Eisenstein newform orbit N.k.E.char_orbit.hecke_orbit
+        form_label = label
+        space_label = ".".join(slabel[:4])
+        ocode = db.mf_newforms_eis.lookup(form_label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newforms_eis", "mf_hecke_nf_eis", "mf_newspaces_eis", "mf_twists_nf", "mf_hecke_charpolys", "mf_newform_portraits", "mf_hecke_traces_eis"]
+        labels = [form_label, form_label, space_label, form_label, ocode, form_label, ocode]
+        label_cols = ["label", "label", "label", "source_label", "hecke_orbit_code", "label", "hecke_orbit_code"]
+        title = f"Newform data - {label}"
+    elif len(slabel) == 4 and slabel[2] == "E":
+        # Eisenstein newspace N.k.E.char_orbit
+        ocode = db.mf_newspaces_eis.lookup(label, "hecke_orbit_code")
+        if ocode is None:
+            return abort(404, f"{label} not in database")
+        tables = ["mf_newspaces_eis", "mf_newspace_portraits"]
+        labels = [label, label]
+        label_cols = ["label", "label"]
+        title = f"Newspace data - {label}"
     elif len(slabel) == 4:
         form_label = label
         space_label = ".".join(slabel[:3])
