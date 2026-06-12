@@ -389,6 +389,52 @@ class CmfTest(LmfdbTest):
             t = page.get_data(as_text=True)
             assert 'Hecke characteristic polynomials' not in t, url_path
 
+    def test_dimension_eisenstein_one(self):
+        r"""
+        List-search correctness for **dimension 1** Eisenstein newforms
+        (cf. ``test_cmf2.test_dimension``; fork issue #87).
+
+        Checks stable ``Results (...)`` phrasing, expected labels, and (where
+        the list UI exposes it) the Atkin--Lehner column header ``A-L`` at
+        composite level (e.g. \(N=11\)); it is omitted for the pure level-one
+        range below.
+        """
+        # Unique match: one dim-1 Eisenstein newform at each \((N,k)\).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=1&weight=4&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (unique match)' in page
+        assert '1.4.E.a.a' in page
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=2&weight=2&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (unique match)' in page
+        assert '2.2.E.a.a' in page
+
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=11&weight=2&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (unique match)' in page
+        assert '11.2.E.a.a' in page
+        assert 'A-L' in page
+
+        # Exactly two Galois orbits at \((3,3)\) with ``dim=1``.
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=3&weight=3&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (displaying both matches)' in page
+        assert '3.3.E.b.a' in page
+        assert '3.3.E.b.b' in page
+
+        # Several dim-1 Eisenstein lines at level 1 (same spirit as ``test_dimension`` count + A-L UI).
+        page = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/?level=1&weight=2-10&dim=1&is_cuspidal=no',
+            follow_redirects=True).get_data(as_text=True)
+        assert 'Results (4 matches)' in page
+        for lab in ['1.4.E.a.a', '1.6.E.a.a', '1.8.E.a.a', '1.10.E.a.a']:
+            assert lab in page
+
     def test_stats(self):
         r"""
         Statistics page loads for CMF (includes Eisenstein in global counts).
