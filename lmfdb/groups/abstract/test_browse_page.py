@@ -376,7 +376,7 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that subgroup search page is working
         """
-        self.check_args("/Groups/Abstract/?search_type=Subgroups", "1.1.1.a1.a1")
+        self.check_args("/Groups/Abstract/?search_type=Subgroups", "ambient order")
         self.check_args("/Groups/Abstract/sub/7.1.1.a1.a1","Ambient group ($G$) information")
 
     def test_subgroup_label_search(self):
@@ -589,6 +589,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?dim=13&cyclotomic_n=39&search_type=ComplexCharacters", ["4563.a.13b18", "351.a1.a1"]) # character label, center
         self.check_args("/Groups/Abstract/?image_isoclass=12.4&kernel_order=6&search_type=ComplexCharacters", "72.21.2d")
         self.check_args("/Groups/Abstract/?faithful=yes&center_order=144&search_type=ComplexCharacters", "576.176.2c1")
+        self.check_args("/Groups/Abstract/?search_type=ComplexCharacters", "Enter a group label to go to the character table for that group.")
 
     def test_highlighted_character(self):
         r"""
@@ -601,9 +602,10 @@ class AbGpsHomeTest(LmfdbTest):
         r"""
         Check that conjugacy class search works
         """
+        self.check_args("/Groups/Abstract/?search_type=ConjugacyClasses","e.g. 3, or a range like 3..5")
         self.check_args("/Groups/Abstract/?group=12.4&search_type=ConjugacyClasses", ["3.a1.a1", "6A"])
         self.check_args("/Groups/Abstract/?group=128.15&search_type=ConjugacyClasses", r"\OD_{16}:C_8" #group name
-        )
+		)
 
     def test_highlighted_conj_class(self):
         r"""

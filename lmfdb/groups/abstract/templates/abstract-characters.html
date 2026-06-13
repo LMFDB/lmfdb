@@ -1,0 +1,51 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>
+  {{ info.stats.char_summary | safe }}
+</div>
+
+
+
+
+<h2>Browse</h2>
+
+<p>
+  By {{KNOWL('group.representation.complex_char_deg', 'degree')}}:
+  {% for rnge in info.degree_list %}
+    <a href="?search_type=ComplexCharacters&amp;dim={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{KNOWL('group.representation.type', 'type')}}:
+  <a href="?search_type=ComplexCharacters&amp;indicator=R">real (R)</a>&nbsp;
+  <a href="?search_type=ComplexCharacters&amp;indicator=C">complex (C)</a>&nbsp;
+  <a href="?search_type=ComplexCharacters&amp;indicator=S">symplectic (S)</a>&nbsp;
+</p>
+<p>
+  <a href="?search_type=ComplexCharacters&amp;faithful=yes">Faithful</a> characters&nbsp;
+</p>
+
+<h2 id='search_h2'> Search </h2>
+
+<form class="re-search" name="search" method="get" action={{url_for('.index')}}>
+  <input type="hidden" name="search_type" value="ComplexCharacters">
+  {{ info.search_array.html() | safe }}
+</form>
+
+
+
+<h2> Find </h2>
+
+
+<form name="search" method="get" action="{{url_for('.index')}}">
+  <input type="hidden" name="search_type" value="ComplexCharacters">
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+
+
+
+
+{% endblock %}

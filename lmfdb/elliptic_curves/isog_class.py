@@ -208,8 +208,7 @@ class ECisog_class():
             self.downloads.append(('{} commands'.format(lang[0]), url_for(".ec_isog_code_download", conductor=self.conductor, iso=self.iso_label, label=self.lmfdb_iso, download_type=lang[1])))
         self.downloads.append(('Underlying data', url_for(".EC_data", label=self.lmfdb_iso)))
 
-        self.bread = [('Elliptic curves', url_for("ecnf.index")),
-                      (r'$\Q$', url_for(".rational_elliptic_curves")),
+        self.bread = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % self.conductor, url_for(".by_conductor", conductor=self.conductor)),
                       ('%s' % self.iso_label, ' ')]
 
