@@ -33,39 +33,31 @@ $.fn.round_bl = function(val) {
   this.css("-moz-border-radius-bottomleft", val + "px");
 }
 
-/** collapser: stored height is used to track progress. */
-function properties_collapser(evt) {
-  evt.preventDefault();
-  var $pb = $(".properties-body");
-  var $pc = $("#properties-collapser");
-  var $ph = $(".properties-header");
-  var pb_h = $pb.height();
-  $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
-    {
-      duration: 50 + 100 * Math.log(100 + $pb.height()),
-      step: function() { 
-       /* synchronize icon rotation effect */
-       var val = $pb.height() / pb_h;
-       var rot = 180 - 180 * val;
-       $pc.rotate(rot);
-       $ph.round_bl(0);
-      },
-      complete: function () {
-        if ($pb.css("display") == "none") {
-          $pc.rotate(180);
-          $ph.round_bl(10);
-        } else {
-          $pc.rotate(0);
-        }
-      }
-    }
-  ); //~~ end animate
-}
-
-
 $(function() {
- /* properties box collapsable click handlers */
- $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
+  /* Add a chevron to each properties-header that has a following properties-body,
+     wired to collapse/expand only that section. */
+  $('.properties-header').each(function() {
+    var $header = $(this);
+    var $body   = $header.next('.properties-body');
+    if ($body.length === 0) return;
+
+    var $chev = $('<span class="prop-chevron open"></span>');
+    $header.append($chev);
+
+    var key = 'lmfdb_prop_' + $.trim($header.text()).replace(/\s+/g, '_').substring(0, 30);
+    if (localStorage.getItem(key) === '0') {
+      $body.hide();
+      $chev.removeClass('open').addClass('closed');
+    }
+
+    $chev.on('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      $chev.toggleClass('open closed');
+      localStorage.setItem(key, $chev.hasClass('open') ? '1' : '0');
+      $body.slideToggle(150);
+    });
+  });
 });
 
 
