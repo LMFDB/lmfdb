@@ -13,7 +13,7 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
-    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats, 
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
     parse_regex_restricted, parse_padicsubfields,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox,
