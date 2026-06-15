@@ -1224,7 +1224,7 @@ def parse_padicsubfields(inp, query, qfield):
             from lmfdb import db
             oldlabel = db.lf_fields.lucky({'new_label':label})
             if oldlabel:
-                oldlabel=oldlabel.get('old_label',None)
+                oldlabel = oldlabel.get('old_label',None)
             if oldlabel:
                 labellist[indx] = oldlabel
             else:
@@ -1233,9 +1233,9 @@ def parse_padicsubfields(inp, query, qfield):
             fail = True
         if not fail:
             splitlab = labellist[indx].split('.')
-            if splitlab[1]=='1':
+            if splitlab[1] == '1':
                 p = splitlab[0]
-                raise SearchParsingError('$\Q_{%s}$ is not considered a proper intermediate field'%str(p))
+                raise SearchParsingError(r'$\Q_{%s}$ is not considered a proper intermediate field'%str(p))
 
     if fail:
         raise SearchParsingError('It needs to be a <a title = "$p$-adic field label" knowl="lf.field.label">$p$-adic field label</a> or a list of local field labels')
