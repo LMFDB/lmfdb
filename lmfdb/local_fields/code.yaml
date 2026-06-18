@@ -12,6 +12,10 @@ not-implemented:
   magma: |
     // (not yet implemented)
 
+frontmatter:
+  all: |
+    {lang} code for working with p-adic field {label}.
+
 field:
   comment: Define the p-adic field
   sage:  |
@@ -49,6 +53,7 @@ residue_degree:
   magma: InertiaDegree(K);
 
 disc_exponent:
+  comment: Discriminant exponent
   magma: Valuation(Discriminant(K));
 
 unramified_subfield:
@@ -58,3 +63,31 @@ unramified_subfield:
 roots_of_unity:
   comment: Roots of unity
   sage: len(K.roots_of_unity())
+
+
+# specify which code snippets to test
+snippet_test:                   
+  testQ2: 
+    label: 2.1.1.0a1.1
+    langs:
+      - sage
+      - magma
+    url: padicField/2.1.1.0a1.1/download/{lang}
+  testQ2i: 
+    label: 2.1.2.2a1.1
+    langs:
+      - sage
+      - magma
+    url: padicField/2.1.2.2a1.1/download/{lang}
+  testQ2sqrt5:
+    label: 2.2.1.0a1.1
+    langs:
+     - sage
+     - magma
+    url: padicField/2.2.1.0a1.1/download/{lang}
+  testQ2isqrt5:
+    label: 2.2.2.4a1.1
+    langs:
+     - sage
+     - magma
+    url: padicField/2.2.2.4a1.1/download/{lang}

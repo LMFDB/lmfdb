@@ -135,6 +135,14 @@ def url_for_label(label):
                    )))
 
 bmf_columns = SearchColumns([
+    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
+                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
+                          url_for("bmf.render_bmf_webpage",
+                                  field_label=fld,
+                                  level_label=lvl,
+                                  label_suffix=suff),
+                          short),
+                      download_col="short_label"),
     ProcessedCol("field_label", "nf", "Base field",
                  lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MultiProcessedCol("level", "mf.bianchi.level", "Level", ["field_label", "level_label"],
@@ -144,14 +152,6 @@ bmf_columns = SearchColumns([
                                   level_label=lvl),
                           lvl),
                       download_col="level_label"),
-    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
-                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
-                          url_for("bmf.render_bmf_webpage",
-                                  field_label=fld,
-                                  level_label=lvl,
-                                  label_suffix=suff),
-                          short),
-                      download_col="short_label"),
     # See Issue #4170
     #MathCol("dimension", "mf.bianchi.newform", "Dimension"),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
@@ -706,6 +706,7 @@ class BMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
+    has_diagram = False
 
     def __init__(self):
         field = TextBox(

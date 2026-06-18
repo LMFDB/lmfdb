@@ -1,10 +1,8 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 api_page = Blueprint("API", __name__, template_folder='templates', static_folder="static")
-api_logger = make_logger(api_page)
 
 @api_page.context_processor
 def body_class():

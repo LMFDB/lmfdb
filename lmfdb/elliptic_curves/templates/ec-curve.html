@@ -104,64 +104,70 @@ white-space: pre in order to keep line breaks! #}
 
     {% if data.mwbsd.rank > 0 or data.mwbsd.torsion > 1 %}
     <h2> {{ KNOWL('ec.mw_generators', title="Mordell-Weil generators") }} </h2>
-    <div>
+    <div class='min_eqn'>
       <p>
 	<table>
 	  <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\hat{h}(P)$")}}</th><th>Order</th></tr>
 	  {% for P,h in data.mwbsd.gens_and_heights %}
-	  <tr><td>${{P}}$</td><td>${{h}}$</td><td>$\infty$</td></tr>
+	  <tr><td>{{P}}</td><td>${{h}}$</td><td>$\infty$</td></tr>
 	  {% endfor %}
 	  {% for T,n in data.mwbsd.tor_gens_and_orders %}
-	  <tr><td>${{T}}$</td><td>$0$</td><td>${{n}}$</td></tr>
+	  <tr><td>{{T}}</td><td>$0$</td><td>${{n}}$</td></tr>
+	  {% endfor %}
+	</table>
+      </p>
+      </div>
+    <div class='proj_eqn nodisplay'>
+      <p>
+	<table>
+	  <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\hat{h}(P)$")}}</th><th>Order</th></tr>
+	  {% for P,h in data.mwbsd.proj_gens_and_heights %}
+	  <tr><td>{{P}}</td><td>${{h}}$</td><td>$\infty$</td></tr>
+	  {% endfor %}
+	  {% for T,n in data.mwbsd.proj_tor_gens_and_orders %}
+	  <tr><td>{{T}}</td><td>$0$</td><td>${{n}}$</td></tr>
+	  {% endfor %}
+	</table>
+      </p>
+      </div>
+    <div class='simp_eqn nodisplay'>
+      <p>
+	<table>
+	  <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\hat{h}(P)$")}}</th><th>Order</th></tr>
+	  {% for P,h in data.mwbsd.short_gens_and_heights %}
+	  <tr><td>{{P}}</td><td>${{h}}$</td><td>$\infty$</td></tr>
+	  {% endfor %}
+	  {% for T,n in data.mwbsd.short_tor_gens_and_orders %}
+	  <tr><td>{{T}}</td><td>$0$</td><td>${{n}}$</td></tr>
 	  {% endfor %}
 	</table>
       </p>
     </div>
     {%endif%}
 
-{#
-    {% if data.mwbsd.rank!=0 %}
-    {% if data.mwbsd.rank==1 %}
-    <h3> {{ KNOWL('ec.mw_generators', title='Non-torsion Mordell-Weil generator') }} and {{KNOWL('ec.canonical_height','height')}}</h3>
-    {% else %}
-    <h3> {{ KNOWL('ec.mw_generators', title='Non-torsion Mordell-Weil generators') }} and {{KNOWL('ec.canonical_height','heights')}}</h3>
-    {% endif %}
-      {% if data.mwbsd.ngens==0 %}
-    No {% if data.mwbsd.rank==1 %} generator {% else %} generators  {% endif %} computed
-      {% else %}
-      <div style='overflow:auto'>
-      <table>
-        <tr><td>$P$</td><td>&nbsp;=&nbsp;</td>
-          {% for pt in data.mwbsd.generators %}<td>{{pt|safe}}</td>{% endfor %}
-          </tr>
-        <tr><td>$\hat{h}(P)$</td><td>&nbsp;&approx;&nbsp;</td>
-          {% for ht in data.mwbsd.heights %}<td>${{ht}}$</td>{% endfor %}
-          </tr>
-        </table>
-      </div>
-      {% if data.mwbsd.ngens < data.mwbsd.rank %}
-	Only {{ data.mwbsd.ngens }} generators computed
-      {% endif %}
-
-    {%endif %}
-      <p>{{ place_code('gens') }}</p>
-    {%endif%}
-
-    {% if data.mwbsd.torsion!=1 %}
-    <h2> {{ KNOWL('ec.mw_generators', title='Torsion generators') }}</h2>
-    <p> {{ data.mwbsd.tor_gens |safe }} </p>
-      {{ place_code('tors') }}
-    {%endif %}
-#}
-
     {% if data.mwbsd.rank > 0 or data.mwbsd.torsion > 1 %}
     <p><h2> {{ KNOWL('ec.q.integral_points', title='Integral points') }}</h2>
-    <div class="ip">
+    <div class="ip min_eqn">
       <p>
       {{data.mwbsd.int_points | safe}}
       </p>
     </div>
-      {{ place_code('intpts') }}
+    <div class="ip proj_eqn  nodisplay">
+      <p>
+	{{data.mwbsd.proj_int_points | safe}}
+      </p>
+    </div>
+    <div class="ip simp_eqn nodisplay">
+      {% if data.is_long %}
+      <p>
+	All points on the simplified model which are integral on the minimal model:
+      </p>
+      {% endif %}
+      <p>
+	{{data.mwbsd.short_int_points | safe}}
+      </p>
+    </div>
+    {{ place_code('intpts') }}
     {% if data.mwbsd.ngens < data.mwbsd.rank %}
      <p>
      N.B. Only integral points which are combinations of known generators are shown.
@@ -181,7 +187,7 @@ white-space: pre in order to keep line breaks! #}
         </tr>
 
         <tr>
-        <td>{{ KNOWL('ec.discriminant', title='Discriminant') }}:</td>
+        <td>{{ KNOWL('ec.discriminant', title='Minimal Discriminant') }}:</td>
         <td>$\Delta$</td>
         <td>&nbsp;=&nbsp;</td>
         <td>${{ data.data.disc }}$</td><td>&nbsp;=&nbsp;</td><td>${{ data.data.disc_factor }} $</td>
@@ -243,6 +249,12 @@ white-space: pre in order to keep line breaks! #}
         <td>{{ KNOWL('ec.q.szpiro_ratio', title='Szpiro ratio') }}:</td>
         <td>$\sigma_{m}$</td><td>&nbsp;&approx;&nbsp;</td><td colspan=3>${{ data.szpiro_ratio }}$</td>
         <td>{{ place_code('szpiro_ratio') }}</td>
+        </tr>
+
+        <tr>
+        <td>{{ KNOWL('ec.intrinsic_torsion', title='Intrinsic torsion order') }}:</td>
+        <td>$\#E(\mathbb Q)_\text{tors}^\text{is}$</td><td>&nbsp;=&nbsp;</td><td colspan=3>${{ data.intrinsic_torsion }}$</td>
+        <td>{{ place_code('intrinsic_torsion') }}</td>
         </tr>
 
        </table>

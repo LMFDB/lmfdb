@@ -7,6 +7,8 @@
 {% endmacro %}
 
 {% block body -%}
+<div id="layout">
+<div id="page-wrapper">
 <div id="header">
     <div id="logo"><a href="{{ url_for('index') }}">
 {% if ALPHA %}
@@ -230,6 +232,8 @@ The function which was called for this page is: {{calling_function}}
 </div>
 {% endif %}
 
+</div>{# /#page-wrapper #}
+
 <div id="footer">
     {% if credit -%}
       Data computed by {{ credit|safe }}.<br />
@@ -243,6 +247,8 @@ The function which was called for this page is: {{calling_function}}
       <a href="{{ url_for('contact') }}">Contact</a>
       &middot;
       <a href="{{ url_for('citation') }}">Citation</a>
+      &middot;
+      <a href="{{ url_for('license') }}">License</a>
       &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
@@ -258,6 +264,7 @@ The function which was called for this page is: {{calling_function}}
       {{ version|safe }}
     </div>
 </div>
+</div>{# /#layout #}
 
 
 

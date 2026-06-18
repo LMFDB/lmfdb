@@ -3,7 +3,7 @@
 import math
 from flask import url_for
 from lmfdb import db
-from lmfdb.lfunctions import logger
+from lmfdb.logger import logger
 from sage.all import prod
 from sage.arith.srange import srange
 from lmfdb.utils import signtocolour

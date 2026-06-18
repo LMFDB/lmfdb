@@ -46,6 +46,7 @@ table.reptable td, table.reptable th {
       {% endif %}
       <tr><td>{{KNOWL('gg.parity','Parity')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.parity}}</td>
       <td>{{ place_code('even') }}</td></tr>
+      <tr><td>{{KNOWL('gg.transitivity', 'Transitivity')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.transitivity}}</td>
       <tr><td>{{KNOWL('gg.primitive', 'Primitive')}}:</td><td>&nbsp;&nbsp;</td><td>{{info.yesno(info.prim)}}</td>
       <td>{{ place_code('primitive') }}</td></tr>
       <tr><td class="nowrap">{{KNOWL('gg.field_automorphisms', '$\card{\Aut(F/K)}$')}}:</td><td>&nbsp;&nbsp;</td><td>${{info.auts}}$</td>

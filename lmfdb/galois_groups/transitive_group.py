@@ -304,8 +304,10 @@ class WebGaloisGroup:
         # read in code.yaml from galois_groups directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        for lang in self.code['gg']:
-            self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+
+        for prop in ['gg', 'auts']:
+            for lang in self.code[prop]:
+                self.code[prop][lang] = self.code[prop][lang].format(**{'n':self.n(), 't':self.t()})
         self.code['show'] = { lang:'' for lang in self.code['prompt'] }
 
 ############  Misc Functions
@@ -1060,6 +1062,6 @@ multiquad = {
     2: "2T1",
     4: "4T2",
     8: "8T3",
-    16: "16T4",
+    16: "16T3",
     32: "32T39",
 }

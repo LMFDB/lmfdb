@@ -146,10 +146,6 @@ class Configuration(_Configuration):
         )
 
         logginggroup.add_argument(
-            "--logfocus", help="name of a logger to focus on", default=argparse.SUPPRESS
-        )
-
-        logginggroup.add_argument(
             "--loglevel",
             help="loglevel for flask [default: %(default)s]",
             dest="logging_loglevel",
@@ -338,8 +334,6 @@ class Configuration(_Configuration):
             "editor": opts["logging"]["editor"],
             "loglevel": opts["logging"]["loglevel"],
         }
-        if "logfocus" in extopts:
-            self.logging_options["logfocus"] = extopts["logfocus"]
 
     def get_all(self):
         return {

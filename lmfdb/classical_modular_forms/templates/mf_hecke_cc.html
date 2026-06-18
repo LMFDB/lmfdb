@@ -1,0 +1,128 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<p>
+  This dataset contains normalized complex {{KNOWL('cmf.hecke_operator', 'Hecke eigenvalues')}} $a_n/n^{(k-1)/2}$ and {{KNOWL('cmf.satake_angles', 'Satake angles')}} $\theta_p$ for {{KNOWL('cmf.embedding', 'embedded newforms')}}.
+</p>
+
+<p>
+  There are currently 14,417,694 embedded newforms (arising from 281,965 {{KNOWL('cmf.newform', 'newforms')}}), with odd {{KNOWL('cmf.weight', 'weight')}} ranging from $1$ to $181$ and even weight ranging from $2$ to $316$.  The stored {{KNOWL('cmf.level', 'levels')}} vary by weight, and for each newform we store either 2000, 4000, or 6000 Hecke eigenvalues (and corresponding Satake angles).  The main difference between this dataset and the internal <tt>mf_hecke_cc</tt> table within the LMFDB is that this dataset stores more eigenvalues (the internal table only has $n$ up to 100).
+</p>
+
+<h3>File and data format</h3>
+
+Each text file starts with a header line follwed by a blank line; the remainder of the file contains one line per embedded newform, and each line has the following format.
+
+<table>
+  <tr>
+    <td>
+      <tt>label</tt>
+    </td>
+    <td>
+      The {{KNOWL('cmf.label', 'label')}} of the embedded newform.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <tt>dual_label</tt>
+    </td>
+    <td>
+      The {{KNOWL('cmf.label', 'label')}} for the {{KNOWL('cmf.dualform', 'dual')}}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <tt>embedding_root</tt>
+    </td>
+    <td>
+      A pair <tt>[a,b]</tt> giving the image $a + bi$ of the generator for the {{KNOWL('cmf.coefficient_field', 'coefficient field')}} under this embedding.  If unknown (which will occur when the degree of the coefficient field is larger than $20$), the string <tt>None</tt> is recorded instead.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <tt>an_normalized</tt>
+    </td>
+    <td>
+      A list of pairs <tt>[cn, dn]</tt> so that the {{KNOWL('cmf.hecke_operator', 'Hecke eigenvalue')}} $a_n = n^{(k-1)/2} (c_n + d_n i)$.  Here $k$ is the {{KNOWL('cmf.weight', 'weight')}} and the list starts at $n=1$.
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <tt>angles</tt>
+    </td>
+    <td>
+      The list of {{KNOWL('cmf.satake_angles', 'Satake angles')}} $\theta_p$ for good primes $p$.  For $p$ dividing the {{KNOWL('cmf.level', 'level')}}, the string <tt>NULL</tt> is recorded instead.
+    </td>
+  </tr>
+</table>
+
+<h3>Download</h3>
+
+{% if klist is defined %}
+<p>
+  Select a {{KNOWL('cmf.weight', 'weight')}} $k$ to download the file containing data for the embedded newforms in $S_k^{\mathrm{new}}(\Gamma_1({{N}})).$
+</p>
+<table>
+  {% for krow in klist %}
+  <tr>
+    {% for k in krow %}
+    <td>
+      <a href="{{url_for('cmf.mf_hecke_cc', N=N, k=k)}}">{{k}}</a>
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% elif Nlist is defined %}
+<p>
+  Select a {{KNOWL('cmf.level', 'level')}} $N$ to download the file containing data for the embedded newforms in $S_{ {{k}} }^{\mathrm{new}}(\Gamma_1(N)).$
+</p>
+<table>
+  {% for Nrow in Nlist %}
+  <tr>
+    {% for N in Nrow %}
+    <td>
+      <a href="{{url_for('cmf.mf_hecke_cc', N=N, k=k)}}">{{N}}</a>
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>
+  Specify both a {{KNOWL('cmf.weight', 'weight')}} $k$ and a {{KNOWL('cmf.level', 'level')}} $N$ to download the file containing data for the embedded newforms in $S_k^{\mathrm{new}}(\Gamma_1(N)),$ or provide one to get a page showing the available options for the other.  Alternatively, you may give the full label to get just the data for one embedded modular form.
+</p>
+<form>
+  <table>
+    <tr>
+      <td align="right">$k = $</td>
+      <td align="left">
+        <input type="text" name="k" size="7" placeholder="2">
+        <span class="formexample">integer from $1$ to $316$ (even if at least $182$)</span>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">$N = $</td>
+      <td align="left">
+        <input type="text" name="N" size="7" placeholder="11">
+        <span class="formexample">integer from $1$ to $10000$</span>
+      </td>
+    </tr>
+    <tr>
+      <td align="right">{{KNOWL('cmf.label', 'Label')}}</td>
+      <td align="left">
+        <input type="text" name="label" size="20" placeholder="11.2.a.a.1.1">
+        <span class="formexample">Label <tt>N.k.a.x</tt> or <tt>N.k.a.x.n.i</tt></span>
+      </td>
+    </tr>
+    <tr>
+      <td align="left">
+        <button type="submit" name="Fetch" value="fetch">Fetch file</button>
+      </td>
+    </tr>
+  </table>
+</form>
+{% endif %}
+
+{% endblock %}
