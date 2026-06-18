@@ -368,7 +368,9 @@ def run(args, parser):
                 delimiter = "\t"
             else:
                 raise ValueError(f"Format {args.format} not valid")
-            writer = csv.DictWriter(F, projection, delimiter=delimiter)
+            # one_per (and some queries) can include extra grouping/sort
+            # columns in each record; restrict the output to the projection.
+            writer = csv.DictWriter(F, projection, delimiter=delimiter, extrasaction="ignore")
             writer.writeheader()
             for rec in res:
                 writer.writerow(rec)

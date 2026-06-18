@@ -153,6 +153,16 @@ class CmdlineSearchTest(LmfdbTest):
         # Only one result per distinct value of degree, and all have degree 4
         self.assertEqual(len(rows), 1)
 
+    def test_oneper_csv(self):
+        # one_per makes psycodict return extra grouping/sort columns; the csv
+        # writer must ignore those rather than crash.
+        out = self.run_cmd(["nf_fields", '{"degree":4}', "--cols", "label,galt", "--oneper", "galt", "--format", "csv", "--limit", "10"])
+        lines = [line for line in out.splitlines() if line]
+        self.assertEqual(lines[0], "label,galt")
+        # Every data row has exactly the two requested columns
+        for line in lines[1:]:
+            self.assertEqual(len(line.split(",")), 2)
+
     # ------------------------------------------------------------------
     # output file
     # ------------------------------------------------------------------
