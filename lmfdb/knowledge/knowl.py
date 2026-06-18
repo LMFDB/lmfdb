@@ -210,15 +210,18 @@ class KnowlBackend(PostgresBase):
         if L:
             return dict(zip(fields, L[0]))
 
-    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2], ids=None):
+    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2], ids=None, start=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        if ids is None:
-            where = SQL("WHERE status >= %s AND type = ANY(%s)")
-            values = [0, types]
-        else:
+        if ids is not None:
             where = SQL("WHERE status >= %s AND id = ANY(%s)")
             values = [0, ids]
+        elif start is not None and isinstance(start, str):
+            where = SQL("WHERE status >= %s AND id LIKE %s")
+            values = [0, start + "%"]
+        else:
+            where = SQL("WHERE status >= %s AND type = ANY(%s)")
+            values = [0, types]
         selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls {1} ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)), where)
         L = self._safe_execute(selecter, values)
         return [dict(zip(fields, res)) for res in L]
@@ -342,7 +345,7 @@ class KnowlBackend(PostgresBase):
         INPUT:
 
         - ``filename`` -- the filename to write output
-        - ``ids`` -- either a list of knowl IDs or an integer/list of integers (in which case all knowls with that type will be output)
+        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls with that type will be output), or a string (in which case all knowl ids starting with that string will be output)
         - ``fields`` -- include these fields; if not specified will use id plus the default fields.
 
         OUTPUT:
@@ -354,12 +357,14 @@ class KnowlBackend(PostgresBase):
             fields = ['id', 'content', 'title']
         if isinstance(ids, int):
             ids = [ids]
-        if all(isinstance(n, int) for n in ids):
+        if isinstance(ids, str):
+            knowls = self.get_all_knowls(fields, start=ids)
+        elif all(isinstance(n, int) for n in ids):
             knowls = self.get_all_knowls(fields, types=ids)
         elif all(isinstance(kid, str) for kid in ids):
             knowls = self.get_all_knowls(fields, ids=ids)
         else:
-            raise ValueError("ids must either be a list of integers or a list of ids")
+            raise ValueError("ids must either be a list of integers, a string, or a list of ids")
         with open(filename, "w", encoding="utf-8") as F:
             yaml.safe_dump([{"written": timestamp}] + knowls, F, default_flow_style=False, sort_keys=False)
 
