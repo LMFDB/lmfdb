@@ -193,9 +193,8 @@
 	      // remove diagram specific parameters
 	      var diagramParams = ["x-axis", "y-axis", "color", "count"];
 	      diagramParams.map(p => searchParams.delete(p));
-	      // set search parameters based on dot
-	      searchParams.set(xAxisKey, d.x);
-	      searchParams.set(yAxisKey, d.y);
+	      // set search parameters based on labels in dot
+	      searchParams.set("labels", d.labels.join(","));
 	      // perform search
 	      window.location.search = searchParams.toString();
 	  }
