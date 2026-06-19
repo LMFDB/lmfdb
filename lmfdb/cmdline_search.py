@@ -61,6 +61,7 @@ You can provide input in two formats:
     parser.add_argument("--offset", type=int, help="Where to start in the list of results", default=0)
     parser.add_argument("--sort", help="columns by which to sort the search results; prepend a minus sign to a column to reverse it")
     parser.add_argument("--oneper", help="a list of columns, separated by commas.  If provided, only one result will be included with each given set of values for those columns (the first according to the provided sort order).")
+    parser.add_argument("-r", "--random", action="store_true", help="Return a single object chosen uniformly at random from those matching the query")
     parser.add_argument("-d", "--debug", action="store_true", help="whether to raise errors")
     parser.add_argument("--host", help="PostgreSQL server host or socket directory [default: %(default)s]", default="devmirror.lmfdb.xyz")
     parser.add_argument("--port", type=int, help="PostreSQL server port [default: %(default)d]", default=5432)
@@ -143,9 +144,39 @@ def section_lookup(section, parser):
     parser.error("Must provide an LMFDB table or section as the first argument")
 
 
-def print_help(table=None, col=None):
-    # TODO: Add useful help
-    pass
+def resolve_table(name, parser):
+    """Return the psycodict table object for a raw table name or a section."""
+    if name in db.tablenames:
+        return db[name]
+    wrapper, _ = section_lookup(name, parser)
+    return wrapper.table
+
+
+def print_help(parser, table=None, col=None):
+    """Describe a table or a single column.
+
+    Invoked as ``lmfdb_search help TABLE [COL]``.  With only a table, prints the
+    table's description followed by the description of every column.  With a
+    table and a column, prints the description of that one column.
+    """
+    if table is None:
+        parser.print_help()
+        return
+    tbl = resolve_table(table, parser)
+    descriptions = tbl.column_description()
+    if col is not None:
+        if col not in tbl.col_type:
+            parser.error(f"{col} is not a column of {tbl.search_table}")
+        print(f"{tbl.search_table}.{col}: {descriptions.get(col, '')}")
+        return
+    table_description = tbl.description()
+    print(f"{tbl.search_table}: {table_description}" if table_description else tbl.search_table)
+    cols = sorted(descriptions)
+    if cols:
+        width = max(len(c) for c in cols)
+        print("\nColumns:")
+        for c in cols:
+            print(f"  {c.ljust(width)}  {descriptions[c] or ''}")
 
 
 def write(s, F):
@@ -175,7 +206,7 @@ def run(args, parser):
         if not args.query:
             parser.print_help()
         elif len(args.query) <= 2:
-            print_help(*args.query)
+            print_help(parser, *args.query)
         else:
             parser.error("Too many positional arguments")
         return
@@ -271,13 +302,26 @@ def run(args, parser):
     if args.limit == -1:
         args.limit = None
 
-    res = table.search(query,
-                       projection=projection,
-                       limit=args.limit,
-                       offset=args.offset,
-                       sort=sort,
-                       one_per=one_per,
-                       raw=raw)
+    if args.random:
+        # A single object chosen uniformly at random; limit/offset/sort/oneper
+        # do not apply, and raw SQL queries are not supported by table.random.
+        if raw is not None:
+            parser.error("--random is not supported together with --sql")
+        rec = table.random(query, projection=projection)
+        res = [] if rec is None else [rec]
+    else:
+        # Pass a fresh raw_values list: psycodict's search() has a mutable
+        # default raw_values=[] that _build_query appends the limit/offset to,
+        # so a second raw= search in the same process would otherwise inherit
+        # stale values and fail with "not all arguments converted".
+        res = table.search(query,
+                           projection=projection,
+                           limit=args.limit,
+                           offset=args.offset,
+                           sort=sort,
+                           one_per=one_per,
+                           raw=raw,
+                           raw_values=[])
     if projection == 1:
         projection = table.search_cols
 
@@ -347,6 +391,11 @@ def run(args, parser):
                 line = "|".join(copy_dumps(rec.get(col, None), table.col_type[col]) for col in projection)
                 write(line + "\n", F)
         elif args.format == "json":
+            # json and tsv are produced here (and in the csv.DictWriter branch
+            # below) rather than through the section download machinery, because
+            # lmfdb/utils/downloader.py has no JSON or TSV DownloadLanguage yet.
+            # If those are added to Downloader.languages, these formats could be
+            # routed through use_download like sage/magma/csv/etc.
             write(json.dumps(Json.prep(res)), F)
         elif use_download:
             dl = wrapper.shortcuts["download"]

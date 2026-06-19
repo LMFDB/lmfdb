@@ -117,6 +117,7 @@ Options
 | `--offset N` | Where to start in the list of results. |
 | `--sort COLS` | Comma-separated columns to sort by; prefix a column with `-` to reverse it. |
 | `--oneper COLS` | Return only one result for each distinct set of values of these columns. |
+| `-r, --random` | Return a single object chosen uniformly at random from those matching the query (ignores `--limit`/`--offset`/`--sort`/`--oneper`; not compatible with `--sql`). |
 | `-p, --completeness` | Prepend whether the results are known to be complete. |
 | `-o, --output FILE` | Write to a file instead of stdout. |
 | `-f, --force` | Overwrite the output file if it already exists. |
@@ -165,4 +166,30 @@ One representative per Galois group, written as CSV:
 
 ```bash
 ./lmfdb_search nf_fields '{"degree":4}' --oneper galt --cols label,galt --format csv
+```
+
+A raw SQL `WHERE` clause against a table:
+
+```bash
+./lmfdb_search nf_fields --sql "degree = 4 AND class_number = 5" --cols label,degree,class_number
+```
+
+A single random degree-4 number field:
+
+```bash
+./lmfdb_search NumberField degree=4 --random
+```
+
+Getting help
+------------
+
+Run with no arguments (or `help`) to see the option summary.  Pass `help`
+followed by a table or section to see its description and the description of
+every column, or followed by a table/section and a column name to see that one
+column's description:
+
+```bash
+./lmfdb_search help nf_fields            # table and all column descriptions
+./lmfdb_search help nf_fields degree     # one column's description
+./lmfdb_search help NumberField class_number
 ```

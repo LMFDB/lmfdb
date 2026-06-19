@@ -1,10 +1,12 @@
 #!/usr/bin/env -S sage -python
 
 # Other features we could add:
-# * Random object
 # * Another database connection (other than devmirror)
-
-# TODO: Add json and tsv language support to downloads
+#
+# TODO: Add json and tsv DownloadLanguage subclasses to
+# lmfdb/utils/downloader.py (Downloader.languages currently has magma, sage,
+# gp, gap, text, oscar and csv but no json or tsv).  Until then the CLI
+# produces json and tsv itself rather than through the download machinery.
 
 from lmfdb.cmdline_search import main
 

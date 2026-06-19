@@ -164,6 +164,79 @@ class CmdlineSearchTest(LmfdbTest):
             self.assertEqual(len(line.split(",")), 2)
 
     # ------------------------------------------------------------------
+    # raw SQL
+    # ------------------------------------------------------------------
+
+    def test_sql_table(self):
+        out = self.run_cmd(["nf_fields", "--sql", "degree = 4 AND class_number = 5",
+                            "--cols", "label,degree,class_number", "--format", "json", "--limit", "3"])
+        data = json.loads(out)
+        self.assertEqual(len(data), 3)
+        for rec in data:
+            self.assertEqual(rec["degree"], 4)
+            self.assertEqual(rec["class_number"], 5)
+
+    def test_sql_raw_format(self):
+        out = self.run_cmd(["nf_fields", "--sql", "degree = 2", "--cols", "label,degree", "--limit", "4"])
+        rows = self.raw_rows(out)
+        self.assertEqual(len(rows), 4)
+        for row in rows:
+            self.assertEqual(row.split("|")[1], "2")
+
+    # ------------------------------------------------------------------
+    # random
+    # ------------------------------------------------------------------
+
+    def test_random_table(self):
+        out = self.run_cmd(["nf_fields", '{"degree":4}', "--random", "--cols", "label,degree"])
+        rows = self.raw_rows(out)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0].split("|")[1], "4")
+
+    def test_random_json_section(self):
+        out = self.run_cmd(["NumberField", "degree=4", "--random", "--format", "json"])
+        data = json.loads(out)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["degree"], 4)
+
+    def test_random_no_match(self):
+        # A query with no results returns nothing (just the raw headers)
+        out = self.run_cmd(["nf_fields", '{"degree":-1}', "--random", "--cols", "label"])
+        self.assertEqual(self.raw_rows(out), [])
+
+    def test_random_with_sql_errors(self):
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["nf_fields", "--sql", "degree = 4", "--random"])
+
+    # ------------------------------------------------------------------
+    # help
+    # ------------------------------------------------------------------
+
+    def test_help_table(self):
+        out = self.run_cmd(["help", "nf_fields"])
+        self.assertIn("nf_fields: Number fields", out)
+        self.assertIn("Columns:", out)
+        # A known column and (part of) its description appear
+        self.assertIn("degree", out)
+        self.assertIn("class number", out)
+
+    def test_help_column(self):
+        out = self.run_cmd(["help", "nf_fields", "degree"]).strip()
+        self.assertEqual(out, "nf_fields.degree: degree of the field over *Q*")
+
+    def test_help_section_column(self):
+        out = self.run_cmd(["help", "NumberField", "class_number"]).strip()
+        self.assertEqual(out, "nf_fields.class_number: class number")
+
+    def test_help_invalid_column(self):
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["help", "nf_fields", "not_a_column"])
+
+    def test_help_too_many_args(self):
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["help", "nf_fields", "degree", "extra"])
+
+    # ------------------------------------------------------------------
     # output file
     # ------------------------------------------------------------------
 
