@@ -17,6 +17,7 @@ Development
 * [Getting Started](https://github.com/LMFDB/lmfdb/blob/main/GettingStarted.md) -- cheat sheet for setting up lmfdb
 * [Development Guide](https://github.com/LMFDB/lmfdb/blob/main/Development.md) -- organizing development
 * [Style Guide](https://github.com/LMFDB/lmfdb/blob/main/StyleGuide.md) -- how things on LMFDB pages should be styled to give the web site a coherent look
+* [Command-line search](https://github.com/LMFDB/lmfdb/blob/main/CommandLineSearch.md) -- searching the LMFDB from the command line with `lmfdb_search`
 
 Guidelines
 ----------
