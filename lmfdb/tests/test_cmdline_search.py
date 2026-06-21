@@ -1,12 +1,14 @@
 
+import inspect
 import io
 import json
 import os
+import re
 import tempfile
 from contextlib import redirect_stdout
 
 from lmfdb.tests import LmfdbTest
-from lmfdb.cmdline_search import main
+from lmfdb.cmdline_search import main, parse_lmfdb_url, build_parser, section_lookup, SECTIONS
 
 
 class CmdlineSearchTest(LmfdbTest):
@@ -297,3 +299,103 @@ class CmdlineSearchTest(LmfdbTest):
     def test_error_invalid_sort_column(self):
         with self.assertRaises(SystemExit):
             self.run_cmd(["nf_fields", '{"degree":4}', "--sort", "not_a_column", "--limit", "1"])
+
+    # ------------------------------------------------------------------
+    # rejecting unknown search criteria (review comment)
+    # ------------------------------------------------------------------
+
+    def test_unknown_section_param_errors(self):
+        # A typo'd/unknown url parameter is an error, not silently ignored
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["NumberField", "degree=4&nonsense=5", "--limit", "1"])
+
+    def test_known_noncolumn_section_param_ok(self):
+        # signature is a valid search box, even though it is not a db column
+        out = self.run_cmd(["NumberField", "degree=4&signature=[0,2]", "--cols", "label", "--limit", "1"])
+        self.assertEqual(len(self.raw_rows(out)), 1)
+
+    def test_unknown_json_column_errors(self):
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["nf_fields", '{"degre":4}', "--cols", "label", "--limit", "1"])
+
+    def test_unknown_json_column_nested_errors(self):
+        # also caught inside $or
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["nf_fields", '{"$or":[{"degree":4},{"notacol":1}]}', "--cols", "label", "--limit", "1"])
+
+    def test_json_value_operator_ok(self):
+        # $-operators at the value level are not mistaken for columns
+        out = self.run_cmd(["nf_fields", '{"degree":{"$gte":4}}', "--cols", "label,degree", "--limit", "3"])
+        self.assertEqual(len(self.raw_rows(out)), 3)
+
+    # ------------------------------------------------------------------
+    # pasting a full LMFDB url
+    # ------------------------------------------------------------------
+
+    def test_url_paste_search(self):
+        out = self.run_cmd(["https://www.lmfdb.org/NumberField/?degree=4", "--cols", "label,degree", "--limit", "2"])
+        rows = self.raw_rows(out)
+        self.assertEqual(len(rows), 2)
+        for row in rows:
+            self.assertEqual(row.split("|")[1], "4")
+
+    def test_url_paste_beta(self):
+        out = self.run_cmd(["https://beta.lmfdb.org/NumberField/?degree=4", "--cols", "label", "--limit", "2"])
+        self.assertEqual(len(self.raw_rows(out)), 2)
+
+    def test_url_paste_download_format(self):
+        # Submit=sage in the url selects the sage download format
+        out = self.run_cmd(["https://www.lmfdb.org/NumberField/?degree=4&download=1&Submit=sage", "--limit", "2"])
+        self.assertIn("data", out)
+        self.assertIn("4.0.", out)
+
+    def test_url_paste_format_override(self):
+        # an explicit --format overrides the download format in the url
+        out = self.run_cmd(["https://www.lmfdb.org/NumberField/?degree=4&Submit=sage", "--format", "json", "--limit", "1"])
+        data = json.loads(out)
+        self.assertEqual(len(data), 1)
+
+    def test_url_paste_bad_host_errors(self):
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["https://evil.example.com/NumberField/?degree=4"])
+
+    def test_url_paste_object_page_errors(self):
+        # an object home page is not a search-results url
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["https://www.lmfdb.org/NumberField/4.0.117.1"])
+
+    def test_url_paste_with_extra_query_errors(self):
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["https://www.lmfdb.org/NumberField/?degree=4", "degree=2"])
+
+    # parse_lmfdb_url unit tests (no database access)
+
+    def test_parse_url_basic(self):
+        parser = build_parser()
+        section, query, fmt = parse_lmfdb_url("https://www.lmfdb.org/NumberField/?degree=4&class_number=2", parser)
+        self.assertEqual(section, "NumberField")
+        self.assertEqual(query, "degree=4&class_number=2")
+        self.assertIsNone(fmt)
+
+    def test_parse_url_pari_mapping(self):
+        # the website "gp" download language maps to the CLI "pari" format
+        parser = build_parser()
+        _, _, fmt = parse_lmfdb_url("https://www.lmfdb.org/NumberField/?degree=4&download=1&Submit=gp", parser)
+        self.assertEqual(fmt, "pari")
+
+    def test_parse_url_download_default_text(self):
+        parser = build_parser()
+        _, _, fmt = parse_lmfdb_url("https://www.lmfdb.org/NumberField/?download=1", parser)
+        self.assertEqual(fmt, "text")
+
+    def test_parse_url_trailing_slash_section(self):
+        parser = build_parser()
+        section, query, fmt = parse_lmfdb_url("https://www.lmfdb.org/Character/Dirichlet/?modulus=7", parser)
+        self.assertEqual(section, "Character/Dirichlet/")
+        self.assertEqual(query, "modulus=7")
+
+    def test_sections_match_section_lookup(self):
+        # SECTIONS must stay in sync with the section_lookup dispatch
+        src = inspect.getsource(section_lookup)
+        found = set(re.findall(r'section == "([^"]+)"', src))
+        self.assertEqual(set(SECTIONS), found)

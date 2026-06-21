@@ -90,10 +90,36 @@ parser for it); use a JSON query instead.
 
 The query may also be read from a file with `-i/--input`.
 
+Unknown search criteria are rejected rather than silently ignored: an
+unrecognized url parameter (e.g. a typo such as `degere=4`) or a json key that
+is not a column produces an error.
+
+Pasting a full LMFDB url
+------------------------
+
+Instead of giving the section and query separately, you can paste a full LMFDB
+search-results url (from either the production site `www.lmfdb.org` or the beta
+site `beta.lmfdb.org`) as the only argument.  It is split into the section and
+the search terms:
+
+```bash
+./lmfdb_search "https://www.lmfdb.org/NumberField/?degree=4&class_number=2"
+```
+
+If the url is a download url (it contains `download=1`/`Submit=...`, as produced
+by the **Download** button on a search-results page), the download language is
+used as the output format — so the url's "Pari/GP" download becomes `--format
+pari`, "SageMath" becomes `--format sage`, and so on.  An explicit `--format` on
+the command line overrides the format from the url.
+
+Only search-results urls are supported.  Object home pages (e.g.
+`.../NumberField/4.0.117.1`) and non-LMFDB hosts are rejected.
+
 Output formats
 --------------
 
-Select the format with `-t/--format` (default `raw`):
+Select the format with `-t/--format` (default `raw`, or the download format
+from a pasted url):
 
 | Format | Raw table | Section |
 | --- | --- | --- |
@@ -142,6 +168,12 @@ The same search directly against the raw table, as JSON, selecting two columns:
 
 ```bash
 ./lmfdb_search nf_fields '{"degree":4}' --cols label,degree --format json
+```
+
+A full search-results url pasted from the website (here a "SageMath" download):
+
+```bash
+./lmfdb_search "https://www.lmfdb.org/NumberField/?degree=4&download=1&Submit=sage"
 ```
 
 The five degree-4 fields of largest absolute discriminant (descending sort):
