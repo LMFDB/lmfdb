@@ -67,8 +67,8 @@ def section_param_names(search_array):
     """The set of url query-string keys recognized for a section: the names of
     the search-form input boxes, plus the common meta parameters."""
     names = set(META_PARAMS)
-    for arr in (getattr(search_array, "refine_array", None) or [],
-                getattr(search_array, "browse_array", None) or []):
+    for arr in (getattr(search_array, "refine_array", []),
+                getattr(search_array, "browse_array", [])):
         for row in arr:
             for box in row:
                 name = getattr(box, "name", None)
