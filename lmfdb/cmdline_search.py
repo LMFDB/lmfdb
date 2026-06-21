@@ -20,7 +20,7 @@ import sys
 import csv
 import json
 from argparse import ArgumentParser
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, parse_qsl, urlencode, urlparse
 
 from lmfdb import db
 from lmfdb.utils.completeness import results_complete
@@ -33,9 +33,139 @@ LANGUAGE_FORMATS = ["text", "sage", "gap", "pari", "magma", "oscar"]
 # The LMFDB download machinery uses ``gp`` for the pari/gp language.
 DOWNLOAD_LANG = {"pari": "gp"}
 
+# Reverse map, used when reading a download language out of a pasted url (the
+# website's "Submit" value uses "gp" where the CLI uses "pari").
+URL_FORMAT = {v: k for k, v in DOWNLOAD_LANG.items()}
+
+# Domains recognized when a full LMFDB url is pasted: the public site
+# (*.lmfdb.org) and the internal servers (*.lmfdb.xyz).
+LMFDB_DOMAINS = ("lmfdb.org", "lmfdb.xyz")
+
+# The LMFDB sections understood by section_lookup, as they appear in an LMFDB
+# url path.  Kept in sync with section_lookup by a test.
+SECTIONS = (
+    "L", "L/rational",
+    "ModularForm/GL2/Q/holomorphic", "ModularForm/GL2/Q/Maass",
+    "ModularForm/GL2/TotallyReal", "ModularForm/GL2/ImaginaryQuadratic",
+    "EllipticCurve/Q", "EllipticCurve", "Genus2Curve/Q", "ModularCurve/Q",
+    "HigherGenus/C/Aut", "Variety/Abelian/Fq", "Belyi", "NumberField",
+    "padicField", "Character/Dirichlet/", "ArtinRepresentation",
+    "Motive/Hypergeometric/Q", "GaloisGroup", "SatoTateGroup",
+    "Groups/Abstract", "Lattice",
+)
+
+# url query-string keys that are not search-form fields but commonly appear in a
+# search-results url (pagination, sorting, column control, download triggers).
+META_PARAMS = frozenset({
+    "search_type", "hst", "start", "count", "sort_order", "sort_dir",
+    "columns", "showcol", "hidecol", "search_array", "jump", "label", "labels",
+    "download", "Submit", "query", "download_row_count", "result_count",
+})
+
 
 def download_lang_key(fmt):
     return DOWNLOAD_LANG.get(fmt, fmt)
+
+
+def section_param_names(search_array):
+    """The set of url query-string keys recognized for a section: the names of
+    the search-form input boxes, plus the common meta parameters."""
+    names = set(META_PARAMS)
+    for arr in (getattr(search_array, "refine_array", []),
+                getattr(search_array, "browse_array", [])):
+        for row in arr:
+            for box in row:
+                name = getattr(box, "name", None)
+                if name:
+                    names.add(name)
+    return names
+
+
+def bad_query_columns(query, valid):
+    """The keys of a dict query that are not columns (i.e. not in ``valid``).
+
+    Recurses through the ``$and``/``$or``/``$not`` logical operators (mirroring
+    psycodict's own ``_columns_searched``); other ``$``-prefixed keys are
+    value-operators and are left alone.  A ``col.subkey`` key (jsonb access) is
+    checked against ``col``.
+    """
+    if isinstance(query, list):  # the value of $and/$or, or a recursive $or
+        return [bad for part in query for bad in bad_query_columns(part, valid)]
+    if not isinstance(query, dict):
+        return []
+    bad = []
+    for key, val in query.items():
+        if key in ("$and", "$or", "$not"):
+            bad.extend(bad_query_columns(val, valid))
+        elif key.startswith("$"):
+            continue
+        elif key.split(".")[0] not in valid:
+            bad.append(key)
+    return bad
+
+
+def check_query_columns(query, valid, parser):
+    """Raise a parser error listing every key in a dict query that is not a column."""
+    bad = list(dict.fromkeys(bad_query_columns(query, valid)))
+    if bad:
+        parser.error("not a column of the search table: " + ", ".join(bad))
+
+
+def is_lmfdb_host(netloc):
+    """Whether ``netloc`` (the host part of a url) is an LMFDB server."""
+    host = netloc.split("@")[-1].split(":")[0].lower()
+    return any(host == domain or host.endswith("." + domain) for domain in LMFDB_DOMAINS)
+
+
+def looks_like_lmfdb_url(arg):
+    """Whether a positional argument should be treated as a pasted LMFDB url
+    rather than a section/table name.  Accepts an explicit http(s) url or a
+    scheme-less url whose host is an LMFDB server (e.g. www.lmfdb.org/...)."""
+    if arg.startswith(("http://", "https://")):
+        return True
+    return is_lmfdb_host(arg.split("/", 1)[0].split("?", 1)[0])
+
+
+def parse_lmfdb_url(url, parser):
+    """Split a full LMFDB search-results url into ``(section, query_string,
+    download_format)``.
+
+    The url may omit the scheme (e.g. ``www.lmfdb.org/NumberField/?degree=4``).
+    ``download_format`` is a CLI format name if the url triggers a download
+    (``download=1``/``Submit=...``), otherwise ``None``.  Errors out on urls
+    that are not LMFDB search-results urls.
+    """
+    parsed = urlparse(url)
+    if not parsed.scheme:
+        # scheme-less url such as www.lmfdb.org/NumberField/?degree=4: urlparse
+        # puts the host in the path, so reparse with a scheme added.
+        parsed = urlparse("https://" + url)
+    if parsed.scheme not in ("http", "https") or not is_lmfdb_host(parsed.netloc):
+        parser.error(f"not an LMFDB url: {url}")
+    path = parsed.path.strip("/")
+    # Sections may end in a slash in the url (e.g. Character/Dirichlet/).
+    if path in SECTIONS:
+        section = path
+    elif path + "/" in SECTIONS:
+        section = path + "/"
+    else:
+        parser.error(f"{url} is not an LMFDB search-results url (could not identify a search section)")
+    fmt = None
+    is_download = False
+    kept = []
+    for key, val in parse_qsl(parsed.query, keep_blank_values=True):
+        if key == "Submit":
+            is_download = True
+            fmt = URL_FORMAT.get(val, val)
+        elif key in ("download", "download_row_count", "query"):
+            # download triggers / duplicated query; not part of the search
+            is_download = is_download or key == "download"
+        else:
+            kept.append((key, val))
+    if is_download and fmt is None:
+        # download with no explicit language defaults to text (as on the website)
+        fmt = "text"
+    return section, urlencode(kept), fmt
 
 
 def build_parser():
@@ -43,18 +173,22 @@ def build_parser():
         prog="LMFDBSearch",
         description="""Command-line search interface for the L-functions and modular forms database (LMFDB)
 
-You can provide input in two formats:
+You can provide input in several formats:
 * A url string, matching the query-string part of an LMFDB url.  For example, searching for number fields with degree 4 would be done with degree=4, matching the LMFDB url https://www.lmfdb.org/NumberField/?degree=4.
 * A json dictionary such as {"degree":4}.
+
+You can also paste a full LMFDB search-results url (from the production or beta
+site) as the only argument, and it will be split into the section and search
+terms; a download format in the url (e.g. Submit=sage) sets the output format.
 """)
 
-    parser.add_argument("table", help="Which table or section of the lmfdb to search")
+    parser.add_argument("table", help="Which table or section of the lmfdb to search, or a full LMFDB search-results url")
     parser.add_argument("query", nargs="*", help="A query constraining which results are returned.  If not present, all results will be included")
     parser.add_argument("-i", "--input", help="Input file with search query", )
     parser.add_argument("-s", "--sql", action="store_true", help="Use SQL for input")
     parser.add_argument("-o", "--output", help="Output file for search results")
     parser.add_argument("-f", "--force", action="store_true", help="Overwrite output file even if it exists")
-    parser.add_argument("-t", "--format", help="Output format", choices=["raw", "text", "json", "csv", "tsv", "sage", "gap", "pari", "magma", "oscar"], default="raw")
+    parser.add_argument("-t", "--format", help="Output format (default: raw, or the download format from a pasted url)", choices=["raw", "text", "json", "csv", "tsv", "sage", "gap", "pari", "magma", "oscar"], default=None)
     parser.add_argument("-p", "--completeness", action="store_true", help="Whether to include completeness information at the begining of the output")
     parser.add_argument("-c", "--cols", help="Which columns to include in the output")
     parser.add_argument("-l", "--limit", type=int, help="The number of matching results to return (-1 for no limit)", default=50)
@@ -210,6 +344,22 @@ def run(args, parser):
         else:
             parser.error("Too many positional arguments")
         return
+
+    # A full LMFDB search-results url can be pasted as the only argument; split
+    # it into the section, the search terms and (if present) a download format.
+    if looks_like_lmfdb_url(args.table):
+        if args.query:
+            parser.error("when pasting a full LMFDB url, do not also provide a separate query")
+        if args.input is not None:
+            parser.error("when pasting a full LMFDB url, do not also use --input")
+        section, url_query, url_format = parse_lmfdb_url(args.table, parser)
+        args.table = section
+        args.query = [url_query] if url_query else []
+        if url_format is not None and args.format is None:
+            args.format = url_format
+    if args.format is None:
+        args.format = "raw"
+
     if len(args.query) > 1:
         parser.error("Too many positional arguments")
 
@@ -266,12 +416,21 @@ def run(args, parser):
             if args.debug:
                 raise
             parser.error(str(err))
+        # Catch typo'd column names up front rather than letting them through
+        # (psycodict would otherwise raise a less friendly error).
+        check_query_columns(query, set(table.search_cols) | {"id"}, parser)
     elif section_search:
         info = parse_qs(args.query[0])
         for key, val in info.items():
             if len(val) > 1:
                 parser.error(f"Multiple values found for {key} in query string")
             info[key] = val[0]
+        # Reject unrecognized search parameters rather than silently ignoring
+        # them (a common and confusing mistake).
+        valid = section_param_names(search_array)
+        unknown = [key for key in info if key not in valid]
+        if unknown:
+            parser.error("unknown search parameter(s): " + ", ".join(unknown))
         info["search_array"] = search_array
         try:
             result = wrapper.make_query(info)
