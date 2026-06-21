@@ -37,6 +37,10 @@ DOWNLOAD_LANG = {"pari": "gp"}
 # website's "Submit" value uses "gp" where the CLI uses "pari").
 URL_FORMAT = {v: k for k, v in DOWNLOAD_LANG.items()}
 
+# Domains recognized when a full LMFDB url is pasted: the public site
+# (*.lmfdb.org) and the internal servers (*.lmfdb.xyz).
+LMFDB_DOMAINS = ("lmfdb.org", "lmfdb.xyz")
+
 # The LMFDB sections understood by section_lookup, as they appear in an LMFDB
 # url path.  Kept in sync with section_lookup by a test.
 SECTIONS = (
@@ -107,17 +111,36 @@ def check_query_columns(query, valid, parser):
         parser.error("not a column of the search table: " + ", ".join(bad))
 
 
+def is_lmfdb_host(netloc):
+    """Whether ``netloc`` (the host part of a url) is an LMFDB server."""
+    host = netloc.split("@")[-1].split(":")[0].lower()
+    return any(host == domain or host.endswith("." + domain) for domain in LMFDB_DOMAINS)
+
+
+def looks_like_lmfdb_url(arg):
+    """Whether a positional argument should be treated as a pasted LMFDB url
+    rather than a section/table name.  Accepts an explicit http(s) url or a
+    scheme-less url whose host is an LMFDB server (e.g. www.lmfdb.org/...)."""
+    if arg.startswith(("http://", "https://")):
+        return True
+    return is_lmfdb_host(arg.split("/", 1)[0].split("?", 1)[0])
+
+
 def parse_lmfdb_url(url, parser):
     """Split a full LMFDB search-results url into ``(section, query_string,
     download_format)``.
 
+    The url may omit the scheme (e.g. ``www.lmfdb.org/NumberField/?degree=4``).
     ``download_format`` is a CLI format name if the url triggers a download
     (``download=1``/``Submit=...``), otherwise ``None``.  Errors out on urls
     that are not LMFDB search-results urls.
     """
     parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https") or not (
-            parsed.netloc == "lmfdb.org" or parsed.netloc.endswith(".lmfdb.org")):
+    if not parsed.scheme:
+        # scheme-less url such as www.lmfdb.org/NumberField/?degree=4: urlparse
+        # puts the host in the path, so reparse with a scheme added.
+        parsed = urlparse("https://" + url)
+    if parsed.scheme not in ("http", "https") or not is_lmfdb_host(parsed.netloc):
         parser.error(f"not an LMFDB url: {url}")
     path = parsed.path.strip("/")
     # Sections may end in a slash in the url (e.g. Character/Dirichlet/).
@@ -324,7 +347,7 @@ def run(args, parser):
 
     # A full LMFDB search-results url can be pasted as the only argument; split
     # it into the section, the search terms and (if present) a download format.
-    if args.table.startswith(("http://", "https://")):
+    if looks_like_lmfdb_url(args.table):
         if args.query:
             parser.error("when pasting a full LMFDB url, do not also provide a separate query")
         if args.input is not None:

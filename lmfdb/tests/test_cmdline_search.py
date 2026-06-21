@@ -9,7 +9,8 @@ from contextlib import redirect_stdout
 
 from lmfdb.tests import LmfdbTest
 from lmfdb.cmdline_search import (
-    main, parse_lmfdb_url, build_parser, section_lookup, SECTIONS, bad_query_columns,
+    main, parse_lmfdb_url, looks_like_lmfdb_url, build_parser, section_lookup,
+    SECTIONS, bad_query_columns,
 )
 
 
@@ -373,6 +374,11 @@ class CmdlineSearchTest(LmfdbTest):
         out = self.run_cmd(["https://beta.lmfdb.org/NumberField/?degree=4", "--cols", "label", "--limit", "2"])
         self.assertEqual(len(self.raw_rows(out)), 2)
 
+    def test_url_paste_schemeless(self):
+        # a url without the http(s):// prefix is accepted
+        out = self.run_cmd(["www.lmfdb.org/NumberField/?degree=4", "--cols", "label", "--limit", "2"])
+        self.assertEqual(len(self.raw_rows(out)), 2)
+
     def test_url_paste_download_format(self):
         # Submit=sage in the url selects the sage download format
         out = self.run_cmd(["https://www.lmfdb.org/NumberField/?degree=4&download=1&Submit=sage", "--limit", "2"])
@@ -423,6 +429,33 @@ class CmdlineSearchTest(LmfdbTest):
         section, query, fmt = parse_lmfdb_url("https://www.lmfdb.org/Character/Dirichlet/?modulus=7", parser)
         self.assertEqual(section, "Character/Dirichlet/")
         self.assertEqual(query, "modulus=7")
+
+    def test_parse_url_schemeless_hosts(self):
+        parser = build_parser()
+        for url in ("www.lmfdb.org/NumberField/?degree=4",
+                    "lmfdb.org/NumberField/?degree=4"):
+            section, query, fmt = parse_lmfdb_url(url, parser)
+            self.assertEqual((section, query), ("NumberField", "degree=4"))
+
+    def test_parse_url_lmfdb_xyz_host(self):
+        # internal *.lmfdb.xyz servers are accepted, with or without scheme
+        parser = build_parser()
+        for url in ("http://abc.lmfdb.xyz/EllipticCurve/Q/?conductor=11",
+                    "devmirror.lmfdb.xyz/EllipticCurve/Q/?conductor=11"):
+            section, query, fmt = parse_lmfdb_url(url, parser)
+            self.assertEqual((section, query), ("EllipticCurve/Q", "conductor=11"))
+
+    def test_looks_like_lmfdb_url(self):
+        for arg in ("https://www.lmfdb.org/NumberField/?degree=4",
+                    "www.lmfdb.org/NumberField/?degree=4",
+                    "lmfdb.org/NumberField/",
+                    "beta.lmfdb.org/NumberField/",
+                    "devmirror.lmfdb.xyz/NumberField/"):
+            self.assertTrue(looks_like_lmfdb_url(arg), arg)
+        # section and table names, and non-LMFDB hosts, are not urls
+        for arg in ("NumberField", "EllipticCurve/Q", "nf_fields", "help",
+                    "example.com/NumberField"):
+            self.assertFalse(looks_like_lmfdb_url(arg), arg)
 
     def test_sections_match_section_lookup(self):
         # SECTIONS must stay in sync with the section_lookup dispatch

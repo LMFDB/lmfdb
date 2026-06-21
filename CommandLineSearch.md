@@ -98,12 +98,19 @@ Pasting a full LMFDB url
 ------------------------
 
 Instead of giving the section and query separately, you can paste a full LMFDB
-search-results url (from either the production site `www.lmfdb.org` or the beta
-site `beta.lmfdb.org`) as the only argument.  It is split into the section and
+search-results url as the only argument, and it is split into the section and
 the search terms:
 
 ```bash
 ./lmfdb_search "https://www.lmfdb.org/NumberField/?degree=4&class_number=2"
+```
+
+Both the public site (`*.lmfdb.org`, e.g. `www.lmfdb.org` or `beta.lmfdb.org`)
+and the internal servers (`*.lmfdb.xyz`) are accepted, and the `https://` (or
+`http://`) prefix may be omitted:
+
+```bash
+./lmfdb_search "www.lmfdb.org/NumberField/?degree=4"
 ```
 
 If the url is a download url (it contains `download=1`/`Submit=...`, as produced
