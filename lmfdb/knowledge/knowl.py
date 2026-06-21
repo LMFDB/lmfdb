@@ -305,13 +305,13 @@ class KnowlBackend(PostgresBase):
 
     def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
+        authors = []
         if most_recent is None:
             most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
-        new_knowl = most_recent is None
-        if new_knowl:
-            authors = []
-        else:
-            authors = most_recent.pop('authors', [])
+        if isinstance(most_recent, Knowl):
+            most_recent = {"authors": most_recent.authors}
+        if most_recent is not None:
+            authors = most_recent.get('authors', [])
 
         if not minor and who and who not in authors:
             authors = authors + [who]
@@ -1096,8 +1096,6 @@ class Knowl():
             Currently only used when renaming a knowl.
         - ``minor`` -- if True, don't add the current user to the list of authors.
         """
-        if most_recent is not None:
-            most_recent = {'authors':most_recent.authors}
         knowldb.save(self, who, most_recent=most_recent, minor=minor)
 
     def delete(self):
