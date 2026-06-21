@@ -77,24 +77,32 @@ def section_param_names(search_array):
     return names
 
 
-def check_query_columns(query, valid, parser):
-    """Raise a parser error if a dict query uses a key that is not a column.
+def bad_query_columns(query, valid):
+    """The keys of a dict query that are not columns (i.e. not in ``valid``).
 
-    Recurses into the lists of the ``$and``/``$or``/``$nor`` logical operators;
-    other ``$``-prefixed keys are psycodict value-operators and are left alone.
+    Recurses through the ``$and``/``$or``/``$not`` logical operators (mirroring
+    psycodict's own ``_columns_searched``); other ``$``-prefixed keys are
+    value-operators and are left alone.  A ``col.subkey`` key (jsonb access) is
+    checked against ``col``.
     """
+    if isinstance(query, list):  # the value of $and/$or, or a recursive $or
+        return [bad for part in query for bad in bad_query_columns(part, valid)]
     if not isinstance(query, dict):
-        return
+        return []
     bad = []
     for key, val in query.items():
-        if key in ("$and", "$or", "$nor"):
-            if isinstance(val, list):
-                for sub in val:
-                    check_query_columns(sub, valid, parser)
+        if key in ("$and", "$or", "$not"):
+            bad.extend(bad_query_columns(val, valid))
         elif key.startswith("$"):
             continue
-        elif key not in valid:
+        elif key.split(".")[0] not in valid:
             bad.append(key)
+    return bad
+
+
+def check_query_columns(query, valid, parser):
+    """Raise a parser error listing every key in a dict query that is not a column."""
+    bad = list(dict.fromkeys(bad_query_columns(query, valid)))
     if bad:
         parser.error("not a column of the search table: " + ", ".join(bad))
 

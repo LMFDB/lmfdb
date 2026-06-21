@@ -8,7 +8,9 @@ import tempfile
 from contextlib import redirect_stdout
 
 from lmfdb.tests import LmfdbTest
-from lmfdb.cmdline_search import main, parse_lmfdb_url, build_parser, section_lookup, SECTIONS
+from lmfdb.cmdline_search import (
+    main, parse_lmfdb_url, build_parser, section_lookup, SECTIONS, bad_query_columns,
+)
 
 
 class CmdlineSearchTest(LmfdbTest):
@@ -323,10 +325,38 @@ class CmdlineSearchTest(LmfdbTest):
         with self.assertRaises(SystemExit):
             self.run_cmd(["nf_fields", '{"$or":[{"degree":4},{"notacol":1}]}', "--cols", "label", "--limit", "1"])
 
+    def test_unknown_json_column_in_not_errors(self):
+        # also caught inside a top-level $not (psycodict uses $not, not $nor)
+        with self.assertRaises(SystemExit):
+            self.run_cmd(["nf_fields", '{"$not":{"notacol":1}}', "--cols", "label", "--limit", "1"])
+
+    def test_not_query_ok(self):
+        out = self.run_cmd(["nf_fields", '{"degree":4,"$not":{"class_number":1}}', "--cols", "label,class_number", "--limit", "2"])
+        self.assertEqual(len(self.raw_rows(out)), 2)
+
     def test_json_value_operator_ok(self):
         # $-operators at the value level are not mistaken for columns
         out = self.run_cmd(["nf_fields", '{"degree":{"$gte":4}}', "--cols", "label,degree", "--limit", "3"])
         self.assertEqual(len(self.raw_rows(out)), 3)
+
+    # bad_query_columns unit tests (no database access)
+
+    def test_bad_query_columns_collects_whole_query(self):
+        # bad keys are collected from every part of the query, not just the
+        # branch where the first one is found
+        valid = {"degree", "class_number"}
+        query = {"foo": 1, "$or": [{"degree": 4}, {"bar": 2}], "$not": {"baz": 3}}
+        self.assertEqual(set(bad_query_columns(query, valid)), {"foo", "bar", "baz"})
+
+    def test_bad_query_columns_ignores_value_operators(self):
+        valid = {"degree"}
+        # value-level $not/$lte are operators, not columns
+        self.assertEqual(bad_query_columns({"degree": {"$not": {"$lte": 5}}}, valid), [])
+
+    def test_bad_query_columns_jsonb_subkey(self):
+        valid = {"coeffs"}
+        self.assertEqual(bad_query_columns({"coeffs.0": 1}, valid), [])
+        self.assertEqual(bad_query_columns({"coffs.0": 1}, valid), ["coffs.0"])
 
     # ------------------------------------------------------------------
     # pasting a full LMFDB url
