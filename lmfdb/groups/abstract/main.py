@@ -1284,7 +1284,6 @@ def group_jump(info):
 def subgroup_jump(info):
     jump = info["jump"]
     # by label
-    print("JUMP",jump)
     if abstract_group_label_regex.fullmatch(jump):
         return redirect(url_for('.index', subgroup=jump, search_type="Subgroups"))
     # by subgroup label
