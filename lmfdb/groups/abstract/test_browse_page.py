@@ -589,7 +589,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?dim=13&cyclotomic_n=39&search_type=ComplexCharacters", ["4563.a.13b18", "351.a1.a1"]) # character label, center
         self.check_args("/Groups/Abstract/?image_isoclass=12.4&kernel_order=6&search_type=ComplexCharacters", "72.21.2d")
         self.check_args("/Groups/Abstract/?faithful=yes&center_order=144&search_type=ComplexCharacters", "576.176.2c1")
-        self.check_args("/Groups/Abstract/?search_type=ComplexCharacters", "Enter a group label to go to the character table for that group.")
+        self.check_args("/Groups/Abstract/?search_type=ComplexCharacters", "Enter a group label to go to the character table for that group")
 
     def test_highlighted_character(self):
         r"""
