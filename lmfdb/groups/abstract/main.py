@@ -779,14 +779,17 @@ def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        info["search_type"] = search_type = info.get(
-            "search_type", info.get("hst", "")
-        )
+        search_types = request.args.getlist("search_type")
+        info["search_type"] = search_type = search_types[-1] if search_types else info.get("hst", "")
+#        info["search_type"] = search_type = info.get(
+#            "search_type", info.get("hst", "") )
         # If only search_type is given (no actual search params), show the landing page
         only_search_type = set(request.args.keys()) <= {"search_type", "hst"}
         if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
+            if search_type == "RandomSubgroup": 
+                return redirect(url_for(".random_abstract_subgroup"))
             if only_search_type and search_type == "Subgroups":
                 info["search_array"] = SubgroupSearchArray()
                 info["ambient_order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -817,6 +820,8 @@ def index():
             info["search_array"] = SubgroupSearchArray()
             return subgroup_search(info)
         elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
+            if search_type == "RandomComplexCharacter":  
+                return redirect(url_for(".random_abstract_character"))
             if only_search_type and search_type == "ComplexCharacters":
                 info["search_array"] = ComplexCharSearchArray()
                 info["degree_list"] = ["1", "2", "3", "4", "5", "6", "7", "8", "9-16", "17-"]
@@ -1062,6 +1067,12 @@ def random_abstract_subgroup():
     return url_for(".by_subgroup_label", label=label)
 
 
+@abstract_page.route("/char/random")
+@redirect_no_cache
+def random_abstract_character():
+    label = db.gps_char.random(projection="label")
+    return url_for_chartable_label(label)
+
 
 @abstract_page.route("/char_table/<label>")
 def char_table(label, from_jump=False):
@@ -1273,7 +1284,7 @@ def group_jump(info):
 def subgroup_jump(info):
     jump = info["jump"]
     # by label
-    if abstract_group_label_regex.fullmatch(jump):  #JP FIX BELOW TO GO TO SUBGROUP SEARCH STILL NOT WORKING
+    if abstract_group_label_regex.fullmatch(jump):
         return redirect(url_for('.index', subgroup=jump, search_type="Subgroups"))
     # by subgroup label
     if subgroup_label_is_valid(jump):
@@ -1674,7 +1685,7 @@ class Subgroup_download(Downloader):
     title="Subgroup search results",
     err_title="Subgroup search input error",
     columns=subgroup_columns,
-    shortcuts={"download": Subgroup_download()},
+    shortcuts={"jump": subgroup_jump,"download": Subgroup_download()},
     bread=lambda: get_bread([("Search Results", "")]),
     learnmore=learnmore_list,
     url_for_label=url_for_subgroup_label,

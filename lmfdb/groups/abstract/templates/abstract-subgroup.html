@@ -41,6 +41,7 @@
 
 
 <form name="search" method = "get" action="{{url_for('.index')}}">
+  <input type="hidden" name="search_type" value="Subgroups">
   {{ info.search_array.jump_box(info) | safe }}
 </form>
 
