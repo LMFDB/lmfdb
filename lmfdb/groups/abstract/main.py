@@ -79,6 +79,10 @@ abstract_subgroup_label_regex = re.compile(
     r"^(\d+)\.([a-z]+|\d+)\.(\d+)\.([a-z]+\d+|[a-z]+\d+\.[a-z]+\d+|[A-Z]+|_\.[A-Z]+)$"
 )
 
+abstract_cc_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)\.\d+[A-Z]+(?:-\d+|\d+)?$")
+abstract_char_label_regex = re.compile(r"^^(\d+)\.([a-z]+|\d+)\.\d+[a-z]+\d*$")
+
+
 #abstract_subgroup_label_regex = re.compile(
 #    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+\d+)(?:\.([a-z]+\d+))?(?:\.(N|M|NC\d+))?$"
 #)
@@ -1081,7 +1085,6 @@ def char_table(label, from_jump=False):
         flash_error(f"There is no conjugacy class of {label} with label {info['cc_highlight']}.")
         del info["cc_highlight"]
     if "cc_highlight" in info and "cc_highlight_i" not in info:
-        # I don't see any paths to produce urls like this, but they are showing up in the flasklog and we can easily look up cc_highlight_i
         info["cc_highlight_i"] = [c.counter for c in gp.conjugacy_classes if c.label == info["cc_highlight"]][0]
     return render_template(
         "character_table_page.html",
@@ -1267,8 +1270,24 @@ def group_jump(info):
     return redirect(url_for(".index"))
 
 
+def subgroup_jump(info):
+    jump = info["jump"]
+    # by label
+    if abstract_group_label_regex.fullmatch(jump):  #JP FIX BELOW TO GO TO SUBGROUP SEARCH STILL NOT WORKING
+        return redirect(url_for('.index', subgroup=jump, search_type="Subgroups"))
+    # by subgroup label
+    if subgroup_label_is_valid(jump):
+        return redirect(url_for(".by_subgroup_label", label=jump))
+
+
+
 def char_jump(info):
     jump = info["jump"]
+	# by char label
+    if abstract_char_label_regex.fullmatch(jump):
+        spl_parts = jump.split(".")
+        gp = ".".join(spl_parts[:2])
+        return redirect(url_for(".char_table",label=gp,char_highlight=jump ))
     # by label
     if abstract_group_label_regex.fullmatch(jump):
         return redirect(url_for(".char_table", label=jump))
@@ -1286,6 +1305,12 @@ def char_jump(info):
 
 def cc_jump(info):
     jump = info["jump"]
+	#by cc label
+    if abstract_cc_label_regex.fullmatch(jump):
+        spl_parts = jump.split(".")
+        gp = ".".join(spl_parts[:2])
+        cc = spl_parts[2:]
+        return redirect(url_for(".char_table",label=gp,cc_highlight=cc ))
     # by label
     if abstract_group_label_regex.fullmatch(jump):
         return redirect(url_for('.index', group=jump, search_type="ConjugacyClasses"))
@@ -3199,52 +3224,52 @@ class SubgroupSearchArray(SearchArray):
              ("sub_ord", "subgroup order", ['subgroup_order', 'ambient_order', 'ambient_counter', 'counter']),
              ("sub_ind", "subgroup index", ['quotient_order', 'ambient_order', 'ambient_counter', 'counter'])]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
-    jump_prompt = "Label or name"
+    jump_egspan = "e.g. 8.3 or 12.4.2.b1.a1"
+    jump_prompt = "Group or subgroup label"
     jump_knowl = "group.find_input"
 
     def __init__(self):
-        abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian")
-        cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic")
-        solvable = YesNoBox(name="solvable", label="Solvable", knowl="group.solvable")
+        abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian", example_col=True)
+        cyclic = YesNoBox(name="cyclic", label="Cyclic", knowl="group.cyclic", example_col=True)
+        solvable = YesNoBox(name="solvable", label="Solvable", knowl="group.solvable", example_col=True)
         quotient_abelian = YesNoBox(
-            name="quotient_abelian", label="Abelian quotient", knowl="group.abelian"
+            name="quotient_abelian", label="Abelian quotient", knowl="group.abelian", example_col=True
         )
         quotient_cyclic = YesNoBox(
-            name="quotient_cyclic", label="Cyclic quotient", knowl="group.cyclic"
+            name="quotient_cyclic", label="Cyclic quotient", knowl="group.cyclic", example_col=True
         )
         quotient_solvable = YesNoBox(
-            name="quotient_solvable", label="Solvable quotient", knowl="group.solvable"
+            name="quotient_solvable", label="Solvable quotient", knowl="group.solvable", example_col=True
         )
-        perfect = YesNoBox(name="perfect", label="Perfect", knowl="group.perfect")
-        normal = YesNoBox(name="normal", label="Normal", knowl="group.subgroup.normal")
+        perfect = YesNoBox(name="perfect", label="Perfect", knowl="group.perfect", example_col=True)
+        normal = YesNoBox(name="normal", label="Normal", knowl="group.subgroup.normal", example_col=True)
         characteristic = YesNoBox(
             name="characteristic",
             label="Characteristic",
-            knowl="group.characteristic_subgroup",
+            knowl="group.characteristic_subgroup", example_col=True
         )
         maximal = YesNoBox(
-            name="maximal", label="Maximal", knowl="group.maximal_subgroup"
+            name="maximal", label="Maximal", knowl="group.maximal_subgroup", example_col=True
         )
         minimal_normal = YesNoBox(
             name="minimal_normal",
             label="Maximal quotient",
-            knowl="group.maximal_quotient",
+            knowl="group.maximal_quotient", example_col=True
         )
-        central = YesNoBox(name="central", label="Central", knowl="group.central")
+        central = YesNoBox(name="central", label="Central", knowl="group.central", example_col=True)
         direct = YesNoBox(
-            name="direct", label="Direct product", knowl="group.direct_product"
+            name="direct", label="Direct product", knowl="group.direct_product", example_col=True
         )
         split = YesNoBox(
-            name="split", label="Semidirect product", knowl="group.semidirect_product"
+            name="split", label="Semidirect product", knowl="group.semidirect_product", example_col=True
         )
         # stem = YesNoBox(
         #    name="stem",
         #    label="Stem",
         #    knowl="group.stem_extension")
-        hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall")
+        hall = YesNoBox(name="hall", label="Hall subgroup", knowl="group.subgroup.hall", example_col=True)
         sylow = YesNoBox(
-            name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup"
+            name="sylow", label="Sylow subgroup", knowl="group.sylow_subgroup", example_col=True
         )
         subgroup = TextBox(
             name="subgroup",
@@ -3317,17 +3342,19 @@ class SubgroupSearchArray(SearchArray):
             [minimal_normal, nontrivproper, hall, sylow],
         ]
 
+
     def search_types(self, info):
-        # Note: info will never be None, since this isn't accessible on the browse page
+        if info is None:
+            return [("Subgroups", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]
         return [("Subgroups", "Search again"), ("RandomSubgroup", "Random subgroup")]
 
 
 class ComplexCharSearchArray(SearchArray):
     sorts = [("", "group", ['group_order', 'group_counter', 'dim', 'label']),
              ("dim", "degree", ['dim', 'group_order', 'group_counter', 'label'])]
-    jump_example = "8.3"
-    jump_egspan = "Enter a group label to go to the character table for that group."
-    jump_prompt	= "Group label"
+    jump_example = "8.3 or 12.4.1d"
+    jump_egspan = "Enter a group label to go to the character table for that group, or one character to see it highlighted on the corresponding character table"
+    jump_prompt	= "Group or complex character label"
     jump_knowl = "group.label"
 
     def __init__(self):
@@ -3408,7 +3435,8 @@ class ComplexCharSearchArray(SearchArray):
         ]
 
     def search_types(self, info):
-        # Note: since we don't access this from the browse page, info will never be None
+        if info is None:
+            return [("ComplexCharacters", "List of complex characters"), ("RandomComplexCharacter", "Random complex character")]
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
 
 
@@ -3418,9 +3446,9 @@ class ConjugacyClassSearchArray(SearchArray):
         ("order", "order", ['order', 'group_order', 'group_counter','size']),
         ("size", "size", ['size', 'order', 'group_order', 'group_counter']),
     ]
-    jump_example = "8.3"
-    jump_egspan = "e.g. 8.3 or 12T4"
-    jump_prompt = "Group label"
+    jump_example = "8.3 or 12.1.4A-1"
+    jump_egspan = "Enter a group label for a list of all conjugacy classes, or one conjugacy class to see it on the corresponding character table."
+    jump_prompt = "Group or conjugacy class label"
     jump_knowl = "group.label"
 
     def __init__(self):
@@ -3455,7 +3483,8 @@ class ConjugacyClassSearchArray(SearchArray):
         ]
 
     def search_types(self, info):
-        # Note: since we don't access this from the browse page, info will never be None
+        if info is None:
+            return [("ConjugacyClasses", "List of conjugacy classes")]
         return [("ConjugacyClasses", "Search again")]
 
 
