@@ -779,15 +779,16 @@ def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        info["search_type"] = search_type = info.get(
-            "search_type", info.get("hst", "")
-        )
+        search_types = request.args.getlist("search_type")
+        info["search_type"] = search_type = search_types[-1] if search_types else info.get("hst", "")
+#        info["search_type"] = search_type = info.get(
+#            "search_type", info.get("hst", "") )
         # If only search_type is given (no actual search params), show the landing page
         only_search_type = set(request.args.keys()) <= {"search_type", "hst"}
         if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
         elif search_type in ["Subgroups", "RandomSubgroup"]:
-            if search_type == "RandomSubgroup":  #JP
+            if search_type == "RandomSubgroup": 
                 return redirect(url_for(".random_abstract_subgroup"))
             if only_search_type and search_type == "Subgroups":
                 info["search_array"] = SubgroupSearchArray()
@@ -819,7 +820,7 @@ def index():
             info["search_array"] = SubgroupSearchArray()
             return subgroup_search(info)
         elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
-            if search_type == "RandomComplexCharacter":  #JP
+            if search_type == "RandomComplexCharacter":  
                 return redirect(url_for(".random_abstract_character"))
             if only_search_type and search_type == "ComplexCharacters":
                 info["search_array"] = ComplexCharSearchArray()
@@ -1066,7 +1067,6 @@ def random_abstract_subgroup():
     return url_for(".by_subgroup_label", label=label)
 
 
-#JP
 @abstract_page.route("/char/random")
 @redirect_no_cache
 def random_abstract_character():
