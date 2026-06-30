@@ -893,7 +893,7 @@ class WebEC():
             # extract the fields from the labels of the base-change curves:
             pol_to_nf = {tuple(rec["coeffs"]): rec for rec in db.nf_fields.search({"label": {"$in": list(nf_to_curve)}}, ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
         else:
-            by_to_nf = {}
+            pol_to_nf = {}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
