@@ -684,7 +684,7 @@ def code_coverage():
 # common base class and bread
 _bc = 'intro'
 def intro_bread():
-    return [('Intro', url_for("introduction"))]
+    return [('Overview', url_for("introduction"))]
 
 
 # template displaying just one single knowl as an KNOWL_INC
@@ -694,7 +694,7 @@ _single_knowl = 'single.html'
 @app.route("/intro")
 def introduction():
     b = intro_bread()
-    return render_template(_single_knowl, title="Introduction", kid='intro', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="Overview", kid='intro', body_class=_bc, bread=b)
 
 
 @app.route("/intro/features")
