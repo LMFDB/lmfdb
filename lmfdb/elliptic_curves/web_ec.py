@@ -888,13 +888,12 @@ class WebEC():
         tg['data'] = tgextra = []
 
         # find all base changes of this curve in the database, if any:
-        bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
-        if bcs:
+        nf_to_curve = {rec["field_label"]: rec["label"] for rec in db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, ["field_label", "label"])}
+        if nf_to_curve:
             # extract the fields from the labels of the base-change curves:
-            bc_fields = [lab.split("-")[0] for lab in bcs]
-            by_pol = {tuple(rec["coeffs"]): rec["label"] for rec in db.nf_fields.search({"label": {"$in": bc_fields}}, ["label", "coeffs"])}
+            pol_to_nf = {tuple(rec["coeffs"]): rec for rec in db.nf_fields.search({"label": {"$in": list(nf_to_curve)}}, ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
         else:
-            by_pol = {}
+            by_to_nf = {}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
@@ -902,12 +901,16 @@ class WebEC():
             tg1['bc_label'] = "not in database"
             tg1['d'] = tgd['degree']
             F = tgd['field']
-            tg1['f'] = formatfield(F)
-            if "missing" in tg1['f']:
+            nf_data = pol_to_nf.get(tuple(F))
+            if nf_data is None:
+                tg1['f'] = formatfield(F, data={"label": "N/A"})
+                bcc = None
                 tg['fields_missing'] = True
+            else:
+                tg1['f'] = formatfield(F, data=nf_data)
+                bcc = nf_to_curve[nf_data["label"]]
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = by_pol.get(tuple(F))
             if bcc:
                 from lmfdb.ecnf.main import split_full_label
                 F, NN, I, C = split_full_label(bcc)
