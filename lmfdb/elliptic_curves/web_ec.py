@@ -889,9 +889,12 @@ class WebEC():
 
         # find all base changes of this curve in the database, if any:
         bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
-        # extract the fields from the labels of the base-change curves:
-        bc_fields = [lab.split("-")[0] for lab in bcs]
-        bc_pols = [db.nf_fields.lookup(lab, projection='coeffs') for lab in bc_fields]
+        if bcs:
+            # extract the fields from the labels of the base-change curves:
+            bc_fields = [lab.split("-")[0] for lab in bcs]
+            by_pol = {tuple(rec["coeffs"]): rec["label"] for rec in db.nf_fields.search({"label": {"$in": bc_fields}}, ["label", "coeffs"])}
+        else:
+            by_pol = {}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
@@ -904,7 +907,7 @@ class WebEC():
                 tg['fields_missing'] = True
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol == F), None)
+            bcc = by_pol.get(tuple(F))
             if bcc:
                 from lmfdb.ecnf.main import split_full_label
                 F, NN, I, C = split_full_label(bcc)
@@ -928,6 +931,7 @@ class WebEC():
         ## {{data.tg.maxd}} such that...".
 
         tg['maxd'] = 24
+
     @lazy_attribute
     def code(self):
         # read in code.yaml from current directory:
