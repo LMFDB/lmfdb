@@ -210,11 +210,13 @@ def is_fundamental_discriminant(d):
         return d % 16 in [8, 12] and integer_is_squarefree(d // 4)
 
 
-@cached_function
-def field_pretty(label):
+@cached_function(key=lambda label, wnf: label) # ignore field when caching
+def field_pretty(label, wnf=None):
     """
     Given an LMFDB number field label, returns a "pretty" latexed representation of this field (if it exists)
     Otherwise, simply returns back the label itself if unable to find a latex representation.
+
+    field should be a WebNumberField object, which is constructed if needed if not provided
 
     Cases implemented:
      - Rational field, quadratic fields, pure cubic fields, imprimitive quartic fields,
@@ -259,7 +261,8 @@ def field_pretty(label):
 
     # Case 5: Imprimitive quartic fields
     if d == '4':
-        wnf = WebNumberField(label)
+        if wnf is None:
+            wnf = WebNumberField(label)
         subs = wnf.subfields()
 
         # Case 5a: Biquadratic fields Q(\sqrt{A}, \sqrt{B})
@@ -308,7 +311,8 @@ def field_pretty(label):
 
     # Case 6: Pure cubic fields Q(\sqrt[3]{N})
     if d == '3':
-        wnf = WebNumberField(label)
+        if wnf is None:
+            wnf = WebNumberField(label)
         # Check that discriminant is negative
         if wnf.disc() < 0:
             # Explicitly solve for a real root of defining polynomial (using Cardano's formula):
@@ -335,7 +339,8 @@ def field_pretty(label):
     # Case 7: General multi-quadratic fields: Q(\sqrt{D_1}, ..., \sqrt{D_k})
     if ZZ(d).is_power_of(2):
         k = ZZ(d).valuation(2)
-        wnf = WebNumberField(label)
+        if wnf is None:
+            wnf = WebNumberField(label)
         all_subs = wnf.subfields()
         quad_subs = [s[0] for s in all_subs if s[0].count(',') == 2]
         num_quad_subs = len(quad_subs)
@@ -602,7 +607,7 @@ class WebNumberField:
         return nf_label_pretty(self.label)
 
     def field_pretty(self):
-        return field_pretty(self.get_label())
+        return field_pretty(self.get_label(), wnf=self)
 
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
@@ -861,7 +866,6 @@ class WebNumberField:
         sf = [z.replace('.',',') for z in self._data['subfields']]
         sfm = self._data['subfield_mults']
         return [[sf[j],sfm[j]] for j in range(len(sf))]
-        return self._data['subs']
 
     def subfields_show(self):
         subs = self.subfields()
