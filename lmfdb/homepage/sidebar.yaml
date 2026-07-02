@@ -67,7 +67,7 @@
       part2:
         - title: "over $\\Q$"
           url_for: "ec.rational_elliptic_curves"
-        - title: "over $\\Q(\\alpha)$"
+        - title: "over number fields"
           url_for: "ecnf.index"
     - title: Elliptic curves over $\F_{q}(t)$
       status: future

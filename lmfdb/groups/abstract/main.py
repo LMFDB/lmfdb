@@ -80,8 +80,8 @@ abstract_subgroup_label_regex = re.compile(
 )
 
 abstract_cc_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)\.\d+[A-Z]+(?:-\d+|\d+)?$")
-abstract_char_label_regex = re.compile(r"^^(\d+)\.([a-z]+|\d+)\.\d+[a-z]+\d*$")
-
+abstract_char_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)\.\d+[a-z]+\d*$")
+#JP
 
 #abstract_subgroup_label_regex = re.compile(
 #    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+\d+)(?:\.([a-z]+\d+))?(?:\.(N|M|NC\d+))?$"
@@ -3364,9 +3364,9 @@ class ComplexCharSearchArray(SearchArray):
     sorts = [("", "group", ['group_order', 'group_counter', 'dim', 'label']),
              ("dim", "degree", ['dim', 'group_order', 'group_counter', 'label'])]
     jump_example = "8.3 or 12.4.1d"
-    jump_egspan = "Enter a group label to go to the character table for that group, or one character to see it highlighted on the corresponding character table"
+    jump_egspan = "Enter a group label or a character table label."
     jump_prompt	= "Group or complex character label"
-    jump_knowl = "group.label"
+    jump_knowl = "group.char_search_input"
 
     def __init__(self):
         faithful = YesNoBox(name="faithful", label="Faithful", knowl="group.representation.faithful")
@@ -3447,7 +3447,7 @@ class ComplexCharSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("ComplexCharacters", "List of complex characters"), ("RandomComplexCharacter", "Random complex character")]
+            return [("ComplexCharacters", "List of characters"), ("RandomComplexCharacter", "Random character")]
         return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
 
 
@@ -3458,9 +3458,9 @@ class ConjugacyClassSearchArray(SearchArray):
         ("size", "size", ['size', 'order', 'group_order', 'group_counter']),
     ]
     jump_example = "8.3 or 12.1.4A-1"
-    jump_egspan = "Enter a group label for a list of all conjugacy classes, or one conjugacy class to see it on the corresponding character table."
+    jump_egspan = "Enter a group label or the label for one conjugacy class."
     jump_prompt = "Group or conjugacy class label"
-    jump_knowl = "group.label"
+    jump_knowl = "group.conjugacy_class_search_input"
 
     def __init__(self):
         group = TextBox(
