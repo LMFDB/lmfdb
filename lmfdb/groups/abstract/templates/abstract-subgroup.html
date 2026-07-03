@@ -13,26 +13,25 @@
 <p>
   By {{KNOWL('group.order', 'ambient order')}}:
   {% for rnge in info.ambient_order_list %}
-    <a href="?search_type=Subgroups&amp;ambient_order={{rnge}}">{{rnge}}</a>&nbsp;
+    <a href="?ambient_order={{rnge}}">{{rnge}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
   By {{KNOWL('group.order', 'subgroup order')}}:
   {% for rnge in info.subgroup_order_list %}
-    <a href="?search_type=Subgroups&amp;subgroup_order={{rnge}}">{{rnge}}</a>&nbsp;
+    <a href="?subgroup_order={{rnge}}">{{rnge}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>By property:
   {% for searchstr, display in info.prop_browse_list %}
-    <a href="?search_type=Subgroups&amp;{{searchstr}}">{{display}}</a>&nbsp;
+    <a href="?{{searchstr}}">{{display}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>A <a href="{{url_for('.random_abstract_subgroup')}}">random subgroup</a>
 
 <h2 id='search_h2'> Search </h2>
 
-<form class="re-search" name="search" method="get" action={{url_for('.index')}}>
-  <input type="hidden" name="search_type" value="Subgroups">
+<form class="re-search" name="search" method="get" action={{url_for('.sub_index')}}>
   {{ info.search_array.html() | safe }}
 </form>
 
@@ -40,8 +39,9 @@
 <h2> Find </h2>
 
 
-<form name="search" method = "get" action="{{url_for('.index')}}">
-  <input type="hidden" name="search_type" value="Subgroups">
+
+
+<form name="search" method = "get" action="{{url_for('.sub_index')}}">
   {{ info.search_array.jump_box(info) | safe }}
 </form>
 

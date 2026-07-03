@@ -202,14 +202,11 @@
       - title: "groups"
         url_for: "abstract.index"
       - title: "subgroups"
-        url_for: "abstract.index"
-        url_args: {search_type: "Subgroups"}
+        url_for: "abstract.sub_index"
       - title: "characters"
-        url_for: "abstract.index"
-        url_args: {search_type: "ComplexCharacters"}
+        url_for: "abstract.char_index"
       - title: "conjugacy classes"
-        url_for: "abstract.index"
-        url_args: {search_type: "ConjugacyClasses"}
+        url_for: "abstract.conjugacy_class_index"
   - title: Lattices
     url_for: "lattice.lattice_render_webpage"
     status: beta
