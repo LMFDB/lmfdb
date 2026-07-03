@@ -81,7 +81,7 @@ abstract_subgroup_label_regex = re.compile(
 
 abstract_cc_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)\.\d+[A-Z]+(?:-\d+|\d+)?$")
 abstract_char_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)\.\d+[a-z]+\d*$")
-#JP
+
 
 #abstract_subgroup_label_regex = re.compile(
 #    r"^(\d+)\.([a-z0-9]+)\.(\d+)\.([a-z]+\d+)(?:\.([a-z]+\d+))?(?:\.(N|M|NC\d+))?$"
@@ -3495,7 +3495,7 @@ class ConjugacyClassSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("ConjugacyClasses", "List of conjugacy classes")]
+            return [("ConjugacyClasses", "List of conj. classes")]
         return [("ConjugacyClasses", "Search again")]
 
 
