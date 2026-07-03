@@ -781,86 +781,9 @@ def index():
     if request.args:
         search_types = request.args.getlist("search_type")
         info["search_type"] = search_type = search_types[-1] if search_types else info.get("hst", "")
-#        info["search_type"] = search_type = info.get(
-#            "search_type", info.get("hst", "") )
         # If only search_type is given (no actual search params), show the landing page
-        only_search_type = set(request.args.keys()) <= {"search_type", "hst"}
         if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
-        elif search_type in ["Subgroups", "RandomSubgroup"]:
-            if search_type == "RandomSubgroup": 
-                return redirect(url_for(".random_abstract_subgroup"))
-            if only_search_type and search_type == "Subgroups":
-                info["search_array"] = SubgroupSearchArray()
-                info["ambient_order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
-                info["subgroup_order_list"] = ["1-16", "17-32", "33-64", "65-128", "129-256", "257-512", "513-1000", "1001-"]
-                info["prop_browse_list"] = [
-                    ("normal=yes", "normal"),
-                    ("normal=no", "non-normal"),
-                    ("abelian=yes", "abelian"),
-                    ("cyclic=yes", "cyclic"),
-                    ("maximal=yes", "maximal"),
-                    ("central=yes", "central"),
-                    ("perfect=yes", "perfect"),
-                    ("characteristic=yes", "characteristic"),
-                ]
-                info["stats"] = GroupStats()
-                return render_template(
-                    "abstract-subgroup.html",
-                    title="Subgroups of abstract groups",
-                    bread=get_bread([("Subgroups", " ")]),
-                    info=info,
-                    learnmore=learnmore_list(),
-                    related_sections=[
-                        ("Groups", url_for(".index")),
-                        ("Characters", url_for(".index", search_type="ComplexCharacters")),
-                        ("Conjugacy classes", url_for(".index", search_type="ConjugacyClasses")),
-                    ],
-                )
-            info["search_array"] = SubgroupSearchArray()
-            return subgroup_search(info)
-        elif search_type in ["ComplexCharacters", "RandomComplexCharacter"]:
-            if search_type == "RandomComplexCharacter":  
-                return redirect(url_for(".random_abstract_character"))
-            if only_search_type and search_type == "ComplexCharacters":
-                info["search_array"] = ComplexCharSearchArray()
-                info["degree_list"] = ["1", "2", "3", "4", "5", "6", "7", "8", "9-16", "17-"]
-                info["stats"] = GroupStats()
-                return render_template(
-                    "abstract-characters.html",
-                    title="Complex characters of abstract groups",
-                    bread=get_bread([("Characters", " ")]),
-                    info=info,
-                    learnmore=learnmore_list(),
-                    related_sections=[
-                        ("Groups", url_for(".index")),
-                        ("Subgroups", url_for(".index", search_type="Subgroups")),
-                        ("Conjugacy classes", url_for(".index", search_type="ConjugacyClasses")),
-                    ],
-                )
-            info["search_array"] = ComplexCharSearchArray()
-            return complex_char_search(info)
-        elif search_type in ["ConjugacyClasses"]:  # no random since lots of groups with cc don't have characters also computed
-            if only_search_type:
-                info["search_array"] = ConjugacyClassSearchArray()
-                info["order_list"] = ["1", "2", "3", "4", "5", "6", "7", "8", "9-16", "17-32", "33-"]
-                info["size_list"] = ["1", "2", "3", "4", "5", "6-10", "11-20", "21-50", "51-"]
-                info["stats"] = GroupStats()
-                return render_template(
-                    "abstract-cc.html",
-                    title="Conjugacy classes of abstract groups",
-                    bread=get_bread([("Conjugacy classes", " ")]),
-                    info=info,
-                    learnmore=learnmore_list(),
-                    related_sections=[
-                        ("Groups", url_for(".index")),
-                        ("Subgroups", url_for(".index", search_type="Subgroups")),
-                        ("Characters", url_for(".index", search_type="ComplexCharacters")),
-                    ],
-                )
-            info["search_array"] = ConjugacyClassSearchArray()
-            return conjugacy_class_search(info)
-
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -884,9 +807,94 @@ def index():
         info=info,
         learnmore=learnmore_list(),
         related_sections=[
-            ("Subgroups", url_for(".index", search_type="Subgroups")),
-            ("Characters", url_for(".index", search_type="ComplexCharacters")),
-            ("Conjugacy classes", url_for(".index", search_type="ConjugacyClasses")),
+            ("Subgroups", url_for(".sub_index")),
+            ("Characters", url_for(".char_index")),
+            ("Conjugacy classes", url_for(".conjugacy_class_index")),
+        ],
+    )
+
+
+
+@abstract_page.route("/Subgroups")
+def sub_index():
+    info = to_dict(request.args, search_array=SubgroupSearchArray())
+    if request.args:
+        return subgroup_search(info)
+    info["ambient_order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
+    info["subgroup_order_list"] = ["1-16", "17-32", "33-64", "65-128", "129-256", "257-512", "513-1000", "1001-"]
+    info["prop_browse_list"] = [
+        ("normal=yes", "normal"),
+        ("normal=no", "non-normal"),
+        ("abelian=yes", "abelian"),
+        ("cyclic=yes", "cyclic"),
+        ("maximal=yes", "maximal"),
+        ("central=yes", "central"),
+        ("perfect=yes", "perfect"),
+        ("characteristic=yes", "characteristic"),
+   	]
+    info["stats"] = GroupStats()
+    info["search_array"] = SubgroupSearchArray()
+    info["count"] = 50
+    return render_template(
+        "abstract-subgroup.html",
+        title="Subgroups of abstract groups",
+        bread=get_bread([("Subgroups", " ")]),
+        info=info,
+        learnmore=learnmore_list(),
+        related_sections=[
+            ("Groups", url_for(".index")),
+            ("Characters", url_for(".char_index")),
+            ("Conjugacy classes", url_for(".conjugacy_class_index")),
+        ],
+    )
+
+
+
+@abstract_page.route("/ComplexCharacters")
+def char_index():
+    info = to_dict(request.args, search_array=ComplexCharSearchArray())
+    if request.args:
+        return complex_char_search(info)
+    info["search_array"] = ComplexCharSearchArray()
+    info["degree_list"] = ["1", "2", "3", "4", "5", "6", "7", "8", "9-16", "17-"]
+    info["stats"] = GroupStats()
+    info["count"] = 50
+    return render_template(
+        "abstract-characters.html",
+        title="Complex characters of abstract groups",
+        bread=get_bread([("Characters", " ")]),
+        info=info,
+        learnmore=learnmore_list(),
+        related_sections=[
+            ("Groups", url_for(".index")),
+            ("Subgroups", url_for(".sub_index")),
+            ("Conjugacy classes", url_for(".conjugacy_class_index")),
+        ],
+    )
+
+
+
+@abstract_page.route("/ConjugacyClasses")
+def conjugacy_class_index():
+    info = to_dict(request.args, search_array=ConjugacyClassSearchArray())
+    if request.args:
+        return conjugacy_class_search(info)
+    # no random since lots of groups with cc don't have characters also computed
+    info["search_array"] = ConjugacyClassSearchArray()
+    info["order_list"] = ["1", "2", "3", "4", "5", "6", "7", "8", "9-16", "17-32", "33-"]
+    info["size_list"] = ["1", "2", "3", "4", "5", "6-10", "11-20", "21-50", "51-"]
+    info["stats"] = GroupStats()
+    info["count"] = 50
+    return render_template(
+        "abstract-cc.html",
+        title="Conjugacy classes of abstract groups",
+        bread=get_bread([("Conjugacy classes", " ")]),
+        info=info,
+        learnmore=learnmore_list(),
+        related_sections=[
+            ("Groups", url_for(".index")),
+            ("Subgroups", url_for(".sub_index")),
+            ("Characters", url_for(".char_index")),
         ],
     )
 
@@ -1285,7 +1293,7 @@ def subgroup_jump(info):
     jump = info["jump"]
     # by label
     if abstract_group_label_regex.fullmatch(jump):
-        return redirect(url_for('.index', subgroup=jump, search_type="Subgroups"))
+        return redirect(url_for('.sub_index', subgroup=jump))
     # by subgroup label
     if subgroup_label_is_valid(jump):
         return redirect(url_for(".by_subgroup_label", label=jump))
@@ -1308,10 +1316,10 @@ def char_jump(info):
         label = db.gps_transitive.lookup(jump, "abstract_label")
         if label is None:
             flash_error(f"Transitive group {jump} is not in the database")
-            return redirect(url_for(".index", search_type="ComplexCharacters"))
+            return redirect(url_for(".char_index"))
         return redirect(url_for(".char_table", label=label))
     flash_error(f"Group {jump} is not in the database")
-    return redirect(url_for(".index", search_type="ComplexCharacters"))
+    return redirect(url_for(".char_index"))
 
 
 def cc_jump(info):
@@ -1324,17 +1332,17 @@ def cc_jump(info):
         return redirect(url_for(".char_table",label=gp,cc_highlight=cc ))
     # by label
     if abstract_group_label_regex.fullmatch(jump):
-        return redirect(url_for('.index', group=jump, search_type="ConjugacyClasses"))
+        return redirect(url_for('.conjugacy_class_index', group=jump))
     #transitive group
     from lmfdb.galois_groups.transitive_group import Tfinder
     if Tfinder.fullmatch(jump):
         label = db.gps_transitive.lookup(jump, "abstract_label")
         if label is None:
             flash_error(f"Transitive group {jump} is not in the database")
-            return redirect(url_for('.index', search_type="ConjugacyClasses"))
-        return redirect(url_for(".index", group=label, search_type="ConjugacyClasses"))
+            return redirect(url_for('.conjugacy_class_index'))
+        return redirect(url_for(".conjugacy_class_index", group=label))
     flash_error(f"Group {jump} is not in the database")
-    return redirect(url_for(".index", search_type="ConjugacyClasses"))
+    return redirect(url_for(".conjugacy_class_index"))
 
 
 
@@ -1427,7 +1435,8 @@ def display_cc_url(numb,conj_classes_known,gp):
         return 'not computed'
     elif conj_classes_known is False:
         return numb
-    return f'<a href = "{url_for(".index", group=gp, search_type="ConjugacyClasses")}">{numb}</a>'
+    return f'<a href = "{url_for(".conjugacy_class_index", group=gp)}">{numb}</a>'
+
 
 class Group_download(Downloader):
     table = db.gps_groups
@@ -1691,7 +1700,6 @@ class Subgroup_download(Downloader):
     url_for_label=url_for_subgroup_label,
 )
 def subgroup_search(info, query={}):
-    info["search_type"] = "Subgroups"
     parse_ints(info, query, "subgroup_order")
     parse_ints(info, query, "ambient_order")
     parse_ints(info, query, "quotient_order", "subgroup index")
@@ -1797,7 +1805,6 @@ class Complex_char_download(Downloader):
     url_for_label=url_for_chartable_label,
 )
 def complex_char_search(info, query={}):
-    info["search_type"] = "ComplexCharacters"
     if 'indicator' in info:
         info['indicator'] = indicator_type(info['indicator'])
     parse_ints(info, query, "dim")
@@ -1950,7 +1957,6 @@ class Conjugacy_class_download(Downloader):
     url_for_label=url_for_cc_label,
 )
 def conjugacy_class_search(info, query={}):
-    info["search_type"] = "ConjugacyClasses"
     parse_ints(info, query, "order")
     parse_ints(info, query, "size")
     parse_group(info,query, "group")
@@ -2067,13 +2073,13 @@ def render_abstract_group(label, data=None):
 
         # "internal" friends
         sbgp_of_url = (
-            " /Groups/Abstract/?subgroup=" + label + "&search_type=Subgroups"
+            " /Groups/Abstract/Subgroups?subgroup=" + label
         )
         sbgp_url = (
-            "/Groups/Abstract/?ambient=" + label + "&search_type=Subgroups"
+            "/Groups/Abstract/Subgroups?ambient=" + label
         )
         quot_url = (
-            "/Groups/Abstract/?quotient=" + label + "&search_type=Subgroups"
+            "/Groups/Abstract/Subgroups?quotient=" + label
         )
         friends = [
             ("Subgroups", sbgp_url),
@@ -2082,7 +2088,7 @@ def render_abstract_group(label, data=None):
         ]
 
         if gp.complex_characters_known:
-            char_url = url_for(".index", group=label, search_type="ComplexCharacters")
+            char_url = url_for(".char_index", group=label)
             friends += [("Complex characters", char_url)]
 
         # "external" friends
@@ -2153,7 +2159,7 @@ def render_abstract_subgroup(label):
     seq = WebAbstractSubgroup(label)
     if seq.is_null():
         flash_error("No subgroup with label %s was found in the database.", label)
-        return redirect(url_for(".index"))
+        return redirect(url_for(".sub_index"))
 
     info["create_boolean_string"] = create_boolean_string
     info["create_boolean_subgroup_string"] = create_boolean_subgroup_string
@@ -3237,7 +3243,7 @@ class SubgroupSearchArray(SearchArray):
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3 or 12.4.2.b1.a1"
     jump_prompt = "Group or subgroup label"
-    jump_knowl = "group.find_input"
+    jump_knowl = "group.subgroup_search_input"
 
     def __init__(self):
         abelian = YesNoBox(name="abelian", label="Abelian", knowl="group.abelian", example_col=True)
@@ -3727,7 +3733,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if missing_subs(label) and gp.source == "Missing":
             ans = 'The group {} is not available in GAP, but see the list of <a href="{}">{}</a>.'.format(
                 label,
-                f"/Groups/Abstract/?subgroup_order={ord}&ambient={ambient}&search_type=Subgroups",
+                f"/Groups/Abstract/Subgroups/?subgroup_order={ord}&ambient={ambient}",
                 "subgroups with this order")
             return Markup(ans)
         ans = f"Group ${gp.tex_name}$: "
@@ -3823,7 +3829,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             ans += "</div><br />"
     else:
         ans += '<a href="{}">{}</a>&nbsp;'.format(
-            f"/Groups/Abstract/?subgroup_order={order}&ambient={ambient}&search_type=Subgroups",
+            f"/Groups/Abstract/Subgroups?subgroup_order={order}&ambient={ambient}",
             "Subgroups with this order")
     if label != "None":
         ans += f'<div align="right"><a href="{url}">{label} home page</a></div>'
