@@ -473,30 +473,6 @@ def modular_forms():
     return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
-@app.route('/Variety')
-@app.route('/Variety/')
-def varieties():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    return render_template('single.html', title=t, kid='varieties.about', bread=b)
-
-
-@app.route('/Field')
-@app.route('/Field/')
-def fields():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)
-
-
-@app.route('/Representation')
-@app.route('/Representation/')
-def representations():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)
-
-
 @app.route('/Motive')
 @app.route('/Motive/')
 def motives():
@@ -504,13 +480,6 @@ def motives():
     b = [(t, url_for('motives'))]
     return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)
 
-
-@app.route('/Group')
-@app.route('/Group/')
-def groups():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)
 
 @app.route('/datasets')
 @app.route('/datasets/')

@@ -148,20 +148,6 @@ table tbody tr.trivial a:hover {
     background: {{color.content_background_red}};
 }
 
-/*
-#search-topright {
-  display: inline;
-}
-#search-topright input {
-  font-size: 75%;
-  border: 1px solid {{ color.search_border }};
-  padding: 1px;
-  background: {{color.search_background}} ;
-  position: relative;
-  top: -1px;
-}
-*/
-
 /* icon in front of external links */
 #content a[target="_blank"]:before {
   content: url("static/images/url-ext.gif");
@@ -380,9 +366,6 @@ body > .debug {
 }
 .properties-body li a {
  display: block;
-/*
- padding: 5px;
-*/
 }
 
 .properties-body {
@@ -1152,46 +1135,6 @@ table .knowl a {
    color: {{color.knowl_error}};
 }
 
-/*
-knowl-qm does not seem to be currently used.
-
-.knowl-qm {
-  font-family: sans-serif;
-  font-weight: bold;
-  border: 1px solid {{ color.knowl_thin_border }};
-  background: transparent;
-  color: {{ color.knowl_hover_text }};
-  cursor: pointer;
-  padding: 0 0.4em;
-  border-radius: 0.8em;
-  font-size: 0.9em;
-  top: -0.4em;
-  left: -0.1em;
-}
-.knowl-qm:hover,
-.knowl-qm.active {
-    background: {{color.knowl_db}};
-  color: {{color.white}};
-}
-.knowl-qm.active:hover {
-  background: transparent;
-  color: {{ color.knowl_hover_text }};
-}
-h1 > .knowl-qm {
-  font-size: 0.6em;
-  border-radius: 0.6em;
-  position: relative;
-  top: -0.8em;
-  left: -0.3em;
-}
-h2 > .knowl-qm {
-  font-size: 0.7em;
-  border-radius: 0.7em;
-  position: relative;
-  top: -0.6em;
-  left: -0.4em;
-}
-*/
 .knowl-output {
   background: {{ color.knowl_background }};
   border: 10px solid {{ color.knowl_border }};
@@ -1320,11 +1263,6 @@ table.values td:nth-child(even) {
   padding-right:0;
 }
 
-/*
-.dirichletseries td:first-child {
-  padding-top:3px;
-}
-*/
 
 .dirichletseries span.term {
   white-space: nowrap;
@@ -1544,17 +1482,11 @@ div.maassformplot {
     position: absolute;
     width: 720px;
     position: relative;
-    /*    height: 800px;
-        overflow: hidden;
-        position: relative; */
 }
 
 div.maassformplot img {
     width:100%;
     height:auto;
-/*    position: absolute;
-    top: -200px;
-    left: -870px;*/
 }
 
 /* End of styling of Maass form plot */
@@ -1632,10 +1564,8 @@ div.maassformplot img {
     color: {{color.col_sidebar_header_links}}; /* sets sidebar header links*/
     flex: 1;
     min-width: 0;
-    
 }
 #sidebar h2 a:hover {
-    /* background: {{ color.sidebar_background_h2_hover }}; */
     background: inherit;
     border-radius: inherit;
     /* HDJ '26: because of the margins, the hover background color change doesn't look good. So I disabled it - but if someone wants to fix it, please go ahead. */
@@ -1648,7 +1578,6 @@ div.maassformplot img {
 #sidebar table td a {
     display: block;
     padding: 2px;
-    /* border-radius: 0; */
 }
 
 #sidebar table td .subtitle {
@@ -1856,12 +1785,12 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
   display: grid;
 
   gap: 2.5vw 2.5vw;
-  
+
   justify-content: space-evenly;
-  
-  align-items: top; 
+
+  align-items: top;
   grid-template-columns: 1fr 1fr;
-  
+
   margin: 20px;
 
 }
