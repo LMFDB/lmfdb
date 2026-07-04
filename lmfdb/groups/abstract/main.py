@@ -1297,6 +1297,8 @@ def subgroup_jump(info):
     # by subgroup label
     if subgroup_label_is_valid(jump):
         return redirect(url_for(".by_subgroup_label", label=jump))
+    flash_error(f"There is no group nor subgroup with the label {jump} in the database")
+    return redirect(url_for(".sub_index"))
 
 
 
@@ -1318,7 +1320,7 @@ def char_jump(info):
             flash_error(f"Transitive group {jump} is not in the database")
             return redirect(url_for(".char_index"))
         return redirect(url_for(".char_table", label=label))
-    flash_error(f"Group {jump} is not in the database")
+    flash_error(f"There is no group nor character with the label {jump} in the database")
     return redirect(url_for(".char_index"))
 
 
@@ -1341,7 +1343,7 @@ def cc_jump(info):
             flash_error(f"Transitive group {jump} is not in the database")
             return redirect(url_for('.conjugacy_class_index'))
         return redirect(url_for(".conjugacy_class_index", group=label))
-    flash_error(f"Group {jump} is not in the database")
+    flash_error(f"There is no group nor character with the label {jump} in the database")
     return redirect(url_for(".conjugacy_class_index"))
 
 
