@@ -3364,7 +3364,7 @@ class SubgroupSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]  #JP
+            return [("", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]
         return [("", "Search again"), ("RandomSubgroup", "Random subgroup")]
 
 
