@@ -3364,8 +3364,8 @@ class SubgroupSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("Subgroups", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]
-        return [("Subgroups", "Search again"), ("RandomSubgroup", "Random subgroup")]
+            return [("", "List of subgroups"), ("RandomSubgroup", "Random subgroup")]
+        return [("", "Search again"), ("RandomSubgroup", "Random subgroup")]
 
 
 class ComplexCharSearchArray(SearchArray):
@@ -3455,8 +3455,8 @@ class ComplexCharSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("ComplexCharacters", "List of characters"), ("RandomComplexCharacter", "Random character")]
-        return [("ComplexCharacters", "Search again"), ("RandomComplexCharacter", "Random")]
+            return [("", "List of characters"), ("RandomComplexCharacter", "Random character")]
+        return [("", "Search again"), ("RandomComplexCharacter", "Random")]
 
 
 class ConjugacyClassSearchArray(SearchArray):
@@ -3503,8 +3503,8 @@ class ConjugacyClassSearchArray(SearchArray):
 
     def search_types(self, info):
         if info is None:
-            return [("ConjugacyClasses", "List of conj. classes")]
-        return [("ConjugacyClasses", "Search again")]
+            return [("", "List of conj. classes")]
+        return [("", "Search again")]
 
 
 def abstract_group_namecache(labels, cache=None, reverse=None):
