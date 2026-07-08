@@ -854,7 +854,7 @@ class ECNF():
         self._code = None # will be set if needed by get_code()
 
         self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
-        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"]]:
+        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"], ["Oscar","oscar"]]:
             self.downloads.append(('{} commands'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
@@ -889,17 +889,17 @@ sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
                      'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
 
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
+Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP', 'oscar': 'Oscar'}
+Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
 
 def make_code(label, lang=None):
     """Return a dict of code snippets for one curve in either one
-    language (if lang is 'pari' or 'gp', 'sage', or 'magma') or all
+    language (if lang is 'pari' or 'gp', 'sage', 'magma', or 'oscar') or all
     three (if lang is None).
     """
     if lang == 'gp':
         lang = 'pari'
-    all_langs = ['magma', 'pari', 'sage']
+    all_langs = ['magma', 'pari', 'sage', 'oscar']
 
     # Get the base field label and a-invariants:
 
@@ -934,6 +934,7 @@ def make_code(label, lang=None):
     ainvs_string = {
         'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
         'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        'oscar': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
         'pari': "[" + ",".join("Polrev({})".format(ai) for ai in ainvs) + "], K",
         }
     if lang:

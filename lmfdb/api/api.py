@@ -8,9 +8,10 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma
 from lmfdb.utils.datetime_utils import utc_now_naive
+from lmfdb.logger import logger
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
-from lmfdb.api import api_page, api_logger
+from lmfdb.api import api_page
 
 
 buffer = memoryview
@@ -221,7 +222,7 @@ def api_query(table, id=None):
         if offset:
             return apierror("Cannot include offset with id")
         single_object = True
-        api_logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
+        logger.info("API query: id = '%s', fields = '%s'" % (id, fields))
         if re.match(r'^\d+$', id):
             id = int(id)
         else:
@@ -315,6 +316,8 @@ def api_query(table, id=None):
     next_req = dict(request.args)
     next_req["_offset"] = offset
     url_args = next_req.copy()
+    # Remove _format so that we don't specify that keyword twice
+    url_args.pop("_format", None)
     query = url_for(".api_query", table=table, **next_req)
     offset += len(data)
     next_req["_offset"] = offset
@@ -367,7 +370,7 @@ def api_query(table, id=None):
 
 
 # This function is used to show the data associated to a given homepage, which could possibly be from multiple tables.
-def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
+def datapage(labels, tables, title, bread, label_cols=None, sorts=None, limit=100):
     """
     INPUT:
 
@@ -377,8 +380,15 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     - ``bread`` -- bread for the page
     - ``label_cols`` -- a list of column names of the same length; defaults to using ``label`` everywhere
     - ``sorts`` -- lists for sorting each table; defaults to None
+    - ``limit`` -- maximum number of rows displayed from each table; if more rows match, the total count is reported instead of listing them all
     """
     format = request.args.get("_format", "html")
+    try:
+        limit_arg = request.args.get("_limit")
+        if limit_arg is not None:
+            limit = max(0, min(10000, int(limit_arg)))
+    except (TypeError, ValueError):
+        pass
     if not isinstance(tables, list):
         tables = [tables]
     if not isinstance(labels, list):
@@ -399,6 +409,7 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         else:
             return abort(code, msg % tuple(flash_extras))
     data = []
+    totals = []
     search_schema = {}
     extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
@@ -408,7 +419,15 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
             q = {col: label}
         coll = db[table]
         try:
-            data.append(list(coll.search(q, projection=3, sort=sort)))
+            # Fetch limit+1 rows to cheaply detect truncation; only call count() if we actually exceeded the limit.
+            rows = list(coll.search(q, projection=3, sort=sort, limit=limit + 1))
+            if len(rows) > limit:
+                total = coll.count(q)
+                rows = rows[:limit]
+            else:
+                total = len(rows)
+            data.append(rows)
+            totals.append(total)
         except QueryCanceledError:
             return apierror("Query %s exceeded time limit.", [q], code=500, table=table)
         except KeyError as err:
@@ -428,6 +447,8 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         "label_cols": label_cols,
         "timestamp": utc_now_naive().isoformat(),
         "data": data,
+        "totals": totals,
+        "limit": limit,
     }
     if format.lower() == "json":
         return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')

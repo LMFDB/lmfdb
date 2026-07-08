@@ -29,7 +29,7 @@ class CodeSnippet():
         self.pre, self.post = pre, post
 
         # edit these when adding support for more languages
-        self.comments = {'magma': '//', 'sage': '#',
+        self.comments = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
         self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "sage_gap": "SageMath (using Gap)",
                            "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
@@ -108,6 +108,10 @@ class CodeSnippet():
         frmt = cmt + " "
         for key in ['all', lang, 'rest']:
             frmt += codefrmt[key] if key in codefrmt else ""
+
+            # Include message to load Oscar package (if lang is Oscar)
+            if key == 'oscar':
+                frmt += 'If you have not already loaded the Oscar package, you should type "using Oscar;" before running the code below.\n'
 
         frmt = frmt.replace('\n', '\n' + cmt + " ", frmt.count("\n")-1)
         return frmt.format(lang=self.full_names[lang], label=label) + "\n"

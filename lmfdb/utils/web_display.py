@@ -61,7 +61,7 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
 </span>"""
     return out
 
-def display_knowl(kid, title=None, kwargs={}):
+def display_knowl(kid, title=None, kwargs={}, strong=False):
     """
     Allows for the construction of knowls from python code
     (to be displayed using the ``safe`` flag in jinja);
@@ -78,6 +78,8 @@ def display_knowl(kid, title=None, kwargs={}):
             if title is None:
                 return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
             else:
+                if strong:
+                    title = f"<strong>{title}</strong>"
                 return f"""<a href="{ url_for('knowledge.edit', ID=kid) }"><span class="knowl knowl-error">{title}</span></a>"""
         elif title is None:
             return f"""<span class="knowl knowl-error">'{kid}'</span>"""
@@ -90,6 +92,8 @@ def display_knowl(kid, title=None, kwargs={}):
             else:
                 title = ktitle
         if len(title) > 0:
+            if strong:
+                title = f"<strong>{title}</strong>"
             return '<a title="{0} [{1}]" knowl="{1}" kwargs="{2}">{3}</a>'.format(ktitle, kid, urlencode(kwargs), title)
         else:
             return ''

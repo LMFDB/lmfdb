@@ -579,7 +579,7 @@ class G2C_download(Downloader):
             ["eqn"],
             {
                 "magma": 'QQx<x> := PolynomialRing(Rationals());\n    curve := HyperellipticCurve(QQx!(out`eqn[1]), QQx!(out`eqn[2]));',
-                "sage": 'QQx.<x> := QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
+                "sage": 'QQx.<x> = QQ[]\n    curve = HyperellipticCurve(QQx(out["eqn"][0]), QQx(out["eqn"][1]))',
                 "gp": 'curve = apply(Polrev, mapget(out, "eqn"));',
             }
         ),
@@ -635,7 +635,14 @@ g2c_columns = SearchColumns([
     columns=g2c_columns,
     bread=lambda: get_bread("Search results"),
     learnmore=learnmore_list,
-    url_for_label=lambda label: url_for(".by_label", label=label),
+    url_for_label=url_for_curve_label,
+    diagram_opts={
+        "title": "Genus 2 curve diagram search",
+        "bread": lambda: get_bread("Diagram search"),
+        "x_axis_default": "cond",
+        "y_axis_default": "regulator",
+        "color_default": "two_selmer_rank",
+    },
 )
 def genus2_curve_search(info, query):
     parse_ints(info, query, "abs_disc", "absolute discriminant")
@@ -944,6 +951,7 @@ def g2c_code_download(**args):
     else:
         response.headers['Content-type'] = 'text/html'
     return response
+
 
 class G2CSearchArray(SearchArray):
     noun = "curve"

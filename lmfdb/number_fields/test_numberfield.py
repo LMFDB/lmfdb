@@ -30,9 +30,21 @@ class NumberFieldTest(LmfdbTest):
 
     def test_search_zeta(self):
         self.check_args('/NumberField/?jump=Qzeta23&search=Go', '[3]') # class group
+        self.check_args('/NumberField/?jump=Qzeta_23&search=Go', '[3]') # class group
+        self.check_args('/NumberField/?jump=qzeta23%2B&search=Go', '1014.3133') # regulator
+        self.check_args('/NumberField/?jump=qzeta_23%2B&search=Go', '1014.3133') # regulator
 
     def test_search_sqrt(self):
         self.check_args('/NumberField/?jump=Qsqrt-163&search=Go', '41') # minpoly
+        self.check_args('/NumberField/?jump=q(sqrt-163)&search=Go', '41') # minpoly
+
+    def test_search_multiple_fields(self):
+        # Test comma-separated list of field labels
+        self.check_args('/NumberField/?jump=2.2.5.1%2c+3.3.49.1&search=Go', '2.2.5.1')
+        self.check_args('/NumberField/?jump=2.2.5.1%2c+3.3.49.1&search=Go', '3.3.49.1')
+        # Test comma-separated list with different input formats
+        self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.5.1')
+        self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.12.1')
 
     def test_search_disc(self):
         self.check_args('/NumberField/?discriminant=1988-2014', '401') # factor of one of the discriminants
@@ -42,6 +54,18 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_naturallabel(self):
         self.check_args('/NumberField/Qsqrt5', '0.481211825') # regulator
+
+    def test_url_naturallabel_custom(self):
+        # Test various different custom nicknames for number fields
+        self.check_args('/NumberField/Qi', '2.0.4.1')
+        self.check_args('/NumberField/Qphi', '2.2.5.1')
+        self.check_args('/NumberField/Qcbrt2', '3.1.108.1')
+        self.check_args('/NumberField/Q(sqrt2+sqrt3)', '4.4.2304.1')
+        self.check_args('/NumberField/Q(sqrt2,sqrt3)', '4.4.2304.1')
+        self.check_args('/NumberField/Q(sqrt(1 + sqrt2))', '4.2.1024.1')
+        self.check_args('/NumberField/Q(sqrt2,sqrt3,cbrt2)', '12.4.320979616137216.3')
+        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
 
     def test_arith_equiv(self):
         self.check_args('/NumberField/7.3.6431296.1', '7.3.6431296.2') # arith equiv field
@@ -73,9 +97,34 @@ class NumberFieldTest(LmfdbTest):
     def test_statistics(self):
         self.check_args('/NumberField/stats', 'Class number')
 
+    def test_pretty_labels(self):
+        # Test "prettified" latex labels for number fields
+        self.check_args('/NumberField/1.1.1.1', r'\Q')
+        self.check_args('/NumberField/2.0.4.1', r'\Q(\sqrt{-1})')
+        self.check_args('/NumberField/4.4.1600.1', r'\Q(\sqrt{2}, \sqrt{5})')
+        self.check_args('/NumberField/6.0.16807.1', r'\Q(\zeta_{7})')
+        self.check_args('/NumberField/3.3.49.1', r'\Q(\zeta_{7})^+')
+        self.check_args('/NumberField/3.1.300.1', r'\Q(\sqrt[3]{10})')
+        self.check_args('/NumberField/4.2.2048.1', r'\Q(\sqrt[4]{2})')
+        self.check_args('/NumberField/4.0.512.1', r'\Q(\sqrt{1 + i})')
+        self.check_args('/NumberField/4.2.1024.1', r'\Q(\sqrt{1 + \sqrt{2}})')
+        self.check_args('/NumberField/4.0.2048.2', r'\Q(\sqrt{-2 + \sqrt{2}})')
+        self.check_args('/NumberField/8.8.3317760000.1', r'\Q(\sqrt{2}, \sqrt{3}, \sqrt{5})')
+        self.check_args('/NumberField/16.0.11007531417600000000.1', r'\Q(i, \sqrt{2}, \sqrt{3}, \sqrt{5})')
+        self.check_args('/NumberField/32.0.4026692887688564776141139207792885760000000000000000.1', r'\Q(i, \sqrt{2}, \sqrt{3}, \sqrt{5}, \sqrt{7})')
+
     def test_signature_search(self):
+        # Square brackets
         self.check_args('/NumberField/?start=0&degree=6&signature=%5B0%2C3%5D&count=100', '6.0.61131.1')
         self.check_args('/NumberField/?start=0&degree=7&signature=%5B3%2C2%5D&count=100', '7.3.1420409.1')
+        # Round brackets
+        self.check_args('/NumberField/?start=0&degree=6&signature=%280%2C3%29&count=100', '6.0.61131.1')
+        self.check_args('/NumberField/?start=0&degree=7&signature=%283%2C2%29&count=100', '7.3.1420409.1')
+
+    def test_signature_display(self):
+        # Verify that signatures are displayed with parentheses, not square brackets
+        self.check_args('/NumberField/6.0.61131.1', '(0, 3)')  # degree 6 field with signature (0, 3)
+        self.check_args('/NumberField/7.3.1420409.1', '(3, 2)')  # degree 7 field with signature (3, 2)
 
     def test_relative_class_number(self):
         self.check_args('/NumberField/4.0.1327873600.2', '2108')
@@ -97,3 +146,27 @@ class NumberFieldTest(LmfdbTest):
     def test_errors(self):
         self.check_args('NumberField/18.0.10490638424...4432.1/download/sage', 'Invalid label')
         self.check_args('NumberField/4.3.2.1/download/sage', 'There is no number field with label 4.3.2.1')
+
+    def test_signature_download(self):
+        # Test that signature is downloaded as [r1, r2] not [r2, degree]
+        # For degree 2 fields with negative discriminant: signature is [0, 1] (complex)
+        # For degree 2 fields with positive discriminant: signature is [2, 0] (real)
+        url = ('/NumberField/?download=1'
+               '&query=%7B%27degree%27%3A+2%2C+%27%24or%27%3A+%5B%7B%27disc_sign%27%3A+'
+               '-1%2C+%27disc_abs%27%3A+%7B%27%24gte%27%3A+1%2C+%27%24lte%27%3A+3%7D%2C+'
+               '%27degree%27%3A+2%7D%2C+%7B%27disc_sign%27%3A+1%2C+%27disc_abs%27%3A+'
+               '%7B%27%24lte%27%3A+5%2C+%27%24gte%27%3A+1%7D%2C+%27degree%27%3A+2%7D%5D%7D'
+               '&degree=2&discriminant=-3-5&showcol=signature&Submit=text')
+        page = self.tc.get(url).get_data(as_text=True)
+        # Check that signature format is [r1, r2] where:
+        # - For imaginary quadratic fields (disc < 0, degree=2): r1=0, r2=1, so signature=[0, 1]
+        # - For real quadratic fields (disc > 0, degree=2): r1=2, r2=0, so signature=[2, 0]
+        # The bug was that it showed [r2, degree] = [1, 2] or [0, 2] instead
+        assert '[0, 1]' in page  # imaginary quadratic field (with space, no quotes)
+        assert '[2, 0]' in page  # real quadratic field (with space, no quotes)
+        # Make sure we're NOT getting the buggy format [r2, degree]
+        assert '[1, 2]' not in page  # wrong format for imaginary quadratic
+        assert '[0, 2]' not in page  # wrong format for real quadratic
+        # Also ensure we're not getting quoted strings
+        assert '"[0, 1]"' not in page
+        assert '"[2, 0]"' not in page

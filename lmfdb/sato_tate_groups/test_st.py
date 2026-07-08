@@ -115,3 +115,11 @@ class SatoTateGroupTest(LmfdbTest):
                 and 'gps_groups' in data and 'number_normal_subgroups' in data)
         page = self.tc.get('/SatoTateGroup/0.1.2').get_data(as_text=True)
         assert 'Underlying data' not in page
+
+    def test_issue_6691_fixed(self):
+        """Test that issue #6691 is fixed: labels with non-numeric component group parts don't crash"""
+        # The specific URL from issue #6691 that was causing ValueError
+        page = self.tc.get('/SatoTateGroup/1.2.A.c13284')
+        data = page.get_data(as_text=True)
+        # Check that the page loads correctly and shows a supergroup
+        assert '1.2.A.c26568' in data

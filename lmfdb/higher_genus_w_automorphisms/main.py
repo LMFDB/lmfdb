@@ -8,7 +8,6 @@ import re
 from io import BytesIO
 import yaml
 
-from lmfdb.logger import make_logger
 from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
 
@@ -25,9 +24,9 @@ from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
+from lmfdb.logger import logger
 from collections import defaultdict
 
-logger = make_logger("hgcwa")
 
 #Parsing group order
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\))))(,(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\)))))*$')
@@ -1276,6 +1275,13 @@ class HGCWASearchArray(SearchArray):
     jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
     jump_knowl = "curve.highergenus.aut.search_input"
     jump_prompt = "Label"
+    null_column_explanations = { # No need to display warnings for these
+        'hyperelliptic': False,
+        'cyclic_trigonal': False,
+        'full_label': False,
+        'full_auto': False,
+    }
+    has_diagram = False
 
     def __init__(self):
         genus = TextBox(

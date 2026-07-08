@@ -73,10 +73,12 @@ class LmfdbTest(unittest.TestCase):
         for t in text:
             assert t not in page, "%s in the %s" % (t, path)
 
-    def check_external(self, homepage, path, text):
+    def check_external(self, homepage, path, text, cookie=None):
         headers = {"User-Agent": "Mozilla/5.0"}
         context = ssl._create_unverified_context()
         request = Request(path, headers=headers)
+        if cookie:
+            request.add_header("Cookie", cookie)
         assert path in homepage, f"Path {path} not found in homepage"
         try:
             # Create opener that follows redirects for both HTTP and HTTPS, including 308

@@ -8,7 +8,7 @@
   },
   "postCreateCommand": "/bin/bash .devcontainer/setup.sh",
   "postAttachCommand": {
-    "server": "sage -python start-lmfdb.py --debug",
+    "server": "sage -python start-lmfdb.py --debug"
   },
   "forwardPorts": [37777],
   "customizations": {

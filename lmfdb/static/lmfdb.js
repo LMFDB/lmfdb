@@ -254,7 +254,7 @@ function knowl_click_handler($el) {
           knowl_cache[knowl_id] = $output.html();
           $output.hide();
 
-          // if it is the outermost knowl, limit its height of the content to 600px
+          // if it is the outermost knowl, limit its height of the content to 500px
           if ($output.parents('.knowl-output').length == 0) {
             $(output_id + " div.knowl-content").first().parent().addClass("limit-height");
           }

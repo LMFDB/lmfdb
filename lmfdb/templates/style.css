@@ -15,6 +15,20 @@ body {
     color: {{color.body_text}};
     background-color: {{color.body_background}};
 }
+
+/* Sticky-footer scaffold: viewport-tall flex column wrapping the page
+   content + footer. Lives on a dedicated wrapper (not body) so that
+   third-party scripts that append to body (e.g. reCAPTCHA) do not
+   become extra flex items that can push the footer off the viewport. */
+#layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+#page-wrapper {
+    flex: 1 0 auto;
+}
 td.title {
     color: {{color.box_tab_text}};
 }
@@ -25,7 +39,7 @@ h2.link > a {
     font-size: 1em !important;
 }
 /* TODO: where is content?*/
-#content > h1
+#content > h1, #content > div.narrow-body > h1
 {
     font-size: 130%;
     font-weight: bold;
@@ -80,6 +94,10 @@ h2.link > a {
     display: inline;
     padding-right: 10px;
     margin: 5px 0 10px 0;
+}
+
+div.narrow-body {
+  max-width:700px;
 }
 
 #footer {
@@ -289,10 +307,14 @@ body.knowl #header {
   background: {{color.flashes_background}};
 }
 
+#flashes p.success {
+  border-left: 15px solid #43664a;
+  background: #e3fde8;
+}
+
 #main {
   margin:  0px 0px 0px 184px;
   padding: 0px 0px 0px 10px;
-  min-height:600px;
 }
 
 .debug {
@@ -1157,7 +1179,10 @@ table.statgrid td.cnt {
 }
 
 .knowl-content {
-  padding: 0 10px;
+    padding: 12px 10px;
+    background-color: {{ color.knowl_background }};
+    max-width: 100%;
+    overflow: auto;
 }
 .knowl-content h1 {
   margin: 0px 0px 10px 0px;
@@ -1258,15 +1283,17 @@ h2 > .knowl-qm {
 }
 */
 .knowl-output {
-  background: {{ color.knowl_background }};
-  border: 10px solid {{ color.knowl_border }};
+  position: relative;
+  background: {{ color.knowl_border }};
+  border: 1px solid {{ color.knowl_border }};
   {{ BORDER_RADIUS(10) }}
-  padding: 0px;
+  padding: 12px 10px;
   display: none;
   margin-top: 10px;
   margin-bottom: 15px;
   margin-right: 10px;
   text-align: left;
+  overflow: hidden;
 }
 
 .knowl-output .knowl-output,
@@ -1295,24 +1322,26 @@ div.limit-height {
 .knowl-output a { display: inline; }
 
 .knowl-footer {
-  position: relative;
-  bottom: -10px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;			/* This makes the knowl open prettily*/
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
   color: {{ color.knowl_border_text }};
   padding: 1px 0 1px 10px;
-  margin:  0 0 0 0;
+  margin: 0;
 }
 .knowl-header {
-  position: relative;
-  top: -10px;
+  position: absolute;
+  top: 0px;
+  width: 100%;			/* This makes the knowl open prettily*/
   font-size: x-small;
   line-height: 100%;
   background: {{ color.knowl_border }};
   color: {{color.grey}};
   padding: 1px 0 1px 10px;
-  margin:  0 0 0 0;
+  margin: 0;
 }
 .knowl-header a,
 .knowl-footer a {
@@ -1800,79 +1829,117 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 
 
 
-/*Table boxes front page*/
+/* Boxes on front page*/
 
-table.boxes {
-  table-layout: fixed;
-  width: 100%; padding: 10;
-  margin: 0px;
-  margin-top: 35px;
-  margin-left: 18px;
-  font-size:1em;
-  display:table;
+
+.box-container {
+  display: grid;
+
+  gap: 2.5vw 2.5vw;
+  
+  justify-content: space-evenly;
+  
+  align-items: top; 
+  grid-template-columns: 1fr 1fr;
+  
+  margin: 20px;
+
+}
+
+/* small screen layout; 720p or mobile */
+@media (max-width: 1000px) {
+  .box-container {
+    grid-template-columns: 1fr;
   }
-table.boxes > tbody > tr > td {
-  padding: 0px 35px 35px 0px;
-  overflow: hidden;
-  vertical-align: top
+}
+
+/* 1440p monitor, */
+@media (min-width: 2550px) {
+  .box-container {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
   }
-table.box {
-  background: {{color.box_background}};
-  width: 100%; height: 100%;
-  min-height: 175px;
-  padding: 10;
-  border-radius: 0px;
-  font-size:1em;
-  }
-table.box td.img {
-  background: {{color.box_background_img}};
-  width: 140px;
-  height: 140px;
-  border: 15;
-  padding-left: 7px;
-  padding-bottom: 2px;
-  padding-top: 7px;
-  padding-right: 7px;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-  }
-table.box img {
-  border: 15;
-  padding: 5;
-  }
-table td.title {
-  font-weight: bold;
-  font-size: 110%;
-  background: {{color.box_background_title}};
-  height: 2em;
-  padding: 5;
-  padding-left: 10px;
-  border-top-right-radius: 10px;
-  }
-table td.content {
-  background: {{color.box_background_img}};
-  font-size: 90%;
-  padding-left: 10px;
-  padding-bottom: 2px;
-  vertical-align: top;
-  border-bottom-right-radius: 10px;
-  }
-table td.content ul li {
-  padding: 3px 0px;
-  }
+}
+
+.parent-box {
+    background: {{color.box_background}};
+
+    line-height: 135%;
+    text-align: center;
+
+    display: grid;
+    grid-template-rows: 2.5em 4fr;
+    grid-template-columns: 1fr 3fr;
+    margin: 0;
+    padding: 0;
+
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.img-box {
+    grid-row: 1 / span 2;
+    grid-column: 1;
+
+    background: {{color.box_background_img}};
+
+    /* to center image: */
+    display: flex;
+    justify-content: center;
+}
+
+.img-container {
+    padding: 10px 10px;
+
+    display: flex;
+    justify-content: center;
+
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+    max-width: 150px;
+    min-width: 150px;
+}
+
+.img-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+div.title {
+    grid-row: 1;
+    grid-column: 2;
+    padding-left: 10px;
+    font-weight: bold;
+    font-size: 110%;
+    background: {{color.box_background_title}};
+    text-align: left;
+
+    display: grid;
+    align-items: center;
+}
+
+div.content {
+    grid-row: 2;
+    grid-column: 2;
+
+    background: {{color.box_background_img}};
+
+    font-size: 90%;
+    text-align: left;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+
 div.user {
-  font-size: 90%;
-  padding: 0px;
-  }
+    font-size: 90%;
+    padding: 0px;
+}
+
 div.user ul li {
-  line-height: 90%;
-  }
-table.box td.content ul.list {
-  margin: 0px;
-  padding-left: 15px; padding-bottom: 5px;
-  list-style-type: none;
-  list-style-position: inside;
-  line-height: 135%;
+    line-height: 90%;
 }
 
 /*End table boxes front page*/

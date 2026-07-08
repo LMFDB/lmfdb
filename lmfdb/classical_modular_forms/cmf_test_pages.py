@@ -1,11 +1,11 @@
 
 from lmfdb.tests import LmfdbTest
 from lmfdb.lmfdb_database import LMFDBDatabase
+from lmfdb.logger import logger
 from sage.parallel.decorate import parallel
 from sage.all import ZZ, sqrt, ceil, gp
 import multiprocessing
 from traceback import print_exc
-import logging
 import time
 
 ncpus = min(multiprocessing.cpu_count(), 10)
@@ -40,9 +40,9 @@ class CMFTest(LmfdbTest):
 
     @parallel(ncpus=ncpus)
     def all_newforms(self, level, weight):
-        logging.getLogger().disabled = True
+        logger.disabled = True
         db = LMFDBDatabase()
-        logging.getLogger().disabled = False
+        logger.disabled = False
         res = []
         errors = []
         n = 0
@@ -62,9 +62,9 @@ class CMFTest(LmfdbTest):
 
     @parallel(ncpus=ncpus)
     def all_newspaces(self, level, weight):
-        logging.getLogger().disabled = True
+        logger.disabled = True
         db = LMFDBDatabase()
-        logging.info.disabled = False
+        logger.disabled = False
         errors = []
         res = []
         n = 0

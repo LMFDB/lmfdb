@@ -145,6 +145,8 @@ def long_label(label):
 
 class WebMaassForm():
     def __init__(self, data):
+        label = data["maass_label"]
+        data.update(db.maass_rigor_coefficients.lookup(label))
         self.__dict__.update(data)
         self._data = data
         self.portrait = db.maass_rigor_portraits.lookup(self.label, projection="portrait")
@@ -340,14 +342,16 @@ class MaassFormDownloader(Downloader):
     title = 'Maass forms'
 
     def download(self, label, lang='text'):
-        table = db.maass_rigor
-        data = table.lookup(label)
+        data = db.maass_rigor.lookup(label)
         if data is None:
             return abort(404, "Maass form %s not found in the database" % label)
-        for col in table.col_type:
-            if table.col_type[col] == "numeric" and data.get(col):
+        data.update(db.maass_rigor_coefficients.lookup(label))
+        col_type = dict(db.maass_rigor.col_type)
+        col_type.update(db.maass_rigor_coefficients.col_type)
+        for col in col_type:
+            if col_type[col] == "numeric" and data.get(col):
                 data[col] = str(data[col])
-            if table.col_type[col] == "numeric[]" and data.get(col):
+            if col_type[col] == "numeric[]" and data.get(col):
                 data[col] = [str(data[col][n]) for n in range(len(data[col]))]
         return self._wrap(Json.dumps(data),
                           "maass." + label,
@@ -355,8 +359,7 @@ class MaassFormDownloader(Downloader):
                           title='All stored data for Maass form %s,' % (label))
 
     def download_coefficients(self, label, lang='text'):
-        table = db.maass_rigor
-        data = table.lookup(label, projection=["coefficients", "coefficient_errors"])
+        data = db.maass_rigor_coefficients.lookup(label, projection=["coefficients", "coefficient_errors"])
         if data is None:
             return abort(404, "Coefficient data for Maass form %s not found in the database" % label)
         coeffs = data["coefficients"]

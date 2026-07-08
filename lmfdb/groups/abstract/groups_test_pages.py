@@ -1,10 +1,10 @@
 from lmfdb.tests import LmfdbTest
 from lmfdb.lmfdb_database import LMFDBDatabase
+from lmfdb.logger import logger
 from sage.parallel.decorate import parallel
 import multiprocessing
 from sage.all import ZZ, floor, ceil
 from traceback import print_exc
-import logging
 import time
 from sage.libs.gap.libgap import libgap
 
@@ -21,9 +21,9 @@ class GroupsTest(LmfdbTest):
         self.tc = app.test_client()
         import lmfdb.website
         assert lmfdb.website
-        logging.getLogger().disabled = True
+        logger.disabled = True
         self.db = LMFDBDatabase()
-        logging.getLogger().disabled = False
+        logger.disabled = False
 
     def abstract_group(self, label):
         url = f'/Groups/Abstract/{label}'

@@ -12,7 +12,6 @@ from flask import url_for
 from collections import defaultdict, Counter
 
 from lmfdb.utils import encode_plot, display_float
-from lmfdb.logger import make_logger
 
 from lmfdb import db
 from lmfdb.app import app
@@ -44,9 +43,6 @@ def maxq(g, p):
         return maxspec[p][g]
     else:
         return maxgen[g]
-
-
-logger = make_logger("abvarfq")
 
 
 #########################
@@ -128,9 +124,11 @@ class AbvarFq_isoclass():
 """
 
     def __init__(self, dbdata):
-        for col in ["size", "zfv_is_bass", "zfv_is_maximal", "zfv_index", "zfv_index_factorization", "zfv_plus_index", "zfv_plus_index_factorization", "zfv_plus_norm", "hyp_count", "jacobian_count", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "principal_polarization_count", "singular_primes"]:
+        for col in ["size", "zfv_is_bass", "zfv_is_maximal", "zfv_index", "zfv_index_factorization", "zfv_plus_index", "zfv_plus_index_factorization", "zfv_plus_norm", "hyp_count", "jacobian_count", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "principal_polarization_count", "singular_primes", "is_cyclic"]:
             if col not in dbdata:
                 dbdata[col] = None
+        if "noncyclic_primes" not in dbdata:
+            dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
 
     @classmethod
@@ -546,9 +544,15 @@ class AbvarFq_isoclass():
             ("Primitive", "yes" if self.is_primitive else "no"),
         ]
         if self.has_principal_polarization != 0:
-            props += [("Principally polarizable", "yes" if self.has_principal_polarization == 1 else "no")]
+            props += [(
+                "Principally polarizable",
+                "yes" if self.has_principal_polarization == 1 else "no",
+            )]
         if self.has_jacobian != 0:
-            props += [("Contains a Jacobian", "yes" if self.has_jacobian == 1 else "no")]
+            props += [(
+                "Contains a Jacobian",
+                "yes" if self.has_jacobian == 1 else "no",
+            )]
         return props
 
     # at some point we were going to display the weil_numbers instead of the frobenius angles
