@@ -1108,7 +1108,7 @@ class WebAbstractGroup(WebObj):
         if self.number_subgroups is None:
             if self.number_normal_subgroups is None:
                 return " "
-            elif self.number_characteristic_subgroups is None: 
+            elif self.number_characteristic_subgroups is None:
                 return """There are <a href=" """ + str(url_for('.sub_index', ambient=self.label, normal='yes')) + """ "> """ + str(self.number_normal_subgroups) + " normal</a> subgroups.  <p>"+normalcolor
             else:
                 ret_str = """ There are  <a href=" """ + str(url_for('.sub_index', ambient=self.label, normal='yes')) + """ "> """ + str(self.number_normal_subgroups) + """ normal subgroups</a>"""

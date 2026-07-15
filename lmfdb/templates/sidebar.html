@@ -85,22 +85,33 @@
   <script>
     $(document).ready(function() {
 
+      function setToggleState($toggle, expanded, label) {
+          $toggle.toggleClass('open', expanded);
+          $toggle.attr('aria-expanded', expanded ? 'true' : 'false');
+          $toggle.attr('aria-label', (expanded ? 'Collapse ' : 'Expand ') + label);
+      }
+
       // ── Collapsible sub-menu toggles (Elliptic curves, Abstract groups, …) ──
-      $('.collapsible-container').each(function() {
+      $('.collapsible-container').each(function(index) {
           var $container = $(this);
           var $content   = $container.find('.collapsible-content');
-          var $chev = $('<span class="collapsible-chevron open"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></span>');
-          $content.before($chev);
-
           // Key from the container's OWN text only, excluding child elements
-          var ownText = $container.clone().children().remove().end().text();
+          var ownText = $.trim($container.clone().children().remove().end().text());
           var key = 'lmfdb_sidebar_entry_' +
-              $.trim(ownText).replace(/\s+/g, '_').substring(0, 30);
+              ownText.replace(/\s+/g, '_').substring(0, 30);
+          var contentId = 'lmfdb-sidebar-entry-' + index;
+          $content.attr('id', contentId);
+
+          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          $chev.attr('aria-controls', contentId);
+          $content.before($chev);
 
           // Open by default; collapse only if explicitly stored closed.
           if (localStorage.getItem(key) === '0') {
               $content.hide();
-              $chev.removeClass('open');
+              setToggleState($chev, false, ownText);
+          } else {
+              setToggleState($chev, true, ownText);
           }
 
           $container.on('click', function(e) {
@@ -109,43 +120,52 @@
 
               e.stopPropagation();
               e.preventDefault();
-              $chev.toggleClass('open');
+              var expanded = $chev.attr('aria-expanded') !== 'true';
+              setToggleState($chev, expanded, ownText);
               $content.slideToggle(150);
-              localStorage.setItem(key, $chev.hasClass('open') ? '1' : '0');
+              localStorage.setItem(key, expanded ? '1' : '0');
           });
       });
 
       // ── Section (h2) collapse/expand ─────────────────────────────────────────
-      $('#sidebar h2').each(function() {
+      $('#sidebar h2').each(function(index) {
           var $h2      = $(this);
           var $content = $h2.nextUntil('h2').not('script');
           if ($content.length === 0) return; // 'single' type – nothing to collapse
+          var headingText = $.trim($h2.text());
 
           // Wrap all content between this h2 and the next into one div
           $content.wrapAll('<div class="section-content"></div>');
           var $section = $h2.next('.section-content');
+          var sectionId = 'lmfdb-sidebar-section-' + index;
+          $section.attr('id', sectionId);
 
           // Append the chevron into the h2
-          var $chev = $('<span class="collapsible-chevron open"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></span>');
+          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          $chev.attr('aria-controls', sectionId);
           $h2.append($chev);
           $h2.css('cursor', 'pointer');
 
           // Restore persisted state (default: open)
-          var key = 'lmfdb_sidebar_sec_' + $.trim($h2.text()).replace(/\s+/g, '_').substring(0, 30);
+          var key = 'lmfdb_sidebar_sec_' + headingText.replace(/\s+/g, '_').substring(0, 30);
           if (localStorage.getItem(key) === '0') {
               $section.hide();
-              $chev.removeClass('open');
+              setToggleState($chev, false, headingText);
+          } else {
+              setToggleState($chev, true, headingText);
           }
 
           $h2.on('click', function(e) {
+              // Preserve any heading link that may be added in the future.
+              if ($(e.target).closest('a').length) return;
               e.stopPropagation();
               e.preventDefault();
-              $chev.toggleClass('open');
+              var expanded = $chev.attr('aria-expanded') !== 'true';
+              setToggleState($chev, expanded, headingText);
               $section.slideToggle(150);
-              localStorage.setItem(key, $chev.hasClass('open') ? '1' : '0');
+              localStorage.setItem(key, expanded ? '1' : '0');
           });
       });
 
   });
   </script>
-

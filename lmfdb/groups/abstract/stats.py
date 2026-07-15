@@ -232,4 +232,3 @@ class GroupStats(StatsDisplay):
     @lazy_attribute
     def cc_summary(self):
         return fr'The database currently contains {comma(db.gps_conj_classes.count())} {display_knowl("group.conjugacy_class", "conjugacy classes")} from among {comma(db.gps_groups.count({"conjugacy_classes_known":True}))}  different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
-

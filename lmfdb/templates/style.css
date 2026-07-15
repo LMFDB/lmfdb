@@ -395,7 +395,11 @@ body > .debug {
   flex-shrink: 0;
   cursor: pointer;
   color: {{ color.properties_header_text }};
-  padding-left: 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  min-width: 0;
+  padding: 4px 2px 4px 10px;
   line-height: 1;
 }
 .prop-chevron::before {
@@ -1618,9 +1622,15 @@ div.maassformplot img {
     flex-shrink: 0;
     cursor: pointer;
     color: {{color.col_sidebar_header_links}};
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    min-width: 0;
+    padding: 0;
     margin-right: 4px;
     margin-left: auto;
-    align-items: right;
+    display: flex;
+    align-items: center;
 }
 
 
@@ -1630,7 +1640,6 @@ div.maassformplot img {
     object-fit: contain;
     transform: rotate(0deg);
     transition: transform 0.15s ease;
-    vertical-align: center;
 }
 
 #sidebar .collapsible-chevron.open > svg {
@@ -1660,7 +1669,7 @@ div.maassformplot img {
     /* No right margin so the chevrons are aligned */
     padding: 4px 0px 4px 4px;
     /* padding-left: 5px; */
-    
+
 }
 #sidebar .future {
     color: {{color.sidebar_text_future}};
@@ -2303,31 +2312,4 @@ button.search_stale, button.search_stale:hover {
 }
 button.search_fresh {
   background: {{color.button_background}};
-}
-
-/* Tabs for elliptic curves & lattice pages */
-div.tab-container {
-  display: inline-block;
-  border-radius: 5px;
-  overflow: hidden;
-  font-weight: bold;
-  line-height: 1.4;
-}
-
-/* ">" selector is needed because a's are already styled above */
-span.tab-inactive > a {
-    color: inherit;
-    background: inherit;
-}
-
-span.tab-active, span.tab-inactive:hover {
-  padding: 10px;
-  background: {{ color.sidebar_background_h2_hover }};
-  color: {{ color.sidebar_h2_hover }};
-}
-
-span.tab-inactive {
-  padding: 10px;
-  background: {{ color.sidebar_background_h2 }};
-  color: {{ color.col_sidebar_header_links }};
 }
