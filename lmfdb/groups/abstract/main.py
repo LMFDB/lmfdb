@@ -781,9 +781,25 @@ def index():
     if request.args:
         search_types = request.args.getlist("search_type")
         info["search_type"] = search_type = search_types[-1] if search_types else info.get("hst", "")
-        # If only search_type is given (no actual search params), show the landing page
         if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
+        # Preserve old abstract-group search URLs while directing users to the
+        # new, object-specific landing pages.  Keep Random* as a search type so
+        # that SearchWrapper still performs a random lookup on the new route.
+        legacy_searches = {
+            "Subgroups": (".sub_index", None),
+            "RandomSubgroup": (".sub_index", "RandomSubgroup"),
+            "ComplexCharacters": (".char_index", None),
+            "RandomComplexCharacter": (".char_index", "RandomComplexCharacter"),
+            "ConjugacyClasses": (".conjugacy_class_index", None),
+        }
+        if search_type in legacy_searches:
+            endpoint, new_search_type = legacy_searches[search_type]
+            args = request.args.to_dict(flat=False)
+            args.pop("search_type", None)
+            if new_search_type is not None:
+                args["search_type"] = [new_search_type]
+            return redirect(url_for(endpoint, **args), 307)
     info["stats"] = GroupStats()
     info["count"] = 50
     info["order_list"] = ["1-64", "65-127", "128", "129-255", "256", "257-383", "384", "385-511", "513-1000", "1001-1500", "1501-2000", "2001-"]
@@ -831,7 +847,7 @@ def sub_index():
         ("central=yes", "central"),
         ("perfect=yes", "perfect"),
         ("characteristic=yes", "characteristic"),
-   	]
+    ]
     info["stats"] = GroupStats()
     info["search_array"] = SubgroupSearchArray()
     info["count"] = 50

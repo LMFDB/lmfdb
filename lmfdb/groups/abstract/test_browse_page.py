@@ -1,3 +1,5 @@
+from urllib.parse import parse_qs, urlsplit
+
 from lmfdb.tests import LmfdbTest
 
 ## TODO
@@ -13,6 +15,32 @@ class AbGpsHomeTest(LmfdbTest):
         """
         homepage = self.tc.get("/Groups/Abstract/").get_data(as_text=True)
         assert "database currently contains" in homepage
+
+    def test_legacy_search_urls(self):
+        r"""
+        Check that old search URLs redirect to the new landing pages without
+        dropping their filters.
+        """
+        cases = [
+            ("/Groups/Abstract/?search_type=Subgroups&ambient=128.207",
+             "/Groups/Abstract/Subgroups", {"ambient": ["128.207"]}),
+            ("/Groups/Abstract/?search_type=RandomSubgroup&ambient=128.207",
+             "/Groups/Abstract/Subgroups",
+             {"ambient": ["128.207"], "search_type": ["RandomSubgroup"]}),
+            ("/Groups/Abstract/?search_type=ComplexCharacters&dim=3",
+             "/Groups/Abstract/ComplexCharacters", {"dim": ["3"]}),
+            ("/Groups/Abstract/?search_type=RandomComplexCharacter&dim=3",
+             "/Groups/Abstract/ComplexCharacters",
+             {"dim": ["3"], "search_type": ["RandomComplexCharacter"]}),
+            ("/Groups/Abstract/?search_type=ConjugacyClasses&group=12.4",
+             "/Groups/Abstract/ConjugacyClasses", {"group": ["12.4"]}),
+        ]
+        for source, expected_path, expected_query in cases:
+            response = self.tc.get(source)
+            target = urlsplit(response.location)
+            assert response.status_code == 307
+            assert target.path == expected_path
+            assert parse_qs(target.query) == expected_query
 
     # TODO test stats once we have them
     #  def test_stats_page(self):

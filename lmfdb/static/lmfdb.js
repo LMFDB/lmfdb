@@ -36,25 +36,39 @@ $.fn.round_bl = function(val) {
 $(function() {
   /* Add a chevron to each properties-header that has a following properties-body,
      wired to collapse/expand only that section. */
-  $('.properties-header').each(function() {
+  $('.properties-header').each(function(index) {
     var $header = $(this);
     var $body   = $header.next('.properties-body');
     if ($body.length === 0) return;
 
-    var $chev = $('<span class="prop-chevron open"></span>');
+    var title = $.trim($header.text());
+    var bodyId = $body.attr('id') || 'lmfdb-properties-body-' + index;
+    $body.attr('id', bodyId);
+
+    var $chev = $('<button type="button" class="prop-chevron open"></button>');
+    $chev.attr('aria-controls', bodyId);
     $header.append($chev);
 
-    var key = 'lmfdb_prop_' + $.trim($header.text()).replace(/\s+/g, '_').substring(0, 30);
+    function setExpanded(expanded) {
+      $chev.toggleClass('open', expanded).toggleClass('closed', !expanded);
+      $chev.attr('aria-expanded', expanded ? 'true' : 'false');
+      $chev.attr('aria-label', (expanded ? 'Collapse ' : 'Expand ') + title);
+    }
+
+    var key = 'lmfdb_prop_' + title.replace(/\s+/g, '_').substring(0, 30);
     if (localStorage.getItem(key) === '0') {
       $body.hide();
-      $chev.removeClass('open').addClass('closed');
+      setExpanded(false);
+    } else {
+      setExpanded(true);
     }
 
     $chev.on('click', function(e) {
       e.stopPropagation();
       e.preventDefault();
-      $chev.toggleClass('open closed');
-      localStorage.setItem(key, $chev.hasClass('open') ? '1' : '0');
+      var expanded = $chev.attr('aria-expanded') !== 'true';
+      setExpanded(expanded);
+      localStorage.setItem(key, expanded ? '1' : '0');
       $body.slideToggle(150);
     });
   });
