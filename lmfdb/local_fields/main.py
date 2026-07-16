@@ -13,7 +13,8 @@ from lmfdb import db
 from lmfdb.app import app
 from lmfdb.utils import (
     web_latex, coeff_to_poly, teXify_pol, display_multiset, display_knowl,
-    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats, parse_regex_restricted,
+    parse_inertia, parse_newton_polygon, parse_bracketed_posints, parse_floats,
+    parse_regex_restricted, parse_padicsubfields,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox,
     HiddenBox, TextBoxNoEg, CountBox, to_dict, comma,
@@ -424,6 +425,10 @@ class LF_download(Downloader):
         ),
     }
 
+class LF_families_download(Downloader):
+    table = db.lf_families
+    title = '$p$-adic families'
+
 def galcolresponse(n,t,cache):
     if t is None:
         return 'not computed'
@@ -612,7 +617,9 @@ families_columns = SearchColumns([
     MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent", default=False, contingent=lambda info: "relative" in info),
     MultiProcessedCol("base_field", "lf.family_base", "Base",
                       ["base", "p", "n0", "rf0"],
-                      pretty_link, contingent=lambda info: "relative" in info),
+                      pretty_link,
+                      apply_download=lambda base, p, n0, rf0: base,
+                      contingent=lambda info: "relative" in info),
     RationalListCol("visible", "lf.slopes", "Abs. Artin slopes",
                     show_slopes2, default=False, short_title="abs. Artin slopes"),
     RationalListCol("slopes", "lf.slopes", "Swan slopes", short_title="Swan slopes"),
@@ -690,6 +697,7 @@ def common_parse(info, query):
     parse_noop(info,query,'packet')
     parse_noop(info,query,'family')
     parse_noop(info,query,'hidden')
+    parse_padicsubfields(info,query,'subfield')
 
 def count_fields(p, n=None, f=None, e=None, eopts=None):
     # Implement a formula due to Monge for the number of fields with given n or e,f
@@ -1442,6 +1450,7 @@ def common_family_parse(info, query):
     titletag=lambda:'p-adic families search results',
     err_title='p-adic families search input error',
     learnmore=learnmore_list,
+    shortcuts={'download': LF_families_download()},
     bread=lambda:get_bread([("Families", "")]),
     postprocess=families_postprocess,
     url_for_label=url_for_family,
@@ -1602,11 +1611,17 @@ def common_boxes():
         label='Packet',
         knowl='lf.packet',
     )
+    subfield = TextBox(
+        name="subfield",
+        label="Intermediate field",
+        knowl="lf.intermediate_fields",
+        example_span="2.1.2.2a1.2 or 5.1.5.9a1.5",
+        example="2.1.2.2a1.2")
     hidden = SneakyTextBox(
         name="hidden",
         label="Hidden content",
         knowl="lf.slopes")
-    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden
+    return degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, subfield, family, packet, hidden
 
 class FamilySearchArray(EmbeddedSearchArray):
     sorts = [
@@ -1617,7 +1632,7 @@ class FamilySearchArray(EmbeddedSearchArray):
     ]
 
     def __init__(self, fam):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, subfield, family, packet, hidden = common_boxes()
         if fam.packet_count is None:
             self.refine_array = [[gal, slopes, ind_insep, hidden], [associated_inertia, jump_set]]
         else:
@@ -1832,15 +1847,15 @@ class LFSearchArray(SearchArray):
     }
 
     def __init__(self):
-        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, family, packet, hidden = common_boxes()
+        degree, qp, c, e, f, topslope, slopes, visible, ind_insep, associated_inertia, jump_set, gal, aut, u, t, inertia, wild, subfield, family, packet, hidden = common_boxes()
         results = CountBox()
 
         self.browse_array = [[degree, qp], [e, f], [c, topslope], [u, t],
                              [slopes, visible], [ind_insep, associated_inertia],
-                             [jump_set, aut], [gal, inertia], [wild], [results]]
-        self.refine_array = [[degree, qp, c, gal],
-                             [e, f, t, u],
-                             [aut, inertia, ind_insep, associated_inertia, jump_set],
+                             [jump_set, aut], [gal, inertia], [wild,subfield], [results]]
+        self.refine_array = [[degree, qp, c, gal, aut],
+                             [e, f, t, u, subfield],
+                             [inertia, ind_insep, associated_inertia, jump_set],
                              [topslope, slopes, visible, wild],
                              [family, packet, hidden]]
 

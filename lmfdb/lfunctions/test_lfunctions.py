@@ -11,6 +11,13 @@ class LfunctionTest(LmfdbTest):
     # Testing at least one example of each type of L-function page
     #------------------------------------------------------
 
+    def test_dirichlet_coefficients_stop_before_unknown_euler_factor(self):
+        response = self.tc.get('/L/4/5e5/1.1/c1e2/0/0')
+        assert response.status_code == 200
+        page = response.get_data(as_text=True)
+        assert '81<sup>-s</sup>' in page
+        assert '101<sup>-s</sup>' not in page
+
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects=True)
         assert '0.4813597783' in L.get_data(as_text=True)
