@@ -262,7 +262,8 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
-        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
+        upperbound = min(2*L.degree*L.numcoeff, nth_prime(len(L.localfactors) + 1) - 1)
+        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, upperbound)
 
         # get rid of extra coeff
         count = 0
