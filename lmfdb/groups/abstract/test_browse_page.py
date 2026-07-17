@@ -633,7 +633,7 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/ConjugacyClasses","e.g. 3, or a range like 3..5")
         self.check_args("/Groups/Abstract/ConjugacyClasses?group=12.4", ["3.a1.a1", "6A"])
         self.check_args("/Groups/Abstract/ConjugacyClasses?group=128.15", r"\OD_{16}:C_8" #group name
-		)
+                )
 
     def test_highlighted_conj_class(self):
         r"""

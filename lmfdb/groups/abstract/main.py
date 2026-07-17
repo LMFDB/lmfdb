@@ -830,7 +830,6 @@ def index():
     )
 
 
-
 @abstract_page.route("/Subgroups")
 def sub_index():
     info = to_dict(request.args, search_array=SubgroupSearchArray())
@@ -865,7 +864,6 @@ def sub_index():
     )
 
 
-
 @abstract_page.route("/ComplexCharacters")
 def char_index():
     info = to_dict(request.args, search_array=ComplexCharSearchArray())
@@ -887,7 +885,6 @@ def char_index():
             ("Conjugacy classes", url_for(".conjugacy_class_index")),
         ],
     )
-
 
 
 @abstract_page.route("/ConjugacyClasses")
@@ -946,7 +943,6 @@ def dynamic_statistics():
 def random_abstract_group():
     label = db.gps_groups.random(projection="label")
     return url_for(".by_label", label=label)
-
 
 
 @abstract_page.route("/interesting")
@@ -1317,10 +1313,9 @@ def subgroup_jump(info):
     return redirect(url_for(".sub_index"))
 
 
-
 def char_jump(info):
     jump = info["jump"]
-	# by char label
+        # by char label
     if abstract_char_label_regex.fullmatch(jump):
         spl_parts = jump.split(".")
         gp = ".".join(spl_parts[:2])
@@ -1342,7 +1337,7 @@ def char_jump(info):
 
 def cc_jump(info):
     jump = info["jump"]
-	#by cc label
+        #by cc label
     if abstract_cc_label_regex.fullmatch(jump):
         spl_parts = jump.split(".")
         gp = ".".join(spl_parts[:2])
@@ -1361,7 +1356,6 @@ def cc_jump(info):
         return redirect(url_for(".conjugacy_class_index", group=label))
     flash_error(f"There is no group nor character with the label {jump} in the database")
     return redirect(url_for(".conjugacy_class_index"))
-
 
 
 def show_factor(n):
@@ -3345,23 +3339,20 @@ class SubgroupSearchArray(SearchArray):
         )
         nontrivproper = YesNoBox(name="nontrivproper", label=display_knowl('group.trivial_subgroup', 'Non-trivial') + " " + display_knowl('group.proper_subgroup', 'proper'))
 
-
         self.browse_array = [
-			[subgroup, subgroup_order],
-			[ambient,ambient_order],
-			[quotient, quotient_order],
-			[cyclic,abelian],
-			[normal,solvable],
-			[characteristic,perfect],
-			[maximal,central],
-			[direct, split],
-			[quotient_cyclic, quotient_abelian],
-			[quotient_solvable,minimal_normal],
-			[nontrivproper],
-			[hall, sylow]
-		]
-
-
+                        [subgroup, subgroup_order],
+                        [ambient,ambient_order],
+                        [quotient, quotient_order],
+                        [cyclic,abelian],
+                        [normal,solvable],
+                        [characteristic,perfect],
+                        [maximal,central],
+                        [direct, split],
+                        [quotient_cyclic, quotient_abelian],
+                        [quotient_solvable,minimal_normal],
+                        [nontrivproper],
+                        [hall, sylow]
+                ]
 
         self.refine_array = [
             [subgroup, subgroup_order, cyclic, abelian, solvable],
@@ -3376,7 +3367,6 @@ class SubgroupSearchArray(SearchArray):
             ],
             [minimal_normal, nontrivproper, hall, sylow],
         ]
-
 
     def search_types(self, info):
         if info is None:
@@ -3455,12 +3445,12 @@ class ComplexCharSearchArray(SearchArray):
         )
 
         self.browse_array = [
-			[group, dim],
-			[image_isoclass,conductor],
-			[indicator, faithful],
-			[image_order, kernel_order],
-			[center_order,center_index]
-		]
+                        [group, dim],
+                        [image_isoclass,conductor],
+                        [indicator, faithful],
+                        [image_order, kernel_order],
+                        [center_order,center_index]
+                ]
 
         self.refine_array = [
             [dim, indicator, faithful,conductor],
@@ -3509,9 +3499,9 @@ class ConjugacyClassSearchArray(SearchArray):
         )
 
         self.browse_array = [
-			[group, order],
-			[size]
-		]
+                        [group, order],
+                        [size]
+                ]
 
         self.refine_array = [
             [group, order, size]
