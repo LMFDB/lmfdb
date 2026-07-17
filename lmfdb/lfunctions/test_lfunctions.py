@@ -25,8 +25,8 @@ class LfunctionTest(LmfdbTest):
         assert response.status_code == 200
         body = response.get_data(as_text=True)
         an = json.loads(body[body.index('{'):])['an']
-        # 25 stored Euler factors (primes up to 97); the first prime without one
-        # is 101, so only a_1..a_100 are determined. a_101 must not leak in.
+        # 25 stored Euler factors (primes up to 97); to match the display bound and avoid the
+        # bogus a_101 (unknown Euler factor would default to 1), the download stops at a_100.
         assert len(an) == 100
 
     def test_LDirichlet(self):
