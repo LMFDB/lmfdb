@@ -1,4 +1,6 @@
 
+import json
+
 from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 
@@ -17,6 +19,15 @@ class LfunctionTest(LmfdbTest):
         page = response.get_data(as_text=True)
         assert '81<sup>-s</sup>' in page
         assert '101<sup>-s</sup>' not in page
+
+    def test_download_dirichlet_coefficients_stop_before_unknown_euler_factor(self):
+        response = self.tc.get('/L/download_dirichlet_coeff/4-5e5-1.1-c1e2-0-0')
+        assert response.status_code == 200
+        body = response.get_data(as_text=True)
+        an = json.loads(body[body.index('{'):])['an']
+        # 25 stored Euler factors (primes up to 97); to match the display bound and avoid the
+        # bogus a_101 (unknown Euler factor would default to 1), the download stops at a_100.
+        assert len(an) == 100
 
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects=True)
