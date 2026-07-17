@@ -889,11 +889,9 @@ class WebEC():
 
         # find all base changes of this curve in the database, if any:
         nf_to_curve = {rec["field_label"]: rec["label"] for rec in db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, ["field_label", "label"])}
-        if nf_to_curve:
-            # extract the fields from the labels of the base-change curves:
-            pol_to_nf = {tuple(rec["coeffs"]): rec for rec in db.nf_fields.search({"label": {"$in": list(nf_to_curve)}}, ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
-        else:
-            pol_to_nf = {}
+        # look up all the fields in the growth table in a single query
+        # (the projection must include the columns needed by field_pretty)
+        pol_to_nf = {tuple(rec["coeffs"]): rec for rec in db.nf_fields.search({"$or": [{"coeffs": tgd['field']} for tgd in tgdata]}, ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
@@ -908,7 +906,7 @@ class WebEC():
                 tg['fields_missing'] = True
             else:
                 tg1['f'] = formatfield(F, data=nf_data)
-                bcc = nf_to_curve[nf_data["label"]]
+                bcc = nf_to_curve.get(nf_data["label"])
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
             if bcc:
