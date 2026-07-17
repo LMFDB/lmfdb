@@ -267,6 +267,30 @@ class Configuration(_Configuration):
         readargs = readargs or startlmfdbQ
         _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
+        # Enable TCP keepalives on the PostgreSQL connection.
+        #
+        # LMFDB usually talks to a *remote* database (the default host is
+        # devmirror.lmfdb.xyz), so a connection can be silently dropped by the
+        # server, a load balancer, or the network.  Without keepalives, libpq
+        # only notices when it next uses the socket: a query issued on a dead
+        # connection then blocks on the OS TCP timeout for several minutes
+        # before raising "OperationalError: server closed the connection
+        # unexpectedly".  This is a recurring source of spurious CI failures
+        # that pass on a rerun.
+        #
+        # These libpq parameters live in options["postgresql"] and are passed
+        # straight through to psycopg2.connect by psycodict, for both the
+        # initial connection and every reset_connection().  They are ignored for
+        # local unix-socket connections and never interrupt a long-running query
+        # (keepalives are handled by the OS TCP stack), so they are safe
+        # defaults; setdefault lets an explicit config.ini or command-line value
+        # take precedence.
+        pg_options = self.options["postgresql"]
+        pg_options.setdefault("keepalives", 1)
+        pg_options.setdefault("keepalives_idle", 30)
+        pg_options.setdefault("keepalives_interval", 10)
+        pg_options.setdefault("keepalives_count", 5)
+
         opts = self.options
         extopts = self.extra_options
         self.flask_options = {
