@@ -24,7 +24,7 @@ def linked_name(item, level=""):
 
     # headings should be wrapped in h2's:
     if level == "heading":
-        this_entry =  ''.join(['<h2>', this_entry,'</h2>\n'])
+        this_entry = ''.join(['<h2>', this_entry,'</h2>\n'])
 
     return this_entry
 
