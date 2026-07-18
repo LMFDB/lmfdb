@@ -888,10 +888,14 @@ class WebEC():
         tg['data'] = tgextra = []
 
         # find all base changes of this curve in the database, if any:
-        nf_to_curve = {rec["field_label"]: rec["label"] for rec in db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, ["field_label", "label"])}
+        nf_to_curve = {rec["field_label"]: rec["label"]
+                       for rec in db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}},
+                                                        ["field_label", "label"])}
         # look up all the fields in the growth table in a single query
         # (the projection must include the columns needed by field_pretty)
-        pol_to_nf = {tuple(rec["coeffs"]): rec for rec in db.nf_fields.search({"$or": [{"coeffs": tgd['field']} for tgd in tgdata]}, ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
+        pol_to_nf = {tuple(rec["coeffs"]): rec
+                     for rec in db.nf_fields.search({"$or": [{"coeffs": tgd['field']} for tgd in tgdata]},
+                                                    ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
