@@ -1,4 +1,4 @@
-from .utils.config import get_secret_key
+from .config import get_secret_key
 import os
 from socket import gethostname
 import time
@@ -18,12 +18,13 @@ from flask import (
 from markupsafe import escape
 from sage.env import SAGE_VERSION
 from sage.all import cached_function
-# acknowledgment page, reads info from CONTRIBUTORS.yaml
+# acknowledgment page, reads info from lmfdb/CONTRIBUTORS.yaml
 
 from .logger import critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.2.1"
+from .version import version as _lmfdb_version
+LMFDB_VERSION = "LMFDB Release " + _lmfdb_version
 
 ############################
 #         Main app         #
@@ -575,7 +576,7 @@ def add_colors():
         if color not in all_color_schemes:
             color = None
         if color is None:
-            from .utils.config import Configuration
+            from .config import Configuration
             color = Configuration().get_color()
     return {"color": all_color_schemes[color].dict()}
 

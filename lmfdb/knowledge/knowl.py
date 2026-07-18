@@ -12,7 +12,7 @@ from psycodict import DelayCommit
 from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
-from lmfdb.utils.config import Configuration
+from lmfdb.config import Configuration, root_lmfdb_path
 from lmfdb.users.pwdmanager import userdb
 from psycopg2.sql import SQL, Identifier, Placeholder
 from sage.all import cached_function
@@ -132,6 +132,22 @@ def normalize_define(term):
 
 def extract_defines(content):
     return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
+
+
+def _git_grep(*args):
+    """
+    Run ``git grep`` with the given arguments in the LMFDB checkout,
+    returning its output.
+
+    Returns None if there are no matches, or if lmfdb is not being run from
+    a git checkout (in which case there is no code to search).
+    """
+    if root_lmfdb_path is None:
+        return None
+    try:
+        return subprocess.check_output(['git', 'grep'] + list(args), encoding='utf-8', cwd=root_lmfdb_path)
+    except subprocess.CalledProcessError:  # no matches
+        return None
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -512,7 +528,10 @@ class KnowlBackend(PostgresBase):
         kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
 
         def filter_from_matches(pattern):
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
+            output = _git_grep('-E', '--full-name', '--line-number', '--context', '2', pattern)
+            if output is None:
+                return
+            matches = output.split('\n--\n')
             for match in matches:
                 lines = match.split('\n')
                 for line in lines:
@@ -590,10 +609,9 @@ class KnowlBackend(PostgresBase):
             kids.append(knowl.source)
         matches = []
         for kid in kids:
-            try:
-                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
-            except subprocess.CalledProcessError:  # no matches
-                pass
+            output = _git_grep('--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.')))
+            if output is not None:
+                matches.extend(output.split('\n--\n'))
         return [self._process_git_grep(match) for match in matches]
 
     def check_sed_safety(self, knowlid):
@@ -605,12 +623,13 @@ class KnowlBackend(PostgresBase):
             (does not occur without surrounding quotes)
         - -1 if the knowl is referenced but cannot be safely replaced.
         """
-        try:
-            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
-        except subprocess.CalledProcessError:  # no matches
+        output = _git_grep("""['"]%s['"]""" % (knowlid.replace('.',r'\.')))
+        if output is None:  # no matches
             return 0
+        matches = output.split('\n')
 
-        easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')],encoding='utf-8').split('\n')
+        easy_output = _git_grep(knowlid.replace('.',r'\.'))
+        easy_matches = [] if easy_output is None else easy_output.split('\n')
         return 1 if (len(matches) == len(easy_matches)) else -1
 
     def start_rename(self, knowl, new_name, who):
@@ -708,7 +727,10 @@ class KnowlBackend(PostgresBase):
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
         all_kids = {k['id'] for k in self.get_all_knowls(['id'])}
-        matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
+        output = _git_grep('-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern)
+        if output is None:
+            return []
+        matches = output.split('\n--\n')
         results = []
         for match in matches:
             lines = match.split('\n')

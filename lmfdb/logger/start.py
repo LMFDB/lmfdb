@@ -12,7 +12,7 @@ def check_sage_version():
         warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***" % (sage_version,LMFDB_SAGE_VERSION))
 
 def start_logging():
-    from lmfdb.utils.config import Configuration
+    from lmfdb.config import Configuration
     config = Configuration()
     logging_options = config.get_logging()
 

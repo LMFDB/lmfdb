@@ -4,9 +4,10 @@ import shutil
 import signal
 import socket
 import subprocess
+import threading
 from collections import Counter
 from psycopg2.sql import SQL
-from lmfdb.utils.config import Configuration, ConfigWrapper
+from lmfdb.config import Configuration, ConfigWrapper, lmfdb_log_dir
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
@@ -160,9 +161,8 @@ class LMFDBSearchTable(PostgresSearchTable):
         self._check_verifications_enabled()
         if ratio is not None and check is None:
             raise ValueError("You can only provide a ratio if you specify a check")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
         if logdir is None:
-            logdir = os.path.join(lmfdb_root, "logs", "verification")
+            logdir = os.path.join(lmfdb_log_dir(), "verification")
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         if label is not None:
@@ -560,9 +560,8 @@ class LMFDBDatabase(PostgresDatabase):
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
         if parallel <= 0:
             raise ValueError("Non-parallel runs not supported for whole database")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
         if logdir is None:
-            logdir = os.path.join(lmfdb_root, "logs", "verification")
+            logdir = os.path.join(lmfdb_log_dir(), "verification")
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         types = None
@@ -651,4 +650,71 @@ class LMFDBDatabase(PostgresDatabase):
             knowldb.drop_column(name, col)
         print("Deleted table and column descriptions from knowl database")
 
-db = LMFDBDatabase()
+class LazyDatabase:
+    """
+    A lazy stand-in for :class:`LMFDBDatabase`.
+
+    Creating this object is cheap: the connection to postgres is only
+    established the first time the object is actually used (an attribute is
+    accessed, a table is looked up, etc.), or when :meth:`connect` is called
+    explicitly.  Afterward it behaves exactly like the underlying
+    :class:`LMFDBDatabase` by forwarding everything to it.
+    """
+    def __init__(self):
+        object.__setattr__(self, "_lazy_instance", None)
+        object.__setattr__(self, "_lazy_lock", threading.Lock())
+
+    def connect(self, config=None, **kwargs):
+        """
+        Connect to the database, if not already connected, and return the
+        underlying :class:`LMFDBDatabase`.
+
+        INPUT:
+
+        - ``config`` -- optional configuration, as for :class:`LMFDBDatabase`.
+          It is an error to provide it if the connection has already been made.
+        """
+        instance = object.__getattribute__(self, "_lazy_instance")
+        if instance is None:
+            with object.__getattribute__(self, "_lazy_lock"):
+                instance = object.__getattribute__(self, "_lazy_instance")
+                if instance is None:
+                    instance = LMFDBDatabase(config=config, **kwargs)
+                    object.__setattr__(self, "_lazy_instance", instance)
+                    return instance
+        if config is not None or kwargs:
+            raise RuntimeError("The database connection has already been established; connection options have no effect")
+        return instance
+
+    @property
+    def connected(self):
+        """Whether the connection to postgres has been established."""
+        return object.__getattribute__(self, "_lazy_instance") is not None
+
+    def __getattr__(self, name):
+        return getattr(self.connect(), name)
+
+    def __setattr__(self, name, value):
+        setattr(self.connect(), name, value)
+
+    def __delattr__(self, name):
+        delattr(self.connect(), name)
+
+    def __getitem__(self, name):
+        return self.connect()[name]
+
+    def __dir__(self):
+        return dir(self.connect())
+
+    def __bool__(self):
+        # so that `assert db` and `if db:` do not force a connection
+        return True
+
+    def __repr__(self):
+        instance = object.__getattribute__(self, "_lazy_instance")
+        if instance is None:
+            return "LMFDB database (not yet connected; will connect on first use)"
+        return repr(instance)
+
+
+db = LazyDatabase()

@@ -1,17 +1,7 @@
-bcrypt
-cython
-flask
-flask-cache
-flask-login
-flask-markdown
-markupsafe
-itsdangerous
-psycopg2-binary
-git+https://github.com/roed314/psycodict.git
-pyflakes
-pytest
-pytest-cov
-pytest-xdist
-pyyaml
-svg.py
-timeout_decorator
+# The LMFDB is pip installable (see pyproject.toml, which is where the
+# dependencies are now recorded); this file remains as the traditional
+# entry point:
+#     sage -pip install -r requirements.txt
+# installs the LMFDB in editable ("develop") mode, together with its
+# dependencies and development tools.
+-e .[dev]
