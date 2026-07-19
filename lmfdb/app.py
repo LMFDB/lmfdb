@@ -16,11 +16,14 @@ from flask import (
     url_for,
 )
 from markupsafe import escape
+
+# imported before sage so that a missing sage produces a helpful error message
+from .logger import critical
+
 from sage.env import SAGE_VERSION
 from sage.all import cached_function
 # acknowledgment page, reads info from lmfdb/CONTRIBUTORS.yaml
 
-from .logger import critical
 from .homepage import load_boxes, contribs
 
 from .version import version as _lmfdb_version

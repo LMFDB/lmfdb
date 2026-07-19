@@ -1,0 +1,96 @@
+# Build the lmfdb package and publish it to PyPI.
+#
+# Triggers:
+#  - pushing a tag v<version> (e.g. v1.2.1) publishes to PyPI;
+#  - running the workflow manually (workflow_dispatch) publishes to
+#    TestPyPI, as a dry run.
+#
+# Before this can succeed, one-time setup is needed:
+#  - psycodict must be released on PyPI and the git dependency in
+#    pyproject.toml replaced by a normal versioned requirement (PyPI
+#    rejects packages whose dependencies are git URLs);
+#  - a "Trusted Publisher" must be configured for the lmfdb project on
+#    https://pypi.org (and https://test.pypi.org), pointing at this
+#    repository, this workflow file (publish.yml) and the environment
+#    names below (no API tokens are needed with trusted publishing);
+#  - (recommended) create "pypi" and "testpypi" environments in the
+#    repository settings, restricted to release tags/branches.
+#
+# Note on version numbers: the package version (pyproject.toml reads it
+# from lmfdb/version.py) must be PEP 440 compliant, i.e. numeric release
+# segments.  A letter-coded LMFDB version like 1.8.ba must be mapped to
+# its numeric form (1.8.26, via class_to_int) for the package; the tag
+# check below compares against the package version.
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check that the tag matches the package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          package_version=$(python -c "import lmfdb.version; print(lmfdb.version.version)")
+          if [ "v${package_version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match lmfdb/version.py (${package_version})"
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build twine
+          python -m build
+          twine check dist/*
+
+      - name: Smoke test the wheel
+        run: |
+          python -m venv smoke
+          smoke/bin/pip install dist/*.whl
+          smoke/bin/python -c "import lmfdb, importlib.metadata; from lmfdb import db; assert not db.connected; print('wheel imports cleanly, version', importlib.metadata.version('lmfdb'))"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
