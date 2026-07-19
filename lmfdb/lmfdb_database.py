@@ -651,4 +651,105 @@ class LMFDBDatabase(PostgresDatabase):
             knowldb.drop_column(name, col)
         print("Deleted table and column descriptions from knowl database")
 
+    ##################################################################
+    # Zenodo archiving and the LMFDB version                         #
+    ##################################################################
+
+    def update_prod(self, search_tables, data_folder=None, remote_opts=None,
+                    dry_run_backup=True, live=False, **kwds):
+        """
+        Push tables to production and archive them on Zenodo: the one-stop
+        replacement (run on proddb) for the manual sequence of
+        ``copy_to_from_remote`` + ``reload_all`` + ``zenodo_backup``.
+
+        INPUT:
+
+        - ``search_tables`` -- the tables to copy from devmirror
+        - ``data_folder`` -- where to put the dump (must not exist yet);
+            defaults to a dated folder under the staging directory of the
+            Zenodo configuration.  Note that /tmp is a poor choice: the
+            folder should survive a reboot so that interrupted uploads can
+            be resumed.
+        - ``remote_opts`` -- passed to ``copy_to_from_remote``
+        - ``dry_run_backup``, ``live`` -- passed to ``zenodo_backup``; the
+            defaults report what would be archived without touching Zenodo
+            (flip both once uploads are approved)
+        - ``**kwds`` -- passed to ``reload_all``
+        """
+        from lmfdb.zenodo.config import ZenodoConfig
+        if data_folder is None:
+            from lmfdb.zenodo.state import utcnow
+            data_folder = os.path.join(
+                ZenodoConfig().staging_dir,
+                "push-%s" % utcnow().strftime("%Y%m%d-%H%M"))
+        self.copy_to_from_remote(search_tables, data_folder,
+                                 remote_opts=remote_opts)
+        kwds.setdefault("adjust_schema", True)
+        kwds.setdefault("restat", False)
+        self.reload_all(data_folder, **kwds)
+        return self.zenodo_backup(data_folder, dry_run=dry_run_backup,
+                                  live=live)
+
+    def zenodo_backup(self, data_folder, tables=None, dry_run=True,
+                      live=False, **kwds):
+        """
+        Archive the tables whose dump files are in ``data_folder`` on Zenodo
+        (skipping unchanged tables and those excluded in
+        lmfdb/zenodo/tables.yaml), then update the knowls and registry
+        records and increment the LMFDB data version.  With ``dry_run=True``
+        (the default) just report what would happen.
+        """
+        from lmfdb.zenodo.backup import backup_folder
+        return backup_folder(self, data_folder, tables=tables,
+                             dry_run=dry_run, live=live, **kwds)
+
+    def zenodo_backfill(self, tables=None, batch_gb=150, dry_run=True,
+                        live=False, **kwds):
+        """
+        Initial archiving of all eligible tables, dumped from this database
+        in batches; resumable.  See ``lmfdb.zenodo.backup.backfill``.
+        """
+        from lmfdb.zenodo.backup import backfill
+        return backfill(self, tables=tables, batch_gb=batch_gb,
+                        dry_run=dry_run, live=live, **kwds)
+
+    def zenodo_status(self):
+        """Summary of the archive and version state."""
+        from lmfdb.zenodo.backup import status
+        return status(self)
+
+    def zenodo_audit(self):
+        """
+        Cross-check the Zenodo archive against the production change log
+        (userdb.dbrecord), reporting tables changed since their last archive,
+        never archived, or not yet classified in tables.yaml.  Suitable for a
+        cron job.
+        """
+        from lmfdb.zenodo.backup import audit
+        return audit(self)
+
+    def zenodo_setup(self, git_hash=None, editor=None):
+        """
+        One-time activation (per database) of the versioning/backup system:
+        creates the state tables and records the initial major version from
+        lmfdb/version.py.  Safe to re-run.
+        """
+        from lmfdb.version import MAJOR
+        from lmfdb.zenodo import state
+        state.ensure_tables(self)
+        if state.latest_versions(self) is None:
+            if git_hash is None:
+                # record the currently deployed commit so the watcher's first
+                # run doesn't count it as a new frontend release
+                try:
+                    from lmfdb.zenodo.watcher import deployed_commit
+                    git_hash = deployed_commit()
+                except Exception as err:
+                    print("Could not determine the deployed commit (%s); "
+                          "the first watcher run will record it" % err)
+            state.insert_major(self, MAJOR, git_hash=git_hash, editor=editor,
+                               comment="versioning system activated")
+            print("Version history initialized at %s.0.a" % MAJOR)
+
+
 db = LMFDBDatabase()

@@ -1,0 +1,150 @@
+# Which production tables are archived on Zenodo, and by whom.
+#
+# STATUS: TENTATIVE -- generated 2026-07-18 from the production table list;
+# the include/exclude decisions below must be finalized by the managing
+# editors before any uploads happen.  In particular the `review` entries
+# (suspected alpha-serving, legacy, or regenerable tables) are treated the
+# same as `no` until they are resolved to yes/no.
+#
+# Semantics per entry:
+#   backup: yes | no | review    (review == not backed up, but reported)
+#   owner:  Zenodo account that owns the table's record (sticky once the
+#           first version is published; assigned from [zenodo] default_owner
+#           in the local config when absent here)
+#   note:   free text
+#
+# Tables that appear in a dump folder (or in db.tablenames) but not here are
+# reported by dry runs and by zenodo_audit as needing classification.
+#
+# The knowl database and the version registry always get records (they are
+# not search tables and are not listed here).
+
+tables:
+  artin_field_data: {backup: yes}
+  artin_old2new_labels: {backup: review, note: "label conversion helper; archive?"}
+  artin_reps: {backup: yes}
+  av_fq_endalg_data: {backup: yes}
+  av_fq_endalg_factors: {backup: yes}
+  av_fq_isog: {backup: yes}
+  belyi_galmap_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  belyi_galmaps: {backup: yes}
+  belyi_galmaps_fixed: {backup: review, note: "migration artifact?"}
+  belyi_galmaps_prim: {backup: yes}
+  belyi_passports: {backup: yes}
+  belyi_passports_fixed: {backup: review, note: "migration artifact?"}
+  belyi_specializations: {backup: review, note: "confirm production status"}
+  bmf_dims: {backup: yes}
+  bmf_forms: {backup: yes}
+  char_dirichlet: {backup: yes}
+  cluster_pictures: {backup: yes}
+  ec_classdata: {backup: yes}
+  ec_curvedata: {backup: yes}
+  ec_galrep: {backup: yes}
+  ec_iqf_labels: {backup: review, note: "label conversion helper; archive?"}
+  ec_iwasawa: {backup: yes}
+  ec_localdata: {backup: yes}
+  ec_mwbsd: {backup: yes}
+  ec_nfcurves: {backup: yes}
+  ec_nfportraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  ec_padic: {backup: yes}
+  ec_torsion_growth: {backup: yes}
+  fq_fields: {backup: review, note: "confirm which section this serves"}
+  g2c_curves: {backup: yes}
+  g2c_endomorphisms: {backup: yes}
+  g2c_galrep: {backup: yes}
+  g2c_plots: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  g2c_ratpts: {backup: yes}
+  g2c_tamagawa: {backup: yes}
+  gps_char: {backup: yes}
+  gps_char_test: {backup: no, note: "test table"}
+  gps_conj_classes: {backup: yes}
+  gps_crep: {backup: yes}
+  gps_families: {backup: yes}
+  gps_gl2zhat: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
+  gps_gl2zhat_coarse: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
+  gps_gl2zhat_fine: {backup: yes}
+  gps_gl2zhat_nonsurjdet: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
+  gps_gmodules: {backup: yes}
+  gps_groups: {backup: yes}
+  gps_groups_cc: {backup: yes}
+  gps_groups_cc_test: {backup: no, note: "test table"}
+  gps_groups_test: {backup: no, note: "test table"}
+  gps_gsp4zhat: {backup: review, note: "Siegel modular curves; alpha?"}
+  gps_images: {backup: yes}
+  gps_qchar: {backup: yes}
+  gps_qchar_test: {backup: no, note: "test table"}
+  gps_qrep: {backup: yes}
+  gps_regular_polynomials: {backup: review, note: "confirm production status"}
+  gps_small: {backup: yes}
+  gps_smallhash: {backup: yes}
+  gps_special_names: {backup: yes}
+  gps_st: {backup: yes}
+  gps_st0: {backup: yes}
+  gps_subgroup_data: {backup: yes}
+  gps_subgroup_search: {backup: yes}
+  gps_subgroups_test: {backup: no, note: "test table"}
+  gps_transitive: {backup: yes}
+  gps_transitive_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  halfmf_forms: {backup: yes}
+  hecke_algebras: {backup: review, note: "Hecke algebra section; hidden/beta?"}
+  hecke_ladic: {backup: review, note: "Hecke algebra section; hidden/beta?"}
+  hecke_orbits: {backup: review, note: "Hecke algebra section; hidden/beta?"}
+  hgcwa_complete: {backup: yes}
+  hgcwa_passports: {backup: yes}
+  hgcwa_unique_groups: {backup: yes}
+  hgm_euler_survey: {backup: review, note: "in development?"}
+  hgm_families: {backup: yes}
+  hgm_monodromy: {backup: review, note: "confirm production status"}
+  hgm_motives: {backup: yes}
+  hmf_fields: {backup: yes}
+  hmf_forms: {backup: yes}
+  hmf_hecke: {backup: yes}
+  inv_dbs: {backup: no, note: "legacy inventory system"}
+  inv_fields_auto: {backup: no, note: "legacy inventory system"}
+  inv_fields_human: {backup: no, note: "legacy inventory system"}
+  inv_ops: {backup: no, note: "legacy inventory system"}
+  inv_rollback: {backup: no, note: "legacy inventory system"}
+  inv_tables: {backup: no, note: "legacy inventory system"}
+  lat_lattices: {backup: yes}
+  lf_families: {backup: yes}
+  lf_fields: {backup: yes}
+  lfunc_instances: {backup: yes}
+  lfunc_lfunctions: {backup: yes}
+  lfunc_rs_knowls: {backup: yes}
+  lfunc_search: {backup: yes}
+  maass_newforms: {backup: yes}
+  maass_newforms_coefficients: {backup: yes}
+  maass_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  maass_rigor: {backup: yes}
+  maass_rigor_coefficients: {backup: yes}
+  maass_rigor_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  mf_boxes: {backup: yes}
+  mf_gamma1: {backup: yes}
+  mf_gamma1_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  mf_hecke_cc: {backup: yes}
+  mf_hecke_charpolys: {backup: yes}
+  mf_hecke_lpolys: {backup: yes}
+  mf_hecke_nf: {backup: yes}
+  mf_hecke_traces: {backup: yes}
+  mf_newform_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  mf_newforms: {backup: yes}
+  mf_newspace_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  mf_newspaces: {backup: yes}
+  mf_stark: {backup: review, note: "confirm production status"}
+  mf_twists_cc: {backup: yes}
+  mf_twists_nf: {backup: yes}
+  modcurve_modelmaps: {backup: yes}
+  modcurve_models: {backup: yes}
+  modcurve_pictures: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  modcurve_points: {backup: yes}
+  modcurve_teximages: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  modlgal_reps: {backup: yes}
+  modlmf_forms: {backup: yes}
+  nf_fields: {backup: yes}
+  nf_fields_extra: {backup: yes, note: "extra table registered separately in meta_tables; confirm pairing with nf_fields"}
+  nf_fields_reflex: {backup: review, note: "confirm production status"}
+  smf_dims: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
+  smf_ev: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
+  smf_families: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
+  smf_fc: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
+  smf_samples: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}

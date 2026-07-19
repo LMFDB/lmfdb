@@ -1,0 +1,107 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div>
+  <p>
+    The current version of the LMFDB is <b>{{ current }}</b>.
+  </p>
+  <p>
+    LMFDB version numbers have the form
+    <b>{major}.{data}.{code}</b> (for example <code>2.3.ba</code>):
+  </p>
+  <ul>
+    <li><b>major</b> is incremented by the managing editors for major
+      milestones; the other two components reset when it is bumped.</li>
+    <li><b>data</b> is incremented every time a batch of database tables is
+      pushed to production.  Each push archives the changed tables on
+      <a href="https://zenodo.org/communities/lmfdb">Zenodo</a>, so every
+      table carries its own version of the form {major}.{data}, namely the
+      LMFDB version at which it last changed; the data of any LMFDB version
+      can be recovered from the corresponding Zenodo records.</li>
+    <li><b>code</b> counts releases of the website code, written in the
+      letter encoding used for elliptic curve isogeny classes
+      (a, b, &hellip;, z, ba, bb, &hellip;).  Each release corresponds to a
+      commit in the
+      <a href="https://github.com/LMFDB/lmfdb">LMFDB git repository</a>.</li>
+  </ul>
+  <p>
+    Versions up to and including 1.2.1 predate this scheme.
+  </p>
+</div>
+
+<h2>Look up a version</h2>
+
+<form method="get" action="{{ url_for('version_page') }}">
+  <input type="text" name="v" value="{{ query }}" placeholder="e.g. 2.3.ba or 2.3" size="12">
+  <button type="submit">Resolve</button>
+  (also available as <a href="{{ url_for('version_api', v=(query if query else 'current')) }}">JSON</a>)
+</form>
+
+{% if error %}
+  <p><b>Error:</b> {{ error }}</p>
+{% endif %}
+
+{% if resolved %}
+  <h3>LMFDB {{ resolved.version }}</h3>
+  <p>Data version created: {{ resolved.time }}.</p>
+  {% if resolved.git_hash %}
+    <p>Website code:
+      <a href="https://github.com/LMFDB/lmfdb/tree/{{ resolved.git_hash }}">{{ resolved.git_hash[:12] }}</a>
+      (deployed {{ resolved.git_time }}).</p>
+  {% endif %}
+  <table class="ntdata">
+    <thead>
+      <tr><th>table</th><th>version</th><th>Zenodo record</th></tr>
+    </thead>
+    <tbody>
+      {% for name, info in resolved.table_list %}
+        <tr>
+          <td><code>{{ name }}</code></td>
+          <td>{{ info.version }}</td>
+          <td>{% if info.doi %}<a href="https://doi.org/{{ info.doi }}">{{ info.doi }}</a>{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+<h2>Version history</h2>
+
+{% if events %}
+  <table class="ntdata">
+    <thead>
+      <tr><th>version</th><th>type</th><th>date</th><th>details</th></tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+        <tr>
+          <td>{{ e.display }}</td>
+          <td>{{ e.kind_label }}</td>
+          <td>{{ e.time }}</td>
+          <td>
+            {% if e.kind == 'code' and e.git_hash %}
+              commit <a href="https://github.com/LMFDB/lmfdb/tree/{{ e.git_hash }}">{{ e.git_hash[:12] }}</a>
+            {% elif e.kind == 'data' %}
+              {{ e.table_list | length }} record{{ '' if e.table_list|length == 1 else 's' }} updated:
+              {% for name, info in e.table_list %}
+                {%- if info.doi -%}
+                  <a href="https://doi.org/{{ info.doi }}">{{ name }}</a>
+                {%- else -%}
+                  {{ name }}
+                {%- endif -%}
+                {{ ", " if not loop.last else "" }}
+              {% endfor %}
+            {% endif %}
+            {% if e.comment %} {{ e.comment }}{% endif %}
+            {% if e.editor %} <i>({{ e.editor }})</i>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p>The version history will appear here once the versioning system is
+  activated.</p>
+{% endif %}
+
+{% endblock %}
