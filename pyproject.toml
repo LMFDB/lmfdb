@@ -1,0 +1,76 @@
+# setuptools>=64 rather than something newer: sage ships its own setuptools,
+# which can end up being used for the build (e.g. with --no-build-isolation),
+# so we stick to metadata that older versions understand (in particular the
+# license table rather than a PEP 639 SPDX string)
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lmfdb"
+dynamic = ["version"]
+description = "The L-functions and modular forms database (LMFDB): python library and website"
+readme = "README.md"
+license = {text = "GPL-2.0-or-later"}
+requires-python = ">=3.9"
+authors = [
+    {name = "The LMFDB Collaboration"},
+]
+keywords = ["number theory", "L-functions", "modular forms", "elliptic curves", "database"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Flask",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+# Note that most of the website (though not database access through lmfdb.db)
+# also requires SageMath, which is not pip installable; install this package
+# into Sage's python, e.g. with `sage -pip install -e .`
+# psycodict is not yet released on PyPI, so we depend on the git repository;
+# this will need to change before the lmfdb itself can be released on PyPI.
+dependencies = [
+    "bcrypt",
+    "flask",
+    "flask-login",
+    "markdown",
+    "markupsafe",
+    "mpmath",
+    "pexpect",
+    "psycodict @ git+https://github.com/roed314/psycodict.git",
+    "psycopg2-binary",
+    "pyyaml",
+    "requests",
+    "svg.py",
+    "timeout-decorator",
+    "werkzeug",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyflakes",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "ruff",
+]
+
+[project.urls]
+Homepage = "https://www.lmfdb.org"
+Source = "https://github.com/LMFDB/lmfdb"
+Issues = "https://github.com/LMFDB/lmfdb/issues"
+
+[project.scripts]
+lmfdb = "lmfdb.website:main"
+lmfdb_search = "lmfdb.cmdline_search:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "lmfdb.version.version"}
+
+[tool.setuptools.packages.find]
+include = ["lmfdb*"]
