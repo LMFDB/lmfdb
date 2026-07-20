@@ -589,14 +589,14 @@ def columns():
                 knowls[pieces[1]][pieces[2]] = k['content']
         else:
             bad_cat.append(k)
-    missing_tables = {tbl: sorted(db[tbl].search_cols) + sorted(db[tbl].extra_cols) for tbl in db.tablenames if tbl not in knowls}
+    missing_tables = {tbl: sorted(db[tbl].search_cols) for tbl in db.tablenames if tbl not in knowls}
     bad_tables = {tbl: klist for tbl, klist in knowls.items() if tbl not in db.tablenames}
     for tbl in bad_tables:
         del knowls[tbl]
     missing_knowls = defaultdict(list)
     for tbl in knowls:
         table = db[tbl]
-        for col in sorted(table.search_cols) + sorted(table.extra_cols):
+        for col in sorted(table.search_cols):
             if col not in knowls[tbl]:
                 missing_knowls[tbl].append(col)
     b = get_bread([("Missing columns", " ")])
