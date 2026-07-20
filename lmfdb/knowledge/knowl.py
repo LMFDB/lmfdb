@@ -142,7 +142,7 @@ class KnowlBackend(PostgresBase):
 
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
-        self._rw_knowldb = db.can_read_write_knowls()
+        self._rw_knowldb = (getattr(db, "_can_read_write_knowls", None) or db.can_read_write_knowls)()
         # we cache knowl titles for 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0

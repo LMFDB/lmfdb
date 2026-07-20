@@ -501,7 +501,7 @@ class LMFDBDatabase(PostgresDatabase):
             self.__editor = uid
         return self.__editor
 
-    def log_db_change(self, operation, tablename=None, logid=None, aborted=False, **data):
+    def _log_db_change(self, operation, tablename=None, logid=None, aborted=False, **data):
         """
         Log a change to the database.
 
@@ -531,6 +531,11 @@ class LMFDBDatabase(PostgresDatabase):
                     "VALUES (%s, %s, %s, %s, %s, %s)"
                 )
                 self._execute(inserter, [logid, True, utc_now_naive(), tablename, operation, uid])
+
+    # psycodict renamed this hook to _log_db_change (roed314/psycodict#92);
+    # keep the old name bound too so the override works whichever psycodict is
+    # installed.  Delete this alias once psycodict is pinned past that PR.
+    log_db_change = _log_db_change
 
     def verify(
         self,
