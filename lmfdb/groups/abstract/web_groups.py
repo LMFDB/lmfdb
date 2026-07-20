@@ -5,7 +5,7 @@ import yaml
 from lmfdb import db
 from flask import url_for
 from urllib.parse import quote_plus
-from psycopg2.sql import SQL, Identifier
+from lmfdb.utils.psycopg_compat import SQL, Identifier
 
 from sage.all import (
     Permutations,

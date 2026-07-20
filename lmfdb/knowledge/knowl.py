@@ -14,7 +14,7 @@ from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
-from psycopg2.sql import SQL, Identifier, Placeholder
+from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from sage.all import cached_function
 from lmfdb.logger import logger
 

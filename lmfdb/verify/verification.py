@@ -10,7 +10,7 @@ from timeout_decorator import timeout, TimeoutError
 from sage.all import Integer, vector, ZZ
 
 from lmfdb.lmfdb_database import db
-from psycopg2.sql import SQL, Composable, Literal
+from lmfdb.utils.psycopg_compat import SQL, Composable, Literal
 from lmfdb.utils import pluralize
 from psycodict.utils import IdentifierWrapper as Identifier
 

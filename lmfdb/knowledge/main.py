@@ -297,7 +297,7 @@ def test():
 @knowledge_page.route("/edit/<ID>")
 @login_required
 def edit(ID):
-    from psycopg2 import DatabaseError
+    from lmfdb.utils.psycopg_compat import DatabaseError
     if not allowed_id(ID):
         return redirect(url_for(".index"))
     knowl = Knowl(ID, editing=True)
@@ -838,7 +838,7 @@ def render_knowl(ID, footer=None, kwargs=None,
 
 @knowledge_page.route("/", methods=['GET', 'POST'])
 def index():
-    from psycopg2 import DataError
+    from lmfdb.utils.psycopg_compat import DataError
     cur_cat = request.args.get("category", "")
 
     from .knowl import knowl_status_code, knowl_type_code
