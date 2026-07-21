@@ -23,7 +23,7 @@ class PostgresUserTable(PostgresBase):
         PostgresBase.__init__(self, 'db_users', db)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
-        self._rw_userdb = db.can_read_write_userdb()
+        self._rw_userdb = (getattr(db, "_can_read_write_userdb", None) or db.can_read_write_userdb)()
         #TODO use this instead of hardcoded columns names
         #with identifiers
         self._username_full_name = ["username", "full_name"]
