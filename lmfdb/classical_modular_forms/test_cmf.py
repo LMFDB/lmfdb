@@ -575,10 +575,10 @@ class CmfTest(LmfdbTest):
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/', ['14,417,694', 'N.k.a.x.n.i'])
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?k=12', ['Select a', '269'])
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=12', ['Select a', '57'])
-        path = 'https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=11&k=2' # explicit link to beta since check_args prohibits external redirects
-        self.check_external(path, path, '11.2.a.a.1.1', cookie="human=1") # Downloads from beta
-        path = 'https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?label=21.2.e.a' # explicit link to beta since check_args prohibits external redirects
-        self.check_external(path, path, '21.2.e.a.4.1', cookie="human=1")
+        # Download checks against the live beta server were removed here
+        # because they tested the deployed site rather than this codebase and
+        # regularly timed out from CI runners; see issue #6225 for tracking
+        # external link checking outside of CI.
 
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
