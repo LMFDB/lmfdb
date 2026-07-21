@@ -10,7 +10,7 @@ fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02
 from lmfdb import db
 from psycodict.base import PostgresBase
 from psycodict.encoding import Array
-from psycopg2.sql import SQL, Identifier, Placeholder
+from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from datetime import timedelta
 from lmfdb.utils.datetime_utils import utc_now_naive
 from lmfdb.logger import logger

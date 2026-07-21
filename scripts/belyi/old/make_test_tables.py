@@ -7,7 +7,7 @@ db.create_table_like('belyi_galmaps_test', db.belyi_galmaps) # create empty tabl
 db.create_table_like('belyi_passports_test', db.belyi_passports) # create empty table with same format as db.belyi_passports
 db.create_table_like('belyi_galmap_portraits_test', db.belyi_galmap_portraits)
 # insert data
-from psycopg2.sql import SQL # to import SQL functions
+from lmfdb.utils.psycopg_compat import SQL # to import SQL functions
 db._execute(SQL('INSERT INTO belyi_galmaps_test SELECT * FROM belyi_galmaps')) # insert data from belyi_galmaps into test table
 db._execute(SQL('INSERT INTO belyi_passports_test SELECT * FROM belyi_passports')) # insert data from belyi_passports into test table
 db._execute(SQL('INSERT INTO belyi_galmap_portraits_test SELECT * FROM belyi_galmap_portraits')) # insert data from belyi_galmaps into test table

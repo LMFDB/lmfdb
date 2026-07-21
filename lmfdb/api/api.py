@@ -3,7 +3,7 @@ import re
 import yaml
 import json
 from collections import defaultdict
-from psycopg2.extensions import QueryCanceledError
+from lmfdb.utils.psycopg_compat import QueryCanceledError
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma

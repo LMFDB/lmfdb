@@ -5,7 +5,7 @@ import signal
 import socket
 import subprocess
 from collections import Counter
-from psycopg2.sql import SQL
+from lmfdb.utils.psycopg_compat import SQL
 from lmfdb.utils.config import Configuration, ConfigWrapper
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
