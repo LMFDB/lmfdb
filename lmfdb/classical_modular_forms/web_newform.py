@@ -424,12 +424,7 @@ class WebNewform():
 
     @lazy_attribute
     def an_cc_bound(self):
-        if self.level <= 1000:
-            return 1000
-        elif self.level <= 4000:
-            return 2000
-        else:
-            return 3000
+        return 100
 
     @lazy_attribute
     def primes_cc_bound(self):

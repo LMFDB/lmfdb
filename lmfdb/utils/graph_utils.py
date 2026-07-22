@@ -191,10 +191,10 @@ def make_graph(M, vertex_labels=None):
             right = []
             for i in range(3):
                 right.append([j for j in range(8) if MM[centers[1], j] == 2 and MM[left[i], j] == 3][0])
-            G.set_pos(pos={centers[0]: [-0.5, 0], centers[1]: [0.5, 0],
-                           left[0]: [-1.5, 1], right[0]: [1.5, 1],
-                           left[1]: [-1.5, 0], right[1]: [1.5, 0],
-                           left[2]: [-1.5, -1], right[2]: [1.5, -1]})
+            G.set_pos(pos={centers[0]: [-1, 0], centers[1]: [1, 0],
+                           left[0]: [-0.4, 0.5], right[0]: [0.4, 0.5],
+                           left[1]: [-0.4, -0.5], right[1]: [0.4, -0.5],
+                           left[2]: [-0.6, -1], right[2]: [0.6, -1]})
 
     if vertex_labels:
         G.relabel(vertex_labels)

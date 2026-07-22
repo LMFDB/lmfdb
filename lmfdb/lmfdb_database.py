@@ -5,7 +5,7 @@ import signal
 import socket
 import subprocess
 from collections import Counter
-from psycopg2.sql import SQL
+from lmfdb.utils.psycopg_compat import SQL
 from lmfdb.utils.config import Configuration, ConfigWrapper
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
@@ -28,7 +28,7 @@ class LMFDBStatsTable(PostgresStatsTable):
 
 
 # These are the operations where we don't insert records into the ongoing_operations table since they don't take noticeable space.
-_nolog_changetypes = ["delete", "resort", "add_column", "drop_column", "create_table", "create_extra_table", "move_column"]
+_nolog_changetypes = ["delete", "resort", "add_column", "drop_column", "create_table"]
 
 
 class LMFDBSearchTable(PostgresSearchTable):
@@ -57,7 +57,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         We use knowls to implement the column description API.
         """
         from lmfdb.knowledge.knowl import knowldb
-        allcols = self.search_cols + self.extra_cols
+        allcols = self.search_cols
         current = knowldb.get_column_descriptions(self.search_table)
         current = {col: kwl.content for col, kwl in current.items()}
         if not drop and description is None:
@@ -501,7 +501,7 @@ class LMFDBDatabase(PostgresDatabase):
             self.__editor = uid
         return self.__editor
 
-    def log_db_change(self, operation, tablename=None, logid=None, aborted=False, **data):
+    def _log_db_change(self, operation, tablename=None, logid=None, aborted=False, **data):
         """
         Log a change to the database.
 
@@ -531,6 +531,11 @@ class LMFDBDatabase(PostgresDatabase):
                     "VALUES (%s, %s, %s, %s, %s, %s)"
                 )
                 self._execute(inserter, [logid, True, utc_now_naive(), tablename, operation, uid])
+
+    # psycodict renamed this hook to _log_db_change (roed314/psycodict#92);
+    # keep the old name bound too so the override works whichever psycodict is
+    # installed.  Delete this alias once psycodict is pinned past that PR.
+    log_db_change = _log_db_change
 
     def verify(
         self,
@@ -643,7 +648,7 @@ class LMFDBDatabase(PostgresDatabase):
 
     @overrides(PostgresDatabase)
     def drop_table(self, name, *args, **kwargs):
-        cols = self[name].search_cols + self[name].extra_cols
+        cols = self[name].search_cols
         super().drop_table(name, *args, **kwargs)
         from lmfdb.knowledge.knowl import knowldb
         knowldb.drop_table(name)

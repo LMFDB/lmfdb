@@ -168,6 +168,10 @@ modlgal_columns = SearchColumns(
     columns=modlgal_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modlgal_label,
+    diagram_opts={
+        "title": r"Mod-$\ell$ Galois representation diagram search",
+        "bread": lambda: get_bread("Diagram search"),
+    },
 )
 def modlgal_search(info, query):
     parse_ints(info, query, "base_ring_characteristic")

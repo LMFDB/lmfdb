@@ -40,12 +40,12 @@
         "server": "devmirror"
     },
     {
-        "files": "lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py",
+        "files": "lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py lmfdb/tests/test_cmdline_search.py",
         "folders": "hilbert_modular_forms sato_tate_groups tests",
         "server": "proddb"
     },
     {
-        "files": "lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py",
+        "files": "lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py lmfdb/tests/test_cmdline_search.py",
         "folders": "hilbert_modular_forms sato_tate_groups tests",
         "server": "devmirror"
     },

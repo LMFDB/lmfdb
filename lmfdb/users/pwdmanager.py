@@ -10,7 +10,7 @@ fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02
 from lmfdb import db
 from psycodict.base import PostgresBase
 from psycodict.encoding import Array
-from psycopg2.sql import SQL, Identifier, Placeholder
+from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from datetime import timedelta
 from lmfdb.utils.datetime_utils import utc_now_naive
 from lmfdb.logger import logger
@@ -23,7 +23,7 @@ class PostgresUserTable(PostgresBase):
         PostgresBase.__init__(self, 'db_users', db)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
-        self._rw_userdb = db.can_read_write_userdb()
+        self._rw_userdb = (getattr(db, "_can_read_write_userdb", None) or db.can_read_write_userdb)()
         #TODO use this instead of hardcoded columns names
         #with identifiers
         self._username_full_name = ["username", "full_name"]
