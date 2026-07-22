@@ -12,13 +12,5 @@
           <td>{{typ}}</td>
         </tr>
       {% endfor %}
-      {% if extra_schema %}
-        {% for col, typ in extra_schema[table] %}
-          <tr{% if loop.index == 1 %} class="toplined"{% endif %}>
-            <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
-            <td>{{typ}}</td>
-          </tr>
-        {% endfor %}
-      {% endif %}
     </table>
   </div>

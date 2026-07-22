@@ -33,39 +33,45 @@ $.fn.round_bl = function(val) {
   this.css("-moz-border-radius-bottomleft", val + "px");
 }
 
-/** collapser: stored height is used to track progress. */
-function properties_collapser(evt) {
-  evt.preventDefault();
-  var $pb = $(".properties-body");
-  var $pc = $("#properties-collapser");
-  var $ph = $(".properties-header");
-  var pb_h = $pb.height();
-  $pb.animate({"height": "toggle", "opacity" : "toggle"}, 
-    {
-      duration: 50 + 100 * Math.log(100 + $pb.height()),
-      step: function() { 
-       /* synchronize icon rotation effect */
-       var val = $pb.height() / pb_h;
-       var rot = 180 - 180 * val;
-       $pc.rotate(rot);
-       $ph.round_bl(0);
-      },
-      complete: function () {
-        if ($pb.css("display") == "none") {
-          $pc.rotate(180);
-          $ph.round_bl(10);
-        } else {
-          $pc.rotate(0);
-        }
-      }
-    }
-  ); //~~ end animate
-}
-
-
 $(function() {
- /* properties box collapsable click handlers */
- $(".properties-header,#properties-collapser").click(function(evt) { properties_collapser(evt); });
+  /* Add a chevron to each properties-header that has a following properties-body,
+     wired to collapse/expand only that section. */
+  $('.properties-header').each(function(index) {
+    var $header = $(this);
+    var $body   = $header.next('.properties-body');
+    if ($body.length === 0) return;
+
+    var title = $.trim($header.text());
+    var bodyId = $body.attr('id') || 'lmfdb-properties-body-' + index;
+    $body.attr('id', bodyId);
+
+    var $chev = $('<button type="button" class="prop-chevron open"></button>');
+    $chev.attr('aria-controls', bodyId);
+    $header.append($chev);
+
+    function setExpanded(expanded) {
+      $chev.toggleClass('open', expanded).toggleClass('closed', !expanded);
+      $chev.attr('aria-expanded', expanded ? 'true' : 'false');
+      $chev.attr('aria-label', (expanded ? 'Collapse ' : 'Expand ') + title);
+    }
+
+    var key = 'lmfdb_prop_' + title.replace(/\s+/g, '_').substring(0, 30);
+    if (localStorage.getItem(key) === '0') {
+      $body.hide();
+      setExpanded(false);
+    } else {
+      setExpanded(true);
+    }
+
+    $chev.on('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      var expanded = $chev.attr('aria-expanded') !== 'true';
+      setExpanded(expanded);
+      localStorage.setItem(key, expanded ? '1' : '0');
+      $body.slideToggle(150);
+    });
+  });
 });
 
 

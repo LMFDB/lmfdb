@@ -6,8 +6,8 @@ flask-login
 flask-markdown
 markupsafe
 itsdangerous
-psycopg2-binary
-git+https://github.com/roed314/psycodict.git
+# the pgbinary extra installs the driver psycodict itself is built on
+psycodict[pgbinary] @ git+https://github.com/roed314/psycodict.git
 pyflakes
 pytest
 pytest-cov

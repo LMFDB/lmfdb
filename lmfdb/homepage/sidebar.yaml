@@ -2,7 +2,6 @@
   type: simple
   heading:
      title: Introduction
-     url_for: "introduction"
   parts:
     - title: Overview
       url_for: "introduction"
@@ -17,7 +16,6 @@
   type: simple
   heading:
     title: L-functions
-    url_for: "l_functions.contents"
   parts:
     - title: "Rational"
       url_for: "l_functions.rational"
@@ -28,7 +26,6 @@
   type: simple
   heading:
     title: Modular forms
-    url_for: "modular_forms"
   parts:
     - title: Classical
       url_for: "cmf.index"
@@ -62,18 +59,20 @@
   type: simple
   heading:
     title: Varieties
-    url_for: "varieties"
   parts:
-    - title: Elliptic curves over $\Q$
+    - title: "Elliptic curves"
+      colspan: onecolumn
+      collapsible: true
       url_for: "ec.rational_elliptic_curves"
-      colspan: onecolumn
-    - title: Elliptic curves over $\Q(\alpha)$
-      url_for: "ecnf.index"
-      colspan: onecolumn
+      part2:
+        - title: "over $\\Q$"
+          url_for: "ec.rational_elliptic_curves"
+        - title: "over number fields"
+          url_for: "ecnf.index"
     - title: Elliptic curves over $\F_{q}(t)$
       status: future
       colspan: onecolumn
-    - title: Genus 2 curves over $\Q$
+    - title: Genus 2 curves
       url_for: "g2c.index_Q"
       colspan: onecolumn
     - title: Genus 2 curves over $\Q(\alpha)$
@@ -125,7 +124,6 @@
   type: simple
   heading:
     title: Fields
-    url_for: "fields"
   parts:
     - title: Number fields
       url_for:  "number_fields.number_field_render_webpage"
@@ -144,7 +142,6 @@
   type: simple
   heading:
     title: Representations
-    url_for: "representations"
   parts:
     - title: Dirichlet characters
       url_for:  "characters.render_DirichletNavigation"
@@ -171,9 +168,8 @@
   status: beta
   heading:
     title: Motives
-    url_for: "motives"
   parts:
-    - title: Hypergeometric over $\Q$
+    - title: Hypergeometric
       status: beta
       url_for:  "hypergm.index"
       colspan: onecolumn
@@ -191,7 +187,6 @@
   type: simple
   heading:
     title: Groups
-    url_for: "groups"
   parts:
   - title: Galois groups
     url_for: "galois_groups.index"
@@ -202,6 +197,16 @@
   - title: Abstract groups
     url_for: "abstract.index"
     colspan: onecolumn
+    collapsible: true
+    part2:
+      - title: "groups"
+        url_for: "abstract.index"
+      - title: "subgroups"
+        url_for: "abstract.sub_index"
+      - title: "characters"
+        url_for: "abstract.char_index"
+      - title: "conjugacy classes"
+        url_for: "abstract.conjugacy_class_index"
   - title: Lattices
     url_for: "lattice.lattice_render_webpage"
     status: beta
