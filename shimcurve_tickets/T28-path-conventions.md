@@ -1,8 +1,8 @@
 ---
 id: T28
 title: Normalize file-path conventions (do this first — it unblocks parallel agents)
-status: open
-owner: none
+status: review
+owner: claude (session 2026-07-16/17)
 priority: P0
 tier: 0
 repos: [ShimCurve]
@@ -47,3 +47,4 @@ Standardize on **cwd = repo root** and make every path consistent with it. This 
 ## Log
 
 - 2026-07-16: ticket created. Conventions table above verified by grep + a live probe run.
+- 2026-07-16 (claude): **Implemented**, ShimCurve branch `ticket/T28-path-conventions` (commit da5540b). `code/utils/paths.m` adds `DataFile(rel)` (registered in spec); all reader/writer sites routed through it (enumerate-O.m x12, enumerate-H.m x2, tablesX0DN.m x6, read-write.m, write-to-latex.m — which was also missing its `data/` component —, picture-to-gp.m, overnight-magma.m). README now: run from repo root, `AttachSpec("spec")`. Verified live from the repo root: `EnumerateO`, `EnumerateOmu`, `WriteHeaderAndSubgroupsDataToFile` all write inside `<repo>/data/`; nothing escapes to the parent. Drive-by: fixed pre-existing syntax error in tests/data_roundtrip.m (`::` annotation + stray `;` on a plain procedure) that aborted run_quick on main; quick suite green. Awaiting review/merge.

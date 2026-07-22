@@ -1,8 +1,8 @@
 ---
 id: T29
 title: Make labels deterministic and reproducible (BLOCKS all regeneration+reload)
-status: open
-owner: none
+status: review
+owner: claude (session 2026-07-16/17)
 priority: P0
 tier: 1
 repos: [ShimCurve, db-readonly]
@@ -51,3 +51,7 @@ LMFDB labels are permanent public identifiers (cited in papers, linked from othe
 ## Log
 
 - 2026-07-16: ticket created. Probe evidence above (two runs → a/b swap on `genera-D6-deg1-N1.m`) obtained in a throwaway worktree; main checkout untouched.
+- 2026-07-16 (claude): **Implemented**, ShimCurve branch `ticket/T29-label-determinism` (commit 97bef4f, stacked on T28). Design per David (Q15): primary = permutation character (Gassmann classes, as before), tiebreaker 1 = Atkin-Lehner content, tiebreaker 2 = canonical generators modeled on Sutherland's GL2CanonicalGenerators. New `code/level-structure/canonical-sort.m`: `ALContent` (sorted multiset of squarefree Aut-component norms over cosets of H∩(O/N)ˣ — a conjugacy-class invariant, unlike the generator-based `autmuO_norms` column), `CanonicalizedGenerators` (greedy lex-minimal generating sequence), `CanonicalGeneratorsKey` (minimized over the G-conjugacy class; computed lazily, only on residual ties). `updateLabels` rewritten accordingly; rows now written in sorted label order.
+- Two more leaks found by testing, both fixed, both **semantic changes needing David's sign-off**: (1) `is_split` was representative-dependent (`H ∩ Image(Ahom)` is not conjugation-invariant — its value flipped between identical runs); now true iff SOME conjugate of H splits against the standard section. (2) `G1` (feeds psl2label + scalar_label) was `O1_subs[last]` — at N=3 the filtered list contains several incomparable maximal det-trivial subgroups, so the choice was arbitrary as well as unstable; now `G1 := Kernel` of the reduced-norm determinant hom on G (the SL2-analogue).
+- 2026-07-17 (claude): **Full-corpus verification complete** (all 15 (deg,N), two independent passes): identical labels and identical values in every column except the presentation-dependent encodings `generators` (Ngens rep) and `ram_data_elts` (coset-numbering-dependent Lehmer codes). Canonicalizing those two encodings (canonical conjugate + canonical coset numbering) is the remaining follow-up; NOT needed for label-keyed update safety. Regression test `tests/regression_label_determinism.m` added to run_quick/run_all; suite green. Timing note: full corpus now ~19 min/pass on this machine (deg6 N6: 407s vs the historical 1956s).
+- **Reconciliation vs shipped data (step 4, full corpus): 1614/2198 rows (73%) change which curve their label names** under the canonical sort; `psl2label` changes on 2158/2198 rows (98%, driven by the canonical G1); `scalar_label` follows; `is_split` changes on a handful. **Recommendation for T27: full reload via copy_from with canonical labels — label-keyed update_from_file against the OLD table is unsafe. The 304 `shimcurve_pictures` rows are keyed by psl2label and must be re-keyed at reload.** Formal sign-off = Q15.3 / T27.

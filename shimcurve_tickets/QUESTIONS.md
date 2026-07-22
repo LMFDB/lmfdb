@@ -162,7 +162,14 @@ The two tied curves are distinguishable: `autmuO_norms = {6,1,1,1,1,1}` with gen
 2. Should the ordering be intrinsic (invariant-based, so independent of the choice of μ and of Magma's enumeration) or is a fixed-choice-of-μ + fixed-algorithm reproducibility enough? (Intrinsic is much more robust — it survives T08's change of μ representative — but needs a complete invariant to sort on.)
 3. Practical consequence: the shipped labels in `gps_shimura_test` were produced by the current unstable procedure, so they may not be reproducible at all. Is it acceptable to **relabel the whole table** on the next reload (breaking any existing external references), or must we pin the existing labels and only stabilize going forward? T29 step 4 measures how many rows would actually move.
 
-**Answer:**
+**Answer:** (David, 2026-07-16, in-session) We should pick a canonical sort. The first tiebreaker should be the Atkin–Lehner content, and the second should be a new implementation of canonical generators (see `GL2CanonicalGenerators` in https://github.com/AndrewVSutherland/Magma/blob/main/gl2base.m for the GL2 case).
+
+*Status:* implemented in T29 (branch `ticket/T29-label-determinism`); see that ticket's Log for the precise spec (AL content = sorted multiset of squarefree Aut-component norms over cosets of H∩(O/N)ˣ; canonical generators = greedy lex-minimal generating sequence minimized over the G-conjugacy class, computed lazily on ties). Full-corpus determinism verified 2026-07-17.
+
+*Still open for David/Eran:*
+- 15.3 now has its empirical answer — the shipped assignment is NOT reproducible: 73% of rows (1614/2198) change curve under the canonical sort and psl2label changes on 98% of rows, so pinning old labels is not an option and the next reload relabels the table. Formal sign-off happens in T27.
+- Two semantic fixes made alongside the sort need blessing: `is_split` is now "some conjugate of H splits against the standard section" (the old computation was representative-dependent and flipped between runs), and `G1` (for psl2label/scalar_label) is now the kernel of the reduced-norm determinant on G rather than an arbitrary maximal det-trivial subgroup from the filtered enumeration.
+- Element ordering inside canonical generators is plain lex on matrix entry sequences (simplest restatable spec), not Sutherland's similarity-class stratification — flag if you want the latter before labels freeze.
 
 ---
 

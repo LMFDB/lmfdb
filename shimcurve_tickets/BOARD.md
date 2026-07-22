@@ -24,8 +24,8 @@ Board state at a glance: `grep -H "^status:" ~/claude/lmfdb/shimcurve_tickets/T*
 - **Never write to any remote database.** The devmirror is read-only anyway; production uploads are done by David. Tickets that "upload" data end at: validated file + exact load commands written into the ticket.
 - Don't edit files under `data/` by hand — regenerate them via the code (exception: one-off migration scripts that write **new** files).
 - The lmfdb repo branch `shimura_curves` has active collaborator traffic (stevehuang235, assaferan). Before large frontend edits, check `git log --oneline -10` for drift and note it in the Log.
-- **Labels are not yet reproducible (T29).** Two runs of the same generation code assign `a`/`b` classes differently. Until T29 lands, any `update_from_file` staged **keyed by label** is unsafe — it can attach data to the wrong curve. Compute and stage freely, but mark such artifacts `PROVISIONAL — pending T29` in your Log and do not present them as loadable.
-- **Run Magma from the repo root** (`cd <worktree> && magma`, then `AttachSpec("spec");`) — *not* from the parent directory, despite what README.md currently says. Writers disagree about cwd (T28); from the repo root the current main pipeline writer lands correctly in `<repo>/data/`. If your ticket runs `EnumerateO`/`EnumerateOmu`/`PrepPictureDataH`, read T28 first — those still assume the parent dir and will escape your worktree.
+- **Labels: canonical sort implemented** on ShimCurve branch `ticket/T29-label-determinism` (stacked on `ticket/T28-path-conventions`; both in review) — base generation work on that branch. The SHIPPED labels in `gps_shimura_test` predate it and are unreproducible (73% of rows change curve under the canonical sort), so label-keyed `update_from_file` against the current DB rows is unsafe; the path is a full reload (T27). Stage label-keyed artifacts as `PROVISIONAL — pending T27 reload`, with labels from the canonical sort.
+- **Run Magma from the repo root** (`cd <worktree> && magma`, then `AttachSpec("spec");`). T28 normalized every reader/writer path to this convention (`code/utils/paths.m`) and updated the README — on the T28/T29 branches nothing escapes the worktree any more.
 
 ## Parallel agents: use git worktrees, not clones
 
@@ -53,7 +53,7 @@ Notes:
 
 ### Environment cheatsheet
 
-- **Magma**: `/Applications/Magma/magma`. The library must be attached from the directory **above** the repo: `cd ~/claude && magma` then `AttachSpec("ShimCurve/spec");`. Batch: `cd ~/claude/ShimCurve && magma -b tests/run_quick.m`.
+- **Magma**: `/Applications/Magma/magma`. Run from the **repo root**: `cd <checkout> && magma`, then `AttachSpec("spec");` (T28 convention). Batch: `cd ~/claude/ShimCurve && magma -b tests/run_quick.m`.
 - **Tests**: `tests/run_quick.m` (safe). `tests/run_all.m` needs `../CHIMP/CHIMP.spec` which is **not installed** — skip `regression_mod2_image.m` or install [CHIMP](https://github.com/edgarcosta/CHIMP) first.
 - **Read-only DB (devmirror)**: `PGPASSWORD=lmfdb psql -h devmirror.lmfdb.xyz -p 5432 -U lmfdb -d lmfdb`. Mixed-case columns need quotes: `"discB"`, `"discO"`, `"Glabel"`.
 - **Python DB interface**: `sage -python`, with `sys.path.insert(0, '/Users/roed/claude/lmfdb')`, then `from lmfdb import db` (connects read-only). Plain `python3` lacks psycodict.
