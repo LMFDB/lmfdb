@@ -2,8 +2,7 @@ import time
 from random import randrange
 from flask import render_template, jsonify, redirect, request, url_for
 from urllib.parse import urlparse
-from psycopg2.extensions import QueryCanceledError
-from psycopg2.errors import NumericValueOutOfRange
+from lmfdb.utils.psycopg_compat import QueryCanceledError, NumericValueOutOfRange
 from sage.misc.decorators import decorator_keywords
 from sage.misc.cachefunc import cached_function
 

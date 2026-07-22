@@ -3,7 +3,7 @@ from lmfdb.utils import comma, StatsDisplay, proportioners, totaler
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb import db
 from flask import url_for
-from psycopg2.sql import SQL
+from lmfdb.utils.psycopg_compat import SQL
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
 from collections import defaultdict

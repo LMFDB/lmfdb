@@ -162,20 +162,6 @@ table tbody tr.trivial a:hover {
     background: {{color.content_background_red}};
 }
 
-/*
-#search-topright {
-  display: inline;
-}
-#search-topright input {
-  font-size: 75%;
-  border: 1px solid {{ color.search_border }};
-  padding: 1px;
-  background: {{color.search_background}} ;
-  position: relative;
-  top: -1px;
-}
-*/
-
 /* icon in front of external links */
 #content a[target="_blank"]:before {
   content: url("static/images/url-ext.gif");
@@ -393,9 +379,6 @@ body > .debug {
 }
 .properties-body li a {
  display: block;
-/*
- padding: 5px;
-*/
 }
 
 .properties-body {
@@ -414,119 +397,49 @@ body > .debug {
   color: {{ color.properties_header_text }};
   background: {{ color.properties_header_background }};
   font-size: 14px;
-  cursor: pointer;
-  padding-right: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .properties-header ~ .properties-header {
   margin-top: 5px;
 }
-#properties-collapser {
+.prop-chevron {
+  flex-shrink: 0;
   cursor: pointer;
-  color: {{ color.properties_collapser }};
-  font-size: 19px;
-  font-weight: bold;
-  text-align: center;
-  border: 1px solid ;
-  width: 20px;
-  height: 17px;
-  position: absolute;
-  top:   4px;
-  right: 3px;
-  {{ BORDER_RADIUS(20) }}
+  color: {{ color.properties_header_text }};
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  min-width: 0;
+  padding: 4px 2px 4px 10px;
+  line-height: 1;
+}
+.prop-chevron::before {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  vertical-align: 1px;
+  transition: transform 0.15s ease;
+}
+.prop-chevron.closed::before {
+  transform: rotate(-45deg);
+  vertical-align: 2px;
 }
 
 #content {
   margin-top: 10px;
   font-size: 95%;
-  line-height: 135%;
+  line-height: 1.4;
   padding-right: 10px;
 }
 
 #content blockquote
 {
-}
-
-
-#sidebar {
-  float: left;
-  width: 184px;
-  margin: 10px 0px;
-  font-family: sans-serif;
-  font-size: 85%;
-  color: {{color.sidebar_text}};
-  background: {{color.sidebar_background}};
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-#sidebar .list li {
-  padding: 5px;
-}
-#sidebar .list a {
-  display: inline;
-  padding: 5px;
-}
-#sidebar h2.knowl {
-  background: {{ color.knowl_border }};
-}
-#sidebar h2.knowl a {
-  color: {{ color.knowl_hyper_text }};
-}
-#sidebar h2.knowl a:hover {
-  background: {{ color.knowl_hover_text }};
-}
-
-#sidebar h2 {
-    font-family: sans-serif;
-    font-size: 100%;
-    background-color: {{ color.sidebar_background_h2 }};/*sidebar tabs*/
-    color: {{ color.sidebar_text_h2 }};
-    padding: 5px;
-    margin: 0;
-}
-
-#sidebar ul:first-child a:first-child,
-#sidebar h2:first-child a:first-child,
-#sidebar h2:first-child {
-  margin: 0;
-  border-top-right-radius: 10px;
-}
-#sidebar ul:last-child li:last-child,
-#sidebar ul:last-child li:last-child a,
-#sidebar h2:last-child {
-  border-bottom-right-radius: 10px;
-}
-#sidebar ul {
-    margin: 0px;
-    padding: 0px;
-    list-style-type: none;
-}
-#sidebar ul li {
-    display: block;
-    margin: 0px;
-    padding: 0px;
-}
-#sidebar a:hover {
-    background: {{ color.sidebar_background_hover }};
-}
-#sidebar a {
-    color: {{color.col_sidebar_links}}; /* sets header and body sidebar links.*/
-    display: block;
-}
-#sidebar li a {
-    color: {{color.col_sidebar_text}}; /* sets the text below Data */
-    background: {{ color.sidebar_background_li }};
-  padding: 5px;
-}
-#sidebar h2 a {
-    color: {{color.col_sidebar_header_links}}; /* sets sidebar header links*/
-    padding: 5px;
-}
-#sidebar h2 a:hover {
-    background: {{ color.sidebar_background_h2_hover }};
-    color: {{ color.sidebar_h2_hover }};
-}
-#sidebar h2.link {
-  padding: 0px;
 }
 
 /* highlighting menu entries (if their respective blueprint overwrites the body_class variable!) */
@@ -1242,46 +1155,6 @@ table .knowl a {
    color: {{color.knowl_error}};
 }
 
-/*
-knowl-qm does not seem to be currently used.
-
-.knowl-qm {
-  font-family: sans-serif;
-  font-weight: bold;
-  border: 1px solid {{ color.knowl_thin_border }};
-  background: transparent;
-  color: {{ color.knowl_hover_text }};
-  cursor: pointer;
-  padding: 0 0.4em;
-  border-radius: 0.8em;
-  font-size: 0.9em;
-  top: -0.4em;
-  left: -0.1em;
-}
-.knowl-qm:hover,
-.knowl-qm.active {
-    background: {{color.knowl_db}};
-  color: {{color.white}};
-}
-.knowl-qm.active:hover {
-  background: transparent;
-  color: {{ color.knowl_hover_text }};
-}
-h1 > .knowl-qm {
-  font-size: 0.6em;
-  border-radius: 0.6em;
-  position: relative;
-  top: -0.8em;
-  left: -0.3em;
-}
-h2 > .knowl-qm {
-  font-size: 0.7em;
-  border-radius: 0.7em;
-  position: relative;
-  top: -0.6em;
-  left: -0.4em;
-}
-*/
 .knowl-output {
   position: relative;
   background: {{ color.knowl_border }};
@@ -1414,11 +1287,6 @@ table.values td:nth-child(even) {
   padding-right:0;
 }
 
-/*
-.dirichletseries td:first-child {
-  padding-top:3px;
-}
-*/
 
 .dirichletseries span.term {
   white-space: nowrap;
@@ -1638,17 +1506,11 @@ div.maassformplot {
     position: absolute;
     width: 720px;
     position: relative;
-    /*    height: 800px;
-        overflow: hidden;
-        position: relative; */
 }
 
 div.maassformplot img {
     width:100%;
     height:auto;
-/*    position: absolute;
-    top: -200px;
-    left: -870px;*/
 }
 
 /* End of styling of Maass form plot */
@@ -1657,28 +1519,89 @@ div.maassformplot img {
 
 /*Sidebar style*/
 
-#sidebar .L a {
+#sidebar {
+    float: left;
+    width: 184px;
+    margin: 10px 0px;
+    font-family: sans-serif;
+    font-size: 85%;
+    color: {{color.sidebar_text}};
+    background: {{color.sidebar_background}};
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+#sidebar .list li {
+    padding: 5px;
+}
+
+#sidebar .list a {
     display: inline;
-    padding: 2px;
 }
 
-#sidebar .L {
-    padding-right: 4px;
+#sidebar h2 {
+    font-size: 100%;
+    background-color: {{ color.sidebar_background_h2 }}; /*sidebar tabs*/
+    color: {{ color.col_sidebar_header_links }};
+
+    padding: 4px 0px 4px 5px;
+    margin: 0px;
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
 }
 
-#sidebar .heading {
-    padding-right: 1px;
-    margin-bottom: 1px;
+#sidebar ul:first-child a:first-child,
+#sidebar h2:first-child a:first-child,
+#sidebar h2:first-child {
+  margin: 0;
+  border-top-right-radius: 10px;
 }
-
-#sidebar div.L {
-    margin: 8px;
+#sidebar ul:last-child li:last-child,
+#sidebar ul:last-child li:last-child a,
+#sidebar h2:last-of-type {
+  border-bottom-right-radius: 10px;
+}
+#sidebar ul {
+    margin: 0px;
+    padding: 0px;
+    list-style-type: none;
+}
+#sidebar ul li {
+    display: block;
+    margin: 0px;
+    padding: 0px;
+}
+#sidebar a:hover {
+    background: {{ color.sidebar_background_hover }};
+}
+#sidebar a {
+    color: {{color.col_sidebar_links}}; /* sets header and body sidebar links.*/
+    display: block;
+}
+#sidebar li a {
+    color: {{color.col_sidebar_text}}; /* sets the text below Data */
+    background: {{ color.sidebar_background_li }};
+    padding: 5px;
+}
+#sidebar h2 a {
+    color: {{color.col_sidebar_header_links}}; /* sets sidebar header links*/
+    flex: 1;
+    min-width: 0;
+}
+#sidebar h2 a:hover {
+    background: inherit;
+    border-radius: inherit;
+    /* HDJ '26: because of the margins, the hover background color change doesn't look good. So I disabled it - but if someone wants to fix it, please go ahead. */
+    color: {{ color.sidebar_h2_hover }};
+}
+#sidebar h2.link {
+    padding: 0px;
 }
 
 #sidebar table td a {
     display: block;
     padding: 2px;
-    border-radius: 0;
 }
 
 #sidebar table td .subtitle {
@@ -1702,6 +1625,72 @@ div.maassformplot img {
     padding: 2px 5px;
 }
 
+/* Sidebar chevrons and styling for collapsible containers */
+#sidebar .collapsible-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    min-width: 100%;
+    padding-left: 2pt;
+    color: {{color.col_sidebar_header_links}}
+}
+
+#sidebar .collapsible-chevron {
+    flex-shrink: 0;
+    cursor: pointer;
+    color: {{color.col_sidebar_header_links}};
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    min-width: 0;
+    padding: 0;
+    margin-right: 4px;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+
+#sidebar .collapsible-chevron > svg {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    transform: rotate(0deg);
+    transition: transform 0.15s ease;
+}
+
+#sidebar .collapsible-chevron.open > svg {
+    transform: rotate(90deg);
+}
+
+
+#sidebar .collapsible-content {
+    flex-basis: 100%;
+    border-left: 2px solid {{color.col_sidebar_header_links}};
+    margin-left: 2px;
+    margin-top: 2px;
+    padding-left: 6px;
+}
+
+#sidebar .collapsible-content div {
+    padding: 0;
+}
+
+#sidebar .collapsible-content .subtitle a {
+    display: block;
+    padding: 2px;
+}
+
+#sidebar .section-content {
+    margin: 3px 0;
+    /* No right margin so the chevrons are aligned */
+    padding: 4px 0px 4px 4px;
+    /* padding-left: 5px; */
+
+}
 #sidebar .future {
     color: {{color.sidebar_text_future}};
     display: inherit;
@@ -1737,10 +1726,7 @@ div.maassformplot img {
     display: block;
     background: none;
     padding: 0px;
-
 }
-#sidebar h2 {
-    margin: 5px 0px 0px;}
 
 p.rotation  {
     transform: rotate(270deg);
@@ -1759,13 +1745,6 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 #sidebar table.short{
     width: 100%;
     table-layout: fixed;
-    border-width: 2px;
-    border-bottom: 0px;
-    border-style: solid;
-    padding: 2px;
-    border-spacing: 0px;
-    border-color: {{color.sidebar_background}};
-    border-collapse: separate;
 }
 
 #sidebar table.short td.bor{
@@ -1795,7 +1774,6 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
 #sidebar h2:first-child a:first-child,
 #sidebar h2:first-child {
   margin: 0;
-  padding-top: 3px;
 }
 
 #sidebar ul:last-child li:last-child,
@@ -1836,12 +1814,12 @@ body.beta #sidebar table.short:nth-of-type(3) .rotation p.rotation {
   display: grid;
 
   gap: 2.5vw 2.5vw;
-  
+
   justify-content: space-evenly;
-  
-  align-items: top; 
+
+  align-items: top;
   grid-template-columns: 1fr 1fr;
-  
+
   margin: 20px;
 
 }

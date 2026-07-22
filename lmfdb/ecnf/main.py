@@ -39,7 +39,7 @@ from lmfdb.ecnf.WebEllipticCurve import (ECNF, web_ainvs, LABEL_RE,
 from lmfdb.ecnf.isog_class import ECNF_isoclass
 
 def get_bread(*breads):
-    bc = [("Elliptic curves", url_for(".index"))]
+    bc = [("Elliptic curves over number fields", url_for(".index"))]
     for x in breads:
         if not isinstance(x, tuple):
             x = (x, " ")
@@ -64,7 +64,7 @@ def learnmore_list_remove(matchstring):
 @ecnf_page.route("/Completeness")
 def completeness_page():
     t = 'Completeness of elliptic curve data over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
              ('Completeness', '')]
     return render_template("single.html", kid='rcs.cande.ec',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Completeness'))
@@ -73,7 +73,7 @@ def completeness_page():
 @ecnf_page.route("/Source")
 def how_computed_page():
     t = 'Source of elliptic curve data over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
              ('Source', '')]
     return render_template("multi.html", kids=['rcs.source.ec',
                                                'rcs.ack.ec',
@@ -83,15 +83,15 @@ def how_computed_page():
 @ecnf_page.route("/Reliability")
 def reliability_page():
     t = 'Reliability of elliptic curve data over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
-             ('Source', '')]
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
+             ('Reliability', '')]
     return render_template("single.html", kid='rcs.rigor.ec',
                            title=t, bread=bread, learnmore=learnmore_list_remove('Reliability'))
 
 @ecnf_page.route("/Labels")
 def labels_page():
     t = 'Labels for elliptic curves over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
              ('Labels', '')]
     return render_template("single.html", kid='ec.curve_label',
                            title=t, bread=bread, learnmore=learnmore_list_remove('labels'))
@@ -218,7 +218,7 @@ def show_ecnf1(nf):
         return redirect(url_for("ec.rational_elliptic_curves", **request.args), 301)
     info = to_dict(request.args, search_array=ECNFSearchArray())
     info['title'] = 'Elliptic curves over %s' % nf_pretty
-    info['bread'] = [('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf))]
+    info['bread'] = [('Elliptic curves over number fields', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf))]
     if len(request.args) > 0:
         # if requested field differs from nf, redirect to general search
         if 'field' in request.args and request.args['field'] != nf_label:
@@ -240,7 +240,7 @@ def show_ecnf_conductor(nf, conductor_label):
         return abort(404)
     info = to_dict(request.args, search_array=ECNFSearchArray())
     info['title'] = 'Elliptic curves over %s of conductor %s' % (nf_pretty, conductor_label)
-    info['bread'] = [('Elliptic curves', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
+    info['bread'] = [('Elliptic curves over number fields', url_for(".index")), (nf_pretty, url_for(".show_ecnf1", nf=nf)), (conductor_label, url_for(".show_ecnf_conductor",nf=nf,conductor_label=conductor_label))]
     if len(request.args) > 0:
         # if requested field or conductor norm differs from nf or conductor_lable, redirect to general search
         if ('field' in request.args and request.args['field'] != nf_label) or \
@@ -272,7 +272,7 @@ def show_ecnf_isoclass(nf, conductor_label, class_label):
     if not isinstance(cl, ECNF_isoclass):
         flash_error("There is no elliptic curve isogeny class with label %s in the database", label)
         return redirect(url_for(".index"))
-    bread = [("Elliptic curves", url_for(".index"))]
+    bread = [("Elliptic curves over number fields", url_for(".index"))]
     title = "Elliptic curve isogeny class %s over number field %s" % (full_class_label, cl.field_name)
     bread.append((nf_pretty, url_for(".show_ecnf1", nf=nf)))
     bread.append((conductor_label, url_for(".show_ecnf_conductor", nf=nf_label, conductor_label=conductor_label)))
@@ -307,9 +307,8 @@ def show_ecnf(nf, conductor_label, class_label, number):
     if not isinstance(ec, ECNF):
         flash_error("There is no elliptic curve with label %s in the database", label)
         return redirect(url_for(".index"))
-    bread = [("Elliptic curves", url_for(".index"))]
     title = "Elliptic curve %s over number field %s" % (ec.short_label, ec.field.field_pretty())
-    bread = [("Elliptic curves", url_for(".index"))]
+    bread = [("Elliptic curves over number fields", url_for(".index"))]
     bread.append((ec.field.field_pretty(), ec.urls['field']))
     bread.append((ec.conductor_label, ec.urls['conductor']))
     bread.append((ec.iso_label, ec.urls['class']))
@@ -479,7 +478,7 @@ class ECNFDownloader(Downloader):
                         'download':ECNFDownloader()},
              url_for_label=url_for_label,
              learnmore=learnmore_list,
-             bread=lambda:[('Elliptic curves', url_for(".index")), ('Search results', '.')],
+             bread=lambda:[('Elliptic curves over number fields', url_for(".index")), ('Search results', '.')],
              diagram_opts={"x_axis_default": "conductor_norm",
                            "y_axis_default": "rank",
                            "color_default": "torsion_order",
@@ -624,7 +623,7 @@ def browse():
     # of the keys (degrees), so we use a list
     info = [[d,['%s,%s' % sig for sig in data[d]]] for d in sorted(data.keys())]
     t = 'Elliptic curves over number fields'
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
              ('Browse', ' ')]
     return render_template("ecnf-stats.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
@@ -665,7 +664,7 @@ def statistics_by_degree(d):
     else:
         t = 'Elliptic curves over number fields of degree {}'.format(d)
 
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
               ('Degree %s' % d,' ')]
     return render_template("ecnf-by-degree.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
@@ -714,7 +713,7 @@ def statistics_by_signature(d,r):
         t = 'Elliptic curves over totally real sextic number fields'
     else:
         t = 'Elliptic curves over number fields of degree %s, signature (%s)' % (d,info['sig'])
-    bread = [('Elliptic curves', url_for("ecnf.index")),
+    bread = [('Elliptic curves over number fields', url_for("ecnf.index")),
               ('Degree %s' % d,url_for("ecnf.statistics_by_degree", d=d)),
               ('Signature (%s)' % info['sig'],' ')]
     return render_template("ecnf-by-signature.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
