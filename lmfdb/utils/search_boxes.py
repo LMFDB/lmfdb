@@ -663,6 +663,7 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
+    label_knowl = None  # Link to knowl for label (used for "labels" SneakyBox)
     sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
     null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
@@ -689,10 +690,19 @@ class SearchArray(UniqueRepresentation):
 
     def search_types(self, info):
         # Override this method to change the displayed search buttons
+        # Diagram button is shown only if info["has_diagram"] is True (set by SearchWrapper)
+
+        has_diagram = getattr(self, "has_diagram", True) and (info.get("has_diagram", False) if info else True)
         if info is None:
-            return [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
+            types = [("", f"List of {plural_form(self.noun)}"), ("Random", f"Random {self.noun}")]
+            if has_diagram:
+                types.append(("Diagram", "Diagram search"))
+            return types
         else:
-            return [("", "Search again"), ("Random", "Random %s" % self.noun)]
+            types = [("", "Search again"), ("Random", "Random %s" % self.noun)]
+            if has_diagram and info.get("search_type") != "Diagram":
+                types.append(("Diagram", "Diagram search"))
+            return types
 
     def hidden(self, info):
         # Override this method to change the hidden inputs
@@ -702,7 +712,8 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return self.browse_array
         else:
-            return self.refine_array
+            # Append a "Labels" search box allowing multiple labels to be passed via URL
+            return self.refine_array + [[SneakyTextBox(name="labels", label="Labels", knowl=self.label_knowl)]]
 
     def _print_table(self, grid, info, layout_type):
         if not grid:

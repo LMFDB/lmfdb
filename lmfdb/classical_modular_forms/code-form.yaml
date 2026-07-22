@@ -50,7 +50,7 @@ initialize-newspace-common: &initialize-newspace-common
     mf = mfinit([N,k,chi],0)
     lf = mfeigenbasis(mf)
   magma: |
-    //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
     chi := DirichletCharacter("{N}.{conrey_index}");
     S:= CuspForms(chi, {k});
     N := Newforms(S);

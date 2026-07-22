@@ -676,8 +676,7 @@ class WebEC():
         else:
             self.title = "Elliptic curve with LMFDB label {}".format(self.lmfdb_label)
 
-        self.bread = [('Elliptic curves', url_for("ecnf.index")),
-                           (r'$\Q$', url_for(".rational_elliptic_curves")),
+        self.bread = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves")),
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]

@@ -4,7 +4,7 @@
 
 <div style="max-width:700px;">
 <p>
-  The LMFDB contains two types of underlying data: the main PostgreSQL database and a collection of <a href="{{url_for('datasets')}}">auxiliary datasets</a>; all data is <a href="{{url_for('license')}}">licensed</a> under <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">CC-BY-SA</a>.  There are three options available for accessing large parts of the main database.
+  The LMFDB contains two types of underlying data: the main PostgreSQL database and a collection of <a href="{{url_for('datasets')}}">auxiliary datasets</a>; all data is <a href="{{url_for('license')}}">licensed</a> under <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">CC-BY-SA</a>.  There are five options available for accessing large parts of the main database.
 </p>
 </div>
 
@@ -14,10 +14,22 @@
   {{KNOWL_INC('intro.download_search')}}
 </div>
 
+<h3>MCP server</h3>
+
+<div style="max-width:700px;">
+  {{KNOWL_INC('intro.mcp')}}
+</div>
+
 <h3>The API</h3>
 
 <div style="max-width:700px;">
   {{KNOWL_INC('intro.api')}}
+</div>
+
+<h3>Command line interface</h3>
+
+<div style="max-width:700px;">
+  {{KNOWL_INC('intro.cmdline')}}
 </div>
 
 <h3>Direct SQL connection</h3>

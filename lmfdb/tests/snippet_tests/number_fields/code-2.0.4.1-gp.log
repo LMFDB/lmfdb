@@ -15,6 +15,8 @@ gp> K.zk
 [1, y]
 gp> K.clgp
 [1, [], []]
+gp> bnfnarrow(K)
+[1, [], []]
 gp> K.fu
 []
 gp> K.tu[2]

@@ -23,7 +23,7 @@ False
 sage: SymmetricGroup(4).centralizer(G).order()
 4
 sage: G.gens()
-((1,4)(2,3), (1,2)(3,4))
+((1,2)(3,4), (1,4)(2,3))
 sage: G.conjugacy_classes()
 [Conjugacy class of () in Transitive group number 2 of degree 4,
  Conjugacy class of (1,2)(3,4) in Transitive group number 2 of degree 4,

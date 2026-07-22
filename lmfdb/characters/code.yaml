@@ -1,0 +1,174 @@
+prompt:
+  sage: 'sage'
+  pari: 'gp'
+  magma: 'magma'
+
+logo:
+  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
+  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
+  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
+
+comment:
+  sage: |
+    #
+  pari: |
+    \\
+  magma: |
+    //
+
+not-implemented:
+  sage: |
+    # (not yet implemented)
+  pari: |
+    \\ (not yet implemented)
+  magma: |
+    // (not yet implemented)
+
+frontmatter:
+  all: |
+    {lang} code for working with Dirichlet character {label}
+
+character_init:
+  comment: Define the Dirichlet character
+  sage: |
+    from sage.modular.dirichlet import DirichletCharacter
+    H = DirichletGroup({modulus}, base_ring=CyclotomicField({sage_zeta_order}))
+    M = H._module
+    chi = DirichletCharacter(H, M([{sage_dirichlet_gens}]))
+  pari: |
+    [g,chi] = znchar(Mod({number}, {modulus}))
+  magma: |
+    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    chi := DirichletCharacter("{modulus}.{number}");
+
+modulus:
+  comment: Modulus
+  sage: chi.modulus()
+  pari: g[1][1]
+  magma: Modulus(chi);
+
+conductor:
+  comment: Conductor
+  sage: chi.conductor()
+  pari: znconreyconductor(g,chi)
+  magma: Conductor(chi);
+
+order:
+  comment: Order
+  sage: chi.multiplicative_order()
+  pari: charorder(g,chi)
+  magma: Order(chi);
+
+is_real:
+  comment: Whether the character is real
+  sage: chi.multiplicative_order() <= 2
+  pari: charorder(g,chi) <= 2
+  magma: Order(chi) le 2;
+
+is_primitive:
+  comment: If the character is primitive
+  sage: chi.is_primitive()
+  pari: |
+    #znconreyconductor(g,chi)==1
+  magma: IsPrimitive(chi);
+
+parity:
+  comment: Parity
+  sage: chi.is_odd()
+  pari: zncharisodd(g,chi)
+  magma: IsOdd(chi);
+
+kronecker_symbol:
+  comment: Kronecker symbol
+  sage: kronecker_character({symbol_num})
+  pari: znchartokronecker(g,chi)
+  magma: KroneckerCharacter({symbol_num});
+
+galois_orbit:
+  comment: Galois orbit
+  sage: chi.galois_orbit()
+  pari: |
+    order = charorder(g,chi)
+    [ charpow(g,chi, k % order) | k <-[1..order-1], gcd(k,order)==1 ]
+  magma: |
+    order := Order(chi);
+    { chi^k : k in [1..order-1] | GCD(k,order) eq 1 };
+
+value_field:
+  comment: Field of values of chi
+  sage: CyclotomicField(chi.multiplicative_order())
+  pari: nfinit(polcyclo(charorder(g,chi)))
+  magma: CyclotomicField(Order(chi));
+
+kernel_field:
+  comment: Fixed field
+  sage: chi.fixed_field()
+
+gauss_sum:
+  comment: Gauss sum
+  sage: chi.gauss_sum(a)
+  pari: znchargauss(g,chi,a)
+
+jacobi_sum:
+  comment: Jacobi sum
+  sage: chi.jacobi_sum(n)
+
+kloosterman_sum:
+  comment: Kloosterman sum
+  sage: chi.kloosterman_sum(a,b)
+
+value:
+  comment: Value of chi at x
+  sage: |
+    chi(x)  # x integer
+  pari: chareval(g,chi,x)  \\ x integer, value in Q/Z
+  magma: chi(x)
+
+
+# Code snippets for Dirichlet character group
+group_init:
+  comment: Define the Dirichlet group
+  sage: G = DirichletGroup({modulus})
+  pari: g = idealstar(,{modulus},2)
+  magma: G = FullDirichletGroup({modulus});
+
+group_order:
+  comment: Order
+  sage: G.order()
+  pari: g.no
+  magma: Order(G);
+
+group_structure:
+  comment: Group structure
+  sage: sorted(g.order() for g in G.gens())
+  pari: g.cyc
+  magma: PrimaryInvariants(G);
+
+group_gens:
+  comment: Generators
+  sage: G.gens()
+  pari: g.gen
+  magma: Generators(G);
+
+
+# Code snippet tests (testing characters, orbits, and group pages)
+snippet_test:
+  test1a1:
+    label: 1.a.1
+    url: Character/Dirichlet/1.a.1/download/{lang}
+  test5c2:
+    label: 5.c.2
+    url: Character/Dirichlet/5.c.2/download/{lang}
+  test3b:
+    label: 3.b
+    url: Character/Dirichlet/3.b/download/{lang}
+  test7c:
+    label: 7.c
+    url: Character/Dirichlet/7.c/download/{lang}
+  test11:
+    label: mod11
+    url: Character/Dirichlet/11/download/{lang}
+  test100:
+    label: mod100
+    url: Character/Dirichlet/100/download/{lang}
+
