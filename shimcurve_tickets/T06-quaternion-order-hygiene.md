@@ -36,3 +36,15 @@ Four defects in the `quaternion_orders` / `quaternion_orders_polarized` generati
 ## Log
 
 - 2026-07-16: ticket created from survey.
+- 2026-07-22 (T24 / wave1-F-opus): frontend half of Q14 — the `show_genus`
+  `aut_gerbiness` factor (`web_curve.py:show_genus`, genus = 1 +
+  aut_gerbiness·index·Area/#Aut − ½Σ ν_e(1−1/e)) — was **already present** on the
+  `shimura_curves` branch at T24's base (commit `560c20a89` "fixing area for genus
+  formula", an ancestor of `dfe40d0fe`); T24 did not need to introduce it. Verified
+  it renders correctly on deg μ>1 curves with aut_gerbiness=3: `6.2.1.1.0.a.1`
+  displays `0 = 1 + \frac{1}{24} - \frac{1}{4} - \frac{3}{8} - \frac{5}{12}` (the
+  area term 1/24 = index(1)·aut_gerbiness(3)·Area(1/6)/#Aut(12); without the ×3 it
+  would be 1/72, giving a nonsensical genus), and `6.2.1.2.0.a.1` (fuchsian_index 2)
+  displays `0 = 1 + 2 \cdot \frac{1}{24} - \frac{3}{4} - \frac{1}{3}`. No frontend
+  change made. The T06 backend halves (.m header, Area normalization, discO/discB
+  inversion, row drift) remain open under this ticket.

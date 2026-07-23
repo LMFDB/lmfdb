@@ -36,3 +36,4 @@ Semantics should mirror modular curves (`gps_gl2zhat_fine`): `parents` = labels 
 ## Log
 
 - 2026-07-16: ticket created from survey.
+- 2026-07-22 (orchestrator): claimed by an agent that was stopped (credit limit) during the reading/design phase before producing any code. Branch `ticket/T12-subgroup-lattice` exists but its tip == the T11 tip `3d30898` (zero T12 commits); worktree was clean. **Reset to open — start fresh.** The correct base is still the tier1core chain tip (currently T11 @ 3d30898; will be the T17 tip once T17 lands, or T06 once the capstone starts — take the latest tier1core-chain branch that includes T11). Nothing to salvage.

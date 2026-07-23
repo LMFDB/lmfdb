@@ -1,8 +1,8 @@
 ---
 id: T05
 title: Fix or remove stale readers; update README data section and roundtrip test
-status: open
-owner: none
+status: review
+owner: wave3-M-opus
 priority: P1
 tier: 0
 repos: [ShimCurve]
@@ -44,3 +44,18 @@ Downstream consumers of `GeneraTableToRecords` exist (`qm-mazur/ICERM-code-demo.
 ## Log
 
 - 2026-07-16: ticket created from survey.
+- 2026-07-22 (wave3-M-opus): **DONE → review.** Branch `ticket/T05-stale-readers` (worktree tier1core, on T15 @ 975b2df, which stacks T04→T09→T07→T10→T29→T28). Commits `ba1f82c` (reader), `e35ca31` (roundtrip test), `cbd6b43` (upload README), `98b0bef` (README `## Data` + ICERM), `48c9f0c` (remove write-to-latex.m).
+
+  **Reader (`code/utils/read-write.m`) — header-driven, per T04 reality.** `GeneraTableToRecords`/`LineToRecord` rewritten; new engine `ReadGeneraTableFile(filename : O, sort)`. Parses the 3-line header, **auto-detects the separator** (picks whichever of `|`/`?` occurs most in the names line — so it reads BOTH the current 69-col `?` corpus AND fresh 71-col `|` writer output with no code change), maps column names → record fields, validates names against `GpsShimuraColumns()`. Custom `splitKeepEmpty` splits on a single sep **preserving empty fields** (Magma's builtin `Split` drops them → would misalign rows). Decodes `{...}` arrays (incl. nested `generators`), `T/F`, `\N` (→ field unset). `generators` (nested 8-int blocks) → **pairs of O-elements** `<O!coords[1..4], O!coords[5..8]>` (O supplied, else derived as `MaximalOrder(QuaternionAlgebra(discB))` when discO=discB); `ram_data_elts` (Lehmer ranks) → **permutations via `DecodePerm(rank, fuchsian_index)`** — verified the perm degree is exactly `fuchsian_index`, the product is `Id`, and `EncodePerm` inverts the stored ranks on every N1 row. Each record carries the full column→value map in `` s`data `` plus ergonomic named fields and the legacy aliases (`fuchsindex`, `torsioninvariants`, `endogroup`, `AutmuOnorms=Set(autmuO_norms)`, `Hsplit`, `ramification_data`).
+
+  **qm-mazur compatibility.** The only downstream references to `GeneraTableToRecords` are the `ICERM-code-demo.m:2` doc-comment and a commented line in `disc6-[2,2].m:44` — **no live callers** (utils-qm-mazur.m `read_data` is an unrelated Igusa/defining-eqn reader, untouched). Updated the ICERM comment: its old read call used `endogroup:=" C2 "` (never matches the new `galEnd` labels like `4.2`) and `[1]` of a 9-row result; now a uniquely-identifying filter → `6.1.4.12.0.a.1`, with current field names + decodings.
+
+  **Roundtrip test (`tests/data_roundtrip.m`).** (1) Generate D=6 deg1 N1 with the **actual 71-col `|` writer** into a gitignored `tmp/` path (≈1 s), read back, assert X(6;1)=`6.1.1.1.0.a.1` genus 0 / fuchsian_index 1 / index 1 / trivial torsion / split, generators decode to O-element pairs, and ram-rank↔perm inverse with product Id on all 5 rows. Fresh generation reproduces the committed N1 labels exactly (canonical sort is deterministic here). (2) Read-only pass over the committed **69-col `?`** `genera-D6-deg1-N2.m` → 28 records, genus spot-checks (`6.1.2.3.0.a.1`=0, `6.1.2.48.3.a.1`=3), genus filter → 16. Added `tmp/` to `.gitignore`.
+
+  **Upload path (`code/upload_scripts/`).** Deleted `shimcurve_generate.py` (parsed the retired EnumerateH text format; had the two open TODOs); replaced with `README.md` documenting the real load path — schema.m as column source of truth, **per-file separator** (`|` fresh / `?` corpus), `copy_from` vs `update_from_file(label_col="label")` (label is column 41), the `base_gerbiness` `add_column` and the T27 label-reload caveat.
+
+  **README `## Data`.** Rewritten to describe the postgres-copy layout (references `GpsShimuraSchema`), explicitly notes the corpus is still 69-col `?` pending the reconciled regeneration (not papered over), documents reading via `GeneraTableToRecords`/`ReadGeneraTableFile` with an accurate example, and removes the legacy 9-column example — now consistent with `# Data for LMFDB`.
+
+  **FLAG — extra legacy parser removed (not in the ticket's enumerated 3).** `code/utils/write-to-latex.m` positionally parsed the legacy 9-col `?` layout (and skipped a 6-line preamble via `count ge 7`), so it was fully broken against the current corpus; it is **not in `spec`, never loaded, unreferenced**, and carried pre-existing bugs (misaligned `tors_latex`; stale `split` var). Removed to satisfy "no code parses the legacy format" (git-preserved). It generated a LaTeX paper table; **if still wanted, reimplement on `GeneraTableToRecords`** — the open item is the `galEnd` group-label → TeX-name mapping (a T18/T26 presentation convention), which is why it was deleted rather than ported here.
+
+  **Acceptance:** all met. `GeneraTableToRecords` on genera-D6-deg1-N2 → 28 records, genus spot-checks pass; ICERM read step updated + runnable; no legacy-format parser remains; README sections agree. `tests/run_quick.m` **green (0 failures, 0 skips)** — T19 smoke, T29 determinism, T09 autmuO, roundtrip, T15 points/obstructions all pass.

@@ -79,7 +79,8 @@ Notes:
 | [T11](T11-fine-coarse-labels.md) | −1 detection, is_coarse, fine labels, scalar_label | 1 | P1 | — | Q5, Q6 |
 | [T12](T12-subgroup-lattice.md) | Populate subgroup-lattice columns (finish PR #3 direction) | 2 | P1 | — | — |
 | [T13](T13-jacobian-decomp-productionize.md) | Make jacobian_decomp production-ready + acquire cmfdata | 2 | P1 | — | Q13 |
-| [T14](T14-populate-jacobian-columns.md) | Populate Jacobian columns for all rows | 2 | P1 | T13 | Q13 |
+| [T14](T14-populate-jacobian-columns.md) | Populate Jacobian columns for all rows | 2 | P1 | T13, T30 | Q13 |
+| [T30](T30-trace-formula.md) | Fix indefinite trace formula + GL4→GL2 bridge | 2 | P1 | T13 | Q13 |
 | [T15](T15-cm-points-obstructions.md) | CM points, obstructions, point counts for coarse rows | 2 | P1 | — | Q9 |
 | [T16](T16-portraits.md) | Portraits beyond level 1 | 2 | P2 | — | — |
 | [T17](T17-gonalities.md) | Exact gonalities | 2 | P3 | — | Q10 |
@@ -109,6 +110,8 @@ graph TD
   T04 --> T05
   T04 --> T25
   T13 --> T14
+  T13 --> T30
+  T30 --> T14
   T19 --> T20
   T07 --> T21
   T09 --> T21

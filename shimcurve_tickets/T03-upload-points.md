@@ -1,8 +1,8 @@
 ---
 id: T03
 title: Relabel + stage the rational-points upload (shimcurve_points)
-status: open
-owner: none
+status: review
+owner: wave2-G-opus
 priority: P0
 tier: 0
 repos: [ShimCurve, lmfdb, db-readonly]
@@ -37,3 +37,92 @@ Important: this file mixes two kinds of information — (a) individual point rec
 ## Log
 
 - 2026-07-16: ticket created from survey.
+- 2026-07-22 (wave2-G-opus): **DONE → review.** Stacked on `ticket/T02-upload-models`
+  (branch `ticket/T03-upload-points`). Split the points file into per-point records
+  (`shimcurve_points`) and per-curve counts (`gps_shimura_test`), staged/parked by T01's
+  map. Artifacts under `shimcurve_tickets/artifacts/`; scripts in `code/scripts/t03_*.py`.
+  No DB writes; devmirror read-only.
+
+  **Source parse (`data/rational points/lmfdb_shim_rational_pt_updated.txt`, 424 records,
+  all 20-col clean, all distinct labels).** 0-indexed columns used: `col2`=#points
+  (`0..10`/`infinite`), `col5`=coordinate set, `col6`=genus, `col10`=M, `col11`=legacy
+  label; rest `\N`. Genus matches T01 on all 424 (0 mismatches). 317 individual points
+  total; coordinate arity is **3 (289 pts, P²) or 4 (28 pts, P³)**.
+
+  **Authoritative schema = `\d shimcurve_points` on devmirror** (uses `Clabel` not
+  `Elabel`, plus `Igusa_invs`, `quo_info`; `coordinates` is **jsonb**). Column layout of
+  the staged copy file (19 search_cols, introspected order):
+  `Clabel|Igusa_invs|cardinality|cm|conductor_norm|coordinates|curve_genus|curve_index|
+   curve_label|curve_level|curve_name|degree|isolated|j_field|j_height|jinv|jorig|quo_info|
+   residue_field`.
+
+  **Point→model reference (modcurve convention, verified on `modcurve_points`):**
+  `coordinates` jsonb = `{"<model_type>": ["a:b:c"]}` — one row per degree-1 point,
+  colon-separated projective coords, keyed by the **model_type of the T02 model whose
+  `number_variables` == the point's coordinate arity**. This join is **clean: 0
+  unresolved/ambiguous points** — every arity-3 point sits on a genus≥1 3-var model
+  (all type 5; the genus-0 conic quotients have *infinitely* many points and never
+  materialize finite coords) and every arity-4 point on a 4-var embedded model (type 8).
+  Result: 289 points → key `"5"`, 28 points → key `"8"`. Per-point fields set:
+  `degree=1`, `residue_field="1.1.1.1"`, `curve_level=1`, `curve_genus` from source;
+  `cm`,`isolated`,`jinv`,… left `\N` (source gives no CM/isolatedness/j data — no guessing).
+
+  **Count-vs-point split (modcurve conventions, verified on `gps_gl2zhat`):**
+  - `col2=k>0` → `num_known_degree1_points=k`, `pointless=f`, and k point rows.
+  - `col2=0` → `num_known_degree1_points=0`, `num_known_degree1_noncm_points=0`,
+    `pointless=\N` (a search finding nothing is not a proof; Shimura's D>1 theorem →
+    `pointless=t` is a Q9/T15 determination, not T03's).
+  - `col2='infinite'` → genus-0 curve with a rational point (≅ P¹): `pointless=f`,
+    `num_known_degree1_points=\N` (matches modcurve genus-0 handling: pointless set, count
+    left NULL, not enumerated). 139 such labels.
+
+  **Staged vs parked (accounting — acceptance criterion met).**
+  - Points: **0 staged + 317 parked = 317.** ALL 317 points lie on UNMAPPED AL-quotient
+    curves (no target row yet); the 42 MAPPED `[1]`-base curves carry 0 points. The staged
+    `T03-shimcurve_points.txt` is therefore a valid but EMPTY copy file (documented inside).
+  - Per-curve counts: **42 staged + 382 parked = 424** (one count row per source record).
+    Staged = the 42 MAPPED bases (all `num_known=0`); parked = 382 UNMAPPED.
+
+  **Artifacts (all PROVISIONAL, label-keyed ⇒ re-key after T27 via T01-report §4):**
+  - `T03-shimcurve_points.txt` — staged copy file (banner + 3 header lines + 0 rows).
+  - `T03-points-parked.txt` — 317 parked point rows: join key + arity + model_type +
+    `degree|residue_field|coordinates`. Coordinate fidelity spot-checked vs source
+    (e.g. `26.1-[1,13]` → `{"5":["4:-9:1"]}`,…; `14.3-[1,21]` P³ fractions → `{"8":[…]}`).
+  - `T03-gps-points-update.txt` — staged count update, 42 MAPPED bases
+    (`label|num_known_degree1_points|num_known_degree1_noncm_points|pointless`).
+  - `T03-gps-points-parked.txt` — 382 parked count updates (join key + counts + `coords_na`).
+
+  **Load commands (DAVID; ONLY after T27 reload + re-key — labels predate T29):**
+  ```python
+  # sage -python, editor credentials, from ~/claude/lmfdb ; from lmfdb import db
+  # per-point rows -- park file becomes loadable once each curve row exists (join key -> curve_label):
+  #   build load.txt with shimcurve_points columns (curve_label from the join key, degree=1,
+  #   residue_field=1.1.1.1, coordinates as staged), then:
+  db.shimcurve_points.copy_from('points_load.txt', sep='|')      # (staged file is empty today)
+  # per-curve counts -- staged 42 MAPPED bases (re-key labels first):
+  grep -v '^#' shimcurve_tickets/artifacts/T03-gps-points-update.txt > /tmp/pts_cnt.txt
+  db.gps_shimura.update_from_file('/tmp/pts_cnt.txt', label_col='label', sep='|')
+  # parked counts load per join key once the curves exist.
+  ```
+
+  **Verification (no writable DB — lint + round-trip, per instructions):**
+  `code/scripts/t03_lint.py` → **PASS** (staged points header = shimcurve_points cols+types,
+  every `curve_label` LABEL_RE, valid jsonb `{mt:["a:b:c"]}` on all 317, `degree=1`,
+  `residue_field=1.1.1.1`, gps header/types, `pointless∈{t,f,\N}`, accounting 0+317=317 and
+  42+382=424). jsonb `::jsonb` cast + `jsonb_object_keys` validated on postgres. Coordinate
+  round-trip spot-checked against source (above). Did not touch the port-37778 dev server;
+  low-degree-point search page verification deferred to David post-load (curve-page point
+  sections are commented out pending T24, per the ticket).
+
+  **Flags for David:** (1) **Frontend inconsistency:** the points queries use bare
+  `self.coarse_label` (`web_curve.py:765,769,773,778`) while models use
+  `mu_label.coarse_label`; I keyed `curve_label` on the **full** coarse label (unique,
+  matches `shimcurve_models.shimcurve` and `modcurve_points.curve_label`) — the frontend
+  should be fixed to match (T24). (2) **9 curves have `col2=2` but `col5='NA'`** (count
+  known, coordinates not materialized): `57.1-[1,57]`, `58.1-[1,58]`, `82.1-[1,82]`,
+  `6.17-[1,102]`, `6.17-[1,6,17,102]`, `10.13-[1,130]`, `10.13-[1,5,26,130]`,
+  `10.19-[1,2,95,190]`, `10.19-[1,10,19,190]` — flagged `coords_na=t` in the parked count
+  file; `num_known_degree1_points=2` is set but they yield no point rows (regenerate coords?).
+  (3) `cm`/`num_known_degree1_noncm_points` are `\N` for all point-bearing curves (source has
+  no CM data) — CM enrichment is Q9/T15. (4) All 317 points auto-load only after the
+  T19→T20→T09→T08 chain generates their AL-quotient curve rows.

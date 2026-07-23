@@ -1,8 +1,8 @@
 ---
 id: T10
 title: Diagnose the D=6, N=5 index-2 assertion failure
-status: open
-owner: none
+status: review
+owner: wave1-A-fable
 priority: P1
 tier: 1
 repos: [ShimCurve]
@@ -45,3 +45,13 @@ Determine mathematically what [G : G1plus] is for D=6 at N=5 (compute it: is it 
 ## Log
 
 - 2026-07-16: ticket created from survey.
+- 2026-07-22 (wave1-A-fable): **DONE per Q4's decided answer** (index = φ(N), reduced-norm quotient G ↠ (Z/N)ˣ with kernel G1plus = Aut ⋉ (O/N)¹). Branch `ticket/T10-N5-assertion` (worktree tier1core, stacked on T29→T28), commit `246834d`.
+  - **Fix**: `assert #G/#G1plus eq 2` → `eq EulerPhi(N)` at all three sites — `enumerate-H.m` GetG1plus (was :45), `enumerate-H.m` EnumerateH (was :677, now :772 after T28/T29 shifts), `genera.m` EnhancedCosetRepresentation (:66, `#G/#Gplus`). Mechanism recorded as docstring on GetG1plus + comments at the other two sites.
+  - **Repo-wide index-2 audit (Q4's ⟐ confirmation)**: grepped `#G/#G1plus`, `#G/2`, `eq 2`, `index 2`, `Gplus` across `code/` and `tests/` — **only the three assert sites assume index 2**; nothing downstream consumes the index (Fuchsian index computed independently via `#G1plusmodKG/#H1plusquo`). The `X0DN_code.m` "index 2 subfield" hits are CM ring-class-field statements, unrelated. Confirms Q4's "only those three".
+  - **Baseline correction (T29-era)**: `git log --stat da5540b..HEAD -- data/` shows T29 committed **no** data files, so the shipped genera files in-tree still carry old nondeterministic labels; shipped-vs-regenerated differs in every row (expected, per T29's 73% reconciliation). Baseline therefore self-generated pre-fix at T29 state.
+  - **No-regression proof**: D=6 deg-1 N=3 (36 rows) and N=4 (262 rows) regenerated pre-fix and post-fix — **identical in all 66 canonical fields**; only `generators` (field 23) and `ram_data_elts` (field 60) differ. Confirmed pre-existing process-level variance, not caused by the fix: two *identical-code* post-fix runs differ in exactly the same two fields (matches T29 Log's known follow-up: Ngens rep / coset-numbering Lehmer codes are presentation-dependent).
+  - **Q4 spot-check at N=5**: #G = 1920, #G1plus = 480, [G:G1plus] = 4 = φ(5); G/G1plus abelian invariants [4] ≅ (Z/5)ˣ — matches Q4's table (index 4 at N=5).
+  - **N=5 evidence file**: `data/genera-tables/genera-D6-deg1-N5.m` generated with no assert failure — 175 rows × 68 fields, 3.5 s. **PROVISIONAL — pending T27 reload** (labels from the canonical T29 sort; a label-keyed update against the current DB is unsafe).
+  - **Coarse cross-check**: `SignatureX0DN(6,5)` = (genus 1, e₂ = 4, e₃ = 0); the unique trivial-Aut-projection row at fuchsian_index 24 (= ψ(5)·#Aut_{±μ} = 6·4 over the (2,4,6) bottom), label `6.1.5.24.1.b.1`, has genus 1, ν₂ = 4, ν₃ = 0, ν₄ = ν₆ = 0 — exact match.
+  - **Verification**: `tests/run_quick.m` green (0 failures, 0 skips). N3/N4 data files restored to committed state (regeneration was baseline validation only; wholesale relabeling of committed data = T27 scope, consistent with T29's choice).
+  - **Flags for David**: (1) Q4's ⟐ sign-off — my grep confirms only the three assert sites; (2) N=5 index profile for the record: 175 gerbiest surjective classes, indexes 2–240, genus 0–11; (3) the N=5 file is committed as PROVISIONAL evidence only — mass level generation stays in T23.

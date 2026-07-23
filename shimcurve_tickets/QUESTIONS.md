@@ -65,6 +65,16 @@ Every row currently hardcodes `is_coarse = true`, and `upload_scripts/shimcurve_
 2. The main enumeration only produces "gerbiest" H (containing the full kernel KG). Does KG always contain (1, −1) — i.e., is every gerbiest H automatically coarse, so fine curves only appear once we enumerate non-gerbiest H?
 3. What should the fine-label format be? (Frontend regex expects `{coarse part}-{fine part}` à la modular curves: `main.py:59`.)
 
+> **[agent wave3-N data, 2026-07-22]** Empirical input for sub-question 2 (data, not an answer):
+> `ContainsMinusOne` ((1,−1) ∈ H, tested as membership of `EnhancedElementInGL4modN(⟨B!1, −O!1⟩, N)`
+> = −I₄, ShimCurve branch `ticket/T11-fine-coarse-labels`) was computed in a fresh enumeration pass
+> over the whole D=6 corpus parameter set — deg μ ∈ {1,2,6} × N ∈ {1,2,3,4,6} (the 2,198 shipped
+> rows) plus deg 1, N=5 (175 rows) — **all 2,373 gerbiest H contain (1,−1); 0 fine**. The
+> structural reason was checked mechanically at every (deg,N): (1,−1) lies in the reduced kernel
+> KG returned by `SemidirectToNormalizerKernel`, and the enumeration only builds H ⊇ KG. So the
+> shipped `is_coarse = true` hardcode is empirically confirmed correct for every existing row, and
+> fine curves can only arise from a future non-gerbiest enumeration.
+
 **Answer:**
 
 ---

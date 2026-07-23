@@ -1,0 +1,122 @@
+T08 invariant comparison, old (git 97bef4f) vs regenerated canonical files.
+PROVISIONAL - pending T27 reload (and the Q3 class-index label decision).
+
+=== maximal ===
+old rows: 804, new rows: 804, common: 804
+missing from new: 0 []
+added in new:     0 []
+coordinate-level diffs (mu / AutmuO_generators): 665
+coordinates identical: 139 ['10.5', '106.53', '111.1', '122.61', '129.129', '134.2', '14.7', '143.1', '15.1', '15.5']
+INVARIANT diffs: 88
+  118.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  122.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  122.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  123.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  129.3: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  161.7: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  166.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  166.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  187.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  201.3: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  209.19: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  214.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  218.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  235.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  235.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  253.11: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  262.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  262.2: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  265.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  267.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  278.2: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  287.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  298.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  301.7: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  309.3: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  319.29: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  346.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  358.2: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  362.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  362.2: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  381.3: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  394.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  394.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  403.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  422.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  422.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  454.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  454.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  485.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  493.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  493.29: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  502.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  515.5: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  517.11: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  527.17: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  535.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  538.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  551.29: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  554.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  565.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  565.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  57.3: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  58.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  589.31: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  614.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  633.3: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  634.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  649.11: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  65.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  662.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  671.61: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  694.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  694.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  697.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  697.17: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  698.2: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  737.11: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  746.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  749.7: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  767.13: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  778.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  779.41: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  781.11: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  785.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  794.2: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  835.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  835.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  838.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  843.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  849.3: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  851.37: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  865.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  886.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  893.19: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  910.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  922.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  985.5: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  989.43: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+
+=== eichler ===
+old rows: 86, new rows: 501, common: 86
+missing from new: 0 []
+added in new:     415 ['10.410.1', '10.430.1', '10.470.1', '10.510.1', '10.530.1', '10.570.1', '10.590.1', '10.610.1', '10.670.1', '10.690.1']
+coordinate-level diffs (mu / AutmuO_generators): 83
+coordinates identical: 3 ['10.30.1', '21.105.1', '39.273.1']
+INVARIANT diffs: 16
+  10.110.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  10.290.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  10.370.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  14.266.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  15.195.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  15.255.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  15.285.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  21.231.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  22.110.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  22.286.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  26.182.1: {'AutmuO_size': ('2', '4'), 'AutmuO_label': ('C2', 'C2^2'), 'AutmuO_is_cyclic': ('t', 'f')}
+  34.170.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  34.374.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  38.266.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  6.318.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}
+  6.366.1: {'AutmuO_size': ('4', '2'), 'AutmuO_label': ('C2^2', 'C2'), 'AutmuO_is_cyclic': ('f', 't')}

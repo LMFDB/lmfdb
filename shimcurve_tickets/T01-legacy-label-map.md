@@ -1,8 +1,8 @@
 ---
 id: T01
 title: Decode legacy model/point labels; build old→new label map
-status: open
-owner: none
+status: review
+owner: wave1-E-opus
 priority: P0
 tier: 0
 repos: [ShimCurve, db-readonly]
@@ -50,3 +50,27 @@ Produce a validated mapping table `old_label → new_label` (or `old_label → U
 ## Log
 
 - 2026-07-16: ticket created from survey.
+- 2026-07-22 (wave1-E-opus): **DONE → review.** Grammar confirmed (Q1's reading is
+  correct); map built. Artifacts at `shimcurve_tickets/artifacts/`:
+  `T01-label-map.csv`, `T01-report.md`, `t01_labels_intermediate.csv`. Scripts committed
+  in worktree `ticket/T01-legacy-label-map` under `code/scripts/` (commit fea3c30).
+  - **Extraction:** 458 distinct labels (models=458 distinct from 462 records; points=424,
+    all ⊆ models), 48 discB (6…462), 69 (D,M) families. Multi-line model records handled by
+    whole-file `|`-split (label regex `^\d+\.\d+-\[[0-9,]*\]$`); points file = clean 20-col
+    (col3=#pts, col6=coords, col7=genus, col11=M, col12=label).
+  - **Grammar (validated 2 ways, 0 contradictions):** (a) combinatorial — 42/69 families show
+    the complete AL-subgroup lattice `#labels==#subgroups((Z/2)^ω(DM))`; (b) genus — 53/53
+    `[1]` bases match devmirror, 43/43 bases match points-genus, **198/198** `[1,m]` quotients
+    match `SignatureX0DNmodAtkinLehnerElement`. `D.M` = `discB . Eichler-level`; row invariants
+    `discB=D, discO=D·M, deg_mu=1, level=1`; bracket = Hall-divisor element set of `H` (incl. 1).
+  - **Map:** 53 `MAPPED_PROVISIONAL` (`[1]`→coarse `X₀(D;M)` row, provenance label only),
+    400 `UNMAPPED_PENDING_GENERATION` (all proper quotients — no target rows exist yet; the
+    only level-1 enhanced AL-quotient rows are D=6 **maximal** `discO=6`, which **no legacy
+    label targets** since legacy D=6 is all Eichler M≥5), 4 `UNMAPPED_GRAMMAR_VIOLATION`,
+    1 `UNMAPPED_NO_COARSE_ROW`. Durable join key `(discB,discO,deg_mu,level,al_subgroup)`;
+    re-run recipe in report §4 (verified against the D=6 maximal `autmuO_norms`→subgroup family).
+  - **Flags for David:** (1) 4 non-Hall labels `77.1-[1,17]`, `85.1-[1,2]`, `94.1-[1,89]`,
+    `178.1-[1,30]` (data-entry errors, not mapped); (2) `15.4` family (16 labels) unmappable —
+    M=4 non-squarefree, `X₀(15;4)` (discO=60) absent from devmirror; (3) 4 duplicate model reps
+    `39.1-[1,13]`, `55.1-[1,5]`, `62.1-[1,2]`, `69.1-[1,3]` (T02 must pick one); (4) 400 pending
+    labels auto-complete only after the T19→T20→T09→T08 generation chain lands.
