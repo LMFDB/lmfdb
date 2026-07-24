@@ -4,7 +4,10 @@
 #
 # Author: Håvard Damm-Johnsen <havard-dj@proton.me>
 
-# NB: magma is currently not supported, run manually instead
+# NB: magma snippets are evaluated interactively via pexpect; since Magma's
+# default prompt "> " also occurs in ordinary output (and in the ">> " markers
+# of error messages), the prompt is changed to a unique string at startup.
+# See _start_snippet_procs for details.
 
 
 from pathlib import Path
@@ -28,7 +31,7 @@ exec_dict = {'sage': 'sage --simple-prompt',
              'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
              'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false);'""",
              }
-prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
+prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'MAGMA_PXP> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
 comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
 
@@ -87,31 +90,33 @@ def _start_snippet_procs(langs):
             # conservative timeout of 10 minutes
             print("\nOscar loaded")
 
-        # elif lang == 'magma':
-            # # TODO: get magma working!
-            # # communicating with the terminal is a mess currently
-            # avoid '>' being detected as prompt
-            # magma = pexpect.spawn(exec_dict['magma'],
-            #                       echo=False, env=os.environ | {'TERM':'dumb'},
-            #                       encoding="utf8",
-            #                       ignore_sighup=True,
-            #                       codec_errors="ignore",)
+        elif lang == 'magma':
+            # Magma needs special handling for three reasons:
+            #
+            #  1. Its default prompt "> " also occurs in ordinary output and in the ">> " markers of Magma error messages, so we cannot
+            #     use it to detect when a command has finished.  We therefore switch to a unique prompt with SetPrompt.
+            #
+            #  2. Magma's internal line editor echoes input back regardless of the pty echo setting, so we disable it with
+            #     SetLineEditor(false); after that, echo suppression is handled by the pty (echo=False below).
+            #
+            #  3. The SetPrompt command itself is echoed once (the line editor is still active when it is sent).  If the command
+            #     contained the new prompt as a literal string, pexpect would match the *echo* of the command instead of the actual
+            #     prompt and permanently desynchronise.  To avoid this, the prompt string is assembled with 'cat' so that the echoed
+            #     command never contains the full prompt.
+            #
+            #  SetColumns(0) disables line-wrapping, and SetAutoColumns(false) stops Magma from re-adjusting to the pty width, so that log files are stable across environments.
 
-            # # magma = processes["magma"].child
-            # magma.logfile = sys.stdout
-            # magma.expect_exact("> ")
-            # magma.sendline("SetColumns(0);")
-            # magma.expect_exact("> ")
-            # magma.sendline("SetAutoColumns(false);")
-            # magma.expect_exact("> ")
-            # magma.sendline("SetLineEditor(false);")
-            # magma.expect_exact("> ")
-            # magma.sendline(f"""SetPrompt("{prompt_dict['magma']}");""")
-            # magma.sendline("\n")
-            # magma.expect_exact(prompt_dict['magma'])
-            # processes['magma'] = pexpect.replwrap.REPLWrapper(magma, prompt_dict['magma'], None)
-            # processes['magma'].run_command("This is a test;")
-
+            magma = pexpect.spawn(exec_dict['magma'],
+                                  echo=False,
+                                  env=os.environ | {'TERM': 'dumb'},
+                                  encoding="utf8",
+                                  ignore_sighup=True,
+                                  codec_errors="ignore")
+            magma_init = ('SetLineEditor(false); SetColumns(0); '
+                          'SetAutoColumns(false); '
+                          'SetPrompt("MAGMA_" cat "PXP> ");')
+            processes['magma'] = pexpect.replwrap.REPLWrapper(
+                magma, "> ", magma_init, new_prompt=prompt_dict['magma'])
         else:
             processes[lang] = pexpect.replwrap.REPLWrapper(exec_dict[lang], prompt_dict[lang] , None)
     return processes
@@ -208,9 +213,6 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
     if 'pari' in langs:
         langs.remove('pari')
         langs.add('gp')
-    if 'magma' in langs:
-        print("magma is currently not supported, run manually")
-        langs.remove('magma')
     if len(langs) == 0:
         print("No valid languages selected")
         return 1
