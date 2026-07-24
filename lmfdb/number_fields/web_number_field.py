@@ -216,9 +216,10 @@ def field_pretty(label, wnf=None):
     Given an LMFDB number field label, returns a "pretty" latexed representation of this field (if it exists)
     Otherwise, simply returns back the label itself if unable to find a latex representation.
 
-    wnf, if provided, should be a WebNumberField for this label; it may have been
-    built from a search projection, and is only used if it has the needed columns
-    (since the result is cached by label alone, it must not depend on the caller)
+    The optional argument 'wnf' should be a WebNumberField, and is used in cases
+    where generating the "pretty representation" requires more data than just the label.
+    The specific data depends on the type of field (multiquadratic, pure cubic, ...),
+    and when it is not present in 'wnf', the database will be queried instead.
 
     Cases implemented:
      - Rational field, quadratic fields, pure cubic fields, imprimitive quartic fields,
