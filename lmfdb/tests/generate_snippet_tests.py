@@ -9,9 +9,9 @@
 #    But since Magma's default prompt "> " also occurs in ordinary output (and in the ">> " markers of error messages),
 #    the prompt is changed to a unique string at startup. See _start_snippet_procs for details.
 #  Some Magma code snippets also require CHIMP (https://github.com/edgarcosta/CHIMP) to be installed.
-#  To install CHIMP and generate the snippet log files with CHIMP, run:
-#    git clone https://github.com/edgarcosta/CHIMP.git ~/CHIMP
-#    sage --python ./lmfdb/tests/generate_snippet_tests.py generate -o magma --chimp ~/CHIMP
+#  To install CHIMP and generate the Magma snippet log files with CHIMP, run:
+#    git clone --recurse-submodules -j8 https://github.com/edgarcosta/CHIMP.git ~/CHIMP
+#    sage -python lmfdb/tests/generate_snippet_tests.py generate -o magma --chimp ~/CHIMP
 
 
 from pathlib import Path
