@@ -1250,6 +1250,11 @@ class WebNumberField:
         # read in code.yaml from numberfields directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
+
+        # If field is 1.1.1.1 (the rationals), then need to define K as a special case for Magma
+        for prop in ['field', 'class_number_formula']:
+            self.code[prop]['magma'].replace("NumberField(x)", "RationalsAsNumberField()")
+
         for lang in self.code['field']:
             f = self.poly()
             if lang == "pari":

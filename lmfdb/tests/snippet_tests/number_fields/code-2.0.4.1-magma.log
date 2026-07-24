@@ -46,12 +46,11 @@ magma> 2^r1 * (2*Pi(RR))^r2 * RK * hK / (wK * Sqrt(RR!Abs(DK)));
 0.78539816339744830961566084581987572104929234984377645524373614807695410157155224965700870633552926699553702162832057666177346115238764555793133985203212027936257102568
 magma> L := Subfields(K); L[2..#L];
 []
-magma> G = GaloisGroup(K);
-Permutation group G acting on a set of cardinality 5
-Order = 60 = 2^2 * 3 * 5
-(3, 4, 5)
-(1, 2, 3) = Symmetric group acting on a set of cardinality 2
+magma> GaloisGroup(K);
+Symmetric group acting on a set of cardinality 2
 Order = 2
+[ -1068 + O(5^5), 1068 + O(5^5) ]
+GaloisData over Z_5
 magma> p := 7; [<pr[2], Valuation(Norm(pr[1]), p)> : pr in Factorization(p*Integers(K))];
 [ <1, 2> ]
 magma> 

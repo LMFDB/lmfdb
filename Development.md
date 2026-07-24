@@ -382,7 +382,7 @@ field:
 
 ### Snippet testing
 
-Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es, excluding magma. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
+Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
 
 ```bash
 sage --python ./lmfdb/tests/generate_snippet_tests.py  -h

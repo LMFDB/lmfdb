@@ -130,7 +130,7 @@ group_init:
   comment: Define the Dirichlet group
   sage: G = DirichletGroup({modulus})
   pari: g = idealstar(,{modulus},2)
-  magma: G = FullDirichletGroup({modulus});
+  magma: G := FullDirichletGroup({modulus});
 
 group_order:
   comment: Order

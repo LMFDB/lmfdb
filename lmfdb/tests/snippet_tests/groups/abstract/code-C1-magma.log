@@ -56,8 +56,6 @@ magma> TransitiveGroup(1, 1);
 Permutation group acting on a set of cardinality 1
 Order = 1
 1 = C(1)
-magma> PrimaryInvariants(G);
-[]
 magma> quo< G | CommutatorSubgroup(G) >;
 Symmetric group G acting on a set of cardinality 1
 Order = 1

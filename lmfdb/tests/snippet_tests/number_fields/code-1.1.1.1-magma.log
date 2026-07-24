@@ -82,10 +82,10 @@ Argument types given: FldRat
 >> L := Subfields(K); L[2..#L];
                       ^
 User error: Identifier 'L' has not been declared or assigned
-magma> G = GaloisGroup(K);
+magma> GaloisGroup(K);
 
->> G = GaloisGroup(K);
-                  ^
+>> GaloisGroup(K);
+              ^
 Runtime error in 'GaloisGroup': Bad argument types
 Argument types given: FldRat
 
