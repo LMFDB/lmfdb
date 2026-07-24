@@ -1,6 +1,28 @@
 FAQ
 ===
 
+Most of the LMFDB's database interface is provided by
+[psycodict](https://github.com/roed314/psycodict/), a dictionary-based
+Python interface to PostgreSQL that was extracted from the LMFDB and is
+now developed as an independent package with its own documentation at
+[psycodict.readthedocs.io](https://psycodict.readthedocs.io/en/latest/).
+For anything not specific to the LMFDB, that documentation is the
+authoritative reference; the most useful pages are
+
+- [Searching](https://psycodict.readthedocs.io/en/latest/Searching.html) --
+  the `search`, `lucky` and `lookup` family of methods, projections,
+  sorting and counts,
+- [Query language](https://psycodict.readthedocs.io/en/latest/QueryLanguage.html) --
+  the operators (`$lte`, `$contains`, `$or`, ...) allowed in query
+  dictionaries,
+- [Data management](https://psycodict.readthedocs.io/en/latest/DataManagement.html) --
+  creating tables and indexes, loading, updating and reverting data,
+- [API reference](https://psycodict.readthedocs.io/en/latest/api/index.html).
+
+This FAQ concentrates on how the LMFDB uses psycodict: our servers and
+credentials, our conventions, and the LMFDB-specific layers (statistics
+pages, verification) built on top of it.
+
 Changes
 -------
 
@@ -14,8 +36,9 @@ Changes
 1. What's an overview of the changes?
 
    The main components of the interface to the Postgres database are
-   in [psycodict](https://github.com/roed314/psycodict/), which the LMFDB
-   now depends on. This might be moved to the lmfdb organization later.
+   in [psycodict](https://github.com/roed314/psycodict/), which the
+   LMFDB depends on; see the documentation links at the top of this
+   document.
 
    Postgres is a mature, open-source implementation of SQL.  One of
    the main differences is that Postgres is a strongly-typed
@@ -57,9 +80,10 @@ Database Interface
 1. How do I interact with the database as a developer?
 
    There are three main objects in the database interface: the overall
-   database interface (`db`, of type `PostgresDatabase`) which
-   contains tables (e.g. `db.nf_fields` of type `PostgresTable`), each
-   of which has a statistics object (e.g. `db.nf_fields.stats` of type
+   database interface (`db`, an LMFDB subclass of psycodict's
+   `PostgresDatabase`) which contains tables (e.g. `db.nf_fields`,
+   subclassing `PostgresSearchTable`), each of which has a statistics
+   object (e.g. `db.nf_fields.stats`, subclassing
    `PostgresStatsTable`).
 
    Each section of the lmfdb will generally rely on one (or perhaps a
@@ -112,8 +136,13 @@ Database Interface
 
    The `info` argument is a dictionary that will be updated with
    various data that is commonly needed by templates populated by the
-   search functions.  For more details, see the documentation at
-   https://github.com/roed314/psycodict/.
+   search functions.
+
+   For the supported query operators, see the
+   [query language](https://psycodict.readthedocs.io/en/latest/QueryLanguage.html)
+   documentation; for projections, sorting and the other keyword
+   arguments, see
+   [Searching](https://psycodict.readthedocs.io/en/latest/Searching.html).
 
 1. What if I only want a single entry, for example with a specified label?
 
@@ -140,26 +169,24 @@ Database Interface
    The `count` method returns the total number of rows matching a
    given query.
 
-   The `_parse_projection` method controls how you can specify output
-   columns.
-
-   The `_parse_special` method defines the keys that allow more
-   complicated queries, such as containment, inequalities and
-   disjunctions.
+   These methods, and more, are documented in the
+   [Searching](https://psycodict.readthedocs.io/en/latest/Searching.html)
+   guide and the
+   [API reference](https://psycodict.readthedocs.io/en/latest/api/index.html).
 
 1. How can I execute other kinds of SQL commands?
 
-   You have three options: use the `_execute` method of the `db` object,
-   run commands from a `psql` prompt, or use the `pgAdmin4` interface
-   (not yet supported).
+   You have two options: use the `_execute` method of the `db` object,
+   or run commands from a `psql` prompt.
 
-   If use `db._execute`, make sure to wrap your statements in the SQL
-   class from `psycopg2.sql` (you can also import it from
-   `psycodict`). You can see lots of examples of this
-   paradigm in https://github.com/roed314/psycodict/
+   If you use `db._execute`, make sure to wrap your statements in the
+   `SQL` class from `psycopg.sql`; you should import it from
+   `psycodict`, which re-exports it (that way your code tracks the
+   database driver psycodict is built on).
 
    ```python
-   sage: from psycodict import db, SQL
+   sage: from lmfdb import db
+   sage: from psycodict import SQL
    sage: cur = db._execute(SQL("SELECT label, dim, cm_discs, rm_discs from mf_newforms WHERE projective_image = %s AND cm_discs @> %s LIMIT 2"), ['D2', [-19]])
    sage: cur.rowcount
    2
@@ -173,8 +200,8 @@ Database Interface
    name that might have come from an untrusted source in `Identifier`,
    and using either the %s construction shown above or the `Literal`
    or `Placeholder` objects when passing constants into your query.
-   More documentation on these constructions can be found in the
-   `psycopg2.sql` module.
+   All of these can be imported from `psycodict`; more documentation
+   on these constructions can be found in the `psycopg.sql` module.
 
    If you want to use SQL from a command prompt, you should log into
    `legendre.mit.edu` (ask Edgar Costa or David Roe if you need an account)
@@ -215,6 +242,11 @@ Adding and modifying data
 -------------------------
 
 Note that you need editor privileges to add, delete or modify data.
+The mechanics of table creation and data loading are documented in
+detail in psycodict's
+[data management](https://psycodict.readthedocs.io/en/latest/DataManagement.html)
+guide; the questions here summarize the most common operations and the
+LMFDB conventions around them.
 
 1. How do I create a new table?
 
@@ -224,22 +256,20 @@ Note that you need editor privileges to add, delete or modify data.
    area of your table, separated by an underscore from the main name,
    which is often a single word).  You then give a dictionary whose
    keys are postgres types and values are lists of columns with that
-   type.  The next argument is the column that should be used in the
-   `lookup` method, typically the `label` column if there is one.
-   You should provide a default sort order if your table will be the
-   primary table behind a section of the website (auxiliary tables may
-   not need a sort order).  You also need to provide a short description
-   of the table, which will be shown in the banner when its contents are
-   viewed on the database section of the website, as well as short
-   descriptions of each of its columns which will be shown when users
-   view the schema for the table in the database section (these will
-   be used to populate knowls that can then be edited by you or anyone
-   with an LMFDB account can edit, they don't need to be perfect).
-
-   You can also give columns for an extra table (see the question "What is an
-   `extra_table`?" later in this document), using the same format as the second
-   argument.  Finally, you can specify the order of columns, which will be used
-   by the `copy_from` and `copy_to` functions by default.
+   type (or a list of `(column, type)` pairs, if you want to control
+   the order of the columns, which is used by the `copy_from` and
+   `copy_to` functions by default).  The next argument is the column
+   that should be used in the `lookup` method, typically the `label`
+   column if there is one.  You should provide a default sort order if
+   your table will be the primary table behind a section of the
+   website (auxiliary tables may not need a sort order).  You also
+   need to provide a short description of the table, which will be
+   shown in the banner when its contents are viewed on the database
+   section of the website, as well as short descriptions of each of
+   its columns which will be shown when users view the schema for the
+   table in the database section (these will be used to populate
+   knowls that can then be edited by you or anyone with an LMFDB
+   account can edit, they don't need to be perfect).
 
    ```python
    db.create_table(name='perfect_numbers',
@@ -258,40 +288,11 @@ Note that you need editor privileges to add, delete or modify data.
                                     'mersenne_n': "For odd perfect numbers, the positive integer n for which $N=2^{n-1}(2^n-1)$, where $2^n-1$ is prime.  Set to zero for even perfect numbers",
                                     'label': "Label of the perfect number",
                                     'odd': "True if $N$ is odd, false otherwise.",
-                                   },
-                   search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
+                                   })
    ```
-
-   If there were `extras` (suppose we put `log_N` and `num_factors` in
-   `extras`), the table creation could look like
-
-   ```python
-   db.create_table(name='perfect_numbers2',
-                   search_columns={'numeric': ['N','mersenne_n'],
-                                   'text': ['label'],
-                                   'bool': ['odd'],
-                                   },
-                   label_col='label',
-                   sort=['label'],
-                   table_description='perfect numbers',
-                   extra_columns={'double precision': ['log_N'],
-                                 'int': ['num_factors'],
-                                 },
-                   col_description={'N': "Integer value of the perfect number",
-                                    'log_N': "Natural logarithm of $N$",
-                                    'num_factors': "The number of factors of the perfect number.",
-                                    'mersenne_n': "For odd perfect numbers, the positive integer n for which $N=2^{n-1}(2^n-1)$, where $2^n-1$ is prime.  Set to zero for even perfect numbers",
-                                    'label': "Label of the perfect number",
-                                    'odd': "True if $N$ is odd, false otherwise.",
-                                   },
-                   search_order=['label', 'N', 'log_N', 'num_factors', 'mersenne_n', 'odd'])
-   ```
-
-   In `perfect_numbers2`, the columns `log_N` and `num_factors` are now not in
-   the search columns.
 
    Once this table exists, you can access it via the object
-    `db.perfect_numers`, which is of type `PostgresTable`.
+   `db.perfect_numbers`, which is of type `PostgresTable`.
 
    Conversely, to remove a table from the LMFDB you can use `drop_table`.
 
@@ -338,11 +339,12 @@ Note that you need editor privileges to add, delete or modify data.
    ```
 
    The second is `copy_from`, which takes a file with one line per row
-   to be inserted, with tabs separating the data on each line.  For
-   large numbers of rows, this method will be faster.
+   to be inserted, with a separator (tab by default) between the data
+   on each line.  For large numbers of rows, this method will be
+   faster.
 
    ```python
-   sage: db.test_table.copy_from('test.txt', sep='|'])
+   sage: db.test_table.copy_from('test.txt', sep='|')
    ```
 
    Example contents of `test.txt`:
@@ -416,27 +418,16 @@ Note that you need editor privileges to add, delete or modify data.
    2.30.A:90:world
    ```
 
-   Under the hood, the `rewrite` function uses `reload`, which is
-   also available for use directly.  It takes as input files
-   containing the desired data for the table (for basic usage, you can
-   just give one file; others are available if your table has an
-   attached extra table, or you want to update the stats with the same
-   command).
-
-   ```python
-   sage: db.test_table.reload("test.txt", includes_ids=False)
-   ```
-
-   Example contents of `test.txt`:
-
-   ```
-   2    12      2.12.B  [2,3]
-   3    30      3.30.A  [2,3,5]
-   3    20      3.20.B  [2,5]
-   ```
-
-   The `reload` method supports arbitrary changes to the data, but requires you to
-   produce an appropriate file.
+   Under the hood, `rewrite` (and, by default, `update_from_file`)
+   uses `reload`, which is also available for use directly: it takes a
+   file containing the desired data for the table (in the same format
+   as produced by `copy_to`), loads it into a brand-new table, and
+   then swaps that in for the current one.  The `reload` method
+   supports arbitrary changes to the data, but requires you to produce
+   an appropriate file; see the
+   [data management](https://psycodict.readthedocs.io/en/latest/DataManagement.html)
+   guide for the file format and the other files (counts, stats,
+   indexes) that can be reloaded with the same command.
 
 1. What if I change my mind and want to revert to the old version of a table, from before a reload?
 
@@ -449,36 +440,11 @@ Note that you need editor privileges to add, delete or modify data.
    There is no built-in way to undo direct additions to tables via
    `copy_from`, `upsert`, or `insert_many`.
 
-1. What is an `extra_table`?
-
-   A few large tables (e.g. `nf_fields`) have been
-   split in two.  The columns in the search table can be used in
-   queries, while the columns in the extra table cannot.  Moreover,
-   you should refrain from projecting onto columns in the extra table
-   in queries that contain more than a few results (in particular,
-   queries without a `LIMIT` clause).  The columns in the extra table
-   are intended to be accessed by the `lookup` and `lucky` methods
-   that only return a single row.
-
-   The benefit of having an extra table is that it drastically shrinks
-   the size of the table on which queries are actually being
-   performed.  For both elliptic curves and number fields, the search
-   table is about a seventh the size of the extra table.  Keeping the
-   search table small means that if we need to resort to a sequential
-   scan it will be faster.
-
-   If you use the public interface, the distinction between search and
-   extra tables should be mostly invisible.  But if you are working
-   with a large table it may be worth splitting it in a similar way;
-   see the `create_extra_table` method.
-
 1. What should I know about sorting?
 
    Every search table has an `id` column, which is a 64-bit integer.
-   One purpose is to link rows in search tables with corresponding
-   rows in the extra table.  Another is to simplify sorting for tables
-   that have multiple columns defining their sort order (which is most
-   of them).
+   Its purpose is to simplify sorting for tables that have multiple
+   columns defining their sort order (which is most of them).
 
    Since tables in the LMFDB are updated rarely, and they have a
    standard sort order (based on the order results are displayed on
@@ -657,7 +623,7 @@ Statistics
 1. How can I easily add a statistics page?
 
    Create a statistics object inheriting from `StatsDisplay` in
-   `lmfdb/display_stats.py`.  It should have attributes
+   `lmfdb/utils/display_stats.py`.  It should have attributes
 
    - `short_summary` (which can be displayed at the top of your browse page),
    - `summary` (which will be displayed at the top of the statistics page),
@@ -694,7 +660,7 @@ Statistics
    they should refresh the statistics by default (if you don't want
    this behavior you can use the keyword `restat=False`).  But if there
    seems to be something wrong with the statistics on a table, you can
-   refresh them manually using, for example, `db.g2c_curves.stats.refresh_statistics()`.
+   refresh them manually using, for example, `db.g2c_curves.stats.refresh_stats()`.
    Sometimes this isn't sufficient (if there are extra stats that shouldn't
    be present for example).  A more drastic option is to call
    `db.g2c_curves.stats._clear_stats_counts()`.  If you do this, make sure to
@@ -707,7 +673,7 @@ Data Validation
 1. How can I add consistency checks for data in the LMFDB?
 
    One option is to add constraints to your table.  To do so, use the
-   `create_constraint` method in `psycodict/table.py`. You can see the current
+   `create_constraint` method.  You can see the current
    constraints using `list_constraints`.
 
    There are three supported types of constraints.  The simplest is
