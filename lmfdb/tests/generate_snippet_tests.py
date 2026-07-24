@@ -4,8 +4,14 @@
 #
 # Author: Håvard Damm-Johnsen <havard-dj@proton.me>
 
-# NB: magma snippets are evaluated interactively via pexpect; since Magma's default prompt "> " also occurs in ordinary output
-# (and in the ">> " markers of error messages), the prompt is changed to a unique string at startup. See _start_snippet_procs for details.
+#  NB: Note regarding Magma:
+#  The Magma snippets are evaluated interactively via pexpect.
+#    But since Magma's default prompt "> " also occurs in ordinary output (and in the ">> " markers of error messages),
+#    the prompt is changed to a unique string at startup. See _start_snippet_procs for details.
+#  Some Magma code snippets also require CHIMP (https://github.com/edgarcosta/CHIMP) to be installed.
+#  To install CHIMP and generate the snippet log files with CHIMP, run:
+#    git clone https://github.com/edgarcosta/CHIMP.git ~/CHIMP
+#    sage --python ./lmfdb/tests/generate_snippet_tests.py generate -o magma --chimp ~/CHIMP
 
 
 from pathlib import Path
@@ -69,10 +75,12 @@ def _setup_test_dir(yaml_file_path=None):
 
     return path_dict
 
-def _start_snippet_procs(langs):
-    """ Return dict where keys are languages in 'langs'
-    and values are pexpect repl processes
-    """
+def _start_snippet_procs(langs, chimp_spec=None):
+    """ 
+    Return dict where keys are languages in 'langs' and values are pexpect repl processes.
+    If chimp_spec is not None, it should be the path to CHIMP.spec, which is attached in the Magma process before any snippets are evaluated.
+    """    
+
     processes = {}
     for lang in langs:
         if lang == 'oscar':
@@ -115,6 +123,22 @@ def _start_snippet_procs(langs):
                           'SetPrompt("mag" cat "ma> ");')  # a hacky trick to avoid the literal "magma> " string occurring inside the echo of the command itself
             processes['magma'] = pexpect.replwrap.REPLWrapper(
                 magma, "> ", magma_init, new_prompt=prompt_dict['magma'])
+
+            # Some Magma snippets require the CHIMP package (https://github.com/edgarcosta/CHIMP).
+            # We attach the spec here, *before* any logfile is set on the child process, so that the AttachSpec call does not show up in the snippet logs.
+            if chimp_spec is not None:
+                out = processes['magma'].run_command(
+                    f'AttachSpec("{chimp_spec}");', timeout=60)
+                if 'error' in out.lower():
+                    print(f"Warning: attaching CHIMP spec {chimp_spec} failed:")
+                    print(out)
+                else:
+                    print("Attached CHIMP spec", chimp_spec)
+            else:
+                print("Note: Magma is running without CHIMP "
+                      "(pass --chimp /path/to/CHIMP or set $CHIMP_SPEC); "
+                      "snippets requiring CHIMP will produce errors.")
+
         else:
             processes[lang] = pexpect.replwrap.REPLWrapper(exec_dict[lang], prompt_dict[lang] , None)
     return processes
@@ -168,7 +192,7 @@ def raise_error_warning(logfile, lang, error_file=None):
                     f.write(space + text.replace('\n', '\n' + space) + '\n\n') # indent to get code blocks
 
 
-def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_langs=None, error_file=None):
+def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_langs=None, error_file=None, chimp_spec=None):
     """
     Create tests for snippet files in yaml_file_path if not None, else for all
     code*.yaml files in the lmfdb, except for those with languages in ignore_langs
@@ -216,7 +240,7 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
     print("Evaluating snippets written in", ", ".join(langs))
 
     # start process for languages to be tested
-    processes = _start_snippet_procs(langs)
+    processes = _start_snippet_procs(langs, chimp_spec=chimp_spec)
 
     if test:
         diff_list = []
@@ -285,6 +309,10 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--only", help="Only languages - only these languages will be run ", action='append', nargs='+', default=None)
     parser.add_argument("-f", "--file", help="Run test or generate on a single file", type=str)
     parser.add_argument("-e", "--error-file", help="Specify error log file (otherwise stdout)", type=str)
+    parser.add_argument("-c", "--chimp", help="Path to the CHIMP repository (https://github.com/edgarcosta/CHIMP) for Magma testing "
+                                              "or directly to its CHIMP.spec file, required by some Magma snippets. "
+                                              "Defaults to the CHIMP_SPEC environment variable if set.",
+                                         type=str, default=os.environ.get("CHIMP_SPEC"))
 
     args = parser.parse_args()
 
@@ -306,4 +334,12 @@ if __name__ == '__main__':
         if error_file.exists():
             error_file.unlink()
 
-    create_snippet_tests(yaml_path, ignore_langs, args.cmd == 'test', only_langs, error_file)
+    chimp_spec = None
+    if args.chimp:
+        chimp_path = Path(args.chimp).expanduser()
+        if chimp_path.is_dir():
+            chimp_path = chimp_path / "CHIMP.spec"
+        assert chimp_path.exists(), f"Could not find CHIMP spec at {chimp_path}"
+        chimp_spec = str(chimp_path.resolve())
+
+    create_snippet_tests(yaml_path, ignore_langs, args.cmd == 'test', only_langs, error_file, chimp_spec)
