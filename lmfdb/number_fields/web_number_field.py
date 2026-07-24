@@ -210,11 +210,16 @@ def is_fundamental_discriminant(d):
         return d % 16 in [8, 12] and integer_is_squarefree(d // 4)
 
 
-@cached_function
-def field_pretty(label):
+@cached_function(key=lambda label, wnf: label) # ignore field when caching
+def field_pretty(label, wnf=None):
     """
     Given an LMFDB number field label, returns a "pretty" latexed representation of this field (if it exists)
     Otherwise, simply returns back the label itself if unable to find a latex representation.
+
+    The optional argument 'wnf' should be a WebNumberField, and is used in cases
+    where generating the "pretty representation" requires more data than just the label.
+    The specific data depends on the type of field (multiquadratic, pure cubic, ...),
+    and when it is not present in 'wnf', the database will be queried instead.
 
     Cases implemented:
      - Rational field, quadratic fields, pure cubic fields, imprimitive quartic fields,
@@ -238,6 +243,14 @@ def field_pretty(label):
     def _sqrt_symbol(z):
         return 'i' if z == -1 else r'\sqrt{%d}' % z
 
+    # A caller-supplied wnf may come from a projection lacking the columns a
+    # case below needs (e.g. the reflex fields table passes only the label);
+    # reload from the database unless every needed column is present
+    def _wnf_with(*keys):
+        if wnf is None or wnf._data is None or any(k not in wnf._data for k in keys):
+            return WebNumberField(label)
+        return wnf
+
     # Case 2: Quadratic fields Q(\sqrt{D})
     # (note that we give the pretty name for 2.0.4.1 as \Q(\sqrt{-1}), and not \Q(i))
     if d == '2':
@@ -259,7 +272,7 @@ def field_pretty(label):
 
     # Case 5: Imprimitive quartic fields
     if d == '4':
-        wnf = WebNumberField(label)
+        wnf = _wnf_with('subfields', 'subfield_mults', 'coeffs')
         subs = wnf.subfields()
 
         # Case 5a: Biquadratic fields Q(\sqrt{A}, \sqrt{B})
@@ -308,7 +321,7 @@ def field_pretty(label):
 
     # Case 6: Pure cubic fields Q(\sqrt[3]{N})
     if d == '3':
-        wnf = WebNumberField(label)
+        wnf = _wnf_with('disc_abs', 'disc_sign', 'coeffs')
         # Check that discriminant is negative
         if wnf.disc() < 0:
             # Explicitly solve for a real root of defining polynomial (using Cardano's formula):
@@ -335,7 +348,7 @@ def field_pretty(label):
     # Case 7: General multi-quadratic fields: Q(\sqrt{D_1}, ..., \sqrt{D_k})
     if ZZ(d).is_power_of(2):
         k = ZZ(d).valuation(2)
-        wnf = WebNumberField(label)
+        wnf = _wnf_with('subfields', 'subfield_mults')
         all_subs = wnf.subfields()
         quad_subs = [s[0] for s in all_subs if s[0].count(',') == 2]
         num_quad_subs = len(quad_subs)
@@ -602,7 +615,7 @@ class WebNumberField:
         return nf_label_pretty(self.label)
 
     def field_pretty(self):
-        return field_pretty(self.get_label())
+        return field_pretty(self.get_label(), wnf=self)
 
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
@@ -861,7 +874,6 @@ class WebNumberField:
         sf = [z.replace('.',',') for z in self._data['subfields']]
         sfm = self._data['subfield_mults']
         return [[sf[j],sfm[j]] for j in range(len(sf))]
-        return self._data['subs']
 
     def subfields_show(self):
         subs = self.subfields()
