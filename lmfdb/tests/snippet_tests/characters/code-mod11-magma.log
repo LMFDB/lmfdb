@@ -2,13 +2,8 @@
 magma> G := FullDirichletGroup(11);
 magma> Order(G);
 10
-magma> PrimaryInvariants(G);
-
->> PrimaryInvariants(G);
-                    ^
-Runtime error in 'PrimaryInvariants': Bad argument types
-Argument types given: GrpDrch
-
+magma> PrimaryInvariants(AbelianGroup(G));
+[ 2, 5 ]
 magma> Generators(G);
 [
 $.1

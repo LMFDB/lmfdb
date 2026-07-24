@@ -47,11 +47,7 @@ Id(G)
 
 magma> CharacterDegrees(G);
 [ <1, 1> ]
-magma> GPC := PCGroup([]);  := Explode([]); AssignNames(~GPC, []);
-
->> GPC := PCGroup([]);  := Explode([]); AssignNames(~GPC, []);
-                        ^
-User error: bad syntax
+magma> GPC := PCGroup([]);
 magma> TransitiveGroup(1, 1);
 Permutation group acting on a set of cardinality 1
 Order = 1

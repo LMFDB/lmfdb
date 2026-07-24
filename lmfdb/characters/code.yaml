@@ -142,7 +142,7 @@ group_structure:
   comment: Group structure
   sage: sorted(g.order() for g in G.gens())
   pari: g.cyc
-  magma: PrimaryInvariants(G);
+  magma: PrimaryInvariants(AbelianGroup(G));
 
 group_gens:
   comment: Generators
