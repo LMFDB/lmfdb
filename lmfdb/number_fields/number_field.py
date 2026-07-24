@@ -1210,7 +1210,6 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, polynomial, or comma-separated list"
-    has_diagram = True
 
     def __init__(self):
         degree = TextBox(
