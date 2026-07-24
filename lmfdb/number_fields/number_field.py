@@ -930,7 +930,23 @@ class NFDownloader(Downloader):
                            ('Diagram search results', '.')],
                  "x_axis_default": "disc",
                  "y_axis_default": "regulator",
-                 "color_default": "num_ram"})
+                 "color_default": "num_ram",
+                 # Axes computed from database columns rather than stored directly:
+                 # the database keeps the sign and absolute value of the discriminant
+                 # in separate columns, so neither the signed nor the absolute
+                 # discriminant is a plain column that can be selected as an axis.
+                 "computed_cols": {
+                     "disc": {
+                         "label": "Discriminant",
+                         "cols": ["disc_sign", "disc_abs"],
+                         "func": lambda r: r["disc_sign"] * r["disc_abs"],
+                     },
+                     "disc_abs": {
+                         "label": "Absolute discriminant",
+                         "cols": ["disc_abs"],
+                         "func": lambda r: r["disc_abs"],
+                     },
+                 }})
 def number_field_search(info, query):
     parse_posints(info,query,'degree')
     parse_galgrp(info,query, qfield=('galois_label', 'degree'))
@@ -1194,7 +1210,6 @@ class NFSearchArray(SearchArray):
     jump_egspan = r"e.g. 2.2.5.1, Qsqrt5, x^2-5, or x^2-x-1 for \(\Q(\sqrt{5})\)"
     jump_knowl = "nf.search_input"
     jump_prompt = "Label, name, polynomial, or comma-separated list"
-    has_diagram = False
 
     def __init__(self):
         degree = TextBox(

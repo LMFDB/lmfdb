@@ -143,6 +143,21 @@ class NumberFieldTest(LmfdbTest):
     def test_underlying_data(self):
         self.check_args('NumberField/2.2.10069.1', ['Underlying data', 'data/2.2.10069.1'])
 
+    def test_diagram_search(self):
+        # The Diagram button should be offered on the search page
+        self.check_args('/NumberField/?degree=2', 'Diagram search')
+        # Default axes use the computed signed discriminant (disc = disc_sign * disc_abs),
+        # which is not a stored column; this used to 500 with KeyError: 'disc'.
+        page = self.tc.get('/NumberField/?search_type=Diagram&degree=2&count=100').get_data(as_text=True)
+        assert 'my_dataviz' in page
+        assert 'Discriminant' in page
+        # 2.0.3.1 is the field of discriminant -3, so its x-coordinate is -3
+        assert '"label": "2.0.3.1"' in page and '"x": "-3"' in page
+        # The computed absolute-discriminant axis also works
+        page2 = self.tc.get('/NumberField/?hst=Diagram&x-axis=disc_abs&y-axis=rd&degree=3&count=50').get_data(as_text=True)
+        assert 'my_dataviz' in page2
+        assert 'Absolute discriminant' in page2
+
     def test_errors(self):
         self.check_args('NumberField/18.0.10490638424...4432.1/download/sage', 'Invalid label')
         self.check_args('NumberField/4.3.2.1/download/sage', 'There is no number field with label 4.3.2.1')
