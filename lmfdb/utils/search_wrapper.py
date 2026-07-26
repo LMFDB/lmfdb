@@ -503,6 +503,15 @@ class SearchWrapper(Wrapper):
         Additionally, one should pass 'diagram_opts = {}' as keyword argument to the @search_wrap macro,
         with options specifying the title, breadcrumbs, and default x/y-axes and color keys, matching numerical
         (or in the case of 'color_default', boolean) columns in the database.
+
+        The 'computed_cols' option registers axes whose values are derived from one or more
+        database columns via a function, rather than stored directly in a single column (e.g.
+        the signed discriminant of a number field, whose sign and absolute value live in
+        separate columns).  It maps an axis key to a spec dict with keys:
+            'label': the display name shown in the dropdown and on the axis,
+            'cols':  the list of database columns to project so 'func' can be evaluated,
+            'func':  a callable taking a result row (dict) and returning the numeric value,
+            'type':  optional, "number" (default) or "boolean" for a color-only option.
         """
         # Get diagram options with defaults
         opts = self.diagram_opts or {}
@@ -537,6 +546,16 @@ class SearchWrapper(Wrapper):
         table = self.table
         col_types = table.col_type
 
+        # Computed axes derived from database columns via a function (see docstring).
+        computed_cols = opts.get("computed_cols", {})
+
+        def clean_title(title):
+            # clean up short titles - get rid of latex
+            return title.replace("$", "") \
+                        .replace(r"\(", "") \
+                        .replace(r"\)", "") \
+                        .replace("\\", "")
+
         columns = self.columns
         if columns is not None:
             # Build from SearchColumns - uses actual database column names
@@ -546,11 +565,10 @@ class SearchWrapper(Wrapper):
                 db_col = col.name if col.name else col.orig[0]
                 # db_col = col.name
                 if db_col in col_types:
-                    # clean up short titles - get rid of latex
-                    diagram_fields[db_col] = col.short_title.replace("$", "") \
-                                                             .replace(r"\(", "") \
-                                                             .replace(r"\)", "") \
-                                                             .replace("\\", "")
+                    diagram_fields[db_col] = clean_title(col.short_title)
+                elif db_col in computed_cols:
+                    # A displayed column whose value is computed from other columns
+                    diagram_fields[db_col] = computed_cols[db_col].get("label") or clean_title(col.short_title)
 
         else:
             # Fall back to search array boxes if no columns defined
@@ -558,11 +576,25 @@ class SearchWrapper(Wrapper):
                              flatten(SA.browse_array) + flatten(SA.refine_array)
                              if hasattr(box, 'name') and hasattr(box, 'short_title')}
 
+        # Register any computed axes not already tied to a displayed column
+        for cname, spec in computed_cols.items():
+            diagram_fields.setdefault(cname, spec.get("label", cname))
+
+        def axis_is_numeric(name):
+            if name in computed_cols:
+                return computed_cols[name].get("type", "number") == "number"
+            return col_types.get(name) in number_types
+
+        def axis_is_boolean(name):
+            if name in computed_cols:
+                return computed_cols[name].get("type", "number") == "boolean"
+            return col_types.get(name) == "boolean"
+
         # Filter to numerical and binary fields based on database column types
         numerical_fields = [(name, label) for (name, label) in diagram_fields.items()
-                           if col_types.get(name) in number_types]
+                           if axis_is_numeric(name)]
         binary_fields = [(name, label) for (name, label) in diagram_fields.items()
-                        if col_types.get(name) == "boolean"]
+                        if axis_is_boolean(name)]
         color_fields = numerical_fields + binary_fields
 
         # Create SearchBox objects for diagram-specific controls
@@ -587,6 +619,9 @@ class SearchWrapper(Wrapper):
         # Get projection
         proj = query.pop("__projection__", self.projection)
         if isinstance(proj, list):
+            # Make sure columns needed to compute derived axes are fetched
+            deps = [dep for spec in computed_cols.values() for dep in spec.get("cols", [])]
+            proj = proj + [dep for dep in deps if dep not in proj]
             proj = [col for col in proj if col in table.search_cols]
 
         count = parse_count(info, result_count_default)
@@ -625,6 +660,9 @@ class SearchWrapper(Wrapper):
                 )
 
             if not res:
+                # Empty result set: hand the template an empty list rather than None
+                # so the d3 script renders an empty diagram instead of erroring.
+                info["d3_data"] = []
                 return render_template(
                     template, info=info, title=title, **template_kwds
                 )
@@ -649,6 +687,19 @@ class SearchWrapper(Wrapper):
             # Get label_builder from diagram_opts if provided (for nonstandard labeling)
             label_builder = opts.get("label_builder")
 
+            # Extract a value for one axis from a result row, applying the
+            # computed-column function when the key names a computed axis.
+            def axis_value(r, key):
+                if key in computed_cols:
+                    func = computed_cols[key].get("func")
+                    if func is None:
+                        return None
+                    try:
+                        return func(r)
+                    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+                        return None
+                return r.get(key)
+
             # Build d3 data
             info["d3_data"] = []
             for r in res:
@@ -663,15 +714,15 @@ class SearchWrapper(Wrapper):
                     # break
 
                 info["d3_data"].append({
-                    "x": str(r.get(x_key)),
-                    "y": str(r.get(y_key)),
-                    "color": str(r.get(col_key)),
+                    "x": str(axis_value(r, x_key)),
+                    "y": str(axis_value(r, y_key)),
+                    "color": str(axis_value(r, col_key)),
                     "path": self.url_for_label(label),
                     "label": label,
                 })
-            # Set axis labels for display
-            info["x-axis-label"] = diagram_fields[x_key]
-            info["y-axis-label"] = diagram_fields[y_key]
+            # Set axis labels for display (fall back to the raw key for unknown axes)
+            info["x-axis-label"] = diagram_fields.get(x_key, x_key)
+            info["y-axis-label"] = diagram_fields.get(y_key, y_key)
 
             return render_template(template, info=info, title=title, **template_kwds)
 
