@@ -8,6 +8,13 @@ prompt:
   pari:   'gp'
   magma:  'magma'
 
+comment:
+  sage: |
+    #
+  pari: |
+    \\
+  magma: |
+    //
 
 header:
   pari: |
