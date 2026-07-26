@@ -1176,11 +1176,6 @@ sorted_code_names = ['field', 'poly', 'degree', 'signature',
                      'fundamental_units', 'regulator', 'class_number_formula',
                      'intermediate_fields', 'galois_group', 'prime_cycle_types']
 
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'oscar': 'Oscar'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
-
-
 def nf_code(**args):
     label = args['nf']
     if not FIELD_LABEL_RE.fullmatch(label):
