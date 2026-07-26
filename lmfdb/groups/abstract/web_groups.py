@@ -3148,7 +3148,7 @@ class WebAbstractGroup(WebObj):
             oscar_assign = create_gap_assignment(self.representations["PC"]["gens"])
         else:
             code['presentation'] = {}
-            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign = None, None, None, None, None, None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign, oscar_assign = None, None, None, None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
