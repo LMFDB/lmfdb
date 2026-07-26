@@ -48,7 +48,7 @@ def sorting_label(lab1):
     return (int(a), class_to_int(b), int(c))
 
 def get_bread(tail=[]):
-    base = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
+    base = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -123,6 +123,10 @@ def rational_elliptic_curves(err_args=None):
                            title=t,
                            bread=get_bread(),
                            learnmore=learnmore_list(),
+                           related_sections=[
+                               (r'Elliptic curves over $\Q(\alpha)$', url_for("ecnf.index")),
+                               ('Classical modular forms', url_for("cmf.index")),
+                           ],
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
 
@@ -1259,6 +1263,7 @@ class ECSearchArray(SearchArray):
     noun = "curve"
     sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
              #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
+             ("disc", "Minimal discriminant", ["absD", "signD", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("cm_discriminant", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),

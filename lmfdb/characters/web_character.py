@@ -1133,7 +1133,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
 
     @lazy_attribute
     def contents(self):
-        logger.warning("[DC] getting content from WebDBDirichletOrbit")
+        logger.info("[DC] getting content from WebDBDirichletOrbit")
         if self._contents is None:
             self._contents = []
             self._fill_contents()

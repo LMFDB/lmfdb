@@ -95,13 +95,6 @@ def learnmore_list(path=None, remove=None):
 
 # Top page #####################################################################
 
-@l_function_page.route("/contents")
-def contents():
-    return render_template(
-        "LfunctionContents.html",
-        title="L-functions",
-        learnmore=learnmore_list(),
-        bread=[("L-functions", " ")])
 
 @l_function_page.route("/")
 def index():

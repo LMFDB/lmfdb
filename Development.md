@@ -39,8 +39,7 @@ Structural Conventions
 
 Below, we describe several of the structural conventions used in the LMFDB. Note
 that we also have styling conventions for the content of individual pages. These
-styling conventions are described in
-[StyleGuide.md](https://github.com/LMFDB/lmfdb/blob/main/StyleGuide.md).
+styling conventions are described in [StyleGuide.md](./StyleGuide.md).
 
 Pages in the LMFDB
 ------------------
@@ -206,11 +205,11 @@ should be
 Here and throughout this document, we say "should" instead of "must", with
 the understanding that some compromises will be inevitable.
 
-Here are some principles:
+Here are some conventions the LMFDB uses:
 
 1. If X is the URL of an object, then L/X is the URL of its standard
    L-function. According to the Langlands program, other L-functions
-   associated to X have the form L(s, X, rho). Examples include
+   associated to X may be written on the the form L(s, X, rho). Examples include
 
    - L(s, f, sym^2)
    - L(s, f, spin)
@@ -261,8 +260,7 @@ Here are some principles:
    should be considered permanent:
 
    - `/ArtinRepresentation/\<dim>/\<conductor>/\<label>`
-   - `/Character/Dirichlet/\<modulus>/\<number>`
-   - `/Character/Hecke/\<number_field>/\<modulus>/\<number>`
+   - `/Character/Dirichlet/\<modulus>/\<label>`
    - `/EllipticCurve/Q/\<label>`
    - `/GaloisGroup/\<label>`
    - `/padicField/\<label>`
@@ -356,9 +354,9 @@ Testing
 
 - A code coverage diagnostic can be obtained via
   ```
-  ./test.sh html
+  ./test.sh coverage
   ```
-  it produces beautiful coverage scores in `lmfdb/cover/index.html`
+  which produces coverage scores saved in `lmfdb/htmlcov`.
 
 Code Snippets 
 -------------
@@ -413,105 +411,54 @@ The tag `langs` here is optional, and if omitted, all (available) languages in t
 
 Part of the code snippet testing system is a pair of code actions to generate evaluation log files automatically. The first one runs when a change to a `code*.yaml` file is pulled to the main branch, and if so, regenerates the evaluation files. If the output is different from the previous evaluation files, it will make a pull request, allowing you to manually check that the output is as expected. The logic is in `.github/workflows/snippet_generate.yml`.
 
-Additionally, there's a second CI which runs twice a month and checks that the evaluations are consistent - it can also be run on demand. This ensures that if and when SageMath (or another CAS) deprecates a function, we'll know without having to wait for someone to update the yaml files, rerun the code or submit a bug report. If this action generates a different output than what's stored in the evaluation files, it will error, and upload the diff as an artifact. This is in `.github/workflows/snippet_test.yml`. Furthermore, it will create/update an issue (see https://github.com/LMFDB/lmfdb/issues/6810 for example) which keeps track of all the evaluation errors.
+Additionally, there's a second CI action which runs twice a month and checks that the evaluations are consistent - it can also be run on demand. This ensures that if and when SageMath (or another CAS) deprecates a function, we'll know without having to wait for someone to update the yaml files, rerun the code or submit a bug report. If this action generates a different output than what's stored in the evaluation files, it will error, and upload the diff as an artifact. This is in `.github/workflows/snippet_test.yml`. Furthermore, it will create/update an issue (see https://github.com/LMFDB/lmfdb/issues/6810 for example) which keeps track of all the evaluation errors.
 
 
 Pro Tip: Debugging
 -------------------
 
-Just add
+Adding
 ```
   import pdb; pdb.set_trace()
 ```
-somewhere (e.g. protected inside a sensible if) this magic
-line and you will end up inside the interactive python
-debugger. there, you can check for the local variables with dir()
-you can execute python code (e.g. to introspect objects)
-and use "pp <var name>" to pretty print variables and
-to continue executing code use the "n" command.
-When you get lost, the command "bt" shows you exactly where you
-are and "up" helps you to get on step up on the stack.
-Of course, "help `<command>`" will tell you more...
+somewhere in a python file (e.g. protected inside a sensible if) will pause the execution of the program; 
+this puts you inside an interactive python debugger, where you can:
+
+- check for the local variables with `dir()`, 
+- you can execute arbitrary python code (e.g. to inspect objects),
+- use `pp <var name>` to pretty print variables,
+- continue executing code using the `n` command.
+
+If you get lost, the command `bt` shows you exactly where you
+are, and `up` helps you to get on step up on the stack.
+Of course, `help <command>` will tell you more.
 
 Git Tips
 =========
 
-global .gitignore
------------------
-
-Please configure Git to have a global .gitignore for all your projects.
-It should contain all the files which are not project specific, but happen
-on your machine. E.g. temporary files ending in `...~` or `.DS_store`.
-
-[copy paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore)
-
-.gitconfig
-----------
-
-In your home directory, in the file ~/.gitconfig
-
-```
+Contributing to the LMFDB requires some familiarity with git, a popular version control system which LMFDB uses. The LMFDB code base is hosted on Github, which is a common hosting service owned by Microsoft.
+- [Official git tutorial](https://git-scm.com/docs/gittutorial) and [Github's git guide](https://github.com/git-guides)
+- Use a global .gitignore file to exclude temporary files like `.DS_store` or `main.py~`; [copy-paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore).
+- Configure your global .gitconfig for shortcuts or global configuration options; for example:
+  ```
 [alias]
-        st=status
-        aliases=!git config --get-regexp 'alias.*' | colrm 1 6 | sed 's/[ ]/ = /'
-        ci=commit
-        br=branch
-        co=checkout
-        df=diff
-        who=shortlog -s --
-        ll = log --oneline --graph --decorate -25
-        lla = log --oneline --graph --decorate --all -25
-        wdiff=diff --word-diff=color
+		st=status
+		aliases=!git config --get-regexp 'alias.*' | colrm 1 6 | sed 's/[ ]/ = /'
+		ci=commit
+		br=branch
+		co=checkout
+		df=diff
+		who=shortlog -s --
+		ll = log --oneline --graph --decorate -25
+		lla = log --oneline --graph --decorate --all -25
+		wdiff=diff --word-diff=color
 [color]
-    ui = auto
-    branch = auto
-    diff = auto
-    interactive = auto
-    status = auto
-```
-
-List-table should always be like
---------------------------------
-
-```
-<table class="ntdata">
-  <thead><tr><td>...</td></tr></thead>
-
-  <tbody>
-   <tr class="odd"> <td>...</td></tr>
-   <tr class="even"><td>...</td></tr>
-   <tr class="odd"> <td>...</td></tr>
-   ...
-  </tbody>
-</table>
-```
-
-... we might also switch to CSS3's nth-element selector and forget about this.
-
-
-Properties
-----------
-
-The table on the right renders Strings formatted in the following datastructure:
-
-```
-prop = [ ( '<description>', [ '<value 1>', '<value 2>', ...] ), ... ]
-```
-
-or
-
-```
-prop = [ ( '<description>', '<value>'), ('<description>', '<value>'), ... ]
-```
-
-you can mix list or non-list.
-
-
-LaTeX Macros
-------------
-
-Latex macros are documented in a knowl that will appear when you start editing one.
-
+	ui = auto
+	branch = auto
+	diff = auto
+	interactive = auto
+	status = auto
+	```
 
 Server Hook
 -----------

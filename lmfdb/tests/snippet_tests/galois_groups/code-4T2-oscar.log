@@ -3,6 +3,9 @@
 julia> G = transitive_group(4, 2)
 Permutation group of degree 4
 
+julia> small_group_identification(G)
+(4, 2)
+
 julia> order(G)
 4
 

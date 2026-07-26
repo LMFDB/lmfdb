@@ -340,10 +340,10 @@ def download_hmf_sage(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    outstr = '"""\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
     outstr += '  It will load the data associated to the HMF, including\n'
     outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
-    outstr += '*/\n\n'
+    outstr += '"""\n\n'
 
     outstr += 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
