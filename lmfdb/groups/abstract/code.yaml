@@ -541,3 +541,23 @@ snippet_test:
   testA5:
     label: A5
     url: Groups/Abstract/60.5/codedownload/{lang}
+
+  # Tests for the the group construction download pages
+  # (incl. constructing the boolean invariants and character table)
+  testC1data:
+    label: C1-data
+    langs: [gap, magma, sage, oscar]
+    url: Groups/Abstract/1.1/download/{lang}
+  testS3data:
+    label: S3-data
+    langs: [gap, magma, sage, oscar]
+    url: Groups/Abstract/6.1/download/{lang}
+  testD4data:
+    label: D4-data
+    langs: [gap, magma, sage, oscar]
+    url: Groups/Abstract/8.3/download/{lang}
+  testA5data:
+    label: A5-data
+    langs: [gap, magma, sage, oscar]
+    url: Groups/Abstract/60.5/download/{lang}
+

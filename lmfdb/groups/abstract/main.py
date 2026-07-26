@@ -2074,13 +2074,17 @@ def render_abstract_group(label, data=None):
 
         title = f"Abstract group {gp.label}: {gp.nick_name}"
 
-        # disable until we can fix downloads
-        downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma"))
-                     ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar"))]
+        downloads = []
+
+        # Download links for constructing group, boolean invariants, and character table
+        for lang in [("Gap","gap"), ("Magma","magma"), ("SageMath","sage"), ("Oscar","oscar")]:
+            downloads.append(('Group to {}'.format(lang[0]), url_for(".download_group", label=label, download_type=lang[1])))
+
+        # Download links for downloading a copy of all code snippets
         for lang in [("Gap","gap"), ("Magma","magma"), ("SageMath","sage"), ("SageMath (using Gap)","sage_gap"), ("Oscar","oscar")]:
             if lang[1] in code['prompt']:
                 downloads.append(('{} commands'.format(lang[0]), url_for(".download_group_code", label=label, download_type=lang[1])))
+
         downloads.append(("Underlying data", url_for(".gp_data", label=label)))
 
         # "internal" friends
@@ -2395,8 +2399,11 @@ def sgp_data(label):
         return datapage([label, label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
-# need to write characters in GAP or Magma formats for downloads
-def download_cyclotomics(n,vals, dltype):
+def download_cyclotomics(n, vals, dltype):
+    """
+    Method to write characters in GAP, Magma, Oscar, Sage formats for downloads.
+    """
+
     s = ""
     val = vals[0]
     c = val[0]  # coefficient
@@ -2432,22 +2439,29 @@ def download_cyclotomics(n,vals, dltype):
             s += "E(" + str(n) + ")"
             if e != 1:
                 s += "^" + str(e)
+
     if dltype == "magma":  # Magma needs different format.
         return s.replace("E(" + str(n) + ")", "K.1")
+    if dltype == "oscar":  # Oscar needs different format.
+        return s.replace("E(", "z(")
+
     return s
 
 
 # create preamble for downloading individual group
 def download_preamble(com1, com2, dltype, cc_known):
-    if dltype == "gap":
-        f = "#"
-    else:
-        f = ""
+    f = DOWNLOAD_LANG_DATA[dltype]["line"]
     s = com1
     s += f + " Various presentations of this group are stored in this file: \n"
     s += f + "\t GPC is polycyclic presentation, GPerm is permutation group \n"
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
-    s += f + " Many characteristics of the group are stored as booleans in a record: \n"
+    s += f + " Many characteristics of the group are stored as booleans in a "
+    if dltype == "sage":
+        s += "dict: \n"
+    elif dltype == "oscar":
+        s += "NamedTuple: \n"
+    else:
+        s += "record: \n"
     s += f + "\t Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, \n"
     s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n"
     s += f + "\t solvable, supersolvable \n \n"
@@ -2461,9 +2475,17 @@ def download_preamble(com1, com2, dltype, cc_known):
             s += f + " the group and i is which group of that order it is. Conjugacy classes \n"
             s += f + " are stored in the variable 'C' with elements from the group 'G'. \n"
         if dltype == "oscar":
-            s += f + " The character table is stored as ..."
+            s += f + " The character table is stored in the dictionary chartbl_n_i, where n is \n"
+            s += f + " the order of the group and i is which group of that order it is. The \n"
+            s += f + " key \"Irr\" holds the table itself, as a matrix over the abelian closure \n"
+            s += f + " of Q whose rows are the irreducible characters and whose columns are \n"
+            s += f + " the conjugacy classes, in the order given by \"ClassNames\". \n"
         if dltype == "sage":
-            s += f + " The character table is stored as ..."
+            s += f + " The character table is stored in the dict chartbl_n_i, where n is the \n"
+            s += f + " order of the group and i is which group of that order it is. The key \n"
+            s += f + " 'Irr' holds the table itself, as a matrix over the universal cyclotomic \n"
+            s += f + " field whose rows are the irreducible characters and whose columns are \n"
+            s += f + " the conjugacy classes, in the order given by 'ClassNames'. \n"
     s += com2
     return s
 
@@ -2487,39 +2509,35 @@ def download_construction_string(G,dltype):
 
 
 # create boolean string for downloading, G is WebAbstractGroup
-def download_boolean_string(G,dltype,ul_label):
-    bool_attr = ['Agroup','Zgroup','abelian','almost_simple','cyclic','metabelian','metacyclic','monomial','nilpotent','perfect','quasisimple','rational','solvable','supersolvable']
+def download_boolean_string(G, dltype, ul_label):
+    bool_attr = ['Agroup', 'Zgroup', 'abelian', 'almost_simple', 'cyclic', 'metabelian', 'metacyclic',
+                 'monomial', 'nilpotent', 'perfect', 'quasisimple', 'rational', 'solvable', 'supersolvable']
 
-    if dltype == "magma":
-        s = "RF := recformat< "+", ".join([attr for attr in bool_attr])+" : BoolElt >; \n"
-        s += "booleans_" + ul_label + " := rec< RF |  "
-    elif dltype == "gap":
-        s = "booleans_" + ul_label + " := rec( "
-    elif dltype == "oscar":
-        s = "booleans_" + ul_label + " := rec( "
-    elif dltype == "sage":
-        s = "...."
-    else:
+    known = [(attr, getattr(G, attr)) for attr in bool_attr]
+    known = [(attr, val) for (attr, val) in known if val is not None]
+    if not known:
         return ""
-
-    for attr in bool_attr:
-        if getattr(G,attr) is not None:
-            s += "\n"
-            s += attr + " := " + str(getattr(G,attr)).lower() + ","
-    s = s[:-1]   # last comma!
-
-    # close record
-    if dltype == "gap":
-        s += "); \n"
+ 
+    # Construct the string presenting all boolean invariants of G
     if dltype == "magma":
-        s += ">; \n"
-    if dltype == "oscar":
-        s += ">; \n"
+        s = "RF := recformat< " + ", ".join(BOOL_ATTR) + " : BoolElt >; \n"
+        s += "booleans_" + ul_label + " := rec< RF | "
+        body = ",".join(f"\n{attr} := {str(val).lower()}" for attr, val in known)
+        return s + body + ">; \n"
+    if dltype == "gap":
+        s = "booleans_" + ul_label + " := rec( "
+        body = ",".join(f"\n{attr} := {str(val).lower()}" for attr, val in known)
+        return s + body + "); \n"
     if dltype == "sage":
-        s += ">; \n"
-
-    return s
-
+        s = "booleans_" + ul_label + " = {"
+        body = ",".join(f'\n    "{attr}": {bool(val)}' for attr, val in known)
+        return s + body + "\n}\n"
+    if dltype == "oscar":
+        s = "booleans_" + ul_label + " = ("
+        body = ",".join(f"\n    {attr} = {str(val).lower()}" for attr, val in known)
+        return s + body + ",\n)\n"
+ 
+    return ""
 
 def download_char_table_magma(G, ul_label):
     gp_type = G.element_repr_type
@@ -2576,7 +2594,7 @@ def download_char_table_magma(G, ul_label):
     return s
 
 
-def download_char_table_gap(G,ul_label):
+def download_char_table_gap(G, ul_label):
     tbl = "chartbl_" + G.label.replace(".","_")
     s = tbl + ":=rec(); \n"
     s += tbl + ".IsFinite:= true; \n"
@@ -2638,73 +2656,140 @@ def download_char_table_gap(G,ul_label):
     return s
 
 
-def download_char_table_oscar(G,ul_label):
-    # todo
+def download_char_table_oscar(G, ul_label):
+    tbl = "chartbl_" + ul_label
+    d = _char_table_data(G)
+ 
+    s = "K, z = abelian_closure(QQ)  # z(n) is the standard primitive n-th root of unity\n\n"
+    s += f"{tbl} = Dict{{String, Any}}()\n"
+    s += f'{tbl}["Identifier"] = "{G.label}"\n'
+    s += f'{tbl}["Size"] = {d["size"]}\n'
+    s += f'{tbl}["NrConjugacyClasses"] = {d["nccl"]}\n'
+    s += f'{tbl}["ClassNames"] = {_julia_str_list(d["names"])}\n'
+    s += f'{tbl}["SizesCentralizers"] = {d["centralizers"]}\n'
+    s += f'{tbl}["OrderClassRepresentatives"] = {d["orders"]}\n'
+    pmap = ", ".join(f"{p} => {v}" for p, v in d["powers"].items())
+    s += f'{tbl}["ComputedPowerMaps"] = Dict({pmap})\n'
+ 
+    gp_var = REP_VAR.get(G.element_repr_type)
+    reps = [download_element_string(G, c, "oscar") for c in d["reps"]]
+    if gp_var and all(r is not None for r in reps):
+        s += f'{tbl}["UnderlyingGroup"] = {gp_var}\n'
+        s += f'{tbl}["ConjugacyClasses"] = [{", ".join(reps)}]\n'
+    else:
+        s += "# Conjugacy class representatives are not available in Oscar "
+        s += "for this representation.\n"
+ 
+    s += f'{tbl}["Indicators"] = {d["indicators"]}\n'
+ 
+    entries = []
+    for chi in G.characters:
+        entries += [download_cyclotomic_value(chi.cyclotomic_n, v, "oscar")
+                    for v in chi.values]
+    nrows = len(G.characters)
+    s += f'{tbl}["Irr"] = matrix(K, {nrows}, {d["nccl"]}, [\n    '
+    s += ",\n    ".join(", ".join(entries[i:i + d["nccl"]])
+                        for i in range(0, len(entries), d["nccl"]))
+    s += "\n])\n"
+    s += "\n# Individual characters can be turned into Oscar class functions with\n"
+    s += f'#   [class_function({gp_var or "G"}, [{tbl}["Irr"][i, j] for j in 1:{tbl}["NrConjugacyClasses"]])\n'
+    s += f'#    for i in 1:{nrows}]\n'
+    return s
 
 
 def download_char_table_sage(G,ul_label):
-    # todo
+    tbl = "chartbl_" + ul_label
+    d = _char_table_data(G)
+ 
+    s = "UCF = UniversalCyclotomicField()\n"
+    s += "E = UCF.gen  # E(n) is the standard primitive n-th root of unity\n\n"
+    s += f"{tbl} = {{}}\n"
+    s += f'{tbl}["Identifier"] = "{G.label}"\n'
+    s += f'{tbl}["Size"] = {d["size"]}\n'
+    s += f'{tbl}["NrConjugacyClasses"] = {d["nccl"]}\n'
+    s += f'{tbl}["ClassNames"] = {d["names"]}\n'
+    s += f'{tbl}["SizesCentralizers"] = {d["centralizers"]}\n'
+    s += f'{tbl}["OrderClassRepresentatives"] = {d["orders"]}\n'
+    s += f'{tbl}["ComputedPowerMaps"] = {d["powers"]}\n'
+ 
+    gp_var = REP_VAR.get(G.element_repr_type)
+    reps = [download_element_string(G, c, "sage") for c in d["reps"]]
+    if gp_var and all(r is not None for r in reps):
+        s += f'{tbl}["UnderlyingGroup"] = {gp_var}\n'
+        s += f'{tbl}["ConjugacyClasses"] = [{", ".join(reps)}]\n'
+    else:
+        s += "# Conjugacy class representatives are not available in Sage "
+        s += "for this representation.\n"
+ 
+    s += f'{tbl}["Indicators"] = {d["indicators"]}\n'
+ 
+    # The character table itself: rows are the irreducible characters, columns
+    # the conjugacy classes, in the same order as ClassNames.
+    entries = []
+    for chi in G.characters:
+        entries += [download_cyclotomic_value(chi.cyclotomic_n, v, "sage")
+                    for v in chi.values]
+    nrows = len(G.characters)
+    s += f'{tbl}["Irr"] = Matrix(UCF, {nrows}, {d["nccl"]}, [\n    '
+    s += ",\n    ".join(", ".join(entries[i:i + d["nccl"]])
+                        for i in range(0, len(entries), d["nccl"]))
+    s += "\n])\n"
+    return s
 
 
 
 def download_char_table(G,dltype,ul_label):  # G is web abstract group
     if dltype == "gap":
-        return download_char_table_gap(G,ul_label)
+        return download_char_table_gap(G, ul_label)
     elif dltype == "magma":
-        return download_char_table_magma(G,ul_label)
+        return download_char_table_magma(G, ul_label)
     elif dltype == "oscar":
-        return download_char_table_oscar(G,ul_label)
+        return download_char_table_oscar(G, ul_label)
     elif dltype == "sage":
-        return download_char_table_sage(G,ul_label)
+        return download_char_table_sage(G, ul_label)
     else:
         return ""
 
 
-def download_trivial_construction(dltype):  #trival gp construction is different
+def download_trivial_construction(dltype):
+     """ The trivial group needs to be special-cased. """
     if dltype == "gap":
-        s = "GPC := TrivialGroup(); \n"
-        s += "GPerm := SymmetricGroup(1); \n"
-    elif dltype == "magma":
-        s = "GPC := SmallGroup(1,1); \n"
-        s += "GPerm := Sym(1); \n"
-    elif dltype == "oscar":
-        s = "..."
-    elif dltype == "sage":
-        s = "...."
-    else:
-        s = ""
-    return s
+        return "GPC := TrivialGroup(); \nGPerm := SymmetricGroup(1); \n"
+    if dltype == "magma":
+        return "GPC := SmallGroup(1,1); \nGPerm := Sym(1); \n"
+    if dltype == "sage":
+        return "GPC = SymmetricGroup(1)\nGPerm = SymmetricGroup(1)\n"
+    if dltype == "oscar":
+        return "GPC = symmetric_group(1)\nGPerm = symmetric_group(1)\n"
+    return ""
+
+#  Language Metadata. For each download language, we include
+#    com1  - opening delimiter of a block comment (or the line-comment char)
+#    com2  - closing delimiter of a block comment ("" if there is none)
+#    line  - character that must start every line of a multi-line comment
+#    ext   - file extension
+DOWNLOAD_LANG_DATA = {
+    "gap":   {"com1": "#",  "com2": "",   "line": "#", "ext": ".g"},
+    "magma": {"com1": "/*", "com2": "*/", "line": "",  "ext": ".m"},
+    "sage":  {"com1": "#",  "com2": "",   "line": "#", "ext": ".sage"},
+    "oscar": {"com1": "#=", "com2": "=#", "line": "",  "ext": ".jl"},
+}
 
 
 @abstract_page.route("/<label>/download/<download_type>")
 def download_group(**args):
     dltype = args["download_type"]
     label = args["label"]
-#    com = "#"  # single line comment start
-    com1 = ""  # multiline comment start
-    com2 = ""  # multiline comment end
+    if dltype not in DOWNLOAD_LANG_DATA:
+        return abort(404, f"Unknown download type {dltype}")
+
+    lang = DOWNLOAD_LANG_DATA[dltype]
+    com1, com2 = lang["com1"], lang["com2"]
 
     wag = WebAbstractGroup(label)
-
     ul_label = wag.label.replace(".","_")
-    filename = "group" + ul_label
+    filename = "group" + ul_label + lang["ext"]
     mydate = time.strftime("%d %B %Y")
-    if dltype == "gap":
-        filename += ".g"
-#        com = ""
-        com1 = "#"
-        com2 = ""
-    elif dltype == "magma":
-        #        com = ""
-        com1 = "/*"
-        com2 = "*/"
-        filename += ".m"
-    elif dltype == "oscar":
-        com1, com2 = "#=", "=#"
-        filename += ".oscar"
-    elif dltype == "sage":
-        com1, com2 = "#=", "=#"
-        filename += ".sage"
 
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
     s += "\n \n"
@@ -2713,19 +2798,21 @@ def download_group(**args):
         cc_known = False
     elif wag.complex_characters_known is False or wag.complex_characters_known is None:
         cc_known = False
-    elif wag.element_repr_type == "Lie":  # issue with representatives of quotients vs permutations
-        if wag.representations["Lie"][0]["family"][0] == "P":
-            cc_known = False
-        else:
-            cc_known = True
+    elif wag.element_repr_type == "Lie":
+        # issue with representatives of quotients vs permutations
+        cc_known = wag.representations["Lie"][0]["family"][0] != "P"
     else:
         cc_known = True
 
-    s += download_preamble(com1, com2,dltype, cc_known)
+    # Sage and Oscar cannot yet write down elements of a group of Lie type
+    if dltype in ["sage", "oscar"] and wag.element_repr_type == "Lie":
+        cc_known = False
+
+    s += download_preamble(com1, com2, dltype, cc_known)
     s += "\n \n"
 
     s += com1 + " Constructions " + com2 + "\n"
-    if label == "1.1":  #special case for trivial subgroup
+    if label == "1.1":  # special case for trivial subgroup
         s += download_trivial_construction(dltype)
     else:
         s += download_construction_string(wag,dltype)
