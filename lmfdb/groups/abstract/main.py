@@ -2461,7 +2461,7 @@ DOWNLOAD_LANG_DATA = {
     "oscar": {"com1": "#=", "com2": "=#", "line": "",  "ext": ".jl"},
 }
 
-# List of the different group constructions
+# List of the different possible group constructions
 REP_VAR = {"PC":"GPC", "Perm":"GPerm", "GLZ":"GLZ", "GLFp":"GLFp", "GLZN":"GLZN", "GLZq":"GLZq", "GLFq":"GLFq"}
 MATRIX_REPS = ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]
 
@@ -2561,6 +2561,17 @@ def download_boolean_string(G, dltype, ul_label):
 #  Downloads for Character tables
 # ---------------------------------
 
+def download_cyclotomic_value(n, val, dltype):
+    s = str(download_cyclotomics(n, val, dltype))
+    if dltype == "magma":
+        s = s.replace(f"E({n})", "K.1")
+    elif dltype == "oscar":
+        s = s.replace("E(", "z(")
+    return s
+
+def _char_values(chi, dltype):
+    return [download_cyclotomic_value(chi.cyclotomic_n, v, dltype) for v in chi.values]
+
 def _char_table_data(G):
     """
     Everything about the character table that does not depend on the output
@@ -2584,10 +2595,25 @@ def _char_table_data(G):
         "indicators": [int(chi.indicator) for chi in G.characters],
     }
 
+def _reps_or_none(G, d, dltype, gp_var=None):
+    """All representatives as source code, or None if any is unavailable."""
+    reps = [download_element_string(G, c, dltype, gp_var=gp_var) for c in d["reps"]]
+    return None if any(r is None for r in reps) else reps
+
+
 def _quoted_list(strs):
     """A list of double-quoted strings (Gap, Magma and Julia all want ")."""
     return "[" + ", ".join('"%s"' % s for s in strs) + "]"
 
+def _gap_power_maps(powers):
+    """
+    Gap's ``ComputedPowerMaps`` is indexed *by the prime*, so every non-prime
+    position has to be left unbound: ``[, map2, , map4]``.  (The previous code
+    packed the maps consecutively, which put the 3- and 5-power maps of a group
+    of order 15 at positions 2 and 3.)
+    """
+    slots = ["" if p not in powers else str(powers[p]) for p in range(1, max(powers) + 1)]
+    return "[" + ", ".join(slots) + "]"
 
 def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
     """
@@ -2780,12 +2806,10 @@ def _char_table_dict(G, ul_label, dltype):
                        " this representation.")
     lines.append(f'{tbl}["Indicators"] = {d["indicators"]}')
 
-    assert(False)
-
     # One row per line, so that every line is a complete statement.
     lines.append(fmt["irr_init"])
     for chi in d["chars"]:
-        lines.append(fmt["irr_row"](", ".join([download_cyclotomics(chi.cyclotomic_n, v, dltype) for v in chi.values])))
+        lines.append(fmt["irr_row"](", ".join(_char_values(chi, dltype))))
     lines.append(f'{tbl}["Irr"] = {fmt["matrix"]}, {len(d["chars"])}, '
                  f'{d["nccl"]}, irr_{ul_label})')
     return "\n".join(lines) + "\n"

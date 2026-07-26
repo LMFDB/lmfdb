@@ -3145,6 +3145,7 @@ class WebAbstractGroup(WebObj):
             gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
             magma_assign = create_magma_assignment(self)
             sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
+            oscar_assign = create_gap_assignment(self.representations["PC"]["gens"])
         else:
             code['presentation'] = {}
             gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign = None, None, None, None, None, None, None, None
@@ -3206,7 +3207,7 @@ class WebAbstractGroup(WebObj):
             nFq, Fq, LFq, LFqsplit, LFqsage, LFqoscar = None, None, None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
-                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign, 'oscar_assign': oscar_assign,
                 'magma_assign': magma_assign, 'deg': deg, 'perms' : perms, 'perms_sage' : perms_sage,
                 'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
                 'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,

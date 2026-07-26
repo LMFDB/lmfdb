@@ -52,6 +52,9 @@ presentation:
   sage_gap: |
     # This uses Sage's interface to GAP, as Sage (currently) has no native support for PC groups
     G = gap.new('PcGroupCode({pccode},{ordgp})'); {sage_gap_assign}
+  oscar: |
+    # This uses Oscar's interface to GAP, as Oscar (currently) has no native support for PC groups
+    G = PcGroup(GAP.evalstr("PcGroupCode({pccode},{ordgp})")); {oscar_assign}
 
 permutation:
   comment: Define the group as a permutation group
