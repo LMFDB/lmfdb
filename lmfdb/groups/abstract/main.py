@@ -2076,16 +2076,12 @@ def render_abstract_group(label, data=None):
 
         # disable until we can fix downloads
         downloads = [("Group to Gap", url_for(".download_group", label=label, download_type="gap")),
-                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma"))]
-                     #("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
+                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma"))
+                     ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar"))]
         for lang in [("Gap","gap"), ("Magma","magma"), ("SageMath","sage"), ("SageMath (using Gap)","sage_gap"), ("Oscar","oscar")]:
             if lang[1] in code['prompt']:
                 downloads.append(('{} commands'.format(lang[0]), url_for(".download_group_code", label=label, download_type=lang[1])))
         downloads.append(("Underlying data", url_for(".gp_data", label=label)))
-                     ("Group to Magma", url_for(".download_group", label=label, download_type="magma")),
-                     ("Group to Oscar", url_for(".download_group", label=label, download_type="oscar")),
-                                         ("Underlying data", url_for(".gp_data", label=label)),
-        ]
 
         # "internal" friends
         sbgp_of_url = (
