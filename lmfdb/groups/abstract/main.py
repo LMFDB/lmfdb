@@ -2507,26 +2507,31 @@ def download_preamble(com1, com2, dltype, cc_known):
     return s
 
 
-# create construction of group for downloading, G is WebAbstractGroup
-def download_construction_string(G,dltype):
-    # add Lie groups?
+def download_construction_string(G, dltype):
+    """
+    Creates a string constructing the group G for each possible representation (GPC, GPerm, GLZ, ...)
+    Input: A WebAbstractGroup G, and a language dltype.
+    """
+
+    # TODO: add Lie groups?
+
     s = ""
     snippet = G.code_snippets()
-    if "PC" in G.representations:
-        gp_str = str(snippet['presentation'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GPC :=").replace("G.", "GPC.").replace("G,", "GPC,")
-    if "Perm" in G.representations:
-        gp_str = str(snippet['permutation'][dltype]) + "\n"
-        s += gp_str.replace("G :=", "GPerm :=")
-    for rep in ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
+    for rep in ["PC", "Perm"] + MATRIX_REPS:
         if rep in G.representations:
-            gp_str = str(snippet[rep][dltype]) + "\n"
-            s += gp_str.replace("G :=", rep+" :=")
+            key = {"PC": "presentation", "Perm": "permutation"}.get(rep, rep)
+            code = snippet.get(key, {}).get(dltype)
+            if code:
+                s += re.sub(r"\bG\b", REP_VAR[rep], str(code).strip())  + "\n" 
     return str(s)
 
 
-# create boolean string for downloading, G is WebAbstractGroup
 def download_boolean_string(G, dltype, ul_label):
+    """
+    Construct the boolean invariants of G as a string for downloading.
+    Given as a record/dict/NamedTuple.
+    """
+
     BOOL_ATTR = ['Agroup', 'Zgroup', 'abelian', 'almost_simple', 'cyclic', 'metabelian', 'metacyclic',
                  'monomial', 'nilpotent', 'perfect', 'quasisimple', 'rational', 'solvable', 'supersolvable']
 
