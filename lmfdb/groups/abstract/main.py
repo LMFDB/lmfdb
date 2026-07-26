@@ -2441,7 +2441,7 @@ def download_cyclotomics(n, vals, dltype):
                 s += "^" + str(e)
 
     if dltype == "magma":  # Magma needs different format.
-        return s.replace("E(" + str(n) + ")", "K.1")
+        return s.replace(f"E({n})", "K.1")
     if dltype == "oscar":  # Oscar needs different format.
         return s.replace("E(", "z(")
 
@@ -2584,54 +2584,62 @@ def _char_table_data(G):
         "indicators": [int(chi.indicator) for chi in G.characters],
     }
 
+def _quoted_list(strs):
+    """A list of double-quoted strings (Gap, Magma and Julia all want ")."""
+    return "[" + ", ".join('"%s"' % s for s in strs) + "]"
 
-def download_element_string(G, code, dltype, gp_type=None):
+
+def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
     """
-    A conjugacy class representative as Sage or Oscar source code, or ``None``
-    when the representation is not available in that language (currently: PC
-    groups in Oscar, and all groups of Lie type).
+    One conjugacy class representative as source code, or ``None`` when the
+    representation is not expressible in that language (groups of Lie type, and
+    PC groups in Oscar unless code.yaml gains an ``oscar`` presentation snippet).
     """
     if gp_type is None:
         gp_type = G.element_repr_type
-    var = REP_VAR.get(gp_type)
+    if gp_var is None:
+        gp_var = REP_VAR.get(gp_type)
+    if gp_var is None:
+        return None
 
     if gp_type == "PC":
-        if dltype == "oscar" and "presentation" not in (G.code_snippets() or {}):
+        if dltype == "oscar" and not (G.code_snippets() or {}).get("presentation", {}).get("oscar"):
             return None
         if code == 0:
-            return f"{var}.Identity()" if dltype == "sage" else f"one({var})"
-        # a^{2}*b  ->  a^2*b ; the generators a, b, ... are bound by the
-        # presentation snippet.
-        s = G.decode_as_pcgs(code, as_str=True, as_magma=True)
-        return s.replace("{", "").replace("}", "")
+            return {"gap": f"Identity({gp_var})",
+                    "magma": f"Id({gp_var})",
+                    "sage": f"{gp_var}.Identity()",
+                    "oscar": f"one({gp_var})"}[dltype]
+        # "a^{2}*b" -> "a^2*b"; a, b, ... are bound by the presentation snippet
+        return G.decode_as_pcgs(code, as_str=True, as_magma=True).replace("{", "").replace("}", "")
 
     if gp_type == "Perm":
-        x = G.decode_as_perm(code)
-        d = G.representations["Perm"]["d"]
+        cycles = G.decode_as_perm(code, as_str=True)
+        if dltype == "gap":
+            return cycles                      # "()" is Gap's identity permutation
+        if dltype == "magma":
+            return f"Id({gp_var})" if cycles == "()" else f"{gp_var}!{cycles}"
         if dltype == "sage":
-            cycles = G.decode_as_perm(code, as_str=True)
-            if cycles == "()":
-                return f"{var}.one()"
-            return f"{var}('{cycles}')"
-        # Oscar wants the list of images
-        images = [int(x(i)) for i in range(1, d + 1)]
-        return f"perm({var}, {images})"
+            return f"{gp_var}.one()" if cycles == "()" else f"{gp_var}('{cycles}')"
+        dim = G.representations["Perm"]["d"]
+        x = G.decode_as_perm(code)
+        return f"perm({gp_var}, {[int(x(i)) for i in range(1, dim + 1)]})"
 
     if gp_type in MATRIX_REPS:
-        d = G.representations[gp_type]["d"]
+        rep = G.representations[gp_type]
+        dim = rep["d"]
         L = G.decode_as_matrix(code, rep_type=gp_type, ListForm=True)
-        if gp_type == "GLFq":
-            entries = split_matrix_Fq_add_al(L, d)      # already a string
-        else:
-            entries = str(split_matrix_list(L, d))
+        if dltype == "gap":
+            return _gap_matrix(gp_type, rep, L, dim)
+        if dltype == "magma":
+            return f"Matrix({dim}, {_magma_matrix(gp_type, L)})"
+        rows = (split_matrix_Fq_add_al(L, dim) if gp_type == "GLFq"
+                else str(split_matrix_list(L, dim)))
         if dltype == "sage":
-            return f"{var}({entries})"
-        R = _matrix_base_ring(G, gp_type, dltype)
-        return f"{var}(matrix({R}, {entries}))"
+            return f"{gp_var}({rows})"
+        return f"{gp_var}(matrix({_matrix_base_ring(G, gp_type, 'oscar')}, {rows}))"
 
-    # "Lie", or anything we do not know how to write down
     return None
-
 
 def _julia_str_list(strs):
     """A Julia vector of strings (Julia has no single-quoted strings)."""
@@ -2772,16 +2780,19 @@ def _char_table_dict(G, ul_label, dltype):
                        " this representation.")
     lines.append(f'{tbl}["Indicators"] = {d["indicators"]}')
 
+    assert(False)
+
     # One row per line, so that every line is a complete statement.
     lines.append(fmt["irr_init"])
     for chi in d["chars"]:
-        lines.append(fmt["irr_row"](", ".join(_char_values(chi, dltype))))
+        lines.append(fmt["irr_row"](", ".join([download_cyclotomics(chi.cyclotomic_n, v, dltype) for v in chi.values])))
     lines.append(f'{tbl}["Irr"] = {fmt["matrix"]}, {len(d["chars"])}, '
                  f'{d["nccl"]}, irr_{ul_label})')
     return "\n".join(lines) + "\n"
 
 def download_char_table_sage(G, ul_label):
     return _char_table_dict(G, ul_label, "sage")
+
 
 def download_char_table_oscar(G, ul_label):
     return _char_table_dict(G, ul_label, "oscar")
