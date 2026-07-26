@@ -2448,6 +2448,23 @@ def download_cyclotomics(n, vals, dltype):
     return s
 
 
+#  Language Metadata. For each download language, we include
+#    com1  - opening delimiter of a block comment (or the line-comment char)
+#    com2  - closing delimiter of a block comment ("" if there is none)
+#    line  - character that must start every line of a multi-line comment
+#    ext   - file extension
+
+DOWNLOAD_LANG_DATA = {
+    "gap":   {"com1": "#",  "com2": "",   "line": "#", "ext": ".g"},
+    "magma": {"com1": "/*", "com2": "*/", "line": "",  "ext": ".m"},
+    "sage":  {"com1": "#",  "com2": "",   "line": "#", "ext": ".sage"},
+    "oscar": {"com1": "#=", "com2": "=#", "line": "",  "ext": ".jl"},
+}
+
+# List of the different group constructions
+REP_VAR = {"PC":"GPC", "Perm":"GPerm", "GLZ":"GLZ", "GLFp":"GLFp", "GLZN":"GLZN", "GLZq":"GLZq", "GLFq":"GLFq"}
+MATRIX_REPS = ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]
+
 # create preamble for downloading individual group
 def download_preamble(com1, com2, dltype, cc_known):
     f = DOWNLOAD_LANG_DATA[dltype]["line"]
@@ -2510,10 +2527,10 @@ def download_construction_string(G,dltype):
 
 # create boolean string for downloading, G is WebAbstractGroup
 def download_boolean_string(G, dltype, ul_label):
-    bool_attr = ['Agroup', 'Zgroup', 'abelian', 'almost_simple', 'cyclic', 'metabelian', 'metacyclic',
+    BOOL_ATTR = ['Agroup', 'Zgroup', 'abelian', 'almost_simple', 'cyclic', 'metabelian', 'metacyclic',
                  'monomial', 'nilpotent', 'perfect', 'quasisimple', 'rational', 'solvable', 'supersolvable']
 
-    known = [(attr, getattr(G, attr)) for attr in bool_attr]
+    known = [(attr, getattr(G, attr)) for attr in BOOL_ATTR]
     known = [(attr, val) for (attr, val) in known if val is not None]
     if not known:
         return ""
@@ -2538,6 +2555,88 @@ def download_boolean_string(G, dltype, ul_label):
         return s + body + ",\n)\n"
  
     return ""
+
+
+# ---------------------------------
+#  Downloads for Character tables
+# ---------------------------------
+
+def _char_table_data(G):
+    """
+    Everything about the character table that does not depend on the output
+    language.  Conjugacy classes come out in LMFDB counter order, so the
+    ``powers`` entries (which are counters) index directly into these lists.
+    """
+    classes = list(G.conjugacy_classes)
+    primes = [int(p) for p in G.factors_of_order[:G.num_primes_for_power_maps]]
+    return {
+        "label": G.label,
+        "name": G.name,
+        "size": int(G.order),
+        "nccl": len(classes),
+        "names": [c.label for c in classes],
+        "sizes": [int(c.size) for c in classes],
+        "centralizers": [int(ZZ(c.group_order) // ZZ(c.size)) for c in classes],
+        "orders": [int(c.order) for c in classes],
+        "powers": {p: [int(c.powers[i]) for c in classes] for i, p in enumerate(primes)},
+        "reps": [c.representative for c in classes],
+        "chars": list(G.characters),
+        "indicators": [int(chi.indicator) for chi in G.characters],
+    }
+
+
+def download_element_string(G, code, dltype, gp_type=None):
+    """
+    A conjugacy class representative as Sage or Oscar source code, or ``None``
+    when the representation is not available in that language (currently: PC
+    groups in Oscar, and all groups of Lie type).
+    """
+    if gp_type is None:
+        gp_type = G.element_repr_type
+    var = REP_VAR.get(gp_type)
+
+    if gp_type == "PC":
+        if dltype == "oscar" and "presentation" not in (G.code_snippets() or {}):
+            return None
+        if code == 0:
+            return f"{var}.Identity()" if dltype == "sage" else f"one({var})"
+        # a^{2}*b  ->  a^2*b ; the generators a, b, ... are bound by the
+        # presentation snippet.
+        s = G.decode_as_pcgs(code, as_str=True, as_magma=True)
+        return s.replace("{", "").replace("}", "")
+
+    if gp_type == "Perm":
+        x = G.decode_as_perm(code)
+        d = G.representations["Perm"]["d"]
+        if dltype == "sage":
+            cycles = G.decode_as_perm(code, as_str=True)
+            if cycles == "()":
+                return f"{var}.one()"
+            return f"{var}('{cycles}')"
+        # Oscar wants the list of images
+        images = [int(x(i)) for i in range(1, d + 1)]
+        return f"perm({var}, {images})"
+
+    if gp_type in MATRIX_REPS:
+        d = G.representations[gp_type]["d"]
+        L = G.decode_as_matrix(code, rep_type=gp_type, ListForm=True)
+        if gp_type == "GLFq":
+            entries = split_matrix_Fq_add_al(L, d)      # already a string
+        else:
+            entries = str(split_matrix_list(L, d))
+        if dltype == "sage":
+            return f"{var}({entries})"
+        R = _matrix_base_ring(G, gp_type, dltype)
+        return f"{var}(matrix({R}, {entries}))"
+
+    # "Lie", or anything we do not know how to write down
+    return None
+
+
+def _julia_str_list(strs):
+    """A Julia vector of strings (Julia has no single-quoted strings)."""
+    return "[" + ", ".join('"%s"' % s for s in strs) + "]"
+
 
 def download_char_table_magma(G, ul_label):
     gp_type = G.element_repr_type
@@ -2594,186 +2693,115 @@ def download_char_table_magma(G, ul_label):
     return s
 
 
+
 def download_char_table_gap(G, ul_label):
-    tbl = "chartbl_" + G.label.replace(".","_")
-    s = tbl + ":=rec(); \n"
-    s += tbl + ".IsFinite:= true; \n"
-    s += tbl + ".UnderlyingCharacteristic:= 0; \n"
+    d = _char_table_data(G)
+    tbl = "chartbl_" + ul_label
+    gp_var = REP_VAR.get(G.element_repr_type)
+    reps = _reps_or_none(G, d, "gap")
 
-    gp_type = G.element_repr_type
+    lines = [
+        f"{tbl} := rec();",
+        f"{tbl}.IsFinite := true;",
+        f"{tbl}.UnderlyingCharacteristic := 0;",
+        f'{tbl}.Size := {d["size"]};',
+        f'{tbl}.InfoText := "Character table for group {d["label"]} downloaded from the LMFDB.";',
+        f'{tbl}.Identifier := "{d["name"]}";',
+        f'{tbl}.NrConjugacyClasses := {d["nccl"]};',
+        f'{tbl}.IdentificationOfConjugacyClasses := {list(range(1, d["nccl"] + 1))};',
+        f'{tbl}.ComputedPowerMaps := {_gap_power_maps(d["powers"])};',
+        f'{tbl}.SizesCentralizers := {d["centralizers"]};',
+        f'{tbl}.ClassNames := {_quoted_list(d["names"])};',
+        f'{tbl}.OrderClassRepresentatives := {d["orders"]};',
+    ]
+    if gp_var:
+        lines.insert(3, f"{tbl}.UnderlyingGroup := {gp_var};")
+    if reps:
+        lines.append(f'{tbl}.ConjugacyClasses := [{", ".join(reps)}];')
+    irr = ", ".join("[" + ", ".join(_char_values(chi, "gap")) + "]" for chi in d["chars"])
+    lines.append(f"{tbl}.Irr := [{irr}];")
+    lines.append(f"ConvertToLibraryCharacterTableNC({tbl});")
+    return "\n".join(lines) + "\n"
 
-    if gp_type == "PC":
-        s += tbl + ".UnderlyingGroup:= GPC;\n"
-    if gp_type == "Perm":
-        s += tbl + ".UnderlyingGroup:= GPerm;\n"
-    for rep in ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]:
-        if gp_type == rep:
-            s += tbl + ".UnderlyingGroup:= "+rep+";\n"
 
-    s += tbl + ".Size:= " + str(G.order) + ";\n"
-    s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB."; \n'
-    s += tbl + '.Identifier:= " ' + G.name + ' "; \n'
-    s += tbl + ".NrConjugacyClasses:= " + str(G.number_conjugacy_classes) + "; \n"
 
-    # process info from each conjugacy class
-    size_centralizers, class_names,order_class_reps, cc_reps = ([] for i in range(4))
-    num_primes = G.num_primes_for_power_maps
-    power_maps = [[ ] for i in range(num_primes)]
-    for conj in G.conjugacy_classes:
-        for i in range(num_primes):
-            power_maps[i].append(conj.powers[i])
-        #power_maps.append(conj.powers)
-        size_centralizers.append(int(conj.group_order/conj.size))
-        class_names.append(conj.label)
-        order_class_reps.append(conj.order)
-        if gp_type != "PC" and gp_type != "Perm":  # need to do matrix directly to include right format
-            cc_reps.append(G.decode_as_matrix(conj.representative,rep_type=gp_type,ListForm=True))
-        else:
-            cc_reps.append(G.decode(conj.representative,rep_type=gp_type))
+def _char_table_dict(G, ul_label, dltype):
+    """
+    Sage and Oscar have no object to populate, so the table becomes a dict/Dict keyed with the Gap record names.
+    The two languages differ only in punctuation, which is what ``fmt`` below collects.
+    """
+    d = _char_table_data(G)
+    tbl = "chartbl_" + ul_label
+    gp_var = REP_VAR.get(G.element_repr_type)
+    repstmp = [download_element_string(G, c, dltype, gp_var=None) for c in d["reps"]]
+    reps = None if any(r is None for r in repstmp) else repstmp
 
-    cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
-    pwr_maps = "[ , "
-    for i in range(len(power_maps)-1):
-        pwr_maps += str(power_maps[i]) + ", "
-    pwr_maps += str(power_maps[len(power_maps)-1]) + "]"  # PowerMaps needs a blank entry in front
+    if dltype == "sage":
+        fmt = {"open": [f"{tbl} = {{}}"],
+               "irr_init": f"irr_{ul_label} = []",
+               "irr_row": lambda row: f"irr_{ul_label} += [{row}]",
+               "matrix": "Matrix(UCF"}
+        head = ["UCF = UniversalCyclotomicField()",
+                "E = UCF.gen  # E(n) is the standard primitive n-th root of unity"]
+    else:
+        fmt = {"open": [f"{tbl} = Dict{{String, Any}}()"],
+               "irr_init": f"irr_{ul_label} = elem_type(K)[]",
+               "irr_row": lambda row: f"append!(irr_{ul_label}, [{row}])",
+               "matrix": "matrix(K"}
+        head = ["K, z = abelian_closure(QQ)  "
+                "# z(n) is the standard primitive n-th root of unity"]
 
-    s += tbl + ".ConjugacyClasses:= " + str(cc_reps) + ";\n"
-    s += tbl + ".IdentificationOfConjugacyClasses:= " + str(list(range(1,G.number_conjugacy_classes+1))) + ";\n"
-    s += tbl + ".ComputedPowerMaps:= "  + str(pwr_maps) + ";\n"
-    s += tbl + ".SizesCentralizers:= "  + str(size_centralizers) + ";\n"
-    s += tbl + ".ClassNames:= "  + str(cl_names) + ";\n"
-    s += tbl + ".OrderClassRepresentatives:= "  + str(order_class_reps) + ";\n"
+    lines = head + [""] + fmt["open"] + [
+        f'{tbl}["Identifier"] = "{d["label"]}"',
+        f'{tbl}["Size"] = {d["size"]}',
+        f'{tbl}["NrConjugacyClasses"] = {d["nccl"]}',
+        f'{tbl}["ClassNames"] = {_quoted_list(d["names"])}',
+        f'{tbl}["SizesCentralizers"] = {d["centralizers"]}',
+        f'{tbl}["OrderClassRepresentatives"] = {d["orders"]}',
+    ]
+    pmap = ", ".join(f"{p}: {v}" if dltype == "sage" else f"{p} => {v}"
+                     for p, v in d["powers"].items())
+    lines.append(f'{tbl}["ComputedPowerMaps"] = '
+                 + (f"{{{pmap}}}" if dltype == "sage" else f"Dict({pmap})"))
+    if reps:
+        lines.append(f'{tbl}["UnderlyingGroup"] = {gp_var}')
+        lines.append(f'{tbl}["ConjugacyClasses"] = [{", ".join(reps)}]')
+    else:
+        lines.append(DOWNLOAD_LANG_DATA[dltype]["com"]
+                     + " Conjugacy class representatives are not available for"
+                       " this representation.")
+    lines.append(f'{tbl}["Indicators"] = {d["indicators"]}')
 
-    irr_values = []
-    for char in G.characters:
-        irr_values_individual = [download_cyclotomics(char.cyclotomic_n,char.values[i],"gap") for i in range(len(char.values))]
-        irr_values.append(irr_values_individual)
-    irr = str(irr_values).replace("'","")
-    s += tbl + ".Irr:= " + str(irr) + ";\n"
+    # One row per line, so that every line is a complete statement.
+    lines.append(fmt["irr_init"])
+    for chi in d["chars"]:
+        lines.append(fmt["irr_row"](", ".join(_char_values(chi, dltype))))
+    lines.append(f'{tbl}["Irr"] = {fmt["matrix"]}, {len(d["chars"])}, '
+                 f'{d["nccl"]}, irr_{ul_label})')
+    return "\n".join(lines) + "\n"
 
-    # end material
-    s += "ConvertToLibraryCharacterTableNC(" + tbl + "); \n"
-    return s
-
+def download_char_table_sage(G, ul_label):
+    return _char_table_dict(G, ul_label, "sage")
 
 def download_char_table_oscar(G, ul_label):
-    tbl = "chartbl_" + ul_label
-    d = _char_table_data(G)
- 
-    s = "K, z = abelian_closure(QQ)  # z(n) is the standard primitive n-th root of unity\n\n"
-    s += f"{tbl} = Dict{{String, Any}}()\n"
-    s += f'{tbl}["Identifier"] = "{G.label}"\n'
-    s += f'{tbl}["Size"] = {d["size"]}\n'
-    s += f'{tbl}["NrConjugacyClasses"] = {d["nccl"]}\n'
-    s += f'{tbl}["ClassNames"] = {_julia_str_list(d["names"])}\n'
-    s += f'{tbl}["SizesCentralizers"] = {d["centralizers"]}\n'
-    s += f'{tbl}["OrderClassRepresentatives"] = {d["orders"]}\n'
-    pmap = ", ".join(f"{p} => {v}" for p, v in d["powers"].items())
-    s += f'{tbl}["ComputedPowerMaps"] = Dict({pmap})\n'
- 
-    gp_var = REP_VAR.get(G.element_repr_type)
-    reps = [download_element_string(G, c, "oscar") for c in d["reps"]]
-    if gp_var and all(r is not None for r in reps):
-        s += f'{tbl}["UnderlyingGroup"] = {gp_var}\n'
-        s += f'{tbl}["ConjugacyClasses"] = [{", ".join(reps)}]\n'
-    else:
-        s += "# Conjugacy class representatives are not available in Oscar "
-        s += "for this representation.\n"
- 
-    s += f'{tbl}["Indicators"] = {d["indicators"]}\n'
- 
-    entries = []
-    for chi in G.characters:
-        entries += [download_cyclotomic_value(chi.cyclotomic_n, v, "oscar")
-                    for v in chi.values]
-    nrows = len(G.characters)
-    s += f'{tbl}["Irr"] = matrix(K, {nrows}, {d["nccl"]}, [\n    '
-    s += ",\n    ".join(", ".join(entries[i:i + d["nccl"]])
-                        for i in range(0, len(entries), d["nccl"]))
-    s += "\n])\n"
-    s += "\n# Individual characters can be turned into Oscar class functions with\n"
-    s += f'#   [class_function({gp_var or "G"}, [{tbl}["Irr"][i, j] for j in 1:{tbl}["NrConjugacyClasses"]])\n'
-    s += f'#    for i in 1:{nrows}]\n'
-    return s
+    return _char_table_dict(G, ul_label, "oscar")
 
-
-def download_char_table_sage(G,ul_label):
-    tbl = "chartbl_" + ul_label
-    d = _char_table_data(G)
- 
-    s = "UCF = UniversalCyclotomicField()\n"
-    s += "E = UCF.gen  # E(n) is the standard primitive n-th root of unity\n\n"
-    s += f"{tbl} = {{}}\n"
-    s += f'{tbl}["Identifier"] = "{G.label}"\n'
-    s += f'{tbl}["Size"] = {d["size"]}\n'
-    s += f'{tbl}["NrConjugacyClasses"] = {d["nccl"]}\n'
-    s += f'{tbl}["ClassNames"] = {d["names"]}\n'
-    s += f'{tbl}["SizesCentralizers"] = {d["centralizers"]}\n'
-    s += f'{tbl}["OrderClassRepresentatives"] = {d["orders"]}\n'
-    s += f'{tbl}["ComputedPowerMaps"] = {d["powers"]}\n'
- 
-    gp_var = REP_VAR.get(G.element_repr_type)
-    reps = [download_element_string(G, c, "sage") for c in d["reps"]]
-    if gp_var and all(r is not None for r in reps):
-        s += f'{tbl}["UnderlyingGroup"] = {gp_var}\n'
-        s += f'{tbl}["ConjugacyClasses"] = [{", ".join(reps)}]\n'
-    else:
-        s += "# Conjugacy class representatives are not available in Sage "
-        s += "for this representation.\n"
- 
-    s += f'{tbl}["Indicators"] = {d["indicators"]}\n'
- 
-    # The character table itself: rows are the irreducible characters, columns
-    # the conjugacy classes, in the same order as ClassNames.
-    entries = []
-    for chi in G.characters:
-        entries += [download_cyclotomic_value(chi.cyclotomic_n, v, "sage")
-                    for v in chi.values]
-    nrows = len(G.characters)
-    s += f'{tbl}["Irr"] = Matrix(UCF, {nrows}, {d["nccl"]}, [\n    '
-    s += ",\n    ".join(", ".join(entries[i:i + d["nccl"]])
-                        for i in range(0, len(entries), d["nccl"]))
-    s += "\n])\n"
-    return s
-
-
-
-def download_char_table(G,dltype,ul_label):  # G is web abstract group
-    if dltype == "gap":
-        return download_char_table_gap(G, ul_label)
-    elif dltype == "magma":
-        return download_char_table_magma(G, ul_label)
-    elif dltype == "oscar":
-        return download_char_table_oscar(G, ul_label)
-    elif dltype == "sage":
-        return download_char_table_sage(G, ul_label)
-    else:
-        return ""
-
+def download_char_table(G, dltype, ul_label):  # G is web abstract group
+    return {
+        "gap": download_char_table_gap,
+        "magma": download_char_table_magma,
+        "sage": download_char_table_sage,
+        "oscar": download_char_table_oscar,
+    }[dltype](G, ul_label)
 
 def download_trivial_construction(dltype):
-     """ The trivial group needs to be special-cased. """
-    if dltype == "gap":
-        return "GPC := TrivialGroup(); \nGPerm := SymmetricGroup(1); \n"
-    if dltype == "magma":
-        return "GPC := SmallGroup(1,1); \nGPerm := Sym(1); \n"
-    if dltype == "sage":
-        return "GPC = SymmetricGroup(1)\nGPerm = SymmetricGroup(1)\n"
-    if dltype == "oscar":
-        return "GPC = symmetric_group(1)\nGPerm = symmetric_group(1)\n"
-    return ""
-
-#  Language Metadata. For each download language, we include
-#    com1  - opening delimiter of a block comment (or the line-comment char)
-#    com2  - closing delimiter of a block comment ("" if there is none)
-#    line  - character that must start every line of a multi-line comment
-#    ext   - file extension
-DOWNLOAD_LANG_DATA = {
-    "gap":   {"com1": "#",  "com2": "",   "line": "#", "ext": ".g"},
-    "magma": {"com1": "/*", "com2": "*/", "line": "",  "ext": ".m"},
-    "sage":  {"com1": "#",  "com2": "",   "line": "#", "ext": ".sage"},
-    "oscar": {"com1": "#=", "com2": "=#", "line": "",  "ext": ".jl"},
-}
+    """ The trivial group needs to be special-cased. """
+    return {
+        "gap":   "GPC := TrivialGroup();\nGPerm := SymmetricGroup(1);\n",
+        "magma": "GPC := SmallGroup(1,1);\nGPerm := Sym(1);\n",
+        "sage":  "GPC = SymmetricGroup(1)\nGPerm = SymmetricGroup(1)\n",
+        "oscar": "GPC = symmetric_group(1)\nGPerm = symmetric_group(1)\n",
+    }.get(dltype, "")
 
 
 @abstract_page.route("/<label>/download/<download_type>")
