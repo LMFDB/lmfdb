@@ -15,7 +15,7 @@ from markupsafe import Markup
 #from six import BytesIO
 from string import digits
 from io import BytesIO
-from sage.all import ZZ, latex, factor, prod, is_prime, GF
+from sage.all import ZZ, latex, factor, prod, is_prime
 from sage.misc.cachefunc import cached_function
 from sage.databases.cremona import class_to_int
 
@@ -71,9 +71,6 @@ from .web_groups import (
     gp_label_to_cc_data,
     missing_subs,
     split_matrix_list,
-    split_matrix_list_Fp,
-    split_matrix_list_ZN,
-    split_matrix_list_Fq,
     split_matrix_Fq_add_al,
 )
 from .stats import GroupStats
@@ -2612,56 +2609,50 @@ def _gap_power_maps(powers):
 
 def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
     """
-    One conjugacy class representative as source code, or ``None`` when the
-    representation is not expressible in that language (groups of Lie type, and
-    PC groups in Oscar unless code.yaml gains an ``oscar`` presentation snippet).
+    One conjugacy class representative as source code,
+    or "None" when the representation is not expressible in that language
     """
 
-    if gp_type is None:
-        gp_type = G.element_repr_type
-    if gp_var is None:
-        gp_var = REP_VAR.get(gp_type)
-    if gp_var is None:
+    gp_type = G.element_repr_type
+    var = REP_VAR.get(gp_type)
+    if var is None:
         return None
-
+ 
     if gp_type == "PC":
         if dltype == "oscar" and not (G.code_snippets() or {}).get("presentation", {}).get("oscar"):
             return None
         if code == 0:
-            return {"gap": f"Identity({gp_var})",
-                    "magma": f"Id({gp_var})",
-                    "sage": f"{gp_var}.Identity()",
-                    "oscar": f"one({gp_var})"}[dltype]
+            return f"{var}.Identity()" if dltype == "sage" else f"one({var})"
         # "a^{2}*b" -> "a^2*b"; a, b, ... are bound by the presentation snippet
         return G.decode_as_pcgs(code, as_str=True, as_magma=True).replace("{", "").replace("}", "")
-
+ 
     if gp_type == "Perm":
         cycles = G.decode_as_perm(code, as_str=True)
-        if dltype == "gap":
-            return cycles                      # "()" is Gap's identity permutation
-        if dltype == "magma":
-            return f"Id({gp_var})" if cycles == "()" else f"{gp_var}!{cycles}"
         if dltype == "sage":
-            return f"{gp_var}.one()" if cycles == "()" else f"{gp_var}('{cycles}')"
-        dim = G.representations["Perm"]["d"]
+            return f"{var}.one()" if cycles == "()" else f"{var}('{cycles}')"
+        d = G.representations["Perm"]["d"]
         x = G.decode_as_perm(code)
-        return f"perm({gp_var}, {[int(x(i)) for i in range(1, dim + 1)]})"
-
+        return f"perm({var}, {[int(x(i)) for i in range(1, d + 1)]})"
+ 
     if gp_type in MATRIX_REPS:
         rep = G.representations[gp_type]
-        dim = rep["d"]
+        d = rep["d"]
         L = G.decode_as_matrix(code, rep_type=gp_type, ListForm=True)
-        if dltype == "gap":
-            return _gap_matrix(gp_type, rep, L, dim)
-        if dltype == "magma":
-            return f"Matrix({dim}, {_magma_matrix(gp_type, L)})"
-        rows = (split_matrix_Fq_add_al(L, dim) if gp_type == "GLFq"
-                else str(split_matrix_list(L, dim)))
+        rows = (split_matrix_Fq_add_al(L, d) if gp_type == "GLFq"
+                else str(split_matrix_list(L, d)))
         if dltype == "sage":
-            return f"{gp_var}({rows})"
-        return f"{gp_var}(matrix({_matrix_base_ring(G, gp_type, 'oscar')}, {rows}))"
-
+            return f"{var}({rows})"
+        # NB: GLFq's base ring F is bound by the GLFq construction snippet, so
+        # the constructions must be written before the character table.
+        R = {"GLZ": "ZZ",
+             "GLFp": f"GF({rep.get('p')})",
+             "GLZN": f"residue_ring(ZZ, {rep.get('p')})[1]",
+             "GLZq": f"residue_ring(ZZ, {rep.get('q')})[1]",
+             "GLFq": "F"}[gp_type]
+        return f"{var}(matrix({R}, {rows}))"
+ 
     return None
+
 
 def download_char_table_magma(G, ul_label):
     gp_type = G.element_repr_type
