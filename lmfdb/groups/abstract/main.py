@@ -2587,26 +2587,6 @@ def _char_table_data(G):
         "indicators": [int(chi.indicator) for chi in G.characters],
     }
 
-def _reps_or_none(G, d, dltype, gp_var=None):
-    """All representatives as source code, or None if any is unavailable."""
-    reps = [download_element_string(G, c, dltype, gp_var=gp_var) for c in d["reps"]]
-    return None if any(r is None for r in reps) else reps
-
-
-def _quoted_list(strs):
-    """A list of double-quoted strings (Gap, Magma and Julia all want ")."""
-    return "[" + ", ".join('"%s"' % s for s in strs) + "]"
-
-def _gap_power_maps(powers):
-    """
-    Gap's ``ComputedPowerMaps`` is indexed *by the prime*, so every non-prime
-    position has to be left unbound: ``[, map2, , map4]``.  (The previous code
-    packed the maps consecutively, which put the 3- and 5-power maps of a group
-    of order 15 at positions 2 and 3.)
-    """
-    slots = ["" if p not in powers else str(powers[p]) for p in range(1, max(powers) + 1)]
-    return "[" + ", ".join(slots) + "]"
-
 def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
     """
     One conjugacy class representative as source code,
@@ -2803,11 +2783,13 @@ def _char_table_dict(G, ul_label, dltype):
         head = ["K, z = abelian_closure(QQ)  "
                 "# z(n) is the standard primitive n-th root of unity"]
 
+    names_list = "[" + ", ".join('"%s"' % s for s in d["names"]) + "]"
+
     lines = head + [""] + fmt["open"] + [
         f'{tbl}["Identifier"] = "{d["label"]}"',
         f'{tbl}["Size"] = {d["size"]}',
         f'{tbl}["NrConjugacyClasses"] = {d["nccl"]}',
-        f'{tbl}["ClassNames"] = {_quoted_list(d["names"])}',
+        f'{tbl}["ClassNames"] = {names_list}',
         f'{tbl}["SizesCentralizers"] = {d["centralizers"]}',
         f'{tbl}["OrderClassRepresentatives"] = {d["orders"]}',
     ]
@@ -2869,7 +2851,7 @@ def download_group(**args):
 
     wag = WebAbstractGroup(label)
     ul_label = wag.label.replace(".","_")
-    filename = "group" + ul_label + lang["ext"]
+    #filename = "group" + ul_label + lang["ext"]
     mydate = time.strftime("%d %B %Y")
 
     s = com1 + " Group " + label + " downloaded from the LMFDB on %s." % (mydate) + " " + com2
