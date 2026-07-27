@@ -135,7 +135,6 @@ def _eval_code_file(data, lang, proc, logfile):
                 print("Timeout while running line:")
                 print(line)
 
-
     # Matches ANSI escape sequences (colour codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
     # E.g. this sometimes occurs in the Gap snippet log files
     ANSI_ESCAPE_RE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
