@@ -3976,9 +3976,3 @@ def order_stats_list_to_string(o_list):
         if o_list.index(pair) != len(o_list) - 1:
             s += ","
     return s
-
-
-#sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
-
-Fullname = {'magma': 'Magma', 'gap': 'Gap'}
-Comment = {'magma': '//', 'gap': '#'}
