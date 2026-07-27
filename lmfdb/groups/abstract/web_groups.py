@@ -120,6 +120,9 @@ def create_sage_gap_assignment(genslist):
     # For Sage (using the GAP interface)
     return " ".join(f"{var_name(j)} = G.{i};" for j, i in enumerate(genslist))
 
+def create_oscar_gap_assignment(genslist):
+    # For Oscar (using the GAP interface)
+    return " ".join(f"{var_name(j)} = gens(G)[{i}];" for j, i in enumerate(genslist))
 
 def create_magma_assignment(G):
     used = [u - 1 for u in sorted(G.gens_used)]
@@ -3145,7 +3148,7 @@ class WebAbstractGroup(WebObj):
             gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
             magma_assign = create_magma_assignment(self)
             sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
-            oscar_assign = create_gap_assignment(self.representations["PC"]["gens"])
+            oscar_assign = create_oscar_gap_assignment(self.representations["PC"]["gens"])
         else:
             code['presentation'] = {}
             gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign, oscar_assign = None, None, None, None, None, None, None, None, None

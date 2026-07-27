@@ -125,6 +125,8 @@ SU(2,2)
 julia> GO(3,2)
 GO(3,2)
 
+julia> GPC = PcGroup(GAP.evalstr("PcGroupCode(25,6)")); a = gens(G)[1]; b = gens(G)[2];
+
 julia> @permutation_group(3, (2,3), (1,3,2))
 Permutation group of degree 3
 

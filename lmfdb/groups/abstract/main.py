@@ -15,7 +15,7 @@ from markupsafe import Markup
 #from six import BytesIO
 from string import digits
 from io import BytesIO
-from sage.all import ZZ, latex, factor, prod, is_prime
+from sage.all import ZZ, latex, factor, prod, is_prime, GF
 from sage.misc.cachefunc import cached_function
 from sage.databases.cremona import class_to_int
 
@@ -70,6 +70,11 @@ from .web_groups import (
     cc_data_to_gp_label,
     gp_label_to_cc_data,
     missing_subs,
+    split_matrix_list,
+    split_matrix_list_Fp,
+    split_matrix_list_ZN,
+    split_matrix_list_Fq,
+    split_matrix_Fq_add_al,
 )
 from .stats import GroupStats
 
@@ -2399,16 +2404,22 @@ def sgp_data(label):
         return datapage([label, label, data["subgroup"], data["ambient"], data["quotient"]], ["gps_subgroup_search", "gps_subgroup_data", "gps_groups", "gps_groups", "gps_groups"], bread=bread, title=title)
 
 
-def download_cyclotomics(n, vals, dltype):
+def format_cyclotomic_element(n, vals, dltype):
     """
-    Method to write characters in GAP, Magma, Oscar, Sage formats for downloads.
+    Convert a cyclotomic field element into a string, used for GAP/Magma/Oscar/Sage download files
+    Represented as a list of "(coefficient, exponent)" pairs, where "(c, e)" denotes the term "c * E(n)^e"
+
+    Input:
+      - n :     The order of the cyclotomic field (used in "E(n)").
+      - vals :  List of "(coefficient, exponent)" pairs representing the cyclotomic element.
+      - dltype: The download language (i.e. magma, gap, sage, oscar)
     """
 
     s = ""
     val = vals[0]
     c = val[0]  # coefficient
     if c == 0:
-        return 0
+        return str(0)
     e = val[1]  # exponent
     if c == 1 and e == 0:  # special case of 1
         s += str(1)
@@ -2453,12 +2464,13 @@ def download_cyclotomics(n, vals, dltype):
 #    com2  - closing delimiter of a block comment ("" if there is none)
 #    line  - character that must start every line of a multi-line comment
 #    ext   - file extension
+#    boolean - the format in which the boolean invariants are given
 
 DOWNLOAD_LANG_DATA = {
-    "gap":   {"com1": "#",  "com2": "",   "line": "#", "ext": ".g"},
-    "magma": {"com1": "/*", "com2": "*/", "line": "",  "ext": ".m"},
-    "sage":  {"com1": "#",  "com2": "",   "line": "#", "ext": ".sage"},
-    "oscar": {"com1": "#=", "com2": "=#", "line": "",  "ext": ".jl"},
+    "gap":   {"com1": "#",  "com2": "",   "line": "#", "ext": ".g", "booleans": "record"},
+    "magma": {"com1": "/*", "com2": "*/", "line": "",  "ext": ".m", "booleans": "record"},
+    "sage":  {"com1": "#",  "com2": "",   "line": "#", "ext": ".sage", "booleans": "dict"},
+    "oscar": {"com1": "#=", "com2": "=#", "line": "",  "ext": ".jl", "booleans": "NamedTuple"},
 }
 
 # List of the different possible group constructions
@@ -2473,12 +2485,7 @@ def download_preamble(com1, com2, dltype, cc_known):
     s += f + "\t GPC is polycyclic presentation, GPerm is permutation group \n"
     s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
     s += f + " Many characteristics of the group are stored as booleans in a "
-    if dltype == "sage":
-        s += "dict: \n"
-    elif dltype == "oscar":
-        s += "NamedTuple: \n"
-    else:
-        s += "record: \n"
+    s += DOWNLOAD_LANG_DATA[dltype]['booleans'] + ": \n"
     s += f + "\t Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, \n"
     s += f + "\t metacyclic, monomial, nilpotent, perfect, quasisimple, rational, \n"
     s += f + "\t solvable, supersolvable \n \n"
@@ -2523,7 +2530,7 @@ def download_construction_string(G, dltype):
             code = snippet.get(key, {}).get(dltype)
             if code:
                 s += re.sub(r"\bG\b", REP_VAR[rep], str(code).strip())  + "\n" 
-    return str(s)
+    return s
 
 
 def download_boolean_string(G, dltype, ul_label):
@@ -2535,47 +2542,30 @@ def download_boolean_string(G, dltype, ul_label):
     BOOL_ATTR = ['Agroup', 'Zgroup', 'abelian', 'almost_simple', 'cyclic', 'metabelian', 'metacyclic',
                  'monomial', 'nilpotent', 'perfect', 'quasisimple', 'rational', 'solvable', 'supersolvable']
 
-    known = [(attr, getattr(G, attr)) for attr in BOOL_ATTR]
-    known = [(attr, val) for (attr, val) in known if val is not None]
+    known = [(a, v) for a, v in ((a, getattr(G, a)) for a in BOOL_ATTR) if v is not None]
     if not known:
         return ""
  
     # Construct the string presenting all boolean invariants of G
-    if dltype == "magma":
-        s = "RF := recformat< " + ", ".join(BOOL_ATTR) + " : BoolElt >; \n"
-        s += "booleans_" + ul_label + " := rec< RF | "
-        body = ",".join(f"\n{attr} := {str(val).lower()}" for attr, val in known)
-        return s + body + ">; \n"
+    var = "booleans_" + ul_label
     if dltype == "gap":
-        s = "booleans_" + ul_label + " := rec( "
-        body = ",".join(f"\n{attr} := {str(val).lower()}" for attr, val in known)
-        return s + body + "); \n"
+        body = ",".join(f"\n{a} := {str(v).lower()}" for a, v in known)
+        return f"{var} := rec( {body}); \n"
+    if dltype == "magma":
+        body = ",".join(f"\n{a} := {str(v).lower()}" for a, v in known)
+        return ("RF := recformat< " + ", ".join(BOOL_ATTR) + " : BoolElt >; \n"
+                + f"{var} := rec< RF | {body}>; \n")
     if dltype == "sage":
-        s = "booleans_" + ul_label + " = {"
-        body = ",".join(f'\n    "{attr}": {bool(val)}' for attr, val in known)
-        return s + body + "\n}\n"
+        body = ",".join(f'\n    "{a}": {bool(v)}' for a, v in known)
+        return f"{var} = {{{body}\n}}\n"
     if dltype == "oscar":
-        s = "booleans_" + ul_label + " = ("
-        body = ",".join(f"\n    {attr} = {str(val).lower()}" for attr, val in known)
-        return s + body + ",\n)\n"
- 
+        body = ",".join(f"\n    {a} = {str(v).lower()}" for a, v in known)
+        return f"{var} = ({body},\n)\n"
     return ""
-
 
 # ---------------------------------
 #  Downloads for Character tables
 # ---------------------------------
-
-def download_cyclotomic_value(n, val, dltype):
-    s = str(download_cyclotomics(n, val, dltype))
-    if dltype == "magma":
-        s = s.replace(f"E({n})", "K.1")
-    elif dltype == "oscar":
-        s = s.replace("E(", "z(")
-    return s
-
-def _char_values(chi, dltype):
-    return [download_cyclotomic_value(chi.cyclotomic_n, v, dltype) for v in chi.values]
 
 def _char_table_data(G):
     """
@@ -2626,6 +2616,7 @@ def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
     representation is not expressible in that language (groups of Lie type, and
     PC groups in Oscar unless code.yaml gains an ``oscar`` presentation snippet).
     """
+
     if gp_type is None:
         gp_type = G.element_repr_type
     if gp_var is None:
@@ -2672,11 +2663,6 @@ def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
 
     return None
 
-def _julia_str_list(strs):
-    """A Julia vector of strings (Julia has no single-quoted strings)."""
-    return "[" + ", ".join('"%s"' % s for s in strs) + "]"
-
-
 def download_char_table_magma(G, ul_label):
     gp_type = G.element_repr_type
 
@@ -2717,7 +2703,7 @@ def download_char_table_magma(G, ul_label):
             s += "K := CyclotomicField(" + str(char.cyclotomic_n) + ": Sparse := true);\n"
             s += "S := [ K |"
             for val in char.values:
-                s += str(download_cyclotomics(str(char.cyclotomic_n),val, "magma"))
+                s += str(format_cyclotomic_element(str(char.cyclotomic_n), val, "magma"))
                 s += ","
             s = s[:-1]  # get rid of last comma
             s += "]; \n"
@@ -2731,37 +2717,73 @@ def download_char_table_magma(G, ul_label):
     s += "chartbl_" + G.label.replace(".","_") + ":= KnownIrreducibles(CR); \n"
     return s
 
+def download_char_table_gap(G,ul_label):
+    tbl = "chartbl_" + G.label.replace(".","_")
+    s = tbl + ":=rec(); \n"
+    s += tbl + ".IsFinite:= true; \n"
+    s += tbl + ".UnderlyingCharacteristic:= 0; \n"
 
+    gp_type = G.element_repr_type
 
-def download_char_table_gap(G, ul_label):
-    d = _char_table_data(G)
-    tbl = "chartbl_" + ul_label
-    gp_var = REP_VAR.get(G.element_repr_type)
-    reps = _reps_or_none(G, d, "gap")
+    if gp_type == "PC":
+        s += tbl + ".UnderlyingGroup:= GPC;\n"
+    if gp_type == "Perm":
+        s += tbl + ".UnderlyingGroup:= GPerm;\n"
+    if gp_type == "GLZ":
+        s += tbl + ".UnderlyingGroup:= GLZ;\n"
+    if gp_type == "GLFp":
+        s += tbl + ".UnderlyingGroup:= GLFp;\n"
+    if gp_type == "GLZN":
+        s += tbl + ".UnderlyingGroup:= GLZN;\n"
+    if gp_type == "GLZq":
+        s += tbl + ".UnderlyingGroup:= GLZq;\n"
+    if gp_type == "GLFq":
+        s += tbl + ".UnderlyingGroup:= GLFq;\n"
 
-    lines = [
-        f"{tbl} := rec();",
-        f"{tbl}.IsFinite := true;",
-        f"{tbl}.UnderlyingCharacteristic := 0;",
-        f'{tbl}.Size := {d["size"]};',
-        f'{tbl}.InfoText := "Character table for group {d["label"]} downloaded from the LMFDB.";',
-        f'{tbl}.Identifier := "{d["name"]}";',
-        f'{tbl}.NrConjugacyClasses := {d["nccl"]};',
-        f'{tbl}.IdentificationOfConjugacyClasses := {list(range(1, d["nccl"] + 1))};',
-        f'{tbl}.ComputedPowerMaps := {_gap_power_maps(d["powers"])};',
-        f'{tbl}.SizesCentralizers := {d["centralizers"]};',
-        f'{tbl}.ClassNames := {_quoted_list(d["names"])};',
-        f'{tbl}.OrderClassRepresentatives := {d["orders"]};',
-    ]
-    if gp_var:
-        lines.insert(3, f"{tbl}.UnderlyingGroup := {gp_var};")
-    if reps:
-        lines.append(f'{tbl}.ConjugacyClasses := [{", ".join(reps)}];')
-    irr = ", ".join("[" + ", ".join(_char_values(chi, "gap")) + "]" for chi in d["chars"])
-    lines.append(f"{tbl}.Irr := [{irr}];")
-    lines.append(f"ConvertToLibraryCharacterTableNC({tbl});")
-    return "\n".join(lines) + "\n"
+    s += tbl + ".Size:= " + str(G.order) + ";\n"
+    s += tbl + '.InfoText:= "Character table for group ' + G.label + ' downloaded from the LMFDB."; \n'
+    s += tbl + '.Identifier:= " ' + G.name + ' "; \n'
+    s += tbl + ".NrConjugacyClasses:= " + str(G.number_conjugacy_classes) + "; \n"
 
+    # process info from each conjugacy class
+    size_centralizers, class_names,order_class_reps, cc_reps = ([] for i in range(4))
+    num_primes = G.num_primes_for_power_maps
+    power_maps = [[ ] for i in range(num_primes)]
+    for conj in G.conjugacy_classes:
+        for i in range(num_primes):
+            power_maps[i].append(conj.powers[i])
+        #power_maps.append(conj.powers)
+        size_centralizers.append(int(conj.group_order/conj.size))
+        class_names.append(conj.label)
+        order_class_reps.append(conj.order)
+        if gp_type != "PC" and gp_type != "Perm":  # need to do matrix directly to include right format
+            cc_reps.append(G.decode_as_matrix(conj.representative,rep_type=gp_type,ListForm=True))
+        else:
+            cc_reps.append(G.decode(conj.representative,rep_type=gp_type))
+
+    cl_names = str(class_names).replace("'",'"')  # need " for GAP instead of '
+    pwr_maps = "[ , "
+    for i in range(len(power_maps)-1):
+        pwr_maps += str(power_maps[i]) + ", "
+    pwr_maps += str(power_maps[len(power_maps)-1]) + "]"  # PowerMaps needs a blank entry in front
+
+    s += tbl + ".ConjugacyClasses:= " + str(cc_reps) + ";\n"
+    s += tbl + ".IdentificationOfConjugacyClasses:= " + str(list(range(1,G.number_conjugacy_classes+1))) + ";\n"
+    s += tbl + ".ComputedPowerMaps:= "  + str(pwr_maps) + ";\n"
+    s += tbl + ".SizesCentralizers:= "  + str(size_centralizers) + ";\n"
+    s += tbl + ".ClassNames:= "  + str(cl_names) + ";\n"
+    s += tbl + ".OrderClassRepresentatives:= "  + str(order_class_reps) + ";\n"
+
+    irr_values = []
+    for char in G.characters:
+        irr_values_individual = [format_cyclotomic_element(char.cyclotomic_n,char.values[i],"gap") for i in range(len(char.values))]
+        irr_values.append(irr_values_individual)
+    irr = str(irr_values).replace("'","")
+    s += tbl + ".Irr:= " + str(irr) + ";\n"
+
+    # end material
+    s += "ConvertToLibraryCharacterTableNC(" + tbl + "); \n"
+    return s
 
 
 def _char_table_dict(G, ul_label, dltype):
@@ -2772,8 +2794,8 @@ def _char_table_dict(G, ul_label, dltype):
     d = _char_table_data(G)
     tbl = "chartbl_" + ul_label
     gp_var = REP_VAR.get(G.element_repr_type)
-    repstmp = [download_element_string(G, c, dltype, gp_var=None) for c in d["reps"]]
-    reps = None if any(r is None for r in repstmp) else repstmp
+    reps_tmp = [download_element_string(G, c, dltype, gp_var=None) for c in d["reps"]]
+    reps = None if any(r is None for r in reps_tmp) else reps_tmp
 
     if dltype == "sage":
         fmt = {"open": [f"{tbl} = {{}}"],
@@ -2814,14 +2836,14 @@ def _char_table_dict(G, ul_label, dltype):
     # One row per line, so that every line is a complete statement.
     lines.append(fmt["irr_init"])
     for chi in d["chars"]:
-        lines.append(fmt["irr_row"](", ".join(_char_values(chi, dltype))))
+        char_values = [format_cyclotomic_element(chi.cyclotomic_n, v, dltype) for v in chi.values]
+        lines.append(fmt["irr_row"](", ".join(char_values)))
     lines.append(f'{tbl}["Irr"] = {fmt["matrix"]}, {len(d["chars"])}, '
                  f'{d["nccl"]}, irr_{ul_label})')
     return "\n".join(lines) + "\n"
 
 def download_char_table_sage(G, ul_label):
     return _char_table_dict(G, ul_label, "sage")
-
 
 def download_char_table_oscar(G, ul_label):
     return _char_table_dict(G, ul_label, "oscar")
