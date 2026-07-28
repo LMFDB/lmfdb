@@ -394,7 +394,7 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def galois_groups(self):
         fields, cache = self.fields
-        opts = sorted(Counter((rec["gal"], rec["galois_label"]) for rec in fields if "gal" in rec and "galois_label" in rec).items())
+        opts = sorted(Counter((rec["gal"], rec["galois_label"]) for rec in fields if rec.get("gal") is not None and rec.get("galois_label") is not None).items())
         if not opts:
             return "No Galois groups in this family have been computed"
 
