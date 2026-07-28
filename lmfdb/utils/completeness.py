@@ -12,14 +12,25 @@ EXAMPLES::
 """
 
 
+import logging
+import traceback
 from collections import defaultdict
 from sage.all import (
     factor, prod, factorial, is_prime, prime_range, ZZ, NN, RR,
     ceil, floor, RealSet, infinity, cached_function, RLF, log, sqrt)
 
+# We deliberately use the standard library logger rather than lmfdb.logger, since this
+# module is also used outside the website (e.g. from lmfdb-lite and lmfdb_search).
+# Records still propagate to the root logger that lmfdb.logger configures.
+logger = logging.getLogger(__name__)
+
 # This dictionary is filled in the __init__ method of CompletenessCheckers based on the table name;
 # specific CompletenessCheckers are created at the bottom of this file.
 lookup = {}
+
+# Caveat reported when the completeness machinery itself fails.  Callers display caveats
+# as "The completeness " + caveat, so this is phrased to fit that sentence.
+FAILED_CHECK_CAVEAT = "check did not finish, so the results may or may not be complete"
 
 
 def results_complete(table, query, db, search_array=None):
@@ -42,15 +53,35 @@ def results_complete(table, query, db, search_array=None):
 
       False if there may be objects missing (depending on the query, these objects may or may not exist)
 
-      None if the table has not implemented completeness guarantees
+      None if the table has not implemented completeness guarantees, or if the completeness
+      check could not be carried out (see below)
 
     - ``reason`` -- A string, giving a reason why results are complete.  Can be grammatically appended to "The LMFDB contains all".   ``None`` if not ``complete``.
 
     - ``caveat`` -- A string, giving any caveats (like dependence on GRH or unproven modularity theorems).  May be ``None``.
+
+    Completeness information is advisory: it annotates search results that have already been
+    computed.  A failure inside the checking machinery must therefore never propagate to the
+    caller and turn a working search into an error.  If the check raises, we log the traceback
+    and report ``(None, None, FAILED_CHECK_CAVEAT)``, i.e. "completeness unknown" together with
+    a caveat that callers can show to the user.  We never report ``True`` in that case.
     """
-    if table in lookup:
+    if table not in lookup:
+        return None, None, None
+    try:
         return lookup[table].check(query, db, search_array)
-    return None, None, None
+    except Exception:
+        # We intentionally catch broadly.  The check runs database queries (which can hit the
+        # statement timeout, as the null-count queries do when a column is unindexed), indexes
+        # into ``db`` (KeyError for a missing table), asserts invariants about the shape of the
+        # query (AssertionError), and does Sage arithmetic on user-supplied bounds (ValueError,
+        # TypeError, ...).  Enumerating those classes would leave the 500 we are fixing in place
+        # for whichever one we forgot, so anything short of a KeyboardInterrupt/SystemExit is
+        # downgraded to "unknown".
+        logger.warning(
+            "Completeness check failed for table %s with query %s\n%s",
+            table, query, traceback.format_exc())
+        return None, None, FAILED_CHECK_CAVEAT
 
 
 #################################

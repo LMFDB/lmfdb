@@ -541,6 +541,10 @@ def run(args, parser):
                     write("No reliance on unproven conjectures\n", F)
                 else:
                     write("The completeness " + caveat + "\n", F)
+            elif caveat is not None:
+                # A verdict of "not complete" comes with no caveat, so this means the
+                # completeness check itself failed; say so rather than asserting a verdict.
+                write("The completeness " + caveat + "\n\n", F)
             else:
                 write("Not guaranteed complete\n\n", F)
         if args.format == "raw":
