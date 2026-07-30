@@ -189,7 +189,7 @@ terms; a download format in the url (e.g. Submit=sage) sets the output format.
     parser.add_argument("-o", "--output", help="Output file for search results")
     parser.add_argument("-f", "--force", action="store_true", help="Overwrite output file even if it exists")
     parser.add_argument("-t", "--format", help="Output format (default: raw, or the download format from a pasted url)", choices=["raw", "text", "json", "csv", "tsv", "sage", "gap", "pari", "magma", "oscar"], default=None)
-    parser.add_argument("-p", "--completeness", action="store_true", help="Whether to include completeness information at the begining of the output")
+    parser.add_argument("-p", "--completeness", action="store_true", help="Whether to include completeness information at the beginning of the output")
     parser.add_argument("-c", "--cols", help="Which columns to include in the output")
     parser.add_argument("-l", "--limit", type=int, help="The number of matching results to return (-1 for no limit)", default=50)
     parser.add_argument("--offset", type=int, help="Where to start in the list of results", default=0)
