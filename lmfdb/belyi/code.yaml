@@ -1,0 +1,16 @@
+
+
+#  Add tests for Sage/Magma download pages for Belyi maps
+snippet_test:
+  test_deg1:
+    label: 1T1-1_1_1-a
+    url: Belyi/1T1/1/1/1/a/    
+  test_deg2: 
+    label: 2T1-2_2_1.1-a
+    url: Belyi/2T1/2/2/1.1/a/
+  test_deg3:
+    label: 3T1-3_3_3-a
+    url: Belyi/3T1/3/3/3/a/
+  test_hyperbolic:
+    label: 4T5-4_4_3.1-a
+    url: Belyi/4T5/4/4/3.1/a/ 
