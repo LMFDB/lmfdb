@@ -3279,6 +3279,11 @@ class WebAbstractGroup(WebObj):
             if prop not in ['frontmatter', 'snippet_test']:
                 for lang in code[prop]:
                     code[prop][lang] = code[prop][lang].format(**data)
+
+        # Special fix for the trivial group 1.1  (fix Magma's PCGroup code snippet)
+        if self.order == 1:
+            code['presentation']['magma'] = code['presentation']['magma'].replace("  := Explode([]); AssignNames(~G, []);", "")
+
         return code
 
     # The following attributes are used in create_boolean_string

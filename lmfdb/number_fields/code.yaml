@@ -157,7 +157,7 @@ galois_group:
   comment: Galois group
   sage:  K.galois_group()
   pari:  polgalois(K.pol)
-  magma: G = GaloisGroup(K);
+  magma: GaloisGroup(K);
   oscar: |
     G, Gtx = galois_group(K);
     degree(K) > 1 ? (G, transitive_group_identification(G)) : (G, nothing)
