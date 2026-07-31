@@ -65,7 +65,8 @@ def _setup_test_dir(yaml_file_path=None):
         raise Exception("Please run in same directory as test.sh")
 
     if yaml_file_path is None:
-        code_paths = lmfdb_dir.rglob("code*.yaml")
+        # Ensure snippet files are evaluated in the same order every time (for deterministic output)
+        code_paths = sorted(lmfdb_dir.rglob("code*.yaml"))
     else:
         code_paths = [Path(yaml_file_path)]
         assert code_paths[0].exists(), f"Specified path {yaml_file_path} does not exist"
