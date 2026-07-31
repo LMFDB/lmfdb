@@ -8,14 +8,14 @@ magma> AutomorphismGroup(G);
 A group of automorphisms of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5
 Generators:
 Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
-(3, 4, 5) |--> (1, 2, 3)
-(1, 2, 3) |--> (3, 4, 5)
-Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
-(3, 4, 5) |--> (2, 5, 4)
-(1, 2, 3) |--> (1, 3, 4)
-Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
 (3, 4, 5) |--> (3, 5, 4)
-(1, 2, 3) |--> (1, 2, 5)
+(1, 2, 3) |--> (1, 4, 2)
+Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
+(3, 4, 5) |--> (2, 4, 3)
+(1, 2, 3) |--> (1, 5, 2)
+Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
+(3, 4, 5) |--> (2, 4, 5)
+(1, 2, 3) |--> (1, 3, 2)
 magma> CompositionFactors(G);
 G
 |  Alternating(5)

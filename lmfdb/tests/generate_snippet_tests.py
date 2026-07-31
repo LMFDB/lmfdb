@@ -45,6 +45,7 @@ SEED = 1
 seed_dict = {'sage': f'set_random_seed({SEED})',
              'sage_gap': f'set_random_seed({SEED})',
              'magma': f'SetSeed({SEED});',
+             'oscar': f'import Random; Random.seed!({SEED}); Oscar.set_seed!({SEED});',
              'gap': f'Reset(GlobalMersenneTwister, {SEED}); Reset(GlobalRandomSource, {SEED});',
              'gp': f'setrand({SEED});',
              }
@@ -164,8 +165,7 @@ def _eval_code_file(data, lang, proc, logfile):
     seed_cmd = seed_dict.get(lang)
     if seed_cmd is not None:
         try:
-            #proc.run_command(seed_cmd, timeout=60)
-            pass
+            proc.run_command(seed_cmd, timeout=60)
         except Exception:
             print(f"Warning: could not reset random state in {lang} with {seed_cmd!r}")
 
@@ -178,6 +178,8 @@ def _eval_code_file(data, lang, proc, logfile):
             except Exception:
                 print("Timeout while running line:")
                 print(line)
+
+    proc.child.logfile = None
 
     # Matches ANSI escape sequences (colour codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
     # E.g. this sometimes occurs in the Gap snippet log files
