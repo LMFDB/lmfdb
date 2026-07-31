@@ -8,14 +8,14 @@ magma> AutomorphismGroup(G);
 A group of automorphisms of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5
 Generators:
 Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
-(3, 4, 5) |--> (1, 2, 4)
-(1, 2, 3) |--> (2, 5, 3)
+(3, 4, 5) |--> (1, 2, 3)
+(1, 2, 3) |--> (3, 4, 5)
 Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
-(3, 4, 5) |--> (2, 3, 5)
-(1, 2, 3) |--> (1, 4, 3)
+(3, 4, 5) |--> (2, 5, 4)
+(1, 2, 3) |--> (1, 3, 4)
 Automorphism of GrpPerm: G, Degree 5, Order 2^2 * 3 * 5 which maps:
-(3, 4, 5) |--> (2, 4, 3)
-(1, 2, 3) |--> (1, 3, 5)
+(3, 4, 5) |--> (3, 5, 4)
+(1, 2, 3) |--> (1, 2, 5)
 magma> CompositionFactors(G);
 G
 |  Alternating(5)
@@ -310,20 +310,20 @@ Id($)
 [2]     Order 2            Length 15
 Permutation group acting on a set of cardinality 5
 Order = 2
-(1, 2)(4, 5)
+(1, 2)(3, 5)
 [3]     Order 3            Length 10
 Permutation group acting on a set of cardinality 5
 Order = 3
-(2, 5, 4)
+(2, 5, 3)
 [4]     Order 4            Length 5
 Permutation group acting on a set of cardinality 5
 Order = 4 = 2^2
-(1, 2)(4, 5)
-(1, 4)(2, 5)
+(1, 2)(3, 5)
+(1, 3)(2, 5)
 [5]     Order 5            Length 6
 Permutation group acting on a set of cardinality 5
 Order = 5
-(1, 4, 3, 2, 5)
+(1, 3, 4, 2, 5)
 [6]     Order 6            Length 10
 Permutation group acting on a set of cardinality 5
 Order = 6 = 2 * 3
@@ -332,19 +332,19 @@ Order = 6 = 2 * 3
 [7]     Order 10           Length 6
 Permutation group acting on a set of cardinality 5
 Order = 10 = 2 * 5
-(2, 3)(4, 5)
-(1, 4, 3, 2, 5)
+(2, 4)(3, 5)
+(1, 3, 4, 2, 5)
 [8]     Order 12           Length 5
 Permutation group acting on a set of cardinality 5
 Order = 12 = 2^2 * 3
-(2, 5, 4)
-(1, 2)(4, 5)
-(1, 4)(2, 5)
+(2, 5, 3)
+(1, 2)(3, 5)
+(1, 3)(2, 5)
 [9]     Order 60           Length 1
 Permutation group acting on a set of cardinality 5
 Order = 60 = 2^2 * 3 * 5
 (1, 2)(3, 4)
-(1, 3, 5)
+(1, 4, 5)
 magma> Center(G);
 Permutation group acting on a set of cardinality 5
 Order = 1
