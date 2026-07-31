@@ -395,16 +395,22 @@ class pAdicSlopeFamily:
     def galois_groups(self):
         fields, cache = self.fields
         opts = sorted(Counter((rec["gal"], rec["galois_label"]) for rec in fields if rec.get("gal") is not None and rec.get("galois_label") is not None).items())
+        unknown_cnt = sum(1 for rec in fields if rec.get("gal") is None or rec.get("galois_label") is None)
         if not opts:
             return "No Galois groups in this family have been computed"
 
         def show_gal(label, cnt):
             kwl = transitive_group_display_knowl(label, cache=cache)
-            if len(opts) == 1:
+            if len(opts) == 1 and not unknown_cnt:
                 return kwl
             url = url_for(".family_page", label=self.label, gal=label)
             return f'{kwl} (<a href="{url}#fields">show {cnt}</a>)'
-        s = ", ".join(show_gal(label, cnt) for ((t, label), cnt) in opts)
+        parts = [show_gal(label, cnt) for ((t, label), cnt) in opts]
+        if unknown_cnt:
+            # No gal= value exists to filter on missing/null Galois groups, so this
+            # bucket is plain text rather than a link (unlike the entries above).
+            parts.append(f"unknown ({unknown_cnt})")
+        s = ", ".join(parts)
         if not self.all_hidden_data_available:
             s += " (incomplete)"
         return s
