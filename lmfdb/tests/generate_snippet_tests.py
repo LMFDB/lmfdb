@@ -76,10 +76,10 @@ def _setup_test_dir(yaml_file_path=None):
     return path_dict
 
 def _start_snippet_procs(langs, chimp_spec=None):
-    """ 
+    """
     Return dict where keys are languages in 'langs' and values are pexpect repl processes.
     If chimp_spec is not None, it should be the path to CHIMP.spec, which is attached in the Magma process before any snippets are evaluated.
-    """    
+    """
 
     processes = {}
     for lang in langs:
