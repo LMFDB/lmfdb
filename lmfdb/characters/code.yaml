@@ -109,7 +109,7 @@ group_init:
   comment: Define the Dirichlet group
   sage: G = DirichletGroup({modulus})
   pari: g = idealstar(,{modulus},2)
-  magma: G = FullDirichletGroup({modulus});
+  magma: G := FullDirichletGroup({modulus});
 
 group_order:
   comment: Order
@@ -121,7 +121,7 @@ group_structure:
   comment: Group structure
   sage: sorted(g.order() for g in G.gens())
   pari: g.cyc
-  magma: PrimaryInvariants(G);
+  magma: PrimaryInvariants(AbelianGroup(G));
 
 group_gens:
   comment: Generators

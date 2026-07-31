@@ -153,7 +153,7 @@ Database Interface
    run commands from a `psql` prompt, or use the `pgAdmin4` interface
    (not yet supported).
 
-   If use `db._execute`, make sure to wrap your statements in the SQL
+   If you use `db._execute`, make sure to wrap your statements in the SQL
    class from `psycopg2.sql` (you can also import it from
    `psycodict`). You can see lots of examples of this
    paradigm in https://github.com/roed314/psycodict/
@@ -209,7 +209,7 @@ Developer configuration
    `password` field to the editor password, and the `host` to
    `localhost`.  Instead, if you prefer to work from your own machine,
    you may use the `ssh` connection to forward a local port to `5432`,
-   and use that port on your `config.ini` file.
+   and use that port in your `config.ini` file.
 
 Adding and modifying data
 -------------------------
@@ -234,7 +234,7 @@ Note that you need editor privileges to add, delete or modify data.
    descriptions of each of its columns which will be shown when users
    view the schema for the table in the database section (these will
    be used to populate knowls that can then be edited by you or anyone
-   with an LMFDB account can edit, they don't need to be perfect).
+   with an LMFDB account; they don't need to be perfect).
 
    You can also give columns for an extra table (see the question "What is an
    `extra_table`?" later in this document), using the same format as the second
@@ -291,7 +291,7 @@ Note that you need editor privileges to add, delete or modify data.
    the search columns.
 
    Once this table exists, you can access it via the object
-    `db.perfect_numers`, which is of type `PostgresTable`.
+    `db.perfect_numbers`, which is of type `PostgresTable`.
 
    Conversely, to remove a table from the LMFDB you can use `drop_table`.
 
@@ -318,7 +318,7 @@ Note that you need editor privileges to add, delete or modify data.
 
 1. How do I delete a column?
 
-   If you want to delete a column to an existing table, use the
+   If you want to delete a column from an existing table, use the
    `drop_column` method.
 
    ```python
@@ -342,7 +342,7 @@ Note that you need editor privileges to add, delete or modify data.
    large numbers of rows, this method will be faster.
 
    ```python
-   sage: db.test_table.copy_from('test.txt', sep='|'])
+   sage: db.test_table.copy_from('test.txt', sep='|')
    ```
 
    Example contents of `test.txt`:
@@ -487,7 +487,7 @@ Note that you need editor privileges to add, delete or modify data.
    (also stored in the `meta_tables` table), the `id` column serves
    this purpose.  As a consequence, indexes can contain this column,
    rather than all of the columns that define the sort order.  The
-   `id` column is added as a primary key, and because its used for
+   `id` column is added as a primary key, and because it's used for
    sorting, many queries will actually use this primary key in
    searches (see the next section on `analyze`).
 
@@ -632,7 +632,7 @@ Statistics
 
    If you added stats for column `A`, it would record that there are
    four instances of 2, three of 1, two of 5 and one each of 3, 4,
-   and 8.  It would also record the minimum value (1), the maximum value (6),
+   and 8.  It would also record the minimum value (1), the maximum value (8),
    the average (3), and the total (12 rows).
 
    If you specified a threshold of 3, it would only record that there
@@ -714,7 +714,7 @@ Data Validation
    `not null`, which checks that a specified column is filled in for
    every row in the table.  The second is `unique`, which checks that
    a column or set of columns is unique across all rows of a table.
-   The final options is `check`, which runs an arbitrary SQL function
+   The final option is `check`, which runs an arbitrary SQL function
    on a set of rows.
 
    Note that constraints are checked whenever a row is added or
