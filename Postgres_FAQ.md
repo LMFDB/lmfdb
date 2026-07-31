@@ -236,7 +236,7 @@ Developer configuration
    `password` field to the editor password, and the `host` to
    `localhost`.  Instead, if you prefer to work from your own machine,
    you may use the `ssh` connection to forward a local port to `5432`,
-   and use that port on your `config.ini` file.
+   and use that port in your `config.ini` file.
 
 Adding and modifying data
 -------------------------
@@ -319,7 +319,7 @@ LMFDB conventions around them.
 
 1. How do I delete a column?
 
-   If you want to delete a column to an existing table, use the
+   If you want to delete a column from an existing table, use the
    `drop_column` method.
 
    ```python
@@ -453,7 +453,7 @@ LMFDB conventions around them.
    (also stored in the `meta_tables` table), the `id` column serves
    this purpose.  As a consequence, indexes can contain this column,
    rather than all of the columns that define the sort order.  The
-   `id` column is added as a primary key, and because its used for
+   `id` column is added as a primary key, and because it's used for
    sorting, many queries will actually use this primary key in
    searches (see the next section on `analyze`).
 
@@ -598,7 +598,7 @@ Statistics
 
    If you added stats for column `A`, it would record that there are
    four instances of 2, three of 1, two of 5 and one each of 3, 4,
-   and 8.  It would also record the minimum value (1), the maximum value (6),
+   and 8.  It would also record the minimum value (1), the maximum value (8),
    the average (3), and the total (12 rows).
 
    If you specified a threshold of 3, it would only record that there
@@ -680,7 +680,7 @@ Data Validation
    `not null`, which checks that a specified column is filled in for
    every row in the table.  The second is `unique`, which checks that
    a column or set of columns is unique across all rows of a table.
-   The final options is `check`, which runs an arbitrary SQL function
+   The final option is `check`, which runs an arbitrary SQL function
    on a set of rows.
 
    Note that constraints are checked whenever a row is added or

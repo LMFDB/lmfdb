@@ -26,7 +26,7 @@ exec_dict = {'sage': 'sage --simple-prompt',
              'magma': 'magma -b',
              'oscar': 'julia',
              'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
-             'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false);'""",
+             'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false); SetUserPreference("UseColorPrompt",false); ColorPrompt(false);'""",
              }
 prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
 comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
@@ -135,12 +135,17 @@ def _eval_code_file(data, lang, proc, logfile):
                 print("Timeout while running line:")
                 print(line)
 
-    # # remove stray ANSI escape characters
-    # with logfile.open('r') as f:
-    #     res =
-    #     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    #     ansi_escape.sub('', res)
-    #     return eval_str
+    # Matches ANSI escape sequences (colour codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
+    # E.g. this sometimes occurs in the Gap snippet log files
+    ANSI_ESCAPE_RE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
+    # Remove stray ANSI escape sequences from logfile
+    with logfile.open('r') as f:
+        contents = f.read()
+    stripped = ANSI_ESCAPE_RE.sub('', contents)
+    if stripped != contents:
+        with logfile.open('w') as f:
+            f.write(stripped)
 
 
 def raise_error_warning(logfile, lang, error_file=None):

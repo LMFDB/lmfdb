@@ -808,7 +808,7 @@ def external_definition_link(site, xid):
     if site == "href":
         # href contains both the link and text for displaying
         if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
-            raise ValueError("Improperly formated href")
+            raise ValueError("Improperly formatted href")
         url, disp = xid[1:-1].split("}{")
         return url.strip(), disp, fragment
     if site == "mathlib":
