@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -125,6 +127,22 @@ class EllCurveTest(LmfdbTest):
     def test_isogeny_class(self):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
         assert '[0, -1, 1, 0, 0]' in L.get_data(as_text=True)
+
+    def test_equation_raw_typeset_widgets(self):
+        L = self.tc.get('/EllipticCurve/Q/11/a/1')
+        data = L.get_data(as_text=True)
+        assert "<tr class='min_eqn'>" in data
+        assert "<tr class='proj_eqn nodisplay'>" in data
+        assert "<tr class='simp_eqn nodisplay'>" in data
+        assert data.count('<span class="raw-tset-container tset ') >= 3
+        assert data.count('textarea readonly rows="1"') >= 3
+        assert "show_eqns('proj_eqn'); return false" in data
+        assert 'homogenize' in data
+
+    def test_raw_typeset_hidden_widgets_not_sized(self):
+        raw_typeset_js = (Path(__file__).parents[1] / 'static/raw_typeset.js').read_text()
+        assert '$tset.length == 0 || $tset[0].getClientRects().length == 0' in raw_typeset_js
+        assert "$ta.css({'width': '', 'height': '', 'max-width': ''});" in raw_typeset_js
 
     def test_dl_qexp(self):
         L = self.tc.get('/EllipticCurve/Q/download_qexp/66.c3/100')
