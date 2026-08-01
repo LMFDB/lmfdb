@@ -933,8 +933,8 @@ class NFDownloader(Downloader):
                  "color_default": "num_ram",
                  # Axes computed from database columns rather than stored directly:
                  # the database keeps the sign and absolute value of the discriminant
-                 # in separate columns, so neither the signed nor the absolute
-                 # discriminant is a plain column that can be selected as an axis.
+                 # in separate columns, so the signed discriminant is not a plain
+                 # column that can be selected as an axis.
                  "computed_cols": {
                      "disc": {
                          "label": "discriminant",
