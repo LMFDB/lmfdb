@@ -1,10 +1,25 @@
 
-function setraw(elt) {
+function sizeraw(elt) {
   var $this = $(elt);
   // typeset container
   var $tset = $this.children("span.tset-container").first();
-  var tset_rect = ($tset)[0].getBoundingClientRect();
   var $ta = $this.children("textarea.raw-container").first();
+  if ($tset.length == 0 || $ta.length == 0 || !$this.is(":visible")) {
+    return;
+  }
+  var was_raw = $this.hasClass("raw");
+  if (was_raw) {
+    $this.removeClass("raw");
+    $this.addClass("tset");
+  }
+  if (!$tset.is(":visible")) {
+    if (was_raw) {
+      $this.removeClass("tset");
+      $this.addClass("raw");
+    }
+    return;
+  }
+  var tset_rect = ($tset)[0].getBoundingClientRect();
   if ( $this.hasClass("compressed") ) {
     $ta.width(Math.max(25, tset_rect.width - (2 + 3))); // 2*border + 2*padding
     $ta.height(tset_rect.height - (2 + 3));
@@ -19,6 +34,16 @@ function setraw(elt) {
     // we need a delay to read the correct scrollHeight
     setTimeout(function() {$ta.height($ta[0].scrollHeight - (2+3));}, 1);
   }
+  if (was_raw) {
+    $this.removeClass("tset");
+    $this.addClass("raw");
+  }
+}
+
+
+function setraw(elt) {
+  var $this = $(elt);
+  sizeraw($this);
 
   $this.removeClass("tset");
   $this.addClass("raw");
@@ -105,4 +130,3 @@ $(document).ready( function(){
     $(".tset-container").dblclick(double_rawtset);
   }
 });
-

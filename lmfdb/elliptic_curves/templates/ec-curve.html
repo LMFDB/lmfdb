@@ -11,6 +11,9 @@ function show_eqns(invstyle) {
     $('.proj_eqn').hide();
     $('.simp_eqn').hide();
     $('.'+invstyle).show();
+    if (typeof sizeraw === 'function') {
+        $('.'+invstyle+' span.raw-tset-container.raw').toArray().forEach(sizeraw);
+    }
   }
 </script>
 

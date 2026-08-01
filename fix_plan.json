@@ -1,0 +1,19 @@
+{
+  "root_cause": "The top-right raw/typeset toggle in `lmfdb/static/raw_typeset.js` blindly calls `setraw` on every `span.raw-tset-container.tset`, including the elliptic-curve projective and simplified equations that are inside `.nodisplay` rows. `setraw` measures the hidden typeset span with `getBoundingClientRect()` and then writes inline textarea dimensions while the ancestor row is `display:none`, so the hidden homogenized equation gets a zero/tiny textarea height; when `show_eqns('proj_eqn')` later reveals that row, the stale inline sizing remains and the raw text box appears broken.",
+  "target_files": [
+    "lmfdb/static/raw_typeset.js",
+    "lmfdb/elliptic_curves/templates/ec-curve.html"
+  ],
+  "target_functions": [
+    "setraw in lmfdb/static/raw_typeset.js",
+    "show_eqns in lmfdb/elliptic_curves/templates/ec-curve.html"
+  ],
+  "approach": "Make the raw/typeset sizing logic tolerate hidden containers by avoiding permanent zero-height sizing when the widget or its typeset span is not visible. Add a small helper in `raw_typeset.js` to size visible raw textareas, and have the elliptic-curve `show_eqns` handler re-run that sizing after it reveals the selected equation class. Keep the behavior and markup unchanged for normal visible toggles.",
+  "tests_to_add": [
+    "Manual/browser regression: on a rational elliptic curve page, click the top-right raw/typeset toggle, then click `homogenize`, and verify the projective equation raw textarea has usable height and does not collapse.",
+    "If an existing browser-capable test harness is available in this repo, add a focused regression around the same interaction; otherwise skip automated coverage because the existing Flask tests do not execute this JavaScript layout path."
+  ],
+  "expected_loc": 25,
+  "risk_notes": "The main risk is changing shared raw/typeset sizing behavior used on many pages; keep the helper narrowly compatible with the current `setraw` behavior and only call it on visible containers after EC equation switching.",
+  "out_of_scope_observations": "The EC template has some malformed closing `<tr>` tags and an invalid CSS selector near the top, but those are unrelated to the reproduced raw textarea collapse and should not be touched for this issue."
+}
