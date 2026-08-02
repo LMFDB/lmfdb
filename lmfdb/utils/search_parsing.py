@@ -1110,20 +1110,23 @@ def parse_galgrp(inp, query, qfield, err_msg=None, list_ok=True):
         if list_ok:
             from lmfdb.galois_groups.transitive_group import complete_group_codes
 
-            gcs = complete_group_codes(inp)
+            gcs, incomplete = complete_group_codes(inp)
         else:
             from lmfdb.galois_groups.transitive_group import complete_group_code
 
-            gcs = complete_group_code(inp)
+            gcs, incomplete = complete_group_code(inp)
 
         galfield, nfield = qfield
         if nfield and nfield not in query:
+            if incomplete:
+                # If the user specified an abstract group and did not specify a degree, then it can only be complete if we have ALL of the corresponding transitive groups in the database
+                query["__complete__"] = False
             nvals = list({s[0] for s in gcs})
             if len(nvals) == 1:
                 query[nfield] = nvals[0]
             else:
                 query[nfield] = {"$in": nvals}
-        # if nfield was already in the query, we could try to intersect it with nvals
+        # if nfield was already in the query, we could try to intersect it with nvals; note that this would have completeness implications
         cands = ["{}T{}".format(s[0], s[1]) for s in gcs]
         if len(cands) == 1:
             query[galfield] = cands[0]

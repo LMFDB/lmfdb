@@ -362,6 +362,7 @@ class SearchWrapper(Wrapper):
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
+        complete = query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
         # These virtual columns won't be present in the database, so we just strip them out
         # We have to do this here since we didn't have access to the table in __init__
@@ -455,7 +456,16 @@ class SearchWrapper(Wrapper):
             if query:
                 nulls = table.stats.null_counts()
                 try:
-                    complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                    if complete is None:
+                        complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                    elif isinstance(complete, tuple) and len(complete) == 2:
+                        msg, caveat = complete
+                        complete = True
+                    elif complete is False:
+                        # msg is not used below, but caveat is
+                        caveat = False
+                    else:
+                        raise ValueError("__complete__ key invalid")
                     if complete:
                         flash_success("The results below are complete, since the LMFDB contains all " + msg)
                     elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined

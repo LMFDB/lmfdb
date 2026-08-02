@@ -715,13 +715,15 @@ def complete_group_code(code):
     aliases = get_aliases()
     code1 = 'X'.join(sorted(code.split('X'), reverse=True))
     if code1 in aliases:
-        return aliases[code1]
+        # Here we treat these as aliases for specific transitive groups, even though some might also be considered abstract groups
+        return aliases[code1], False
     # Try nTj notation
     rematch = re.match(r"^(\d+)[Tt](\d+)$", code)
     if rematch:
+        # A specific n,t pair is handled by the completeness code, so we don't need to mark it incomplete specially
         n = int(rematch.group(1))
         t = int(rematch.group(2))
-        return [(n, t)]
+        return [(n, t)], False
     # convert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
@@ -729,12 +731,13 @@ def complete_group_code(code):
     # Try abstract group label
     rematch = re.match(r'^(\d+)\.([0-9a-zA-Z]+)$', code)
     if rematch:
+        incomplete = int(rematch.group(1)) > 47
+        # There will be transitive groups beyond the LMFDB's threshold that are isomorphic to this abstract group as a transitive group
         nts = list(db.gps_transitive.search({'abstract_label':code.lower()}, projection=['n','t']))
         nts = [(z['n'], z['t']) for z in nts]
-        return nts
+        return nts, incomplete
     else:
         raise NameError(code)
-    return []
 
 # Takes a list of codes
 
@@ -750,9 +753,12 @@ def complete_group_codes(codes):
     codelist = codes.split(',')
     # now turn the z's back into commas
     codelist = [re.sub('z', ',', x) for x in codelist]
+    incomplete = False
     for code in codelist:
-        ans.extend(complete_group_code(code))
-    return list(set(ans))
+        nts, incomp = complete_group_code(code)
+        incomplete = incomplete or incomp
+        ans.extend(nts)
+    return list(set(ans)), incomplete
 
 @cached_function
 def get_aliases():
