@@ -29,3 +29,54 @@ The main table's `_test` name (and its 10 accumulated `_old*` snapshots on the s
 ## Log
 
 - 2026-07-16: ticket created from survey.
+
+- 2026-08-01 (opus session): **the reload strategy is now SIGNED OFF and the schema deltas are
+  pinned.** See [DECISIONS.md](DECISIONS.md). Everything below is decided, not proposed.
+
+  ### [D5] The reload is a full atomic `copy_from` — approved
+  The shipped labels are unreproducible (73% of rows change curve under the canonical sort,
+  `psl2label` on 98%), so **label-keyed `update_from_file` against the current table is
+  permanently unsafe**. T27 reloads the whole table with canonical labels under the new name,
+  and the **304 `shimcurve_pictures` rows re-key** (they are keyed by `psl2label`, which [D4]
+  changes on 2158/2198 rows). Every `PROVISIONAL — pending T27 reload` artifact in
+  `artifacts/` unparks here, each re-keyed via its own invariant-key file.
+
+  ### Schema deltas to apply before loading (both columns are new to the live table)
+  ```python
+  db.gps_shimura_test.add_column("base_gerbiness", "integer")   # T07 / D7
+  db.gps_shimura_test.add_column("factorization", "text[]")     # D26
+  ```
+  Canonical schema is **72 columns** (`GpsShimuraSchema()`); `label` is not column 1.
+  `factorization` loads as `\N` until **T12** computes fiber-product decompositions — populate
+  it in the same pass if T12 has landed, otherwise leave null and populate later.
+
+  ### [D31] The Pollack label cascade lands here — UNIMPLEMENTED WORK, schedule it
+  `mu_label` becomes four components **`discB.discO.deg.i`** (maximal orders write
+  discO = discB) and `quaternion_orders_polarized` becomes **one row per negation pair**
+  {[μ], [−μ]}. This cascades into the curve label and widens `LABEL_RE`
+  (`lmfdb/shimura_curves/main.py:57-60`). Nothing implements this yet — it needs a real
+  implementation pass across `enumerate-O.m`, `enumerate-H.m` and the frontend regexes before
+  the reload can produce final labels. T08's audit already maps each shipped row to its true
+  class index, so migration is not blind. **Interaction:** even deg-1 needs the index (D=15
+  has two principal-polarization pairs), so Q11's naming votes ([D54]–[D56], still open) must
+  land before `name` generation (T18).
+
+  ### [D46] Level convention
+  Level-family columns come from the **congruence level**. The unified writers already do
+  this, so the 71 + 86 + 303 rows T25's verify flagged self-heal on reload — no migration
+  script, just don't reintroduce the Eichler-level computation.
+
+  ### [D48] Prerequisite: fix the discB/discO swap FIRST
+  `quaternion_orders.discB`/`discO` are swapped on all 640 Eichler rows. **T06 owns the fix
+  and it must land before this reload**, otherwise the corrected labels get built on inverted
+  order data.
+
+  ### Also carried in from the review round
+  - **T25's checklist**: rename `verify/shimcurve/gps_shimura_test.py` (+ class) to match the
+    new table name, retarget the `shimcurve_models`/`_points` FK checks, add `UNIQUE(label)`
+    (confirm on the primary — devmirror's `list_constraints()` returns `{}`), and reconcile
+    the duplicated `columns.gps_shimura*` knowl sets.
+  - **T24 is done and pushed** (D25), so its dependency is satisfied.
+  - Still-open decisions that gate parts of this ticket: **Q12** (release scope, table name,
+    completeness claims — this ticket's own `questions:` entry), [D26]'s population source
+    (T12), [D43] (enhanced Jacobian rows), and the Q11 votes.

@@ -1,7 +1,7 @@
 ---
 id: T24
 title: Frontend bug sweep (lmfdb repo, branch shimura_curves)
-status: review
+status: done
 owner: wave1-F-opus
 priority: P1
 tier: 4
@@ -144,3 +144,49 @@ Known defects in `~/claude/lmfdb/lmfdb/shimura_curves/` (branch `shimura_curves`
   `76fb854a6` (item8), `d7e21b482` (item7), `ee58b67e6` (item6), `fc3781fdb` (item5),
   `94647654d` (item4), `871ae8ecb` (item3), `0e4a74f23` (item2), `1dd7a0fca` (item1).
   David reviews/pushes.
+
+- 2026-08-01 (opus session): **APPROVED + PUSHED → status: done.** David's verdicts
+  [D25](DECISIONS.md) (approve + push), [D20](DECISIONS.md) (full-label keying) and
+  [D26](DECISIONS.md) (add the `factorization` column). Two follow-ups landed on the branch
+  before pushing, then `ticket/T24-frontend` was pushed to `origin` (roed-math/lmfdb).
+  **No PR opened** — D25 authorized the push only; GitHub's PR link is
+  https://github.com/roed-math/lmfdb/pull/new/ticket/T24-frontend when you want it.
+
+  **Merge with current `shimura_curves` (packet §8 step 3):** done first — commit `07a2354bd`.
+  This also fixed the branch's test collection, which had been failing on
+  `AttributeError: 'LMFDBDatabase' object has no attribute 'can_read_write_userdb'`: the
+  branch predated the main merge (`5c2fbc140`) that brought the psycodict-1.0/psycopg3
+  compatibility work (#7070–#7072). Not a T24 bug — it was the venv/checkout mismatch
+  recorded in project memory.
+
+  **D20 follow-up — commit `4b71e8d8d`.** The `coarse_label` *column* holds only the
+  `level.index.genus.class.num` suffix, while D20 rules that the curve-keyed tables store the
+  **full** `mu_label.coarse_label` label. The frontend was querying with the bare column, so
+  every such query would have silently missed once T03's points load. Introduced one
+  `full_coarse_label` attribute and routed through it: `shimcurve_points` (4 sites),
+  `shimcurve_modelmaps` (2), the coarse link in `coarse_description`, and the two
+  `shimcurve_models` sites that had been rebuilding the label inline with a shadowing local.
+  **Two further latent bugs of the same family, found and fixed here:**
+  - `quadratic_refinements` searched `{'coarse_label': self.label}` — suffix column vs full
+    label; now matches on `(mu_label, coarse_label)`.
+  - `shimcurve_data`'s `label == coarse_label` test **could never be true**, so
+    `/ShimuraCurve/data/<label>` always took the else branch and handed `datapage` a bogus
+    suffix label. Confirmed on devmirror: **0 of 2587** rows satisfy the old comparison, while
+    `mu_label + "." + coarse_label == label` on **2587/2587**.
+
+  **D26:** the `factorization` references stay (the column is being added, not stripped). The
+  existing defensive `rec.get('factorization') or []` guard is forward-compatible — it will
+  emit the factors as soon as the column is populated. The schema half landed in ShimCurve;
+  see T04's Log.
+
+  **Verification.** `pytest lmfdb/shimura_curves/` → 3 passed. Dev server on :37778, **16
+  routes curled 200** (homepage, coarse / Eichler / deg-μ>1 curve pages, all three downloads,
+  diagram, stats, random, `covered_by` search, low-degree points, both `/data/` pages,
+  Completeness, Labels) with **zero server errors** in the log. `/ShimuraCurve/data/<label>`
+  now returns **200** and renders a real datapage — the environment 500 this ticket flagged
+  as "not Shimura's" is gone after the main merge. The single `shimcurve_models` row still
+  renders on X(6;1), confirming the refactored models query resolves. pyflakes clean.
+
+  **Note for T02/T03 when they load data:** `shimcurve_modelmaps.domain_label` is now queried
+  with the full label too, for consistency with `shimcurve_models.shimcurve`. The table is
+  still empty (created by T02), so nothing to migrate — but stage it keyed on the full label.

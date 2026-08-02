@@ -55,3 +55,14 @@ LMFDB labels are permanent public identifiers (cited in papers, linked from othe
 - Two more leaks found by testing, both fixed, both **semantic changes needing David's sign-off**: (1) `is_split` was representative-dependent (`H ∩ Image(Ahom)` is not conjugation-invariant — its value flipped between identical runs); now true iff SOME conjugate of H splits against the standard section. (2) `G1` (feeds psl2label + scalar_label) was `O1_subs[last]` — at N=3 the filtered list contains several incomparable maximal det-trivial subgroups, so the choice was arbitrary as well as unstable; now `G1 := Kernel` of the reduced-norm determinant hom on G (the SL2-analogue).
 - 2026-07-17 (claude): **Full-corpus verification complete** (all 15 (deg,N), two independent passes): identical labels and identical values in every column except the presentation-dependent encodings `generators` (Ngens rep) and `ram_data_elts` (coset-numbering-dependent Lehmer codes). Canonicalizing those two encodings (canonical conjugate + canonical coset numbering) is the remaining follow-up; NOT needed for label-keyed update safety. Regression test `tests/regression_label_determinism.m` added to run_quick/run_all; suite green. Timing note: full corpus now ~19 min/pass on this machine (deg6 N6: 407s vs the historical 1956s).
 - **Reconciliation vs shipped data (step 4, full corpus): 1614/2198 rows (73%) change which curve their label names** under the canonical sort; `psl2label` changes on 2158/2198 rows (98%, driven by the canonical G1); `scalar_label` follows; `is_split` changes on a handful. **Recommendation for T27: full reload via copy_from with canonical labels — label-keyed update_from_file against the OLD table is unsafe. The 304 `shimcurve_pictures` rows are keyed by psl2label and must be re-keyed at reload.** Formal sign-off = Q15.3 / T27.
+
+- 2026-08-01 (opus session): **David's semantic sign-offs recorded** — see
+  [DECISIONS.md](DECISIONS.md).
+  - **[D3] `is_split` BLESSED**: "some conjugate of H splits against the standard section".
+  - **[D4] `G1` BLESSED**: the kernel of the reduced-norm determinant hom on G.
+  - **[D5] APPROVED (= the formal Q15.3 sign-off)**: T27 is a **full atomic `copy_from`
+    reload** with the rename, and the 304 `shimcurve_pictures` rows **re-key at reload**.
+    Label-keyed `update_from_file` against the current table is permanently off the table.
+  QUESTIONS.md Q15 updated accordingly.
+  **Ticket stays `review`**: [D2] (does the canonical sort implement Q15's design as intended)
+  is still unanswered, as is [D1] for T28. The math is blessed; the code review is not yet in.

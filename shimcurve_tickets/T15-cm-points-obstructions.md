@@ -78,3 +78,14 @@ Scope note: start with the 389 coarse X₀(D;N)-type rows plus the D=6 level-1 q
   #   grep -v '^#' shimcurve_tickets/artifacts/T15-points-update.txt | cut -d'|' -f1-8 > /tmp/t15_load.txt
   db.gps_shimura_test.update_from_file('/tmp/t15_load.txt', label_col='label', sep='|')
   ```
+
+- 2026-08-01 (opus session): **[D46] DECIDED — congruence level.** See
+  [DECISIONS.md](DECISIONS.md). The level-family columns (`level`, `level_is_prime`,
+  `level_is_prime_power`, `level_radical`, `level_is_squarefree`) are computed from the
+  **congruence level**, not the Eichler level M. This closes **flag #2** of this ticket's
+  close-out: the unified writers as landed are already correct, so the 71 + 86 + 303
+  devmirror rows T25's verify flagged **self-heal at the T27 reload** with no writer change.
+  The artifact's `join_level_congruence` / `join_eichler_level` pair stays as-is — the
+  congruence value is the one that lands in `level`.
+  **Ticket stays `review`**: [D44] (approve the artifact) and [D45] (`all_degree1_points_known
+  = t` on pointless rows — routes to Eran) are unanswered.

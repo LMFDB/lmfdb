@@ -48,3 +48,20 @@ Four defects in the `quaternion_orders` / `quaternion_orders_polarized` generati
   displays `0 = 1 + 2 \cdot \frac{1}{24} - \frac{3}{4} - \frac{1}{3}`. No frontend
   change made. The T06 backend halves (.m header, Area normalization, discO/discB
   inversion, row drift) remain open under this ticket.
+
+- 2026-08-01 (opus session): **[D48] ASSIGNED — fix the discB/discO swap here, before the T27
+  reload.** See [DECISIONS.md](DECISIONS.md). T25's verify established the finding and David
+  confirmed it:
+  - In `quaternion_orders`, the column named **`discB` holds the reduced order discriminant
+    and `discO` holds the algebra discriminant** — the reverse of both the label grammar
+    (`discB.discO`) and `gps_shimura_test`'s own columns. Invisible on the 304 maximal rows
+    (discB = discO), **wrong on all 640 Eichler rows**; proven by joining on `order_label`
+    against gps_shimura_test (agree on maximal, swapped on all 86 Eichler references).
+  - **`area_*` is unaffected** (computed from the true discB), so the Gauss–Bonnet checks stay
+    green either way — do not "fix" area while fixing this.
+  - Fix the writer, regenerate, and stage the corrected file; the corrected values land at the
+    T27 reload.
+- 2026-08-01: **still blocked on [D57] (Q14) for the other half** — whether `area` keeps the
+  value φψ/12 and gets an honest rename, or stores φψ/6 with both genus formulas adjusted.
+  Do not start the area work until that lands. **Sequencing unchanged:** the single reconciled
+  polarized regeneration still waits for T07 + T08 to merge (see T08's PROVISIONAL banner).

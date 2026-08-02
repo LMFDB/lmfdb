@@ -77,3 +77,13 @@ Once Q2 pins the definitions: implement them correctly in both sites, add assert
     > 2. The value the column *used* to store — #KG_level, the full root-of-unity band of ker(Aut_{±μ}(O) ⋉ Oˣ → N_{Bˣ}(O)/Qˣ) reduced mod N, which equals 2·#ker(f) rationally since the (1,−1) it contains is absorbed into the ± of Aut_{±μ}(O) — is kept under the new name `base_gerbiness`.
     > 3. `aut_gerbiness` (Aut-components of KG, used by the Gauss–Bonnet genus normalization) is unchanged; it agrees numerically with the new gerbiness whenever reduction mod N is faithful (N ≥ 3, Minkowski).
     > `Gerby_gen` is now a genuine generator of ker(f) (primitive integral representative of the generating unit's Bˣ/Qˣ-class, matching the `AutmuO_generators` normalization) instead of the hardcoded identity. The D=6 corpus was regenerated and diffed against a pre-change baseline: only the gerbiness-family columns changed.
+
+- 2026-08-01 (opus session): **[D7] APPROVED AS-IS** — see [DECISIONS.md](DECISIONS.md).
+  `gerbiness` := #ker(f), `base_gerbiness` added, and the writer schema delta are all
+  blessed. **Q2.2's optional rename `aut_gerbiness` → `aut_band` is DECLINED**: the column
+  keeps its name, so nothing further to do on that front. The "coincides numerically with
+  `aut_gerbiness` on all D=6 data" finding is acknowledged and recorded in QUESTIONS.md §Q2
+  so nobody re-reports it as a bug.
+  **Ticket stays `review`**: [D8] (keeping the `aut_mu_O.m:66` injectivity assert) and [D10]
+  (maximal-only scope of the deg-1 theorem) both route to **Eran** and are unanswered; [D9]
+  (Gerby_gen coordinates) and [D11] (post the issue-#6 comment) are also still open.

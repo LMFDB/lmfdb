@@ -30,7 +30,23 @@ Upstream issue #6 says the method "does not look at the projection onto the Aut_
 3. What should `Gerby_gen` contain for deg μ > 1 (a generator of which kernel, in what coordinates)?
 4. Is the relation "gerbiness = 1 ⟺ deg μ = 1" a theorem we can assert as a sanity check?
 
-**Answer:**
+**Answer:** (Eran, DECIDED — full text in [QUESTIONS_ANSWERS.md](QUESTIONS_ANSWERS.md) §Q2) Three
+distinct quantities were sharing one name. `gerbiness` := |ker(f: Aut_{±μ}(O) → Aut(coarse curve))|
+— the moduli-stack gerbe, trivial iff deg μ = 1. The old stored value (#KG_level, the root-of-unity
+band) survives renamed `base_gerbiness`. `aut_gerbiness` is kept for the Gauss–Bonnet genus
+normalization. Implemented in T07.
+
+*Resolved (David, 2026-08-01, **D7** — see [DECISIONS.md](DECISIONS.md)):* the redefinition, the
+`base_gerbiness` name and the schema growth are **approved as-is**, and **Q2.2's optional rename of
+`aut_gerbiness` → `aut_band` is declined** — the column keeps its name. Note for readers of the data:
+the new `gerbiness` coincides *numerically* with `aut_gerbiness` on the whole D=6 corpus (both count
+the band whenever reduction mod N is faithful, which it always is at working level) even though the
+two are semantically distinct.
+
+*Still open (routes to Eran):* **D8** — whether the injectivity assert at `aut_mu_O.m:66` may stay
+(T07 kept it deliberately, arguing it checks a different map than issue #6's); **D10** — confirming
+that the "gerbiness = 1 ⟸ deg μ = 1" assert is intended to be maximal-order-only, with Eichler
+orders spot-checked rather than asserted.
 
 ---
 
@@ -42,7 +58,23 @@ Upstream issue #6 says the method "does not look at the projection onto the Aut_
 2. Is there a preferred canonical representative μ (e.g. minimal with respect to some explicit quadratic form on O⁰, ties broken lexicographically) that we should standardize on so that stored coordinates (`mu`, `AutmuO_generators`) are reproducible across runs?
 3. Any preferred algorithm for finding μ deterministically on Eichler orders (where `Embed`/`InternalConjugatingElement` misbehave)? E.g. enumerate short vectors of the ternary form on the trace-zero submodule O⁰ with nrd = d·disc(O)?
 
-**Answer:**
+**Answer:** (Eran, DECIDED — full text in [QUESTIONS_ANSWERS.md](QUESTIONS_ANSWERS.md) §Q3) μ is
+classified up to **Pollack conjugation** (Rotger, Crelle 561 (2003)); a given (O, deg) admits
+*finitely many inequivalent classes*, not one. T08 implemented complete canonical enumeration
+(`pollack-classes.m`) with existence certified by the Eichler/Rotger class-number formula before any
+search — no `Embed`, no `InternalConjugatingElement`.
+
+*Resolved (David, 2026-08-01, **D31** — see [DECISIONS.md](DECISIONS.md)):* the **label cascade is
+approved as proposed**. One `quaternion_orders_polarized` row per **negation pair** {[μ], [−μ]}
+(= isomorphism class of degree-d polarizations); `mu_label` unified to the four-component
+**`discB.discO.deg.i`** (maximal orders write discO = discB, so `6.6.2.1`); index `i` = position in
+the canonical class order from `PolarizedElementClasses`; the added component cascades into the curve
+label and widens the frontend `LABEL_RE`. **Not implemented anywhere yet** — scheduled as T27-time
+work, coordinating with Q11 (open) and Q15. Migration is not blind: T08's audit already maps each
+shipped row's stored μ to its true class index.
+
+*Still open:* **D49** — whether `nrd_mu` (which satisfies `nrd_mu·deg_mu = discO` in the data, the
+*reciprocal* of the gps convention `Norm(μ) = deg_mu·discO`) is a misnamed column or a scaled μ.
 
 ---
 
@@ -176,9 +208,11 @@ The two tied curves are distinguishable: `autmuO_norms = {6,1,1,1,1,1}` with gen
 
 *Status:* implemented in T29 (branch `ticket/T29-label-determinism`); see that ticket's Log for the precise spec (AL content = sorted multiset of squarefree Aut-component norms over cosets of H∩(O/N)ˣ; canonical generators = greedy lex-minimal generating sequence minimized over the G-conjugacy class, computed lazily on ties). Full-corpus determinism verified 2026-07-17.
 
+*Resolved (David, 2026-08-01 — see [DECISIONS.md](DECISIONS.md)):*
+- **15.3 SIGNED OFF (D5).** The shipped assignment is not reproducible (73% of rows change curve under the canonical sort, psl2label on 98%), so pinning old labels was never an option: **T27 is a full atomic `copy_from` reload with the rename, and the 304 `shimcurve_pictures` rows re-key at reload.** Label-keyed `update_from_file` against the current table is permanently unsafe; every `PROVISIONAL` artifact stays parked until T27 runs.
+- **Both semantic fixes BLESSED**: `is_split` = "some conjugate of H splits against the standard section" (**D3** — the old computation was representative-dependent and flipped between identical runs), and `G1` = the kernel of the reduced-norm determinant hom on G (**D4** — the old value was an arbitrary maximal det-trivial subgroup from an unstable enumeration).
+
 *Still open for David/Eran:*
-- 15.3 now has its empirical answer — the shipped assignment is NOT reproducible: 73% of rows (1614/2198) change curve under the canonical sort and psl2label changes on 98% of rows, so pinning old labels is not an option and the next reload relabels the table. Formal sign-off happens in T27.
-- Two semantic fixes made alongside the sort need blessing: `is_split` is now "some conjugate of H splits against the standard section" (the old computation was representative-dependent and flipped between runs), and `G1` (for psl2label/scalar_label) is now the kernel of the reduced-norm determinant on G rather than an arbitrary maximal det-trivial subgroup from the filtered enumeration.
 - Element ordering inside canonical generators is plain lex on matrix entry sequences (simplest restatable spec), not Sutherland's similarity-class stratification — flag if you want the latter before labels freeze.
 
 ---

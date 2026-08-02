@@ -151,3 +151,15 @@ LMFDB tables ship with consistency checks under `~/claude/lmfdb/lmfdb/verify/` (
   4. T27 checklist adds: rename `gps_shimura_test.py`→`gps_shimura.py` (+class), add `base_gerbiness`
      + reconcile the duplicated/misaligned `columns.gps_shimura*` knowl sets (§6 of table-schemas.md),
      add `UNIQUE(label)`, and the checks above go green once the T06/T14/T15/T17 fixes land.
+
+- 2026-08-01 (opus session): **[D48] CONFIRMED — the discB/discO swap is real; T06 owns the
+  fix, before the T27 reload.** See [DECISIONS.md](DECISIONS.md). Recorded in T06's Log as an
+  assigned work item. Also relevant to this ticket's results table:
+  - **[D46] congruence level** settles `check_level_flags` (71 hits) and `check_level_radical`
+    (86 hits) as **data bugs that self-heal at T27**, not check bugs — the checks stay as
+    written.
+  - **[D26]** adds `factorization text[]` to the canonical schema (72 columns now), so
+    `table-schemas.md` needs the new row and the T27 checklist in this ticket's close-out
+    grows a second `add_column`. The generator parses `schema.m` live, so a regen picks it up.
+  **Ticket stays `review`**: [D47] (approve the suite + doc) and [D49] (`nrd_mu` semantics —
+  routes to Eran) are unanswered.

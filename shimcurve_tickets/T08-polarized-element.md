@@ -84,3 +84,17 @@ Since (O, deg) determines a SET of Pollack classes, `mu_label` needs a class ind
 > Also in `IsTwisting`: the "not sure if this is enough when O is not maximal" TODO is resolved — nrd(chi) | disc(O) is only used as a necessary-condition prefilter and normalizer membership is explicitly checked for every candidate; the bare one-value `return false` that crashed two-value callers is fixed.
 >
 > Verification: full D ≤ 1000 maximal sweep (every squarefree degree) run twice in fresh processes with byte-identical outputs; class enumerations agree with the independent class-number formula across the sample range; the 86-row Eichler deg-1 range regenerates end-to-end from stored bases plus higher-degree samples; regression tests added to the quick suite.
+
+- 2026-08-01 (opus session): **[D31] LABEL CASCADE APPROVED AS PROPOSED** — see
+  [DECISIONS.md](DECISIONS.md). One `quaternion_orders_polarized` row per **negation pair**
+  {[μ], [−μ]}; `mu_label` unified to the four-component **`discB.discO.deg.i`** (maximal
+  orders write discO = discB); index `i` from `PolarizedElementClasses`' canonical order;
+  the component cascades into the curve label and widens the frontend `LABEL_RE`.
+  **Still unimplemented** — this is now a scheduled T27-time work item (T27's Log carries it).
+  The ⟐ in this ticket's "Label-cascade proposal" section is therefore CLOSED as a decision
+  and OPEN as work. QUESTIONS.md §Q3 updated.
+  Note the interaction flagged in the proposal: **even deg-1 needs the index** (D=15 has two
+  principal-polarization pairs), so Q11's naming votes ([D54]–[D56], still open) must land
+  before any `name` is generated for those curves.
+  **Ticket stays `review`**: [D30] (approve the engine) and [D32] (post the issue-#5 comment)
+  are unanswered, as is [D33] (the Rotger erratum — worth telling Rotger either way).

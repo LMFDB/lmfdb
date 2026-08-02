@@ -37,3 +37,12 @@ Semantics should mirror modular curves (`gps_gl2zhat_fine`): `parents` = labels 
 
 - 2026-07-16: ticket created from survey.
 - 2026-07-22 (orchestrator): claimed by an agent that was stopped (credit limit) during the reading/design phase before producing any code. Branch `ticket/T12-subgroup-lattice` exists but its tip == the T11 tip `3d30898` (zero T12 commits); worktree was clean. **Reset to open — start fresh.** The correct base is still the tier1core chain tip (currently T11 @ 3d30898; will be the T17 tip once T17 lands, or T06 once the capstone starts — take the latest tier1core-chain branch that includes T11). Nothing to salvage.
+
+- 2026-08-01 (opus session): **new consumer — [D26](DECISIONS.md).** David added the
+  `factorization text[]` column to the canonical schema (fiber-product decomposition, semantics
+  copied from `gps_gl2zhat_fine.factorization`). Both writers currently emit `\N` because
+  deciding which curves are fiber products **needs the subgroup lattice this ticket builds**.
+  So T12 now has a second deliverable beyond `parents`/`parents_conj`/`lattice_labels`/
+  `lattice_x`: compute `factorization`, and hand T27 the values to populate.
+  The frontend already consumes it (jump-box fiber products in `main.py`, `fiber_product_of`
+  in `web_curve.py`) and will light up as soon as the column is populated.

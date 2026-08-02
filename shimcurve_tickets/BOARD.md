@@ -7,6 +7,12 @@ Goal: produce and ship Shimura-curve data for the LMFDB. Two repos:
 
 Mathematical framework: enhanced representations, Laga–Schembri–Shnidman–Voight, [arXiv:2308.15193](https://arxiv.org/abs/2308.15193) §3.5. A dedicated preprint may arrive; until then **QUESTIONS.md** is the channel for mathematical decisions — David answers there.
 
+> **Read [DECISIONS.md](DECISIONS.md) before acting on any ticket Log that says "flag for
+> David".** It is the authoritative register of his verdicts (numbered D1–D57, defined in
+> [REVIEW_PACKET.md](REVIEW_PACKET.md) and its 2026-08-01 extension). Round 1 settled 10 of
+> them — including the label semantics, the reload strategy, and the schema — so several
+> "open" flags in the older Logs are already answered there.
+
 ## How to work a ticket (agent protocol)
 
 0. **Get an isolated worktree** (see *Parallel agents* below). Never run two agents in one checkout.

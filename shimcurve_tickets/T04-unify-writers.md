@@ -71,3 +71,24 @@ Single source of truth for the schema; both writers emit identical headers and c
   **Notes for T05** (not in flight): the legacy pair — `GeneraTableToRecords`/`LineToRecord` (`read-write.m`) and the legacy 9-field writer inside `EnumerateH(write:=true)` (`enumerate-H.m` ~:830) — still speak the old `?`-format and don't read the postgres-copy files at all; after the corpus regenerates in the unified layout, T05 should port or retire them and add a true roundtrip test against `WriteGpsShimuraHeader`/`GpsShimuraRow` (parse header from schema, not fixtures).
 
   **Data-quality flag for T27:** devmirror has **71 coarse level-1 rows with `level_is_prime = t`** (discB 6..39 — the oldest batch; 1 is not prime) vs 268 with `f` — junk from an older loader, self-heals at the T27 reload since both unified writers now emit F at level 1.
+
+- 2026-08-01 (opus session): **[D26](DECISIONS.md) executed — canonical schema is now 72
+  columns.** David added `factorization text[]` rather than stripping the frontend references.
+  Commit `a1d6be1` on `ticket/T25-schema-docs` (the tier1core tip, so the change sits above
+  T04's own commits rather than forcing a rebase of the stack).
+  - `schema.m`: `<"factorization","text[]">` inserted **after `curve_label`** — alphabetical
+    position within the alphabetical run that starts at `all_degree1_points_known`, the same
+    convention T07 used for `base_gerbiness`. Header comment now documents both
+    not-yet-in-the-DB columns and both `add_column` calls.
+  - **Both writers emit `\N`** (= not computed): deciding which curves are fiber products
+    needs the subgroup lattice, i.e. **T12**. T27 populates the column once T12 lands.
+    `enumerate-H.m` (`s_fields_assoc`) and `tablesX0DN.m` (`row`) each got the fill plus a
+    comment saying why it is null.
+  - Verified: `GpsShimuraColumns()` = **72**, `factorization` at position 55, type `text[]`,
+    no duplicate names; `GpsShimuraRow` round-trips 72 fields and its missing-column guard
+    still fires when `factorization` is withheld; **`tests/run_quick.m` green (0 failures,
+    0 skips)** — which is the real test, since the loud key-set check means a writer that
+    forgot the column would fail immediately.
+  - **T27 delta is now two calls**, not one:
+    `db.gps_shimura_test.add_column("base_gerbiness", "integer")` and
+    `db.gps_shimura_test.add_column("factorization", "text[]")`.

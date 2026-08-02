@@ -126,3 +126,14 @@ Important: this file mixes two kinds of information — (a) individual point rec
   (3) `cm`/`num_known_degree1_noncm_points` are `\N` for all point-bearing curves (source has
   no CM data) — CM enrichment is Q9/T15. (4) All 317 points auto-load only after the
   T19→T20→T09→T08 chain generates their AL-quotient curve rows.
+
+- 2026-08-01 (opus session): **[D20] DECIDED — full label.** See [DECISIONS.md](DECISIONS.md).
+  `shimcurve_points.Clabel`/`curve_label` store the full `mu_label.coarse_label` label,
+  matching `shimcurve_models.shimcurve` and `modcurve_points.curve_label`. **This ticket's
+  staged files are already keyed that way, so there is nothing to re-key** — the frontend was
+  the side that had to move, and it did (T24 commit `4b71e8d8d`, pushed). The PROVISIONAL
+  banner still applies for the ordinary T27-reload reason ([D5]), not for keying.
+  When T02's `shimcurve_modelmaps` eventually gets rows, stage `domain_label` on the full
+  label too — T24 now queries it that way for consistency.
+  **Ticket stays `review`**: [D19] (count conventions) and [D21] (the 9 coordinate-less
+  curves) are unanswered.
