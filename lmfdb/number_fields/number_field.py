@@ -887,6 +887,13 @@ def nf_postprocess(res, info, query):
         rec["narrow_class_group_desc"] = wnf.narrow_class_group_invariants()
     return res
 
+def nf_signed_discriminant(rec):
+    sign = rec.get("disc_sign")
+    disc = rec.get("disc_abs")
+    if sign is None or disc is None:
+        return None
+    return sign * disc
+
 class NFDownloader(Downloader):
     table = db.nf_fields
     title = "Number fields"
@@ -939,12 +946,12 @@ class NFDownloader(Downloader):
                      "disc": {
                          "label": "discriminant",
                          "cols": ["disc_sign", "disc_abs"],
-                         "func": lambda r: r["disc_sign"] * r["disc_abs"],
+                         "func": nf_signed_discriminant,
                      },
                      "disc_abs": {
                          "label": "absolute discriminant",
                          "cols": ["disc_abs"],
-                         "func": lambda r: r["disc_abs"],
+                         "func": lambda r: r.get("disc_abs"),
                      },
                  }})
 def number_field_search(info, query):
