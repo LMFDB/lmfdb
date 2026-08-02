@@ -1267,7 +1267,9 @@ class NFBound(ColTest):
             [10**8, 12*10**6, 12*10**6], # n=5
             [28**6, 10**7, 10**7, 10**7], # n=6
             [214942297, 2*10**8, 2*10**8, 2*10**8], # n=7
-            [17**8, 79259702, 20829049, 5726300, 1656109], # n=8
+            # r2=3,4 come from Driver doing Hunter searches for
+            # primitive fields plus older searches for non-primative
+            [17**8, 79259702, 20829049, 2*10**7, 2*10**7], # n=8
             [15**9, 27316369, 27316369, 146723910, 39657561], # n=9
             [190612177]*6, # n=10
             [5154074557]*6, # n=11
@@ -1476,9 +1478,11 @@ class NFBound(ColTest):
         # Sets of transitive group IDs with specified Galois group or subfield structure
         quartic_2_group = (1,2,3)
         octic_2_group = (1,2,3,4,5,6,7,8,9,10,11,15,16,17,18,19,20,21,22,26,27,28,29,30,31,35)
-        octwith4 = (1,2,4,6,7,8,10,12,13,14,16,17,19,20,21,23,27,28,30,38,40)
+        # Have a quartic subfield
         octic_with_quartic = tup(1,25)+tup(26,33)+(35,38,39,40,44)
+        # Have a quadratic subfield but no quartic subfield
         octic_type_2 = (33,34,41,42,45,46,47)
+        octic_imprim = tuple(set(octic_type_2).union(set(octic_with_quartic)))
         decic_with_quint = (1,2,3,4,5,8,11,12,14,15,16,22,23,24,25,29,34,36,37,38,39)
         decic_with_quad = (1,2,3,4,5,6,9,10,11,12,17,18,19,20,21,22,27,28,33,40,41,42,43)
 
@@ -1676,9 +1680,9 @@ class NFBound(ColTest):
                 11: [(42, (1,))],
                 12: [(42, (1,))],
                 13: [(42, (1,))]},
-            8: {1: [(2500, octic_2_group), (230, octwith4), (228, (37,)), (200, (25,)), (8, octic_with_quartic), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
-                2: [(250, octic_2_group), (8, octic_with_quartic), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
-                3: [(8, octic_with_quartic), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
+            8: {1: [(2500, octic_2_group), (230, octic_imprim), (228, (37,)), (200, (25,)), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
+                2: [(250, octic_2_group), (30, octic_imprim), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
+                3: [(8, octic_imprim), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
                 4: [(8, (25,36))]},
             9: {1: [(6, tup(1,19)+tup(20,26)+(28,29,31)), (6, (19,26,30))],
                 2: [(6, tup(1,19)+tup(20,26)+(28,29,31)), (6, (19,26,30))],
