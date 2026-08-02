@@ -154,7 +154,7 @@ class NumberFieldTest(LmfdbTest):
         # 2.0.3.1 is the field of discriminant -3, so its x-coordinate is -3
         assert '"label": "2.0.3.1"' in page and '"x": "-3"' in page
         # The computed absolute-discriminant axis also works
-        page2 = self.tc.get('/NumberField/?hst=Diagram&x-axis=disc_abs&y-axis=rd&degree=3&count=50').get_data(as_text=True)
+        page2 = self.tc.get('/NumberField/?search_type=Diagram&x-axis=disc_abs&y-axis=rd&degree=2&count=100').get_data(as_text=True)
         assert 'my_dataviz' in page2
         assert 'absolute discriminant' in page2
 
