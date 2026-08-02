@@ -42,10 +42,10 @@ comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
 # To ensure output is fully deterministic and the log files don't change between runs,
 # we set the random seed to 1 before each test run
 SEED = 1
-seed_dict = {'sage': f'set_random_seed({SEED})',
-             'sage_gap': f'set_random_seed({SEED})',
+seed_dict = {'sage': f'set_random_seed({SEED}); gap.set_seed({SEED}); libgap.set_seed({SEED})',
+             'sage_gap': f'set_random_seed({SEED}); gap.set_seed({SEED}); libgap.set_seed({SEED})',
              'magma': f'SetSeed({SEED});',
-             'oscar': f'import Random; Random.seed!({SEED}); Oscar.set_seed!({SEED});',
+             'oscar': f'import Random; Random.seed!({SEED}); Oscar.set_seed!({SEED}); Oscar.randseed!({SEED});',
              'gap': f'Reset(GlobalMersenneTwister, {SEED}); Reset(GlobalRandomSource, {SEED});',
              'gp': f'setrand({SEED});',
              }
@@ -167,8 +167,9 @@ def _eval_code_file(data, lang, proc, logfile):
     if seed_cmd is not None:
         try:
             proc.run_command(seed_cmd, timeout=60)
-        except Exception:
-            print(f"Warning: could not reset random state in {lang} with {seed_cmd!r}")
+        except Exception as exc:
+            # Raise error if unable to set the random seed
+            raise RuntimeError(f"Error: could not reset random state in {lang} with {seed_cmd!r}") from exc
 
     with logfile.open('w') as f:
         proc.child.logfile = f
