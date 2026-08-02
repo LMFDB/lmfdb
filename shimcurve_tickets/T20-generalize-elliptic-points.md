@@ -1,7 +1,7 @@
 ---
 id: T20
 title: Generalize elliptic-point counting beyond D=6
-status: in-progress
+status: review
 owner: wave2-J-fable
 priority: P1
 tier: 3
@@ -178,3 +178,41 @@ Q7 decides the mathematical route (Ogg-style counting as in `X0DN_code.m` extend
   `SignatureX0DNmodAtkinLehnerElement` changes AL-quotient signatures — T25's verify was
   told this bug could only surface on generated AL-quotient rows; those rows now exist in
   t20-artifacts/, so a verify pass against them is a good post-merge check.
+- 2026-08-01 (opus session): **CLOSE-OUT COMPLETE → status: review.** The three items the
+  interrupted session left are done; **no generation was redone**, per that entry's warning.
+  1. **`tests/run_quick.m` green on the final tree** (branch tip `8acb524`, the orchestrator's
+     WIP commit): **95 PASS, 0 failures, 0 skips**, run twice for stability. That covers T19's
+     normalizer suite, the new `tests/regression_elliptic_points.m`, the T29 label-determinism
+     regression, T15's obstruction tests, T09's autmuO construction test and the roundtrip
+     parser tests.
+  2. **The D=10 genus/ν regression test was already wired** — `regression_elliptic_points.m`
+     is loaded from `run_quick.m` and asserts the D=10 bottom orders `[2,2,2,3]`, bottom genus
+     0, that `EnhancedRamificationData` returns one σ entry per bottom cone point, and the
+     genus of the full-congruence H against the `SignatureX0DN(10,1)` oracle. Nothing to add.
+  3. Closing summary below.
+
+  **Summary.** Elliptic-point counting is no longer D=6-specific. `EnhancedBottomSignature(O, μ)`
+  computes the cone orders and genus of the enhanced bottom X(D;M)/W_μ, certified by requiring
+  two independent sources to agree (the actual normalizer generators' order/AL-class multiset
+  vs Ogg's cone data) plus a Gauss–Bonnet re-assert; `EnhancedGenus`/`EnhancedEllipticPoints`/
+  `EnhancedRamificationData` take the bottom as input instead of assuming (2,4,6). Positive-genus
+  and non-spherical bottoms are **refused loudly** — the pipeline never emits wrong ν. En route
+  the ticket confirmed and fixed the **s3 = e3/2** bug in `SignatureX0DNmodAtkinLehnerElement`
+  (both copies), which T19 had suspected: 139 Gauss–Bonnet violations across a 920-quotient
+  sweep, all in the else branch, all repaired exactly; genus outputs were never affected and
+  the shipped coarse ν columns are clean. Validation: D=6 regenerates byte-identically (modulo
+  the two known churn fields), and the D=10/15/21/26 spread battery matches the Ogg oracles
+  throughout. **ν-schema decision [D36]**: keep the four fixed `nu2/nu3/nu4/nu6` columns — the
+  φ(n) ≤ 2 theorem makes them provably sufficient and the code now asserts it.
+
+  **What this unblocks:** [T21](T21-run-D10-D15.md) (D=10/15 generation) can start — its other
+  dependencies T07, T09, T19 are all in review. Two things T21 must plan for, both from this
+  ticket's Log: the degenerate-tuple wall means production runs should raise MaxTuples/MaxPool
+  per order or accept validated fallbacks, and **most of D ≤ 1000 has positive-genus bottoms**
+  (1,817 of 1,968 (D,W) pairs — `t20-artifacts/bottom-characterization.csv` says exactly which),
+  which need either hyperbolic-generator support or a μ with a genus-0 W_μ-quotient.
+
+  **Open for David/Eran (unchanged):** [D35] approve the s3 fix, [D36] ratify the ν-schema call,
+  [D37] the D=26 deg-1 question for Eran (genuine obstruction, or just tall generators?).
+  Post-merge check worth doing: T25's verify was told the s3 bug could only surface on generated
+  AL-quotient rows — those rows now exist in `t20-artifacts/`, so run the verify pass against them.
