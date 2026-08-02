@@ -424,8 +424,19 @@ class LMFDBSearchTable(PostgresSearchTable):
         check_space(grace_space_claimed[None], grace_default, "grace.mit.edu /var/lib/postgresql", ts_filter(grace_ops, None))
         check_space(grace_space_claimed["scratch"], grace_scratch, "grace.mit.edu /scratch", ts_filter(grace_ops, "scratch"))
 
-        # Get a connection to devmirror so that we can see which operations have been mirrored there
-        devmirror = PostgresDatabase(host="devmirror.lmfdb.xyz", user="lmfdb", password="lmfdb", port="5432")
+        # Get a connection to devmirror so that we can see which operations have been mirrored there.
+        # Every connection parameter is given explicitly, but we still pass along our own
+        # configuration: without it psycodict builds a default Configuration, which reads (and
+        # creates) a config.ini in the current directory, and in some versions parses sys.argv,
+        # so that an unrelated argument to the calling script aborts the upload.
+        devmirror = PostgresDatabase(
+            config=self._db.config,
+            host="devmirror.lmfdb.xyz",
+            user="lmfdb",
+            password="lmfdb",
+            port="5432",
+            dbname="lmfdb",
+        )
         dm_ops = list(devmirror._execute(op_cmd))
         # dm_finished is a set with logids that have finished mirroring; dm_space_claimed is a dictionary (by tablespace) of how much space the in-progress operations might need
         dm_finished, dm_space_claimed = get_space_needed(dm_ops)
