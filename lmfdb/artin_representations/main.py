@@ -188,7 +188,10 @@ def parse_projective_group(inp, query, qfield):
             query[qfield] = [-1,-2] # we don't have it
     else:
         try:
-            mycode, incomplete = complete_group_code(inp.upper())[0]
+            mycodes, incomplete = complete_group_code(inp.upper())
+            if not mycodes:
+                raise ValueError("No transitive representation was found")
+            mycode = mycodes[0]
             if incomplete:
                 # The user specified the projective group as an abstract group, too large for the LMFDB to contain all of its transitive representations
                 query["__complete__"] = False

@@ -626,7 +626,7 @@ class SearchWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data
         query, sort, table, title, err_title, template, one_per = data
-        complete = query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
 
         # Use diagram template instead of default
         template = diagram_template
@@ -781,7 +781,7 @@ class CountWrapper(Wrapper):
             return data  # error page
         query, sort, table, title, err_title, template, one_per = data
         groupby = query.pop("__groupby__", self.groupby)
-        complete = query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:
@@ -860,7 +860,7 @@ class EmbedWrapper(Wrapper):
             return data
         query, sort, table, title, err_title, template, one_per = data
         proj = query.pop("__projection__", self.projection)
-        complete = query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
         if "result_count" in info:
@@ -947,7 +947,7 @@ class YieldWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data
         query, sort, yielder, title, err_title, template, one_per = data
-        complete = query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         if "result_count" in info:
             if one_per:
                 nres = yielder(query, one_per=one_per, count=True)
