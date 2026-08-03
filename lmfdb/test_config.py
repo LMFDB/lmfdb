@@ -77,22 +77,47 @@ class TestSecretKey:
         assert mode == 0o600
 
     def test_concurrent_creation_yields_one_key(self, tmp_path):
-        # concurrent workers must end up with the same key
+        # Concurrent workers must all end up with the same complete key.
+        # Repeated, because the window in which a reader could observe a
+        # created-but-not-yet-written file is small.
+        for i in range(20):
+            directory = tmp_path / ("run%d" % i)
+            directory.mkdir()
+            cfg = str(directory / "config.ini")
+            barrier = threading.Barrier(8)
+            keys = []
+
+            def worker():
+                barrier.wait()
+                keys.append(config_mod.get_secret_key(cfg))
+
+            threads = [threading.Thread(target=worker) for _ in range(8)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            assert all(len(k) == 32 for k in keys), "a worker read an incomplete key: %r" % keys
+            assert len(set(keys)) == 1, keys
+
+    def test_concurrent_creation_across_processes(self, tmp_path):
+        # the same race between separate processes, as when several
+        # gunicorn workers start at once
         cfg = str(tmp_path / "config.ini")
-        barrier = threading.Barrier(8)
-        keys = []
-
-        def worker():
-            barrier.wait()
-            keys.append(config_mod.get_secret_key(cfg))
-
-        threads = [threading.Thread(target=worker) for _ in range(8)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-        assert len(set(keys)) == 1
-        assert len(keys[0]) == 32
+        code = (
+            "import sys\n"
+            "from lmfdb.config import get_secret_key\n"
+            "sys.stdout.write(get_secret_key(%r))\n" % cfg
+        )
+        procs = [
+            subprocess.Popen(
+                [sys.executable, "-c", code], stdout=subprocess.PIPE, text=True
+            )
+            for _ in range(6)
+        ]
+        keys = [p.communicate()[0] for p in procs]
+        assert all(p.returncode == 0 for p in procs)
+        assert all(len(k) == 32 for k in keys), "a process read an incomplete key: %r" % keys
+        assert len(set(keys)) == 1, keys
 
 
 class TestConfiguration:

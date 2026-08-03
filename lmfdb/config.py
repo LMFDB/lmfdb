@@ -35,6 +35,7 @@ import os
 import secrets
 import string
 import socket
+import tempfile
 from contextlib import closing
 from logging import INFO
 
@@ -133,20 +134,27 @@ def get_secret_key(config_file=None):
     """
     if config_file is None:
         config_file = find_config_file()
-    secret_key_file = os.path.join(os.path.dirname(os.path.abspath(config_file)), "secret_key")
+    directory = os.path.dirname(os.path.abspath(config_file))
+    secret_key_file = os.path.join(directory, "secret_key")
     if not os.path.exists(secret_key_file):
-        os.makedirs(os.path.dirname(secret_key_file), exist_ok=True)
+        os.makedirs(directory, exist_ok=True)
         key = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-        # create the file atomically, readable only by the owner; if
-        # another process creates it first, its key is used instead, so
-        # concurrent workers always end up with the same key
+        # Write the key to a temporary file (created readable only by the
+        # owner) and link it into place once it is complete: under its
+        # final name the file is therefore never empty or half-written, so
+        # workers starting simultaneously either create the key or read a
+        # complete one.  The link fails if the name already exists, which
+        # is how the losers of the race learn to use the existing key.
+        fd, tmp = tempfile.mkstemp(dir=directory)
         try:
-            fd = os.open(secret_key_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        except FileExistsError:
-            pass
-        else:
             with os.fdopen(fd, "w") as F:
                 F.write(key)
+            try:
+                os.link(tmp, secret_key_file)
+            except FileExistsError:
+                pass
+        finally:
+            os.unlink(tmp)
     with open(secret_key_file) as F:
         return F.read()
 
