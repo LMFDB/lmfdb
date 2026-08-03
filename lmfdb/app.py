@@ -387,7 +387,7 @@ def alive():
     a basic health check
     """
     from . import db
-    if db.is_alive():
+    if (getattr(db, "_is_alive", None) or db.is_alive)():
         return "LMFDB!"
     else:
         abort(503)
@@ -399,7 +399,7 @@ def statshealth():
     a health check on the stats pages
     """
     from . import db
-    if db.is_alive():
+    if (getattr(db, "_is_alive", None) or db.is_alive)():
         tc = app.test_client()
         for url in ['/NumberField/stats',
                     '/ModularForm/GL2/Q/holomorphic/stats',
@@ -429,7 +429,7 @@ def info():
     output += "HOSTNAME = %s\n\n" % gethostname()
     output += "# PostgreSQL info\n"
     from . import db
-    if not db.is_alive():
+    if not (getattr(db, "_is_alive", None) or db.is_alive)():
         output += "db is offline\n"
     else:
         conn_str = "%s" % db.conn

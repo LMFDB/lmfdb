@@ -49,7 +49,7 @@ class DynamicKnowlTest(LmfdbTest):
         if db.config.postgresql_options["host"] == "proddb.lmfdb.xyz":
             # Create a different connection to devmirror to compare timestamps
             from lmfdb.config import Configuration
-            from psycopg2.sql import SQL
+            from lmfdb.utils.psycopg_compat import SQL
             from datetime import timedelta
             dev_config = Configuration()
             # Modify configuration to connect to devmirror
