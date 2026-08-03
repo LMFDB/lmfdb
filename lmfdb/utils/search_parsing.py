@@ -1176,7 +1176,7 @@ def parse_inertia(inp, query, qfield, err_msg=None):
             aliases = lmfdb.galois_groups.transitive_group.get_aliases()
             inp2 = inp.upper()
             if inp2 in aliases:
-                nt = aliases[inp2][0]
+                nt = aliases[inp2][0][0]
                 query[iner_gap] = nt2abstract(nt[0], nt[1])
             else:
                 # Check for Gap code using [a,b] or a.b notation
