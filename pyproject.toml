@@ -28,8 +28,10 @@ classifiers = [
 # Note that most of the website (though not database access through lmfdb.db)
 # also requires SageMath, which is not pip installable; install this package
 # into Sage's python, e.g. with `sage -pip install -e .`
-# psycodict is not yet released on PyPI, so we depend on the git repository;
-# this will need to change before the lmfdb itself can be released on PyPI.
+# The pgbinary extra installs the driver psycodict itself is built on.  We
+# track released versions rather than a git branch, so that what an install
+# gets doesn't depend on the day it was run; the upper bound is psycodict's
+# next major version, where its versioning policy allows breaking changes.
 dependencies = [
     "bcrypt",
     "flask",
@@ -38,8 +40,7 @@ dependencies = [
     "markupsafe",
     "mpmath",
     "pexpect",
-    "psycodict @ git+https://github.com/roed314/psycodict.git",
-    "psycopg2-binary",
+    "psycodict[pgbinary]>=1.0.0rc1,<2",
     "pyyaml",
     "requests",
     "svg.py",
