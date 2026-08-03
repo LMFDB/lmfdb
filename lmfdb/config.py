@@ -32,9 +32,8 @@ files is determined as follows.
 import argparse
 import getpass
 import os
-import random
+import secrets
 import string
-import __main__
 import socket
 from contextlib import closing
 from logging import INFO
@@ -119,25 +118,6 @@ def find_config_file():
     return os.path.join(lmfdb_home(), "config.ini")
 
 
-def _resolved_config_file():
-    """
-    The path of the configuration file in use.
-
-    This is :func:`find_config_file`, except that when the process was
-    started by one of the website entry points (the same condition under
-    which :class:`Configuration` reads the command line) a ``--config-file``
-    command-line option takes precedence, so that everything stored next to
-    the configuration file follows it.
-    """
-    if _started_as_website():
-        parser = argparse.ArgumentParser(add_help=False)
-        parser.add_argument("--config-file", dest="config_file")
-        args, _ = parser.parse_known_args()
-        if args.config_file:
-            return os.path.abspath(os.path.expanduser(args.config_file))
-    return find_config_file()
-
-
 def get_secret_key(config_file=None):
     """
     Return the secret key used for flask sessions, creating it (in the same
@@ -146,27 +126,29 @@ def get_secret_key(config_file=None):
     INPUT:
 
     - ``config_file`` -- the path of the configuration file next to which
-      the key is stored.  Defaults to the configuration file in use,
-      including a ``--config-file`` command-line option when the website is
-      being started.
+      the key is stored.  Defaults to :func:`find_config_file`; components
+      with access to a :class:`Configuration` should use its
+      ``get_secret_key`` method instead, so that a ``--config-file`` option
+      is respected.
     """
     if config_file is None:
-        config_file = _resolved_config_file()
+        config_file = find_config_file()
     secret_key_file = os.path.join(os.path.dirname(os.path.abspath(config_file)), "secret_key")
-    # if secret_key_file doesn't exist, create it
     if not os.path.exists(secret_key_file):
         os.makedirs(os.path.dirname(secret_key_file), exist_ok=True)
-        with open(secret_key_file, "w") as F:
-            # generate a random ASCII string
-            F.write(
-                "".join(
-                    [
-                        random.choice(string.ascii_letters + string.digits)
-                        for n in range(32)
-                    ]
-                )
-            )
-    return open(secret_key_file).read()
+        key = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+        # create the file atomically, readable only by the owner; if
+        # another process creates it first, its key is used instead, so
+        # concurrent workers always end up with the same key
+        try:
+            fd = os.open(secret_key_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        except FileExistsError:
+            pass
+        else:
+            with os.fdopen(fd, "w") as F:
+                F.write(key)
+    with open(secret_key_file) as F:
+        return F.read()
 
 
 def _resolve_log_path(value, default_name):
@@ -185,18 +167,22 @@ def _resolve_log_path(value, default_name):
     return value
 
 
-def _started_as_website():
+# The process-wide configuration: the first Configuration created in the
+# process (for the website, the one lmfdb.cli builds from the command line
+# before anything else is imported) is shared by every component -- logging,
+# the flask app's secret key, and the database -- so that the configuration,
+# including any --config-file option, is resolved exactly once.
+_current_configuration = None
+
+
+def current_configuration():
     """
-    Whether this process was launched by one of the website entry points
-    (start-lmfdb.py, the lmfdb console script, or python -m lmfdb), in which
-    case command-line arguments are read and recorded in the config file.
+    The process-wide :class:`Configuration`, created on first use.
     """
-    main_file = getattr(__main__, "__file__", None)
-    if not main_file:
-        return False
-    if os.path.basename(main_file) in ("start-lmfdb.py", "lmfdb", "lmfdb.exe", "lmfdb-script.py"):
-        return True
-    return main_file.endswith(os.path.join("lmfdb", "__main__.py"))
+    global _current_configuration
+    if _current_configuration is None:
+        _current_configuration = Configuration()
+    return _current_configuration
 
 
 class Configuration(_Configuration):
@@ -445,16 +431,17 @@ class Configuration(_Configuration):
             action="store_false",
             default=argparse.SUPPRESS,
         )
-        # if the website was started (via start-lmfdb.py, the lmfdb script or python -m lmfdb)
-        startlmfdbQ = _started_as_website()
-        writeargstofile = writeargstofile or startlmfdbQ
-        readargs = readargs or startlmfdbQ
-
-        # record the location of the configuration file (including a
-        # --config-file option when arguments are read), so that files that
-        # live next to it, like the secret key, can follow it
+        # record the locations of the configuration and secrets files
+        # (including the --config-file and --secrets-file options when
+        # arguments are read), so that files that live next to the
+        # configuration, like the secret key, can follow it
         known_args, _ = parser.parse_known_args(None if readargs else [])
         self.config_file = os.path.abspath(known_args.config_file)
+        if known_args.secrets_file is None:
+            # psycodict resolves a missing secrets file the same way
+            self.secrets_file = os.path.join(os.path.dirname(self.config_file), "secrets.ini")
+        else:
+            self.secrets_file = os.path.abspath(known_args.secrets_file)
 
         _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
@@ -534,6 +521,12 @@ class Configuration(_Configuration):
             "editor": opts["logging"]["editor"],
             "loglevel": opts["logging"]["loglevel"],
         }
+
+        # the first configuration created in the process becomes the shared
+        # one (see current_configuration)
+        global _current_configuration
+        if _current_configuration is None:
+            _current_configuration = self
 
     def get_secret_key(self):
         """

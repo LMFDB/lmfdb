@@ -21,9 +21,19 @@ def check_sage_version():
     if [int(c) for c in sage_version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
         warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***" % (sage_version,LMFDB_SAGE_VERSION))
 
+_logging_started = False
+
+
 def start_logging():
-    from lmfdb.config import Configuration
-    config = Configuration()
+    # make repeated initialization (tests, notebooks, repeated app
+    # construction) a no-op instead of duplicating handlers
+    global _logging_started
+    if _logging_started:
+        return
+    _logging_started = True
+
+    from lmfdb.config import current_configuration
+    config = current_configuration()
     logging_options = config.get_logging()
 
     root_logger = getLogger()

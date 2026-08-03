@@ -17,8 +17,10 @@ authors = [
     {name = "The LMFDB Collaboration"},
 ]
 keywords = ["number theory", "L-functions", "modular forms", "elliptic curves", "database"]
+# Development Status describes the pip packaging (new in this release),
+# not the website; bump it once an actual PyPI release has settled
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Framework :: Flask",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
@@ -64,7 +66,7 @@ Source = "https://github.com/LMFDB/lmfdb"
 Issues = "https://github.com/LMFDB/lmfdb/issues"
 
 [project.scripts]
-lmfdb = "lmfdb.website:main"
+lmfdb = "lmfdb.cli:main"
 lmfdb_search = "lmfdb.cmdline_search:main"
 
 [tool.setuptools]

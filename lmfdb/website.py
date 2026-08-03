@@ -106,14 +106,15 @@ from .lmfdb_database import db
 if db.is_verifying:
     raise RuntimeError("Cannot start website while verifying (SQL injection vulnerabilities)")
 
-def main():
+def main(config=None):
     info("main: ...done.")
-    from .config import Configuration
+    if config is None:
+        from .config import current_configuration
+        config = current_configuration()
 
-    C = Configuration()
-    flask_options = C.get_flask()
+    flask_options = config.get_flask()
     flask_options['threaded'] = False
-    cocalc_options = C.get_cocalc()
+    cocalc_options = config.get_cocalc()
 
     if "profiler" in flask_options and flask_options["profiler"]:
         info("Profiling!")
