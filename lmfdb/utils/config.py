@@ -34,7 +34,6 @@ from lmfdb.config import (
 __all__ = [
     "Configuration",
     "ConfigWrapper",
-    "COCALC_port",
     "abs_path_lmfdb",
     "find_config_file",
     "get_secret_key",
@@ -46,9 +45,9 @@ __all__ = [
 
 
 def __getattr__(name):
-    # Forward any other historical name (in particular COCALC_port, a
-    # module-level variable that lmfdb.config updates) to lmfdb.config, so
-    # its current value is always returned
+    # Forward any other historical name to lmfdb.config; in particular
+    # COCALC_port, a module-level variable that lmfdb.config updates, is
+    # served here rather than imported so that reads see its current value
     import lmfdb.config
     return getattr(lmfdb.config, name)
 
