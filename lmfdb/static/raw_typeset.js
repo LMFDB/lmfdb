@@ -3,8 +3,14 @@ function setraw(elt) {
   var $this = $(elt);
   // typeset container
   var $tset = $this.children("span.tset-container").first();
-  var tset_rect = ($tset)[0].getBoundingClientRect();
   var $ta = $this.children("textarea.raw-container").first();
+  if ( $tset.length == 0 || $tset[0].getClientRects().length == 0 ) {
+    $ta.css({'width': '', 'height': '', 'max-width': ''});
+    $this.removeClass("tset");
+    $this.addClass("raw");
+    return;
+  }
+  var tset_rect = ($tset)[0].getBoundingClientRect();
   if ( $this.hasClass("compressed") ) {
     $ta.width(Math.max(25, tset_rect.width - (2 + 3))); // 2*border + 2*padding
     $ta.height(tset_rect.height - (2 + 3));
@@ -105,4 +111,3 @@ $(document).ready( function(){
     $(".tset-container").dblclick(double_rawtset);
   }
 });
-
