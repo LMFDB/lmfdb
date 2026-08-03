@@ -59,6 +59,20 @@ def is_port_open(host, port):
         return sock.connect_ex((host, port)) == 0
 
 
+def abs_path_lmfdb(filename):
+    """
+    The path of a file at the root of the git checkout, relative to the
+    current directory (a historical helper; only available when lmfdb is
+    used from a checkout).
+    """
+    if root_lmfdb_path is None:
+        raise RuntimeError(
+            "abs_path_lmfdb gives the location of a file in the LMFDB git "
+            "checkout, but lmfdb is being used as an installed package"
+        )
+    return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
+
+
 def lmfdb_home():
     """
     The directory holding the LMFDB configuration file, secret key and logs.
@@ -106,12 +120,40 @@ def find_config_file():
     return os.path.join(lmfdb_home(), "config.ini")
 
 
-def get_secret_key():
+def _resolved_config_file():
+    """
+    The path of the configuration file in use.
+
+    This is :func:`find_config_file`, except that when the process was
+    started by one of the website entry points (the same condition under
+    which :class:`Configuration` reads the command line) a ``--config-file``
+    command-line option takes precedence, so that everything stored next to
+    the configuration file follows it.
+    """
+    if _started_as_website():
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("--config-file", dest="config_file")
+        args, _ = parser.parse_known_args()
+        if args.config_file:
+            return os.path.abspath(os.path.expanduser(args.config_file))
+    return find_config_file()
+
+
+def get_secret_key(config_file=None):
     """
     Return the secret key used for flask sessions, creating it (in the same
     directory as the configuration file) if it does not yet exist.
+
+    INPUT:
+
+    - ``config_file`` -- the path of the configuration file next to which
+      the key is stored.  Defaults to the configuration file in use,
+      including a ``--config-file`` command-line option when the website is
+      being started.
     """
-    secret_key_file = os.path.join(os.path.dirname(find_config_file()), "secret_key")
+    if config_file is None:
+        config_file = _resolved_config_file()
+    secret_key_file = os.path.join(os.path.dirname(os.path.abspath(config_file)), "secret_key")
     # if secret_key_file doesn't exist, create it
     if not os.path.exists(secret_key_file):
         os.makedirs(os.path.dirname(secret_key_file), exist_ok=True)
@@ -187,8 +229,8 @@ class Configuration(_Configuration):
             "--secrets-file",
             dest="secrets_file",
             metavar="SECRETS",
-            help="secrets file [default: %(default)s]",
-            default="secrets.ini",
+            help="secrets file [default: secrets.ini next to the configuration file]",
+            default=None,
         )
 
         parser.add_argument(
@@ -409,11 +451,11 @@ class Configuration(_Configuration):
         writeargstofile = writeargstofile or startlmfdbQ
         readargs = readargs or startlmfdbQ
 
-        # the config file is created if it doesn't exist; make sure the
-        # directory it lives in exists first
-        known_args, _ = parser.parse_known_args([] if not readargs else None)
-        config_dir = os.path.dirname(os.path.abspath(known_args.config_file))
-        os.makedirs(config_dir, exist_ok=True)
+        # record the location of the configuration file (including a
+        # --config-file option when arguments are read), so that files that
+        # live next to it, like the secret key, can follow it
+        known_args, _ = parser.parse_known_args(None if readargs else [])
+        self.config_file = os.path.abspath(known_args.config_file)
 
         _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
@@ -494,6 +536,13 @@ class Configuration(_Configuration):
             "loglevel": opts["logging"]["loglevel"],
         }
 
+    def get_secret_key(self):
+        """
+        Return the secret key used for flask sessions, stored next to this
+        configuration's file.
+        """
+        return get_secret_key(self.config_file)
+
     def get_all(self):
         return {
             "flask_options": self.flask_options,
@@ -530,6 +579,9 @@ class ConfigWrapper:
         self.postgresql_options = config_dict.get('postgresql_options', {})
         self.flask_options = config_dict.get('flask_options', {})
         self.logging_options = config_dict.get('logging_options', {'editor': ''})
+        # No configuration file is involved; files stored next to it (like
+        # the secret key) fall back to the default location
+        self.config_file = None
 
     # Add the get methods that might be expected
     def get_postgresql(self):

@@ -22,6 +22,7 @@ if __name__ == "__main__":
 from lmfdb.config import (
     Configuration,
     ConfigWrapper,
+    abs_path_lmfdb,
     find_config_file,
     get_secret_key,
     is_port_open,
@@ -33,6 +34,8 @@ from lmfdb.config import (
 __all__ = [
     "Configuration",
     "ConfigWrapper",
+    "COCALC_port",
+    "abs_path_lmfdb",
     "find_config_file",
     "get_secret_key",
     "is_port_open",
@@ -40,6 +43,14 @@ __all__ = [
     "lmfdb_log_dir",
     "root_lmfdb_path",
 ]
+
+
+def __getattr__(name):
+    # Forward any other historical name (in particular COCALC_port, a
+    # module-level variable that lmfdb.config updates) to lmfdb.config, so
+    # its current value is always returned
+    import lmfdb.config
+    return getattr(lmfdb.config, name)
 
 if __name__ == "__main__":
     Configuration(writeargstofile=True, readargs=True)
