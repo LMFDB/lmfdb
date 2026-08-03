@@ -58,13 +58,12 @@ Installation
    ```
 
    This installs the LMFDB itself (in editable mode, i.e. pointing at your
-   checkout) together with its dependencies, so that `import lmfdb` works
-   from `sage` regardless of the current directory; there is no need to add
-   the checkout to your `PYTHONPATH`.  Equivalently, you can run
-   `sage -pip install -e .` (add `[dev]` to also get the testing tools).
-   Importing `lmfdb` does not connect to the database; the connection is
-   established the first time `lmfdb.db` is used, or explicitly via
-   `db.connect()`.
+   checkout) together with its dependencies and development tools, so that
+   `import lmfdb` works from `sage` regardless of the current directory;
+   there is no need to add the checkout to your `PYTHONPATH`.  It is
+   equivalent to `sage -pip install -e ".[dev]"`.  Importing `lmfdb` does
+   not connect to the database; the connection is established the first
+   time `lmfdb.db` is used.
 
    ### Troubleshooting with packages.
 
@@ -138,8 +137,8 @@ Running
    sage -python start-lmfdb.py --debug
    ```
 
-   Since the LMFDB is installed by the step above, you can equivalently run
-   `lmfdb --debug` (a script installed by pip) or
+   Installing the LMFDB (see above) also provides an `lmfdb` command, so
+   you can equivalently run `lmfdb --debug`, or
    `sage -python -m lmfdb --debug`, from any directory.
 
  * The effect of the (optional) --debug is that you will be running
@@ -178,11 +177,12 @@ Running
 
  * Locations of configuration and log files: when running from a git
    checkout, the configuration file is `config.ini` at the root of the
-   checkout (as it always was) and log files (`flasklog`,
-   `slow_queries.log`, verification logs) go to the `logs/` subdirectory.
-   When the LMFDB is installed as a package rather than run from a checkout,
-   these files live in `~/.lmfdb` instead (unless there is a `config.ini` in
-   the current directory).  The environment variables `LMFDB_HOME` (the
+   checkout, and log files (`flasklog`, `slow_queries.log`, verification
+   logs) go to its `logs/` subdirectory.  When the LMFDB is installed as a
+   package rather than run from a checkout, these files live in `~/.lmfdb`
+   (except that a `config.ini` in the current directory is used if it
+   exists).  The secret key used for login sessions is stored next to the
+   configuration file.  The environment variables `LMFDB_HOME` (the
    directory for all of these files) and `LMFDB_CONFIG` (the path of the
    configuration file) override these defaults, as does the `--config-file`
    command-line option.

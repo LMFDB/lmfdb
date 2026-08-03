@@ -16,9 +16,8 @@ The location of the configuration file, the secret key and the log
 files is determined as follows.
 
 - When lmfdb is used from a git checkout, the configuration file is
-  ``config.ini`` at the root of the checkout (as it always was), the secret
-  key is stored next to it, and log files go to ``logs/`` at the root of
-  the checkout.
+  ``config.ini`` at the root of the checkout, the secret key is stored
+  next to it, and log files go to ``logs/`` at the root of the checkout.
 
 - When lmfdb is installed as a package (e.g. with ``sage -pip install .``),
   these files live in the LMFDB home directory, ``~/.lmfdb`` by default;
@@ -108,8 +107,8 @@ def find_config_file():
 
     - the ``LMFDB_CONFIG`` environment variable;
     - ``config.ini`` in the current directory, if it exists and lmfdb is not
-      being used from a git checkout (a checkout keeps its own config.ini at
-      the root, as before);
+      being used from a git checkout (a checkout always keeps its
+      configuration at its root);
     - ``config.ini`` in the directory given by :func:`lmfdb_home`.
     """
     path = os.environ.get("LMFDB_CONFIG")
