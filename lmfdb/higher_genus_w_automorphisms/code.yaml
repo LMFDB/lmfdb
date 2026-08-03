@@ -150,7 +150,7 @@ add_to_total_full:
    magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label,full_auto:=full_auto, full_sign:=full_sign>);"
 
 add_to_total_basic_rep:
-    gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label, gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic) ); "
+    gap:  "Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label, gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal) ); "
     magma: "Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic,is_cyclic_trigonal:=is_cyclic_trigonal >);"
 
 add_to_total_hyp_rep:
@@ -172,3 +172,30 @@ search_result_gp_comment:
   gap:  " Create group and signature information."
   magma: " Create group as a permutation group and initialize signature information."
 
+
+# Add tests for Gap/Magma code download pages for HGCWA
+snippet_test:
+  test_hyperelliptic:
+    label: hgcwa_hyperelliptic
+    url: HigherGenus/C/Aut/2.2-1.0.2-2-2-2-2-2.1/download/{lang}
+  test_hyperelliptic_topo:
+    label: hgcwa_hyperelliptic_topo
+    url: HigherGenus/C/Aut/2.2-1.0.2-2-2-2-2-2/download/topo_{lang}
+  test_klein_quartic_family:
+    label: hgcwa_klein_quartic_family
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7/download/{lang}
+  test_klein_quartic_passport:
+    label: hgcwa_klein_quartic_passport
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7.1/download/{lang}
+  test_klein_quartic_braid:
+    label: hgcwa_klein_quartic_braid
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7.1/download/braid_{lang}
+  test_klein_quartic_rep:
+    label: hgcwa_klein_quartic_rep
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7.1.1/download/rep_{lang}
+  test_cyclic_trigonal:
+    label: hgcwa_cyclic_trigonal
+    url: HigherGenus/C/Aut/10.9-2.0.3-3-3-3-3-3.1/download/{lang}
+  test_not_full_auto:
+    label: hgcwa_not_full_auto
+    url: HigherGenus/C/Aut/13.45-2.0.3-15-15.1/download/{lang}
