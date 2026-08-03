@@ -4,14 +4,13 @@ import shutil
 import signal
 import socket
 import subprocess
-import threading
 from collections import Counter
 # SQL comes from psycodict itself (which re-exports its driver's sql
 # classes) rather than lmfdb.utils.psycopg_compat: importing anything from
 # lmfdb.utils executes its heavyweight __init__, and this module must stay
 # importable without sage or flask
 from psycodict import SQL
-from lmfdb.config import Configuration, ConfigWrapper, lmfdb_log_dir
+from lmfdb.config import ConfigWrapper, lmfdb_log_dir
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
@@ -471,17 +470,19 @@ class LMFDBDatabase(PostgresDatabase):
     PARAMETERS:
 
     - ``config`` -- optional configuration. Can be:
-        * None (default): creates a default Configuration() object
+        * None (default): uses the process-wide configuration (see
+          lmfdb.config.current_configuration)
         * dict: a dictionary with keys 'postgresql_options', 'flask_options', 'logging_options'
         * Configuration object: used directly
     """
     _search_table_class_ = LMFDBSearchTable
 
     def __init__(self, config=None, **kwargs):
-        # If config is not provided, create the default configuration
+        # If config is not provided, use the process-wide configuration
+        # (creating it, and if needed the default configuration file)
         if config is None:
-            # This will write the default configuration file if needed
-            config = Configuration()
+            from lmfdb.config import current_configuration
+            config = current_configuration()
         elif isinstance(config, dict):
             # If config is a dict, create a wrapper object with the required attributes
             config = ConfigWrapper(config)
@@ -670,71 +671,8 @@ class LMFDBDatabase(PostgresDatabase):
             knowldb.drop_column(name, col)
         print("Deleted table and column descriptions from knowl database")
 
-class LazyDatabase:
-    """
-    A lazy stand-in for :class:`LMFDBDatabase`.
-
-    Creating this object is cheap: the connection to postgres is only
-    established the first time the object is actually used (an attribute is
-    accessed, a table is looked up, etc.), or when :meth:`connect` is called
-    explicitly.  Afterward it behaves exactly like the underlying
-    :class:`LMFDBDatabase` by forwarding everything to it.
-    """
-    def __init__(self):
-        object.__setattr__(self, "_lazy_instance", None)
-        object.__setattr__(self, "_lazy_lock", threading.Lock())
-
-    def connect(self, config=None, **kwargs):
-        """
-        Connect to the database, if not already connected, and return the
-        underlying :class:`LMFDBDatabase`.
-
-        INPUT:
-
-        - ``config`` -- optional configuration, as for :class:`LMFDBDatabase`.
-          It is an error to provide it if the connection has already been made.
-        """
-        instance = object.__getattribute__(self, "_lazy_instance")
-        if instance is None:
-            with object.__getattribute__(self, "_lazy_lock"):
-                instance = object.__getattribute__(self, "_lazy_instance")
-                if instance is None:
-                    instance = LMFDBDatabase(config=config, **kwargs)
-                    object.__setattr__(self, "_lazy_instance", instance)
-                    return instance
-        if config is not None or kwargs:
-            raise RuntimeError("The database connection has already been established; connection options have no effect")
-        return instance
-
-    @property
-    def connected(self):
-        """Whether the connection to postgres has been established."""
-        return object.__getattribute__(self, "_lazy_instance") is not None
-
-    def __getattr__(self, name):
-        return getattr(self.connect(), name)
-
-    def __setattr__(self, name, value):
-        setattr(self.connect(), name, value)
-
-    def __delattr__(self, name):
-        delattr(self.connect(), name)
-
-    def __getitem__(self, name):
-        return self.connect()[name]
-
-    def __dir__(self):
-        return dir(self.connect())
-
-    def __bool__(self):
-        # so that `assert db` and `if db:` do not force a connection
-        return True
-
-    def __repr__(self):
-        instance = object.__getattribute__(self, "_lazy_instance")
-        if instance is None:
-            return "LMFDB database (not yet connected; will connect on first use)"
-        return repr(instance)
-
-
-db = LazyDatabase()
+# The public lazy proxy, importable from here for backwards compatibility
+# (the verify modules and older scripts do `from lmfdb.lmfdb_database import
+# db`).  This is the same object as lmfdb.db, not a second database.
+from ._lazy_database import db
+assert db
