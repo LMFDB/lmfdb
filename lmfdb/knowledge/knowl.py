@@ -338,15 +338,15 @@ class KnowlBackend(PostgresBase):
 
     def yaml_export(self, filename, ids=0, fields=None):
         """
-        Write the given knowls to a yaml file; you can then edit that file and reload using update_from_yaml.
-        You should usually not change the first output, which records the timestamp that this
+        Write the given knowls to a yaml file; you can then edit that file and reload it using ``yaml_import``.
+        You should usually not change the first record in the output, which stores the time at which the export was performed; ``yaml_import`` uses it to detect knowls that have changed in the database since the export.
         This function is not currently exposed to the web interface, so must be run manually (a connection to devmirror is sufficient, so it does not need to be run by an LMFDB editor).
 
         INPUT:
 
         - ``filename`` -- the filename to write output
-        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls with that type will be output), or a string (in which case all knowl ids starting with that string will be output)
-        - ``fields`` -- include these fields; if not specified will use id plus the default fields.
+        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls of those types will be output; the default ``0`` gives normal knowls, as opposed to top/bottom annotations, comments and column descriptions -- see ``knowl_type_code``), or a string (in which case all knowl ids starting with that string will be output)
+        - ``fields`` -- include these fields; defaults to id, content and title
 
         OUTPUT:
 
@@ -368,10 +368,20 @@ class KnowlBackend(PostgresBase):
         with open(filename, "w", encoding="utf-8") as F:
             yaml.safe_dump([{"written": timestamp}] + knowls, F, default_flow_style=False, sort_keys=False)
 
-    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False):
+    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False, minor=True):
         """
-        This function provides a mechanism for updating many knowls at once from a yaml file.
+        This function provides a mechanism for updating many knowls at once from a yaml file, as produced by ``yaml_export``.
         It is not currently exposed to the web interface, so must be run manually by an LMFDB editor.
+
+        Knowls that have changed in the database since the yaml file was written are skipped (with a message), as are records that match the current database contents.  All changes are saved in a single transaction, so a failure partway through will not leave a partial import.  We suggest running with ``dryrun=True`` first to check the set of changes.
+
+        INPUT:
+
+        - ``filename`` -- a yaml file, as produced by ``yaml_export``: a list of records, the first storing the time the export was performed and the rest holding knowl data
+        - ``who`` -- the user id of the person performing the import, recorded as the last author of each changed knowl
+        - ``dryrun`` -- if True, print the changes that would be made without saving anything
+        - ``straight_to_production`` -- if False (the default), updated knowls are reset to beta status so that they can be reviewed.  WARNING: if True, an updated knowl keeps its current status, so a reviewed knowl will remain marked as reviewed even though its new content has not been; only use this for edits that do not require review.  Newly created knowls always start in beta status.
+        - ``minor`` -- if True (the default), the person performing the import is not added to the author list of updated knowls (though they are still recorded as the last author).  Set to False for imports that make substantial changes.  The creator of a newly created knowl is always added as an author.
         """
         with open(filename, encoding="utf-8") as F:
             records = yaml.safe_load(F)
@@ -386,33 +396,34 @@ class KnowlBackend(PostgresBase):
         for knowl in updated:
             knowl.update(records[knowl["id"]])
         count = 0
-        for old, new in zip(knowls, updated):
-            assert old['id'] == new['id']
-            if old != new:
-                if dryrun:
-                    print(f"Updating {old['id']}:")
-                    for col, oval in old.items():
-                        if col != "content":
-                            nval = new[col]
-                            if nval != oval:
-                                print(f'  Changing {col} from "{oval}" to "{nval}"')
-                    if 'content' in old:
-                        ncontent, ocontent = new['content'], old['content']
-                        if ncontent != ocontent:
-                            diff = difflib.ndiff(ocontent.split("\n"), ncontent.split("\n"))
-                            print("  " + "\n  ".join(diff))
-                else:
-                    if not straight_to_production:
-                        new['status'] = 0
-                    new['timestamp'] = utc_now_naive()
-                    self.save(Knowl(new['id'], data=new), who, most_recent=Knowl(old['id'], data=old))
-                count += 1
         ccount = 0
-        if creating:
-            from lmfdb.knowledge.main import allowed_id
+        with DelayCommit(self):
+            for old, new in zip(knowls, updated):
+                assert old['id'] == new['id']
+                if old != new:
+                    if dryrun:
+                        print(f"Updating {old['id']}:")
+                        for col, oval in old.items():
+                            if col != "content":
+                                nval = new[col]
+                                if nval != oval:
+                                    print(f'  Changing {col} from "{oval}" to "{nval}"')
+                        if 'content' in old:
+                            ncontent, ocontent = new['content'], old['content']
+                            if ncontent != ocontent:
+                                diff = difflib.ndiff(ocontent.split("\n"), ncontent.split("\n"))
+                                print("  " + "\n  ".join(diff))
+                    else:
+                        if not straight_to_production:
+                            new['status'] = 0
+                        new['timestamp'] = utc_now_naive()
+                        self.save(Knowl(new['id'], data=new), who, most_recent=Knowl(old['id'], data=old), minor=minor)
+                    count += 1
             for kid, rec in creating.items():
-                if not allowed_id(kid):
-                    print(f"{kid} not a valid knowl id")
+                reason = bad_knowl_id_reason(kid)
+                if reason is not None:
+                    errmsg, args = reason
+                    print(f"Cannot create {kid}: " + " ".join((errmsg % args).split()))
                     continue
                 if not ("content" in rec and "title" in rec):
                     print(f"{kid} missing required content/title")
@@ -895,6 +906,41 @@ def knowl_title(kid):
 
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
+# knowl IDs are restricted by these regexes
+allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_annotation_id = re.compile(r"^[a-zA-Z0-9._\-~]+$")  # all unreserved URL characters
+
+def bad_knowl_id_reason(ID):
+    """
+    Check whether a string is a valid id for a new knowl.
+
+    Unlike ``lmfdb.knowledge.main.allowed_id`` (which is built on this function),
+    this does not require a Flask request context, so it can be used from
+    scripts such as ``yaml_import``.
+
+    INPUT:
+
+    - ``ID`` -- a string, the proposed id for a knowl
+
+    OUTPUT:
+
+    ``None`` if the id is valid; otherwise a pair ``(errmsg, args)`` that can be
+    passed to ``flash_error(errmsg, *args)`` or formatted as ``errmsg % args``.
+    """
+    if ID.endswith('comment'):
+        main_knowl = ".".join(ID.split(".")[:-2])
+        if not knowldb.knowl_exists(main_knowl):
+            return ("Knowl '%s' does not exist, so it cannot be commented on", (main_knowl,))
+    elif ID.endswith('top') or ID.endswith('bottom') or ID.startswith("columns."):
+        if not allowed_annotation_id.match(ID):
+            label = '.'.join(ID.split(".")[1:-1])
+            return ("Label '%s' contains characters not allowed by knowl database; update allowed_id function or change label scheme", (label,))
+    elif not allowed_knowl_id.match(ID):
+        return ("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""", (ID,))
+    return None
 
 def external_definition_link(site, xid):
     if xid.count("@") == 1:
