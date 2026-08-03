@@ -28,5 +28,5 @@ gap> full_auto:=[90,7];
 [ 90, 7 ]
 gap> full_sign:=[0,2,6,15];
 [ 0, 2, 6, 15 ]
-gap> Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,  genus:=genus, dimension:=dim, r:=r, g0:=g0,passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, full_auto:=full_auto, full_sign:=full_sign) ); 
+gap> Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,  genus:=genus, dimension:=dim, r:=r, g0:=g0,passport_label:= passport_label,gen_vect_label:=gen_vect_label, full_auto:=full_auto, full_sign:=full_sign) ); 
 gap> 

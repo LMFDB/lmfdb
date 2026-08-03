@@ -30,6 +30,8 @@ gap> gen_vect_label:=1;
 1
 gap> braid_class:=[1, 1];
 [ 1, 1 ]
+gap> topological_class:=[1, 1];
+[ 1, 1 ]
 gap> is_hyperelliptic:=false;
 false
 gap> is_cyclic_trigonal:=false;
@@ -51,6 +53,8 @@ gap> gen_vect_label:=1;
 1
 gap> braid_class:=[2, 1];
 [ 2, 1 ]
+gap> topological_class:=[1, 1];
+[ 1, 1 ]
 gap> is_hyperelliptic:=false;
 false
 gap> is_cyclic_trigonal:=false;

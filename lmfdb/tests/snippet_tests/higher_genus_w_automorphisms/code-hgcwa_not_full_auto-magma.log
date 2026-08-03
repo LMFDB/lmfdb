@@ -16,5 +16,5 @@ magma> passport_label:=1;
 magma> gen_vect_label:=1;
 magma> full_auto:=[90,7];
 magma> full_sign:=[0,2,6,15];
-magma> Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, full_auto:=full_auto, full_sign:=full_sign>);
+magma> Append(~data, rec<RecFormat | group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=gen_vectors_as_perm, conj_classes:=cc, genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label,full_auto:=full_auto, full_sign:=full_sign>);
 magma> 

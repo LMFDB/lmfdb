@@ -30,5 +30,5 @@ gap> is_cyclic_trigonal:=true;
 true
 gap> cyc_auto:=PermList([2, 3, 1, 5, 6, 4, 8, 9, 7]);
 (1,2,3)(4,5,6)(7,8,9)
-gap> Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label, braid_class:=braid_class, topological_class:=topological_class, is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto) ); 
+gap> Add( data, rec( group:=G, gp_id:=gp_id, signature:=signature, gen_vectors:=perm_list,genus:=genus, dimension:=dim, r:=r, g0:=g0, passport_label:= passport_label,gen_vect_label:=gen_vect_label,is_hyperelliptic:=is_hyperelliptic, is_cyclic_trigonal:=is_cyclic_trigonal, cyc_auto:=cyc_auto) ); 
 gap> 
