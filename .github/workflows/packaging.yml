@@ -1,0 +1,54 @@
+# Packaging checks that run on every push and pull request (publish.yml
+# only builds on release tags and manual dispatch): build the sdist and
+# wheel, check their metadata, install the wheel into a clean virtual
+# environment -- without sage and without a database -- and exercise the
+# configuration handling and the lazy lmfdb.db object of the installed
+# package.  Needs no secrets, so it also runs on forks.
+name: Packaging
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ main, dev, web ]
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Install the wheel into a clean venv
+        run: |
+          python -m venv smoke
+          smoke/bin/pip install dist/*.whl pytest
+
+      - name: Import and configuration tests against the installed package
+        # run from an empty directory so the checkout cannot shadow the
+        # installed package, and with an isolated LMFDB home
+        run: |
+          mkdir empty && cd empty
+          export LMFDB_HOME=$PWD/lmfdb-home
+          ../smoke/bin/python -c "import lmfdb"
+          ../smoke/bin/python -c "from lmfdb import db; assert db.connected is False"
+          ../smoke/bin/python -m pytest -v --pyargs lmfdb.test_config
+
+      - name: The console script fails helpfully without sage
+        run: |
+          if smoke/bin/lmfdb --version > out.txt 2>&1; then
+            echo "expected the lmfdb script to fail in a venv without sage"
+            cat out.txt
+            exit 1
+          fi
+          grep -q "requires SageMath" out.txt
+          grep -q "lmfdb.db) works without Sage" out.txt

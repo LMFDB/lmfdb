@@ -6,9 +6,6 @@
 #    TestPyPI, as a dry run.
 #
 # Before this can succeed, one-time setup is needed:
-#  - psycodict must be released on PyPI and the git dependency in
-#    pyproject.toml replaced by a normal versioned requirement (PyPI
-#    rejects packages whose dependencies are git URLs);
 #  - a "Trusted Publisher" must be configured for the lmfdb project on
 #    https://pypi.org (and https://test.pypi.org), pointing at this
 #    repository, this workflow file (publish.yml) and the environment
