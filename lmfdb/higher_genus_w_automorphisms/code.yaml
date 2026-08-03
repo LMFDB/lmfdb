@@ -173,17 +173,29 @@ search_result_gp_comment:
   magma: " Create group as a permutation group and initialize signature information."
 
 
-# Add tests for Gap/Magma code download pages
+# Add tests for Gap/Magma code download pages for HGCWA
 snippet_test:
-  test_hgcwa_hyperelliptic:
+  test_hyperelliptic:
     label: hgcwa_hyperelliptic
     url: HigherGenus/C/Aut/2.2-1.0.2-2-2-2-2-2.1/download/{lang}
-  test_hgcwa_basic:
-    label: hgcwa_basic
+  test_hyperelliptic_topo:
+    label: hgcwa_hyperelliptic_topo
+    url: HigherGenus/C/Aut/2.2-1.0.2-2-2-2-2-2/download/topo_{lang}
+  test_klein_quartic_family:
+    label: hgcwa_klein_quartic_family
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7/download/{lang}
+  test_klein_quartic_passport:
+    label: hgcwa_klein_quartic_passport
     url: HigherGenus/C/Aut/3.168-42.0.2-3-7.1/download/{lang}
-  test_hgcwa_cyclic_trigonal:
+  test_klein_quartic_braid:
+    label: hgcwa_klein_quartic_braid
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7.1/download/braid_{lang}
+  test_klein_quartic_rep:
+    label: hgcwa_klein_quartic_rep
+    url: HigherGenus/C/Aut/3.168-42.0.2-3-7.1.1/download/rep_{lang}
+  test_cyclic_trigonal:
     label: hgcwa_cyclic_trigonal
     url: HigherGenus/C/Aut/10.9-2.0.3-3-3-3-3-3.1/download/{lang}
-  test_hgcwa_not_full_auto:
+  test_not_full_auto:
     label: hgcwa_not_full_auto
     url: HigherGenus/C/Aut/13.45-2.0.3-15-15.1/download/{lang}
