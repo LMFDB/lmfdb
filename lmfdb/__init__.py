@@ -14,13 +14,22 @@ command (or ``python -m lmfdb``, or ``start-lmfdb.py`` from a git checkout).
 
 
 def __getattr__(name):
-    # Lazy attributes (PEP 562), so that `import lmfdb` stays cheap
+    # The db object is provided lazily (PEP 562), so that `import lmfdb`
+    # stays cheap and never fails: connecting is deferred until first use
     if name == "db":
         try:
             from .lmfdb_database import db
-        except ImportError:
-            print('Missing dependency; try running "sage -pip install -e ." in the LMFDB home folder.')
-            raise
+        except ImportError as e:
+            # Chain an AttributeError rather than letting the ImportError
+            # propagate: introspection such as help(lmfdb) then keeps
+            # working, while `from lmfdb import db` and `lmfdb.db` both
+            # display this message together with the underlying error
+            raise AttributeError(
+                "lmfdb.db is unavailable because a dependency failed to "
+                "import ({}); installing the package, for example with "
+                '"sage -pip install -e ." from the root of an LMFDB '
+                "checkout, installs all dependencies".format(e)
+            ) from e
         globals()["db"] = db
         return db
     raise AttributeError("module 'lmfdb' has no attribute %r" % (name,))

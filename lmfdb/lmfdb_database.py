@@ -6,7 +6,11 @@ import socket
 import subprocess
 import threading
 from collections import Counter
-from lmfdb.utils.psycopg_compat import SQL
+# SQL comes from psycodict itself (which re-exports its driver's sql
+# classes) rather than lmfdb.utils.psycopg_compat: importing anything from
+# lmfdb.utils executes its heavyweight __init__, and this module must stay
+# importable without sage or flask
+from psycodict import SQL
 from lmfdb.config import Configuration, ConfigWrapper, lmfdb_log_dir
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
