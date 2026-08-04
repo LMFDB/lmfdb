@@ -245,6 +245,18 @@ def by_url_curve_label(cond, alpha, num):
     label = str(cond) + "." + alpha + str(num)
     return render_curve_webpage(label)
 
+@g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
+def by_url_curve_label_old(cond, alpha, disc, num):
+    # support URLs using the old label format cond.alpha.disc.num by
+    # redirecting to the new label cond.alpha+num (see genus2_jump)
+    return redirect(url_for(".by_url_curve_label", cond=cond, alpha=alpha, num=num), 301)
+
+@g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
+def by_url_isogeny_class_discriminant_old(cond, alpha, disc):
+    # support old-style URLs that specified an isogeny class and discriminant
+    # by redirecting to the isogeny class page
+    return redirect(url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha), 301)
+
 @g2c_page.route("/Q/<int:cond>/<alpha>/")
 def by_url_isogeny_class_label(cond, alpha):
     return render_isogeny_class_webpage(str(cond) + "." + alpha)
@@ -291,8 +303,6 @@ def render_curve_webpage(label):
     try:
         g2c = WebG2C.by_label(label)
     except (KeyError, ValueError) as err:
-        print("intentially raising error for debugging")
-        raise err
         return abort(404, err.args)
     return render_template(
         "g2c_curve.html",
@@ -474,7 +484,6 @@ def genus2_jump(info):
         return redirect(url_for_isogeny_class_label(jump), 301)
     elif OLD_LABEL_RE.fullmatch(jump):
         s = jump.split(".")
-        print(len(s))
         jump = s[0] + "." + s[1] + s[3]
         return redirect(url_for_curve_label(jump), 301)
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
@@ -667,9 +676,9 @@ def genus2_curve_search(info, query):
     if info.get("geom_aut_grp_id"):
         info["geom_aut_grp"] = ".".join(info.pop("geom_aut_grp_id")[1:-1].split(","))
     if info.get("aut_grp_label"):
-        info["aut_grp"] = aut_grp_label
+        info["aut_grp"] = info.pop("aut_grp_label")
     if info.get("geom_aut_grp_label"):
-        info["geom_aut_grp"] = geom_aut_grp_label
+        info["geom_aut_grp"] = info.pop("geom_aut_grp_label")
     for fld in (
         "st_group",
         "real_geom_end_alg",
@@ -713,7 +722,7 @@ class G2C_stats(StatsDisplay):
         g2c_knowl = display_knowl("g2c.g2curve", title="genus 2 curves")
         return (
             r'The database currently contains %s %s over $\Q$ of %s up to %s and %s up to %.3g.  Here are some <a href="%s">further statistics</a>. <b>This data is provisional, labels may change!</b>'
-            % (self.ncurves, g2c_knowl, self.cond_knowl, "$2^{20}$" if self.max_cond == 2**20 else comma(self.max_cound), self.disc_knowl, self.max_disc, stats_url)
+            % (self.ncurves, g2c_knowl, self.cond_knowl, "$2^{20}$" if self.max_cond == 2**20 else comma(self.max_cond), self.disc_knowl, self.max_disc, stats_url)
         )
 
     @property
