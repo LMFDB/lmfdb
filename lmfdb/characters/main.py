@@ -162,6 +162,8 @@ def common_parse(info, query):
     parse_ints(info, query, "modulus", name="modulus")
     parse_ints(info, query, "conductor", name="conductor")
     parse_ints(info, query, "order", name="order")
+    if "is_primitive" not in info and "primitive" in info:
+        info["is_primitive"] = str(info["primitive"]).lower()
     if 'inducing' in info:
         try:
             validate_label(info['inducing'])
@@ -204,6 +206,9 @@ def common_parse(info, query):
         elif parity == 'odd':
             query['is_even'] = False
     parse_bool(info, query, "is_primitive", name="is_primitive")
+    if ("modulus" not in query and isinstance(query.get("conductor"), int)
+        and isinstance(query.get("order"), int) and "is_primitive" not in query):
+        query["is_primitive"] = True
     parse_bool(info, query, "is_real", name="is_real")
     parse_bool(info, query, "is_minimal", name="is_minimal")
 
