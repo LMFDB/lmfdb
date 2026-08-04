@@ -6,7 +6,10 @@
 {% endif %}
 {% endmacro %}
 
+
 {% block body -%}
+<div id="layout">
+<div id="page-wrapper">
 <div id="header">
     <div id="logo"><a href="{{ url_for('index') }}">
 {% if ALPHA %}
@@ -148,9 +151,8 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
+{% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or related_sections or learnmore) %}
       <div id="properties">
-       <div id="properties-collapser">&uarr;</div>
     {% if properties %}
        <h1 class="properties-header">Properties</h1>
        <div class="properties-body">
@@ -180,6 +182,7 @@
    {{ rightnavig("Origins of factors", factors_origins) }}
    {{ neighbors("Nearby objects", navi) }}
    {{ rightnavig("Downloads", downloads) }}
+   {{ rightnavig("Related sections", related_sections) }}
    {{ rightnavig("Learn more", learnmore) }}
     </div>
     {%- endif %}
@@ -230,6 +233,8 @@ The function which was called for this page is: {{calling_function}}
 </div>
 {% endif %}
 
+</div>{# /#page-wrapper #}
+
 <div id="footer">
     {% if credit -%}
       Data computed by {{ credit|safe }}.<br />
@@ -243,6 +248,8 @@ The function which was called for this page is: {{calling_function}}
       <a href="{{ url_for('contact') }}">Contact</a>
       &middot;
       <a href="{{ url_for('citation') }}">Citation</a>
+      &middot;
+      <a href="{{ url_for('license') }}">License</a>
       &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
@@ -258,6 +265,7 @@ The function which was called for this page is: {{calling_function}}
       {{ version|safe }}
     </div>
 </div>
+</div>{# /#layout #}
 
 
 

@@ -204,7 +204,14 @@ lattice_columns = SearchColumns([
              url_for_label=url_for_label,
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
-             properties=lambda: [])
+             properties=lambda: [],
+             diagram_opts={
+                 "title": "Integral lattices diagram search",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "x_axis_default": "level",
+                 "y_axis_default": "minimum",
+                 "color": "aut",
+             })
 def lattice_search(info, query):
     for field, name in [('dim', 'Dimension'), ('det', 'Determinant'), ('level', None),
                         ('minimum', 'Minimal vector length'), ('class_number', None),

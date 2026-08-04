@@ -2,7 +2,7 @@
 # Author: Sebastien Labbe
 
 from flask import render_template, request, url_for, redirect
-from lmfdb.permutations import permutations_page, logger
+from lmfdb.permutations import permutations_page
 from sage.all import Permutation, Integer
 from lmfdb.utils import flash_error
 
@@ -42,7 +42,6 @@ def show():
         data = [Integer(z) for z in data.split('.')]
         p = Permutation(data)
     except (TypeError, ValueError):
-        logger.info("Impossible to create a permutation from input.")
         flash_error("Ooops, impossible to create a permutation from given input!")
         return redirect(url_for(".index"))
     return render_template("permutations.html", permutation=p,

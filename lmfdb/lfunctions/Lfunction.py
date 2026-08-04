@@ -34,7 +34,6 @@ from sage.all import (
     is_prime,
     lazy_attribute,
     log,
-    next_prime,
     nth_prime,
     primes_first_n,
     prime_pi,
@@ -64,7 +63,7 @@ from lmfdb.siegel_modular_forms.sample import Sample
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
-from lmfdb.lfunctions import logger
+from lmfdb.logger import logger
 from .Lfunctionutilities import (
     string2number,
     compute_local_roots_SMF2_scalar_valued,)
@@ -262,7 +261,8 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
-        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
+        upperbound = min(2*L.degree*L.numcoeff, nth_prime(len(L.localfactors) + 1) - 1)
+        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, upperbound)
 
         # get rid of extra coeff
         count = 0
@@ -622,7 +622,10 @@ class Lfunction_from_db(Lfunction):
     def download_dirichlet_coeff(self):
         filename = self.label
         data = {}
-        data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
+        # Only a_1..a_{q-1} are determined by the stored Euler factors, where q
+        # is the first prime without one (an unknown a_p would wrongly default to
+        # 1). Same bound as the displayed coefficients in makeLfromdata.
+        data['an'] = an_from_data(self.localfactors, nth_prime(len(self.localfactors) + 1) - 1)
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.dir_coeffs',
