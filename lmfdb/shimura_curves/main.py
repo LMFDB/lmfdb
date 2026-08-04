@@ -162,7 +162,7 @@ def lat_diagram(label):
     info = {"dojs": dojs}
     info.update(display_opts)
     return render_template(
-        "lat_diagram_page.html",
+        "shimcurve_lat_diagram_page.html",
         dojs=dojs,
         info=info,
         title="Diagram of nearby Shimura curves for %s" % label,
