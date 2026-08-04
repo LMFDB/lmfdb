@@ -399,75 +399,99 @@ class ModCrvTest(LmfdbTest):
             L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
             assert l in L.get_data(as_text=True)
 
-    def test_related_objects(self):
-        # The friends links tested here require columns that are not yet populated in
-        # gps_gl2zhat on devmirror (trace_hash and newforms are used to find sibling
-        # modular curves, curve_label/simple to link elliptic curves and modular forms)
-        for lab, col in [
-                ("48.4608.161-48.duj.4.7", "trace_hash"),
-                ("60.2880.97-60.bol.1.8", "trace_hash"),
-                ("48.2304.161.duj.1", "newforms"),
-                ("60.1440.97.bol.1", "newforms"),
-                ("6.6.1.a.1", "curve_label"),
-                ("23.24.2.a.1", "simple"),
-                ("23.24.2.a.1", "trace_hash"),
-                ]:
-            if db.gps_gl2zhat.lookup(lab, col) is None:
-                self.skipTest("gps_gl2zhat data load on devmirror incomplete (%s.%s not populated)" % (lab, col))
-        for url, friends in [
-            (
-                "/ModularCurve/Q/48.4608.161-48.duj.4.7",
-                (
-                    # Currently, isogeny/gassmann class links are not available on individual curve pages.
-                    # 'Modular isogeny class 48.2304.161.duj',
-                    'L-function not available',
-                    'Modular curve 48.2304.161.duj.1',
-                    'Modular curve 48.2304.161.duj.2',
-                    'Modular curve 48.2304.161.duj.3',
-                    'Modular curve 48.2304.161.duj.4',
-                    'Modular curve 48.2304.161.duj.5',
-                    'Modular curve 48.2304.161.duj.6',
-                    'Modular curve 48.2304.161.duj.7',
-                    'Modular curve 48.2304.161.duj.8',
-                    'Modular curve 48.2304.161.dut.1',
-                    'Modular curve 48.2304.161.dut.2',
-                    'Modular curve 48.2304.161.dut.3',
-                    'Modular curve 48.2304.161.dut.4',
-                    'Modular curve 48.2304.161.dut.5',
-                    'Modular curve 48.2304.161.dut.6',
-                    'Modular curve 48.2304.161.dut.7',
-                    'Modular curve 48.2304.161.dut.8'
-                )
-            ),
-            (
-                "/ModularCurve/Q/60.2880.97-60.bol.1.8",
-                (
-                    # Currently, isogeny/gassmann class links are not available on individual curve pages.
-                    # 'Modular isogeny class 60.1440.97.bol',
-                    'L-function not available',
-                    'Modular curve 60.1440.97.bog.1',
-                    'Modular curve 60.1440.97.bol.1'
-                )
-            ),
-            # The next two cases come from LMFDB#5929
-            (
-                "/ModularCurve/Q/6.6.1.a.1",
-                (
-                    'Elliptic curve 36.a3',
-                    'Modular form 36.2.a.a'
-                )
-            ),
-            (
-                "/ModularCurve/Q/23.24.2.a.1",
-                (
-                    'Isogeny class 529.a',
-                    'Modular form 23.2.a.a'
-                )
-            )
-            ]:
-            data = self.tc.get(url,follow_redirects=True).get_data(as_text=True)
-            for friend in friends:
-                assert friend in data
+    def _skip_if_not_populated(self, *checks):
+        """
+        Skip the current test unless each given (table, label, column) triple
+        has a non-null value.
+
+        Used to guard tests asserting on data that has not yet been loaded on
+        devmirror.  Each guard must query the table that owns the data (e.g.
+        dims/mults/newforms live in modcurve_decomposition, keyed by Gassmann
+        class, not in gps_gl2zhat), so that the guard becomes true once the
+        load completes rather than staying false forever.
+        """
+        for table, label, col in checks:
+            if table.lookup(label, col) is None:
+                self.skipTest("%s.%s not populated for %s (data load on devmirror incomplete)" % (table.search_table, col, label))
+
+    # The four test_related_objects_* tests below check the friends links on
+    # individual curve pages.  Sibling modular curve links require
+    # gps_gl2zhat.trace_hash (not yet populated on devmirror) together with the
+    # newforms of the Gassmann class (modcurve_decomposition, populated);
+    # elliptic curve / genus 2 curve / modular form links additionally require
+    # gps_gl2zhat.simple and gps_gl2zhat.curve_label.
+
+    def test_related_objects_siblings_48(self):
+        self._skip_if_not_populated(
+            (db.modcurve_decomposition, "48.2304.161.duj", "newforms"),
+            (db.gps_gl2zhat, "48.4608.161-48.duj.4.7", "trace_hash"),
+        )
+        data = self.tc.get("/ModularCurve/Q/48.4608.161-48.duj.4.7", follow_redirects=True).get_data(as_text=True)
+        for friend in (
+            # Currently, isogeny/gassmann class links are not available on individual curve pages.
+            # 'Modular isogeny class 48.2304.161.duj',
+            'L-function not available',
+            'Modular curve 48.2304.161.duj.1',
+            'Modular curve 48.2304.161.duj.2',
+            'Modular curve 48.2304.161.duj.3',
+            'Modular curve 48.2304.161.duj.4',
+            'Modular curve 48.2304.161.duj.5',
+            'Modular curve 48.2304.161.duj.6',
+            'Modular curve 48.2304.161.duj.7',
+            'Modular curve 48.2304.161.duj.8',
+            'Modular curve 48.2304.161.dut.1',
+            'Modular curve 48.2304.161.dut.2',
+            'Modular curve 48.2304.161.dut.3',
+            'Modular curve 48.2304.161.dut.4',
+            'Modular curve 48.2304.161.dut.5',
+            'Modular curve 48.2304.161.dut.6',
+            'Modular curve 48.2304.161.dut.7',
+            'Modular curve 48.2304.161.dut.8',
+        ):
+            assert friend in data
+
+    def test_related_objects_siblings_60(self):
+        self._skip_if_not_populated(
+            (db.modcurve_decomposition, "60.1440.97.bol", "newforms"),
+            (db.gps_gl2zhat, "60.2880.97-60.bol.1.8", "trace_hash"),
+        )
+        data = self.tc.get("/ModularCurve/Q/60.2880.97-60.bol.1.8", follow_redirects=True).get_data(as_text=True)
+        for friend in (
+            # Currently, isogeny/gassmann class links are not available on individual curve pages.
+            # 'Modular isogeny class 60.1440.97.bol',
+            'L-function not available',
+            'Modular curve 60.1440.97.bog.1',
+            'Modular curve 60.1440.97.bol.1',
+        ):
+            assert friend in data
+
+    def test_related_objects_elliptic_curve(self):
+        # From LMFDB#5929
+        self._skip_if_not_populated(
+            (db.modcurve_decomposition, "6.6.1.a", "newforms"),
+            (db.gps_gl2zhat, "6.6.1.a.1", "simple"),
+            (db.gps_gl2zhat, "6.6.1.a.1", "curve_label"),
+        )
+        data = self.tc.get("/ModularCurve/Q/6.6.1.a.1", follow_redirects=True).get_data(as_text=True)
+        for friend in (
+            'Elliptic curve 36.a3',
+            'Modular form 36.2.a.a',
+        ):
+            assert friend in data
+
+    def test_related_objects_genus2_isogeny_class(self):
+        # From LMFDB#5929
+        self._skip_if_not_populated(
+            (db.modcurve_decomposition, "23.24.2.a", "newforms"),
+            (db.gps_gl2zhat, "23.24.2.a.1", "simple"),
+            (db.gps_gl2zhat, "23.24.2.a.1", "trace_hash"),
+        )
+        data = self.tc.get("/ModularCurve/Q/23.24.2.a.1", follow_redirects=True).get_data(as_text=True)
+        for friend in (
+            'Isogeny class 529.a',
+            'Modular form 23.2.a.a',
+        ):
+            assert friend in data
 
     def test_download(self):
         self.tc.get("/ModularCurve/download_to_magma/60.11520.409-60.bwm.1.10")
@@ -608,11 +632,32 @@ class ModCrvTest(LmfdbTest):
         assert "Magma code for modular curve with label 11.12.1.a.1" in data
         assert "// Curve name" in data
         assert "// Cummins-Pauli label" in data
+        assert "level := 11;" in data
+        assert "Pol<x,y,z> := PolynomialRing(Rationals(), 3);" in data
 
-        # Test Sage download
+        # Test Sage download: this must be genuine Sage code, not Magma code
+        # with a different header
         L = self.tc.get("/ModularCurve/download_to_sage/11.12.1.a.1")
         data = L.get_data(as_text=True)
         assert "Sage code for modular curve with label 11.12.1.a.1" in data
+        assert "# Curve name" in data
+        assert "# Cummins-Pauli label" in data
+        assert "//" not in data  # no Magma comments
+        assert ":=" not in data  # no Magma assignments
+        assert "level = 11" in data
+        assert "Pol.<x,y,z> = PolynomialRing(QQ, 3)" in data
+        # The file must actually run in Sage: like a .sage file, it goes
+        # through the Sage preparser (the model equations use the ^ operator)
+        import sage.all
+        from sage.repl.preparse import preparse
+        ns = dict(vars(sage.all))
+        exec(compile(preparse(data), "11.12.1.a.1.sage", "exec"), ns)
+        assert ns["level"] == 11
+        assert ns["g"] == 1
+        assert ns["is_P1"] is False
+        # the Weierstrass model and the j-invariant map were evaluated in Pol
+        assert ns["model_0"][0].parent() is ns["Pol"]
+        assert ns["map_0_coord_0"].parent() is ns["Pol"]
 
         # Test text download
         L = self.tc.get("/ModularCurve/download_to_text/11.12.1.a.1")
