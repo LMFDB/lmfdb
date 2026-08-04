@@ -100,6 +100,10 @@ class EllCurveTest(LmfdbTest):
         assert '729.1-CMb1' in t and '1024.1-a1' in t and '73.1-a1' not in t
         L = self.tc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
         assert '11.1-a1' not in L.get_data(as_text=True)
+        # Test regulator search
+        L = self.tc.get('/EllipticCurve/?regulator=8.4-9.1')
+        t = L.get_data(as_text=True)
+        assert '14763.2-b4' in t and '73.1-a1' not in t
 
     def test_browse(self):
         r"""
