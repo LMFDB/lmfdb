@@ -108,5 +108,10 @@
         "files": "lmfdb/modular_curves/test_modular_curves.py",
         "folders": "modular_curves",
         "server": "devmirror"
+    },
+    {
+        "files": "lmfdb/shimura_curves/test_shimura_curves.py",
+        "folders": "shimura_curves",
+        "server": "devmirror"
     }
 ]

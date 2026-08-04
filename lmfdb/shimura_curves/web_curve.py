@@ -938,7 +938,7 @@ class WebShimCurve(WebObj):
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 desc = "This Shimura curve has finitely many rational points."
         else:
-            desc = fr'Local obstructions for rational points on this curve are not known.'
+            desc = 'Local obstructions for rational points on this curve are not known.'
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
             desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc
