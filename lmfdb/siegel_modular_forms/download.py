@@ -315,7 +315,8 @@ class SMF_download(Downloader):
             return abort(404, "Label not found: %s"%label)
         space = WebNewformSpace(data)
         data['newforms'] = [form['label'] for form in space.newforms]
-        data['oldspaces'] = space.oldspaces
+        # Oldspace data is not yet available (see WebNewformSpace.__init__)
+        # data['oldspaces'] = space.oldspaces
         return self._wrap(Json.dumps(data),
                           label,
                           lang=lang,

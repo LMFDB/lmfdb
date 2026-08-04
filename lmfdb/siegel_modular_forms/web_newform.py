@@ -8,8 +8,7 @@ from flask import url_for
 from functools import reduce
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute,
-                      LaurentPolynomialRing, PowerSeriesRing, O)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -27,7 +26,6 @@ from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
 from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str
-from lmfdb.lfunctions.Lfunctionutilities import seriescoeff
 
 LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -192,11 +190,11 @@ def raw_typeset_qexp(coeffs_dict,
             rawq = f" * q_{{12}}^{exps[2]}"
             tsetq = f" q_{{{{12}}}}^{{{exps[2]}}}"
         elif (exps[2] == 1):
-            rawq = f" * q_{{12}}"
-            tsetq = f" q_{{{{12}}}}"
+            rawq = " * q_{12}"
+            tsetq = " q_{{12}}"
         else:
-            rawq = f" * "
-            tsetq = f" "
+            rawq = " * "
+            tsetq = " "
 
         if (exps[0] > 1):
             rawq += f"q_{1}^{exps[0]}"
@@ -622,9 +620,9 @@ class WebNewform():
         base_label = [str(s) for s in [self.degree, self.family, self.level]]
         weight_label = [str(s) for s in self.weight]
         smf_base = '/ModularForm/GSp/Q/'
-        ns1_label = '.'.join(base_label + weight_label)
-        ns1_url = smf_base + '/'.join(base_label) + '.'.join(weight_label)
         # Right now, we still don't have the analogues of Gamma1 spaces
+        # ns1_label = '.'.join(base_label + weight_label)
+        # ns1_url = smf_base + '/'.join(base_label) + '.'.join(weight_label)
         # res.append(('Newspace ' + ns1_label, ns1_url))
         char_letter = self.char_orbit_label
         ns_label = '.'.join(base_label + weight_label + [char_letter])
@@ -670,9 +668,10 @@ class WebNewform():
 #                return '<script id="properties_script">$( document ).ready(function() {properties_lfun(%r, %r, %r, %r, %r)}); </script>' %  (res, str(self.label), str(nf_url), self.conrey_indexes, self.rel_dim)
             if self.dim > 1:
                 for lfun_label in self.embedding_labels:
-                    lfun_url =  '/L' + smf_base + lfun_label.replace('.','/')
                     # Right now we don't have the associated L-functions (or maybe we do but they are labeled differently...)
+                    # lfun_url = '/L' + smf_base + lfun_label.replace('.','/')
                     # res.append(('L-function ' + lfun_label, lfun_url))
+                    pass
 
         return res
 
@@ -822,17 +821,8 @@ class WebNewform():
         if not valid_label(label):
             raise ValueError("Invalid newform label %s." % label)
 
-        slabel = label.split('.')
         data = db.smf_newforms.lookup(label)
         if data is None:
-            # Display a different error if Nk^2 is too large
-            N, k, a, x = label.split('.')
-            Nk2 = int(N) * int(k) * int(k)
-            nontriv = not (a == 'a')
-            from .main import Nk2_bound
-            if Nk2 > Nk2_bound(nontriv = nontriv):
-                nontriv_text = "non trivial" if nontriv else "trivial"
-                raise ValueError(r"Level and weight too large.  The product \(Nk^2 = %s\) is larger than the currently computed threshold of \(%s\) for %s character."%(Nk2, Nk2_bound(nontriv = nontriv), nontriv_text) )
             raise ValueError("Newform %s not found" % label)
         return WebNewform(data, embedding_label = embedding_label)
 

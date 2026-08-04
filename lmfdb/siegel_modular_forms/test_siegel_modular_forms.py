@@ -1,163 +1,280 @@
+"""
+Tests for the rewritten Siegel modular forms pages (smf_* tables).
+
+The data on devmirror is provisional and only partially loaded, so tests
+that depend on database content use runtime skip guards rather than
+failing when a table or label has not been loaded yet.
+"""
+
+import re
 
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
 
 
-class HomePageTest(LmfdbTest):
+class SmfTest(LmfdbTest):
     def check(self, url, text):
         data = self.tc.get("/ModularForm/GSp/Q/" + url, follow_redirects=True).get_data(as_text=True)
-        if isinstance(text, list):
-            for t in text:
-                assert t in data, (
-                    "expected string '%s' not found in page /ModularForm/GSp/Q/%s"
-                    % (t, url)
-                )
-        else:
-            assert text in data
+        # Match against both the raw page (for links) and a tag-stripped
+        # version (for text that is interrupted by knowl links or line breaks)
+        html = re.sub(r"\s+", " ", data)
+        stripped = re.sub(r"\s+", " ", re.sub(r"<[^>]*>", " ", data))
+        if not isinstance(text, list):
+            text = [text]
+        for t in text:
+            t = re.sub(r"\s+", " ", t)
+            assert t in html or t in stripped, (
+                "expected string '%s' not found in page /ModularForm/GSp/Q/%s"
+                % (t, url)
+            )
+        return data
+
+    def need_forms(self, label=None):
+        if not db.smf_newforms.count():
+            self.skipTest("smf_newforms not yet loaded on devmirror")
+        if label is not None and not db.smf_newforms.label_exists(label):
+            self.skipTest("%s not in smf_newforms on devmirror" % label)
+
+    def need_spaces(self, label=None):
+        if not db.smf_newspaces.count():
+            self.skipTest("smf_newspaces not yet loaded on devmirror")
+        if label is not None and not db.smf_newspaces.label_exists(label):
+            self.skipTest("%s not in smf_newspaces on devmirror" % label)
+
+    def test_browse_page(self):
+        r"""
+        Check the top-level browse page for Siegel modular forms
+        """
+        self.need_forms()
+        self.check("", [
+            "Siegel modular forms",
+            "The database currently contains",
+            "Browse newforms",
+            "Browse newspaces",
+            "By weight",
+            "By level",
+            "Some interesting newforms",
+            "random newform",
+            "paramodular",
+            "/ModularForm/GSp/Q/stats",
+            "provisional",
+        ])
 
     def test_random_page(self):
         """
-        Test 3 random sample pages
+        Test 3 random newform pages
         """
-        self.check("random", "Hecke eigenform")
-        self.check("random", "Hecke eigenform")
-        self.check("random", "Hecke eigenform")
+        self.need_forms()
+        for _ in range(3):
+            self.check("random/", ["Newform orbit", "Newspace parameters", "Automorphic type"])
 
-    def test_browse_page(self):
+    def test_random_space(self):
         """
-        Test the top level browse pages
+        Test a random newspace page
         """
-        self.check("Sp4Z_j/", "Upsilon")
-        self.check(
-            "Sp4Z/",
-            ["Galois orbits", "Klingen", "Eisenstein", "Maass", "Saito-Kurokawa"],
-        )
-        self.check("Sp4Z_2/", ["Galois orbits", "Cusp", "Non cusp", "Satoh bracket"])
-        self.check("Kp/", "in level 277, the")
-        self.check("Sp6Z/", "Miyawaki (1)")
-        self.check("Sp8Z/", "Other_II (2)")
-        self.check("Gamma0_2/", "Gamma_0(2)")
-        self.check("Gamma1_2/", "Gamma_1(2)")
-        self.check("Gamma_2/", "Gamma(2)")
-        self.check("Gamma0_3/", "Gamma_0(3)")
-        self.check("Gamma0_3_psi_3/", "Gamma_0(3)")
-        self.check("Gamma0_4/", "Gamma_0(4)")
-        self.check("Gamma0_4_psi_4/", "Gamma_0(4)")
-        self.check("Gamma0_4_half/", "k-1/2")
-        self.check("Sp4Z_j/10/10/", "M_{10,10}")
-        self.check("Sp4Z/10/", "M_{10,0}")
-        self.check("Sp4Z_2/10/", "M_{10,2}")
+        self.need_spaces()
+        self.check("random_space/", "Space of Siegel modular forms")
+
+    def test_newform_pages(self):
+        """
+        Test some specific newform pages, including scalar and vector-valued
+        weights, all three families, and dimension larger than 1
+        """
+        # Siegel family (Sp(4,Z)), scalar weight 12
+        self.need_forms("2.S.1.12.0.a.a")
+        self.check("2/S/1/12.0/a/a/", [
+            "Newform orbit 2.S.1.12.0.a.a",
+            "Newspace parameters",
+            "Newform invariants",
+            "(12, 0)",
+        ])
+        # principal family, vector-valued weight (2,12), Yoshida lift
+        self.need_forms("2.P.2.2.12.a.a")
+        self.check("2/P/2/2.12/a/a/", [
+            "Newform orbit 2.P.2.2.12.a.a",
+            "principal",
+            "(2, 12)",
+            "Automorphic type",
+            "Dirichlet series",
+            "53460",  # coefficient of 5^{-s} in the spin L-series
+        ])
+        # paramodular family
+        self.need_forms("2.K.568.3.0.a.c")
+        self.check("2/K/568/3.0/a/c/", [
+            "Newform orbit 2.K.568.3.0.a.c",
+            "paramodular",
+            "568 = 2^{3} \\cdot 71",
+            "General type (G)",
+        ])
+        # dimension 2 form
+        self.need_forms("2.K.1.4.20.a.a")
+        self.check("2/K/1/4.20/a/a/", ["Newform orbit 2.K.1.4.20.a.a", "Dimension"])
+        # vector-valued Siegel family form
+        self.need_forms("2.S.1.4.8.a.a")
+        self.check("2/S/1/4.8/a/a/", "Newform orbit 2.S.1.4.8.a.a")
+
+    def test_space_pages(self):
+        """
+        Test newspace pages, including the dimension and decomposition tables
+        """
+        self.need_spaces("2.K.568.3.0.a")
+        self.check("2/K/568/3.0/a/", [
+            "Space of Siegel modular forms of level 568 and weight (3, 0)",
+            "Defining parameters",
+            "Cusp forms",
+            "Saito-Kurokawa lifts (P)",
+            "General type (G)",
+            "Atkin-Lehner",
+            "newform subspaces",
+            "2.K.568.3.0.a.a",
+        ])
+        self.need_spaces("2.S.1.12.0.a")
+        self.check("2/S/1/12.0/a/", [
+            "Space of Siegel modular forms of level 1 and weight (12, 0)",
+            "M_{12,0}",
+        ])
 
     def test_dimension_tables(self):
         """
-        Test dimension table pages
+        Test the dimension tables for newforms and for spaces
         """
-        self.check("?family=Sp4Z_j&k=&j=&table=1", ["Cusp", "Non cusp"])
-        self.check("?family=Sp4Z_j&k=&j=2&table=1", ["Cusp", "Non cusp"])
-        self.check("?family=Gamma0_2&k=&j=&table=1", ["Cusp", "Non cusp"])
-        self.check("?family=Gamma0_2&k=&j=2&table=1", ["Cusp", "Non cusp"])
-        self.check("?family=Gamma1_2&k=&j=&table=1", ["111", "21"])
-        self.check("?family=Gamma1_2&k=&j=2&table=1", ["111", "21"])
-        self.check("?family=Gamma_2&k=&j=&table=1", ["111111", "3111"])
-        self.check("?family=Gamma_2&k=&j=2&table=1", ["111111", "3111"])
-        self.check("?family=Gamma0_3&k=&j=&table=1", ["Total", "74"])
-        self.check("?family=Gamma0_3&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Gamma0_3_psi_3&k=&j&table=1", ["Total", "68"])
-        self.check("?family=Gamma0_3_psi_3&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Gamma0_4&k=&j=&table=1", ["Total", "192"])
-        self.check("?family=Gamma0_4&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Gamma0_4_psi_4&k=&j&table=1", ["Total", "495"])
-        self.check("?family=Gamma0_4_psi_4&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Gamma0_4_half&k=&j&table=1", ["Cusp", "129"])
-        self.check("?family=Gamma0_4_half&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Sp6Z&k=&j&table=1", ["Miyawaki lifts", "conjectured"])
-        self.check("?family=Sp6Z&k=&j=2&table=1", "should not be specified")
-        self.check("?family=Sp8Z&k=&j&table=1", ["Ikeda lifts", "Miyawaki lifts"])
-        self.check("?family=Sp8Z&k=&j=2&table=1", "should not be specified")
+        self.need_forms()
+        self.need_spaces()
+        self.check("?search_type=Dimensions&degree=2&family=K", [
+            "Dimension search results",
+            "The dimensions shown below are for the space of newforms",
+            "n/a",
+        ])
+        self.check("?search_type=Dimensions&degree=2&family=K&weight=3&level=1-24", [
+            "Dimension search results",
+            "(3, 0)",
+        ])
+        self.check("?search_type=SpaceDimensions&degree=2&family=K", [
+            "Dimension search results",
+            "The dimensions shown are for spaces of modular forms",
+            "All modular forms",
+            "New cusp forms",
+            "Old Eisenstein series",
+        ])
 
-    def test_sample_page_Q(self):
+    def test_newform_search(self):
         """
-        Test eigenvalue, Fourier coefficient, and modulus selection on a sample page with coefficient field Q
+        Test the newform search results
         """
+        self.need_forms("2.K.568.3.0.a.c")
+        self.check("?search_type=List&family=K&weight=3&level=568", [
+            "Siegel newform search results",
+            "Results (",
+            "2.K.568.3.0.a.c",
+        ])
+        self.check("2/", ["Siegel newform search results", "Results ("])
+        self.check("2/K/", ["Siegel newform search results", "Results ("])
+
+    def test_space_search(self):
+        """
+        Test the newspace search results
+        """
+        self.need_spaces()
+        self.check("?search_type=Spaces&degree=2&family=K&level=1-100", [
+            "Newspace search results",
+            "Results (",
+            "2.K.",
+        ])
+
+    def test_trace_search(self):
+        """
+        Test the trace search results
+        """
+        self.need_forms()
+        self.check("?search_type=Traces&degree=2&family=K&level=1-20", [
+            "search results",
+            "Results (",
+        ])
+
+    def test_stats(self):
+        """
+        Test the statistics page
+        """
+        self.need_forms()
+        self.check("stats", [
+            "Siegel modular forms: Statistics",
+            "Distribution of levels and absolute dimension",
+            "newforms",
+        ])
+
+    def test_dynamic_stats(self):
+        """
+        Test the dynamic statistics page
+        """
+        self.need_forms()
         self.check(
-            "Sp4Z.24_E",
-            ["35184384671745", "19664276334286895123835070363311360", "..."],
-        )
-        self.check(
-            "Sp4Z.24_E?ev_index=19&fc_det=0&modulus=&update=1",
-            [
-                "3498743002442937227729601361394364486949008189359690164120",
-                "3398215376663749994606261280",
-                "(0, 0, 25)",
-            ],
-        )
-        self.check(
-            "Sp4Z.24_E/?ev_index=&fc_det=&modulus=1000000007&update=1",
-            ["384425457", "(1, 1, 1)", "384425457"],
+            "dynamic_stats?col1=level&buckets1=1-100%2C101-999&proportions=recurse"
+            "&col2=dim&buckets2=1-4%2C5-1000&search_type=DynStats",
+            "Dynamic statistics",
         )
 
-    def test_sample_page_nf(self):
+    def test_jump(self):
         """
-        Test eigenvalue, Fourier coefficient, and modulus selection on a sample page with quadratic coefficient field
+        Test the jump box, including error messages
         """
-        self.check(
-            "Sp4Z.18_Maass/",
-            [
-                "Maass spezialschaar",
-                "x^{2} - x - 589050",
-                "$-144 a + 135840$",
-                "$10 a - 8340$",
-            ],
-        )
-        self.check(
-            "Sp4Z.18_Maass/?ev_index=&fc_det=&modulus=17%2Ca%2B1&update=1",
-            "is the unit ideal, please specify",
-        )
-        self.check(
-            "Sp4Z.18_Maass/?ev_index=&fc_det=&modulus=65537&update=1",
-            ["$5$", "$-1378 a - 22820$", "(2, 2, 2)", "$32016 a + 5274$"],
-        )
+        self.need_forms("2.S.1.12.0.a.a")
+        self.check("?jump=2.S.1.12.0.a.a", "Newform orbit 2.S.1.12.0.a.a")
+        self.check("?jump=2.K.568.3.0.a", "Space of Siegel modular forms of level 568")
+        self.check("?jump=maria", "is not a valid newform or space label")
 
-    def test_huge_sample(self):
+    def test_not_found(self):
         """
-        Test sample page with defining equation and explicit formula too large to display
+        Check that missing labels and invalid families give proper errors
         """
-        self.check(
-            "Sp4Z.56_Ups", ["interesting cusp form", "6085 bytes", "7912968 bytes"]
-        )
+        self.check("?jump=2.K.9999.3.0.a.z", "Newform 2.K.9999.3.0.a.z not found")
+        self.check("2/K/9999/3.0/a/", "Space 2.K.9999.3.0.a not found")
+        page = self.tc.get("/ModularForm/GSp/Q/2/X/", follow_redirects=True)
+        assert page.status_code == 404
 
-    def test_all_sample_pages(self):
+    def test_downloads(self):
         """
-        Verify that every sample form home page loads OK (should take under 10s on atkin)
+        Test the download links that appear on newform and newspace pages
         """
-        errors = []
-        data = list(
-            db.smf_samples.search(
-                {"collection": {"$exists": True}, "name": {"$exists": True}},
-                ["collection", "name"],
-            )
-        )
-        assert len(data) >= 129
-        n = 0
-        print()
-        import sys
+        self.need_forms("2.P.2.2.12.a.a")
+        self.check("download_traces/2.P.2.2.12.a.a", "[0, 1, 0, -600, -4, -53460")
+        self.check("download_newform/2.P.2.2.12.a.a", [
+            "Stored data for newform 2.P.2.2.12.a.a",
+            '"analytic_rank_proved"',
+        ])
+        self.need_spaces("2.K.568.3.0.a")
+        self.check("download_newspace/2.K.568.3.0.a", [
+            "Stored data for newspace 2.K.568.3.0.a",
+            '"ALdims"',
+        ])
 
-        for s in data:
-            full_label = s["collection"][0] + "." + s["name"]
-            sys.stdout.write("Checking {}...".format(full_label))
-            sys.stdout.flush()
-            try:
-                n = n + 1
-                self.check(full_label, [full_label, "Hecke eigenform"])
-            except Exception:
-                print("\nError on page " + full_label)
-                errors.append(full_label)
-        if not errors:
-            print("\nTested %s SMF pages with no errors" % n)
-        else:
-            print(
-                "\nTested %d pages with %d errors occurring on the following pages:"
-                % (n, len(errors))
-            )
-            for label in errors:
-                print(label)
+    def test_underlying_data(self):
+        """
+        Test the underlying data pages
+        """
+        self.need_forms("2.P.2.2.12.a.a")
+        self.check("data/2.P.2.2.12.a.a", [
+            "Newform data - 2.P.2.2.12.a.a",
+            "smf_newforms",
+            "smf_hecke_nf",
+        ])
+        self.need_spaces("2.K.568.3.0.a")
+        self.check("data/2.K.568.3.0.a", [
+            "Newspace data - 2.K.568.3.0.a",
+            "smf_newspaces",
+        ])
+
+    def test_interesting(self):
+        """
+        Test the interesting newforms and newspaces pages
+        """
+        self.check("interesting_newforms", "Some interesting newforms")
+        self.check("interesting_spaces", "Some interesting newspaces")
+
+    def test_sidebar(self):
+        """
+        Test the learn-more pages
+        """
+        self.check("Completeness", "Completeness of Siegel modular form data")
+        self.check("Source", "Source of Siegel modular form data")
+        self.check("Reliability", "Reliability of Siegel modular form data")
+        self.check("Labels", "Labels for Siegel modular forms")
