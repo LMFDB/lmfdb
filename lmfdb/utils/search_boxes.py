@@ -1,3 +1,4 @@
+from markupsafe import escape
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form, get_search_type
@@ -621,9 +622,11 @@ class SearchButton(SearchBox):
         else:
             cls = " class='search_fresh'"
         btext = "<button type='submit' name='search_type' value='{val}'{cls} style='width: {width}px;'{onclick}>{desc}</button>"
+        # The value can be derived from the request (see search_types), so it
+        # must be escaped: the surrounding HTML is rendered with |safe
         return btext.format(
             width=self.width,
-            val=self.value,
+            val=escape(self.value),
             desc=self.description,
             cls=cls,
             onclick=onclick)
@@ -700,8 +703,13 @@ class SearchArray(UniqueRepresentation):
             return types
         else:
             # The value of the "Search again" button must be the current
-            # search type, so that clicking it does not switch mode
+            # search type, so that clicking it does not switch mode.  Only
+            # modes this generic implementation knows about are kept: an
+            # unknown search_type (which SearchWrapper treats as an ordinary
+            # list search) is not echoed back into the button
             st = self._st(info)
+            if not (st == "Diagram" and has_diagram):
+                st = ""
             types = [(st, "Search again"), ("Random", "Random %s" % self.noun)]
             if has_diagram and st != "Diagram":
                 types.append(("Diagram", "Diagram search"))
@@ -816,7 +824,7 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return ""
         else:
-            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for name, val in self.hidden(info))
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, escape(info.get(val))) for name, val in self.hidden(info))
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"

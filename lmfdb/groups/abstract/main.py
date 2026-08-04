@@ -780,7 +780,15 @@ def index():
     bread = get_bread()
     info = to_dict(request.args, search_array=GroupsSearchArray())
     if request.args:
-        info["search_type"] = search_type = get_search_type(info)
+        # Repeated search_type parameters follow last-value-wins semantics
+        # on this route, so consult the raw request; get_search_type still
+        # provides the hst fallback for old bookmarked URLs
+        search_types = request.args.getlist("search_type")
+        if search_types:
+            search_type = search_types[-1]
+        else:
+            search_type = get_search_type(info)
+        info["search_type"] = search_type
         if search_type in ["List", "", "Random", "Diagram"]:
             return group_search(info)
         # Preserve old abstract-group search URLs while directing users to the

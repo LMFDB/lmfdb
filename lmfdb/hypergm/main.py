@@ -403,7 +403,9 @@ class HGMDownload(Downloader):
     table = db.hgm_motives  # overridden if family search
 
     def get_table(self, info):
-        search_type = get_search_type(info, default="Motive")
+        # An explicitly empty search_type (overriding a stale hst) means the
+        # motive list, whose canonical name here is "Motive"
+        search_type = get_search_type(info, default="Motive") or "Motive"
         if search_type in ["Family", "RandomFamily"]:
             return db.hgm_families
         else:
@@ -420,7 +422,11 @@ class HGMDownload(Downloader):
              bread=lambda: get_bread([("Search results", '')]),
              learnmore=learnmore_list)
 def hgm_search(info, query):
-    info["search_type"] = search_type = get_search_type(info, default="Motive")
+    # An explicitly empty search_type (which overrides a stale hst, e.g. when
+    # the motive list button is clicked on a family results page) still means
+    # the motive list, whose canonical name here is "Motive": the result
+    # columns and sort options are keyed on the named mode
+    info["search_type"] = search_type = get_search_type(info, default="Motive") or "Motive"
     if search_type in ["Family", "RandomFamily"]:
         query['__title__'] = r'Hypergeometric family over $\Q$ search results'
         query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
