@@ -1,0 +1,11 @@
+{% macro tabs() %}
+<div class="lattice-tabs" style="margin-bottom: 12px; font-size: 120%;">
+  {%- for label, endpoint, active in varargs %}
+  {%- if active %}
+  <span style="font-weight: bold; margin-right: 1.5em;">{{ label }}</span>
+  {%- else %}
+  <a href="{{ url_for(endpoint) }}" style="margin-right: 1.5em;">{{ label }}</a>
+  {%- endif %}
+  {%- endfor %}
+</div>
+{% endmacro %}
