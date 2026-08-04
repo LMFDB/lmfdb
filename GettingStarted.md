@@ -46,7 +46,7 @@ Installation
  * Install dependencies.  This requires you to have write access to the
    Sage installation directory, so should be no problem on a personal
    machine, but if you are using a system-wide Sage install on a shared
-   machine, you will need ask a system administrator to do this step.
+   machine, you will need to ask a system administrator to do this step.
 
    ```
    sage -i gap_packages
@@ -76,13 +76,13 @@ Installation
      that). This problem does seem to be resolved for Sage 9.3beta, and it is currently
      unclear if the problem exists for Sage 9.0 or 9.1.
 
-   - In case the last step fails by is Mac OSX with the error
+   - In case the last step fails on Mac OSX with the error
 
      ```
      Error: pg_config executable not found.
      ```
 
-     we recommend to installing PostgreSQL by doing
+     we recommend installing PostgreSQL by doing
 
      ```
      brew install postgresql
@@ -104,9 +104,9 @@ Installation
    - [optional] Memcache.  *This step is not at all necessary and can
      safely be ignored!* Memcache speeds up recompilation of python
      modules during development.  Using it requires both installing the
-     appropriate package for your Operating System and installing an
+     appropriate package for your operating system and installing an
      additional python module.  The first line below needs to be run in
-     a Sage shell, and the for second you need to be a super-user to
+     a Sage shell, and for the second you need to be a super-user to
      install memcached if your machine does not have it.
 
      * `easy_install -U python-memcached`
@@ -141,7 +141,7 @@ Running
  * When running with `--debug`, whenever a python (*.py) file changes
    the server will reload automatically.  If you save while editing
    at a point where such a file is not syntactically correct, the
-   server will crash and you will need to `start_lmfdb` again.   Any
+   server will crash and you will need to `start-lmfdb` again.   Any
    changes to html files will not cause the server to restart, so
    you will need to reload the pages in your browser.  Changes in
    the yaml files which are read only once at startup will require
@@ -167,8 +167,8 @@ Running
 CoCalc
 ======
 
- * You can run the LMFDB inside a [CoCalc](https://www.cocalc.com) project by doing
-   following the above installation instructions on a terminal in your project (you may want to
+ * You can run the LMFDB inside a [CoCalc](https://www.cocalc.com) project by following
+   the above installation instructions on a terminal in your project (you may want to
    install the requirements using the `--user` flag).
    Explicitly,
 
@@ -194,7 +194,7 @@ Troubleshooting
 ===============
 
 [warning] Recently on some linux machines, users have had to install the
-contents of requirements.txt by manually.  If the above instructions do not
+contents of requirements.txt manually.  If the above instructions do not
 work, un-install the above packages and re-install them one at a time,
 including those in requirements.txt.
 
@@ -259,10 +259,10 @@ Code development and sharing your work
    branches upstream to be aware of: `web`, `dev` and `main`:
 
    - `web` is changed rarely and contains the code currently running at
-     [www.lmfdb.org](www.lmfdb.org)
+     [www.lmfdb.org](https://www.lmfdb.org)
 
    - `dev` is changed more often and contains the code currently running at
-     [beta.lmfdb.org](beta.lmfdb.org)
+     [beta.lmfdb.org](https://beta.lmfdb.org)
 
    - `main` is the development branch.
 
@@ -323,5 +323,5 @@ For anyone who would like to attempt it, the following steps should theoreticall
  * Now you need to run ssh-keygen within the Sage appliance and e-mail the result to Harald Schilly, Jonathan Bober or John Cremona (see above).
    Since copy-and-paste can be tricky from inside the virtual image, we suggest writing to a file shared by the host OS.
 
- * The instructions for Linux/OS X should now work.  You should be able to forward the mongo database and run `sage -python start-lmfdb.py` within the Sage appliance,
+ * The instructions for Linux/OS X should now work.  You should be able to run `sage -python start-lmfdb.py` within the Sage appliance,
    and access the resulting website from your host OS' web browser.
