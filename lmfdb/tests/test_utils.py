@@ -664,6 +664,7 @@ class UtilsTest(unittest.TestCase):
                 # union is inexact), which is still safe on the left of a bound check
                 ("ec_curvedata", {'conductor': {'$or': [{'$mod': [0, 7], '$lte': 100000}, {'$mod': [0, 11], '$gte': 200000, '$lte': 300000}]}}, "elliptic curves with conductor at most 500000"),
                 ("mf_newforms", {'level': {'$mod': [0, 4], '$lte': 20}, 'weight': {'$gte': 2, '$lte': 10}}, "newforms with $Nk^2$ at most 4000"),
+                ("nf_fields", {'degree': 2, 'disc_abs': {'$mod': [0, 7], '$gte': 1, '$lte': 1000000}}, "number fields with absolute discriminant at most 1656109"),
                 ("ec_curvedata", {'conductor': 1000003}, "elliptic curves with prime conductor at most 300 million"),
                 ("ec_curvedata", {'conductor': 76204800}, "elliptic curves with 7-smooth conductor"),
                 ("ec_curvedata", {'absD': {'$gte': 50000, '$lte': 100000}}, "elliptic curves with minimal discriminant at most 500000"),
@@ -713,6 +714,10 @@ class UtilsTest(unittest.TestCase):
                 ("mf_newforms", {'level': {'$mod': [0, 23]}, 'weight': 1}),
                 # Mixed-congruence branches with one branch outside the bound
                 ("ec_curvedata", {'conductor': {'$or': [{'$mod': [0, 7], '$lte': 100000}, {'$mod': [0, 11], '$gte': 200000}]}}),
+                # Enumerating the discriminants of an unbounded congruence set would not
+                # terminate: every multiple of 10**6 is skipped by Stickelberger's
+                # condition at 4, so no candidate ever reaches clear_S to end the loop
+                ("nf_fields", {'degree': 2, 'disc_abs': {'$mod': [0, 1000000], '$gte': 1}}),
                 ("hgcwa_passports", {'genus': 6}),
                 ("av_fq_isog", {'g': 6, 'q': 3}),
                 ("belyi_galmaps", {'deg': 8}),

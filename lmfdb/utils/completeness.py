@@ -3229,15 +3229,21 @@ class NFBound(ColTest):
             if S is not None and self.clear_S(n, S, nram, galt, reasons):
                 return True, caveat
 
-        # Can also iterate over valid discriminants in a discriminant range
+        # Can also iterate over valid discriminants in a discriminant range, provided
+        # the range is one we can enumerate.  Without that guard the loop need not
+        # terminate: an unbounded range has infinitely many discriminants, and one cut
+        # out by a congruence can skip arbitrarily many candidates in a row without
+        # producing one for clear_S to reject (every multiple of 10**6, for instance,
+        # fails stickelberger's condition at 4).  This runs while answering a request.
         if D.restricted():
-            for S in D.stickelberger(n, r2opts):
-                if not self.clear_S(n, S, nram, galt, reasons, update_galt=False):
-                    break
-            else:
-                if not reasons:
-                    reasons.add("incompatible conditions: no valid discriminants in range")
-                return True, caveat
+            if D.enumerable():
+                for S in D.stickelberger(n, r2opts):
+                    if not self.clear_S(n, S, nram, galt, reasons, update_galt=False):
+                        break
+                else:
+                    if not reasons:
+                        reasons.add("incompatible conditions: no valid discriminants in range")
+                    return True, caveat
 
             # Minkowski bound (only relevant for n>12)
             if n >= len(self._maxD):
