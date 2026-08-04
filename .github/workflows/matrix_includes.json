@@ -113,5 +113,10 @@
         "files": "lmfdb/classical_modular_forms/test_cmf_eisenstein.py",
         "folders": "classical_modular_forms/eisenstein",
         "server": "devmirror"
+    },
+    {
+        "files": "lmfdb/shimura_curves/test_shimura_curves.py",
+        "folders": "shimura_curves",
+        "server": "devmirror"
     }
 ]
