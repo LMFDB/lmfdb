@@ -17,6 +17,12 @@ class ModCurveIsog_class():
         """
         self.__dict__.update(dbdata)
         self.web_curve = WebModCurve(self.label)
+        # dims/mults/newforms now live in the modcurve_decomposition table rather
+        # than gps_gl2zhat; combined_data (used by WebModCurve) merges them back in,
+        # so take them from the web curve rather than the raw database row.
+        if not self.web_curve.is_null():
+            for attr in ("dims", "mults", "newforms"):
+                setattr(self, attr, getattr(self.web_curve, attr, None))
         self.make_class()
 
     @staticmethod
