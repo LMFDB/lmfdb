@@ -59,7 +59,10 @@ coarse_label_re = r"\d+\.\d+\.(?:\d+\.)?\d+\.\d+\.\d+\.[a-z]+\.\d+"
 fine_label_re = r"\d+\.\d+\.(?:\d+\.)?\d+\.\d+\.\d+-\d+\.\d+\.[a-z]+\.\d+\.\d+"
 LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
-NAME_RE = re.compile(r"X\*?\(\d+(,\d+)?(;|,)\d+\)")
+# Accepts the standard names X(D;N), X(D,M;N) and the starred (Atkin-Lehner
+# quotient) names in both spellings X*(D;N) and X^*(D;N); canonicalize_name
+# turns all of them into the form stored in the database.
+NAME_RE = re.compile(r"X(\^?\*)?\(\d+(,\d+)?(;|,)\d+\)")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -234,14 +237,35 @@ def shimcurve_lmfdb_label(label):
         lmfdb_label = label
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
-        lmfdb_label = db.gps_shimura_test.lucky({"name": canonicalize_name(label)}, "label")
+        # canonicalize_name maps both starred spellings X*(D;N) and X^*(D;N)
+        # to the canonical form X^*(D;N) used in the name column
+        lmfdb_label = db.gps_shimura_test.lucky({"name": canonicalize_name(label.upper())}, "label")
     else:
         label_type = "label"
         lmfdb_label = None
     return lmfdb_label, label_type
 
 def shimcurve_jump(info):
-    labels = (info["jump"]).split("*")
+    jump = info["jump"].strip()
+    # Starred names such as X*(6;1) or X^*(6;1) contain an asterisk that is
+    # part of the name, so we first try to interpret the whole input as a
+    # single label or name before treating * as a fiber product separator.
+    lmfdb_label, label_type = shimcurve_lmfdb_label(jump)
+    if lmfdb_label is not None:
+        return redirect(url_for_shimcurve_label(lmfdb_label))
+    if label_type == "name":
+        # A syntactically valid name (possibly starred) that is not in the
+        # database; the asterisk is not a fiber product separator here.
+        flash_error("There is no Shimura curve in the database with name %s", jump)
+        return redirect(url_for(".index"))
+    # Now interpret * as a fiber product separator.  An asterisk that is part
+    # of a starred name is always followed by an open parenthesis, so we only
+    # split at asterisks that are not.
+    labels = [piece.strip() for piece in re.split(r"\*(?!\()", jump)]
+    labels = [piece for piece in labels if piece]
+    if len(labels) <= 1:
+        flash_error("There is no Shimura curve in the database with %s %s", label_type, jump)
+        return redirect(url_for(".index"))
     lmfdb_labels = []
     for label in labels:
         lmfdb_label, label_type = shimcurve_lmfdb_label(label)
@@ -249,31 +273,45 @@ def shimcurve_jump(info):
             flash_error("There is no Shimura curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
-    lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.a.1"]
-    if len(lmfdb_labels) == 1:
-        label = lmfdb_labels[0]
-        return redirect(url_for_shimcurve_label(label))
-    elif len(lmfdb_labels_not_X1) == 1:
-        label = lmfdb_labels_not_X1[0]
-        return redirect(url_for_shimcurve_label(label))
-    else:
+    # Check that all the factors exist and get the data needed below
+    curvedata = {rec["label"]: rec for rec in db.gps_shimura_test.search(
+        {"label": {"$in": lmfdb_labels}},
+        ["label", "index", "discB", "discO", "level", "deg_mu"])}
+    for label in lmfdb_labels:
+        if label not in curvedata:
+            flash_error("There is no Shimura curve in the database with label %s", label)
+            return redirect(url_for(".index"))
+
+    def ambient(label):
+        rec = curvedata[label]
+        return (rec["discB"], rec["discO"], rec["level"], rec["deg_mu"])
+    # Analogue of X(1) in the modular curve jump: a factor of index 1
+    # corresponds to the full ambient group, so it is the base of the fiber
+    # product and the fiber product with it changes nothing (as long as it has
+    # the same ambient data as the other factor).
+    nontrivial = [l for l in lmfdb_labels if curvedata[l]["index"] != 1]
+    if len(nontrivial) == 1:
+        label = nontrivial[0]
+        if all(ambient(l) == ambient(label) for l in lmfdb_labels):
+            return redirect(url_for_shimcurve_label(label))
+    # Check labels are indeed distinct
+    if len(set(nontrivial)) != len(nontrivial):
+        flash_error("Fiber product decompositions cannot contain repeated terms")
+        return redirect(url_for(".index"))
+    label = None
+    if nontrivial and "factorization" in db.gps_shimura_test.search_cols:
         # Get factorization for each label
-        factors = list(db.gps_shimura_test.search({"label": {"$in": lmfdb_labels_not_X1}},
-                                                  ["label","factorization"]))
+        factors = list(db.gps_shimura_test.search({"label": {"$in": nontrivial}},
+                                                  ["label", "factorization"]))
         factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
                    for f in factors]
-        # Check labels are indeed distinct
-        if len(factors) != len(lmfdb_labels_not_X1):
-            flash_error("Fiber product decompositions cannot contain repeated terms")
-            return redirect(url_for(".index"))
         # Get list of all factors, lexicographically sorted
         factors = sorted(sum(factors, []), key=key_for_numerically_sort)
         label = db.gps_shimura_test.lucky({'factorization': factors}, "label")
-        if label is None:
-            flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", info["jump"])
-            return redirect(url_for(".index"))
-        else:
-            return redirect(url_for_shimcurve_label(label))
+    if label is None:
+        flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", jump)
+        return redirect(url_for(".index"))
+    return redirect(url_for_shimcurve_label(label))
 
 def blankzeros(n):
     return "$%o$"%n if n else ""
