@@ -15,15 +15,37 @@ from math import log2
 import ast
 
 SPACES_RE = re.compile(r"\d\s+\d")
-LIST_RE = re.compile(r"^(-?\d+|(-?\d+)?-(-?\d+)?)(,(-?\d+|(-?\d+)?-(-?\d+)?))*$")
+# The endpoints of a range are separated by .. or by a dash; a lone endpoint on
+# either side of the separator may be omitted.  The item grammars below are
+# factored so that every comma separated item has exactly one parse: overlapping
+# alternatives (a negative singleton also matching a range whose lower endpoint
+# was omitted, say) make a list of items take exponential time to reject, which
+# is a denial of service risk since these patterns are applied to search input.
+RANGE_SEP_STR = r"(?:\.\.|-)"
+UNSIGNED_INT_STR = r"\d+"
+SIGNED_INT_STR = r"-?\d+"
+# A singleton or a range with a lower endpoint (5, -5, -5-3, -5--3, -5-), a
+# range with the lower endpoint omitted (..3, ..-3), or the same with .. already
+# folded into - by prep_ranges (--3).  Note that -3 is the singleton -3.
+INT_ITEM_STR = r"(?:{s}(?:{sep}(?:{s})?)?|--{u}|\.\.{s})".format(
+    s=SIGNED_INT_STR, sep=RANGE_SEP_STR, u=UNSIGNED_INT_STR)
+LIST_RE = re.compile(r"^{0}(?:,{0})*$".format(INT_ITEM_STR))
 # The dash separating the endpoints of a range must be distinguished from
 # the dash used as a minus sign.  A dash is a separator if it is preceded by
 # a digit or decimal point (a leading dash is a sign, and a dash after e is
 # an exponent sign), or if it occurs at the start immediately before a minus
 # sign (an omitted lower endpoint, as in --4, obtained from ..-4).
 RANGE_DASH_RE = re.compile(r"(?<=[\d.])-|^-(?=-)")
-FLOAT_STR = r"(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))"
-LIST_FLOAT_RE = re.compile(r"^({0}|{0}-|{0}-{0}|-{0})(,({0}|{0}-|{0}-{0}|-{0}))*$".format(FLOAT_STR))
+# prep_ranges folds .. into - so that the rest of the parsing machinery only has
+# to handle one separator, but only when a lower endpoint precedes it: -10 is
+# the negative number -10, so ..10 would otherwise silently become a search for
+# -10 instead of a search for values at most 10.
+RANGE_DOTS_RE = re.compile(r"(?<=\d)\.\.")
+UNSIGNED_FLOAT_STR = r"(?:(?:\d+(?:[.]\d*)?|[.]\d+)(?:e[-+]?\d+)?|\d+/\d+)"
+FLOAT_STR = r"-?" + UNSIGNED_FLOAT_STR
+FLOAT_ITEM_STR = r"(?:{f}(?:{sep}(?:{f})?)?|--{u}|\.\.{f})".format(
+    f=FLOAT_STR, sep=RANGE_SEP_STR, u=UNSIGNED_FLOAT_STR)
+LIST_FLOAT_RE = re.compile(r"^{0}(?:,{0})*$".format(FLOAT_ITEM_STR))
 BRACKETED_POSINT_RE = re.compile(r"^[\[(][\])]|[\[(]0*[1-9]\d*(,0*[1-9]\d*)*[\])]$")
 BRACKETED_NN_RE = re.compile(r"^[\[(][\])]|[\[(]\d+(,\d+)*[\])]$")
 BRACKETED_RAT_RE = re.compile(r"^[\[(][\])]|[\[(]-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*[\])]$")
@@ -186,7 +208,8 @@ def clean_input(inp, clean_spaces=True, angle_to_curly=False):
 def prep_ranges(inp):
     if inp is None:
         return None
-    return inp.replace("..", "-").replace(" ", "")
+    # A leading .. marks an omitted lower endpoint and is left alone: see RANGE_DOTS_RE
+    return RANGE_DOTS_RE.sub("-", inp.replace(" ", ""))
 
 def prep_raw(inp, names={}):
     """

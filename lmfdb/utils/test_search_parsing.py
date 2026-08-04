@@ -3,6 +3,9 @@ Unit tests for search input parsing (lmfdb/utils/search_parsing.py),
 focused on ranges with negative endpoints; see issue #3825.
 """
 
+import subprocess
+import sys
+
 import pytest
 
 from psycodict.utils import SearchParsingError
@@ -24,24 +27,51 @@ def test_prep_ranges():
     assert prep_ranges("2..10") == "2-10"
     assert prep_ranges("-4..-1") == "-4--1"
     assert prep_ranges("-1..3") == "-1-3"
-    assert prep_ranges("..-4") == "--4"
+    assert prep_ranges("2 .. 10") == "2-10"
+    # a .. with no lower endpoint must survive: -4 and -10 already mean the
+    # negative numbers -4 and -10
+    assert prep_ranges("..-4") == "..-4"
+    assert prep_ranges("..10") == "..10"
+    assert prep_ranges("-5,..10") == "-5,..10"
 
 
 def test_list_re():
-    # prep_ranges has already replaced .. by - when LIST_RE is applied
+    # prep_ranges has replaced .. by - when LIST_RE is applied, except in front
+    # of an omitted lower endpoint
     for ok in ["5", "-5", "5-10", "-1-3", "-4--1", "5-", "-5-", "--4",
-               "-5,-2", "-4--1,7", "1--3"]:
+               "-5,-2", "-4--1,7", "1--3", "..4", "..-4", "..10", "-5,..10",
+               "-1..3", "-4..-1", "2..10", "5.."]:
         assert LIST_RE.match(ok), ok
-    for bad in ["--", "3--", "---4", "2..10", "2+3", "1,,2", "x-2"]:
+    for bad in ["-", "--", "..", "3--", "---4", "..-", "..5-6", "2+3", "1,,2",
+                "x-2", "1.5", ",5", "5,"]:
         assert not LIST_RE.match(bad), bad
 
 
 def test_list_float_re():
-    for ok in ["-1.5", "-1.5-2.5", "-4--1", "--4.5", "2.5-", "-2.5-", "1e-5",
-               "1/4", "-1/4-1/2"]:
+    for ok in ["-1.5", "-1.5-2.5", "-1.5--0.5", "-4--1", "--4.5", "2.5-",
+               "-2.5-", "1e-5", "1e-5-2e-4", "-1e-5--2e-4", "1/4", "-1/4-1/2",
+               "--1/4", "..4.5", "..-4.5", "1..5", "-.5-.5"]:
         assert LIST_FLOAT_RE.match(ok), ok
-    for bad in ["--", "1.5--", "1..5"]:
+    for bad in ["-", "--", "..", "1.5--", "1e", "1//2", "x", "1.5,,2"]:
         assert not LIST_FLOAT_RE.match(bad), bad
+
+
+def _rejects_promptly(pattern, text, timeout=30):
+    # Run the match in a subprocess so that a return of exponential
+    # backtracking fails this test instead of hanging the whole test run.
+    code = "import re, sys; sys.exit(0 if re.compile(sys.argv[1]).match(sys.argv[2]) is None else 1)"
+    return subprocess.run([sys.executable, "-c", code, pattern, text],
+                          timeout=timeout).returncode == 0
+
+
+def test_lists_reject_malformed_input_promptly():
+    # These patterns are applied to raw search input, so an ambiguous item
+    # grammar (one where a negative singleton also parses as a range with an
+    # omitted lower endpoint) is a denial of service risk: rejecting a list of
+    # n negative singletons took time exponential in n.
+    for regex in [LIST_RE, LIST_FLOAT_RE]:
+        for text in ["-1," * 200 + "x", "--1," * 200 + "x", "-1--1," * 200 + "x"]:
+            assert _rejects_promptly(regex.pattern, text), (regex.pattern, text[:20])
 
 
 def test_parse_range2_signed():
@@ -100,6 +130,24 @@ def test_parse_ints_negative_ranges():
     assert info["c"] == "-4--1"
 
 
+def test_parse_ints_open_left():
+    # ..10 must not be silently reinterpreted as the singleton -10; these go
+    # through the decorated parser, which applies prep_ranges first
+    query = {}
+    parse_ints({"c": "..10"}, query, "c")
+    assert query == {"c": {"$lte": 10}}
+    query = {}
+    parse_ints({"c": "-5,..10"}, query, "c")
+    assert query == {"$or": [{"c": -5}, {"c": {"$lte": 10}}]}
+    query = {}
+    parse_ints({"c": "..-4"}, query, "c")
+    assert query == {"c": {"$lte": -4}}
+    # and it is echoed back unchanged rather than as -10
+    info = {"c": "..10"}
+    parse_ints(info, {}, "c")
+    assert info["c"] == "..10"
+
+
 def test_parse_ints_invalid():
     app.config["TESTING"] = True
     if not app.secret_key:
@@ -132,3 +180,15 @@ def test_parse_floats_negative_ranges():
     parse_floats({"c": "1e-5-2e-4"}, query, "c")
     assert query["c"]["$gte"] == pytest.approx(1e-5, abs=1e-9)
     assert query["c"]["$lte"] == pytest.approx(2e-4, abs=1e-9)
+
+
+def test_parse_floats_open_left():
+    # ..4.5 must not be silently reinterpreted as a search near -4.5
+    query = {}
+    parse_floats({"c": "..4.5"}, query, "c")
+    assert set(query["c"]) == {"$lte"}
+    assert query["c"]["$lte"] == pytest.approx(4.5, abs=1e-9)
+    query = {}
+    parse_floats({"c": "--4.5"}, query, "c")
+    assert set(query["c"]) == {"$lte"}
+    assert query["c"]["$lte"] == pytest.approx(-4.5, abs=1e-9)
