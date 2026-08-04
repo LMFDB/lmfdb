@@ -1,10 +1,8 @@
 import cmath
 import math
 import os
-import random
 import re
 import tempfile
-import time
 from copy import copy
 from itertools import islice
 from types import GeneratorType
@@ -35,7 +33,7 @@ from sage.all import (
 from sage.misc.functional import round
 from sage.structure.element import Element
 
-from lmfdb.app import app, is_beta, is_debug_mode, _url_source
+from lmfdb.app import is_beta, is_debug_mode, _url_source
 
 
 def integer_divisors(n):
@@ -800,96 +798,6 @@ def flash_info(errmsg, *args):
 def flash_success(msg, *args):
     """ flash information in green with args in black; msg may contain markup, including latex math mode"""
     flash(Markup(msg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)), "success")
-
-
-################################################################################
-#  Ajax utilities
-################################################################################
-
-# LinkedList is used in Ajax below
-class LinkedList():
-    __slots__ = ('value', 'next', 'timestamp')
-
-    def __init__(self, value, nxt):
-        self.value = value
-        self.next = nxt
-        self.timestamp = time.time()
-
-    def append(self, value):
-        self.next = LinkedList(value, self)
-        return self.next
-
-
-class AjaxPool():
-    def __init__(self, size=1e4, expiration=3600):
-        self._size = size
-        self._key_list = self._head = LinkedList(None, None)
-        self._expiration = expiration
-        self._all = {}
-
-    def get(self, key, value=None):
-        return self._all.get(key, value)
-
-    def __contains__(self, key):
-        return key in self._all
-
-    def __setitem__(self, key, value):
-        self._key_list = self._key_list.append(key)
-        self._all[key] = value
-
-    def __getitem__(self, key):
-        res = self._all[key]
-        self.purge()
-        return res
-
-    def __delitem__(self, key):
-        del self._all[key]
-
-    def pop_key(self):
-        head = self._head
-        if head.next is None:
-            return None
-        else:
-            key = head.value
-            self._head = head.next
-            return key
-
-    def purge(self):
-        if self._size:
-            while len(self._all) > self._size:
-                key = self.pop_key()
-                if key in self._all:
-                    del self._all[key]
-        if self._expiration:
-            oldest = time.time() - self._expiration
-            while self._head.timestamp < oldest:
-                key = self.pop_key()
-                if key in self._all:
-                    del self._all[key]
-
-
-pending = AjaxPool()
-def ajax_url(callback, *args, **kwds):
-    if '_ajax_sticky' in kwds:
-        _ajax_sticky = kwds.pop('_ajax_sticky')
-    else:
-        _ajax_sticky = False
-    if not isinstance(args, tuple):
-        args = args,
-    nonce = hex(random.randint(0, 1 << 128))
-    pending[nonce] = callback, args, kwds, _ajax_sticky
-    return url_for('ajax_result', id=nonce)
-
-
-@app.route('/callback_ajax/<id>')
-def ajax_result(id):
-    if id in pending:
-        f, args, kwds, _ajax_sticky = pending[id]
-        if not _ajax_sticky:
-            del pending[id]
-        return f(*args, **kwds)
-    else:
-        return "<expired>"
 
 
 def image_callback(G):
