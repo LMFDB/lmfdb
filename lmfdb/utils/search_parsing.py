@@ -25,8 +25,8 @@ RANGE_SEP_STR = r"(?:\.\.|-)"
 UNSIGNED_INT_STR = r"\d+"
 SIGNED_INT_STR = r"-?\d+"
 # A singleton or a range with a lower endpoint (5, -5, -5-3, -5--3, -5-), a
-# range with the lower endpoint omitted (..3, ..-3), or the same with .. already
-# folded into - by prep_ranges (--3).  Note that -3 is the singleton -3.
+# range with the lower endpoint omitted (..3, ..-3), or that same range with a
+# dash for the omitted endpoint (--3).  Note that -3 is the singleton -3.
 INT_ITEM_STR = r"(?:{s}(?:{sep}(?:{s})?)?|--{u}|\.\.{s})".format(
     s=SIGNED_INT_STR, sep=RANGE_SEP_STR, u=UNSIGNED_INT_STR)
 LIST_RE = re.compile(r"^{0}(?:,{0})*$".format(INT_ITEM_STR))
