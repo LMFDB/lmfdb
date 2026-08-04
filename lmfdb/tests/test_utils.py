@@ -8,7 +8,7 @@
 
 import unittest
 
-from sage.all import var
+from sage.all import var, QQ
 
 from lmfdb.utils import (
     an_list,
@@ -37,6 +37,8 @@ from lmfdb.utils.completeness import (
     bottom,
     infinity,
 )
+
+from lmfdb.utils.downloader import OscarLanguage, SageLanguage
 
 class UtilsTest(unittest.TestCase):
     """
@@ -103,6 +105,15 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(splitcoeff("1 2"), [[1.0, 2.0]])
         self.assertEqual(splitcoeff("  0  -1.2  \n  3.14  1 "),
                          [[0.0, -1.2], [3.14, 1.0]])
+
+    def test_rational_to_lang(self):
+        r"""
+        Checking utility: DownloadLanguage.rational_to_lang
+        """
+        # In Julia, -3/2 is floating point division, so Oscar needs -3//2
+        self.assertEqual(SageLanguage().to_lang(QQ(-3) / 2), "-3/2")
+        self.assertEqual(OscarLanguage().to_lang(QQ(-3) / 2), "-3//2")
+        self.assertEqual(OscarLanguage().to_lang(QQ(3)), "3")
 
     ################################################################################
     #  display and formatting utilities

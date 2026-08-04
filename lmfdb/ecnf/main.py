@@ -3,16 +3,15 @@
 
 import ast
 import re
-from functools import lru_cache
 from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, make_response, abort
-from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
+from sage.all import factor, is_prime, lazy_attribute, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import (
-    to_dict, flash_error, display_knowl, Downloader,
+    to_dict, flash_error, display_knowl, Downloader, coeff_to_poly,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
@@ -449,17 +448,22 @@ class ECNFDownloader(Downloader):
     title = "Elliptic curves over number fields"
     short_name = "curves"
 
-    @staticmethod
-    @lru_cache(maxsize=128)
-    def field_poly(field_label):
-        # Look up the defining polynomial of a base field; cached since download
-        # results are sorted by field, so the same field shows up in consecutive rows
-        from lmfdb.utils import coeff_to_poly
-        return coeff_to_poly(db.nf_fields.lookup(field_label, projection='coeffs'))
+    @lazy_attribute
+    def field_polys(self):
+        # The defining polynomials of the base fields, keyed by field label.  There
+        # are under a thousand base fields, so we fetch them all in one query the
+        # first time a download happens rather than looking them up row by row.
+        labels = db.ec_nfcurves.distinct('field_label')
+        polys = {rec['label']: coeff_to_poly(rec['coeffs'])
+                 for rec in db.nf_fields.search({'label': {'$in': labels}}, projection=['label', 'coeffs'])}
+        missing = [label for label in labels if label not in polys]
+        if missing:
+            raise ValueError("Missing defining polynomial for base field %s" % missing[0])
+        return polys
 
     def postprocess(self, row, info, query):
         # Look up the defining polynomial coefficients for the base field of the curve
-        row["field_coeffs"] = self.field_poly(row['field_label'])
+        row["field_coeffs"] = self.field_polys[row['field_label']]
 
         # Convert Weierstrass coefficients from string to a list of list of rationals
         row['ainvs'] = [[QQ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
