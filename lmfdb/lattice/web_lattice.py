@@ -354,7 +354,12 @@ class WebGenus(WebLat):
         chi = kronecker_character(self.disc)
         chi_orbit = 'a' if chi.is_trivial() else 'b'
         mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
-        friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        try:
+            # Eisenstein newspace labels are only supported once the CMF
+            # Eisenstein branch is merged; skip the friend if not available.
+            friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        except ValueError:
+            pass
         return friends
 
     @lazy_attribute
@@ -539,7 +544,12 @@ class WebLattice(WebLat):
         chi = kronecker_character(self.disc)
         chi_orbit = 'a' if chi.is_trivial() else 'b'
         mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
-        friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        try:
+            # Eisenstein newspace labels are only supported once the CMF
+            # Eisenstein branch is merged; skip the friend if not available.
+            friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
+        except ValueError:
+            pass
         return friends        
 
     @lazy_attribute

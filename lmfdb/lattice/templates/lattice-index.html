@@ -1,5 +1,6 @@
 {% extends "homepage.html" %}
 {% block content %}
+{% from "lattice-tabs.html" import tabs %}
 
 {{ tabs(("Lattices", ".index", true), ("Genera", ".genus_index", false)) }}
 

@@ -234,7 +234,7 @@ class LatticeDownloader(Downloader):
                  "color": "aut",
              })
 def lattice_search(info, query):
-    common_parse(info, query)
+    common_parse(info, query, det_qfield='det_abs')
     # Store flat gram in query for direct DB matching (lat_lattices_new has a gram column)
     if 'gram_matrix' in info:
         mat = info['gram_matrix']

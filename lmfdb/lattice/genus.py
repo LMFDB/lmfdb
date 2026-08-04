@@ -164,12 +164,24 @@ def genus_search_equivalence(res, info, query):
 def url_for_genus(label):
     return url_for(".render_genus_webpage", label=label)
 
-def common_parse(info, query):
+def common_parse(info, query, det_qfield='det'):
+    # det_qfield: lat_genera has a signed det column, but lat_lattices_new only
+    # stores det_abs/det_sign, so the lattice search passes det_qfield='det_abs'.
     for field, name in [('rank', 'Rank'), ('level', 'Level'), ('class_number', 'Class number')]:
         parse_posints(info, query, field, name)
     # TODO: fix handling of sign here (e.g. -100..-11 currently fails)
-    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
-        parse_ints(info, query, field, name)
+    if det_qfield == 'det':
+        parse_ints(info, query, 'det', 'Determinant')
+    else:
+        det = (info.get('det') or '').strip()
+        if re.fullmatch(r'-\d+', det):
+            query['det_sign'] = -1
+            det_info = dict(info)
+            det_info['det'] = det[1:]
+            parse_ints(det_info, query, 'det', 'Determinant', qfield=det_qfield)
+        else:
+            parse_ints(info, query, 'det', 'Determinant', qfield=det_qfield)
+    parse_ints(info, query, 'disc', 'Discriminant')
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
     # Handle even/odd search
