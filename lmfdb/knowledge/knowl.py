@@ -1,10 +1,13 @@
 # the basic knowledge object, with database awareness, …
 
-from datetime import datetime, timedelta
 from collections import defaultdict
-import time
+from datetime import timedelta
+from lmfdb.utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
+import re
 import subprocess
-import sys
+import time
+import yaml
+import difflib
 
 from psycodict.base import PostgresBase
 from psycodict import DelayCommit
@@ -13,11 +16,17 @@ from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
-from lmfdb.utils import datetime_to_timestamp_in_ms
-from psycopg2.sql import SQL, Identifier, Placeholder
+from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from sage.all import cached_function
+from lmfdb.logger import logger
 
-import re
+# Timezone handling utilities for knowl system
+#
+# IMPORTANT: The knowl database stores timestamps in columns defined as
+# "timestamp without time zone". All timestamps are stored as UTC but
+# without timezone information. These utilities ensure consistent handling.
+
+
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
 top_knowl_re = re.compile(r"(.*)\.top$")
 comment_knowl_re = re.compile(r"(.*)\.(\d+)\.comment$")
@@ -46,7 +55,7 @@ grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
-defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
+defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*|\{\{\s*DEFINES\s*\(\s*['"]([^'"]+)['"]""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -124,7 +133,7 @@ def normalize_define(term):
 
 
 def extract_defines(content):
-    return sorted({x.strip() for x in defines_finder_re.findall(content)})
+    return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -135,12 +144,46 @@ class KnowlBackend(PostgresBase):
 
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
-        self._rw_knowldb = db.can_read_write_knowls()
+        self._refresh_connection_capabilities()
         # we cache knowl titles for 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
         self.cached_titles = {}
+
+    def _refresh_connection_capabilities(self):
+        """
+        Ask the database what the current session may do with the knowls.
+
+        Fails closed: nothing is editable until the session has said so.
+        """
+        self._rw_knowldb = False
+        checker = getattr(db, "_can_read_write_knowls", None) or db.can_read_write_knowls
+        self._rw_knowldb = checker()
+
+    def _connection_reset(self):
+        """
+        Called by psycodict once it has replaced the connection this object
+        uses (roed314/psycodict#135); a no-op in psycodict without that hook.
+
+        Whether knowls may be edited describes the session rather than this
+        object, and a replacement connection can reach a standby, or a role
+        whose privileges have changed, so the cached answer has to be asked
+        again rather than carried over.
+        """
+        self._refresh_connection_capabilities()
+
+    def _safe_execute(self, query, values=None):
+        # Every 20 minutes we reload the knowl database on production
+        # using a dump from beta.  If this query is run during the time
+        # that restore happens, we could trigger an error.  The restore
+        # takes about 0.6 seconds, so if we hit an error we wait
+        # 1 second and try again.
+        try:
+            return list(self._execute(query, values))
+        except Exception:
+            time.sleep(1)
+            return list(self._execute(query, values))
 
     @property
     def titles(self):
@@ -169,10 +212,12 @@ class KnowlBackend(PostgresBase):
         if fields is None:
             fields = ['id'] + self._default_fields
         if timestamp is not None:
+            timestamp = ensure_naive_utc(timestamp)
+            logger.debug("Fetching knowl with ID: %s and timestamp: %s", ID, timestamp)
             selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
-            cur = self._execute(selecter, [ID, timestamp])
-            if cur.rowcount > 0:
-                return dict(zip(fields, cur.fetchone()))
+            L = self._safe_execute(selecter, [ID, timestamp])
+            if L:
+                return dict(zip(fields, L[0]))
             else:
                 return None
 
@@ -180,26 +225,35 @@ class KnowlBackend(PostgresBase):
             beta = is_beta()
         selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND status >= %s ORDER BY timestamp DESC LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
         if not beta:
-            cur = self._execute(selecter, [ID, 1])
-            if cur.rowcount > 0:
-                return dict(zip(fields, cur.fetchone()))
-        cur = self._execute(selecter, [ID, -2 if allow_deleted else 0])
-        if cur.rowcount > 0:
-            return dict(zip(fields, cur.fetchone()))
+            L = self._safe_execute(selecter, [ID, 1])
+            if L:
+                return dict(zip(fields, L[0]))
+        L = self._safe_execute(selecter, [ID, -2 if allow_deleted else 0])
+        if L:
+            return dict(zip(fields, L[0]))
 
-    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2]):
+    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2], ids=None, start=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [0, types])
-        return [dict(zip(fields, res)) for res in cur]
+        if ids is not None:
+            where = SQL("WHERE status >= %s AND id = ANY(%s)")
+            values = [0, ids]
+        elif start is not None and isinstance(start, str):
+            where = SQL("WHERE status >= %s AND id LIKE %s")
+            values = [0, start + "%"]
+        else:
+            where = SQL("WHERE status >= %s AND type = ANY(%s)")
+            values = [0, types]
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls {1} ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)), where)
+        L = self._safe_execute(selecter, values)
+        return [dict(zip(fields, res)) for res in L]
 
     def get_all_defines(self):
         selecter = SQL("SELECT DISTINCT ON (id) id, defines FROM kwl_knowls WHERE status >= 0 AND type = 0 AND cardinality(defines) > 0 ORDER BY id, timestamp DESC")
-        cur = self._execute(selecter)
+        L = self._safe_execute(selecter)
         # This should be fixed in the data
         return [{k: (v if k == 'id' else [normalize_define(t) for t in v])
-                 for k, v in zip(['id', 'defines'], res)} for res in cur]
+                 for k, v in zip(['id', 'defines'], res)} for res in L]
 
     #FIXME shouldn't I be allowed to search on id? or something?
     def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False):
@@ -268,18 +322,18 @@ class KnowlBackend(PostgresBase):
         else:
             sort = SQL("")
         selecter = SQL("SELECT {0} FROM ({1}) knowls WHERE {2}{3}").format(sqlfields, selecter, secondary_restrictions, sort)
-        cur = self._execute(selecter, values)
-        return [{k:res[i] for k,i in projfields} for res in cur]
+        L = self._safe_execute(selecter, values)
+        return [{k:res[i] for k,i in projfields} for res in L]
 
     def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
+        authors = []
         if most_recent is None:
             most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
-        new_knowl = most_recent is None
-        if new_knowl:
-            authors = []
-        else:
-            authors = most_recent.pop('authors', [])
+        if isinstance(most_recent, Knowl):
+            most_recent = {"authors": most_recent.authors}
+        if most_recent is not None:
+            authors = most_recent.get('authors', [])
 
         if not minor and who and who not in authors:
             authors = authors + [who]
@@ -304,14 +358,120 @@ class KnowlBackend(PostgresBase):
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
 
+    def yaml_export(self, filename, ids=0, fields=None):
+        """
+        Write the given knowls to a yaml file; you can then edit that file and reload it using ``yaml_import``.
+        You should usually not change the first record in the output, which stores the time at which the export was performed; ``yaml_import`` uses it to detect knowls that have changed in the database since the export.
+        This function is not currently exposed to the web interface, so must be run manually (a connection to devmirror is sufficient, so it does not need to be run by an LMFDB editor).
+
+        INPUT:
+
+        - ``filename`` -- the filename to write output
+        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls of those types will be output; the default ``0`` gives normal knowls, as opposed to top/bottom annotations, comments and column descriptions -- see ``knowl_type_code``), or a string (in which case all knowl ids starting with that string will be output)
+        - ``fields`` -- include these fields; defaults to id, content and title
+
+        OUTPUT:
+
+        - the file will be created with a list of dictionaries.  The first will be a dictionary storing the time the file was written; the rest of the records hold the knowl data.
+        """
+        timestamp = utc_now_naive()
+        if fields is None:
+            fields = ['id', 'content', 'title']
+        if isinstance(ids, int):
+            ids = [ids]
+        if isinstance(ids, str):
+            knowls = self.get_all_knowls(fields, start=ids)
+        elif all(isinstance(n, int) for n in ids):
+            knowls = self.get_all_knowls(fields, types=ids)
+        elif all(isinstance(kid, str) for kid in ids):
+            knowls = self.get_all_knowls(fields, ids=ids)
+        else:
+            raise ValueError("ids must either be a list of integers, a string, or a list of ids")
+        with open(filename, "w", encoding="utf-8") as F:
+            yaml.safe_dump([{"written": timestamp}] + knowls, F, default_flow_style=False, sort_keys=False)
+
+    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False, minor=True):
+        """
+        This function provides a mechanism for updating many knowls at once from a yaml file, as produced by ``yaml_export``.
+        It is not currently exposed to the web interface, so must be run manually by an LMFDB editor.
+
+        Knowls that have changed in the database since the yaml file was written are skipped (with a message), as are records that match the current database contents.  All changes are saved in a single transaction, so a failure partway through will not leave a partial import.  We suggest running with ``dryrun=True`` first to check the set of changes.
+
+        INPUT:
+
+        - ``filename`` -- a yaml file, as produced by ``yaml_export``: a list of records, the first storing the time the export was performed and the rest holding knowl data
+        - ``who`` -- the user id of the person performing the import, recorded as the last author of each changed knowl
+        - ``dryrun`` -- if True, print the changes that would be made without saving anything
+        - ``straight_to_production`` -- if False (the default), updated knowls are reset to beta status so that they can be reviewed.  WARNING: if True, an updated knowl keeps its current status, so a reviewed knowl will remain marked as reviewed even though its new content has not been; only use this for edits that do not require review.  Newly created knowls always start in beta status.
+        - ``minor`` -- if True (the default), the person performing the import is not added to the author list of updated knowls (though they are still recorded as the last author).  Set to False for imports that make substantial changes.  The creator of a newly created knowl is always added as an author.
+        """
+        with open(filename, encoding="utf-8") as F:
+            records = yaml.safe_load(F)
+        timestamp = records[0]["written"]
+        records = {rec['id']: rec for rec in records[1:]}
+        knowls = self.get_all_knowls(['id'] + self._default_fields, ids=list(records))
+        existing = set(rec['id'] for rec in knowls)
+        creating = {kid: rec for kid, rec in records.items() if kid not in existing}
+        too_new = [rec["id"] for rec in knowls if rec["timestamp"] >= timestamp]
+        knowls = [rec for rec in knowls if rec["timestamp"] < timestamp]
+        updated = [dict(rec) for rec in knowls]
+        for knowl in updated:
+            knowl.update(records[knowl["id"]])
+        count = 0
+        ccount = 0
+        with DelayCommit(self):
+            for old, new in zip(knowls, updated):
+                assert old['id'] == new['id']
+                if old != new:
+                    if dryrun:
+                        print(f"Updating {old['id']}:")
+                        for col, oval in old.items():
+                            if col != "content":
+                                nval = new[col]
+                                if nval != oval:
+                                    print(f'  Changing {col} from "{oval}" to "{nval}"')
+                        if 'content' in old:
+                            ncontent, ocontent = new['content'], old['content']
+                            if ncontent != ocontent:
+                                diff = difflib.ndiff(ocontent.split("\n"), ncontent.split("\n"))
+                                print("  " + "\n  ".join(diff))
+                    else:
+                        if not straight_to_production:
+                            new['status'] = 0
+                        new['timestamp'] = utc_now_naive()
+                        self.save(Knowl(new['id'], data=new), who, most_recent=Knowl(old['id'], data=old), minor=minor)
+                    count += 1
+            for kid, rec in creating.items():
+                reason = bad_knowl_id_reason(kid)
+                if reason is not None:
+                    errmsg, args = reason
+                    print(f"Cannot create {kid}: " + " ".join((errmsg % args).split()))
+                    continue
+                if not ("content" in rec and "title" in rec):
+                    print(f"{kid} missing required content/title")
+                    continue
+                if dryrun:
+                    print(f"Creating {kid}")
+                else:
+                    rec['status'] = 0
+                    rec['timestamp'] = utc_now_naive()
+                    self.save(Knowl(kid, data=rec), who)
+                ccount += 1
+        if count:
+            print(f"{count} knowls updated")
+        if ccount:
+            print(f"{ccount} knowls created")
+        if too_new:
+            print(f"{len(too_new)} knowls have changed since the yaml file was created, and are thus not being updated:\n{','.join(too_new)}")
+
     def get_history(self, limit=25):
         """
         returns the last @limit history items
         """
         cols = ("id", "title", "timestamp", "last_author")
         selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
-        cur = self._execute(selecter, [0, -2, limit])
-        return [dict(zip(cols, res)) for res in cur]
+        L = self._safe_execute(selecter, [0, -2, limit])
+        return [dict(zip(cols, res)) for res in L]
 
     def get_comment_history(self, limit=25):
         """
@@ -319,25 +479,24 @@ class KnowlBackend(PostgresBase):
         """
         # We want to select the oldest version of each comment but the newest version of each knowl
         selecter = SQL("WITH k AS (SELECT DISTINCT ON (id) id, title, timestamp, last_author FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC), c AS (SELECT id, timestamp, last_author, source FROM (SELECT DISTINCT ON (id) id, timestamp, last_author, source FROM kwl_knowls WHERE status >= %s AND type = %s ORDER BY id, timestamp) ci ORDER BY timestamp DESC LIMIT %s) SELECT k.id, k.title, k.timestamp, k.last_author, c.id, c.timestamp, c.last_author FROM k, c WHERE k.id = c.source ORDER BY c.timestamp DESC")
-        cur = self._execute(selecter, [0, -2, 0, -2, limit])
-        return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in cur]
+        L = self._safe_execute(selecter, [0, -2, 0, -2, limit])
+        return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in L]
 
     def get_edit_history(self, ID):
         selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls WHERE status >= %s AND id = %s ORDER BY timestamp")
-        cur = self._execute(selecter, [0, ID])
-        return [dict(zip(["timestamp", "last_author", "content", "status"], rec)) for rec in cur]
+        L = self._safe_execute(selecter, [0, ID])
+        return [dict(zip(["timestamp", "last_author", "content", "status"], rec)) for rec in L]
 
     def get_comments(self, ID):
         # Note that the subselect is sorted in ascending order by timestamp
         selecter = SQL("SELECT id, last_author, timestamp FROM (SELECT DISTINCT ON (id) id, last_author, timestamp FROM kwl_knowls WHERE type = %s AND source = %s AND status >= 0 ORDER BY id, timestamp) knowls ORDER BY timestamp DESC")
-        cur = self._execute(selecter, [-2, ID])
-        return list(cur)
+        return self._safe_execute(selecter, [-2, ID])
 
     def get_column_descriptions(self, table):
         fields = ['id'] + self._default_fields
         selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [f"columns.{table}.%", 2, 0])
-        return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in cur}
+        L = self._safe_execute(selecter, [f"columns.{table}.%", 2, 0])
+        return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L}
 
     def set_column_description(self, table, col, description):
         uid = db.login()
@@ -359,10 +518,10 @@ class KnowlBackend(PostgresBase):
 
     def get_table_description(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
-        rec = self._execute(selecter, [f"tables.{table}", 2, 0]).fetchone()
-        if rec:
-            return Knowl(rec[0], data=dict(zip(fields, rec)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        L = self._safe_execute(selecter, [f"tables.{table}", 2, 0])
+        if L:
+            return Knowl(L[0][0], data=dict(zip(fields, L[0])))
 
     def set_table_description(self, table, description):
         uid = db.login()
@@ -397,14 +556,14 @@ class KnowlBackend(PostgresBase):
 
     def review(self, knowl, who, set_beta=False):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
-        self._execute(updator, [0 if set_beta else 1, who, datetime.utcnow(), knowl.id, knowl.timestamp])
+        self._execute(updator, [0 if set_beta else 1, who, utc_now_naive(), knowl.id, knowl.timestamp])
 
     def _set_referrers(self, knowls):
         kids = [k.id for k in knowls]
         selecter = SQL("SELECT id, links FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links && %s")
-        cur = self._execute(selecter, [0, -2, kids])
+        L = self._safe_execute(selecter, [0, -2, kids])
         referrers = {k.id: [] for k in knowls}
-        for refid, links in cur:
+        for refid, links in L:
             for kid in links:
                 if kid in referrers:
                     referrers[kid].append(refid)
@@ -415,18 +574,18 @@ class KnowlBackend(PostgresBase):
                     for D in self.code_references(k)]
 
     def needs_review(self, days):
-        now = datetime.utcnow()
+        now = utc_now_naive()
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND (type = 1 OR type = -1) ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        cur = self._execute(selecter, [time, 0])
-        knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in cur]
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type >= -1 AND type <= 1 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        L = self._safe_execute(selecter, [time, 0])
+        knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L]
 
         kids = [k.id for k in knowls]
         selecter = SQL("SELECT DISTINCT ON (id) id, content FROM kwl_knowls WHERE status = 1 AND id = ANY(%s) ORDER BY id, timestamp DESC")
-        cur = self._execute(selecter, [kids])
-        reviewed = {rec[0]:rec[1] for rec in cur}
+        L = self._safe_execute(selecter, [kids])
+        reviewed = {rec[0]:rec[1] for rec in L}
 
         for k in knowls:
             k.reviewed_content = reviewed.get(k.id)
@@ -439,7 +598,7 @@ class KnowlBackend(PostgresBase):
             SQL(", ").join(SQL("a.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(SQL("b.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(map(Identifier, fields)))
-        data = list(self._execute(selecter))
+        data = self._safe_execute(selecter)
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in data]
         for knowl, rec in zip(knowls, data):
             D = dict(zip(fields, rec[len(fields):]))
@@ -470,20 +629,20 @@ class KnowlBackend(PostgresBase):
             if not beta:
                 # Have to make sure we do display references where the most recent positively reviewed knowl does reference this, but the most recent beta does not.
                 selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
-                cur = self._execute(selecter, values)
-                good_ids = [rec[0] for rec in cur]
+                L = self._safe_execute(selecter, values)
+                good_ids = [rec[0] for rec in L]
                 # Have to make sure that we don't display knowls as referencing this one when the most recent positively reviewed knowl doesn't but the most recent beta knowl does.
                 selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE NOT (links @> %s)")
-                cur = self._execute(selecter, values)
-                bad_ids = [rec[0] for rec in cur]
+                L = self._safe_execute(selecter, values)
+                bad_ids = [rec[0] for rec in L]
             # We also need new knowls that have never been reviewed
             selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
-        cur = self._execute(selecter, values)
+        L = self._safe_execute(selecter, values)
         if not beta and not old:
-            new_ids = [rec[0] for rec in cur if rec[0] not in bad_ids]
+            new_ids = [rec[0] for rec in L if rec[0] not in bad_ids]
             return sorted(set(new_ids + good_ids))
         else:
-            return [rec[0] for rec in cur]
+            return [rec[0] for rec in L]
 
     def orphans(self, old=False, beta=None):
         """
@@ -505,10 +664,10 @@ class KnowlBackend(PostgresBase):
         # Find references in the codebase
         filter_from_matches(link_finder_re.pattern)
         selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
-        cur = self._execute(selecter, [0])
+        L = self._safe_execute(selecter, [0])
         categories = {}
         titles = {}
-        for rec in cur:
+        for rec in L:
             categories[rec[0]] = rec[2]
             titles[rec[0]] = rec[3]
             for link in rec[1]:
@@ -523,7 +682,7 @@ class KnowlBackend(PostgresBase):
             by_category[categories[kid]].append((titles[kid], kid))
         for cat in by_category:
             L = sorted(by_category[cat])
-            by_category[cat] = [kid for (title, kid) in L]
+            by_category[cat] = [kid for title, kid in L]
         return by_category
 
     @staticmethod
@@ -571,11 +730,8 @@ class KnowlBackend(PostgresBase):
         matches = []
         for kid in kids:
             try:
-                if sys.version_info[0] == 3:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
-                else:
-                    matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))]).split('\n--\n'))
-            except subprocess.CalledProcessError: # no matches
+                matches.extend(subprocess.check_output(['git', 'grep', '--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.'))],encoding='utf-8').split('\n--\n'))
+            except subprocess.CalledProcessError:  # no matches
                 pass
         return [self._process_git_grep(match) for match in matches]
 
@@ -589,11 +745,8 @@ class KnowlBackend(PostgresBase):
         - -1 if the knowl is referenced but cannot be safely replaced.
         """
         try:
-            if sys.version_info[0] == 3:
-                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
-            else:
-                matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))]).split('\n')
-        except subprocess.CalledProcessError: # no matches
+            matches = subprocess.check_output(['git', 'grep', """['"]%s['"]""" % (knowlid.replace('.',r'\.'))],encoding='utf-8').split('\n')
+        except subprocess.CalledProcessError:  # no matches
             return 0
 
         easy_matches = subprocess.check_output(['git', 'grep', knowlid.replace('.',r'\.')],encoding='utf-8').split('\n')
@@ -618,7 +771,7 @@ class KnowlBackend(PostgresBase):
         old_name = knowl.id
         with DelayCommit(self):
             self._execute(updater, [old_name, new_name, old_name, knowl.timestamp])
-            new_knowl = knowl.copy(ID=new_name, timestamp=datetime.utcnow(), source=knowl.id)
+            new_knowl = knowl.copy(ID=new_name, timestamp=utc_now_naive(), source=knowl.id)
             new_knowl.save(who, most_recent=knowl, minor=True)
 
     def undo_rename(self, knowl):
@@ -660,7 +813,7 @@ class KnowlBackend(PostgresBase):
 
     def rename_hyphens(self, execute=False):
         selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE id LIKE %s")
-        bad_names = [rec[0] for rec in db._execute(selecter, ['%-%'])]
+        bad_names = [rec[0] for rec in db._safe_execute(selecter, ['%-%'])]
         if execute:
             for kid in bad_names:
                 new_kid = kid.replace('-', '_')
@@ -679,7 +832,7 @@ class KnowlBackend(PostgresBase):
         """
         selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0")
         results = defaultdict(list)
-        for kid, link in self._execute(selecter):
+        for kid, link in self._safe_execute(selecter):
             results[kid].append(link)
         return [(kid, results[kid]) for kid in sorted(results)]
 
@@ -694,10 +847,7 @@ class KnowlBackend(PostgresBase):
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
         """
         all_kids = {k['id'] for k in self.get_all_knowls(['id'])}
-        if sys.version_info[0] == 3:
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
-        else:
-            matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern]).split('\n--\n')
+        matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern],encoding='utf-8').split('\n--\n')
         results = []
         for match in matches:
             lines = match.split('\n')
@@ -723,20 +873,20 @@ class KnowlBackend(PostgresBase):
         if there has been a lock in the last @delta_min minutes, returns a dictionary with the name of the user who obtained a lock and the time it was obtained; else None.
         attention, it discards all locks prior to @delta_min!
         """
-        now = datetime.utcnow()
+        now = utc_now_naive()
         tdelta = timedelta(minutes=delta_min)
         time = now - tdelta
         selecter = SQL("SELECT username, timestamp FROM kwl_locks WHERE id = %s AND timestamp >= %s LIMIT 1")
-        cur = self._execute(selecter, (knowlid, time))
-        if cur.rowcount > 0:
-            return dict(zip(["username", "timestamp"], cur.fetchone()))
+        L = self._safe_execute(selecter, (knowlid, time))
+        if L:
+            return dict(zip(["username", "timestamp"], L[0]))
 
     def set_locked(self, knowl, username):
         """
         when a knowl is edited, a lock is created. username is the user id.
         """
         inserter = SQL("INSERT INTO kwl_locks (id, timestamp, username) VALUES (%s, %s, %s)")
-        now = datetime.utcnow()
+        now = utc_now_naive()
         self._execute(inserter, [knowl.id, now, username])
 
     def knowl_title(self, kid):
@@ -761,8 +911,8 @@ class KnowlBackend(PostgresBase):
         Returns a dictionary giving the count of (not deleted) knowls within each category.
         """
         selecter = SQL("SELECT cat, COUNT(*) FROM (SELECT DISTINCT ON (id) cat FROM kwl_knowls WHERE type = %s AND status >= 0) knowls GROUP BY cat")
-        cur = self._execute(selecter, [0])
-        return {res[0]: res[1] for res in cur}
+        L = self._safe_execute(selecter, [0])
+        return {res[0]: res[1] for res in L}
 
     def remove_author(self, kid, uid):
         """
@@ -778,6 +928,114 @@ def knowl_title(kid):
 
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
+
+# knowl IDs are restricted by these regexes
+allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_annotation_id = re.compile(r"^[a-zA-Z0-9._\-~]+$")  # all unreserved URL characters
+
+def bad_knowl_id_reason(ID):
+    """
+    Check whether a string is a valid id for a new knowl.
+
+    Unlike ``lmfdb.knowledge.main.allowed_id`` (which is built on this function),
+    this does not require a Flask request context, so it can be used from
+    scripts such as ``yaml_import``.
+
+    INPUT:
+
+    - ``ID`` -- a string, the proposed id for a knowl
+
+    OUTPUT:
+
+    ``None`` if the id is valid; otherwise a pair ``(errmsg, args)`` that can be
+    passed to ``flash_error(errmsg, *args)`` or formatted as ``errmsg % args``.
+    """
+    if ID.endswith('comment'):
+        main_knowl = ".".join(ID.split(".")[:-2])
+        if not knowldb.knowl_exists(main_knowl):
+            return ("Knowl '%s' does not exist, so it cannot be commented on", (main_knowl,))
+    elif ID.endswith('top') or ID.endswith('bottom') or ID.startswith("columns."):
+        if not allowed_annotation_id.match(ID):
+            label = '.'.join(ID.split(".")[1:-1])
+            return ("Label '%s' contains characters not allowed by knowl database; update allowed_id function or change label scheme", (label,))
+    elif not allowed_knowl_id.match(ID):
+        return ("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""", (ID,))
+    return None
+
+def external_definition_link(site, xid):
+    if xid.count("@") == 1:
+        xid, fragment = xid.split("@")
+    else:
+        fragment = None
+    # If you add options here, you also need to update the knowl lmfdb.external_definitions
+    if site == "arxiv":
+        # example xid="1809.10195"
+        return f"https://arxiv.org/abs/{xid}", f"arXiv:{xid}", fragment
+    if site == "doi":
+        # example xid="10.2140/obs.2019.2.393"
+        return f"https://doi.org/{xid}", xid, fragment
+    if site == "groupprops":
+        # example xid="Alternating_group"
+        return f"https://groupprops.subwiki.org/wiki/{xid}", "groupprops:" + xid, fragment
+    if site == "href":
+        # href contains both the link and text for displaying
+        if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
+            raise ValueError("Improperly formatted href")
+        url, disp = xid[1:-1].split("}{")
+        return url.strip(), disp, fragment
+    if site == "mathlib":
+        # example xid="NumberTheory/ModularForms/Basic.html#UpperHalfPlane.J"
+        if "#" in xid:
+            disp = "mathlib:" + xid.split("#")[-1]
+        else:
+            disp = "mathlib:" + xid
+        return f"https://leanprover-community.github.io/mathlib4_docs/Mathlib/{xid}", disp, fragment
+    if site == "mathworld":
+        # example xid=HeckeOperator
+        return f"https://mathworld.wolfram.com/{xid}.html", "mathworld:" + xid, fragment
+    if site == "mr":
+        # example xid="0439848"
+        return f"https://www.ams.org/mathscinet-getitem?mr={xid}", "MR:" + xid, fragment
+    if site == "nlab":
+        # example xid="number field"
+        return f"https://ncatlab.org/nlab/show/{xid}", "nlab:" + xid, fragment
+    if site == "stacks":
+        # example xid="020C"
+        return f"https://stacks.math.columbia.edu/tag/{xid}", "stacks:" + xid, fragment
+    if site == "wikidata":
+        # example xid="Q83478"
+        return f"https://www.wikidata.org/wiki/{xid}", "wikidata:" + xid, fragment
+    if site == "wikipedia":
+        # example xid="Group_(mathematics)"
+        return f"https://en.wikipedia.org/wiki/{xid}", "wiki:" + xid, fragment
+    if site == "zbl":
+        # example="0339.14028"
+        return f"https://zbmath.org/?q={xid}", "zbl:" + xid, fragment
+    raise ValueError("Unknown external site")
+
+def knowl_definition(title,
+                     clarification_kid=None,
+                     kwargs={}):
+    from lmfdb.utils.web_display import display_knowl
+    if clarification_kid is None:
+        if not kwargs:
+            return f"<strong>{title}</strong>"
+        if len(kwargs) == 1:
+            try:
+                site, xid = list(kwargs.items())[0]
+                url, disp, fragment = external_definition_link(site, xid)
+                link = f'<a href="{url}"><strong>{title}</strong></a>'
+                if fragment:
+                    link += f" ({fragment})"
+                return link
+            except ValueError:
+                pass
+        return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
+    else:
+        return display_knowl(clarification_kid, title, strong=True)
+
 
 @cached_function
 def knowl_url_prefix():
@@ -829,7 +1087,7 @@ class Knowl():
         # Because category is different from cat, the category will be recomputed when copying knowls.
         self.category = data.get('cat', extract_cat(ID))
         self._last_author = data.get('last_author', data.get('_last_author', ''))
-        self.timestamp = data.get('timestamp', datetime.utcnow())
+        self.timestamp = ensure_naive_utc(data.get('timestamp', utc_now_naive()))
         self.ms_timestamp = datetime_to_timestamp_in_ms(self.timestamp)
         self.links = data.get('links', [])
         self.defines = data.get('defines', [])
@@ -856,8 +1114,6 @@ class Knowl():
                 self.coltype = None
                 if pieces[1] not in db.tablenames:
                     self.title += " (DEFUNCT)"
-        #self.reviewer = data.get('reviewer') # Not returned by get_knowl by default
-        #self.review_timestamp = data.get('review_timestamp') # Not returned by get_knowl by default
 
         if showing:
             self.comments = knowldb.get_comments(ID)
@@ -873,7 +1129,7 @@ class Knowl():
             if reviewed_data and reviewed_data['status'] == 1:
                 self.reviewed_content = reviewed_data['content']
                 self.reviewed_title = reviewed_data['title']
-                self.reviewed_timestamp = reviewed_data['timestamp']
+                self.reviewed_timestamp = ensure_naive_utc(reviewed_data['timestamp'])
         if editing:
             self.all_defines = {k:v for k,v in knowldb.all_defines.items() if len(k) > 3 and k not in common_words and ID not in v}
 
@@ -883,7 +1139,7 @@ class Knowl():
             self.most_recent = not self.edit_history or self.edit_history[-1]['timestamp'] == self.timestamp
             #if not self.edit_history:
             #    # New knowl.  This block should be edited according to the desired behavior for diffs
-            #    self.edit_history = [{"timestamp":datetime.utcnow(),
+            #    self.edit_history = [{"timestamp":datetime.now(UTC),
             #                          "last_author":"__nobody__",
             #                          "content":"",
             #                          "status":0}]
@@ -908,8 +1164,6 @@ class Knowl():
             Currently only used when renaming a knowl.
         - ``minor`` -- if True, don't add the current user to the list of authors.
         """
-        if most_recent is not None:
-            most_recent = {'authors':most_recent.authors}
         knowldb.save(self, who, most_recent=most_recent, minor=minor)
 
     def delete(self):

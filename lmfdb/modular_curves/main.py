@@ -9,6 +9,7 @@ from sage.all import ZZ
 
 from lmfdb.utils import (
     SearchArray,
+    EmbeddedSearchArray,
     TextBox,
     TextBoxWithSelect,
     SelectBox,
@@ -20,6 +21,7 @@ from lmfdb.utils import (
     display_knowl,
     flash_error,
     search_wrap,
+    embed_wrap,
     to_dict,
     parse_ints,
     parse_noop,
@@ -54,6 +56,7 @@ from lmfdb.modular_curves.web_curve import (
     formatted_dims, url_for_EC_label, url_for_ECNF_label, showj_nf, combined_data,
     learnmore_list, LABEL_RE, ISO_CLASS_RE
 )
+from lmfdb.modular_curves.family import ModCurveFamily
 from lmfdb.modular_curves.upload import ModularCurveUploader
 from lmfdb.modular_curves.isog_class import ModCurveIsog_class
 
@@ -151,6 +154,7 @@ def by_label(label):
     return render_template(
         "modcurve.html",
         curve=curve,
+        code=curve.code,
         dojs=dojs,
         zip=zip,
         name_to_latex=name_to_latex,
@@ -342,7 +346,7 @@ modcurve_columns = SearchColumns(
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", default=False),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", short_title="j-points", default=False),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
@@ -350,7 +354,7 @@ modcurve_columns = SearchColumns(
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "X2", "Xpm2", "Xarith", "any"]:
+    if inp not in ["X0", "X1", "Xpm1", "X", "Xsp", "Xspplus", "Xns", "Xnsplus", "XS4", "Xarith1", "Xarithpm1", "Xsym", "Xarith", "any"]:
         raise ValueError
     inp = inp.replace("plus", "+")
     if inp == "any":
@@ -361,15 +365,17 @@ def parse_family(inp, query, qfield):
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)"]}]}
     elif inp == "Xsp": #add X(1),X(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
-    elif inp == "X2": # X_1(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
-    elif inp == "Xpm2": # X_{\pm1}(2,2n); add X(2)
-        query[qfield] = {"$or":[{"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
+    elif inp == "Xarith1": # X_{arith,1}(m,mn); add X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%,%"}, {"$like": "X1(2,%"}, {"$in":["X(2)"]}]}
+    elif inp == "Xarithpm1": # X_{\pm1}(2,2n); add X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%,%"}, {"$like": "Xpm1(2,%"}, {"$in":["X(2)"]}]}
     elif inp == "Xpm1": # Add X(1) and X0(N) for N=2,3,4,6
         query[qfield] = {"$or":[{"$like": "Xpm1(%", "$not": {"$like": "%,%"}}, {"$in": ["X(1)", "X0(2)", "X0(3)", "X0(4)", "X0(6)"]}]}
     elif inp == "X1":
         query[qfield] = {"$or":[{"$like": "X1(%", "$not": {"$like": "%,%"}}, {"$in":["X(1)", "X0(2)"]}]}
     elif inp == "Xarith": # add X(1), X(2)
+        query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
+    elif inp == "Xarith":
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X(2)"]}]}
     else: #add X(1),X0(2)
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(1)","X0(2)"]}]}
@@ -668,6 +674,9 @@ def modcurve_Gassmann_text_download():
     columns=modcurve_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modcurve_label,
+    diagram_opts={"x_axis_default": "level",
+                  "y_axis_default": "index",
+                  "color_default": "genus"},
 )
 def modcurve_search(info, query):
     parse_ints(info, query, "level")
@@ -743,7 +752,13 @@ def modcurve_search(info, query):
             raise ValueError(msg % info["covered_by"])
         query["label"] = {"$in": parents}
 
+modcurve_sorts = [
+    ("", "level", ["level", "index", "genus", "label"]),
+    ("index", "index", ["index", "level", "genus", "label"]),
+    ("genus", "genus", ["genus", "level", "index", "label"]),
+    ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
 
+]
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
     jump_example = "13.78.3.a.1"
@@ -922,8 +937,8 @@ class ModCurveSearchArray(SearchArray):
                      ("X1", "X1(N)"),
                      ("Xpm1", "X±1(N)"),
                      ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "X±1(2,2N)"),
+                     ("Xarith1", "Xarith1(M,MN)"),
+                     ("Xarithpm1", "Xarith±1(M,MN)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),
@@ -964,13 +979,8 @@ class ModCurveSearchArray(SearchArray):
             [CPlabel],
         ]
 
-    _default = ["level", "index", "genus", "coarse_class_num", "coarse_level", "coarse_num", "fine_num"]
-    sorts = [
-        ("", "level", _default),
-        ("index", "index", ["index", "level"] + _default[2:]),
-        ("genus", "genus", ["genus"] + _default[:2] + _default[3:]),
-        ("rank", "rank", ["rank", "genus"] + _default[:2] + _default[3:]),
-    ]
+    sorts = modcurve_sorts
+
     null_column_explanations = {
         'simple': False,
         'squarefree': False,
@@ -978,6 +988,37 @@ class ModCurveSearchArray(SearchArray):
         'genus_minus_rank': False,
         'name': False,
     }
+
+class FamilySearchArray(EmbeddedSearchArray):
+    sorts = modcurve_sorts
+
+@modcurve_page.route("/Q/family/<name>")
+def family_page(name):
+    info = to_dict(request.args, search_array=FamilySearchArray(), name=name)
+    try:
+        info["family"] = family = ModCurveFamily(name)
+    except ValueError:
+        flash_error(f"There is no family with name {name}")
+        return redirect(url_for(".index_Q"))
+    info["title"] = family.title
+    info["bread"] = family.bread
+   # info["properties"] = family.properties
+    return render_family(info)
+
+@embed_wrap(
+    table=db.gps_gl2zhat_fine,
+    template="modcurve_family.html",
+    err_title="Modular curve family error",
+    columns=modcurve_columns,
+    learnmore=learnmore_list,
+    # Each of the following arguments is set here so that it overridden when constructing template_kwds,
+    # which prioritizes values found in info (which are set in family_page() before calling render_family)
+    bread=lambda:None,
+    properties=lambda:None,
+    family=lambda:None,
+)
+def render_family(info, query):
+    parse_family(info, query, 'name')
 
 @modcurve_page.route("/Q/low_degree_points")
 def low_degree_points():
@@ -1059,6 +1100,7 @@ class RatPointSearchArray(SearchArray):
              ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
              ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
              ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"])]
+
     def __init__(self):
         curve = TextBox(
             name="curve",
@@ -1130,8 +1172,8 @@ class RatPointSearchArray(SearchArray):
                      ("X1", "X1(N)"),
                      ("Xpm1", "Xpm1(N)"),
                      ("X", "X(N)"),
-                     ("X2", "X1(2,2N)"),
-                     ("Xpm2", "Xpm1(2,2N)"),
+                     ("Xarith1", "Xarith1(M,MN)"),
+                     ("Xarithpm1", "Xarith±1(M,MN)"),
                      ("Xsp", "Xsp(N)"),
                      ("Xns", "Xns(N)"),
                      ("Xspplus", "Xsp+(N)"),

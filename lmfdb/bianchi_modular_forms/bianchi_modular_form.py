@@ -8,7 +8,7 @@ from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
-    teXify_pol, search_wrap, Downloader)
+    teXify_pol, search_wrap, Downloader, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
@@ -64,13 +64,19 @@ def index():
     """
     info = to_dict(request.args, search_array=BMFSearchArray(), stats=BianchiStats())
     if not request.args:
-        gl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_fields = ["2.0.{}.1".format(d) for d in [4,8,3,20,7,11,19,43,67,163]]
-        gl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]#,31,35,39,43,47,51,53,55,59,67,71,79,83,87,91,95,163]]
-        sl2_names = [r"\(\Q(\sqrt{-%s})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
+        gl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,24,7,40,11,52,56,15,68,19,84,88,23]]
+        gl2_forms_max = "2.0.2491.1"
+        gl2_forms_max_name = r"\(\Q(\sqrt{-2491})\)"
+        gl2_dims_max = "2.0.2495.1"
+        gl2_dims_max_name = r"\(\Q(\sqrt{-2495})\)"
+        sl2_fields = [f"2.0.{d}.1" for d in [4,8,3,20,7,11,19,43,67,163]]
+        gl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,6,7,10,11,13,14,15,17,19,21,22,23]]
+        sl2_names = [r"\(\Q(\sqrt{-{%s}})\)" % d for d in [1,2,3,5,7,11,19,43,67,163]]
         info['gl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
         info['sl2_field_list'] = [{'url':url_for("bmf.render_bmf_field_dim_table_sl2", field_label=f), 'name':n} for f,n in zip(sl2_fields,sl2_names)]
         info['field_forms'] = [{'url':url_for("bmf.index", field_label=f), 'name':n} for f,n in zip(gl2_fields,gl2_names)]
+        info['last_field_forms'] = {'url':url_for("bmf.index", field_label=gl2_forms_max), 'name':gl2_forms_max_name}
+        info['last_field_dims'] = {'url':url_for("bmf.render_bmf_field_dim_table_gl2", field_label=gl2_dims_max), 'name':gl2_dims_max_name}
 
         t = 'Bianchi modular forms'
         bread = get_bread()
@@ -80,12 +86,13 @@ def index():
         return bianchi_modular_form_search(info)
 
 @bmf_page.route("/random")
+@redirect_no_cache
 def random_bmf():    # Random Bianchi modular form
     res = db.bmf_forms.random(projection=['field_label', 'level_label', 'label_suffix'])
-    return redirect(url_for(".render_bmf_webpage",
+    return url_for(".render_bmf_webpage",
                     field_label=res['field_label'],
                     level_label=res['level_label'],
-                    label_suffix=res['label_suffix']), 307)
+                    label_suffix=res['label_suffix'])
 
 @bmf_page.route("/interesting")
 def interesting():
@@ -128,6 +135,14 @@ def url_for_label(label):
                    )))
 
 bmf_columns = SearchColumns([
+    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
+                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
+                          url_for("bmf.render_bmf_webpage",
+                                  field_label=fld,
+                                  level_label=lvl,
+                                  label_suffix=suff),
+                          short),
+                      download_col="short_label"),
     ProcessedCol("field_label", "nf", "Base field",
                  lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MultiProcessedCol("level", "mf.bianchi.level", "Level", ["field_label", "level_label"],
@@ -137,14 +152,6 @@ bmf_columns = SearchColumns([
                                   level_label=lvl),
                           lvl),
                       download_col="level_label"),
-    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
-                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
-                          url_for("bmf.render_bmf_webpage",
-                                  field_label=fld,
-                                  level_label=lvl,
-                                  label_suffix=suff),
-                          short),
-                      download_col="short_label"),
     # See Issue #4170
     #MathCol("dimension", "mf.bianchi.newform", "Dimension"),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
@@ -410,7 +417,7 @@ def download_bmf_magma(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -452,7 +459,7 @@ def download_bmf_magma(**args):
     outstr += 'for i in [1..#heckeEigenvaluesList] do\n    heckeEigenvalues[primes[i]] := heckeEigenvaluesList[i];\nend for;\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += '\nALEigenvalues := AssociativeArray();\n'
         for s in AL_eigs:
             outstr += 'ALEigenvalues[ideal<ZF | {}>] := {};\n'.format(set(s[0]), s[1])
@@ -540,7 +547,7 @@ def download_bmf_sage(**args):
     except ValueError:
         return "Bianchi newform not found"
 
-    hecke_pol  = f.hecke_poly_obj
+    hecke_pol = f.hecke_poly_obj
     hecke_eigs = f.hecke_eigs
 
     F = WebNumberField(f.field_label)
@@ -580,10 +587,10 @@ def download_bmf_sage(**args):
     outstr += 'for i in range(len(hecke_eigenvalues_array)):\n    hecke_eigenvalues[primes[i]] = hecke_eigenvalues_array[i]\n\n'
 
     if f.have_AL:
-        AL_eigs    = f.AL_table_data
+        AL_eigs = f.AL_table_data
         outstr += 'AL_eigenvalues = {}\n'
         for s in AL_eigs:
-            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0],s[1])
+            outstr += 'AL_eigenvalues[ZF.ideal(%s)] = %s\n' % (s[0], s[1])
     else:
         outstr += 'AL_eigenvalues ="not known"\n'
 
@@ -699,6 +706,7 @@ class BMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
+    has_diagram = False
 
     def __init__(self):
         field = TextBox(

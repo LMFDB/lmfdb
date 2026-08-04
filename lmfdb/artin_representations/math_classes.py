@@ -179,8 +179,8 @@ class ArtinRepresentation():
                 return " " + str(p) + " "
             else:
                 return " " + str(p) + "^{" + str(exponent) + "}"
-        tmp = r" \cdot ".join(power_prime(p, val) for (p, val) in self.factored_conductor())
-        return tmp
+
+        return r" \cdot ".join(power_prime(p, val) for p, val in self.factored_conductor())
 
     def num_ramps(self):
         return self._data["NumBadPrimes"]
@@ -424,7 +424,7 @@ class ArtinRepresentation():
         return self._data['GaloisLabel']
 
     def group(self):
-        n, t = [int(z) for z in self._data['GaloisLabel'].split("T")]
+        n, t = (int(z) for z in self._data['GaloisLabel'].split("T"))
         return group_display_short(n, t)
 
     def pretty_galois_knowl(self):

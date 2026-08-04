@@ -5,46 +5,90 @@ on:
 jobs:
   autopep8:
     runs-on: ubuntu-latest
+    env:
+      # Error codes organized following https://pep8.readthedocs.io/en/latest/intro.html#error-codes
+      # 
+      # E1 - Indentation
+      # E111 - Fix indentation to be a multiple of four.
+      # E115 - Fix expected indented block (comment).
+      # 
+      # E2 - Whitespace  
+      # E211 - Remove extraneous whitespace before '('.
+      # E222 - Fix multiple spaces after operator.
+      # E225 - Fix missing whitespace around operator.
+      # E241 - Fix extraneous whitespace around keywords.
+      # E242 - Remove extraneous whitespace around operator.
+      # E251 - Remove whitespace around parameter '=' sign.
+      # E252 - Missing whitespace around parameter equals.
+      # E27 - Fix extraneous whitespace around keywords.
+      # 
+      # E3 - Blank line
+      # E303 - Remove extra blank lines.
+      # E304 - Remove blank line following function decorator.
+      # E306 - Expected 1 blank line before a nested definition.
+      # 
+      # E4 - Import
+      # E401 - Put imports on separate lines.
+      # 
+      # E5 - Line length
+      # E502 - Remove extraneous escape of newline.
+      # 
+      # E7 - Statement
+      # E70 - Put semicolon-separated compound statement on separate lines.
+      # E701 - Put colon-separated compound statement on separate lines.
+      # E702 - Put semicolon-separated compound statement on separate lines.
+      # E711 - Fix comparison with None.
+      # E712 - Fix comparison with boolean.
+      # E713 - Use 'not in' for test for membership.
+      # E714 - Use 'is not' test for object identity.
+      # E721 - Use "isinstance()" instead of comparing types directly.
+      # E731 - Use a def when use do not assign a lambda expression.
+      # 
+      # W2 - Whitespace warning
+      # W291 - Remove trailing whitespace.
+      # W292 - Add a single newline at the end of the file.
+      # W293 - Remove trailing whitespace on blank line.
+      # 
+      # W3 - Blank line warning
+      # W391 - Remove trailing blank lines.
+      # 
+      # W5 - Line break warning
+      # W504 - Fix line break after binary operator.
+      # 
+      # W6 - Deprecation warning
+      # W601 - Use "in" rather than "has_key()".
+      # W602 - Fix deprecated form of raising exception.
+      # W603 - Use "!=" instead of "<>"
+      # W604 - Use "repr()" instead of backticks.
+      # W605 - Fix invalid escape sequence 'x'.
+      # W690 - Fix various deprecated code (via lib2to3).
+      AUTOPEP8_CODES: |
+        E111,E115,
+        E211,E222,E225,E241,E242,E251,E252,E27,
+        E303,E304,E306,
+        E401,
+        E502,
+        E70,E701,E702,E711,E712,E713,E714,E721,E731,
+        W291,W292,W293,
+        W391,
+        W504,
+        W601,W602,W603,W604,W605,W690
     steps:
       - uses: actions/checkout@v2
         id: checkout
+      - name: Process autopep8 codes
+        id: process_codes
+        run: |
+          # Convert multiline codes to single line, removing newlines and extra spaces
+          PROCESSED_CODES=$(echo "$AUTOPEP8_CODES" | tr -d '\n' | tr -s ' ' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+          echo "AUTOPEP8_SELECT=$PROCESSED_CODES" >> $GITHUB_ENV
+          echo "Processed codes: $PROCESSED_CODES"
       - name: autopep8
         uses: peter-evans/autopep8@v1
         if: ${{ github.repository }} == 'LMFDB/lmfdb'
         with:
-          # see generate_autopep8codes.py
-          # E241 - Fix extraneous whitespace around keywords.
-          # E242 - Remove extraneous whitespace around operator.
-          # E251 - Remove whitespace around parameter '=' sign.
-          # E252 - Missing whitespace around parameter equals.
-          # E27 -  Fix extraneous whitespace around keywords.
-          # E266 - Fix too many leading '#' for block comments.
-          # W291 - Remove trailing whitespace.
-          # W292 - Add a single newline at the end of the file.
-          # W293 - Remove trailing whitespace on blank line.
-          # E303 - Remove extra blank lines.
-          # E304 - Remove blank line following function decorator.
-          # E306 - Expected 1 blank line before a nested definition.
-          # W391 - Remove trailing blank lines.
-          # E401 - Put imports on separate lines.
-          # E502 - Remove extraneous escape of newline.
-          # W504 - Fix line break after binary operator.
-          # W601 - Use "in" rather than "has_key()".
-          # W602 - Fix deprecated form of raising exception.
-          # W603 - Use "!=" instead of "<>"
-          # W604 - Use "repr()" instead of backticks.
-          # W605 - Fix invalid escape sequence 'x'.
-          # W690 - Fix various deprecated code (via lib2to3).
-          # E70 -  Put semicolon-separated compound statement on separate lines.
-          # E701 - Put colon-separated compound statement on separate lines.
-          # E711 - Fix comparison with None.
-          # E712 - Fix comparison with boolean.
-          # E713 - Use 'not in' for test for membership.
-          # E714 - Use 'is not' test for object identity.
-          # E721 - Use "isinstance()" instead of comparing types directly.
-          # E722 - Fix bare except.
-          # E731 - Use a def when use do not assign a lambda expression.
-          args: --recursive --in-place --aggressive --select=E241,E242,E251,E252,E266,E27,W291,W292,W293,E303,E304,E306,W391,E401,E502,W504,W601,W602,W603,W604,W605,W690,E70,E701,E711,E712,E713,E714,E721,E722,E731 lmfdb/
+          # Args using processed environment variable
+          args: --recursive --in-place --aggressive --select=${{ env.AUTOPEP8_SELECT }} lmfdb/
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3

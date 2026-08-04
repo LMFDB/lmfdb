@@ -697,7 +697,7 @@ def mu_data(n):
     if rec['component_group'] is None:
         rec['component_group'] = 'ab/%s' % n
     else:
-        rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+        rec['component_group_number'] = rec['component_group'].split('.')[1]
     rec['st0_label'] = '0.1.A'
     rec['identity_component'] = 'SO(1)'
     rec['trace_zero_density'] = '0'
@@ -754,7 +754,7 @@ def su2_mu_data(w, n):
     if rec['component_group'] is None:
         rec['component_group'] = 'ab/%s' % n
     else:
-        rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+        rec['component_group_number'] = rec['component_group'].split('.')[1] # not necessarily an integer (e.g. for cyclic groups outside GAP ID range)
     rec['st0_label'] = '%d.2.A' % w
     rec['identity_component'] = 'SU(2)'
     rec['trace_zero_density'] = '0'
@@ -808,7 +808,7 @@ def nu1_mu_data(w,n):
     rec['component_group'] = '4.2' if n == 2 else db.gps_special_names.lucky({'family':'D','parameters':{'n':n}},projection='label')
     if rec['component_group'] is None:
         return None
-    rec['component_group_number'] = int(rec['component_group'].split('.')[1])
+    rec['component_group_number'] = rec['component_group'].split('.')[1] # not necessarily an integer (e.g. for groups outside GAP ID range)
     rec['st0_label'] = '%d.2.B' % w
     rec['identity_component'] = 'U(1)'
     rec['trace_zero_density'] = '1/2'
@@ -859,7 +859,7 @@ def render_by_label(label):
     data, in_database = st_lookup(label)
     info = {}
     if data is None:
-        flash_error ("%s is not the label of a Sato-Tate group currently in the database.", label)
+        flash_error("%s is not the label of a Sato-Tate group currently in the database.", label)
         return redirect(url_for(".index"))
     for attr in ['label','weight','degree','name','pretty','real_dimension','components']:
         info[attr] = data[attr]
@@ -868,7 +868,7 @@ def render_by_label(label):
     info['rational'] = boolean_name(info.get('rational',True))
     st0 = db.gps_st0.lucky({'name':data['identity_component']})
     if not st0:
-        flash_error ("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
+        flash_error("%s is not the label of a Sato-Tate identity component currently in the database.", data['identity_component'])
         return redirect(url_for(".index"))
     info['symplectic_form'] = st0.get('symplectic_form')
     info['hodge_circle'] = st0.get('hodge_circle')
@@ -877,15 +877,17 @@ def render_by_label(label):
     info['st0_description'] = st0['description']
     if data['component_group'][:2] == "ab":
         info['component_group'] = r"C_{%s}" % info['components']
+        info['component_group_knowl'] = r"$C_{%s}$" % info['components']
         info['cyclic'] = boolean_name(True)
         info['abelian'] = boolean_name(True)
         info['solvable'] = boolean_name(True)
     else:
         G = db.gps_groups.lookup(data['component_group'])
         if not G:
-            flash_error ("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
+            flash_error("%s is not the label of a Sato-Tate component group currently in the database.", data['component_group'])
             return redirect(url_for(".index"))
         info['component_group'] = G['tex_name']
+        info['component_group_knowl'] = abstract_group_display_knowl(r"%s" % data['component_group'])
         info['cyclic'] = boolean_name(G['cyclic'])
         info['abelian'] = boolean_name(G['abelian'])
         info['solvable'] = boolean_name(G['solvable'])
@@ -1073,6 +1075,7 @@ class STSearchArray(SearchArray):
         'supgroup_multiplicities': False,
         'component_group_number': False,
     }
+    has_diagram = False
 
     def __init__(self):
         weight = TextBox(

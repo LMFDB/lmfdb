@@ -67,9 +67,9 @@ class EllCurveTest(LmfdbTest):
         Check that the code download links work
         """
         L = self.tc.get('/EllipticCurve/2.0.4.1/5525.5/b/9')
-        assert 'Code to Magma' in L.get_data(as_text=True)
-        assert 'Code to SageMath' in L.get_data(as_text=True)
-        assert 'Code to PariGP' in L.get_data(as_text=True)
+        assert 'Magma commands' in L.get_data(as_text=True)
+        assert 'SageMath commands' in L.get_data(as_text=True)
+        assert 'PariGP commands' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/magma')
         assert 'Magma code for working with elliptic curve 2.2.89.1-81.1-a1' in L.get_data(as_text=True)
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/sage')
@@ -100,6 +100,10 @@ class EllCurveTest(LmfdbTest):
         assert '729.1-CMb1' in t and '1024.1-a1' in t and '73.1-a1' not in t
         L = self.tc.get('/EllipticCurve/?field=2.0.11.1&jinv=~-52893159101157376/11')
         assert '11.1-a1' not in L.get_data(as_text=True)
+        # Test regulator search
+        L = self.tc.get('/EllipticCurve/?regulator=8.4-9.1')
+        t = L.get_data(as_text=True)
+        assert '14763.2-b4' in t and '73.1-a1' not in t
 
     def test_browse(self):
         r"""

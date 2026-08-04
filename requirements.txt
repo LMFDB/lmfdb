@@ -4,13 +4,17 @@ flask
 flask-cache
 flask-login
 flask-markdown
-markupsafe==2.0.1
+markupsafe
 itsdangerous
-psycopg2-binary
-git+https://github.com/roed314/psycodict.git
+# the pgbinary extra installs the driver psycodict itself is built on.  We track
+# released versions rather than a git branch, so that what an install gets doesn't
+# depend on the day it was run; the upper bound is psycodict's next major version,
+# where its versioning policy allows breaking changes.
+psycodict[pgbinary]>=1.0.0rc1,<2
 pyflakes
 pytest
 pytest-cov
 pytest-xdist
 pyyaml
+svg.py
 timeout_decorator

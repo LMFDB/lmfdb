@@ -155,7 +155,14 @@ hmf_columns = SearchColumns([
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             properties=lambda: [])
+             properties=lambda: [],
+             diagram_opts={
+                 "title": "Hilbert modular form diagram search",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "x_axis_default": "level_norm",
+                 "y_axis_default": "dimension",
+                 "color_default": "disc",
+             })
 def hilbert_modular_form_search(info, query):
     parse_nf_string(info,query,'field_label',name="Field")
     parse_ints(info,query,'deg', name='Field degree')
@@ -213,9 +220,9 @@ def download_hmf_magma(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    hecke_pol  = f['hecke_polynomial']
+    hecke_pol = f['hecke_polynomial']
     hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    AL_eigs    = f['AL_eigenvalues']
+    AL_eigs = f['AL_eigenvalues']
 
     outstr = '/*\n  This code can be loaded, or copied and pasted, into Magma.\n'
     outstr += '  It will load the data associated to the HMF, including\n'
@@ -231,7 +238,7 @@ def download_hmf_magma(**args):
     outstr += 'g := P!' + str(F.coeffs()) + ';\n'
     outstr += 'F<w> := NumberField(g);\n'
     outstr += 'ZF := Integers(F);\n\n'
-#    outstr += 'ideals_str := [' + ','.join([st for st in F_hmf["ideals"]]) + '];\n'
+#    outstr += 'ideals_str := [' + ','.join(st for st in F_hmf["ideals"]) + '];\n'
 #    outstr += 'ideals := [ideal<ZF | {F!x : x in I}> : I in ideals_str];\n\n'
 
     outstr += 'NN := ideal<ZF | {' + f["level_ideal"][1:-1] + '}>;\n\n'
@@ -326,17 +333,17 @@ def download_hmf_sage(**args):
     if f is None:
         return "No such form"
 
-    hecke_pol  = f['hecke_polynomial']
+    hecke_pol = f['hecke_polynomial']
     hecke_eigs = [str(eig) for eig in f['hecke_eigenvalues']]
-    AL_eigs    = f['AL_eigenvalues']
+    AL_eigs = f['AL_eigenvalues']
 
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    outstr = '"""\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
     outstr += '  It will load the data associated to the HMF, including\n'
     outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
-    outstr += '*/\n\n'
+    outstr += '"""\n\n'
 
     outstr += 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'
@@ -446,10 +453,10 @@ def render_hmf_webpage(**args):
         numeigs = 20
     info['numeigs'] = numeigs
 
-    hecke_pol  = data['hecke_polynomial']
-    eigs       = [str(eig) for eig in data['hecke_eigenvalues']]
+    hecke_pol = data['hecke_polynomial']
+    eigs = [str(eig) for eig in data['hecke_eigenvalues']]
     eigs = eigs[:min(len(eigs), numeigs)]
-    AL_eigs    = data['AL_eigenvalues']
+    AL_eigs = data['AL_eigenvalues']
 
     primes = hmf_field['primes']
     n = min(len(eigs), len(primes))

@@ -395,8 +395,8 @@ def pack(rdata, R0, rmax):
     # If there are few enough circles, we space them out around the annulus with uniform gaps
     # We approximate the intersections as happening at radius R0+rmax, then check that this doesn't cause problems
     rdata = sorted(rdata, key=lambda pair: (-pair[1].valuation(2), -pair[1].valuation(3), pair[1], -pair[0]))
-    #print("Packing", R0, rmax, rdata)
-    radii = [r for (r, o) in rdata]
+    # print("Packing", R0, rmax, rdata)
+    radii = [r for r, o in rdata]
     Rc = R0 + rmax
     thetasum = sum(2*r / Rc for r in radii)
     if thetasum < 2*pi:
@@ -406,7 +406,7 @@ def pack(rdata, R0, rmax):
             thetas.append(thetas[i] + (radii[i] + radii[i+1])/Rc + thetaspace)
         pos = [(Rc * theta.cos(), Rc * theta.sin()) for theta in thetas]
         if all(distxy(pos[i], pos[(i+1) % len(pos)]) >= radii[i] + radii[(i+1) % len(pos)] for i in range(len(pos))):
-            return [(x, y, r, get_color(o)) for ((r, o), (x, y)) in zip(rdata, pos)], R0 + 2*rmax
+            return [(x, y, r, get_color(o)) for (r, o), (x, y) in zip(rdata, pos)], R0 + 2*rmax
     area = sum(r**2 for r in radii) # actually area/pi
     density = 0.86
     segments = []
@@ -555,7 +555,7 @@ def arrange_rings(radii, colors, R0, rmax):
         for r, cnt in sorted(radii.items(), reverse=True):
             thetaneeded = (1 - 2*r**2 / Rc**2).arccos()
             rcolors = Counter(colors[r])
-            #orderlist = [o for (o, ocnt) in sorted(orders.items(), reverse=True) for j in range(ocnt)]
+            #orderlist = [o for o, ocnt in sorted(orders.items(), reverse=True) for j in range(ocnt)]
             while thetaneeded * cnt > thetaleft:
                 this_ring = (thetaleft / thetaneeded).floor()
                 if this_ring > 0:
@@ -601,15 +601,15 @@ def arrange_rings(radii, colors, R0, rmax):
             utilization += 0.1
 
 def arrange(rdata, R0, rmax):
-    radii = Counter([r for (r, o) in rdata])
+    radii = Counter([r for r, o in rdata])
     colors = {r: Counter() for r in radii}
-    for (r, o) in rdata:
+    for r, o in rdata:
         colors[r][get_color(o)] += 1
     circles, R1 = arrange_ring(radii, colors, R0, rmax)
     if circles:
         return circles, R1
-    #rmin = min(radii)
-    if True: #rmax < 3 * rmin:
+    # rmin = min(radii)
+    if True:  # rmax < 3 * rmin:
         # the circles are close to the same size.  We divide them up into concentric rings greedily
         return arrange_rings(radii, colors, R0, rmax)
     # Fall back for now; look at 310.4 for an example
@@ -627,16 +627,16 @@ def find_packing(ccdata):
     - a real number `R` so that all circles will be contained within the box [-R, R] x [-R, R]
     """
     by_pcount = defaultdict(list)
-    for (n, o) in ccdata:
+    for n, o in ccdata:
         n, o = ZZ(n), ZZ(o)
         if o != 1:
-            by_pcount[sum(e for (p, e) in o.factor())].append((get_radius(n), o))
+            by_pcount[sum(e for p, e in o.factor())].append((get_radius(n), o))
     r0 = R = get_radius(1)
     circles = [(RR(0), RR(0), r0, get_color(ZZ(1)))]
     for pcnt in sorted(by_pcount):
         # Add a gap between annuli
         annulus = by_pcount[pcnt]
-        r1 = max(r for (r, o) in annulus)
+        r1 = max(r for r, o in annulus)
         R += max(r0, r1)
         r0 = r1
         new_circles, R = arrange(annulus, R, r0)
@@ -645,5 +645,5 @@ def find_packing(ccdata):
     if R > 10000000:
         scale = RR(10000000) / R
         R = RR(10000000)
-        circles = [(x*scale, y*scale, rad*scale, (r, g, b)) for (x, y, rad, (r, g, b)) in circles]
+        circles = [(x*scale, y*scale, rad*scale, (r, g, b)) for x, y, rad, (r, g, b) in circles]
     return circles, R

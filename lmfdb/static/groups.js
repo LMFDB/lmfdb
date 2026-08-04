@@ -159,18 +159,6 @@ function getpositions() {
 }
 
 var styles=['subgroup_diagram', 'subgroup_profile', 'subgroup_autdiagram', 'subgroup_autprofile', 'normal_diagram', 'normal_profile', 'normal_autdiagram', 'normal_autprofile'];
-function button_on(who) {
-  $('button.'+who).css('background', '{{color.lf_an_button_bkg}}');
-  $('button.'+who).css('border', '2px solid {{color.lf_an_button_brd}}');
-}
-function other_buttons_off(keep) {
-  for (var i = 0; i < styles.length; i++) {
-    if(styles[i] != keep) {
-      $('button.'+styles[i]).css('background', '{{color.lf_ar_button_bkg}}');
-      $('button.'+styles[i]).css('border', '1px solid {{color.lf_ar_button_brd}}');
-    }
-  }
-}
 var mode_pairs = [['subgroup', 'normal'], ['', 'aut'], ['diagram', 'profile']];
 function select_subgroup_mode(mode) {
   var cls, thismode, opposite_mode, piece;

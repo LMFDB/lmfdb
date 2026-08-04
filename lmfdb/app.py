@@ -20,7 +20,7 @@ from sage.env import SAGE_VERSION
 from sage.all import cached_function
 # acknowledgment page, reads info from CONTRIBUTORS.yaml
 
-from .logger import logger_file_handler, critical
+from .logger import critical
 from .homepage import load_boxes, contribs
 
 LMFDB_VERSION = "LMFDB Release 1.2.1"
@@ -80,8 +80,6 @@ def is_running():
 ############################
 
 
-app.logger.addHandler(logger_file_handler())
-
 # If the debug toolbar is installed then use it
 if app.debug:
     try:
@@ -131,7 +129,8 @@ def ctx_proc_userdata():
     # overwrite this variable when you want to customize it
     # For example, [ ('Bread', '.'), ('Crumb', '.'), ('Hierarchy', '.')]
     vars['bread'] = None
-
+    from lmfdb.utils import CodeSnippet
+    vars['CodeSnippet'] = CodeSnippet
     # default title
     vars['title'] = r'LMFDB'
 
@@ -359,6 +358,23 @@ def index():
 def about():
     return render_template("about.html", title="About the LMFDB")
 
+@app.route("/rcs")
+def top_rcs():
+    t = "Source, reliability, and completeness"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="rcs", title=t, bread=bread)
+
+@app.route("/announcements")
+def announcements():
+    t = "Announcements"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.announcements", title=t, bread=bread)
+
+@app.route("/ongoing")
+def ongoing():
+    t = "Ongoing projects"
+    bread = [(t, " ")]
+    return render_template("single.html", kid="content.ongoing", title=t, bread=bread)
 
 @app.route("/health")
 @app.route("/alive")
@@ -367,7 +383,7 @@ def alive():
     a basic health check
     """
     from . import db
-    if db.is_alive():
+    if (getattr(db, "_is_alive", None) or db.is_alive)():
         return "LMFDB!"
     else:
         abort(503)
@@ -379,7 +395,7 @@ def statshealth():
     a health check on the stats pages
     """
     from . import db
-    if db.is_alive():
+    if (getattr(db, "_is_alive", None) or db.is_alive)():
         tc = app.test_client()
         for url in ['/NumberField/stats',
                     '/ModularForm/GL2/Q/holomorphic/stats',
@@ -403,14 +419,13 @@ def statshealth():
     else:
         abort(503)
 
-
 @app.route("/info")
 def info():
     output = ""
     output += "HOSTNAME = %s\n\n" % gethostname()
     output += "# PostgreSQL info\n"
     from . import db
-    if not db.is_alive():
+    if not (getattr(db, "_is_alive", None) or db.is_alive)():
         output += "db is offline\n"
     else:
         conn_str = "%s" % db.conn
@@ -455,71 +470,7 @@ def search():
 def modular_forms():
     t = 'Modular forms'
     b = [(t, url_for('modular_forms'))]
-    # lm = [('History of modular forms', '/ModularForm/history')]
-    return render_template('single.html', title=t, kid='mf.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/ModularForm/history")
-
-
-def modular_forms_history():
-    t = 'Modular forms'
-    b = [(t, url_for('modular_forms'))]
-    b.append(('History', url_for("modular_forms_history")))
-    return render_template(_single_knowl, title="A brief history of modular forms", kid='mf.gl2.history', body_class=_bc, bread=b)
-
-
-@app.route('/Variety')
-@app.route('/Variety/')
-def varieties():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    # lm = [('History of varieties', '/Variety/history')]
-    return render_template('single.html', title=t, kid='varieties.about', bread=b)  # , learnmore=lm)
-
-# @app.route("/Variety/history")
-
-
-def varieties_history():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    b.append(('History', url_for("varieties_history")))
-    return render_template(_single_knowl, title="A brief history of varieties", kid='ag.variety.history', body_class=_bc, bread=b)
-
-
-@app.route('/Field')
-@app.route('/Field/')
-def fields():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    # lm = [('History of fields', '/Field/history')]
-    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Field/history")
-
-
-def fields_history():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    b.append(('History', url_for("fields_history")))
-    return render_template(_single_knowl, title="A brief history of fields", kid='field.history', body_class=_bc, bread=b)
-
-
-@app.route('/Representation')
-@app.route('/Representation/')
-def representations():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    # lm = [('History of representations', '/Representation/history')]
-    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Representation/history")
-
-
-def representations_history():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    b.append(('History', url_for("representations_history")))
-    return render_template(_single_knowl, title="A brief history of representations", kid='repn.history', body_class=_bc, bread=b)
+    return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
 @app.route('/Motive')
@@ -527,35 +478,13 @@ def representations_history():
 def motives():
     t = 'Motives'
     b = [(t, url_for('motives'))]
-    # lm = [('History of motives', '/Motives/history')]
-    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Motives/history")
+    return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)
 
 
-def motives_history():
-    t = 'Motives'
-    b = [(t, url_for('motives'))]
-    b.append(('History', url_for("motives_history")))
-    return render_template(_single_knowl, title="A brief history of motives", kid='motives.history', body_class=_bc, bread=b)
-
-
-@app.route('/Group')
-@app.route('/Group/')
-def groups():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    # lm = [('History of groups', '/Group/history')]
-    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)  # , learnmore=lm)
-
-# @app.route("/Group/history")
-
-
-def groups_history():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    b.append(('History', url_for("groups_history")))
-    return render_template(_single_knowl, title="A brief history of groups", kid='group.history', body_class=_bc, bread=b)
+@app.route('/datasets')
+@app.route('/datasets/')
+def datasets():
+    return render_template('datasets.html', title='Auxiliary datasets', bread=[("Datasets", " ")])
 
 
 @app.route("/editorial-board")
@@ -572,6 +501,12 @@ def citation():
     t = "Citing the LMFDB"
     b = [(t, url_for("citation"))]
     return render_template('citation.html', title=t, body_class='', bread=b)
+
+@app.route("/license")
+def license():
+    t = "LMFDB Data and Code Licenses"
+    b = [("LMFDB Licenses", " ")]
+    return render_template('license.html', title=t, bread=b)
 
 
 @app.route("/contact")
@@ -661,17 +596,54 @@ def css():
 def not_yet_implemented():
     return render_template("not_yet_implemented.html", title="Not Yet Implemented")
 
-# the checklist is used for human testing on a high-level, supplements test.sh
 
+@app.route("/CodeCoverage")
+def code_coverage():
+    import glob
+    import yaml
+    lmfdb_dir = os.path.dirname(os.path.abspath(__file__))
+    yaml_files = sorted(glob.glob(os.path.join(lmfdb_dir, "**/code*.yaml"), recursive=True))
+    metadata_keys = {'prompt', 'logo', 'comment', 'not-implemented', 'frontmatter', 'snippet_test', 'top_matter'}
+    cas_display = {"pari": "Pari/GP", "sage": "SageMath", "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}
+    all_cas = set()
+    modules = []
+    for yf in yaml_files:
+        with open(yf) as f:
+            data = yaml.safe_load(f)
+        if not data:
+            continue
+        cas_list = list(data.get('prompt', {}).keys())
+        all_cas.update(cas_list)
+        sections = {k: v for k, v in data.items() if k not in metadata_keys and isinstance(v, dict)}
+        total = len(sections)
+        per_cas = {}
+        for cas in cas_list:
+            per_cas[cas] = sum(1 for s in sections.values() if cas in s)
+        rel = os.path.relpath(yf, lmfdb_dir)
+        module_name = rel.split(os.sep)[0].replace('_', ' ').capitalize()
+        basename = os.path.basename(yf)
+        if basename != 'code.yaml':
+            suffix = basename.replace('code-', '').replace('code', '').replace('.yaml', '')
+            module_name += f' ({suffix})'
+        modules.append({'name': module_name, 'file': rel, 'total': total, 'per_cas': per_cas, 'cas_list': cas_list})
+    cas_order = [c for c in ['sage', 'pari', 'magma', 'oscar', 'gap'] if c in all_cas]
+    totals = {}
+    grand_total = 0
+    for cas in cas_order:
+        count = sum(m['per_cas'].get(cas, 0) for m in modules if cas in m['cas_list'])
+        applicable = sum(m['total'] for m in modules if cas in m['cas_list'])
+        totals[cas] = (count, applicable)
+    grand_total = sum(m['total'] for m in modules)
+    bread = [("Code Coverage", '')]
+    return render_template("code_coverage.html",
+                           title="Code Snippet Coverage",
+                           bread=bread,
+                           modules=modules,
+                           cas_order=cas_order,
+                           cas_display=cas_display,
+                           totals=totals,
+                           grand_total=grand_total)
 
-@app.route("/checklist-list")
-def checklist_list():
-    return render_template("checklist.html", body_class="checklist")
-
-
-@app.route("/checklist")
-def checklist():
-    return render_template("checklist-fs.html")
 
 ##############################
 #         Intro pages        #
@@ -681,7 +653,7 @@ def checklist():
 # common base class and bread
 _bc = 'intro'
 def intro_bread():
-    return [('Intro', url_for("introduction"))]
+    return [('Overview', url_for("introduction"))]
 
 
 # template displaying just one single knowl as an KNOWL_INC
@@ -691,7 +663,7 @@ _single_knowl = 'single.html'
 @app.route("/intro")
 def introduction():
     b = intro_bread()
-    return render_template(_single_knowl, title="Introduction", kid='intro', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="Overview", kid='intro', body_class=_bc, bread=b)
 
 
 @app.route("/intro/features")
@@ -772,16 +744,19 @@ def sitemap():
 def WhiteListedRoutes():
     return [
         'ArtinRepresentation',
+        'Belyi',
         'Character/Dirichlet',
         'Character/calc-gauss/Dirichlet',
         'Character/calc-jacobi/Dirichlet',
         'Character/calc-kloosterman/Dirichlet',
         'Character/calc-value/Dirichlet',
+        'datasets',
         'EllipticCurve',
         'Field',
         'GaloisGroup',
         'Genus2Curve/Q',
         'Group/foo', # allows /Group but not /Groups/*
+        'Groups/Abstract',
         'HigherGenus/C/Aut',
         'L/Completeness',
         'L/CuspForms',
@@ -793,7 +768,6 @@ def WhiteListedRoutes():
         'L/contents',
         'L/degree',
         'L/download',
-        'L/history',
         'L/interesting',
         'L/lhash',
         'L/rational',
@@ -813,7 +787,6 @@ def WhiteListedRoutes():
         'acknowledgment',
         'alive',
         'api',
-        #'api2',
         'bigpicture',
         'callback_ajax',
         'citation',
@@ -833,6 +806,7 @@ def WhiteListedRoutes():
         'news',
         'not_yet_implemented',
         'random',
+        'rcs',
         'robots.txt',
         'search',
         'sitemap',

@@ -3,36 +3,21 @@ title: A database
 image: families
 content: <p>The LMFDB is a database of mathematical objects arising in number theory and arithmetic geometry that illustrates some of the mathematical connections predicted by the Langlands program.</p>
   <p>Click a heading on the left to browse, or <a href="/random">go to a random page</a>.</p>
-control: 1
-links:
-  - [ 0,0 ]
 ---
 title: Announcements
-content: <p>The first <a href="https://icerm.brown.edu/events/sc-23-lucant/">LuCaNT</a> conference took place July 10-14, 2023 at <a href="https://icerm.brown.edu">ICERM</a>. Thanks to everyone who attended! Conference proceedings will be published soon.</p>
-  <p>Check out the recently updated <a href="/Groups/Abstract/">abstract groups</a> database [beta].</p>
-  <p>Check out the new <a href="/ModularCurve/Q/">modular curves</a> database [beta].</p>
 image: announcements
-control: 0
-links:
-  - [ 0,0 ]
 ---
 title: Learn more
 image: smalluniverse
-content: <p>Information is available regarding the <a href="/knowledge/show/rcs">source, reliability, and completeness</a> of the database.</p>
+content: <p>Information is available regarding the <a href="/rcs">source, reliability, and completeness</a> of the database.</p>
   <p><a href="/knowledge/show/doc.knowl">Knowls</a> provide explanations when you need them.</p><p><a href="/intro">Overview</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/universe">LMFDB universe</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/knowledge/">Knowledge</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/api/">Data</a></p>
-control: 0
-links:
-  - [ 0,0 ]
 ---
 title: Citations and acknowledgments
 image: citations
 content: <ul>
     <li><a href="/citation">How to cite the LMFDB</a></li>
-    <li><a href="https://github.com/LMFDB/lmfdb">Source code repository</li>
-    <li><a href="/management">Editorial board</li>
-    <li><a href="/acknowledgment">Acknowledgments</li>
+    <li><a href="https://github.com/LMFDB/lmfdb">Source code repository</a></li>
+    <li><a href="/management">Editorial board</a></li>
+    <li><a href="/acknowledgment">Acknowledgments</a> and <a href="/acknowledgment/activities">activities</a></li>
   </ul>
-control: 0
-links:
-  - [ 0,0 ]
 ...

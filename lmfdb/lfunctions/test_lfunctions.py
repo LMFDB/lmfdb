@@ -1,4 +1,6 @@
 
+import json
+
 from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
 
@@ -10,6 +12,22 @@ class LfunctionTest(LmfdbTest):
     #------------------------------------------------------
     # Testing at least one example of each type of L-function page
     #------------------------------------------------------
+
+    def test_dirichlet_coefficients_stop_before_unknown_euler_factor(self):
+        response = self.tc.get('/L/4/5e5/1.1/c1e2/0/0')
+        assert response.status_code == 200
+        page = response.get_data(as_text=True)
+        assert '81<sup>-s</sup>' in page
+        assert '101<sup>-s</sup>' not in page
+
+    def test_download_dirichlet_coefficients_stop_before_unknown_euler_factor(self):
+        response = self.tc.get('/L/download_dirichlet_coeff/4-5e5-1.1-c1e2-0-0')
+        assert response.status_code == 200
+        body = response.get_data(as_text=True)
+        an = json.loads(body[body.index('{'):])['an']
+        # 25 stored Euler factors (primes up to 97); to match the display bound and avoid the
+        # bogus a_101 (unknown Euler factor would default to 1), the download stops at a_100.
+        assert len(an) == 100
 
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects=True)
@@ -94,9 +112,9 @@ class LfunctionTest(LmfdbTest):
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
         assert '4-176e2-1.1-c1e2-0-4' in L.get_data(as_text=True)
 
-        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.0.1/a/', follow_redirects=True)
+        L = self.tc.get('/L/EllipticCurve/2.0.1879.1/1.1/a/', follow_redirects=True)
         #assert '/SatoTateGroup/1.2.' in L.get_data(as_text=True)
-        assert 'Elliptic curve 2.0.1879.1-1.0.1-a' in L.get_data(as_text=True)
+        assert 'Elliptic curve 2.0.1879.1-1.1-a' in L.get_data(as_text=True)
         assert '4-1879e2-1.1-c1e2-0-0' in L.get_data(as_text=True)
 
         L = self.tc.get('/L/EllipticCurve/2.0.4.1/100.2/a/', follow_redirects=True)
@@ -586,6 +604,15 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/SymmetricPower/2/EllipticCurve/Q/27/a/')
         assert 'not in the database' in L.get_data(as_text=True)
+
+    # ------------------------------------------------------
+    # Testing congruences in search
+    # ------------------------------------------------------
+
+    def test_trace_search_mod_q(self):
+        L = self.tc.get('L/rational?conductor=37&degree=2&search_type=Traces&an_constraints=a11+%3D1&an_modulo=3&view_modp=reductions')
+        assert '2-37-1.1-c1-0-1' in L.get_data(as_text=True)
+        assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
 
     # ------------------------------------------------------
     # Testing units not tested above

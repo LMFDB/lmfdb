@@ -34,7 +34,6 @@ from sage.all import (
     is_prime,
     lazy_attribute,
     log,
-    next_prime,
     nth_prime,
     primes_first_n,
     prime_pi,
@@ -64,7 +63,7 @@ from lmfdb.sato_tate_groups.main import st_link_by_name
 from lmfdb.artin_representations.math_classes import ArtinRepresentation
 import lmfdb.hypergm.hodge
 from .Lfunction_base import Lfunction
-from lmfdb.lfunctions import logger
+from lmfdb.logger import logger
 from .Lfunctionutilities import (
     string2number,
     compute_local_roots_SMF2_scalar_valued,)
@@ -262,7 +261,8 @@ def makeLfromdata(L):
         L.dirichlet_coefficients_arithmetic = data['dirichlet_coefficients']
     elif data.get('euler_factors', None) is not None:
         # ask for more, in case many are zero
-        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, 2*L.degree*L.numcoeff)
+        upperbound = min(2*L.degree*L.numcoeff, nth_prime(len(L.localfactors) + 1) - 1)
+        L.dirichlet_coefficients_arithmetic = an_from_data(L.localfactors, upperbound)
 
         # get rid of extra coeff
         count = 0
@@ -388,7 +388,7 @@ def apply_coeff_info(L, coeff_info):
                     res = -I, -I
             else:
                 # an = e^(2 pi i an_power_int / this_base_power_int)
-                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int)  + r"}\right)$"
+                arithmetic = r" $e\left(\frac{" + str(an_power_int) + "}{" + str(this_base_power_int) + r"}\right)$"
                 #exp(2*pi*I*QQ(an_power_int)/ZZ(this_base_power_int)).n()
                 analytic = (2*CBF(an_power_int)/this_base_power_int).exppii()
                 # round half integers
@@ -497,7 +497,7 @@ class Lfunction_from_db(Lfunction):
         _, conductor, character, cr, imag, index = self.label.split('-')
         spectral_label = cr + '-' + imag
         degree = self.degree
-        conductor  = conductor.replace('e', '^')
+        conductor = conductor.replace('e', '^')
         bread = [('L-functions', url_for('.index'))]
         if self.rational:
             bread.append(('Rational', url_for('.rational')))
@@ -596,10 +596,11 @@ class Lfunction_from_db(Lfunction):
 
     def download_euler_factors(self):
         filename = self.label
-        data  = {}
+        data = {}
         data['bad_lfactors'] = self.bad_lfactors
         ps = primes_first_n(len(self.localfactors))
-        data['first_lfactors'] = [ [ps[i], l] for i, l in enumerate(self.localfactors)]
+        data['first_lfactors'] = [[ps[i], l]
+                                  for i, l in enumerate(self.localfactors)]
         return Downloader()._wrap(Json.dumps(data),
                                   filename + '.euler_factors',
                                   lang='text',
@@ -621,7 +622,10 @@ class Lfunction_from_db(Lfunction):
     def download_dirichlet_coeff(self):
         filename = self.label
         data = {}
-        data['an'] = an_from_data(self.localfactors, next_prime(nth_prime(len(self.localfactors)+1)) - 1)
+        # Only a_1..a_{q-1} are determined by the stored Euler factors, where q
+        # is the first prime without one (an unknown a_p would wrongly default to
+        # 1). Same bound as the displayed coefficients in makeLfromdata.
+        data['an'] = an_from_data(self.localfactors, nth_prime(len(self.localfactors) + 1) - 1)
         return Downloader()._wrap(
                 Json.dumps(data),
                 filename + '.dir_coeffs',
@@ -717,10 +721,10 @@ class Lfunction_Maass(Lfunction):
 
         # Check for compulsory arguments
         if self.fromDB:
-            validate_required_args ('Unable to construct L-function of Maass form.',
+            validate_required_args('Unable to construct L-function of Maass form.',
                                     args, 'group', 'level', 'char', 'R', 'ap_id')
         else:
-            validate_required_args ('Unable to construct L-function of Maass form.',
+            validate_required_args('Unable to construct L-function of Maass form.',
                                     args, 'maass_id')
 
         self._Ltype = "maass"
@@ -847,9 +851,9 @@ class Lfunction_HMF(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Hilbert modular form '
+        validate_required_args('Unable to construct Hilbert modular form '
                                 + 'L-function.', args, 'label', 'number', 'character')
-        validate_integer_args ('Unable to construct Hilbert modular form L-function.',
+        validate_integer_args('Unable to construct Hilbert modular form L-function.',
                                args, 'character','number')
 
         self._Ltype = "hilbertmodularform"
@@ -916,14 +920,14 @@ class Lfunction_HMF(Lfunction):
         self.numcoeff = PP  # The number of coefficients is given by the
                             # norm of the last prime
 
-        Fhmfprimes = [st.replace(' ','') for st in F_hmf['primes']]
+        Fhmfprimes = [st.replace(' ', '') for st in F_hmf['primes']]
 
-        ppmidNN = [c[0].replace(' ','') for c in f['AL_eigenvalues']]
+        ppmidNN = [c[0].replace(' ', '') for c in f['AL_eigenvalues']]
 
         ratl_primes = [p for p in range(primes[-1][0] + 1) if is_prime(p)]
         RCC = CC['T']
-        (T,) = RCC._first_ngens(1)
-        heckepols = [RCC(1) for p in ratl_primes]
+        T = RCC.gen()
+        heckepols = [RCC.one() for p in ratl_primes]
         for l in range(len(hecke_eigenvalues)):
             if Fhmfprimes[l] in ppmidNN:
                 heckepols[ratl_primes.index(primes[l][1])] *= (
@@ -1122,7 +1126,7 @@ class DedekindZeta(Lfunction):
         constructor_logger(self, args)
 
         # Check for compulsory arguments
-        validate_required_args ('Unable to construct Dedekind zeta function.', args, 'label')
+        validate_required_args('Unable to construct Dedekind zeta function.', args, 'label')
         self._Ltype = "dedekindzeta"
 
         # Put the arguments into the object dictionary
@@ -1431,7 +1435,7 @@ class SymmetricPowerLfunction(Lfunction):
         validate_required_args('Unable to construct symmetric power L-function.',
                                args, 'power', 'underlying_type', 'field',
                                'conductor', 'isogeny')
-        validate_integer_args ('The power has to be an integer.',
+        validate_integer_args('The power has to be an integer.',
                                args, 'power', 'conductor')
         self._Ltype = "SymmetricPower"
 

@@ -139,9 +139,6 @@ def TraceHashClass(iso, E):
     For curves over number fields the iso label should include the
     field label.
     """
-    global TH_dict
-    if iso in TH_dict:
-        return TH_dict[iso]
-    else:
-        th = TH_dict[iso] = TraceHash(E)
-        return th
+    if iso not in TH_dict:
+        TH_dict[iso] = TraceHash(E)
+    return TH_dict[iso]

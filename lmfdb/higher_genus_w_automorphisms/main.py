@@ -8,7 +8,6 @@ import re
 from io import BytesIO
 import yaml
 
-from lmfdb.logger import make_logger
 from flask import render_template, request, url_for, redirect, send_file, abort
 from sage.all import Permutation
 
@@ -25,9 +24,9 @@ from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page
 from lmfdb.higher_genus_w_automorphisms.hgcwa_stats import HGCWAstats
+from lmfdb.logger import logger
 from collections import defaultdict
 
-logger = make_logger("hgcwa")
 
 #Parsing group order
 LIST_RE = re.compile(r'^(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\))))(,(\d+|(\d*-(\d+)?)|((\d*)\**(g((\+|\-)(\d*))*|\(g(\+|\-)(\d+)\)))))*$')
@@ -155,7 +154,7 @@ def decjac_format(decjac_list):
             entry = entry + "^{" + str(ints[1]) + "}"
         entries.append(entry)
     latex = "\\times ".join(entries)
-    ccClasses = cc_display ([ints[2] for ints in decjac_list])
+    ccClasses = cc_display([ints[2] for ints in decjac_list])
     return latex, ccClasses
 
 # Turn 'i.j' in the total label in to cc displayed in mongo
@@ -292,7 +291,7 @@ def expr_error(err):
     return err_msg
 
 def expr_getc():
-    global cur_expr, cur_index
+    global cur_index
     while cur_index < len(cur_expr):
         result = cur_expr[cur_index]
         cur_index += 1
@@ -545,15 +544,15 @@ def parse_range2_extend(arg, key, parse_singleton=int, parse_endpoint=None, inst
                             group_order = int(a)*g-b
                     elif a == '':
                         group_order = g
-                    else: #ag
+                    else:  # ag
                         group_order = int(a)*g
 
                 queries.append((group_order, g))
 
-            if instance == 1: #If there is only one linear function
-                return ['$or', [{key: gp_ord, 'genus': g} for (gp_ord,g) in queries]]
+            if instance == 1:  # If there is only one linear function
+                return ['$or', [{key: gp_ord, 'genus': g} for gp_ord, g in queries]]
             else:
-                return [[key, gp_ord, g] for (gp_ord,g) in queries] #Nested list
+                return [[key, gp_ord, g] for gp_ord, g in queries]  # Nested list
 
         else:
             raise ValueError("It needs to be an integer (such as 25), \
@@ -1147,25 +1146,27 @@ def hgcwa_code_download(**args):
     import time
     label = args['label']
 
-    #Choose language
-    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or args['download_type'] == 'rep_magma':
-        lang = 'magma'
-    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' or args['download_type'] == 'rep_gap':
-        lang = 'gap'
-    else:
-        lang = args['download_type']
+    # download_type -> (filename prefix, language)
+    DownloadPrefix = {
+        'gap': ('HigherGenusData_', 'gap'),
+        'magma': ('HigherGenusData_', 'magma'),
+        'topo_gap': ('HigherGenusDataTopolRep_', 'gap'),
+        'topo_magma': ('HigherGenusDataTopolRep_', 'magma'),
+        'braid_gap': ('HigherGenusDataBraidRep_', 'gap'),
+        'braid_magma': ('HigherGenusDataBraidRep_', 'magma'),
+        'rep_gap': ('HigherGenusDataTopolClass_', 'gap'),
+        'rep_magma': ('HigherGenusDataTopolClass_', 'magma'),
+    }
+
+    # Choose language and file prefix from the download type
+    download_type = args['download_type']
+    if download_type not in DownloadPrefix:
+        return abort(404, "Unknown download type %s" % download_type)
+    prefix, lang = DownloadPrefix[download_type]
+    all_vectors = (lang == download_type)
 
     s = Comment[lang]
-
-    #Choose filename
-    if lang == args['download_type']:
-        filename = 'HigherGenusData_' + str(label) + FileSuffix[lang]
-    elif args['download_type'] == 'topo_magma' or args['download_type'] == 'topo_gap':
-        filename = 'HigherGenusDataTopolRep_' + str(label) + FileSuffix[lang]
-    elif args['download_type'] == 'braid_magma' or args['download_type'] == 'braid_gap':
-        filename = 'HigherGenusDataBraidRep_' + str(label) + FileSuffix[lang]
-    elif args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
-        filename = 'HigherGenusDataTopolClass_' + str(label) + FileSuffix[lang]
+    filename = prefix + str(label) + FileSuffix[lang]
 
     code = s + " " + Fullname[lang] + " code for the lmfdb family of higher genus curves " + str(label) + '\n'
     code += s + " The results are stored in a list of records called 'data'\n\n"
@@ -1176,25 +1177,30 @@ def hgcwa_code_download(**args):
         fam, cc_1, cc_2 = split_vector_label(label)
         cc_list = [int(cc_1), int(cc_2)]
         search_data = list(db.hgcwa_passports.search({"label": fam}))
-        data = [entry for entry in search_data if entry['topological'] == cc_list]
+        data = [entry for entry in search_data if entry.get('topological') == cc_list]
 
     elif label_is_one_passport(label):
         search_data = list(db.hgcwa_passports.search({"passport_label": label}))
-        if lang == args['download_type']:
+        if all_vectors:
             data = search_data
         else:
-            data = [entry for entry in search_data if entry['braid'] == entry['cc']]
+            data = [entry for entry in search_data if 'braid' in entry and entry['braid'] == entry['cc']]
 
     elif label_is_one_family(label):
         search_data = list(db.hgcwa_passports.search({"label": label}))
-        if lang == args['download_type']:
+        if all_vectors:
             data = search_data
         else:
-            data = [entry for entry in search_data if entry['topological'] == entry['cc']]
+            data = [entry for entry in search_data if 'topological' in entry and entry['topological'] == entry['cc']]
+
+    else:
+        return abort(404, "Invalid label %s" % label)
+
+    if not data:
+        return abort(404, "No data for label %s" % label)
 
     code += s + code_list['gp_comment'][lang] + '\n'
     code += code_list['group'][lang] + str(data[0]['group']) + ';\n'
-
     if lang == 'magma':
         code += code_list['group_construct'][lang] + '\n'
 
@@ -1219,13 +1225,15 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
 
-    # Add braid and topological tag for each entry
-    if lang == args['download_type'] and 'braid' in data[0]:
-        stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
-        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+    # Add braid and topological tag for each entry.
+    has_refinement_data = all('braid' in entry and 'topological' in entry for entry in data)
+    is_rep_download = download_type in ('rep_gap', 'rep_magma')
+    include_refinement_fields = has_refinement_data and (all_vectors or is_rep_download)
 
-    if args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
-        stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
+    if include_refinement_fields:
+        braid_value = '{braid}' if is_rep_download else '{braid[1]}'
+        stdfmt += code_list['braid_class'][lang] + braid_value + ';\n'
+        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
 
     # extended formatting template for when signH is present
     signHfmt = stdfmt
@@ -1245,9 +1253,7 @@ def hgcwa_code_download(**args):
     nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
 
     #Action for all vectors and action for just representatives
-    if lang == args['download_type'] or \
-        args['download_type'] == 'rep_magma' or \
-        args['download_type'] == 'rep_gap':
+    if include_refinement_fields:
         signHfmt += code_list['add_to_total_full_rep'][lang] + '\n'
         hypfmt += code_list['add_to_total_hyp_rep'][lang] + '\n'
         cyctrigfmt += code_list['add_to_total_cyc_trig_rep'][lang] + '\n'
@@ -1276,6 +1282,13 @@ class HGCWASearchArray(SearchArray):
     jump_egspan = "e.g. 2.12-4.0.2-2-2-3 or 3.168-42.0.2-3-7.2"
     jump_knowl = "curve.highergenus.aut.search_input"
     jump_prompt = "Label"
+    null_column_explanations = { # No need to display warnings for these
+        'hyperelliptic': False,
+        'cyclic_trigonal': False,
+        'full_label': False,
+        'full_auto': False,
+    }
+    has_diagram = False
 
     def __init__(self):
         genus = TextBox(

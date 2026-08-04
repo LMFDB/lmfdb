@@ -1,6 +1,5 @@
 import cmath
 import math
-import datetime
 import os
 import random
 import re
@@ -243,7 +242,7 @@ def coeff_to_poly(c, var=None):
             varposs = set(re.findall(r"[A-Za-z_]+", c))
             if len(varposs) == 1:
                 var = varposs.pop()
-            elif not(varposs):
+            elif not (varposs):
                 var = 'x'
             else:
                 raise ValueError("Polynomial must be univariate")
@@ -372,8 +371,9 @@ def str_to_CBF(s):
         if a:
             res += CBF(a)
         if b:
-            res  += sign * CBF(b) * CBF.gens()[0]
+            res += sign * CBF(b) * CBF.gens()[0]
         return res
+
 
 # Conversion from numbers to letters and back
 def letters2num(s):
@@ -385,6 +385,7 @@ def letters2num(s):
     for j in range(len(letters)):
         ssum = ssum*26+letters[j]
     return ssum
+
 
 def num2letters(n):
     r"""
@@ -572,24 +573,31 @@ def splitcoeff(coeff):
 #  display and formatting utilities
 ################################################################################
 
-def comma(x, sep=","):
+def comma(x, sep=None, mathmode=True):
     """
     Input is an integer. Output is a string of that integer with commas.
     CAUTION: this misbehaves if the input is not an integer.
 
     sep is an optional separator other than a comma
+    mathmode is a boolean which determines whether to include dollar signs
+    and place curly braces around the commas (set to True by default)
 
-    Example:
-    >>> comma("12345")
+    Examples:
+    >>> comma(12345)
+    '$12{,}345$'
+    >>> comma(12345, mathmode=False)
     '12,345'
     """
-    return x < 1000 and str(x) or ('%s%s%03d' % (comma(x // 1000, sep), sep, (x % 1000)))
+    if sep is None:
+        sep = "{,}" if mathmode else ","
+    if x < 1000:
+        x = str(x)
+    else:
+        x = '%s%s%03d' % (comma(x // 1000, sep, False), sep, (x % 1000))
+    if mathmode:
+        x = f"${x}$"
+    return x
 
-def latex_comma(x):
-    """
-    For latex we need to use braces around the commas to get the spacing right.
-    """
-    return comma(x).replace(",", "{,}")
 
 def format_percentage(num, denom):
     if denom == 0:
@@ -605,7 +613,7 @@ def signtocolour(sign):
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     g = int(255.0 * (math.cos((2.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)
     b = int(255.0 * (math.cos(argument / 2.0)) ** 2)
-    return("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
+    return ("rgb(" + str(r) + "," + str(g) + "," + str(b) + ")")
 
 
 def rgbtohex(rgb):
@@ -770,15 +778,28 @@ def debug():
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Error: " + errmsg), "error")
 
 def flash_warning(errmsg, *args):
     """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
-    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Warning: " + errmsg), "warning")
 
 def flash_info(errmsg, *args):
     """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
-    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Note: " + errmsg), "info")
+
+def flash_success(msg, *args):
+    """ flash information in green with args in black; msg may contain markup, including latex math mode"""
+    flash(Markup(msg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)), "success")
 
 
 ################################################################################
@@ -938,13 +959,6 @@ def encode_plot(P, pad=None, pad_inches=0.1, remove_axes=False, axes_pad=None, f
     buf = virtual_file.getbuffer()
     return "data:image/png;base64," + quote(b64encode(buf))
 
-# conversion tools between timestamp different kinds of timestamp
-epoch = datetime.datetime.utcfromtimestamp(0)
-def datetime_to_timestamp_in_ms(dt):
-    return int((dt - epoch).total_seconds() * 1000000)
-
-def timestamp_in_ms_to_datetime(ts):
-    return datetime.datetime.utcfromtimestamp(float(int(ts)/1000000.0))
 
 class WebObj:
     def __init__(self, label, data=None):

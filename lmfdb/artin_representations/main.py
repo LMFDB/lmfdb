@@ -25,7 +25,6 @@ from lmfdb.galois_groups.transitive_group import (
     group_pretty_and_nTj)
 
 from lmfdb.artin_representations import artin_representations_page
-#from lmfdb.artin_representations import artin_logger
 from lmfdb.artin_representations.math_classes import (
     ArtinRepresentation, num2letters, artin_label_pretty)
 
@@ -44,7 +43,7 @@ def cycle_string(lis):
 
 def get_bread(breads=[]):
     bc = [("Artin representations", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
@@ -245,9 +244,11 @@ def artin_postprocess(res, info, query):
     cache = knowl_cache(gp_labels)
     return [ArtinRepresentation(data=x, knowl_cache=cache) for x in res]
 
+
 class ArtinDownload(Downloader):
     table = db.artin_reps
     title = "Artin representations"
+
     def modify_query(self, info, query):
         query['Hide'] = 0
 
@@ -336,8 +337,6 @@ def render_artin_representation_webpage(label):
 
     label = newlabel
     bread = get_bread([(artin_label_pretty(label), ' ')])
-
-    #artin_logger.info("Found %s" % (the_rep._data))
 
     if case == 'rep':
         title = "Artin representation %s" % label
@@ -529,6 +528,7 @@ class ArtinSearchArray(SearchArray):
     jump_egspan = "e.g. 4.5648.6t13.b.a"
     jump_knowl = "artin.search_input"
     jump_prompt = "Label"
+    has_diagram = False
 
     def __init__(self):
         dimension = TextBox(
@@ -653,8 +653,8 @@ def unsci(rng, first=False):
         return rng
     if "-" in rng:
         pieces = "-".split(rng)
-        fz = [True] + [False]*(len(pieces)-1)
-        return "-".join(unsci(piece, z) for (piece, z) in zip(pieces, fz))
+        fz = [True] + [False] * (len(pieces) - 1)
+        return "-".join(unsci(piece, z) for piece, z in zip(pieces, fz))
     e = tpow.findall(rng)
     if not e:
         return rng
@@ -759,7 +759,7 @@ class ArtinStats(StatsDisplay):
         "Indicator": (lambda ind: r"frobenius_schur_indicator=%s" % ind),
     }
     buckets = {
-        "Conductor": [trange(a, b) for (a,b) in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
+        "Conductor": [trange(a, b) for a, b in intervals(0,8,2) + intervals(8,24,4) + intervals(24,56,8) + intervals(56,88,16)] + [trange(88,None)],
         "Dim": [str(x) for x in range(1,13)] + ["14-21", "24-30", "35", "40-70"]
     }
 

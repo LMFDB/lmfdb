@@ -5,11 +5,11 @@
 import flask
 from functools import wraps
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import render_template, request, Blueprint, url_for, make_response
 from flask_login import login_required, login_user, current_user, logout_user, LoginManager
 from lmfdb.utils import flash_error, to_dict
 from lmfdb.utils.uploader import Uploader
+from lmfdb.logger import logger
 from markupsafe import Markup
 
 from lmfdb import db
@@ -17,7 +17,6 @@ assert db
 
 
 login_page = Blueprint("users", __name__, template_folder='templates')
-logger = make_logger(login_page)
 
 import re
 allowed_usernames = re.compile("^[a-zA-Z0-9._-]+$")
@@ -225,9 +224,9 @@ def register_new():
 @login_page.route("/register/new/<int:N>")
 @admin_required
 def register(N=10):
-    N = 100 if N > 100 else N
+    N = min(N, 100)
     import random
-    tokens = [str(random.randrange(1e20, 1e21)) for _ in range(N)]
+    tokens = [str(random.randrange(int(1e20), int(1e21))) for _ in range(N)]
     userdb.create_tokens(tokens)
     urls = ["%s%s" % (base_url, url_for(".register_token", token=t)) for t in tokens]
     resp = make_response('\n'.join(urls))
@@ -248,7 +247,7 @@ def register_token(token):
     else: # must be post
         name = request.form['name']
         if not allowed_usernames.match(name):
-            flash_error("""Oops, usename '%s' is not allowed.
+            flash_error("""Oops, username '%s' is not allowed.
                   It must consist of lower/uppercase characters,
                   no spaces, numbers or '.', '_' and '-'.""", name)
             return flask.redirect(url_for(".register_new"))
@@ -319,7 +318,6 @@ def admin():
 @app.route("/restartserver")
 @admin_required
 def restart():
-    import sys
     from subprocess import Popen, PIPE
     from urllib.parse import urlparse
     urlparts = urlparse(request.url)
@@ -330,13 +328,11 @@ def restart():
     else:
         command = None
     if command:
-        if sys.version_info[0] == 3:
-            out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
-        else:
-            out = Popen(command, stdout=PIPE).communicate()[0]
+        out = Popen(command, stdout=PIPE, encoding='utf-8').communicate()[0]
         return out.replace('\n', '<br>')
     else:
         return "Only supported in beta.lmfdb.org, prodweb1.lmfdb.xyz, and prodweb2.lmfdb.xyz"
+
 
 class Reviewer(Uploader):
     """
@@ -345,6 +341,7 @@ class Reviewer(Uploader):
     def __init__(self):
         from lmfdb.modular_curves.upload import Points, PointCompleteness, GonalityBounds, Models, UniversalEC, MultiKnowl
         super().__init__([Points(), PointCompleteness(), GonalityBounds(), Models(), UniversalEC(), MultiKnowl()])
+
 
 @login_page.route("/uploads", methods=["GET", "POST"])
 @login_required

@@ -1,0 +1,112 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<p>
+  This dataset contains 136,924,520 {{KNOWL('ec.q', 'elliptic curves')}} over $\Q$ with {{ KNOWL('ec.q.conductor', 'conductor') }} up to $10^8$, divided into 115,821,258 {{KNOWL('ec.isogeny_class', 'isogeny classes')}}.  It also contains 11,378,911 elliptic curves with prime conductor up to $10^{10}$, divided into 11,372,286 isogeny classes.  Not every curve satisfying these conductor bounds is present in this dataset, only those that satisfy additional bounds on the discriminant and coefficients are included; see <a href="https://doi.org/10.1007/3-540-45455-1_22">Stein-Watkins</a> for details.
+</p>
+
+<h3>File and data format</h3>
+
+<p>
+  The data for conductors $N\le 10^8$ is stored in 1000 text files, indexed from $k=0$ to $k=999$, where the $k$th file contains data for $k \cdot 10^5 < N \le (k+1) \cdot 10^5$.  Similarly, the data for prime conductors $p\le 10^{10}$ is stored in 100 text files, indexed from $k=0$ to $k=99$, where the $k$th file contains data for $k \cdot 10^8 < p \le (k+1) \cdot 10^8$.
+</p>
+
+<p>
+  Within each file, curves $E$ are grouped into isogeny classes.  The first row of an isogeny class has the following form, with columns separated by spaces.  In general, X is used when a quantity has not been computed.
+</p>
+
+<table class="ntdata">
+  <tr>
+    <th>Column</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>$N$</td>
+    <td>The {{ KNOWL('ec.q.conductor', 'conductor') }} of $E$</td>
+    <td>$2200005$</td>
+  </tr>
+  <tr>
+    <td>$[p_1,\dots,p_m]$</td>
+    <td>The primes dividing the conductor in increasing order</td>
+    <td>$[3,5,48889]$</td>
+  </tr>
+  <tr>
+    <td>$r$</td>
+    <td>The {{KNOWL('ec.rank', 'rank')}} of $E$</td>
+    <td>$2$</td>
+  </tr>
+  <tr>
+    <td>$L^{(r)}(1)/r!$</td>
+    <td>The {{ KNOWL('ec.special_value', 'special value') }} of $E$</td>
+    <td>$14.921134$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{isog}_{\mathrm{max}}$</td>
+    <td>The largest degree of an {{KNOWL('ec.isogeny', 'isogeny')}} between non-isomorphic curves in the class</td>
+    <td>$12$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{deg}_{\mathrm{mod}}$</td>
+    <td>The {{KNOWL('ec.q.modular_degree', 'modular degree')}} of the {{KNOWL('ec.q.optimal', 'optimal quotient')}} of $J_0(N)$.<br>A star indicates that the curve of minimal {{KNOWL('ec.q.faltings_height', 'Faltings height')}} is not $J_0$-optimal.</br>A plus indicates that the minimal Faltings height curve is a {{KNOWL('ec.q.minimal_twist', 'minimal quadratic twist')}}.</td>
+    <td>+*2</td>
+  </tr>
+</table>
+
+<p>
+  Later rows in an isogeny class correspond to individual curves within that class (these rows are distinguished by starting with a square bracket rather than an integer).
+</p>
+
+<table class="ntdata">
+  <tr>
+    <th>Column</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>$[a_1,a_2,a_3,a_4,a_6]$</td>
+    <td>The {{KNOWL('ec.weierstrass_coeffs', '$a$-invariants')}} of the {{KNOWL('ec.q.minimal_weierstrass_equation', 'reduced minimal model')}}</td>
+    <td>$[1,0,1,-1065042,-440575900]$</td>
+  </tr>
+  <tr>
+    <td>$\operatorname{ord}(\Delta)$</td>
+    <td>The valuations of the {{KNOWL('ec.q.discriminant', 'discriminant')}} of $E$ at each prime dividing the conductor, in order.<br>Surrounded by square brackets if $\Delta > 0$ and round brackets if $\Delta < 0$.</td>
+    <td>$(12,9,2,1)$</td>
+  </tr>
+  <tr>
+    <td>$&#1064;_{\mathrm{an}}$</td>
+    <td>{{ KNOWL('ec.analytic_sha_order', 'Analytic order of &#1064;') }}</td>
+    <td>$4$</td>
+  </tr>
+  <tr>
+    <td>$E_{\mathrm{tors}}$</td>
+    <td>The {{KNOWL('ec.q.torsion_subgroup', 'torsion subgroup')}}, where $n$ indicates $\Z/n\Z$ and $nx$ indicates $\Z/n\Z \times \Z/2\Z$</td>
+    <td>$6x$</td>
+  </tr>
+</table>
+
+<h3>Download</h3>
+
+<form>
+  <table>
+    <tr>
+      <td align="right">Conductors</td>
+      <td align="left"><select name="ctype"><option value="all">all</option><option value="prime">prime</option></select></td>
+    </tr>
+    <tr>
+      <td align="right">$k = $</td>
+      <td align="left">
+        <input type="text" name="k" size="7" placeholder="123">
+        <span class="formexample"> integer from 0 to 999 (0 to 99 for prime conductor)</span>
+      </td>
+    </tr>
+    <tr>
+      <td align="left">
+        <button type="submit" name="Fetch" value="fetch">Fetch file</button>
+      </td>
+    </tr>
+  </table>
+</form>
+
+{% endblock %}

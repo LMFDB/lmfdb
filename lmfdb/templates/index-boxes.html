@@ -5,23 +5,18 @@
 {{ KNOWL_INC('users.' + userid|lower + '.note') }}
 </div>
 
-<table class="boxes">
-<tr>
- {% for box in boxes %}
-    <td align="center">
-    <table class="box">
-      <tr vertical-align="top">
-        <td class="img" rowspan="3" vertical-align="middle"><img height="150px" width="150px" src="{{ box.img }}"></td>
-        <td class="title">{{ box.title }}</td>
-      </tr>
-      <tr>
-        <td class="content">{{ box.content|safe }}</td>
-      </tr>
-    </table>
-    </td>
-    {% if loop.index is even -%}</tr><tr>{%- endif %}
- {% endfor %}
-</tr>
-</table>
+<div class="box-container">
+  {% for box in boxes %}
+  <div class="parent-box">
+    <div class="img-box">
+      <div class="img-container">
+      <img src="{{ box.img }}"/>
+    </div>
+    </div>
+    <div class="title">{{ box.title }}</div>
+    <div class="content">{{ box.content|safe }}</div>
+  </div>
+  {% endfor %}
+</div>
 
 {% endblock %}

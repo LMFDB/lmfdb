@@ -1,10 +1,8 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 g2c_page = Blueprint("g2c", __name__, template_folder='templates')
-g2c_logger = make_logger(g2c_page)
 
 @g2c_page.context_processor
 def body_class():

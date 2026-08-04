@@ -145,6 +145,8 @@ def long_label(label):
 
 class WebMaassForm():
     def __init__(self, data):
+        label = data["maass_label"]
+        data.update(db.maass_rigor_coefficients.lookup(label))
         self.__dict__.update(data)
         self._data = data
         self.portrait = db.maass_rigor_portraits.lookup(self.label, projection="portrait")
@@ -294,9 +296,9 @@ class WebMaassForm():
                     continue
                 f = factor(m)
                 if has_finite_rational_coeffs:
-                    level_part = prod(p**e for (p,e) in f if p in level_10_primes)
-                    other_part = prod(p**e for (p,e) in f if p not in level_10_primes)
-                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for (p,e) in f))
+                    level_part = prod(p**e for p, e in f if p in level_10_primes)
+                    other_part = prod(p**e for p, e in f if p not in level_10_primes)
+                    m_is_finite_rational = (other_part == 1 and all(e % 2 == 0 for p, e in f))
                     if m_is_finite_rational:
                         # determine sign
                         sgn = sign(self.coefficients[m - 1])  # if fricke_unknown, this is 0
@@ -310,8 +312,8 @@ class WebMaassForm():
                 pm = False
                 if self.fricke_eigenvalue == 0:
                     # Work out the coefficient from one that's prime to the level
-                    level_part = prod(p**e for (p,e) in f if p in level_primes)
-                    other_part = prod(p**e for (p,e) in f if p not in level_primes)
+                    level_part = prod(p**e for p, e in f if p in level_primes)
+                    other_part = prod(p**e for p, e in f if p not in level_primes)
                     if level_part > 1:
                         coeff = abs(self.coefficients[other_part - 1] / RR(level_part).sqrt())
                         pm = True
@@ -336,17 +338,20 @@ class WebMaassForm():
 
 
 class MaassFormDownloader(Downloader):
+    table = db.maass_rigor
     title = 'Maass forms'
 
     def download(self, label, lang='text'):
-        table = db.maass_rigor
-        data = table.lookup(label)
+        data = db.maass_rigor.lookup(label)
         if data is None:
             return abort(404, "Maass form %s not found in the database" % label)
-        for col in table.col_type:
-            if table.col_type[col] == "numeric" and data.get(col):
+        data.update(db.maass_rigor_coefficients.lookup(label))
+        col_type = dict(db.maass_rigor.col_type)
+        col_type.update(db.maass_rigor_coefficients.col_type)
+        for col in col_type:
+            if col_type[col] == "numeric" and data.get(col):
                 data[col] = str(data[col])
-            if table.col_type[col] == "numeric[]" and data.get(col):
+            if col_type[col] == "numeric[]" and data.get(col):
                 data[col] = [str(data[col][n]) for n in range(len(data[col]))]
         return self._wrap(Json.dumps(data),
                           "maass." + label,
@@ -354,8 +359,7 @@ class MaassFormDownloader(Downloader):
                           title='All stored data for Maass form %s,' % (label))
 
     def download_coefficients(self, label, lang='text'):
-        table = db.maass_rigor
-        data = table.lookup(label, projection=["coefficients", "coefficient_errors"])
+        data = db.maass_rigor_coefficients.lookup(label, projection=["coefficients", "coefficient_errors"])
         if data is None:
             return abort(404, "Coefficient data for Maass form %s not found in the database" % label)
         coeffs = data["coefficients"]

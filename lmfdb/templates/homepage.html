@@ -1,28 +1,15 @@
 {% extends "base.html" %}
 
-{% macro place_code(item) %}
+{% macro place_code(item, is_top_snippet=False) %}
 {% if code and code[item] %}
-{% for L in code[item] %}
-{% if code[item][L] %}
-{# currently there are two uses of multiline code:
-   - either strings containing newlines and ending with a newline
-   - or arrays of lines
-   first convert the first case to the second
-#}
-{% if code[item][L] is string %}
-{% set lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]] %}
-{% else %}
-{% set lines = code[item][L] %}
-{% endif %}
-{% set prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L %}
-{# keep the line below as is to avoid annoying line breaks #}
-<div class="{{ [L,'nodisplay','code','codebox'] | join(' ')}}">{% for line in lines %}{% if lines | length == 1 %}{{prompt}}:&nbsp;{% endif %}{{line}}<br /><div style="margin: 0; padding: 0; height: 0;">&nbsp;</div>{# this div is a workaround for a copy-tex bug where if a code block followed a hidden code block followed by math was selected and copied the hidden block would be also it is important that it has display: block #}{% endfor %}</div>
-{% endif %}
-{% endfor %}
+{{ CodeSnippet(code, item).place_code(is_top_snippet=is_top_snippet) }}
 {% endif %}
 {% endmacro %}
 
+
 {% block body -%}
+<div id="layout">
+<div id="page-wrapper">
 <div id="header">
     <div id="logo"><a href="{{ url_for('index') }}">
 {% if ALPHA %}
@@ -164,9 +151,8 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
+{% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or related_sections or learnmore) %}
       <div id="properties">
-       <div id="properties-collapser">&uarr;</div>
     {% if properties %}
        <h1 class="properties-header">Properties</h1>
        <div class="properties-body">
@@ -196,6 +182,7 @@
    {{ rightnavig("Origins of factors", factors_origins) }}
    {{ neighbors("Nearby objects", navi) }}
    {{ rightnavig("Downloads", downloads) }}
+   {{ rightnavig("Related sections", related_sections) }}
    {{ rightnavig("Learn more", learnmore) }}
     </div>
     {%- endif %}
@@ -211,30 +198,7 @@
     {%- endwith %}
     <div align="right" style="float: right; padding-left:10px;" id="rawtseticonspot" title="raw/typeset toggle"></div>
     {% if code %}
-        <script>
-        var cur_lang = null;
-        function show_code(new_lang) {
-           {% for lang in code['show'] %}
-           $('.{{lang}}').hide();
-           {% endfor %}
-            if (cur_lang == new_lang) {
-              cur_lang = null;
-            } else {
-              $('.'+new_lang).show();
-              $('.'+new_lang).css('display','inline-block');
-              cur_lang = new_lang;
-            }
-        }
-        </script>
-        <div align="right" style="float: right; margin-top:2px;">
-            Show commands:
-            {% set slash = joiner("/ ") %}
-            {% for lang in code['show']|sort %}
-            {# override show names for standard languages to ensure consistency #}
-            {% set show = 'PariGP' if lang == 'pari' else 'SageMath' if lang == 'sage' else 'Magma' if lang == 'magma' else 'Oscar' if lang == 'oscar' else "Gap" if lang == 'gap' else code['show']['lang'] %}
-            {{slash()}}<a onclick="show_code('{{lang}}'); return false" href='#'>{{show}}</a>
-            {% endfor %}
-        </div>
+    {{ CodeSnippet(code).show_commands_box() | safe}}
     {% endif %}
     {% if KNOWL_ID %}
     {% if BACKUP_KNOWL_ID %}
@@ -269,6 +233,8 @@ The function which was called for this page is: {{calling_function}}
 </div>
 {% endif %}
 
+</div>{# /#page-wrapper #}
+
 <div id="footer">
     {% if credit -%}
       Data computed by {{ credit|safe }}.<br />
@@ -282,6 +248,8 @@ The function which was called for this page is: {{calling_function}}
       <a href="{{ url_for('contact') }}">Contact</a>
       &middot;
       <a href="{{ url_for('citation') }}">Citation</a>
+      &middot;
+      <a href="{{ url_for('license') }}">License</a>
       &middot;
       <a href="{{ url_for('acknowledgment') }}">Acknowledgments</a>
       &middot;
@@ -297,6 +265,7 @@ The function which was called for this page is: {{calling_function}}
       {{ version|safe }}
     </div>
 </div>
+</div>{# /#layout #}
 
 
 

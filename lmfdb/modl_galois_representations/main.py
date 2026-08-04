@@ -150,7 +150,7 @@ modlgal_columns = SearchColumns(
         CheckCol("is_solvable", "modlgal.solvable", "Solvable", default=False),
         LinkCol("determinant_label", "modlgal.determinant", "Determinant", url_for_modlgal_label, align="center", default=False),
         ProcessedCol("determinant_index", "modlgal.det_surjective", "Det. surjective", lambda a: "&#x2713;" if a == 1 else "" , align="center", default=False),
-        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join([str(p) for p in ps]) + "$", align="center", default=False),
+        ProcessedCol("generating_primes", "modlgal.generating_primes", "Generators", lambda ps: "$" + ",".join(str(p) for p in ps) + "$", align="center", default=False),
         ProcessedCol("kernel_polynomial", "modlgal.min_sib_splitting_field", "Splitting field", formatfield),
         ProcessedCol("projective_kernel_polynomial", "modlgal.projective_kernel_polynomial", "Projective splitting field", formatfield, default=False),
     ],
@@ -168,6 +168,10 @@ modlgal_columns = SearchColumns(
     columns=modlgal_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modlgal_label,
+    diagram_opts={
+        "title": r"Mod-$\ell$ Galois representation diagram search",
+        "bread": lambda: get_bread("Diagram search"),
+    },
 )
 def modlgal_search(info, query):
     parse_ints(info, query, "base_ring_characteristic")

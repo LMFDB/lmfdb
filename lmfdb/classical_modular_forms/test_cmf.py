@@ -2,9 +2,6 @@
 from lmfdb.tests import LmfdbTest
 import unittest
 
-from . import cmf_logger
-cmf_logger.setLevel(100)
-
 
 class CmfTest(LmfdbTest):
     def runTest(self):
@@ -264,6 +261,12 @@ class CmfTest(LmfdbTest):
             assert elt + '.a' in page.get_data(as_text=True)
         for elt in ['Decomposition', r"S_{9}^{\mathrm{old}}(\Gamma_1(38))", "lower level spaces"]:
             assert elt in page.get_data(as_text=True)
+        decomposition = r"""
+<div class="center">
+  \( S_{9}^{\mathrm{old}}(\Gamma_1(38)) \cong \) <a href=/ModularForm/GL2/Q/holomorphic/1/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(1))\)</a>\(^{\oplus 4}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/2/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(2))\)</a>\(^{\oplus 2}\)\(\oplus\)<a href=/ModularForm/GL2/Q/holomorphic/19/9/>\(S_{9}^{\mathrm{new}}(\Gamma_1(19))\)</a>\(^{\oplus 2}\)
+</div>
+"""
+        assert decomposition in page.get_data(as_text=True)
 
     def test_convert_conreylabels(self):
         for c in [27, 31]:
@@ -479,44 +482,44 @@ class CmfTest(LmfdbTest):
             assert r'0.317472\pi' in page.get_data(as_text=True)
 
         #test large floats
-        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=95-96&prec=6&format=embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/1/']:
             page = self.tc.get(url)
             assert '213.765' in page.get_data(as_text=True)
-            assert '5.39613e49' in page.get_data(as_text=True)
-            assert '7.61562e49' in page.get_data(as_text=True)
+            assert '8.08549e33' in page.get_data(as_text=True)
+            assert '3.07391e34' in page.get_data(as_text=True)
 
-        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=95-96&prec=6&format=embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/2/']:
             page = self.tc.get(url)
             assert '3412.77' in page.get_data(as_text=True)
-            assert '1.55372e49' in page.get_data(as_text=True)
-            assert '1.00032e49' in page.get_data(as_text=True)
+            assert '2.89755e32' in page.get_data(as_text=True)
+            assert '3.65313e34' in page.get_data(as_text=True)
 
-        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=embed',
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=95-96&prec=6&format=embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/3/']:
             page = self.tc.get(url)
             assert '3626.53' in page.get_data(as_text=True)
-            assert '1.17540e49' in page.get_data(as_text=True)
-            assert '1.20001e50' in page.get_data(as_text=True)
+            assert '7.61461e34' in page.get_data(as_text=True)
+            assert '2.65998e34' in page.get_data(as_text=True)
 
         # same numbers but normalized
-        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=95-96&prec=6&format=analytic_embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/1/']:
             page = self.tc.get(url)
-            assert '0.993913' in page.get_data(as_text=True)
-            assert '1.36787' in page.get_data(as_text=True)
+            assert '0.198401' in page.get_data(as_text=True)
+            assert '0.627978' in page.get_data(as_text=True)
 
-        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=95-96&prec=6&format=analytic_embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/2/']:
             page = self.tc.get(url)
-            assert '0.286180' in page.get_data(as_text=True)
-            assert '0.179671' in page.get_data(as_text=True)
-        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=695-696&prec=6&format=analytic_embed',
+            assert '0.00710997' in page.get_data(as_text=True)
+            assert '0.746308' in page.get_data(as_text=True)
+        for url in ['/ModularForm/GL2/Q/holomorphic/1/36/a/a/?m=1-3&n=95-96&prec=6&format=analytic_embed',
                     '/ModularForm/GL2/Q/holomorphic/1/36/a/a/1/3/']:
             page = self.tc.get(url)
-            assert '0.216496' in page.get_data(as_text=True)
-            assert '2.15537' in page.get_data(as_text=True)
+            assert '1.86846' in page.get_data(as_text=True)
+            assert '0.543416' in page.get_data(as_text=True)
 
         # test some exact values
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/25/2/e/a/?n=97&m=8&prec=6&format=satake_angle')
@@ -545,14 +548,14 @@ class CmfTest(LmfdbTest):
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/e/a/?m=1-2&n=2-10000&prec=6&format=embed')
         assert "Only" in page.get_data(as_text=True)
-        assert "up to 1000 are available" in page.get_data(as_text=True)
+        assert "up to 100 are available" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7524/2/l/b/?n=5000&m=&prec=&format=embed')
         assert "Only" in page.get_data(as_text=True)
-        assert "up to 3000 are available" in page.get_data(as_text=True)
+        assert "up to 100 are available" in page.get_data(as_text=True)
         assert "in specified range; resetting to default" in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7524/2/l/b/?n=1500-4000&m=&prec=&format=embed')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/7524/2/l/b/?n=50-4000&m=&prec=&format=embed')
         assert "Only" in page.get_data(as_text=True)
-        assert "up to 3000 are available" in page.get_data(as_text=True)
+        assert "up to 100 are available" in page.get_data(as_text=True)
         assert "limiting to" in page.get_data(as_text=True)
 
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/13/2/e/a/?m=1-2&n=3.5&prec=6&format=embed')
@@ -563,10 +566,19 @@ class CmfTest(LmfdbTest):
         assert "must be an integer, range of integers or comma separated list of integers" in page.get_data(as_text=True)
         page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=2-10&m=1-20&prec=16&format=embed')
         assert 'must be a positive integer, at most 15 (for higher precision, use the download button)' in page.get_data(as_text=True)
-        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=999-1001&m=1-20&prec=6&format=embed')
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/99/2/p/a/?n=99-101&m=1-20&prec=6&format=embed')
         assert 'Only' in page.get_data(as_text=True)
-        assert 'up to 1000 are available' in page.get_data(as_text=True)
-        assert 'a_{1000}' in page.get_data(as_text=True)
+        assert 'up to 100 are available' in page.get_data(as_text=True)
+        assert 'a_{100}' in page.get_data(as_text=True)
+
+    def test_mf_hecke_cc_dataset(self):
+        self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/', ['14,417,694', 'N.k.a.x.n.i'])
+        self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?k=12', ['Select a', '269'])
+        self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=12', ['Select a', '57'])
+        # Download checks against the live beta server were removed here
+        # because they tested the deployed site rather than this codebase and
+        # regularly timed out from CI runners; see issue #6225 for tracking
+        # external link checking outside of CI.
 
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
@@ -594,3 +606,110 @@ class CmfTest(LmfdbTest):
                 and 'mf_hecke_charpolys' in data and 'charpoly_factorization' in data
                 and 'mf_newform_portraits' in data and "data:image/png;base64" in data
                 and 'mf_hecke_traces' in data and 'trace_an' in data)
+
+    def test_character_values(self):
+        # A newform orbit of dimension 1
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/12/3/c/a/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(5\)</td>
+      <td class="dark border-bottom">\(7\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>
+      <td class="dark">\(1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert (character_values_table in data)
+
+        # A newform orbit of dimension 2
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/119/1/d/a/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(52\)</td>
+      <td class="dark border-bottom">\(71\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>
+      <td class="dark">\(-1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert (character_values_table in data)
+
+        # An embedded newform
+        data = self.tc.get('/ModularForm/GL2/Q/holomorphic/119/1/d/a/118/1/').get_data(as_text=True)
+        character_values_table = r"""
+<table class="ntdata">
+  <tbody>
+        <tr>
+      <td class="dark border-right border-bottom">\(n\)</td>
+      <td class="light border-bottom">\(52\)</td>
+      <td class="dark border-bottom">\(71\)</td>    </tr>
+    <tr>
+      <td class="dark border-right">\(\chi(n)\)</td>
+      <td class="light">\(-1\)</td>
+      <td class="dark">\(-1\)</td>    </tr>
+  </tbody>
+</table>
+"""
+        assert (character_values_table in data)
+
+    def test_invalid_format_parameter(self):
+        """Test that invalid format parameters are handled gracefully"""
+        # Test invalid format 'txt' which was causing the original issue
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/441/4/a/h/?format=txt')
+        data = page.get_data(as_text=True)
+        assert "Invalid format parameter" in data
+        assert "txt" in data
+        assert "Valid formats are:" in data
+
+        # Test another invalid format
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=invalid')
+        data = page.get_data(as_text=True)
+        assert "Invalid format parameter" in data
+        assert "invalid" in data
+
+        # Test that valid formats still work
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=embed')
+        data = page.get_data(as_text=True)
+        assert "Valid formats are:" not in data
+        assert "Invalid format parameter" not in data
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/11/2/a/a/?format=satake')
+        data = page.get_data(as_text=True)
+        assert "Valid formats are:" not in data
+        assert "Invalid format parameter" not in data
+
+    def test_code_download_no_duplicates(self):
+        """Regression test for #7003: the newspace-initialization commands must
+        appear exactly once in each language's downloaded code, using the
+        weight-appropriate variant. download_code previously emitted the shared
+        initialize-newspace-common anchor base plus both weight variants."""
+        base = '/ModularForm/GL2/Q/holomorphic/download_code_newform'
+
+        def get(label, lang):
+            return self.tc.get('%s/%s/%s' % (base, label, lang)).get_data(as_text=True)
+
+        # weight 2 form: the init commands must each appear once...
+        assert get('417.2.d.a', 'magma').count('CuspForms(chi, 2)') == 1
+        pari = get('417.2.d.a', 'pari')
+        assert pari.count('mf = mfinit(') == 1 and pari.count('mfeigenbasis(') == 1, pari
+        sage = get('417.2.d.a', 'sage')
+        assert sage.count('Newforms(chi, 2, names="a")') == 1, sage
+        assert 'cuspidal_submodule' not in sage  # ...and the weight 1 sage variant must not leak in
+
+        # weight 1 form: the cuspidal-submodule sage variant is used instead
+        assert get('23.1.b.a', 'magma').count('CuspForms(chi, 1)') == 1
+        pari = get('23.1.b.a', 'pari')
+        assert pari.count('mf = mfinit(') == 1 and pari.count('mfeigenbasis(') == 1, pari
+        sage = get('23.1.b.a', 'sage')
+        assert sage.count('cuspidal_submodule().basis()') == 1, sage
+        assert 'Newforms(chi' not in sage

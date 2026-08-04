@@ -146,10 +146,6 @@ class Configuration(_Configuration):
         )
 
         logginggroup.add_argument(
-            "--logfocus", help="name of a logger to focus on", default=argparse.SUPPRESS
-        )
-
-        logginggroup.add_argument(
             "--loglevel",
             help="loglevel for flask [default: %(default)s]",
             dest="logging_loglevel",
@@ -222,6 +218,51 @@ class Configuration(_Configuration):
             metavar="DBNAME",
             help="PostgreSQL database name [default: %(default)s]",
             default="lmfdb",
+        )
+
+        # TCP keepalives on the database connection.  LMFDB usually talks to a
+        # remote database (see --postgresql-host), where a connection can be
+        # silently dropped by the server, a load balancer, or the network.
+        # Keepalives let libpq detect a dead connection within about a minute
+        # (with the defaults below) instead of blocking on the OS TCP timeout
+        # for several minutes; this is a recurring source of spurious CI
+        # failures that pass on a rerun.  psycodict passes these parameters
+        # straight through to psycopg2.connect, for both the initial connection
+        # and every reconnection.  They are ignored for local unix-socket
+        # connections and never interrupt a running query.  Pass
+        # --postgresql-keepalives 0 to fall back to the operating system
+        # defaults.
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives",
+            dest="postgresql_keepalives",
+            metavar="0|1",
+            type=int,
+            help="use TCP keepalives on the database connection, 0 to disable [default: %(default)s]",
+            default=1,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-idle",
+            dest="postgresql_keepalives_idle",
+            metavar="SECONDS",
+            type=int,
+            help="idle time before the first keepalive probe is sent [default: %(default)s]",
+            default=30,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-interval",
+            dest="postgresql_keepalives_interval",
+            metavar="SECONDS",
+            type=int,
+            help="time between keepalive probes [default: %(default)s]",
+            default=10,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-count",
+            dest="postgresql_keepalives_count",
+            metavar="N",
+            type=int,
+            help="unanswered keepalive probes before the connection is dropped [default: %(default)s]",
+            default=5,
         )
 
         # undocumented options
@@ -338,8 +379,6 @@ class Configuration(_Configuration):
             "editor": opts["logging"]["editor"],
             "loglevel": opts["logging"]["loglevel"],
         }
-        if "logfocus" in extopts:
-            self.logging_options["logfocus"] = extopts["logfocus"]
 
     def get_all(self):
         return {
@@ -362,6 +401,28 @@ class Configuration(_Configuration):
 
     def get_postgresql(self):
         return self.postgresql_options
+
+    def get_logging(self):
+        return self.logging_options
+
+
+class ConfigWrapper:
+    """
+    A wrapper class that provides the same interface as Configuration
+    but is initialized from a dictionary of options.
+    """
+    def __init__(self, config_dict):
+        # Set default values and update with provided config
+        self.postgresql_options = config_dict.get('postgresql_options', {})
+        self.flask_options = config_dict.get('flask_options', {})
+        self.logging_options = config_dict.get('logging_options', {'editor': ''})
+
+    # Add the get methods that might be expected
+    def get_postgresql(self):
+        return self.postgresql_options
+
+    def get_flask(self):
+        return self.flask_options
 
     def get_logging(self):
         return self.logging_options

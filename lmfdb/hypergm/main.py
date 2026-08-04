@@ -14,7 +14,7 @@ from lmfdb.utils import (
     clean_input, parse_ints, parse_bracketed_posints, parse_rational,
     parse_restricted, integer_options, search_wrap, Downloader,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, CountBox, BasicSpacer, SearchButton, RowSpacer,
-    to_dict, web_latex, integer_divisors)
+    to_dict, web_latex, integer_divisors, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, RationalCol
 from lmfdb.api import datapage
@@ -204,7 +204,7 @@ def get_bread(breads=[]):
     bc = [("Motives", url_for("motives")),
           ("Hypergeometric", url_for(".index")),
           (r"$\Q$", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 
@@ -634,16 +634,18 @@ def show_slopes(sl):
 
 
 @hypergm_page.route("/random_family")
+@redirect_no_cache
 def random_family():
     label = db.hgm_families.random()
-    return redirect(url_for(".by_family_label", label=label))
+    return url_for(".by_family_label", label=label)
 
 
 @hypergm_page.route("/random_motive")
+@redirect_no_cache
 def random_motive():
     label = db.hgm_motives.random()
     s = label.split('_t')
-    return redirect(url_for(".by_label", label=s[0], t='t' + s[1]))
+    return url_for(".by_label", label=s[0], t='t' + s[1])
 
 
 @hypergm_page.route("/interesting_families")
@@ -675,7 +677,7 @@ def interesting_motives():
 @hypergm_page.route("/Source")
 def how_computed_page():
     t = r'Source and acknowledgments for hypergeometric motives over $\Q$'
-    bread = get_bread(('Source', ''))
+    bread = get_bread([('Source', '')])
     return render_template("multi.html", kids=['rcs.source.hgm',
                                                'rcs.ack.hgm',
                                                'rcs.cite.hgm'],
@@ -686,7 +688,7 @@ def how_computed_page():
 @hypergm_page.route("/Completeness")
 def completeness_page():
     t = r'Completeness of hypergeometric motive data over $\Q$'
-    bread = get_bread(('Completeness', ''))
+    bread = get_bread([('Completeness','')])
     return render_template("single.html", kid='rcs.cande.hgm',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Completeness'))
@@ -695,7 +697,7 @@ def completeness_page():
 @hypergm_page.route("/Reliability")
 def reliability_page():
     t = r'Reliability of hypergeometric motive data over $\Q$'
-    bread = get_bread(('Reliability', ''))
+    bread = get_bread([('Reliability', '')])
     return render_template("single.html", kid='rcs.rigor.hgm',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('Reliability'))
@@ -704,7 +706,7 @@ def reliability_page():
 @hypergm_page.route("/Labels")
 def labels_page():
     t = r'Labels for hypergeometric motives over $\Q$'
-    bread = get_bread(('Labels', ''))
+    bread = get_bread([('Labels', '')])
     return render_template("single.html", kid='hgm.field.label',
            title=t, bread=bread,
            learnmore=learnmore_list_remove('labels'))

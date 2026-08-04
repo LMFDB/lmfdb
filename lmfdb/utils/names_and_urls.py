@@ -70,7 +70,7 @@ def name_and_object_from_url(url, check_existence=False):
 
     elif url_split[0] == "ModularForm":
         if url_split[1] == 'GL2':
-            if url_split[2] == 'Q' and url_split[3]  == 'holomorphic':
+            if url_split[2] == 'Q' and url_split[3] == 'holomorphic':
                 if len(url_split) == 10:
                     # ModularForm/GL2/Q/holomorphic/24/2/f/a/11/2
                     newform_label = ".".join(url_split[-6:-2])

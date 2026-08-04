@@ -18,13 +18,14 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
 from lmfdb.utils.web_display import dispZmat_from_list
+from lmfdb.logger import logger
 from lmfdb.api import datapage
-from lmfdb.elliptic_curves import ec_page, ec_logger
+from lmfdb.elliptic_curves import ec_page
 from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
@@ -47,7 +48,7 @@ def sorting_label(lab1):
     return (int(a), class_to_int(b), int(c))
 
 def get_bread(tail=[]):
-    base = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
+    base = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -67,7 +68,9 @@ def learnmore_list():
             ('Completeness of the data', url_for(".completeness_page")),
             ('Reliability of the data', url_for(".reliability_page")),
             ('Elliptic curve labels', url_for(".labels_page")),
-            ('Congruent number curves', url_for(".render_congruent_number_data"))]
+            ('Congruent number curves', url_for(".render_congruent_number_data")),
+            ('Stein-Watkins dataset', url_for(".render_sw_ecdb")),
+            ('BHKSSW dataset', url_for(".render_bhkssw"))]
 
 
 def learnmore_list_add(learnmore_label, learnmore_url):
@@ -120,6 +123,10 @@ def rational_elliptic_curves(err_args=None):
                            title=t,
                            bread=get_bread(),
                            learnmore=learnmore_list(),
+                           related_sections=[
+                               (r'Elliptic curves over $\Q(\alpha)$', url_for("ecnf.index")),
+                               ('Classical modular forms', url_for("cmf.index")),
+                           ],
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
 
@@ -188,7 +195,7 @@ class ECstats(StatsDisplay):
 
     @property
     def summary(self):
-        return r'Currently, the database includes ${}$ {} over $\Q$ in ${}$ {}, with {} at most ${}$.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
+        return r'Currently, the database includes {} {} over $\Q$ in {} {}, with {} at most {}.'.format(self.ncurves_c, self.ec_knowl, self.nclasses_c, self.cl_knowl, self.cond_knowl, self.max_N_c)
 
     table = db.ec_curvedata
     baseurl_func = ".rational_elliptic_curves"
@@ -250,7 +257,7 @@ def by_conductor(conductor):
     if request.args:
         # if conductor changed, fall back to a general search
         if 'conductor' in request.args and request.args['conductor'] != str(conductor):
-            return redirect (url_for(".rational_elliptic_curves", **request.args), 307)
+            return redirect(url_for(".rational_elliptic_curves", **request.args), 307)
         info['title'] += ' Search results'
         info['bread'].append(('Search results',''))
     info['conductor'] = conductor
@@ -398,28 +405,13 @@ modm_not_computed = r'(\d+)\.(\d+)\.(\d+)\.(\?)'
 modm_no_negative = r'(\d+)\.(\d+)\.(\d+)-(\d+)\.([a-z]+)\.(\d+)\.(\d+)'
 modm_image_label_regex = re.compile(modm_full + "|" + modm_not_computed + "|" + modm_no_negative)
 
-class EC_download(Downloader):
-    table = db.ec_curvedata
-    title = "Elliptic curves"
-    inclusions = {
-        "curve": (
-            ["ainvs"],
-            {
-                "sage": 'curve = EllipticCurve(out["ainvs"])',
-                "magma": 'curve := EllipticCurve(out`ainvs);',
-                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
-                "oscar": 'curve = EllipticCurve(out["ainvs"])',
-            }
-        )
-    }
-
 def ec_postprocess(res, info, query):
     labels = [rec["lmfdb_label"] for rec in res]
     mwgens = {rec["lmfdb_label"]: rec["gens"] for rec in db.ec_mwbsd.search({"lmfdb_label":{"$in":labels}}, ["lmfdb_label", "gens"])}
     for rec in res:
         gens = mwgens.get(rec["lmfdb_label"])
         if gens is not None:
-            gens = [(a/c, b/c) for (a,b,c) in gens]
+            gens = [(a / c, b / c) for a, b, c in gens]
         rec["mwgens"] = gens
     return res
 
@@ -479,19 +471,54 @@ ec_columns = SearchColumns([
                   short_title="j-invariant", align="center", default=False),
     FloatCol("abc_quality", "ec.q.abc_quality", "$abc$ quality", short_title="abc quality", prec=5, default=False),
     FloatCol("szpiro_ratio", "ec.q.szpiro_ratio", "Szpiro ratio", prec=5, default=False),
+    MathCol("intrinsic_torsion", "ec.intrinsic_torsion", "Intrinsic torsion order", align="center", default=False),
     MathCol("ainvs", "ec.weierstrass_coeffs", "Weierstrass coefficients", short_title="Weierstrass coeffs", align="left", default=False),
     ProcessedCol("equation", "ec.q.minimal_weierstrass_equation", "Weierstrass equation", latex_equation, short_title="Weierstrass equation", align="left", orig="ainvs", download_col="ainvs"),
     ProcessedCol("modm_images", "ec.galois_rep", r"mod-$m$ images", lambda v: "<span>" + ", ".join([make_modcurve_link(s) for s in v[:5]] + ([r"$\ldots$"] if len(v) > 5 else [])) + "</span>",
                   short_title="mod-m images", default=lambda info: info.get("galois_image")),
-    MathCol("mwgens", "ec.mordell_weil_group", "MW-generators", default=False),
+    ListCol("mwgens", "ec.mordell_weil_group", "MW-generators", mathmode=True, default=False),
+    MathCol("manin_constant", "ec.q.manin_constant", "Manin constant", align="center", default=lambda info: info.get("manin_constant")),
 ])
+
 
 class ECDownloader(Downloader):
     table = db.ec_curvedata
     title = "Elliptic curves"
+
     def modify_query(self, info, query):
         if info.get("optimal") == "on":
             query["__one_per__"] = "lmfdb_iso"
+
+    inclusions = {
+        "curve": (
+            ["ainvs"],
+            {
+                "sage": 'curve = EllipticCurve(out["ainvs"]){attach_lmfdb_label}',
+                "magma": 'curve := EllipticCurve(out`ainvs);',
+                "gp": 'curve = ellinit(mapget(out, "ainvs"));',
+                "oscar": 'curve = elliptic_curve(out["ainvs"])',
+            }
+        )
+    }
+
+    def postprocess(self, row, info, query):
+        # Unfortunately, I don't see a good way to batch these database calls
+        # given how the download iterator works
+        if "mwgens" in info.get("showcol", "").split("."):
+            gens = db.ec_mwbsd.lucky({"lmfdb_label": row["lmfdb_label"]}, "gens")
+            if gens is not None:
+                gens = [(ZZ(a) / c, ZZ(b) / c) for a, b, c in gens]
+            row["mwgens"] = gens
+        return row
+
+    def createrecord_code(self, lang, column_names):
+        # We override the createrecord_code subclass to attach the lmfdb label
+        # to the elliptic curve, if lang is Sage and "lmfdb_label" is in column_name
+        code = super().createrecord_code(lang, column_names)
+        attach_lmfdb_label = '\n    curve._lmfdb_label = out["lmfdb_label"]' if "lmfdb_label" in column_names else ""
+        code = code.replace("{attach_lmfdb_label}", attach_lmfdb_label)
+        return code
+
 
 @search_wrap(table=db.ec_curvedata,
              title='Elliptic curve search results',
@@ -503,7 +530,14 @@ class ECDownloader(Downloader):
              shortcuts={'jump':elliptic_curve_jump,
                         'download':ECDownloader()},
              bread=lambda:get_bread('Search results'),
-             postprocess=ec_postprocess)
+             postprocess=ec_postprocess,
+             diagram_opts={
+                 "title": "Elliptic curve diagrams",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "label_builder": lambda r: r["lmfdb_label"],
+                 "x_axis_default": "conductor",
+                 "y_axis_default": "regulator",
+             })
 def elliptic_curve_search(info, query):
     parse_rational_to_list(info, query, 'jinv', 'j-invariant')
     parse_ints(info, query, 'conductor')
@@ -542,6 +576,7 @@ def elliptic_curve_search(info, query):
     parse_floats(info,query,'faltings_height','faltings_height')
     parse_floats(info,query,'abc_quality')
     parse_floats(info,query,'szpiro_ratio')
+    parse_ints(info,query,'intrinsic_torsion')
     if info.get('reduction'):
         if info['reduction'] == 'semistable':
             query['semistable'] = True
@@ -573,6 +608,7 @@ def elliptic_curve_search(info, query):
                  qfield='bad_primes',mode=info.get('bad_quantifier'))
     parse_primes(info, query, 'sha_primes', name='sha primes',
                  qfield='sha_primes',mode=info.get('sha_quantifier'))
+    parse_ints(info, query, 'manin_constant')
     if info.get('galois_image'):
         labels = [a.strip() for a in info['galois_image'].split(',')]
         elladic_labels = [a for a in labels if elladic_image_label_regex.fullmatch(a) and is_prime_power(elladic_image_label_regex.match(a)[1])]
@@ -655,7 +691,7 @@ def by_triple_label(conductor,iso_label,number):
 
 @ec_page.route("/<label>/")
 def by_ec_label(label):
-    ec_logger.debug(label)
+    logger.debug(label)
 
     # First see if we have an LMFDB label of a curve or class:
     try:
@@ -666,12 +702,12 @@ def by_ec_label(label):
             return redirect(url_for(".by_double_iso_label", conductor=N, iso_label=iso))
 
     except AttributeError:
-        ec_logger.debug("%s not a valid lmfdb label, trying cremona")
+        logger.debug("%s not a valid lmfdb label, trying cremona")
         # Next see if we have a Cremona label of a curve or class:
         try:
             N, iso, number = split_cremona_label(label)
         except AttributeError:
-            ec_logger.debug("%s not a valid cremona label either, trying Weierstrass")
+            logger.debug("%s not a valid cremona label either, trying Weierstrass")
             eqn = label.replace(" ","")
             if weierstrass_eqn_regex.match(eqn) or short_weierstrass_eqn_regex.match(eqn):
                 return by_weierstrass(eqn)
@@ -686,7 +722,7 @@ def by_ec_label(label):
         data = db.ec_curvedata.lucky({label_type: label})
         if data is None:
             return elliptic_curve_jump_error(label, {}, missing_curve=True)
-        ec_logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
+        logger.debug(url_for(".by_ec_label", label=data['lmfdb_label']))
         if number:
             return render_curve_webpage_by_label(label)
         else:
@@ -736,10 +772,8 @@ def modular_form_display(label, number):
         number = int(number)
     except ValueError:
         number = 10
-    if number < 10:
-        number = 10
-    if number > 1000:
-        number = 1000
+    number = max(number, 10)
+    number = min(number, 1000)
     ainvs = db.ec_curvedata.lookup(label, 'ainvs', 'lmfdb_label')
     if ainvs is None:
         return elliptic_curve_jump_error(label, {})
@@ -763,7 +797,7 @@ def render_curve_webpage_by_label(label):
 
     data.modform_display = url_for(".modular_form_display", label=lmfdb_label, number="")
 
-    code = data.code()
+    code = data.code
     code['show'] = {'magma':'','pari':'','sage':'','oscar':''} # use default show names
     learnmore_curve_picture = ('Picture description', url_for(".curve_picture_page"))
     T = render_template("ec-curve.html",
@@ -777,8 +811,8 @@ def render_curve_webpage_by_label(label):
                         KNOWL_ID="ec.q.%s" % lmfdb_label,
                         BACKUP_KNOWL_ID="ec.q.%s" % data.lmfdb_iso,
                         learnmore=learnmore_list_add(*learnmore_curve_picture))
-    ec_logger.debug("Total walltime: %ss" % (time.time() - t0))
-    ec_logger.debug("Total cputime: %ss" % (cputime(cpt0)))
+    logger.debug("Total walltime: %ss" % (time.time() - t0))
+    logger.debug("Total cputime: %ss" % (cputime(cpt0)))
     return T
 
 
@@ -917,6 +951,12 @@ def ec_code_download(**args):
     response.headers['Content-type'] = 'text/plain'
     return response
 
+@ec_page.route('/<conductor>/<iso>/download/<download_type>')
+def ec_isog_code_download(**args):
+    response = make_response(ec_isog_code(**args))
+    response.headers['Content-type'] = 'text/plain'
+    return response
+
 @ec_page.route("/CongruentNumbers")
 def render_congruent_number_data():
     info = to_dict(request.args)
@@ -924,14 +964,14 @@ def render_congruent_number_data():
         return redirect(url_for(".render_single_congruent_number", n=info['lookup']))
     learnmore = learnmore_list_remove('Congruent numbers and curves')
     t = 'Congruent numbers and congruent number curves'
-    bread = get_bread(t)
+    bread = [("Datasets", url_for("datasets")), (t, " ")]
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
         if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
             return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
-            return redirect(url_for(".rational_elliptic_curves"))
+            return redirect(url_for(".render_congruent_number_data"))
 
     return render_template("congruent_number_data.html", info=info, title=t, bread=bread, learnmore=learnmore)
 
@@ -945,34 +985,113 @@ def render_single_congruent_number(n):
     bread = get_bread() + [("Congruent numbers", url_for(".render_congruent_number_data")), (n, "")]
     return render_template("single_congruent_number.html", info=info, title=t, bread=bread, learnmore=learnmore_list())
 
+@ec_page.route("/stein-watkins")
+def render_sw_ecdb():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('Stein-Watkins dataset')
+    t = 'Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("Stein-Watkins dataset", " ")]
+    if 'Fetch' in info:
+        errors = []
+        if info.get("ctype") == "all":
+            fname = "a.{:03d}"
+            kmax = 999
+        elif info.get("ctype") == "prime":
+            fname = "p.{:02d}"
+            kmax = 99
+        else:
+            errors.append("Invalid conductor type")
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a nonnegative integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/stein_watkins_ecdb/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("sw_ecdb.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
+
+@ec_page.route("/BHKSSW")
+def render_bhkssw():
+    info = to_dict(request.args)
+    learnmore = learnmore_list_remove('BHKSSW dataset')
+    t = 'Balakrishnan-Ho-Kaplan-Spicer-Stein-Watkins elliptic curve database'
+    bread = [("Datasets", url_for("datasets")), ("BHKSSW dataset", " ")]
+    #if 'filename' in info:
+    #    filepath = os.path.join(os.path.expanduser('~/data/bhkssw_ecdb/' + info['filename']))
+    #    if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+    #        return send_file(filepath, as_attachment=True)
+    #    else:
+    #        flash_error('File {} not found'.format(info['filename']))
+    #        return redirect(url_for(".render_bhkssw"))
+    # This format was nice, but not possible with the 30-second timeout limitation
+    #info['files'] = [ # number of curves, size in MB, lower bound, upper bound, filename
+    #    (2249362, 151, "0", r"1 \cdot 10^8", "1e8db.txt"),
+    #    (1758056, 123, r"1 \cdot 10^8", r"2 \cdot 10^8", "2e8db.txt"),
+    #    (11300506, 798, r"2 \cdot 10^8", r"1 \cdot 10^9", "1e9db.txt"),
+    #    (11982016, 866, r"1 \cdot 10^9", r"2 \cdot 10^9", "2e9db.txt"),
+    #    (10976368, 800, r"2 \cdot 10^9", r"3 \cdot 10^9", "3e9db.txt"),
+    #    (10395560, 768, r"3 \cdot 10^9", r"4 \cdot 10^9", "4e9db.txt"),
+    #    (9932368, 744, r"4 \cdot 10^9", r"5 \cdot 10^9", "5e9db.txt"),
+    #    (9584588, 720, r"5 \cdot 10^9", r"6 \cdot 10^9", "6e9db.txt"),
+    #    (9385318, 707, r"6 \cdot 10^9", r"7 \cdot 10^9", "7e9db.txt"),
+    #    (9071666, 685, r"7 \cdot 10^9", r"8 \cdot 10^9", "8e9db.txt"),
+    #    (8975214, 679, r"8 \cdot 10^9", r"9 \cdot 10^9", "9e9db.txt"),
+    #    (8788686, 666, r"9 \cdot 10^9", r"1.0 \cdot 10^{10}", "10e9db.txt"),
+    #    (8642210, 664, r"1.0 \cdot 10^{10}", r"1.1 \cdot 10^{10}", "11e9db.txt"),
+    #    (8477024, 652, r"1.1 \cdot 10^{10}", r"1.2 \cdot 10^{10}", "12e9db.txt"),
+    #    (8383290, 645, r"1.2 \cdot 10^{10}", r"1.3 \cdot 10^{10}", "13e9db.txt"),
+    #    (8275108, 638, r"1.3 \cdot 10^{10}", r"1.4 \cdot 10^{10}", "14e9db.txt"),
+    #    (8143456, 628, r"1.4 \cdot 10^{10}", r"1.5 \cdot 10^{10}", "15e9db.txt"),
+    #    (8106334, 626, r"1.5 \cdot 10^{10}", r"1.6 \cdot 10^{10}", "16e9db.txt"),
+    #    (7959996, 615, r"1.6 \cdot 10^{10}", r"1.7 \cdot 10^{10}", "17e9db.txt"),
+    #    (7903210, 611, r"1.7 \cdot 10^{10}", r"1.8 \cdot 10^{10}", "18e9db.txt"),
+    #    (7849564, 607, r"1.8 \cdot 10^{10}", r"1.9 \cdot 10^{10}", "19e9db.txt"),
+    #    (7781996, 602, r"1.9 \cdot 10^{10}", r"2.0 \cdot 10^{10}", "20e9db.txt"),
+    #    (7822372, 605, r"2.0 \cdot 10^{10}", r"2.1 \cdot 10^{10}", "21e9db.txt"),
+    #    (7636198, 591, r"2.1 \cdot 10^{10}", r"2.2 \cdot 10^{10}", "22e9db.txt"),
+    #    (7562706, 586, r"2.2 \cdot 10^{10}", r"2.3 \cdot 10^{10}", "23e9db.txt"),
+    #    (7593218, 588, r"2.3 \cdot 10^{10}", r"2.4 \cdot 10^{10}", "24e9db.txt"),
+    #    (7505566, 582, r"2.4 \cdot 10^{10}", r"2.5 \cdot 10^{10}", "25e9db.txt"),
+    #    (7409408, 575, r"2.5 \cdot 10^{10}", r"2.6 \cdot 10^{10}", "26e9db.txt"),
+    #    (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
+    #]
+    if 'Fetch' in info:
+        fname = "{}.txt"
+        kmax = 2699
+        errors = []
+        if 'k' in info and not errors:
+            k = info["k"].strip()
+            if k.isdigit():
+                k = int(k)
+                if k <= kmax:
+                    fname = fname.format(k)
+                else:
+                    errors.append(f"k must be at most {kmax}")
+            else:
+                errors.append(f"k must be a positive integer at most {kmax}")
+        if not errors:
+            filepath = os.path.expanduser('~/data/bhkssw_split/' + fname)
+            if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+                return send_file(filepath, as_attachment=True)
+            errors.append(f"File {fname} not found")
+        for err in errors:
+            flash_error(err)
+
+    return render_template("bhkssw.html", info=info, comma=comma, title=t, bread=bread, learnmore=learnmore)
+
 sorted_code_names = ['curve', 'simple_curve', 'mwgroup', 'gens', 'tors', 'intpts', 'cond', 'disc', 'jinv', 'cm', 'faltings', 'stable_faltings', 'rank', 'analytic_rank', 'reg', 'real_period', 'cp', 'ntors', 'sha', 'L1', 'bsd_formula', 'qexp', 'moddeg', 'manin', 'localdata', 'galrep']
 
-code_names = {'curve': 'Define the curve',
-                 'simple_curve': 'Simplified equation',
-                 'mwgroup': 'Mordell-Weil group',
-                 'gens': 'Mordell-Weil generators',
-                 'tors': 'Torsion subgroup',
-                 'intpts': 'Integral points',
-                 'cond': 'Conductor',
-                 'disc': 'Discriminant',
-                 'jinv': 'j-invariant',
-                 'cm': 'Potential complex multiplication',
-                 'faltings': 'Faltings height',
-                 'stable_faltings': 'Stable Faltings height',
-                 'rank': 'Mordell-Weil rank',
-                 'analytic_rank': 'Analytic rank',
-                 'reg': 'Regulator',
-                 'real_period': 'Real Period',
-                 'cp': 'Tamagawa numbers',
-                 'ntors': 'Torsion order',
-                 'sha': 'Order of Sha',
-                 'L1': 'Special L-value',
-                 'bsd_formula': 'BSD formula',
-                 'qexp': 'q-expansion of modular form',
-                 'moddeg': 'Modular degree',
-                 'manin': 'Manin constant',
-                 'localdata': 'Local data',
-                 'galrep': 'mod p Galois image'}
 
 Fullname = {
     'magma': 'Magma',
@@ -988,22 +1107,27 @@ def ec_code(**args):
         return elliptic_curve_jump_error(label, {})
     if E == "Curve not found":
         return elliptic_curve_jump_error(label, {}, missing_curve=True)
-    Ecode = E.code()
+    Ecode = E.code
     lang = args['download_type']
     if lang not in Fullname:
-        abort(404,"Invalid code language specified: " + lang)
-    name = Fullname[lang]
-    if lang == 'gp':
-        lang = 'pari'
-    comment = Ecode.pop('comment').get(lang).strip()
-    code = f"{comment} {name} code for working with elliptic curve {label}\n\n"
-    for k in Ecode: # OrderedDict
-        if 'comment' not in Ecode[k] or lang not in Ecode[k]:
-            continue
-        code += f"\n{comment} {Ecode[k]['comment']}: \n"
-        code += Ecode[k][lang] + ('\n' if '\n' not in Ecode[k][lang] else '')
+        return abort(404, "Invalid code language specified: " + lang)
+    code = CodeSnippet(Ecode)
+    return code.export_code(label, lang, sorted_code_names)
 
-    return code
+def ec_isog_code(**args):
+    label = class_lmfdb_label(args['conductor'], args['iso'])
+    E = ECisog_class.by_label(label)
+    if E == "Invalid label":
+        return elliptic_curve_jump_error(label, {})
+    if E == "Class not found":
+        return elliptic_curve_jump_error(label, {}, missing_curve=True)
+    Ecode = E.code
+    lang = args['download_type']
+    if lang not in Fullname:
+        return abort(404, "Invalid code language specified: " + lang)
+    code = CodeSnippet(Ecode)
+    sorted_isog_code_names = ['isogeny_class', 'rank', 'qexp', 'isogeny_matrix', 'isogeny_graph', 'curves']
+    return code.export_code(label, lang, sorted_isog_code_names)
 
 
 def tor_struct_search_Q(prefill="any"):
@@ -1139,6 +1263,7 @@ class ECSearchArray(SearchArray):
     noun = "curve"
     sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
              #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
+             ("disc", "Minimal discriminant", ["absD", "signD", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("rank", "rank", ["rank", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("torsion", "torsion", ["torsion", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("cm_discriminant", "CM discriminant", [("cm", -1), "conductor", "iso_nlabel", "lmfdb_number"]),
@@ -1153,7 +1278,8 @@ class ECSearchArray(SearchArray):
              ("adelic_genus", "adelic genus", ["adelic_genus", "adelic_level", "adelic_index"]),
              ("faltings_height", "Faltings height", ["faltings_height", "conductor", "iso_nlabel", "lmfdb_number"]),
              ("abc_quality", "$abc$ quality", ["abc_quality", "conductor", "iso_nlabel", "lmfdb_number"]),
-             ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"])]
+             ("szpiro_ratio", "Szpiro ratio", ["szpiro_ratio", "conductor", "iso_nlabel", "lmfdb_number"]),
+             ("intrinsic torsion", "Intrinsic torsion order", ["intrinsic_torsion", "conductor", "iso_nlabel", "lmfdb_number"])]
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
     jump_prompt = "Label or coefficients"
@@ -1347,6 +1473,19 @@ class ECSearchArray(SearchArray):
             knowl="ec.q.szpiro_ratio",
             example="8-",
             advanced=True)
+        intrinsic_torsion = TextBox(
+            name="intrinsic_torsion",
+            label="Intrinsic torsion order",
+            knowl="ec.intrinsic_torsion",
+            example="3",
+            advanced=True)
+
+        manin_constant = TextBox(
+            name="manin_constant",
+            label="Manin constant",
+            knowl="ec.q.manin_constant",
+            example="2",
+            advanced=True)
 
         count = CountBox()
 
@@ -1363,6 +1502,7 @@ class ECSearchArray(SearchArray):
             [adelic_level, adelic_index],
             [adelic_genus, faltings_height],
             [abc_quality, szpiro_ratio],
+            [intrinsic_torsion, manin_constant],
             [count]
             ]
 
@@ -1372,5 +1512,6 @@ class ECSearchArray(SearchArray):
             [class_deg, isodeg, class_size, num_int_pts],
             [sha, sha_primes, regulator, reduction, faltings_height],
             [galois_image, adelic_level, adelic_index, adelic_genus],
-            [nonmax_primes, abc_quality, szpiro_ratio],
+            [nonmax_primes, abc_quality, szpiro_ratio, manin_constant],
+            [intrinsic_torsion]
             ]

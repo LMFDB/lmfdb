@@ -30,6 +30,16 @@ function set_buckets(col_selecter, bucket_id) {
   <input type="hidden" name="sort_dir" value="{{info.sort_dir}}" />
 </form>
 
+<script>
 {% if info.search_array.has_advanced_inputs(info) %}
-<script> show_advancedQ(); </script>
+show_advancedQ();
 {% endif %}
+
+function set_fresh() {
+  $(".search_stale").removeClass("search_stale").addClass("search_fresh");
+}
+
+$("input").on("input", set_fresh);
+$("select").on("change", set_fresh);
+</script>
+

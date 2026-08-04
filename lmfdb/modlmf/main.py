@@ -39,7 +39,7 @@ def my_latex(s):
 
 def get_bread(breads=[]):
     bc = [("mod &#x2113; modular forms", url_for(".index"))]
-    bc.extend(b for b in breads)
+    bc.extend(breads)
     return bc
 
 def learnmore_list():
@@ -225,10 +225,8 @@ def q_exp_display(label, number):
         number = int(number)
     except Exception:
         number = 20
-    if number < 20:
-        number = 20
-    if number > 150:
-        number = 150
+    number = max(number, 20)
+    number = min(number, 150)
     coeffs = db.modlmf_forms.lookup(label, projection='coeffs')[:number+1]
     return print_q_expansion(coeffs)
 

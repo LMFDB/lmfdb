@@ -49,7 +49,7 @@ def my_latex(s):
 # breadcrumbs and links for data quality entries
 
 def get_bread(tail=[]):
-    base = [("Lattice", url_for(".lattice_render_webpage"))]
+    base = [("Lattices", url_for(".lattice_render_webpage"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -204,7 +204,14 @@ lattice_columns = SearchColumns([
              url_for_label=url_for_label,
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
-             properties=lambda: [])
+             properties=lambda: [],
+             diagram_opts={
+                 "title": "Integral lattices diagram search",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "x_axis_default": "level",
+                 "y_axis_default": "minimum",
+                 "color": "aut",
+             })
 def lattice_search(info, query):
     for field, name in [('dim', 'Dimension'), ('det', 'Determinant'), ('level', None),
                         ('minimum', 'Minimal vector length'), ('class_number', None),
@@ -362,8 +369,7 @@ def theta_display(label, number):
         number = 20
     if number < 20:
         number = 30
-    if number > 150:
-        number = 150
+    number = min(number, 150)
     data = db.lat_lattices.lookup(label, projection=['theta_series'])
     coeff = [data['theta_series'][i] for i in range(number+1)]
     return print_q_expansion(coeff)
@@ -497,7 +503,7 @@ class LatSearchArray(SearchArray):
             label="Gram matrix",
             knowl="lattice.gram",
             example="[5,1,23]",
-            example_span=r"$[5,1,23]$ for the matrix $\begin{pmatrix}5 & 1\\ 1& 23\end{pmatrix}$")
+            example_span=r"$[2,1,0,6,3,10]$ for the matrix $\begin{pmatrix}2 & 1& 0\\ 1 & 6 & 3 \\ 0 & 3 & 10\end{pmatrix}$")
         minimum = TextBox(
             name="minimum",
             label="Minimal vector length",

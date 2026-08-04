@@ -28,7 +28,7 @@ def test_small_gps(sample_gp):
         if sample_gp['number_subgroup_classes']:
             SubLat = libgap.LatticeSubgroups(G)
             Cons = libgap.ConjugacyClassesSubgroups(SubLat)
-            print ("Number of subgroup classes match: "  + str(libgap.Size(Cons) == sample_gp['number_subgroup_classes']))
+            print("Number of subgroup classes match: " + str(libgap.Size(Cons) == sample_gp['number_subgroup_classes']))
         if sample_gp['number_normal_subgroups']:
             NormLat = libgap.NormalSubgroups(G)
             print("Number of normal subgroups match: " + str(libgap.Size(NormLat) == sample_gp['number_normal_subgroups']))

@@ -9,8 +9,8 @@
 
 <p>
   By {{KNOWL('modcurve.standard', 'family')}}:
-  {% for (fam, famname) in [("X0", "X_0(N)"), ("X1", "X_1(N)"), ("X", "X(N)"), ("Xsp", "X_{\\mathrm{sp}}(N)"), ("Xspplus", "X_{\\mathrm{sp}}^+(N)"), ("Xns", "X_{\\mathrm{ns}}(N)"), ("Xnsplus", "X_{\\mathrm{ns}}^+(N)"), ("XS4", "X_{S_4}(p)"), ("Xarith", "X_{\\mathrm{arith}}(N)")] %}
-  <a href="?family={{fam}}">${{famname}}$</a>&nbsp;
+  {% for (fam, famname) in [("X0", "X_0(N)"), ("X1", "X_1(N)"), ("Xpm1", "X_{\pm 1}(N)"), ("Xarith1", "X_{\\mathrm{arith},1}(M,MN)"), ("Xarithpm1", "X_{\\mathrm{arith},\pm 1}(M,MN)"), ("X", "X(N)"), ("Xsp", "X_{\\mathrm{sp}}(N)"), ("Xspplus", "X_{\\mathrm{sp}}^+(N)"), ("Xns", "X_{\\mathrm{ns}}(N)"), ("Xnsplus", "X_{\\mathrm{ns}}^+(N)"), ("XS4", "X_{S_4}(p)"), ("Xarith", "X_{\\mathrm{arith}}(N)")] %}
+  <a href="family/{{fam}}">${{famname}}$</a>&nbsp;
   {% endfor %}
 </p>
 

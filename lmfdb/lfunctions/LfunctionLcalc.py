@@ -142,7 +142,7 @@ def createLcalcfile_ver2(L, url):
 ###
 ### Specify whether Dirichlet coefficients are periodic:"""
     thefile += "\n\n"
-    if(L.coefficient_period != 0 or hasattr(L, 'is_zeta')):
+    if (L.coefficient_period != 0 or hasattr(L, 'is_zeta')):
         thefile += "periodic = True\n\n"
     else:
         thefile += "periodic = False\n\n"
@@ -235,7 +235,7 @@ def createLcalcfile_ver2(L, url):
         # thefile = thefile[:-2]
         thefile += "]\n"
 
-    return(thefile)
+    return (thefile)
 
 
 # Lcalc Version 1 ###########################################################
@@ -323,4 +323,4 @@ def createLcalcfile_ver1(L):
             # add imaginary part of Dirichlet coefficient
         thefile += "\n"
 
-    return(thefile)
+    return (thefile)

@@ -119,11 +119,11 @@ def by_url_belyi_galmap_label(group, sigma0, sigma1, sigmaoo, letnum):
     label = "{}-{}_{}_{}-{}".format(group, sigma0, sigma1, sigmaoo, letnum)
     return render_belyi_galmap_webpage(label)
 
-
-@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>/<triple>/")
-def by_url_embedded_belyi_map_label(group, sigma0, sigma1, sigmaoo, letnum, triple):
-    label = "{}-{}_{}_{}-{}".format(group, sigma0, sigma1, sigmaoo, letnum)
-    return render_embedded_belyi_map_webpage(label, triple)
+# TODO: fix embedded Belyi pages to work with raw and compress
+#@belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/<letnum>/<triple>/")
+#def by_url_embedded_belyi_map_label(group, sigma0, sigma1, sigmaoo, letnum, triple):
+#    label = "{}-{}_{}_{}-{}".format(group, sigma0, sigma1, sigmaoo, letnum)
+#    return render_embedded_belyi_map_webpage(label, triple)
 
 
 @belyi_page.route("/<group>/<sigma0>/<sigma1>/<sigmaoo>/")
@@ -490,7 +490,7 @@ class Belyi_download(Downloader):
         s += "// Magma code for Belyi map with label %s\n\n" % label
         s += "\n// Group theoretic data\n\n"
         s += "d := %s;\n" % rec["deg"]
-        s += "i := %s;\n" % int(label.split("T")[1][0])
+        s += "i := %s;\n" % int(label.split("T")[1].split("-")[0])
         s += "G := TransitiveGroup(d,i);\n"
         s += "sigmas := %s;\n" % self.perm_maker(rec, lang)
         s += "embeddings := %s;\n" % self.embedding_maker(rec, lang)
@@ -543,7 +543,7 @@ class Belyi_download(Downloader):
         s += "# Sage code for Belyi map with label %s\n\n" % label
         s += "\n# Group theoretic data\n\n"
         s += "d = %s\n" % rec["deg"]
-        s += "i = %s\n" % int(label.split("T")[1][0])
+        s += "i = %s\n" % int(label.split("T")[1].split("-")[0])
         s += "G = TransitiveGroup(d,i)\n"
         s += "sigmas = %s\n" % self.perm_maker(rec, lang)
         s += "embeddings = %s\n" % self.embedding_maker(rec, lang)
@@ -560,7 +560,7 @@ class Belyi_download(Downloader):
             s += "S.<x> = PolynomialRing(K)\n"
             f, h = curve_string_parser(rec)
             ainvs = hyperelliptic_polys_to_ainvs(f, h)
-            s += "X = EllipticCurve(%s)\n" % ainvs
+            s += "X = EllipticCurve(K, %s)\n" % ainvs
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']
@@ -713,7 +713,7 @@ def primitivization_search(info, query, search_type):
         re_str = PASSPORT_RE
         err_name = "passport"
     else:
-        ValueError("Invalid search type")
+        raise ValueError("invalid search type")
     if info.get("primitivization"):
         primitivization = info["primitivization"]
         if re.match(re_str, primitivization):
@@ -888,6 +888,7 @@ def labels_page():
 class BelyiCommonSearchArray(SearchArray):
     jump_knowl = "belyi.search_input"
     jump_label = "Label"
+    has_diagram = False
 
     def __init__(self):
         self.deg = TextBox(

@@ -8,7 +8,7 @@ from pathlib import Path
 import sqlite3
 import struct
 import sys
-from math import log
+from math import log2
 
 import mpmath
 mpmath.mp.prec = 300
@@ -72,7 +72,7 @@ def list_zeros(filename,
     # Nt0 = N(t0), the number of zeros with imaginary part < t0, and similarly
     # for t1. So the number of zeros in this block is Nt1 - Nt0.
 
-    mpmath.mp.prec = log(t1, 2) + 10 + 101
+    mpmath.mp.prec = log2(t1) + 10 + 101
     # We make sure that the working precision is large enough. Note
     # that we are adding a little too much here, so when these numbers
     # are printed, they will have too many digits.
@@ -132,7 +132,7 @@ def list_zeros(filename,
             #
             header = infile.read(8 * 4)
             t0, t1, Nt0, Nt1 = struct.unpack('ddQQ', header)
-            mpmath.mp.prec = log(t1, 2) + 10 + 101
+            mpmath.mp.prec = log2(t1) + 10 + 101
             t0 = mpmath.mpf(t0)
             Z = 0
 
@@ -157,8 +157,7 @@ def list_zeros(filename,
 
 
 def zeros_starting_at_t(t, number_of_zeros=1000):
-    if t < 14:
-        t = 14
+    t = max(t, 14)
     query = 'select * from zero_index where t <= ? order by t desc limit 1'
     c = sqlite3.connect(db_location).cursor()
     c.execute(query, (float(t),))
@@ -168,8 +167,7 @@ def zeros_starting_at_t(t, number_of_zeros=1000):
 
 def zeros_starting_at_N(N, number_of_zeros=1000):
     N = int(N)
-    if N < 0:
-        N = 0
+    N = max(N, 0)
 
     query = 'select * from zero_index where N <= ? order by N desc limit 1'
     c = sqlite3.connect(db_location).cursor()

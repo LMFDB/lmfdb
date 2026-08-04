@@ -6,9 +6,9 @@ from lmfdb import db
 from sage.all import ZZ, libgap, cached_function, lazy_attribute, Permutations, QQ, SymmetricGroup
 import os
 import yaml
-from flask import render_template
+from flask import render_template, url_for
 
-from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml
+from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
@@ -68,12 +68,22 @@ def list_with_mult(lis, names=True, cache=None):
 
 # Given [[1,2,4],[3,5]] give the string '(1,2,4)(3,5)'
 def cyclestrings(perm):
-    a = ['('+','.join([str(u) for u in v])+')' for v in perm]
+    a = ('(' + ','.join(str(u) for u in v) + ')' for v in perm)
     return ''.join(a)
 
 def compress_cycle_type(ct):
     bits = [(str(z), f'^{{{c}}}' if c > 1 else '' ) for z, c in sorted(Counter(ct).items(),reverse=True)]
     return ','.join(z + e for z,e in bits)
+
+def quick_latex(s):
+    str = s.replace('*',' ')
+    str = str.replace('(',r'\left(')
+    str = str.replace(')',r'\right)')
+    # multidigit exponents
+    str = re.sub(r'\^\s*(\d+)', r'^{\1}',str)
+    return '$'+str+'$'
+
+
 ############  Galois group object
 
 
@@ -120,7 +130,7 @@ class WebGaloisGroup:
         return int(self._data['order'])
 
     def gens(self):
-        return(self._data['gens'])
+        return (self._data['gens'])
 
     def display_short(self, emptyifnotpretty=False):
         if self._data.get('pretty') is not None:
@@ -150,9 +160,12 @@ class WebGaloisGroup:
         if str(self.n()) == "1":
             return "None needed"
         gens = self.gens()
-        gens = [cyclestrings(g) for g in gens]
+        gens = ['$'+cyclestrings(g)+'$' for g in gens]
         gens = ', '.join(gens)
         return gens
+
+    def aut_knowl(self):
+        return abstract_group_display_knowl(self._data['aut_label'])
 
     def gapgroupnt(self):
         if int(self.n()) == 1:
@@ -164,6 +177,14 @@ class WebGaloisGroup:
 
     def num_conjclasses(self):
         return self._data['num_conj_classes']
+
+    @lazy_attribute
+    def portrait(self):
+        pict = db.gps_transitive_portraits.lookup(self.label, projection='portrait')
+        if pict:
+            pict_link = '<div style="align:center">'+pict+'</div>'
+            return pict_link
+        return '<div style="text-align:center"><img src="%s" style="display:inline" height="150" width="116"/></div>' % url_for('static', filename='images/Evariste_galois.jpg')
 
     @lazy_attribute
     def wag(self):
@@ -192,7 +213,7 @@ class WebGaloisGroup:
 
     @lazy_attribute
     def conjclasses(self):
-        if self.num_conjclasses()>CC_LIMIT:
+        if self.num_conjclasses() > CC_LIMIT:
             return None
         g = self.gapgroupnt()
         n = self.n()
@@ -215,8 +236,9 @@ class WebGaloisGroup:
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            for j in range(len(self.conjugacy_classes)):
-                self.conjugacy_classes[j].force_repr(' ')
+            if self.conjugacy_classes:
+                for j in range(len(self.conjugacy_classes)):
+                    self.conjugacy_classes[j].force_repr(' ')
         cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
         inds = [n-len(z) for z in cc2]
         cc2 = [compress_cycle_type(z) for z in cc2]
@@ -245,6 +267,28 @@ class WebGaloisGroup:
             return False
         return self.wag.complex_characters_known
 
+    @lazy_attribute
+    def regulars(self):
+        t = list(db.gps_regular_polynomials.search({'label':self.label})) # it will be a short list
+        if t:
+            genknowl = display_knowl("gg.generic_polynomial", "generic")
+
+            def msg(code):
+                if code is None:
+                    return ''
+                if code == []:
+                    return f' is {genknowl} for any base field $K$'
+                if code == [0]:
+                    return fr' is {genknowl} for the base field $\Q$'
+                code = ','.join(str(z) for z in code)
+                return fr' is {genknowl} for any base field $K$ of characteristic $\neq$ {code}'
+
+            regdata = [(raw_typeset(z['polynomial'], quick_latex(z['polynomial'])), msg(z.get('generic'))) for z in t]
+            for j, (poly, msg) in enumerate(regdata):
+                if msg:
+                    regdata[j] = (poly, f'The polynomial $f_{{{j+1}}}$ {msg}')
+            return regdata
+
     def chartable(self):
         self.conjclasses # called to load info in self
         return render_template("character-table.html", gp=self,
@@ -260,8 +304,10 @@ class WebGaloisGroup:
         # read in code.yaml from galois_groups directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        for lang in self.code['gg']:
-            self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+
+        for prop in ['gg', 'auts']:
+            for lang in self.code[prop]:
+                self.code[prop][lang] = self.code[prop][lang].format(**{'n':self.n(), 't':self.t()})
         self.code['show'] = { lang:'' for lang in self.code['prompt'] }
 
 ############  Misc Functions
@@ -396,7 +442,7 @@ def group_phrase(n, t):
         inf += "A non-solvable"
     inf += ' group of order '
     inf += str(group['order'])
-    return(inf)
+    return (inf)
 
 
 @cached_function
@@ -488,7 +534,7 @@ def group_cclasses_knowl_guts(n, t):
     rest += "<p><a title='Malle's constant $a(G)$' knowl='gg.malle_a'>'Malle's constant $a(G)$</a>: &nbsp; &nbsp;"
     wgg = WebGaloisGroup(label)
     if wgg.malle_a:
-        rest += '$%s$'%str(wgg.malle_a)
+        rest += '$%s$' % str(wgg.malle_a)
     else:
         rest += 'not computed'
     return rest
@@ -936,3 +982,86 @@ def get_aliases():
             aliases[ky].append(nt)
         aliases[ky].sort()
     return aliases
+
+# These dictionaries are used by number field parsing code when user requests a dihedral galois group
+dihedral_gal = {
+    2: "2T1",
+    4: "4T2",
+    6: "6T2",
+    8: "8T4",
+    10: "10T2",
+    12: "12T3",
+    14: "14T2",
+    16: "16T13",
+    18: "18T5",
+    20: "20T4",
+    22: "22T2",
+    24: "24T13",
+    26: "26T2",
+    28: "28T4",
+    30: "30T3",
+    32: "32T31",
+    34: "34T2",
+    36: "36T10",
+    38: "38T2",
+    40: "40T12",
+    42: "42T5",
+    44: "44T4",
+    46: "46T2",
+}
+
+dihedral_ngal = {
+    3: "3T2",
+    4: "4T3",
+    5: "5T2",
+    6: "6T3",
+    7: "7T2",
+    8: "8T6",
+    9: "9T3",
+    10: "10T3",
+    11: "11T2",
+    12: "12T12",
+    13: "13T2",
+    14: "14T3",
+    15: "15T2",
+    16: "16T56",
+    17: "17T2",
+    18: "18T13",
+    19: "19T2",
+    20: "20T10",
+    21: "21T5",
+    22: "22T3",
+    23: "23T2",
+    24: "24T34",
+    25: "25T4",
+    26: "26T3",
+    27: "27T8",
+    28: "28T10",
+    29: "29T2",
+    30: "30T14",
+    31: "31T2",
+    32: "32T374",
+    33: "33T3",
+    34: "34T3",
+    35: "35T4",
+    36: "36T47",
+    37: "37T2",
+    38: "38T3",
+    39: "39T4",
+    40: "40T46",
+    41: "41T2",
+    42: "42T11",
+    43: "43T2",
+    44: "44T9",
+    45: "45T4",
+    46: "46T3",
+    47: "47T2",
+}
+
+multiquad = {
+    2: "2T1",
+    4: "4T2",
+    8: "8T3",
+    16: "16T3",
+    32: "32T39",
+}
