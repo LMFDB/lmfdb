@@ -22,7 +22,7 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -36,24 +36,13 @@ from lmfdb.knowledge import knowledge_page
 _cache_time = 120
 
 
-# know IDs are restricted by this regex
-allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
-allowed_annotation_id = re.compile(r"^[a-zA-Z0-9._\-~]+$")  # all unreserved URL characters
-
-
 def allowed_id(ID):
-    if ID.endswith('comment'):
-        main_knowl = ".".join(ID.split(".")[:-2])
-        return knowldb.knowl_exists(main_knowl)
-    if ID.endswith('top') or ID.endswith('bottom') or ID.startswith("columns."):
-        if not allowed_annotation_id.match(ID):
-            label = '.'.join(ID.split(".")[1:-1])
-            flash_error("Label '%s' contains characters not allowed by knowl database; updated allowed_id function or change label scheme" % label)
-            return False
-    elif not allowed_knowl_id.match(ID):
-        flash_error("""Oops, knowl id '%s' is not allowed.
-                  It must consist of lowercase characters,
-                  no spaces, numbers or '.', '_' and '-'.""", ID)
+    # The actual validation logic is in bad_knowl_id_reason, which can also be
+    # used outside a request context; here we just flash the error message.
+    reason = bad_knowl_id_reason(ID)
+    if reason is not None:
+        errmsg, args = reason
+        flash_error(errmsg, *args)
         return False
     return True
 
