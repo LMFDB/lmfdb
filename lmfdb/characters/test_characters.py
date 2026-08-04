@@ -36,7 +36,11 @@ class DirichletSearchTest(LmfdbTest):
 
     def test_search(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4')
-        assert r'15.e' in W.get_data(as_text=True)
+        data = W.get_data(as_text=True)
+        assert "The search query took longer than expected" not in data
+        assert r'15.e' in data
+        W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4&is_primitive=no')
+        assert r'30.e' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7')
         assert r'25.d' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=Yes')
