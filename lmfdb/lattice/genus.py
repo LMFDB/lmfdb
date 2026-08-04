@@ -10,7 +10,7 @@ from sage.all import ZZ, matrix, IntegralLattice
 from lmfdb.utils import (
     flash_error, to_dict, #web_latex_split_on_pm,
     SearchArray, EmbeddedSearchArray, TextBox, TextBoxWithSelect, SelectBox, CountBox, #prop_int_pretty,
-    parse_ints, parse_posints, parse_count,
+    parse_ints, parse_posints, parse_signed_ints, parse_count,
     parse_bracketed_posints, parse_start, parse_noop, #clean_input,
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
@@ -169,18 +169,16 @@ def common_parse(info, query, det_qfield='det'):
     # stores det_abs/det_sign, so the lattice search passes det_qfield='det_abs'.
     for field, name in [('rank', 'Rank'), ('level', 'Level'), ('class_number', 'Class number')]:
         parse_posints(info, query, field, name)
-    # TODO: fix handling of sign here (e.g. -100..-11 currently fails)
     if det_qfield == 'det':
+        # lat_genera stores a signed det column, so parse_ints handles signs directly
         parse_ints(info, query, 'det', 'Determinant')
     else:
-        det = (info.get('det') or '').strip()
-        if re.fullmatch(r'-\d+', det):
-            query['det_sign'] = -1
-            det_info = dict(info)
-            det_info['det'] = det[1:]
-            parse_ints(det_info, query, 'det', 'Determinant', qfield=det_qfield)
-        else:
-            parse_ints(info, query, 'det', 'Determinant', qfield=det_qfield)
+        # lat_lattices_new stores (det_sign, det_abs).  parse_signed_ints is
+        # sign-aware: "5" gives det_sign=1, "-5" gives det_sign=-1, ranges such
+        # as "5-20" or "-20--5" constrain det_abs with the appropriate sign,
+        # and comma-separated lists (including mixed signs, or ranges spanning
+        # zero) become an $or over (det_sign, det_abs) clauses.
+        parse_signed_ints(info, query, 'det', 'Determinant', qfield=('det_sign', 'det_abs'))
     parse_ints(info, query, 'disc', 'Discriminant')
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 

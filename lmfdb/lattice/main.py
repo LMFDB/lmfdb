@@ -113,6 +113,11 @@ def _show_genus(query, info, genus_label):
     return db.lat_lattices_new.search(query, limit=count, offset=start, info=info)
 
 
+# Wall-clock budget (in seconds) for the isometry postprocessor below.
+# Module-level so that tests can temporarily raise it for deterministic runs.
+ISOM_TIME_LIMIT = 20.0
+
+
 def lattice_search_isometric(res, info, query):
     """
     We check for isometric lattices if the user enters a valid gram matrix
@@ -126,8 +131,6 @@ def lattice_search_isometric(res, info, query):
     5. If no match is found (or the time budget is exceeded), show all lattices
        in the genus with an informational message.
     """
-    ISOM_TIME_LIMIT = 20.0  # seconds
-
     if info['number'] == 0 and info.get('gram_matrix'):
         A = info['gram_matrix']
         query.pop('gram', None)
@@ -142,12 +145,15 @@ def lattice_search_isometric(res, info, query):
         except Exception:
             return res
 
-        # Use genus invariants to narrow the DB search
+        # Use genus invariants to narrow the DB search.  Note that nplus is the
+        # number of positive eigenvalues p, i.e. signature_pair() = (p, n),
+        # whereas signature() is the difference p - n (they agree only for
+        # positive-definite lattices).
         genus_query = {
             'rank': int(input_genus.rank()),
             'det': int(input_genus.det()),
             'level': int(input_genus.level()),
-            'nplus': int(input_genus.signature()),
+            'nplus': int(input_genus.signature_pair()[0]),
             'is_even': bool(input_genus.is_even()),
         }
 
