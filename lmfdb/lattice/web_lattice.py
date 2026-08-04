@@ -355,8 +355,9 @@ class WebGenus(WebLat):
         chi_orbit = 'a' if chi.is_trivial() else 'b'
         mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
         try:
-            # Eisenstein newspace labels are only supported once the CMF
-            # Eisenstein branch is merged; skip the friend if not available.
+            # The CMF code accepts Eisenstein (E) newspace labels only when
+            # the Eisenstein branch is present (it is on alpha); degrade
+            # gracefully so the lattices branch can also be deployed without it.
             friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
         except ValueError:
             pass
@@ -545,8 +546,9 @@ class WebLattice(WebLat):
         chi_orbit = 'a' if chi.is_trivial() else 'b'
         mf_space = f'{self.level}.{weight}.E.{chi_orbit}'
         try:
-            # Eisenstein newspace labels are only supported once the CMF
-            # Eisenstein branch is merged; skip the friend if not available.
+            # The CMF code accepts Eisenstein (E) newspace labels only when
+            # the Eisenstein branch is present (it is on alpha); degrade
+            # gracefully so the lattices branch can also be deployed without it.
             friends.append(("Newspace " + mf_space, url_for_mf_label(mf_space)))
         except ValueError:
             pass
