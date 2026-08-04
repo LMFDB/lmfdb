@@ -484,12 +484,12 @@ class ModCurve_download(Downloader):
         ),
     }
 
-    def download_modular_curve_magma_str(self, label):
+    def download_modular_curve_magma_str(self, label, lang="Magma"):
         s = ""
         rec = combined_data(label)
         if rec is None:
             return abort(404, "Label not found: %s" % label)
-        s += "// Magma code for modular curve with label %s\n\n" % label
+        s += "// %s code for modular curve with label %s\n\n" % (lang, label)
         if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
             s += "// Other names and/or labels\n"
             if rec['name']:
@@ -653,7 +653,7 @@ class ModCurve_download(Downloader):
         return self._wrap(s, label, lang="magma")
 
     def download_modular_curve_sage(self, label):
-        s = self.download_modular_curve_magma_str(label)
+        s = self.download_modular_curve_magma_str(label, lang="Sage")
         s = s.replace(":=", "=")
         s = s.replace(";", "")
         s = s.replace("//", "#")

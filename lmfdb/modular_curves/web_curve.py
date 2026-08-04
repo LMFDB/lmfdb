@@ -1044,6 +1044,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def rational_points_description(self):
         curve = self
+        desc = ""
         if curve.known_degree1_noncm_points or curve.pointless is False:
             if curve.genus == 1 and curve.rank is None:
                 desc = r'This modular curve is an elliptic curve, but the rank has not been computed'
@@ -1088,7 +1089,10 @@ class WebModCurve(WebObj):
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
-            if curve.obstructions == [0]:
+            if curve.obstructions is None:
+                # Obstruction data not computed (or not yet loaded)
+                desc = 'This modular curve has no known rational points.'
+            elif curve.obstructions == [0]:
                 desc = 'This modular curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
                 desc = fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'
