@@ -2351,7 +2351,10 @@ class WebAbstractGroup(WebObj):
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
             code_cmd = " ".join([self.create_short_snippet((rep['family'], rep['d'], rep['q'])) for rep in rdata])
-            return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr><tr><td colspan="6">{code_cmd}</td></tr>'
+            head = f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
+            if not code_cmd.strip():
+                return head
+            return head + f'<tr><td colspan="6">{code_cmd}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
             if not skip_head:  #add copy button in certain cases
@@ -2511,6 +2514,8 @@ class WebAbstractGroup(WebObj):
 
                 # Display code snippets for transitive group representations
                 code_cmd = " ".join([self.create_short_snippet(trans) for trans in self.transitive_friends])
+                if not code_cmd.strip():
+                    return rep_content
                 return rep_content + f'<tr><td colspan="6">{code_cmd}</td></tr>'
 
             elif rtype == "semidirect":
@@ -2857,8 +2862,11 @@ class WebAbstractGroup(WebObj):
 
     # Used for displaying code snippets across multiple columns in a table
     def create_long_snippet(self,item):
+        code = self.code_snippets()
+        if not code or not code.get(item):
+            return ""
         col_span_val = '"6"'
-        snippet = CodeSnippet(self.code_snippets(), item,
+        snippet = CodeSnippet(code, item,
                               pre=f"<tr> <td colspan={col_span_val}>",
                               post="</td></tr>")
         return snippet.place_code()
@@ -2866,7 +2874,10 @@ class WebAbstractGroup(WebObj):
     # Used for displaying (short) code snippets in the constructions table
     # e.g. for Lie type representations or transitive groups
     def create_short_snippet(self,item):
-        snippet = CodeSnippet(self.code_snippets(), item)
+        code = self.code_snippets()
+        if not code or not code.get(item):
+            return ""
+        snippet = CodeSnippet(code, item)
         return snippet.place_code()
 
     @lazy_attribute
@@ -3279,6 +3290,11 @@ class WebAbstractGroup(WebObj):
             if prop not in ['frontmatter', 'snippet_test']:
                 for lang in code[prop]:
                     code[prop][lang] = code[prop][lang].format(**data)
+
+        # Special fix for the trivial group 1.1  (fix Magma's PCGroup code snippet)
+        if self.order == 1:
+            code['presentation']['magma'] = code['presentation']['magma'].replace("  := Explode([]); AssignNames(~G, []);", "")
+
         return code
 
     # The following attributes are used in create_boolean_string
