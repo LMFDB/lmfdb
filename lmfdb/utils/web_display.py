@@ -829,8 +829,13 @@ def sparse_cyclotomic_to_mathml(n, dat):
         if k == 0:
             return "<mn>1</mn>"
         elif n == 4:
-            assert k == 1
-            return zeta
+            # zeta = i has no subscript index, so higher powers (which can occur
+            # when the input is not reduced to a basis) are shown as superscripts.
+            if k == 1:
+                return zeta
+            if k < 0:
+                return f"<msup>{zeta}<mrow>{minus}<mn>{-k}</mn></mrow></msup>"
+            return f"<msup>{zeta}<mn>{k}</mn></msup>"
         if k == 1:
             return f"<msub>{zeta}</msub>"
         if 1 < k < 10:
