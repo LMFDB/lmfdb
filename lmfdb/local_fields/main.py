@@ -1349,7 +1349,7 @@ def family_page(label):
     try:
         family = pAdicSlopeFamily(label)
     except NotImplementedError:
-        flash_error("No famly with label %s in the database", label)
+        flash_error("No family with label %s in the database", label)
         return redirect(url_for(".index"))
     info = to_dict(request.args, search_array=FamilySearchArray(family), family_label=label, family=family, stats=LFStats())
     p, n = family.p, family.n
