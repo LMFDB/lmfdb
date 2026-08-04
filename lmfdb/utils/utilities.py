@@ -892,34 +892,6 @@ def ajax_result(id):
         return "<expired>"
 
 
-def ajax_more(callback, *arg_list, **kwds):
-    from .web_display import web_latex
-    inline = kwds.get('inline', True)
-    text = kwds.get('text', 'more')
-    nonce = hex(random.randint(0, 1 << 128))
-    if inline:
-        args = arg_list[0]
-        arg_list = arg_list[1:]
-        if isinstance(args, tuple):
-            res = callback(*arg_list)
-        elif isinstance(args, dict):
-            res = callback(**args)
-        else:
-            res = callback(args)
-        res = web_latex(res)
-    else:
-        res = ''
-    if arg_list:
-        url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
-    else:
-        return res
-
-
-def image_src(G):
-    return ajax_url(image_callback, G, _ajax_sticky=True)
-
-
 def image_callback(G):
     P = G.plot()
     _, filename = tempfile.mkstemp('.png')
