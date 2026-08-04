@@ -2797,6 +2797,9 @@ def download_group_code(label, download_type):
             for lang in code_snippets["presentation"]:
                 code_snippets["presentation"][lang] = code_snippets["presentation"][lang].replace("G :=", "GPC :=").replace("G =", "GPC =").replace("G.", "GPC.").replace("G,", "GPC,")
 
+        # If group is non-abelian, remove code snippets only meant for abelian groups
+        code_snippets["primary_decomposition"].pop('magma', None)
+
         code = CodeSnippet(code_snippets)
         response = make_response(code.export_code(label, download_type, sorted_code_names))
     except Exception as err:
@@ -4007,9 +4010,3 @@ def order_stats_list_to_string(o_list):
         if o_list.index(pair) != len(o_list) - 1:
             s += ","
     return s
-
-
-#sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
-
-Fullname = {'magma': 'Magma', 'gap': 'Gap'}
-Comment = {'magma': '//', 'gap': '#'}
