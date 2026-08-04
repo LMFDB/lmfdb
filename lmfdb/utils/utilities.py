@@ -982,6 +982,8 @@ class WebObj:
         return self._data is None
 
 def plural_form(noun):
+    if noun == "genus":
+        return "genera"
     if noun and noun[-1] != "s":
         noun += "s"
     return noun

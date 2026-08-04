@@ -208,7 +208,7 @@
       - title: "conjugacy classes"
         url_for: "abstract.conjugacy_class_index"
   - title: Lattices
-    url_for: "lattice.lattice_render_webpage"
+    url_for: "lattice.index"
     status: beta
     colspan: onecolumn
   - title: Finite subgroups of

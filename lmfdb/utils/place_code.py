@@ -49,7 +49,7 @@ class CodeSnippet():
                     lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
                     lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
                 else:
-                    lines = code[item][L]
+                    lines = code[item][L] if code[item][L] is not None else []
 
                 prompt = code['prompt'][L] if 'prompt' in code and L in code['prompt'] else L
                 class_str = " ".join([L,'nodisplay','codebox'])

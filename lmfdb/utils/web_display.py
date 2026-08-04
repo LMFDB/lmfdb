@@ -563,6 +563,7 @@ def raw_typeset_poly(coeffs,
 
 def raw_typeset_poly_factor(factors, # list of pairs (f,e)
                             compress_threshold=20, # this is per factor
+                            total_threshold=80, # this is the total length
                             decreasing=True,
                             **kwargs):
     if len(factors) == 0:
@@ -578,19 +579,62 @@ def raw_typeset_poly_factor(factors, # list of pairs (f,e)
             **kwargs)
     raw = []
     tset = []
+    total = 0
     for f, e in factors:
-        rawf = str(f)
+        if e == 0:
+            continue
+        elif e == 1:
+            eraw = etset = ""
+        else:
+            eraw = f"^{e}"
+            etset = f"^{{{e}}}"
+        rawf = str(f).replace(" ", "")
         tsetf = compress_polynomial(f, compress_threshold, decreasing)
         if '+' in rawf or '-' in rawf:
-            raw.append(f'({rawf})^{e}')
-            tset.append(f'({tsetf})^{{{e}}}')
+            raw.append(f'({rawf}){eraw}')
+            tset.append(f'({tsetf}){etset}')
         else:
-            raw.append(f'{rawf}^{e}')
-            tset.append(f'{tsetf}^{{{e}}}')
+            raw.append(f'{rawf}{eraw}')
+            tset.append(f'{tsetf}{etset}')
+        total += len(tset[-1])
 
+    if len(tset) > 2 and total > total_threshold:
+        total = len(tset[0]) + len(tset[-1])
+        for i, tsetfe in enumerate(tset[1:-1], 1):
+            total += len(tsetfe)
+            if total > total_threshold:
+                break
+        tset[i:-1] = [r"\cdots"]
     tset = " ".join(tset)
-    raw = " ".join(raw)
+    raw = "*".join(raw)
     return raw_typeset(raw, rf'\( {tset} \)', compressed=r'\cdots' in tset, **kwargs)
+
+def raw_typeset_matrix(M, # matrix
+                       compress_threshold=10, # compression if the number of rows/cols is larger than this
+                       keep=5, # if compressed, keep this number of initial rows/cols
+                       **kwargs):
+    # For now, we don't compress individual entries
+    raw = "[[" + "],\n[".join(",".join(str(c) for c in row) for row in M) + "]]"
+    if M.nrows() <= compress_threshold and M.ncols() <= compress_threshold:
+        return raw_typeset(raw, rf'\( {latex(M)} \)', compressed=False, **kwargs)
+    tset = []
+    if M.nrows() > compress_threshold:
+        rows = list(M)[:keep] + [M[-1]]
+    else:
+        rows = list(M)
+    if M.ncols() > compress_threshold:
+        rows = [[str(c) for c in row[:keep]] + [r"\cdots"] + [str(row[-1])] for row in rows]
+        ncols = keep + 2
+    else:
+        rows = [[str(c) for c in row] for row in rows]
+        ncols = M.ncols()
+    if M.nrows() > compress_threshold:
+        if M.ncols() > compress_threshold:
+            rows[-1:-1] = [[r"\vdots"] * keep + [r"\ddots", r"\vdots"]]
+        else:
+            rows[-1:-1] = [[r"\vdots"] * M.ncols()]
+    tset = r"\left(\begin{array}{%s}%s\end{array}\right)" % ("r"*ncols, " \\\\\n".join(" & ".join(row) for row in rows))
+    return raw_typeset(raw, rf'\( {tset} \)', compressed=True, **kwargs)
 
 
 def raw_typeset_qexp(coeffs_list,
