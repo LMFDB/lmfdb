@@ -6,6 +6,7 @@
 {% endif %}
 {% endmacro %}
 
+
 {% block body -%}
 <div id="layout">
 <div id="page-wrapper">
@@ -150,9 +151,8 @@
    {% endif %}
  {%- endmacro %}
 
-{% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or learnmore) %}
+{% if (properties or origins or Linstances or friends or factors_origins or navi or  downloads or related_sections or learnmore) %}
       <div id="properties">
-       <div id="properties-collapser">&uarr;</div>
     {% if properties %}
        <h1 class="properties-header">Properties</h1>
        <div class="properties-body">
@@ -182,6 +182,7 @@
    {{ rightnavig("Origins of factors", factors_origins) }}
    {{ neighbors("Nearby objects", navi) }}
    {{ rightnavig("Downloads", downloads) }}
+   {{ rightnavig("Related sections", related_sections) }}
    {{ rightnavig("Learn more", learnmore) }}
     </div>
     {%- endif %}

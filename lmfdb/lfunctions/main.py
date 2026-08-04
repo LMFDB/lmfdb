@@ -95,13 +95,6 @@ def learnmore_list(path=None, remove=None):
 
 # Top page #####################################################################
 
-@l_function_page.route("/contents")
-def contents():
-    return render_template(
-        "LfunctionContents.html",
-        title="L-functions",
-        learnmore=learnmore_list(),
-        bread=[("L-functions", " ")])
 
 @l_function_page.route("/")
 def index():
@@ -2008,8 +2001,8 @@ def generic_completeness():
 
 @l_function_page.route("/Reliability")
 def generic_reliability():
-    t = 'Reliabililty of L-function data'
-    bread = get_bread(breads=[('Reliabillity', ' ')])
+    t = 'Reliability of L-function data'
+    bread = get_bread(breads=[('Reliability', ' ')])
     return render_template("single.html", kid='rcs.rigor.lfunction', title=t, bread=bread)
 
 @l_function_page.route("/<path:prepath>/Source")
