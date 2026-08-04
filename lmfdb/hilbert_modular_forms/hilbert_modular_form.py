@@ -155,7 +155,14 @@ hmf_columns = SearchColumns([
              bread=lambda: get_bread("Search results"),
              learnmore=learnmore_list,
              url_for_label=url_for_label,
-             properties=lambda: [])
+             properties=lambda: [],
+             diagram_opts={
+                 "title": "Hilbert modular form diagram search",
+                 "bread": lambda: get_bread("Diagram search"),
+                 "x_axis_default": "level_norm",
+                 "y_axis_default": "dimension",
+                 "color_default": "disc",
+             })
 def hilbert_modular_form_search(info, query):
     parse_nf_string(info,query,'field_label',name="Field")
     parse_ints(info,query,'deg', name='Field degree')
@@ -333,10 +340,10 @@ def download_hmf_sage(**args):
     F = WebNumberField(f['field_label'])
     F_hmf = get_hmf_field(f['field_label'])
 
-    outstr = '/*\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
+    outstr = '"""\n  This code can be loaded, or copied and paste using cpaste, into Sage.\n'
     outstr += '  It will load the data associated to the HMF, including\n'
     outstr += '  the field, level, and Hecke and Atkin-Lehner eigenvalue data.\n'
-    outstr += '*/\n\n'
+    outstr += '"""\n\n'
 
     outstr += 'P.<x> = PolynomialRing(QQ)\n'
     outstr += 'g = P(' + str(F.coeffs()) + ')\n'

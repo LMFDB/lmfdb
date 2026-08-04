@@ -42,7 +42,7 @@
     </tr>
   </table>
 </div>
-{{ place_code('jacobi') }}
+{{ place_code('value') }}
 {% set value_default = 2 %}
 <form style="margin-left:10px;"> \( \chi_{ {{modulus}} }({{number}},a) \;\)  at \(\;a = \)
     <input id="calc-value-input" size=10 placeholder={{gauss_default}}>
@@ -61,7 +61,7 @@
 <h2>
     {{ KNOWL('character.dirichlet.gauss_sum', title='Gauss sum') }}
 </h2>
-{{ place_code('gauss') }}
+{{ place_code('gauss_sum') }}
 {% set gauss_default = 2 %}
 <form style="margin-left:10px;"> \( \tau_{ a }( \chi_{ {{modulus}} }({{number}},&middot;) )\;\)  at \(\;a = \)
     <input id="calc-gauss-input" size=10 placeholder={{gauss_default}}>
@@ -75,7 +75,7 @@
 <h2>
   {{ KNOWL('character.dirichlet.jacobi_sum', title='Jacobi sum') }}
 </h2>
-{{ place_code('jacobi') }}
+{{ place_code('jacobi_sum') }}
 {% set jacobi_default = 1 %}
 <form style="margin-left:10px;"> \( J(\chi_{ {{modulus}} }({{number}},&middot;),\chi_{ {{modulus}} }(n,&middot;)) \;\) for \( \; n = \)
   <input id="calc-jacobi-input" size="10" placeholder={{jacobi_default}}>
@@ -89,7 +89,7 @@
 <h2>
   {{ KNOWL('character.dirichlet.kloosterman_sum', title='Kloosterman sum') }}
 </h2>
-{{ place_code('kloosterman') }}
+{{ place_code('kloosterman_sum') }}
 {% set kloosterman_default_a = 1 %}
 {% set kloosterman_default_b = 2 %}
 <form style="margin-left:10px;"> \(K(a,b,\chi_{ {{modulus}} }({{number}},&middot;)) \;\) at \(\; a,b = \)

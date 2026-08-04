@@ -279,6 +279,7 @@ class MaassSearchArray(SearchArray):
     jump_egspan = "e.g. 42.42 or 42.0.1.42.1"
     jump_knowl = "mf.maass.label"
     jump_prompt = "Label"
+    has_diagram = False
 
     def __init__(self):
         level = TextBox(name="level", label="Level", knowl="mf.maass.mwf.level", example="1", example_span="2 or 1-10")
@@ -383,7 +384,7 @@ def jump_box(info):
     random_projection="maass_label",
     bread=lambda: bread_prefix() + [('Search results', '')],
     learnmore=learnmore_list,
-    url_for_label=lambda label: url_for(".by_label", label=label),
+    url_for_label=lambda label: url_for(".by_label", label=label,),
 )
 def search(info, query):
     parse_ints(info, query, 'level', name='Level')
