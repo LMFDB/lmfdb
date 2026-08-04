@@ -887,10 +887,14 @@ class WebEC():
         tg['data'] = tgextra = []
 
         # find all base changes of this curve in the database, if any:
-        bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
-        # extract the fields from the labels of the base-change curves:
-        bc_fields = [lab.split("-")[0] for lab in bcs]
-        bc_pols = [db.nf_fields.lookup(lab, projection='coeffs') for lab in bc_fields]
+        nf_to_curve = {rec["field_label"]: rec["label"]
+                       for rec in db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}},
+                                                        ["field_label", "label"])}
+        # look up all the fields in the growth table in a single query
+        # (the projection must include the columns needed by field_pretty)
+        pol_to_nf = {tuple(rec["coeffs"]): rec
+                     for rec in db.nf_fields.search({"$or": [{"coeffs": tgd['field']} for tgd in tgdata]},
+                                                    ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
@@ -898,12 +902,16 @@ class WebEC():
             tg1['bc_label'] = "not in database"
             tg1['d'] = tgd['degree']
             F = tgd['field']
-            tg1['f'] = formatfield(F)
-            if "missing" in tg1['f']:
+            nf_data = pol_to_nf.get(tuple(F))
+            if nf_data is None:
+                tg1['f'] = formatfield(F, data={"label": "N/A"})
+                bcc = None
                 tg['fields_missing'] = True
+            else:
+                tg1['f'] = formatfield(F, data=nf_data)
+                bcc = nf_to_curve.get(nf_data["label"])
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol == F), None)
             if bcc:
                 from lmfdb.ecnf.main import split_full_label
                 F, NN, I, C = split_full_label(bcc)
@@ -927,6 +935,7 @@ class WebEC():
         ## {{data.tg.maxd}} such that...".
 
         tg['maxd'] = 24
+
     @lazy_attribute
     def code(self):
         # read in code.yaml from current directory:
