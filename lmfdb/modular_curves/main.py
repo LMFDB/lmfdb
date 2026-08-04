@@ -484,80 +484,119 @@ class ModCurve_download(Downloader):
         ),
     }
 
-    def download_modular_curve_magma_str(self, label, lang="Magma"):
-        s = ""
+    def download_modular_curve_str(self, label, lang):
+        """
+        The contents of the code download file for a modular curve, as a string.
+
+        INPUT:
+
+        - ``label`` -- the label of a modular curve
+        - ``lang`` -- either "magma" or "sage"; determines the syntax used for
+          the generated code (comment character, assignment operator, booleans,
+          statement terminator and polynomial ring constructor)
+        """
         rec = combined_data(label)
         if rec is None:
             return abort(404, "Label not found: %s" % label)
-        s += "// %s code for modular curve with label %s\n\n" % (lang, label)
-        if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
-            s += "// Other names and/or labels\n"
-            if rec['name']:
-                s += "// Curve name: %s\n" % rec['name']
-            if rec['CPlabel']:
-                s += "// Cummins-Pauli label: %s\n" % rec['CPlabel']
-            if rec['RZBlabel']:
-                s += "// Rouse-Zureick-Brown label: %s\n" % rec['RZBlabel']
-            if rec['RSZBlabel']:
-                s += "// Rouse-Sutherland-Zureick-Brown label: %s\n" % rec['RSZBlabel']
-            if rec['Slabel']:
-                s += "// Sutherland label: %s\n" % rec['Slabel']
-            if rec['SZlabel']:
-                s += "// Sutherland-Zywina label: %s\n" % rec['SZlabel']
-        s += "\n// Group data\n"
-        s += "level := %s;\n" % rec['level']
-        s += "// Elements that, together with Gamma(level), generate the group\n"
-        s += "gens := %s;\n" % rec['generators']
-        s += "// Group contains -1?\n"
-        if rec['contains_negative_one']:
-            s += "ContainsMinus1 := true;\n"
+        if lang == "magma":
+            com = "//"                        # comment character
+            asgn = ":="                       # assignment operator
+            eol = ";"                         # statement terminator
+            true, false = "true", "false"
+        elif lang == "sage":
+            com = "#"
+            asgn = "="
+            eol = ""
+            true, false = "True", "False"
         else:
-            s += "ContainsMinus1 := false;\n"
-        s += "// Index in Gamma(1)\n"
-        s += "index := %s;\n" % rec['index']
-        s += "\n// Curve data\n"
-        s += "conductor := %s;\n" % rec['conductor']
-        s += "bad_primes := %s;\n" % rec['bad_primes']
-        s += "// Genus\n"
-        s += "g := %s;\n" % rec['genus']
-        s += "// Rank\n"
-        s += "r := %s\n;" % rec['rank']
-        if rec['q_gonality'] != -1:
-            s += "// Exact gonality known\n"
-            s += "gamma := %s;\n" % rec['q_gonality']
-        else:
-            s += "// Exact gonality unknown, but contained in following interval\n"
-            s += "gamma_int := %s;\n" % rec['q_gonality_bounds']
-        s += "\n// Modular data\n"
-        s += "// Number of cusps\n"
-        s += "Ncusps := %s\n;" % rec['cusps']
-        s += "// Number of rational cusps\n"
-        s += "Nrat_cusps := %s\n;" % rec['rational_cusps']
-        s += "// CM discriminants\n"
-        s += "CM_discs := %s;\n" % rec['cm_discriminants']
-        if rec['factorization'] != []:
-            s += "// Modular curve is a fiber product of the following curves"
-            s += "factors := %s\n" % [f.replace("'", "\"") for f in rec['factorization']]
-        s += "// Groups containing given group, corresponding to curves covered by given curve\n"
-        parents_mag = "%s" % rec['parents']
-        parents_mag = parents_mag.replace("'", "\"")
-        s += "covers := %s;\n" % parents_mag
+            raise ValueError("Unsupported download language: %s" % lang)
 
-        s += "\n// Models for this modular curve, if computed\n"
+        def assign(name, value):
+            return "%s %s %s%s\n" % (name, asgn, value, eol)
+
+        s = "%s %s code for modular curve with label %s\n\n" % (com, lang.capitalize(), label)
+        if rec['name'] or rec['CPlabel'] or rec['Slabel'] or rec['SZlabel'] or rec['RZBlabel']:
+            s += "%s Other names and/or labels\n" % com
+            if rec['name']:
+                s += "%s Curve name: %s\n" % (com, rec['name'])
+            if rec['CPlabel']:
+                s += "%s Cummins-Pauli label: %s\n" % (com, rec['CPlabel'])
+            if rec['RZBlabel']:
+                s += "%s Rouse-Zureick-Brown label: %s\n" % (com, rec['RZBlabel'])
+            if rec['RSZBlabel']:
+                s += "%s Rouse-Sutherland-Zureick-Brown label: %s\n" % (com, rec['RSZBlabel'])
+            if rec['Slabel']:
+                s += "%s Sutherland label: %s\n" % (com, rec['Slabel'])
+            if rec['SZlabel']:
+                s += "%s Sutherland-Zywina label: %s\n" % (com, rec['SZlabel'])
+        s += "\n%s Group data\n" % com
+        s += assign("level", rec['level'])
+        s += "%s Elements that, together with Gamma(level), generate the group\n" % com
+        s += assign("gens", rec['generators'])
+        s += "%s Group contains -1?\n" % com
+        s += assign("ContainsMinus1", true if rec['contains_negative_one'] else false)
+        s += "%s Index in Gamma(1)\n" % com
+        s += assign("index", rec['index'])
+        s += "\n%s Curve data\n" % com
+        s += assign("conductor", rec['conductor'])
+        s += assign("bad_primes", rec['bad_primes'])
+        s += "%s Genus\n" % com
+        s += assign("g", rec['genus'])
+        s += "%s Rank\n" % com
+        s += assign("r", rec['rank'])
+        if rec['q_gonality'] != -1:
+            s += "%s Exact gonality known\n" % com
+            s += assign("gamma", rec['q_gonality'])
+        else:
+            s += "%s Exact gonality unknown, but contained in following interval\n" % com
+            s += assign("gamma_int", rec['q_gonality_bounds'])
+        s += "\n%s Modular data\n" % com
+        s += "%s Number of cusps\n" % com
+        s += assign("Ncusps", rec['cusps'])
+        s += "%s Number of rational cusps\n" % com
+        s += assign("Nrat_cusps", rec['rational_cusps'])
+        s += "%s CM discriminants\n" % com
+        s += assign("CM_discs", rec['cm_discriminants'])
+        if rec['factorization'] != []:
+            s += "%s Modular curve is a fiber product of the following curves\n" % com
+            s += assign("factors", str(rec['factorization']).replace("'", "\""))
+        s += "%s Groups containing given group, corresponding to curves covered by given curve\n" % com
+        s += assign("covers", str(rec['parents']).replace("'", "\""))
+
         models = list(db.modcurve_models.search(
             {"modcurve": label, "model_type":{"$not":1}},
             ["equation", "number_variables", "model_type", "smooth"]))
-        if models:
-            max_nb_variables = max([m["number_variables"] for m in models])
-            variables = "xyzwtuvrsabcdefghiklmnopqj"[:max_nb_variables]
-            s += "Pol<%s" % variables[0]
-            for x in variables[1:]:
-                s += ",%s" % x
-            s += "> := PolynomialRing(Rationals(), %s);\n" % max_nb_variables
+        maps = list(db.modcurve_modelmaps.search(
+            {"domain_label": label},
+            ["domain_model_type", "codomain_label", "codomain_model_type",
+             "coordinates", "leading_coefficients"]))
+        codomain_labels = [m["codomain_label"] for m in maps]
+        codomain_models = list(db.modcurve_models.search(
+            {"modcurve": {"$in": codomain_labels}},
+            ["equation", "modcurve", "model_type", "number_variables"]))
 
-        s += "// Isomorphic to P^1?\n"
-        is_P1 = "true" if (rec['genus'] == 0 and rec['pointless'] is False) else "false"
-        s += "is_P1 := %s;\n" % is_P1
+        # The polynomial ring must contain the variables of the model equations,
+        # of the coordinates of the maps (a map whose domain model is P^1 is
+        # expressed in the coordinates x, y of P^1), and of the codomain
+        # equations included with the maps.
+        num_variables = max((m["number_variables"] for m in models), default=0)
+        for m in maps:
+            if m["domain_model_type"] == 1:
+                num_variables = max(num_variables, 2)
+            if m["codomain_label"] != "1.1.0.a.1" and m["codomain_model_type"] != 1:
+                num_variables = max([num_variables] + [eq["number_variables"] for eq in codomain_models
+                                                       if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]])
+
+        s += "\n%s Models for this modular curve, if computed\n" % com
+        if num_variables:
+            variables = ",".join("xyzwtuvrsabcdefghiklmnopqj"[:num_variables])
+            if lang == "magma":
+                s += "Pol<%s> := PolynomialRing(Rationals(), %s);\n" % (variables, num_variables)
+            else:
+                s += "Pol.<%s> = PolynomialRing(QQ, %s)\n" % (variables, num_variables)
+
+        s += "%s Isomorphic to P^1?\n" % com
+        s += assign("is_P1", true if (rec['genus'] == 0 and rec['pointless'] is False) else false)
         model_id = 0
         for m in models:
             if m["model_type"] == 0:
@@ -577,25 +616,12 @@ class ModCurve_download(Downloader):
                 name = "Embedded model"
             else:
                 name = "Other model"
-            s += "\n// %s\n" % name
-            s += "model_%s := [" % model_id
-            s += ",".join(m['equation'])
-            s += "];\n"
+            s += "\n%s %s\n" % (com, name)
+            s += assign("model_%s" % model_id, "[%s]" % ",".join(m['equation']))
             model_id += 1
 
-        s += "\n// Maps from this modular curve, if computed\n"
-        maps = list(db.modcurve_modelmaps.search(
-            {"domain_label": label},
-            ["domain_model_type", "codomain_label", "codomain_model_type",
-             "coordinates", "leading_coefficients"]))
-        codomain_labels = [m["codomain_label"] for m in maps]
-        codomain_models = list(db.modcurve_models.search(
-            {"modcurve": {"$in": codomain_labels}},
-            ["equation", "modcurve", "model_type"]))
+        s += "\n%s Maps from this modular curve, if computed\n" % com
         map_id = 0
-        #if maps and is_P1: #variable t has not been introduced above
-        #     s += "Pol<t> := PolynomialRing(Rationals());\n"
-        #This was using t twice when the genus was large enough that t was used above. Even when t is not defined above, t is not used below.
         for m in maps:
             prefix = "map_%s_" % map_id
             has_codomain_equation = False
@@ -630,35 +656,29 @@ class ModCurve_download(Downloader):
                 else:
                     name += " to another model of modular curve"
                 name += " with label %s" % m["codomain_label"]
-            s += "\n// %s\n" % name
+            s += "\n%s %s\n" % (com, name)
             coord = m["coordinates"]
             if m["leading_coefficients"] is None:
                 lead = [1]*len(coord)
             else:
                 lead = m["leading_coefficients"]
             for j in range(len(coord)):
-                s += "//   Coordinate number %s:\n" % j
-                s += prefix + ("coord_%s := " % j)
-                s += "%s*(" % lead[j]
-                s += "%s);\n" % coord[j]
+                s += "%s   Coordinate number %s:\n" % (com, j)
+                s += assign(prefix + "coord_%s" % j, "%s*(%s)" % (lead[j], coord[j]))
             if has_codomain_equation:
-                s += "// Codomain equation:\n"
+                s += "%s Codomain equation:\n" % com
                 eq = [eq for eq in codomain_models if eq["modcurve"] == m["codomain_label"] and eq["model_type"] == m["codomain_model_type"]][0]
-                s += prefix + "codomain := " + "[%s];\n" % ",".join(eq["equation"])
+                s += assign(prefix + "codomain", "[%s]" % ",".join(eq["equation"]))
             map_id += 1
         return s
 
     def download_modular_curve_magma(self, label):
-        s = self.download_modular_curve_magma_str(label)
-        return self._wrap(s, label, lang="magma")
+        return self._wrap(self.download_modular_curve_str(label, "magma"),
+                          label, lang="magma")
 
     def download_modular_curve_sage(self, label):
-        s = self.download_modular_curve_magma_str(label, lang="Sage")
-        s = s.replace(":=", "=")
-        s = s.replace(";", "")
-        s = s.replace("//", "#")
-        s = s.replace("K<", "K.<")
-        return self._wrap(s, label, lang="sage")
+        return self._wrap(self.download_modular_curve_str(label, "sage"),
+                          label, lang="sage")
 
     def download_modular_curve(self, label, lang):
         if lang == "magma":

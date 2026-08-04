@@ -463,10 +463,19 @@ class WebModCurve(WebObj):
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
-        if self.genus > 0 and self.trace_hash is not None:
-            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
-                if r['newforms'] == self.newforms and r['label'] != self.label:
-                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
+        if self.genus > 0 and self.trace_hash is not None and self.newforms:
+            # newforms now live in modcurve_decomposition (keyed by Gassmann class)
+            # rather than gps_gl2zhat, so look them up there for each candidate sibling
+            candidates = [r for r in self.table.search({'trace_hash': self.trace_hash}, ['label', 'name', 'coarse_label'])
+                          if r['label'] != self.label]
+            classes = sorted({".".join(r['coarse_label'].split(".")[:4]) for r in candidates})
+            if classes:
+                class_newforms = {rec['gassman_class']: rec['newforms']
+                                  for rec in db.modcurve_decomposition.search({'gassman_class': {'$in': classes}},
+                                                                             ['gassman_class', 'newforms'])}
+                for r in candidates:
+                    if class_newforms.get(".".join(r['coarse_label'].split(".")[:4])) == self.newforms:
+                        friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         return friends
 
     @lazy_attribute
