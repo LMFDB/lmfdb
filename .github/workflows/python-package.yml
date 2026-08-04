@@ -32,7 +32,9 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
     env:
-      IS_ALPHA_PR: ${{ github.event_name == 'pull_request' && github.base_ref == 'alpha' }}
+      # True for PRs into alpha and for pushes to alpha: the feature tables only
+      # exist on devmirror, so proddb tests can't pass on the alpha branch.
+      IS_ALPHA_PR: ${{ (github.event_name == 'pull_request' && github.base_ref == 'alpha') || (github.event_name == 'push' && github.ref == 'refs/heads/alpha') }}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
     - uses: actions/checkout@v3
