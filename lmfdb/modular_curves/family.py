@@ -50,7 +50,7 @@ X0 = ModCurveFamily_base(
     psl2index=r"i = N\cdot \prod\limits_{p|N, \text{ prime}} \left(1 + \frac{1}{p}\right)",
     nu2=r"$\nu_2 = \begin{cases} 0, & \text{ if } N \equiv 0 \pmod{4}, \\ \prod\limits_{p|N, \text{prime}} \big( 1 + \big( \frac{-1}{p} \big) \big), & \text{otherwise.} \end{cases}$",
     nu3=r"$\nu_3 = \begin{cases} 0, & \text{ if } N \equiv 0 \pmod{9}, \\ \prod\limits_{p|N, \text{ prime}} \big( 1 + \big( \frac{-3}{p} \big) \big), & \text{otherwise.} \end{cases}$",
-    cusps=r"$\nu_\infty = \sum\limits_{d|N, d>0} \varphi\left(\left(d,\frac{N}{d}\right)\right)$",
+    cusps=r"$\nu_\infty = \sum\limits_{d|N, d>0} \varphi\left(\gcd\left(d,\frac{N}{d}\right)\right)$",
     knowl_ID="modcurve.x0",
     genus_formula=r"$$ g = 1 + \frac{ i }{12} - \frac{ \nu_2 }{4} - \frac{ \nu_3}{3} - \frac{ \nu_\infty}{2}$$",
     notation=r'''<ul> <li>$\varphi(d)$ is the Euler totient function </li></ul>''',

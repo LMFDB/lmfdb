@@ -236,8 +236,9 @@ class WebGaloisGroup:
             ccn = [x.Size() for x in cc]
             cclabels = ['' for z in cc]
             cc = [x.Representative() for x in cc]
-            for j in range(len(self.conjugacy_classes)):
-                self.conjugacy_classes[j].force_repr(' ')
+            if self.conjugacy_classes:
+                for j in range(len(self.conjugacy_classes)):
+                    self.conjugacy_classes[j].force_repr(' ')
         cc2 = [libgap.CycleLengths(x, list(range(1,n+1))) for x in cc]
         inds = [n-len(z) for z in cc2]
         cc2 = [compress_cycle_type(z) for z in cc2]
@@ -303,8 +304,10 @@ class WebGaloisGroup:
         # read in code.yaml from galois_groups directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
         self.code = yaml.load(open(os.path.join(_curdir, "code.yaml")), Loader=yaml.FullLoader)
-        for lang in self.code['gg']:
-            self.code['gg'][lang] = self.code['gg'][lang] % (self.n(),self.t())
+
+        for prop in ['gg', 'auts']:
+            for lang in self.code[prop]:
+                self.code[prop][lang] = self.code[prop][lang].format(**{'n':self.n(), 't':self.t()})
         self.code['show'] = { lang:'' for lang in self.code['prompt'] }
 
 ############  Misc Functions
@@ -1059,6 +1062,6 @@ multiquad = {
     2: "2T1",
     4: "4T2",
     8: "8T3",
-    16: "16T4",
+    16: "16T3",
     32: "32T39",
 }

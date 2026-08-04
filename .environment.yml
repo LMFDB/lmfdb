@@ -16,3 +16,4 @@ dependencies:
   - flask
   - werkzeug
   - parallel
+  - pari-elldata

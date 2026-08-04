@@ -8,7 +8,7 @@ from lmfdb.utils import (
     to_dict, web_latex_ideal_fact, flash_error, comma, display_knowl,
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
-    teXify_pol, search_wrap, Downloader)
+    teXify_pol, search_wrap, Downloader, redirect_no_cache)
 from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
@@ -86,12 +86,13 @@ def index():
         return bianchi_modular_form_search(info)
 
 @bmf_page.route("/random")
+@redirect_no_cache
 def random_bmf():    # Random Bianchi modular form
     res = db.bmf_forms.random(projection=['field_label', 'level_label', 'label_suffix'])
-    return redirect(url_for(".render_bmf_webpage",
+    return url_for(".render_bmf_webpage",
                     field_label=res['field_label'],
                     level_label=res['level_label'],
-                    label_suffix=res['label_suffix']), 307)
+                    label_suffix=res['label_suffix'])
 
 @bmf_page.route("/interesting")
 def interesting():
@@ -134,6 +135,14 @@ def url_for_label(label):
                    )))
 
 bmf_columns = SearchColumns([
+    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
+                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
+                          url_for("bmf.render_bmf_webpage",
+                                  field_label=fld,
+                                  level_label=lvl,
+                                  label_suffix=suff),
+                          short),
+                      download_col="short_label"),
     ProcessedCol("field_label", "nf", "Base field",
                  lambda fld: nf_display_knowl(fld, field_pretty(fld))),
     MultiProcessedCol("level", "mf.bianchi.level", "Level", ["field_label", "level_label"],
@@ -143,14 +152,6 @@ bmf_columns = SearchColumns([
                                   level_label=lvl),
                           lvl),
                       download_col="level_label"),
-    MultiProcessedCol("label", "mf.bianchi.labels", "Label", ["field_label", "level_label", "label_suffix", "short_label"],
-                      lambda fld, lvl, suff, short: '<a href="{}">{}</a>'.format(
-                          url_for("bmf.render_bmf_webpage",
-                                  field_label=fld,
-                                  level_label=lvl,
-                                  label_suffix=suff),
-                          short),
-                      download_col="short_label"),
     # See Issue #4170
     #MathCol("dimension", "mf.bianchi.newform", "Dimension"),
     ProcessedCol("sfe", "mf.bianchi.sign", "Sign",
@@ -705,6 +706,7 @@ class BMFSearchArray(SearchArray):
     jump_egspan = "e.g. 2.0.4.1-65.2-a (single form) or 2.0.4.1-65.2 (space of forms at a level)"
     jump_prompt = "Label"
     jump_knowl = "mf.bianchi.search_input"
+    has_diagram = False
 
     def __init__(self):
         field = TextBox(

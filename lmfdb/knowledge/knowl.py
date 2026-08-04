@@ -1,15 +1,13 @@
 # the basic knowledge object, with database awareness, …
 
 from collections import defaultdict
-from datetime import datetime, timedelta
-try:
-    from datetime import UTC               # Py 3.11+
-except ImportError:                         # Py ≤3.10
-    from datetime import timezone as _tz
-    UTC = _tz.utc
+from datetime import timedelta
+from lmfdb.utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
 import re
 import subprocess
 import time
+import yaml
+import difflib
 
 from psycodict.base import PostgresBase
 from psycodict import DelayCommit
@@ -18,37 +16,15 @@ from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
 from lmfdb.utils.config import Configuration
 from lmfdb.users.pwdmanager import userdb
-from lmfdb.utils import datetime_to_timestamp_in_ms
-from psycopg2.sql import SQL, Identifier, Placeholder
+from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from sage.all import cached_function
-from lmfdb.knowledge import logger
+from lmfdb.logger import logger
 
 # Timezone handling utilities for knowl system
 #
 # IMPORTANT: The knowl database stores timestamps in columns defined as
 # "timestamp without time zone". All timestamps are stored as UTC but
 # without timezone information. These utilities ensure consistent handling.
-
-def utc_now_naive():
-    """
-    Return current UTC time as a naive datetime object (no timezone info).
-    This is used for storing timestamps in the knowl database which uses
-    'timestamp without time zone' columns but stores all times as UTC.
-    """
-    return datetime.now(UTC).replace(tzinfo=None)
-
-def ensure_naive_utc(dt):
-    """
-    Ensure datetime object is naive (no timezone) and represents UTC time.
-    If timezone-aware, convert to UTC first, then strip timezone info.
-    If naive, assume it's already UTC.
-    """
-    if dt.tzinfo is not None:
-        # Convert to UTC and strip timezone
-        return dt.astimezone(UTC).replace(tzinfo=None)
-    else:
-        # Already naive, assume it's UTC
-        return dt
 
 
 text_keywords = re.compile(r"\b[a-zA-Z0-9-]{3,}\b")
@@ -79,7 +55,7 @@ grep_extractor = re.compile(r'(.+?)([:|-])(\d+)([-|:])(.*)')
 # We need to convert knowl
 link_finder_re = re.compile(r"""(KNOWL(_INC)?\(|kid\s*=|knowl\s*=|th_wrap\s*\()\s*['"]([^'"]+)['"]|""")
 define_fixer = re.compile(r"""\{\{\s*KNOWL(_INC)?\s*\(\s*['"]([^'"]+)['"]\s*,\s*(title\s*=\s*)?([']([^']+)[']|["]([^"]+)["]\s*)\)\s*\}\}""")
-defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*""")
+defines_finder_re = re.compile(r"""\*\*([^\*]+)\*\*|\{\{\s*DEFINES\s*\(\s*['"]([^'"]+)['"]""")
 # this one is different from the hashtag regex in main.py,
 # because of the match-group ( ... )
 hashtag_keywords = re.compile(r'#[a-zA-Z][a-zA-Z0-9-_]{1,}\b')
@@ -157,7 +133,7 @@ def normalize_define(term):
 
 
 def extract_defines(content):
-    return sorted({x.strip() for x in defines_finder_re.findall(content)})
+    return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -168,12 +144,34 @@ class KnowlBackend(PostgresBase):
 
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
-        self._rw_knowldb = db.can_read_write_knowls()
+        self._refresh_connection_capabilities()
         # we cache knowl titles for 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
         self.cached_titles = {}
+
+    def _refresh_connection_capabilities(self):
+        """
+        Ask the database what the current session may do with the knowls.
+
+        Fails closed: nothing is editable until the session has said so.
+        """
+        self._rw_knowldb = False
+        checker = getattr(db, "_can_read_write_knowls", None) or db.can_read_write_knowls
+        self._rw_knowldb = checker()
+
+    def _connection_reset(self):
+        """
+        Called by psycodict once it has replaced the connection this object
+        uses (roed314/psycodict#135); a no-op in psycodict without that hook.
+
+        Whether knowls may be edited describes the session rather than this
+        object, and a replacement connection can reach a standby, or a role
+        whose privileges have changed, so the cached answer has to be asked
+        again rather than carried over.
+        """
+        self._refresh_connection_capabilities()
 
     def _safe_execute(self, query, values=None):
         # Every 20 minutes we reload the knowl database on production
@@ -234,11 +232,20 @@ class KnowlBackend(PostgresBase):
         if L:
             return dict(zip(fields, L[0]))
 
-    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2]):
+    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2], ids=None, start=None):
         if fields is None:
             fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE status >= %s AND type = ANY(%s) ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        L = self._safe_execute(selecter, [0, types])
+        if ids is not None:
+            where = SQL("WHERE status >= %s AND id = ANY(%s)")
+            values = [0, ids]
+        elif start is not None and isinstance(start, str):
+            where = SQL("WHERE status >= %s AND id LIKE %s")
+            values = [0, start + "%"]
+        else:
+            where = SQL("WHERE status >= %s AND type = ANY(%s)")
+            values = [0, types]
+        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls {1} ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)), where)
+        L = self._safe_execute(selecter, values)
         return [dict(zip(fields, res)) for res in L]
 
     def get_all_defines(self):
@@ -320,13 +327,13 @@ class KnowlBackend(PostgresBase):
 
     def save(self, knowl, who, most_recent=None, minor=False):
         """who is the ID of the user, who wants to save the knowl"""
+        authors = []
         if most_recent is None:
             most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
-        new_knowl = most_recent is None
-        if new_knowl:
-            authors = []
-        else:
-            authors = most_recent.pop('authors', [])
+        if isinstance(most_recent, Knowl):
+            most_recent = {"authors": most_recent.authors}
+        if most_recent is not None:
+            authors = most_recent.get('authors', [])
 
         if not minor and who and who not in authors:
             authors = authors + [who]
@@ -350,6 +357,112 @@ class KnowlBackend(PostgresBase):
             inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
+
+    def yaml_export(self, filename, ids=0, fields=None):
+        """
+        Write the given knowls to a yaml file; you can then edit that file and reload it using ``yaml_import``.
+        You should usually not change the first record in the output, which stores the time at which the export was performed; ``yaml_import`` uses it to detect knowls that have changed in the database since the export.
+        This function is not currently exposed to the web interface, so must be run manually (a connection to devmirror is sufficient, so it does not need to be run by an LMFDB editor).
+
+        INPUT:
+
+        - ``filename`` -- the filename to write output
+        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls of those types will be output; the default ``0`` gives normal knowls, as opposed to top/bottom annotations, comments and column descriptions -- see ``knowl_type_code``), or a string (in which case all knowl ids starting with that string will be output)
+        - ``fields`` -- include these fields; defaults to id, content and title
+
+        OUTPUT:
+
+        - the file will be created with a list of dictionaries.  The first will be a dictionary storing the time the file was written; the rest of the records hold the knowl data.
+        """
+        timestamp = utc_now_naive()
+        if fields is None:
+            fields = ['id', 'content', 'title']
+        if isinstance(ids, int):
+            ids = [ids]
+        if isinstance(ids, str):
+            knowls = self.get_all_knowls(fields, start=ids)
+        elif all(isinstance(n, int) for n in ids):
+            knowls = self.get_all_knowls(fields, types=ids)
+        elif all(isinstance(kid, str) for kid in ids):
+            knowls = self.get_all_knowls(fields, ids=ids)
+        else:
+            raise ValueError("ids must either be a list of integers, a string, or a list of ids")
+        with open(filename, "w", encoding="utf-8") as F:
+            yaml.safe_dump([{"written": timestamp}] + knowls, F, default_flow_style=False, sort_keys=False)
+
+    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False, minor=True):
+        """
+        This function provides a mechanism for updating many knowls at once from a yaml file, as produced by ``yaml_export``.
+        It is not currently exposed to the web interface, so must be run manually by an LMFDB editor.
+
+        Knowls that have changed in the database since the yaml file was written are skipped (with a message), as are records that match the current database contents.  All changes are saved in a single transaction, so a failure partway through will not leave a partial import.  We suggest running with ``dryrun=True`` first to check the set of changes.
+
+        INPUT:
+
+        - ``filename`` -- a yaml file, as produced by ``yaml_export``: a list of records, the first storing the time the export was performed and the rest holding knowl data
+        - ``who`` -- the user id of the person performing the import, recorded as the last author of each changed knowl
+        - ``dryrun`` -- if True, print the changes that would be made without saving anything
+        - ``straight_to_production`` -- if False (the default), updated knowls are reset to beta status so that they can be reviewed.  WARNING: if True, an updated knowl keeps its current status, so a reviewed knowl will remain marked as reviewed even though its new content has not been; only use this for edits that do not require review.  Newly created knowls always start in beta status.
+        - ``minor`` -- if True (the default), the person performing the import is not added to the author list of updated knowls (though they are still recorded as the last author).  Set to False for imports that make substantial changes.  The creator of a newly created knowl is always added as an author.
+        """
+        with open(filename, encoding="utf-8") as F:
+            records = yaml.safe_load(F)
+        timestamp = records[0]["written"]
+        records = {rec['id']: rec for rec in records[1:]}
+        knowls = self.get_all_knowls(['id'] + self._default_fields, ids=list(records))
+        existing = set(rec['id'] for rec in knowls)
+        creating = {kid: rec for kid, rec in records.items() if kid not in existing}
+        too_new = [rec["id"] for rec in knowls if rec["timestamp"] >= timestamp]
+        knowls = [rec for rec in knowls if rec["timestamp"] < timestamp]
+        updated = [dict(rec) for rec in knowls]
+        for knowl in updated:
+            knowl.update(records[knowl["id"]])
+        count = 0
+        ccount = 0
+        with DelayCommit(self):
+            for old, new in zip(knowls, updated):
+                assert old['id'] == new['id']
+                if old != new:
+                    if dryrun:
+                        print(f"Updating {old['id']}:")
+                        for col, oval in old.items():
+                            if col != "content":
+                                nval = new[col]
+                                if nval != oval:
+                                    print(f'  Changing {col} from "{oval}" to "{nval}"')
+                        if 'content' in old:
+                            ncontent, ocontent = new['content'], old['content']
+                            if ncontent != ocontent:
+                                diff = difflib.ndiff(ocontent.split("\n"), ncontent.split("\n"))
+                                print("  " + "\n  ".join(diff))
+                    else:
+                        if not straight_to_production:
+                            new['status'] = 0
+                        new['timestamp'] = utc_now_naive()
+                        self.save(Knowl(new['id'], data=new), who, most_recent=Knowl(old['id'], data=old), minor=minor)
+                    count += 1
+            for kid, rec in creating.items():
+                reason = bad_knowl_id_reason(kid)
+                if reason is not None:
+                    errmsg, args = reason
+                    print(f"Cannot create {kid}: " + " ".join((errmsg % args).split()))
+                    continue
+                if not ("content" in rec and "title" in rec):
+                    print(f"{kid} missing required content/title")
+                    continue
+                if dryrun:
+                    print(f"Creating {kid}")
+                else:
+                    rec['status'] = 0
+                    rec['timestamp'] = utc_now_naive()
+                    self.save(Knowl(kid, data=rec), who)
+                ccount += 1
+        if count:
+            print(f"{count} knowls updated")
+        if ccount:
+            print(f"{ccount} knowls created")
+        if too_new:
+            print(f"{len(too_new)} knowls have changed since the yaml file was created, and are thus not being updated:\n{','.join(too_new)}")
 
     def get_history(self, limit=25):
         """
@@ -816,6 +929,114 @@ def knowl_title(kid):
 def knowl_exists(kid):
     return knowldb.knowl_exists(kid)
 
+# knowl IDs are restricted by these regexes
+allowed_knowl_id = re.compile("^[a-z0-9._-]+$")
+allowed_annotation_id = re.compile(r"^[a-zA-Z0-9._\-~]+$")  # all unreserved URL characters
+
+def bad_knowl_id_reason(ID):
+    """
+    Check whether a string is a valid id for a new knowl.
+
+    Unlike ``lmfdb.knowledge.main.allowed_id`` (which is built on this function),
+    this does not require a Flask request context, so it can be used from
+    scripts such as ``yaml_import``.
+
+    INPUT:
+
+    - ``ID`` -- a string, the proposed id for a knowl
+
+    OUTPUT:
+
+    ``None`` if the id is valid; otherwise a pair ``(errmsg, args)`` that can be
+    passed to ``flash_error(errmsg, *args)`` or formatted as ``errmsg % args``.
+    """
+    if ID.endswith('comment'):
+        main_knowl = ".".join(ID.split(".")[:-2])
+        if not knowldb.knowl_exists(main_knowl):
+            return ("Knowl '%s' does not exist, so it cannot be commented on", (main_knowl,))
+    elif ID.endswith('top') or ID.endswith('bottom') or ID.startswith("columns."):
+        if not allowed_annotation_id.match(ID):
+            label = '.'.join(ID.split(".")[1:-1])
+            return ("Label '%s' contains characters not allowed by knowl database; update allowed_id function or change label scheme", (label,))
+    elif not allowed_knowl_id.match(ID):
+        return ("""Oops, knowl id '%s' is not allowed.
+                  It must consist of lowercase characters,
+                  no spaces, numbers or '.', '_' and '-'.""", (ID,))
+    return None
+
+def external_definition_link(site, xid):
+    if xid.count("@") == 1:
+        xid, fragment = xid.split("@")
+    else:
+        fragment = None
+    # If you add options here, you also need to update the knowl lmfdb.external_definitions
+    if site == "arxiv":
+        # example xid="1809.10195"
+        return f"https://arxiv.org/abs/{xid}", f"arXiv:{xid}", fragment
+    if site == "doi":
+        # example xid="10.2140/obs.2019.2.393"
+        return f"https://doi.org/{xid}", xid, fragment
+    if site == "groupprops":
+        # example xid="Alternating_group"
+        return f"https://groupprops.subwiki.org/wiki/{xid}", "groupprops:" + xid, fragment
+    if site == "href":
+        # href contains both the link and text for displaying
+        if not xid or xid[0] != "{" or xid[-1] != "}" or xid.count("}{") != 1:
+            raise ValueError("Improperly formatted href")
+        url, disp = xid[1:-1].split("}{")
+        return url.strip(), disp, fragment
+    if site == "mathlib":
+        # example xid="NumberTheory/ModularForms/Basic.html#UpperHalfPlane.J"
+        if "#" in xid:
+            disp = "mathlib:" + xid.split("#")[-1]
+        else:
+            disp = "mathlib:" + xid
+        return f"https://leanprover-community.github.io/mathlib4_docs/Mathlib/{xid}", disp, fragment
+    if site == "mathworld":
+        # example xid=HeckeOperator
+        return f"https://mathworld.wolfram.com/{xid}.html", "mathworld:" + xid, fragment
+    if site == "mr":
+        # example xid="0439848"
+        return f"https://www.ams.org/mathscinet-getitem?mr={xid}", "MR:" + xid, fragment
+    if site == "nlab":
+        # example xid="number field"
+        return f"https://ncatlab.org/nlab/show/{xid}", "nlab:" + xid, fragment
+    if site == "stacks":
+        # example xid="020C"
+        return f"https://stacks.math.columbia.edu/tag/{xid}", "stacks:" + xid, fragment
+    if site == "wikidata":
+        # example xid="Q83478"
+        return f"https://www.wikidata.org/wiki/{xid}", "wikidata:" + xid, fragment
+    if site == "wikipedia":
+        # example xid="Group_(mathematics)"
+        return f"https://en.wikipedia.org/wiki/{xid}", "wiki:" + xid, fragment
+    if site == "zbl":
+        # example="0339.14028"
+        return f"https://zbmath.org/?q={xid}", "zbl:" + xid, fragment
+    raise ValueError("Unknown external site")
+
+def knowl_definition(title,
+                     clarification_kid=None,
+                     kwargs={}):
+    from lmfdb.utils.web_display import display_knowl
+    if clarification_kid is None:
+        if not kwargs:
+            return f"<strong>{title}</strong>"
+        if len(kwargs) == 1:
+            try:
+                site, xid = list(kwargs.items())[0]
+                url, disp, fragment = external_definition_link(site, xid)
+                link = f'<a href="{url}"><strong>{title}</strong></a>'
+                if fragment:
+                    link += f" ({fragment})"
+                return link
+            except ValueError:
+                pass
+        return display_knowl("lmfdb.external_definitions", title, kwargs=kwargs, strong=True)
+    else:
+        return display_knowl(clarification_kid, title, strong=True)
+
+
 @cached_function
 def knowl_url_prefix():
     """
@@ -943,8 +1164,6 @@ class Knowl():
             Currently only used when renaming a knowl.
         - ``minor`` -- if True, don't add the current user to the list of authors.
         """
-        if most_recent is not None:
-            most_recent = {'authors':most_recent.authors}
         knowldb.save(self, who, most_recent=most_recent, minor=minor)
 
     def delete(self):

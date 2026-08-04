@@ -5,7 +5,7 @@ from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import Downloader, flash_error
 from lmfdb.characters.TinyConrey import ConreyCharacter
-from lmfdb.classical_modular_forms.web_newform import WebNewform
+from lmfdb.classical_modular_forms.web_newform import WebNewform, valid_label
 from lmfdb.classical_modular_forms.web_space import WebNewformSpace, WebGamma1Space
 
 
@@ -148,6 +148,8 @@ class CMF_download(Downloader):
     qexp_function_body_sparse_cyclotomic = {'sage': header + discrete_log_sage + extend_multiplicatively_sage + field_and_convert_sage_sparse_cyclotomic + convert_aps + char_values_sage_generic + an_code_sage}
 
     def download_qexp(self, label, lang='sage'):
+        if not valid_label(label):
+            return abort(404, "Invalid label: %s" % label)
         if isinstance(lang, str):
             lang = self.languages.get(lang, self.languages['sage'])
         hecke_nf = self._get_hecke_nf(label)
@@ -286,22 +288,7 @@ class CMF_download(Downloader):
 #        return self._download_cc(label, lang, 'angles', '.angles', 'Satake angles')
 
     def download_embedding(self, label, lang='text'):
-        data = db.mf_hecke_cc.lucky({'label':label},
-                                    ['label',
-                                     'embedding_root_real',
-                                     'embedding_root_imag',
-                                     'an_normalized',
-                                     'angles'])
-        if data is None:
-            return abort(404, "No embedded newform found for %s" % (label))
-        root = (data.pop('embedding_root_real', None),
-                data.pop('embedding_root_imag', None))
-        if root != (None, None):
-            data['root'] = root
-        return self._wrap(Json.dumps(data),
-                          label,
-                          lang=lang,
-                          title='Coefficient data for embedded newform %s,' % label)
+        return redirect(url_for("cmf.mf_hecke_cc", label=label), 301)
 
     def download_newform(self, label, lang='text'):
         data = db.mf_newforms.lookup(label)
@@ -327,12 +314,27 @@ class CMF_download(Downloader):
             return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
         code = form.code
+        # 'initialize-newspace-common' is only a YAML merge anchor base (see
+        # code-form.yaml): its snippet is inlined into both weight-specific
+        # keys, so emitting it on its own would duplicate that snippet. Only
+        # the weight-appropriate initialization applies to a given form.
+        code.pop('initialize-newspace-common', None)
+        code.pop('initialize-newspace-weight-not-1' if form.weight == 1
+                 else 'initialize-newspace-weight-1', None)
         comment = code.pop('comment').get(lang).strip()
         script = "%s %s code for working with modular form %s\n\n" % (comment,Fullname[lang],label)
         for k in code:
             if 'comment' not in code[k] or lang not in code[k]:
                 continue
-            script += "\n%s %s: \n" % (comment,code[k]['comment'])
+
+            # Remove duplicates, in particular those introduced by tags
+            # initialize-newspace-weight-1 and initialize-newspace-weight-not-1
+            # which inherit the same magma code snippet from initalize-newspace-common.
+            # This solves #7003.
+            if code[k][lang] in script:
+                continue
+
+            script += "\n%s %s: \n" % (comment, code[k]['comment'])
             script += code[k][lang] + ('\n' if '\n' not in code[k][lang] else '')
         return script
 

@@ -38,7 +38,7 @@
  {{ec.field.latex_poly}}; {{ KNOWL('nf.class_number', 'class number')
  }} \({{ec.field.class_number()}}\).
 </p>
-    {{ place_code('field') }}
+    {{ place_code('field', is_top_snippet=True) }}
 </div>
 
 <style type="text/css">
@@ -53,7 +53,7 @@ cellpadding="5";
 <div style='overflow-x:auto; overflow-y:hidden; margin-left:1ch;'>
 \({{ ec.equation }}\)
 </div>
-    {{ place_code('curve') }}
+    {{ place_code('curve', is_top_snippet=True) }}
 <p>
   {% if ec.is_minimal %}
   This is a {{ KNOWL('ec.global_minimal_model','global minimal model')}}.
@@ -399,8 +399,8 @@ cellpadding="5";
 
 <h2> {{ KNOWL('ec.bsdconjecture', title='BSD formula') }}</h2>
 <div>
-<p style="margin:10px 280px;">
-$\displaystyle {{ ec.bsd_formula|safe }}$
+<p>
+$${{ ec.bsd_formula }}$$
 </p>
 <center>
 {{ place_code('bsd_formula') }}

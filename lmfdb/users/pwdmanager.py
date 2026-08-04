@@ -10,15 +10,10 @@ fixed_salt = '=tU\xfcn|\xab\x0b!\x08\xe3\x1d\xd8\xe8d\xb9\xcc\xc3fM\xe9O\xfb\x02
 from lmfdb import db
 from psycodict.base import PostgresBase
 from psycodict.encoding import Array
-from psycopg2.sql import SQL, Identifier, Placeholder
-from datetime import datetime, timedelta
-try:
-    from datetime import UTC               # Py 3.11+
-except ImportError:                         # Py ≤3.10
-    from datetime import timezone as _tz
-    UTC = _tz.utc
-
-from .main import logger
+from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
+from datetime import timedelta
+from lmfdb.utils.datetime_utils import utc_now_naive
+from lmfdb.logger import logger
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login
 from flask_login import UserMixin, AnonymousUserMixin
@@ -28,15 +23,52 @@ class PostgresUserTable(PostgresBase):
         PostgresBase.__init__(self, 'db_users', db)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
-        self._rw_userdb = db.can_read_write_userdb()
         #TODO use this instead of hardcoded columns names
         #with identifiers
         self._username_full_name = ["username", "full_name"]
-        if self._rw_userdb:
-            cur = self._execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
-            self._cols = [rec[0] for rec in cur]
-        else:
-            self._cols = self._username_full_name
+        self._refresh_connection_capabilities()
+
+    def _refresh_connection_capabilities(self):
+        """
+        Ask the database what the current session may do with userdb.users,
+        and which columns it has.
+
+        This fails closed: the restricted answers are installed first and are
+        only widened once the session has been found able to read and write.
+        The query is issued on ``self.conn`` rather than through ``_execute``
+        because this also runs while psycodict is recovering from a failure
+        inside ``_execute``, which it would otherwise re-enter.
+        """
+        self._rw_userdb = False
+        self._cols = self._username_full_name
+
+        checker = getattr(db, "_can_read_write_userdb", None) or db.can_read_write_userdb
+        if not checker():
+            return
+        cur = self.conn.cursor()
+        try:
+            cur.execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
+            cols = [rec[0] for rec in cur.fetchall()]
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        finally:
+            cur.close()
+        self._cols = cols
+        self._rw_userdb = True
+
+    def _connection_reset(self):
+        """
+        Called by psycodict once it has replaced the connection this object
+        uses (roed314/psycodict#135); a no-op in psycodict without that hook.
+
+        Whether userdb may be written to describes the session rather than this
+        object, and a replacement connection can reach a standby, or a role
+        whose privileges have changed, so the cached answers have to be asked
+        again rather than carried over.
+        """
+        self._refresh_connection_capabilities()
 
     def can_read_write_userdb(self):
         return self._rw_userdb
@@ -101,7 +133,7 @@ class PostgresUserTable(PostgresBase):
         password = self.bchash(pwd)
         #TODO: use identifiers
         insertor = SQL("INSERT INTO userdb.users (username, bcpassword, created, full_name, about, url) VALUES (%s, %s, %s, %s, %s, %s)")
-        self._execute(insertor, [uid, password, datetime.now(UTC), full_name, about, url])
+        self._execute(insertor, [uid, password, utc_now_naive(), full_name, about, url])
         new_user = LmfdbUser(uid)
         return new_user
 
@@ -202,7 +234,7 @@ class PostgresUserTable(PostgresBase):
             return
 
         insertor = SQL("INSERT INTO userdb.tokens (id, expire) VALUES %s")
-        now = datetime.now(UTC)
+        now = utc_now_naive()
         tdelta = timedelta(days=1)
         exp = now + tdelta
         self._execute(insertor, [(t, exp) for t in tokens], values_list=True)
@@ -220,7 +252,7 @@ class PostgresUserTable(PostgresBase):
             logger.info("no attempt to delete old tokens, not enough privileges")
             return
         deletor = SQL("DELETE FROM userdb.tokens WHERE expire < %s")
-        now = datetime.now(UTC)
+        now = utc_now_naive()
         tdelta = timedelta(days=8)
         cutoff = now - tdelta
         self._execute(deletor, [cutoff])

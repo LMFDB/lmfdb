@@ -177,6 +177,7 @@ def by_label(label):
     return render_template(
         "modcurve.html",
         curve=curve,
+        code=curve.code,
         dojs=dojs,
         zip=zip,
         name_to_latex=name_to_latex,
@@ -389,7 +390,7 @@ modcurve_columns = SearchColumns(
         CheckCol("contains_negative_one", "modcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=lambda info: info.get("contains_negative_one")),
         MultiProcessedCol("dims", "modcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=lambda info: info.get("dims")),
         ProcessedCol("models", "modcurve.models", "Models", blankzeros, default=False),
-        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", default=False),
+        MathCol("num_known_degree1_points", "modcurve.known_points", "$j$-points", short_title="j-points", default=False),
         CheckCol("pointless", "modcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "modcurve.level_structure", r"$\operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$\begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
         MathCol("entanglement_index", "modcurve.entanglement", "Entanglement Index", default=lambda info: info.get("entanglement_index")),
@@ -723,6 +724,9 @@ def modcurve_Gassmann_text_download():
     columns=modcurve_columns,
     bread=lambda: get_bread("Search results"),
     url_for_label=url_for_modcurve_label,
+    diagram_opts={"x_axis_default": "level",
+                  "y_axis_default": "index",
+                  "color_default": "genus"},
 )
 def modcurve_search(info, query):
     parse_ints(info, query, "level")
@@ -1263,6 +1267,7 @@ class RatPointSearchArray(SearchArray):
              ("conductor", "minimal conductor norm", ["conductor_norm", "j_height", "jinv", "degree", "curve_level", "curve_genus", "curve_index", "curve_label"]),
              ("residue_field", "residue field", ["degree", "residue_field", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"]),
              ("cm", "CM discriminant", ["cm", "degree", "curve_level", "curve_genus", "curve_index", "curve_label", "j_height", "jinv"])]
+
     def __init__(self):
         curve = TextBox(
             name="curve",

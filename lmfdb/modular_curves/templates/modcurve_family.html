@@ -33,9 +33,10 @@
     </tr>
 </table>
 
+{% if Knowl(family.knowl_ID_remarks).content  %}
 <h2> Remarks </h2>
 
  <p>{{ KNOWL_INC(family.knowl_ID_remarks) }}</p> 
-
+{% endif %}
 
 {% endblock %}

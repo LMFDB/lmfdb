@@ -231,19 +231,14 @@ def get_cname_list(info):
 
 def patch_up_old_inventory(data, table_name):
     """
-    Patch old inventory data to use new database information
+    Patch old inventory data to use new database information.
+
     data -- old inventory data
     table_name -- Name of table in postgres database
     """
-
     table = db[table_name]
-    result = {}
-    for el in table.search_cols:
-        try:
-            result[el] = data[el]
-        except KeyError:
-            result[el] = "Missing"
-    return result
+    return {el: data.get(el, "Missing") for el in table.search_cols}
+
 
 def default_projection(request, cnames=None):
     """

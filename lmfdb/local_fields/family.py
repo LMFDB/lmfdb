@@ -19,6 +19,8 @@ def latex_content(s):
     # Input should be a content string, [s1, s2, ..., sm]^t_u.  This converts the s_i (which might be rational numbers) to their latex form
     if s is None or s == "":
         return "not computed"
+    elif s == []:
+        return r'$[\ ]$'
     elif isinstance(s, list):
         return '$[' + ','.join(latex(x) for x in s) + ']$'
     else:
@@ -51,9 +53,10 @@ class pAdicSlopeFamily:
         assert p.is_prime()
         self.pw = p**w
         _, self.etame = self.e.val_unit(p)
+
     @lazy_attribute
     def scaled_rams(self):
-        return [r / (self.etame * self.p**i) for (i, r) in enumerate(self.rams, 1)]
+        return [r / (self.etame * self.p**i) for i, r in enumerate(self.rams, 1)]
 
     @lazy_attribute
     def dots(self):
@@ -391,17 +394,23 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def galois_groups(self):
         fields, cache = self.fields
-        opts = sorted(Counter((rec["gal"], rec["galois_label"]) for rec in fields if "gal" in rec and "galois_label" in rec).items())
+        opts = sorted(Counter((rec["gal"], rec["galois_label"]) for rec in fields if rec.get("gal") is not None and rec.get("galois_label") is not None).items())
+        unknown_cnt = sum(1 for rec in fields if rec.get("gal") is None or rec.get("galois_label") is None)
         if not opts:
             return "No Galois groups in this family have been computed"
 
         def show_gal(label, cnt):
             kwl = transitive_group_display_knowl(label, cache=cache)
-            if len(opts) == 1:
+            if len(opts) == 1 and not unknown_cnt:
                 return kwl
             url = url_for(".family_page", label=self.label, gal=label)
             return f'{kwl} (<a href="{url}#fields">show {cnt}</a>)'
-        s = ", ".join(show_gal(label, cnt) for ((t, label), cnt) in opts)
+        parts = [show_gal(label, cnt) for ((t, label), cnt) in opts]
+        if unknown_cnt:
+            # No gal= value exists to filter on missing/null Galois groups, so this
+            # bucket is plain text rather than a link (unlike the entries above).
+            parts.append(f"unknown ({unknown_cnt})")
+        s = ", ".join(parts)
         if not self.all_hidden_data_available:
             s += " (incomplete)"
         return s

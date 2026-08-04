@@ -680,6 +680,7 @@ class ECNF():
             eq_query = '\\overset{?}{=}'
             frac = '\\frac'
             Sha = '\\# &#1064;(E/K)'
+            Sha = '\\# Ш(E/K)'
             Om = '\\Omega(E/K)'
             Reg = '\\mathrm{Reg}_{\\mathrm{NT}}(E/K)'
             prodcp = '\\prod_{\\mathfrak{p}} c_{\\mathfrak{p}}'
@@ -695,7 +696,7 @@ class ECNF():
                 rhs_num    = rf'{BSDsha} {dot} {BSDomega:0.6f} {dot} {BSDReg:0.6f} {dot} {BSDprodcp}'
             rhs_den    = rf'{{{BSDntors}^2 {dot} {BSDrootdisc:0.6f}}}'
             rhs        = rf'{frac}{{ {rhs_num} }} {{ {rhs_den} }}'
-            self.bsd_formula = rf'{BSDLvalue:0.9f} {approx} {lder_name} {eq_query} {lhs} {approx} {rhs} {approx} {BSDLvalue_from_formula:0.9f}'
+            self.bsd_formula = rf'\begin{{aligned}}{BSDLvalue:0.9f} {approx} {lder_name} & {eq_query} {lhs} \\ & {approx} {rhs} \\ & {approx} {BSDLvalue_from_formula:0.9f} \end{{aligned}}'
 
         else:
             self.BSDsha = "not available"
@@ -853,7 +854,7 @@ class ECNF():
         self._code = None # will be set if needed by get_code()
 
         self.downloads = [('All stored data to text', url_for(".download_ECNF_all", nf=self.field_label, conductor_label=quote(self.conductor_label), class_label=self.iso_label, number=self.number))]
-        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"]]:
+        for lang in [["Magma","magma"], ["PariGP", "gp"], ["SageMath","sage"], ["Oscar","oscar"]]:
             self.downloads.append(('{} commands'.format(lang[0]),
                                    url_for(".ecnf_code_download", nf=self.field_label, conductor_label=quote(self.conductor_label),
                                            class_label=self.iso_label, number=self.number, download_type=lang[1])))
@@ -887,18 +888,14 @@ sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
                      'disc', 'disc_norm', 'jinv', 'cm', 'rank',
                      'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
-
 def make_code(label, lang=None):
     """Return a dict of code snippets for one curve in either one
-    language (if lang is 'pari' or 'gp', 'sage', or 'magma') or all
+    language (if lang is 'pari' or 'gp', 'sage', 'magma', or 'oscar') or all
     three (if lang is None).
     """
     if lang == 'gp':
         lang = 'pari'
-    all_langs = ['magma', 'pari', 'sage']
+    all_langs = ['magma', 'pari', 'sage', 'oscar']
 
     # Get the base field label and a-invariants:
 
@@ -933,6 +930,7 @@ def make_code(label, lang=None):
     ainvs_string = {
         'magma': "[" + ",".join("K!{}".format(ai) for ai in ainvs) + "]",
         'sage': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
+        'oscar': "[" + ",".join("K({})".format(ai) for ai in ainvs) + "]",
         'pari': "[" + ",".join("Polrev({})".format(ai) for ai in ainvs) + "], K",
         }
     if lang:
