@@ -18,8 +18,8 @@ def linked_name(item, level=""):
 
     if 'status' in item and item['status'] == 'beta':
         this_entry = ''.join(['<div class="beta">', this_entry, '</div>'])
-    elif item['show'] and 'status' in item and item['status'] == 'future':
-        if item['show']:
+    elif 'status' in item and item['status'] == 'future':
+        if item.get('show'):
             this_entry = ''.join(['<div class="alpha">', this_entry, '</div>'])
         else:
             this_entry = ''.join(['<div class="future">',this_entry,'</div>'])
