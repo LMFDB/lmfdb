@@ -124,11 +124,9 @@ class AbvarFq_isoclass():
 """
 
     def __init__(self, dbdata):
-        for col in ["size", "zfv_is_bass", "zfv_is_maximal", "zfv_index", "zfv_index_factorization", "zfv_plus_index", "zfv_plus_index_factorization", "zfv_plus_norm", "hyp_count", "jacobian_count", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "principal_polarization_count", "singular_primes", "is_cyclic"]:
+        for col in ["size", "zfv_is_bass", "zfv_is_maximal", "zfv_index", "zfv_index_factorization", "zfv_plus_index", "zfv_plus_index_factorization", "zfv_plus_norm", "hyp_count", "jacobian_count", "all_polarized_product", "cohen_macaulay_max", "endomorphism_ring_count", "weak_equivalence_count", "zfv_singular_count", "group_structure_count", "zfv_pic_size", "principal_polarization_count", "singular_primes", "is_cyclic", "noncyclic_primes"]:
             if col not in dbdata:
                 dbdata[col] = None
-        if "noncyclic_primes" not in dbdata:
-            dbdata["noncyclic_primes"] = []
         self.__dict__.update(dbdata)
 
     @classmethod

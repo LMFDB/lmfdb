@@ -192,7 +192,7 @@ class AbvarFqStats(StatsDisplay):
 
     @lazy_attribute
     def short_summary(self):
-        return r'The database currently contains %s %s of %s of dimension up to %s over finite fields.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.' % (
+        return r'The database currently contains %s %s of %s of dimension up to %s over finite fields.  You can <a href="%s">browse further statistics</a> or <a href="%s">create your own</a>.  <b>Data on isomorphism classes, polarizations, and isogeny graphs is still provisional.  Labels may change, and we are still working to ensure the reliability of the data.</b>' % (
             self.counts["nclasses_c"],
             self.isogeny_knowl,
             self.abvar_knowl,
