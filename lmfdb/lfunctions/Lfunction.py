@@ -1041,7 +1041,11 @@ class Lfunction_SMF2_scalar_valued(Lfunction):
         if not is_debug_mode():
             raise ValueError(f'Error constructing L-function for Siegel modular form {label}, as it is not in the database')
 
-        self.S = Sample('Sp4Z', label)
+        # The Sample class went away with the SMF rewrite; SMF L-functions are
+        # disabled pending new data (the routes in lfunctions/main.py are
+        # commented out, so this class is unreachable).
+        raise ValueError(f'L-functions for Siegel modular forms are disabled pending the SMF rewrite ({label})')
+        # self.S = Sample('Sp4Z', label)
         if not self.S:
             raise KeyError("Siegel modular form Sp4Z.%s not found in database." % label)
         self.field = self.S.field()
