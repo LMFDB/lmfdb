@@ -211,6 +211,12 @@
     url_for: "lattice.index"
     status: beta
     colspan: onecolumn
+    collapsible: true
+    part2:
+      - title: "lattices"
+        url_for: "lattice.index"
+      - title: "genera"
+        url_for: "lattice.genus_index"
   - title: Finite subgroups of
     part2:
       - title: $\GL(n,\F_q)$
