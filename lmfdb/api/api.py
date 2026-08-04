@@ -3,7 +3,7 @@ import re
 import yaml
 import json
 from collections import defaultdict
-from psycopg2.extensions import QueryCanceledError
+from lmfdb.utils.psycopg_compat import QueryCanceledError
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma
@@ -382,12 +382,9 @@ def api_query(table, id=None):
                                 for col, typ in coll.col_type.items()}}
         search_schema = [(col, coll.col_type[col])
                          for col in sorted(coll.search_cols)]
-        extra_schema = [(col, coll.col_type[col])
-                        for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
                                search_schema={table: search_schema},
-                               extra_schema={table: extra_schema},
                                examples=examples,
                                single_object=single_object,
                                query_unquote=query_unquote,
@@ -438,7 +435,6 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None, limit=10
     data = []
     totals = []
     search_schema = {}
-    extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
         if isinstance(col, list):  # Needed for gps_conj_classes, which effectively has a pair of columns for a label
             q = dict(zip(col, label))
@@ -463,8 +459,6 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None, limit=10
             return apierror(str(err), table=table)
         search_schema[table] = [(col, coll.col_type[col])
                                 for col in sorted(coll.search_cols)]
-        extra_schema[table] = [(col, coll.col_type[col])
-                               for col in sorted(coll.extra_cols)]
     data = Json.prep(data)
 
     # the collected result
@@ -489,7 +483,6 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None, limit=10
         return render_template("apidata.html",
                                title=title,
                                search_schema=search_schema,
-                               extra_schema=extra_schema,
                                bread=bread,
                                pretty=pretty_document,
                                **data)

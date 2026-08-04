@@ -19,16 +19,5 @@
           {% endif %}
         </tr>
       {% endfor %}
-      {% if extra_schema %}
-        {% for col, typ in extra_schema[table] %}
-          <tr{% if loop.index == 1 %} class="toplined"{% endif %}>
-            <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
-            <td>{{typ}}</td>
-            {% if example is not none %}
-              <td class="schema-example">{{example.get(col, '')}}</td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-      {% endif %}
     </table>
   </div>
