@@ -144,12 +144,34 @@ class KnowlBackend(PostgresBase):
 
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
-        self._rw_knowldb = (getattr(db, "_can_read_write_knowls", None) or db.can_read_write_knowls)()
+        self._refresh_connection_capabilities()
         # we cache knowl titles for 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
         self.cached_titles = {}
+
+    def _refresh_connection_capabilities(self):
+        """
+        Ask the database what the current session may do with the knowls.
+
+        Fails closed: nothing is editable until the session has said so.
+        """
+        self._rw_knowldb = False
+        checker = getattr(db, "_can_read_write_knowls", None) or db.can_read_write_knowls
+        self._rw_knowldb = checker()
+
+    def _connection_reset(self):
+        """
+        Called by psycodict once it has replaced the connection this object
+        uses (roed314/psycodict#135); a no-op in psycodict without that hook.
+
+        Whether knowls may be edited describes the session rather than this
+        object, and a replacement connection can reach a standby, or a role
+        whose privileges have changed, so the cached answer has to be asked
+        again rather than carried over.
+        """
+        self._refresh_connection_capabilities()
 
     def _safe_execute(self, query, values=None):
         # Every 20 minutes we reload the knowl database on production
