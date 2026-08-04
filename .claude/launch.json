@@ -1,0 +1,77 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "homepage",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "exec ~/claude/homepage/.venv/bin/python ~/claude/homepage/scripts/serve.py 8314"
+      ],
+      "port": 8314
+    },
+    {
+      "name": "gq2-src",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd ~/claude/gq2-paper && exec ~/miniforge3/bin/python3 -m http.server 8775 -d web-assets/site"
+      ],
+      "port": 8775
+    },
+    {
+      "name": "gq2-site",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd ~/claude/gq2-paper && exec ~/miniforge3/bin/python3 -m http.server 8774 -d output/site"
+      ],
+      "port": 8774
+    },
+    {
+      "name": "gq2-review",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd ~/claude/gq2-paper && exec ~/miniforge3/bin/python3 ~/claude/paperforge/review/review_server.py --port 8773"
+      ],
+      "port": 8773
+    },
+    {
+      "name": "typst-paper",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "exec ~/miniforge3/bin/python3 -m http.server 8781 -d ~/claude/gq2-paper/.claude/worktrees/typst-backend/output/typst"
+      ],
+      "port": 8781
+    },
+    {
+      "name": "mockup",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "exec ~/miniforge3/bin/python3 -m http.server 8790 -d ~/claude/gq2-paper/mockups/running-example"
+      ],
+      "port": 8790
+    },
+    {
+      "name": "shimcurve-T24",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd ~/claude/lmfdb-wt/T24 && exec sage -python start-lmfdb.py --port 37778"
+      ],
+      "port": 37778
+    },
+    {
+      "name": "mathbases",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd ~/claude/MathBases && exec ~/miniforge3/bin/python3 -m http.server 4001 -d _site"
+      ],
+      "port": 4001
+    }
+  ]
+}

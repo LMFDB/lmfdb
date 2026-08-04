@@ -1,0 +1,1305 @@
+6.1 same old_aut=4:C2^2 new_aut=4:C2^2
+6.2 negation old_aut=12:D6 new_aut=12:D6
+6.6 same old_aut=8:D4 new_aut=8:D4
+6.30.1 same old_aut=4:C2^2 new_aut=4:C2^2
+6.42.1 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.66.1 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+6.78.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.102.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.114.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+6.138.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+6.174.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.186.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+6.210.1 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.222.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.246.1 same old_aut=2:C2 new_aut=2:C2
+6.258.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+6.282.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.318.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+6.330.1 jumped:8(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+6.354.1 negation old_aut=2:C2 new_aut=2:C2
+6.366.1 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+6.390.1 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+6.402.1 new
+6.426.1 new
+6.438.1 new
+6.462.1 new
+6.474.1 new
+6.498.1 new
+6.510.1 new
+6.534.1 new
+6.546.1 new
+6.570.1 new
+6.582.1 new
+6.606.1 new
+6.618.1 new
+6.642.1 new
+6.654.1 new
+6.678.1 new
+6.690.1 new
+6.714.1 new
+6.762.1 new
+6.786.1 new
+6.798.1 new
+6.822.1 new
+6.834.1 new
+6.858.1 new
+6.870.1 new
+6.894.1 new
+6.906.1 new
+6.930.1 new
+6.942.1 new
+6.966.1 new
+6.978.1 new
+10.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+10.2 same old_aut=4:C2^2 new_aut=4:C2^2
+10.5 same old_aut=4:C2^2 new_aut=4:C2^2
+10.30.1 same old_aut=4:C2^2 new_aut=4:C2^2
+10.70.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+10.110.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+10.130.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+10.170.1 negation old_aut=2:C2 new_aut=2:C2
+10.190.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+10.210.1 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+10.230.1 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+10.290.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+10.310.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+10.330.1 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+10.370.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+10.390.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+10.410.1 new
+10.430.1 new
+10.470.1 new
+10.510.1 new
+10.530.1 new
+10.570.1 new
+10.590.1 new
+10.610.1 new
+10.670.1 new
+10.690.1 new
+10.710.1 new
+10.730.1 new
+10.770.1 new
+10.790.1 new
+10.830.1 new
+10.870.1 new
+10.890.1 new
+10.910.1 new
+10.930.1 new
+10.970.1 new
+14.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+14.7 same old_aut=4:C2^2 new_aut=4:C2^2
+14.14 negation old_aut=8:D4 new_aut=8:D4
+14.42.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+14.70.1 same old_aut=4:C2^2 new_aut=4:C2^2
+14.154.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+14.182.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+14.210.1 same old_aut=4:C2^2 new_aut=4:C2^2
+14.238.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+14.266.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+14.322.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+14.406.1 new
+14.434.1 new
+14.462.1 new
+14.518.1 new
+14.546.1 new
+14.574.1 new
+14.602.1 new
+14.658.1 new
+14.714.1 new
+14.742.1 new
+14.770.1 new
+14.798.1 new
+14.826.1 new
+14.854.1 new
+14.910.1 new
+14.938.1 new
+14.966.1 new
+14.994.1 new
+15.1 same old_aut=4:C2^2 new_aut=4:C2^2
+15.5 same old_aut=12:D6 new_aut=12:D6
+15.30.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+15.105.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+15.165.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+15.195.1 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+15.210.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+15.255.1 jumped:22(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+15.285.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+15.330.1 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+15.345.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+15.390.1 jumped:13(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+15.435.1 new
+15.465.1 new
+15.510.1 new
+15.555.1 new
+15.570.1 new
+15.615.1 new
+15.645.1 new
+15.690.1 new
+15.705.1 new
+15.795.1 new
+15.870.1 new
+15.885.1 new
+15.915.1 new
+15.930.1 new
+21.1 negation old_aut=2:C2 new_aut=2:C2
+21.3 same old_aut=4:C2^2 new_aut=4:C2^2
+21.21 negation old_aut=8:D4 new_aut=8:D4
+21.42.1 same old_aut=4:C2^2 new_aut=4:C2^2
+21.105.1 same old_aut=4:C2^2 new_aut=4:C2^2
+21.210.1 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+21.231.1 jumped:11(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+21.273.1 negation old_aut=2:C2 new_aut=2:C2
+21.357.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+21.399.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+21.462.1 new
+21.483.1 new
+21.546.1 new
+21.609.1 new
+21.651.1 new
+21.714.1 new
+21.777.1 new
+21.798.1 new
+21.861.1 new
+21.903.1 new
+21.966.1 new
+21.987.1 new
+22.1 same old_aut=4:C2^2 new_aut=4:C2^2
+22.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+22.22 negation old_aut=8:D4 new_aut=8:D4
+22.66.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+22.110.1 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+22.154.1 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+22.286.1 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+22.330.1 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+22.374.1 jumped:22(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+22.418.1 new
+22.462.1 new
+22.506.1 new
+22.638.1 new
+22.682.1 new
+22.770.1 new
+22.814.1 new
+22.858.1 new
+22.902.1 new
+22.946.1 new
+26.1 same old_aut=2:C2 new_aut=2:C2
+26.2 same old_aut=4:C2^2 new_aut=4:C2^2
+26.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+26.78.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+26.130.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+26.182.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+26.286.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+26.390.1 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+26.442.1 new
+26.494.1 new
+26.546.1 new
+26.598.1 new
+26.754.1 new
+26.806.1 new
+26.858.1 new
+26.910.1 new
+26.962.1 new
+33.1 negation old_aut=2:C2 new_aut=2:C2
+33.11 same old_aut=12:D6 new_aut=12:D6
+33.33 same old_aut=8:D4 new_aut=8:D4
+33.66.1 jumped:8(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+33.165.1 same old_aut=2:C2 new_aut=2:C2
+33.231.1 jumped:21(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+33.330.1 same old_aut=4:C2^2 new_aut=4:C2^2
+33.429.1 new
+33.462.1 new
+33.561.1 new
+33.627.1 new
+33.759.1 new
+33.858.1 new
+33.957.1 new
+34.1 same old_aut=2:C2 new_aut=2:C2
+34.2 same old_aut=2:C2 new_aut=2:C2
+34.102.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+34.170.1 jumped:11(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+34.238.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+34.374.1 jumped:20(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+34.442.1 new
+34.510.1 new
+34.646.1 new
+34.714.1 new
+34.782.1 new
+34.986.1 new
+35.1 jumped:8(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+35.5 same old_aut=4:C2^2 new_aut=4:C2^2
+35.70.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+35.105.1 negation old_aut=2:C2 new_aut=2:C2
+35.210.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+35.385.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+35.455.1 new
+35.595.1 new
+35.665.1 new
+35.770.1 new
+35.805.1 new
+35.910.1 new
+38.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+38.2 same old_aut=4:C2^2 new_aut=4:C2^2
+38.38 negation old_aut=8:D4 new_aut=8:D4
+38.114.1 negation old_aut=2:C2 new_aut=2:C2
+38.190.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+38.266.1 jumped:19(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+38.418.1 new
+38.494.1 new
+38.570.1 new
+38.646.1 new
+38.798.1 new
+38.874.1 new
+39.1 same old_aut=2:C2 new_aut=2:C2
+39.3 negation old_aut=2:C2 new_aut=2:C2
+39.78.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+39.195.1 jumped:15(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+39.273.1 same old_aut=2:C2 new_aut=2:C2
+39.390.1 new
+39.429.1 new
+39.546.1 new
+39.663.1 new
+39.741.1 new
+39.858.1 new
+39.897.1 new
+46.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+46.23 same old_aut=4:C2^2 new_aut=4:C2^2
+46.46 negation old_aut=8:D4 new_aut=8:D4
+46.138.1 new
+46.230.1 new
+46.322.1 new
+46.506.1 new
+46.598.1 new
+46.690.1 new
+46.782.1 new
+46.874.1 new
+46.966.1 new
+51.1 negation old_aut=2:C2 new_aut=2:C2
+51.17 same old_aut=12:D6 new_aut=12:D6
+51.102.1 new
+51.255.1 new
+51.357.1 new
+51.510.1 new
+51.561.1 new
+51.663.1 new
+51.714.1 new
+51.969.1 new
+55.1 same old_aut=2:C2 new_aut=2:C2
+55.11 same old_aut=2:C2 new_aut=2:C2
+55.110.1 new
+55.165.1 new
+55.330.1 new
+55.385.1 new
+55.715.1 new
+55.770.1 new
+55.935.1 new
+57.1 negation old_aut=2:C2 new_aut=2:C2
+57.3 jumped:7(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+57.57 same old_aut=8:D4 new_aut=8:D4
+57.114.1 new
+57.285.1 new
+57.399.1 new
+57.570.1 new
+57.627.1 new
+57.741.1 new
+57.798.1 new
+57.969.1 new
+58.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+58.2 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+58.29 same old_aut=4:C2^2 new_aut=4:C2^2
+58.174.1 new
+58.290.1 new
+58.406.1 new
+58.638.1 new
+58.754.1 new
+58.870.1 new
+58.986.1 new
+62.1 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+62.31 same old_aut=4:C2^2 new_aut=4:C2^2
+62.62 same old_aut=8:D4 new_aut=8:D4
+62.186.1 new
+62.310.1 new
+62.434.1 new
+62.682.1 new
+62.806.1 new
+62.930.1 new
+65.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+65.5 same old_aut=4:C2^2 new_aut=4:C2^2
+65.13 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+65.130.1 new
+65.195.1 new
+65.390.1 new
+65.455.1 new
+65.715.1 new
+65.910.1 new
+69.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+69.23 same old_aut=12:D6 new_aut=12:D6
+69.69 same old_aut=8:D4 new_aut=8:D4
+69.138.1 new
+69.345.1 new
+69.483.1 new
+69.690.1 new
+69.759.1 new
+69.897.1 new
+69.966.1 new
+74.1 negation old_aut=2:C2 new_aut=2:C2
+74.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+74.37 same old_aut=4:C2^2 new_aut=4:C2^2
+74.222.1 new
+74.370.1 new
+74.518.1 new
+74.814.1 new
+74.962.1 new
+77.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+77.7 negation old_aut=4:C2^2 new_aut=4:C2^2
+77.77 same old_aut=8:D4 new_aut=8:D4
+77.154.1 new
+77.231.1 new
+77.385.1 new
+77.462.1 new
+77.770.1 new
+82.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+82.2 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+82.246.1 new
+82.410.1 new
+82.574.1 new
+82.902.1 new
+85.1 same old_aut=4:C2^2 new_aut=4:C2^2
+85.5 same old_aut=4:C2^2 new_aut=4:C2^2
+85.17 same old_aut=4:C2^2 new_aut=4:C2^2
+85.170.1 new
+85.255.1 new
+85.510.1 new
+85.595.1 new
+85.935.1 new
+86.1 same old_aut=2:C2 new_aut=2:C2
+86.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+86.86 same old_aut=8:D4 new_aut=8:D4
+86.258.1 new
+86.430.1 new
+86.602.1 new
+86.946.1 new
+87.1 same old_aut=2:C2 new_aut=2:C2
+87.29 same old_aut=12:D6 new_aut=12:D6
+87.174.1 new
+87.435.1 new
+87.609.1 new
+87.870.1 new
+87.957.1 new
+91.1 negation old_aut=2:C2 new_aut=2:C2
+91.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+91.182.1 new
+91.273.1 new
+91.455.1 new
+91.546.1 new
+91.910.1 new
+93.1 negation old_aut=2:C2 new_aut=2:C2
+93.3 negation old_aut=4:C2^2 new_aut=4:C2^2
+93.93 negation old_aut=8:D4 new_aut=8:D4
+93.186.1 new
+93.465.1 new
+93.651.1 new
+93.930.1 new
+94.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+94.47 negation old_aut=4:C2^2 new_aut=4:C2^2
+94.94 negation old_aut=8:D4 new_aut=8:D4
+94.282.1 new
+94.470.1 new
+94.658.1 new
+95.1 same old_aut=2:C2 new_aut=2:C2
+95.19 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+95.190.1 new
+95.285.1 new
+95.570.1 new
+95.665.1 new
+106.1 same old_aut=4:C2^2 new_aut=4:C2^2
+106.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+106.53 same old_aut=4:C2^2 new_aut=4:C2^2
+106.318.1 new
+106.530.1 new
+106.742.1 new
+111.1 same old_aut=2:C2 new_aut=2:C2
+111.3 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+111.222.1 new
+111.555.1 new
+111.777.1 new
+115.1 same old_aut=4:C2^2 new_aut=4:C2^2
+115.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+115.230.1 new
+115.345.1 new
+115.690.1 new
+115.805.1 new
+118.1 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+118.2 negation old_aut=2:C2 new_aut=2:C2
+118.118 negation old_aut=8:D4 new_aut=8:D4
+118.354.1 new
+118.590.1 new
+118.826.1 new
+119.1 same old_aut=2:C2 new_aut=2:C2
+119.17 negation old_aut=4:C2^2 new_aut=4:C2^2
+119.238.1 new
+119.357.1 new
+119.595.1 new
+119.714.1 new
+122.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+122.2 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+122.61 same old_aut=4:C2^2 new_aut=4:C2^2
+122.366.1 new
+122.610.1 new
+122.854.1 new
+123.1 jumped:7(f=2,norm=true) old_aut=2:C2 new_aut=4:C2^2
+123.41 negation old_aut=12:D6 new_aut=12:D6
+123.246.1 new
+123.615.1 new
+123.861.1 new
+129.1 same old_aut=2:C2 new_aut=2:C2
+129.3 jumped:7(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+129.129 same old_aut=8:D4 new_aut=8:D4
+129.258.1 new
+129.645.1 new
+129.903.1 new
+133.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+133.19 same old_aut=4:C2^2 new_aut=4:C2^2
+133.133 negation old_aut=8:D4 new_aut=8:D4
+133.266.1 new
+133.399.1 new
+133.665.1 new
+133.798.1 new
+134.1 negation old_aut=2:C2 new_aut=2:C2
+134.2 same old_aut=4:C2^2 new_aut=4:C2^2
+134.134 same old_aut=8:D4 new_aut=8:D4
+134.402.1 new
+134.670.1 new
+134.938.1 new
+141.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+141.47 negation old_aut=12:D6 new_aut=12:D6
+141.141 negation old_aut=8:D4 new_aut=8:D4
+141.282.1 new
+141.705.1 new
+141.987.1 new
+142.1 negation old_aut=2:C2 new_aut=2:C2
+142.71 same old_aut=4:C2^2 new_aut=4:C2^2
+142.142 negation old_aut=8:D4 new_aut=8:D4
+142.426.1 new
+142.710.1 new
+142.994.1 new
+143.1 same old_aut=2:C2 new_aut=2:C2
+143.13 jumped:4(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+143.286.1 new
+143.429.1 new
+143.715.1 new
+143.858.1 new
+145.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+145.290.1 new
+145.435.1 new
+145.870.1 new
+146.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+146.2 negation old_aut=2:C2 new_aut=2:C2
+146.438.1 new
+146.730.1 new
+155.1 jumped:10(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+155.31 negation old_aut=2:C2 new_aut=2:C2
+155.310.1 new
+155.465.1 new
+155.930.1 new
+158.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+158.79 negation old_aut=4:C2^2 new_aut=4:C2^2
+158.158 same old_aut=8:D4 new_aut=8:D4
+158.474.1 new
+158.790.1 new
+159.1 same old_aut=2:C2 new_aut=2:C2
+159.53 same old_aut=12:D6 new_aut=12:D6
+159.318.1 new
+159.795.1 new
+161.1 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+161.7 jumped:12(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+161.161 same old_aut=8:D4 new_aut=8:D4
+161.322.1 new
+161.483.1 new
+161.805.1 new
+161.966.1 new
+166.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+166.2 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+166.166 negation old_aut=8:D4 new_aut=8:D4
+166.498.1 new
+166.830.1 new
+177.1 same old_aut=2:C2 new_aut=2:C2
+177.59 same old_aut=12:D6 new_aut=12:D6
+177.177 same old_aut=8:D4 new_aut=8:D4
+177.354.1 new
+177.885.1 new
+178.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+178.2 negation old_aut=2:C2 new_aut=2:C2
+178.534.1 new
+178.890.1 new
+183.1 same old_aut=2:C2 new_aut=2:C2
+183.3 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+183.366.1 new
+183.915.1 new
+185.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+185.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+185.37 negation old_aut=4:C2^2 new_aut=4:C2^2
+185.370.1 new
+185.555.1 new
+187.1 jumped:5(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+187.17 jumped:8(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+187.374.1 new
+187.561.1 new
+187.935.1 new
+194.1 jumped:20(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+194.2 negation old_aut=2:C2 new_aut=2:C2
+194.582.1 new
+194.970.1 new
+201.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+201.3 jumped:4(f=2,norm=true) old_aut=2:C2 new_aut=4:C2^2
+201.201 negation old_aut=8:D4 new_aut=8:D4
+201.402.1 new
+202.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+202.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+202.101 same old_aut=4:C2^2 new_aut=4:C2^2
+202.606.1 new
+203.1 same old_aut=2:C2 new_aut=2:C2
+203.7 same old_aut=2:C2 new_aut=2:C2
+203.406.1 new
+203.609.1 new
+205.1 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+205.410.1 new
+205.615.1 new
+206.1 same old_aut=2:C2 new_aut=2:C2
+206.103 negation old_aut=4:C2^2 new_aut=4:C2^2
+206.206 negation old_aut=8:D4 new_aut=8:D4
+206.618.1 new
+209.1 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+209.19 jumped:1(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+209.209 negation old_aut=8:D4 new_aut=8:D4
+209.418.1 new
+209.627.1 new
+210.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+210.2 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+210.3 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+210.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+210.7 same old_aut=4:C2^2 new_aut=4:C2^2
+213.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+213.71 negation old_aut=12:D6 new_aut=12:D6
+213.213 same old_aut=8:D4 new_aut=8:D4
+213.426.1 new
+214.1 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+214.2 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+214.214 negation old_aut=8:D4 new_aut=8:D4
+214.642.1 new
+215.1 same old_aut=2:C2 new_aut=2:C2
+215.5 jumped:4(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+215.430.1 new
+215.645.1 new
+217.1 negation old_aut=2:C2 new_aut=2:C2
+217.31 same old_aut=4:C2^2 new_aut=4:C2^2
+217.217 negation old_aut=8:D4 new_aut=8:D4
+217.434.1 new
+217.651.1 new
+218.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+218.2 same old_aut=4:C2^2 new_aut=4:C2^2
+218.109 negation old_aut=4:C2^2 new_aut=4:C2^2
+218.654.1 new
+219.1 same old_aut=2:C2 new_aut=2:C2
+219.3 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+219.438.1 new
+221.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+221.442.1 new
+221.663.1 new
+226.1 negation old_aut=2:C2 new_aut=2:C2
+226.2 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+226.678.1 new
+235.1 jumped:7(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+235.5 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+235.470.1 new
+235.705.1 new
+237.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+237.3 same old_aut=4:C2^2 new_aut=4:C2^2
+237.237 same old_aut=8:D4 new_aut=8:D4
+237.474.1 new
+247.1 same old_aut=2:C2 new_aut=2:C2
+247.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+247.494.1 new
+247.741.1 new
+249.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+249.83 same old_aut=12:D6 new_aut=12:D6
+249.249 negation old_aut=8:D4 new_aut=8:D4
+249.498.1 new
+253.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+253.11 jumped:8(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+253.253 negation old_aut=8:D4 new_aut=8:D4
+253.506.1 new
+253.759.1 new
+254.1 negation old_aut=2:C2 new_aut=2:C2
+254.127 negation old_aut=4:C2^2 new_aut=4:C2^2
+254.254 negation old_aut=8:D4 new_aut=8:D4
+254.762.1 new
+259.1 same old_aut=2:C2 new_aut=2:C2
+259.7 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+259.518.1 new
+259.777.1 new
+262.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+262.2 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+262.262 negation old_aut=8:D4 new_aut=8:D4
+262.786.1 new
+265.1 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+265.5 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+265.53 negation old_aut=4:C2^2 new_aut=4:C2^2
+265.530.1 new
+265.795.1 new
+267.1 jumped:8(f=2,norm=true) old_aut=2:C2 new_aut=4:C2^2
+267.89 same old_aut=12:D6 new_aut=12:D6
+267.534.1 new
+274.1 jumped:10(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+274.2 negation old_aut=2:C2 new_aut=2:C2
+274.822.1 new
+278.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+278.2 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+278.278 negation old_aut=8:D4 new_aut=8:D4
+278.834.1 new
+287.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+287.41 negation old_aut=4:C2^2 new_aut=4:C2^2
+287.574.1 new
+287.861.1 new
+291.1 negation old_aut=2:C2 new_aut=2:C2
+291.3 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+291.582.1 new
+295.1 same old_aut=2:C2 new_aut=2:C2
+295.59 same old_aut=2:C2 new_aut=2:C2
+295.590.1 new
+295.885.1 new
+298.1 same old_aut=4:C2^2 new_aut=4:C2^2
+298.2 jumped:13(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+298.149 same old_aut=4:C2^2 new_aut=4:C2^2
+298.894.1 new
+299.1 same old_aut=2:C2 new_aut=2:C2
+299.23 negation old_aut=2:C2 new_aut=2:C2
+299.598.1 new
+299.897.1 new
+301.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+301.7 jumped:7(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+301.301 same old_aut=8:D4 new_aut=8:D4
+301.602.1 new
+301.903.1 new
+302.1 negation old_aut=2:C2 new_aut=2:C2
+302.151 same old_aut=4:C2^2 new_aut=4:C2^2
+302.302 negation old_aut=8:D4 new_aut=8:D4
+302.906.1 new
+303.1 same old_aut=2:C2 new_aut=2:C2
+303.101 negation old_aut=12:D6 new_aut=12:D6
+303.606.1 new
+305.1 negation old_aut=2:C2 new_aut=2:C2
+305.610.1 new
+305.915.1 new
+309.1 jumped:12(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+309.3 jumped:16(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+309.309 same old_aut=8:D4 new_aut=8:D4
+309.618.1 new
+314.1 same old_aut=2:C2 new_aut=2:C2
+314.2 same old_aut=4:C2^2 new_aut=4:C2^2
+314.157 negation old_aut=4:C2^2 new_aut=4:C2^2
+314.942.1 new
+319.1 same old_aut=2:C2 new_aut=2:C2
+319.29 jumped:7(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+319.638.1 new
+319.957.1 new
+321.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+321.107 jumped:2(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+321.321 negation old_aut=8:D4 new_aut=8:D4
+321.642.1 new
+323.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+323.19 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+323.646.1 new
+323.969.1 new
+326.1 same old_aut=2:C2 new_aut=2:C2
+326.2 same old_aut=4:C2^2 new_aut=4:C2^2
+326.326 same old_aut=8:D4 new_aut=8:D4
+326.978.1 new
+327.1 same old_aut=2:C2 new_aut=2:C2
+327.3 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+327.654.1 new
+329.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+329.47 jumped:4(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+329.329 same old_aut=8:D4 new_aut=8:D4
+329.658.1 new
+329.987.1 new
+330.1 same old_aut=4:C2^2 new_aut=4:C2^2
+330.2 same old_aut=4:C2^2 new_aut=4:C2^2
+330.10 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+330.15 negation old_aut=4:C2^2 new_aut=4:C2^2
+330.110 jumped:7(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+334.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+334.167 same old_aut=4:C2^2 new_aut=4:C2^2
+334.334 negation old_aut=8:D4 new_aut=8:D4
+335.1 same old_aut=2:C2 new_aut=2:C2
+335.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+335.670.1 new
+339.1 same old_aut=2:C2 new_aut=2:C2
+339.113 negation old_aut=12:D6 new_aut=12:D6
+339.678.1 new
+341.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+341.11 same old_aut=4:C2^2 new_aut=4:C2^2
+341.341 negation old_aut=8:D4 new_aut=8:D4
+341.682.1 new
+346.1 same old_aut=2:C2 new_aut=2:C2
+346.2 jumped:14(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+346.173 negation old_aut=4:C2^2 new_aut=4:C2^2
+355.1 jumped:10(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+355.71 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+355.710.1 new
+358.1 same old_aut=4:C2^2 new_aut=4:C2^2
+358.2 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+358.358 same old_aut=8:D4 new_aut=8:D4
+362.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+362.2 jumped:10(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+362.181 negation old_aut=4:C2^2 new_aut=4:C2^2
+365.1 jumped:12(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+365.5 same old_aut=4:C2^2 new_aut=4:C2^2
+365.73 same old_aut=4:C2^2 new_aut=4:C2^2
+365.730.1 new
+371.1 negation old_aut=2:C2 new_aut=2:C2
+371.7 negation old_aut=2:C2 new_aut=2:C2
+371.742.1 new
+377.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+377.754.1 new
+381.1 same old_aut=2:C2 new_aut=2:C2
+381.3 jumped:16(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+381.381 same old_aut=8:D4 new_aut=8:D4
+381.762.1 new
+382.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+382.191 negation old_aut=4:C2^2 new_aut=4:C2^2
+382.382 same old_aut=8:D4 new_aut=8:D4
+386.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+386.2 same old_aut=2:C2 new_aut=2:C2
+390.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+390.2 same old_aut=4:C2^2 new_aut=4:C2^2
+390.3 jumped:8(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+390.5 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+390.30 jumped:8(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+391.1 negation old_aut=2:C2 new_aut=2:C2
+391.17 negation old_aut=2:C2 new_aut=2:C2
+391.782.1 new
+393.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+393.131 negation old_aut=12:D6 new_aut=12:D6
+393.393 negation old_aut=8:D4 new_aut=8:D4
+393.786.1 new
+394.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+394.2 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+394.197 same old_aut=4:C2^2 new_aut=4:C2^2
+395.1 same old_aut=2:C2 new_aut=2:C2
+395.79 same old_aut=2:C2 new_aut=2:C2
+395.790.1 new
+398.1 jumped:14(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+398.199 same old_aut=4:C2^2 new_aut=4:C2^2
+398.398 negation old_aut=8:D4 new_aut=8:D4
+403.1 jumped:5(f=2,norm=true) old_aut=2:C2 new_aut=4:C2^2
+403.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+403.806.1 new
+407.1 same old_aut=2:C2 new_aut=2:C2
+407.11 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+407.814.1 new
+411.1 negation old_aut=2:C2 new_aut=2:C2
+411.137 jumped:4(f=2,norm=true) old_aut=12:D6 new_aut=12:D6
+411.822.1 new
+413.1 jumped:10(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+413.59 negation old_aut=4:C2^2 new_aut=4:C2^2
+413.413 negation old_aut=8:D4 new_aut=8:D4
+413.826.1 new
+415.1 same old_aut=2:C2 new_aut=2:C2
+415.5 jumped:19(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+415.830.1 new
+417.1 jumped:10(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+417.3 jumped:20(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+417.417 negation old_aut=8:D4 new_aut=8:D4
+417.834.1 new
+422.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+422.2 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+422.422 negation old_aut=8:D4 new_aut=8:D4
+427.1 same old_aut=2:C2 new_aut=2:C2
+427.61 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+427.854.1 new
+437.1 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+437.19 negation old_aut=4:C2^2 new_aut=4:C2^2
+437.437 same old_aut=8:D4 new_aut=8:D4
+437.874.1 new
+445.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+445.890.1 new
+446.1 same old_aut=2:C2 new_aut=2:C2
+446.223 same old_aut=4:C2^2 new_aut=4:C2^2
+446.446 same old_aut=8:D4 new_aut=8:D4
+447.1 same old_aut=2:C2 new_aut=2:C2
+447.149 jumped:3(f=2,norm=true) old_aut=12:D6 new_aut=12:D6
+447.894.1 new
+451.1 jumped:17(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+451.41 same old_aut=4:C2^2 new_aut=4:C2^2
+451.902.1 new
+453.1 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+453.3 negation old_aut=4:C2^2 new_aut=4:C2^2
+453.453 same old_aut=8:D4 new_aut=8:D4
+453.906.1 new
+454.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+454.2 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+454.454 negation old_aut=8:D4 new_aut=8:D4
+458.1 negation old_aut=2:C2 new_aut=2:C2
+458.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+458.229 same old_aut=4:C2^2 new_aut=4:C2^2
+462.1 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+462.3 negation old_aut=4:C2^2 new_aut=4:C2^2
+462.11 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+462.21 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+462.462 negation old_aut=8:D4 new_aut=8:D4
+466.1 same old_aut=2:C2 new_aut=2:C2
+466.2 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+469.1 jumped:14(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+469.7 negation old_aut=4:C2^2 new_aut=4:C2^2
+469.469 negation old_aut=8:D4 new_aut=8:D4
+469.938.1 new
+471.1 same old_aut=2:C2 new_aut=2:C2
+471.3 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+471.942.1 new
+473.1 jumped:12(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+473.43 negation old_aut=4:C2^2 new_aut=4:C2^2
+473.473 same old_aut=8:D4 new_aut=8:D4
+473.946.1 new
+478.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+478.239 negation old_aut=4:C2^2 new_aut=4:C2^2
+478.478 negation old_aut=8:D4 new_aut=8:D4
+481.1 jumped:10(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+481.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+481.37 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+481.962.1 new
+482.1 same old_aut=2:C2 new_aut=2:C2
+482.2 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+485.1 jumped:20(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+485.5 same old_aut=4:C2^2 new_aut=4:C2^2
+485.97 negation old_aut=4:C2^2 new_aut=4:C2^2
+485.970.1 new
+489.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+489.3 jumped:4(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+489.489 negation old_aut=8:D4 new_aut=8:D4
+489.978.1 new
+493.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+493.17 negation old_aut=4:C2^2 new_aut=4:C2^2
+493.29 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+493.986.1 new
+497.1 jumped:18(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+497.7 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+497.497 negation old_aut=8:D4 new_aut=8:D4
+497.994.1 new
+501.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+501.167 jumped:2(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+501.501 same old_aut=8:D4 new_aut=8:D4
+502.1 jumped:11(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+502.2 same old_aut=2:C2 new_aut=2:C2
+502.502 same old_aut=8:D4 new_aut=8:D4
+505.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+510.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+510.5 same old_aut=4:C2^2 new_aut=4:C2^2
+510.6 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+510.51 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+510.170 jumped:6(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+511.1 negation old_aut=2:C2 new_aut=2:C2
+511.73 jumped:3(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+514.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+514.2 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+515.1 jumped:10(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+515.5 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+517.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+517.11 jumped:15(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+517.517 negation old_aut=8:D4 new_aut=8:D4
+519.1 same old_aut=2:C2 new_aut=2:C2
+519.173 jumped:1(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+526.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+526.263 same old_aut=4:C2^2 new_aut=4:C2^2
+526.526 same old_aut=8:D4 new_aut=8:D4
+527.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+527.17 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+533.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+533.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+533.41 negation old_aut=4:C2^2 new_aut=4:C2^2
+535.1 same old_aut=2:C2 new_aut=2:C2
+535.5 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+537.1 same old_aut=2:C2 new_aut=2:C2
+537.179 negation old_aut=12:D6 new_aut=12:D6
+537.537 negation old_aut=8:D4 new_aut=8:D4
+538.1 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+538.2 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+538.269 same old_aut=4:C2^2 new_aut=4:C2^2
+542.1 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+542.271 negation old_aut=4:C2^2 new_aut=4:C2^2
+542.542 negation old_aut=8:D4 new_aut=8:D4
+543.1 same old_aut=2:C2 new_aut=2:C2
+543.3 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+545.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+546.1 same old_aut=2:C2 new_aut=2:C2
+546.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+546.6 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+546.7 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+546.26 same old_aut=4:C2^2 new_aut=4:C2^2
+551.1 same old_aut=2:C2 new_aut=2:C2
+551.29 jumped:8(f=2,norm=true) old_aut=2:C2 new_aut=4:C2^2
+553.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+553.7 jumped:1(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+553.553 negation old_aut=8:D4 new_aut=8:D4
+554.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+554.2 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+554.277 negation old_aut=4:C2^2 new_aut=4:C2^2
+559.1 same old_aut=2:C2 new_aut=2:C2
+559.43 negation old_aut=2:C2 new_aut=2:C2
+562.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+562.2 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+565.1 jumped:11(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+565.5 jumped:14(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+565.113 negation old_aut=4:C2^2 new_aut=4:C2^2
+566.1 same old_aut=2:C2 new_aut=2:C2
+566.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+566.566 negation old_aut=8:D4 new_aut=8:D4
+570.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+570.2 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+570.3 same old_aut=4:C2^2 new_aut=4:C2^2
+570.10 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+570.19 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+573.1 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+573.191 same old_aut=12:D6 new_aut=12:D6
+573.573 negation old_aut=8:D4 new_aut=8:D4
+579.1 same old_aut=2:C2 new_aut=2:C2
+579.3 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+581.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+581.83 same old_aut=4:C2^2 new_aut=4:C2^2
+581.581 negation old_aut=8:D4 new_aut=8:D4
+583.1 same old_aut=2:C2 new_aut=2:C2
+583.11 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+586.1 same old_aut=4:C2^2 new_aut=4:C2^2
+586.2 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+586.293 negation old_aut=4:C2^2 new_aut=4:C2^2
+589.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+589.31 jumped:1(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+589.589 same old_aut=8:D4 new_aut=8:D4
+591.1 same old_aut=2:C2 new_aut=2:C2
+591.197 same old_aut=12:D6 new_aut=12:D6
+597.1 negation old_aut=2:C2 new_aut=2:C2
+597.3 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+597.597 same old_aut=8:D4 new_aut=8:D4
+611.1 negation old_aut=2:C2 new_aut=2:C2
+611.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+614.1 negation old_aut=2:C2 new_aut=2:C2
+614.2 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+614.614 negation old_aut=8:D4 new_aut=8:D4
+622.1 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+622.311 negation old_aut=4:C2^2 new_aut=4:C2^2
+622.622 negation old_aut=8:D4 new_aut=8:D4
+623.1 same old_aut=2:C2 new_aut=2:C2
+623.89 negation old_aut=4:C2^2 new_aut=4:C2^2
+626.1 jumped:18(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+626.2 negation old_aut=2:C2 new_aut=2:C2
+629.1 same old_aut=2:C2 new_aut=2:C2
+629.17 negation old_aut=4:C2^2 new_aut=4:C2^2
+629.37 negation old_aut=4:C2^2 new_aut=4:C2^2
+633.1 same old_aut=2:C2 new_aut=2:C2
+633.3 jumped:24(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+633.633 same old_aut=8:D4 new_aut=8:D4
+634.1 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+634.2 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+634.317 same old_aut=4:C2^2 new_aut=4:C2^2
+635.1 same old_aut=4:C2^2 new_aut=4:C2^2
+635.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+649.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+649.11 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+649.649 same old_aut=8:D4 new_aut=8:D4
+655.1 same old_aut=2:C2 new_aut=2:C2
+655.131 negation old_aut=2:C2 new_aut=2:C2
+662.1 negation old_aut=2:C2 new_aut=2:C2
+662.2 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+662.662 negation old_aut=8:D4 new_aut=8:D4
+667.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+667.23 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+669.1 same old_aut=2:C2 new_aut=2:C2
+669.3 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+669.669 same old_aut=8:D4 new_aut=8:D4
+671.1 same old_aut=2:C2 new_aut=2:C2
+671.61 jumped:8(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+674.1 jumped:14(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+674.2 same old_aut=2:C2 new_aut=2:C2
+679.1 same old_aut=2:C2 new_aut=2:C2
+679.97 negation old_aut=4:C2^2 new_aut=4:C2^2
+681.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+681.227 same old_aut=12:D6 new_aut=12:D6
+681.681 negation old_aut=8:D4 new_aut=8:D4
+685.1 jumped:11(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+685.5 same old_aut=4:C2^2 new_aut=4:C2^2
+685.137 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+687.1 same old_aut=2:C2 new_aut=2:C2
+687.3 jumped:19(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+689.1 jumped:40(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+690.1 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+690.2 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+690.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+690.6 same old_aut=4:C2^2 new_aut=4:C2^2
+690.230 jumped:6(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+694.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+694.2 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+694.694 same old_aut=8:D4 new_aut=8:D4
+695.1 same old_aut=2:C2 new_aut=2:C2
+695.139 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+697.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+697.17 jumped:14(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+697.41 same old_aut=4:C2^2 new_aut=4:C2^2
+698.1 negation old_aut=4:C2^2 new_aut=4:C2^2
+698.2 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+698.349 negation old_aut=4:C2^2 new_aut=4:C2^2
+699.1 same old_aut=2:C2 new_aut=2:C2
+699.233 negation old_aut=12:D6 new_aut=12:D6
+703.1 same old_aut=2:C2 new_aut=2:C2
+703.37 negation old_aut=4:C2^2 new_aut=4:C2^2
+706.1 same old_aut=2:C2 new_aut=2:C2
+706.2 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+707.1 jumped:12(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+707.101 negation old_aut=4:C2^2 new_aut=4:C2^2
+713.1 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+713.23 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+713.713 same old_aut=8:D4 new_aut=8:D4
+714.1 negation old_aut=2:C2 new_aut=2:C2
+714.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+714.3 same old_aut=4:C2^2 new_aut=4:C2^2
+714.7 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+714.14 same old_aut=4:C2^2 new_aut=4:C2^2
+717.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+717.239 negation old_aut=12:D6 new_aut=12:D6
+717.717 negation old_aut=8:D4 new_aut=8:D4
+718.1 negation old_aut=2:C2 new_aut=2:C2
+718.359 same old_aut=4:C2^2 new_aut=4:C2^2
+718.718 negation old_aut=8:D4 new_aut=8:D4
+721.1 same old_aut=2:C2 new_aut=2:C2
+721.103 jumped:4(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+721.721 negation old_aut=8:D4 new_aut=8:D4
+723.1 negation old_aut=2:C2 new_aut=2:C2
+723.3 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+731.1 negation old_aut=2:C2 new_aut=2:C2
+731.43 negation old_aut=2:C2 new_aut=2:C2
+734.1 negation old_aut=2:C2 new_aut=2:C2
+734.367 same old_aut=4:C2^2 new_aut=4:C2^2
+734.734 same old_aut=8:D4 new_aut=8:D4
+737.1 same old_aut=2:C2 new_aut=2:C2
+737.11 jumped:8(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+737.737 negation old_aut=8:D4 new_aut=8:D4
+745.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+746.1 jumped:26(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+746.2 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+746.373 same old_aut=4:C2^2 new_aut=4:C2^2
+749.1 jumped:29(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+749.7 jumped:16(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+749.749 same old_aut=8:D4 new_aut=8:D4
+753.1 jumped:11(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+753.251 jumped:1(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+753.753 same old_aut=8:D4 new_aut=8:D4
+755.1 negation old_aut=2:C2 new_aut=2:C2
+755.151 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+758.1 negation old_aut=2:C2 new_aut=2:C2
+758.2 same old_aut=4:C2^2 new_aut=4:C2^2
+758.758 same old_aut=8:D4 new_aut=8:D4
+763.1 jumped:11(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+763.7 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+766.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+766.383 same old_aut=4:C2^2 new_aut=4:C2^2
+766.766 negation old_aut=8:D4 new_aut=8:D4
+767.1 same old_aut=2:C2 new_aut=2:C2
+767.13 jumped:6(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+770.1 same old_aut=2:C2 new_aut=2:C2
+770.2 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+770.10 same old_aut=4:C2^2 new_aut=4:C2^2
+770.11 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+770.35 negation old_aut=4:C2^2 new_aut=4:C2^2
+771.1 negation old_aut=2:C2 new_aut=2:C2
+771.257 jumped:3(f=2,norm=true) old_aut=12:D6 new_aut=12:D6
+778.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+778.2 jumped:14(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+778.389 negation old_aut=4:C2^2 new_aut=4:C2^2
+779.1 jumped:24(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+779.41 jumped:1(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+781.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+781.11 jumped:20(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+781.781 negation old_aut=8:D4 new_aut=8:D4
+785.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+785.5 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+785.157 same old_aut=4:C2^2 new_aut=4:C2^2
+789.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+789.263 same old_aut=12:D6 new_aut=12:D6
+789.789 same old_aut=8:D4 new_aut=8:D4
+791.1 negation old_aut=2:C2 new_aut=2:C2
+791.7 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+793.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+794.1 jumped:42(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+794.2 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+794.397 same old_aut=4:C2^2 new_aut=4:C2^2
+798.1 same old_aut=4:C2^2 new_aut=4:C2^2
+798.6 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+798.7 same old_aut=4:C2^2 new_aut=4:C2^2
+798.14 negation old_aut=4:C2^2 new_aut=4:C2^2
+798.19 same old_aut=4:C2^2 new_aut=4:C2^2
+798.798 negation old_aut=8:D4 new_aut=8:D4
+799.1 jumped:17(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+799.47 same old_aut=2:C2 new_aut=2:C2
+802.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+802.2 negation old_aut=2:C2 new_aut=2:C2
+803.1 same old_aut=2:C2 new_aut=2:C2
+803.73 negation old_aut=4:C2^2 new_aut=4:C2^2
+807.1 same old_aut=2:C2 new_aut=2:C2
+807.269 same old_aut=12:D6 new_aut=12:D6
+813.1 jumped:12(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+813.3 jumped:17(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+813.813 negation old_aut=8:D4 new_aut=8:D4
+815.1 same old_aut=2:C2 new_aut=2:C2
+815.5 jumped:5(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+817.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+817.19 negation old_aut=4:C2^2 new_aut=4:C2^2
+817.817 same old_aut=8:D4 new_aut=8:D4
+818.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+818.2 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+831.1 same old_aut=2:C2 new_aut=2:C2
+831.3 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+835.1 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+835.5 jumped:22(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+838.1 jumped:14(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+838.2 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+838.838 same old_aut=8:D4 new_aut=8:D4
+842.1 jumped:16(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+842.2 same old_aut=2:C2 new_aut=2:C2
+842.421 same old_aut=4:C2^2 new_aut=4:C2^2
+843.1 jumped:11(f=2,norm=true) old_aut=2:C2 new_aut=4:C2^2
+843.281 negation old_aut=12:D6 new_aut=12:D6
+849.1 negation old_aut=2:C2 new_aut=2:C2
+849.3 jumped:16(f=2,norm=true) old_aut=4:C2^2 new_aut=2:C2
+849.849 same old_aut=8:D4 new_aut=8:D4
+851.1 negation old_aut=2:C2 new_aut=2:C2
+851.37 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+858.1 jumped:9(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+858.2 jumped:15(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+858.3 same old_aut=2:C2 new_aut=2:C2
+858.11 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+858.26 negation old_aut=4:C2^2 new_aut=4:C2^2
+862.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+862.431 negation old_aut=4:C2^2 new_aut=4:C2^2
+862.862 same old_aut=8:D4 new_aut=8:D4
+865.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+865.5 jumped:25(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+865.173 same old_aut=4:C2^2 new_aut=4:C2^2
+866.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+866.2 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+869.1 jumped:18(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+869.79 jumped:8(f=2,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+869.869 same old_aut=8:D4 new_aut=8:D4
+870.1 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+870.2 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+870.6 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+870.15 same old_aut=4:C2^2 new_aut=4:C2^2
+870.87 jumped:2(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+870.290 jumped:6(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+871.1 same old_aut=2:C2 new_aut=2:C2
+871.13 same old_aut=2:C2 new_aut=2:C2
+878.1 jumped:7(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+878.439 same old_aut=4:C2^2 new_aut=4:C2^2
+878.878 negation old_aut=8:D4 new_aut=8:D4
+879.1 same old_aut=2:C2 new_aut=2:C2
+879.293 jumped:1(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+886.1 jumped:11(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+886.2 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+886.886 same old_aut=8:D4 new_aut=8:D4
+889.1 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+889.7 same old_aut=2:C2 new_aut=2:C2
+889.889 negation old_aut=8:D4 new_aut=8:D4
+893.1 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+893.19 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=4:C2^2
+893.893 same old_aut=8:D4 new_aut=8:D4
+895.1 same old_aut=2:C2 new_aut=2:C2
+895.179 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+898.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+898.2 jumped:15(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+899.1 same old_aut=2:C2 new_aut=2:C2
+899.29 same old_aut=2:C2 new_aut=2:C2
+901.1 jumped:3(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+905.1 jumped:23(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+910.1 jumped:13(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+910.5 jumped:21(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+910.7 negation old_aut=4:C2^2 new_aut=4:C2^2
+910.13 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+910.14 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+910.455 jumped:3(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+913.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+913.83 same old_aut=4:C2^2 new_aut=4:C2^2
+913.913 negation old_aut=8:D4 new_aut=8:D4
+914.1 jumped:30(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+914.2 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+917.1 negation old_aut=2:C2 new_aut=2:C2
+917.131 same old_aut=4:C2^2 new_aut=4:C2^2
+917.917 same old_aut=8:D4 new_aut=8:D4
+921.1 same old_aut=2:C2 new_aut=2:C2
+921.3 jumped:19(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+921.921 same old_aut=8:D4 new_aut=8:D4
+922.1 jumped:15(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+922.2 jumped:24(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+922.461 same old_aut=4:C2^2 new_aut=4:C2^2
+923.1 jumped:27(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+923.13 negation old_aut=4:C2^2 new_aut=4:C2^2
+926.1 same old_aut=2:C2 new_aut=2:C2
+926.463 negation old_aut=4:C2^2 new_aut=4:C2^2
+926.926 same old_aut=8:D4 new_aut=8:D4
+930.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+930.2 jumped:10(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+930.3 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+930.10 jumped:8(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+930.93 negation old_aut=4:C2^2 new_aut=4:C2^2
+933.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+933.311 negation old_aut=12:D6 new_aut=12:D6
+933.933 same old_aut=8:D4 new_aut=8:D4
+934.1 negation old_aut=2:C2 new_aut=2:C2
+934.2 jumped:12(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+934.934 negation old_aut=8:D4 new_aut=8:D4
+939.1 same old_aut=2:C2 new_aut=2:C2
+939.3 negation old_aut=2:C2 new_aut=2:C2
+943.1 jumped:4(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+943.23 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+949.1 jumped:6(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+949.13 same old_aut=4:C2^2 new_aut=4:C2^2
+949.73 jumped:4(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+951.1 same old_aut=2:C2 new_aut=2:C2
+951.317 jumped:2(f=1,norm=true) old_aut=12:D6 new_aut=12:D6
+955.1 jumped:7(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+955.191 jumped:2(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+958.1 same old_aut=2:C2 new_aut=2:C2
+958.479 same old_aut=4:C2^2 new_aut=4:C2^2
+958.958 same old_aut=8:D4 new_aut=8:D4
+959.1 same old_aut=2:C2 new_aut=2:C2
+959.7 jumped:5(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+965.1 jumped:40(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+965.5 negation old_aut=4:C2^2 new_aut=4:C2^2
+965.193 negation old_aut=4:C2^2 new_aut=4:C2^2
+966.1 same old_aut=2:C2 new_aut=2:C2
+966.2 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+966.3 jumped:7(f=1,norm=true) old_aut=4:C2^2 new_aut=4:C2^2
+966.21 same old_aut=4:C2^2 new_aut=4:C2^2
+966.966 jumped:3(f=1,norm=true) old_aut=8:D4 new_aut=8:D4
+973.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+973.139 same old_aut=4:C2^2 new_aut=4:C2^2
+973.973 negation old_aut=8:D4 new_aut=8:D4
+974.1 negation old_aut=2:C2 new_aut=2:C2
+974.487 same old_aut=4:C2^2 new_aut=4:C2^2
+974.974 negation old_aut=8:D4 new_aut=8:D4
+979.1 jumped:10(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+979.11 jumped:14(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+982.1 same old_aut=2:C2 new_aut=2:C2
+982.2 jumped:9(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+982.982 same old_aut=8:D4 new_aut=8:D4
+985.1 jumped:18(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+985.5 jumped:13(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+985.197 negation old_aut=4:C2^2 new_aut=4:C2^2
+989.1 jumped:24(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+989.43 jumped:5(f=1,norm=true) old_aut=4:C2^2 new_aut=2:C2
+989.989 negation old_aut=8:D4 new_aut=8:D4
+993.1 jumped:8(f=1,norm=true) old_aut=2:C2 new_aut=2:C2
+993.3 jumped:17(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+993.993 negation old_aut=8:D4 new_aut=8:D4
+995.1 jumped:30(f=2,norm=true) old_aut=2:C2 new_aut=2:C2
+995.199 negation old_aut=2:C2 new_aut=2:C2
+998.1 negation old_aut=2:C2 new_aut=2:C2
+998.2 negation old_aut=4:C2^2 new_aut=4:C2^2
+998.998 negation old_aut=8:D4 new_aut=8:D4

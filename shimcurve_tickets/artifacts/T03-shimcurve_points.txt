@@ -1,0 +1,16 @@
+# ==========================================================================
+# T03  shimcurve_points  STAGED UPLOAD  --  PROVISIONAL, pending T27 reload
+# --------------------------------------------------------------------------
+# 0 staged point rows: ALL 317 known rational points lie on Atkin-Lehner
+# quotient curves that are UNMAPPED in T01 (their rows are not generated yet).
+# The 42 MAPPED [1]-base curves in the points file carry 0 points (D>1 Shimura
+# curves have no real points).  The points are in T03-points-parked.txt, keyed
+# by join key; load them once their curve rows exist (T19->T20->T09->T08).
+# curve_label convention = full coarse label (mu_label.coarse_label), matching
+# shimcurve_models.shimcurve; NB the frontend points query uses bare
+# self.coarse_label (web_curve.py:765,769,773,778) -- flag for T24.
+# Load (after rows exist):  db.shimcurve_points.copy_from('load.txt', sep='|')
+# ==========================================================================
+Clabel|Igusa_invs|cardinality|cm|conductor_norm|coordinates|curve_genus|curve_index|curve_label|curve_level|curve_name|degree|isolated|j_field|j_height|jinv|jorig|quo_info|residue_field
+text|text|integer|smallint|numeric|jsonb|integer|integer|text|integer|text|smallint|smallint|text|double precision|text|text|smallint[]|text
+
