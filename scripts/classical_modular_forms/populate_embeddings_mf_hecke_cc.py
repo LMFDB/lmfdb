@@ -15,7 +15,7 @@ def convert_eigenvals_to_qexp(basis, eigenvals, normalization):
 
 
 def upsert_embedding(id_number, skip = True):
-    rowcc = db.mf_hecke_cc.lucky({'id':id_number}, projection=['an_normalized', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
+    rowcc = db.mf_hecke_cc_eis.lucky({'id':id_number}, projection=['an_normalized', 'hecke_orbit_code','id','lfunction_label', 'embedding_root_imag','embedding_root_real'])
     if rowcc is None:
         return
     if skip:
@@ -38,7 +38,7 @@ def upsert_embedding(id_number, skip = True):
     else:
         # print rowcc['lfunction_label']
         HF = NumberField(ZZx(newform['field_poly']), "v")
-        hecke_nf = db.mf_hecke_nf.lucky({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an','field_poly','field_poly_root_of_unity','hecke_ring_numerators','hecke_ring_denominators', 'hecke_ring_power_basis'])
+        hecke_nf = db.mf_hecke_nf_eis.lucky({'hecke_orbit_code':hecke_orbit_code}, ['hecke_ring_cyclotomic_generator','an','field_poly','field_poly_root_of_unity','hecke_ring_numerators','hecke_ring_denominators', 'hecke_ring_power_basis'])
         assert hecke_nf is not None
         assert newform['field_poly'] == hecke_nf['field_poly']
         assert hecke_nf['hecke_ring_cyclotomic_generator'] == 0
@@ -74,17 +74,17 @@ def upsert_embedding(id_number, skip = True):
                 row_embeddings['embedding_root_imag'] = float(embeddings[i](HF.gen()).imag())
                 break
     assert len(row_embeddings) == 2
-    db.mf_hecke_cc.upsert({'id': rowcc['id']}, row_embeddings)
+    db.mf_hecke_cc_eis.upsert({'id': rowcc['id']}, row_embeddings)
 
 
 import sys
 if len(sys.argv) == 3:
-    bound = db.mf_hecke_cc.max_id()
+    bound = db.mf_hecke_cc_eis.max_id()
     k = int(sys.argv[1])
     start = int(sys.argv[2])
     assert k > start
-    hoc = list(db.mf_newforms.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
-    ids = sorted(list(db.mf_hecke_cc.search({'hecke_orbit_code':{'$in': hoc}, 'embedding_root_real':{'$exists':False}}, projection='id', sort = [])))
+    hoc = list(db.mf_newforms_eis.search({'dim':{'$lt': 21}, 'weight':{'$ne': 1}}, projection='hecke_orbit_code'))
+    ids = sorted(list(db.mf_hecke_cc_eis.search({'hecke_orbit_code':{'$in': hoc}, 'embedding_root_real':{'$exists':False}}, projection='id', sort = [])))
     ids = ids[start::k]
     for j, i in enumerate(ids):
         upsert_embedding(i)

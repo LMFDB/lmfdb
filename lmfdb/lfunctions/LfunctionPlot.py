@@ -484,7 +484,7 @@ def paintSvgHoloNew(condmax):
     values = {}
     max_k = 0  # the largest weight we see
 
-    for nf in db.mf_newforms.search({'analytic_conductor': {'$lte': condmax}},
+    for nf in db.mf_newforms_eis.search({'analytic_conductor': {'$lte': condmax}},
                                     projection=['analytic_conductor', 'label', 'level', 'weight', 'conrey_index', 'dim', 'char_degree'],
                                     sort=[('analytic_conductor', 1)]):
         _, k, _, hecke_letter = nf['label'].split('.')

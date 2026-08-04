@@ -68,10 +68,10 @@ class mf_newforms(MfChecker):
         """
         # TIME > 120s
         bad_labels = []
-        labels = self.check_crosstable_count('mf_newspaces', 1, 'space_label', 'label')
+        labels = self.check_crosstable_count('mf_newspaces_eis', 1, 'space_label', 'label')
         bad_labels.extend([label + " (count)" for label in labels])
         for col in ['Nk2', 'analytic_conductor', 'char_conductor', 'char_degree', 'char_is_real', 'char_orbit_index', 'char_orbit_label', 'char_order', 'char_parity', 'char_values', 'conrey_index', 'level', 'level_is_prime', 'level_is_prime_power', 'level_is_square', 'level_is_squarefree', 'level_primes', 'level_radical', 'prim_orbit_index', 'weight', 'weight_parity']:
-            labels = self.check_crosstable('mf_newspaces', col, 'space_label', col, 'label')
+            labels = self.check_crosstable('mf_newspaces_eis', col, 'space_label', col, 'label')
             bad_labels.extend([label + " (%s)" % col for label in labels])
         return bad_labels
 
@@ -352,8 +352,8 @@ class mf_newforms(MfChecker):
         # TIME > 1300s
         # I expect this to take about 3/4h
         # we a create a temp table as we can't use aggregates under WHERE
-        db._execute(SQL("CREATE TEMP TABLE tmp_cc AS SELECT t1.hecke_orbit_code, every(0 = all(t1.an_normalized[:][2:2] )) self_dual FROM mf_hecke_cc t1, mf_newforms t2 WHERE t1.hecke_orbit_code=t2.hecke_orbit_code AND t2.is_self_dual AND t2.field_poly is NULL GROUP BY t1.hecke_orbit_code"))
-        query = SQL("SELECT t1.label FROM mf_newforms t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code")
+        db._execute(SQL("CREATE TEMP TABLE tmp_cc AS SELECT t1.hecke_orbit_code, every(0 = all(t1.an_normalized[:][2:2] )) self_dual FROM mf_hecke_cc_eis t1, mf_newforms_eis t2 WHERE t1.hecke_orbit_code=t2.hecke_orbit_code AND t2.is_self_dual AND t2.field_poly is NULL GROUP BY t1.hecke_orbit_code"))
+        query = SQL("SELECT t1.label FROM mf_newforms_eis t1, tmp_cc t2 WHERE NOT t2.self_dual AND t1.hecke_orbit_code = t2.hecke_orbit_code")
         return self._run_query(query=query)
 
     @overall_long
@@ -542,7 +542,7 @@ class mf_newforms(MfChecker):
         there should be exactly 1000 records in mf_hecke_traces for each record in mf_newforms
         """
         # TIME > 500s
-        return self.check_crosstable_count('mf_hecke_traces', 1000, 'hecke_orbit_code')
+        return self.check_crosstable_count('mf_hecke_traces_eis', 1000, 'hecke_orbit_code')
 
     @overall_long
     def check_traces_match(self):
@@ -550,7 +550,7 @@ class mf_newforms(MfChecker):
         check that traces[n] matches trace_an in mf_hecke_traces
         """
         # TIME > 600s
-        return self.check_crosstable_aggregate('mf_hecke_traces', 'traces', 'hecke_orbit_code', 'trace_an', sort=['n'], truncate=1000)
+        return self.check_crosstable_aggregate('mf_hecke_traces_eis', 'traces', 'hecke_orbit_code', 'trace_an', sort=['n'], truncate=1000)
 
     #### mf_hecke_lpolys ####
 
@@ -560,7 +560,7 @@ class mf_newforms(MfChecker):
         there should be exactly 25 records in mf_hecke_lpolys for each record in mf_newforms with field_poly
         """
         # TIME about 200s
-        return self.check_crosstable_count('mf_hecke_lpolys', 25, 'hecke_orbit_code', constraint={'field_poly':{'$exists':True}})
+        return self.check_crosstable_count('mf_hecke_lpolys_eis', 25, 'hecke_orbit_code', constraint={'field_poly':{'$exists':True}})
 
     #### mf_hecke_cc ####
 
@@ -571,7 +571,7 @@ class mf_newforms(MfChecker):
         rows in mf_hecke_cc per hecke_orbit_code matches dim
         """
         # TIME > 1000s
-        return accumulate_failures(self.check_crosstable_count('mf_hecke_cc', 'dim', 'hecke_orbit_code', constraint=self._box_query(box)) for box in db.mf_boxes.search({'embeddings':True}))
+        return accumulate_failures(self.check_crosstable_count('mf_hecke_cc_eis', 'dim', 'hecke_orbit_code', constraint=self._box_query(box)) for box in db.mf_boxes.search({'embeddings':True}))
 
     @overall
     def check_embeddings_count_boxcheck(self):
@@ -593,7 +593,7 @@ class mf_newforms(MfChecker):
         query = SQL("SELECT t1.{0} FROM {1} t1, {2} t2 WHERE {3} AND t2.{4} is NULL AND t2.{5} is NULL AND t1.{6} IS NOT NULL").format(
                 Identifier(self.table._label_col),
                 Identifier(self.table.search_table),
-                Identifier('mf_hecke_cc'),
+                Identifier('mf_hecke_cc_eis'),
                 join,
                 Identifier("embedding_root_real"),
                 Identifier("embedding_root_imag"),
@@ -608,7 +608,7 @@ class mf_newforms(MfChecker):
         """
         poly = PolynomialRing(ZZ, "x")(rec['field_poly'])
         dpoly = poly.derivative()
-        dbroots = db.mf_hecke_cc.search({'hecke_orbit_code': rec['hecke_orbit_code']}, ["embedding_root_real", "embedding_root_imag"])
+        dbroots = db.mf_hecke_cc_eis.search({'hecke_orbit_code': rec['hecke_orbit_code']}, ["embedding_root_real", "embedding_root_imag"])
         dbroots = [CCC(root["embedding_root_real"], root["embedding_root_imag"]) for root in dbroots]
         if len(dbroots) != poly.degree():
             if verbose:
@@ -656,5 +656,5 @@ class mf_newforms(MfChecker):
         """
         howmany = 200
         # we restrict to weight <= 272
-        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) AND t1.weight <= 272")
+        query = SQL("WITH foo AS (  SELECT hecke_orbit_code, traces(array_agg(an_normalized[1:%s])) traces FROM mf_hecke_cc_eis GROUP BY hecke_orbit_code) SELECT t1.label FROM mf_newforms_eis t1, foo WHERE t1.hecke_orbit_code = foo.hecke_orbit_code AND NOT compare_traces(t1.traces[1:%s], foo.traces, -0.5*(t1.weight - 1)) AND t1.weight <= 272")
         return self._run_query(query=query, values=[howmany, howmany])

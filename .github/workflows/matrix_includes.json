@@ -108,5 +108,10 @@
         "files": "lmfdb/modular_curves/test_modular_curves.py",
         "folders": "modular_curves",
         "server": "devmirror"
+    },
+    {
+        "files": "lmfdb/classical_modular_forms/test_cmf_eisenstein.py",
+        "folders": "classical_modular_forms/eisenstein",
+        "server": "devmirror"
     }
 ]

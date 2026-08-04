@@ -265,7 +265,7 @@ def render_hecke_algebras_webpage(**args):
         ('Level', '%s' % info['level']),
         ('Weight', '%s' % info['weight'])]
     if info['num_orbits'] != 0:
-        info['friends'] = [('Newforms space ' + info['label'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
+        info['friends'] = [('Newforms space ' + info['label'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label_or_automorphic_type='a'))]
     else:
         info['friends'] = []
     t = "Hecke algebra %s" % info['label']
@@ -360,7 +360,7 @@ def render_hecke_algebras_webpage_l_adic(**args):
         ('Weight', '%s' % info['weight']),
         ('Characteristic', '%s' % info['ell']),
         ('Orbit label', '%s' % info['orbit_label'])]
-    info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label='a'))]
+    info['friends'] = [('Modular form ' + info['base_lab'], url_for("cmf.by_url_space_label", level=info['level'], weight=info['weight'], char_orbit_label_or_automorphic_type='a'))]
 
     t = "%s-adic and mod %s data for the Hecke algebra orbit %s" % (info['ell'], info['ell'], info['orbit_label'])
     return render_template("hecke_algebras_l_adic-single.html", info=info, credit=credit, title=t, bread=bread, properties=info['properties'], learnmore=learnmore_list(), friends=info['friends'], KNOWL_ID='hecke_algebra_l_adic.%s' % (info['orbit_label']))

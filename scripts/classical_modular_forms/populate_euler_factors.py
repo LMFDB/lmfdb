@@ -53,7 +53,7 @@ def fix_euler(idnumber, an_list_bound = 11):
     assert lfun['origin'][:len(start_origin)] == start_origin, lfun['origin']
     label = lfun['origin'][len(start_origin):].replace('/','.')
     newform = db.mf_newforms.lucky({'label':label}, ['hecke_orbit_code', 'level'])
-    lpolys = list(db.mf_hecke_lpolys.search({'hecke_orbit_code': newform['hecke_orbit_code']},['lpoly','p'],sort='p'))
+    lpolys = list(db.mf_hecke_lpolys_eis.search({'hecke_orbit_code': newform['hecke_orbit_code']},['lpoly','p'],sort='p'))
     if lpolys == []:
         # we don't have exact data
         assert lfun['degree'] > 40

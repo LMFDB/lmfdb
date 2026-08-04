@@ -9,8 +9,8 @@ parallel -u -j 40 --halt 2 --progress sage -python scripts/classical_modular_for
 ### Generate statistics
 ```
 from db_backend import db, SQL
-db.mf_newforms.stats.refresh_stats()
-db.mf_newspaces.stats.refresh_stats()
+db.mf_newforms_eis.stats.refresh_stats()
+db.mf_newspaces_eis.stats.refresh_stats()
 ```
 
 ## mf_hecke_cc
@@ -48,25 +48,25 @@ This runs in parallel and takes about 1h
 ```
 for cols in [['is_self_twist'], ['level'], ['weight'], ['self_twist_type'],['analytic_conductor'],['label'],['space_label']]:
     try:
-        db.mf_newforms.create_index(cols)
+        db.mf_newforms_eis.create_index(cols)
     except ValueError, err:
         print cols, err
         pass
 for cols in [['embedding_m', 'hecke_orbit_code']]:
     try:
-        db.mf_hecke_cc.create_index(cols)
+        db.mf_hecke_cc_eis.create_index(cols)
     except ValueError, err:
         print cols, err
         pass
 for cols in [['n', 'hecke_orbit_code'],['hecke_orbit_code']]:
     try:
-        db.mf_hecke_nf.create_index(cols)
+        db.mf_hecke_nf_eis.create_index(cols)
     except ValueError, err:
         print cols, err
         pass
 for cols in [['label'], ['weight'], ['level'],['char_order', 'weight','level']]:
     try:
-        db.mf_newspaces.create_index(cols)
+        db.mf_newspaces_eis.create_index(cols)
     except ValueError, err:
         print cols, err
         pass
