@@ -1525,8 +1525,9 @@ def generateLfunctionFromUrl(*args, **kwds):
         return Lfunction_Maass(fromDB=True, group=args[1], level=args[4],
                                char=args[5], R=args[6], ap_id=args[7])
 
-    elif args[0] == 'ModularForm' and args[1] == 'GSp' and args[2] == 'Q' and args[3] == 'Sp4Z':
-        return Lfunction_SMF2_scalar_valued(weight=args[4], orbit=args[5], number=args[6])
+    # Siegel modular form L-functions are disabled pending the SMF rewrite
+    # elif args[0] == 'ModularForm' and args[1] == 'GSp' and args[2] == 'Q' and args[3] == 'Sp4Z':
+    #     return Lfunction_SMF2_scalar_valued(weight=args[4], orbit=args[5], number=args[6])
 
     elif args[0] == 'NumberField':
         return DedekindZeta(label=str(args[1]))
