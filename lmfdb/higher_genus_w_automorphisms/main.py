@@ -1146,25 +1146,27 @@ def hgcwa_code_download(**args):
     import time
     label = args['label']
 
-    #Choose language
-    if args['download_type'] == 'topo_magma' or args['download_type'] == 'braid_magma' or args['download_type'] == 'rep_magma':
-        lang = 'magma'
-    elif args['download_type'] == 'topo_gap' or args['download_type'] == 'braid_gap' or args['download_type'] == 'rep_gap':
-        lang = 'gap'
-    else:
-        lang = args['download_type']
+    # download_type -> (filename prefix, language)
+    DownloadPrefix = {
+        'gap': ('HigherGenusData_', 'gap'),
+        'magma': ('HigherGenusData_', 'magma'),
+        'topo_gap': ('HigherGenusDataTopolRep_', 'gap'),
+        'topo_magma': ('HigherGenusDataTopolRep_', 'magma'),
+        'braid_gap': ('HigherGenusDataBraidRep_', 'gap'),
+        'braid_magma': ('HigherGenusDataBraidRep_', 'magma'),
+        'rep_gap': ('HigherGenusDataTopolClass_', 'gap'),
+        'rep_magma': ('HigherGenusDataTopolClass_', 'magma'),
+    }
+
+    # Choose language and file prefix from the download type
+    download_type = args['download_type']
+    if download_type not in DownloadPrefix:
+        return abort(404, "Unknown download type %s" % download_type)
+    prefix, lang = DownloadPrefix[download_type]
+    all_vectors = (lang == download_type)
 
     s = Comment[lang]
-
-    #Choose filename
-    if lang == args['download_type']:
-        filename = 'HigherGenusData_' + str(label) + FileSuffix[lang]
-    elif args['download_type'] == 'topo_magma' or args['download_type'] == 'topo_gap':
-        filename = 'HigherGenusDataTopolRep_' + str(label) + FileSuffix[lang]
-    elif args['download_type'] == 'braid_magma' or args['download_type'] == 'braid_gap':
-        filename = 'HigherGenusDataBraidRep_' + str(label) + FileSuffix[lang]
-    elif args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
-        filename = 'HigherGenusDataTopolClass_' + str(label) + FileSuffix[lang]
+    filename = prefix + str(label) + FileSuffix[lang]
 
     code = s + " " + Fullname[lang] + " code for the lmfdb family of higher genus curves " + str(label) + '\n'
     code += s + " The results are stored in a list of records called 'data'\n\n"
@@ -1175,25 +1177,30 @@ def hgcwa_code_download(**args):
         fam, cc_1, cc_2 = split_vector_label(label)
         cc_list = [int(cc_1), int(cc_2)]
         search_data = list(db.hgcwa_passports.search({"label": fam}))
-        data = [entry for entry in search_data if entry['topological'] == cc_list]
+        data = [entry for entry in search_data if entry.get('topological') == cc_list]
 
     elif label_is_one_passport(label):
         search_data = list(db.hgcwa_passports.search({"passport_label": label}))
-        if lang == args['download_type']:
+        if all_vectors:
             data = search_data
         else:
-            data = [entry for entry in search_data if entry['braid'] == entry['cc']]
+            data = [entry for entry in search_data if 'braid' in entry and entry['braid'] == entry['cc']]
 
     elif label_is_one_family(label):
         search_data = list(db.hgcwa_passports.search({"label": label}))
-        if lang == args['download_type']:
+        if all_vectors:
             data = search_data
         else:
-            data = [entry for entry in search_data if entry['topological'] == entry['cc']]
+            data = [entry for entry in search_data if 'topological' in entry and entry['topological'] == entry['cc']]
+
+    else:
+        return abort(404, "Invalid label %s" % label)
+
+    if not data:
+        return abort(404, "No data for label %s" % label)
 
     code += s + code_list['gp_comment'][lang] + '\n'
     code += code_list['group'][lang] + str(data[0]['group']) + ';\n'
-
     if lang == 'magma':
         code += code_list['group_construct'][lang] + '\n'
 
@@ -1218,13 +1225,15 @@ def hgcwa_code_download(**args):
     stdfmt += code_list['passport_label'][lang] + '{cc[0]}' + ';\n'
     stdfmt += code_list['gen_vect_label'][lang] + '{cc[1]}' + ';\n'
 
-    # Add braid and topological tag for each entry
-    if lang == args['download_type'] and 'braid' in data[0]:
-        stdfmt += code_list['braid_class'][lang] + '{braid[1]}' + ';\n'
-        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
+    # Add braid and topological tag for each entry.
+    has_refinement_data = all('braid' in entry and 'topological' in entry for entry in data)
+    is_rep_download = download_type in ('rep_gap', 'rep_magma')
+    include_refinement_fields = has_refinement_data and (all_vectors or is_rep_download)
 
-    if args['download_type'] == 'rep_magma' or args['download_type'] == 'rep_gap':
-        stdfmt += code_list['braid_class'][lang] + '{braid}' + ';\n'
+    if include_refinement_fields:
+        braid_value = '{braid}' if is_rep_download else '{braid[1]}'
+        stdfmt += code_list['braid_class'][lang] + braid_value + ';\n'
+        stdfmt += code_list['topological_class'][lang] + '{topological}' + ';\n'
 
     # extended formatting template for when signH is present
     signHfmt = stdfmt
@@ -1244,9 +1253,7 @@ def hgcwa_code_download(**args):
     nhypcycstr += code_list['cyc'][lang] + code_list['fal'][lang] + ';\n'
 
     #Action for all vectors and action for just representatives
-    if lang == args['download_type'] or \
-        args['download_type'] == 'rep_magma' or \
-        args['download_type'] == 'rep_gap':
+    if include_refinement_fields:
         signHfmt += code_list['add_to_total_full_rep'][lang] + '\n'
         hypfmt += code_list['add_to_total_hyp_rep'][lang] + '\n'
         cyctrigfmt += code_list['add_to_total_cyc_trig_rep'][lang] + '\n'
