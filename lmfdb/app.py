@@ -391,7 +391,7 @@ def alive():
     a basic health check
     """
     from . import db
-    if db.is_alive():
+    if (getattr(db, "_is_alive", None) or db.is_alive)():
         return "LMFDB!"
     else:
         abort(503)
@@ -403,7 +403,7 @@ def statshealth():
     a health check on the stats pages
     """
     from . import db
-    if db.is_alive():
+    if (getattr(db, "_is_alive", None) or db.is_alive)():
         tc = app.test_client()
         for url in ['/NumberField/stats',
                     '/ModularForm/GL2/Q/holomorphic/stats',
@@ -433,7 +433,7 @@ def info():
     output += "HOSTNAME = %s\n\n" % gethostname()
     output += "# PostgreSQL info\n"
     from . import db
-    if not db.is_alive():
+    if not (getattr(db, "_is_alive", None) or db.is_alive)():
         output += "db is offline\n"
     else:
         conn_str = "%s" % db.conn
@@ -481,30 +481,6 @@ def modular_forms():
     return render_template('single.html', title=t, kid='mf.about', bread=b)
 
 
-@app.route('/Variety')
-@app.route('/Variety/')
-def varieties():
-    t = 'Varieties'
-    b = [(t, url_for('varieties'))]
-    return render_template('single.html', title=t, kid='varieties.about', bread=b)
-
-
-@app.route('/Field')
-@app.route('/Field/')
-def fields():
-    t = 'Fields'
-    b = [(t, url_for('fields'))]
-    return render_template('single.html', kid='field.about', title=t, body_class=_bc, bread=b)
-
-
-@app.route('/Representation')
-@app.route('/Representation/')
-def representations():
-    t = 'Representations'
-    b = [(t, url_for('representations'))]
-    return render_template('single.html', kid='repn.about', title=t, body_class=_bc, bread=b)
-
-
 @app.route('/Motive')
 @app.route('/Motive/')
 def motives():
@@ -512,13 +488,6 @@ def motives():
     b = [(t, url_for('motives'))]
     return render_template('single.html', kid='motives.about', title=t, body_class=_bc, bread=b)
 
-
-@app.route('/Group')
-@app.route('/Group/')
-def groups():
-    t = 'Groups'
-    b = [(t, url_for('groups'))]
-    return render_template('single.html', kid='group.about', title=t, body_class=_bc, bread=b)
 
 @app.route('/datasets')
 @app.route('/datasets/')
@@ -692,7 +661,7 @@ def code_coverage():
 # common base class and bread
 _bc = 'intro'
 def intro_bread():
-    return [('Intro', url_for("introduction"))]
+    return [('Overview', url_for("introduction"))]
 
 
 # template displaying just one single knowl as an KNOWL_INC
@@ -702,7 +671,7 @@ _single_knowl = 'single.html'
 @app.route("/intro")
 def introduction():
     b = intro_bread()
-    return render_template(_single_knowl, title="Introduction", kid='intro', body_class=_bc, bread=b)
+    return render_template(_single_knowl, title="Overview", kid='intro', body_class=_bc, bread=b)
 
 
 @app.route("/intro/features")

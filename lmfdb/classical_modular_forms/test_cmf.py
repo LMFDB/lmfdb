@@ -579,10 +579,10 @@ class CmfTest(LmfdbTest):
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/', ['14,417,694', 'N.k.a.x.n.i'])
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?k=12', ['Select a', '269'])
         self.check_args('/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=12', ['Select a', '57'])
-        path = 'https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?N=11&k=2' # explicit link to beta since check_args prohibits external redirects
-        self.check_external(path, path, '11.2.a.a.1.1', cookie="human=1") # Downloads from beta
-        path = 'https://beta.lmfdb.org/ModularForm/GL2/Q/holomorphic/mf_hecke_cc/?label=21.2.e.a' # explicit link to beta since check_args prohibits external redirects
-        self.check_external(path, path, '21.2.e.a.4.1', cookie="human=1")
+        # Download checks against the live beta server were removed here
+        # because they tested the deployed site rather than this codebase and
+        # regularly timed out from CI runners; see issue #6225 for tracking
+        # external link checking outside of CI.
 
     def test_underlying_data(self):
         data = self.tc.get('/ModularForm/GL2/Q/holomorphic/data/13.2').get_data(as_text=True)
@@ -691,3 +691,29 @@ class CmfTest(LmfdbTest):
         data = page.get_data(as_text=True)
         assert "Valid formats are:" not in data
         assert "Invalid format parameter" not in data
+
+    def test_code_download_no_duplicates(self):
+        """Regression test for #7003: the newspace-initialization commands must
+        appear exactly once in each language's downloaded code, using the
+        weight-appropriate variant. download_code previously emitted the shared
+        initialize-newspace-common anchor base plus both weight variants."""
+        base = '/ModularForm/GL2/Q/holomorphic/download_code_newform'
+
+        def get(label, lang):
+            return self.tc.get('%s/%s/%s' % (base, label, lang)).get_data(as_text=True)
+
+        # weight 2 form: the init commands must each appear once...
+        assert get('417.2.d.a', 'magma').count('CuspForms(chi, 2)') == 1
+        pari = get('417.2.d.a', 'pari')
+        assert pari.count('mf = mfinit(') == 1 and pari.count('mfeigenbasis(') == 1, pari
+        sage = get('417.2.d.a', 'sage')
+        assert sage.count('Newforms(chi, 2, names="a")') == 1, sage
+        assert 'cuspidal_submodule' not in sage  # ...and the weight 1 sage variant must not leak in
+
+        # weight 1 form: the cuspidal-submodule sage variant is used instead
+        assert get('23.1.b.a', 'magma').count('CuspForms(chi, 1)') == 1
+        pari = get('23.1.b.a', 'pari')
+        assert pari.count('mf = mfinit(') == 1 and pari.count('mfeigenbasis(') == 1, pari
+        sage = get('23.1.b.a', 'sage')
+        assert sage.count('cuspidal_submodule().basis()') == 1, sage
+        assert 'Newforms(chi' not in sage

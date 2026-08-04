@@ -4,7 +4,7 @@ import yaml
 
 from flask import url_for
 from sage.all import (
-    Set, ZZ, RR, pi, gcd, euler_phi, CyclotomicField, gap, RealField, sqrt, prod, matrix, vector, GF,
+    Set, ZZ, RR, pi, gcd, euler_phi, CyclotomicField, gap, RealField, sqrt, prod,
     QQ, NumberField, QuadraticField, PolynomialRing, latex, pari, cached_function, Permutation)
 
 from lmfdb import db
@@ -210,18 +210,23 @@ def is_fundamental_discriminant(d):
         return d % 16 in [8, 12] and integer_is_squarefree(d // 4)
 
 
-@cached_function
-def field_pretty(label):
+@cached_function(key=lambda label, wnf: label) # ignore field when caching
+def field_pretty(label, wnf=None):
     """
     Given an LMFDB number field label, returns a "pretty" latexed representation of this field (if it exists)
     Otherwise, simply returns back the label itself if unable to find a latex representation.
+
+    The optional argument 'wnf' should be a WebNumberField, and is used in cases
+    where generating the "pretty representation" requires more data than just the label.
+    The specific data depends on the type of field (multiquadratic, pure cubic, ...),
+    and when it is not present in 'wnf', the database will be queried instead.
 
     Cases implemented:
      - Rational field, quadratic fields, pure cubic fields, imprimitive quartic fields,
      - cyclotomic fields and their maximal real subfields, and general multi-quadratic fields.
     """
 
-    d, r, D, _ = label.split('.')
+    d, r, disc, _ = label.split('.')
 
     # Case 1: The rationals Q
     if d == '1':  # Q
@@ -238,9 +243,18 @@ def field_pretty(label):
     def _sqrt_symbol(z):
         return 'i' if z == -1 else r'\sqrt{%d}' % z
 
+    # A caller-supplied wnf may come from a projection lacking the columns a
+    # case below needs (e.g. the reflex fields table passes only the label);
+    # reload from the database unless every needed column is present
+    def _wnf_with(*keys):
+        if wnf is None or wnf._data is None or any(k not in wnf._data for k in keys):
+            return WebNumberField(label)
+        return wnf
+
     # Case 2: Quadratic fields Q(\sqrt{D})
+    # (note that we give the pretty name for 2.0.4.1 as \Q(\sqrt{-1}), and not \Q(i))
     if d == '2':
-        D = ZZ(int(D))
+        D = ZZ(disc)
         if r == '0':
             D = -D
         # Don't prettify invalid quadratic field labels
@@ -258,22 +272,20 @@ def field_pretty(label):
 
     # Case 5: Imprimitive quartic fields
     if d == '4':
-        wnf = WebNumberField(label)
+        wnf = _wnf_with('subfields', 'subfield_mults', 'coeffs')
         subs = wnf.subfields()
 
         # Case 5a: Biquadratic fields Q(\sqrt{A}, \sqrt{B})
         if len(subs) == 3:  # only for V_4 fields
-            subs = [wnf.from_coeffs(string2list(str(z[0]))) for z in subs]
-            # Abort if we don't know one of these fields
-            if not any(z._data is None for z in subs):
-                labels_str = [str(z.get_label()) for z in subs]
-                labels_split = [z.split('.') for z in labels_str]
-                # extract abs disc and signature to be good for sorting
-                labels = sorted([[integer_squarefree_part(ZZ(z[2])), - int(z[1])] for z in labels_split])
-                # put in +/- sign
-                labels_values = [z[0] * (-1)**(1 + z[1] / 2) for z in labels]
-                labels_str = [_sqrt_symbol(z) for z in labels_values]
-                return r'\(\Q(%s, %s)\)' % (labels_str[0], labels_str[1])
+            all_Ds = []
+            for sub in subs:
+                qs = sub[0].split(',')
+                all_Ds.append(integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2])))
+
+            # Sort the Ds by absolute value (in case of tie, put positive Ds first)
+            labels_values = sorted(all_Ds, key=lambda x: (abs(x), -x))
+            labels_str = [_sqrt_symbol(z) for z in labels_values]
+            return r'\(\Q(%s, %s)\)' % (labels_str[0], labels_str[1])
 
         # Case 5b: Imprimitive quartic fields of type Q(\sqrt(A + B*\sqrt(D)))
         if len(subs) == 1:
@@ -309,7 +321,7 @@ def field_pretty(label):
 
     # Case 6: Pure cubic fields Q(\sqrt[3]{N})
     if d == '3':
-        wnf = WebNumberField(label)
+        wnf = _wnf_with('disc_abs', 'disc_sign', 'coeffs')
         # Check that discriminant is negative
         if wnf.disc() < 0:
             # Explicitly solve for a real root of defining polynomial (using Cardano's formula):
@@ -336,38 +348,44 @@ def field_pretty(label):
     # Case 7: General multi-quadratic fields: Q(\sqrt{D_1}, ..., \sqrt{D_k})
     if ZZ(d).is_power_of(2):
         k = ZZ(d).valuation(2)
-        wnf = WebNumberField(label)
+        wnf = _wnf_with('subfields', 'subfield_mults')
         all_subs = wnf.subfields()
         quad_subs = [s[0] for s in all_subs if s[0].count(',') == 2]
         num_quad_subs = len(quad_subs)
         if num_quad_subs == int(d) - 1:
-            quad_labels = [str(wnf.from_coeffs(string2list(str(z))).get_label()) for z in quad_subs]
-            all_Ds = [_quad_label_to_D(qlabel) for qlabel in quad_labels]
+            all_Ds = []
+            for quad_sub in quad_subs:
+                qs = quad_sub.split(',')
+                all_Ds.append(integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2])))
 
             # Sort the Ds by absolute value (in case of tie, put positive Ds first)
             sorted_Ds = sorted(all_Ds, key=lambda x: (abs(x), -x))
             final_Ds = []
 
-            # Compute set of all primes dividing the Ds
-            primes = sorted({int(p) for D in all_Ds for p in ZZ(abs(D)).prime_divisors()})
+            # Compute set of all primes dividing the Ds (can take prime divisors of discriminant)
+            primes = ZZ(disc).prime_divisors()
 
-            # Keep track of prime exponents and row space used so far
-            all_prime_exponents = []
-            row_space = matrix(GF(2), all_prime_exponents).row_space()
+            # Keep track of prime exponents and row space (over F_2) used so far
+            # For fast computations, store row_space just as a set of integers, considered as vectors of bits.
+            row_space = {0}  # The trivial space
 
             for D in sorted_Ds:
-                # Convert D to a vector of prime exponents mod 2 (including sign)
-                prime_exp = [int(D < 0)]+[D.valuation(p)%2 for p in primes]
-                if vector(prime_exp) not in row_space:
+                # Convert D to a vector of prime exponents mod 2 (including sign), stored with bits as an integer
+                # D is already squarefree, so all prime exponents either 0 or 1
+                prime_exp = int(D < 0)
+                for i in range(len(primes)):
+                    prime_exp += int((D%primes[i]) == 0) << (i+1)
+                if prime_exp not in row_space:
                     final_Ds.append(D)
 
                     # Break out once rank is full
                     if len(final_Ds) == k:
                         break
 
-                    # Recompute row space
-                    all_prime_exponents.append(prime_exp)
-                    row_space = matrix(GF(2), all_prime_exponents).row_space()
+                    # Recompute the new row space (take prime_exp XOR everything else in row_space)
+                    old_row_space = row_space.copy()
+                    for v in old_row_space:
+                        row_space.add(v^prime_exp)  # here ^ is bitwise XOR
 
             return r'\(\Q('+', '.join([_sqrt_symbol(D) for D in final_Ds])+r')\)'
 
@@ -597,7 +615,7 @@ class WebNumberField:
         return nf_label_pretty(self.label)
 
     def field_pretty(self):
-        return field_pretty(self.get_label())
+        return field_pretty(self.get_label(), wnf=self)
 
     def knowl(self):
         return nf_display_knowl(self.get_label(), self.field_pretty())
@@ -856,7 +874,6 @@ class WebNumberField:
         sf = [z.replace('.',',') for z in self._data['subfields']]
         sfm = self._data['subfield_mults']
         return [[sf[j],sfm[j]] for j in range(len(sf))]
-        return self._data['subs']
 
     def subfields_show(self):
         subs = self.subfields()
@@ -1241,4 +1258,9 @@ class WebNumberField:
             self.code['field'][lang] = self.code['field'][lang] % f
         for lang in self.code['class_number_formula']:
             self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
+
+        # If field is 1.1.1.1 (the rationals), then need to define K as a special case for Magma
+        for prop in ['field', 'class_number_formula']:
+            self.code[prop]['magma'] = self.code[prop]['magma'].replace("NumberField(x)", "RationalsAsNumberField()")
+
         self.code['show'] = {lang: '' for lang in self.code['prompt']}
