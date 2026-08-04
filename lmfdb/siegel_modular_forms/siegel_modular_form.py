@@ -2,7 +2,6 @@
 from collections import defaultdict
 import re
 import os
-import yaml
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import (
@@ -16,19 +15,19 @@ from lmfdb.utils import (
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, display_float, factor_base_factorization_latex,
     flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
-    SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
-    DoubleSelectBox, BasicSpacer, RowSpacer, HiddenBox, SearchButtonWithSelect,
-    SubsetBox, ParityMod, CountBox, SelectBoxNoEg,
+    SearchArray, TextBox, SelectBox, TextBoxWithSelect,
+    RowSpacer, HiddenBox, SearchButtonWithSelect,
+    SubsetBox, ParityMod, CountBox,
     StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
 from psycodict.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
 from lmfdb.api import datapage
 from lmfdb.siegel_modular_forms.web_newform import (
-    WebNewform, convert_newformlabel_from_conrey, LABEL_RE,
-    quad_field_knowl, cyc_display, field_display_gen)
+    WebNewform, LABEL_RE,
+    cyc_display, field_display_gen)
 from lmfdb.siegel_modular_forms import smf_page
 from lmfdb.siegel_modular_forms.web_space import (
     aut_rep_type_sort_key, family_str_to_char, family_char_to_str,
@@ -36,7 +35,6 @@ from lmfdb.siegel_modular_forms.web_space import (
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
     ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.siegel_modular_forms.download import SMF_download
-from lmfdb.sato_tate_groups.main import st_display_knowl
 
 INT_RE = re.compile("^[0-9]*$")
 POSINT_RE = re.compile("^[1-9][0-9]*$")
@@ -214,6 +212,7 @@ def index():
                            learnmore=learnmore_list(),
                            bread=get_bread())
 
+@smf_page.route("/random")
 @smf_page.route("/random/")
 @redirect_no_cache
 def random_form():
@@ -221,6 +220,7 @@ def random_form():
     label = db.smf_newforms.random()
     return url_for_label(label)
 
+@smf_page.route("/random_space")
 @smf_page.route("/random_space/")
 @redirect_no_cache
 def random_space():
@@ -475,13 +475,30 @@ def mf_data(label):
         title = fr"Newspace data - {label}"
     else:
         return abort(404, f"Invalid label {label}")
+    if isinstance(labels, list):
+        # Some smf tables may not have been loaded yet; only display those present
+        present = [i for i, table in enumerate(tables) if table in db.tablenames]
+        tables = [tables[i] for i in present]
+        labels = [labels[i] for i in present]
+        if label_cols is not None:
+            label_cols = [label_cols[i] for i in present]
+        if not tables:
+            return abort(404, f"Data for {label} not yet available")
     bread = get_bread(other=[(label, url_for_label(label)), ("Data", " ")])
     return datapage(labels, tables, title=title, bread=bread, label_cols=label_cols)
 
 def check_valid_family(family):
     if not family_char_to_str(family):
-        return (False, "Invalid family label - {family}")
+        return (False, f"Invalid family label - {family}")
     return (True, "")
+
+def parse_family_str(family):
+    # Convert a family name (e.g. "paramodular") to its single character
+    # code, raising a ValueError (caught by search_wrap) if invalid
+    c = family_str_to_char(family)
+    if c is None:
+        raise ValueError("%s is not a valid family" % family)
+    return c
 
 def check_valid_weight(weight, degree):
     if weight.count('.') >= degree:
@@ -513,8 +530,8 @@ def by_url_family_label(degree, family):
     valid_family = check_valid_family(family)
     if not valid_family[0]:
         return abort(404, valid_family[1])
-    label = str(degree)+"."+str(family)
     # currently we do not have a family webpage
+    # label = str(degree)+"."+str(family)
     # return render_family_webpage(label)
     info = to_dict(request.args, search_array=SMFSearchArray())
     return newform_search(info)
@@ -543,8 +560,8 @@ def by_url_full_space_label(degree, family, level, weight):
     valid_weight = check_valid_weight(weight, degree)
     if not valid_weight[0]:
         return abort(404, valid_weight[1])
-    label = ".".join([str(w) for w in [degree, family, level, weight]])
     # At the moment we do not have full space webpages
+    # label = ".".join([str(w) for w in [degree, family, level, weight]])
     # return render_full_space_webpage(label)
     info = to_dict(request.args, search_array=SMFSearchArray())
     return newform_search(info)
@@ -842,7 +859,7 @@ def common_parse(info, query, na_check=False):
     if 'family' in info:
         query['family'] = info['family']
         if (type(query['family']) == str) and (len(query['family']) > 1):
-            query['family'] = family_str_to_char(info['family'])
+            query['family'] = parse_family_str(info['family'])
     if 'weight_parity' in info:
         parity=info['weight_parity']
         if parity == 'even':
@@ -1175,7 +1192,7 @@ def dimension_common_postprocess(info, query, cusp_types, newness_types, url_gen
         info['switch_text'] = switch_text
     info['count'] = 50 # put count back in so that it doesn't show up as none in url
     if len(info['family']) > 1:
-        info['family'] = family_str_to_char(info['family'])
+        info['family'] = parse_family_str(info['family'])
     info['family'] = ord(info['family'])
     info['degree'] = int(info['degree'])
 
@@ -1217,7 +1234,7 @@ def dimension_space_postprocess(res, info, query):
         url_generator = url_generator_list
     else:
         def url_generator(g, F, N, k):
-            return url_for(".by_url_full_gammma1_space_label", degree=g, family=chr(F), level=N,
+            return url_for(".by_url_full_space_label", degree=g, family=chr(F), level=N,
                            weight= '.'.join([str(kk) for kk in k]))
 
     def pick_table(entry, X, typ):
@@ -1316,7 +1333,7 @@ def dimension_form_search(info, query):
     if 'family' not in info:
         info['family'] = 'paramodular'
     if len(info['family']) > 1:
-        info['family'] = family_str_to_char(info['family'])
+        info['family'] = parse_family_str(info['family'])
     if 'weight' not in info:
         info['weight'] = '1-12'
     if 'level' not in info:
@@ -1367,7 +1384,7 @@ def dimension_space_search(info, query):
     if 'family' not in info:
         info['family'] = 'paramodular'
     if len(info['family']) > 1:
-        info['family'] = family_str_to_char(info['family'])
+        info['family'] = parse_family_str(info['family'])
     if 'weight' not in info:
         info['weight'] = '1-12'
     if 'level' not in info:
@@ -1399,7 +1416,6 @@ space_columns = SearchColumns([
              learnmore=learnmore_list)
 def space_search(info, query):
     newspace_parse(info, query)
-    print(info)
     set_info_funcs(info)
 
 @smf_page.route("/Source")
@@ -1469,7 +1485,6 @@ class SMF_stats(StatsDisplay):
         self.level_knowl = display_knowl('mf.siegel.level', title='level')
         self.newform_knowl = display_knowl('mf.siegel.newform', title='newforms')
         self.newspace_knowl = display_knowl('mf.siegel.newspace', title='newspaces')
-        stats_url = url_for(".statistics")
 
     @property
     def short_summary(self):
@@ -1741,15 +1756,6 @@ class SMFSearchArray(SearchArray):
             knowl='mf.siegel.hecke_ring_generators',
             example='20',
             example_span='7, 1-10')
-
-        num_newforms = TextBox(
-            name='num_forms',
-            label='Num. ' + display_knowl("mf.siegel.newform", "newforms"),
-            width=160,
-            example='3')
-        hnum_newforms = HiddenBox(
-            name='num_forms',
-            label='')
 
         results = CountBox()
 
