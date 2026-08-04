@@ -12,6 +12,15 @@ from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
 from psycodict.statstable import PostgresStatsTable
 
+try:
+    from psycodict.grants import LMFDBGrantPolicy
+except ImportError:
+    # psycodict before roed314/psycodict#137, which granted these privileges
+    # unconditionally and so has nothing to be told about them.  Delete this
+    # fallback once the psycodict requirement is pinned past that PR.
+    LMFDBGrantPolicy = None
+
+
 def overrides(super_class):
     def overrider(method):
         super_method = getattr(super_class, method.__name__)
@@ -483,6 +492,15 @@ class LMFDBDatabase(PostgresDatabase):
             config = ConfigWrapper(config)
         # else: config is already a Configuration object, use it as-is
 
+        if LMFDBGrantPolicy is not None:
+            # psycodict's default policy grants nothing, so a table it creates
+            # -- or swaps in during a reload -- would be readable only by its
+            # owner.  This policy is what psycodict used to do: SELECT to lmfdb
+            # and webserver, INSERT to webserver on counts and stats.  It warns
+            # rather than raises when a role is missing, since a development
+            # database usually has neither; a deployment that must have both
+            # can pass LMFDBGrantPolicy(missing_role="error") instead.
+            kwargs.setdefault("grant_policy", LMFDBGrantPolicy())
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
         self.__editor = config.logging_options.get("editor", "")
