@@ -778,15 +778,24 @@ def debug():
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Error: " + errmsg), "error")
 
 def flash_warning(errmsg, *args):
     """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
-    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Warning: " + errmsg), "warning")
 
 def flash_info(errmsg, *args):
     """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
-    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Note: " + errmsg), "info")
 
 def flash_success(msg, *args):
     """ flash information in green with args in black; msg may contain markup, including latex math mode"""
