@@ -38,12 +38,9 @@ LMFDBtransactions_inv.log
 
 scripts/groups/Make-images/images/*.png
 
-<<<<<<< HEAD
 smf_lmfdb
 __pycache__
 scripts/groups/Make-images/images/eqguts.tex
 scripts/groups/Make-images/prettyindex
 scripts/groups/Make-images/imagereloader
-=======
 gps_shimura_test.txt
->>>>>>> shimura_curves
