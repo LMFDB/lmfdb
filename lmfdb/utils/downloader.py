@@ -1,7 +1,9 @@
 """
-This file defines two kinds of classes used in constructing download files for the LMFDB:
+This file defines three kinds of classes used in constructing download files for the LMFDB:
 
 * ``DownloadLanguage``, representing languages such as Sage and Magma
+* ``ColumnSchema``, describing one downloaded column, shared between the places where a
+  download file describes its own contents
 * ``Downloader``, provides utility functions for downloading both search results and a single object.
   Can subclassed to provide customization.  An instance of this class should be passed in as a
   download shortcut to the search_wrap constructor.
@@ -182,9 +184,19 @@ class DownloadLanguage():
             inp = self.to_lang(inp)
         return name + " " + self.assignment_defn + " " + inp + self.line_end + "\n"
 
-    def assign_columns(self, columns, column_names):
-        # We have a special function for assigning columns, to support adding hyperlinks to knowls in CSV files
-        return self.assign("columns", column_names)
+    def assign_columns(self, schema):
+        """
+        Creates the assignment of the ``columns`` variable, listing the storage names
+        of the downloaded columns.
+
+        We have a special function for this (rather than just calling ``assign``) since CSV
+        files have no comments and thus need to describe the columns in the header row itself.
+
+        INPUT:
+
+        - ``schema`` -- a list of ``ColumnSchema`` objects, one for each downloaded column
+        """
+        return self.assign("columns", [entry.name for entry in schema])
 
     def assign_iter(self, name, inp):
         """
@@ -382,14 +394,32 @@ class CSVLanguage(DownloadLanguage):
         # Column assignments are handled separately below
         return ""
 
-    def assign_columns(self, columns, column_names):
+    def column_header(self, entry):
+        """
+        The text of the header cell describing one downloaded column.
+
+        Since CSV files have no comments, the grouped columns (which are downloaded as a
+        nested list of their subcolumns' values) are annotated with the ordered storage
+        names of that list's entries, so that the file describes its own contents (#6477).
+        We keep one header cell per top-level column, so the shape of the data is unchanged.
+
+        INPUT:
+
+        - ``entry`` -- a ``ColumnSchema`` object describing the column
+        """
+        if entry.grouped:
+            return "%s [%s]" % (entry.name, ", ".join(sub.name for sub in entry.subcols))
+        return entry.name
+
+    def assign_columns(self, schema):
         urlparts = urlparse(request.url)
         out = []
-        for col, name in zip(columns, column_names):
+        for entry in schema:
+            name = self.column_header(entry)
             # Make hyperlink of column name, if col.knowl exists
-            if getattr(col, "knowl", None):
+            if getattr(entry.col, "knowl", None):
                 url = urlunparse(urlparts._replace(
-                    path=url_for("knowledge.show", ID=col.knowl),
+                    path=url_for("knowledge.show", ID=entry.col.knowl),
                     params="",
                     query="",
                     fragment=""
@@ -409,6 +439,38 @@ class CSVLanguage(DownloadLanguage):
         """
         for row in inp:
             yield self.write(row)
+
+
+class ColumnSchema():
+    """
+    A description of one column of a search results download.
+
+    The columns of a download are described in several places (the comment at the top of the
+    file, the ``columns`` assignment, and the definitions at the bottom of the file), so we
+    build one of these for each column and share it between them.
+
+    INPUT:
+
+    - ``col`` -- the ``SearchCol`` being downloaded
+    - ``name`` -- a string, the storage name used for this column in the download file
+    - ``title`` -- a string, the title used when describing this column to a reader
+    - ``subcols`` -- for a grouped column that is downloaded as a nested list of its
+      subcolumns' values (see ``ColGroup.download``), the ``ColumnSchema`` objects describing
+      the entries of that list, in order.  Empty for a column downloaded as a single value.
+    """
+    def __init__(self, col, name, title, subcols=()):
+        self.col = col
+        self.name = name
+        self.title = title
+        self.subcols = list(subcols)
+
+    @property
+    def grouped(self):
+        """
+        Whether this column is downloaded as a nested list of its subcolumns' values,
+        rather than as a single value.
+        """
+        return bool(self.subcols)
 
 
 class Downloader():
@@ -627,6 +689,41 @@ class Downloader():
                     return S, display
         return None, None
 
+    def make_schema(self, cols, column_names, info):
+        """
+        Describe the columns being downloaded, for use in the header comment, the ``columns``
+        assignment and the definitions at the bottom of the download file.
+
+        INPUT:
+
+        - ``cols`` -- the list of search columns being downloaded
+        - ``column_names`` -- the corresponding storage names
+        - ``info`` -- the dictionary created from the url
+
+        OUTPUT:
+
+        A list of ``ColumnSchema`` objects, one for each downloaded column.
+        """
+        def storage_name(col):
+            return col.name if col.download_col is None else col.download_col
+
+        def disp_title(col, prefer_short=False):
+            # The (short) title used to describe a column in the download header and definitions
+            title = col.short_title if prefer_short else col.title
+            if title is None:
+                title = col.title
+            return title if isinstance(title, str) else title(info)
+
+        schema = []
+        for col, name in zip(cols, column_names):
+            # A ColGroup without a download_col is downloaded as a nested list of its subcolumns'
+            # values (see ColGroup.download), so we record those subcolumns in order to describe
+            # each of them individually (#6477).  Every other column downloads as a single value.
+            subcols = [ColumnSchema(sub, storage_name(sub), disp_title(sub, prefer_short=True))
+                       for sub in col.download_subcols(info)]
+            schema.append(ColumnSchema(col, name, disp_title(col), subcols))
+        return schema
+
     def createrecord_code(self, lang, column_names):
         """
         The contents of a function that creates a record from an entry of the data list.
@@ -771,22 +868,10 @@ class Downloader():
             cols = [cols[i] for i in include]
             column_names = [column_names[i] for i in include]
 
-        def col_disp_title(col, prefer_short=False):
-            # The (short) title used to describe a column in the download header and definitions.
-            title = col.short_title if prefer_short else col.title
-            if title is None:
-                title = col.title
-            return title if isinstance(title, str) else title(info)
-
-        data_format = [col_disp_title(col) for col in cols]
-        # ColGroups without a download_col are downloaded as a nested list of their subcolumns
-        # (see ColGroup.download), so we record those subcolumns in order to describe them (#6477).
-        group_expansions = []  # list of (group_title, [subcolumn_titles])
-        for col in cols:
-            subcols = col.download_subcols(info)
-            if subcols:
-                group_expansions.append(
-                    (col_disp_title(col), [col_disp_title(sub, prefer_short=True) for sub in subcols]))
+        # One description of the downloaded columns, shared by the header comment,
+        # the columns assignment and the definitions at the bottom of the file
+        schema = self.make_schema(cols, column_names, info)
+        data_format = [entry.title for entry in schema]
         first50 = [[col.download(rec) for col in cols] for rec in first50]
         if num_results > 10000:
             # Estimate the size of the download file.  This won't necessarily be a great estimate
@@ -817,15 +902,17 @@ class Downloader():
             yield lang.comment('    [' + ', '.join(data_format) + ']\n')
             # Grouped columns are downloaded as a nested list of their subcolumns, so we spell
             # out the contents of each such list here (#6477).
-            if group_expansions:
+            if any(entry.grouped for entry in schema):
                 yield lang.comment(' where the grouped columns are themselves lists:\n')
-                for gtitle, subtitles in group_expansions:
-                    yield lang.comment('    %s = [%s]\n' % (gtitle, ', '.join(subtitles)))
+                for entry in schema:
+                    if entry.grouped:
+                        yield lang.comment('    %s = [%s]\n' % (
+                            entry.title, ', '.join(sub.title for sub in entry.subcols)))
             yield lang.comment(' For more details, see the definitions at the bottom of the file.\n')
             if make_data_comment:
                 yield lang.comment(f'\n {make_data_comment}\n')
             yield lang.comment('\n\n')
-            yield lang.assign_columns(cols, column_names)
+            yield lang.assign_columns(schema)
 
             # This is where the actual contents are included, applying postprocess and col.download to each
             yield from lang.assign_iter("data", lang.to_lang_iter(
@@ -849,10 +936,9 @@ class Downloader():
             # We do some global preprocessing to get access to knowls that define the columns.
             # Grouped columns (ColGroups downloaded as a nested list) are expanded into their
             # subcolumns so that each subcolumn is documented individually (#6477).
-            doc_plan = [(col, name, col.download_subcols(info)) for col, name in zip(cols, column_names)]
-            if any(c.download_desc is None
-                   for col, name, subcols in doc_plan
-                   for c in [col, *subcols]):
+            if any(entry.col.download_desc is None
+                   for top in schema
+                   for entry in [top, *top.subcols]):
                 from lmfdb.knowledge.knowl import knowldb
                 all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
@@ -868,7 +954,8 @@ class Downloader():
 
             # If we haven't specified a more specific download_desc, we use the column knowl to get a
             # string to add to the bottom of the file for each column
-            def emit_col_doc(col, name, disp_title):
+            def emit_col_doc(entry):
+                col, name, disp_title = entry.col, entry.name, entry.title
                 if col.download_desc is None:
                     knowldata = all_knowls.get(col.knowl)
                     if knowldata is None:
@@ -893,16 +980,14 @@ class Downloader():
                             yield lang.comment("\n")
                     yield lang.comment("\n\n")
 
-            for col, name, subcols in doc_plan:
-                if subcols:
+            for entry in schema:
+                if entry.grouped:
                     # A grouped column, downloaded as a list; introduce it and document each subcolumn.
-                    gtitle = col_disp_title(col)
-                    yield lang.comment(f" {gtitle} is a grouped column, downloaded as a list of the following subcolumns:\n\n")
-                    yield from emit_col_doc(col, name, gtitle)
-                    for sub in subcols:
-                        subname = sub.name if sub.download_col is None else sub.download_col
-                        yield from emit_col_doc(sub, subname, col_disp_title(sub, prefer_short=True))
+                    yield lang.comment(f" {entry.title} is a grouped column, downloaded as a list of the following subcolumns:\n\n")
+                    yield from emit_col_doc(entry)
+                    for sub in entry.subcols:
+                        yield from emit_col_doc(sub)
                 else:
-                    yield from emit_col_doc(col, name, col_disp_title(col))
+                    yield from emit_col_doc(entry)
 
         return self._wrap_generator(make_download(), filename, lang=lang)
