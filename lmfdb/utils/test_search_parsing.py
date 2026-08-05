@@ -36,24 +36,47 @@ def test_prep_ranges():
 
 
 def test_list_re():
-    # prep_ranges has replaced .. by - when LIST_RE is applied, except in front
-    # of an omitted lower endpoint
+    # prep_ranges has replaced .. by - by the time LIST_RE is applied, except in
+    # front of an omitted lower endpoint, so 2..10 is rejected here while still
+    # working through parse_ints (see test_parse_ints_negative_ranges)
     for ok in ["5", "-5", "5-10", "-1-3", "-4--1", "5-", "-5-", "--4",
-               "-5,-2", "-4--1,7", "1--3", "..4", "..-4", "..10", "-5,..10",
-               "-1..3", "-4..-1", "2..10", "5.."]:
+               "-5,-2", "-4--1,7", "1--3", "..4", "..-4", "..10", "-5,..10"]:
         assert LIST_RE.match(ok), ok
     for bad in ["-", "--", "..", "3--", "---4", "..-", "..5-6", "2+3", "1,,2",
-                "x-2", "1.5", ",5", "5,"]:
+                "x-2", "1.5", ",5", "5,", "2..10", "-4..-1", "5.."]:
         assert not LIST_RE.match(bad), bad
 
 
 def test_list_float_re():
     for ok in ["-1.5", "-1.5-2.5", "-1.5--0.5", "-4--1", "--4.5", "2.5-",
                "-2.5-", "1e-5", "1e-5-2e-4", "-1e-5--2e-4", "1/4", "-1/4-1/2",
-               "--1/4", "..4.5", "..-4.5", "1..5", "-.5-.5"]:
+               "--1/4", "..4.5", "..-4.5", "-.5-.5"]:
         assert LIST_FLOAT_RE.match(ok), ok
-    for bad in ["-", "--", "..", "1.5--", "1e", "1//2", "x", "1.5,,2"]:
+    for bad in ["-", "--", "..", "1.5--", "1e", "1//2", "x", "1.5,,2",
+                "1..5", "1...2", "2.5..3.5"]:
         assert not LIST_FLOAT_RE.match(bad), bad
+
+
+def test_dotted_ranges_still_work_through_the_parsers():
+    # The patterns only ever see .. in front of an omitted lower endpoint, since
+    # prep_ranges normalizes the rest, but both spellings must keep working for
+    # the user
+    assert not LIST_RE.match("1..5")
+    assert not LIST_FLOAT_RE.match("1..5")
+    query = {}
+    parse_ints({"c": "1..5"}, query, "c")
+    assert query == {"c": {"$gte": 1, "$lte": 5}}
+    query = {}
+    parse_ints({"c": "..5"}, query, "c")
+    assert query == {"c": {"$lte": 5}}
+    query = {}
+    parse_floats({"c": "1..5"}, query, "c")
+    assert query["c"]["$gte"] == pytest.approx(1, abs=1e-9)
+    assert query["c"]["$lte"] == pytest.approx(5, abs=1e-9)
+    query = {}
+    parse_floats({"c": "..5"}, query, "c")
+    assert set(query["c"]) == {"$lte"}
+    assert query["c"]["$lte"] == pytest.approx(5, abs=1e-9)
 
 
 def _rejects_promptly(pattern, text, timeout=30):
@@ -65,13 +88,24 @@ def _rejects_promptly(pattern, text, timeout=30):
 
 
 def test_lists_reject_malformed_input_promptly():
-    # These patterns are applied to raw search input, so an ambiguous item
-    # grammar (one where a negative singleton also parses as a range with an
-    # omitted lower endpoint) is a denial of service risk: rejecting a list of
-    # n negative singletons took time exponential in n.
-    for regex in [LIST_RE, LIST_FLOAT_RE]:
-        for text in ["-1," * 200 + "x", "--1," * 200 + "x", "-1--1," * 200 + "x"]:
-            assert _rejects_promptly(regex.pattern, text), (regex.pattern, text[:20])
+    # These patterns are applied to raw search input, so an item grammar with
+    # more than one parse per item is a denial of service risk: rejecting a list
+    # of n such items takes time exponential in n.  Two ambiguities have shown
+    # up here, a negative singleton that also parses as a range with an omitted
+    # lower endpoint, and 1...2, which parses as both 1. .. 2 and 1 .. .2 when
+    # .. is allowed as a separator between two endpoints.
+    for regex, text in [
+        (LIST_RE, "-1," * 200 + "x"),
+        (LIST_RE, "--1," * 200 + "x"),
+        (LIST_RE, "-1--1," * 200 + "x"),
+        (LIST_RE, "1...2," * 200 + "x"),
+        (LIST_FLOAT_RE, "-1," * 200 + "x"),
+        (LIST_FLOAT_RE, "--1," * 200 + "x"),
+        (LIST_FLOAT_RE, "-1--1," * 200 + "x"),
+        (LIST_FLOAT_RE, "1...2," * 200 + "x"),
+        (LIST_FLOAT_RE, "1.-.2," * 200 + "x"),
+    ]:
+        assert _rejects_promptly(regex.pattern, text), (regex.pattern, text[:20])
 
 
 def test_parse_range2_signed():
