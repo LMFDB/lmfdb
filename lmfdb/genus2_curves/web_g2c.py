@@ -781,6 +781,21 @@ def augment_galrep_and_nonsurj(galrep, nonsurj):
                 output.append({'prime': p, 'modell_image' : 'not computed'})
     return output
 
+def magma_cond_option(data):
+    """Options for Magma's Conductor(LSeries(...)), as a string to be inserted
+    just before the closing parenthesis of LSeries.
+
+    Magma refuses to apply Ogg's formula once v_2(disc) >= 12, so for those
+    curves we hand it the local L-factor at 2 (which is in the database) rather
+    than letting it try.  Both the code snippets on the curve page and the
+    downloaded code need this, so it lives here.
+    """
+    if data['abs_disc'] % 4096 == 0:
+        ind2 = [a[0] for a in data['bad_lfactors']].index(2)
+        bad2 = data['bad_lfactors'][ind2][1]
+        return ': ExcFactors:=[*<2,Valuation(%s,2),R!%s>*]' % (data['cond'], bad2)
+    return ''
+
 
 ###############################################################################
 # Genus 2 curve class definition
@@ -1137,13 +1152,7 @@ class WebG2C():
                          'magma':'R<x> := PolynomialRing(Rationals()); Cmin := HyperellipticCurve(R!%s, R!%s); // minimal equation' % (f, h) }
         code['simple_curve'] = {'sage':'Csim = HyperellipticCurve(R(%s)); Csim # simplified equation' % (g),
                                 'magma':'Csim, pi := SimplifiedModel(Cmin); Csim; // simplified equation' }
-        if data['abs_disc'] % 4096 == 0:
-            ind2 = [a[0] for a in data['bad_lfactors']].index(2)
-            bad2 = data['bad_lfactors'][ind2][1]
-            magma_cond_option = ': ExcFactors:=[*<2,Valuation('+str(data['cond'])+',2),R!'+str(bad2)+'>*]'
-        else:
-            magma_cond_option = ''
-        code['cond'] = {'magma': 'Conductor(LSeries(Cmin%s)); Factorization($1);' % magma_cond_option}
+        code['cond'] = {'magma': 'Conductor(LSeries(Cmin%s)); Factorization($1);' % magma_cond_option(data)}
         code['disc'] = {'magma':'Discriminant(Cmin); Factorization(Integers()!$1);'}
         code['geom_inv'] = {'sage':'Cmin.igusa_clebsch_invariants(); [factor(a) for a in _]',
                             'magma':'IgusaClebschInvariants(Cmin); IgusaInvariants(Cmin); G2Invariants(Cmin);'}
@@ -1175,5 +1184,6 @@ class WebG2C():
             # Fill in placeholders for this specific curve:
             for lang in ['magma']: #TODO: 'sage', 'pari',
                 self._code['curve'][lang] = self._code['curve'][lang] % (self.data['min_eqn'])
+                self._code['cond'][lang] = self._code['cond'][lang] % magma_cond_option(self.data)
 
         return self._code

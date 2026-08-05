@@ -34,7 +34,7 @@ tors:
 
 cond:
   comment: Conductor
-  magma: Conductor(LSeries(Cmin));
+  magma: Conductor(LSeries(Cmin%s));
 
 disc:
   comment: Discriminant

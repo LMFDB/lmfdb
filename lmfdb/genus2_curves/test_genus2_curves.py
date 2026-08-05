@@ -129,6 +129,23 @@ class Genus2Test(LmfdbTest):
         self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=sage")
         self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=magma")
 
+    def test_code_download_conductor(self):
+        # Magma will not use Ogg's formula once v_2(disc) >= 12, so for those
+        # curves the conductor snippet has to hand it the L-factor at 2.  The
+        # downloaded code needs the same treatment as the snippet on the page.
+        excfactors = "ExcFactors:=[*<2,Valuation(400,2),R![1]>*]"
+        page = self.tc.get("/Genus2Curve/Q/400/a/409600/1").get_data(as_text=True)
+        # the snippets on the page escape the angle brackets of the tuple
+        assert excfactors.replace("<", "&lt;").replace(">", "&gt;") in page
+        code = self.tc.get(
+            "/Genus2Curve/Q/400/a/409600/1/download/magma").get_data(as_text=True)
+        assert "Conductor(LSeries(Cmin: %s));" % excfactors in code
+        # curves with v_2(disc) < 12 get the plain call
+        code = self.tc.get(
+            "/Genus2Curve/Q/961/a/961/1/download/magma").get_data(as_text=True)
+        assert "Conductor(LSeries(Cmin));" in code
+        assert "ExcFactors" not in code
+
     def test_rational_weierstrass_points_search(self):
         L = self.tc.get("/Genus2Curve/Q/?num_rat_wpts=4")
         assert "360.a.6480.1" in L.get_data(as_text=True)
