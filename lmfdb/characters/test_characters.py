@@ -68,9 +68,61 @@ class DirichletSearchTest(LmfdbTest):
         assert 'label=2.0.3.1' in data
         # kernel field knowl for Q(zeta_5)
         assert 'label=4.0.125.1' in data
+        # The order 4 characters of modulus 13 cut out 4.0.2197.1, which is
+        # not the value field of any character, so this pins down the kernel
+        # field column (and is a quartic field whose pretty name needs more
+        # than the label)
+        W = self.tc.get('/Character/Dirichlet/?modulus=13&order=4&search_type=List&showcol=first')
+        data = W.get_data(as_text=True)
+        assert 'label=4.0.2197.1' in data
+        assert r'\(\Q(\sqrt{-26 -6 \sqrt{13}})\)' in data
+        # kernel fields that are not in the database
+        W = self.tc.get('/Character/Dirichlet/?modulus=5002&order=12&search_type=List&showcol=first')
+        assert 'knowl="nf.field.missing"' in W.get_data(as_text=True)
+        # value fields that are not in the database
+        W = self.tc.get('/Character/Dirichlet/?order=47&search_type=List')
+        assert r'$\Q(\zeta_{47})$' in W.get_data(as_text=True)
         # kernel fields are not computed for orders larger than 12
         W = self.tc.get('/Character/Dirichlet/?order=13-100&search_type=List')
         assert 'not computed' in W.get_data(as_text=True)
+
+    def test_field_columns_no_lookups(self):
+        # Once character_postprocess has run, displaying the kernel field must
+        # not go back to the database: it is the per-field record lookups that
+        # issue #6008 is about.
+        from unittest.mock import patch
+        from lmfdb import db
+        from lmfdb.characters.main import character_postprocess, display_kernel_field
+        from lmfdb.number_fields.web_number_field import field_pretty
+
+        res = list(db.char_dirichlet.search({'modulus': 13, 'order': 4}))
+        res = character_postprocess(res, {}, {})
+        assert [rec['kernel_field_data']['label'] for rec in res] == ['4.0.2197.1']
+
+        def no_lookup(*args, **kwargs):
+            raise AssertionError("number field record lookup while displaying a kernel field")
+
+        # field_pretty caches by label, so a lookup made by an earlier test
+        # would otherwise hide one made here
+        field_pretty.clear_cache()
+        with patch.object(db.nf_fields, 'lookup', no_lookup), \
+             patch.object(db.nf_fields, 'lucky', no_lookup), \
+             patch.object(db.nf_fields_extra, 'lookup', no_lookup):
+            displayed = [display_kernel_field(rec['modulus'], rec['first'], rec['order'],
+                                              rec['kernel_poly'], rec['kernel_field_data'])
+                         for rec in res]
+        assert 'label=4.0.2197.1' in displayed[0]
+        assert r'\(\Q(\sqrt{-26 -6 \sqrt{13}})\)' in displayed[0]
+
+    def test_field_columns_download(self):
+        # The virtual columns added by character_postprocess must not leak into
+        # downloads: the kernel field column downloads as [modulus, first, order]
+        # and the value field column as the raw order
+        url = ('/Character/Dirichlet/?query=%7B%27order%27%3A+4%2C+%27modulus%27%3A+13%7D'
+               '&Submit=text&download=1&search_type=List&showcol=first')
+        data = self.tc.get(url).get_data(as_text=True)
+        assert '[Orbit label, Conrey labels, Modulus, Conductor, Order, Kernel field,' in data
+        assert '"13.d"\t[13, 5, 8, 2]\t13\t13\t4\t[13, 5, 4]\t' in data
 
 class DirichletTableTest(LmfdbTest):
 

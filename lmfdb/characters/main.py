@@ -271,16 +271,15 @@ def display_galois_orbit(modulus, first, last, degree):
             disp = r"$, \cdots ,$".join(disp)
             return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
-def display_kernel_field(modulus, first, order, kernel_poly=None, kernel_label=None):
-    # kernel_poly and kernel_label are precomputed in character_postprocess;
-    # if they are absent we fall back to computing them here, at the cost of
-    # a database query for each call
+def display_kernel_field(modulus, first, order, kernel_poly=None, kernel_field_data=None):
+    # kernel_poly and kernel_field_data are precomputed in
+    # character_postprocess; if they are absent we fall back to computing them
+    # here, at the cost of several database queries for each call
     if order > 12:
         return "not computed"
     if kernel_poly is None:
         kernel_poly = [ZZ(x) for x in ConreyCharacter(modulus,first).kernel_field_poly()]
-    data = {"label": kernel_label} if kernel_label else None
-    return formatfield(kernel_poly, data=data)
+    return formatfield(kernel_poly, data=kernel_field_data)
 
 def display_value_field(order, value_field_label=None):
     # value_field_label is precomputed in character_postprocess ("N/A" when the
@@ -306,8 +305,8 @@ def character_postprocess(res, info, query):
     Each of these columns identifies a number field by its defining polynomial,
     which naively requires two database queries per row.  Instead we compute all
     of the defining polynomials here (the pari computations involved are cheap)
-    and then find all of the matching number field labels in a single database
-    query.  See https://github.com/LMFDB/lmfdb/issues/6008.
+    and then find all of the matching number fields in a single database query.
+    See https://github.com/LMFDB/lmfdb/issues/6008.
     """
     R = PolynomialRing(ZZ, "x")
     cyclo_coeffs = {}  # order2 -> coeffs of the polredabs'ed cyclotomic polynomial
@@ -327,20 +326,26 @@ def character_postprocess(res, info, query):
             rec["kernel_poly"] = [int(ZZ(x)) for x in kernel_poly]
     all_coeffs = {tuple(c) for c in cyclo_coeffs.values() if c is not None}
     all_coeffs.update(tuple(rec["kernel_poly"]) for rec in res if "kernel_poly" in rec)
-    labels = {}
+    nf_data = {}
     if all_coeffs:
         # We use $or rather than $in since psycodict does not apply the
-        # typecast needed to compare integer arrays with the numeric[] column
+        # typecast needed to compare integer arrays with the numeric[] column.
+        # We keep the whole record rather than just the label since
+        # field_pretty needs more than the label (coeffs, disc_abs, disc_sign,
+        # subfields and subfield_mults, all of which live in nf_fields) and
+        # reloads the field from the database when they are missing.
         nf_query = {"$or": [{"coeffs": list(c)} for c in sorted(all_coeffs)]}
-        labels = {tuple(f["coeffs"]): f["label"]
-                  for f in db.nf_fields.search(nf_query, ["coeffs", "label"])}
+        nf_data = {tuple(f["coeffs"]): f for f in db.nf_fields.search(nf_query)}
     for rec in res:
         order = rec["order"]
         order2 = order if order % 4 != 2 else order // 2
         cyclo = cyclo_coeffs[order2]
-        rec["value_field_label"] = "N/A" if cyclo is None else labels.get(tuple(cyclo), "N/A")
+        value_field = None if cyclo is None else nf_data.get(tuple(cyclo))
+        rec["value_field_label"] = "N/A" if value_field is None else value_field["label"]
         if "kernel_poly" in rec:
-            rec["kernel_label"] = labels.get(tuple(rec["kernel_poly"]), "N/A")
+            # formatfield reads the label "N/A" as "not in the database", so a
+            # missing field is recorded without another query
+            rec["kernel_field_data"] = nf_data.get(tuple(rec["kernel_poly"]), {"label": "N/A"})
     return res
 
 character_columns = SearchColumns([
@@ -351,7 +356,7 @@ character_columns = SearchColumns([
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
     MultiProcessedCol("first", "character.dirichlet.field_cut_out", "Kernel field",
-                      ["modulus", "first", "order", "kernel_poly", "kernel_label"],
+                      ["modulus", "first", "order", "kernel_poly", "kernel_field_data"],
                       display_kernel_field, align="center", default=False,
                       apply_download=lambda modulus, first, order, *args: [modulus, first, order]),
     MultiProcessedCol("order", "character.dirichlet.value_field", "Value field",
