@@ -1634,13 +1634,50 @@ def name_to_label(name):
     return None
 
 
-@search_parser(clean_info=True, prep_plus=True)
+CLOSING_DELIMITERS = {")": "(", "]": "[", "}": "{"}
+
+
+def split_group_search_terms(inp):
+    # Split a comma-separated list of labels, orders and group names, ignoring
+    # commas inside grouping delimiters so that a name like SL(2,7) survives as
+    # a single entry.  Unlike split_top_level_commas (used for jump boxes, where
+    # unbalanced input is passed on to the jump logic) malformed input is
+    # rejected here, since a search box can report the problem to the user.
+    stack = []
+    terms = []
+    current = []
+    for c in inp:
+        if c in CLOSING_DELIMITERS.values():
+            stack.append(c)
+        elif c in CLOSING_DELIMITERS:
+            if not stack or stack.pop() != CLOSING_DELIMITERS[c]:
+                raise SearchParsingError("Mismatched parentheses or brackets")
+        if c == "," and not stack:
+            terms.append("".join(current))
+            current = []
+        else:
+            current.append(c)
+    if stack:
+        raise SearchParsingError("Mismatched parentheses or brackets")
+    terms.append("".join(current))
+    if not all(terms):
+        raise SearchParsingError("Comma-separated list has an empty entry")
+    return terms
+
+
+def strip_unary_plus(z):
+    # We used to remove every + from the input (prep_plus), which accepted a
+    # unary + on an order or label but also mangled names like SO+(4,2).
+    return z[1:] if z.startswith("+") else z
+
+
+@search_parser(clean_info=True)
 def parse_group_label_or_order_or_name(inp, query, qfield, regex):
     # Like parse_group_label_or_order, but comma-separated entries may also be
     # group names (e.g. C6, S4, C2^3, SL(2,7)), resolved to labels.
     orders = []
     labels = []
-    for z in inp.split(","):
+    for z in map(strip_unary_plus, split_group_search_terms(inp)):
         if re.fullmatch(r'\d+', z):
             orders.append({'$startswith': f'{z}.'})
         elif regex.fullmatch(z):
@@ -1669,7 +1706,7 @@ def parse_group_label_or_name(inp, query, qfield, regex):
     # Like parse_regex_restricted for group labels, but comma-separated entries
     # may also be group names (e.g. C6, S4, C2^3, SL(2,7)), resolved to labels.
     labels = []
-    for z in inp.split(","):
+    for z in split_group_search_terms(inp):
         if regex.fullmatch(z):
             labels.append(z)
         else:

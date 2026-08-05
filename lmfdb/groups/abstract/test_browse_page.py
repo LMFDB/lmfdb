@@ -397,12 +397,57 @@ class AbGpsHomeTest(LmfdbTest):
         # group A5 resolves to 60.5 in the complex character search
         self.check_args("/Groups/Abstract/?search_type=ComplexCharacters&group=A5", "60.5")
 
+    def test_search_by_name_with_commas(self):
+        r"""
+        Check that a family name whose parameters contain commas, such as
+        SL(2,7) = 336.114 or GL(2,3) = 48.29, is kept as a single entry rather
+        than being split at its internal comma.
+        """
+        # a label only box (parse_group_label_or_name): Aut(G) = GL(2,3)
+        self.check_args("/Groups/Abstract/?aut_group=GL(2,3)", ["9.2", "18.5"])
+        # an order or name box (parse_group_label_or_order_or_name): [G,G] = SL(2,7)
+        self.check_args("/Groups/Abstract/?commutator_label=SL(2,7)", "336.114")
+        # and the subgroup search
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&ambient=SL(2,7)", "336.114")
+        # only top level commas split the list: GL(2,3) = 48.29 and C6 = 6.2
+        self.check_args("/Groups/Abstract/?aut_group=GL(2,3),C6", ["9.2", "18.5", "7.1", "18.2"])
+        # such a name may also be mixed with an order in an order or name box
+        self.check_args(
+            "/Groups/Abstract/?commutator_label=8,SL(2,7)&order=336",
+            ["336.114", "336.169", "336.170", "336.213"],
+        )
+
+    def test_search_by_name_with_plus(self):
+        r"""
+        Check that a + inside a name survives, while a leading unary + on an
+        order or label is still accepted.  SO+(4,2) is 72.40, which has trivial
+        center and so occurs as a central quotient.
+        """
+        self.check_args(
+            "/Groups/Abstract/?central_quotient=SO%2B(4%2C2)&order=144",
+            ["144.115", "144.186"],
+        )
+        # +8 still means "center of order 8", +8.1 still means "center C8"
+        self.check_args("/Groups/Abstract/?center_label=%2B8&order=8", ["8.1", "8.2", "8.5"])
+        self.check_args("/Groups/Abstract/?center_label=%2B8.1&order=8", "8.1")
+        self.not_check_args("/Groups/Abstract/?center_label=%2B8.1&order=8", "8.2")
+
     def test_search_by_bad_name(self):
         r"""
         Check that an unrecognized name in a search box gives a sensible error.
         """
         self.check_args("/Groups/Abstract/?center_label=nonsensexyz", "Abstract groups search input error")
         self.check_args("/Groups/Abstract/?aut_group=nonsensexyz", "Abstract groups search input error")
+        # unbalanced delimiters are rejected as such, rather than being split at
+        # the internal comma and reported as a truncated name
+        for url in ["/Groups/Abstract/?aut_group=SL(2,7",
+                    "/Groups/Abstract/?commutator_label=SL(2,7"]:
+            self.check_args(url, "Abstract groups search input error")
+            self.not_check_args(url, "SL(2 is not")
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&ambient=SL(2,7", "Subgroup search input error")
+        self.not_check_args("/Groups/Abstract/?search_type=Subgroups&ambient=SL(2,7", "SL(2 is not")
+        # as are empty entries in the comma separated list
+        self.check_args("/Groups/Abstract/?center_label=C2,,C6", "Abstract groups search input error")
 
     def test_supersolvable_search(self):
         r"""
