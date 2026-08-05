@@ -22,10 +22,11 @@ from lmfdb.utils import (
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
 from lmfdb.utils.place_code import CodeSnippet
-from psycodict.utils import range_formatter
+from psycodict.utils import SearchParsingError, range_formatter
+from lmfdb.utils.display_stats import NO_SEARCH_QUERY
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
-from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_parsing import QQ_DEC_RE, QQ_RE, search_parser
 from lmfdb.api import datapage
 from lmfdb.logger import logger
 from lmfdb.local_fields import local_fields_page
@@ -1919,14 +1920,6 @@ def galsortkey(gal):
         return [-1, -1]
     return galdata(gal)
 
-# Sentinel returned by the query_formatters below for bucket values that have no
-# search representation (e.g. a not-computed Galois group, or an empty/uncomputed
-# list of slopes).  LFStats.display_data detects this marker in an assembled
-# drill-down url and blanks the link, so that clicking the count of a "not computed"
-# bucket does not open an unfiltered search (which would return every field).  The
-# NUL byte cannot occur in a real url query fragment, making detection unambiguous.
-NO_SEARCH_QUERY = "\x00"
-
 def galquery(gal):
     if gal is None:
         # There is no way to search for fields where the Galois group is not computed
@@ -1954,32 +1947,82 @@ def array_sort_key(v):
         return (0, [])
     return (1, v)
 
-def topslope_formatter(ts):
-    # top_slope is stored as a fixed-width decimal approximation (making database
-    # sorting work) followed by the exact rational; see ratproc above
-    if isinstance(ts, str):
-        try:
-            return "$%s$" % latex(QQ(ts[12:]))
-        except (TypeError, ValueError):
-            return ts
-    return range_formatter(ts)
+# top_slope is stored as a fixed-width decimal approximation, which makes the
+# database sort text in numerical order, followed by the exact rational; see ratproc.
+TOPSLOPE_PREFIX_LEN = 12
+TOPSLOPE_PREFIX_RE = re.compile(r"\d+\.\d+")
 
-def topslope_query(ts):
-    def dec(x):
-        # Strip the decimal prefix, leaving the exact rational
-        return x[12:] if isinstance(x, str) else x
+def topslope_encoder(endpoint):
+    """
+    Encode a top slope, as it is written in the topslope search box, into the
+    form stored in the database.  Used for the endpoints of statistics buckets,
+    which must be compared against the stored values.
+    """
+    if not QQ_DEC_RE.match(endpoint):
+        raise SearchParsingError("%s is not a non-negative rational number, such as 4/3 or 2.5." % endpoint)
+    return ratproc(endpoint)
+
+def topslope_decoder(ts):
+    """
+    The exact rational underlying a stored top slope, or None if the input is not
+    a stored top slope (a bucket typed by a user, for example, is already exact).
+    """
+    if not isinstance(ts, str) or len(ts) <= TOPSLOPE_PREFIX_LEN:
+        return None
+    prefix, rest = ts[:TOPSLOPE_PREFIX_LEN], ts[TOPSLOPE_PREFIX_LEN:]
+    if TOPSLOPE_PREFIX_RE.fullmatch(prefix) and QQ_RE.match(rest):
+        return rest
+    return None
+
+def topslope_endpoints(ts):
+    """
+    The endpoints of a top slope value or range, as exact rationals: a pair
+    (lower, upper), either of which may be None if the range is unbounded on that
+    side, and which are equal for a single value.
+
+    The input is either a value or a range as stored in the database, or a bucket
+    as typed into the buckets box on the dynamic statistics page.
+    """
     if isinstance(ts, dict):
         lower = ts.get("$gte", ts.get("$gt"))
         upper = ts.get("$lte", ts.get("$lt"))
-        if lower is None and upper is None:
-            return NO_SEARCH_QUERY
-        elif lower is None:
-            # top slopes are always nonnegative
-            return "topslope=0-%s" % dec(upper)
-        elif upper is None:
-            return "topslope=%s-" % dec(lower)
-        return "topslope=%s-%s" % (dec(lower), dec(upper))
-    return "topslope=%s" % dec(ts)
+    elif isinstance(ts, str) and topslope_decoder(ts) is None and "-" in ts[1:]:
+        # a range typed into the buckets box, such as '1-2' or '2-'
+        lower, _, upper = ts.partition("-")
+        upper = upper or None
+    else:
+        lower = upper = ts
+    return tuple(topslope_decoder(x) or x for x in (lower, upper))
+
+def topslope_formatter(ts):
+    def show(x):
+        try:
+            return "$%s$" % latex(QQ(x))
+        except (TypeError, ValueError):
+            return str(x)
+    lower, upper = topslope_endpoints(ts)
+    if lower is None and upper is None:
+        return "not computed"
+    elif lower == upper:
+        return show(lower)
+    elif upper is None:
+        return "%s-" % show(lower)
+    elif lower is None:
+        # top slopes are always non-negative
+        return "$0$-%s" % show(upper)
+    return "%s-%s" % (show(lower), show(upper))
+
+def topslope_query(ts):
+    lower, upper = topslope_endpoints(ts)
+    if lower is None and upper is None:
+        return NO_SEARCH_QUERY
+    elif lower == upper:
+        return "topslope=%s" % lower
+    elif upper is None:
+        return "topslope=%s-" % lower
+    elif lower is None:
+        return "topslope=0-%s" % upper
+    return "topslope=%s-%s" % (lower, upper)
 
 def content_query(shortname, quantifier):
     # For columns searched via parse_newton_polygon; the quantifier makes the search
@@ -1992,7 +2035,8 @@ def content_query(shortname, quantifier):
     return inner
 
 def bracket_query(shortname):
-    # For columns searched via parse_bracketed_posints, which matches exactly
+    # For columns searched via parse_bracketed_posints, which matches exactly.
+    # The empty list is searchable, unlike a value that is not computed.
     def inner(val):
         if val is None:
             return NO_SEARCH_QUERY
@@ -2061,7 +2105,9 @@ class LFStats(StatsDisplay):
         'top_slope': topslope_formatter,
         'ind_of_insep': formatbracketcol,
         'associated_inertia': formatbracketcol,
-        'jump_set': (lambda js: f"${js}$" if js else "undefined"),
+        # a field with no jump set has an empty one; distinguishing that from a
+        # field where it is not computed keeps the two from sharing a row
+        'jump_set': formatbracketcol,
     }
     query_formatters = {
         'galois_label': galquery,
@@ -2075,8 +2121,19 @@ class LFStats(StatsDisplay):
         'associated_inertia': bracket_query('associated_inertia'),
         'jump_set': bracket_query('jump_set'),
     }
-    buckets = {'p': ['2', '3', '5', '7', '11-19', '23-97', '101-199'],
-               'c': ['0', '1', '2', '3', '4', '5-8', '9-16', '17-32', '33-79']}
+    # The public parameters of the search page, where they differ from the column name
+    url_params = {'galois_label': ['gal'],
+                  'top_slope': ['topslope'],
+                  'slopes': ['slopes', 'slopes_quantifier'],
+                  'visible': ['visible', 'visible_quantifier'],
+                  'ind_of_insep': ['ind_of_insep', 'insep_quantifier']}
+    # top_slope is stored encoded, so bucket endpoints must be encoded before they
+    # are compared against it
+    bucket_encoders = {'top_slope': topslope_encoder}
+    # The last bucket is left open above, so that fields are not omitted from the
+    # table if the database grows beyond the current maximum (p < 200 and c <= 79)
+    buckets = {'p': ['2', '3', '5', '7', '11-19', '23-97', '101-'],
+               'c': ['0', '1', '2', '3', '4', '5-8', '9-16', '17-32', '33-']}
 
     stat_list = [
         ramdisp(2),
@@ -2111,28 +2168,6 @@ class LFStats(StatsDisplay):
         self.numfields = db.lf_fields.count()
         self.num_abs_families = db.lf_families.count({"n0":1})
         self.num_rel_families = db.lf_families.count({"n0":{"$gt": 1}})
-
-    @staticmethod
-    def _suppress_null_links(data):
-        # Suppress drill-down links for buckets whose value cannot be expressed as a
-        # search.  Such a bucket (e.g. a not-computed Galois group, or an empty slope
-        # content) gets NO_SEARCH_QUERY from its query_formatter; without this the count
-        # would link to a url like /padicField/?gal= whose empty parameter the search
-        # parser ignores, opening an unfiltered search rather than the counted fields.
-        # A blank query is rendered without a link by stat_1d.html / stat_2d.html.
-        def suppress(cells):
-            for cell in cells:
-                if cell.get('query') and NO_SEARCH_QUERY in cell['query']:
-                    cell['query'] = ''
-        if 'counts' in data:
-            suppress(data['counts'])
-        if 'grid' in data:
-            for _row_header, row in data['grid']:
-                suppress(row)
-        return data
-
-    def display_data(self, *args, **kwds):
-        return self._suppress_null_links(super().display_data(*args, **kwds))
 
     @staticmethod
     def dynamic_parse(info, query):
