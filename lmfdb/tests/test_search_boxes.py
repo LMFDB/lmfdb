@@ -68,6 +68,10 @@ class GetSearchTypeTest(LmfdbTest):
         assert get_search_type({}) == ""
         assert get_search_type({}, default="Motive") == "Motive"
 
+    def test_single_value(self):
+        with self.app.test_request_context("/?search_type=Traces&hst=Dimensions"):
+            assert get_search_type(to_dict(request.args)) == "Traces"
+
     def test_explicit_empty_overrides_hst(self):
         # to_dict drops the explicitly submitted empty search_type, but it
         # must still take precedence over a stale hst
@@ -75,6 +79,22 @@ class GetSearchTypeTest(LmfdbTest):
             info = to_dict(request.args)
             assert "search_type" not in info
             assert get_search_type(info, default="Motive") == ""
+
+    def test_repeated_values(self):
+        # When falling back on the raw request, the last value wins.  Note
+        # that to_dict records the *first* value of a repeated argument, so
+        # a route wanting last-value-wins must consult the request itself
+        with self.app.test_request_context("/?search_type=Subgroups&search_type=List"):
+            assert get_search_type({}) == "List"
+        with self.app.test_request_context("/?search_type=Subgroups&search_type=&hst=Subgroups"):
+            assert get_search_type({}) == ""
+
+    def test_normalized_info_wins(self):
+        # A search_type already recorded in info (e.g. normalized by a route
+        # or wrapper) is not undone by the raw request
+        with self.app.test_request_context("/?search_type=Subgroups&search_type=List"):
+            assert get_search_type({"search_type": "Diagram"}) == "Diagram"
+            assert get_search_type({"search_type": ""}) == ""
 
 
 class SearchTypeReflectionTest(LmfdbTest):

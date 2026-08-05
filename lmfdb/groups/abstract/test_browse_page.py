@@ -48,11 +48,14 @@ class AbGpsHomeTest(LmfdbTest):
         semantics, and that hst is only consulted when no search_type at
         all was supplied.
         """
-        # the last value selects the ordinary group search
+        # the last value selects the ordinary group search, and the hidden
+        # input recording the displayed mode (used by prev/next) must follow,
+        # so that paging does not switch back into the earlier mode
         page = self.tc.get(
             "/Groups/Abstract/?search_type=Subgroups&search_type=List&order=8"
         ).get_data(as_text=True)
         assert "Abstract group search results" in page
+        assert 'name="hst" value=""' in page
         # the last value selects the legacy subgroup redirect
         response = self.tc.get(
             "/Groups/Abstract/?search_type=List&search_type=Subgroups&ambient=128.207"
@@ -64,6 +67,7 @@ class AbGpsHomeTest(LmfdbTest):
             "/Groups/Abstract/?search_type=Subgroups&search_type=&hst=Subgroups&order=8"
         ).get_data(as_text=True)
         assert "Abstract group search results" in page
+        assert 'name="hst" value=""' in page
         # with no search_type at all, hst still supplies the old-bookmark fallback
         response = self.tc.get("/Groups/Abstract/?hst=Subgroups&ambient=128.207")
         assert response.status_code == 307

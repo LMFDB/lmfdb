@@ -437,14 +437,24 @@ def get_search_type(info, default=""):
     search buttons) is recovered from the raw request arguments, so that
     it is not overridden by a stale ``hst``.
 
+    A ``search_type`` already recorded in ``info`` wins over the raw
+    request, so that a caller which normalized it (as the search wrappers
+    do) is not undone.  When falling back on the raw request, repeated
+    ``search_type`` parameters follow last-value-wins semantics, matching
+    the abstract group landing page; note that :func:`to_dict` instead
+    records the first value of a repeated request argument.
+
     INPUT:
 
     - ``info`` -- a dictionary, as produced by :func:`to_dict`
     - ``default`` -- the search type to return if none was specified
     """
     search_type = info.get("search_type")
-    if search_type is None and has_request_context() and "search_type" in request.args:
-        search_type = request.args["search_type"] # empty, since to_dict drops empty values
+    if search_type is None and has_request_context():
+        # empty values are absent from info, since to_dict drops them
+        search_types = request.args.getlist("search_type")
+        if search_types:
+            search_type = search_types[-1]
     if search_type is None:
         search_type = info.get("hst", default)
     return search_type
