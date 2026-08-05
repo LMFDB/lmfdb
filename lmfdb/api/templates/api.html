@@ -17,7 +17,8 @@ Queries are url encoded <b><code>key=value</code></b> parameters, where the valu
 Keys starting with "<code>_</code>" are meta-parameters further refining query.
 They can be combined by specifying several ones delimited by <code>&amp;</code> to further drill down to the desired objects.
 The result formats are JSON, YAML, raw or HTML (default).
-Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects.
+Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects;
+the raw format carries no metadata, so it has no <code>next</code> entry and the following page is requested by advancing <code>_offset</code> instead.
 The overall limit is at about 10000 results and beyond that it is necessary to further refine the query to the results in question.
 </div>
 <div>
@@ -40,14 +41,15 @@ The overall limit is at about 10000 results and beyond that it is necessary to f
 <div>
 <ul>
 <li><code>_format</code> is used to specify the encoding. Possible values are html (default), json, yaml and raw.
-The raw format requires <code>_fields</code> and returns only the contents of the requested fields,
-with no ids or metadata: one line per record.
-When a single field is requested, each line is that field's value, JSON-encoded;
-since an integer, float, string or (nested) list is then also a valid PARI/GP expression,
-a single-field raw response can be read directly into PARI/GP with <code>readvec</code>.
-When several fields are requested, each line is instead a JSON array of their values (JSON Lines),
-so every record is self-delimiting and parses unambiguously with a JSON reader,
-even when a value itself contains the delimiter used in the query.</li>
+The raw format requires <code>_fields</code> and returns newline-delimited JSON,
+without the usual response envelope or the implicit <code>id</code>:
+with one requested field, each line is that field's JSON value,
+and with several fields, each line is a JSON array containing those field values, in the order requested.
+<code>_delim</code> is used only to parse parameters such as <code>_fields</code> and <code>_sort</code>;
+it does not delimit output records or fields, so a record stays unambiguous even when a value contains the delimiter.
+For fields whose emitted JSON notation is also valid GP syntax, notably integers and nested arrays of integers,
+the response can be read directly with PARI/GP <code>readvec</code>; other values should be parsed as JSON.
+Raw requests remain limited to 100 records and omit pagination metadata: advance <code>_offset</code> to retrieve subsequent pages.</li>
 <li>To only retrieve a selected list of entries per document,
 use <code>_fields=name1,name2</code> to reduce the amount of data sent back to only those fields named <code>name1</code> and <code>name2</code>.
 </li>

@@ -3,6 +3,7 @@ import re
 import yaml
 import json
 from collections import defaultdict
+from sage.rings.real_mpfr import RealLiteral, RealNumber
 from lmfdb.utils.psycopg_compat import QueryCanceledError
 from lmfdb import db
 from psycodict.encoding import Json
@@ -31,6 +32,38 @@ def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
     attrs = sorted([(key, quote_string(rec[key])) for key in rec if (id or key != 'id')])
     return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
+
+
+# The JSON number syntax (RFC 8259), used to check that a decimal literal
+# coming from the database can be emitted as a bare JSON number.
+JSON_NUMBER_RE = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][-+]?[0-9]+)?\Z")
+
+
+def raw_json_dumps(value):
+    """
+    The JSON text for one database value in the raw output format.
+
+    A Postgres numeric is emitted as a JSON number holding the exact decimal
+    that Postgres returned, rather than as the {"__RealLiteral__": ...} object
+    with which Json.prep records how to rebuild the Sage real: raw output
+    promises the contents of the column, and that decimal is the value.  The
+    literal is copied verbatim, never converted through a float, so nothing is
+    rounded.  Values with no plain JSON rendering (rationals, number field
+    elements, dates, ...) keep psycodict's extended encoding.
+    """
+    if isinstance(value, RealNumber):
+        literal = value.literal if isinstance(value, RealLiteral) else str(value)
+        # NaN and the infinities have no JSON number syntax, so they fall
+        # through to the extended encoding rather than produce a line that no
+        # JSON reader will accept.
+        if JSON_NUMBER_RE.match(literal):
+            return literal
+    elif isinstance(value, (list, tuple)):
+        return "[" + ", ".join(raw_json_dumps(entry) for entry in value) + "]"
+    elif isinstance(value, dict) and all(isinstance(key, str) for key in value):
+        return "{" + ", ".join("%s: %s" % (json.dumps(key), raw_json_dumps(val))
+                               for key, val in value.items()) + "}"
+    return json.dumps(Json.prep(value))
 
 
 def hidden_collection(c):
@@ -184,6 +217,7 @@ def api_query(table, id=None):
 
     # parsing the meta parameters _format and _offset
     format = request.args.get("_format", "html")
+    raw = format.lower() == "raw"
     offset = int(request.args.get("_offset", 0))
     DELIM = request.args.get("_delim", ",")
     fields = request.args.get("_fields", None)
@@ -201,12 +235,14 @@ def api_query(table, id=None):
 
     if fields:
         raw_fields = fields.split(DELIM)
-        fields = ['id'] + raw_fields
+        # A raw response has no envelope and no implicit id, so it projects
+        # exactly the requested fields; the other formats also show the id.
+        fields = raw_fields if raw else ['id'] + raw_fields
     else:
         raw_fields = None
         fields = 3
 
-    if format.lower() == "raw" and raw_fields is None:
+    if raw and raw_fields is None:
         return apierror("_format=raw requires the _fields parameter", code=400)
 
     if sortby:
@@ -233,7 +269,9 @@ def api_query(table, id=None):
         else:
             return apierror("id '%s' must be an integer", [id])
         data = coll.lucky({'id':id}, projection=fields)
-        data = [data] if data else []
+        # A record all of whose projected columns are NULL comes back as an
+        # empty dictionary; only a missing record comes back as None.
+        data = [data] if data is not None else []
     else:
         single_object = False
 
@@ -307,30 +345,36 @@ def api_query(table, id=None):
     if single_object and not data:
         return apierror("no document with id %s found in table %s.", [id, table])
 
-    # fixup data for display and json/yaml encoding
+    # fixup data for display and for encoding in any of the formats
     if 'bytea' in coll.col_type.values():
         for row in data:
             for key, val in row.items():
                 if isinstance(val, buffer):
                     row[key] = "[binary data]"
         #data = [ dict([ (key, val if coll.col_type[key] != 'bytea' else "binary data") for key, val in row.items() ]) for row in data]
-    data = Json.prep(data)
 
-    if format.lower() == "raw":
+    if raw:
         # Just the requested columns, one record per line, with no ids or
         # metadata wrapper, for easy consumption by scripts (LMFDB#1010).
-        # A single requested field is emitted as one JSON value per line, so
-        # that an integer, float, string or (nested) list is also a valid
-        # PARI/GP expression, readable directly with readvec. Several fields
-        # are emitted as one JSON array per line (JSON Lines): each record is
-        # then self-delimiting and parses unambiguously with a JSON reader,
-        # even when a value itself contains the query delimiter.
+        # The body is newline-delimited JSON: with a single requested field
+        # each line is that field's JSON value, and with several fields each
+        # line is a JSON array of their values in the order requested, so a
+        # record stays self-delimiting even when a value contains the query
+        # delimiter or a newline.  Records are rendered from the database
+        # values rather than from Json.prep's output, so that a numeric column
+        # is the decimal it holds and not the object describing its Sage type.
+        # A column is missing from a record exactly when its value is NULL:
+        # most tables are declared with include_nones off, so psycodict leaves
+        # a NULL out of the dictionary rather than storing None, and a field
+        # that is not a column of the table is rejected before the query runs.
         if len(raw_fields) == 1:
             col = raw_fields[0]
-            out = "".join(json.dumps(rec.get(col)) + "\n" for rec in data)
+            out = "".join(raw_json_dumps(rec.get(col)) + "\n" for rec in data)
         else:
-            out = "".join(json.dumps([rec.get(col) for col in raw_fields]) + "\n" for rec in data)
+            out = "".join(raw_json_dumps([rec.get(col) for col in raw_fields]) + "\n" for rec in data)
         return Response(out, mimetype='text/plain')
+
+    data = Json.prep(data)
 
     # preparing the datastructure
     start = offset
