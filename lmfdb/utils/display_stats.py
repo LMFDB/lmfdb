@@ -685,6 +685,41 @@ class StatsDisplay(UniqueRepresentation):
         return headers
 
     @staticmethod
+    def _total_url(base_url, extras, table, cols, constraint, total, buckets, split_list):
+        """
+        The url for the total of a one-dimensional table, or the empty string when
+        the records it counts cannot be described by a search.
+
+        The only aggregate a search page can express here is the constraint itself,
+        which is the right one exactly when every record satisfying the constraint
+        is included in the total.  That fails in four ways:
+
+        - a total over buckets covers only the buckets displayed, which need not
+          exhaust the column, and a union of buckets is not a search anyway;
+        - a total over a column whose lists are split counts the entries of those
+          lists rather than records;
+        - the statistics backend leaves out records where the column is null, so a
+          column that is not computed for every record is totalled over only some
+          of them;
+        - a constraint on the column being displayed is left out of the urls, since
+          each cell constrains that column itself, so the total would claim more
+          records than it counted.
+
+        The column name on its own used to be appended as a marker, but an empty
+        parameter is ignored by the search parsers, so such a link silently
+        returned every record rather than the ones counted (and the parameter is
+        often not one the search page accepts, as with galois_label and gal).
+        """
+        constraint = constraint or {}
+        if buckets or split_list or any(col in constraint for col in cols):
+            return ''
+        if total != table.table.count(constraint):
+            # Some records have no value in this column, and no search selects
+            # exactly the ones that do
+            return ''
+        return base_url + '&'.join(extras)
+
+    @staticmethod
     def _suppress_unsearchable(data):
         """
         Blank the url of any cell whose value cannot be searched for, so that its
@@ -823,7 +858,8 @@ class StatsDisplay(UniqueRepresentation):
                     D['proportion'] = ''
             if show_total:
                 total = {'count': total,
-                         'query': base_url + '&'.join(extras + [cols[0]]),
+                         'query': self._total_url(base_url, extras, table, cols, constraint,
+                                                  total, buckets, split_list),
                          'proportion':_format_percentage(total, self._overall, show_zero=True)}
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'

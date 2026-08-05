@@ -1,6 +1,49 @@
 from lmfdb.tests import LmfdbTest
 
 
+class StubTable():
+    """
+    Stands in for a table and its statistics backend, with a controlled set of
+    counts, so that tests of the statistics framework do not depend on which
+    statistics happen to be cached in the database.
+
+    INPUT:
+
+    - ``counts`` -- the counts, as a dictionary from tuples of stored values, or
+      as a list of (tuple of stored values, count) pairs when those values are
+      unhashable (a bucketed column is stored as a range)
+    - ``records`` -- the number of records satisfying the constraint, which
+      exceeds the total when the column is not computed for some of them.
+      Defaults to the number counted.
+    """
+    def __init__(self, counts, records=None):
+        self.counts = list(counts.items() if isinstance(counts, dict) else counts)
+        self.records = records
+        # the same object serves as the table, its statistics and its counts
+        self.stats = self.table = self
+
+    def _get_values_counts(self, cols, constraint, split_list, formatter,
+                           query_formatter, base_url, buckets=None):
+        from psycodict.utils import KeyedDefaultDict
+        headers = [[] for _ in cols]
+        data = KeyedDefaultDict(lambda key: {'count': 0, 'query': '', 'proportion': ''})
+        for values, cnt in self.counts:
+            for val, header in zip(values, headers):
+                header.append(val)
+            key = tuple(formatter[col](val) for col, val in zip(cols, values))
+            data[key if len(cols) > 1 else key[0]] = {'count': cnt, 'query': '', 'proportion': ''}
+        return (headers, data) if len(cols) > 1 else (headers[0], data)
+
+    def _get_total_avg(self, cols, constraint, avg, split_list):
+        # as in psycodict, records where the column is null are left out
+        return sum(cnt for values, cnt in self.counts if values[0] is not None), False
+
+    def count(self, query):
+        if self.records is not None:
+            return self.records
+        return sum(cnt for _values, cnt in self.counts)
+
+
 class LocalFieldTest(LmfdbTest):
 
     # All tests should pass
@@ -141,14 +184,30 @@ class LocalFieldTest(LmfdbTest):
 
     @staticmethod
     def _stat_counts(dat):
-        """The counts of a 1d statistics table, as (label, count, url)."""
+        """
+        The counts of a 1d statistics table, as (label, count, url).
+
+        Such a table is transposed: a row of values, then the row of counts
+        underneath it, for each block of ten values.
+        """
         import re
         dat = dat.replace('&amp;', '&')
-        labels = [re.sub('<[^>]*>', '', lab).strip()
-                  for lab in re.findall(r'<td class="lab">(.*?)</td>', dat, re.S)]
-        counts = [(int(cnt), url) for url, cnt in
-                  re.findall(r"<td>(?:<a href='([^']*)'>)?(\d+)</a?>?</td>", dat)]
-        return [(lab, cnt, url) for lab, (cnt, url) in zip(labels, counts)]
+        counts, labels = [], None
+        for row in re.findall(r'<tr[^>]*>(.*?)</tr>', dat, re.S):
+            head = re.match(r'\s*<th[^>]*>(.*?)</th>', row, re.S)
+            if head is None:
+                continue
+            title = re.sub('<[^>]*>', '', head.group(1)).strip()
+            cells = row[head.end():]
+            if title == 'count':
+                for label, (url, cnt) in zip(labels or [], re.findall(
+                        r"<td>(?:<a href='([^']*)'>)?(\d+)(?:</a>)?</td>", cells)):
+                    counts.append((label, int(cnt), url))
+                labels = None
+            elif title != 'proportion' and labels is None:
+                labels = [re.sub('<[^>]*>', '', cell).strip()
+                          for cell in re.findall(r'<td>(.*?)</td>', cells, re.S)]
+        return counts
 
     def _url_count(self, url):
         """How many fields the search page returns for a drill-down url."""
@@ -200,29 +259,8 @@ class LocalFieldTest(LmfdbTest):
         # formatter for slopes produces TeX, which is not valid search input, so an
         # empty cell built from the displayed value rather than the stored one is
         # visibly wrong (and its row's total would lose the constraint entirely).
-        from psycodict.utils import KeyedDefaultDict
         from lmfdb.local_fields.main import LFStats
         from lmfdb.utils import totaler
-
-        class StubStats():
-            """Stands in for the statistics backend, with a controlled sparse grid."""
-            def __init__(self, counts):
-                self.counts = counts
-
-            def _get_values_counts(self, cols, constraint, split_list, formatter,
-                                   query_formatter, base_url, buckets=None):
-                headers = [[] for _ in cols]
-                data = KeyedDefaultDict(lambda key: {'count': 0, 'query': '', 'proportion': ''})
-                for values, cnt in self.counts.items():
-                    for val, header in zip(values, headers):
-                        header.append(val)
-                    key = tuple(formatter[col](val) for col, val in zip(cols, values))
-                    data[key] = {'count': cnt, 'query': '', 'proportion': ''}
-                return headers, data
-
-        class StubTable():
-            def __init__(self, counts):
-                self.stats = StubStats(counts)
 
         # slopes [2] occurs only in degree 2, and is not computed for some fields
         table = StubTable({('[2]', 2): 5, ('[2, 2]', 4): 7, ('[2, 2]', 8): 3, (None, 2): 11})
@@ -246,6 +284,72 @@ class LocalFieldTest(LmfdbTest):
         # of that row nor its total are linked
         assert [D['count'] for D in grid['not computed']] == [11, 0, 0, 11]
         assert all(D['query'] == '' for D in grid['not computed'])
+
+    def test_dynamic_stats_1d_totals(self):
+        # The Total of a one-dimensional table counts the fields where the column
+        # is computed, which is not something the search page can ask for, so it is
+        # only linked when that is every field matching the constraint.  Of the 3784
+        # fields with p=7 and n=21, only 1324 have a computed Galois group.
+        from lmfdb import db
+        L = self.tc.get('/padicField/dynamic_stats?p=7&n=21&col1=galois_label'
+                        '&totals1=yes&proportions=none&search_type=DynStats')
+        assert L.status_code == 200
+        counts = self._stat_counts(L.get_data(as_text=True))
+        assert counts, "no statistics available for Galois groups with p=7, n=21"
+        total = [c for c in counts if c[0] == 'Total']
+        assert len(total) == 1, counts
+        _label, count, url = total[0]
+        assert count == db.lf_fields.count({'p': 7, 'n': 21, 'galois_label': {'$exists': True}})
+        assert count < db.lf_fields.count({'p': 7, 'n': 21})
+        assert url == '', url        # a link here would return the other 2460 too
+        # where the column is computed for every field, the total is the constraint
+        # itself, and is linked
+        L = self.tc.get('/padicField/dynamic_stats?p=2&n=8&col1=galois_label'
+                        '&totals1=yes&proportions=none&search_type=DynStats')
+        counts = self._stat_counts(L.get_data(as_text=True))
+        total = [c for c in counts if c[0] == 'Total'][0]
+        assert total[2] and 'galois_label' not in total[2], total
+        assert self._url_count(total[2]) == total[1] == db.lf_fields.count({'p': 2, 'n': 8})
+        # a total over buckets covers only the buckets displayed, so it is not
+        # linked, while the buckets themselves still are
+        L = self.tc.get('/padicField/dynamic_stats?col1=top_slope&buckets1=0-1,1-2'
+                        '&totals1=yes&proportions=none&search_type=DynStats')
+        counts = self._stat_counts(L.get_data(as_text=True))
+        assert [label for label, _cnt, _url in counts] == ['$0$-$1$', '$1$-$2$', 'Total']
+        assert counts[-1][2] == '', counts
+        assert [url for _label, _cnt, url in counts[:2]] == [
+            '/padicField/?topslope=0-1', '/padicField/?topslope=1-2']
+
+    def test_dynamic_stats_1d_totals_policy(self):
+        # The same rule, on a controlled set of counts.  A column that is not
+        # computed for every field, a total over part of the column, and a total
+        # over the entries of lists rather than over fields all go unlinked.
+        from lmfdb.local_fields.main import LFStats
+        stats = LFStats()
+        with self.app.test_request_context('/padicField/'):
+            def total_of(table, **kwds):
+                counts = stats.display_data(table=table, totaler={'avg': False},
+                                            proportioner=False, **kwds)['counts']
+                assert counts[-1]['value'] == 'Total'
+                return counts[-1]['count'], counts[-1]['query']
+            # every field has a Galois group here, so the total is the whole search
+            assert total_of(StubTable({('4T1',): 5, ('4T3',): 11}), cols=['galois_label'],
+                            link_constraint='p=2&n=4') == (16, '/padicField/?p=2&n=4')
+            # here it is not computed for 11 of the 27, which no search expresses
+            assert total_of(StubTable({('4T1',): 5, ('4T3',): 11, (None,): 11}, records=27),
+                            cols=['galois_label'], link_constraint='p=2&n=4') == (16, '')
+            # a total over buckets covers only the buckets shown
+            assert total_of(StubTable([(({'$gte': 0, '$lte': 1},), 7),
+                                       (({'$gte': 2, '$lte': 3},), 9)]),
+                            cols=['c'], buckets={'c': ['0-1', '2-3']}) == (16, '')
+            # a constraint on the column being displayed is left out of the urls,
+            # since each count constrains that column itself, so the total would
+            # describe more fields than it counted
+            assert total_of(StubTable({(2,): 5, (4,): 11}), cols=['n'],
+                            constraint={'p': 2, 'n': {'$lte': 4}},
+                            link_constraint='p=2') == (16, '')
+        # and a split-list total counts entries of lists rather than fields
+        assert LFStats._total_url('/padicField/?', [], None, ['cm_discs'], {}, 16, {}, True) == ''
 
     def test_dynamic_stats_public_urls(self):
         # A constraint entered on the dynamic statistics page has to survive
@@ -288,7 +392,17 @@ class LocalFieldTest(LmfdbTest):
             for key, val in parse_qsl(constraint):
                 if key.endswith('quantifier'):
                     assert '%s=%s' % (key, val) in link, (constraint, link)
-        # and those fragments are what the drill-down links are built from
+            # and every drill-down link is built from those fragments.  Statistics
+            # for a constrained column are computed on demand, so the page itself
+            # has nothing to show against a read-only database; the counts are
+            # supplied here so that the check does not depend on the cache.
+            with self.app.test_request_context('/padicField/'):
+                counts = stats.display_data(cols=['n'], table=StubTable({(2,): 5, (4,): 7}),
+                                            proportioner=False, link_constraint=link)['counts']
+            assert [D['count'] for D in counts] == [5, 7]
+            for D, n in zip(counts, [2, 4]):
+                assert D['query'] == '/padicField/?%s&n=%s' % (link, n), (constraint, D['query'])
+        # the pages themselves render, and never expose an internal column
         for constraint in constraints:
             url = ('/padicField/dynamic_stats?%s&col1=n&totals1=yes&proportions=none'
                    '&search_type=DynStats' % constraint)
@@ -296,13 +410,12 @@ class LocalFieldTest(LmfdbTest):
             assert L.status_code == 200, constraint
             dat = L.get_data(as_text=True)
             assert 'is not a valid input' not in dat, constraint
+            assert '_tmp' not in dat and '=None' not in dat, constraint
             for _label, cnt, link in self._stat_counts(dat):
-                if not link:
-                    continue
-                assert '_tmp' not in link and '=None' not in link, (constraint, link)
-                assert urlparse(link).path == '/padicField/', link
-                if cnt:
-                    assert self._url_count(link) == cnt, (constraint, link, cnt)
+                if link:
+                    assert urlparse(link).path == '/padicField/', link
+                    if cnt:
+                        assert self._url_count(link) == cnt, (constraint, link, cnt)
 
     def test_dynamic_stats_topslope_buckets(self):
         # top_slope is stored as a fixed-width decimal prefix followed by the exact
