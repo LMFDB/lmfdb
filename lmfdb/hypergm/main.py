@@ -282,10 +282,46 @@ def poly_with_factored_coeffs(c, p):
     return out
 
 
+# Fields that only make sense for an individual motive, not for a family.
+HGM_MOTIVE_ONLY_FIELDS = ["conductor", "hodge", "t", "sign"]
+
+# Request arguments that select the search mode, the page or a download rather
+# than constraining the objects searched for; they are not carried over when the
+# same search is rerun on families.
+HGM_MODE_ARGS = ["search_type", "hst", "start", "download", "query",
+                 "result_count", "Submit", "download_row_count"]
+
+
+def default_search_type(info):
+    # The family Hodge vector is a family-level invariant, so a bare famhodge
+    # query (the URL reported in issue #3406) should search families rather than
+    # motives, of which there may be none in the database.  Any explicit choice
+    # (search_type/hst) or motive-only constraint is respected.
+    search_type = info.get("search_type", info.get("hst", ""))
+    if search_type:
+        return search_type
+    if info.get("famhodge") and not any(info.get(k) for k in HGM_MOTIVE_ONLY_FIELDS):
+        return "Family"
+    return "Motive"
+
+
+def family_search_url():
+    # The URL for the current search with the object type switched from motives
+    # to families: motive-only constraints cannot apply to a family, and the mode,
+    # pagination and download arguments are replaced rather than carried over.
+    args = {key: val for key, val in request.args.items()
+            if val and not key.startswith("_")  # url_for's own keywords
+            and key not in HGM_MOTIVE_ONLY_FIELDS and key not in HGM_MODE_ARGS}
+    return url_for(".index", search_type="Family", **args)
+
+
 @hypergm_page.route("/")
 def index():
     info = to_dict(request.args, search_array=HGMSearchArray())
     if request.args:
+        # The search type must be settled before hgm_search is called, since the
+        # SearchWrapper dispatches shortcuts such as download before reaching it.
+        info["search_type"] = default_search_type(info)
         return hgm_search(info)
     return render_template(
         "hgm-index.html",
@@ -411,46 +447,34 @@ class HGMDownload(Downloader):
     table = db.hgm_motives  # overridden if family search
 
     def get_table(self, info):
-        search_type = info.get("search_type", info.get("hst", "Motive"))
+        # Downloads reach this point without hgm_search having run, so normalize
+        # the search type here too: it also controls the sort order and which
+        # contingent columns are included, which must agree with the table.
+        search_type = info["search_type"] = default_search_type(info)
         if search_type in ["Family", "RandomFamily"]:
             return db.hgm_families
         else:
             return db.hgm_motives
 
 
-# Fields that only make sense for an individual motive, not for a family.
-HGM_MOTIVE_ONLY_FIELDS = ["conductor", "hodge", "t", "sign"]
-
-
-def default_search_type(info):
-    # The family Hodge vector is a family-level invariant, so a bare famhodge
-    # query (the URL reported in issue #3406) should search families rather than
-    # motives, of which there may be none in the database.  Any explicit choice
-    # (search_type/hst) or motive-only constraint is respected.
-    search_type = info.get("search_type", info.get("hst", ""))
-    if search_type:
-        return search_type
-    if info.get("famhodge") and not any(info.get(k) for k in HGM_MOTIVE_ONLY_FIELDS):
-        return "Family"
-    return "Motive"
-
-
 def hgm_postprocess(res, info, query):
     # A motive search whose only Hodge constraint is the family Hodge vector may
     # return nothing even though matching families exist (issue #3406); point the
-    # user at the family search in that case.
+    # user at the same search over families in that case.  Under this guard every
+    # constraint parsed into the query is a column of hgm_families as well, so the
+    # count and the link describe the whole search, not just its famhodge part.
     if (not res
             and info.get("search_type", info.get("hst", "Motive")) not in ["Family", "RandomFamily"]
             and query.get("famhodge") is not None
             and not any(info.get(k) for k in HGM_MOTIVE_ONLY_FIELDS)):
-        nfam = db.hgm_families.count({"famhodge": query["famhodge"]})
+        nfam = db.hgm_families.count(query)
         if nfam:
-            url = url_for(".index", famhodge=info["famhodge"], search_type="Family")
             flash(Markup(
-                "Note: no motives in the database have this family Hodge vector, "
-                "but %d matching famil%s exist &mdash; "
+                "Note: no motives in the database match this search, "
+                "but %d matching famil%s &mdash; "
                 '<a href="%s">search families instead</a>.'
-                % (nfam, "y" if nfam == 1 else "ies", url)), "info")
+                % (nfam, "y exists" if nfam == 1 else "ies exist",
+                   family_search_url())), "info")
     return res
 
 

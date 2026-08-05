@@ -1,4 +1,16 @@
+import re
+from html import unescape
+from urllib.parse import unquote
+
 from lmfdb.tests import LmfdbTest
+
+# The Hodge polygon heading followed by its plot.  Both pages carry other base64
+# plots, so the two have to be matched together rather than separately.
+HODGE_POLYGON_RE = re.compile(r'Hodge polygon\s*(?:</a>)?\s*</h2>\s*<img src="data:image/png;base64,')
+# The Download link rendered by templates/download_search_results.html
+DOWNLOAD_LINK_RE = re.compile(r'href="([^"]*download=1[^"]*)"')
+# The "search families instead" link flashed by hgm_postprocess
+FAMILY_HINT_RE = re.compile(r'no motives in the database match this search.*?href="([^"]*)"', re.S)
 
 
 class HGMTest(LmfdbTest):
@@ -79,11 +91,51 @@ class HGMTest(LmfdbTest):
         self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]", "A7.2_B5.3.1")
         self.not_check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]", "search families instead")
 
+    def test_search_famhodge_bare_download(self):
+        # The Download link on the bare famhodge results page must return the same
+        # family dataset the page displays.  SearchWrapper dispatches the download
+        # shortcut before hgm_search runs, so the search type has to be settled at
+        # the route entry point; otherwise the download runs the family query
+        # against hgm_motives and comes back empty.
+        page = self.tc.get("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]").get_data(as_text=True)
+        link = DOWNLOAD_LINK_RE.search(page)
+        assert link is not None, "no download link on the search results page"
+        response = self.tc.get(unescape(link.group(1)))
+        self.assertEqual(response.status_code, 200)
+        text = response.get_data(as_text=True)
+        self.assertIn("A7.2_B5.3.1", text)
+        self.assertNotIn("returned 0", text)
+        # family labels, not motive labels
+        assert re.search(r"A[\d.]+_B[\d.]+_t", text) is None, "motive labels in a family download"
+
     def test_search_famhodge_motive_hint(self):
         # An explicit motive search on a family Hodge vector with no matching
         # motives points the user at the family search instead.
         self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&search_type=Motive",
                         ["search families instead", "matching famil"])
+
+    def test_search_famhodge_hint_incompatible(self):
+        # The count and the link cover every family-compatible constraint, so a
+        # search that no family satisfies gets no hint at all.
+        self.not_check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&degree=999&search_type=Motive",
+                            "search families instead")
+
+    def test_search_famhodge_hint_keeps_constraints(self):
+        # The family link is the same search with only the object type changed.
+        page = self.tc.get("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&A=[7%2C2]&search_type=Motive").get_data(as_text=True)
+        hint = FAMILY_HINT_RE.search(page)
+        assert hint is not None, "no family hint on a motive search with matching families"
+        link = unescape(hint.group(1))
+        self.assertIn("search_type=Family", link)
+        self.assertIn("A=[7,2]", unquote(link))
+        families = self.tc.get(link, follow_redirects=True).get_data(as_text=True)
+        self.assertIn("A7.2_B5.3.1", families)
+        # not broadened back to every family with this Hodge vector
+        self.assertNotIn("A10.3.2_B7.1", families)
+
+    def test_search_famhodge_hint_singular(self):
+        self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&A=[7%2C2]&B=[5%2C3%2C1]&search_type=Motive",
+                        "1 matching family exists")
 
     def test_search_A(self):
         self.check_args("/Motive/Hypergeometric/Q/?A=[3%2C2%2C2]&search_type=Family", "A3.2.2_B5")
@@ -146,8 +198,15 @@ class HGMTest(LmfdbTest):
 
     def test_hodge_polygon(self):
         # The Hodge polygon plot is shown on family and motive pages of positive weight.
-        self.check_args("/Motive/Hypergeometric/Q/A10.6.3.2_B14.1.1.1", ["Hodge polygon", "data:image/png;base64"])
-        self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t9.8", ["Hodge polygon", "data:image/png;base64"])
+        for path in ["/Motive/Hypergeometric/Q/A10.6.3.2_B14.1.1.1",
+                     "/Motive/Hypergeometric/Q/A2.2.2_B4.1/t9.8"]:
+            page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+            assert HODGE_POLYGON_RE.search(page) is not None, "no Hodge polygon plot on %s" % path
+
+    def test_no_hodge_polygon_weight_zero(self):
+        # The polygon of a weight 0 object is flat, so it is deliberately omitted.
+        self.not_check_args("/Motive/Hypergeometric/Q/A10.2_B5.1", "Hodge polygon")
+        self.not_check_args("/Motive/Hypergeometric/Q/A4_B2.1/t-8.1", "Hodge polygon")
 
     ### malformed labels (issue #3406)
 
