@@ -115,7 +115,7 @@ class LMFDBSearchTable(PostgresSearchTable):
                         who = self._db.login()
                         new_knowl.save(who, most_recent=knowl, minor=True)
                     else:
-                        knowldb.actually_rename(knowl, new_name=f'columns.{self.search_table}.{col}')
+                        knowldb.rename_description_knowl(knowl, f'columns.{self.search_table}.{col}')
                 elif not keep_old:
                     knowldb.delete(knowl)
 
