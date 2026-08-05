@@ -620,7 +620,9 @@ def common_parse(info, query):
         parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode=info.get("simple_quantifier"))
     else:
         parse_submultiset(info, query, "simple_factors")
-    if info.get("use_geom_decomp") == "on":
+    # CheckBox submits "yes"; "on" is the browser default that older hand
+    # written links use, so accept both
+    if info.get("use_geom_decomp") in ["yes", "on"]:
         dimstr = "geom_dim"
         nf_qfield = "geometric_number_fields"
         gal_qfield = "geometric_galois_groups"

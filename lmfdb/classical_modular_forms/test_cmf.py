@@ -29,10 +29,14 @@ class CmfTest(LmfdbTest):
         def is_powerful(n):
             return all(e > 1 for _, e in ZZ(n).factor())
 
+        def is_prime_square(n):
+            factorization = list(ZZ(n).factor())
+            return len(factorization) == 1 and factorization[0][1] == 2
+
         unfiltered, _ = levels(base)
         for level_type, predicate in [
                 ('prime', lambda n: ZZ(n).is_prime()),
-                ('prime_square', lambda n: ZZ(n).is_prime_power() and ZZ(n).is_square()),
+                ('prime_square', is_prime_square),
                 ('prime_power', lambda n: ZZ(n).is_prime_power()),
                 ('square', lambda n: ZZ(n).is_square()),
                 ('squarefree', lambda n: ZZ(n).is_squarefree()),
