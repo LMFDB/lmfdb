@@ -629,11 +629,8 @@ def abelian_nf_label(T):
         # Order maximal (at least) at the primes in S; written in the
         # variable y so that we can factor polynomials in x over K below
         nf = pari.nfinit([T.subst("x", "y"), S])
-        # The defining polynomial of K, used in place of nf when looking for
-        # roots below: nf is only conditional (its order is certified maximal
-        # at the primes of S and nowhere else), and PARI warns that nfroots
-        # can miss a root when handed such a structure, while it recovers in
-        # polynomial time when handed nf.pol
+        # The defining polynomial of K, kept for the second attempt at root
+        # finding below
         field_pol = nf.getattr("pol")
         gal = pari.galoisinit(nf)
         if gal == 0 or pari.galoisisabelian(gal) == 0:
@@ -654,14 +651,27 @@ def abelian_nf_label(T):
     for cand in db.nf_fields.search(query, ['label', 'coeffs']):
         gpol = pari(coeff_to_poly(cand['coeffs']))
         try:
-            for rt in pari.nfroots(field_pol, gpol):
-                if gpol.subst("x", rt) == 0:
-                    # certified: K contains a root of gpol, which is
-                    # irreducible of the same degree n, so K is isomorphic
-                    # to the field of this candidate
-                    return cand['label']
+            roots = pari.nfroots(nf, gpol)
         except PariError:
-            continue
+            roots = []
+        if len(roots) == 0:
+            # nf is only conditional (its order is certified maximal at the
+            # primes of S and nowhere else), and PARI warns that nfroots can
+            # miss a root when handed such a structure, while it recovers in
+            # polynomial time when handed nf.pol.  Ask again that way before
+            # discarding the candidate: this costs nothing when the first
+            # call already found a root, and the alternative to a second try
+            # is the polredabs path, which is orders of magnitude slower
+            try:
+                roots = pari.nfroots(field_pol, gpol)
+            except PariError:
+                continue
+        for rt in roots:
+            if gpol.subst("x", rt) == 0:
+                # certified: K contains a root of gpol, which is irreducible
+                # of the same degree n, so K is isomorphic to the field of
+                # this candidate
+                return cand['label']
     return None
 
 
