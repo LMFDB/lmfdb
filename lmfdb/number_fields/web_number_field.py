@@ -568,6 +568,30 @@ def _probably_galois(T, needed=6, maxp=1000):
     return True
 
 
+def _known_discriminant_primes(D):
+    """
+    The prime divisors of the nonzero integer ``D`` that can be found
+    cheaply: those below 10^5, together with the base of the remaining
+    cofactor when that cofactor is a power of a single pseudoprime of
+    reasonable size.  A hard composite cofactor is left alone; ``D`` is
+    never fully factored.
+    """
+    S = D.gcd(_prime_product(10**5)).prime_divisors()
+    C = D.abs()
+    for p in S:
+        C //= p**C.valuation(p)
+    if C > 1 and C.ndigits() <= 300:
+        # This catches a field ramified at one larger prime p.  Such a p
+        # occurs in the discriminant with exponent greater than one as soon
+        # as the degree is at least 4, and the index of Z[x]/(T) contributes
+        # further powers of p, so the cofactor is a prime power rather than
+        # a prime.
+        p, e = C.is_pseudoprime_power(get_data=True)
+        if e:
+            S.append(p)
+    return S
+
+
 def abelian_nf_label(T):
     """
     Attempt to find the label of the number field K defined by ``T`` (an
@@ -601,19 +625,16 @@ def abelian_nf_label(T):
         D = ZZ(T.poldisc())
         if D == 0:
             return None
-        # Primes up to 10^5 dividing D
-        S = D.gcd(_prime_product(10**5)).prime_divisors()
-        # If the remaining unfactored part of D is a pseudoprime of
-        # reasonable size, use it too: this catches fields ramified at one
-        # larger prime.  If it is a hard composite we leave it alone.
-        C = D.abs()
-        for p in S:
-            C //= p**C.valuation(p)
-        if C > 1 and C.ndigits() <= 300 and C.is_pseudoprime():
-            S.append(C)
+        S = _known_discriminant_primes(D)
         # Order maximal (at least) at the primes in S; written in the
         # variable y so that we can factor polynomials in x over K below
         nf = pari.nfinit([T.subst("x", "y"), S])
+        # The defining polynomial of K, used in place of nf when looking for
+        # roots below: nf is only conditional (its order is certified maximal
+        # at the primes of S and nowhere else), and PARI warns that nfroots
+        # can miss a root when handed such a structure, while it recovers in
+        # polynomial time when handed nf.pol
+        field_pol = nf.getattr("pol")
         gal = pari.galoisinit(nf)
         if gal == 0 or pari.galoisisabelian(gal) == 0:
             # not certified Galois, or certified non-abelian
@@ -633,7 +654,7 @@ def abelian_nf_label(T):
     for cand in db.nf_fields.search(query, ['label', 'coeffs']):
         gpol = pari(coeff_to_poly(cand['coeffs']))
         try:
-            for rt in pari.nfroots(nf, gpol):
+            for rt in pari.nfroots(field_pol, gpol):
                 if gpol.subst("x", rt) == 0:
                     # certified: K contains a root of gpol, which is
                     # irreducible of the same degree n, so K is isomorphic

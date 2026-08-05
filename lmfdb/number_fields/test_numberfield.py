@@ -76,6 +76,24 @@ class NumberFieldTest(LmfdbTest):
         # polredabs path
         assert abelian_nf_label(pari("x^8 - 2")) is None
         assert abelian_nf_label(pari("polcompositum(x^4 - 2, x^2 + 1)[1]")) is None
+        # same field, but entered so that the order we can certify maximal is
+        # very far from maximal: the index is divisible by two primes above
+        # 10^5, which stay out of S, so nfroots is called with a conditional
+        # structure (hence gets the defining polynomial, not the nf)
+        m = 100003 * 100019
+        T = (m * pari("x")).Mod(pari("polcyclo(20)")).charpoly()
+        assert abelian_nf_label(T) == "8.0.4000000.1"
+
+    def test_known_discriminant_primes(self):
+        # a large ramified prime shows up in the discriminant as a prime
+        # power, not as a prime (issue #5471)
+        from sage.all import ZZ
+        from lmfdb.number_fields.web_number_field import _known_discriminant_primes
+        q = ZZ(100003)
+        S = _known_discriminant_primes(ZZ(2)**20 * ZZ(5)**10 * q**7)
+        assert S == [ZZ(2), ZZ(5), q]
+        # a cofactor with two large prime factors is left unfactored
+        assert _known_discriminant_primes(ZZ(2)**20 * q * ZZ(100019)) == [ZZ(2)]
 
     def test_jump_degree_too_large(self):
         # for degrees beyond anything in the database the jump returns
