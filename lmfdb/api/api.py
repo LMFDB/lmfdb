@@ -6,7 +6,7 @@ from collections import defaultdict
 from sage.rings.real_mpfr import RealLiteral, RealNumber
 from lmfdb.utils.psycopg_compat import QueryCanceledError
 from lmfdb import db
-from psycodict.encoding import Json
+from psycodict.encoding import Json, LmfdbDecimalZero
 from lmfdb.utils import flash_error, comma
 from lmfdb.utils.datetime_utils import utc_now_naive
 from lmfdb.logger import logger
@@ -39,6 +39,28 @@ def pretty_document(rec, sep=", ", id=True):
 JSON_NUMBER_RE = re.compile(r"-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][-+]?[0-9]+)?\Z")
 
 
+def exact_decimal(value):
+    """
+    The decimal that Postgres sent for a numeric value, as JSON number text.
+
+    psycodict hands a numeric back as a Sage real remembering the decimal it
+    was built from, except for a decimal that is exactly zero, which it hands
+    back as an integer wrapper remembering it instead.  Either way the literal
+    is the value, and rebuilding it from a float or an int would drop the
+    stored scale, and with it the sign of a literal like -0.000.
+
+    None if there is no such literal, or if it is not JSON number syntax: NaN
+    and the infinities have no JSON representation.
+    """
+    if isinstance(value, (LmfdbDecimalZero, RealLiteral)):
+        literal = value.literal
+    elif isinstance(value, RealNumber):
+        literal = str(value)
+    else:
+        return None
+    return literal if JSON_NUMBER_RE.match(literal) else None
+
+
 def raw_json_dumps(value):
     """
     The JSON text for one database value in the raw output format.
@@ -51,14 +73,10 @@ def raw_json_dumps(value):
     rounded.  Values with no plain JSON rendering (rationals, number field
     elements, dates, ...) keep psycodict's extended encoding.
     """
-    if isinstance(value, RealNumber):
-        literal = value.literal if isinstance(value, RealLiteral) else str(value)
-        # NaN and the infinities have no JSON number syntax, so they fall
-        # through to the extended encoding rather than produce a line that no
-        # JSON reader will accept.
-        if JSON_NUMBER_RE.match(literal):
-            return literal
-    elif isinstance(value, (list, tuple)):
+    literal = exact_decimal(value)
+    if literal is not None:
+        return literal
+    if isinstance(value, (list, tuple)):
         return "[" + ", ".join(raw_json_dumps(entry) for entry in value) + "]"
     elif isinstance(value, dict) and all(isinstance(key, str) for key in value):
         return "{" + ", ".join("%s: %s" % (json.dumps(key), raw_json_dumps(val))
