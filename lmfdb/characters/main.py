@@ -57,6 +57,8 @@ def learn(current=None):
         r.append(('Dirichlet character labels', url_for(".labels_page")))
     if current != 'orbit_labels':
         r.append(('Dirichlet character orbit labels', url_for(".orbit_labels_page")))
+    if current != 'pictures':
+        r.append(('Picture description', url_for(".picture_page")))
     return r
 
 ###############################################################################
@@ -377,6 +379,16 @@ def extent_page():
     info['bread'] = bread('Extent')
     info['learnmore'] = learn('extent')
     return render_template("single.html", kid='rcs.cande.character.dirichlet',
+                           **info)
+
+
+@characters_page.route("/Dirichlet/Pictures")
+def picture_page():
+    info = {}
+    info['title'] = 'Pictures for Dirichlet characters'
+    info['bread'] = bread('Pictures')
+    info['learnmore'] = learn('pictures')
+    return render_template("single.html", kid='portrait.character.dirichlet',
                            **info)
 
 

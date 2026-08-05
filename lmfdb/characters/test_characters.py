@@ -1,4 +1,17 @@
+from math import gcd, sqrt
+
 from lmfdb.tests import LmfdbTest
+from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.portraits import (
+    PORTRAIT_CACHE_SIZE,
+    PORTRAIT_MAX_MODULUS,
+    paint_portrait,
+    partial_gauss_sums,
+    portrait_complexity,
+    portrait_data,
+    portrait_is_enabled,
+    portrait_properties,
+)
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 from lmfdb.utils import comma
@@ -185,12 +198,17 @@ class DirichletCharactersTest(LmfdbTest):
 
     def test_portrait(self):
         # The Gauss-sum portrait (issue #3996) is embedded in the properties
-        # box for small modulus, computed on the fly.
+        # box, computed on the fly, and explained in the Learn more box.
         W = self.tc.get('/Character/Dirichlet/27/8')
-        assert 'data:image/png;base64,' in W.get_data(as_text=True), "portrait present"
-        # It is skipped for large modulus, where computing it on the fly is too slow.
-        W = self.tc.get('/Character/Dirichlet/40487/5')
-        assert 'data:image/png;base64,' not in W.get_data(as_text=True), "portrait skipped"
+        page = W.get_data(as_text=True)
+        assert 'class="dirichlet-character-portrait"' in page, "portrait present"
+        assert 'alt="Gauss-sum portrait of the Dirichlet character 27.8"' in page
+        assert 'src="data:image/png;base64,' in page
+        assert 'Picture description' in page
+
+    def test_portrait_page(self):
+        W = self.tc.get('/Character/Dirichlet/Pictures')
+        assert 'Pictures for Dirichlet characters' in W.get_data(as_text=True)
 
     def test_dirichlet_calc(self):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')
@@ -260,3 +278,75 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'is_minimal' in W and 'last' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W
+
+
+class DirichletPortraitTest(LmfdbTest):
+    """Unit tests for the Gauss-sum portraits of issue #3996.
+
+    ``add_portrait`` swallows every exception, so a regression in the maths
+    below would silently turn into a missing picture rather than a failing
+    page; these tests check the data the picture is drawn from directly.
+    """
+
+    def test_complete_gauss_sums(self):
+        """The last partial sum is the complete Gauss sum computed by pari."""
+        for modulus, number in [(4, 3),     # primitive, real, odd
+                                (5, 2),     # primitive, order 4, not real
+                                (15, 4),    # imprimitive, of conductor 5
+                                (12, 11)]:  # composite modulus, 8 nonunits
+            chi = ConreyCharacter(modulus, number)
+            _, sums = partial_gauss_sums(modulus, number)
+            for a in range(modulus):
+                tau = complex(chi.gauss_sum_numerical(a))
+                assert abs(sums[a, -1] - tau) < 1e-10, \
+                    "tau_%s of %s.%s" % (a, modulus, number)
+
+    def test_primitive_radius(self):
+        """The invariant the picture is drawn to expose: for a primitive
+        character the dots with gcd(a, N) = 1 lie on the circle of radius
+        sqrt(N), and all the other dots sit at the origin."""
+        modulus, number = 27, 2
+        assert ConreyCharacter(modulus, number).conductor() == modulus
+        _, sums = partial_gauss_sums(modulus, number)
+        for a in range(modulus):
+            if gcd(a, modulus) == 1:
+                assert abs(abs(sums[a, -1]) - sqrt(modulus)) < 1e-10, \
+                    "|tau_%s| = sqrt(%s)" % (a, modulus)
+            else:
+                assert abs(sums[a, -1]) < 1e-10, "tau_%s = 0" % a
+
+    def test_modulus_one(self):
+        """The trivial character has no partial sums at all: its portrait is
+        the single complete Gauss sum tau_0 = 1."""
+        segments, _, dots, _ = portrait_data(1, 1)
+        assert segments.shape == (0, 2, 2)
+        assert dots.shape == (1, 2)
+        assert abs(dots[0][0] - 1) < 1e-10 and abs(dots[0][1]) < 1e-10
+        assert paint_portrait(1, 1).startswith('data:image/png;base64,')
+
+    def test_workload_cutoff(self):
+        """Portraits are limited by the work they take, not by the modulus:
+        the prime 293 needs 293*292 segments, while the larger 300 needs only
+        300*phi(300) = 300*80."""
+        assert portrait_complexity(293) == 85556
+        assert portrait_complexity(300) == 24000
+        assert not portrait_is_enabled(293)
+        assert portrait_is_enabled(300)
+        assert not portrait_is_enabled(PORTRAIT_MAX_MODULUS + 1)
+        # a character we decline to draw is a quiet None, not an error
+        assert paint_portrait(293, 17) is None
+        assert portrait_properties(40487, 5) is None
+
+    def test_cache(self):
+        """Completed portraits are cached, in a cache of bounded size."""
+        paint_portrait.cache_clear()
+        first = paint_portrait(3, 2)
+        assert paint_portrait.cache_info().hits == 0
+        second = paint_portrait(3, 2)
+        info = paint_portrait.cache_info()
+        assert second is first
+        assert info.hits == 1
+        assert info.maxsize == PORTRAIT_CACHE_SIZE
+        # characters with no portrait never reach the cache
+        paint_portrait(293, 17)
+        assert paint_portrait.cache_info().misses == info.misses
