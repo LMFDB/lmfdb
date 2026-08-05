@@ -11,6 +11,45 @@ class CmfTest(LmfdbTest):
         # checks search of conductors dividing 1000
         self.check_args('/ModularForm/GL2/Q/holomorphic/?level_type=divides&level=1000', '40.2.k.a')
 
+    def test_level_types(self):
+        # Every option the level type offers has to actually filter.  The
+        # prime square and powerful options used to fall through to the
+        # invalid-type branch, whose redirect our callers discard, so the
+        # search ran with no condition on the level at all.
+        import re
+        base = '/ModularForm/GL2/Q/holomorphic/?level=1-40&weight=2'
+
+        def levels(url):
+            page = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
+            found = re.findall(r'>(\d+)\.\d+\.[a-z]+\.[a-z]+<', page)
+            return sorted({int(n) for n in found}), ('is invalid' in page)
+
+        from sage.all import ZZ
+
+        def is_powerful(n):
+            return all(e > 1 for _, e in ZZ(n).factor())
+
+        unfiltered, _ = levels(base)
+        for level_type, predicate in [
+                ('prime', lambda n: ZZ(n).is_prime()),
+                ('prime_square', lambda n: ZZ(n).is_prime_power() and ZZ(n).is_square()),
+                ('prime_power', lambda n: ZZ(n).is_prime_power()),
+                ('square', lambda n: ZZ(n).is_square()),
+                ('squarefree', lambda n: ZZ(n).is_squarefree()),
+                ('powerful', is_powerful)]:
+            found, invalid = levels(base + '&level_type=' + level_type)
+            assert not invalid, "%s reported as an invalid level type" % level_type
+            assert found, "%s returned no results" % level_type
+            assert found != unfiltered, "%s did not filter" % level_type
+            bad = [n for n in found if not predicate(n)]
+            assert not bad, "%s returned levels %s" % (level_type, bad)
+
+        # A level type that is not on the menu must stop the search rather
+        # than quietly returning everything
+        found, invalid = levels(base + '&level_type=bogus')
+        assert invalid, "an unknown level type was accepted"
+        assert not found, "an unknown level type still returned results"
+
     def test_browse_page(self):
         r"""
         Check browsing for elliptic modular forms
