@@ -113,10 +113,10 @@ where the prefix "-" indicates to sort in descending order.
 The database contains {{ ntables }} tables in {{ databases|length }} datasets,
 with a total of {{ "{:,}".format(nrows) }} rows.
 {% if show_hidden %}
-All tables are shown, including test tables;
-<a href="{{ url_for('.index') }}">hide test tables</a>.
+All tables are shown, including the test and auxiliary ones;
+<a href="{{ url_for('.index') }}">hide them</a>.
 {% elif nhidden %}
-{{ nhidden }} test table{% if nhidden != 1 %}s are{% else %} is{% endif %} not shown;
+{{ nhidden }} test and auxiliary table{% if nhidden != 1 %}s are{% else %} is{% endif %} hidden;
 <a href="{{ url_for('.full_index') }}">show all tables</a>.
 {% endif %}
 </div>

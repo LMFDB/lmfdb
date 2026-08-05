@@ -36,8 +36,12 @@ def pretty_document(rec, sep=", ", id=True):
 def hidden_collection(c):
     """
     hide some collections from the main page (still available via direct requests)
+
+    Test tables follow two naming conventions (``test_something`` and
+    ``something_test``) and both are hidden, as are the auxiliary tables
+    whose names carry one of the suffixes below.
     """
-    return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
+    return c.startswith("test") or c.endswith("_test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
 
 #def collection_indexed_keys(collection):
 #    """
@@ -59,7 +63,7 @@ dataset_names = {
     "cluster": "Cluster pictures",
     "data": "Data uploads",
     "ec": "Elliptic curves",
-    "fq": "Function fields",
+    "fq": "Finite fields",
     "g2c": "Genus 2 curves",
     "gps": "Groups",
     "halfmf": "Half-integral weight modular forms",
@@ -102,14 +106,16 @@ def get_database_info(show_hidden=False):
 
     INPUT:
 
-    - ``show_hidden`` -- whether to include tables (such as test tables)
-      that are hidden from the main API page by default
+    - ``show_hidden`` -- whether to include the tables (test tables and some
+      auxiliary ones) that are hidden from the main API page by default
     """
     try:
         from lmfdb.knowledge.knowl import knowldb
         descriptions = knowldb.get_table_descriptions()
     except Exception:
-        # The API index should still work if the knowl database is unavailable
+        # The API index should still work if the knowl database is unavailable,
+        # but a failure here silently empties a column of the page, so log it
+        logger.exception("Could not load the table descriptions for the API index")
         descriptions = {}
     info = defaultdict(list)
     for table in db.tablenames:
