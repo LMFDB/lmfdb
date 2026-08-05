@@ -191,20 +191,29 @@ def polynomial_unroll(poly):
     [coefficients, exponent] pairs describing a factorization) into a
     polynomial.
 
-    Raise ValueError on empty or non-list input; malformed entries raise
-    the TypeError/ValueError of the underlying polynomial construction
-    (Lfactor_to_gq catches all of these).
+    Raise ValueError on empty or non-list input, on a factorization with a
+    malformed entry, or on an exponent that is not a positive integer;
+    other malformed entries raise the TypeError/ValueError of the
+    underlying polynomial construction (Lfactor_to_gq catches all of these).
     """
     if not isinstance(poly, (list, tuple)) or not poly:
         raise ValueError("Euler factor must be a nonempty list")
     if isinstance(poly[0], list):
-        expanded_factor_list = []
-        for fac, exponent in poly:
-            expanded_factor_list.extend([fac] * exponent)
-        # the initial value makes an empty product the constant polynomial 1
-        # rather than the integer 1 (whose degree method raises)
-        return prod((coeff_to_poly(fac) for fac in expanded_factor_list),
-                    coeff_to_poly([1]))
+        # multiply the factors up rather than expanding the list, so that a
+        # malformed factor cannot vanish from the product
+        result = coeff_to_poly([1])
+        for item in poly:
+            if not isinstance(item, (list, tuple)) or len(item) != 2:
+                raise ValueError("factored Euler factor must be a list of "
+                                 "[coefficients, exponent] pairs")
+            fac, exponent = item
+            if not isinstance(fac, (list, tuple)) or not fac:
+                raise ValueError("Euler factor must be a nonempty list")
+            # bool is a subclass of int, and True in ZZ, so exclude it here
+            if isinstance(exponent, bool) or exponent not in ZZ or ZZ(exponent) <= 0:
+                raise ValueError("Euler factor exponents must be positive integers")
+            result *= coeff_to_poly(fac) ** ZZ(exponent)
+        return result
     return coeff_to_poly(poly)
 
 def polynomial_unroll_get_gq(poly):
@@ -312,6 +321,61 @@ def Lfactor_to_label_and_link_if_exists(poly, p=None):
         if db.av_fq_isog.lookup(label, projection='label') is None:
             return ''
     return '<a href="%s">%s</a>' % (url_for_label(label), label)
+
+
+def pretty_poly(poly, prec=None):
+    """The local factor as a plain truncated power series, used when the
+    coefficients are inexact or only known to finite precision.
+    """
+    out = "1"
+    for i, elt in enumerate(poly):
+        if elt is None or (i == prec and prec != len(poly) - 1):
+            out += "+O(%s)" % (seriesvar(i, "polynomial"),)
+            break
+        elif i > 0:
+            out += seriescoeff(elt, i, "series", "polynomial", 3)
+    return out
+
+
+def euler_factor_row_data(poly, p, display_galois=False,
+                          complex_coefficients=False, isogeny_label=False):
+    """Prepare the $\\Gal(F_p)$, $F_p(T)$ and isogeny class cells of one row
+    of the Euler product table, from the local factor poly at the prime p.
+
+    Return the triple (factors, gal_groups, isog_class); gal_groups is always
+    nonempty, and is [[0, 0]] when no Galois group is to be displayed.  Local
+    factor data that cannot be interpreted as a polynomial give the
+    placeholder factor 'not available' with empty Galois and isogeny cells,
+    rather than taking down the whole L-function page.
+
+    complex_coefficients selects the plain power series display (as does a
+    factor with unknown coefficients), and isogeny_label requests the av/Fq
+    isogeny class, which is only meaningful at a good prime of a weight 1
+    L-function.
+    """
+    gal_groups = [[0, 0]]
+    isog_class = ''
+    try:
+        if not isinstance(poly, (list, tuple)) or not poly:
+            raise ValueError("Euler factor must be a nonempty list")
+        if complex_coefficients or None in poly:
+            factors = r'\( %s \)' % pretty_poly(poly)
+        else:
+            if isinstance(poly[0], list):
+                galois_pretty_factors = list_factored_to_factored_poly_otherorder
+            else:
+                galois_pretty_factors = list_to_factored_poly_otherorder
+            if display_galois:
+                factors, gal_groups = galois_pretty_factors(poly, galois=True, p=p)
+                gal_groups = gal_groups or [[0, 0]]
+            else:
+                factors = galois_pretty_factors(poly, galois=False, p=p)
+            factors = make_bigint(r'\( %s \)' % factors)
+            if isogeny_label:
+                isog_class = Lfactor_to_label_and_link_if_exists(poly, p)
+    except (TypeError, ValueError, ArithmeticError, IndexError):
+        return "not available", [[0, 0]], ''
+    return factors, gal_groups, isog_class
 
 
 def display_isogeny_label(L):
@@ -507,15 +571,7 @@ def lfuncEPhtml(L, fmt):
     elif all(None in elt for elt in (L.localfactors + L.bad_lfactors)):
         display_galois = False
 
-    def pretty_poly(poly, prec=None):
-        out = "1"
-        for i, elt in enumerate(poly):
-            if elt is None or (i == prec and prec != len(poly) - 1):
-                out += "+O(%s)" % (seriesvar(i, "polynomial"),)
-                break
-            elif i > 0:
-                out += seriescoeff(elt, i, "series", "polynomial", 3)
-        return out
+    display_isogeny = display_isogeny_label(L)
 
     eptable = r"""<div style="max-width: 100%; overflow-x: auto;">"""
     eptable += "<table class='ntdata'>"
@@ -524,47 +580,29 @@ def lfuncEPhtml(L, fmt):
     if display_galois:
         eptable += r"<th class='weight galois'>$\Gal(F_p)$</th>"
     eptable += r"""<th class='weight' style="text-align: left;">$F_p(T)$</th>"""
-    if display_isogeny_label(L):
+    if display_isogeny:
         eptable += r"""<th class='weight' style="text-align: left; font-weight: normal;">Isogeny Class over $\mathbf{F}_p$</th>"""
     eptable += "</tr>"
     eptable += "</thead>"
 
     def row(trclass, goodorbad, p, poly):
-        if isinstance(poly[0], list):
-            galois_pretty_factors = list_factored_to_factored_poly_otherorder
-        else:
-            galois_pretty_factors = list_to_factored_poly_otherorder
-        out = ""
-        try:
-            isog_class = ''
-            if L.coefficient_field == "CDF" or None in poly:
-                factors = r'\( %s \)' % pretty_poly(poly)
-                gal_groups = [[0, 0]]
-            elif not display_galois:
-                factors = galois_pretty_factors(poly, galois=display_galois, p=p)
-                factors = make_bigint(r'\( %s \)' % factors)
-                if display_isogeny_label(L) and p not in bad_primes:
-                    isog_class = Lfactor_to_label_and_link_if_exists(poly, p)
+        factors, gal_groups, isog_class = euler_factor_row_data(
+            poly, p,
+            display_galois=display_galois,
+            complex_coefficients=(L.coefficient_field == "CDF"),
+            isogeny_label=display_isogeny and p not in bad_primes)
+        out = "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
+        if display_galois:
+            out += "<td class='galois'>"
+            if gal_groups[0] == [0, 0]:
+                pass   # do nothing, because the local factor is 1
             else:
-                factors, gal_groups = galois_pretty_factors(poly, galois=display_galois, p=p)
-                factors = make_bigint(r'\( %s \)' % factors)
-                if display_isogeny_label(L) and p not in bad_primes:
-                    isog_class = Lfactor_to_label_and_link_if_exists(poly, p)
-            out += "<tr" + trclass + "><td>" + goodorbad + "</td><td>" + str(p) + "</td>"
-            if display_galois:
-                out += "<td class='galois'>"
-                if gal_groups[0] == [0, 0]:
-                    pass   # do nothing, because the local factor is 1
-                else:
-                    out += r"$\times$".join(transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups)
-                out += "</td>"
-            out += "<td> %s </td>" % factors
-            if display_isogeny_label(L):
-                out += "<td> %s </td>" % isog_class
-            out += "</tr>"
-
-        except IndexError:
-            out += "<tr><td></td><td>" + str(j) + "</td><td>" + "not available" + "</td></tr>" + "not available" + "</td></tr>"
+                out += r"$\times$".join(transitive_group_display_knowl_C1_as_trivial(f"{n}T{k}") for n, k in gal_groups)
+            out += "</td>"
+        out += "<td> %s </td>" % factors
+        if display_isogeny:
+            out += "<td> %s </td>" % isog_class
+        out += "</tr>"
         return out
     goodorbad = "bad"
     trclass = ""
@@ -598,6 +636,8 @@ def lfuncEPhtml(L, fmt):
     if display_galois:
         last_entry += "<td></td>"
     last_entry += "<td></td>"
+    if display_isogeny:
+        last_entry += "<td></td>"
     eptable += last_entry
     eptable += "</tr>"
     eptable += r"""<tr class="more toggle nodisplay"><td colspan="2"><a onclick="show_moreless(&quot;less&quot;); return true" href="#eptable">show less</a></td>"""
