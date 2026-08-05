@@ -141,6 +141,29 @@ def parity_text(val):
     return 'odd' if val == -1 else 'even'
 
 
+def wrap_traces(traces_string, continuation=""):
+    """Break a trace assignment across lines so that it fits in the code box.
+
+    Line breaks are only inserted after a comma, so that each line is valid in
+    the target language once ``continuation`` (e.g. ``" \\"`` for gp, which
+    requires an explicit line continuation) is appended to it.  Some newspaces
+    have a large trace bound, and hence a long trace list: 3912.1.cp.a is an
+    extreme example.
+    """
+    line_length = 70
+    i = 0
+    wrapped = ""
+    while i < len(traces_string):
+        wrapped += traces_string[i:i + line_length]
+        i += line_length
+        while wrapped[-1] != "," and i < len(traces_string):
+            wrapped += traces_string[i]
+            i += 1
+        if i < len(traces_string):
+            wrapped += continuation + "\n"
+    return wrapped
+
+
 class WebNewform():
     def __init__(self, data, space=None, all_m=False, all_n=False, embedding_label=None):
         # TODO validate data
@@ -412,12 +435,14 @@ class WebNewform():
         else:
             label = '%s.%s' % (self.label, self.embedding_label)
             downloads.append(('Coefficient data to text', url_for('.download_embedded_newform', label=label)))
-        downloads.append(
-                ('Magma commands', url_for(".cmf_code_download", label=self.label, download_type='magma')))
-        downloads.append(
-                ('PariGP commands', url_for(".cmf_code_download", label=self.label, download_type='pari')))
-        downloads.append(
-                ('SageMath commands', url_for(".cmf_code_download", label=self.label, download_type='sage')))
+        # Only offer the languages that this newform actually has snippets for
+        # (weight 1 has no Magma, see WebNewform.code)
+        for lang, name in [('magma', 'Magma commands'),
+                           ('pari', 'PariGP commands'),
+                           ('sage', 'SageMath commands')]:
+            if lang in self.code_langs:
+                downloads.append(
+                    (name, url_for(".cmf_code_download", label=self.label, download_type=lang)))
 
         downloads.append(('Underlying data', url_for('.mf_data', label=label)))
         return downloads
@@ -1446,22 +1471,6 @@ function switch_basis(btype) {
         sage_trace_bound = self.ns_data.get('trace_bound')
         traces_list = str(self.traces[0:sage_trace_bound]).replace(" ","")
 
-        def wrap_traces(traces_string, continuation=""):
-            #format string to look nice in the code box if it's long (check 3912/1/cp/a e.g.)
-            #continuation is appended before each inserted line break (e.g. " \\" for gp)
-            line_length = 70
-            i = 0
-            wrapped = ""
-            while i < len(traces_string):
-                wrapped += traces_string[i:i+line_length]
-                i += line_length
-                while wrapped[-1] != "," and i < len(traces_string):
-                    wrapped += traces_string[i]
-                    i += 1
-                if i < len(traces_string):
-                    wrapped += continuation + "\n"
-            return wrapped
-
         data = { 'N': self.level,
                  'k': self.weight,
                  'conrey_index': self.conrey_index,
@@ -1481,7 +1490,20 @@ function switch_basis(btype) {
         if self.weight == 1:
             # Magma does not support weight 1 newforms (Newforms errors out and
             # modular symbols require weight at least 2), so we cannot select
-            # the newform there
-            code['newform'].pop('magma', None)
-            code['qexp'].pop('magma', None)
+            # the newform there.  Drop Magma from every section and from the
+            # language selectors, so that the page, the downloads list and
+            # download_code all agree that Magma is unavailable here.
+            for key, val in code.items():
+                if isinstance(val, dict):
+                    val.pop('magma', None)
+                elif isinstance(val, list):
+                    code[key] = [lang for lang in val if lang != 'magma']
         return code
+
+    @lazy_attribute
+    def code_langs(self):
+        """The languages that code snippets are available in for this newform.
+
+        Weight 1 newforms have no Magma snippet; see :meth:`code`.
+        """
+        return [lang for lang in ('magma', 'pari', 'sage') if lang in self.code['prompt']]
