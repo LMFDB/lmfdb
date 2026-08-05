@@ -20,7 +20,7 @@ Formats:
 Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
 </div>
 <div class="table-description">
-  {{ KNOWL_INC('tables.'+table) }}
+  {{ KNOWL_INC('tables.'+table, htag='h2', show_title=True) }}
 </div>
 <div>
   {% include "apischema.html" %}

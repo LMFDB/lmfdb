@@ -88,7 +88,7 @@ class ApiTest(LmfdbTest):
             assert 'class="schema-example"' in data
             assert 'class="schema-holder {}-schema-holder"'.format(tbl) in data
             # the table description is displayed as a knowl, not in the title
-            assert "<title>Database - {} (".format(tbl) not in data
+            assert "Database - {} (".format(tbl) not in data
         # The random row must be sampled with a projection that includes the
         # search columns, otherwise the Example cells for search columns render
         # blank.  degree is a search column of nf_fields that is never null, so
@@ -98,6 +98,31 @@ class ApiTest(LmfdbTest):
                       r'<td class="schema-example">(.*?)</td>', data, re.S)
         assert m is not None, "degree row not found in nf_fields schema table"
         assert m.group(1).strip() != "", "Example cell for search column 'degree' is blank"
+
+    def test_api_table_description(self):
+        r"""
+        Check that the tables.<table> knowl is shown with its own title as a
+        heading above the schema, rather than folded into the page title
+        """
+        from markupsafe import escape
+        from lmfdb.knowledge.knowl import Knowl
+        from lmfdb.knowledge.main import md, md_preprocess
+
+        tbl = 'nf_fields'
+        # The title and content live in the knowl database, so we ask for them
+        # rather than hard coding them here.
+        with self.app.test_request_context():
+            self.app.preprocess_request()
+            knowl = Knowl('tables.{}'.format(tbl))
+            assert knowl.exists(), "no tables.{} knowl to test against".format(tbl)
+            heading = "<h2>{}</h2>".format(escape(knowl.title))
+            content = md.convert(md_preprocess(knowl.content))
+
+        data = self.tc.get("/api/{}".format(tbl), follow_redirects=True).get_data(as_text=True)
+        assert heading in data, "table description heading missing"
+        assert content in data, "table description content missing"
+        # the heading introduces the description, and both precede the schema
+        assert data.index(heading) < data.index(content) < data.index("{}-schema-shower".format(tbl))
 
     def test_api_schema_on_datapage(self):
         r"""

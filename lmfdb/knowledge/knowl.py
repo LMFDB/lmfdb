@@ -1100,19 +1100,20 @@ class Knowl():
             self.type, self.source, self.source_name = extract_typ(ID)
         if self.type == 2:
             pieces = ID.split(".")
-            # Ignore the title passed in
             if len(pieces) == 3:
-                # Column
+                # Column: the title is generated, so ignore the title passed in
                 self.title = f"Column {pieces[2]} of table {pieces[1]}"
                 if pieces[1] in db.tablenames:
                     self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
                 else:
                     self.coltype = "DEFUNCT"
             elif len(pieces) == 2:
-                # Table
-                self.title = f"Table {pieces[1]}"
+                # Table: unlike a column description, the title is editable,
+                # so it is only generated for records that don't have one yet
                 self.coltype = None
-                if pieces[1] not in db.tablenames:
+                if not self.title:
+                    self.title = f"Table {pieces[1]}"
+                if pieces[1] not in db.tablenames and not self.title.endswith(" (DEFUNCT)"):
                     self.title += " (DEFUNCT)"
 
         if showing:
