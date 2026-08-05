@@ -707,7 +707,12 @@ abvar_columns = SearchColumns([
     MathCol("jacobian_count", "av.jacobian_count", "Jacobians", default=False),
     MathCol("hyp_count", "av.hyperelliptic_count", "Hyperelliptic Jacobians", default=False),
     ProcessedCol("curves", "ag.jacobian", "Curves", curves_display_search, default=False,
-                 download_desc="Equations of curves whose Jacobians are in the isogeny class.  For a base field GF(p^r) with r > 1, the variable a denotes a generator of the base field over its prime field.  The list may be empty or missing if no such curves are known."),
+                 download_desc="Equations of curves whose Jacobians are in the isogeny class.\n"
+                 "For a base field GF(p^r) with r > 1, the variable a is the image of x in GF(p)[x]/(C(x)),\n"
+                 "where C is the degree r Conway polynomial over GF(p) used by the LMFDB;\n"
+                 "equivalently, a is a root of that Conway polynomial.\n"
+                 "A null value means that the curves in this isogeny class have not been computed;\n"
+                 "an empty list means that the computation was carried out and there are no such curves."),
     MathCol("twist_count", "av.twist", "Num. twists", default=False),
     MathCol("max_twist_degree", "av.twist", "Max. twist degree", default=False),
     MathCol("geometric_extension_degree", "av.endomorphism_field", "End. degree", default=False),
