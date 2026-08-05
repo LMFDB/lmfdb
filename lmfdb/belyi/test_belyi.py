@@ -169,6 +169,7 @@ class BelyiTest(LmfdbTest):
             "phi := (1/3125*(162*nu-81)*x^2+1/78125*(972*nu-486)*x+1/390625*(-1458*nu+729))/(x^6-9/25*x^5+27/125*x^4+1/3125*(-162*nu-54)*x^3+1/78125*(729*nu-486)*x^2+1/9765625*(-2187*nu+5832)*x+1/244140625*(-2187*nu-1458))*y+(1/3125*(-162*nu+81)*x^3+1/156250*(1458*nu-729)*x^2+1/9765625*(-2187*nu+10935)*x+1/488281250*(-4374*nu-76545))/(x^6-9/25*x^5+27/125*x^4+1/3125*(-162*nu-54)*x^3+1/78125*(729*nu-486)*x^2+1/9765625*(-2187*nu+5832)*x+1/244140625*(-2187*nu-1458));"
             in page.get_data(as_text=True)
         )
+        assert("i := 15;" in page.get_data(as_text=True))  # Test transitive group index parsed correctly
         # in sage
         page = self.tc.get(
             "/Belyi/download_galmap_to_sage/6T15-5.1_5.1_5.1-c",
@@ -178,6 +179,7 @@ class BelyiTest(LmfdbTest):
            "phi = (1/3125*(162*nu-81)*x^2+1/78125*(972*nu-486)*x+1/390625*(-1458*nu+729))/(x^6-9/25*x^5+27/125*x^4+1/3125*(-162*nu-54)*x^3+1/78125*(729*nu-486)*x^2+1/9765625*(-2187*nu+5832)*x+1/244140625*(-2187*nu-1458))*y+(1/3125*(-162*nu+81)*x^3+1/156250*(1458*nu-729)*x^2+1/9765625*(-2187*nu+10935)*x+1/488281250*(-4374*nu-76545))/(x^6-9/25*x^5+27/125*x^4+1/3125*(-162*nu-54)*x^3+1/78125*(729*nu-486)*x^2+1/9765625*(-2187*nu+5832)*x+1/244140625*(-2187*nu-1458))"
             in page.get_data(as_text=True)
         )
+        assert("i = 15" in page.get_data(as_text=True))  # Test transitive group index parsed correctly
         # genus 2 example
         # in magma
         page = self.tc.get(

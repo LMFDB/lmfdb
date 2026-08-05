@@ -6,8 +6,91 @@ from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset,
         web_latex, compress_expression)
 from flask import url_for
 import re
+import os
 
 from lmfdb import db
+
+
+###############################################################################
+# Belyi dessin images from belyi_images.txt
+###############################################################################
+
+_belyi_images = None
+
+def _load_belyi_images():
+    global _belyi_images
+    if _belyi_images is not None:
+        return _belyi_images
+    _belyi_images = {}
+    txt_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'images', 'belyi_images.txt')
+    txt_path = os.path.abspath(txt_path)
+    if not os.path.exists(txt_path):
+        return _belyi_images
+    with open(txt_path, encoding='utf-8') as f:
+        for i, line in enumerate(f):
+            if i < 2:  # skip header rows
+                continue
+            line = line.rstrip('\n')
+            parts = line.split('|', 2)
+            if len(parts) != 3:
+                continue
+            belyidb_label = parts[1]
+            svg_field = parts[2]
+            lmfdb_plabel = _belyidb_to_lmfdb_plabel(belyidb_label)
+            if lmfdb_plabel is None:
+                continue
+            # svg_field is a PostgreSQL text[] like {svg1,svg2,...}; split into list
+            svg_field = svg_field.strip()
+            if svg_field.startswith('{') and svg_field.endswith('}'):
+                svg_field = svg_field[1:-1]
+            # Each element is a complete <svg>...</svg>; split on the boundary between them
+            raw_svgs = re.split(r'(?<=</svg>),', svg_field)
+            svgs = [_crop_svg_bottom(s.replace('\\"', '"').strip()) for s in raw_svgs if s.strip()]
+            _belyi_images[lmfdb_plabel] = svgs
+    return _belyi_images
+
+
+def _crop_svg_bottom(svg, crop_height=660):
+    # The page number sits at y≈702 in a 792-unit-tall viewBox.
+    # Fix: shrink the viewBox height AND the SVG height attribute proportionally,
+    # and set overflow="hidden" so nothing outside the viewBox leaks through.
+    # 1. Update viewBox height
+    svg = re.sub(
+        r'(viewBox=")(\S+\s+\S+\s+\S+\s+)\S+(")',
+        lambda m: m.group(1) + m.group(2) + str(crop_height) + m.group(3),
+        svg
+    )
+    # 2. Update the SVG height attribute proportionally (original viewBox height = 792)
+
+    def _new_height(m):
+        try:
+            orig = float(m.group(1))
+            new_h = round(orig * crop_height / 792)
+            return 'height="{}"'.format(new_h)
+        except ValueError:
+            return m.group(0)
+    svg = re.sub(r'height="([\d.]+)"', _new_height, svg, count=1)
+    # 3. Ensure the outermost <svg> tag has overflow="hidden" to clip below the viewBox
+    svg = re.sub(r'(<svg\b)(?![^>]*overflow)', r'\1 overflow="hidden"', svg, count=1)
+    return svg
+
+
+def _belyidb_to_lmfdb_plabel(belyidb_label):
+    # "4T2-[2,2,2]-22-22-22-g0" -> "4T2-2.2_2.2_2.2"
+    parts = belyidb_label.split('-')
+    if len(parts) < 5:
+        return None
+    group = parts[0]
+    # parts[1] is abc like [2,2,2] — skip it; parts[2-4] are cycle types
+    sigma0 = '.'.join(list(parts[2]))
+    sigma1 = '.'.join(list(parts[3]))
+    sigmaoo = '.'.join(list(parts[4]))
+    return '{}-{}_{}_{}'.format(group, sigma0, sigma1, sigmaoo)
+
+
+def get_belyi_images(plabel):
+    """Return list of SVG strings for the given LMFDB passport label, or []."""
+    return _load_belyi_images().get(plabel, [])
 
 
 ###############################################################################
@@ -299,6 +382,9 @@ class WebBelyiGalmap():
 
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
+
+        # Dessin images (one per embedding, or a single shared one)
+        data['dessin_svgs'] = get_belyi_images(galmap['plabel'])
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},

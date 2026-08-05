@@ -1,9 +1,10 @@
 # Python logging module
-from logging import info, warning, debug, critical
+from logging import info, warning, debug, critical, getLogger
 
-from .start import start_logging, logger_file_handler
-from .utils import make_logger
+from .start import start_logging
 
 start_logging()
 
-__all__ = ['info', 'warning', 'debug', 'critical', 'make_logger', 'logger_file_handler']
+logger = getLogger()
+
+__all__ = ['info', 'warning', 'debug', 'critical', 'logger']

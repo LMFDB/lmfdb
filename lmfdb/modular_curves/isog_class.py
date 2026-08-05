@@ -1,6 +1,5 @@
 from flask import url_for
 from lmfdb.utils import prop_int_pretty
-from lmfdb.modular_curves import modcurve_logger
 from lmfdb.modular_curves.web_curve import modcurve_link, ISO_CLASS_RE, WebModCurve
 from lmfdb import db
 
@@ -16,7 +15,6 @@ class ModCurveIsog_class():
 
             - dbdata: the data from the database
         """
-        modcurve_logger.debug("Constructing an instance of ModCurveIsog_class")
         self.__dict__.update(dbdata)
         self.web_curve = WebModCurve(self.label)
         self.make_class()

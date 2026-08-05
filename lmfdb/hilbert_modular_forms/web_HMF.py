@@ -8,9 +8,6 @@ from sage.all import QQ, polygen
 
 from lmfdb import db
 from lmfdb.hilbert_modular_forms.hilbert_field import HilbertNumberField
-from lmfdb.logger import make_logger
-
-logger = make_logger("hmf")
 
 
 def construct_full_label(field_label, weight, level_label, label_suffix):
@@ -43,7 +40,6 @@ class WebHMF():
 
         """
         if dbdata:
-            logger.debug("Constructing an instance of WebHMF class from database")
             self.__dict__.update(dbdata)
             self.dbdata = dbdata
         else:

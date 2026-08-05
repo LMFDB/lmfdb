@@ -14,6 +14,11 @@ class GalGpTest(LmfdbTest):
         assert '14T18' in L.get_data(as_text=True)
         assert '294' in L.get_data(as_text=True) # order of 21T18
 
+    def test_aut_search(self):
+        L = self.tc.get('/GaloisGroup/?n=10&auts=5')
+        assert '10T6' in L.get_data(as_text=True)
+        assert '10T7' not in L.get_data(as_text=True)
+
     def test_display_bigpage(self):
         L = self.tc.get('/GaloisGroup/22T29')
         assert '22528' in L.get_data(as_text=True) # order of 22T29

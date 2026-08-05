@@ -136,7 +136,11 @@ def glnC_postprocess(res, info, query):
              bread=lambda: get_bread([('Search Results', '')]),
              learnmore=learnmore_list,
              credit=lambda: credit_string,
-             url_for_label=url_for_label)
+             url_for_label=url_for_label,
+             diagram_opts={
+                 "title": r"$\GL(n,\C)$ subgroup diagram search",
+                 "bread": lambda: get_bread([("Diagram search", "")]),
+             })
 def group_search(info, query):
     info['group_url'] = get_url
     parse_ints(info, query, 'order', 'order')

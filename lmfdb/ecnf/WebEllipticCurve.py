@@ -888,10 +888,6 @@ sorted_code_names = ['field', 'curve', 'is_min', 'cond', 'cond_norm',
                      'disc', 'disc_norm', 'jinv', 'cm', 'rank',
                      'gens', 'heights', 'reg', 'tors', 'ntors', 'torgens', 'localdata']
 
-
-Fullname = {'magma': 'Magma', 'sage': 'SageMath', 'gp': 'Pari/GP', 'pari': 'Pari/GP', 'oscar': 'Oscar'}
-Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\', 'oscar': '#'}
-
 def make_code(label, lang=None):
     """Return a dict of code snippets for one curve in either one
     language (if lang is 'pari' or 'gp', 'sage', 'magma', or 'oscar') or all

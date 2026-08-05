@@ -13,21 +13,21 @@ from lmfdb.utils import (
     clean_input, prep_ranges, parse_bool, parse_ints, parse_galgrp,
     SearchArray, TextBox, TextBoxNoEg, YesNoBox, ParityBox, CountBox,
     StatsDisplay, totaler, proportioners, prop_int_pretty, Downloader,
-    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache)
+    sparse_cyclotomic_to_mathml, search_wrap, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MultiProcessedCol, MathCol, CheckCol, SearchCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import modules2string
-from lmfdb.galois_groups import galois_groups_page, logger
+from lmfdb.galois_groups import galois_groups_page
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from .transitive_group import (
     galois_module_knowl_guts, group_display_short,
     subfield_display, resolve_display, chartable,
     cclasses_display_knowl, character_table_display_knowl,
     group_alias_table, WebGaloisGroup, knowl_cache)
+from lmfdb.logger import logger
 
 # Test to see if this gap installation knows about transitive groups
-# logger = make_logger("GG")
 
 try:
     G = libgap.TransitiveGroup(9, 2)
@@ -137,10 +137,13 @@ def make_order_key(order):
 gg_columns = SearchColumns([
     LinkCol("label", "gg.label", "Label", url_for_label),
     SearchCol("pretty", "gg.simple_name", "Name"),
+    MathCol("n", "gg.degree", "Degree", short_title="degree", default=False),
     MathCol("order", "group.order", "Order", align="right"),
     MathCol("parity", "gg.parity", "Parity", align="right"),
     CheckCol("solv", "group.solvable", "Solvable"),
     MathCol("nilpotency", "group.nilpotent", "Nil. class", short_title="nilpotency class", default=False),
+    MathCol("auts", "gg.field_automorphisms", r"$\#\Aut(F/K)$", short_title="field auts"),
+    MathCol("transitivity", "gg.transitivity", "Transitivity", short_title="transitivity",default=lambda info: info.get("transitivity")),
     MathCol("num_conj_classes", "gg.conjugacy_classes", "Conj. classes", short_title="conjugacy classes", default=False),
     MultiProcessedCol("subfields", "gg.subfields", "Subfields",
                       ["subfields", "cache"],
@@ -151,8 +154,9 @@ gg_columns = SearchColumns([
                       lambda sibs, bnd, cache: WebGaloisGroup(None, {"siblings":sibs, "bound_siblings":bnd}).otherrep_list(givebound=False, cache=cache),
                       apply_download=lambda s, b, c: [s, b])
 ],
-    db_cols=["bound_siblings", "abstract_label", "label", "name", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes"])
-gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
+
+    db_cols=["bound_siblings", "abstract_label", "label", "name", "n", "order", "parity", "pretty", "siblings", "solv", "subfields", "nilpotency", "num_conj_classes", "auts", "transitivity"])
+#gg_columns.below_download = r"<p>Results are complete for degrees $\leq 23$.</p>"
 
 def gg_postprocess(res, info, query):
     # We want to cache latex forms both for the results and for any groups that show up as siblings or subfields
@@ -179,7 +183,15 @@ def gg_postprocess(res, info, query):
              url_for_label=url_for_label,
              postprocess=gg_postprocess,
              learnmore=learnmore_list,
-             bread=lambda: get_bread([("Search results", ' ')]))
+             bread=lambda: get_bread([("Search results", ' ')]),
+             diagram_opts={
+                 "title": "Galois group diagram search",
+                 "bread": lambda: get_bread(breads=[("Diagram search", " ")]),
+                 "x_axis_default": "n",
+                 "y_axis_default": "num_conj_classes",
+                 "color_default": "nilpotency",
+             }
+             )
 def galois_group_search(info, query):
     if info.get('jump','').strip():
         jump_list = ["1T1", "2T1", "3T1", "4T1", "4T2", "5T1", "6T1", "7T1",
@@ -217,6 +229,8 @@ def galois_group_search(info, query):
     parse_ints(info,query,'order')
     parse_ints(info,query,'arith_equiv')
     parse_ints(info,query,'nilpotency')
+    parse_ints(info,query,'transitivity')
+    parse_ints(info,query,'auts')
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
@@ -227,6 +241,7 @@ def galois_group_search(info, query):
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
 
     _set_show_subs(info)
+
 
 def yesno(val):
     if val:
@@ -322,6 +337,7 @@ def render_group_webpage(args):
             ('Cyclic', yesno(data['cyc'])),
             ('Abelian', yesno(data['ab'])),
             ('Solvable', yesno(data['solv'])),
+            ('Transitivity', prop_int_pretty(data['transitivity'])),
             ('Primitive', yesno(data['prim'])),
             ('$p$-group', yesno(pgroup)),
         ]
@@ -340,8 +356,8 @@ def render_group_webpage(args):
         data['dispv'] = sparse_cyclotomic_to_mathml
         data['malle_a'] = wgg.malle_a
         downloads = []
-        for lang in [("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
-            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code", label=label, download_type=lang[1])))
+        for lang in [("Gap", "gap"), ("Magma", "magma"), ("Oscar", "oscar"), ("SageMath", "sage")]:
+            downloads.append(('{} commands'.format(lang[0]), url_for(".gg_code_download", label=label, download_type=lang[1])))
         downloads.append(('Underlying data', url_for(".gg_data", label=label)))
         # split the label so that breadcrumbs point to a search for this object's degree
         parent_id, child_id = label.split("T")
@@ -360,20 +376,22 @@ def render_group_webpage(args):
             KNOWL_ID="gg.%s" % label,
             learnmore=learnmore_list()+[('Picture description', url_for('.pictures'))])
 
+
+sorted_code_names = ['gg', 'id', 'order', 'cyclic', 'abelian', 'solvable', 'nilpotent',
+                     'n', 't', 'even', 'primitive', 'auts', 'gens', 'ccs', 'char_table']
+
+def gg_code(label, download_type):
+    gg = WebGaloisGroup(label)
+    gg.make_code_snippets()
+    code = CodeSnippet(gg.code)
+    return code.export_code(label, download_type, sorted_code_names)
+
 @galois_groups_page.route('/<label>/download/<download_type>')
-def gg_code(label,download_type):
-    if download_type == "magma":
-        s = "// Magma code for creating transitive group " + label + "\n\n"
-        s += "G := TransitiveGroup(%s,%s);\n" % tuple(label.split("T"))
-    elif download_type == "oscar":
-        s = "# Oscar code for creating transitive group " + label + "\n\n"
-        s += "G = transitive_group(%s,%s)\n" % tuple(label.split("T"))
-    elif download_type == "sage":
-        s = "# Sage code for creating transitive group " + label + "\n\n"
-        s += "G = TransitiveGroup(%s,%s)\n" % tuple(label.split("T"))
-    else:
-        return abort(404, f"Invalid download type {download_type}")
-    response = make_response(s)
+def gg_code_download(**args):
+    try:
+        response = make_response(gg_code(**args))
+    except Exception as err:
+        return abort(404, str(err))
     response.headers['Content-type'] = 'text/plain'
     return response
 
@@ -492,6 +510,12 @@ class GalSearchArray(SearchArray):
             knowl="gg.tnumber",
             example="3",
             example_span="3 or 4,6 or 2..5 or 4,6..8")
+        transitivity = TextBox(
+            name="transitivity",
+            label="Transitivity",
+            knowl="gg.transitivity",
+            example="2",
+            example_span="2 or 4,6 or 2..5 or 4,6..8")
         order = TextBox(
             name="order",
             label="Order",
@@ -514,6 +538,12 @@ class GalSearchArray(SearchArray):
             knowl="group.nilpotent",
             example="1..100",
             example_span="-1, or 1..3")
+        aut = TextBox(
+            name="auts",
+            label=r"$\#\Aut(F/K)$",
+            knowl="gg.field_automorphisms",
+            example="2..5",
+            example_span="3, or 4..6")
         arith_equiv = TextBox(
             name="arith_equiv",
             label="Equivalent siblings",
@@ -522,9 +552,9 @@ class GalSearchArray(SearchArray):
             example_span="1 or 2,3 or 1..5 or 1,3..10")
         count = CountBox()
 
-        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [gal], [arith_equiv], [count]]
+        self.browse_array = [[n, parity], [t, cyc], [order, solv], [nilpotency, prim], [arith_equiv, aut], [gal], [count, transitivity]]
 
-        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency]]
+        self.refine_array = [[parity, cyc, solv, prim, arith_equiv], [n, t, order, gal, nilpotency], [aut, transitivity]]
 
 def yesone(s):
     return "yes" if s in ["yes", 1] else "no"

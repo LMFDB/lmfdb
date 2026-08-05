@@ -1,6 +1,4 @@
 from lmfdb import db
-from lmfdb.logger import make_logger
-wcplog = make_logger("WCP")
 
 
 def cp_display_knowl(label, name=None, img=None):

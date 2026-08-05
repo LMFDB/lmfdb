@@ -6,7 +6,7 @@
 
 <p>For each \(n\) we display the coefficients of the \(q\)-expansion \(a_n\), the
 {{ KNOWL('cmf.satake_parameters',title='Satake parameters') }} \(\alpha_p\),
-and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).</p>
+and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).  You can download additional coefficients <a href="{{url_for('cmf.mf_hecke_cc', label=newform.label+'.'+newform.embedding_label)}}">here</a>.</p>
 
 
 <script>
@@ -27,9 +27,8 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).</p>
   }
 </script>
 
-{% set class_n = [50, 250, 1000] %}
-{% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', '\(a_n\) instead','\(a_n\) with \(n\)')]%}
-{% set default_class = [50,'primes'] %}
+{% set subsets = [('primes', 'only \(a_p\)','\(a_p\) with \(p\)'), ('all', 'all \(a_n\)','\(a_n\) with \(n\)')]%}
+{% set default_class = [100,'primes'] %}
 {% macro render_display_options(href) %}
 <div>
   {% for s in subsets %}
@@ -37,27 +36,15 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).</p>
     {% if s[0] == default_class[1] %}
       {% set extra = '' %}
     {% endif %}
-    <span class="noptions {{s[0]}} {{extra}}">
-    Display {{s[2]}} up to:
-    {% for k in class_n %}
-    <a onclick="show_primes_all_n('{{k}}','{{s[0]}}'); return true" href="{{href}}">{{k}}</a>
-    {% endfor %} {# for k in class_n #}
-    </span>
-    {% for n in class_n %}
-      {% set extra = 'nodisplay' %}
-      {% if n == default_class[0] and s[0] == default_class[1] %}
-        {% set extra = '' %}
-      {% endif %}
 
-      {# deals with the other options #}
-      <span class="{{s[0]}} {{n|string}} {{extra}}" >
-      {% for ns in subsets %}
-       {% if ns != s %}
-       (<a onclick="show_primes_all_n('{{n}}','{{ns[0]}}'); return true" href="{{href}}">See {{ns[1]}}</a>)
-       {% endif %}
-      {% endfor %} {# for ns in subsets #}
-      </span>
-    {% endfor %} {# for n in class_n #}
+    {# deals with the other options #}
+    <span class="{{s[0]}} 100 {{extra}}" >
+    {% for ns in subsets %}
+      {% if ns != s %}
+        Currently showing {{s[1]}}; <a onclick="show_primes_all_n('100','{{ns[0]}}'); return true" href="{{href}}">display {{ns[1]}}</a>
+      {% endif %}
+    {% endfor %} {# for ns in subsets #}
+    </span>
   {% endfor %} {# for s in subsets #}
 </div>
 {% endmacro %}
@@ -120,8 +107,8 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).</p>
     <tbody>
       {% set m = newform.embedding_m %}
       {% set pindex = [1] %}
-      {% for n in range(2, 1000) %}
-        {% set classes = ["all"] %}
+      {% for n in range(2, 100) %}
+        {% set classes = ["all", "100"] %}
         {% if n in newform.character_values %} {# n is a prime that doesn't divide the level #}
           {% set rowspan = 2 %}
           {% do classes.append("primes") %}
@@ -145,14 +132,6 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).</p>
           {% set shaden = 'lightall' %}
         {% endif %}
         {% set allshades = shade + ' ' + shaden + ' ' + shadep %}
-        {% for cn in class_n %}
-          {% if n <= cn %}
-            {% do classes.append(cn|string) %}
-          {% endif %}
-        {% endfor %} {# cn in class_n #}
-        {% if n > default_class[0] %}
-          {% do classes.append("nodisplay") %}
-        {% endif %}
 
         {% set class = classes|join(" ") %}
 
@@ -201,7 +180,7 @@ and the Satake angles \(\theta_p = \textrm{Arg}(\alpha_p)\).</p>
             <td colspan=4></td>
             </tr>
           {% endif %}
-    {% endfor %} {# n in range(2, 1000) #}
+    {% endfor %} {# n in range(2, 100) #}
     </tbody>
   </table>
 </div>

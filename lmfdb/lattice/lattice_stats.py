@@ -1,9 +1,7 @@
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, StatsDisplay, display_knowl, proportioners, totaler
-from lmfdb.logger import make_logger
 
-logger = make_logger("lattice")
 
 class Lattice_stats(StatsDisplay):
     def __init__(self):

@@ -1,10 +1,8 @@
 import cmath
 import math
 import os
-import random
 import re
 import tempfile
-import time
 from copy import copy
 from itertools import islice
 from types import GeneratorType
@@ -35,7 +33,7 @@ from sage.all import (
 from sage.misc.functional import round
 from sage.structure.element import Element
 
-from lmfdb.app import app, is_beta, is_debug_mode, _url_source
+from lmfdb.app import is_beta, is_debug_mode, _url_source
 
 
 def integer_divisors(n):
@@ -778,137 +776,28 @@ def debug():
 
 def flash_error(errmsg, *args):
     """ flash errmsg in red with args in black; errmsg may contain markup, including latex math mode"""
-    flash(Markup("Error: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "error")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Error: " + errmsg), "error")
 
 def flash_warning(errmsg, *args):
     """ flash warning in grey with args in red; warning may contain markup, including latex math mode"""
-    flash(Markup("Warning: " + (errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args))), "warning")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:red'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Warning: " + errmsg), "warning")
 
 def flash_info(errmsg, *args):
     """ flash information in grey with args in black; warning may contain markup, including latex math mode"""
-    flash(Markup("Note: " + (errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args))), "info")
+    errmsg = str(errmsg)
+    if args:
+        errmsg = errmsg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)
+    flash(Markup("Note: " + errmsg), "info")
 
 def flash_success(msg, *args):
     """ flash information in green with args in black; msg may contain markup, including latex math mode"""
     flash(Markup(msg % tuple("<span style='color:black'>%s</span>" % escape(x) for x in args)), "success")
-
-
-################################################################################
-#  Ajax utilities
-################################################################################
-
-# LinkedList is used in Ajax below
-class LinkedList():
-    __slots__ = ('value', 'next', 'timestamp')
-
-    def __init__(self, value, nxt):
-        self.value = value
-        self.next = nxt
-        self.timestamp = time.time()
-
-    def append(self, value):
-        self.next = LinkedList(value, self)
-        return self.next
-
-
-class AjaxPool():
-    def __init__(self, size=1e4, expiration=3600):
-        self._size = size
-        self._key_list = self._head = LinkedList(None, None)
-        self._expiration = expiration
-        self._all = {}
-
-    def get(self, key, value=None):
-        return self._all.get(key, value)
-
-    def __contains__(self, key):
-        return key in self._all
-
-    def __setitem__(self, key, value):
-        self._key_list = self._key_list.append(key)
-        self._all[key] = value
-
-    def __getitem__(self, key):
-        res = self._all[key]
-        self.purge()
-        return res
-
-    def __delitem__(self, key):
-        del self._all[key]
-
-    def pop_key(self):
-        head = self._head
-        if head.next is None:
-            return None
-        else:
-            key = head.value
-            self._head = head.next
-            return key
-
-    def purge(self):
-        if self._size:
-            while len(self._all) > self._size:
-                key = self.pop_key()
-                if key in self._all:
-                    del self._all[key]
-        if self._expiration:
-            oldest = time.time() - self._expiration
-            while self._head.timestamp < oldest:
-                key = self.pop_key()
-                if key in self._all:
-                    del self._all[key]
-
-
-pending = AjaxPool()
-def ajax_url(callback, *args, **kwds):
-    if '_ajax_sticky' in kwds:
-        _ajax_sticky = kwds.pop('_ajax_sticky')
-    else:
-        _ajax_sticky = False
-    if not isinstance(args, tuple):
-        args = args,
-    nonce = hex(random.randint(0, 1 << 128))
-    pending[nonce] = callback, args, kwds, _ajax_sticky
-    return url_for('ajax_result', id=nonce)
-
-
-@app.route('/callback_ajax/<id>')
-def ajax_result(id):
-    if id in pending:
-        f, args, kwds, _ajax_sticky = pending[id]
-        if not _ajax_sticky:
-            del pending[id]
-        return f(*args, **kwds)
-    else:
-        return "<expired>"
-
-
-def ajax_more(callback, *arg_list, **kwds):
-    from .web_display import web_latex
-    inline = kwds.get('inline', True)
-    text = kwds.get('text', 'more')
-    nonce = hex(random.randint(0, 1 << 128))
-    if inline:
-        args = arg_list[0]
-        arg_list = arg_list[1:]
-        if isinstance(args, tuple):
-            res = callback(*arg_list)
-        elif isinstance(args, dict):
-            res = callback(**args)
-        else:
-            res = callback(args)
-        res = web_latex(res)
-    else:
-        res = ''
-    if arg_list:
-        url = ajax_url(ajax_more, callback, *arg_list, inline=True, text=text)
-        return """<span id='%(nonce)s'>%(res)s <a onclick="$('#%(nonce)s').load('%(url)s', function() { renderMathInElement($('#%(nonce)s').get(0),katexOpts);}); return false;" href="#">%(text)s</a></span>""" % locals()
-    else:
-        return res
-
-
-def image_src(G):
-    return ajax_url(image_callback, G, _ajax_sticky=True)
 
 
 def image_callback(G):

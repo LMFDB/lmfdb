@@ -5,8 +5,6 @@ from lmfdb.app import app
 from lmfdb.cluster_pictures.web_cluster_picture import (
     cp_knowl_guts)
 
-# assert cp_logger
-
 CP_credit = 'Alex Best, Raymond van Bommel'
 Completename = 'Completeness of the data'
 dnc = 'data not computed'

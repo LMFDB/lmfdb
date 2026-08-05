@@ -4,154 +4,9 @@
 {% if user_is_authenticated or BETA or key != '9Inv' %}
 {{heading | safe}}
 
-{% if value.type == 'L' %}
-  <div class="L">
-  <span class="heading">{{value.firstpart.heading}}</span>
-  {% for item in value.firstpart.entries %}
-    {% if (BETA and item.status == 'beta') or not item.status %}
-      <span class="L">{{item.url | safe}}</span>
-    {% endif %}
-  {% endfor %}
-  </div>
-  <table class="short">
-  <tr>
-  {% for item in value.secondpart.parts %}
-    {% if (BETA and item.status == 'beta') or not item.status %}
-      {% if item.colspan == "onecolumn" %}<td colspan=2>{% else %}<td>{% endif %}
-      {{item.url | safe}}</td>
-      {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-    {% endif %}
-  {% endfor %}</tr>
-  </table>
-
-{% elif value.type == 'multilevel' %}
-
-<table class="short">
-{% for entry in value.parts %}
-  {%- if entry.status -%}
-    {%- if BETA and entry.status == 'beta' -%}
-      <tr>
-      {%- if entry.style == "rotate" -%}
-        <td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
-      {%- else -%}
-        <td scope="col" colspan="2" class="full">{{ entry.url | safe }}</td>
-      {%- endif -%}
-      <td class="bor">
-      {%- if entry.part2 -%}
-        <table class="short2">
-        <tr class="bor">
-        {%- for pt2 in entry.part2 -%}
-          {% if (BETA and pt2.status =='beta') or not pt2.status %}
-            {%- if pt2.colspan == "onecolumn%" -%}
-              {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-              <td colspan="2">
-            {%- else -%}
-              <td>
-            {%- endif -%}
-            <span class="subtitle">{{ pt2.url | safe }}</span>
-            {%- if pt2.part3 -%}
-              <table class="short2"><tr>
-              {%- for pt3 in pt2.part3 -%}
-                {%- if pt3.colspan == "onecolumn"%}
-                  {%- if loop.index is even -%} </tr><tr> {%- endif -%}
-                  <td colspan="2">
-                {%- else -%}
-                  <td>
-                {%- endif -%}
-                {{ pt3.url | safe}}</td>
-                {%- if loop.index is even%}</tr><tr>{%- endif -%}
-              {%- endfor -%}
-              </tr></table>
-            {%- endif -%} {# if part3 in pt2 #}
-            {%- if pt2.colspan == "onecolumn"%} </td></tr><tr> {%- else -%} </td> {%- endif -%}
-            </td>
-            {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-          {% endif %}
-        {%- endfor -%} {# for pt2 #}
-        </tr>
-        </table>
-      {%- endif -%} {# if part2 in entry #}
-      </td>
-      </tr>
-    {%- endif -%} {# this concludes the BETA flag #}
-  {%- else -%} {# status not set #}
-    <tr>
-    {%- if entry.style == "rotate" -%}
-      <td width="40" class="borc rotation"><p class="test rotation">{{ entry.url | safe }}</p></td>
-    {%- else -%}
-      <td scope="col" colspan="2" class="full">{{ entry.url | safe }}</td>
-    {%- endif -%}
-    <td class="bor">
-    {%- if entry.part2 -%}
-      <table class="short2">
-      <tr class="bor">
-      {%- for pt2 in entry.part2 -%}
-        {%- if pt2.colspan == "onecolumn"%} </tr><tr><td colspan="2"> {%- else -%}<td>{%- endif -%}
-        {% if pt2.status %}
-          {%- if BETA and pt2.status == 'beta' -%}
-            <span class="subtitle">{{ pt2.url | safe }}</span>
-            {%- if pt2.part3 -%}
-              <table class="short2" border="0">
-              <tr>
-              {%- for pt3 in pt2.part3 -%}
-                {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
-                  {%- if pt3.colspan == "onecolumn" -%}
-                    {%- if loop.index is even -%} </tr><tr> {%- endif -%}
-                    <td colspan="2">
-                  {%- else -%}
-                    <td>
-                  {%- endif -%}
-                  <span class="subtitle">{{ pt3.url | safe }}</span></td>
-                  {%- if pt3.colspan == "onecolumn" -%}
-                    {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
-                  {%- endif -%}
-                  {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-                {% endif %}
-              {%- endfor -%}
-              </tr>
-              </table>
-            {%- endif -%}
-          {% endif %}
-        {%- else -%} {# pt2.status not set #}
-          <span class="subtitle">{{ pt2.url | safe }}</span>
-          {%- if pt2.part3 -%}
-            <table class="short2">
-            <tr>
-            {%- for pt3 in pt2.part3 -%}
-              {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
-                {%- if pt3.colspan == "onecolumn" -%}
-                  {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
-                  <td colspan="3">
-                {%- else -%}
-                  <td>
-                {%- endif -%}
-                {%- if BETA and pt3.status == "beta" -%}
-                  <span class="beta",class="subtitle">{{pt3.url|safe}}</span></td>
-                {%- else -%}
-                  <span class="subtitle">{{ pt3.url | safe }}</span></td>
-                {%- endif -%}
-                {%- if pt3.colspan == "onecolumn" -%}
-                  {%- if loop.index is odd -%} </tr><tr> {%- endif -%}
-                {%- endif -%}
-                {%- if loop.index is even -%} </tr><tr> {%- endif -%}
-              {%- endif -%}
-            {%- endfor -%}
-            </tr>
-            </table>
-          {%- endif -%}
-        {%- endif -%}
-        </td>
-        {%- if loop.index is even -%}</tr><tr>{%- endif -%}
-      {%- endfor -%} {# if part2 in entry #}
-      </tr>
-      </table>
-    {%- endif -%}
-  {%- endif -%}
-{% endfor %} {# for entry #}
-</table>
 
 
-{% elif value.type == 'simple' %}
+{% if value.type == 'simple' %}
 
   <table class="short">
   <tr>
@@ -167,9 +22,23 @@
     {%- else -%}
       <td scope="col" width="20%">
     {%- endif -%}
+    {%- if entry.collapsible and entry.part2 -%}
+      <span class="collapsible-container">
+        {{entry.title | safe}}
+	<div class="collapsible-content">
+      {%- for pt2 in entry.part2 -%}
+        {%- if not BETA and pt2.status == "notonbeta" -%}
+          <div><span class="subtitle">{{ pt2.url | safe }}</span></div>
+        {%- elif (BETA and pt2.status == 'beta') or not pt2.status -%}
+          <div><span class="subtitle">{{ pt2.url | safe }}</span></div>
+        {%- endif -%}
+      {%- endfor -%}
+      </div></td>
+    {%- else -%}
         {{entry.url | safe}}
     {%- endif -%}
-  {%- if entry.part2 -%}
+  {%- endif -%}
+  {%- if entry.part2 and not entry.collapsible -%}
     <td scope="col" width="40%">
     {%- for pt2 in entry.part2 -%}
       {%- if not BETA and pt2.status == "notonbeta" -%}
@@ -213,3 +82,90 @@
 {%- endif -%} {# if (BETA and value.status == 'beta') or not value.status #}
 {%- endfor -%} {# for key, heading, value in sidebar.data #}
 
+  <script>
+    $(document).ready(function() {
+
+      function setToggleState($toggle, expanded, label) {
+          $toggle.toggleClass('open', expanded);
+          $toggle.attr('aria-expanded', expanded ? 'true' : 'false');
+          $toggle.attr('aria-label', (expanded ? 'Collapse ' : 'Expand ') + label);
+      }
+
+      // ── Collapsible sub-menu toggles (Elliptic curves, Abstract groups, …) ──
+      $('.collapsible-container').each(function(index) {
+          var $container = $(this);
+          var $content   = $container.find('.collapsible-content');
+          // Key from the container's OWN text only, excluding child elements
+          var ownText = $.trim($container.clone().children().remove().end().text());
+          var key = 'lmfdb_sidebar_entry_' +
+              ownText.replace(/\s+/g, '_').substring(0, 30);
+          var contentId = 'lmfdb-sidebar-entry-' + index;
+          $content.attr('id', contentId);
+
+          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          $chev.attr('aria-controls', contentId);
+          $content.before($chev);
+
+          // Open by default; collapse only if explicitly stored closed.
+          if (localStorage.getItem(key) === '0') {
+              $content.hide();
+              setToggleState($chev, false, ownText);
+          } else {
+              setToggleState($chev, true, ownText);
+          }
+
+          $container.on('click', function(e) {
+              // Let clicks inside the submenu through (links must work)
+              if ($(e.target).closest('.collapsible-content').length) return;
+
+              e.stopPropagation();
+              e.preventDefault();
+              var expanded = $chev.attr('aria-expanded') !== 'true';
+              setToggleState($chev, expanded, ownText);
+              $content.slideToggle(150);
+              localStorage.setItem(key, expanded ? '1' : '0');
+          });
+      });
+
+      // ── Section (h2) collapse/expand ─────────────────────────────────────────
+      $('#sidebar h2').each(function(index) {
+          var $h2      = $(this);
+          var $content = $h2.nextUntil('h2').not('script');
+          if ($content.length === 0) return; // 'single' type – nothing to collapse
+          var headingText = $.trim($h2.text());
+
+          // Wrap all content between this h2 and the next into one div
+          $content.wrapAll('<div class="section-content"></div>');
+          var $section = $h2.next('.section-content');
+          var sectionId = 'lmfdb-sidebar-section-' + index;
+          $section.attr('id', sectionId);
+
+          // Append the chevron into the h2
+          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          $chev.attr('aria-controls', sectionId);
+          $h2.append($chev);
+          $h2.css('cursor', 'pointer');
+
+          // Restore persisted state (default: open)
+          var key = 'lmfdb_sidebar_sec_' + headingText.replace(/\s+/g, '_').substring(0, 30);
+          if (localStorage.getItem(key) === '0') {
+              $section.hide();
+              setToggleState($chev, false, headingText);
+          } else {
+              setToggleState($chev, true, headingText);
+          }
+
+          $h2.on('click', function(e) {
+              // Preserve any heading link that may be added in the future.
+              if ($(e.target).closest('a').length) return;
+              e.stopPropagation();
+              e.preventDefault();
+              var expanded = $chev.attr('aria-expanded') !== 'true';
+              setToggleState($chev, expanded, headingText);
+              $section.slideToggle(150);
+              localStorage.setItem(key, expanded ? '1' : '0');
+          });
+      });
+
+  });
+  </script>

@@ -1,0 +1,42 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div>
+  {{ info.stats.cc_summary | safe }}
+</div>
+
+
+<h2>Browse</h2>
+
+<p>
+  By {{KNOWL('group.order_conjugacy_class', 'order')}}:
+  {% for rnge in info.order_list %}
+    <a href="?order={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{KNOWL('group.size_conjugacy_class', 'size')}}:
+  {% for rnge in info.size_list %}
+    <a href="?size={{rnge}}">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+
+
+<h2 id='search_h2'> Search </h2>
+
+<form class="re-search" name="search" method="get" action={{url_for('.conjugacy_class_index')}}>
+  {{ info.search_array.html() | safe }}
+</form>
+
+
+
+<h2> Find </h2>
+
+
+<form name="search" method = "get" action="{{url_for('.conjugacy_class_index')}}">
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+
+{% endblock %}

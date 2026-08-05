@@ -29,7 +29,7 @@ class CodeSnippet():
         self.pre, self.post = pre, post
 
         # edit these when adding support for more languages
-        self.comments = {'magma': '//', 'sage': '#',
+        self.comments = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
         self.full_names = {"pari": "Pari/GP", "sage": "SageMath", "sage_gap": "SageMath (using Gap)",
                            "magma": "Magma", "oscar": "Oscar", "gap": "Gap"}

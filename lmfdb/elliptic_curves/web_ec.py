@@ -9,7 +9,6 @@ from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
 from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
-from lmfdb.logger import make_logger
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, lazy_attribute, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 
@@ -67,8 +66,6 @@ def class_cremona_label(conductor, iso_class):
 
 def cremona_label_to_lmfdb_label(clab):
     return clab if "." in clab else next(db.ec_curvedata.search({"Clabel": clab}, projection='lmfdb_label'))
-
-logger = make_logger("ec")
 
 # S_LABEL_RE assumes surjective determinant, but we need extended Slabels for EC/NF
 # This can be removed if/when we add modular curves with non-surjective determinant to the modular curves database
@@ -329,7 +326,6 @@ class WebEC():
 
             - dbdata: the data from the database
         """
-        logger.debug("Constructing an instance of WebEC")
         self.__dict__.update(dbdata)
         self.make_curve()
         assert 'ainvs' in self.data
@@ -628,6 +624,9 @@ class WebEC():
             self.friends.append((f'Minimal quartic twist {data["min_quartic_twist_label"]}', data['min_quartic_twist_url']))
         self.friends.append(('All twists ', url_for(".rational_elliptic_curves", jinv=data['j_invariant'])))
 
+        if db.ec_nfcurves.count({'q_curve':True,'base_change':{'$contains':self.lmfdb_label}}) > 0:
+            self.friends.append(('Base changes ', url_for('ecnf.index', base_change_label=self.lmfdb_label)))
+
         lfun_url = url_for("l_functions.l_function_ec_page", conductor_label=N, isogeny_class_label=iso)
         origin_url = lfun_url.lstrip('/L/').rstrip('/')
 
@@ -677,8 +676,7 @@ class WebEC():
         else:
             self.title = "Elliptic curve with LMFDB label {}".format(self.lmfdb_label)
 
-        self.bread = [('Elliptic curves', url_for("ecnf.index")),
-                           (r'$\Q$', url_for(".rational_elliptic_curves")),
+        self.bread = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves")),
                            ('%s' % N, url_for(".by_conductor", conductor=N)),
                            ('%s' % iso, url_for(".by_double_iso_label", conductor=N, iso_label=iso)),
                            ('%s' % num,' ')]
@@ -889,10 +887,14 @@ class WebEC():
         tg['data'] = tgextra = []
 
         # find all base changes of this curve in the database, if any:
-        bcs = list(db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}}, projection='label'))
-        # extract the fields from the labels of the base-change curves:
-        bc_fields = [lab.split("-")[0] for lab in bcs]
-        bc_pols = [db.nf_fields.lookup(lab, projection='coeffs') for lab in bc_fields]
+        nf_to_curve = {rec["field_label"]: rec["label"]
+                       for rec in db.ec_nfcurves.search({'base_change': {'$contains': [self.lmfdb_label]}},
+                                                        ["field_label", "label"])}
+        # look up all the fields in the growth table in a single query
+        # (the projection must include the columns needed by field_pretty)
+        pol_to_nf = {tuple(rec["coeffs"]): rec
+                     for rec in db.nf_fields.search({"$or": [{"coeffs": tgd['field']} for tgd in tgdata]},
+                                                    ["label", "coeffs", "disc_abs", "disc_sign", "subfields", "subfield_mults"])}
         tg['fields_missing'] = False
 
         for tgd in tgdata:
@@ -900,12 +902,16 @@ class WebEC():
             tg1['bc_label'] = "not in database"
             tg1['d'] = tgd['degree']
             F = tgd['field']
-            tg1['f'] = formatfield(F)
-            if "missing" in tg1['f']:
+            nf_data = pol_to_nf.get(tuple(F))
+            if nf_data is None:
+                tg1['f'] = formatfield(F, data={"label": "N/A"})
+                bcc = None
                 tg['fields_missing'] = True
+            else:
+                tg1['f'] = formatfield(F, data=nf_data)
+                bcc = nf_to_curve.get(nf_data["label"])
             T = tgd['torsion']
             tg1['t'] = r'\(' + r' \oplus '.join(r'\Z/{}\Z'.format(n) for n in T) + r'\)'
-            bcc = next((lab for lab, pol in zip(bcs, bc_pols) if pol == F), None)
             if bcc:
                 from lmfdb.ecnf.main import split_full_label
                 F, NN, I, C = split_full_label(bcc)
@@ -929,6 +935,7 @@ class WebEC():
         ## {{data.tg.maxd}} such that...".
 
         tg['maxd'] = 24
+
     @lazy_attribute
     def code(self):
         # read in code.yaml from current directory:

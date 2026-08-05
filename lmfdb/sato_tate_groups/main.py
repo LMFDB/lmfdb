@@ -1075,6 +1075,7 @@ class STSearchArray(SearchArray):
         'supgroup_multiplicities': False,
         'component_group_number': False,
     }
+    has_diagram = False
 
     def __init__(self):
         weight = TextBox(

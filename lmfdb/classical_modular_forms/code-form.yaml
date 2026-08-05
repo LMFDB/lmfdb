@@ -8,11 +8,6 @@ prompt:
   pari:   'gp'
   magma:  'magma'
 
-logo:
-  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
-
 comment:
   sage: |
     #
@@ -20,14 +15,6 @@ comment:
     \\
   magma: |
     //
-
-not-implemented:
-  sage: |
-    # (not yet implemented)
-  pari: |
-    \\\\ (not yet implemented)
-  magma: |
-    // (not yet implemented)
 
 header:
   pari: |
@@ -50,7 +37,7 @@ initialize-newspace-common: &initialize-newspace-common
     mf = mfinit([N,k,chi],0)
     lf = mfeigenbasis(mf)
   magma: |
-    //Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
     chi := DirichletCharacter("{N}.{conrey_index}");
     S:= CuspForms(chi, {k});
     N := Newforms(S);

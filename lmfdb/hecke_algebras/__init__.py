@@ -1,10 +1,8 @@
 
 from lmfdb.app import app
-from lmfdb.logger import make_logger
 from flask import Blueprint
 
 hecke_algebras_page = Blueprint("hecke_algebras", __name__, template_folder='templates', static_folder="static")
-hecke_algebras_logger = make_logger(hecke_algebras_page)
 
 
 @hecke_algebras_page.context_processor

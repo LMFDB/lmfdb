@@ -1,0 +1,55 @@
+{% set search_header = 'Refine diagram search' %}
+
+<h2 id='search_h2'>{{KNOWL('intro.search', search_header)}}
+  {% if info.search_array.has_advanced_inputs(info) %}
+  <button id="advancedtoggle" href="#">Advanced search options</button>
+  {% endif %}
+</h2>
+
+<form class='re-search'>
+  {# Hidden inputs - exclude 'count' for diagram search since it's shown explicitly #}
+  <input type="hidden" name="start" value="{{info.start}}" />
+  <input type="hidden" name="hst" value="{{info.search_type}}" />
+
+  {{ info.search_array.main_table(info) | safe }}
+  <table>
+
+    {# Horizontal separator between search options and diagram options #}
+    <tr style="height: 30px;">
+      <td colspan="8"><hr style="margin: 10px 0; border: 0; border-top: 1px solid #ccc;"></td>
+    </tr>
+
+    {# Diagram-specific controls - rendered in same table for column alignment #}
+    <tr>
+      {% for box in info.diagram_boxes %}
+      {{ box.label_html(info) | safe }}
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for box in info.diagram_boxes %}
+      {{ box.input_html(info) | safe }}
+      {% endfor %}
+    </tr>
+  </table>
+
+  {# Buttons #}
+  {{ info.search_array.buttons(info) | safe }}
+
+  <input type="hidden" name="showcol" value="{{info.showcol}}" />
+  <input type="hidden" name="hidecol" value="{{info.hidecol}}" />
+  <input type="hidden" name="sort_order" value="{{info.sort_order}}" />
+  <input type="hidden" name="sort_dir" value="{{info.sort_dir}}" />
+</form>
+
+<script>
+{% if info.search_array.has_advanced_inputs(info) %}
+show_advancedQ();
+{% endif %}
+
+function set_fresh() {
+  $(".search_stale").removeClass("search_stale").addClass("search_fresh");
+}
+
+$("input").on("input", set_fresh);
+$("select").on("change", set_fresh);
+</script>

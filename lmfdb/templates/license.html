@@ -1,0 +1,39 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<div class="narrow-body">
+<h1>Data license</h1>
+
+<p> The <a href="{{url_for('API.options')}}">database</a> underpinning the LMFDB is licensed under the <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Creative Commons Attribution-ShareAlike 4.0 International License</a> (CC-BY-SA).</p>
+
+<h1>Code licenses</h1>
+
+<p> The <a href="https://github.com/LMFDB/lmfdb">code</a> for generating this website is licensed under the <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GNU General Public License, version 2</a> (GPL v2).</p>
+<p> Copyright for the code used to generate the data that has been contributed to the LMFDB is held by individual contributors.  We encourage contributors to choose an <a href="https://opensource.org/licenses">open source license</a>.</p>
+
+<h1>Frequently asked questions</h1>
+
+<h4>Is mathematical data really copyrightable?</h4>
+
+<p>Indeed, the individual elements of a dataset of mathematical objects are not copyrightable.  However, most jurisdictions provide for copyright on a the collection as a whole.  For example,</p>
+<ul>
+  <li>In the <a href="https://eur-lex.europa.eu/EN/legal-content/summary/legal-protection-databases.html">European Union</a>, "a database will be protected by copyright if the selection or arrangement of its contents constitute the creator's own intellectual creation."</li>
+  <li>In the <a href="https://www.copyright.gov/reports/appendix.pdf">United States</a>, databases are protected when "formed by the collection and assembling of preexisting materials or of data that are selected, coordinated, or arranged in such a way that the resulting work as a whole constitutes an original work of authorship."</li>
+</ul>
+<p>For example, we believe that <a href="https://beta.lmfdb.org/rcs">completeness claims</a> are protected under these clauses, as are search results for queries.  Individual facts about L-functions, modular forms, curves or fields are not.  Of course, we encourage you to <a href="{{url_for('citation')}}">cite us</a> whenever you use the LMFDB!</p>
+
+<h4>How should I provide attribution?</h4>
+
+<p>There are details available on our <a href="{{url_for('citation')}}">citation</a> page.</p>
+
+<h4>How does this apply to training an AI model using this data?</h4>
+
+<p>See <a href="https://creativecommons.org/using-cc-licensed-works-for-ai-training-2/">this guidance</a> from Creative Commons.  We also encourage you to use more efficient <a href="{{url_for('API.options')}}">access options</a> rather than scraping the website directly, and to rate limit your website requests in order to not overload our servers.</p>
+
+<h4>I have another question...</h4>
+
+<p>If you have additional questions about LMFDB licenses, please <a href="{{url_for('contact')}}">contact us</a>.</p>
+</div>
+
+{% endblock %}

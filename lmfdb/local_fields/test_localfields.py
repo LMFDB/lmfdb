@@ -59,3 +59,16 @@ create_record(row) =
     field = Polrev(mapget(out, "coeffs"));
     mapput(~out, "field", field);
     return(out);''' in page
+
+    def test_families_search_download(self):
+        # Absolute families: download should produce a file (not just refresh the page).  Issue #6829.
+        r = self.tc.get('/padicField/?Submit=sage&download=1&query=%7B%27n0%27%3A+1%2C+%27p%27%3A+2%2C+%27n%27%3A+2%7D&p=2&n=2&search_type=Families')
+        assert 'attachment' in r.headers.get('Content-Disposition', '')
+        page = r.get_data(as_text=True)
+        assert '"2.2.1.0a"' in page
+        assert '"2.1.2.2a"' in page
+        # Relative families: download should also work and include the base field label.
+        r = self.tc.get('/padicField/?Submit=sage&download=1&query=%7B%27base%27%3A+%272.2.1.0a1.1%27%2C+%27n%27%3A+2%7D&n=2&base=2.2.1.0a1.1&relative=1&search_type=Families')
+        assert 'attachment' in r.headers.get('Content-Disposition', '')
+        page = r.get_data(as_text=True)
+        assert '"2.2.1.0a1.1"' in page
