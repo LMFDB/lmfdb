@@ -1618,11 +1618,19 @@ def parse_subfield(inp, query, qfield):
     if "," in inp:
         # A comma-separated list of subfields means AND of the containment
         # conditions, i.e. fields containing every listed subfield (equivalently,
-        # their compositum).  input_to_subfield may return None for empty pieces
-        # (e.g. a trailing comma), which we drop.
-        sfs = [sf for sf in (input_to_subfield(f) for f in inp.split(",")) if sf]
-        if sfs:
-            query[qfield] = {"$contains": sfs}
+        # their compositum).  An empty entry (from a leading, trailing or
+        # repeated comma) is an error rather than something to drop, since
+        # dropping it would silently broaden the search.
+        empty_entry = "Entries in the comma-separated list must be nonempty."
+        parts = inp.split(",")
+        if not all(parts):
+            raise SearchParsingError(empty_entry)
+        sfs = [input_to_subfield(part) for part in parts]
+        # input_to_subfield returns None for an entry that is empty once
+        # unsupported characters have been removed.
+        if not all(sfs):
+            raise SearchParsingError(empty_entry)
+        query[qfield] = {"$contains": sfs}
     else:
         sf = input_to_subfield(inp)
         if sf:  # Might return none

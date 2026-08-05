@@ -1,4 +1,7 @@
+from psycodict.utils import SearchParsingError
+
 from lmfdb.tests import LmfdbTest
+from lmfdb.utils.search_parsing import parse_subfield
 
 class NumberFieldTest(LmfdbTest):
     # All tests should pass
@@ -46,17 +49,62 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.5.1')
         self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.12.1')
 
+    def parse_subfield_query(self, inp):
+        """The query produced by the "Intermediate field" search box."""
+        query = {}
+        parse_subfield({'subfield': inp}, query, field='subfield', qfield='subfields')
+        return query
+
+    def test_parse_subfield(self):
+        # A single intermediate field gives a scalar $contains, as it did before
+        # lists were allowed
+        self.assertEqual(self.parse_subfield_query('x^2-2'),
+                         {'subfields': {'$contains': '-2.0.1'}})
+        # A comma-separated list gives a single $contains holding every entry, in
+        # the order given.  On the text[] subfields column that compiles to the
+        # Postgres containment subfields @> ARRAY[...], i.e. the AND of the
+        # containment conditions -- not the first entry alone, and not an OR.
+        self.assertEqual(self.parse_subfield_query('x^2-2,x^2-3'),
+                         {'subfields': {'$contains': ['-2.0.1', '-3.0.1']}})
+        self.assertEqual(self.parse_subfield_query('x^2-3,x^2-2'),
+                         {'subfields': {'$contains': ['-3.0.1', '-2.0.1']}})
+        # Labels, polynomials and nicknames may be mixed freely
+        self.assertEqual(self.parse_subfield_query('2.2.8.1,Qsqrt3'),
+                         {'subfields': {'$contains': ['-2.0.1', '-3.0.1']}})
+        # Whitespace is stripped by the search parser
+        self.assertEqual(self.parse_subfield_query('x^2-2, x^2-3'),
+                         {'subfields': {'$contains': ['-2.0.1', '-3.0.1']}})
+
+    def test_parse_subfield_errors(self):
+        # An empty entry, from a leading, trailing or repeated comma, is an error:
+        # dropping it would silently weaken the search, and dropping the only
+        # entries of "," would drop the constraint altogether.  An entry that is
+        # empty only after unsupported characters are removed ('é' below) is
+        # an error too, and a malformed entry is an error as before.
+        for bad in [',', 'x^2-2,', ',x^2-2', 'x^2-2,,x^2-3', 'x^2-2,é', 'x^2-2,notafield']:
+            query = {}
+            # The parser flashes the error before re-raising, so it needs a request
+            with self.app.test_request_context():
+                with self.assertRaises(SearchParsingError):
+                    parse_subfield({'subfield': bad}, query, field='subfield', qfield='subfields')
+            self.assertEqual(query, {}, "%s did not leave the query untouched" % bad)
+
     def test_search_subfield(self):
-        # Single intermediate field (unchanged behavior): fields containing Q(sqrt2)
-        self.check_args_with_timeout('/NumberField/?subfield=x%5E2-2', '4.0.256.1')
-        # Multiple intermediate fields: a comma-separated list matches fields
-        # containing every listed subfield (the compositum).  Q(sqrt2,sqrt3) =
-        # 4.4.2304.1 contains both Q(sqrt2) and Q(sqrt3).
-        self.check_args_with_timeout('/NumberField/?subfield=x%5E2-2%2Cx%5E2-3', '4.4.2304.1')
-        # Same search given by field labels instead of polynomials
-        self.check_args_with_timeout('/NumberField/?subfield=2.2.8.1%2C2.2.12.1', '4.4.2304.1')
-        # A malformed entry in the list gives a clean error, not a 500
+        # An end to end check that a list search really is an AND.  Among the
+        # quartic fields of discriminant at most 3000, both Q(sqrt2,sqrt3) =
+        # 4.4.2304.1 and Q(zeta_8) = 4.0.256.1 contain Q(sqrt2), but only the
+        # first also contains Q(sqrt3), so it alone answers the list search.
+        # (The degree and discriminant bounds keep the search fast; the query
+        # itself is checked without a database search in test_parse_subfield.)
+        self.check_args('/NumberField/?degree=4&discriminant=1-3000&subfield=x%5E2-2',
+                        ['4.4.2304.1', '4.0.256.1'])
+        self.check_args('/NumberField/?degree=4&discriminant=1-3000&subfield=x%5E2-2%2Cx%5E2-3',
+                        '4.4.2304.1')
+        self.not_check_args('/NumberField/?degree=4&discriminant=1-3000&subfield=x%5E2-2%2Cx%5E2-3',
+                            '4.0.256.1')
+        # A malformed or empty entry gives a clean error page, not a 500
         self.check_args('/NumberField/?subfield=x%5E2-2%2Cnotafield', 'not a valid field nickname or label')
+        self.check_args('/NumberField/?subfield=x%5E2-2%2C', 'Entries in the comma-separated list must be nonempty')
 
     def test_search_disc(self):
         self.check_args('/NumberField/?discriminant=1988-2014', '401') # factor of one of the discriminants
