@@ -24,8 +24,10 @@ class RandomRedirectTest(LmfdbTest):
         '/GaloisGroup/random': 'Galois group',
         '/Genus2Curve/Q/random/': 'Genus 2',
         '/Groups/Abstract/random': 'Abstract',
-        '/Groups/GLnC/random': 'representation',
-        '/Groups/GLnQ/random': 'representation',
+        # the lowercase word only appeared in the main-branch sidebar, which
+        # the alpha homepage replaces; the pages themselves say Representation
+        '/Groups/GLnC/random': 'Representation',
+        '/Groups/GLnQ/random': 'Representation',
         '/HigherGenus/C/Aut/random': 'genus',
         '/ModularForm/GL2/TotallyReal/random': 'Hilbert',
         '/random': 'LMFDB',  # homepage random redirects to various objects

@@ -463,10 +463,19 @@ class WebModCurve(WebObj):
             friends.append(("L-function", "/L" + url_for_mf_label(self.newforms[0])))
         else:
             friends.append(("L-function not available",""))
-        if self.genus > 0 and self.trace_hash is not None:
-            for r in self.table.search({'trace_hash':self.trace_hash},['label','name','newforms']):
-                if r['newforms'] == self.newforms and r['label'] != self.label:
-                    friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
+        if self.genus > 0 and self.trace_hash is not None and self.newforms:
+            # newforms now live in modcurve_decomposition (keyed by Gassmann class)
+            # rather than gps_gl2zhat, so look them up there for each candidate sibling
+            candidates = [r for r in self.table.search({'trace_hash': self.trace_hash}, ['label', 'name', 'coarse_label'])
+                          if r['label'] != self.label]
+            classes = sorted({".".join(r['coarse_label'].split(".")[:4]) for r in candidates})
+            if classes:
+                class_newforms = {rec['gassman_class']: rec['newforms']
+                                  for rec in db.modcurve_decomposition.search({'gassman_class': {'$in': classes}},
+                                                                             ['gassman_class', 'newforms'])}
+                for r in candidates:
+                    if class_newforms.get(".".join(r['coarse_label'].split(".")[:4])) == self.newforms:
+                        friends.append(("Modular curve " + (r['name'] if r['name'] else r['label']),url_for("modcurve.by_label", label=r['label'])))
         return friends
 
     @lazy_attribute
@@ -1044,6 +1053,7 @@ class WebModCurve(WebObj):
     @lazy_attribute
     def rational_points_description(self):
         curve = self
+        desc = ""
         if curve.known_degree1_noncm_points or curve.pointless is False:
             if curve.genus == 1 and curve.rank is None:
                 desc = r'This modular curve is an elliptic curve, but the rank has not been computed'
@@ -1088,7 +1098,10 @@ class WebModCurve(WebObj):
                         url_for('.low_degree_points', curve=curve.label, degree=1),
                         pluralize(curve.known_degree1_points, "known rational point"))
         else:
-            if curve.obstructions == [0]:
+            if curve.obstructions is None:
+                # Obstruction data not computed (or not yet loaded)
+                desc = 'This modular curve has no known rational points.'
+            elif curve.obstructions == [0]:
                 desc = 'This modular curve has no real points, and therefore no rational points.'
             elif 0 in curve.obstructions:
                 desc = fr'This modular curve has no real points and no $\Q_p$ points for $p={curve.obstruction_primes}$, and therefore no rational points.'

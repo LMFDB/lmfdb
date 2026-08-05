@@ -55,11 +55,14 @@ from lmfdb.shimura_curves.web_curve import (
 )
 from lmfdb.modular_curves.main import CP_LABEL_GENUS_RE
 
-coarse_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+\.[a-z]+\.\d+"
-fine_label_re = r"\d+\.\d+\.\d+\.\d+\.\d+-\d+\.\d+\.[a-z]+\.\d+\.\d+"
+coarse_label_re = r"\d+\.\d+\.(?:\d+\.)?\d+\.\d+\.\d+\.[a-z]+\.\d+"
+fine_label_re = r"\d+\.\d+\.(?:\d+\.)?\d+\.\d+\.\d+-\d+\.\d+\.[a-z]+\.\d+\.\d+"
 LABEL_RE = re.compile(f"({coarse_label_re})|({fine_label_re})")
 FINE_LABEL_RE = re.compile(fine_label_re)
-NAME_RE = re.compile(r"X\(\d+(;|,)\d+\)")
+# Accepts the standard names X(D;N), X(D,M;N) and the starred (Atkin-Lehner
+# quotient) names in both spellings X*(D;N) and X^*(D;N); canonicalize_name
+# turns all of them into the form stored in the database.
+NAME_RE = re.compile(r"X(\^?\*)?\(\d+(,\d+)?(;|,)\d+\)")
 
 def learnmore_list():
     return [('Source and acknowledgments', url_for(".how_computed_page")),
@@ -86,6 +89,8 @@ def index_Q():
     if request.args:
         return shimcurve_search(info)
     title = r"Shimura curves over $\Q$"
+    info["discb_list"] = ["6-50", "50-100", "100-150", "150-200", "200-"]
+    info["disco_list"] = ["6-50", "50-100", "100-150", "150-200", "200-"]
     info["level_list"] = ["1-4", "5-8", "9-12", "13-16", "17-23", "24-"]
     info["genus_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
     info["rank_list"] = ["0", "1", "2", "3", "4-6", "7-20", "21-100", "101-"]
@@ -160,7 +165,7 @@ def lat_diagram(label):
     info = {"dojs": dojs}
     info.update(display_opts)
     return render_template(
-        "lat_diagram_page.html",
+        "shimcurve_lat_diagram_page.html",
         dojs=dojs,
         info=info,
         title="Diagram of nearby Shimura curves for %s" % label,
@@ -232,14 +237,35 @@ def shimcurve_lmfdb_label(label):
         lmfdb_label = label
     elif NAME_RE.fullmatch(label.upper()):
         label_type = "name"
-        lmfdb_label = db.gps_shimura_test.lucky({"name": canonicalize_name(label)}, "label")
+        # canonicalize_name maps both starred spellings X*(D;N) and X^*(D;N)
+        # to the canonical form X^*(D;N) used in the name column
+        lmfdb_label = db.gps_shimura_test.lucky({"name": canonicalize_name(label.upper())}, "label")
     else:
         label_type = "label"
         lmfdb_label = None
     return lmfdb_label, label_type
 
 def shimcurve_jump(info):
-    labels = (info["jump"]).split("*")
+    jump = info["jump"].strip()
+    # Starred names such as X*(6;1) or X^*(6;1) contain an asterisk that is
+    # part of the name, so we first try to interpret the whole input as a
+    # single label or name before treating * as a fiber product separator.
+    lmfdb_label, label_type = shimcurve_lmfdb_label(jump)
+    if lmfdb_label is not None:
+        return redirect(url_for_shimcurve_label(lmfdb_label))
+    if label_type == "name":
+        # A syntactically valid name (possibly starred) that is not in the
+        # database; the asterisk is not a fiber product separator here.
+        flash_error("There is no Shimura curve in the database with name %s", jump)
+        return redirect(url_for(".index"))
+    # Now interpret * as a fiber product separator.  An asterisk that is part
+    # of a starred name is always followed by an open parenthesis, so we only
+    # split at asterisks that are not.
+    labels = [piece.strip() for piece in re.split(r"\*(?!\()", jump)]
+    labels = [piece for piece in labels if piece]
+    if len(labels) <= 1:
+        flash_error("There is no Shimura curve in the database with %s %s", label_type, jump)
+        return redirect(url_for(".index"))
     lmfdb_labels = []
     for label in labels:
         lmfdb_label, label_type = shimcurve_lmfdb_label(label)
@@ -247,31 +273,45 @@ def shimcurve_jump(info):
             flash_error("There is no Shimura curve in the database with %s %s", label_type, label)
             return redirect(url_for(".index"))
         lmfdb_labels.append(lmfdb_label)
-    lmfdb_labels_not_X1 = [l for l in lmfdb_labels if l != "1.1.0.a.1"]
-    if len(lmfdb_labels) == 1:
-        label = lmfdb_labels[0]
-        return redirect(url_for_shimcurve_label(label))
-    elif len(lmfdb_labels_not_X1) == 1:
-        label = lmfdb_labels_not_X1[0]
-        return redirect(url_for_shimcurve_label(label))
-    else:
+    # Check that all the factors exist and get the data needed below
+    curvedata = {rec["label"]: rec for rec in db.gps_shimura_test.search(
+        {"label": {"$in": lmfdb_labels}},
+        ["label", "index", "discB", "discO", "level", "deg_mu"])}
+    for label in lmfdb_labels:
+        if label not in curvedata:
+            flash_error("There is no Shimura curve in the database with label %s", label)
+            return redirect(url_for(".index"))
+
+    def ambient(label):
+        rec = curvedata[label]
+        return (rec["discB"], rec["discO"], rec["level"], rec["deg_mu"])
+    # Analogue of X(1) in the modular curve jump: a factor of index 1
+    # corresponds to the full ambient group, so it is the base of the fiber
+    # product and the fiber product with it changes nothing (as long as it has
+    # the same ambient data as the other factor).
+    nontrivial = [l for l in lmfdb_labels if curvedata[l]["index"] != 1]
+    if len(nontrivial) == 1:
+        label = nontrivial[0]
+        if all(ambient(l) == ambient(label) for l in lmfdb_labels):
+            return redirect(url_for_shimcurve_label(label))
+    # Check labels are indeed distinct
+    if len(set(nontrivial)) != len(nontrivial):
+        flash_error("Fiber product decompositions cannot contain repeated terms")
+        return redirect(url_for(".index"))
+    label = None
+    if nontrivial and "factorization" in db.gps_shimura_test.search_cols:
         # Get factorization for each label
-        factors = list(db.gps_shimura_test.search({"label": {"$in": lmfdb_labels_not_X1}},
-                                                  ["label","factorization"]))
+        factors = list(db.gps_shimura_test.search({"label": {"$in": nontrivial}},
+                                                  ["label", "factorization"]))
         factors = [(f["factorization"] if f["factorization"] != [] else [f["label"]])
                    for f in factors]
-        # Check labels are indeed distinct
-        if len(factors) != len(lmfdb_labels_not_X1):
-            flash_error("Fiber product decompositions cannot contain repeated terms")
-            return redirect(url_for(".index"))
         # Get list of all factors, lexicographically sorted
         factors = sorted(sum(factors, []), key=key_for_numerically_sort)
         label = db.gps_shimura_test.lucky({'factorization': factors}, "label")
-        if label is None:
-            flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", info["jump"])
-            return redirect(url_for(".index"))
-        else:
-            return redirect(url_for_shimcurve_label(label))
+    if label is None:
+        flash_error("There is no Shimura curve in the database isomorphic to the fiber product %s", jump)
+        return redirect(url_for(".index"))
+    return redirect(url_for_shimcurve_label(label))
 
 def blankzeros(n):
     return "$%o$"%n if n else ""
@@ -283,38 +323,42 @@ shimcurve_columns = SearchColumns(
         MathCol("level", "shimcurve.level", "Level"),
         MathCol("index", "shimcurve.index", "Index"),
         MathCol("discB", "shimcurve.discb", r"$\operatorname{Disc}(B)$"),
-        MathCol("discO", "shimcurve.disco", r"$\operatorname{nrd}(O)$"),
+        MathCol("discO", "shimcurve.disco", r"$\operatorname{discrd}(O)$"),
+        MathCol("deg_mu", "shimcurve.nrdmu", "Polarization degree"),
         MathCol("genus", "shimcurve.genus", "Genus"),
         ProcessedCol("rank", "shimcurve.rank", "Rank", lambda r: "" if r is None else r, default=lambda info: info.get("rank") or info.get("genus_minus_rank"), align="center", mathmode=True),
         ProcessedCol("q_gonality_bounds", "shimcurve.gonality", r"$\Q$-gonality", lambda b: r'$%s$'%(b[0]) if b[0] == b[1] else r'$%s \le \gamma \le %s$'%(b[0],b[1]), align="center", short_title="Q-gonality"),
-        CheckCol("cm_discriminants", "shimcurve.cm_discriminants", "CM points", align="center"),
+        #CheckCol("cm_discriminants", "shimcurve.cm_discriminants", "CM points", align="center"),
         ProcessedCol("conductor", "ag.conductor", "Conductor", factored_conductor, align="center", mathmode=True, default=False),
         CheckCol("simple", "shimcurve.simple", "Simple", default=False),
         CheckCol("squarefree", "av.squarefree", "Squarefree", default=False),
-        CheckCol("contains_negative_one", "shimcurve.contains_negative_one", "Contains -1", short_title="contains -1", default=False),
+        CheckCol("is_coarse", "shimcurve.is_coarse", "Is coarse", short_title="is coarse", default=False),
         MultiProcessedCol("dims", "shimcurve.decomposition", "Decomposition", ["dims", "mults"], formatted_dims, align="center", apply_download=False, default=False),
         ProcessedCol("models", "shimcurve.models", "Models", blankzeros, default=False),
         MathCol("num_known_degree1_points", "shimcurve.known_points", "$j$-points", default=False),
         CheckCol("pointless", "shimcurve.local_obstruction", "Local obstruction", default=False),
         ProcessedCol("generators", "shimcurve.level_structure", r"$N_{B^{\times}}(O) \ltimes \operatorname{GL}_2(\mathbb{Z}/N\mathbb{Z})$-generators", lambda gens: ", ".join(r"$ \langle %s+%si+%sj+%sk, \begin{bmatrix}%s&%s\\%s&%s\end{bmatrix}$" % tuple(g) for g in gens) if gens else "trivial subgroup", short_title="generators", default=False),
     ],
-    db_cols=["label", "name", "level", "index", "discB", "discO", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "contains_negative_one", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    #db_cols=["label", "name", "level", "index", "discB", "discO", "deg_mu", "genus", "rank", "q_gonality_bounds", "cm_discriminants", "conductor", "simple", "squarefree", "is_coarse", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
+    db_cols=["label", "name", "level", "index", "discB", "discO", "deg_mu", "genus", "rank", "q_gonality_bounds", "conductor", "simple", "squarefree", "is_coarse", "dims", "mults", "models", "pointless", "num_known_degree1_points", "generators"])
 
 @search_parser
 def parse_family(inp, query, qfield):
-    if inp not in ["XD", "XDN", "XDstar", "XDNstar", "any"]:
+    if inp not in ["XD", "XDN", "XDstar", "XDNstar", "XDM1", "any"]:
         raise ValueError
     if inp == "any":
         query[qfield] = {"$like": "X%"}
-    elif inp == "XD": #add nothing
-        query[qfield] = {"$like": "X" + "(%;1)"}
+    elif inp == "XD":
+        query[qfield] = {"$like": "X(%;1)", "$not": {"$like": "%,%"}}
     elif inp == "XDN":
         query[qfield] = {"$or":[{"$like": "X(%;%)", "$not": {"$like": "%,%"}}, {"$in":["X(6;1)", "X(6;2)"]}]}
     elif inp == "XDstar":
         query[qfield] = {"$like": "X^*" + "(%;1)"}
     elif inp == "XDNstar":
         query[qfield] = {"$like": "X^*" + "(%;%)"}
-    else: #add X(6;1),X(6;2)
+    elif inp == "XDM1":
+        query[qfield] = {"$like": "X(%;1)"}
+    else:
         query[qfield] = {"$or":[{"$like": inp + "(%"}, {"$in":["X(6;1)","X(6;2)"]}]}
 
 # cols currently unused in individual page download
@@ -384,7 +428,7 @@ class ShimCurve_download(Downloader):
         s += "// Elements that, together with Gamma(level), generate the group\n"
         s += "gens := %s;\n" % rec['generators']
         s += "// Group contains -1?\n"
-        if rec['contains_negative_one']:
+        if rec['is_coarse']:
             s += "ContainsMinus1 := true;\n"
         else:
             s += "ContainsMinus1 := false;\n"
@@ -588,34 +632,37 @@ def shimcurve_search(info, query):
     parse_ints(info, query, "genus")
     parse_ints(info, query, "discB")
     parse_ints(info, query, "discO")
+    parse_ints(info, query, "deg_mu")
     parse_ints(info, query, "rank")
     parse_ints(info, query, "genus_minus_rank")
     parse_interval(info, query, "q_gonality", quantifier_type=info.get("gonality_type", "exactly"))
     parse_ints(info, query, "nu2")
     parse_ints(info, query, "nu3")
+    parse_ints(info, query, "nu4")
+    parse_ints(info, query, "nu6")
     if not info.get("points_type"): # default, which is non-cuspidal
         parse_ints(info, query, "points", qfield="num_known_degree1_noncusp_points")
-    elif info["points_type"] == "noncm":
-        parse_ints(info, query, "points", qfield="num_known_degree1_noncm_points")
+    #elif info["points_type"] == "noncm":
+    #    parse_ints(info, query, "points", qfield="num_known_degree1_noncm_points")
     elif info["points_type"] == "all":
         parse_ints(info, query, "points", qfield="num_known_degree1_points")
     parse_bool_unknown(info, query, "has_obstruction")
     parse_bool(info, query, "simple")
     parse_bool(info, query, "squarefree")
-    parse_bool(info, query, "contains_negative_one")
-    if "cm_discriminants" in info:
-        if info["cm_discriminants"] == "yes":
-            query["cm_discriminants"] = {"$ne": []}
-        elif info["cm_discriminants"] == "no":
-            query["cm_discriminants"] = []
-        elif info["cm_discriminants"] == "-3,-12,-27":
-            query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-3,-12,-27]]}
-        elif info["cm_discriminants"] == "-4,-16":
-            query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-4,-16]]}
-        elif info["cm_discriminants"] == "-7,-28":
-            query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-7,-28]]}
-        else:
-            query["cm_discriminants"] = {"$contains": int(info["cm_discriminants"])}
+    parse_bool(info, query, "is_coarse")
+    #if "cm_discriminants" in info:
+    #    if info["cm_discriminants"] == "yes":
+    #        query["cm_discriminants"] = {"$ne": []}
+    #    elif info["cm_discriminants"] == "no":
+    #        query["cm_discriminants"] = []
+    #    elif info["cm_discriminants"] == "-3,-12,-27":
+    #        query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-3,-12,-27]]}
+    #    elif info["cm_discriminants"] == "-4,-16":
+    #        query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-4,-16]]}
+    #    elif info["cm_discriminants"] == "-7,-28":
+    #        query["cm_discriminants"] = {"$or": [{"$contains": int(D)} for D in [-7,-28]]}
+    #    else:
+    #        query["cm_discriminants"] = {"$contains": int(info["cm_discriminants"])}
     parse_element_of(info, query, "covers", qfield="parents", parse_singleton=str)
     parse_element_of(info, query, "factor", qfield="factorization", parse_singleton=str)
     if "covered_by" in info:
@@ -691,6 +738,13 @@ class ShimCurveSearchArray(SearchArray):
             example="6",
             example_span="6",
         )
+        deg_mu = TextBox(
+            name="deg_mu",
+            knowl="shimcurve.nrdmu",
+            label=r"Polarization degree",
+            example="1",
+            example_span="1",
+        )
         rank = TextBox(
             name="rank",
             knowl="shimcurve.rank",
@@ -735,12 +789,26 @@ class ShimCurveSearchArray(SearchArray):
             example="1",
             example_span="1,3-5",
         )
-        factor = TextBox(
-            name="factor",
-            knowl="shimcurve.fiber_product",
-            label="Fiber product with",
-            example="3.4.0.a.1",
+        nu4 = TextBox(
+            name="nu4",
+            knowl="shimcurve.elliptic_points",
+            label="Elliptic points of order 4",
+            example="1",
+            example_span="1,3-5",
         )
+        nu6 = TextBox(
+            name="nu6",
+            knowl="shimcurve.elliptic_points",
+            label="Elliptic points of order 6",
+            example="1",
+            example_span="1,3-5",
+        )
+        #factor = TextBox(
+        #    name="factor",
+        #    knowl="shimcurve.fiber_product",
+        #    label="Fiber product with",
+        #    example="3.4.0.a.1",
+        #)
         covers = TextBox(
             name="covers",
             knowl="shimcurve.modular_cover",
@@ -765,27 +833,27 @@ class ShimCurveSearchArray(SearchArray):
             label="Squarefree",
             example_col=True,
         )
-        cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
-                   + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
-                   + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
-        cm_discriminants = SelectBox(
-            name="cm_discriminants",
-            options=cm_opts,
-            knowl="shimcurve.cm_discriminants",
-            label="CM points",
-            example="yes, no, CM discriminant -3"
-        )
-        contains_negative_one = YesNoBox(
-            name="contains_negative_one",
-            knowl="shimcurve.contains_negative_one",
-            label="Contains $-I$",
+        #cm_opts = ([('', ''), ('yes', 'rational CM points'), ('no', 'no rational CM points')]
+        #           + [('-4,-16', 'CM field Q(sqrt(-1))'), ('-3,-12,-27', 'CM field Q(sqrt(-3))'), ('-7,-28', 'CM field Q(sqrt(-7))')]
+        #           + [('-%d'%d, 'CM discriminant -%d'%d) for d in [3,4,7,8,11,12,16,19,27,38,43,67,163]])
+        #cm_discriminants = SelectBox(
+        #    name="cm_discriminants",
+        #    options=cm_opts,
+        #    knowl="shimcurve.cm_discriminants",
+        #    label="CM points",
+        #    example="yes, no, CM discriminant -3"
+        #)
+        is_coarse = YesNoBox(
+            name="is_coarse",
+            knowl="shimcurve.is_coarse",
+            label="Is coarse",
             example="yes",
             example_col=True,
             example_span="",
         )
         points_type = SelectBox(
             name="points_type",
-            options=[('noncm', 'non-CM'),
+            options=[#('noncm', 'non-CM'),
                      ('all', 'all'),
                      ],
             min_width=105)
@@ -811,6 +879,7 @@ class ShimCurveSearchArray(SearchArray):
                      ("XDN", "X(D;N)"),
                      ("XDstar", "X^*(D;1)"),
                      ("XDNstar", "X^*(D;N)"),
+                     ("XDM1", "X(D,M;1)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
@@ -820,30 +889,38 @@ class ShimCurveSearchArray(SearchArray):
 
         self.browse_array = [
             [level, index],
-            [genus, rank],
-            [discB, discO],
-            [genus_minus_rank, gonality],
+            [genus, discB],
+            [discO, deg_mu],
+            [rank, genus_minus_rank],
             [nu2, nu3],
-            [simple, squarefree],
-            [cm_discriminants, factor],
+            [nu4, nu6],
+            [gonality, simple],
+            #[squarefree, cm_discriminants],
             [covers, covered_by],
-            [contains_negative_one, family],
-            [points, obstructions],
+            #[is_coarse, family],
+            #[family],
+            [squarefree, family],
+            #[points, obstructions],
             [count],
         ]
 
         self.refine_array = [
-            [level, index, genus, discB, discO, rank, genus_minus_rank],
-            [gonality, nu2, nu3],
-            [simple, squarefree, cm_discriminants, factor, covers],
-            [covered_by, contains_negative_one, points, obstructions, family],
+            [level, index, discB, discO, deg_mu], 
+            [genus, rank, genus_minus_rank, gonality],
+            [nu2, nu3, nu4, nu6],
+            #[simple, squarefree, cm_discriminants, factor, covers],
+            #[simple, squarefree, cm_discriminants, covers],
+            [simple, squarefree, covers, covered_by],
+            [is_coarse, points, obstructions, family],
         ]
 
     sorts = [
-        ("", "level", ["level", "index", "genus", "label"]),
-        ("index", "index", ["index", "level", "genus", "label"]),
-        ("genus", "genus", ["genus", "level", "index", "label"]),
-        ("rank", "rank", ["rank", "genus", "level", "index", "label"]),
+        ("", "level", ["level", "discB", "discO", "deg_mu", "index", "genus", "label"]),
+        ("discB", "discB", ["discB", "discO", "deg_mu", "level", "index", "genus", "label"]),
+        ("discO", "discO", ["discO", "discB", "deg_mu", "level", "index", "genus", "label"]),
+        ("index", "index", ["index", "discB", "discO", "level", "deg_mu", "genus", "label"]),
+        ("genus", "genus", ["genus", "level", "deg_mu", "index", "label"]),
+        ("rank", "rank", ["rank", "genus", "level", "deg_mu", "index", "label"]),
     ]
     null_column_explanations = {
         'simple': False,
@@ -1000,6 +1077,7 @@ class RatPointSearchArray(SearchArray):
                      ("XDN", "X(D;N)"),
                      ("XDstar", "X^*(D;1)"),
                      ("XDNstar", "X^*(D;N)"),
+                     ("XDM1", "X(D,M;1)"),
                      ("any", "any")],
             knowl="shimcurve.standard",
             label="Family",
@@ -1024,15 +1102,17 @@ class ShimCurve_stats(StatsDisplay):
     @property
     def short_summary(self):
         shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
+        pqm_knowl = display_knowl("shimcurve.pqm", title="potential quaternionic multiplication")
         return (
-            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A$ over $\Q$ with potential quaternionic multiplication.  You can <a href="{url_for(".statistics")}">browse further statistics</a>. <b>This data is provisional and incomplete! More will be added.</b>'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A$ over $\Q$ with {pqm_knowl}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>. <b>This data is provisional and incomplete! More will be added.</b>'
         )
 
     @property
     def summary(self):
         shimcurve_knowl = display_knowl("shimcurve", title="Shimura curves")
+        pqm_knowl = display_knowl("shimcurve.pqm", title="potential quaternionic multiplication")
         return (
-            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A/\Q$ with potential quaternionic multiplication.'
+            fr'The database currently contains {self.ncurves} {shimcurve_knowl} of level $N\le {self.max_level}$ parameterizing abelian surfaces $A/\Q$ with {pqm_knowl}.'
         )
 
     table = db.gps_shimura_test

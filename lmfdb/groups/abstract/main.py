@@ -3739,7 +3739,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
             data = None
             url = url_for("abstract.by_label", label=label)
         gp = WebAbstractGroup(label, data=data)
-        # dealing with groups identified in magma but not in gap so can't do live pages˚
+        # dealing with groups identified in magma but not in gap so can't do live pages
         if not label.startswith("ab/"):
             ord = label.split(".")[0]
             if missing_subs(label) and gp.source == "Missing":

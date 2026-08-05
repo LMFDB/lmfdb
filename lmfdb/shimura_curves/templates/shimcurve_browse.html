@@ -9,8 +9,8 @@
 
 <p>
   By {{KNOWL('shimcurve.standard', 'family')}}:
-  {% for (fam, famname) in [("XD", "X(D;1)"), ("XDN", "X(D;N)"), ("XDstar", "X^*(D;1)"), ("XDNstar", "X^*(D;N)")] %}
-  <a href="?family={{fam}}">${{famname}}$</a>&nbsp;
+  {% for (fam, famname) in [("XD", "X(D;1)"), ("XDN", "X(D;N)"), ("XDstar", "X^*(D;1)"), ("XDNstar", "X^*(D;N)"), ("XDM1", "X(D,M;1)")] %}
+  <a href="?family={{fam}}&sort_order=discB">${{famname}}$</a>&nbsp;
   {% endfor %}
 </p>
 
@@ -24,9 +24,15 @@
   {% endfor %}
 </p>
 <p>
-  By {{KNOWL('shimcurve.genus', 'genus')}}:
-  {% for rnge in info.genus_list %}
-  <a href="?genus={{rnge}}&sort_order=genus">{{rnge}}</a>&nbsp;
+  By {{KNOWL('shimcurve.discb', '$\mathrm{Disc}(B)$')}}:
+  {% for rnge in info.discb_list %}
+  <a href="?discB={{rnge}}&sort_order=discB">{{rnge}}</a>&nbsp;
+  {% endfor %}
+</p>
+<p>
+  By {{KNOWL('shimcurve.disco', '$\mathrm{discrd}(O)$')}}:
+  {% for rnge in info.disco_list %}
+  <a href="?discO={{rnge}}&sort_order=discO">{{rnge}}</a>&nbsp;
   {% endfor %}
 </p>
 <p>
@@ -40,9 +46,11 @@
   Some <a href="{{url_for('.interesting')}}">interesting Shimura curves</a> or a <a href={{url_for('.random_curve')}}>random curve</a>
 </p>
 
+{#
 <p>
   Search for <a href="{{url_for('.low_degree_points')}}?cusp=no">low degree points</a>
 </p>
+#}
 
 <h2> {{ KNOWL('intro.search', 'Search') }} </h2>
 

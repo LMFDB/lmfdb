@@ -48,10 +48,10 @@ def aut_rep_type_sort_key(rep_type):
         return 1
 
 def family_str_to_char(str):
-    return FAMILY_DICT[str]
+    return FAMILY_DICT.get(str)
 
 def family_char_to_str(c):
-    return FAMILY_DICT_STR[c]
+    return FAMILY_DICT_STR.get(c)
 
 def get_bread(**kwds):
     # Should be called with either search=True or an initial segment of the links below

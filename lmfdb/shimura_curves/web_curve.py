@@ -97,7 +97,16 @@ def showj_nf(j, jfield, jorig, resfield):
 
 def canonicalize_name(name):
     cname = name
-    cname = name.replace(",", ";")
+    if ";" not in cname:
+        # X(D,M) with no semicolon: X(D,1) → X(D;1), X(D,M) → X(D,M;1)
+        paren = cname.index("(") if "(" in cname else -1
+        if paren != -1 and cname.endswith(")") and "," in cname[paren:]:
+            inner = cname[paren+1:-1]
+            parts = inner.split(",")
+            if len(parts) == 2 and parts[1] == "1":
+                cname = cname[:paren+1] + parts[0] + ";1)"
+            else:
+                cname = cname[:-1] + ";1)"
     if cname[:2] == "X*":
         cname = "X^*" + cname[2:]
     return cname
@@ -599,6 +608,8 @@ class WebShimCurve(WebObj):
     def show_generators(self):
         if not self.generators: # 2.6.0.a.1
             return "trivial subgroup"
+        if self.level == 1:
+            return ", ".join(r"$" + WebShimCurve.show_quaternion(g[:4]) + r"$" for g in self.generators)
         return ", ".join(r"$\left \langle " + WebShimCurve.show_quaternion(g[:4]) + "," + self.show_order_elt(g[4:]) + r" \right \rangle$" for g in self.generators)
 
     def show_quat_alg(self):
@@ -657,11 +668,13 @@ class WebShimCurve(WebObj):
         return ell_str    
     
     def show_genus(self):
+        # Showing the genus formula from Gauss-Bonnet, see (39.4.2) in [JV]
         genus_str = r"$ %s " % str(self.genus)
         if self.nu2 is not None:
             order = db.quaternion_orders.lookup(self.order_label, ['area_numerator', 'area_denominator'])
             area = order['area_numerator'] / QQ(order['area_denominator']);
             area /= db.quaternion_orders_polarized.lookup(self.mu_label, 'AutmuO_size');
+            area *= self.aut_gerbiness
             index = self.fuchsian_index
             if index == 1:
                 genus_str += r" = 1 + \frac{%s}{%s}" % (area.numerator(), area.denominator())
@@ -925,7 +938,7 @@ class WebShimCurve(WebObj):
             elif curve.genus > 1 or (curve.genus == 1 and curve.rank == 0):
                 desc = "This Shimura curve has finitely many rational points."
         else:
-            desc = fr'Local obstructions for rational points on this curve are not known.'
+            desc = 'Local obstructions for rational points on this curve are not known.'
         if (self.genus > 1 or self.genus == 1 and self.rank == 0) and self.db_rational_points:
             desc += "  The following are the known rational points on this Shimura curve (one row per $j$-invariant)."
         return desc

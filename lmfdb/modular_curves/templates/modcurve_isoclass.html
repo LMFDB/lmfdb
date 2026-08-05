@@ -107,7 +107,7 @@ text-align: center;
 </table>
 {% if iso_class.genus > 0 and iso_class.dims is not none %}
 <table>
-  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> ${{ iso_class.rank }}$ </td></tr>
+  <tr><td>{{ KNOWL('modcurve.rank', 'Analytic rank') }}:</td><td> {% if iso_class.rank is not none %}${{ iso_class.rank }}${% else %}not computed{% endif %} </td></tr>
   <tr>
     <td>{{ KNOWL('ag.conductor', 'Conductor') }}:</td>
     <td>{% if iso_class.conductor is not none %}${{ iso_class.web_curve.factored_conductor }}${% else %}not computed{% endif %}</td>

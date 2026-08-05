@@ -299,7 +299,7 @@ def hmsurface_search(info, query):
     if info.get("kodaira_dims"):
         try:
             ZZ(info["kodaira_dims"])
-        except:
+        except (ValueError, TypeError):
             err = "You must specify a single Kodaira dimension"
             flash_error(err)
             raise ValueError(err)

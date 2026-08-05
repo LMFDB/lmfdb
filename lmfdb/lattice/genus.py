@@ -10,7 +10,7 @@ from sage.all import ZZ, matrix, IntegralLattice
 from lmfdb.utils import (
     flash_error, to_dict, #web_latex_split_on_pm,
     SearchArray, EmbeddedSearchArray, TextBox, TextBoxWithSelect, SelectBox, CountBox, #prop_int_pretty,
-    parse_ints, parse_posints, parse_list, parse_count,
+    parse_ints, parse_posints, parse_signed_ints, parse_count,
     parse_bracketed_posints, parse_start, parse_noop, #clean_input,
     parse_rational_to_list, raw_typeset_qexp,
     search_wrap, embed_wrap, redirect_no_cache, Downloader, ParityBox)
@@ -164,12 +164,22 @@ def genus_search_equivalence(res, info, query):
 def url_for_genus(label):
     return url_for(".render_genus_webpage", label=label)
 
-def common_parse(info, query):
+def common_parse(info, query, det_qfield='det'):
+    # det_qfield: lat_genera has a signed det column, but lat_lattices_new only
+    # stores det_abs/det_sign, so the lattice search passes det_qfield='det_abs'.
     for field, name in [('rank', 'Rank'), ('level', 'Level'), ('class_number', 'Class number')]:
         parse_posints(info, query, field, name)
-    # TODO: fix handling of sign here (e.g. -100..-11 currently fails)
-    for field, name in [('det', 'Determinant'),  ('disc', 'Discriminant')]:
-        parse_ints(info, query, field, name)
+    if det_qfield == 'det':
+        # lat_genera stores a signed det column, so parse_ints handles signs directly
+        parse_ints(info, query, 'det', 'Determinant')
+    else:
+        # lat_lattices_new stores (det_sign, det_abs).  parse_signed_ints is
+        # sign-aware: "5" gives det_sign=1, "-5" gives det_sign=-1, ranges such
+        # as "5-20" or "-20--5" constrain det_abs with the appropriate sign,
+        # and comma-separated lists (including mixed signs, or ranges spanning
+        # zero) become an $or over (det_sign, det_abs) clauses.
+        parse_signed_ints(info, query, 'det', 'Determinant', qfield=('det_sign', 'det_abs'))
+    parse_ints(info, query, 'disc', 'Discriminant')
     parse_bracketed_posints(info, query, 'signature', qfield=('rank','nplus'),exactlength=2, allow0=True, extractor=lambda L: (L[0]+L[1],L[0]))
 
     # Handle even/odd search

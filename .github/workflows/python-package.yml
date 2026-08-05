@@ -32,7 +32,9 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
     env:
-      IS_ALPHA_PR: ${{ github.event_name == 'pull_request' && github.base_ref == 'alpha' }}
+      # True for PRs into alpha and for pushes to alpha: the feature tables only
+      # exist on devmirror, so proddb tests can't pass on the alpha branch.
+      IS_ALPHA_PR: ${{ (github.event_name == 'pull_request' && github.base_ref == 'alpha') || (github.event_name == 'push' && github.ref == 'refs/heads/alpha') }}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
     - uses: actions/checkout@v3
@@ -92,7 +94,7 @@ jobs:
     - name: checking that we didn't miss any test files
       shell: bash -l {0}
       # If this fails you need to update the file list above and file count
-      run: test $(find lmfdb -name 'test_*.py' -or -name '*_test.py' | wc -l) -eq 47
+      run: test $(find lmfdb -name 'test_*.py' -or -name '*_test.py' | wc -l) -eq 46
 
     - name: Config LMFDB to run tests against proddb
       if: matrix.files != 'lint' && matrix.server == 'proddb' && env.IS_ALPHA_PR != 'true'
