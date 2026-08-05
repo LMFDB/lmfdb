@@ -98,7 +98,7 @@ def query_text(query):
         return query.as_string(knowldb.conn)  # psycopg2 wants a connection
 
 
-def description_row(kid, content, timestamp, status=0, authors=None):
+def description_row(kid, content, timestamp, status=0, authors=None, links=None):
     """
     A row of kwl_knowls holding one version of a table or column description,
     with the metadata that knowldb.save would have stored alongside it.
@@ -113,7 +113,7 @@ def description_row(kid, content, timestamp, status=0, authors=None):
             "title": meta["title"],
             "status": status,
             "type": meta["type"],
-            "links": [],
+            "links": links or [],
             "defines": meta["defines"],
             "source": meta["source"],
             "source_name": meta["source_name"],
@@ -166,8 +166,9 @@ class FakeKnowlTable:
     def select(self, sql, values):
         if sql.startswith("SELECT 1 FROM kwl_knowls WHERE id = %s"):
             return [(1,) for row in self.rows if row["id"] == values[0]][:1]
-        if sql.startswith("SELECT timestamp, content FROM kwl_knowls WHERE id = %s"):
-            return [(row["timestamp"], row["content"]) for row in self.rows if row["id"] == values[0]]
+        if sql.startswith("SELECT id, timestamp, content, title FROM kwl_knowls WHERE id = ANY(%s)"):
+            return [(row["id"], row["timestamp"], row["content"], row["title"])
+                    for row in self.rows if row["id"] in values[0]]
         if "links @> %s" in sql:  # ids_referencing
             status, typ, links = values
             return sorted({(row["id"],) for row in self.rows
@@ -321,10 +322,57 @@ class PortColumnKnowlsTest(LmfdbTest):
         dropped = [row for row in table.rows if row["id"] == "columns.old_nf_fields.not_a_column"]
         assert [row["status"] for row in dropped] == [-2]
 
-        # knowls referring to the old id follow it
+        # knowls referring to the old id follow it, and are reindexed
         referring = [row for row in table.rows if row["id"] == "nf.degree"][0]
         assert referring["content"] == "See {{KNOWL('columns.nf_fields.degree')}}"
         assert referring["links"] == ["columns.nf_fields.degree"]
+        assert referring["_keywords"] == make_keywords(referring["content"], referring["id"],
+                                                       referring["title"])
+
+    def test_a_reference_to_a_renamed_description_is_reindexed(self):
+        # knowl search matches against the keywords, so rewriting a reference
+        # has to rewrite the keywords of the knowl holding it
+        table = self.port([
+            description_row("columns.oldtable.degree", "The degree of the field", NEWER),
+            normal_row("nf.degree", "See {{KNOWL('columns.oldtable.degree')}}", NEWER,
+                       links=["columns.oldtable.degree"])],
+            keep_old=False, other_table="oldtable")
+
+        referring = [row for row in table.rows if row["id"] == "nf.degree"][0]
+        assert referring["content"] == "See {{KNOWL('columns.nf_fields.degree')}}"
+        assert referring["links"] == ["columns.nf_fields.degree"]
+        assert referring["_keywords"] == make_keywords(referring["content"], referring["id"],
+                                                       referring["title"])
+        assert "oldtable" not in referring["_keywords"]
+
+    def test_a_description_referring_to_itself_is_reindexed(self):
+        # the keywords have to be redone after the content is rewritten, not before
+        table = self.port([
+            description_row("columns.oldtable.degree", "See {{KNOWL('columns.oldtable.degree')}}",
+                            NEWER, links=["columns.oldtable.degree"])],
+            keep_old=False, other_table="oldtable")
+
+        row = [row for row in table.rows if row["id"] == "columns.nf_fields.degree"][0]
+        assert row["content"] == "See {{KNOWL('columns.nf_fields.degree')}}"
+        assert row["links"] == ["columns.nf_fields.degree"]
+        assert row["_keywords"] == make_keywords(row["content"], row["id"], row["title"])
+        assert "oldtable" not in row["_keywords"]
+
+    def test_a_description_referring_to_another_is_reindexed(self):
+        # class_number is ported first, so the reference in it is rewritten
+        # after it has already been moved and indexed
+        table = self.port([
+            description_row("columns.oldtable.class_number",
+                            "Divides {{KNOWL('columns.oldtable.degree')}}", NEWER,
+                            links=["columns.oldtable.degree"]),
+            description_row("columns.oldtable.degree", "The degree of the field", NEWER)],
+            keep_old=False, other_table="oldtable")
+
+        row = [row for row in table.rows if row["id"] == "columns.nf_fields.class_number"][0]
+        assert row["content"] == "Divides {{KNOWL('columns.nf_fields.degree')}}"
+        assert row["links"] == ["columns.nf_fields.degree"]
+        assert row["_keywords"] == make_keywords(row["content"], row["id"], row["title"])
+        assert "oldtable" not in row["_keywords"]
 
     def test_a_rename_will_not_merge_two_histories(self):
         # nf_fields already describes r2, so moving the other table's

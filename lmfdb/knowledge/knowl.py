@@ -891,19 +891,22 @@ class KnowlBackend(PostgresBase):
         with DelayCommit(self):
             updator = SQL("UPDATE kwl_knowls SET (id, cat, type, source, source_name, title, defines) = (%s, %s, %s, %s, %s, %s, %s) WHERE id = %s")
             self._execute(updator, [new_name, meta['cat'], meta['type'], meta['source'], meta['source_name'], meta['title'], meta['defines'], old_name])
-            # The keywords are built from the id and title, so unlike in a
-            # normal rename every version needs new ones: the description of a
-            # column of the old table should not be found when searching for
-            # the new one, whether it is displayed on beta or on production.
-            selecter = SQL("SELECT timestamp, content FROM kwl_knowls WHERE id = %s")
-            updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
-            for timestamp, content in self._safe_execute(selecter, [new_name]):
-                self._execute(updator, [make_keywords(content, new_name, meta['title']), new_name, timestamp])
             referrers = self.ids_referencing(old_name, old=True)
             updator = SQL("UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
             values = [r"""['"]\s*{0}\s*['"]""".format(old_name.replace('.', r'\.')),
                       "'{0}'".format(new_name), 'g', old_name, new_name, referrers] # g means replace all
             self._execute(updator, values)
+            # The keywords are built from the id, title and content, and all
+            # three have just changed: the id and title on every version of this
+            # knowl, and the content on every version of the knowls that
+            # referred to it (which include this one, if it refers to itself).
+            # Unlike a normal rename we redo them all rather than only the
+            # versions on display, so that a description of a column of the old
+            # table is not found by searching for the new one on either server.
+            selecter = SQL("SELECT id, timestamp, content, title FROM kwl_knowls WHERE id = ANY(%s)")
+            updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
+            for kid, timestamp, content, title in self._safe_execute(selecter, [[new_name] + referrers]):
+                self._execute(updator, [make_keywords(content, kid, title), kid, timestamp])
             self.cached_titles.pop(old_name, None)
             self.cached_titles[new_name] = meta['title']
             knowl.id = new_name
