@@ -628,6 +628,10 @@ def point_string(P):
 
 
 def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x', 'y', 'z'])('y')):
+    # hts may be missing, None, or shorter than gens while the Mordell-Weil
+    # data is being recomputed; display an unknown height rather than failing
+    if hts is None:
+        hts = []
     def divisor_data(P):
         R = PolynomialRing(QQ, ['x', 'z'])
         x = R('x')
@@ -656,8 +660,9 @@ def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x', 'y', 'z'])('y')
         div = (r'2 \cdot' + point_string(D0[0]) if len(D0) == 1 and len(Dinf) != 1 else ' + '.join(point_string(P) for P in D0)) if D0 else 'D_0'
         div += ' - '
         div += (r'2 \cdot' + point_string(Dinf[0]) if len(Dinf) == 1 and len(D0) != 1 else ' - '.join(point_string(P) for P in Dinf)) if Dinf else r'D_\infty'
+        ht = decimal_pretty(str(hts[i])) if i < len(hts) and hts[i] is not None else '?'
         gentab.extend([td_wrapl(div), td_wrapr(D[0]),td_wrapc('='),td_wrapl("0,"),td_wrapr(D[1]),td_wrapc("="),td_wrapl(D[2]),
-                       td_wrapc(decimal_pretty(str(hts[i]))) if invs[i] == 0 else td_wrapc('0'), td_wrapc(r'\infty') if invs[i] == 0 else td_wrapc(invs[i])])
+                       td_wrapc(ht) if invs[i] == 0 else td_wrapc('0'), td_wrapc(r'\infty') if invs[i] == 0 else td_wrapc(invs[i])])
         gentab.append('</tr>')
     gentab.extend(['</tbody>', '</table>'])
     return '\n'.join(gentab)
@@ -843,15 +848,13 @@ class WebG2C():
             ratpts = {}
         clus = []
         for x in tama:
-            if x['p'] != 2:
-                try:
-                    clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
-                    #clusimg = clusentry['image']
-                    clusthmb = clusentry['thumbnail']
-                    clus.append([x['p'], x['cluster_label'], clusthmb])
-                except Exception:
-                    logger.error("Cluster picture data for genus 2 curve %s not found in database." % label)
-                    raise KeyError("Cluster picture data for genus 2 curve %s not found in database." % label)
+            if x['p'] != 2 and x.get('cluster_label'):
+                clusentry = db.cluster_pictures.lucky({"label": x['cluster_label']})
+                if clusentry:
+                    clus.append([x['p'], x['cluster_label'], clusentry['thumbnail']])
+                else:
+                    # missing cluster picture should not prevent the page from being displayed
+                    logger.warning("Cluster picture data for genus 2 curve %s not found in database." % label)
         nonsurj = curve.get('non_maximal_primes')
         galrep = list(db.g2c_galrep_new.search({'lmfdb_label': curve['label']},['prime', 'modell_image']))
         galrep = augment_galrep_and_nonsurj(galrep, nonsurj)
@@ -935,18 +938,25 @@ class WebG2C():
                 data['rat_pts_v'] = ratpts['rat_pts_v']
                 data['rat_pts_table'] = ratpts_table(ratpts['rat_pts'],ratpts['rat_pts_v'])
                 data['rat_pts_simple_table'] = ratpts_simpletable(ratpts['rat_pts'],ratpts['rat_pts_v'],data['min_eqn'])
-                if ratpts.get('mw_gens'):
-                    data['mw_gens_v'] = ratpts['mw_gens_v']
+                # Mordell-Weil data may not have been computed for all curves;
+                # degrade gracefully when it is absent (mw_invs is None)
+                if ratpts.get('mw_invs') is not None:
+                    data['mw_gens_v'] = ratpts.get('mw_gens_v')
                     lower = len([n for n in ratpts['mw_invs'] if n == 0])
-                    upper = data['analytic_rank']
+                    # analytic_rank may be absent while the data is recomputed
+                    upper = data['analytic_rank'] if data.get('analytic_rank') is not None else lower
                     invs = ratpts['mw_invs'] if data['mw_gens_v'] or lower >= upper else [0 for n in range(upper-lower)] + ratpts['mw_invs']
                     if len(invs) == 0:
                         data['mw_group'] = 'trivial'
                     else:
                         data['mw_group'] = r'\(' + r' \oplus '.join((r'\Z' if n == 0 else r'\Z/{%s}\Z' % n) for n in invs) + r'\)'
-                    if lower >= upper:
-                        data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'])
-                        data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts['mw_heights'], ratpts['rat_pts'], data['min_eqn'])
+                    # only build the generator table when the generator list
+                    # matches the invariants; heights may be incomplete (the
+                    # table displays unknown heights as ?)
+                    if (lower >= upper and ratpts.get('mw_gens') is not None
+                            and len(ratpts['mw_gens']) >= len(ratpts['mw_invs'])):
+                        data['mw_gens_table'] = mw_gens_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts.get('mw_heights'), ratpts['rat_pts'])
+                        data['mw_gens_simple_table'] = mw_gens_simple_table(ratpts['mw_invs'], ratpts['mw_gens'], ratpts.get('mw_heights'), ratpts['rat_pts'], data['min_eqn'])
 
             if curve.get('two_torsion_field'):
                 if curve['two_torsion_field'][0]:
@@ -959,6 +969,7 @@ class WebG2C():
                 tamalist = [[item['p'], item['tamagawa_number']] for item in tama]
                 root_numbers = [[item['p'], item['local_root_number']] for item in tama]
                 data['local_table'] = local_table(data['cond'], data['abs_disc'], tamalist, data['bad_lfactors_pretty'], data['bad_lfactors'], clus, root_numbers)
+            if galrep:
                 data['galrep_table'] = galrep_table(galrep, data['torsion_order'])
 
             lmfdb_label = data['label']
@@ -1052,7 +1063,7 @@ class WebG2C():
                 ('Conductor', prop_int_pretty(data['cond'])),
                 ('Discriminant', prop_int_pretty(data['disc'])),
                 ]
-            if data['mw_rank_proved']:
+            if data['mw_rank_proved'] and data.get('mw_group'):
                 properties += [('Mordell-Weil group', data['mw_group'])]
         else:
             properties += [('Conductor', prop_int_pretty(data['cond']))]
