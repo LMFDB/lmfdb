@@ -30,7 +30,7 @@ gp> [polcoeff (lfunrootres (lfuncreate (K))[1][1][2], -1), 2^K.r1 * (2*Pi)^K.r2 
 [1.0000000000000000000000000000000000000, 1.0000000000000000000000000000000000000]
 gp> L = nfsubfields(K); L[2..length(L)]
 []
-gp> if(poldegree(K.pol) <= 11, polgalois(K.pol), "polgalois only supports degree <= 11")
+gp> if(poldegree(K.pol) > 11, "polgalois only supports degree <= 11", iferr(polgalois(K.pol), E, "polgalois in degrees 8 to 11 requires the optional galdata package", errname(E) == "e_FILE" || errname(E) == "e_PACKAGE"))
 [1, 1, 1, "S1"]
 gp> p = 7; pfac = idealprimedec(K, p); vector(length(pfac), j, [pfac[j][3], pfac[j][4]])
 [[1, 1]]
