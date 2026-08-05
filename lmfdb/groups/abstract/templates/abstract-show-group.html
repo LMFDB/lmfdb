@@ -42,7 +42,7 @@
     <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{gp.derived_length}}$  </td> <td>{{ place_code('derived_length') }}  </td></tr>
     {% if gp.show_hash %}
       <tr><td>{{KNOWL('group.hash', title='Hash:')}}</td>
-          <td>{{ gp.show_hash }} (<a href="{{ url_for('.index', hash=gp.order|string + '#' + gp.show_hash|string) }}">all groups with this order and hash</a>)</td></tr>
+          <td>{{ gp.show_hash }} (<a href="{{ gp.hash_url }}">all groups with this order and hash</a>)</td></tr>
     {% endif %}
   </table>
 </p>

@@ -15,9 +15,12 @@ availability predicate that the stored hashes depend on.
 SECURITY: user input is *never* passed to ``libgap.eval``.  Descriptions
 are validated with strict regular expressions and (for matrices)
 ``ast.literal_eval`` on a literals-only body; the group objects are then
-constructed programmatically.  Every GAP computation runs under a
-``cysignals`` ``alarm`` timeout and the group order is capped, so a
-pathological input cannot hang the server.
+constructed programmatically.  Parsing, group construction and the order
+computation all run inside a single ``cysignals`` ``alarm``; the order cap
+is then enforced before any further work (in particular before factoring
+the order), and the hash computation runs under a second alarm.  No
+unbounded Sage or GAP computation is reachable from user input.  GAP's own
+start-up is deliberately outside the guard, see :func:`prepare_gap`.
 """
 
 import ast
@@ -39,22 +42,14 @@ from sage.libs.gap.util import GAPError
 from cysignals.alarm import AlarmInterrupt
 
 from lmfdb import db
-from flask import url_for
-from .web_groups import primary_to_smith, label_sortkey
+from .web_groups import primary_to_smith
+from .hash_lookup import live_pages_available, resolve_order_hash
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
 REDP = 9223372036854775783  # largest prime below 2^63 (Postgres signed bigint)
-
-# The ten orders for which gps_smallhash is a complete (order, counter, hash)
-# table (= SmallhashOrders() in Hash.m).  For these, a hash match against the
-# complete table pins the group down to a hash-collision cluster, and a unique
-# match is a proof of isomorphism.
-SMALLHASH_ORDERS = frozenset(
-    [512, 1152, 1536, 1920, 2187, 6561, 15625, 16807, 78125, 161051]
-)
 
 ORDER_CAP = 10 ** 6      # the magma_identifiable predicate is only verified this far
 MAX_INPUT = 2000         # characters
@@ -255,7 +250,11 @@ def parse_permutation_group(s):
 
 def parse_pc_group(s):
     """Parse ``<order>PC<code>`` (the FiniteGroups ``StringToGroup`` convention)
-    into a GAP PC group."""
+    into a GAP PC group.
+
+    Like the other parsers this is called from :func:`identify_group` inside
+    the alarm that also bounds the order computation, so the ``Order()`` check
+    below (a PC group knows its order) is guarded."""
     m = PC_RE.fullmatch(s.replace(" ", ""))
     if not m:
         raise DescriptionError(
@@ -277,9 +276,43 @@ def parse_pc_group(s):
     return G
 
 
+def entry_ring(q):
+    """The coefficient ring for ``Mat(d,q)`` together with the decoder turning
+    an integer code from the input into a ring element.
+
+    * ``q = p`` prime: ``GF(p)``, codes are integers reduced modulo ``p``;
+    * ``q = p^e`` with ``e > 1``: ``GF(q)``, codes are integers ``0 <= x < q``
+      whose base-``p`` digits, least significant first, are the coefficients of
+      the entry in the basis ``1, a, ..., a^(e-1)``, where ``a`` is the Conway
+      generator of ``GF(q)``, the element GAP writes as ``Z(q)``.  This is
+      the convention of ``DecodeMat`` in the FiniteGroups repository, whose
+      ``Basis(GF(q))`` is that same power basis;
+    * ``q`` not a prime power: ``Z/q``, codes are integers reduced modulo ``q``.
+    """
+    q = ZZ(q)
+    if not q.is_prime_power():
+        R = Zmod(q)
+        return R, R
+    R = GF(q, "a")
+    e = q.factor()[0][1]
+    if e == 1:
+        return R, R
+
+    def decode(x):
+        if not (0 <= x < q):
+            raise DescriptionError(
+                f"Over GF({q}) each matrix entry must be an integer code x with "
+                f"0 <= x < {q}, whose base-{q.factor()[0][0]} digits are its "
+                "coordinates in the power basis of the field generator.")
+        return R.from_integer(int(x))
+
+    return R, decode
+
+
 def parse_matrix_group(s):
     """Parse ``Mat(d,q):[[...]],[[...]]`` into a GAP matrix group over ``GF(q)``
-    (prime power) or ``Z/q`` (otherwise)."""
+    (prime power) or ``Z/q`` (otherwise).  See :func:`entry_ring` for how the
+    integer entries are interpreted."""
     m = MAT_RE.fullmatch(s.strip())
     if not m:
         raise DescriptionError(
@@ -292,7 +325,7 @@ def parse_matrix_group(s):
         raise DescriptionError(f"Matrix dimension must be between 1 and {MAX_MATRIX_DIM}.")
     if not (2 <= q <= MAX_MATRIX_Q):
         raise DescriptionError(f"Modulus q must be between 2 and {MAX_MATRIX_Q}.")
-    R = GF(q, "a") if ZZ(q).is_prime_power() else Zmod(q)
+    R, decode = entry_ring(q)
     try:
         data = ast.literal_eval(body)
     except (ValueError, SyntaxError, TypeError, MemoryError, RecursionError):
@@ -317,7 +350,7 @@ def parse_matrix_group(s):
         if any(not isinstance(x, int) or abs(x) > MAX_MATRIX_ENTRY for x in flat):
             raise DescriptionError(
                 f"Matrix entries must be integers with absolute value at most {MAX_MATRIX_ENTRY}.")
-        MM = matrix(R, d, [R(x) for x in flat])
+        MM = matrix(R, d, [decode(x) for x in flat])
         if not MM.is_invertible():
             raise DescriptionError("Matrix generators must be invertible.")
         mats.append(MM)
@@ -352,13 +385,21 @@ def describe_formats():
          "(1,2,3)(4,5),(1,2)"),
         ("PC code", "the order and small-group PC code, as order PC code",
          "8PC4"),
-        ("Matrices", "generators over GF(q) or Z/q",
+        ("Matrices", "generators over GF(q) for q a prime power, or over Z/q "
+         "otherwise, as Mat(dimension,q) followed by the matrices",
          "Mat(2,3):[[1,1],[0,1]],[[0,1],[1,0]]"),
+        ("Matrices over GF(p^e)", "an entry over a field with q = p^e elements is "
+         "an integer code 0 ≤ x < q whose base-p digits, least significant "
+         "first, are its coordinates in the basis 1, a, ..., a^(e-1) of the "
+         "Conway generator a (so over GF(4) the code 2 is a itself)",
+         "Mat(1,4):[[2]]"),
     ]
 
 
-def _candidate(label, present):
-    return {"label": label, "present": present}
+def _candidate(label, present, live=False):
+    """One group sharing the computed hash: ``present`` says it has a row in
+    ``gps_groups``, ``live`` that GAP can build a page for it anyway."""
+    return {"label": label, "present": present, "live": live}
 
 
 def _lookup(G, N):
@@ -373,44 +414,56 @@ def _lookup(G, N):
             "proof": True,
             "proof_reason": "GAP identified this group up to isomorphism.",
         }
-    # (b) A smallhash order: gps_smallhash is a complete (order, counter, hash)
-    # table, so a unique hash match is a proof and a multiple match pins the
-    # group to an explicit hash-collision cluster.
-    if int(N) in SMALLHASH_ORDERS:
-        h = group_hash(G)
-        counters = sorted(int(c) for c in
-                          db.gps_smallhash.search({"order": int(N), "hash": h}, "counter"))
-        labels = [f"{int(N)}.{c}" for c in counters]
-        if len(counters) == 1:
+    h = group_hash(G)
+    res = resolve_order_hash(N, h)
+    # (b) A complete-table order: gps_smallhash lists every group of this order
+    # with this hash, so a unique match is a proof of isomorphism and a
+    # multiple match pins the group to an explicit hash-collision cluster.
+    if res.complete:
+        present = set(res.in_lmfdb())
+        # Groups of most of these orders have a homepage computed by GAP even
+        # when they are not in the database; those of order 6561 do not.
+        live = live_pages_available(N)
+        if len(res.labels) == 1 and (res.labels[0] in present or live):
             return {
                 "status": "redirect",
-                "label": labels[0],
+                "label": res.labels[0],
                 "hash": h,
                 "proof": True,
                 "proof_reason": ("The hash tables are complete for order "
                                  f"{int(N)} and exactly one group has this hash."),
             }
-        present = set(db.gps_groups.search({"label": {"$in": labels}}, "label")) if labels else set()
+        if not res.labels:
+            # The hash was computed from an actual group of this order, so the
+            # complete table has to contain it: this is a data problem, not a
+            # statement about the input.
+            return {
+                "status": "list",
+                "hash": h,
+                "complete": True,
+                "candidates": [],
+                "data_error": True,
+                "note": (f"The complete hash table for order {int(N)} did not contain "
+                         "the computed hash.  The table may be unavailable or "
+                         "inconsistent; please report this."),
+            }
         return {
             "status": "list",
             "hash": h,
             "complete": True,
-            "candidates": [_candidate(lab, lab in present) for lab in labels],
+            "candidates": [_candidate(lab, lab in present, live) for lab in res.labels],
             "caveat": (f"The hash tables are complete for order {int(N)}, so this "
                        "group is isomorphic to exactly one of the following "
-                       f"{len(labels)} groups (they share a hash collision)."),
+                       f"{len(res.labels)} groups (they share a hash collision)."),
         }
-    # (c) Any other order: look up the computed hash in gps_groups.  A hash
-    # match does NOT prove isomorphism (e.g. 6561.23 and 6561.25 collide).
-    h = group_hash(G)
-    matches = sorted(db.gps_groups.search({"order": int(N), "hash": h}, "label"),
-                     key=label_sortkey)
-    if matches:
+    # (c) Any other order: the hash matches in gps_groups.  A hash match does
+    # NOT prove isomorphism (e.g. 6561.23 and 6561.25 collide).
+    if res.labels:
         return {
             "status": "list",
             "hash": h,
             "complete": False,
-            "candidates": [_candidate(lab, True) for lab in matches],
+            "candidates": [_candidate(lab, True) for lab in res.labels],
             "caveat": ("Equal order and hash does not prove isomorphism, so your "
                        "group is isomorphic to one of the following, or to a group "
                        "not in the database with the same hash."),
@@ -439,6 +492,25 @@ def _lookup(G, N):
     }
 
 
+_gap_ready = False
+
+
+def prepare_gap():
+    """Force GAP's one-time start-up before any alarm is set.
+
+    Starting GAP and loading the libraries behind Sage's conversions takes
+    about twenty seconds in a fresh worker, and an alarm that fires during that
+    start-up leaves ``libgap`` unusable for the rest of the process (every
+    later GAP call returns ``Aborted``).  The work is the same whatever the
+    user typed, so it belongs outside the guard; interrupting GAP once it is
+    running is safe, as the timeouts below rely on.
+    """
+    global _gap_ready
+    if not _gap_ready:
+        PermutationGroup([[(1, 2)]])._libgap_().Order()
+        _gap_ready = True
+
+
 def identify_group(desc):
     """Identify the group described by ``desc``.
 
@@ -460,32 +532,35 @@ def identify_group(desc):
         return {**base, "status": "error",
                 "error": f"Input too long (at most {MAX_INPUT} characters)."}
 
-    try:
-        G, kind = _parse(desc)
-    except DescriptionError as err:
-        return {**base, "status": "error", "error": str(err)}
-    base["kind"] = kind
-
-    # Order under a short timeout (matrix groups in particular can be slow).
+    # Parsing already builds Sage and GAP objects (a permutation group, a PC
+    # group from its code, matrices over a finite ring), so it runs under the
+    # same alarm as the order computation rather than ahead of it.
+    prepare_gap()
     try:
         alarm(ORDER_TIMEOUT)
+        G, kind = _parse(desc)
         N = ZZ(G.Order())
+    except DescriptionError as err:
+        return {**base, "status": "error", "error": str(err)}
     except AlarmInterrupt:
         return {**base, "status": "error",
-                "error": "Timed out computing the group order; try a smaller group."}
-    except (GAPError, ValueError, RuntimeError) as err:
+                "error": ("Timed out constructing the group and computing its order; "
+                          "try a smaller group.")}
+    except (GAPError, ValueError, RuntimeError, TypeError) as err:
         return {**base, "status": "error",
-                "error": f"Could not compute the group order: {err}"}
+                "error": f"Could not construct the group or compute its order: {err}"}
     finally:
         cancel_alarm()
 
+    base["kind"] = kind
     base["order"] = int(N)
-    base["order_factored"] = latex(N.factor())
+    # Nothing that scales with the order (factoring included) before the cap.
     if N > ORDER_CAP:
         return {**base, "status": "error",
                 "error": (f"Order {int(N)} exceeds the supported bound of "
                           f"{ORDER_CAP}; only smaller groups can be identified."),
                 "show_order_link": False}
+    base["order_factored"] = latex(N.factor())
 
     # Hash / identification under a longer timeout.
     try:
@@ -510,13 +585,3 @@ def identify_group(desc):
 
     result.update(base)
     return result
-
-
-def order_search_url(order):
-    """URL to the search page listing all groups of the given order."""
-    return url_for("abstract.index", order=int(order))
-
-
-def hash_search_url(order, h):
-    """URL to the search page listing all groups of the given order and hash."""
-    return url_for("abstract.index", hash=f"{int(order)}#{int(h)}")

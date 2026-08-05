@@ -76,8 +76,13 @@ from .identify import (
     identify_group,
     describe_formats,
     looks_like_permutation,
-    order_search_url,
+)
+from .hash_lookup import (
+    hash_constraint,
     hash_search_url,
+    order_search_url,
+    resolve_order_hash,
+    structural_hash,
 )
 
 
@@ -238,12 +243,16 @@ def parse_family(inp, query, qfield):
 
 @search_parser
 def parse_hashes(inp, query, qfield, order_field):
+    # hash_constraint decides which column carries the hash at this order: at
+    # the orders with a complete gps_smallhash table, gps_groups.hash holds the
+    # label counter instead of the hash, so the search has to go through
+    # gps_smallhash and come back as a list of counters.
     if inp.count("#") == 0:
         opts = [ZZ(opt) for opt in inp.split(",")]
-        if len(opts) == 1:
-            query[qfield] = opts[0]
-        else:
-            query[qfield] = {"$or": opts}
+        N = query.get(order_field)
+        if isinstance(N, (dict, list)):
+            N = None  # a range or list of orders: only the stored column to go on
+        query.update(hash_constraint(N, opts, qfield))
     elif inp.count("#") == 1:
         N, hsh = inp.split("#")
         N, hsh = ZZ(N), ZZ(hsh)
@@ -251,7 +260,7 @@ def parse_hashes(inp, query, qfield, order_field):
             query[order_field] = N
         elif query[order_field] != N:
             raise ValueError(f"You cannot specify order both in the {order_field} input and the {qfield} input")
-        query[qfield] = hsh
+        query.update(hash_constraint(N, [hsh], qfield))
     else:
         raise ValueError("To specify multiple hash values, all must have the same order; provide the order in the order input and then just give hashes separated by commas")
 
@@ -1235,11 +1244,15 @@ def group_jump(info):
     hre = abstract_group_hash_regex.fullmatch(jump)
     if hre:
         N, hsh = [ZZ(c) for c in hre.groups()]
-        if N <= 2000 and (N < 512 or N.valuation(2) < 7):
-            # Less useful here, since we mostly have group ids in this regime, but we include it for completeness
-            possible_labels = list(db.gps_groups.search({"order":N, "hash": hsh}, "label"))
-            if len(possible_labels) == 1:
-                return redirect(url_for(".by_label", label=possible_labels[0]))
+        res = resolve_order_hash(N, hsh)
+        # A complete gps_smallhash table makes a unique match a proof of
+        # isomorphism; otherwise only the orders where the hash is the group id
+        # determine the group (less useful here, since we mostly have group ids
+        # in this regime, but we include it for completeness).
+        if res.complete or (N <= 2000 and (N < 512 or N.valuation(2) < 7)):
+            label = res.unique_label()
+            if label is not None:
+                return redirect(url_for(".by_label", label=label))
         return redirect(url_for(".index", hash=jump))
     # by permutation generators
     if looks_like_permutation(jump):
@@ -1572,7 +1585,13 @@ group_columns = SearchColumns([
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
                       align="center"),
-    ProcessedCol("hash", "group.hash", "Hash", lambda h: "" if h is None else str(h), default=False, align="right", short_title="hash")])
+    # structural_hash suppresses the rows where gps_groups.hash is the label
+    # counter rather than the hash, so that this column never shows something
+    # other than the value the group.hash knowl describes.
+    MultiProcessedCol("hash", "group.hash", "Hash",
+                      ["counter", "hash"],
+                      lambda counter, h: "" if structural_hash(counter, h) is None else str(h),
+                      default=False, align="right", short_title="hash")])
 
 @search_wrap(
     table=db.gps_groups,
@@ -3761,7 +3780,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[1] is None:
             ans += "Isomorphism class has not been identified<br />"
         else:
-            ans += f"{display_knowl('group.hash', 'Hash')}: <a href=\"{url_for('.index', hash=f'{order}#{profiledata[1]}')}\">{profiledata[1]}</a><br />"
+            ans += f"{display_knowl('group.hash', 'Hash')}: <a href=\"{hash_search_url(order, profiledata[1])}\">{profiledata[1]}</a><br />"
         isomorphism_label = "Subgroups with this data:"
     else:
         if label.startswith("ab/"):
@@ -3822,7 +3841,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[4] is None:
             ans += "Quotient isomorphism class has not been identified<br />"
         else:
-            ans += f"{display_knowl('group.hash', 'Quotient hash')}: <a href=\"{url_for('.index', hash=f'{ambient_order // order}#{profiledata[4]}')}\">{profiledata[4]}</a><br />"
+            ans += f"{display_knowl('group.hash', 'Quotient hash')}: <a href=\"{hash_search_url(ambient_order // order, profiledata[4])}\">{profiledata[4]}</a><br />"
 
     if gp and not gp.live():
         if ambient is None:

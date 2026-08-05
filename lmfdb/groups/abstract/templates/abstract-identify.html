@@ -54,8 +54,9 @@
     <ul>
       {% for c in res.candidates %}
         <li>
-          {% if c.present %}
+          {% if c.present or c.live %}
             <a href="{{ url_for('.by_label', label=c.label) }}">{{ c.label }}</a>
+            {%- if not c.present %} <span class="nowrap">(not in the database)</span>{% endif %}
           {% else %}
             {{ c.label }} <span class="nowrap">(not in the database)</span>
           {% endif %}
@@ -63,7 +64,7 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>{{ res.note }}</p>
+    <p{% if res.data_error %} class="red"{% endif %}>{{ res.note }}</p>
   {% endif %}
 {% endif %}
 
