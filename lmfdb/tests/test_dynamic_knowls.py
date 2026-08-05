@@ -1,9 +1,11 @@
 
+from unittest.mock import patch
+
 from flask import render_template
 from markupsafe import escape
 
 from lmfdb.tests import LmfdbTest
-from lmfdb.knowledge.knowl import Knowl
+from lmfdb.knowledge.knowl import Knowl, knowldb
 from lmfdb.utils.datetime_utils import utc_now_naive
 
 class DynamicKnowlTest(LmfdbTest):
@@ -135,3 +137,37 @@ class DescriptionKnowlTest(LmfdbTest):
         assert '<input name="title" id="ktitle" value="{}" type="hidden" />'.format(
             escape(column_knowl.title)) in column
         assert "Postgres column type" in column
+
+    def _set_table_description(self, table, description, old):
+        r"""
+        Run knowldb.set_table_description with the database write mocked out,
+        and return the knowl it would have saved.
+        """
+        saved = []
+
+        def fake_save(knowl, who, most_recent=None, minor=False):
+            saved.append(knowl)
+
+        with patch.object(knowldb, "get_knowl", return_value=old), \
+             patch.object(knowldb, "save", side_effect=fake_save), \
+             patch.object(self.db, "login", return_value="tester"):
+            knowldb.set_table_description(table, description)
+
+        assert len(saved) == 1
+        return saved[0]
+
+    def test_content_update_keeps_table_title(self):
+        r"""
+        db.<table>.description(...) updates the content, so it must carry the
+        title over rather than saving the generated fallback in its place.
+        """
+        old = {"authors": ["editor"], "title": "Number field data",
+               "content": "Number fields", "status": 0}
+        kwl = self._set_table_description("nf_fields", "Fields of finite degree", old)
+        assert kwl.title == "Number field data"
+        assert kwl.content == "Fields of finite degree"
+
+    def test_content_update_generates_missing_table_title(self):
+        # a table description that does not exist yet still gets the fallback
+        kwl = self._set_table_description("nf_fields", "Number fields", None)
+        assert kwl.title == "Table nf_fields"

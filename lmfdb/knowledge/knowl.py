@@ -526,14 +526,18 @@ class KnowlBackend(PostgresBase):
     def set_table_description(self, table, description):
         uid = db.login()
         kid = f"tables.{table}"
-        data = {
-            'content': description,
-            'defines': table,
-        }
-        kwl = Knowl(kid, data=data)
         old = self.get_knowl(kid, beta=True)
         if old is None:
             old = {'authors': []}
+        data = {
+            'content': description,
+            'defines': table,
+            # Unlike a column description, the title here is set by editors,
+            # so carry it over: this updates the content only, and a missing
+            # title would be saved as the generated fallback, discarding it.
+            'title': old.get('title', ''),
+        }
+        kwl = Knowl(kid, data=data)
         self.save(kwl, uid, most_recent=old)
 
     def drop_table(self, table):
