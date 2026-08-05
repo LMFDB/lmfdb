@@ -94,6 +94,7 @@ class ApiTest(LmfdbTest):
         assert parse_api_value("f2.5", ",") == 2.5
         assert parse_api_value("i11..100", ",") == {"$gte": 11, "$lte": 100}
         assert parse_api_value("f..2.5", ",") == {"$lte": 2.5}
+        assert parse_api_value("lsa;b", ";") == ["a", "b"]
         assert parse_api_value("li2;2", ";") == [2, 2]
         assert parse_api_value("lf0.5,1.5", ",") == [0.5, 1.5]
         assert parse_api_value("py{'a': 1}", ",") == {"a": 1}
@@ -119,6 +120,14 @@ class ApiTest(LmfdbTest):
         # float range (numeric columns are encoded as RealLiteral dicts)
         data = self.tc.get('/api/ec_curvedata/?faltings_height=f-0.9..-0.7&_format=json&_fields=faltings_height', follow_redirects=True).get_json()
         assert data['data'] and all(-0.9 <= float(rec['faltings_height']['data']) <= -0.7 for rec in data['data'])
+
+    def test_api_list_of_strings_query(self):
+        r"""
+        Check the ls prefix, which splits the whole value into a list of strings
+        """
+        # the example on the API index page: curves with torsion structure [2,2], not [2]
+        data = self.tc.get('/api/ec_curvedata/?torsion_structure=ls2;2&_delim=;&_format=json&_fields=torsion_structure', follow_redirects=True).get_json()
+        assert data['data'] and all(rec['torsion_structure'] == [2, 2] for rec in data['data'])
 
     def test_api_contains_float_query(self):
         r"""

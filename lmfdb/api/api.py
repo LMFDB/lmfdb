@@ -196,7 +196,7 @@ def parse_api_value(qval, delim=","):
         elif qval.startswith("f"):
             return parse_numeric(qval[1:], float)
         elif qval.startswith("ls"):      # indicator, that it might be a list of strings
-            return qval[2].split(delim)
+            return qval[2:].split(delim)
         elif qval.startswith("li"):
             return [int(_) for _ in qval[2:].split(delim)]
         elif qval.startswith("lf"):
