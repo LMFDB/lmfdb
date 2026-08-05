@@ -46,6 +46,7 @@ from lmfdb.utils.search_boxes import (
     SelectBox,
     SortController,
     TextBox,
+    TextBoxWithSelect,
 )
 
 from lmfdb.classical_modular_forms.main import an_modulo_is_constraint
@@ -536,6 +537,36 @@ class SearchBoxTest(unittest.TestCase):
         # Hidden inputs are not displayed, so there is nothing to highlight
         hidden = HiddenBox(name="hst", label="")._input({"hst": "Traces"})
         self.assertNotIn("search_", hidden)
+
+    def test_qualifying_select(self):
+        r"""
+        Checking that a select qualifying a text box is only active once that
+        text box has been filled in, since the parsers it is handed to do
+        nothing when their field is empty
+        """
+        quantifier = SelectBox(name="level_type",
+                               options=[("", ""), ("prime", "prime")])
+        TextBoxWithSelect(name="level", label="Level", select_box=quantifier)
+        self.assertEqual(self.classes(quantifier, {"level_type": "prime"}), set())
+        self.assertEqual(
+            self.classes(quantifier, {"level_type": "prime", "level": "11"}),
+            {"search_constraint", "search_active"})
+        # and an empty select is still not active when the text box is filled
+        self.assertEqual(self.classes(quantifier, {"level": "11"}),
+                         {"search_constraint"})
+
+    def test_qualifying_select_that_constrains_alone(self):
+        r"""
+        Checking that a select which restricts the results by itself, such as
+        the level and conductor types, can say so and is then not gated on
+        the text box beside it
+        """
+        quantifier = SelectBox(name="level_type",
+                               options=[("", ""), ("prime", "prime")],
+                               is_constraint=True)
+        TextBoxWithSelect(name="level", label="Level", select_box=quantifier)
+        self.assertEqual(self.classes(quantifier, {"level_type": "prime"}),
+                         {"search_constraint", "search_active"})
 
     def test_contextual_constraint(self):
         r"""

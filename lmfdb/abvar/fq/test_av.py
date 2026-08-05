@@ -3,6 +3,17 @@ from lmfdb.tests import LmfdbTest
 
 class AVTest(LmfdbTest):
     # All tests should pass
+    def test_geom_decomp_active_classes(self):
+        r"""
+        Check that the geometric decomposition checkbox is only marked as
+        constraining the results once one of the inputs it re-targets is used
+        """
+        url = "/Variety/Abelian/Fq/?q=2&g=2&use_geom_decomp=yes&search_type=List"
+        self.assertEqual(self.search_classes(url, "use_geom_decomp"), set())
+        url += "&dim1_factors=1"
+        self.assertEqual(self.search_classes(url, "use_geom_decomp"),
+                         {"search_constraint", "search_active"})
+
     def test_polynomial(self):
         r"""
         Check that the formatted polynomial displays correctly

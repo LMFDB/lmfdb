@@ -34,6 +34,18 @@ class ModCrvTest(LmfdbTest):
         L = self.tc.get("/ModularCurve/Q/?start=0&level_type=divides&level=15")
         assert "15.12.0.b.2" in L.get_data(as_text=True)
 
+    def test_level_type_active_classes(self):
+        # modcurve_browse.html links straight to ?level_type=... searches, so
+        # the level type has to stay marked as constraining the results even
+        # with no level entered, unlike the quantifier selects that only say
+        # how to read the box beside them
+        self.assertEqual(self.search_classes("/ModularCurve/Q/?level_type=prime",
+                                             "level_type"),
+                         {"search_constraint", "search_active"})
+        self.assertEqual(self.search_classes("/ModularCurve/Q/?level=13",
+                                             "level_type"),
+                         {"search_constraint"})
+
     def test_index_range(self):
         L = self.tc.get("/ModularCurve/Q/?index=100-1000")
         assert "6.144.1-6.b.1.1" in L.get_data(as_text=True)

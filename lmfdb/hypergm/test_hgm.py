@@ -73,6 +73,15 @@ class HGMTest(LmfdbTest):
         self.assertEqual(self.search_classes(url, "weight"),
                          {"family", "search_constraint"})
 
+    def test_prime_active_classes(self):
+        # The prime only picks the columns the p-part boxes are compared
+        # against, so on its own it does not constrain the results
+        url = "/Motive/Hypergeometric/Q/?degree=4&p=3&search_type=Family"
+        self.assertEqual(self.search_classes(url, "p"), set())
+        url += "&Ap=%5B2%2C1%5D"
+        self.assertEqual(self.search_classes(url, "p"),
+                         {"search_constraint", "search_active"})
+
     def test_search_weight(self):
         self.check_args("/Motive/Hypergeometric/Q/?weight=3&search_type=Family", "A5_B6.6")
         self.not_check_args("/Motive/Hypergeometric/Q/?weight=3&search_type=Family", "A3_B4")

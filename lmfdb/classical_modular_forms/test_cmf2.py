@@ -214,6 +214,24 @@ class CmfTest(LmfdbTest):
             self.assertEqual(self.search_classes(url, name),
                              {'simult_select', 'search_constraint'})
 
+    def test_quantifier_active_classes(self):
+        # A quantifier select is handed to a parser that does nothing when
+        # its text box is empty, so it is only active once that box is filled
+        url = '/ModularForm/GL2/Q/holomorphic/?level=11'
+        self.assertEqual(self.search_classes(url, 'prime_quantifier'), set())
+        url = ('/ModularForm/GL2/Q/holomorphic/?level=11&level_primes=11'
+               '&prime_quantifier=exactly')
+        self.assertEqual(self.search_classes(url, 'prime_quantifier'),
+                         {'search_constraint', 'search_active'})
+
+        # The parities and the level type are the exceptions: common_parse
+        # reads them whether or not their text box was filled in, so they do
+        # constrain the results on their own and must stay highlighted
+        url = '/ModularForm/GL2/Q/holomorphic/?level=11-20&weight_parity=odd'
+        self.assertEqual(self.search_classes(url, 'weight_parity'),
+                         {'simult_select', 'search_constraint', 'search_active'})
+        self.assertEqual(self.search_classes(url, 'weight'), {'search_constraint'})
+
     def test_trivial_searches(self):
         from sage.all import Subsets
         for begin in [

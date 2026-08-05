@@ -491,11 +491,25 @@ class SkipBox(TextBox):
 
 
 class TextBoxWithSelect(TextBox):
+    """
+    A text box with a select box beside it qualifying how to interpret it.
+
+    The select is usually handed to a ``@search_parser`` function as its
+    ``mode``, and those return immediately when their text field is empty, so
+    by default the select is only treated as constraining the results once
+    the text box has been filled in.  A select that is read directly during
+    parsing does restrict the results by itself, and must say so by passing
+    ``is_constraint=True``; see ``level_type`` in classical modular forms and
+    modular curves, ``conductor_type`` in elliptic curves and mod-l Galois
+    representations, and the two CMF parities.
+    """
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
         self.select_box.width = self.select_box.min_width
         self.select_box.short_width = self.select_box.min_width
         TextBox.__init__(self, name, label, **kwds)
+        if "is_constraint" not in self.select_box.__dict__:
+            self.select_box.is_constraint = self._is_filled
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan

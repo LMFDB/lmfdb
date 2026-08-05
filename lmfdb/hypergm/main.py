@@ -712,6 +712,17 @@ def labels_page():
            learnmore=learnmore_list_remove('labels'))
 
 
+def p_is_constraint(info):
+    """
+    Whether the prime $p$ input is restricting which results are shown.
+
+    The prime only picks which columns the $A_p$, $B_p$, $A^\\perp_p$ and
+    $B^\\perp_p$ boxes are compared against, so with all four of those empty
+    it changes neither the results nor how they are displayed.
+    """
+    return any((info.get(name) or '').strip()
+               for name in ['Ap', 'Bp', 'Apperp', 'Bpperp'])
+
 class HGMSearchArray(SearchArray):
     _sort = [('', 'degree', ['degree', 'weight', 'A', 'B', 'label']),
             ('weight', 'weight', ['weight', 'degree', 'A', 'B', 'label']),
@@ -764,7 +775,8 @@ class HGMSearchArray(SearchArray):
             options=[("", 2),
                      ("3", 3),
                      ("5", 5),
-                     ("7", 7)])
+                     ("7", 7)],
+            is_constraint=p_is_constraint)
         Ap = TextBox(
             name="Ap",
             label="$A_p$",
