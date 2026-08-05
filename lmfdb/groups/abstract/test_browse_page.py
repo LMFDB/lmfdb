@@ -1,6 +1,7 @@
 from urllib.parse import parse_qs, urlsplit
 
 from lmfdb.tests import LmfdbTest
+from lmfdb.groups.abstract.main import FAMILY_ALIASES
 
 ## TODO
 ## Test diagram and character table displays and picture?
@@ -74,11 +75,51 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?jump=10.1", "10.1") # by label
         self.check_args("/Groups/Abstract/?jump=SL(2,7)", "336.114") # by family name
         self.check_args("/Groups/Abstract/?jump=F5", "20.3") # by name
-        # families stored under an alias name (issue #6654)
-        self.check_args("/Groups/Abstract/?jump=Sp(2, 5)", "120.5") # Sp(2,q) = SL(2,q)
-        self.check_args("/Groups/Abstract/?jump=PSp(2,5)", "60.5") # PSp(2,q) = PSL(2,q)
-        self.check_args("/Groups/Abstract/?jump=GSp(2,7)", "2016.a") # GSp(2,q) = GL(2,q)
-        self.check_args("/Groups/Abstract/?jump=Spin(3,5)", "120.5") # Spin(3,q) = SL(2,q)
+
+    def test_family_alias_lookup(self):
+        r"""
+        Check that Groups/Abstract/?jump finds the members of a family that are
+        stored in gps_special_names under another family's name (issue #6654).
+
+        One stored example for each entry of FAMILY_ALIASES; the final
+        assertion keeps the two lists in sync.
+        """
+        cases = [
+            # (alias key, jump argument, label of the stored group)
+            (("Sp", 2), "Sp(2, 5)", "120.5"),            # Sp(2,q) = SL(2,q)
+            (("PSp", 2), "PSp(2,5)", "60.5"),            # PSp(2,q) = PSL(2,q)
+            (("GSp", 2), "GSp(2,7)", "2016.a"),          # GSp(2,q) = GL(2,q)
+            (("ASp", 2), "ASp(2,2)", "24.12"),           # ASp(2,q) = ASL(2,q)
+            (("PSigmaSp", 2), "PSigmaSp(2,5)", "60.5"),  # PSigmaSp(2,q) = PSigmaL(2,q)
+            (("ASigmaSp", 2), "ASigmaSp(2,2)", "24.12"), # ASigmaSp(2,q) = ASigmaL(2,q)
+            (("Spin", 3), "Spin(3,5)", "120.5"),         # Spin(3,q) = SL(2,q)
+        ]
+        for _, jump, label in cases:
+            self.check_args("/Groups/Abstract/?jump=" + jump, label)
+        assert set(alias for alias, _, _ in cases) == set(FAMILY_ALIASES), \
+            "every entry of FAMILY_ALIASES needs a jump test"
+
+    def test_absent_family_lookup(self):
+        r"""
+        Check that Groups/Abstract/?jump reports a group that exists but is not
+        in the database as missing rather than as an invalid name.  This is the
+        branch of group_jump that goes through valid_params, so it checks the
+        family names used there against gps_families.
+        """
+        absent = "has not yet been added to the database"
+        invalid = "is not a valid name for a group or subgroup"
+        # even-dimensional families: GSp and ASp are newly accepted there, and
+        # OrthPlus, POPlus, GSOPlus, GOrthPlus replace GOPlus, PGOPlus,
+        # CSOPlus, COPlus
+        for jump in ["GSp(100,5)", "ASp(100,5)", "OrthPlus(100,5)",
+                     "POPlus(100,5)", "GSOPlus(100,5)", "GOrthPlus(100,5)"]:
+            self.check_args("/Groups/Abstract/?jump=" + jump, absent)
+        # odd-dimensional families: Orth, PO, GSO, GOrth replace GO, PGO, CSO, CO
+        for jump in ["Orth(101,5)", "PO(101,5)", "GSO(101,5)", "GOrth(101,5)"]:
+            self.check_args("/Groups/Abstract/?jump=" + jump, absent)
+        # a dimension of the wrong parity is not a group at all
+        self.check_args("/Groups/Abstract/?jump=GOrthPlus(101,5)", invalid)
+        self.check_args("/Groups/Abstract/?jump=GOrth(100,5)", invalid)
 
     # test that abelian group redirect works
     def test_abelian_lookup(self):
