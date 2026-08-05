@@ -630,13 +630,19 @@ class WebEC():
         # curve in the base_change column).  When there are at most
         # MAX_BC_LINKS of them we list them individually; some curves
         # of small conductor have hundreds of base changes in the
-        # database, and for these we just link to an ECNF search.
-        bc_labels = list(db.ec_nfcurves.search({'base_change': {'$contains': self.lmfdb_label}},
-                                               projection='label', limit=MAX_BC_LINKS + 1))
+        # database, and for these we just link to an ECNF search.  The
+        # query must agree with the one that search makes for
+        # base_change_label (see lmfdb/ecnf/main.py), so that the two
+        # ways of listing the base changes give the same set of curves.
+        # This is one query per page, using the GIN index on
+        # base_change: 2ms or less on the server even for the curves
+        # with 200+ base changes, such as 14.a1.
+        bc_query = {'q_curve': True, 'base_change': {'$contains': self.lmfdb_label}}
+        bc_labels = list(db.ec_nfcurves.search(bc_query, projection='label', limit=MAX_BC_LINKS + 1))
         if len(bc_labels) > MAX_BC_LINKS:
             self.friends.append(('Base changes ', url_for('ecnf.index', base_change_label=self.lmfdb_label)))
         else:
-            from lmfdb.ecnf.main import split_full_label
+            from lmfdb.ecnf.WebEllipticCurve import split_full_label
             for bc_label in bc_labels:
                 (nf, cond_label, class_label, number) = split_full_label(bc_label)
                 self.friends.append(('Base change ' + bc_label,

@@ -1,3 +1,8 @@
+from unittest.mock import patch
+
+from lmfdb import db
+from lmfdb.ecnf.WebEllipticCurve import split_full_label
+from lmfdb.elliptic_curves.web_ec import MAX_BC_LINKS
 from lmfdb.tests import LmfdbTest
 
 
@@ -162,27 +167,82 @@ class EllCurveTest(LmfdbTest):
         assert ' is strictly larger than ' in L.get_data(as_text=True)
         assert '<a href=/EllipticCurve/3.3.49.1/512.1/e/3>3.3.49.1-512.1-e3</a>' in L.get_data(as_text=True)
 
-    def test_base_change_friends(self):
+    def base_change_page(self, bc_labels, label='131.a1', url='/EllipticCurve/Q/131/a/1'):
         """
-        Test the display of base changes in the friends (Related
-        objects) column.
+        Fetch the page of an elliptic curve over Q with the query for its
+        base changes returning bc_labels, whatever the database holds,
+        checking that query on the way.
         """
-        # 131.a1 has 5 base changes in the database, listed individually
-        L = self.tc.get('/EllipticCurve/Q/131/a/1')
-        text = L.get_data(as_text=True)
-        assert 'Base change 2.0.3.1-17161.1-a1' in text
-        assert '/EllipticCurve/2.0.3.1/17161.1/a/1' in text
-        assert 'Base change 2.0.8.1-17161.2-a1' in text
-        # 73.a2 has more than 10, so we just link to an ECNF search
-        L = self.tc.get('/EllipticCurve/Q/73/a/2')
-        text = L.get_data(as_text=True)
-        assert 'base_change_label=73.a2' in text
-        assert 'Base change 2' not in text
-        # 389.a1 has no base changes in the database
-        L = self.tc.get('/EllipticCurve/Q/389/a/1')
-        text = L.get_data(as_text=True)
+        real_search = db.ec_nfcurves.search
+        queries = []
+
+        def fake_search(query, projection=1, *args, **kwargs):
+            # The friends box asks for the base changes of one label;
+            # make_torsion_growth passes a list, so is left alone.
+            bc = query.get('base_change')
+            if isinstance(bc, dict) and isinstance(bc.get('$contains'), str):
+                queries.append((query, projection, kwargs))
+                return list(bc_labels)
+            return real_search(query, projection, *args, **kwargs)
+
+        with patch.object(db.ec_nfcurves, 'search', fake_search):
+            text = self.tc.get(url).get_data(as_text=True)
+        # whatever the number of base changes, the page makes exactly one
+        # query for them, with the predicate used by the ECNF search for
+        # base_change_label, projecting just the label
+        assert queries == [({'q_curve': True, 'base_change': {'$contains': label}},
+                            'label', {'limit': MAX_BC_LINKS + 1})]
+        return text
+
+    def test_base_change_friends_none(self):
+        """
+        Test that a curve with no base changes in the database gets
+        neither individual links nor a link to an ECNF search.
+        """
+        text = self.base_change_page([])
+        assert 'Base change 2.0.3.1-' not in text
         assert 'base_change_label' not in text
-        assert 'Base change 2' not in text
+
+    def test_base_change_friends_listed(self):
+        """
+        Test that the base changes of a curve are listed individually in
+        the friends (Related objects) column when there are at most
+        MAX_BC_LINKS of them.
+        """
+        labels = ['2.0.3.1-%s.1-a1' % (i + 1) for i in range(MAX_BC_LINKS)]
+        text = self.base_change_page(labels)
+        for i, bc_label in enumerate(labels):
+            link = '<a href="/EllipticCurve/2.0.3.1/%s.1/a/1">Base change %s</a>' % (i + 1, bc_label)
+            assert text.count(link) == 1
+        # no link to an ECNF search in addition to the individual ones
+        assert 'base_change_label' not in text
+
+    def test_base_change_friends_search(self):
+        """
+        Test that a curve with more than MAX_BC_LINKS base changes in the
+        database gets a single link to an ECNF search instead.
+        """
+        labels = ['2.0.3.1-%s.1-a1' % (i + 1) for i in range(MAX_BC_LINKS + 1)]
+        text = self.base_change_page(labels)
+        assert text.count('<a href="/EllipticCurve/?base_change_label=131.a1">Base changes </a>') == 1
+        assert 'Base change 2.0.3.1-' not in text
+
+    def test_base_change_friends_live(self):
+        """
+        Test the base changes displayed on a curve page against the ones
+        actually in the database.
+        """
+        bc_labels = list(db.ec_nfcurves.search({'q_curve': True, 'base_change': {'$contains': '131.a1'}},
+                                               projection='label', limit=MAX_BC_LINKS + 1))
+        assert bc_labels, "131.a1 should have base changes in the database"
+        text = self.tc.get('/EllipticCurve/Q/131/a/1').get_data(as_text=True)
+        if len(bc_labels) > MAX_BC_LINKS:
+            assert 'base_change_label=131.a1' in text
+        else:
+            for bc_label in bc_labels:
+                nf, cond_label, class_label, number = split_full_label(bc_label)
+                url = '/EllipticCurve/%s/%s/%s/%s' % (nf, cond_label, class_label, number)
+                assert '<a href="%s">Base change %s</a>' % (url, bc_label) in text
 
     def test_990h(self):
         """
