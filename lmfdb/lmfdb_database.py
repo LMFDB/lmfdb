@@ -106,7 +106,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         """
         from lmfdb.knowledge.knowl import knowldb
         from lmfdb.utils.datetime_utils import utc_now_naive
-        knowls = knowldb.get_column_description(other_table)
+        knowls = knowldb.get_column_descriptions(other_table)
         with DelayCommit(self):
             for col, knowl in knowls.items():
                 if col in self.col_type:

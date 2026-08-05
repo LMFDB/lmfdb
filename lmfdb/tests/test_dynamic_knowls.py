@@ -1,5 +1,8 @@
 
+from unittest.mock import patch
+
 from lmfdb.tests import LmfdbTest
+from lmfdb.knowledge.knowl import Knowl, knowldb
 from lmfdb.utils.datetime_utils import utc_now_naive
 
 class DynamicKnowlTest(LmfdbTest):
@@ -75,3 +78,68 @@ class DynamicKnowlTest(LmfdbTest):
 
             # The timestamps and counts should be the same
             assert dev_cnt == prod_cnt and dev_t == prod_t
+
+
+class PortColumnKnowlsTest(LmfdbTest):
+    """
+    These tests check that db.<table>.port_column_knowls moves the column
+    description knowls of another table onto this one.
+    """
+
+    def _port(self, other_table, cols, keep_old=True):
+        r"""
+        Run db.nf_fields.port_column_knowls with the database writes mocked
+        out, and return the knowls it would have saved, renamed and deleted.
+        """
+        old_knowls = {col: Knowl(f"columns.{other_table}.{col}",
+                                 data={"content": f"The {col} column",
+                                       "authors": ["editor"], "status": 0})
+                      for col in cols}
+        saved, renamed, deleted = [], [], []
+
+        def fake_save(knowl, who, most_recent=None, minor=False):
+            saved.append((knowl, who, most_recent, minor))
+
+        def fake_rename(knowl, new_name=None):
+            renamed.append((knowl, new_name))
+
+        with patch.object(knowldb, "get_column_descriptions", return_value=old_knowls), \
+             patch.object(knowldb, "save", side_effect=fake_save), \
+             patch.object(knowldb, "actually_rename", side_effect=fake_rename), \
+             patch.object(knowldb, "delete", side_effect=deleted.append), \
+             patch.object(self.db, "login", return_value="tester"):
+            self.db.nf_fields.port_column_knowls(other_table, keep_old=keep_old)
+
+        return saved, renamed, deleted
+
+    def test_descriptions_of_the_other_table_are_requested(self):
+        with patch.object(knowldb, "get_column_descriptions", return_value={}) as get_descriptions:
+            self.db.nf_fields.port_column_knowls("old_nf_fields")
+        get_descriptions.assert_called_once_with("old_nf_fields")
+
+    def test_copies_knowls_of_shared_columns(self):
+        saved, renamed, deleted = self._port("old_nf_fields", ["degree", "not_a_column"])
+
+        # only a column that this table actually has is ported
+        assert len(saved) == 1
+        knowl, who, most_recent, minor = saved[0]
+        assert knowl.id == "columns.nf_fields.degree"
+        assert knowl.content == "The degree column"
+        assert knowl.title == "Column degree of table nf_fields"
+        # the old knowl is passed along so that its authors are carried over
+        assert most_recent.id == "columns.old_nf_fields.degree"
+        assert (who, minor) == ("tester", True)
+        # keep_old leaves the knowls of the other table in place
+        assert renamed == [] and deleted == []
+
+    def test_renames_knowls_when_not_keeping_old(self):
+        saved, renamed, deleted = self._port("old_nf_fields", ["degree", "not_a_column"],
+                                             keep_old=False)
+
+        assert saved == []
+        assert len(renamed) == 1
+        knowl, new_name = renamed[0]
+        assert knowl.id == "columns.old_nf_fields.degree"
+        assert new_name == "columns.nf_fields.degree"
+        # a knowl for a column this table does not have is dropped
+        assert [k.id for k in deleted] == ["columns.old_nf_fields.not_a_column"]
