@@ -41,7 +41,11 @@ from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.lfunctions import l_function_page
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
-from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
+from lmfdb.classical_modular_forms.main import (
+    an_modulo_is_constraint,
+    process_an_constraints,
+    set_Trn,
+)
 from lmfdb.artin_representations.main import parse_artin_label
 from lmfdb.utils.search_parsing import (
     parse_bool, parse_ints, parse_ints_to_list, parse_floats, parse_noop, parse_mod1,
@@ -616,24 +620,30 @@ class LFunctionSearchArray(SearchArray):
             self.refine_array += [[algebraic]]
 
         if force_rational:
+            # The columns shown in the trace and Euler factor tables, and how
+            # their entries are displayed, do not affect which L-functions
+            # match the search
             trace_coldisplay = TextBox(
                 name='n',
                 label='Columns to display',
                 example='1-40',
-                example_span='3,7,19, 40-90')
+                example_span='3,7,19, 40-90',
+                is_constraint=False)
 
             euler_coldisplay = TextBox(
                 name='n',
                 label='Columns to display',
                 example='2-11',
-                example_span='3,7,19')
+                example_span='3,7,19',
+                is_constraint=False)
 
             trace_primality = SelectBox(
                 name='n_primality',
                 label='Show',
                 options=[('', 'primes only'),
                          ('prime_powers', 'prime powers'),
-                         ('all', 'all')])
+                         ('all', 'all')],
+                is_constraint=False)
 
             trace_an_constraints = TextBox(
                 name='an_constraints',
@@ -650,13 +660,15 @@ class LFunctionSearchArray(SearchArray):
             trace_an_moduli = TextBox(
                 name='an_modulo',
                 label='Modulo',
-                example_span='5, 16')
+                example_span='5, 16',
+                is_constraint=an_modulo_is_constraint)
 
             trace_view = SelectBox(
                 name='view_modp',
                 label='View',
                 options=[('', 'integers'),
-                         ('reductions', 'reductions')])
+                         ('reductions', 'reductions')],
+                is_constraint=False)
 
             self.traces_array = [
                 RowSpacer(22),

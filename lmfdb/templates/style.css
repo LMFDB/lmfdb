@@ -2335,11 +2335,12 @@ button.search_fresh {
 }
 
 /* Highlight inputs that are actively constraining the displayed search results */
-input.search_active, select.search_active {
-  background: {{color.search_active_background}};
+input.search_active:not([type=checkbox]), select.search_active {
+  background-color: {{color.search_active_background}};
 }
-/* Checkboxes are rendered natively, so mark them with a ring instead */
+/* Checkboxes are rendered natively, so mark them with a ring instead.  This
+   uses box-shadow rather than outline so that the browser's keyboard focus
+   indicator, which outline would replace, stays visible. */
 input[type=checkbox].search_active {
-  outline: 3px solid {{color.search_active_background}};
-  outline-offset: 1px;
+  box-shadow: 0 0 0 2px {{color.search_active_ring}};
 }

@@ -732,31 +732,31 @@ class HGMSearchArray(SearchArray):
             label="Degree",
             knowl="hgm.degree",
             example="4",
-            extra=['class="family"'])
+            classes=["family"])
         weight = TextBox(
             name="weight",
             label="Weight",
             knowl="hgm.weight",
             example="3",
-            extra=['class="family"'])
+            classes=["family"])
         famhodge = TextBox(
             name="famhodge",
             label="Family Hodge vector",
             knowl="hgm.hodge_vector",
             example="[1,1,1,1]",
-            extra=['class="family"'])
+            classes=["family"])
         A = TextBox(
             name="A",
             label="$A$",
             knowl="hgm.defining_parameters",
             example="[3,2,2]",
-            extra=['class="family"'])
+            classes=["family"])
         B = TextBox(
             name="B",
             label="$B$",
             knowl="hgm.defining_parameters",
             example="[6,4]",
-            extra=['class="family"'])
+            classes=["family"])
         p = SelectBox(
             name="p",
             label="Prime $p$",
@@ -770,25 +770,25 @@ class HGMSearchArray(SearchArray):
             label="$A_p$",
             knowl="hgm.defining_parameter_ppart",
             example="[2,2,1,1]",
-            extra=['class="family"'])
+            classes=["family"])
         Bp = TextBox(
             name="Bp",
             label="$B_p$",
             knowl="hgm.defining_parameter_ppart",
             example="[2,2,1,1]",
-            extra=['class="family"'])
+            classes=["family"])
         Apperp = TextBox(
             name="Apperp",
             label=r"$A^\perp_p$",
             knowl="hgm.defining_parameter_primetoppart",
             example="[2,2,1,1]",
-            extra=['class="family"'])
+            classes=["family"])
         Bpperp = TextBox(
             name="Bpperp",
             label=r"$B^\perp_p$",
             knowl="hgm.defining_parameter_primetoppart",
             example="[2,2,1,1]",
-            extra=['class="family"'])
+            classes=["family"])
         spacer = BasicSpacer("")
 
         conductor = TextBox(
@@ -797,27 +797,27 @@ class HGMSearchArray(SearchArray):
             knowl="hgm.conductor",
             example="64",
             example_span="a value, like 32, a list, like 32,64, or a range like 1..10000",
-            extra=['class="motive"'])
+            classes=["motive"])
         hodge = TextBox(
             name="hodge",
             label="Hodge vector",
             knowl="hgm.hodge_vector",
             example="[1,1,1,1]",
-            extra=['class="motive"'])
+            classes=["motive"])
         t = TextBox(
             name="t",
             label="Specialization point $t$",
             knowl="hgm.specpoint",
             example="3/2",
             example_span="3/2 (1 has an associated degree drop and is always in the database)",
-            extra=['class="motive"'])
+            classes=["motive"])
         sign = TextBoxNoEg(
             name="sign",
             label=r"Root number $\epsilon$",
             knowl="lfunction.sign",
             example="-1",
             example_span="1 or -1, with -1 occurring only in the symplectic case",
-            extra=['class="motive"'])
+            classes=["motive"])
         # The following two boxes are not yet enabled
         # generic = YesNoBox(
         #    name="generic",

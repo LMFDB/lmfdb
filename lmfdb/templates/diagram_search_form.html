@@ -52,14 +52,4 @@ function set_fresh() {
 
 $("input").on("input", set_fresh);
 $("select").on("change", set_fresh);
-
-function update_search_active() {
-  var box = $(this);
-  if (box.is("[type=checkbox]")) {
-    box.toggleClass("search_active", box.prop("checked"));
-  } else {
-    box.toggleClass("search_active", Boolean(box.val()));
-  }
-}
-$(".search_constraint").on("input change", update_search_active);
 </script>

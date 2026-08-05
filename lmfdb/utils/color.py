@@ -198,6 +198,9 @@ class ColorScheme():
         'select_background': 'col_main_ll',
         # Background for search inputs actively constraining the results shown
         'search_active_background': '#FFF9C4', # P2-100
+        # Ring for active checkboxes, which are rendered natively and so
+        # cannot be tinted; darker than the tint so that it stays visible
+        'search_active_ring': '#F9A825', # P2-800
         'button_border': 'col_main_lg',
         'button_background_hover': 'col_main_l',
         'button_border_hover': 'col_main_lg',

@@ -184,6 +184,36 @@ class CmfTest(LmfdbTest):
         for elt in map(str,[17,0,-80,60,3780,-1200]):
             assert elt in page.get_data(as_text=True)
 
+    def test_traces_active_classes(self):
+        # Only the inputs that select which newforms are shown should be
+        # marked; the rest choose which columns of traces are displayed
+        url = '/ModularForm/GL2/Q/holomorphic/?level=11&search_type=Traces'
+        self.assertEqual(self.search_classes(url, 'level'),
+                         {'search_constraint', 'search_active'})
+        self.assertEqual(self.search_classes(url, 'weight'), {'search_constraint'})
+        # set_Trn defaults n_primality to primes on every trace search, so it
+        # would otherwise look filled in even when the user never touched it
+        for name in ['n', 'n_primality', 'view_modp', 'an_modulo']:
+            self.assertEqual(self.search_classes(url, name), set())
+
+        # The modulus does constrain the results once there is a trace
+        # constraint for it to be applied to
+        url = ('/ModularForm/GL2/Q/holomorphic/?level=244&weight=4&search_type=Traces'
+               '&an_constraints=a3%3D0&an_modulo=3')
+        for name in ['an_constraints', 'an_modulo']:
+            self.assertEqual(self.search_classes(url, name),
+                             {'search_constraint', 'search_active'})
+
+    def test_simult_select_classes(self):
+        # simult_select drives simult_change() in the CMF search template, and
+        # has to survive alongside the classes marking active constraints
+        url = '/ModularForm/GL2/Q/holomorphic/?level=11&weight=2'
+        page = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
+        assert 'onchange="simult_change(event);"' in page
+        for name in ['weight_parity', 'char_parity']:
+            self.assertEqual(self.search_classes(url, name),
+                             {'simult_select', 'search_constraint'})
+
     def test_trivial_searches(self):
         from sage.all import Subsets
         for begin in [
