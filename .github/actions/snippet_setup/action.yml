@@ -36,6 +36,12 @@ runs:
   - name: Load Julia packages from cache
     id: julia-cache
     uses: julia-actions/cache@v3
+    with:
+      # v3 defaults both of these to true; keep the v2 behaviour instead, so a
+      # failed job cannot publish a half-populated depot and cache deletion
+      # does not require an `actions: write` token.
+      save-always: false
+      delete-old-caches: false
 
   - name: Install Oscar
     shell: bash -l {0}

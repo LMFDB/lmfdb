@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, dev, web ]
 
+permissions:
+  contents: read
+
 jobs:
   matrix_prep:
     name: Initial setup
@@ -16,13 +19,47 @@ jobs:
       # Required as the JSON input file needs to be read
       - uses: actions/checkout@v7
 
-      - name: Conditional Build Matrix
+      # Only devmirror entries can run without the proddb password, so forks
+      # (which have no LMFDB_CI_ACCESS secret) get the devmirror half of
+      # .github/workflows/matrix_includes.json.  The secret itself is never
+      # passed here, only whether it is set.
+      - name: Build test matrix
         id: set-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@main
-        with:
-          # Filtering the default input file: '.github/workflows/matrix_includes.json'
-          # using JMESPath https://jmespath.org/examples.html
-          filter: "[? '${{ secrets.LMFDB_CI_ACCESS }}' || server == 'devmirror']"
+        env:
+          HAS_LMFDB_CI_ACCESS: ${{ secrets.LMFDB_CI_ACCESS != '' }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          with open(
+              ".github/workflows/matrix_includes.json",
+              encoding="utf-8",
+          ) as matrix_file:
+              entries = json.load(matrix_file)
+
+          has_access = (
+              os.environ.get("HAS_LMFDB_CI_ACCESS", "").lower() == "true"
+          )
+          if not has_access:
+              entries = [
+                  entry
+                  for entry in entries
+                  if entry.get("server") == "devmirror"
+              ]
+
+          matrix = json.dumps(
+              {"include": entries},
+              separators=(",", ":"),
+          )
+          with open(
+              os.environ["GITHUB_OUTPUT"],
+              "a",
+              encoding="utf-8",
+          ) as output_file:
+              print(f"matrix={matrix}", file=output_file)
+          PY
 
 
   test:
