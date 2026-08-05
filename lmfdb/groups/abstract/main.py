@@ -796,7 +796,12 @@ def index():
         if search_type in legacy_searches:
             endpoint, new_search_type = legacy_searches[search_type]
             args = request.args.to_dict(flat=False)
-            args.pop("search_type", None)
+            # Drop both mode parameters: the destination route encodes the
+            # object type, and SearchWrapper falls back to hst when there is
+            # no explicit search_type, so a stale hidden hst would otherwise
+            # override the mode we just resolved.
+            for key in ("search_type", "hst"):
+                args.pop(key, None)
             if new_search_type is not None:
                 args["search_type"] = [new_search_type]
             return redirect(url_for(endpoint, **args), 307)

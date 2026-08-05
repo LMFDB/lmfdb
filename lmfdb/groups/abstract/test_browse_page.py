@@ -19,7 +19,9 @@ class AbGpsHomeTest(LmfdbTest):
     def test_legacy_search_urls(self):
         r"""
         Check that old search URLs redirect to the new landing pages without
-        dropping their filters.
+        dropping their filters.  The hidden hst field records the previous
+        search mode, so it must not survive the redirect: SearchWrapper falls
+        back to hst when there is no explicit search_type.
         """
         cases = [
             ("/Groups/Abstract/?search_type=Subgroups&ambient=128.207",
@@ -34,11 +36,25 @@ class AbGpsHomeTest(LmfdbTest):
              {"dim": ["3"], "search_type": ["RandomComplexCharacter"]}),
             ("/Groups/Abstract/?search_type=ConjugacyClasses&group=12.4",
              "/Groups/Abstract/ConjugacyClasses", {"group": ["12.4"]}),
+            # The legacy mode may only be present in the hidden hst field.
+            ("/Groups/Abstract/?hst=Subgroups&ambient=128.207",
+             "/Groups/Abstract/Subgroups", {"ambient": ["128.207"]}),
+            ("/Groups/Abstract/?hst=RandomSubgroup&ambient=128.207",
+             "/Groups/Abstract/Subgroups",
+             {"ambient": ["128.207"], "search_type": ["RandomSubgroup"]}),
+            # An explicit search_type must keep winning over a stale hst.
+            ("/Groups/Abstract/?search_type=Subgroups&hst=RandomSubgroup&ambient=128.207",
+             "/Groups/Abstract/Subgroups", {"ambient": ["128.207"]}),
+            ("/Groups/Abstract/?search_type=ComplexCharacters&hst=RandomComplexCharacter&dim=3",
+             "/Groups/Abstract/ComplexCharacters", {"dim": ["3"]}),
+            # Repeated values of a non-routing parameter are preserved.
+            ("/Groups/Abstract/?search_type=Subgroups&order=8&order=16",
+             "/Groups/Abstract/Subgroups", {"order": ["8", "16"]}),
         ]
         for source, expected_path, expected_query in cases:
             response = self.tc.get(source)
-            target = urlsplit(response.location)
             assert response.status_code == 307
+            target = urlsplit(response.location)
             assert target.path == expected_path
             assert parse_qs(target.query) == expected_query
 
