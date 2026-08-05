@@ -95,7 +95,7 @@ class AbGpsTest(LmfdbTest):
         # Letter-labeled orders carry a genuine Magma hash, shown with a search link.
         self.check_args("/Groups/Abstract/2016.a", [
             "374703223365377769",
-            "hash=2016%23374703223365377769"])
+            "/Groups/Abstract/hash/2016/374703223365377769"])
         # Identifiable/enumerated orders store hash == counter, so the row is suppressed.
         self.not_check_args("/Groups/Abstract/60.5", "all groups with this order and hash")
         self.not_check_args("/Groups/Abstract/512.11", "all groups with this order and hash")
@@ -121,6 +121,15 @@ class AbGpsTest(LmfdbTest):
         assert not res.complete and res.source == "gps_groups"
         assert res.labels == ["2016.a"]
         assert hash_constraint(2016, [374703223365377769]) == {"hash": 374703223365377769}
+        # With no single order, the counter-storing orders are excluded from
+        # the column match and resolved separately.
+        constraint = hash_constraint(None, [1584677793794603025])
+        assert constraint == {"$or": [
+            {"hash": 1584677793794603025,
+             "order": {"$nin": [512, 1152, 1536, 1920, 2187, 15625]}},
+            {"order": 512, "counter": {"$in": [11]}}]}
+        assert hash_constraint(None, [11]) == {"$or": [
+            {"hash": 11, "order": {"$nin": [512, 1152, 1536, 1920, 2187, 15625]}}]}
         # A counter stored in the hash column is not a hash to display.
         assert structural_hash(11, 11) is None
         assert structural_hash(1, 374703223365377769) == 374703223365377769
@@ -130,20 +139,61 @@ class AbGpsTest(LmfdbTest):
         r = self.tc.get("/Groups/Abstract/?jump=512%231584677793794603025")
         assert r.status_code in (301, 302), "jump did not redirect"
         assert "/Groups/Abstract/512.11" in r.headers["Location"]
-        # A collision cluster does not: it lands on the search page.
-        r = self.tc.get("/Groups/Abstract/?jump=78125%233521944227884464685")
-        assert "hash=78125" in r.headers["Location"]
+        # A collision cluster does not: it lands on the hash page, which lists
+        # the whole cluster including the groups with no database row.
+        page = self.tc.get("/Groups/Abstract/?jump=78125%233521944227884464685",
+                           follow_redirects=True).get_data(as_text=True)
+        for lab in ["78125.82", "78125.335", "78125.340"]:
+            assert lab in page, "%s not on the hash page" % lab
+
+    def test_hash_page(self):
+        # The complete cluster, not just the part of it in gps_groups.
+        page = self.tc.get("/Groups/Abstract/hash/78125/3521944227884464685",
+                           follow_redirects=True).get_data(as_text=True)
+        import re
+        assert set(re.findall(r"78125\.\d+", page)) == {"78125.82", "78125.335", "78125.340"}
+        assert "hash tables are complete" in page
+        # 78125.82 has no database row; it says so, and links to the GAP page
+        assert "not in the database" in page
+        assert '/Groups/Abstract/78125.82"' in page
+        # An order with a complete table and no group of this hash says so.
+        self.check_args("/Groups/Abstract/hash/512/1", "no group of")
+        # Orders without a complete table go on to the ordinary search page.
+        r = self.tc.get("/Groups/Abstract/hash/2016/374703223365377769")
+        assert r.status_code in (301, 302)
+        assert "hash=2016%23374703223365377769" in r.headers["Location"]
+        # A value too large to be a stored hash is refused, not queried.
+        self.check_args("/Groups/Abstract/hash/512/99999999999999999999",
+                        "No group has order")
+
+    def test_hash_page_without_homepage(self):
+        # A unique complete-table match with neither a database row nor a GAP
+        # page is still displayed, rather than becoming an empty search.
+        from lmfdb.groups.abstract import main as main_mod
+        from lmfdb.groups.abstract.hash_lookup import HashResolution
+        orig = main_mod.resolve_order_hash
+        main_mod.resolve_order_hash = (
+            lambda order, value: HashResolution(int(order), int(value), ["6561.999999"],
+                                                True, "gps_smallhash"))
+        try:
+            page = self.tc.get("/Groups/Abstract/hash/6561/12345",
+                               follow_redirects=True).get_data(as_text=True)
+        finally:
+            main_mod.resolve_order_hash = orig
+        assert "6561.999999" in page and "not in the database" in page
+        assert '/Groups/Abstract/6561.999999"' not in page, "linked a page that does not exist"
 
     def test_hash_search(self):
         # Complete-table orders search through gps_smallhash: the stored
         # gps_groups.hash of 512.11 is 11, not the hash being searched for.
         self.check_args(
             "/Groups/Abstract/?hash=512%231584677793794603025&search_type=List", "512.11")
-        page = self.tc.get(
-            "/Groups/Abstract/?hash=78125%233521944227884464685&search_type=List",
-            follow_redirects=True).get_data(as_text=True)
-        for lab in ["78125.335", "78125.340"]:
-            assert lab in page, "%s not in hash search" % lab
+        self.check_args("/Groups/Abstract/?order=512&hash=1584677793794603025&search_type=List",
+                        "512.11")
+        # Several hashes at one order resolve through the complete table too.
+        self.check_args(
+            "/Groups/Abstract/?order=512&hash=1584677793794603025%2C1718285292446712970"
+            "&search_type=List", ["512.11", "512.10494213"])
         # Ordinary orders still search the gps_groups column; the optional hash
         # column renders the same value the links resolve.
         page = self.tc.get(
@@ -153,29 +203,45 @@ class AbGpsTest(LmfdbTest):
             assert lab in page, "%s not in hash search" % lab
         assert "4714647875464396655" in page
 
+    def test_hash_search_false_positives(self):
+        # A stored counter must not answer a search for a structural hash:
+        # 512.11 has hash 1584677793794603025, and stores 11.
+        self.not_check_args("/Groups/Abstract/?hash=11&search_type=List", "512.11")
+        self.not_check_args("/Groups/Abstract/?order=500-600&hash=11&search_type=List", "512.11")
+        # ... while a search for the real hash finds it, with no order given.
+        self.check_args("/Groups/Abstract/?hash=1584677793794603025&search_type=List", "512.11")
+
     def test_hash_column(self):
-        # The column shows the structural hash, never a label counter.
+        # The column shows the structural hash, never a label counter, and the
+        # hash a search asked for when the row cannot supply it.
         from lmfdb.groups.abstract.main import group_columns
         col = [C for C in group_columns.columns if C.name == "hash"][0]
-        assert col.display({"counter": 11, "hash": 11}) == ""
-        assert col.display({"counter": 1, "hash": 374703223365377769}) == "374703223365377769"
+        assert col.display({"counter": 11, "hash": 11, "public_hash": None}) == ""
+        assert col.display({"counter": 1, "hash": 374703223365377769,
+                            "public_hash": None}) == "374703223365377769"
+        assert col.display({"counter": 11, "hash": 11,
+                            "public_hash": 1584677793794603025}) == "1584677793794603025"
         self.check_args("/Groups/Abstract/?order=2016&search_type=List&showcol=hash",
                         "374703223365377769")
+        self.check_args("/Groups/Abstract/?order=512&hash=1584677793794603025"
+                        "&search_type=List&showcol=hash", "1584677793794603025")
 
     def test_hash_popup_links(self):
-        # The subgroup and quotient popups link to the same resolution.
+        # The subgroup and quotient popups link to the same complete cluster.
+        import re
         from lmfdb.groups.abstract.main import group_data
         with self.app.test_request_context():
-            sub = group_data("None", ambient="1024.a",
-                             profiledata="512.?$1584677793794603025$?")
-            # a subgroup of order 512 in an ambient of order 2^18: the quotient
-            # has order 512 too, so both links resolve the same set
-            quo = group_data("None", ambient="262144.a",
-                             profiledata="512.?$None$?$None$1584677793794603025$?")
-        assert "hash=512%231584677793794603025" in sub
-        assert "hash=512%231584677793794603025" in quo
-        self.check_args("/Groups/Abstract/?hash=512%231584677793794603025&search_type=List",
-                        "512.11")
+            sub = group_data("None", ambient="390625.a",
+                             profiledata="78125.?$3521944227884464685$?")
+            # a subgroup of order 78125 in an ambient of order 5^12: the
+            # quotient has order 78125 too, so both links resolve the same set
+            quo = group_data("None", ambient="6103515625.a",
+                             profiledata="78125.?$None$?$None$3521944227884464685$?")
+        for html in [sub, quo]:
+            link = re.search(r'href="([^"]*/hash/78125/3521944227884464685)"', str(html))
+            assert link, "popup did not link to the hash page: %s" % html
+            page = self.tc.get(link.group(1), follow_redirects=True).get_data(as_text=True)
+            assert set(re.findall(r"78125\.\d+", page)) == {"78125.82", "78125.335", "78125.340"}
 
     def test_identify_perm(self):
         # Permutation generators that GAP can identify redirect to the group homepage.
@@ -205,11 +271,30 @@ class AbGpsTest(LmfdbTest):
             follow_redirects=True).get_data(as_text=True)
         listed = set(re.findall(r"2016\.[a-z]+", page))
         assert listed, "no candidates were listed"
-        link = re.search(r'href="([^"]*hash=2016[^"]*)"', page)
-        assert link, "no hash search link on the identification page"
+        link = re.search(r'href="([^"]*/hash/2016/\d+)"', page)
+        assert link, "no hash link on the identification page"
         results = self.tc.get(link.group(1).replace("&amp;", "&"),
                               follow_redirects=True).get_data(as_text=True)
         assert set(re.findall(r"2016\.[a-z]+", results)) == listed
+        # At a complete-table order the link has to reach the whole cluster,
+        # including the groups the identification listed as absent.
+        from lmfdb.groups.abstract import main as main_mod
+        cluster = [{"label": lab, "present": lab != "78125.82", "live": True}
+                   for lab in ["78125.82", "78125.335", "78125.340"]]
+        orig = main_mod.identify_group
+        main_mod.identify_group = lambda desc: {
+            "status": "list", "input": desc, "kind": "permutation", "order": 78125,
+            "order_factored": "5^{7}", "hash": 3521944227884464685, "complete": True,
+            "candidates": cluster, "caveat": "mocked complete cluster"}
+        try:
+            page = self.tc.get("/Groups/Abstract/identify?description=mock",
+                               follow_redirects=True).get_data(as_text=True)
+        finally:
+            main_mod.identify_group = orig
+        link = re.search(r'href="([^"]*/hash/78125/3521944227884464685)"', page)
+        assert link, "no hash link on the identification page"
+        results = self.tc.get(link.group(1), follow_redirects=True).get_data(as_text=True)
+        assert set(re.findall(r"78125\.\d+", results)) == {c["label"] for c in cluster}
 
     def test_identify_missing_smallhash(self):
         # A hash computed from a group of a complete-table order has to be in

@@ -24,14 +24,21 @@ Two tables store hashes:
 A hash search at one of those ten orders therefore has to go to
 ``gps_smallhash``, and what comes back is complete: the groups it lists are
 provably all the groups of that order with that hash, so a unique match is a
-proof of isomorphism.
+proof of isomorphism, and a collision is a cluster that a search of
+``gps_groups`` alone would under-report.  That is what the ``by_hash`` route
+renders; :func:`hash_search_url` sends every "groups with this order and hash"
+link there.
 
 Index note: ``gps_smallhash`` has 4.2*10^8 rows and a single index, on
 ``(order, hash)``.  Queries in that direction are fast.  The other direction,
 ``(order, counter)`` to a hash, is a sequential scan (about six minutes against
-devmirror), so the true hash of a group at one of these orders is not something
-a page can display; :func:`structural_hash` reports that there is no usable
-value rather than showing the counter under a "hash" heading.
+devmirror), so a group at one of the six counter-storing orders cannot be asked
+for its own hash.  A row of such an order therefore shows no hash on its
+homepage and an empty cell in the optional search column, rather than its
+counter under a "hash" heading (:func:`structural_hash`); the exception is a
+search that named one hash at one order, where :func:`searched_hash` recovers
+the value from the query itself.  Displaying these hashes in general would take
+an ``(order, counter)`` index on ``gps_smallhash``.
 """
 
 from dataclasses import dataclass, field
@@ -47,6 +54,10 @@ from lmfdb import db
 SMALLHASH_ORDERS = frozenset(
     [512, 1152, 1536, 1920, 2187, 6561, 15625, 16807, 78125, 161051]
 )
+
+# The orders where gps_groups.hash is the label counter rather than the hash,
+# so that a search against that column would be answering a different question.
+COUNTER_HASH_ORDERS = frozenset([512, 1152, 1536, 1920, 2187, 15625])
 
 
 @dataclass(frozen=True)
@@ -101,6 +112,17 @@ def smallhash_counters(order, values):
         {"order": int(order), "hash": {"$in": [int(v) for v in values]}}, "counter")})
 
 
+def smallhash_counters_by_order(orders, values):
+    """The counters of the groups of any of these ``orders`` whose hash is one
+    of ``values``, as a dict keyed by order.  One indexed query."""
+    out = {}
+    for rec in db.gps_smallhash.search(
+            {"order": {"$in": [int(N) for N in orders]},
+             "hash": {"$in": [int(v) for v in values]}}, ["order", "counter"]):
+        out.setdefault(int(rec["order"]), []).append(int(rec["counter"]))
+    return {N: sorted(counters) for N, counters in out.items()}
+
+
 def resolve_order_hash(order, value):
     """The groups of order ``order`` whose hash is ``value``, as a
     :class:`HashResolution`."""
@@ -113,20 +135,49 @@ def resolve_order_hash(order, value):
 
 
 def hash_constraint(order, values, qfield="hash"):
-    """Search constraints selecting the groups of order ``order`` whose hash is
-    one of ``values``, to be merged into a ``gps_groups`` query.
+    """Search constraints selecting the groups whose hash is one of ``values``,
+    to be merged into a ``gps_groups`` query.
 
-    ``order`` may be ``None`` when the order is unconstrained or constrained to
-    a range, in which case the stored ``hash`` column is the only thing to go
-    on: such a search can pick up a spurious row at one of the orders that
-    store counters there, which giving a single order (or using the ``N#h``
-    form) avoids.  With an order in hand we resolve the hashes to counters at
-    the complete-table orders, since ``gps_groups.hash`` is not the hash there.
+    ``order`` is the single order the search is pinned to, or ``None`` when the
+    order is unconstrained or constrained to a range or a list.  Either way the
+    stored ``hash`` column is only consulted at the orders where it holds the
+    hash: at the others the hashes are resolved to counters through
+    ``gps_smallhash``, so that a search for the hash ``11`` cannot come back
+    with ``512.11``, whose stored 11 is its counter.
+
+    With no single order this needs a top-level ``$or`` (merge it with
+    ``collapse_ors``, not ``dict.update``); any order constraint already in the
+    query still applies to every branch.
     """
     values = [int(v) for v in values]
-    if order is not None and int(order) in SMALLHASH_ORDERS:
-        return {"counter": {"$in": smallhash_counters(order, values)}}
-    return {qfield: values[0] if len(values) == 1 else {"$or": values}}
+    column = {qfield: values[0] if len(values) == 1 else {"$or": values}}
+    if order is not None:
+        if int(order) in SMALLHASH_ORDERS:
+            return {"counter": {"$in": smallhash_counters(order, values)}}
+        return column
+    counters = smallhash_counters_by_order(COUNTER_HASH_ORDERS, values)
+    branches = [dict(column, order={"$nin": sorted(COUNTER_HASH_ORDERS)})]
+    branches.extend({"order": N, "counter": {"$in": cs}} for N, cs in sorted(counters.items()))
+    return {"$or": branches}
+
+
+def searched_hash(info):
+    """The ``(order, value)`` that a search asked for, when it asked for one
+    hash at one order and so knows a value that the row itself may not record.
+
+    Both ``N#h`` in the hash box and a hash with the order box pinned to a
+    single order count; a list of hashes or a range of orders does not.
+    """
+    raw = (info.get("hash") or "").strip()
+    if not raw or "," in raw:
+        return None
+    try:
+        if raw.count("#") == 1:
+            order, value = raw.split("#")
+            return int(order), int(value)
+        return int((info.get("order") or "").strip()), int(raw)
+    except ValueError:
+        return None
 
 
 def structural_hash(counter, stored):
@@ -151,5 +202,10 @@ def order_search_url(order):
 
 
 def hash_search_url(order, value):
-    """URL of the search page listing all groups of the given order and hash."""
-    return url_for("abstract.index", hash=f"{int(order)}#{int(value)}")
+    """URL of the page listing all the groups of the given order and hash.
+
+    Every "groups with this order and hash" link goes here, and the route sends
+    the orders without a complete table on to the ordinary search page, so that
+    such a link never shows a subset of what it promises.
+    """
+    return url_for("abstract.by_hash", order=int(order), value=int(value))
