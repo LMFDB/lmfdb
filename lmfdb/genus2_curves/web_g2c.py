@@ -86,14 +86,18 @@ def simplify_hyperelliptic_point(fh, pt):
     return [pt[0], (2*pt[1] + f1([pt[0],pt[2]])) / s, pt[2]]
 
 
-def comp_poly(fh):
+def comp_poly(fh, d):
+    # Mordell-Weil generators are recorded with denominators cleared, as a relation
+    # d*y = yD(x,z) on the minimal model.  Since y -> (2*y + h(x,z))/s, that same
+    # relation reads d*Y = (2*yD + d*h(x,z))/s on the simplified model, so the
+    # polynomial to substitute for yD depends on the denominator d.
     s = simplify_hyperelliptic_scale(fh)
     f1 = PolynomialRing(QQ, 'x')(fh[1])
     xyzR = PolynomialRing(QQ,['x', 'y', 'z'])
     y = xyzR('y')
     z = xyzR('z')
     f1 = (xyzR(f1)*z**(4-len(fh[1]))).homogenize(z)
-    return (2*y + f1) / s
+    return (2*y + d*f1) / s
 
 
 def min_eqns_pretty(fh):
@@ -615,7 +619,9 @@ def point_string(P):
     return '(' + ' : '.join(map(str, P)) + ')'
 
 
-def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x', 'y', 'z'])('y')):
+# comp takes the cleared denominator of a generator's y-coordinate and returns the
+# polynomial in x, y, z to substitute for that y-coordinate; None leaves it alone.
+def mw_gens_table(invs,gens,hts,pts,comp=None):
     def divisor_data(P):
         R = PolynomialRing(QQ, ['x', 'z'])
         x = R('x')
@@ -626,7 +632,8 @@ def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x', 'y', 'z'])('y')
         if str(xD.factor())[:4] == "(-1)":
             xD = -xD
         yD = sum([ZZ(yden)*ZZ(yP[i][0])/ZZ(yP[i][1])*x**i*z**(len(yP)-i-1) for i in range(len(yP))])
-        yD = comp(x, yD, z)
+        if comp is not None:
+            yD = comp(yden)(x, yD, z)
         return [make_bigint(elt, 10) for elt in [str(xD.factor()).replace("**","^").replace("*",""), str(yden)+"y" if yden > 1 else "y", str(yD).replace("**","^").replace("*","")]], xD, yD, yden
     if not invs:
         return ''
@@ -653,7 +660,7 @@ def mw_gens_table(invs,gens,hts,pts,comp=PolynomialRing(QQ,['x', 'y', 'z'])('y')
 
 def mw_gens_simple_table(invs, gens, hts, pts, fh):
     spts = [simplify_hyperelliptic_point(fh, pt) for pt in pts]
-    return mw_gens_table(invs, gens, hts, spts, comp=comp_poly(fh))
+    return mw_gens_table(invs, gens, hts, spts, comp=lambda d: comp_poly(fh, d))
 
 
 def local_table(N, D, tama, bad_lpolys, bad_lfactors, cluster_pics, root_numbers):
