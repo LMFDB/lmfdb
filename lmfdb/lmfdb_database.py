@@ -501,6 +501,22 @@ class LMFDBDatabase(PostgresDatabase):
             # database usually has neither; a deployment that must have both
             # can pass LMFDBGrantPolicy(missing_role="error") instead.
             kwargs.setdefault("grant_policy", LMFDBGrantPolicy())
+        # The web workers connect as the ``webserver`` role and must not run a
+        # query forever.  psycodict used to hand that role a 25 second
+        # statement timeout by inferring it from the role name; a generic
+        # library should not do that, so LMFDB now asks for the timeout
+        # explicitly here.  Passing session_settings (rather than relying on
+        # the old default) works on every psycodict version: a psycodict that
+        # still applies the role default sees an explicit value and uses it,
+        # and one that has dropped the role default gets the value from here.
+        user = kwargs.get("user")
+        if user is None:
+            try:
+                user = config.postgresql_options.get("user")
+            except AttributeError:
+                user = None
+        if user == "webserver":
+            kwargs.setdefault("session_settings", {"statement_timeout": "25s"})
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
         self.__editor = config.logging_options.get("editor", "")
