@@ -518,18 +518,26 @@ snippet_test:
   # (incl. constructing the boolean invariants and character table)
   testC1data:
     label: C1-data
-    langs: [sage]
+    langs: [sage, magma]
     url: Groups/Abstract/1.1/download/{lang}
   testS3data:
     label: S3-data
-    langs: [sage]
+    langs: [sage, magma]
     url: Groups/Abstract/6.1/download/{lang}
   testD4data:
     label: D4-data
-    langs: [sage]
+    langs: [sage, magma]
     url: Groups/Abstract/8.3/download/{lang}
+  testQ8data:
+    label: Q8-data
+    langs: [sage, magma]
+    url: Groups/Abstract/8.4/download/{lang}
+  test_matrix_reps_data:
+    label: "32_14-data"
+    langs: [sage, magma]
+    url: Groups/Abstract/32.14/download/{lang}
   testA5data:
     label: A5-data
-    langs: [sage]
+    langs: [sage, magma]
     url: Groups/Abstract/60.5/download/{lang}
 
