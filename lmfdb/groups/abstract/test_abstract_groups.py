@@ -288,8 +288,14 @@ class AbGpsTest(LmfdbTest):
                             "public_hash": 1584677793794603025}) == "1584677793794603025"
         self.check_args("/Groups/Abstract/?order=2016&search_type=List&showcol=hash",
                         "374703223365377769")
-        self.check_args("/Groups/Abstract/?order=512&hash=1584677793794603025"
-                        "&search_type=List&showcol=hash", "1584677793794603025")
+        # An order and a hash on their own are answered by the hash page, so a
+        # second condition is what keeps this one a table of results, where the
+        # column supplies the hash that the order-512 row cannot.
+        r = self.tc.get("/Groups/Abstract/?order=512&hash=1584677793794603025"
+                        "&solvable=yes&search_type=List&showcol=hash")
+        assert r.status_code == 200, "the search was answered by a redirect"
+        page = r.get_data(as_text=True)
+        assert "512.11" in page and "1584677793794603025" in page
 
     def test_hash_popup_links(self):
         # The subgroup and quotient popups link to the same complete cluster.
