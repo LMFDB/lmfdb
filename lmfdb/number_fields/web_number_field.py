@@ -232,13 +232,6 @@ def field_pretty(label, wnf=None):
     if d == '1':  # Q
         return r'\(\Q\)'
 
-    # Converts LMFDB label for quadratic field K to the D in K = Q(sqrt(D))
-    def _quad_label_to_D(quad_label):
-        parts = str(quad_label).split('.')
-        z = integer_squarefree_part(ZZ(parts[2]))  # Get squarefree part
-        z *= (-1) ** (1 + int(parts[1]) // 2)      # Get correct sign
-        return ZZ(z)
-
     # Converts D to the latexed form of sqrt(D)
     def _sqrt_symbol(z):
         return 'i' if z == -1 else r'\sqrt{%d}' % z
@@ -289,35 +282,35 @@ def field_pretty(label, wnf=None):
 
         # Case 5b: Imprimitive quartic fields of type Q(\sqrt(A + B*\sqrt(D)))
         if len(subs) == 1:
-            quad_sub = wnf.from_coeffs(string2list(str(subs[0][0])))
-            if not quad_sub._data is None:
-                # Get unique quadratic subfield Q(sqrt(D))
-                quad_label = str(quad_sub.get_label())
-                D = _quad_label_to_D(quad_label)
-                Ksub = QuadraticField(D, 'sqrtD')
-                sqrtD = Ksub.gen(0)
+            # Get unique quadratic subfield Q(sqrt(D)) from its defining
+            # polynomial, as in case 5a; looking the subfield up in the
+            # database instead would cost a query on every call
+            qs = subs[0][0].split(',')
+            D = integer_squarefree_part(ZZ(qs[1])**2 - 4*ZZ(qs[0])*ZZ(qs[2]))
+            Ksub = QuadraticField(D, 'sqrtD')
+            sqrtD = Ksub.gen(0)
 
-                # Factorise defining polynomial for K over Q(sqrt(D))
-                Rsub = PolynomialRing(Ksub, 'x')
-                relative_poly = Rsub(wnf.poly()).factor()[0][0]
+            # Factorise defining polynomial for K over Q(sqrt(D))
+            Rsub = PolynomialRing(Ksub, 'x')
+            relative_poly = Rsub(wnf.poly()).factor()[0][0]
 
-                # Can extract the first quadratic factor
-                rel_coeffs = relative_poly.coefficients(sparse=False)
-                alpha = rel_coeffs[1]**2 - 4*rel_coeffs[0]*rel_coeffs[2]
-                A, B = sqrtD.coordinates_in_terms_of_powers()(alpha)
+            # Can extract the first quadratic factor
+            rel_coeffs = relative_poly.coefficients(sparse=False)
+            alpha = rel_coeffs[1]**2 - 4*rel_coeffs[0]*rel_coeffs[2]
+            A, B = sqrtD.coordinates_in_terms_of_powers()(alpha)
 
-                # Divide out common square factors
-                g = gcd(A,B)
-                g //= g.squarefree_part()
-                A, B = ZZ(A//g), ZZ(B//g)
+            # Divide out common square factors
+            g = gcd(A,B)
+            g //= g.squarefree_part()
+            A, B = ZZ(A//g), ZZ(B//g)
 
-                # Return final pretty latex
-                if A == 0:
-                    # Case: Pure quartic field
-                    return r'\(\Q(\sqrt[4]{%d})\)' % (D*B**2)
-                else:
-                    B_str = "+" if B == 1 else "-" if B == -1 else f"{B:+d}"
-                    return r'\(\Q(\sqrt{%d %s %s})\)' % (A, B_str, _sqrt_symbol(D))
+            # Return final pretty latex
+            if A == 0:
+                # Case: Pure quartic field
+                return r'\(\Q(\sqrt[4]{%d})\)' % (D*B**2)
+            else:
+                B_str = "+" if B == 1 else "-" if B == -1 else f"{B:+d}"
+                return r'\(\Q(\sqrt{%d %s %s})\)' % (A, B_str, _sqrt_symbol(D))
 
     # Case 6: Pure cubic fields Q(\sqrt[3]{N})
     if d == '3':

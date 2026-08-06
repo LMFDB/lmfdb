@@ -1,7 +1,7 @@
 from lmfdb.app import app
 import re
 from flask import render_template, url_for, request, redirect, abort, make_response
-from sage.all import euler_phi, PolynomialRing, QQ, gcd, ZZ
+from sage.all import euler_phi, pari, PolynomialRing, QQ, gcd, ZZ
 from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
@@ -13,7 +13,7 @@ from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.api import datapage
-from lmfdb.number_fields.web_number_field import formatfield
+from lmfdb.number_fields.web_number_field import formatfield, field_pretty, nf_display_knowl
 from lmfdb.characters.web_character import (
     valuefield_from_order,
     WebSmallDirichletCharacter,
@@ -271,12 +271,82 @@ def display_galois_orbit(modulus, first, last, degree):
             disp = r"$, \cdots ,$".join(disp)
             return f'<p style="margin-top: 0px;margin-bottom:0px;">\n{disp}\n</p>'
 
-def display_kernel_field(modulus, first, order):
+def display_kernel_field(modulus, first, order, kernel_poly=None, kernel_field_data=None):
+    # kernel_poly and kernel_field_data are precomputed in
+    # character_postprocess; if they are absent we fall back to computing them
+    # here, at the cost of several database queries for each call
     if order > 12:
         return "not computed"
+    if kernel_poly is None:
+        kernel_poly = [ZZ(x) for x in ConreyCharacter(modulus,first).kernel_field_poly()]
+    return formatfield(kernel_poly, data=kernel_field_data)
+
+def display_value_field(order, value_field_label=None):
+    # value_field_label is precomputed in character_postprocess ("N/A" when the
+    # field is not in the database); if it is absent we fall back to
+    # valuefield_from_order, at the cost of a database query for each call
+    if value_field_label is None:
+        return valuefield_from_order(order)
+    order2 = order if order % 4 != 2 else order // 2
+    if value_field_label == "N/A":
+        return r'$\Q(\zeta_{%d})$' % order2
+    if order2 == 3:
+        nfpretty = r'\(\mathbb{Q}(\zeta_3)\)'
+    elif order2 == 4:
+        nfpretty = r'\(\mathbb{Q}(i)\)'
     else:
-        coeffs = ConreyCharacter(modulus,first).kernel_field_poly()
-        return formatfield([ZZ(x) for x in coeffs])
+        nfpretty = field_pretty(value_field_label)
+    return nf_display_knowl(value_field_label, nfpretty)
+
+def character_postprocess(res, info, query):
+    """
+    Compute the data needed by the kernel field and value field columns in a batch.
+
+    Each of these columns identifies a number field by its defining polynomial,
+    which naively requires two database queries per row.  Instead we compute all
+    of the defining polynomials here (the pari computations involved are cheap)
+    and then find all of the matching number fields in a single database query.
+    See https://github.com/LMFDB/lmfdb/issues/6008.
+    """
+    R = PolynomialRing(ZZ, "x")
+    cyclo_coeffs = {}  # order2 -> coeffs of the polredabs'ed cyclotomic polynomial
+    for rec in res:
+        order = rec["order"]
+        # As in valuefield_from_order, the value field is Q(zeta_{order2})
+        order2 = order if order % 4 != 2 else order // 2
+        if order2 not in cyclo_coeffs:
+            if euler_phi(order2) > 23:
+                # Not in the database (as in WebNumberField.from_cyclo)
+                cyclo_coeffs[order2] = None
+            else:
+                pol = pari.polcyclo(order2).polredabs()
+                cyclo_coeffs[order2] = [int(c) for c in R(pol).coefficients(sparse=False)]
+        if order <= 12:
+            kernel_poly = ConreyCharacter(rec["modulus"], rec["first"]).kernel_field_poly()
+            rec["kernel_poly"] = [int(ZZ(x)) for x in kernel_poly]
+    all_coeffs = {tuple(c) for c in cyclo_coeffs.values() if c is not None}
+    all_coeffs.update(tuple(rec["kernel_poly"]) for rec in res if "kernel_poly" in rec)
+    nf_data = {}
+    if all_coeffs:
+        # We use $or rather than $in since psycodict does not apply the
+        # typecast needed to compare integer arrays with the numeric[] column.
+        # We keep the whole record rather than just the label since
+        # field_pretty needs more than the label (coeffs, disc_abs, disc_sign,
+        # subfields and subfield_mults, all of which live in nf_fields) and
+        # reloads the field from the database when they are missing.
+        nf_query = {"$or": [{"coeffs": list(c)} for c in sorted(all_coeffs)]}
+        nf_data = {tuple(f["coeffs"]): f for f in db.nf_fields.search(nf_query)}
+    for rec in res:
+        order = rec["order"]
+        order2 = order if order % 4 != 2 else order // 2
+        cyclo = cyclo_coeffs[order2]
+        value_field = None if cyclo is None else nf_data.get(tuple(cyclo))
+        rec["value_field_label"] = "N/A" if value_field is None else value_field["label"]
+        if "kernel_poly" in rec:
+            # formatfield reads the label "N/A" as "not in the database", so a
+            # missing field is recorded without another query
+            rec["kernel_field_data"] = nf_data.get(tuple(rec["kernel_poly"]), {"label": "N/A"})
+    return res
 
 character_columns = SearchColumns([
     LinkCol("label", "character.dirichlet.galois_orbit_label", "Orbit label", lambda label: label.replace(".", "/"), align="center"),
@@ -285,8 +355,13 @@ character_columns = SearchColumns([
     MathCol("modulus", "character.dirichlet.modulus", "Modulus"),
     MathCol("conductor", "character.dirichlet.conductor", "Conductor"),
     MathCol("order", "character.dirichlet.order", "Order"),
-    MultiProcessedCol("first", "character.dirichlet.field_cut_out", "Kernel field", ["modulus", "first", "order"], display_kernel_field, align="center", default=False, apply_download=False),
-    ProcessedCol("order", "character.dirichlet.value_field", "Value field", valuefield_from_order, align="center", apply_download=False),
+    MultiProcessedCol("first", "character.dirichlet.field_cut_out", "Kernel field",
+                      ["modulus", "first", "order", "kernel_poly", "kernel_field_data"],
+                      display_kernel_field, align="center", default=False,
+                      apply_download=lambda modulus, first, order, *args: [modulus, first, order]),
+    MultiProcessedCol("order", "character.dirichlet.value_field", "Value field",
+                      ["order", "value_field_label"], display_value_field,
+                      align="center", download_col="order"),
     ProcessedCol("is_even", "character.dirichlet.parity", "Parity", lambda is_even: "even" if is_even else "odd"),
     CheckCol("is_real", "character.dirichlet.real", "Real"),
     CheckCol("is_primitive", "character.dirichlet.primitive", "Primitive"),
@@ -298,6 +373,7 @@ character_columns = SearchColumns([
     title="Dirichlet character search results",
     err_title="Dirichlet character search input error",
     columns=character_columns,
+    postprocess=character_postprocess,
     shortcuts={"jump": jump, "download": Downloader(db.char_dirichlet)},
     url_for_label=url_for_label,
     learnmore=learn,
