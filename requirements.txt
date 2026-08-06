@@ -1,20 +1,7 @@
-bcrypt
-cython
-flask
-flask-cache
-flask-login
-flask-markdown
-markupsafe
-itsdangerous
-# the pgbinary extra installs the driver psycodict itself is built on.  We track
-# released versions rather than a git branch, so that what an install gets doesn't
-# depend on the day it was run; the upper bound is psycodict's next major version,
-# where its versioning policy allows breaking changes.
-psycodict[pgbinary]>=1.0.0rc1,<2
-pyflakes
-pytest
-pytest-cov
-pytest-xdist
-pyyaml
-svg.py
-timeout_decorator
+# The LMFDB is pip installable (see pyproject.toml, which is where the
+# dependencies are now recorded); this file remains as the traditional
+# entry point:
+#     sage -pip install -r requirements.txt
+# installs the LMFDB in editable ("develop") mode, together with its
+# dependencies and development tools.
+-e .[dev]

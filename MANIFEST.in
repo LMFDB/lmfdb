@@ -1,0 +1,9 @@
+# Non-python files that ship with the lmfdb package (templates, static
+# assets, yaml data, code snippet test fixtures); together with
+# `include-package-data = true` in pyproject.toml this also determines
+# which data files are installed
+recursive-include lmfdb *.yaml *.html *.css *.js *.png *.jpg *.gif *.svg *.svgz *.ico *.txt *.md *.rst *.log *.sage
+include lmfdb/number_fields/Database-info
+include lmfdb/galois_groups/Database-info
+global-exclude *.pyc
+global-exclude __pycache__

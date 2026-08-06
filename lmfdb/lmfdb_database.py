@@ -5,8 +5,12 @@ import signal
 import socket
 import subprocess
 from collections import Counter
-from lmfdb.utils.psycopg_compat import SQL
-from lmfdb.utils.config import Configuration, ConfigWrapper
+# SQL comes from psycodict itself (which re-exports its driver's sql
+# classes) rather than lmfdb.utils.psycopg_compat: importing anything from
+# lmfdb.utils executes its heavyweight __init__, and this module must stay
+# importable without sage or flask
+from psycodict import SQL
+from lmfdb.config import ConfigWrapper, lmfdb_log_dir
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
@@ -169,9 +173,8 @@ class LMFDBSearchTable(PostgresSearchTable):
         self._check_verifications_enabled()
         if ratio is not None and check is None:
             raise ValueError("You can only provide a ratio if you specify a check")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
         if logdir is None:
-            logdir = os.path.join(lmfdb_root, "logs", "verification")
+            logdir = os.path.join(lmfdb_log_dir(), "verification")
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         if label is not None:
@@ -476,17 +479,19 @@ class LMFDBDatabase(PostgresDatabase):
     PARAMETERS:
 
     - ``config`` -- optional configuration. Can be:
-        * None (default): creates a default Configuration() object
+        * None (default): uses the process-wide configuration (see
+          lmfdb.config.current_configuration)
         * dict: a dictionary with keys 'postgresql_options', 'flask_options', 'logging_options'
         * Configuration object: used directly
     """
     _search_table_class_ = LMFDBSearchTable
 
     def __init__(self, config=None, **kwargs):
-        # If config is not provided, create the default configuration
+        # If config is not provided, use the process-wide configuration
+        # (creating it, and if needed the default configuration file)
         if config is None:
-            # This will write the default configuration file if needed
-            config = Configuration()
+            from lmfdb.config import current_configuration
+            config = current_configuration()
         elif isinstance(config, dict):
             # If config is a dict, create a wrapper object with the required attributes
             config = ConfigWrapper(config)
@@ -594,9 +599,8 @@ class LMFDBDatabase(PostgresDatabase):
             raise ValueError("Verification not enabled by default; import db from lmfdb.verify to enable")
         if parallel <= 0:
             raise ValueError("Non-parallel runs not supported for whole database")
-        lmfdb_root = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
         if logdir is None:
-            logdir = os.path.join(lmfdb_root, "logs", "verification")
+            logdir = os.path.join(lmfdb_log_dir(), "verification")
         if not os.path.exists(logdir):
             os.makedirs(logdir)
         types = None
@@ -685,4 +689,8 @@ class LMFDBDatabase(PostgresDatabase):
             knowldb.drop_column(name, col)
         print("Deleted table and column descriptions from knowl database")
 
-db = LMFDBDatabase()
+# The public lazy proxy, importable from here for backwards compatibility
+# (the verify modules and older scripts do `from lmfdb.lmfdb_database import
+# db`).  This is the same object as lmfdb.db, not a second database.
+from ._lazy_database import db
+assert db

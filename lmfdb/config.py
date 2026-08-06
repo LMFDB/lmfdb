@@ -1,0 +1,598 @@
+# LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
+# Copyright (C) 2010-2012 by the LMFDB authors
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+
+"""
+This file must not depend on other files from this project.
+It's purpose is to parse a config file (create a default one if none
+is present) and replace values stored within it with those given
+via optional command-line arguments.
+
+The location of the configuration file, the secret key and the log
+files is determined as follows.
+
+- When lmfdb is used from a git checkout, the configuration file is
+  ``config.ini`` at the root of the checkout, the secret key is stored
+  next to it, and log files go to ``logs/`` at the root of the checkout.
+
+- When lmfdb is installed as a package (e.g. with ``sage -pip install .``),
+  these files live in the LMFDB home directory, ``~/.lmfdb`` by default;
+  a ``config.ini`` in the current directory takes precedence if present.
+
+- The environment variables ``LMFDB_HOME`` (directory for all of these
+  files) and ``LMFDB_CONFIG`` (path of the configuration file) override
+  the above, as does the ``--config-file`` command-line option.
+"""
+
+
+import argparse
+import getpass
+import os
+import secrets
+import string
+import socket
+import tempfile
+from contextlib import closing
+from logging import INFO
+
+COCALC_port = 0
+
+# The root of the git checkout containing this file, or None if lmfdb is
+# being used as an installed package rather than from a checkout
+root_lmfdb_path = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+)
+if not os.path.exists(os.path.join(root_lmfdb_path, "start-lmfdb.py")):
+    root_lmfdb_path = None
+
+from psycodict.config import Configuration as _Configuration
+
+
+def is_port_open(host, port):
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.settimeout(1)
+        return sock.connect_ex((host, port)) == 0
+
+
+def abs_path_lmfdb(filename):
+    """
+    The path of a file at the root of the git checkout, relative to the
+    current directory (a historical helper; only available when lmfdb is
+    used from a checkout).
+    """
+    if root_lmfdb_path is None:
+        raise RuntimeError(
+            "abs_path_lmfdb gives the location of a file in the LMFDB git "
+            "checkout, but lmfdb is being used as an installed package"
+        )
+    return os.path.relpath(os.path.join(root_lmfdb_path, filename), os.getcwd())
+
+
+def lmfdb_home():
+    """
+    The directory holding the LMFDB configuration file, secret key and logs.
+
+    This is the first of:
+
+    - the ``LMFDB_HOME`` environment variable;
+    - the root of the git checkout, when lmfdb is used from a checkout;
+    - ``~/.lmfdb``.
+    """
+    home = os.environ.get("LMFDB_HOME")
+    if home:
+        return os.path.abspath(os.path.expanduser(home))
+    if root_lmfdb_path is not None:
+        return root_lmfdb_path
+    return os.path.join(os.path.expanduser("~"), ".lmfdb")
+
+
+def lmfdb_log_dir():
+    """
+    The directory where log files (flasklog, slow_queries.log, verification
+    logs) are placed by default.
+    """
+    return os.path.join(lmfdb_home(), "logs")
+
+
+def find_config_file():
+    """
+    The path where the configuration file is located (or will be created if
+    missing), in the absence of a --config-file command-line option.
+
+    This is the first of:
+
+    - the ``LMFDB_CONFIG`` environment variable;
+    - ``config.ini`` in the current directory, if it exists and lmfdb is not
+      being used from a git checkout (a checkout always keeps its
+      configuration at its root);
+    - ``config.ini`` in the directory given by :func:`lmfdb_home`.
+    """
+    path = os.environ.get("LMFDB_CONFIG")
+    if path:
+        return os.path.abspath(os.path.expanduser(path))
+    if root_lmfdb_path is None and os.path.exists("config.ini"):
+        return os.path.abspath("config.ini")
+    return os.path.join(lmfdb_home(), "config.ini")
+
+
+def get_secret_key(config_file=None):
+    """
+    Return the secret key used for flask sessions, creating it (in the same
+    directory as the configuration file) if it does not yet exist.
+
+    INPUT:
+
+    - ``config_file`` -- the path of the configuration file next to which
+      the key is stored.  Defaults to :func:`find_config_file`; components
+      with access to a :class:`Configuration` should use its
+      ``get_secret_key`` method instead, so that a ``--config-file`` option
+      is respected.
+    """
+    if config_file is None:
+        config_file = find_config_file()
+    directory = os.path.dirname(os.path.abspath(config_file))
+    secret_key_file = os.path.join(directory, "secret_key")
+    if not os.path.exists(secret_key_file):
+        os.makedirs(directory, exist_ok=True)
+        key = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+        # Write the key to a temporary file (created readable only by the
+        # owner) and link it into place once it is complete: under its
+        # final name the file is therefore never empty or half-written, so
+        # workers starting simultaneously either create the key or read a
+        # complete one.  The link fails if the name already exists, which
+        # is how the losers of the race learn to use the existing key.
+        fd, tmp = tempfile.mkstemp(dir=directory)
+        try:
+            with os.fdopen(fd, "w") as F:
+                F.write(key)
+            try:
+                os.link(tmp, secret_key_file)
+            except FileExistsError:
+                pass
+        finally:
+            os.unlink(tmp)
+    with open(secret_key_file) as F:
+        return F.read()
+
+
+def _resolve_log_path(value, default_name):
+    """
+    Determine the location of a log file.
+
+    The historical default values ("flasklog" and "slow_queries.log", which
+    used to be created in the current directory) are placed in the directory
+    given by :func:`lmfdb_log_dir` instead; any other value is respected as a
+    path (relative to the current directory if not absolute).
+    """
+    if value == default_name:
+        logdir = lmfdb_log_dir()
+        os.makedirs(logdir, exist_ok=True)
+        return os.path.join(logdir, default_name)
+    return value
+
+
+# The process-wide configuration: the first Configuration created in the
+# process (for the website, the one lmfdb.cli builds from the command line
+# before anything else is imported) is shared by every component -- logging,
+# the flask app's secret key, and the database -- so that the configuration,
+# including any --config-file option, is resolved exactly once.
+_current_configuration = None
+
+
+def current_configuration():
+    """
+    The process-wide :class:`Configuration`, created on first use.
+    """
+    global _current_configuration
+    if _current_configuration is None:
+        _current_configuration = Configuration()
+    return _current_configuration
+
+
+class Configuration(_Configuration):
+    def __init__(self, writeargstofile=False, readargs=False):
+        default_config_file = find_config_file()
+
+        # 1: parsing command-line arguments
+        parser = argparse.ArgumentParser(
+            description="LMFDB - The L-functions and modular forms database"
+        )
+
+        parser.add_argument(
+            "--config-file",
+            dest="config_file",
+            metavar="FILE",
+            help="configuration file [default: %(default)s]",
+            default=default_config_file,
+        )
+        # gunicorn uses '-c' to specify its config file
+        # we don't want the config parser to get confused
+        # when the app is ran via gunicorn
+        parser.add_argument(
+            "-c",
+            help=argparse.SUPPRESS,
+            dest="trash_becauseofgunicorn"
+        )
+        parser.add_argument(
+            "-s",
+            "--secrets-file",
+            dest="secrets_file",
+            metavar="SECRETS",
+            help="secrets file [default: secrets.ini next to the configuration file]",
+            default=None,
+        )
+
+        parser.add_argument(
+            "-d",
+            "--debug",
+            action="store_true",
+            dest="core_debug",
+            help="enable debug mode",
+        )
+
+        parser.add_argument(
+            "-r",
+            "--restart",
+            action="store_true",
+            dest="core_restart",
+            help="enable restart mode. CAUTION: can cause segfaults on pages using PARI",
+        )
+
+        parser.add_argument(
+            "--color",
+            dest="core_color",
+            metavar="COLOR",
+            help="color template (see lmfdb/utils/color.py)",
+            default=19,
+            type=int,
+        )
+
+        parser.add_argument(
+            "-p",
+            "--port",
+            dest="web_port",
+            metavar="PORT",
+            help="the LMFDB server will be running on PORT [default: %(default)d]",
+            type=int,
+            default=37777,
+        )
+        parser.add_argument(
+            "-b",
+            "--bind_ip",
+            dest="web_bindip",
+            metavar="HOST",
+            help="the LMFDB server will be listening to HOST [default: %(default)s]",
+            default="127.0.0.1",
+        )
+
+        logginggroup = parser.add_argument_group("Logging options:")
+        logginggroup.add_argument(
+            "--logfile",
+            help="logfile for flask [default: %(default)s]",
+            dest="logging_logfile",
+            metavar="FILE",
+            default="flasklog",
+        )
+
+        logginggroup.add_argument(
+            "--loglevel",
+            help="loglevel for flask [default: %(default)s]",
+            dest="logging_loglevel",
+            metavar="LEVEL",
+            type=int,
+            default=INFO,
+        )
+
+        logginggroup.add_argument(
+            "--slowcutoff",
+            dest="logging_slowcutoff",
+            metavar="SLOWCUTOFF",
+            help="threshold to log slow queries [default: %(default)s]",
+            default=0.1,
+            type=float,
+        )
+
+        logginggroup.add_argument(
+            "--slowlogfile",
+            help="logfile for slow queries [default: %(default)s]",
+            dest="logging_slowlogfile",
+            metavar="FILE",
+            default="slow_queries.log",
+        )
+        logginggroup.add_argument(
+            "--editor",
+            help="username for editor making data changes",
+            dest="logging_editor",
+            metavar="EDITOR",
+            default="",
+        )
+
+        # PostgresSQL options
+        postgresqlgroup = parser.add_argument_group("PostgreSQL options")
+        postgresqlgroup.add_argument(
+            "--postgresql-host",
+            dest="postgresql_host",
+            metavar="HOST",
+            help="PostgreSQL server host or socket directory [default: %(default)s]",
+            default="devmirror.lmfdb.xyz",
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-port",
+            dest="postgresql_port",
+            metavar="PORT",
+            type=int,
+            help="PostgreSQL server port [default: %(default)d]",
+            default=5432,
+        )
+
+        postgresqlgroup.add_argument(
+            "--postgresql-user",
+            dest="postgresql_user",
+            metavar="USER",
+            help="PostgreSQL username [default: %(default)s]",
+            default="lmfdb",
+        )
+
+        postgresqlgroup.add_argument(
+            "--postgresql-pass",
+            dest="postgresql_password",
+            metavar="PASS",
+            help="PostgreSQL password [default: %(default)s]",
+            default="lmfdb",
+        )
+
+        postgresqlgroup.add_argument(
+            "--postgresql-dbname",
+            dest="postgresql_dbname",
+            metavar="DBNAME",
+            help="PostgreSQL database name [default: %(default)s]",
+            default="lmfdb",
+        )
+
+        # TCP keepalives on the database connection.  LMFDB usually talks to a
+        # remote database (see --postgresql-host), where a connection can be
+        # silently dropped by the server, a load balancer, or the network.
+        # Keepalives let libpq detect a dead connection within about a minute
+        # (with the defaults below) instead of blocking on the OS TCP timeout
+        # for several minutes; this is a recurring source of spurious CI
+        # failures that pass on a rerun.  psycodict passes these parameters
+        # straight through to psycopg2.connect, for both the initial connection
+        # and every reconnection.  They are ignored for local unix-socket
+        # connections and never interrupt a running query.  Pass
+        # --postgresql-keepalives 0 to fall back to the operating system
+        # defaults.
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives",
+            dest="postgresql_keepalives",
+            metavar="0|1",
+            type=int,
+            help="use TCP keepalives on the database connection, 0 to disable [default: %(default)s]",
+            default=1,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-idle",
+            dest="postgresql_keepalives_idle",
+            metavar="SECONDS",
+            type=int,
+            help="idle time before the first keepalive probe is sent [default: %(default)s]",
+            default=30,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-interval",
+            dest="postgresql_keepalives_interval",
+            metavar="SECONDS",
+            type=int,
+            help="time between keepalive probes [default: %(default)s]",
+            default=10,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-count",
+            dest="postgresql_keepalives_count",
+            metavar="N",
+            type=int,
+            help="unanswered keepalive probes before the connection is dropped [default: %(default)s]",
+            default=5,
+        )
+
+        # undocumented options
+        parser.add_argument(
+            "--enable-profiler",
+            dest="profiler",
+            help=argparse.SUPPRESS,
+            action="store_true",
+            default=argparse.SUPPRESS,
+        )
+
+        # undocumented flask options
+        parser.add_argument(
+            "--enable-reloader",
+            dest="use_reloader",
+            help=argparse.SUPPRESS,
+            action="store_true",
+            default=argparse.SUPPRESS,
+        )
+
+        parser.add_argument(
+            "--disable-reloader",
+            dest="use_reloader",
+            help=argparse.SUPPRESS,
+            action="store_false",
+            default=argparse.SUPPRESS,
+        )
+
+        parser.add_argument(
+            "--enable-debugger",
+            dest="use_debugger",
+            help=argparse.SUPPRESS,
+            action="store_true",
+            default=argparse.SUPPRESS,
+        )
+
+        parser.add_argument(
+            "--disable-debugger",
+            dest="use_debugger",
+            help=argparse.SUPPRESS,
+            action="store_false",
+            default=argparse.SUPPRESS,
+        )
+        # record the locations of the configuration and secrets files
+        # (including the --config-file and --secrets-file options when
+        # arguments are read), so that files that live next to the
+        # configuration, like the secret key, can follow it
+        known_args, _ = parser.parse_known_args(None if readargs else [])
+        self.config_file = os.path.abspath(known_args.config_file)
+        if known_args.secrets_file is None:
+            # psycodict resolves a missing secrets file the same way
+            self.secrets_file = os.path.join(os.path.dirname(self.config_file), "secrets.ini")
+        else:
+            self.secrets_file = os.path.abspath(known_args.secrets_file)
+
+        _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
+
+        opts = self.options
+        extopts = self.extra_options
+
+        # The historical default log files used to be created in the current
+        # directory; they now go to the log directory.  We update the options
+        # dictionary itself since psycodict reads the slow query settings
+        # from there.
+        opts["logging"]["logfile"] = _resolve_log_path(opts["logging"]["logfile"], "flasklog")
+        opts["logging"]["slowlogfile"] = _resolve_log_path(opts["logging"]["slowlogfile"], "slow_queries.log")
+
+        self.flask_options = {
+            "port": opts["web"]["port"],
+            "host": opts["web"]["bindip"],
+            "debug": opts["core"]["debug"],
+            "use_reloader": opts["core"]["restart"],
+        }
+        for opt in ["use_debugger", "use_reloader", "profiler"]:
+            if opt in extopts:
+                self.flask_options[opt] = extopts[opt]
+
+        self.cocalc_options = {}
+        if "COCALC_PROJECT_ID" in os.environ:
+            from requests import get
+            # we must accept external connections
+            self.flask_options["host"] = "0.0.0.0"
+            self.cocalc_options["host"] = "cocalc.com"
+            external_ip = get('https://api.ipify.org').content.decode('utf8')
+            if external_ip == "18.18.21.21": # chatelet
+                self.cocalc_options["host"] = "chatelet.mit.edu"
+                global COCALC_port
+                if COCALC_port:
+                    self.flask_options["port"] = COCALC_port
+                else:
+                    # randomify port, we have only container
+                    if self.flask_options["port"] == 37777: # default
+                        username = getpass.getuser()
+                        intusername = int(username, base=36)
+                        self.flask_options["port"] = 10000 + (intusername % 55536)
+                    while is_port_open(self.flask_options["host"], self.flask_options["port"]):
+                        print(f'port {self.flask_options["port"]} already in use, trying the next one')
+                        self.flask_options["port"] += 1
+                        if self.flask_options["port"] > 65536:
+                            self.flask_options["port"] = 10000
+                    COCALC_port = self.flask_options["port"]
+            self.cocalc_options["root"] = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(self.flask_options['port'])
+            self.cocalc_options["prefix"] = ("https://"
+                                             + self.cocalc_options["host"]
+                                             + self.cocalc_options["root"])
+            stars = "\n" + "*" * 80
+            self.cocalc_options["message"] = (stars +
+             "\n\033[1mCocalc\033[0m environment detected!\n"
+             + "Visit"
+             + f"\n  \033[1m {self.cocalc_options['prefix']} \033[0m"
+             + "\nto access this LMFDB instance"
+             + stars)
+
+        self.color = opts["core"]["color"]
+
+        self.postgresql_options = {
+            "port": opts["postgresql"]["port"],
+            "host": opts["postgresql"]["host"],
+            "dbname": opts["postgresql"]["dbname"],
+        }
+
+        # optional items
+        for elt in ["user", "password"]:
+            if elt in opts["postgresql"]:
+                self.postgresql_options[elt] = opts["postgresql"][elt]
+
+        self.logging_options = {
+            "logfile": opts["logging"]["logfile"],
+            "slowcutoff": opts["logging"]["slowcutoff"],
+            "slowlogfile": opts["logging"]["slowlogfile"],
+            "editor": opts["logging"]["editor"],
+            "loglevel": opts["logging"]["loglevel"],
+        }
+
+        # the first configuration created in the process becomes the shared
+        # one (see current_configuration)
+        global _current_configuration
+        if _current_configuration is None:
+            _current_configuration = self
+
+    def get_secret_key(self):
+        """
+        Return the secret key used for flask sessions, stored next to this
+        configuration's file.
+        """
+        return get_secret_key(self.config_file)
+
+    def get_all(self):
+        return {
+            "flask_options": self.flask_options,
+            "postgresql_options": self.postgresql_options,
+            "logging_options": self.logging_options,
+        }
+
+    def get_flask(self):
+        return self.flask_options
+
+    def get_cocalc(self):
+        return self.cocalc_options
+
+    def get_url_prefix(self):
+        return self.cocalc_options.get('prefix', '')
+
+    def get_color(self):
+        return self.color
+
+    def get_postgresql(self):
+        return self.postgresql_options
+
+    def get_logging(self):
+        return self.logging_options
+
+
+class ConfigWrapper:
+    """
+    A wrapper class that provides the same interface as Configuration
+    but is initialized from a dictionary of options.
+    """
+    def __init__(self, config_dict):
+        # Set default values and update with provided config
+        self.postgresql_options = config_dict.get('postgresql_options', {})
+        self.flask_options = config_dict.get('flask_options', {})
+        self.logging_options = config_dict.get('logging_options', {'editor': ''})
+        # No configuration file is involved; files stored next to it (like
+        # the secret key) fall back to the default location
+        self.config_file = None
+
+    # Add the get methods that might be expected
+    def get_postgresql(self):
+        return self.postgresql_options
+
+    def get_flask(self):
+        return self.flask_options
+
+    def get_logging(self):
+        return self.logging_options
+
+
+if __name__ == "__main__":
+    Configuration(writeargstofile=True, readargs=True)
