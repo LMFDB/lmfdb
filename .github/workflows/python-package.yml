@@ -10,7 +10,7 @@ on:
 # run for the commit it replaces, instead of leaving it to occupy job slots
 # to completion.  Pushes keep their own group (keyed by ref rather than PR
 # number), so the push and pull_request runs of a commit do not cancel each
-# other, and nothing is cancelled on main/dev/web, where every commit should
+# other, and nothing is canceled on main/dev/web, where every commit should
 # be tested.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
