@@ -145,9 +145,9 @@ def hash_constraint(order, values, qfield="hash"):
     ``gps_smallhash``, so that a search for the hash ``11`` cannot come back
     with ``512.11``, whose stored 11 is its counter.
 
-    With no single order this needs a top-level ``$or`` (merge it with
-    ``collapse_ors``, not ``dict.update``); any order constraint already in the
-    query still applies to every branch.
+    With no single order this needs a top-level ``$or``; merge it into the
+    query with :func:`merge_constraint`, not with ``collapse_ors``.  Any order
+    constraint already in the query still applies to every branch.
     """
     values = [int(v) for v in values]
     column = {qfield: values[0] if len(values) == 1 else {"$or": values}}
@@ -161,21 +161,50 @@ def hash_constraint(order, values, qfield="hash"):
     return {"$or": branches}
 
 
+def merge_constraint(query, constraint):
+    """Add ``constraint`` to ``query``, so that both conditions hold.
+
+    ``collapse_ors`` foils a new ``$or`` into an existing one by updating each
+    old branch with each new one, which discards the old condition wherever the
+    two name the same column.  They do here: an order list parses to
+    ``{"$or": [{"order": 512}, {"order": 2016}]}`` while every branch of
+    :func:`hash_constraint` names an order too, so foiling would ask for the
+    hash at every order *except* the six counter-storing ones, and would look
+    up order-512 counters whether or not 512 was one of the orders asked for.
+    Two ``$or`` conditions are therefore intersected with ``$and``, which
+    ``SearchParser`` already uses for negated inputs, rather than foiled.
+    """
+    if "$or" in query and "$or" in constraint:
+        existing = dict(query)
+        query.clear()
+        query["$and"] = [existing, constraint]
+    else:
+        query.update(constraint)
+
+
 def searched_hash(info):
     """The ``(order, value)`` that a search asked for, when it asked for one
     hash at one order and so knows a value that the row itself may not record.
 
     Both ``N#h`` in the hash box and a hash with the order box pinned to a
-    single order count; a list of hashes or a range of orders does not.
+    single order count; a list of hashes or a range of orders does not, and
+    neither does an ``N#h`` that the order box contradicts, which is the
+    conflict ``parse_hashes`` rejects.
     """
     raw = (info.get("hash") or "").strip()
     if not raw or "," in raw:
         return None
+    order_raw = (info.get("order") or "").strip()
     try:
         if raw.count("#") == 1:
             order, value = raw.split("#")
-            return int(order), int(value)
-        return int((info.get("order") or "").strip()), int(raw)
+            order = int(order)
+            # A separate order has to be this order; a different one, a range
+            # or a list is a search that names two orders, not one.
+            if order_raw and int(order_raw) != order:
+                return None
+            return order, int(value)
+        return int(order_raw), int(raw)
     except ValueError:
         return None
 

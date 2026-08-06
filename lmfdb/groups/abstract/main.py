@@ -82,6 +82,7 @@ from .hash_lookup import (
     hash_constraint,
     hash_search_url,
     live_pages_available,
+    merge_constraint,
     order_search_url,
     resolve_order_hash,
     searched_hash,
@@ -267,9 +268,7 @@ def parse_hashes(inp, query, qfield, order_field):
         constraint = hash_constraint(N, [hsh], qfield)
     else:
         raise ValueError("To specify multiple hash values, all must have the same order; provide the order in the order input and then just give hashes separated by commas")
-    if "$or" in constraint:
-        collapse_ors(["$or", constraint.pop("$or")], query)
-    query.update(constraint)
+    merge_constraint(query, constraint)
 
 #input string of complex character label and return rational character label
 def q_char(char):

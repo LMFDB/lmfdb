@@ -211,6 +211,71 @@ class AbGpsTest(LmfdbTest):
         # ... while a search for the real hash finds it, with no order given.
         self.check_args("/Groups/Abstract/?hash=1584677793794603025&search_type=List", "512.11")
 
+    def test_hash_search_order_list(self):
+        # A hash condition names orders of its own, so foiling it into an order
+        # list would leave only one of the two conditions standing; the query
+        # has to intersect them.
+        from lmfdb import db
+        from lmfdb.groups.abstract.main import group_parse
+        query = {}
+        group_parse({"order": "512,2016", "hash": "1584677793794603025"}, query)
+        assert query == {"$and": [
+            {"$or": [{"order": 512}, {"order": 2016}]},
+            {"$or": [{"hash": 1584677793794603025,
+                      "order": {"$nin": [512, 1152, 1536, 1920, 2187, 15625]}},
+                     {"order": 512, "counter": {"$in": [11]}}]}]}
+        # One order pins the search to the complete table, and a range still
+        # constrains every branch without an intersection being needed.
+        query = {}
+        group_parse({"order": "512", "hash": "1584677793794603025"}, query)
+        assert query == {"order": 512, "counter": {"$in": [11]}}
+        query = {}
+        group_parse({"order": "500-600", "hash": "11"}, query)
+        assert query == {
+            "order": {"$gte": 500, "$lte": 600},
+            "$or": [{"hash": 11,
+                     "order": {"$nin": [512, 1152, 1536, 1920, 2187, 15625]}}]}
+        # The intersected query means what it says: the orders it names, and
+        # the group whose structural hash was asked for.
+        query = {}
+        group_parse({"order": "512,2016", "hash": "1584677793794603025"}, query)
+        assert list(db.gps_groups.search(query, "label", limit=20)) == ["512.11"]
+        # 512.11 stores its counter 11 in the hash column, so a list of orders
+        # that includes 512 must not answer a search for the hash 11 with it,
+        # and a list that excludes 512 must not acquire an order-512 result
+        # from the counters resolved for the hash it did ask for, ...
+        self.not_check_args(
+            "/Groups/Abstract/?order=512%2C2016&hash=11&search_type=List", "512.11")
+        self.not_check_args(
+            "/Groups/Abstract/?order=2016%2C5120&hash=1584677793794603025&search_type=List",
+            "512.11")
+        # ... while the list still finds the group whose hash was asked for.
+        self.check_args(
+            "/Groups/Abstract/?order=512%2C2016&hash=1584677793794603025&search_type=List",
+            "512.11")
+
+    def test_hash_search_order_conflict(self):
+        # N#h names an order itself, and the hash page answers a search that
+        # asks for one order and one hash: an order box that says something
+        # else is the conflict parse_hashes rejects, not a search to redirect.
+        for order in ["2016", "500-600"]:
+            page = self.tc.get(
+                "/Groups/Abstract/?order=%s&hash=512%%231584677793794603025"
+                "&search_type=List" % order, follow_redirects=True).get_data(as_text=True)
+            assert "512.11" not in page, "%s did not constrain the search" % order
+            assert "You cannot specify order both in the" in page, \
+                "%s and an embedded order gave no error" % order
+        # A list of orders reaches the ordinary search rather than the hash
+        # page, and there it means the orders it names.
+        self.not_check_args(
+            "/Groups/Abstract/?order=2016%2C5120&hash=512%231584677793794603025"
+            "&search_type=List", "512.11")
+        # The same order in both places is one order, and still redirects.
+        r = self.tc.get("/Groups/Abstract/?order=512&hash=512%231584677793794603025"
+                        "&search_type=List")
+        assert r.status_code in (301, 302), "matching orders did not reach the hash page"
+        assert "/hash/512/1584677793794603025" in r.headers["Location"]
+
     def test_hash_column(self):
         # The column shows the structural hash, never a label counter, and the
         # hash a search asked for when the row cannot supply it.
