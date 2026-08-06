@@ -247,15 +247,13 @@ def by_url_curve_label(cond, alpha, num):
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
 def by_url_curve_label_old(cond, alpha, disc, num):
-    # support URLs using the old label format cond.alpha.disc.num by
-    # redirecting to the new label cond.alpha+num (see genus2_jump)
-    return redirect(url_for(".by_url_curve_label", cond=cond, alpha=alpha, num=num), 301)
+    flash_error("Conversion from old labels not yet supported")
+    return redirect(url_for(".index"))
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
 def by_url_isogeny_class_discriminant_old(cond, alpha, disc):
-    # support old-style URLs that specified an isogeny class and discriminant
-    # by redirecting to the isogeny class page
-    return redirect(url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha), 301)
+    flash_error("Conversion from old labels not yet supported")
+    return redirect(url_for(".index"))
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/")
 def by_url_isogeny_class_label(cond, alpha):
@@ -483,9 +481,8 @@ def genus2_jump(info):
     elif ISOGENY_LABEL_RE.fullmatch(jump):
         return redirect(url_for_isogeny_class_label(jump), 301)
     elif OLD_LABEL_RE.fullmatch(jump):
-        s = jump.split(".")
-        jump = s[0] + "." + s[1] + s[3]
-        return redirect(url_for_curve_label(jump), 301)
+        flash_error("Conversion from old labels not yet supported")
+        return redirect(url_for(".index"))
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves_new.lucky({"Lhash": jump[1:].strip()}, projection="class")
