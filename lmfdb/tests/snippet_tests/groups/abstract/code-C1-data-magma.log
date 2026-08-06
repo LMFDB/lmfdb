@@ -3,7 +3,7 @@ magma> /* Group 1.1 downloaded from the LMFDB on 05 August 2026. */
 magma>  
 magma> /* Various presentations of this group are stored in this file: 
 magma> 	 GPC is polycyclic presentation, GPerm is permutation group 
-magma> 	 GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups 
+magma> 	 GLZ, GLFp, GLZN, GLZq, GLFq if they exist are matrix groups 
 magma>  
 magma>  Many characteristics of the group are stored as booleans in a record: 
 magma> 	 Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, 
