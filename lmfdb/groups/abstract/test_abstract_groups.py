@@ -420,12 +420,12 @@ class AbGpsTest(LmfdbTest):
             orig[2]()
         identify_mod.cancel_alarm = spy_cancel
         try:
-            # over the cap: no factorization, and the alarm is cancelled
+            # over the cap: no factorization, and the alarm is canceled
             identify_mod._parse = lambda desc: (FakeGroup(ZZ(10) ** 7), "permutation")
             res = identify_mod.identify_group("(1,2)")
             assert res["status"] == "error" and "exceeds the supported bound" in res["error"]
             assert not factored, "the order was factored before the cap was checked"
-            assert len(cancels) == 1, "the alarm was not cancelled on the over-cap path"
+            assert len(cancels) == 1, "the alarm was not canceled on the over-cap path"
             # a timeout while parsing is reported, not raised
             identify_mod._parse = raises(AlarmInterrupt())
             res = identify_mod.identify_group("(1,2)")
@@ -436,7 +436,7 @@ class AbGpsTest(LmfdbTest):
             res = identify_mod.identify_group("(1,2)")
             assert res["status"] == "error" and "gap fell over" in res["error"]
             assert len(cancels) == 3
-            # a bad description still short-circuits, with the alarm cancelled
+            # a bad description still short-circuits, with the alarm canceled
             identify_mod._parse = orig[0]
             res = identify_mod.identify_group("garbage")
             assert res["status"] == "error" and "Unrecognized description" in res["error"]
