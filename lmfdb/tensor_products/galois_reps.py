@@ -543,7 +543,7 @@ class GaloisRepresentation( Lfunction):
         else:
             raise ValueError("You asked for a type that we don't have")
 
-    def renormalise_coefficients(self):
+    def renormalize_coefficients(self):
         """
         This turns a list of algebraically normalized coefficients
         as above into a list of automorphically normalized,
@@ -600,7 +600,7 @@ class GaloisRepresentation( Lfunction):
         # take a lot of time. We cut it down and print a warning
         number_of_terms = min(self.numcoeff, self.besancon_bound)
         self.dirichlet_coefficients = self.algebraic_coefficients(number_of_terms+1)
-        self.renormalise_coefficients()
+        self.renormalize_coefficients()
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"

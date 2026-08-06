@@ -238,7 +238,7 @@ class Wrapper:
             one_per = [one_per]
         return query, sort, table, title, err_title, template, one_per
 
-    def query_cancelled_error(
+    def query_canceled_error(
         self, info, query, err, err_title, template, template_kwds
     ):
         ctx = ctx_proc_userdata()
@@ -421,7 +421,7 @@ class SearchWrapper(Wrapper):
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -644,7 +644,7 @@ class SearchWrapper(Wrapper):
                 one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -784,7 +784,7 @@ class CountWrapper(Wrapper):
                         tuple(key[i] for i in perm): val for (key, val) in res.items()
                     }
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         else:
@@ -869,7 +869,7 @@ class EmbedWrapper(Wrapper):
                 one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:

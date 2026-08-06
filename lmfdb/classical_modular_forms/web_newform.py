@@ -1028,9 +1028,9 @@ function switch_basis(btype) {
                  th_wrap('charpoly', '$F_p(T)$'),
                  '  </tr>', '</thead>', '<tbody>']
         loop_count = 0
-        for p, factorisation in hecke_polys_orbits.items():
-            factorisation.sort(key=lambda elt: (elt[0].degree(), elt[1]))
-            charpoly = raw_typeset_poly_factor(factorisation, decreasing=True)
+        for p, factorization in hecke_polys_orbits.items():
+            factorization.sort(key=lambda elt: (elt[0].degree(), elt[1]))
+            charpoly = raw_typeset_poly_factor(factorization, decreasing=True)
             if loop_count < num_disp:
                 polys.append('  <tr>')
             else:

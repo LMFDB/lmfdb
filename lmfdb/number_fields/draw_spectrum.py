@@ -66,9 +66,9 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     bottom_line = round((3/4)*height)
 
     # fraction of height of center line around which the primes in spec are centered
-    centre_ratio = 1/2 if gaga else 1/4
+    center_ratio = 1/2 if gaga else 1/4
     # y-coordinate of Spec O_K
-    y_centre = round(centre_ratio*height)
+    y_center = round(center_ratio*height)
 
     line_thickness = .75
 
@@ -91,10 +91,10 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
         x_coord = (n+1)*x_spread
         if l == [0]:
             coords.append(ram_coords(
-                local_alg_dict, p, x_coord, y_centre, y_spread))
+                local_alg_dict, p, x_coord, y_center, y_spread))
         else:
             coords.append(unram_coords(
-                l, x_coord, y_centre, y_spread))
+                l, x_coord, y_center, y_spread))
 
     # draw Spec Z line at the bottom
     if not gaga:
@@ -108,7 +108,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
                 y2=bottom_line))
 
         # a dashed line afterwards to signify generic fiber
-        for y in (bottom_line, y_centre):
+        for y in (bottom_line, y_center):
             elements.append(
                 svg.Line(
                     stroke="black",
@@ -129,7 +129,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
                 text_anchor="middle"))
 
     # draw curves between primes - do this first so points drawn over curve
-    nextpts = coords if gaga else coords + [[Point(width-2*x_spread, y_centre)]]
+    nextpts = coords if gaga else coords + [[Point(width-2*x_spread, y_center)]]
     for n in range(len(nextpts)-1):
         for pt_this in coords[n]:
             for pt_next in nextpts[n + 1]:
@@ -184,7 +184,7 @@ def draw_gaga(frobs, local_alg_dict, colors=True) -> svg.SVG:
     return draw_spec(frobs, local_alg_dict, colors=colors, gaga=True)
 
 
-def unram_coords(frob_cycle_list, x_coord, y_centre, spread) -> list:
+def unram_coords(frob_cycle_list, x_coord, y_center, spread) -> list:
     """
     Given list of Frobenius cycle describing a fixed fiber
     with no ramification, evenly spread points.
@@ -195,19 +195,19 @@ def unram_coords(frob_cycle_list, x_coord, y_centre, spread) -> list:
     N = sum(l[1] for l in frob_cycle_list)
     if N == 1:
         cyc_len = frob_cycle_list[0][0]
-        return [Point(x_coord, y_centre, cyc_len)]
+        return [Point(x_coord, y_center, cyc_len)]
     point_list = []
     point_index = 0         # total index of point
     for cyc_len, num_repeats in frob_cycle_list:
         for _ in range(num_repeats):
             y_offset = round(spread * (2 * point_index / (N - 1) - 1))
-            point = Point(x_coord, y_centre - y_offset, cyc_len)
+            point = Point(x_coord, y_center - y_offset, cyc_len)
             point_list.append(point)
             point_index += 1
     return point_list
 
 
-def ram_coords(local_alg_dict, p, x_coord, y_centre, spread, deg=1):
+def ram_coords(local_alg_dict, p, x_coord, y_center, spread, deg=1):
     """ Given `local_alg_dict` as defined in web_number_field.py, and a prime `p`,
     extract the points in the ramified fiber
     """
@@ -225,7 +225,7 @@ def ram_coords(local_alg_dict, p, x_coord, y_centre, spread, deg=1):
             y_offset = round(spread * (2 * i / (N - 1) - 1))
         else:
             y_offset = 0
-        point = Point(x_coord, y_centre - y_offset, residue_deg, hsl_color(ram_index, max_ram_index))
+        point = Point(x_coord, y_center - y_offset, residue_deg, hsl_color(ram_index, max_ram_index))
         point_list.append(point)
 
     return point_list
