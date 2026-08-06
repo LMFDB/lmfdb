@@ -449,6 +449,31 @@ class AbGpsHomeTest(LmfdbTest):
         # as are empty entries in the comma separated list
         self.check_args("/Groups/Abstract/?center_label=C2,,C6", "Abstract groups search input error")
 
+    def test_search_by_bad_name_in_debug_mode(self):
+        r"""
+        An unrecognized name says what is wrong with the input; it is not a bug.
+        So the search page is redisplayed with the error message at the top even
+        when the site is being run with debug enabled, rather than the developer
+        being shown a traceback (LMFDB#7173).
+        """
+        debug = self.app.debug
+        self.app.debug = True
+        try:
+            self.check_args(
+                "/Groups/Abstract/?aut_group=bird",
+                ["Abstract groups search input error", "bird is not a valid group label or name"],
+            )
+            self.check_args(
+                "/Groups/Abstract/?search_type=Subgroups&ambient=bird",
+                ["Subgroup search input error", "bird is not a valid group label or name"],
+            )
+            self.check_args(
+                "/Groups/Abstract/?search_type=ComplexCharacters&group=bird",
+                ["Complex character search input error", "bird is not a valid group label or name"],
+            )
+        finally:
+            self.app.debug = debug
+
     def test_supersolvable_search(self):
         r"""
         Check that we can restrict to supersolvable groups or not only
