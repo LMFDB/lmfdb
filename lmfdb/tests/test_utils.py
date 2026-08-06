@@ -709,6 +709,8 @@ class UtilsTest(unittest.TestCase):
                 ("artin_reps", {'GaloisLabel': '8T34', 'Conductor': {'$gte': 1, '$lte': 200}}),
                 ("gps_groups", {'order': {'$gte': 300, '$lte': 600}}),
                 ("ec_curvedata", {'rank': 6}),
+                ("ec_curvedata", {'conductor': 1000000007}),   # prime, but past the 300 million prime conductor bound
+                ("ec_curvedata", {'conductor': {'$in': [1000003, 1000000007]}}),   # all prime, but not all within the bound
                 # "Multiple of" searches used to raise an error rather than returning False (issue #6822)
                 ("ec_curvedata", {'conductor': {'$mod': [0, 7]}}),
                 ("mf_newforms", {'level': {'$mod': [0, 23]}, 'weight': 1}),

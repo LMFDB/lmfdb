@@ -1514,7 +1514,11 @@ class PrimeBound(Bound):
     """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
-        return all(D.enumerable() and all(is_prime(p) for p in D) for D in Ds)
+        # The bound is checked first, both because a value outside it is not certified
+        # complete however prime it is, and because it rules out large ranges without
+        # iterating over them.  ``enumerable`` is still needed: the bounds are typically
+        # unbounded below, so passing it does not make the set enumerable.
+        return super().__call__(db, Ds) and all(D.enumerable() and all(is_prime(p) for p in D) for D in Ds)
 
 
 class Smooth(ColTest):

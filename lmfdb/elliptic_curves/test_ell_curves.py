@@ -135,6 +135,16 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/11/a/')
         assert '[0, -1, 1, 0, 0]' in L.get_data(as_text=True)
 
+    def test_cm_isogeny_class(self):
+        # The CM field shown in the Properties box is looked up in nf_fields
+        # by coefficient list; this 500ed when that list mixed Sage Integers
+        # with Python ints (see #7129).  27.a and 32.a exercise the two
+        # branches computing the coefficient list.
+        L = self.tc.get('/EllipticCurve/Q/27/a/')
+        assert r'\Q(\sqrt{-3})' in L.get_data(as_text=True)
+        L = self.tc.get('/EllipticCurve/Q/32/a/')
+        assert r'\Q(\sqrt{-1})' in L.get_data(as_text=True)
+
     def test_dl_qexp(self):
         L = self.tc.get('/EllipticCurve/Q/download_qexp/66.c3/100')
         assert '0,1,1,1,1,-4,1,-2,1,1,-4,1,1,4,-2,-4,1,-2,1,0,-4,-2,1,-6,1,11,4,1,-2,10,-4,-8,1,1,-2,8,1,-2,0,4,-4,2,-2,4,1,-4,-6,-2,1,-3,11,-2,4,4,1,-4,-2,0,10,0,-4,-8,-8,-2,1,-16,1,-12,-2,-6,8,2,1,-6,-2,11,0,-2,4,10,-4,1,2,4,-2,8,4,10,1,10,-4,-8,-6,-8,-2,0,1,-2,-3,1,11' in L.get_data(as_text=True)
