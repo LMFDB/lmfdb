@@ -190,7 +190,7 @@ def createLcalcfile_ver2(L, url):
 ### that the 0-th entry is also listed.
 ###
 ### Complex numbers should be entered, as usual as a pair of numbers, separated
-### by a comma. If no complex numbers appear amongst the Dirichlet coefficients,
+### by a comma. If no complex numbers appear among the Dirichlet coefficients,
 ### lcalc will assume the L-function is self-dual."""
     thefile += "\n\n"
 

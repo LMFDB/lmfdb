@@ -39,7 +39,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     """ Draw the spectrum of the ring of integers of a number field,
     from data in the lmfdb.
     `frobs` is a list of lists [[p, [frob_cycle1,...,frob_cycleN]]]
-    `local_algs` is a list of strings describing ramification behaviour ['p.deg.(other stuff)', ..., ]
+    `local_algs` is a list of strings describing ramification behavior ['p.deg.(other stuff)', ..., ]
     If `colors` is `True`, color classes which lie in the same Frobenius cycle
     """
     num_primes = min(len(frobs), num_primes)
@@ -58,14 +58,14 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     # distance between two primes along x-axis
     x_spread = floor(width/(num_primes+1)) if gaga else 50
 
-    # distance between prime ideals in same fibre
+    # distance between prime ideals in same fiber
     # = total distance from top to bottom
     y_spread = 30
 
     # y-coordinate of Spec Z
     bottom_line = round((3/4)*height)
 
-    # fraction of height of centre line around which the primes in spec are centred
+    # fraction of height of center line around which the primes in spec are centered
     centre_ratio = 1/2 if gaga else 1/4
     # y-coordinate of Spec O_K
     y_centre = round(centre_ratio*height)
@@ -85,7 +85,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
     # NB: svg y-coords start from top! eg (0,1) is 1 unit down from top left corner
 
     # list of coordinates, where the n-th member is a
-    # list of Points in the n-th fibre
+    # list of Points in the n-th fiber
     coords = []
     for n, [p, l] in enumerate(frobs):
         x_coord = (n+1)*x_spread
@@ -107,7 +107,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
                 x2=coords[-1][0].x + x_spread,
                 y2=bottom_line))
 
-        # a dashed line afterwards to signify generic fibre
+        # a dashed line afterwards to signify generic fiber
         for y in (bottom_line, y_centre):
             elements.append(
                 svg.Line(
@@ -162,7 +162,7 @@ def draw_spec(frobs, local_alg_dict, colors=True, rings=False, num_primes=100, g
                     text=f'({frobs[n][0]})',
                     text_anchor="middle"))
 
-        # fibre above prime
+        # fiber above prime
         for pt in pts:
             radius = min(dot_radius
                          + residue_factor*(pt.girth-1), y_spread/5, x_spread/5)
@@ -177,7 +177,7 @@ def draw_gaga(frobs, local_alg_dict, colors=True) -> svg.SVG:
     """ Draw the spectrum of the ring of integers of a number field,
     from data in the lmfdb.
     ``frobs`` is a list of lists [[p, [frob_cycle1,...,frob_cycleN]]]
-    ``local_algs`` is a list of strings describing ramification behaviour ['p.deg.(other stuff)', ..., ]
+    ``local_algs`` is a list of strings describing ramification behavior ['p.deg.(other stuff)', ..., ]
     If ``colors`` is ``True``, color classes which lie
     in the same Frobenius cycle
     """
@@ -186,7 +186,7 @@ def draw_gaga(frobs, local_alg_dict, colors=True) -> svg.SVG:
 
 def unram_coords(frob_cycle_list, x_coord, y_centre, spread) -> list:
     """
-    Given list of Frobenius cycle describing a fixed fibre
+    Given list of Frobenius cycle describing a fixed fiber
     with no ramification, evenly spread points.
 
     Returns list of :class:`Point`.
@@ -209,7 +209,7 @@ def unram_coords(frob_cycle_list, x_coord, y_centre, spread) -> list:
 
 def ram_coords(local_alg_dict, p, x_coord, y_centre, spread, deg=1):
     """ Given `local_alg_dict` as defined in web_number_field.py, and a prime `p`,
-    extract the points in the ramified fibre
+    extract the points in the ramified fiber
     """
     # list of lists [e,f]
     algs = local_alg_dict[str(p)]

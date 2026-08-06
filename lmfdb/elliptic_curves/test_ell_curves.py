@@ -174,10 +174,10 @@ class EllCurveTest(LmfdbTest):
 
     def test_990h(self):
         """
-        Test the exceptional 990h/990.i optimal labelling.
+        Test the exceptional 990h/990.i optimal labeling.
         """
-        # The isogeny class 990h (Cremona labelling) or 990.i (LMFDB labelling)
-        # has a different Gamma-optimal curve in its labelling than all others.
+        # The isogeny class 990h (Cremona labeling) or 990.i (LMFDB labeling)
+        # has a different Gamma-optimal curve in its labeling than all others.
         L = self.tc.get('/EllipticCurve/Q/990/i/')
         row = '\n'.join([
             '<td class="center"><a href="/EllipticCurve/Q/990h3/">990h3</a></td>',

@@ -520,7 +520,7 @@ class WebEC():
         # Optimality
 
         # The optimal curve in the class is the curve whose Cremona
-        # label ends in '1' except for '990h' which was labelled
+        # label ends in '1' except for '990h' which was labeled
         # wrongly long ago. This is proved for N up to
         # OPTIMALITY_BOUND (and when there is only one curve in an
         # isogeny class, obviously) and expected for all N.

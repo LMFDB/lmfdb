@@ -238,7 +238,7 @@ def EC_nf_plot(K, ainvs, base_field_gen_name):
         xmax = max([r[1] for r in R])
         ymin = min([r[2] for r in R])
         ymax = max([r[3] for r in R])
-        cols = rainbow(n1) # Default choice of n colours
+        cols = rainbow(n1) # Default choice of n colors
         # However, these tend to be too pale, so we preset them for small values of n
         if n1 == 1:
             cols = ["blue"]

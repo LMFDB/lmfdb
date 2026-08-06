@@ -2411,7 +2411,7 @@ class NFBound(ColTest):
         r2, D, sign = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign")
         rd, grd, reg = NumberSet(query.get("rd")), NumberSet(query.get("grd")), NumberSet(query.get("regulator"))
 
-        # Initialise list of r2, of possible signatures (n-2*r2, r2)
+        # Initialize list of r2, of possible signatures (n-2*r2, r2)
         r2opts = list(r2.intersection(IntegerSet([0, n//2])))
         if sign == 1:
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 0]
