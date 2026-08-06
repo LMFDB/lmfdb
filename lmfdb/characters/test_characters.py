@@ -283,7 +283,7 @@ class DirichletCharactersTest(LmfdbTest):
 class DirichletPortraitTest(LmfdbTest):
     """Unit tests for the Gauss-sum portraits of issue #3996.
 
-    ``add_portrait`` swallows every exception, so a regression in the maths
+    ``add_portrait`` swallows every exception, so a regression in the math
     below would silently turn into a missing picture rather than a failing
     page; these tests check the data the picture is drawn from directly.
     """
