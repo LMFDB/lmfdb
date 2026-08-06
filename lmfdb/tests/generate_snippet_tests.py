@@ -115,7 +115,7 @@ def _start_snippet_procs(langs, chimp_spec=None):
             #
             #  SetColumns(0) disables line-wrapping, and SetAutoColumns(false) stops Magma from re-adjusting to the pty width, so that log files are stable across environments.
             #
-            #  Note that Magma seeds its random number generator from the clock, and several of its algorithms are randomised
+            #  Note that Magma seeds its random number generator from the clock, and several of its algorithms are randomized
             #  (e.g. the decomposition underlying NewformDecomposition, and the search underlying Generators of an elliptic
             #  curve).  The answers are always correct, but a choice of generator can differ between runs, so a Magma log is
             #  not reproducible: e.g. a q-expansion may come out in terms of a rather than -a.  Calling SetSeed here would fix
@@ -241,7 +241,7 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
         if 'snippet_test' in contents:
             langs |= set(contents['prompt'].keys())
     # The yaml files spell it 'pari', but the executable and the log files are
-    # named after 'gp'.  Normalise before applying --ignore/--only, so that
+    # named after 'gp'.  Normalize before applying --ignore/--only, so that
     # either spelling works on the command line.
     def normalize(names):
         return {'gp' if name == 'pari' else name for name in names}
