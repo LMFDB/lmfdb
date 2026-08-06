@@ -2479,13 +2479,19 @@ DOWNLOAD_LANG_DATA = {
 REP_VAR = {"PC":"GPC", "Perm":"GPerm", "GLZ":"GLZ", "GLFp":"GLFp", "GLZN":"GLZN", "GLZq":"GLZq", "GLFq":"GLFq"}
 MATRIX_REPS = ["GLZ", "GLFp", "GLZN", "GLZq", "GLFq"]
 
+def rename_group_variable(code, variable):
+    """
+    Rename the group variable G in a code snippet, matching whole tokens only.
+    """
+    return re.sub(r"\bG\b", variable, code)
+
 # create preamble for downloading individual group
 def download_preamble(com1, com2, dltype, cc_known):
     f = DOWNLOAD_LANG_DATA[dltype]["line"]
     s = com1
     s += f + " Various presentations of this group are stored in this file: \n"
     s += f + "\t GPC is polycyclic presentation, GPerm is permutation group \n"
-    s += f + "\t GLZ, GLFp, GLZA, GLZq, GLFq if they exist are matrix groups \n \n"
+    s += f + "\t GLZ, GLFp, GLZN, GLZq, GLFq if they exist are matrix groups \n \n"
     s += f + " Many characteristics of the group are stored as booleans in a "
     s += DOWNLOAD_LANG_DATA[dltype]['booleans'] + ": \n"
     s += f + "\t Agroup, Zgroup, abelian, almost_simple, cyclic, metabelian, \n"
@@ -2531,7 +2537,7 @@ def download_construction_string(G, dltype):
             key = {"PC": "presentation", "Perm": "permutation"}.get(rep, rep)
             code = snippet.get(key, {}).get(dltype)
             if code:
-                s += re.sub(r"\bG\b", REP_VAR[rep], str(code).strip())  + "\n" 
+                s += rename_group_variable(str(code).strip(), REP_VAR[rep]) + "\n" 
     return s
 
 
@@ -2592,7 +2598,7 @@ def _char_table_data(G):
         "indicators": [int(chi.indicator) for chi in G.characters],
     }
 
-def download_element_string(G, code, dltype, gp_type=None, gp_var=None):
+def download_element_string(G, code, dltype):
     """
     One conjugacy class representative as source code,
     or "None" when the representation is not expressible in that language
@@ -2770,7 +2776,7 @@ def _char_table_dict(G, ul_label, dltype):
     d = _char_table_data(G)
     tbl = "chartbl_" + ul_label
     gp_var = REP_VAR.get(G.element_repr_type)
-    reps_tmp = [download_element_string(G, c, dltype, gp_var=None) for c in d["reps"]]
+    reps_tmp = [download_element_string(G, c, dltype) for c in d["reps"]]
     reps = None if any(r is None for r in reps_tmp) else reps_tmp
 
     if dltype == "sage":
@@ -2806,9 +2812,8 @@ def _char_table_dict(G, ul_label, dltype):
         lines.append(f'{tbl}["UnderlyingGroup"] = {gp_var}')
         lines.append(f'{tbl}["ConjugacyClasses"] = [{", ".join(reps)}]')
     else:
-        lines.append(DOWNLOAD_LANG_DATA[dltype]["com"]
-                     + " Conjugacy class representatives are not available for"
-                       " this representation.")
+        lines.append("# Conjugacy class representatives are not available for"
+                     " this representation.")
     lines.append(f'{tbl}["Indicators"] = {d["indicators"]}')
 
     # One row per line, so that every line is a complete statement.
@@ -2929,7 +2934,7 @@ def download_group_code(label, download_type):
         # We need to still assign the PC representation to some variable (e.g. "GPC"), for this command to work
         if "presentation" in code_snippets:
             for lang in code_snippets["presentation"]:
-                code_snippets["presentation"][lang] = code_snippets["presentation"][lang].replace("G :=", "GPC :=").replace("G =", "GPC =").replace("G.", "GPC.").replace("G,", "GPC,")
+                code_snippets["presentation"][lang] = rename_group_variable(code_snippets["presentation"][lang], "GPC")
 
         # If group is non-abelian, remove code snippets only meant for abelian groups
         code_snippets["primary_decomposition"].pop('magma', None)

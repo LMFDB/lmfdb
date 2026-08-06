@@ -122,7 +122,7 @@ def create_sage_gap_assignment(genslist):
 
 def create_oscar_gap_assignment(genslist):
     # For Oscar (using the GAP interface)
-    return " ".join(f"{var_name(j)} = gens(G)[{i}];" for j, i in enumerate(genslist))
+    return " ".join(f"{var_name(j)} = gen(G, {i});" for j, i in enumerate(genslist))
 
 def create_magma_assignment(G):
     used = [u - 1 for u in sorted(G.gens_used)]
@@ -3196,7 +3196,7 @@ class WebAbstractGroup(WebObj):
             LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
             LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
             LZNsage = "["+", ".join(["MS("+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
-            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1]"+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
+            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1], "+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
         else:
             nZN, N, LZN, LZNsplit, LZNsage, LZNoscar = None, None, None, None, None, None
         if "GLZq" in self.representations:
@@ -3205,7 +3205,7 @@ class WebAbstractGroup(WebObj):
             LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
             LZqsplit = "[" + ",".join([split_matrix_list_ZN(mat, nZq, Zq) for mat in LZq]) + "]"
             LZqsage = "["+", ".join(["MS("+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
-            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1]"+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
+            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1], "+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
         else:
             nZq, Zq, LZq, LZqsplit, LZqsage, LZqoscar, = None, None, None, None, None, None
         # add below for GLFq implementation

@@ -514,7 +514,7 @@ snippet_test:
     label: A5
     url: Groups/Abstract/60.5/codedownload/{lang}
 
-  # Tests for the the group construction download pages
+  # Tests for the group construction download pages
   # (incl. constructing the boolean invariants and character table)
   testC1data:
     label: C1-data
