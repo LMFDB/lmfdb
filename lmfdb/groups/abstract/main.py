@@ -798,7 +798,12 @@ def index():
         if search_type in legacy_searches:
             endpoint, new_search_type = legacy_searches[search_type]
             args = request.args.to_dict(flat=False)
-            args.pop("search_type", None)
+            # Drop both mode parameters: the destination route encodes the
+            # object type, and SearchWrapper falls back to hst when there is
+            # no explicit search_type, so a stale hidden hst would otherwise
+            # override the mode we just resolved.
+            for key in ("search_type", "hst"):
+                args.pop(key, None)
             if new_search_type is not None:
                 args["search_type"] = [new_search_type]
             return redirect(url_for(endpoint, **args), 307)
@@ -2926,6 +2931,9 @@ def download_group_code(label, download_type):
             for lang in code_snippets["presentation"]:
                 code_snippets["presentation"][lang] = code_snippets["presentation"][lang].replace("G :=", "GPC :=").replace("G =", "GPC =").replace("G.", "GPC.").replace("G,", "GPC,")
 
+        # If group is non-abelian, remove code snippets only meant for abelian groups
+        code_snippets["primary_decomposition"].pop('magma', None)
+
         code = CodeSnippet(code_snippets)
         response = make_response(code.export_code(label, download_type, sorted_code_names))
     except Exception as err:
@@ -4135,9 +4143,3 @@ def order_stats_list_to_string(o_list):
         if o_list.index(pair) != len(o_list) - 1:
             s += ","
     return s
-
-
-#sorted_code_names = ['presentation', 'permutation', 'matrix', 'transitive']
-
-Fullname = {'magma': 'Magma', 'gap': 'Gap'}
-Comment = {'magma': '//', 'gap': '#'}

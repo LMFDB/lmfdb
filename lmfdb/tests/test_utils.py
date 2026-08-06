@@ -400,6 +400,8 @@ class UtilsTest(unittest.TestCase):
                 ("artin_reps", {'GaloisLabel': '8T34', 'Conductor': {'$gte': 1, '$lte': 200}}),
                 ("gps_groups", {'order': {'$gte': 300, '$lte': 600}}),
                 ("ec_curvedata", {'rank': 6}),
+                ("ec_curvedata", {'conductor': 1000000007}),   # prime, but past the 300 million prime conductor bound
+                ("ec_curvedata", {'conductor': {'$in': [1000003, 1000000007]}}),   # all prime, but not all within the bound
                 ("hgcwa_passports", {'genus': 6}),
                 ("av_fq_isog", {'g': 6, 'q': 3}),
                 ("belyi_galmaps", {'deg': 8}),
