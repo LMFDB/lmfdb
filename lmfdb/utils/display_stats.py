@@ -699,7 +699,7 @@ class StatsDisplay(UniqueRepresentation):
         - a total over a column whose lists are split counts the entries of those
           lists rather than records;
         - the statistics backend leaves out records where the column is null, so a
-          column that is not computed for every record is totalled over only some
+          column that is not computed for every record is totaled over only some
           of them;
         - a constraint on the column being displayed is left out of the urls, since
           each cell constrains that column itself, so the total would claim more

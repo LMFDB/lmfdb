@@ -430,7 +430,7 @@ class LocalFieldTest(LmfdbTest):
         L = self.tc.get(url)
         assert L.status_code == 200
         dat = L.get_data(as_text=True)
-        # the buckets are labelled and linked with exact rationals, not with the
+        # the buckets are labeled and linked with exact rationals, not with the
         # encoding, and an endpoint is never dropped (which produced 'topslope=-')
         assert '$0$-$1$' in dat and '$1$-$2$' in dat and '$2$-' in dat
         assert '00.0000000000' not in dat and 'topslope=-' not in dat
