@@ -77,6 +77,58 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('EllipticCurve/2.2.89.1/81.1/a/1/download/gp')
         assert 'Pari/GP code for working with elliptic curve 2.2.89.1-81.1-a1' in L.get_data(as_text=True)
 
+    def test_search_download(self):
+        r"""
+        Check downloading search results (issue #7004)
+        """
+        # The base field 3.3.1849.1 is not monogenic, so these curves have
+        # Weierstrass coefficients with non-integral rational coordinates
+        base = '/EllipticCurve/?download=1&query=%7B%27field_label%27%3A+%273.3.1849.1%27%2C+%27conductor_norm%27%3A+1%7D&Submit='
+        for lang in ['sage', 'gp', 'magma', 'text', 'csv']:
+            L = self.tc.get(base + lang)
+            data = L.get_data(as_text=True)
+            assert '[-25097, -6233/2, 3859/2]' in data
+            assert 'unable to convert' not in data
+        # In Julia, -3/2 is floating point division, so rationals must be downloaded as -3//2
+        L = self.tc.get(base + 'oscar')
+        data = L.get_data(as_text=True)
+        assert '[-25097, -6233//2, 3859//2]' in data
+        # For curves whose rank is not known, the rank bounds should be
+        # downloaded rather than a LaTeX string such as "0 \le r \le 1"
+        base = '/EllipticCurve/?download=1&query=%7B%27field_label%27%3A+%272.0.868.1%27%2C+%27conductor_norm%27%3A+2%7D&Submit='
+        for lang in ['sage', 'gp', 'magma', 'text', 'csv', 'oscar']:
+            L = self.tc.get(base + lang)
+            data = L.get_data(as_text=True)
+            # The columns preceding the Sato-Tate group are the two labels, the base
+            # field with its defining polynomial, the conductor norm, the rank and the
+            # torsion, so [0, 1] can only be the bounds on the rank of this curve
+            row = [line for line in data.split('\n') if '2.1-b1' in line][0]
+            assert '[0, 1]' in row.split('1.2.A.1.1a')[0]
+            assert r'\le r' not in row
+
+    def test_download_field_polys(self):
+        r"""
+        Check that the base field defining polynomials used when downloading
+        search results are loaded in a single query (issue #7004)
+        """
+        from unittest.mock import patch
+        from lmfdb.ecnf.main import ECNFDownloader
+        downloader = ECNFDownloader()
+        rows = [{'field_label': label, 'ainvs': '0,0,0;0,0,0;0,0,0;0,0,0;0,0,0'}
+                for label in ['3.3.1849.1', '2.0.868.1', '3.3.1849.1']]
+        with patch.object(self.db.nf_fields, 'search', wraps=self.db.nf_fields.search) as search, \
+             patch.object(self.db.nf_fields, 'lookup', wraps=self.db.nf_fields.lookup) as lookup:
+            polys = [downloader.postprocess(row, {}, {})['field_coeffs'] for row in rows]
+            # All of the defining polynomials are fetched by the first row, in bulk
+            assert search.call_count == 1
+            assert lookup.call_count == 0
+            # and the dictionary they were saved in is reused afterwards
+            assert downloader.field_polys is downloader.field_polys
+            assert search.call_count == 1
+        assert polys[0] is polys[2]
+        for row, poly in zip(rows, polys):
+            assert poly.degree() == int(row['field_label'].split('.')[0])
+
     def test_search(self):
         r"""
         Check ecnf search results

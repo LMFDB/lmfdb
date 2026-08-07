@@ -6,12 +6,12 @@ import re
 from urllib.parse import quote, unquote
 
 from flask import render_template, request, url_for, redirect, make_response, abort
-from sage.all import factor, is_prime, QQ, ZZ, PolynomialRing
+from sage.all import factor, is_prime, lazy_attribute, QQ, ZZ, PolynomialRing
 
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import (
-    to_dict, flash_error, display_knowl, Downloader,
+    to_dict, flash_error, display_knowl, Downloader, coeff_to_poly,
     parse_ints, parse_ints_to_list_flash, parse_noop, nf_string_to_label, parse_element_of,
     parse_nf_string, parse_nf_jinv, parse_bracketed_posints, parse_floats, parse_primes,
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
@@ -400,7 +400,9 @@ ecnf_columns = SearchColumns([
                  default=lambda info: info.get("bad_primes"), mathmode=True, align="center"),
     MultiProcessedCol("rank", "ec.rank", "Rank", ["rank", "rank_bounds"],
                       lambda rank, rank_bounds: rank if rank is not None else (r"%s \le r \le %s" % (rank_bounds[0],rank_bounds[1]) if rank_bounds is not None else ""),
-                      mathmode=True, align="center"),
+                      mathmode=True, align="center",
+                      # When the rank is not known, download the bounds on the rank instead (None if those are unknown too)
+                      apply_download=lambda rank, rank_bounds: rank if rank is not None else rank_bounds),
     ProcessedCol("torsion_structure", "ec.torsion_subgroup", "Torsion",
                  lambda tors: r"\oplus".join(r"\Z/%s\Z" % n for n in tors) if tors else r"\mathsf{trivial}", mathmode=True, align="center"),
     ProcessedCol("has_cm", "ec.complex_multiplication", "CM", lambda v: r"$\textsf{%s}$" % ("no" if v == 0 else ("potential" if v < 0 else "yes")),
@@ -446,11 +448,22 @@ class ECNFDownloader(Downloader):
     title = "Elliptic curves over number fields"
     short_name = "curves"
 
+    @lazy_attribute
+    def field_polys(self):
+        # The defining polynomials of the base fields, keyed by field label.  There
+        # are under a thousand base fields, so we fetch them all in one query the
+        # first time a download happens rather than looking them up row by row.
+        labels = db.ec_nfcurves.distinct('field_label')
+        polys = {rec['label']: coeff_to_poly(rec['coeffs'])
+                 for rec in db.nf_fields.search({'label': {'$in': labels}}, projection=['label', 'coeffs'])}
+        missing = [label for label in labels if label not in polys]
+        if missing:
+            raise ValueError("Missing defining polynomial for base field %s" % missing[0])
+        return polys
+
     def postprocess(self, row, info, query):
         # Look up the defining polynomial coefficients for the base field of the curve
-        from lmfdb.utils import coeff_to_poly
-        poly = coeff_to_poly(db.nf_fields.lookup(row['field_label'], projection='coeffs'))
-        row["field_coeffs"] = poly
+        row["field_coeffs"] = self.field_polys[row['field_label']]
 
         # Convert Weierstrass coefficients from string to a list of list of rationals
         row['ainvs'] = [[QQ(aj) for aj in ai.split(",")] for ai in row['ainvs'].split(";")]
