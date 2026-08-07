@@ -1,11 +1,16 @@
 from sage.all import lcm, gcd, I
+from sage.geometry.newton_polygon import NewtonPolygon
 from sage.plot.graphics import Graphics
 from sage.plot.line import line
 from sage.plot.circle import circle
+from sage.plot.point import points
+from sage.plot.polygon import polygon
 from sage.plot.text import text
 from sage.rings.rational import Rational
 from sage.rings.complex_mpfr import ComplexField
 from sage.functions.log import exp
+
+from lmfdb.utils import encode_plot
 
 
 def circle_drops(A, B):
@@ -75,3 +80,36 @@ def circle_image(A, B):
         if tmp[val] < 0:
             G += text(str(abs(tmp[val])), exp(C(.2+2*3.14159*I*val[0]/val[1])), fontsize=30, axes=False, color=color2)
     return G
+
+
+def hodge_polygon_plot(hodge):
+    """
+    Return an encoded plot of the Hodge polygon determined by the Hodge vector
+    ``hodge`` (the list ``[h_0, h_1, ...]`` of Hodge numbers).
+
+    The Hodge polygon is the lower convex polygon starting at the origin whose
+    segment of slope ``i`` has horizontal length ``h_i``.  The rendering imitates
+    the Newton polygon plot used for abelian varieties over finite fields (see
+    ``lmfdb.abvar.fq.isog_class.AbvarFq_isoclass.newton_plot``).
+    """
+    expand_hodge = []
+    for i, h in enumerate(hodge):
+        expand_hodge += [i] * h
+    pts = NewtonPolygon(expand_hodge).vertices()
+    xmax = pts[-1][0]
+    ymax = pts[-1][1]
+    L = Graphics()
+    L += polygon(pts + [(0, ymax)], alpha=0.1)
+    for i in range(xmax + 1):
+        L += line([(i, 0), (i, ymax)], color="grey", thickness=0.5)
+    for j in range(ymax + 1):
+        L += line([(0, j), (xmax, j)], color="grey", thickness=0.5)
+    L += line(pts, thickness=2)
+    # Use points (fixed pixel size) rather than circles so the vertex markers
+    # stay round after the aspect ratio is scaled below.
+    L += points(pts, size=30, color="black", zorder=5)
+    L.axes(False)
+    # Scale the aspect ratio so the polygon fills a 2:1 image (rendered at width
+    # 500, height 250), matching the local field Newton polygon display.
+    L.set_aspect_ratio(xmax / (2 * ymax) if ymax else 1)
+    return encode_plot(L, pad=0, pad_inches=0, bbox_inches="tight", figsize=(8, 4))
