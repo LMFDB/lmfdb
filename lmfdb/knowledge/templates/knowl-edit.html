@@ -20,6 +20,13 @@
   {% else %}
     {% from "knowl-defs.html" import knowlbar with context %}
 
+    {# Column descriptions have a generated, read-only title and a Postgres
+       column type; table descriptions have neither, and their title is edited
+       like a normal knowl's.  They are told apart by the source, which is the
+       table name for a column description and none for a table description. #}
+    {% set column_description = (k.type == 2 and k.source is not none) %}
+    {% set table_description = (k.type == 2 and k.source is none) %}
+
     {% set renamable = (k.type == 0 and k.exists() and user_is_admin and k.source is none) %}
     {% set renaming_other_to_this = (k.type == 0 and k.source is not none and k.id != k.source) %}
     {% set renaming_this_to_other = (k.type == 0 and k.id == k.source) %}
@@ -81,14 +88,20 @@
         </tr>
         {% endif %} {# renamable #}
         <tr>
-          <td>{{KNOWL("doc.knowl.description",title="Description")}}</td>
-          {% if k.type == 2 %}
+          <td>
+            {%- if table_description -%}
+              Title
+            {%- else -%}
+              {{KNOWL("doc.knowl.description",title="Description")}}
+            {%- endif -%}
+          </td>
+          {% if column_description %}
             <td>{{ k.title }}<input name="title" id="ktitle" value="{{ k.title }}" type="hidden" /></td>
           {% else %}
             <td><input size="40" name="title" id="ktitle" value="{{ k.title }}" /></td>
           {% endif %}
         </tr>
-        {% if k.type == 2 %}
+        {% if column_description %}
           <tr>
             <td>Postgres column type</td>
             <td>{{ k.coltype }}</td>

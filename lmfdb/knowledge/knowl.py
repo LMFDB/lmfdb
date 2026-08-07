@@ -526,14 +526,18 @@ class KnowlBackend(PostgresBase):
     def set_table_description(self, table, description):
         uid = db.login()
         kid = f"tables.{table}"
-        data = {
-            'content': description,
-            'defines': table,
-        }
-        kwl = Knowl(kid, data=data)
         old = self.get_knowl(kid, beta=True)
         if old is None:
             old = {'authors': []}
+        data = {
+            'content': description,
+            'defines': table,
+            # Unlike a column description, the title here is set by editors,
+            # so carry it over: this updates the content only, and a missing
+            # title would be saved as the generated fallback, discarding it.
+            'title': old.get('title', ''),
+        }
+        kwl = Knowl(kid, data=data)
         self.save(kwl, uid, most_recent=old)
 
     def drop_table(self, table):
@@ -1100,19 +1104,20 @@ class Knowl():
             self.type, self.source, self.source_name = extract_typ(ID)
         if self.type == 2:
             pieces = ID.split(".")
-            # Ignore the title passed in
             if len(pieces) == 3:
-                # Column
+                # Column: the title is generated, so ignore the title passed in
                 self.title = f"Column {pieces[2]} of table {pieces[1]}"
                 if pieces[1] in db.tablenames:
                     self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
                 else:
                     self.coltype = "DEFUNCT"
             elif len(pieces) == 2:
-                # Table
-                self.title = f"Table {pieces[1]}"
+                # Table: unlike a column description, the title is editable,
+                # so it is only generated for records that don't have one yet
                 self.coltype = None
-                if pieces[1] not in db.tablenames:
+                if not self.title:
+                    self.title = f"Table {pieces[1]}"
+                if pieces[1] not in db.tablenames and not self.title.endswith(" (DEFUNCT)"):
                     self.title += " (DEFUNCT)"
 
         if showing:

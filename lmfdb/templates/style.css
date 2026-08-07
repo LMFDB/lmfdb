@@ -702,6 +702,22 @@ table.ntdata tr.toplined {
   border-top: 2px solid {{ color.table_ntdata_border }};
 }
 
+/* schema display on API and underlying data pages */
+div.schema-holder {
+  max-height: 500px;
+  width: 97%;
+  overflow-y: auto;
+}
+table.schema-table {
+  width: 95%;
+}
+table.schema-table td.schema-example {
+  font-family: monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 40em;
+}
+
 table.ntdata th {
   text-align: left;
   padding-right: 7px;
