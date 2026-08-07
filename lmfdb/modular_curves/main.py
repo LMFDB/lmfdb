@@ -274,7 +274,13 @@ def modcurve_lmfdb_label(label):
     return lmfdb_label, label_type
 
 def modcurve_jump(info):
-    labels = (info["jump"]).split("*")
+    jump = info["jump"]
+    # Since several modular curves can share the same Cummins-Pauli label,
+    # we redirect to the search results listing all of them when the match
+    # is not unique
+    if CP_LABEL_RE.fullmatch(jump) and db.gps_gl2zhat_fine.count({"CPlabel": jump}) > 1:
+        return redirect(url_for(".index_Q", CPlabel=jump))
+    labels = jump.split("*")
     lmfdb_labels = []
     for label in labels:
         lmfdb_label, label_type = modcurve_lmfdb_label(label)
