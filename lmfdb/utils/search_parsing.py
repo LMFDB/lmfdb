@@ -15,9 +15,41 @@ from math import log2
 import ast
 
 SPACES_RE = re.compile(r"\d\s+\d")
-LIST_RE = re.compile(r"^(\d+|(\d*-(\d+)?))(,(\d+|(\d*-(\d+)?)))*$")
-FLOAT_STR = r"(-?(((\d+([.]\d*)?)|([.]\d+))(e[-+]?\d+)?)|(-?\d+/\d+))"
-LIST_FLOAT_RE = re.compile(r"^({0}|{0}-|{0}-{0})(,({0}|{0}-|{0}-{0}))*$".format(FLOAT_STR))
+# Ranges are written 2-10 or 2..10, but prep_ranges turns the second spelling
+# into the first before these patterns run, so a dash is the only separator they
+# have to handle between two endpoints; only a .. with no lower endpoint reaches
+# them.  The item grammars below are factored so that every comma separated item
+# has exactly one parse: overlapping alternatives (a negative singleton also
+# matching a range whose lower endpoint was omitted, say) make a list of items
+# take exponential time to reject, which is a denial of service risk since these
+# patterns are applied to search input.
+UNSIGNED_INT_STR = r"\d+"
+SIGNED_INT_STR = r"-?\d+"
+# A singleton or a range with a lower endpoint (5, -5, -5-3, -5--3, -5-), a
+# range with the lower endpoint omitted (..3, ..-3), or that same range with a
+# dash for the omitted endpoint (--3).  Note that -3 is the singleton -3.
+INT_ITEM_STR = r"(?:{s}(?:-(?:{s})?)?|--{u}|\.\.{s})".format(
+    s=SIGNED_INT_STR, u=UNSIGNED_INT_STR)
+LIST_RE = re.compile(r"^{0}(?:,{0})*$".format(INT_ITEM_STR))
+# The dash separating the endpoints of a range must be distinguished from
+# the dash used as a minus sign.  A dash is a separator if it is preceded by
+# a digit or decimal point (a leading dash is a sign, and a dash after e is
+# an exponent sign), or if it occurs at the start immediately before a minus
+# sign (an omitted lower endpoint, as in --4, obtained from ..-4).
+RANGE_DASH_RE = re.compile(r"(?<=[\d.])-|^-(?=-)")
+# prep_ranges folds .. into - so that the rest of the parsing machinery only has
+# to handle one separator, but only when a lower endpoint precedes it: -10 is
+# the negative number -10, so ..10 would otherwise silently become a search for
+# -10 instead of a search for values at most 10.
+RANGE_DOTS_RE = re.compile(r"(?<=\d)\.\.")
+UNSIGNED_FLOAT_STR = r"(?:(?:\d+(?:[.]\d*)?|[.]\d+)(?:e[-+]?\d+)?|\d+/\d+)"
+FLOAT_STR = r"-?" + UNSIGNED_FLOAT_STR
+# A dash rather than .. between the endpoints matters here: a float may end in a
+# decimal point and another may begin with one, so allowing .. as a separator
+# would give 1...2 the two parses 1. .. 2 and 1 .. .2
+FLOAT_ITEM_STR = r"(?:{f}(?:-(?:{f})?)?|--{u}|\.\.{f})".format(
+    f=FLOAT_STR, u=UNSIGNED_FLOAT_STR)
+LIST_FLOAT_RE = re.compile(r"^{0}(?:,{0})*$".format(FLOAT_ITEM_STR))
 BRACKETED_POSINT_RE = re.compile(r"^[\[(][\])]|[\[(]0*[1-9]\d*(,0*[1-9]\d*)*[\])]$")
 BRACKETED_NN_RE = re.compile(r"^[\[(][\])]|[\[(]\d+(,\d+)*[\])]$")
 BRACKETED_RAT_RE = re.compile(r"^[\[(][\])]|[\[(]-?(\d+|\d+/\d+)(,-?(\d+|\d+/\d+))*[\])]$")
@@ -180,7 +212,8 @@ def clean_input(inp, clean_spaces=True, angle_to_curly=False):
 def prep_ranges(inp):
     if inp is None:
         return None
-    return inp.replace("..", "-").replace(" ", "")
+    # A leading .. marks an omitted lower endpoint and is left alone: see RANGE_DOTS_RE
+    return RANGE_DOTS_RE.sub("-", inp.replace(" ", ""))
 
 def prep_raw(inp, names={}):
     """
@@ -243,9 +276,9 @@ def parse_ints_to_list(arg, max_val=None):
         s = s[1:-1]
     if "," in s:
         return [int(n) for n in s.split(",")]
-    if "-" in s[1:]:
-        i = s.index("-", 1)
-        m, M = s[:i], s[i + 1:]
+    if ".." in s:
+        i = s.index("..")
+        m, M = s[:i], s[i + 2:]
         if max_val is not None:
             try:
                 M = int(M)
@@ -254,9 +287,9 @@ def parse_ints_to_list(arg, max_val=None):
             else:
                 M = min(M, max_val)
         return list(range(int(m), int(M) + 1))
-    if ".." in s:
-        i = s.index("..", 1)
-        m, M = s[:i], s[i + 2:]
+    if RANGE_DASH_RE.search(s):
+        i = RANGE_DASH_RE.search(s).start()
+        m, M = s[:i], s[i + 1:]
         if max_val is not None:
             try:
                 M = int(M)
@@ -316,8 +349,8 @@ def parse_range(arg, parse_singleton=int, use_dollar_vars=True):
             return {"$or": [parse_range(a) for a in arg.split(",")]}
         else:
             return [parse_range(a) for a in arg.split(",")]
-    elif "-" in arg[1:]:
-        ix = arg.index("-", 1)
+    elif RANGE_DASH_RE.search(arg):
+        ix = RANGE_DASH_RE.search(arg).start()
         start, end = arg[:ix], arg[ix + 1:]
         q = {}
         if start:
@@ -344,12 +377,12 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus
         ]
         tmp = [{a[0]: a[1]} for a in tmp]
         return ["$or", tmp]
-    elif ".." in arg[1:] or (split_minus and "-" in arg[1:]):
-        if ".." in arg[1:]:
-            ix = arg.index("..", 1)
+    elif ".." in arg or (split_minus and RANGE_DASH_RE.search(arg)):
+        if ".." in arg:
+            ix = arg.index("..")
             stop = ix + 2
         else:
-            ix = arg.index("-", 1)
+            ix = RANGE_DASH_RE.search(arg).start()
             stop = ix + 1
         start, end = arg[:ix], arg[stop:]
         q = {}
@@ -357,6 +390,8 @@ def parse_range2(arg, key, parse_singleton=int, parse_endpoint=None, split_minus
             q["$gte"] = parse_endpoint(start)
         if end:
             q["$lte"] = parse_endpoint(end)
+        if not q:
+            raise SearchParsingError("A range cannot have both endpoints omitted.")
         return [key, q]
     else:
         return [key, parse_singleton(arg)]
@@ -406,8 +441,8 @@ def parse_range3(arg, split0=False, lower_bound=None, upper_bound=None):
         arg = arg.replace(" ", "")
     if "," in arg:
         return sum([parse_range3(a, split0, lower_bound, upper_bound) for a in arg.split(",")], [])
-    elif "-" in arg[1:]:
-        ix = arg.index("-", 1)
+    elif RANGE_DASH_RE.search(arg):
+        ix = RANGE_DASH_RE.search(arg).start()
         start, end = arg[:ix], arg[ix + 1:]
         if start:
             low = ZZ(str(start))
@@ -576,10 +611,11 @@ def parse_range_float(arg, key, exact_den=4, exact_prec=10, mod1=False):
             exp = 0
         else:
             exp = int(exp)
+        # Multiplying by 10^exp shifts the decimal point exp places to the right
         if "." in mantissa:
-            return len(mantissa) - mantissa.find(".") - 1 + exp
+            return len(mantissa) - mantissa.find(".") - 1 - exp
         else:
-            return exp
+            return -exp
 
     def my_float(x):
         # Also support rationals
@@ -595,7 +631,7 @@ def parse_range_float(arg, key, exact_den=4, exact_prec=10, mod1=False):
             prec = find_prec(rep)
             if prec is None:  # integer
                 prec = 0
-        return "%.{}f".format(prec) % x
+        return "%.{}f".format(max(prec, 0)) % x
 
     def eps(prec=None):
         if prec is None:
@@ -627,20 +663,28 @@ def parse_range_float(arg, key, exact_den=4, exact_prec=10, mod1=False):
                 outpt.append({a[0]: a[1]})
         inpt = ",".join(inp for a, inp in tmp)
         return ["$or", outpt], inpt
-    elif ".." in arg[1:] or "-" in arg[1:]:
-        if ".." in arg[1:]:
-            ix = arg.index("..", 1)
+    elif ".." in arg or RANGE_DASH_RE.search(arg):
+        if ".." in arg:
+            ix = arg.index("..")
             stop = ix + 2
         else:
-            ix = arg.index("-", 1)
+            ix = RANGE_DASH_RE.search(arg).start()
             stop = ix + 1
         start, end = arg[:ix], arg[stop:]
-        if not end:  # always have start
+        if not start and not end:
+            raise SearchParsingError("A range cannot have both endpoints omitted.")
+        if not end:
             if mod1:
                 # the range contains all values mod 1
                 return ["$or", []], ""
             s = my_float(start)
             return [key, {"$gte": s - eps()}], arg
+        if not start:
+            if mod1:
+                # the range contains all values mod 1
+                return ["$or", []], ""
+            e = my_float(end)
+            return [key, {"$lte": e + eps()}], arg
         s, e = my_float(start), my_float(end)
         if s > e:
             raise SearchParsingError("Start (%s) larger than end (%s)" % (start, end))
