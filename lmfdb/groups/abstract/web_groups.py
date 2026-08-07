@@ -1274,6 +1274,26 @@ class WebAbstractGroup(WebObj):
                     seen.add(s.aut_label)
             return self._finalize_profile(by_order)
 
+    @lazy_attribute
+    def maximal_profile(self):
+        if self.has_subgroups and self.maximal_subgroups_known:
+            by_order = defaultdict(Counter)
+            for s in self.subgroups.values():
+                if s.maximal:
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex] += s.conjugacy_class_count
+            return self._finalize_profile(by_order)
+
+    @lazy_attribute
+    def maximal_autprofile(self):
+        if self.has_subgroups and self.maximal_subgroups_known and (self.all_subgroups_known or self.complements_known or self.outer_equivalence):
+            seen = set()
+            by_order = defaultdict(Counter)
+            for s in self.subgroups.values():
+                if s.maximal and s.aut_label not in seen:
+                    by_order[s.subgroup_order][s.subgroup, s.subgroup_hash, s.subgroup_tex] += 1
+                    seen.add(s.aut_label)
+            return self._finalize_profile(by_order)
+
     def _display_profile(self, profile, aut):
         def display_profile_line(order, subs):
             l = []
@@ -1312,6 +1332,12 @@ class WebAbstractGroup(WebObj):
             return f"All normal subgroups of index up to {self.normal_index_bound} or order up to {self.normal_order_bound} are shown. <br>"
         return ""
 
+    @cached_method
+    def _maximal_summary(self):
+        if not self.maximal_subgroups_known:
+            return "Maximal subgroups have not been computed. <br>"
+        return ""
+
     @lazy_attribute
     def subgroup_order_bound(self):
         if self.subgroup_index_bound == 0 or self.subgroup_index_bound is None:
@@ -1342,6 +1368,14 @@ class WebAbstractGroup(WebObj):
                 profile = self.subgroup_profile
                 desc = "Classes of subgroups up to conjugation"
             summary = self._subgroup_summary(in_profile=True)
+        elif sub_all == "maximal":
+            if sub_aut:
+                profile = self.maximal_autprofile
+                desc = "Classes of maximal subgroups up to automorphism"
+            else:
+                profile = self.maximal_profile
+                desc = "Classes of maximal subgroups up to conjugation"
+            summary = self._maximal_summary()
         else:
             if sub_aut:
                 profile = self.normal_autprofile
@@ -1356,7 +1390,7 @@ class WebAbstractGroup(WebObj):
 
     @cached_method
     def diagram_count(self, sub_all, sub_aut, limit=0):
-        # The number of subgroups shown in the diagram of this type; sub_all can be "subgroup" or "normal" and sub_aut can be "aut" or ""
+        # The number of subgroups shown in the diagram of this type; sub_all can be "subgroup", "normal" or "maximal" and sub_aut can be "aut" or ""
         # If limit is nonzero, then a count of 0 is returned (indicating that the diagram should not be shown) when there would be more nodes than the limit.
         if not self.subgroup_inclusions_known:
             return 0
@@ -1382,7 +1416,13 @@ class WebAbstractGroup(WebObj):
                     return 0
                 return impose_limit(len(subs))
         else:
-            subs = [H for H in self.subgroups.values() if H.normal]
+            if sub_all == "maximal":
+                if not self.maximal_subgroups_known:
+                    return 0
+                # We include the whole group at the top of the diagram
+                subs = [H for H in self.subgroups.values() if H.maximal or H.quotient_order == 1]
+            else:
+                subs = [H for H in self.subgroups.values() if H.normal]
             if sub_aut:
                 if any(H.aut_label is None or H.diagramx is None for H in subs):
                     # We don't know subgroups up to automorphism or can't lay out the subgroups
@@ -1402,6 +1442,12 @@ class WebAbstractGroup(WebObj):
             else:
                 desc = "Classes of subgroups up to conjugation"
             summary = self._subgroup_summary(in_profile=False)
+        elif sub_all == "maximal":
+            if sub_aut:
+                desc = "Classes of maximal subgroups up to automorphism"
+            else:
+                desc = "Classes of maximal subgroups up to conjugation"
+            summary = self._maximal_summary()
         else:
             if sub_aut:
                 desc = "Normal subgroups up to automorphism"
@@ -1425,10 +1471,10 @@ class WebAbstractGroup(WebObj):
         return desc, summary, count
 
     def diagram_classes(self):
-        # Which combinations of subgroup/normal and conj/aut have a diagram
+        # Which combinations of subgroup/normal/maximal and conj/aut have a diagram
         # Note that it's possible that the only diagrams "shown" will be for cases where there's a link to a fullpage version.
         classes = []
-        for sub_all in ["subgroup", "normal"]:
+        for sub_all in ["subgroup", "normal", "maximal"]:
             for sub_aut in ["", "aut"]:
                 if self.diagram_count(sub_all, sub_aut) > 0:
                     classes.append(f"{sub_all}_{sub_aut}diagram")
@@ -1451,6 +1497,19 @@ class WebAbstractGroup(WebObj):
 
             def contains(G):
                 return [h for h in G.contains if test(subs[h])]
+        elif sub_all == "maximal":
+            def test(H):
+                # We include the whole group so that the diagram is connected
+                if H.maximal or H.quotient_order == 1:
+                    by_aut[H.aut_label].add(H.short_label)
+                    return True
+
+            def contains(G):
+                # Every maximal subgroup is covered by the whole group at the top;
+                # no inclusions among maximal subgroups themselves
+                if G.quotient_order == 1:
+                    return [H.short_label for H in nodes if H is not G]
+                return []
         else:
             def test(H):
                 if H.normal:
@@ -1493,7 +1552,7 @@ class WebAbstractGroup(WebObj):
 
     def fullpage_links(self, getpositions=False):
         s = ""
-        for sub_all in ["subgroup", "normal"]:
+        for sub_all in ["subgroup", "normal", "maximal"]:
             for sub_aut in ["", "aut"]:
                 cls = f'{sub_all}_{sub_aut}diagram'
                 s += f'<div class="{cls}">\n'
