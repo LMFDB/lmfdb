@@ -202,7 +202,7 @@ class WebMaassForm():
         props = [
           (None, '<img src="{0}" width="200" height="200" style="margin:10px;"/>'.format(self.portrait))
         ] if self.portrait is not None else []
-        props += [('Label', short_label(self.label)),
+        props += [('Label', self.label),
                   ('Level', prop_int_pretty(self.level)),
                   ('Weight', prop_int_pretty(self.weight)),
                   ('Character', self.character_label),
