@@ -1,3 +1,8 @@
+import re
+import struct
+from base64 import b64decode
+from urllib.parse import unquote
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -59,6 +64,25 @@ create_record(row) =
     field = Polrev(mapget(out, "coeffs"));
     mapput(~out, "field", field);
     return(out);''' in page
+
+    def _eisenstein_diagram_dims(self, label):
+        # Extract the pixel dimensions of the Eisenstein diagram on a family page
+        page = self.tc.get(f'/padicField/family/{label}').get_data(as_text=True)
+        m = re.search(r'id="diagram_eisenstein"[^>]*>\s*<img src="data:image/png;base64,([^"]*)"', page)
+        assert m is not None
+        png = b64decode(unquote(m.group(1)))
+        assert png[:8] == b'\x89PNG\r\n\x1a\n'
+        return struct.unpack(">II", png[16:24])
+
+    def test_family_diagram_scaling(self):
+        # Families with small slopes and large e used to produce vertically
+        # compressed Eisenstein diagrams with overlapping labels.  Issue #6828.
+        for label in ['2.1.16.16a', '2.1.32.34a']:
+            w, h = self._eisenstein_diagram_dims(label)
+            assert h > 0.3 * w
+        # A typical family should keep a moderate shape
+        w, h = self._eisenstein_diagram_dims('2.1.4.6a')
+        assert 0.25 * w < h < 0.6 * w
 
     def test_families_search_download(self):
         # Absolute families: download should produce a file (not just refresh the page).  Issue #6829.
