@@ -686,14 +686,14 @@ def chartable(n, t):
 def group_alias_table():
     aliases = get_aliases()
     akeys = list(aliases)
-    akeys.sort(key=lambda x: aliases[x][0][0] * 10000 + aliases[x][0][1])
+    akeys.sort(key=lambda x: aliases[x][0][0][0] * 10000 + aliases[x][0][0][1])
     ans = r'<table border=1 cellpadding=5 class="right_align_table"><thead><tr><th>Alias</th><th>Group</th><th>\(n\)T\(t\)</th></tr></thead>'
     ans += '<tbody>'
     for j in akeys:
         # Remove An, Cn, Dn, Sn since they are covered by a general comment
         if not re.match(r'^[ACDS]\d+$', j):
-            name = group_display_short(aliases[j][0][0], aliases[j][0][1])
-            ntlist = aliases[j]
+            name = group_display_short(aliases[j][0][0][0], aliases[j][0][0][1])
+            ntlist = aliases[j][0]
             ntstrings = [str(x[0]) + "T" + str(x[1]) for x in ntlist]
             ntstring = ", ".join(ntstrings)
             ans += r"<tr><td>%s</td><td>%s</td><td>%s</td></tr>" % (j, name, ntstring)
@@ -715,13 +715,15 @@ def complete_group_code(code):
     aliases = get_aliases()
     code1 = 'X'.join(sorted(code.split('X'), reverse=True))
     if code1 in aliases:
-        return aliases[code1]
+        # Here we treat these as aliases for specific transitive groups, even though some might also be considered abstract groups
+        return aliases[code1] # aliases stores the relevant pair
     # Try nTj notation
     rematch = re.match(r"^(\d+)[Tt](\d+)$", code)
     if rematch:
+        # A specific n,t pair is handled by the completeness code, so we don't need to mark it incomplete specially
         n = int(rematch.group(1))
         t = int(rematch.group(2))
-        return [(n, t)]
+        return [(n, t)], False
     # convert GAP code to abstract group label
     rematch = re.match(r'^\[(\d+),(\d+)\]$', code)
     if rematch:
@@ -729,12 +731,13 @@ def complete_group_code(code):
     # Try abstract group label
     rematch = re.match(r'^(\d+)\.([0-9a-zA-Z]+)$', code)
     if rematch:
+        incomplete = int(rematch.group(1)) > 47
+        # There will be transitive groups beyond the LMFDB's threshold that are isomorphic to this abstract group as a transitive group
         nts = list(db.gps_transitive.search({'abstract_label':code.lower()}, projection=['n','t']))
         nts = [(z['n'], z['t']) for z in nts]
-        return nts
+        return nts, incomplete
     else:
         raise NameError(code)
-    return []
 
 # Takes a list of codes
 
@@ -750,9 +753,12 @@ def complete_group_codes(codes):
     codelist = codes.split(',')
     # now turn the z's back into commas
     codelist = [re.sub('z', ',', x) for x in codelist]
+    incomplete = False
     for code in codelist:
-        ans.extend(complete_group_code(code))
-    return list(set(ans))
+        nts, incomp = complete_group_code(code)
+        incomplete = incomplete or incomp
+        ans.extend(nts)
+    return list(set(ans)), incomplete
 
 @cached_function
 def get_aliases():
@@ -969,18 +975,20 @@ def get_aliases():
     # Load all sibling representations from the database
     labels = ["%sT%s" % elt[0] for elt in aliases.values()]
     siblings = {
-        elt["label"]: [tuple(z[0]) for z in elt["siblings"]]
+        elt["label"]: ([tuple(z[0]) for z in elt["siblings"]], elt["order"] > 47)
         for elt in db.gps_transitive.search(
-                {"label": {"$in": labels}}, ["label", "siblings"]
+                {"label": {"$in": labels}}, ["label", "siblings", "order"]
         )
     }
     for ky in aliases:
         nt = aliases[ky][0]
         label = "%sT%s" % nt
-        aliases[ky] = siblings[label][:]
+        aliases[ky] = siblings[label][0][:]
         if nt not in aliases[ky]:
             aliases[ky].append(nt)
         aliases[ky].sort()
+        # We also store whether the order of the group is larger than 47 (in which case the list of transitive groups is incomplete)
+        aliases[ky] = (aliases[ky], siblings[label][1])
     return aliases
 
 # These dictionaries are used by number field parsing code when user requests a dihedral galois group

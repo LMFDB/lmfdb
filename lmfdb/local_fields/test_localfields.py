@@ -72,3 +72,9 @@ create_record(row) =
         assert 'attachment' in r.headers.get('Content-Disposition', '')
         page = r.get_data(as_text=True)
         assert '"2.2.1.0a1.1"' in page
+
+    def test_gal_incomplete(self):
+        # There are some abstract groups that we know occur as Galois groups of p-adic fields but where the degree where they arise is larger than 23.  The corresponding results should not be shown as complete
+        r = self.tc.get('/padicField/?p=2&gal=256.2522', follow_redirects=True)
+        page = r.get_data(as_text=True)
+        assert "are complete" not in page
