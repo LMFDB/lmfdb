@@ -149,6 +149,33 @@ class AbGpsTest(LmfdbTest):
             assert nodes == {"1.a1.a1", "2.a1.a1", "3.a1.a1", "4.a1.a1"}
             assert edges == {("2.a1.a1", "1.a1.a1"), ("3.a1.a1", "1.a1.a1"), ("4.a1.a1", "1.a1.a1")}
 
+    def test_maximal_subgroups_layout(self):
+        r"""
+        Check that the classes of maximal subgroups are laid out side by side rather
+        than stacked in one column, which would suggest that each is contained in the
+        next one up
+        """
+        # D20 has four classes of maximal subgroups, three of order 20 and one of order
+        # 8, while the three classes of S4 all have different orders (12, 8 and 6) and so
+        # land on three different rows of the diagram; both have to fan out
+        for label in ["40.6", "24.12"]:
+            page = self.tc.get("/Groups/Abstract/%s" % label).get_data(as_text=True)
+            graphs = diagram_graphs(page, label)
+            for mode in [("maximal", ""), ("maximal", "aut")]:
+                nodes = graphs[DIAGRAM_MODES.index(mode)][0]
+                whole_group = max(nodes, key=lambda node: node[4])
+                maxima = [node for node in nodes if node is not whole_group]
+                assert len(maxima) > 1
+                # x-coordinates for the two height modes: by number of prime divisors
+                # of the order, and by the order itself
+                for x in [6, 7]:
+                    columns = sorted(node[x] for node in maxima)
+                    assert len(set(columns)) == len(maxima), f"{label} {mode} shares a column"
+                    # evenly spaced, with the whole group centered above them
+                    gaps = [columns[i] - columns[i - 1] for i in range(1, len(columns))]
+                    assert max(gaps) - min(gaps) <= 1, f"{label} {mode} spaced unevenly"
+                    assert abs(whole_group[x] - (columns[0] + columns[-1]) / 2) <= 1
+
     def test_maximal_subgroups_diagram(self):
         r"""
         Check that the maximal subgroup diagram is a star with the whole group on
