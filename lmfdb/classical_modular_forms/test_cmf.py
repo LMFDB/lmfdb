@@ -1,5 +1,6 @@
 
 from lmfdb.tests import LmfdbTest
+from ast import literal_eval
 import unittest
 
 
@@ -699,7 +700,7 @@ class CmfTest(LmfdbTest):
             return self.tc.get('%s/%s/%s' % (base, label, lang)).get_data(as_text=True)
 
         # weight 2 form: the init commands must each appear once...
-        assert get('417.2.d.a', 'magma').count('CuspForms(chi, 2)') == 1
+        assert get('417.2.d.a', 'magma').count('NewformDecomposition(') == 1
         pari = get('417.2.d.a', 'pari')
         assert pari.count('mf = mfinit(') == 1 and pari.count('mfeigenbasis(') == 1, pari
         sage = get('417.2.d.a', 'sage')
@@ -707,9 +708,116 @@ class CmfTest(LmfdbTest):
         assert 'cuspidal_submodule' not in sage  # ...and the weight 1 sage variant must not leak in
 
         # weight 1 form: the cuspidal-submodule sage variant is used instead
-        assert get('23.1.b.a', 'magma').count('CuspForms(chi, 1)') == 1
         pari = get('23.1.b.a', 'pari')
         assert pari.count('mf = mfinit(') == 1 and pari.count('mfeigenbasis(') == 1, pari
         sage = get('23.1.b.a', 'sage')
         assert sage.count('cuspidal_submodule().basis()') == 1, sage
         assert 'Newforms(chi' not in sage
+
+    def test_code_download_magma_uses_modular_symbols(self):
+        """The Magma snippet must select the newform from a modular symbols
+        decomposition. Newforms of a space of cusp forms can silently return
+        incorrect eigenvalues in current Magma (e.g. for 32.2.g, 110.2.f and
+        102.2.h), so that computation must not appear at all."""
+        base = '/ModularForm/GL2/Q/holomorphic/download_code_newform'
+        for label in ['417.2.d.a', '80.5.h.b']:
+            magma = self.tc.get('%s/%s/magma' % (base, label)).get_data(as_text=True)
+            assert magma.count('NewformDecomposition(') == 1, magma
+            assert magma.count('ModularSymbols(chi,') == 1, magma
+            # the unreliable computation must not be present, even unused
+            assert 'CuspForms' not in magma, magma
+            assert 'Newforms(S)' not in magma, magma
+            # the form is selected by matching traces, and everything
+            # downstream uses the selected form
+            assert 'f := [d : d in D |' in magma, magma
+            assert 'eq traces' in magma, magma
+            assert 'qEigenform(f, 20);' in magma, magma
+
+        # 80.5.h.b is the regression case from LMFDB/lmfdb#6059: Magma's
+        # decomposition lists this orbit before 80.5.h.a, so an unselected
+        # snippet returns the wrong form. The two orbits first differ at a_5.
+        magma = self.tc.get('%s/80.5.h.b/magma' % base).get_data(as_text=True)
+        assert 'traces := [2,0,0,0,14];' in magma, magma
+        magma = self.tc.get('%s/80.5.h.a/magma' % base).get_data(as_text=True)
+        assert 'traces := [2,0,0,0,-50];' in magma, magma
+
+    def test_code_download_weight_one_has_no_magma(self):
+        """Magma cannot compute weight 1 newforms, so no Magma command snippet
+        should be offered anywhere for a weight 1 form."""
+        from lmfdb.classical_modular_forms.web_newform import WebNewform
+        from lmfdb import db
+
+        form = WebNewform(db.mf_newforms.lookup('23.1.b.a'))
+        code = form.code
+        # no section keeps a magma entry, and magma is gone from both language
+        # selectors ('prompt' is the one CodeSnippet uses, 'show' is the fallback)
+        assert 'magma' not in code['prompt'], code['prompt']
+        assert 'magma' not in code['show'], code['show']
+        assert not [key for key, val in code.items()
+                    if isinstance(val, dict) and 'magma' in val]
+        assert form.code_langs == ['pari', 'sage'], form.code_langs
+
+        base = '/ModularForm/GL2/Q/holomorphic/download_code_newform'
+        # a direct request is rejected rather than returning a header-only or
+        # failing script
+        assert self.tc.get('%s/23.1.b.a/magma' % base).status_code == 404
+        # ...while the other languages are unaffected
+        for lang in ['pari', 'gp', 'sage']:
+            res = self.tc.get('%s/23.1.b.a/%s' % (base, lang))
+            assert res.status_code == 200
+            assert 'mfinit(' in res.get_data(as_text=True) or 'cuspidal_submodule' in res.get_data(as_text=True)
+
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/23/1/b/a/').get_data(as_text=True)
+        assert "show_code('magma'" not in page  # no Magma in the language selector
+        assert 'Magma commands' not in page     # nor in the downloads list
+        assert 'CuspForms' not in page          # no Magma code block is rendered
+        # the separate 'Modular form to Magma' data export is still offered
+        assert 'Modular form to Magma' in page
+        # and the other languages are still there
+        assert "show_code('pari'" in page and "show_code('sage'" in page
+        assert 'PariGP commands' in page and 'SageMath commands' in page
+
+        # weight at least 2 still offers Magma everywhere
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/80/5/h/b/').get_data(as_text=True)
+        assert "show_code('magma'" in page
+        assert 'Magma commands' in page
+        assert 'NewformDecomposition(' in page
+
+    def test_trace_wrapping(self):
+        """Long trace lists are broken across lines; check that each language
+        gets a syntactically valid multiline assignment which reconstructs the
+        original list. 675.1.g has trace bound 46, so its trace list is long
+        enough to wrap."""
+        from lmfdb.classical_modular_forms.web_newform import wrap_traces
+        from lmfdb import db
+
+        traces = db.mf_newforms.lookup('675.1.g.a', ['traces'])['traces']
+        trace_bound = db.mf_newspaces.lucky({'label': '675.1.g'}, 'trace_bound')
+        traces_list = str(traces[0:trace_bound]).replace(" ", "")
+
+        sage = wrap_traces("traces = " + traces_list)
+        gp = wrap_traces("traces = " + traces_list, " \\")
+        magma = wrap_traces("traces := " + traces_list + ";")
+        for wrapped in [sage, gp, magma]:
+            assert '\n' in wrapped, wrapped  # the point of the test
+            assert all(len(line) <= 75 for line in wrapped.split('\n')), wrapped
+        # gp needs an explicit continuation on every line but the last
+        gp_lines = gp.split('\n')
+        assert all(line.endswith(', \\') for line in gp_lines[:-1]), gp
+        assert not gp_lines[-1].endswith('\\'), gp
+        # sage and magma continue a bracketed list, so they take no continuation
+        assert '\\' not in sage and '\\' not in magma
+        assert magma.endswith(';')
+        # every line break happens after a comma, so nothing is split mid-number
+        # and the assignment reconstructs the original list exactly
+        for wrapped, sep in [(sage, "traces = "), (gp, "traces = "), (magma, "traces := ")]:
+            rhs = wrapped.replace(" \\", "").replace("\n", "").replace(sep, "").rstrip(";")
+            assert literal_eval(rhs) == traces[0:trace_bound], wrapped
+
+        # a short trace list is left on a single line
+        assert wrap_traces("traces = [1,-2]", " \\") == "traces = [1,-2]"
+
+        # and the generated gp snippet really does contain the wrapped form
+        gp_code = self.tc.get(
+            '/ModularForm/GL2/Q/holomorphic/download_code_newform/675.1.g.a/gp').get_data(as_text=True)
+        assert gp in gp_code, gp_code

@@ -32,7 +32,10 @@ exec_dict = {'sage': 'sage --simple-prompt',
              'sage_gap': 'sage --simple-prompt',   # Used for evaluating GAP-type group objects defined within Sage
              'magma': 'magma -b',
              'oscar': 'julia',
-             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
+             # parisizemax lets the PARI stack grow on demand; the 8MB default is
+             # not enough for some snippets (mfinit of a weight 1 newspace of
+             # moderate level already overflows it)
+             'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -D parisizemax=2G -q",
              'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false); SetUserPreference("UseColorPrompt",false); ColorPrompt(false);'""",
              }
 prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
@@ -122,6 +125,12 @@ def _start_snippet_procs(langs, chimp_spec=None):
             #     command never contains the full prompt.
             #
             #  SetColumns(0) disables line-wrapping, and SetAutoColumns(false) stops Magma from re-adjusting to the pty width, so that log files are stable across environments.
+            #
+            #  Note that Magma seeds its random number generator from the clock, and several of its algorithms are randomized
+            #  (e.g. the decomposition underlying NewformDecomposition, and the search underlying Generators of an elliptic
+            #  curve).  The answers are always correct, but a choice of generator can differ between runs, so a Magma log is
+            #  not reproducible: e.g. a q-expansion may come out in terms of a rather than -a.  Calling SetSeed here would fix
+            #  that, but the committed Magma logs were generated without it, so they would all have to be regenerated first.
 
             magma = pexpect.spawn(exec_dict['magma'],
                                   echo=False,
@@ -254,13 +263,17 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
         contents = yaml.load(code_file.open(), Loader=yaml.FullLoader)
         if 'snippet_test' in contents:
             langs |= set(contents['prompt'].keys())
-    langs -= set(ignore_langs)
-    if only_langs is not None:
-        langs &= only_langs
+    # The yaml files spell it 'pari', but the executable and the log files are
+    # named after 'gp'.  Normalize before applying --ignore/--only, so that
+    # either spelling works on the command line.
+    def normalize(names):
+        return {'gp' if name == 'pari' else name for name in names}
 
-    if 'pari' in langs:
-        langs.remove('pari')
-        langs.add('gp')
+    langs = normalize(langs)
+    langs -= normalize(ignore_langs)
+    if only_langs is not None:
+        langs &= normalize(only_langs)
+
     if len(langs) == 0:
         print("No valid languages selected")
         return 1

@@ -36,11 +36,6 @@ initialize-newspace-common: &initialize-newspace-common
     [N,k,chi] = [{N},{k},Mod({conrey_index},{N})]
     mf = mfinit([N,k,chi],0)
     lf = mfeigenbasis(mf)
-  magma: |
-    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
-    chi := DirichletCharacter("{N}.{conrey_index}");
-    S:= CuspForms(chi, {k});
-    N := Newforms(S);
 
 initialize-newspace-weight-1:
   <<: *initialize-newspace-common
@@ -57,12 +52,14 @@ initialize-newspace-weight-not-1:
     from sage.modular.dirichlet import DirichletCharacter
     H = DirichletGroup({N}, base_ring=CyclotomicField({sage_zeta_order}))
     chi = DirichletCharacter(H, H._module({sage_genvalues}))
-    N = Newforms(chi, {k}, names="a") 
-
-coeff-field:
-  comment: Coefficient field, relative polynomial
-  pari: |
-    f.mod \\ as an extension of the cyclotomic field Q(t)/Phi
+    N = Newforms(chi, {k}, names="a")
+  magma: |
+    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    chi := DirichletCharacter("{N}.{conrey_index}");
+    // Magma's newform constructor for spaces of cusp forms can silently return
+    // incorrect eigenvalues, so we decompose the space of modular symbols instead
+    M := NewSubspace(CuspidalSubspace(ModularSymbols(chi, {k}, -1)));
+    D := NewformDecomposition(M);
 
 relative_polynomial:
   sage: K.relative_polynomial()
@@ -73,7 +70,18 @@ newform:
     {sage_traces}
     f = next(g for g in N if [g.coefficient(i+1).trace() for i in range({sage_trace_bound})] == traces)
   pari: |
-    f = lf[1] \\ Warning: the index may be different
+    {gp_traces}
+    abstrace(a,d) = my(s=1); while(type(a) == "t_POLMOD", s *= poldegree(a.mod); a = trace(a)); a*d/s
+    tracevec(g,n) = my(p=mfparams(g), v=mfcoefs(g,n)); vector(n, i, abstrace(v[i+1], poldegree(p[4])*poldegree(p[5])))
+    f = [g | g <- lf, tracevec(g,#traces) == traces][1]
+  magma: |
+    {magma_traces}
+    f := [d : d in D | [Integers()|Trace(Trace(Coefficient(e,j))) : j in [1..#traces]] eq traces where e := qEigenform(d, #traces+1)][1];
+
+coeff-field:
+  comment: Coefficient field, relative polynomial
+  pari: |
+    f.mod \\ as an extension of the cyclotomic field Q(t)/Phi
 
 coefficient_field:
   sage: |
@@ -90,6 +98,8 @@ qexp:
     f.q_expansion() # note that sage often uses an isomorphic number field
   pari: |
     mfcoefs(f, 20)
+  magma: |
+    qEigenform(f, 20);
 
 embeddings:
   comment: embeddings in the coefficient field
@@ -104,3 +114,25 @@ l-function:
   pari: |
     L = lfunmf(mf,f);
     lfun(L,1)
+
+# Code snippet tests for newform pages; all of these labels are in spaces with
+# several newform orbits, so they exercise the trace-based selection
+# (for 37.2.a the Pari/GP eigenbasis order differs from the LMFDB order,
+# and for 80.5.h the Magma order does, see LMFDB/lmfdb#6059)
+snippet_test:
+  test37_2_a_a:
+    label: 37.2.a.a
+    langs:
+      - sage
+      - gp
+    url: ModularForm/GL2/Q/holomorphic/download_code_newform/37.2.a.a/{lang}
+  test95_1_d_a:
+    label: 95.1.d.a
+    langs:
+      - gp
+    url: ModularForm/GL2/Q/holomorphic/download_code_newform/95.1.d.a/{lang}
+  test80_5_h_b:
+    label: 80.5.h.b
+    langs:
+      - magma
+    url: ModularForm/GL2/Q/holomorphic/download_code_newform/80.5.h.b/{lang}
