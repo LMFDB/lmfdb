@@ -57,6 +57,8 @@ def learn(current=None):
         r.append(('Dirichlet character labels', url_for(".labels_page")))
     if current != 'orbit_labels':
         r.append(('Dirichlet character orbit labels', url_for(".orbit_labels_page")))
+    if current != 'pictures':
+        r.append(('Picture description', url_for(".picture_page")))
     return r
 
 ###############################################################################
@@ -380,6 +382,16 @@ def extent_page():
                            **info)
 
 
+@characters_page.route("/Dirichlet/Pictures")
+def picture_page():
+    info = {}
+    info['title'] = 'Pictures for Dirichlet characters'
+    info['bread'] = bread('Pictures')
+    info['learnmore'] = learn('pictures')
+    return render_template("single.html", kid='portrait.character.dirichlet',
+                           **info)
+
+
 def make_webchar(args, get_bread=False):
     modulus = int(args['modulus'])
     number = int(args['number']) if 'number' in args else None
@@ -547,6 +559,10 @@ def render_Dirichletwebpage(modulus=None, orbit_label=None, number=None):
     info['learnmore'] = learn()
     info['downloads'] = downloads
     info['KNOWL_ID'] = 'character.dirichlet.%s.%s' % (modulus, number)
+    # Gauss-sum portrait in the properties box (#3996); local import keeps this
+    # hook self-contained (see lmfdb/characters/portraits.py).
+    from lmfdb.characters.portraits import add_portrait
+    add_portrait(info, modulus, number)
     return render_template('Character.html', **info)
 
 @characters_page.route('/Dirichlet/<label>/download/<download_type>')
