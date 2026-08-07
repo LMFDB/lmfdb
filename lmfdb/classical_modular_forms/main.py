@@ -20,6 +20,7 @@ from lmfdb.utils import (
     redirect_no_cache)
 from psycodict.utils import range_formatter
 from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_wrapper import multi_entry_jump_search
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
 from lmfdb.api import datapage
@@ -676,7 +677,40 @@ def url_for_label(label):
     kwds = {keys[i]: val for i, val in enumerate(slabel)}
     return url_for(func, **kwds)
 
+def cmf_multi_label_to_label(entry):
+    """
+    Parse a single jump-box entry into a newform label. Only newform labels
+    (e.g. 11.2.a.a) are supported in multi-entry lists; the ``:``-separated form
+    (e.g. 11:2:a:a, or 11:2:1:1 with numeric character/Hecke orbits) is also
+    accepted. Used by ``multi_entry_jump_search`` when the Find box contains a
+    comma-separated list. Raises ``ValueError`` for anything else (spaces and
+    trace-hash searches are not supported in multi-entry lists).
+    """
+    entry = entry.strip()
+    if ':' in entry:
+        parts = entry.split(':')
+        if len(parts) > 2 and parts[2].isdigit():
+            parts[2] = str(cremona_letter_code(int(parts[2]) - 1))
+        if len(parts) > 3 and parts[3].isdigit():
+            parts[3] = str(cremona_letter_code(int(parts[3]) - 1))
+        entry = '.'.join(parts)
+    if LABEL_RE.match(entry):
+        return entry
+    raise ValueError("%s is not a valid newform label" % entry)
+
+
 def jump_box(info):
+    # A comma-separated list of newform labels returns a newform search page.
+    multi_jump = multi_entry_jump_search(
+        info,
+        parse_entry=cmf_multi_label_to_label,
+        label_exists=db.mf_newforms.label_exists,
+        index_endpoint=".index",
+        object_name="newforms",
+    )
+    if multi_jump is not None:
+        return multi_jump
+
     jump = info.pop("jump").strip()
     errmsg = None
     if OLD_SPACE_LABEL_RE.match(jump):
@@ -1554,7 +1588,8 @@ class CMFSearchArray(SearchArray):
     jump_example = "3.6.a.a"
     jump_egspan = "e.g. 3.6.a.a, 55.3.d or 20.5"
     jump_knowl = "cmf.search_input"
-    jump_prompt = "Label"
+    jump_prompt = "Label or comma-separated list"
+    label_knowl = "cmf.label"
     null_column_explanations = { # No need to display warnings for these
         'atkin_lehner_string': False,
         'is_polredabs': False,

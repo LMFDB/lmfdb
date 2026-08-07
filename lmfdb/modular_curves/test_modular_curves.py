@@ -361,6 +361,16 @@ class ModCrvTest(LmfdbTest):
             L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
             assert l in L.get_data(as_text=True)
 
+    def test_jump_multiple(self):
+        # A comma-separated list of labels returns a search page listing them
+        self.check_args('/ModularCurve/Q/?jump=13.78.3.a.1%2C+3.4.0.a.1&search=Go', ['13.78.3.a.1', '3.4.0.a.1'])
+        # Labels and names can be mixed (XSP(3) -> 3.12.0.a.1)
+        self.check_args('/ModularCurve/Q/?jump=13.78.3.a.1%2C+XSP%283%29&search=Go', ['13.78.3.a.1', '3.12.0.a.1'])
+        # An unrecognized entry mixed in is ignored; the valid labels are still shown
+        self.check_args('/ModularCurve/Q/?jump=13.78.3.a.1%2C+banana%2C+3.4.0.a.1&search=Go', ['13.78.3.a.1', '3.4.0.a.1', 'ignored'])
+        # When no entry is valid, an error is shown
+        self.check_args('/ModularCurve/Q/?jump=banana%2C+kiwi&search=Go', 'None of the')
+
     def test_related_objects(self):
         for url, friends in [
             (

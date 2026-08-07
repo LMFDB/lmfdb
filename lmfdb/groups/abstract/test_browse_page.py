@@ -91,6 +91,16 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?jump=SL(2,7)", "336.114") # by family name
         self.check_args("/Groups/Abstract/?jump=F5", "20.3") # by name
 
+    def test_lookup_multiple(self):
+        r"""
+        Check that a comma-separated list of group labels returns a search page
+        """
+        self.check_args("/Groups/Abstract/?jump=8.3%2C+16.5&search=Go", ["8.3", "16.5"])
+        # An unrecognized entry mixed in is ignored; the valid labels are still shown
+        self.check_args("/Groups/Abstract/?jump=8.3%2C+banana%2C+16.5&search=Go", ["8.3", "16.5", "ignored"])
+        # When no entry is valid, an error is shown
+        self.check_args("/Groups/Abstract/?jump=banana%2C+kiwi&search=Go", "None of the")
+
     # test that abelian group redirect works
     def test_abelian_lookup(self):
         r"""
