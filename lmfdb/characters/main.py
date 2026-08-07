@@ -6,7 +6,8 @@ from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
     to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
-    StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader, redirect_no_cache, CodeSnippet)
+    StatsDisplay, totaler, proportioners, comma, flash_warning, flash_info,
+    Downloader, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_parsing import parse_range3
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
@@ -158,10 +159,258 @@ class DirichSearchArray(SearchArray):
             ('Random', 'Random character')])
 
 
+def int_bounds(val):
+    """
+    The lower and upper bounds implied by a query value produced by
+    ``parse_ints`` (either an integer or a dictionary with keys among
+    ``$gte`` and ``$lte``).  Either bound may be ``None`` (unbounded), and
+    ``(None, None)`` is returned for values of any other shape.
+    """
+    if isinstance(val, int):
+        return val, val
+    if isinstance(val, dict) and val and all(key in ["$gte", "$lte"] for key in val):
+        return val.get("$gte"), val.get("$lte")
+    return None, None
+
+
+def forced_int(val):
+    """
+    The unique integer allowed by a query value produced by ``parse_ints``,
+    or ``None`` if the value does not pin down a single integer.
+    """
+    lo, hi = int_bounds(val)
+    return lo if lo is not None and lo == hi else None
+
+
+class Sentinel():
+    """
+    A distinguishable non-value returned by ``intersect_ints``.
+    """
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return self.name
+
+
+EMPTY = Sentinel("EMPTY")  # no integer satisfies both constraints
+UNSUPPORTED = Sentinel("UNSUPPORTED")  # a constraint of a shape we do not interpret
+
+
+def intersect_ints(first, second):
+    """
+    The intersection of two constraints of the shape produced by
+    ``parse_ints``: ``None`` (no constraint), an integer, or a dictionary
+    with keys among ``$gte`` and ``$lte``.  Returns the intersection in the
+    same normalized shape, ``EMPTY`` if no integer satisfies both, or
+    ``UNSUPPORTED`` if either constraint has some other shape, which we
+    leave alone rather than guess at.
+    """
+    if first is None:
+        return second
+    if second is None:
+        return first
+    flo, fhi = int_bounds(first)
+    slo, shi = int_bounds(second)
+    if (flo, fhi) == (None, None) or (slo, shi) == (None, None):
+        return UNSUPPORTED
+    lo = flo if slo is None else (slo if flo is None else max(flo, slo))
+    hi = fhi if shi is None else (shi if fhi is None else min(fhi, shi))
+    if lo is not None and hi is not None:
+        if lo > hi:
+            return EMPTY
+        if lo == hi:
+            return lo
+    merged = {}
+    if lo is not None:
+        merged["$gte"] = lo
+    if hi is not None:
+        merged["$lte"] = hi
+    return merged
+
+
+def force_no_results(info, query, reason, *args):
+    """
+    Used when the search constraints are contradictory for mathematical
+    reasons.  We tell the user why there are no results and replace the query
+    with one that provably returns nothing but is answered instantly from the
+    hash index on label, rather than letting postgres scan a large part of
+    the table to find nothing (see issues #6733 and #6422).
+    """
+    if "result_count" not in info:
+        flash_info("This search returns no results because " + reason + ".", *args)
+    query.clear()
+    query["label"] = ""
+    return True
+
+
+def refine_primitive_search(info, query):
+    """
+    A character is primitive if and only if its conductor equals its modulus.
+    When ``is_primitive=yes``, mirroring a constraint on one of
+    modulus/conductor onto the other column lets postgres answer searches
+    like ``conductor=17&is_primitive=yes`` from the (conductor, modulus,
+    orbit) index instead of scanning every character of conductor 17 and
+    filtering (issue #6733).  Returns True if the query was found to be
+    contradictory (and was replaced by an empty one).
+    """
+    reason = "a primitive character has modulus equal to its conductor"
+    merged = intersect_ints(query.get("conductor"), query.get("modulus"))
+    if merged is EMPTY:
+        return force_no_results(info, query, reason)
+    if merged is not None and merged is not UNSUPPORTED:
+        query["conductor"] = merged
+        query["modulus"] = dict(merged) if isinstance(merged, dict) else merged
+        if isinstance(merged, int):
+            # conductor = modulus already forces primitivity
+            query.pop("is_primitive")
+    # Constraints coming from comma separated inputs are stored inside $or;
+    # mirror each branch separately, dropping impossible branches.
+    ors = query.get("$or")
+    if query.get("is_primitive") is True and isinstance(ors, list):
+        newors = []
+        for branch in ors:
+            bmerged = intersect_ints(branch.get("conductor"), branch.get("modulus"))
+            if bmerged is EMPTY:
+                continue
+            if bmerged is not None and bmerged is not UNSUPPORTED:
+                branch = dict(branch)
+                branch["conductor"] = bmerged
+                branch["modulus"] = dict(bmerged) if isinstance(bmerged, dict) else bmerged
+            newors.append(branch)
+        if not newors:
+            return force_no_results(info, query, reason)
+        query["$or"] = newors
+    # a scalar or range input constrains every branch of a comma separated one
+    for col in ["conductor", "modulus"]:
+        if prune_or_branches(info, query, col, reason):
+            return True
+    return False
+
+
+def prune_or_branches(info, query, col, reason, *args):
+    """
+    Narrow the constraint on ``col`` inside each ``$or`` branch (this is
+    where ``parse_ints`` stores comma separated inputs) by the top level
+    constraint on the same column, dropping the branches that become
+    impossible.  Returns True if no branch survives (and the query was
+    replaced by one that returns nothing).
+    """
+    top = query.get(col)
+    ors = query.get("$or")
+    if top is None or not isinstance(ors, list):
+        return False
+    newors = []
+    for branch in ors:
+        if col not in branch:
+            newors.append(branch)
+            continue
+        narrowed = intersect_ints(top, branch[col])
+        if narrowed is EMPTY:
+            continue
+        if narrowed is not UNSUPPORTED:
+            branch = dict(branch)
+            branch[col] = narrowed
+        newors.append(branch)
+    if not newors:
+        return force_no_results(info, query, reason, *args)
+    query["$or"] = newors
+    return False
+
+
+def collapse_single_branch(info, query):
+    """
+    Fold a lone surviving ``$or`` branch into the top level query, so that
+    postgres is handed plain column constraints rather than an OR.
+    """
+    ors = query.get("$or")
+    if not isinstance(ors, list) or len(ors) != 1:
+        return False
+    merged = {}
+    for col, val in ors[0].items():
+        if col in query:
+            val = intersect_ints(query[col], val)
+            if val is EMPTY:
+                return force_no_results(info, query, "the constraints on the %s are incompatible", col)
+            if val is UNSUPPORTED:
+                return False
+        merged[col] = val
+    del query["$or"]
+    query.update(merged)
+    return False
+
+
+def refine_real_search(info, query):
+    """
+    A Dirichlet character is real if and only if its order is at most 2.
+    There is no index on ``is_real``, so we record the realness constraint
+    as a constraint on the order instead and drop the boolean: filtering on
+    ``is_real`` makes postgres walk every character of conductor 17 to
+    answer ``conductor=17&is_real=yes`` (issue #6733).  Returns True if the
+    query was found to be contradictory (and was replaced by one that
+    returns nothing).
+    """
+    is_real = query.get("is_real")
+    if is_real is None:
+        return False
+    if is_real:
+        allowed, reason = {"$lte": 2}, "a real character has order at most 2"
+    else:
+        allowed, reason = {"$gte": 3}, "every character of order at most 2 is real"
+    narrowed = intersect_ints(query.get("order"), allowed)
+    if narrowed is EMPTY:
+        return force_no_results(info, query, reason)
+    if narrowed is UNSUPPORTED:
+        return False
+    query["order"] = narrowed
+    del query["is_real"]
+    return prune_or_branches(info, query, "order", reason)
+
+
+def refine_parity_search(info, query):
+    """
+    A character of odd order takes the value 1 at -1, so it is even.
+    Postgres does not know this and has no index on ``is_even``, so we
+    apply it ourselves: searching for odd characters of odd order returns
+    nothing, and asking for even parity is redundant once the order is odd.
+    Returns True if the query was found to be contradictory (and was
+    replaced by one that returns nothing).
+    """
+    is_even = query.get("is_even")
+    if is_even is None:
+        return False
+    ors = query.get("$or")
+    branches = ors if isinstance(ors, list) else [{}]
+    # the order forced within each branch, None if more than one is allowed
+    forced = []
+    for branch in branches:
+        val = intersect_ints(query.get("order"), branch.get("order"))
+        forced.append(None if val is EMPTY or val is UNSUPPORTED else forced_int(val))
+    odd = [n is not None and n % 2 == 1 for n in forced]
+    if is_even:
+        if all(odd):
+            # the order constraint already forces the character to be even
+            del query["is_even"]
+    elif all(odd):
+        return force_no_results(info, query, "a character of odd order is even, so there are no odd characters of order %s", ", ".join(str(n) for n in forced))
+    elif isinstance(ors, list) and any(odd):
+        query["$or"] = [branch for branch, branch_odd in zip(branches, odd) if not branch_odd]
+    return False
+
+
 def common_parse(info, query):
     parse_ints(info, query, "modulus", name="modulus")
     parse_ints(info, query, "conductor", name="conductor")
     parse_ints(info, query, "order", name="order")
+    if 'parity' in info:
+        parity = info['parity']
+        if parity == 'even':
+            query['is_even'] = True
+        elif parity == 'odd':
+            query['is_even'] = False
+    parse_bool(info, query, "is_primitive", name="is_primitive")
+    parse_bool(info, query, "is_real", name="is_real")
+    parse_bool(info, query, "is_minimal", name="is_minimal")
     if 'inducing' in info:
         try:
             validate_label(info['inducing'])
@@ -174,7 +423,8 @@ def common_parse(info, query):
                 parts_of_label = label.split(".")
             primitive_modulus = int(parts_of_label[0])
             primitive_orbit = class_to_int(parts_of_label[1])+1
-            if db.char_dirichlet.count({'modulus':primitive_modulus,'is_primitive':True,'orbit':primitive_orbit}) == 0:
+            psi = db.char_dirichlet.lucky({'modulus':primitive_modulus,'is_primitive':True,'orbit':primitive_orbit}, projection=["order", "is_even"])
+            if psi is None:
                 raise ValueError("Primitive character orbit not found")
 
             def incompatible(query):
@@ -190,22 +440,52 @@ def common_parse(info, query):
                         return False
                 return True
             if incompatible(query):
-                query["primitive_orbit"] = 0
-            else:
-                query["conductor"] = primitive_modulus
-                query["primitive_orbit"] = primitive_orbit
+                return force_no_results(info, query, "a character induced by %s has conductor %s", info['inducing'], primitive_modulus)
+            query["conductor"] = primitive_modulus
+            query["primitive_orbit"] = primitive_orbit
+            # a comma separated conductor is stored in $or, where the check
+            # above does not see it
+            if prune_or_branches(info, query, "conductor", "a character induced by %s has conductor %s", info['inducing'], primitive_modulus):
+                return True
+            # A character induced by psi has the same order, parity and
+            # realness as psi; recording this catches contradictory searches
+            # and lets postgres use the (order, conductor, modulus, orbit)
+            # index instead of filtering all characters of this conductor.
+            narrowed = intersect_ints(query.get("order"), psi["order"])
+            if narrowed is EMPTY:
+                return force_no_results(info, query, "a character induced by %s has order %s", info['inducing'], psi["order"])
+            if narrowed is not UNSUPPORTED:
+                query["order"] = narrowed
+            if prune_or_branches(info, query, "order", "a character induced by %s has order %s", info['inducing'], psi["order"]):
+                return True
+            if query.get("is_even") == (not psi["is_even"]):
+                return force_no_results(info, query, "a character induced by %s is %s", info['inducing'], "even" if psi["is_even"] else "odd")
+            query.pop("is_even", None)
+            psi_real = psi["order"] <= 2
+            if query.get("is_real") == (not psi_real):
+                return force_no_results(info, query, "a character induced by %s is %s", info['inducing'], "real" if psi_real else "not real")
+            query.pop("is_real", None)
         except ValueError:
             flash_error("%s is not the label of a primitive character in the database", info['inducing'])
             raise ValueError
-    if 'parity' in info:
-        parity = info['parity']
-        if parity == 'even':
-            query['is_even'] = True
-        elif parity == 'odd':
-            query['is_even'] = False
-    parse_bool(info, query, "is_primitive", name="is_primitive")
-    parse_bool(info, query, "is_real", name="is_real")
-    parse_bool(info, query, "is_minimal", name="is_minimal")
+    # Mathematical facts relating the search columns let us short-circuit
+    # or speed up several searches that postgres would otherwise answer by
+    # filtering a large part of the table (issues #6733 and #6422).
+    con = forced_int(query.get("conductor"))
+    mod = forced_int(query.get("modulus"))
+    if con is not None and mod is not None:
+        if con > 0 and mod % con != 0:
+            return force_no_results(info, query, "the conductor of a character divides its modulus, so there are no characters of modulus %s and conductor %s", mod, con)
+        if query.get("is_primitive") is False and con == mod:
+            return force_no_results(info, query, "an imprimitive character has conductor strictly smaller than its modulus")
+    if query.get("is_primitive") is True:
+        if refine_primitive_search(info, query):
+            return True
+    if refine_real_search(info, query):
+        return True
+    if refine_parity_search(info, query):
+        return True
+    return collapse_single_branch(info, query)
 
 
 def validate_label(label):
