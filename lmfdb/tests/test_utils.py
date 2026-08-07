@@ -347,6 +347,14 @@ class UtilsTest(unittest.TestCase):
                 ("nf_fields", {'degree': 2, 'r2': 1, 'regulator': {'$gte': 0, '$lte': 0.999}}, "number fields with degree 2, signature [0,1], regulator less than 1.00"),
                 ("nf_fields", {'degree': 4, 'r2': 1, 'regulator': {'$gte': 0, '$lte': 0.5}}, "number fields with degree 4, signature [2,1], regulator less than 0.51"),
                 ("nf_fields", {'degree': 7, 'r2': 1, 'regulator': {'$gte': 0, '$lte': 6}}, "number fields with degree 7, signature [5,1], regulator less than 6.10"),
+                # Quadratic fields unramified outside S have discriminant dividing 8*prod_{odd p in S} p (issue #7017)
+                ("nf_fields", {'degree': 2, 'ramps': {'$containedin': [1009, 1013]}}, "number fields with degree 2, unramified outside {1009,1013}"),
+                # CM fields are totally imaginary, forcing the signature (here reducing to the class number bound)
+                ("nf_fields", {'degree': 2, 'cm': True, 'class_number': 1}, "number fields with signature [0,1], class number at most 100 (except 98)"),
+                # No CM fields have odd degree, so the search is (vacuously) complete
+                ("nf_fields", {'degree': 3, 'cm': True}, "number fields with incompatible conditions: CM and signature"),
+                # For imaginary quadratic fields the narrow class number equals the class number
+                ("nf_fields", {'degree': 2, 'r2': 1, 'narrow_class_number': 1}, "number fields with signature [0,1], class number at most 100 (except 98)"),
                 ("artin_reps", {'GaloisLabel': '6T6', 'Conductor': {'$gte': 1, '$lte': 20000}}, "Artin representations with group 6T6, and conductor at most 22497"),
                 ("gps_groups", {'order': {'$gte': 300, '$lte': 500}}, "groups of order at most 2000 except orders larger than 500 that are multiples of 128"),
                 ("gps_groups", {'perfect': True, 'order': {'$gte': 20000, '$lte': 40000}}, "perfect groups of order at most 50000"),
@@ -370,8 +378,12 @@ class UtilsTest(unittest.TestCase):
                 ("belyi_galmaps", {'deg': {'$gte': 2, '$lte': 4}}, "Belyi maps of degree at most 6"),
                 ("lf_fields", {'p': 2, 'n': 16}, "p-adic fields of degree at most 23 and residue characteristic at most 199"),
                 ("lf_fields", {'p': 3, 'e': 9, 'f': 2}, "p-adic fields of degree at most 23 and residue characteristic at most 199"),
+                # Discriminant exponent c = 0 means unramified (e = 1), so n = f (issue #7017)
+                ("lf_fields", {'p': {'$gte': 1, '$lte': 100}, 'c': 0, 'f': {'$gte': 1, '$lte': 10}}, "p-adic fields of degree at most 23 and residue characteristic at most 199"),
                 ("lf_families", {'p': 2, 'e': 4, 'f0': {'$gte': 1, '$lte': 2}, 'e0': 2, 'f': 2}, "families of p-adic extensions with absolute degree at most 47, base degree at most 15 and residue characteristic at most 199"),
                 ("char_dirichlet", {'modulus': {'$gte': 40, '$lte': 100}}, "Dirichlet characters with modulus at most a million"),
+                # A primitive character has conductor equal to its modulus (issue #7017)
+                ("char_dirichlet", {'conductor': {'$gte': 1, '$lte': 1000}, 'is_primitive': True}, "primitive Dirichlet characters with conductor at most a million"),
                 ("hgm_families", {'degree': {'$gte': 4, '$lte': 6}}, "hypergeometric families with degree at most 7"),
                 ("gps_transitive", {'n': 18, 'solv': 1}, "transitive groups of degree at most 47 (except 32)"),
                 ("gps_transitive", {'n': 32, 'order': 384}, "transitive groups of degree 32 and order at most 511"),
@@ -394,6 +406,10 @@ class UtilsTest(unittest.TestCase):
                 ("bmf_forms", {'field_disc': {'$gte': -120, '$lte': -3}, 'level_norm': {'$gte': 1, '$lte': 4000}}),
                 ("ec_nfcurves", {'field_label': '7.7.20134393.1', 'conductor_norm': {'$gte': 1, '$lte': 50}}),
                 ("nf_fields", {'degree': 6, 'disc_abs': {'$gte': 1, '$lte': 20000000}}),
+                # Quadratic disc bound 8*1009*1013*100003 exceeds the degree-2 completeness bound
+                ("nf_fields", {'degree': 2, 'ramps': {'$containedin': [1009, 1013, 100003]}}),
+                # CM constrains only the signature, not the discriminant, so degree 4 CM alone is not complete
+                ("nf_fields", {'degree': 4, 'cm': True}),
                 ("nf_fields", {'degree': 2, 'r2': 1, 'regulator': 1}),
                 ("nf_fields", {'degree': 4, 'r2': 2, 'regulator': {'$gte': 0.962, '$lte': 0.963}}),   # Infinitely many degree 4 CM fields with regulator 0.962423650119
                 ("nf_fields", {'degree': 6, 'r2': 3, 'regulator': {'$gte': 2.101, '$lte': 2.102}}),   # Infinitely many degree 6 CM fields with regulator 2.10181872849
@@ -406,8 +422,12 @@ class UtilsTest(unittest.TestCase):
                 ("av_fq_isog", {'g': 6, 'q': 3}),
                 ("belyi_galmaps", {'deg': 8}),
                 ("lf_fields", {'p': 2, 'n': 24}),
+                # c = 0 gives e = 1, but n = f = 30 still exceeds the degree bound
+                ("lf_fields", {'p': 2, 'c': 0, 'f': 30}),
                 ("lf_families", {'p': 2, 'e': 4, 'f0': {'$gte': 1, '$lte': 4}, 'e0': 2, 'f': 2}),
                 ("char_dirichlet", {'modulus': {'$gte': 400000, '$lte': 3000000}}),
+                # Without primitivity, a conductor bound does not bound the modulus
+                ("char_dirichlet", {'conductor': {'$gte': 1, '$lte': 1000}}),
                 ("hgm_families", {'degree': 8}),
                 ("gps_transitive", {'n': 32, 'solv': 1}),
                 ("gps_st", {'rational': True, 'weight': 1, 'degree': 8}),

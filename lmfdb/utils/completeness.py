@@ -1037,6 +1037,20 @@ class CMFFiller:
             query["char_order"] = 1
 
 
+class UnramifiedFiller:
+    """
+    Infers ramification data for p-adic field queries.
+
+    The discriminant exponent c of a p-adic field is 0 exactly when the field is
+    unramified, i.e. when the ramification index e is 1.  So when c is known to be 0
+    we can fill in e = 1; combined with MulFiller("n", "e", "f") this also gives n = f.
+    """
+
+    def __call__(self, query):
+        if "c" in query and IntegerSet(query["c"]).is_subset(IntegerSet(0)):
+            query["e"] = IntegerSet(query.get("e")).intersection(IntegerSet(1))
+
+
 #################################
 # Specific CompletenessCheckers #
 #################################
@@ -2222,6 +2236,29 @@ class NFBound(ColTest):
 
         return False
 
+    def clear_S_disc(self, n, S, r2opts, reasons):
+        """
+        Prove completeness for fields unramified outside S using a discriminant bound.
+
+        If a degree n field is unramified outside a finite set of primes S, then its
+        absolute discriminant divides ``prod_{p in S} p^{e_p}``, where ``e_p`` is an upper
+        bound for the p-adic valuation of the discriminant of a degree n field.  If this
+        product is within our discriminant completeness bound for every relevant signature,
+        then the search is complete.
+
+        Currently only implemented for n = 2: the discriminant of the quadratic field
+        Q(sqrt(m)) (m squarefree) is m or 4m, so it divides ``8 * prod_{odd p in S} p``,
+        with the factor of 8 present only when 2 lies in S (otherwise the field is
+        unramified at 2 and its discriminant is odd).
+        """
+        if n != 2 or not r2opts or n >= len(self._maxD):
+            return False
+        M = prod(8 if p == 2 else p for p in S)
+        if all(M <= self._maxD[n][r2] for r2 in r2opts):
+            reasons.add("degree 2, unramified outside {%s}" % ",".join(str(p) for p in sorted(S)))
+            return True
+        return False
+
     def galt(self, n, gal, isgal, cyc, ab, solv):
         """
         Compute the possible degree n transitive Galois groups satisfying the given constraints.
@@ -2417,6 +2454,13 @@ class NFBound(ColTest):
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 0]
         elif sign == -1:
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 1]
+        if query.get("cm") is True:
+            # A CM field is a totally imaginary quadratic extension of a totally real
+            # field, so it has signature [0, n/2] (in particular its degree n is even).
+            r2opts = [r2 for r2 in r2opts if 2 * r2 == n]
+            if not r2opts:
+                reasons.add("incompatible conditions: CM and signature")
+                return True, None
         if not r2opts:
             reasons.add("incompatible conditions: signature and discriminant")
             return True, None
@@ -2424,6 +2468,12 @@ class NFBound(ColTest):
             # Imaginary quadratic fields, where we can use Mark Watkins' paper (Class groups of imaginary quadratic fields) to guarantee completeness based on class number
             h = query.get("class_number")
             C = query.get("class_group")
+            # Imaginary quadratic fields have r_1 = 0, so the narrow class number/group
+            # coincides with the ordinary class number/group.
+            if h is None:
+                h = query.get("narrow_class_number")
+            if C is None:
+                C = query.get("narrow_class_group")
             if isinstance(C, list) and h is None:
                 h = prod(C)
             h = IntegerSet(h)
@@ -2515,8 +2565,11 @@ class NFBound(ColTest):
                 return True, None
             if S is not None and nram is not None:
                 nram = min([len(S), nram])
-            if S is not None and self.clear_S(n, S, nram, galt, reasons):
-                return True, caveat
+            if S is not None:
+                if self.clear_S(n, S, nram, galt, reasons):
+                    return True, caveat
+                if self.clear_S_disc(n, S, r2opts, reasons):
+                    return True, caveat
 
         # Can also iterate over valid discriminants in a discriminant range
         if D.restricted():
@@ -2908,7 +2961,7 @@ CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at
 CompletenessChecker("nf_fields", [((), NFBound())])
 
 
-CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[MulFiller("n", "e", "f")])
+CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[UnramifiedFiller(), MulFiller("n", "e", "f")])
 
 
 CompletenessChecker("lf_families", [(("n0", "n", "p"), Bound(1, 47, 199), "families of p-adic fields of degree at most 47 and residue characteristic at most 199"),
@@ -2921,7 +2974,12 @@ CompletenessChecker("lf_families", [(("n0", "n", "p"), Bound(1, 47, 199), "famil
                           MulFiller("n_absolute", "e_absolute", "f_absolute")])
 
 
-CompletenessChecker("char_dirichlet", [("modulus", Bound(1000000), "Dirichlet characters with modulus at most a million")])
+CompletenessChecker("char_dirichlet", [
+    ("modulus", Bound(1000000), "Dirichlet characters with modulus at most a million"),
+    # A primitive Dirichlet character has conductor equal to its modulus, so a bound on
+    # the conductor also bounds the modulus.
+    ("conductor", Bound(1000000), "primitive Dirichlet characters with conductor at most a million",
+     None, lambda query: query.get("is_primitive") is True)])
 
 
 CompletenessChecker("artin_reps", [(("GaloisLabel", "Conductor"), ArtinBound())])
