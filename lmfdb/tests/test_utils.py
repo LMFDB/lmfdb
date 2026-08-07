@@ -38,6 +38,12 @@ from lmfdb.utils.completeness import (
     infinity,
 )
 
+from lmfdb.utils.search_columns import (
+    ColGroup,
+    MathCol,
+    SearchCol,
+)
+
 class UtilsTest(unittest.TestCase):
     """
     An example of unit tests that are not based on the website itself.
@@ -206,6 +212,35 @@ class UtilsTest(unittest.TestCase):
         malformed = [[1,0], [0]]
         malform_rep = '\\left(\\begin{array}{rr}1 & 0\\\\0\\end{array}\\right)'
         self.assertEqual(list_to_latex_matrix(malformed), malform_rep)
+
+    def test_download_subcols(self):
+        r"""
+        Checking utility: download_subcols, which identifies the columns that download as a
+        nested list of their subcolumns' values so that the downloader can document each
+        subcolumn (#6477).  Columns downloading a single value must report no subcolumns,
+        since expanding them would describe data that isn't there.
+        """
+        subcols = [MathCol("a", "test.a", "A"), MathCol("b", "test.b", "B")]
+
+        # An ordinary column downloads a single value
+        self.assertEqual(SearchCol("plain", "test.plain", "Plain").download_subcols({}), [])
+
+        # A group with no download_col downloads the list of its subcolumns' values, in order
+        group = ColGroup("group", None, "Group", subcols)
+        self.assertEqual(group.download_subcols({}), subcols)
+        self.assertEqual(group.download({"a": 1, "b": 2}), [1, 2])
+
+        # while a group with a download_col downloads that single column instead
+        scalar = ColGroup("scalar", None, "Scalar", subcols, download_col="ab")
+        self.assertEqual(scalar.download_subcols({}), [])
+        self.assertEqual(scalar.download({"a": 1, "b": 2, "ab": "12"}), "12")
+
+        # Groups whose subcolumns depend on info are not expanded either; the ones we have
+        # (conjugacy class powers) set a download_col
+        callable_scalar = ColGroup("callable", None, "Callable", lambda info: subcols,
+                                   orig=["ab"], download_col="ab")
+        self.assertEqual(callable_scalar.download_subcols({}), [])
+        self.assertEqual(callable_scalar.download({"ab": "12"}), "12")
 
     def test_integer_set(self):
         A = IntegerSet([2, 4])

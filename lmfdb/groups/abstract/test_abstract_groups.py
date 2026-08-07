@@ -1,4 +1,58 @@
+import csv
+import io
+import re
+
 from lmfdb.tests import LmfdbTest
+
+# A search for the subgroups of a single small group (D_4), used to test the download of
+# grouped columns.  The query is the url encoding of {'ambient': '8.3'}.
+SUBGROUP_DOWNLOAD = ("/Groups/Abstract/Subgroups?download=1"
+                     "&query=%7B%27ambient%27%3A+%278.3%27%7D"
+                     "&ambient=8.3&download_row_count=3&Submit=")
+
+
+def list_entries(field):
+    """
+    The top level entries of a list in a download file, as strings.  Entries of nested
+    lists are not broken out, so this gives the length of the list as downloaded.
+    """
+    assert field.startswith("[") and field.endswith("]"), field
+    entries = ['']
+    escaped = in_string = False
+    depth = 0
+    for c in field[1:-1]:
+        if escaped:
+            escaped = False
+        elif in_string:
+            escaped = c == "\\"
+            in_string = c != '"'
+        elif c == '"':
+            in_string = True
+        elif c in "[(":
+            depth += 1
+        elif c in ")]":
+            depth -= 1
+        elif c == "," and depth == 0:
+            entries.append('')
+            continue
+        entries[-1] += c
+    return [entry.strip() for entry in entries]
+
+
+def grouped_schema(page):
+    """
+    The expansions of the grouped columns, as (title, [subcolumn titles]) pairs in order,
+    taken from the header comment of a text download.
+    """
+    header = page.split("where the grouped columns are themselves lists:")[-1]
+    header = header.split("For more details")[0]
+    schema = []
+    for line in header.split("\n"):
+        match = re.match(r"^#\s+(.+) = \[(.+)\]$", line)
+        if match:
+            schema.append((match.group(1), match.group(2).split(", ")))
+    return schema
+
 
 class AbGpsTest(LmfdbTest):
     # All tests should pass
@@ -34,6 +88,121 @@ class AbGpsTest(LmfdbTest):
         self.assertTrue("GPerm := PermutationGroup< 23 | (1,2,4,7,5,8,11,14,3,6,9,12,10,13,15,16)(18,20), (1,3)(2,6)(4,9)(5,10)(7,12)(8,13)(11,15)(14,16)(17,18)(19,20), (1,2,4,7,5,8,11,14,3,6,9,12,10,13,15,16), (21,23,22), (17,19)(18,20), (1,4,5,11,3,9,10,15)(2,7,8,14,6,12,13,16), (1,5,3,10)(2,8,6,13)(4,11,9,15)(7,14,12,16), (1,3)(2,6)(4,9)(5,10)(7,12)(8,13)(11,15)(14,16) >;" in response.get_data(as_text=True))
         self.assertTrue("monomial := true," in response.get_data(as_text=True))
         self.assertTrue("CR := CharacterRing(G);" in response.get_data(as_text=True))
+
+    def test_subgroup_search_download_text(self):
+        r"""
+        The subgroup columns are grouped, and each group downloads as a list of its
+        subcolumns' values, so the download must describe those subcolumns (#6477).
+        """
+        page = self.tc.get(SUBGROUP_DOWNLOAD + "text").get_data(as_text=True)
+
+        # The top level shape of a row is unchanged
+        self.assertIn("[Label, Subgroup, Ambient, Quotient]", page)
+
+        # and each grouped column is expanded into its subcolumns, in order.  We check the
+        # first and last subcolumn along with a few in between, so that an expansion that is
+        # truncated or reordered fails even if a column is added later.
+        schema = grouped_schema(page)
+        self.assertEqual([title for title, subs in schema], ["Subgroup", "Ambient", "Quotient"])
+        expansions = dict(schema)
+        for title, expected in [
+            ("Subgroup", ["Sub. name", "Sub. order", "Sub. normal", "Sub. central", "Sub. metacyclic"]),
+            ("Ambient", ["Ambient name", "Ambient order"]),
+            ("Quotient", ["Quo. name", "Quo. size", "Quo. abelian", "Quo. metabelian"]),
+        ]:
+            subs = expansions[title]
+            self.assertEqual([sub for sub in subs if sub in expected], expected)
+            self.assertEqual(subs[0], expected[0])
+            self.assertEqual(subs[-1], expected[-1])
+
+            # The definitions at the bottom introduce the group and describe its subcolumns
+            self.assertIn(f" {title} is a grouped column, downloaded as a list of the following subcolumns:", page)
+        for title, name in [("Sub. name", "sub_name"), ("Sub. order", "subgroup_order"),
+                            ("Sub. metacyclic", "metacyclic"), ("Ambient name", "ambient_name"),
+                            ("Ambient order", "ambient_order"), ("Quo. name", "quotient_name"),
+                            ("Quo. metabelian", "quotient_metabelian")]:
+            self.assertIn(f"{title} ({name}) --", page)
+
+        # The name of a group downloads as a [label, TeX name] pair rather than a single name,
+        # which is documented for the subgroup, the ambient group and the quotient
+        for what in ["subgroup", "ambient group", "quotient"]:
+            self.assertIn(f"A two-element list [label, name] for the {what} as an abstract group", page)
+
+        # Finally, the downloaded rows have the documented shape
+        rows = [line for line in page.split("\n") if line.startswith('"8.3.')]
+        self.assertTrue(rows)
+        for row in rows:
+            fields = row.split("\t")
+            self.assertEqual(len(fields), 4)
+            for field, title in zip(fields[1:], ["Subgroup", "Ambient", "Quotient"]):
+                entries = list_entries(field)
+                self.assertEqual(len(entries), len(expansions[title]))
+                # whose first entry is the [label, TeX name] pair
+                self.assertEqual(len(list_entries(entries[0])), 2)
+
+    def test_subgroup_search_download_csv(self):
+        r"""
+        CSV files have no comments, so the header row itself has to describe the contents of
+        each grouped column (#6477).  We keep one field per column, so the shape is unchanged.
+        """
+        page = self.tc.get(SUBGROUP_DOWNLOAD + "csv").get_data(as_text=True)
+        rows = [row for row in csv.reader(io.StringIO(page)) if row]
+        header, data = rows[0], rows[1:]
+        self.assertEqual(len(header), 4)
+
+        # An ordinary column is still just its name, linked to its knowl
+        self.assertTrue(header[0].startswith("=HYPERLINK("), header[0])
+        self.assertTrue(header[0].endswith('"label")'), header[0])
+
+        # while a grouped column also lists the contents of its nested list, in order
+        for cell, name, expected in [
+            (header[1], "subgroup_cols", ["sub_name", "subgroup_order", "normal", "metacyclic"]),
+            (header[2], "ambient_cols", ["ambient_name", "ambient_order"]),
+            (header[3], "quotient_cols", ["quotient_name", "quotient_order", "quotient_metabelian"]),
+        ]:
+            match = re.match(r"^(\w+) \[(.+)\]$", cell)
+            self.assertTrue(match, cell)
+            self.assertEqual(match.group(1), name)
+            subcols = match.group(2).split(", ")
+            self.assertEqual([sub for sub in subcols if sub in expected], expected)
+            self.assertEqual(subcols[0], expected[0])
+            self.assertEqual(subcols[-1], expected[-1])
+
+        # Each row still has one field per top level column
+        self.assertTrue(data)
+        for row in data:
+            self.assertEqual(len(row), len(header))
+
+    def test_scalar_colgroup_download(self):
+        r"""
+        Column groups that set a download_col download as a single value rather than as a
+        list over their subcolumns, so they must not be expanded into subcolumns (#6477).
+        """
+        from lmfdb.classical_modular_forms.main import newform_columns
+        from lmfdb.groups.abstract.main import conjugacy_class_columns, subgroup_columns
+        from lmfdb.utils.search_columns import ColGroup
+
+        def get_col(columns, name):
+            # Some names are shared with a spacer column, so we ask for the group by type
+            return next(col for col in columns.columns
+                        if col.name == name and isinstance(col, ColGroup))
+
+        for columns, name, download_col in [
+            (newform_columns, "traces", "trace_display"),
+            (newform_columns, "atkin_lehner", "atkin_lehner_eigenvals"),
+            (conjugacy_class_columns, "power_cols", "powers"),
+        ]:
+            col = get_col(columns, name)
+            self.assertEqual(col.download_col, download_col)
+            self.assertEqual(col.download_subcols({}), [])
+            # and the value downloaded is the single stored column
+            self.assertEqual(col.download({download_col: "unchanged"}), "unchanged")
+
+        # By contrast the subgroup groups, which have no download_col, are expanded
+        for name in ["subgroup_cols", "ambient_cols", "quotient_cols"]:
+            col = get_col(subgroup_columns, name)
+            self.assertIsNone(col.download_col)
+            self.assertEqual(col.download_subcols({}), col.subcols)
 
     def test_conj_decode(self):
         from lmfdb.groups.abstract.web_groups import WebAbstractGroup

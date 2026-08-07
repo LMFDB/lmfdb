@@ -1651,13 +1651,26 @@ def group_parse(info, query):
     parse_family(info, query, "family", qfield="label")
     parse_hashes(info, query, "hash", order_field="order")
 
+def name_download_desc(what, extra=""):
+    """
+    The download description for a column giving the name of the subgroup, ambient group or
+    quotient.  These columns are displayed as a single name, but download as the pair of
+    database columns holding the LMFDB label and the TeX name, so we spell that pair out (#6477).
+    """
+    return (f"A two-element list [label, name] for the {what} as an abstract group: its LMFDB label, "
+            "followed by its name formatted in TeX (see the group.name knowl for the conventions "
+            "used in these names).\n"
+            "The label is null when the abstract group is not in the LMFDB; the name is still given "
+            f"in that case.{extra}")
+
 subgroup_columns = SearchColumns([
     LinkCol("label", "group.subgroup_label", "Label", get_sub_url, th_class=" border-right", td_class=" border-right"),
     ColGroup("subgroup_cols", None, "Subgroup", [
         MultiProcessedCol("sub_name", "group.name", "Name",
                           ["subgroup", "subgroup_tex"],
                           display_url,
-                          short_title="Sub. name", apply_download=False),
+                          short_title="Sub. name", apply_download=False,
+                          download_desc=name_download_desc("subgroup")),
         ProcessedCol("subgroup_order", "group.order", "Order", show_factor, align="center", short_title="Sub. order"),
         ProcessedCol("sylow", "group.sylow_subgroup", "Sylow", lambda x: f"${latex(x)}$" if x > 1 else "", align="center", short_title="Sub. Sylow"),
         CheckCol("normal", "group.subgroup.normal", "norm", short_title="Sub. normal"),
@@ -1681,14 +1694,19 @@ subgroup_columns = SearchColumns([
         MultiProcessedCol("ambient_name", "group.name", "Name",
                           ["ambient", "ambient_tex"],
                           display_url,
-                          short_title="Ambient name", apply_download=False),
+                          short_title="Ambient name", apply_download=False,
+                          download_desc=name_download_desc("ambient group")),
         ProcessedCol("ambient_order", "group.order", "Order", show_factor, align="center", short_title="Ambient order")]),
         SpacerCol("", th_class=" border-right", td_class=" border-right", td_style="padding:0px;", th_style="padding:0px;"),
     ColGroup("quotient_cols", None, "Quotient", [
         MultiProcessedCol("quotient_name", "group.name", "Name",
                           ["quotient", "quotient_tex"],
                           display_url,
-                          short_title="Quo. name", apply_download=False),
+                          short_title="Quo. name", apply_download=False,
+                          download_desc=name_download_desc(
+                              "quotient",
+                              extra="\nBoth entries are null when the subgroup is not normal, "
+                                    "since then the quotient is not defined.")),
         ProcessedCol("quotient_order", "group.quotient_size", "Size", lambda n: show_factor(n) if n else "", align="center", short_title="Quo. size"),
         CheckCol("minimal_normal", "group.maximal_quotient", "max", short_title="Quo. maximal"),
         #next columns are None if non-normal so we set unknown to "-" instead of "?"
