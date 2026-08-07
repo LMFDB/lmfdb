@@ -32,7 +32,13 @@ from lmfdb.utils import (
 
 from lmfdb.utils.completeness import (
     results_complete,
+    Congruence,
+    CongruenceSet,
     IntegerSet,
+    NumberSet,
+    Smooth,
+    PrimeBound,
+    to_rset,
     top,
     bottom,
     infinity,
@@ -309,6 +315,303 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual((A + A).bound_under(X), 50000)
         self.assertEqual((A * B).bound_under(X), 1000)
 
+    def test_congruence_set(self):
+        # "Multiple of N" searches produce {"$mod": [r, m]} constraints, which used to
+        # raise an error in the completeness checker; see
+        # https://github.com/LMFDB/lmfdb/issues/6822
+        C = Congruence(7, [0])
+        self.assertEqual(14 in C, True)
+        self.assertEqual(15 in C, False)
+        self.assertEqual(-7 in C, True)
+        self.assertEqual(Congruence(6, [0, 2, 4]), Congruence(2, [0]))
+        self.assertEqual(Congruence(5, [0, 1, 2, 3, 4]).is_trivial(), True)
+        self.assertEqual(Congruence(4, [1]).intersection(Congruence(6, [3])), (Congruence(12, [9]), True))
+        self.assertEqual(Congruence(4, [0]).intersection(Congruence(4, [2]))[0].is_empty(), True)
+        self.assertEqual(Congruence(14, [0]).refines(C), True)
+        self.assertEqual(C.refines(Congruence(14, [0])), False)
+        self.assertEqual(Congruence(2, [0]).complement(), Congruence(2, [1]))
+
+        # to_rset ignores congruence conditions rather than raising an error
+        self.assertEqual(str(to_rset({"$mod": [0, 7]})), "(-oo, +oo)")
+
+        M7 = IntegerSet({"$mod": [0, 7]})
+        # An interval is not contained in the multiples of 7...
+        self.assertEqual(IntegerSet([1, 500000]).is_subset(M7), False)
+        self.assertEqual(IntegerSet([7, 700]).is_subset(M7), False)
+        # ...but multiples of 14 are, as are specific multiples of 7
+        self.assertEqual(IntegerSet({"$mod": [0, 14], "$lte": 100}).is_subset(M7), True)
+        self.assertEqual(IntegerSet({"$in": [7, 14, 21]}).is_subset(M7), True)
+        # The set of all multiples of 7 is unbounded
+        self.assertEqual(M7.is_subset(top(500000)), False)
+        self.assertEqual(M7.is_finite(), False)
+        self.assertEqual(7 in M7, True)
+        self.assertEqual(8 in M7, False)
+
+        # Interval endpoints are sharpened to satisfy the congruence
+        B = IntegerSet({"$mod": [0, 7], "$gte": 1, "$lte": 100})
+        self.assertEqual(str(B), "[7, 98] ∩ {n ≡ 0 (mod 7)}")
+        self.assertEqual(B.min(), 7)
+        self.assertEqual(B.max(), 98)
+        self.assertEqual(B.bounded(98), True)
+        self.assertEqual(B.is_subset(top(500000)), True)
+        self.assertEqual(list(B.intersection(IntegerSet([1, 30]))), [7, 14, 21, 28])
+        self.assertEqual(list(IntegerSet({"$mod": [3, 5], "$gte": 0, "$lte": 20})), [3, 8, 13, 18])
+        self.assertEqual(list(-IntegerSet({"$mod": [3, 5], "$gte": 0, "$lte": 20})), [-18, -13, -8, -3])
+
+        # Congruences combine via the CRT, and can be complemented
+        self.assertEqual(list(IntegerSet({"$and": [{"$mod": [0, 4]}, {"$mod": [0, 6]}], "$gte": 1, "$lte": 100})), [12, 24, 36, 48, 60, 72, 84, 96])
+        self.assertEqual(bool(IntegerSet({"$and": [{"$mod": [0, 4]}, {"$mod": [2, 4]}]})), False)
+        self.assertEqual(list(IntegerSet({"$not": {"$mod": [0, 2]}, "$gte": 0, "$lte": 10})), [1, 3, 5, 7, 9])
+
+        # Unions keep the congruence when possible
+        U = IntegerSet({"$mod": [0, 7], "$gte": 0, "$lte": 20}).union(IntegerSet({"$mod": [0, 7], "$gte": 30, "$lte": 50}))
+        self.assertEqual(str(U), "([0, 14] ∪ [35, 49]) ∩ {n ≡ 0 (mod 7)}")
+        self.assertEqual(U.exact, True)
+        self.assertEqual(B.difference(IntegerSet([0, 50])).min(), 56)
+        self.assertEqual(B.difference(IntegerSet([0, 50])).exact, True)
+
+        # A union of branches with different ranges and congruences need not be
+        # representable by a single range and congruence.  When the branches have few
+        # enough elements they are listed, which makes the union exact; the true set
+        # here is {0, 2, 11}, and 1 (which lies in neither branch) is not in it
+        mixed = IntegerSet({"$or": [{"$mod": [0, 2], "$gte": 0, "$lte": 2},
+                                    {"$mod": [1, 2], "$gte": 10, "$lte": 12}]})
+        self.assertEqual(mixed.exact, True)
+        self.assertEqual(sorted(mixed), [0, 2, 11])
+        self.assertEqual(1 in mixed, False)
+        self.assertEqual(IntegerSet(1).is_subset(mixed), False)
+        self.assertEqual(IntegerSet(2).is_subset(mixed), True)
+        self.assertEqual(1 in IntegerSet([0, 20]).difference(mixed), True)
+        self.assertEqual(2 in IntegerSet([0, 20]).difference(mixed), False)
+
+        # Beyond that size the union is a proper superset of the set it describes; the
+        # over-approximation is recorded as inexact and must never be treated as exact
+        big = IntegerSet({"$or": [{"$mod": [0, 2], "$gte": 0, "$lte": 4000},
+                                  {"$mod": [1, 2], "$gte": 10000, "$lte": 14000}]})
+        # The true set is the even numbers in [0,4000] together with the odd numbers in
+        # [10000,14000], over-approximated by all of [0,4000] ∪ [10000,14000]
+        self.assertEqual(big.exact, False)
+        self.assertEqual(1 in big, True)
+        # 1 lies in neither branch, so containment must not be certified...
+        self.assertEqual(IntegerSet(1).is_subset(big), False)
+        # ...and even actual members are not certified, since big is not known exactly
+        self.assertEqual(IntegerSet(2).is_subset(big), False)
+        # Subtracting an inexact set could remove too much, so it is refused:
+        # 1 belongs to [0,20000] minus either branch and must survive the difference
+        self.assertEqual(1 in IntegerSet([0, 20000]).difference(big), True)
+        self.assertEqual(IntegerSet([0, 20000]).difference(big).exact, False)
+        # An inexact set may still be used on the left of is_subset, since certifying
+        # an over-approximation also certifies the set it contains
+        self.assertEqual(big.is_subset(IntegerSet([0, 20000])), True)
+        self.assertEqual(big.is_subset(IntegerSet([0, 11])), False)
+
+        # Unions that are exactly representable keep exactness: same range with
+        # congruences that combine exactly
+        both = IntegerSet({"$or": [{"$mod": [0, 3], "$gte": 0, "$lte": 3000},
+                                   {"$mod": [1, 3], "$gte": 0, "$lte": 3000}]})
+        self.assertEqual(both.exact, True)
+        self.assertEqual(isinstance(both, CongruenceSet), True)
+        self.assertEqual(IntegerSet(6).is_subset(both), True)
+        self.assertEqual(IntegerSet(2).is_subset(both), False)
+
+        # Operations propagate exactness conservatively; arithmetic drops congruences
+        self.assertEqual(M7.exact, True)
+        self.assertEqual(IntegerSet([0, 20]).intersection(big).exact, False)
+        # An empty over-approximation is exact: the set it describes must be empty
+        self.assertEqual(IntegerSet([5000, 9000]).intersection(big).exact, True)
+        self.assertEqual(bool(IntegerSet([5000, 9000]).intersection(big)), False)
+        self.assertEqual(B.difference(big).exact, False)
+        self.assertEqual(1 in NumberSet({"$mod": [0, 2]}), True)
+        self.assertEqual(NumberSet({"$mod": [0, 2]}).exact, False)
+        self.assertEqual((-B).exact, True)
+        self.assertEqual((B + B).exact, False)
+        self.assertEqual((IntegerSet([2, 4]) + IntegerSet([1, 2])).exact, True)
+        self.assertEqual((IntegerSet([2, 4]) * IntegerSet([2, 4])).exact, False)
+        self.assertEqual((IntegerSet(9) * IntegerSet(2)).exact, True)
+
+    def test_congruence_comparison(self):
+        # __eq__ follows the rich comparison protocol, returning NotImplemented for
+        # unrelated types so that Python can fall back on the reflected operation
+        C = Congruence(7, [0])
+        self.assertEqual(C.__eq__("not a congruence"), NotImplemented)
+        self.assertEqual(C == "not a congruence", False)
+        self.assertEqual("not a congruence" == C, False)
+        self.assertEqual(C != "not a congruence", True)
+        self.assertEqual("not a congruence" != C, True)
+        self.assertEqual(C == Congruence(7, [0]), True)
+        self.assertEqual(C != Congruence(7, [1]), True)
+        self.assertEqual(len({C, Congruence(7, [7])}), 1)
+
+    def test_congruence_mod_semantics(self):
+        # psycodict's query language is {"$mod": [r, m]} with m positive, and it reduces
+        # the residue to r % m (nonnegative), so negative values match by their residue
+        M7 = IntegerSet({"$mod": [0, 7]})
+        self.assertEqual(-7 in M7, True)
+        self.assertEqual(-8 in M7, False)
+        self.assertEqual(str(IntegerSet({"$mod": [-4, 7]})), str(IntegerSet({"$mod": [3, 7]})))
+        self.assertEqual(list(IntegerSet({"$mod": [3, 5], "$gte": -20, "$lte": 0})), [-17, -12, -7, -2])
+        self.assertEqual(list(IntegerSet({"$mod": [-2, 5], "$gte": -20, "$lte": 0})), [-17, -12, -7, -2])
+        # Moduli outside psycodict's query language are rejected rather than being given
+        # a meaning that the database query would not share
+        for bad in [[0, 0], [1, -7], [3]]:
+            with self.assertRaises(ValueError):
+                IntegerSet({"$mod": bad})
+
+    def test_congruence_iteration(self):
+        # Iteration steps from each element to the next rather than walking every
+        # integer of the ambient interval: with a user-supplied modulus, filtering
+        # would make a completeness check run for effectively unbounded time
+        C = Congruence(10**12, [0])
+        self.assertEqual(list(C.iter_up(1, 3 * 10**12)), [10**12, 2 * 10**12, 3 * 10**12])
+        self.assertEqual(list(C.iter_down(-1, -3 * 10**12)), [-10**12, -2 * 10**12, -3 * 10**12])
+
+        S = IntegerSet({"$mod": [0, 10**12], "$gte": 0, "$lte": 10**12})
+        it = iter(S)
+        self.assertEqual(next(it), 0)
+        self.assertEqual(next(it), 10**12)
+        with self.assertRaises(StopIteration):
+            next(it)
+        self.assertEqual(S.cardinality(), 2)
+
+        # A nonzero residue, and a negative bounded interval
+        self.assertEqual(list(IntegerSet({"$mod": [5, 10**12], "$gte": 0, "$lte": 3 * 10**12})),
+                         [5, 10**12 + 5, 2 * 10**12 + 5])
+        self.assertEqual(list(IntegerSet({"$mod": [5, 10**12], "$gte": -2 * 10**12, "$lte": 0})),
+                         [-2 * 10**12 + 5, -10**12 + 5])
+
+        # Several residues: sorted order, no duplicates
+        many = IntegerSet({"$or": [{"$mod": [1, 10**12]}, {"$mod": [7, 10**12]}, {"$mod": [1, 3 * 10**12]}],
+                           "$gte": 0, "$lte": 2 * 10**12})
+        vals = list(many)
+        self.assertEqual(vals, sorted(vals))
+        self.assertEqual(len(vals), len(set(vals)))
+        self.assertEqual(vals, [1, 7, 10**12 + 1, 10**12 + 7])
+
+        # One-sided unbounded iteration, increasing when bounded below and decreasing
+        # when bounded above, and a fair enumeration when unbounded in both directions
+        up = IntegerSet({"$mod": [5, 10**12], "$gte": 0})
+        self.assertEqual([n for _, n in zip(range(3), up)], [5, 10**12 + 5, 2 * 10**12 + 5])
+        down = IntegerSet({"$mod": [5, 10**12], "$lte": 0})
+        self.assertEqual([n for _, n in zip(range(3), down)], [-10**12 + 5, -2 * 10**12 + 5, -3 * 10**12 + 5])
+        whole = IntegerSet({"$mod": [5, 10**12]})
+        self.assertEqual([n for _, n in zip(range(4), whole)],
+                         [5, -10**12 + 5, 10**12 + 5, -2 * 10**12 + 5])
+
+        # Structural check that no filtering happens: producing an element never tests
+        # an ambient integer for membership in the congruence
+        tested = []
+        original = Congruence.__contains__
+
+        def counting_contains(self, n):
+            tested.append(n)
+            return original(self, n)
+        Congruence.__contains__ = counting_contains
+        try:
+            self.assertEqual(list(IntegerSet({"$mod": [0, 10**9], "$gte": 0, "$lte": 10**10})),
+                             [i * 10**9 for i in range(11)])
+        finally:
+            Congruence.__contains__ = original
+        self.assertEqual(tested, [])
+
+    def test_congruence_checker_guards(self):
+        # A completeness checker may always decline to certify, but must never tie up a
+        # request enumerating a set that the query made huge
+        self.assertEqual(Smooth(10)(None, [{"$in": [8, 9]}]), True)
+        self.assertEqual(Smooth(10)(None, [{"$in": [8, 11]}]), False)
+        # Unbounded, so smoothness cannot be checked element by element
+        self.assertEqual(Smooth(10)(None, [{"$mod": [0, 2**40]}]), False)
+        self.assertEqual(Smooth(10)(None, [{"$mod": [0, 2**40], "$gte": 0}]), False)
+        # Finite but enormous
+        self.assertEqual(Smooth(10)(None, [[1, 10**12]]), False)
+        # Sparse and finite: only two elements, however wide the interval
+        self.assertEqual(PrimeBound(10**13)(None, [{"$mod": [3, 10**12], "$gte": 0, "$lte": 10**12}]), True)
+        self.assertEqual(PrimeBound(10**13)(None, [{"$mod": [4, 10**12], "$gte": 0, "$lte": 10**12}]), False)
+        self.assertEqual(PrimeBound(10**13)(None, [[1, 10**12]]), False)
+
+    def test_congruence_small_domain(self):
+        # Compare the represented set with a naive evaluation of the query on a small
+        # domain: the representation must always contain the true set, with equality
+        # whenever it claims to be exact, and no operation may certify a false claim
+        domain = list(range(-20, 21))
+
+        def naive(query):
+            """The set of integers in the domain satisfying the query"""
+            def matches(n, q):
+                if q is None:
+                    return True
+                if isinstance(q, dict):
+                    for k, v in q.items():
+                        if k == "$or":
+                            ok = any(matches(n, D) for D in v)
+                        elif k == "$and":
+                            ok = all(matches(n, D) for D in v)
+                        elif k in ["$not", "$ne"]:
+                            ok = not matches(n, v)
+                        elif k == "$lte":
+                            ok = n <= v
+                        elif k == "$lt":
+                            ok = n < v
+                        elif k == "$gte":
+                            ok = n >= v
+                        elif k == "$gt":
+                            ok = n > v
+                        elif k == "$in":
+                            ok = n in v
+                        elif k == "$nin":
+                            ok = n not in v
+                        elif k == "$mod":
+                            ok = n % v[1] == v[0] % v[1]
+                        else:
+                            raise ValueError(k)
+                        if not ok:
+                            return False
+                    return True
+                if isinstance(q, list) and len(q) == 2:
+                    return q[0] <= n <= q[1]
+                if isinstance(q, set):
+                    return n in q
+                return n == q
+            return {n for n in domain if matches(n, query)}
+
+        def members(S):
+            return {n for n in domain if n in S}
+
+        queries = [{"$mod": [r, m]} for m in [2, 3, 4] for r in range(m)]
+        queries += [{"$mod": [0, 6], "$gte": -12, "$lte": 12},
+                    {"$gte": -7, "$lte": 9},
+                    {"$gt": 0, "$lt": 5},
+                    {"$in": [-6, 0, 5, 12]},
+                    {"$nin": [0, 1, 2]},
+                    {"$mod": [1, 2], "$in": [-3, 0, 4, 7]},
+                    {"$not": {"$mod": [2, 5]}},
+                    {"$lte": 3}]
+        for q in queries:
+            S = IntegerSet(q)
+            self.assertTrue(naive(q) <= members(S), q)
+            if S.exact:
+                self.assertEqual(naive(q), members(S), q)
+        for q1 in queries:
+            A, N1 = IntegerSet(q1), naive(q1)
+            for q2 in queries:
+                B, N2 = IntegerSet(q2), naive(q2)
+                for op, expected in [("union", N1 | N2),
+                                     ("intersection", N1 & N2),
+                                     ("difference", N1 - N2)]:
+                    C = getattr(A, op)(B)
+                    self.assertTrue(expected <= members(C), (op, q1, q2))
+                    if C.exact:
+                        self.assertEqual(expected, members(C), (op, q1, q2))
+                # A certified containment must actually hold
+                if A.is_subset(B):
+                    self.assertTrue(N1 <= N2, (q1, q2))
+            # $or and $not are parsed with the same operations
+            for D, expected in [(IntegerSet({"$or": [q1, q1]}), N1),
+                                (IntegerSet({"$not": q1}), set(domain) - N1)]:
+                self.assertTrue(expected <= members(D), q1)
+                if D.exact:
+                    self.assertEqual(expected, members(D), q1)
+            self.assertTrue(N1 <= members(A.complement().complement()))
+
     def test_complete(self):
         from lmfdb import db
         for tup in [
@@ -356,6 +659,12 @@ class UtilsTest(unittest.TestCase):
                 ("gps_groups", {'permutation_degree': {'$gte': 10, '$lte': 14}}, "groups with minimal permutation degree at most 15"),
                 ("gps_groups", {'linQ_dim': 5}, r"groups with linear $\Q$-degree at most 6"),
                 ("ec_curvedata", {'conductor': {'$gte': 300, '$lte': 3000}}, "elliptic curves with conductor at most 500000"),
+                ("ec_curvedata", {'conductor': {'$mod': [0, 7], '$lte': 400000}}, "elliptic curves with conductor at most 500000"),
+                # Branches with different ranges and congruences over-approximate (the
+                # union is inexact), which is still safe on the left of a bound check
+                ("ec_curvedata", {'conductor': {'$or': [{'$mod': [0, 7], '$lte': 100000}, {'$mod': [0, 11], '$gte': 200000, '$lte': 300000}]}}, "elliptic curves with conductor at most 500000"),
+                ("mf_newforms", {'level': {'$mod': [0, 4], '$lte': 20}, 'weight': {'$gte': 2, '$lte': 10}}, "newforms with $Nk^2$ at most 4000"),
+                ("nf_fields", {'degree': 2, 'disc_abs': {'$mod': [0, 7], '$gte': 1, '$lte': 1000000}}, "number fields with absolute discriminant at most 1656109"),
                 ("ec_curvedata", {'conductor': 1000003}, "elliptic curves with prime conductor at most 300 million"),
                 ("ec_curvedata", {'conductor': 76204800}, "elliptic curves with 7-smooth conductor"),
                 ("ec_curvedata", {'absD': {'$gte': 50000, '$lte': 100000}}, "elliptic curves with minimal discriminant at most 500000"),
@@ -402,6 +711,15 @@ class UtilsTest(unittest.TestCase):
                 ("ec_curvedata", {'rank': 6}),
                 ("ec_curvedata", {'conductor': 1000000007}),   # prime, but past the 300 million prime conductor bound
                 ("ec_curvedata", {'conductor': {'$in': [1000003, 1000000007]}}),   # all prime, but not all within the bound
+                # "Multiple of" searches used to raise an error rather than returning False (issue #6822)
+                ("ec_curvedata", {'conductor': {'$mod': [0, 7]}}),
+                ("mf_newforms", {'level': {'$mod': [0, 23]}, 'weight': 1}),
+                # Mixed-congruence branches with one branch outside the bound
+                ("ec_curvedata", {'conductor': {'$or': [{'$mod': [0, 7], '$lte': 100000}, {'$mod': [0, 11], '$gte': 200000}]}}),
+                # Enumerating the discriminants of an unbounded congruence set would not
+                # terminate: every multiple of 10**6 is skipped by Stickelberger's
+                # condition at 4, so no candidate ever reaches clear_S to end the loop
+                ("nf_fields", {'degree': 2, 'disc_abs': {'$mod': [0, 1000000], '$gte': 1}}),
                 ("hgcwa_passports", {'genus': 6}),
                 ("av_fq_isog", {'g': 6, 'q': 3}),
                 ("belyi_galmaps", {'deg': 8}),
