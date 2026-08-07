@@ -19,6 +19,9 @@ Formats:
 - <a href="{{ url }}">HTML</a>
 - <a href="{{ url_for('.api_query', table=table, _format = 'yaml', **url_args) }}">YAML</a>
 - <a href="{{ url_for('.api_query', table=table, _format = 'json', **url_args) }}">JSON</a>
+{% if url_args.get('_fields') %}
+- <a href="{{ url_for('.api_query', table=table, _format = 'raw', **url_args) }}">Raw</a>
+{% endif %}
 - {{ timestamp }}
 {% if not single_object %}
 - <a href="{{ next }}">next page</a>
