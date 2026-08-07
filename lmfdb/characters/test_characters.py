@@ -35,18 +35,29 @@ class DirichletSearchTest(LmfdbTest):
         assert '46.d' in W.get_data(as_text=True)
 
     def test_search(self):
-        W = self.tc.get('/Character/Dirichlet/?conductor=15&order=4')
-        assert r'15.e' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7')
-        assert r'25.d' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=Yes')
-        assert r'25.d' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No')
-        assert r'50.d' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Odd')
-        assert r'56.n' in W.get_data(as_text=True)
-        W = self.tc.get('/Character/Dirichlet/?conductor=25-50&order=5-7&primitive=No&parity=Even')
-        assert r'50.d' in W.get_data(as_text=True)
+        # Each filter is checked in both directions, so a parameter that stops
+        # being parsed widens the search and trips a negative assertion.
+        # Conductor 16, order 4 has a primitive even orbit (16.e), a primitive
+        # odd one (16.f), and imprimitive counterparts at modulus 32.  Labels
+        # carry their tags, since a bare '16.e' also matches '416.e'.
+        page = self.tc.get('/Character/Dirichlet/?conductor=15&order=4').get_data(as_text=True)
+        assert '>15.e<' in page
+        page = self.tc.get('/Character/Dirichlet/?conductor=16&order=4&is_primitive=no').get_data(as_text=True)
+        assert '>32.e<' in page and '>32.f<' in page
+        assert '>16.e<' not in page and '>16.f<' not in page
+        page = self.tc.get('/Character/Dirichlet/?conductor=16&order=4&parity=even').get_data(as_text=True)
+        assert '>16.e<' in page and '>32.e<' in page
+        assert '>16.f<' not in page and '>32.f<' not in page
+        page = self.tc.get('/Character/Dirichlet/?conductor=16&order=4&parity=odd').get_data(as_text=True)
+        assert '>16.f<' in page and '>32.f<' in page
+        assert '>16.e<' not in page and '>32.e<' not in page
+        page = self.tc.get('/Character/Dirichlet/?conductor=16&order=4&is_primitive=no&parity=odd').get_data(as_text=True)
+        assert '>32.f<' in page
+        assert '>16.e<' not in page and '>16.f<' not in page and '>32.e<' not in page
+        # A conductor range matches no index prefix, so this one reads every
+        # orbit of conductor 25-50 before it can sort; allow the timeout page.
+        self.check_args_with_timeout(
+            '/Character/Dirichlet/?conductor=25-50&order=5-7', '>25.d<')
 
     def test_condsearch(self):
         W = self.tc.get('/Character/Dirichlet/?conductor=111')

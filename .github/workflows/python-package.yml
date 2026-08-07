@@ -28,6 +28,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: matrix_prep
+    # A healthy job finishes well inside half an hour; the slowest green ones
+    # observed are around 25 minutes, and that includes building the conda
+    # environment on a cache miss.  GitHub's default is six hours, which is long
+    # enough for a job stuck on the database to hold a runner all morning -- one
+    # recently ran for five and a half.  Fail such a job in an hour instead.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
