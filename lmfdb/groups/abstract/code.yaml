@@ -21,6 +21,9 @@ presentation:
   sage_gap: |
     # This uses Sage's interface to GAP, as Sage (currently) has no native support for PC groups
     G = gap.new('PcGroupCode({pccode},{ordgp})'); {sage_gap_assign}
+  oscar: |
+    # This uses Oscar's interface to GAP, as Oscar (currently) has no native support for PC groups
+    G = PcGroup(GAP.evalstr("PcGroupCode({pccode},{ordgp})")); {oscar_assign}
 
 permutation:
   comment: Define the group as a permutation group
@@ -510,3 +513,31 @@ snippet_test:
   testA5:
     label: A5
     url: Groups/Abstract/60.5/codedownload/{lang}
+
+  # Tests for the group construction download pages
+  # (incl. constructing the boolean invariants and character table)
+  testC1data:
+    label: C1-data
+    langs: [sage, magma]
+    url: Groups/Abstract/1.1/download/{lang}
+  testS3data:
+    label: S3-data
+    langs: [sage, magma]
+    url: Groups/Abstract/6.1/download/{lang}
+  testD4data:
+    label: D4-data
+    langs: [sage, magma]
+    url: Groups/Abstract/8.3/download/{lang}
+  testQ8data:
+    label: Q8-data
+    langs: [sage, magma]
+    url: Groups/Abstract/8.4/download/{lang}
+  test_matrix_reps_data:
+    label: "32_14-data"
+    langs: [sage, magma]
+    url: Groups/Abstract/32.14/download/{lang}
+  testA5data:
+    label: A5-data
+    langs: [sage, magma]
+    url: Groups/Abstract/60.5/download/{lang}
+

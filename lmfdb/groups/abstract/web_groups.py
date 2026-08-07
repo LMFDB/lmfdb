@@ -120,6 +120,9 @@ def create_sage_gap_assignment(genslist):
     # For Sage (using the GAP interface)
     return " ".join(f"{var_name(j)} = G.{i};" for j, i in enumerate(genslist))
 
+def create_oscar_gap_assignment(genslist):
+    # For Oscar (using the GAP interface)
+    return " ".join(f"{var_name(j)} = gen(G, {i});" for j, i in enumerate(genslist))
 
 def create_magma_assignment(G):
     used = [u - 1 for u in sorted(G.gens_used)]
@@ -3156,9 +3159,10 @@ class WebAbstractGroup(WebObj):
             gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
             magma_assign = create_magma_assignment(self)
             sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
+            oscar_assign = create_oscar_gap_assignment(self.representations["PC"]["gens"])
         else:
             code['presentation'] = {}
-            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign = None, None, None, None, None, None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign, oscar_assign = None, None, None, None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -3192,7 +3196,7 @@ class WebAbstractGroup(WebObj):
             LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
             LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
             LZNsage = "["+", ".join(["MS("+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
-            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1]"+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
+            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1], "+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
         else:
             nZN, N, LZN, LZNsplit, LZNsage, LZNoscar = None, None, None, None, None, None
         if "GLZq" in self.representations:
@@ -3201,7 +3205,7 @@ class WebAbstractGroup(WebObj):
             LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
             LZqsplit = "[" + ",".join([split_matrix_list_ZN(mat, nZq, Zq) for mat in LZq]) + "]"
             LZqsage = "["+", ".join(["MS("+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
-            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1]"+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
+            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1], "+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
         else:
             nZq, Zq, LZq, LZqsplit, LZqsage, LZqoscar, = None, None, None, None, None, None
         # add below for GLFq implementation
@@ -3217,7 +3221,7 @@ class WebAbstractGroup(WebObj):
             nFq, Fq, LFq, LFqsplit, LFqsage, LFqoscar = None, None, None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
-                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign, 'oscar_assign': oscar_assign,
                 'magma_assign': magma_assign, 'deg': deg, 'perms' : perms, 'perms_sage' : perms_sage,
                 'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
                 'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,
