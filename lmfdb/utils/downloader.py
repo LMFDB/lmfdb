@@ -605,6 +605,20 @@ class Downloader():
         """
         pass
 
+    def get_projection(self, info, table, columns):
+        """
+        This is a hook for downloaders to determine the database projection based on info.
+
+        By default it fetches the columns in ``columns.db_cols`` that are present in the
+        search table.  It is overridden when a heavy column should only be fetched when it
+        is actually included in the download (see abelian varieties over Fq, LMFDB#6975).
+        """
+        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
+        # These virtual columns are often only used in display code and won't be present in the database, so we just strip them out
+        if isinstance(columns.db_cols, list):
+            return [col for col in columns.db_cols if col in table.search_cols]
+        return columns.db_cols # some tables use 1 for project-to-all
+
     def get_sort(self, info, query):
         """
         This determines the sort order requested from the database.
@@ -705,12 +719,7 @@ class Downloader():
 
         # Determine which columns will be fetched from the database
         columns = info["columns"]
-        # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
-        # These virtual columns are often only used in display code and won't be present in the database, so we just strip them out
-        if isinstance(columns.db_cols, list):
-            proj = [col for col in columns.db_cols if col in table.search_cols]
-        else:
-            proj = columns.db_cols # some tables use 1 for project-to-all
+        proj = self.get_projection(info, table, columns)
 
         # Extract the query and modify it
         try:

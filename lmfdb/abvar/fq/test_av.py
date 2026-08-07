@@ -158,6 +158,103 @@ class AVTest(LmfdbTest):
         page = self.tc.get('Variety/Abelian/Fq/download_curves/5.3.ac_e_ai_v_abl', follow_redirects=True)
         assert 'No curves for abelian variety isogeny class 5.3.ac_e_ai_v_abl' in page.get_data(as_text=True)
 
+    def test_curves_search_column(self):
+        r"""
+        Test the curves column on search results pages, including downloads.
+        """
+        # The column is available in the column dropdown
+        page = self.tc.get("/Variety/Abelian/Fq/?q=4&g=1").get_data(as_text=True)
+        assert '<option value="curves">' in page
+        # A single curve is displayed as is, longer lists are truncated
+        page = self.tc.get("/Variety/Abelian/Fq/?q=4&g=1&showcol=curves").get_data(as_text=True)
+        assert "$y^2+y=x^3+a$" in page
+        assert "$y^2+a y=x^3$ and 1 more" in page
+        # Search downloads contain the full lists of raw equations, over a non-prime
+        # base field as well, and say which generator a of that field is meant.
+        # The gp download matters for LMFDB#6975, which asked for these equations in PARI/GP.
+        query = "query=%7B%27q%27%3A+4%2C+%27g%27%3A+1%7D"
+        for lang in ["sage", "gp", "magma", "oscar", "gap", "text"]:
+            data = self.tc.get("/Variety/Abelian/Fq/?q=4&g=1&showcol=curves&download=1&Submit=%s&%s" % (lang, query)).get_data(as_text=True)
+            assert '["y^2+a*y=x^3", "y^2+(a+1)*y=x^3"]' in data
+            assert "Conway polynomial" in data
+        # csv files hold the equations but cannot carry the explanatory comments
+        data = self.tc.get("/Variety/Abelian/Fq/?q=4&g=1&showcol=curves&download=1&Submit=csv&" + query).get_data(as_text=True)
+        assert "y^2+a*y=x^3" in data
+        assert "Conway polynomial" not in data
+
+    def test_curves_projection(self):
+        r"""
+        Check that the (heavy) curves arrays are fetched from the database only when the
+        Curves column is actually displayed or downloaded (LMFDB#6975).
+        """
+        from lmfdb.utils import Downloader
+        from lmfdb.abvar.fq.download import AbvarFq_download
+        from lmfdb.abvar.fq.main import abelian_variety_search, abvar_columns, curves_requested
+
+        # curves is deliberately absent from the fixed projection used by every search
+        assert "curves" not in abvar_columns.db_cols
+        assert not curves_requested({})
+        assert curves_requested({"showcol": "curves"})
+
+        # the search adds it to the projection only when the column is shown
+        with self.app.test_request_context("/Variety/Abelian/Fq/?q=4&g=1"):
+            query = {}
+            abelian_variety_search.f({"q": "4", "g": "1"}, query)
+            assert "__projection__" not in query
+            query = {}
+            abelian_variety_search.f({"q": "4", "g": "1", "showcol": "curves"}, query)
+            assert "curves" in query["__projection__"]
+
+        # and so do downloads of search results
+        downloader = AbvarFq_download()
+        default_projection = downloader.get_projection({}, self.db.av_fq_isog, abvar_columns)
+        curves_projection = downloader.get_projection({"showcol": "curves"}, self.db.av_fq_isog, abvar_columns)
+        assert "curves" not in default_projection
+        assert "curves" in curves_projection
+
+        # the generic hook is unchanged: it only restricts db_cols to the table's columns
+        generic = Downloader().get_projection({"showcol": "curves"}, self.db.av_fq_isog, abvar_columns)
+        assert generic == default_projection
+        assert generic == [col for col in abvar_columns.db_cols if col in self.db.av_fq_isog.search_cols]
+
+    def test_curves_not_computed(self):
+        r"""
+        Isogeny classes whose curves have not been computed (NULL in the database) must be
+        distinguishable in downloads from those searched without finding a curve (an empty list).
+        """
+        import re
+        from lmfdb.utils.downloader import GPLanguage, SageLanguage
+        from lmfdb.abvar.fq.isog_class import AbvarFq_isoclass
+        from lmfdb.abvar.fq.main import abvar_columns
+
+        curves_col = [col for col in abvar_columns.columns if col.name == "curves"][0]
+        # the curves of 2.729.aee_gmg have not been computed (psycodict omits the NULL column)
+        not_computed = AbvarFq_isoclass(self.db.av_fq_isog.lookup("2.729.aee_gmg", ["label", "curves"]))
+        assert not_computed.curves is None
+        # 2.3.ag_p was searched, and contains no curve
+        no_curve = AbvarFq_isoclass(self.db.av_fq_isog.lookup("2.3.ag_p", ["label", "curves"]))
+        assert no_curve.curves == []
+        # both display as an empty cell
+        assert curves_col.display(not_computed) == ""
+        assert curves_col.display(no_curve) == ""
+        # but downloads give the language's null value for the uncomputed one
+        assert SageLanguage().to_lang(curves_col.download(not_computed)) == "None"
+        assert GPLanguage().to_lang(curves_col.download(not_computed)) == "null"
+        assert SageLanguage().to_lang(curves_col.download(no_curve)) == "[]"
+        assert GPLanguage().to_lang(curves_col.download(no_curve)) == "[]"
+
+        # the cells on the search page are empty, rather than showing None
+        page = self.tc.get("/Variety/Abelian/Fq/?q=729&g=2&showcol=curves").get_data(as_text=True)
+        assert "2.729.aee_gmg" in page
+        cells = re.findall(r'<td class="col-curves"[^>]*>(.*?)</td>', page, re.S)
+        assert cells and not any(cell.strip() for cell in cells)
+
+        # and downloading such a row gives null (here we hide every other column)
+        hidecol = ".".join(col.name for col in abvar_columns.columns if col.default({}))
+        url = "/Variety/Abelian/Fq/?q=729&g=2&showcol=curves&hidecol=%s&download=1&download_row_count=2&Submit=%s&query=%%7B%%27q%%27%%3A+729%%2C+%%27g%%27%%3A+2%%7D"
+        assert "[None]" in self.tc.get(url % (hidecol, "sage")).get_data(as_text=True)
+        assert "[null]" in self.tc.get(url % (hidecol, "gp")).get_data(as_text=True)
+
     def test_cyclic_group_of_points_display(self):
         r"""
         Check that the cyclic group of points information is displayed
