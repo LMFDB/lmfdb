@@ -1,7 +1,8 @@
 from urllib.parse import parse_qs, urlsplit
 
+from lmfdb import db
 from lmfdb.tests import LmfdbTest
-from lmfdb.groups.abstract.main import FAMILY_ALIASES
+from lmfdb.groups.abstract.main import FAMILY_ALIASES, FAMILY_NAME_ALIASES
 
 ## TODO
 ## Test diagram and character table displays and picture?
@@ -98,6 +99,95 @@ class AbGpsHomeTest(LmfdbTest):
             self.check_args("/Groups/Abstract/?jump=" + jump, label)
         assert set(alias for alias, _, _ in cases) == set(FAMILY_ALIASES), \
             "every entry of FAMILY_ALIASES needs a jump test"
+
+    def check_jump(self, jump, label):
+        r"""
+        Check that the jump box redirects to a group's page.  This looks at the
+        redirect target rather than the rendered page, because a short label
+        such as 6.1 occurs as a substring on plenty of other pages.
+        """
+        r = self.tc.get("/Groups/Abstract/?jump=" + jump)
+        assert r.status_code == 302, "%s did not redirect (%s)" % (jump, r.status_code)
+        assert r.headers["Location"].endswith("/" + label), \
+            "%s redirected to %s, not to %s" % (jump, r.headers["Location"], label)
+
+    def test_family_name_alias_lookup(self):
+        r"""
+        Check that Groups/Abstract/?jump accepts the family name printed in a
+        group page's "Groups of Lie type" row and the one printed in its Magma
+        snippet, neither of which is always the name stored in gps_families
+        (issue #6654).
+
+        One stored example for each entry of FAMILY_NAME_ALIASES; the final
+        assertion keeps the two lists in sync.  A + is percent-encoded, since a
+        literal + in a query string means a space.
+        """
+        cases = [
+            # (alias, jump argument, label of the stored group)
+            # as printed in the "Groups of Lie type" row
+            ("O", "O(3,2)", "6.1"),
+            ("O+", "O%2B(4,2)", "72.40"),
+            ("O-", "O-(4,2)", "120.34"),
+            ("GO", "GO(3,2)", "6.1"),
+            ("GO+", "GO%2B(2,2)", "2.1"),
+            ("GO-", "GO-(2,2)", "6.1"),
+            ("U", "U(2,2)", "18.3"),
+            ("GU", "GU(2,2)", "18.3"),
+            ("SO+", "SO%2B(4,2)", "72.40"),
+            ("SO-", "SO-(4,2)", "120.34"),
+            ("GSO+", "GSO%2B(2,2)", "2.1"),
+            ("GSO-", "GSO-(2,2)", "6.1"),
+            ("PSO+", "PSO%2B(4,2)", "72.40"),
+            ("PSO-", "PSO-(4,2)", "120.34"),
+            ("PO+", "PO%2B(4,2)", "72.40"),
+            ("PO-", "PO-(4,2)", "120.34"),
+            ("Omega+", "Omega%2B(4,2)", "36.10"),
+            ("Omega-", "Omega-(4,2)", "60.5"),
+            ("POmega+", "POmega%2B(4,2)", "36.10"),
+            ("POmega-", "POmega-(4,2)", "60.5"),
+            ("Spin+", "Spin%2B(4,2)", "36.10"),
+            ("Spin-", "Spin-(4,2)", "60.5"),
+            # as printed in the Magma snippet
+            ("CO", "CO(3,2)", "6.1"),
+            ("COPlus", "COPlus(2,2)", "2.1"),
+            ("COMinus", "COMinus(2,2)", "6.1"),
+            ("CSO", "CSO(3,2)", "6.1"),
+            ("CSOPlus", "CSOPlus(2,2)", "2.1"),
+            ("CSOMinus", "CSOMinus(2,2)", "6.1"),
+            ("CSp", "CSp(4,2)", "720.763"),
+            ("CSU", "CSU(2,2)", "6.1"),
+            ("CU", "CU(2,2)", "18.3"),
+            ("PGO", "PGO(3,2)", "6.1"),
+            ("PGOPlus", "PGOPlus(4,2)", "72.40"),
+            ("PGOMinus", "PGOMinus(4,2)", "120.34"),
+            ("PGU", "PGU(2,2)", "6.1"),
+        ]
+        for _, jump, label in cases:
+            self.check_jump(jump, label)
+        assert set(alias for alias, _, _ in cases) == set(FAMILY_NAME_ALIASES), \
+            "every entry of FAMILY_NAME_ALIASES needs a jump test"
+
+        # the name Jen Paulhus reported, and the other reading of it
+        self.check_jump("GO(5,3)", "103680.a")
+        self.check_jump("O(5,3)", "103680.a")
+
+    def test_family_name_aliases_are_unclaimed(self):
+        r"""
+        The alias rewrite runs before the gps_families regexes are tried, so an
+        alias must not be a name that already means something else.  Magma's
+        GO, GOPlus, GOMinus and GU are the names this rules out: we print those
+        for the conformal groups Magma calls CO, COPlus, COMinus and CU.
+        """
+        families = set(db.gps_families.search({}, projection="family"))
+        for alias, family in FAMILY_NAME_ALIASES.items():
+            assert alias not in families, "%s is already a family name" % alias
+            assert family in families, "%s is not a family name" % family
+        # what Magma means by each of these; we must not read them that way
+        magma_only = {"GO": "Orth", "GOPlus": "OrthPlus",
+                      "GOMinus": "OrthMinus", "GU": "Unitary"}
+        for name, magma_family in magma_only.items():
+            assert FAMILY_NAME_ALIASES.get(name) != magma_family, \
+                "%s is printed for a different group than Magma's %s" % (name, name)
 
     def test_absent_family_lookup(self):
         r"""

@@ -1218,6 +1218,40 @@ FAMILY_ALIASES = {
     ("Spin", 3): ("SL", 2),           # Spin(3,q) = SL(2,q)
 }
 
+# A user should be able to type the name they are looking at, but neither name
+# printed on a group page is the family name stored in gps_families.  The name
+# in the "Groups of Lie type" row is the family's tex_name, which uses other
+# letters for the orthogonal and unitary families (Orth prints as O, GOrth as
+# GO, Unitary as U, GUnitary as GU) and a +/- exponent for the Plus and Minus
+# families; the name in the code snippets is Magma's, which differs again.
+# This maps both spellings onto the stored family name.  See #6654.
+FAMILY_NAME_ALIASES = {
+    # as printed in the "Groups of Lie type" row
+    "O": "Orth", "O+": "OrthPlus", "O-": "OrthMinus",
+    "GO": "GOrth", "GO+": "GOrthPlus", "GO-": "GOrthMinus",
+    "U": "Unitary", "GU": "GUnitary",
+    "SO+": "SOPlus", "SO-": "SOMinus",
+    "GSO+": "GSOPlus", "GSO-": "GSOMinus",
+    "PSO+": "PSOPlus", "PSO-": "PSOMinus",
+    "PO+": "POPlus", "PO-": "POMinus",
+    "Omega+": "OmegaPlus", "Omega-": "OmegaMinus",
+    "POmega+": "POmegaPlus", "POmega-": "POmegaMinus",
+    "Spin+": "SpinPlus", "Spin-": "SpinMinus",
+    # as printed in the Magma code snippet, where that name is not already
+    # spoken for above or by gps_families
+    "CO": "GOrth", "COPlus": "GOrthPlus", "COMinus": "GOrthMinus",
+    "CSO": "GSO", "CSOPlus": "GSOPlus", "CSOMinus": "GSOMinus",
+    "CSp": "GSp", "CSU": "GSU", "CU": "GUnitary",
+    "PGO": "PO", "PGOPlus": "POPlus", "PGOMinus": "POMinus",
+    "PGU": "PU",
+}
+# Magma's GO, GOPlus, GOMinus and GU are deliberately absent: we print GO and GU
+# for the conformal groups Magma calls CO and CU, so honoring Magma's spelling
+# would return a different group from the one the page shows under that name.
+
+# the family part of a name of the form Fam(n,q), including a +/- exponent
+FAMILY_NAME_RE = re.compile(r"([A-Za-z]+[-+]?)(\(.*\))")
+
 #### Searching
 def group_jump(info):
     jump = info["jump"]
@@ -1300,8 +1334,14 @@ def group_jump(info):
                 return n == 4 and params["twist"] == 2 and q.is_power_of(2) and not q.is_power_of(4)
             elif params["fam"] == "G":
                 return n == 2 and params["twist"] == 2 and q.is_power_of(3) and not q.is_power_of(9)
+    # Match against the stored spelling of the family, but keep the user's
+    # spelling for the error messages below.
+    fam_jump = jump
+    alias = FAMILY_NAME_RE.fullmatch(jump)
+    if alias and alias.group(1) in FAMILY_NAME_ALIASES:
+        fam_jump = FAMILY_NAME_ALIASES[alias.group(1)] + alias.group(2)
     for family in db.gps_families.search():
-        m = re.fullmatch(family["input"], jump)
+        m = re.fullmatch(family["input"], fam_jump)
         if m:
             m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items()) # convert string to int
             fam, params = family["family"], m_dict
