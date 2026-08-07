@@ -75,6 +75,19 @@ class AbGpsTest(LmfdbTest):
             r"C_2^3\times C_{100}", # automorphism group structure
         ])
 
+    def test_latex_macros(self):
+        r"""
+        Check that KaTeX macros used by group tex names are defined (issue #7048)
+        """
+        # 51840.b displays its elements as matrices in \GammaU(4,2)
+        page = self.tc.get("/Groups/Abstract/51840.b").get_data(as_text=True)
+        assert r"\GammaU(4,2)" in page
+        # macros produced by stripping the initial P from projective Lie families
+        # must be defined in base.html along with the rest of the family
+        for macro in [r'"\\GammaL"', r'"\\GammaU"', r'"\\SigmaL"', r'"\\SigmaSp"',
+                      r'"\\PGammaL"', r'"\\PGammaU"', r'"\\PSigmaL"', r'"\\PSigmaSp"']:
+            assert macro in page
+
     def test_underlying_data(self):
         self.check_args("/Groups/Abstract/data/2520.a", [
             "gps_groups", "number_normal_subgroups",
