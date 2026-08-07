@@ -1,3 +1,6 @@
+import pytest
+
+from lmfdb.api.api import parse_api_value, parse_numeric
 from lmfdb.tests import LmfdbTest
 
 class ApiTest(LmfdbTest):
@@ -57,6 +60,92 @@ class ApiTest(LmfdbTest):
         query = 'nf_fields/?degree=i12&r2=i5&_format=json'
         data = self.tc.get("/api/{}".format(query), follow_redirects=True).get_data(as_text=True)
         assert '"label": "12.2.167630295667.1",' in data
+
+    def test_parse_numeric(self):
+        r"""
+        Check the range syntax used by the i and f prefixes
+        """
+        # exact values
+        assert parse_numeric("11", int) == 11
+        assert parse_numeric("2.5", float) == 2.5
+        # ranges are inclusive on both ends
+        assert parse_numeric("11..100", int) == {"$gte": 11, "$lte": 100}
+        assert parse_numeric("389..", int) == {"$gte": 389}
+        assert parse_numeric("..2.5", float) == {"$lte": 2.5}
+        assert parse_numeric("-0.9..-0.7", float) == {"$gte": -0.9, "$lte": -0.7}
+        # a range must have at least one endpoint
+        with pytest.raises(ValueError):
+            parse_numeric("..", int)
+
+    def test_parse_api_value(self):
+        r"""
+        Check the decoding of query values from the type-prefix syntax
+        """
+        # None matches null entries; the literal string is available as sNone
+        assert parse_api_value("None", ",") is None
+        assert parse_api_value("sNone", ",") == "None"
+        # the contains prefixes build $contains queries
+        assert parse_api_value("cf1.25", ",") == {"$contains": [1.25]}
+        assert parse_api_value("ci7", ",") == {"$contains": [7]}
+        assert parse_api_value("cs11.a2", ",") == {"$contains": ["11.a2"]}
+        assert parse_api_value("cpy[1,2]", ",") == {"$contains": [[1, 2]]}
+        # scalars, lists and ranges
+        assert parse_api_value("i11", ",") == 11
+        assert parse_api_value("f2.5", ",") == 2.5
+        assert parse_api_value("i11..100", ",") == {"$gte": 11, "$lte": 100}
+        assert parse_api_value("f..2.5", ",") == {"$lte": 2.5}
+        assert parse_api_value("lsa;b", ";") == ["a", "b"]
+        assert parse_api_value("li2;2", ";") == [2, 2]
+        assert parse_api_value("lf0.5,1.5", ",") == [0.5, 1.5]
+        assert parse_api_value("py{'a': 1}", ",") == {"a": 1}
+        # unprefixed and malformed typed values are kept as strings
+        assert parse_api_value("11.a2", ",") == "11.a2"
+        assert parse_api_value("i1.5", ",") == "i1.5"
+        assert parse_api_value("i..", ",") == "i.."
+
+    def test_api_range_query(self):
+        r"""
+        Check range queries using the i and f prefixes
+        """
+        data = self.tc.get('/api/ec_curvedata/?conductor=i11..100&_format=json&_fields=conductor', follow_redirects=True).get_json()
+        assert data['data'] and all(11 <= rec['conductor'] <= 100 for rec in data['data'])
+        # both endpoints are included: the three curves of conductor 11 are found
+        data = self.tc.get('/api/ec_curvedata/?conductor=i11..11&_format=json&_fields=conductor', follow_redirects=True).get_json()
+        assert len(data['data']) == 3 and all(rec['conductor'] == 11 for rec in data['data'])
+        # one-sided ranges
+        data = self.tc.get('/api/ec_curvedata/?conductor=i..20&_format=json&_fields=conductor', follow_redirects=True).get_json()
+        assert data['data'] and all(rec['conductor'] <= 20 for rec in data['data'])
+        data = self.tc.get('/api/ec_curvedata/?conductor=i389..&_format=json&_fields=conductor', follow_redirects=True).get_json()
+        assert data['data'] and all(rec['conductor'] >= 389 for rec in data['data'])
+        # float range (numeric columns are encoded as RealLiteral dicts)
+        data = self.tc.get('/api/ec_curvedata/?faltings_height=f-0.9..-0.7&_format=json&_fields=faltings_height', follow_redirects=True).get_json()
+        assert data['data'] and all(-0.9 <= float(rec['faltings_height']['data']) <= -0.7 for rec in data['data'])
+
+    def test_api_list_of_strings_query(self):
+        r"""
+        Check the ls prefix, which splits the whole value into a list of strings
+        """
+        # the example on the API index page: curves with torsion structure [2,2], not [2]
+        data = self.tc.get('/api/ec_curvedata/?torsion_structure=ls2;2&_delim=;&_format=json&_fields=torsion_structure', follow_redirects=True).get_json()
+        assert data['data'] and all(rec['torsion_structure'] == [2, 2] for rec in data['data'])
+
+    def test_api_contains_float_query(self):
+        r"""
+        Check the cf prefix, which searches a numeric array for a given value
+        """
+        # the defining polynomial of 6.0.177147.2 is x^6 + 3, so its coefficients contain 0 but not 0.5
+        query = '/api/nf_fields/?label=6.0.177147.2&coeffs=cf%s&_format=json&_fields=label,coeffs'
+        data = self.tc.get(query % '0.0', follow_redirects=True).get_json()
+        assert [rec['label'] for rec in data['data']] == ['6.0.177147.2']
+        data = self.tc.get(query % '0.5', follow_redirects=True).get_json()
+        assert data['data'] == []
+
+    def test_api_null_query(self):
+        r"""
+        Check searching for entries where a column is null
+        """
+        data = self.tc.get('/api/gps_gl2zhat_fine/?q_gonality=None&_format=json&_fields=q_gonality,label', follow_redirects=True).get_json()
+        assert data['data'] and all(rec['q_gonality'] is None for rec in data['data'])
 
     def test_api_usage(self):
         r"""

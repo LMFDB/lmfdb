@@ -157,6 +157,66 @@ def stats():
     return render_template('api-stats.html', info=info)
 
 
+def parse_numeric(x, typ):
+    """
+    Parse a value for one of the numeric type-prefixes, allowing the
+    inclusive range syntax ``a..b``; either endpoint may be omitted,
+    as in ``a..`` or ``..b``.
+    """
+    if ".." in x:
+        lower, upper = x.split("..", 1)
+        rng = {}
+        if lower:
+            rng["$gte"] = typ(lower)
+        if upper:
+            rng["$lte"] = typ(upper)
+        if not rng:
+            raise ValueError("range must have at least one endpoint")
+        return rng
+    return typ(x)
+
+
+def parse_api_value(qval, delim=","):
+    """
+    Decode one query value using the API's type-prefix syntax, e.g.
+    ``i11`` -> ``11``, ``i11..100`` -> ``{"$gte": 11, "$lte": 100}``,
+    ``None`` -> ``None`` (matching null entries), ``sNone`` -> ``"None"``.
+
+    A value with no recognized prefix, or a malformed typed value such as
+    ``i1.5``, is returned unchanged as a string.
+    """
+    from ast import literal_eval
+    try:
+        if qval == "None":     # match entries where qkey is null (use sNone for the string "None")
+            return None
+        elif qval.startswith("s"):
+            return qval[1:]
+        elif qval.startswith("i"):
+            return parse_numeric(qval[1:], int)
+        elif qval.startswith("f"):
+            return parse_numeric(qval[1:], float)
+        elif qval.startswith("ls"):      # indicator, that it might be a list of strings
+            return qval[2:].split(delim)
+        elif qval.startswith("li"):
+            return [int(_) for _ in qval[2:].split(delim)]
+        elif qval.startswith("lf"):
+            return [float(_) for _ in qval[2:].split(delim)]
+        elif qval.startswith("py"):     # literal evaluation
+            return literal_eval(qval[2:])
+        elif qval.startswith("cs"):     # containing string in list
+            return {"$contains": [qval[2:]]}
+        elif qval.startswith("ci"):
+            return {"$contains": [int(qval[2:])]}
+        elif qval.startswith("cf"):
+            return {"$contains": [float(qval[2:])]}
+        elif qval.startswith("cpy"):
+            return {"$contains": [literal_eval(qval[3:])]}
+    except Exception:
+        # no suitable conversion for the value, keep it as string
+        pass
+    return qval
+
+
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
     if id == 'schema':
@@ -233,38 +293,11 @@ def api_query(table, id=None):
         single_object = False
 
         for qkey, qval in request.args.items():
-            from ast import literal_eval
-            try:
-                if qkey.startswith("_"):
-                    continue
-                elif qval.startswith("s"):
-                    qval = qval[1:]
-                elif qval.startswith("i"):
-                    qval = int(qval[1:])
-                elif qval.startswith("f"):
-                    qval = float(qval[1:])
-                elif qval.startswith("ls"):      # indicator, that it might be a list of strings
-                    qval = qval[2].split(DELIM)
-                elif qval.startswith("li"):
-                    qval = [int(_) for _ in qval[2:].split(DELIM)]
-                elif qval.startswith("lf"):
-                    qval = [float(_) for _ in qval[2:].split(DELIM)]
-                elif qval.startswith("py"):     # literal evaluation
-                    qval = literal_eval(qval[2:])
-                elif qval.startswith("cs"):     # containing string in list
-                    qval = { "$contains": [qval[2:]] }
-                elif qval.startswith("ci"):
-                    qval = { "$contains": [int(qval[2:])] }
-                elif qval.startswith("cf"):
-                    qval = { "contains": [float(qval[2:])] }
-                elif qval.startswith("cpy"):
-                    qval = { "$contains": [literal_eval(qval[3:])] }
-            except Exception:
-                # no suitable conversion for the value, keep it as string
-                pass
+            if qkey.startswith("_"):
+                continue
 
             # update the query
-            q[qkey] = qval
+            q[qkey] = parse_api_value(qval, DELIM)
 
         # assure that one of the keys of the query is indexed
         # however, this doesn't assure that the query will be fast...
