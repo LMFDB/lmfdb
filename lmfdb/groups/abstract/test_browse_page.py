@@ -58,6 +58,37 @@ class AbGpsHomeTest(LmfdbTest):
             assert target.path == expected_path
             assert parse_qs(target.query) == expected_query
 
+    def test_repeated_search_type(self):
+        r"""
+        Check that repeated search_type parameters follow last-value-wins
+        semantics, and that hst is only consulted when no search_type at
+        all was supplied.
+        """
+        # the last value selects the ordinary group search, and the hidden
+        # input recording the displayed mode (used by prev/next) must follow,
+        # so that paging does not switch back into the earlier mode
+        page = self.tc.get(
+            "/Groups/Abstract/?search_type=Subgroups&search_type=List&order=8"
+        ).get_data(as_text=True)
+        assert "Abstract group search results" in page
+        assert 'name="hst" value=""' in page
+        # the last value selects the legacy subgroup redirect
+        response = self.tc.get(
+            "/Groups/Abstract/?search_type=List&search_type=Subgroups&ambient=128.207"
+        )
+        assert response.status_code == 307
+        assert urlsplit(response.location).path == "/Groups/Abstract/Subgroups"
+        # a final empty value overrides both a stale earlier value and a stale hst
+        page = self.tc.get(
+            "/Groups/Abstract/?search_type=Subgroups&search_type=&hst=Subgroups&order=8"
+        ).get_data(as_text=True)
+        assert "Abstract group search results" in page
+        assert 'name="hst" value=""' in page
+        # with no search_type at all, hst still supplies the old-bookmark fallback
+        response = self.tc.get("/Groups/Abstract/?hst=Subgroups&ambient=128.207")
+        assert response.status_code == 307
+        assert urlsplit(response.location).path == "/Groups/Abstract/Subgroups"
+
     # TODO test stats once we have them
     #  def test_stats_page(self):
     #  self.check_args("/Groups/Abstract/stats","Abstract groups: Statistics")

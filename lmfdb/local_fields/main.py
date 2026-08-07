@@ -17,7 +17,7 @@ from lmfdb.utils import (
     parse_regex_restricted, parse_padicsubfields,
     parse_galgrp, parse_ints, clean_input, parse_rats, parse_noop, flash_error,
     SearchArray, TextBox, TextBoxWithSelect, SubsetBox, SelectBox, SneakyTextBox,
-    HiddenBox, TextBoxNoEg, CountBox, to_dict, comma,
+    HiddenBox, TextBoxNoEg, CountBox, to_dict, get_search_type, comma,
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
@@ -353,7 +353,7 @@ def index():
     if any(col in info for col in relative_columns):
         info["relative"] = 1
     if len(request.args) != 0:
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        info["search_type"] = search_type = get_search_type(info)
         if search_type in ['Families', 'FamilyCounts']:
             info['search_array'] = FamiliesSearchArray(relative=("relative" in info))
         if search_type in ['Counts', 'FamilyCounts']:

@@ -8,7 +8,7 @@ from sage.misc.cachefunc import cached_function
 
 from lmfdb.app import app, ctx_proc_userdata, is_debug_mode
 from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
-from lmfdb.utils.utilities import flash_error, flash_warning, flash_info, flash_success, to_dict
+from lmfdb.utils.utilities import flash_error, flash_warning, flash_info, flash_success, to_dict, get_search_type
 from lmfdb.utils.completeness import results_complete
 
 # For diagram search support in SearchWrapper:
@@ -319,7 +319,7 @@ class SearchWrapper(Wrapper):
     def __call__(self, info):
         info = to_dict(info, exclude=["bread"])  # I'm not sure why this is required...
         #  if search_type starts with 'Random' returns a random label
-        search_type = info.get("search_type", info.get("hst", ""))
+        search_type = get_search_type(info)
         if search_type == "List":
             # Backward compatibility
             search_type = ""
@@ -925,7 +925,7 @@ class YieldWrapper(Wrapper):
     def __call__(self, info):
         info = to_dict(info)
         #  if search_type starts with 'Random' returns a random label
-        search_type = info.get("search_type", info.get("hst", ""))
+        search_type = get_search_type(info)
         info["search_type"] = search_type
         info["columns"] = self.columns
         random = info["search_type"].startswith("Random")
