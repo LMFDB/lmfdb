@@ -1595,7 +1595,7 @@ class TensorProductLfunction(Lfunction):
 
         li = self.tp.an_list(upper_bound=self.numcoeff)
         for n in range(1,len(li)):
-            # now renormalise it for s <-> 1-s as the functional equation
+            # now renormalize it for s <-> 1-s as the functional equation
             li[n] /= sqrt(float(n))
         self.dirichlet_coefficients = li
 

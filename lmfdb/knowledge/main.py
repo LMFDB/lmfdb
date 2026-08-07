@@ -64,7 +64,7 @@ class KnowlTagPatternWithTitle(markdown.inlinepatterns.Pattern):
         return "{{ KNOWL('%s') }}" % kid
 
 
-# Initialise the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
+# Initialize the markdown converter, sending a wikilink [[topic]] to the L-functions wiki
 md = markdown.Markdown(extensions=['markdown.extensions.wikilinks'],
                        extension_configs={'wikilinks': [('base_url', 'https://wiki.l-functions.org/')]})
 # priority above escape (180), but below backtick (190)

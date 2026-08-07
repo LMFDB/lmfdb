@@ -304,7 +304,7 @@ class GaloisRepresentation( Lfunction):
         self.conductor = ZZ(F.level)
         self.bad_semistable_primes = [fa[0] for fa in self.conductor.factor() if fa[1] == 1 ]
         # should be including primes of bad red that are pot good
-        # however I don't know how to recognise them
+        # however I don't know how to recognize them
         self.bad_pot_good = []
         self.langlands = True
         self.mu_fe = []
@@ -518,7 +518,7 @@ class GaloisRepresentation( Lfunction):
         """
         Computes the list [a1,a2,... of coefficients up
         to a bound. Note that [0] is a1.
-        This is in the alg. normalisation, i.e. s <-> w+1-s
+        This is in the alg. normalization, i.e. s <-> w+1-s
         """
 
         if self.object_type == "ellipticcurve":
@@ -543,10 +543,10 @@ class GaloisRepresentation( Lfunction):
         else:
             raise ValueError("You asked for a type that we don't have")
 
-    def renormalise_coefficients(self):
+    def renormalize_coefficients(self):
         """
-        This turns a list of algebraically normalised coefficients
-        as above into a list of automorphically normalised,
+        This turns a list of algebraically normalized coefficients
+        as above into a list of automorphically normalized,
         i.e. s <-> 1-s
         """
         # this also turns them into floats and complex.
@@ -600,7 +600,7 @@ class GaloisRepresentation( Lfunction):
         # take a lot of time. We cut it down and print a warning
         number_of_terms = min(self.numcoeff, self.besancon_bound)
         self.dirichlet_coefficients = self.algebraic_coefficients(number_of_terms+1)
-        self.renormalise_coefficients()
+        self.renormalize_coefficients()
 
         self.texname = "L(s,\\rho)"
         self.texnamecompleteds = "\\Lambda(s,\\rho)"

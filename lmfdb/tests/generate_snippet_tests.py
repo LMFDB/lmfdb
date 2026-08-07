@@ -118,7 +118,7 @@ def _start_snippet_procs(langs, chimp_spec=None):
             #
             #  3. The SetPrompt command itself is echoed once (the line editor is still active when it is sent).  If the command
             #     contained the new prompt as a literal string, pexpect would match the *echo* of the command instead of the actual
-            #     prompt and permanently desynchronise.  To avoid this, the prompt string is assembled with 'cat' so that the echoed
+            #     prompt and permanently desynchronize.  To avoid this, the prompt string is assembled with 'cat' so that the echoed
             #     command never contains the full prompt.
             #
             #  SetColumns(0) disables line-wrapping, and SetAutoColumns(false) stops Magma from re-adjusting to the pty width, so that log files are stable across environments.
@@ -183,7 +183,7 @@ def _eval_code_file(data, lang, proc, logfile):
 
     proc.child.logfile = None
 
-    # Matches ANSI escape sequences (colour codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
+    # Matches ANSI escape sequences (color codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
     # E.g. this sometimes occurs in the Gap snippet log files
     ANSI_ESCAPE_RE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 

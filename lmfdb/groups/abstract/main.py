@@ -162,7 +162,7 @@ def ctx_abstract_groups():
 
 def learnmore_list():
     return [
-        ("Source and acknowledgements", url_for(".how_computed_page")),
+        ("Source and acknowledgments", url_for(".how_computed_page")),
         ("Completeness of the data", url_for(".completeness_page")),
         ("Reliability of the data", url_for(".reliability_page")),
         ("Abstract  group labeling", url_for(".labels_page")),

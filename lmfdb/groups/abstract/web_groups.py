@@ -3050,7 +3050,7 @@ class WebAbstractGroup(WebObj):
             families['sage'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSU','Orth','Unitary','PU']
             families['oscar'] = ['GL','SL','Sp','SO','SU','Orth','Unitary']
 
-            # Prioritise displaying the first Lie type representation which is implemented in the language
+            # Prioritize displaying the first Lie type representation which is implemented in the language
             for lie_rep in self.lie_representations:
                 nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
                 lie_rep_key = (lie_rep['family'], nLie, qLie)

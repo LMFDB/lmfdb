@@ -127,7 +127,7 @@ function knowl_click_handler($el) {
   var output_id = '#knowl-output-' + uid;
   var $output_id = $(output_id);
 
-  // slightly different behaviour if we are inside a table, but
+  // slightly different behavior if we are inside a table, but
   // not in a knowl inside a table.
   var table_mode = $el.parent().is("td") || $el.parent().is("th");
 
