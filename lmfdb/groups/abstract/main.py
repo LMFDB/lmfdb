@@ -1252,6 +1252,17 @@ FAMILY_NAME_ALIASES = {
 # the family part of a name of the form Fam(n,q), including a +/- exponent
 FAMILY_NAME_RE = re.compile(r"([A-Za-z]+[-+]?)(\(.*\))")
 
+def normalize_family_jump(jump):
+    """
+    Rewrite the family part of a name of the form Fam(n,q) to the spelling
+    stored in gps_families, leaving the parameters, and anything that is not a
+    recognized alias, exactly as they were.
+    """
+    alias = FAMILY_NAME_RE.fullmatch(jump)
+    if alias and alias.group(1) in FAMILY_NAME_ALIASES:
+        return FAMILY_NAME_ALIASES[alias.group(1)] + alias.group(2)
+    return jump
+
 #### Searching
 def group_jump(info):
     jump = info["jump"]
@@ -1336,10 +1347,7 @@ def group_jump(info):
                 return n == 2 and params["twist"] == 2 and q.is_power_of(3) and not q.is_power_of(9)
     # Match against the stored spelling of the family, but keep the user's
     # spelling for the error messages below.
-    fam_jump = jump
-    alias = FAMILY_NAME_RE.fullmatch(jump)
-    if alias and alias.group(1) in FAMILY_NAME_ALIASES:
-        fam_jump = FAMILY_NAME_ALIASES[alias.group(1)] + alias.group(2)
+    fam_jump = normalize_family_jump(jump)
     for family in db.gps_families.search():
         m = re.fullmatch(family["input"], fam_jump)
         if m:
