@@ -42,6 +42,7 @@ from lmfdb.utils import (
     CodeSnippet
 )
 from .circles import find_packing
+from .hash_lookup import hash_search_url, structural_hash
 
 
 nc = "not computed"
@@ -1089,6 +1090,26 @@ class WebAbstractGroup(WebObj):
         props.append(
             ("Rank", f"${self.rank}$" if self.rank else "not computed"))
         return props
+
+    @lazy_attribute
+    def show_hash(self):
+        # The isomorphism-invariant hash, shown only when the stored value is
+        # one and carries information beyond the label: letter-labeled orders
+        # (2016.a, ...) and Magma-only orders (6561.*) display it, while the
+        # small-group-enumerated orders (512.11, ...) store the counter in that
+        # column and identifiable orders repeat the label counter there.  See
+        # hash_lookup.structural_hash.
+        if self.live() or not isinstance(self._data, dict):
+            return None
+        return structural_hash(self.counter, self._data.get("hash"))
+
+    @lazy_attribute
+    def hash_url(self):
+        # The other groups of this order and hash; at the complete-table orders
+        # that search is resolved through gps_smallhash rather than gps_groups.
+        if self.show_hash is None:
+            return None
+        return hash_search_url(self.order, self.show_hash)
 
     @lazy_attribute
     def has_subgroups(self):

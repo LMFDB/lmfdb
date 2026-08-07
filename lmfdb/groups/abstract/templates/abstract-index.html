@@ -63,4 +63,18 @@
 </form>
 
 
+<h2> Identify </h2>
+
+<p>
+  Compute the {{KNOWL('group.hash', 'hash')}} of a group given by permutation
+  generators, a PC code, or matrix generators, and find matching groups.
+</p>
+
+<form name="identify" method="get" action="{{url_for('.identify_group_page')}}">
+  <input type="text" name="description" size="40" placeholder="(1,2,3)(4,5),(1,2)" />
+  <input type="submit" value="Identify" />
+  <span class="formexample" style="display:none"> e.g. (1,2,3)(4,5),(1,2) </span>
+</form>
+
+
 {% endblock %}

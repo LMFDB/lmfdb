@@ -72,6 +72,22 @@ from .web_groups import (
     missing_subs,
 )
 from .stats import GroupStats
+from .identify import (
+    identify_group,
+    describe_formats,
+    looks_like_permutation,
+)
+from .hash_lookup import (
+    SMALLHASH_ORDERS,
+    hash_constraint,
+    hash_search_url,
+    live_pages_available,
+    merge_constraint,
+    order_search_url,
+    resolve_order_hash,
+    searched_hash,
+    structural_hash,
+)
 
 
 abstract_group_label_regex = re.compile(r"^(\d+)\.([a-z]+|\d+)$")
@@ -231,12 +247,17 @@ def parse_family(inp, query, qfield):
 
 @search_parser
 def parse_hashes(inp, query, qfield, order_field):
+    # hash_constraint decides which column carries the hash: at the orders with
+    # a complete gps_smallhash table, gps_groups.hash holds the label counter
+    # instead of the hash, so those orders are resolved through gps_smallhash
+    # and come back as a list of counters (as a $or over orders when the search
+    # is not pinned to one order).
     if inp.count("#") == 0:
         opts = [ZZ(opt) for opt in inp.split(",")]
-        if len(opts) == 1:
-            query[qfield] = opts[0]
-        else:
-            query[qfield] = {"$or": opts}
+        N = query.get(order_field)
+        if isinstance(N, (dict, list)):
+            N = None  # a range or list of orders: constrain each order separately
+        constraint = hash_constraint(N, opts, qfield)
     elif inp.count("#") == 1:
         N, hsh = inp.split("#")
         N, hsh = ZZ(N), ZZ(hsh)
@@ -244,9 +265,10 @@ def parse_hashes(inp, query, qfield, order_field):
             query[order_field] = N
         elif query[order_field] != N:
             raise ValueError(f"You cannot specify order both in the {order_field} input and the {qfield} input")
-        query[qfield] = hsh
+        constraint = hash_constraint(N, [hsh], qfield)
     else:
         raise ValueError("To specify multiple hash values, all must have the same order; provide the order in the order input and then just give hashes separated by commas")
+    merge_constraint(query, constraint)
 
 #input string of complex character label and return rational character label
 def q_char(char):
@@ -782,6 +804,12 @@ def index():
         search_types = request.args.getlist("search_type")
         info["search_type"] = search_type = search_types[-1] if search_types else info.get("hst", "")
         if search_type in ["List", "", "Random", "Diagram"]:
+            # A bare order-and-hash search is answered by the hash page, which
+            # can list the groups of a complete-table order that gps_groups
+            # does not contain.
+            asked = hash_only_search(request.args) if search_type in ["List", ""] else None
+            if asked is not None and asked[0] in SMALLHASH_ORDERS:
+                return redirect(url_for(".by_hash", order=asked[0], value=asked[1]))
             return group_search(info)
         # Preserve old abstract-group search URLs while directing users to the
         # new, object-specific landing pages.  Keep Random* as a search type so
@@ -1292,12 +1320,19 @@ def group_jump(info):
     hre = abstract_group_hash_regex.fullmatch(jump)
     if hre:
         N, hsh = [ZZ(c) for c in hre.groups()]
-        if N <= 2000 and (N < 512 or N.valuation(2) < 7):
-            # Less useful here, since we mostly have group ids in this regime, but we include it for completeness
-            possible_labels = list(db.gps_groups.search({"order":N, "hash": hsh}, "label"))
-            if len(possible_labels) == 1:
-                return redirect(url_for(".by_label", label=possible_labels[0]))
-        return redirect(url_for(".index", hash=jump))
+        res = resolve_order_hash(N, hsh)
+        # A complete gps_smallhash table makes a unique match a proof of
+        # isomorphism; otherwise only the orders where the hash is the group id
+        # determine the group (less useful here, since we mostly have group ids
+        # in this regime, but we include it for completeness).
+        if res.complete or (N <= 2000 and (N < 512 or N.valuation(2) < 7)):
+            label = res.unique_label()
+            if label is not None:
+                return redirect(url_for(".by_label", label=label))
+        return redirect(hash_search_url(N, hsh))
+    # by permutation generators
+    if looks_like_permutation(jump):
+        return redirect(url_for(".identify_group_page", description=jump))
     # or as product of cyclic groups
     if CYCLIC_PRODUCT_RE.fullmatch(jump):
         invs = [n.strip() for n in jump.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
@@ -1535,8 +1570,12 @@ def group_postprocess(res, info, query):
             if label is not None:
                 labels.add(label)
     tex_cache = {rec["label"]: rec["tex_name"] for rec in db.gps_groups.search({"label":{"$in":list(labels)}}, ["label", "tex_name"])}
+    # Where gps_groups.hash holds the label counter the row cannot supply its
+    # own hash (see hash_lookup), but a search for one hash at one order can.
+    asked = searched_hash(info)
     for rec in res:
         rec["tex_cache"] = tex_cache
+        rec["public_hash"] = asked[1] if asked and rec.get("order") == asked[0] else None
     if "family" in info:
         family = info["family"]
         if family == "any":
@@ -1632,7 +1671,15 @@ group_columns = SearchColumns([
     MultiProcessedCol("type", "group.type", "Type - length",
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
-                      align="center")])
+                      align="center"),
+    # The hash the group.hash knowl describes: the stored value where that is
+    # the hash, the searched-for value where the search supplies one, and
+    # nothing rather than a label counter (see hash_lookup.structural_hash).
+    MultiProcessedCol("hash", "group.hash", "Hash",
+                      ["counter", "hash", "public_hash"],
+                      lambda counter, h, asked: str(asked) if asked is not None
+                      else ("" if structural_hash(counter, h) is None else str(h)),
+                      default=False, align="right", short_title="hash")])
 
 @search_wrap(
     table=db.gps_groups,
@@ -2741,6 +2788,77 @@ def download_trivial_construction(dltype):  #trival gp construction is different
     return s
 
 
+@abstract_page.route("/hash/<int:order>/<int:value>")
+def by_hash(order, value):
+    """All the groups of a given order and hash.
+
+    At the orders with a complete ``gps_smallhash`` table this lists every such
+    group, including the ones with no database row, which an ordinary search of
+    ``gps_groups`` cannot do; the other orders go on to the search page, where
+    the stored column is the hash and the usual search machinery applies.
+    """
+    # Orders and hashes are stored as 32- and 64-bit integers, so anything
+    # larger is not one, and asking the database would be an error.
+    if order >= 2**31 or value >= 2**63:
+        flash_error("No group has order %s and hash %s.", order, value)
+        return redirect(url_for(".index"))
+    res = resolve_order_hash(order, value)
+    if not res.complete:
+        return redirect(url_for(".index", hash=f"{order}#{value}", search_type="List"))
+    label = res.unique_label()
+    if label is not None:
+        return redirect(url_for(".by_label", label=label))
+    present = set(res.in_lmfdb())
+    live = live_pages_available(order)
+    return render_template(
+        "abstract-hash.html",
+        title=f"Groups of order {order} with hash {value}",
+        bread=get_bread([("Hash", "")]),
+        order=order,
+        value=value,
+        candidates=[{"label": lab, "present": lab in present, "live": live}
+                    for lab in res.labels],
+        order_url=order_search_url(order),
+        learnmore=learnmore_list(),
+    )
+
+
+# Arguments that say how to display a search rather than what to search for.
+HASH_SEARCH_ARGS = {"hash", "order", "search_type", "hst", "count", "start",
+                    "showcol", "hidecol", "sort_order", "sorts", "columns", "submit"}
+
+
+def hash_only_search(args):
+    """The ``(order, value)`` of a request that asks for nothing but an order
+    and a hash, so that it can be answered by :func:`by_hash` instead of by a
+    search of ``gps_groups``; ``None`` for anything else."""
+    if any(v.strip() for k, v in args.items() if k not in HASH_SEARCH_ARGS):
+        return None
+    return searched_hash(args)
+
+
+@abstract_page.route("/identify")
+def identify_group_page():
+    description = request.args.get("description", "")
+    res = identify_group(description)
+    if res["status"] == "redirect":
+        return redirect(url_for(".by_label", label=res["label"]))
+    info = to_dict(request.args, search_array=GroupsSearchArray())
+    info["res"] = res
+    info["formats"] = describe_formats()
+    if res.get("order") and res.get("hash") is not None:
+        info["hash_url"] = hash_search_url(res["order"], res["hash"])
+    if res.get("order"):
+        info["order_url"] = order_search_url(res["order"])
+    return render_template(
+        "abstract-identify.html",
+        title="Identify a finite group",
+        bread=get_bread([("Identify", "")]),
+        info=info,
+        learnmore=learnmore_list(),
+    )
+
+
 @abstract_page.route("/<label>/download/<download_type>")
 def download_group(**args):
     dltype = args["download_type"]
@@ -2880,7 +2998,7 @@ class GroupsSearchArray(SearchArray):
             ("irrQ_degree", r"$\Q$-irrep degree", ["irrQ_degree", "counter"])
     ]
     jump_example = "8.3"
-    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
+    jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, (1,2,3)(4,5),(1,2), or 12.4.2.b1.a1"
     jump_prompt = "Label or name"
     jump_knowl = "group.find_input"
 
@@ -3799,8 +3917,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[1] is None:
             ans += "Isomorphism class has not been identified<br />"
         else:
-            # TODO: add search link to groups with this order and hash
-            ans += f"{display_knowl('group.hash', 'Hash')} : {profiledata[1]}<br />"
+            ans += f"{display_knowl('group.hash', 'Hash')}: <a href=\"{hash_search_url(order, profiledata[1])}\">{profiledata[1]}</a><br />"
         isomorphism_label = "Subgroups with this data:"
     else:
         if label.startswith("ab/"):
@@ -3861,8 +3978,7 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         if profiledata[4] is None:
             ans += "Quotient isomorphism class has not been identified<br />"
         else:
-            # TODO: add hash knowl and search link to groups with this order and hash
-            ans += f"Quotient hash: {profiledata[4]}<br />"
+            ans += f"{display_knowl('group.hash', 'Quotient hash')}: <a href=\"{hash_search_url(ambient_order // order, profiledata[4])}\">{profiledata[4]}</a><br />"
 
     if gp and not gp.live():
         if ambient is None:
