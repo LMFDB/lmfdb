@@ -35,27 +35,13 @@ class DirichletSearchTest(LmfdbTest):
         assert '46.d' in W.get_data(as_text=True)
 
     def test_search(self):
-        # The primitivity and parity filters are read from is_primitive=yes|no
-        # and parity=even|odd; the older primitive=Yes|No and parity=Odd|Even
-        # spellings set nothing at all, so searches using them silently ran the
-        # unfiltered query and asserted labels that were on its first page
-        # anyway.  Every filter below is therefore checked in both directions,
-        # by a label it must keep and one it must drop, so a parameter that
-        # stops being parsed widens the search and fails here.
-        #
-        # Labels are matched with their surrounding tags: 416 is also a multiple
-        # of 16, so a bare '16.e' would match the '416.e' further down the page.
-        #
-        # Fixing both conductor and order matches an index prefix, which leaves
-        # the index supplying the sort as well, so all of these come back from a
-        # handful of index entries.
+        # Each filter is checked in both directions, so a parameter that stops
+        # being parsed widens the search and trips a negative assertion.
+        # Conductor 16, order 4 has a primitive even orbit (16.e), a primitive
+        # odd one (16.f), and imprimitive counterparts at modulus 32.  Labels
+        # carry their tags, since a bare '16.e' also matches '416.e'.
         page = self.tc.get('/Character/Dirichlet/?conductor=15&order=4').get_data(as_text=True)
         assert '>15.e<' in page
-        # conductor 16 and order 4 gives a primitive even orbit (16.e), a
-        # primitive odd one (16.f), and imprimitive even and odd ones at
-        # modulus 32, so each filter is visible in the labels it selects.  All
-        # four are asserted present by one filtered search or another, so no
-        # unfiltered control page is needed.
         page = self.tc.get('/Character/Dirichlet/?conductor=16&order=4&is_primitive=no').get_data(as_text=True)
         assert '>32.e<' in page and '>32.f<' in page
         assert '>16.e<' not in page and '>16.f<' not in page
@@ -68,13 +54,8 @@ class DirichletSearchTest(LmfdbTest):
         page = self.tc.get('/Character/Dirichlet/?conductor=16&order=4&is_primitive=no&parity=odd').get_data(as_text=True)
         assert '>32.f<' in page
         assert '>16.e<' not in page and '>16.f<' not in page and '>32.e<' not in page
-        # Ranges match no index prefix, so this one matches every modulus
-        # admitting a character of conductor 25 to 50, upwards of half a million
-        # orbits, every one of which is read before the sort by modulus can pick
-        # the first page.  It is the only search here that costs that, and the
-        # only one allowed to settle for the timeout page.  Range parsing is
-        # also covered cheaply by test_order and test_modbrowse, which range
-        # over a single column.
+        # A conductor range matches no index prefix, so this one reads every
+        # orbit of conductor 25-50 before it can sort; allow the timeout page.
         self.check_args_with_timeout(
             '/Character/Dirichlet/?conductor=25-50&order=5-7', '>25.d<')
 
