@@ -860,6 +860,15 @@ def index():
         else:
             flash_error("Unexpected error %s occurred during knowl search", str(e))
         all_knowls = []
+    # Knowls whose id starts with "ui." (e.g. search-box help bubbles, sort-order
+    # or statistics-extent explanations) are user-interface helper texts rather
+    # than context-free definitions.  They should not clutter the public knowl
+    # browse/search index, so we hide them -- and their "ui" category -- from
+    # visitors who are not logged in.  See LMFDB issue #3721.
+    if not current_user.is_authenticated:
+        all_knowls = [k for k in all_knowls if not k["id"].startswith("ui.")]
+        if cur_cat == "ui":
+            cur_cat = ""
     categories = Counter()
     if cur_cat:
         # Always include the current category
