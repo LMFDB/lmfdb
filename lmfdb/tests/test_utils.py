@@ -38,6 +38,21 @@ from lmfdb.utils.completeness import (
     infinity,
 )
 
+from lmfdb.utils.search_boxes import (
+    CheckBox,
+    ColumnController,
+    CountBox,
+    HiddenBox,
+    SelectBox,
+    SortController,
+    TextBox,
+    TextBoxWithSelect,
+)
+
+from lmfdb.classical_modular_forms.main import an_modulo_is_constraint
+
+from lmfdb.tests import input_classes
+
 class UtilsTest(unittest.TestCase):
     """
     An example of unit tests that are not based on the website itself.
@@ -413,3 +428,161 @@ class UtilsTest(unittest.TestCase):
                 ("gps_st", {'rational': True, 'weight': 1, 'degree': 8}),
         ]:
             self.assertEqual(results_complete(tbl, query, db)[0], False)
+
+
+class SearchBoxTest(unittest.TestCase):
+    """
+    Unit tests for the rendering of search inputs, in particular for the
+    classes marking which inputs constrain the results being displayed.
+    """
+
+    def classes(self, box, info):
+        r"""
+        Checking utility: the classes of the input rendered by ``box``
+        """
+        rendered = input_classes(box._input(info), box.name)
+        self.assertEqual(len(rendered), 1)
+        return rendered[0]
+
+    def test_text_box_active(self):
+        r"""
+        Checking that a filled in text box is marked as an active constraint
+        """
+        box = TextBox(name="level", label="Level")
+        self.assertEqual(
+            self.classes(box, {"level": "11"}),
+            {"search_constraint", "search_active"})
+
+    def test_text_box_inactive(self):
+        r"""
+        Checking that an empty text box on a results page is not marked active
+        """
+        box = TextBox(name="level", label="Level")
+        self.assertEqual(self.classes(box, {"weight": "2"}), {"search_constraint"})
+        self.assertEqual(self.classes(box, {"level": ""}), {"search_constraint"})
+        self.assertEqual(self.classes(box, {"level": "  "}), {"search_constraint"})
+
+    def test_text_box_browse(self):
+        r"""
+        Checking that the search classes are absent from the browse page
+        """
+        box = TextBox(name="level", label="Level")
+        self.assertEqual(self.classes(box, None), set())
+
+    def test_custom_classes(self):
+        r"""
+        Checking that custom classes survive alongside the search classes
+        """
+        box = TextBox(name="degree", label="Degree", classes=["family"])
+        self.assertEqual(
+            self.classes(box, {"degree": "4"}),
+            {"family", "search_constraint", "search_active"})
+        self.assertEqual(self.classes(box, None), {"family"})
+
+    def test_class_in_extra(self):
+        r"""
+        Checking that a class written into extra is merged rather than repeated
+        """
+        box = TextBox(name="degree", label="Degree", extra=['class="family"'])
+        self.assertEqual(
+            self.classes(box, {"degree": "4"}),
+            {"family", "search_constraint", "search_active"})
+
+    def test_select_box_extra_preserved(self):
+        r"""
+        Checking that other attributes in extra survive alongside the classes
+        """
+        box = SelectBox(
+            name="weight_parity",
+            options=[("", ""), ("odd", "odd")],
+            classes=["simult_select"],
+            extra=['onchange="simult_change(event);"'])
+        rendered = box._input({"weight_parity": "odd"})
+        self.assertIn('onchange="simult_change(event);"', rendered)
+        self.assertEqual(
+            self.classes(box, {"weight_parity": "odd"}),
+            {"simult_select", "search_constraint", "search_active"})
+
+    def test_advanced_classes(self):
+        r"""
+        Checking that the advanced class survives alongside the others
+        """
+        box = TextBox(name="degree", label="Degree", classes=["family"], advanced=True)
+        self.assertEqual(
+            self.classes(box, {"degree": "4"}),
+            {"family", "advanced", "search_constraint", "search_active"})
+
+    def test_check_box(self):
+        r"""
+        Checking that only a checked checkbox is marked as an active constraint
+        """
+        box = CheckBox(name="cm", label="CM")
+        self.assertEqual(
+            self.classes(box, {"cm": "yes"}),
+            {"search_constraint", "search_active"})
+        self.assertEqual(self.classes(box, {}), {"search_constraint"})
+        # An unchecked box shows up as False rather than as a missing key
+        self.assertEqual(self.classes(box, {"cm": False}), {"search_constraint"})
+        self.assertEqual(self.classes(box, None), set())
+
+    def test_display_controls(self):
+        r"""
+        Checking that controls which only affect the display are not constraints
+        """
+        for box, info in [
+                (CountBox(), {"count": "50"}),
+                (SortController([("level", "level")], "rational.sort_order"),
+                 {"sort_order": "level"})]:
+            self.assertEqual(self.classes(box, info), set())
+        # The column controller writes its own tag, without a name attribute
+        self.assertFalse(ColumnController().constrains({"column_control": "level"}))
+        # Hidden inputs are not displayed, so there is nothing to highlight
+        hidden = HiddenBox(name="hst", label="")._input({"hst": "Traces"})
+        self.assertNotIn("search_", hidden)
+
+    def test_qualifying_select(self):
+        r"""
+        Checking that a select qualifying a text box is only active once that
+        text box has been filled in, since the parsers it is handed to do
+        nothing when their field is empty
+        """
+        quantifier = SelectBox(name="level_type",
+                               options=[("", ""), ("prime", "prime")])
+        TextBoxWithSelect(name="level", label="Level", select_box=quantifier)
+        self.assertEqual(self.classes(quantifier, {"level_type": "prime"}), set())
+        self.assertEqual(
+            self.classes(quantifier, {"level_type": "prime", "level": "11"}),
+            {"search_constraint", "search_active"})
+        # and an empty select is still not active when the text box is filled
+        self.assertEqual(self.classes(quantifier, {"level": "11"}),
+                         {"search_constraint"})
+
+    def test_qualifying_select_that_constrains_alone(self):
+        r"""
+        Checking that a select which restricts the results by itself, such as
+        the level and conductor types, can say so and is then not gated on
+        the text box beside it
+        """
+        quantifier = SelectBox(name="level_type",
+                               options=[("", ""), ("prime", "prime")],
+                               is_constraint=True)
+        TextBoxWithSelect(name="level", label="Level", select_box=quantifier)
+        self.assertEqual(self.classes(quantifier, {"level_type": "prime"}),
+                         {"search_constraint", "search_active"})
+
+    def test_contextual_constraint(self):
+        r"""
+        Checking a box whose role depends on the rest of the search: the trace
+        modulus only constrains the results when there are trace constraints
+        for it to be applied to
+        """
+        box = TextBox(name="an_modulo", label="Modulo",
+                      is_constraint=an_modulo_is_constraint)
+        self.assertEqual(
+            self.classes(box, {"an_modulo": "3", "an_constraints": "a11=1"}),
+            {"search_constraint", "search_active"})
+        self.assertEqual(
+            self.classes(box, {"an_modulo": "3", "an_constraints": ""}), set())
+        self.assertEqual(
+            self.classes(box, {"an_modulo": "3", "view_modp": "reductions"}), set())
+        self.assertEqual(self.classes(box, {"an_modulo": "3"}), set())

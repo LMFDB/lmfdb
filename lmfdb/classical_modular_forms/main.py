@@ -835,11 +835,16 @@ def common_parse(info, query, na_check=False):
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
                 query['level'] = {'$mod': [0, ZZ(query['level'])]}
-        elif info['level_type'] in ['prime', 'prime_power', 'square', 'squarefree']:
+        elif info['level_type'] in ['prime', 'prime_square', 'prime_power',
+                                    'square', 'squarefree', 'powerful']:
             query['level_is_' + info['level_type']] = True
         else:
-            flash_error("The level type %s is invalid.", info['level_type'])
-            return redirect(url_for(".index"))
+            # Raise rather than redirect: our callers use the query we build
+            # and ignore what we return, so a redirect here would be dropped
+            # and the search would run with no condition on the level at all
+            msg = "The level type %s is invalid." % info['level_type']
+            flash_error(msg)
+            raise ValueError(msg)
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
@@ -1019,6 +1024,18 @@ def trace_postprocess(res, info, query):
     return res
 def space_trace_postprocess(res, info, query):
     return trace_postprocess(res, info, query, True)
+def an_modulo_is_constraint(info):
+    """
+    Whether the ``an_modulo`` input is restricting which results are shown.
+
+    The modulus enters the query only through the trace constraints, which it
+    turns from equalities into congruences.  Without any trace constraints it
+    just controls whether the traces that are displayed are reduced (together
+    with ``view_modp``), so it should not be marked as an active constraint.
+    """
+    an_constraints = info.get('an_constraints') or ''
+    return bool(an_constraints.strip())
+
 def process_an_constraints(info, query, qfield='traces', nshift=None):
     q = info.get('an_modulo','').strip()
     if q:
@@ -1570,6 +1587,9 @@ class CMFSearchArray(SearchArray):
     }
 
     def __init__(self):
+        # Unlike most quantifier selects, this one restricts the results on
+        # its own: common_parse turns prime/square/squarefree/... into a
+        # level_is_* condition whether or not a level was entered
         level_quantifier = SelectBox(
             name='level_type',
             options=[('', ''),
@@ -1582,7 +1602,8 @@ class CMFSearchArray(SearchArray):
                      ('divides','divides'),
                      ('multiple','multiple of'),
                      ],
-            min_width=110)
+            min_width=110,
+            is_constraint=True)
         level = TextBoxWithSelect(
             name='level',
             label='Level',
@@ -1591,9 +1612,14 @@ class CMFSearchArray(SearchArray):
             example_span='4, 1-20',
             select_box=level_quantifier)
 
+        # The parities also restrict the results on their own, and in fact
+        # usually arrive that way: simult_change() sets every simult_select
+        # at once, so both are submitted even with the text boxes empty
         weight_quantifier = ParityMod(
             name='weight_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
+            classes=["simult_select"],
+            extra=['onchange="simult_change(event);"'],
+            is_constraint=True)
 
         weight = TextBoxWithSelect(
             name='weight',
@@ -1605,7 +1631,9 @@ class CMFSearchArray(SearchArray):
 
         character_quantifier = ParityMod(
             name='char_parity',
-            extra=['class="simult_select"', 'onchange="simult_change(event);"'])
+            classes=["simult_select"],
+            extra=['onchange="simult_change(event);"'],
+            is_constraint=True)
 
         character = TextBoxWithSelect(
             name='char_label',
@@ -1757,18 +1785,22 @@ class CMFSearchArray(SearchArray):
 
         results = CountBox()
 
+        # The columns shown in the trace table, and how their entries are
+        # displayed, do not affect which newforms match the search
         trace_coldisplay = TextBox(
             name='n',
             label='Columns to display',
             example='1-40',
-            example_span='3,7,19, 40-90')
+            example_span='3,7,19, 40-90',
+            is_constraint=False)
 
         trace_primality = SelectBox(
             name='n_primality',
             label='Show',
             options=[('', 'primes only'),
                      ('prime_powers', 'prime powers'),
-                     ('all', 'all')])
+                     ('all', 'all')],
+            is_constraint=False)
 
         trace_an_constraints = TextBox(
             name='an_constraints',
@@ -1779,13 +1811,15 @@ class CMFSearchArray(SearchArray):
         trace_an_moduli = TextBox(
             name='an_modulo',
             label='Modulo',
-            example_span='5, 16')
+            example_span='5, 16',
+            is_constraint=an_modulo_is_constraint)
 
         trace_view = SelectBox(
             name='view_modp',
             label='View',
             options=[('', 'integers'),
-                     ('reductions', 'reductions')])
+                     ('reductions', 'reductions')],
+            is_constraint=False)
 
         self.browse_array = [
             [level, weight],

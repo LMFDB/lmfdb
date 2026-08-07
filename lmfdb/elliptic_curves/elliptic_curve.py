@@ -1291,6 +1291,9 @@ class ECSearchArray(SearchArray):
                                }
 
     def __init__(self):
+        # Unlike most quantifier selects, this one restricts the results on
+        # its own: prime/p-power/sq-free set num_bad_primes and semistable
+        # whether or not a conductor was entered
         conductor_quantifier = SelectBox(
             name='conductor_type',
             options=[('', ''),
@@ -1300,7 +1303,8 @@ class ECSearchArray(SearchArray):
                      ('divides','divides'),
                      ('multiple','multiple of'),
                      ],
-            min_width=85)
+            min_width=85,
+            is_constraint=True)
         cond = TextBoxWithSelect(
             name="conductor",
             label="Conductor",

@@ -604,10 +604,16 @@ class SearchWrapper(Wrapper):
 
         # Create SearchBox objects for diagram-specific controls
         # These are rendered in diagram_search_form.html using the same HTML structure as other boxes
+        # These choose how the diagram is drawn (which fields go on each axis
+        # and how many points to show) rather than constraining the underlying
+        # results, so they are not highlighted as active
         info["diagram_boxes"] = [
-            SelectBox(name="x-axis", label="x-axis", options=numerical_fields),
-            SelectBox(name="y-axis", label="y-axis", options=numerical_fields),
-            SelectBox(name="color", label="Color", options=color_fields),
+            SelectBox(name="x-axis", label="x-axis", options=numerical_fields,
+                      is_constraint=False),
+            SelectBox(name="y-axis", label="y-axis", options=numerical_fields,
+                      is_constraint=False),
+            SelectBox(name="color", label="Color", options=color_fields,
+                      is_constraint=False),
             CountBox(),
         ]
 

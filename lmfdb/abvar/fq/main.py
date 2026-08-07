@@ -162,6 +162,23 @@ def AV_data(label):
     return datapage(labels, tables, title=f"Abelian variety isogeny class data - {label}", bread=bread, label_cols=label_cols, sorts=sorts)
 
 
+# The inputs whose database column the "Use geometric decomposition"
+# checkbox switches; see common_parse
+GEOM_DECOMP_INPUTS = (["dim%s_factors" % n for n in range(1, 6)]
+                      + ["dim%s_distinct" % n for n in range(1, 4)]
+                      + ["number_field", "galois_group"])
+
+def use_geom_decomp_is_constraint(info):
+    """
+    Whether the "Use geometric decomposition" checkbox is restricting which
+    results are shown.
+
+    It only chooses which columns the dimension, number field and Galois
+    group inputs are matched against, so with all of those empty it changes
+    neither the results nor how they are displayed.
+    """
+    return any((info.get(name) or '').strip() for name in GEOM_DECOMP_INPUTS)
+
 class AbvarSearchArray(SearchArray):
     sorts = [("", "dimension", ['g', 'q', 'poly']),
              ("q", "field", ['q', 'g', 'poly']),
@@ -426,7 +443,8 @@ class AbvarSearchArray(SearchArray):
         use_geom_decomp = CheckBox(
             "use_geom_decomp",
             label=uglabel,
-            short_label=uglabel
+            short_label=uglabel,
+            is_constraint=use_geom_decomp_is_constraint
         )
         use_geom_index = CheckboxSpacer(use_geom_decomp, colspan=4, advanced=True)
         use_geom_refine = CheckboxSpacer(use_geom_decomp, colspan=5, advanced=True)
@@ -602,7 +620,9 @@ def common_parse(info, query):
         parse_subset(info, query, "simple_factors", qfield="simple_distinct", mode=info.get("simple_quantifier"))
     else:
         parse_submultiset(info, query, "simple_factors")
-    if info.get("use_geom_decomp") == "on":
+    # CheckBox submits "yes"; "on" is the browser default that older hand
+    # written links use, so accept both
+    if info.get("use_geom_decomp") in ["yes", "on"]:
         dimstr = "geom_dim"
         nf_qfield = "geometric_number_fields"
         gal_qfield = "geometric_galois_groups"

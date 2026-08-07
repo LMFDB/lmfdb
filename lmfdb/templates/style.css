@@ -2342,3 +2342,14 @@ button.search_stale, button.search_stale:hover {
 button.search_fresh {
   background: {{color.button_background}};
 }
+
+/* Highlight inputs that are actively constraining the displayed search results */
+input.search_active:not([type=checkbox]), select.search_active {
+  background-color: {{color.search_active_background}};
+}
+/* Checkboxes are rendered natively, so mark them with a ring instead.  This
+   uses box-shadow rather than outline so that the browser's keyboard focus
+   indicator, which outline would replace, stays visible. */
+input[type=checkbox].search_active {
+  box-shadow: 0 0 0 2px {{color.search_active_ring}};
+}
