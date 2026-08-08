@@ -46,6 +46,68 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.5.1')
         self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.12.1')
 
+    def test_search_abelian_jump(self):
+        # Abelian fields entered by a non-reduced defining polynomial are
+        # identified without running polredabs (issue #5471).
+        from sage.all import pari
+        from urllib.parse import quote
+        # the degree 47 field of conductor 283 from the issue, entered via
+        # the minimal polynomial of z + z^2 for z a root of the stored
+        # polynomial
+        label = "47.47.60558628944427886416035618894711378994697503545758179730765967261479053047453845062877188530544503628007178201769.1"
+        coeffs = self.db.nf_fields.lookup(label, "coeffs")
+        g = pari([int(c) for c in coeffs]).Polrev()
+        T = pari("x + x^2").Mod(g).charpoly()
+        self.check_args('/NumberField/?jump=' + quote(str(T)),
+                        [label, 'uses a different defining polynomial'])
+        # same for a moderate degree: Q(zeta_32), degree 16
+        T = pari("x + x^2").Mod(pari("polcyclo(32)")).charpoly()
+        self.check_args('/NumberField/?jump=' + quote(str(T)),
+                        '16.0.18446744073709551616.1')
+
+    def test_abelian_nf_label(self):
+        # the underlying fast path for issue #5471
+        from sage.all import pari
+        from lmfdb.number_fields.web_number_field import abelian_nf_label
+        # degree 8: Q(zeta_20), entered via the minimal polynomial of z + 3z^3
+        T = (pari("x") + 3 * pari("x^3")).Mod(pari("polcyclo(20)")).charpoly()
+        assert abelian_nf_label(T) == "8.0.4000000.1"
+        # non-Galois and Galois-but-non-abelian inputs are left to the
+        # polredabs path
+        assert abelian_nf_label(pari("x^8 - 2")) is None
+        assert abelian_nf_label(pari("polcompositum(x^4 - 2, x^2 + 1)[1]")) is None
+        # same field, but entered so that the order we can certify maximal is
+        # very far from maximal: the index is divisible by two primes above
+        # 10^5, which stay out of S, so nfroots is called with a conditional
+        # structure (hence gets the defining polynomial, not the nf)
+        m = 100003 * 100019
+        T = (m * pari("x")).Mod(pari("polcyclo(20)")).charpoly()
+        assert abelian_nf_label(T) == "8.0.4000000.1"
+
+    def test_known_discriminant_primes(self):
+        # a large ramified prime shows up in the discriminant as a prime
+        # power, not as a prime (issue #5471)
+        from sage.all import ZZ
+        from lmfdb.number_fields.web_number_field import _known_discriminant_primes
+        q = ZZ(100003)
+        S = _known_discriminant_primes(ZZ(2)**20 * ZZ(5)**10 * q**7)
+        assert S == [ZZ(2), ZZ(5), q]
+        # a cofactor with two large prime factors is left unfactored
+        assert _known_discriminant_primes(ZZ(2)**20 * q * ZZ(100019)) == [ZZ(2)]
+
+    def test_jump_degree_too_large(self):
+        # for degrees beyond anything in the database the jump returns
+        # quickly instead of attempting polredabs (issue #5471): here a
+        # degree 94 subfield of Q(zeta_283), for which polredabs takes
+        # more than five minutes
+        from sage.all import pari
+        from urllib.parse import quote
+        T = pari.polsubcyclo(283, 94)
+        if T.type() == 't_VEC':
+            T = T[0]
+        self.check_args('/NumberField/?jump=' + quote(str(T)),
+                        'does not define a number field in the database')
+
     def test_search_disc(self):
         self.check_args('/NumberField/?discriminant=1988-2014', '401') # factor of one of the discriminants
 
