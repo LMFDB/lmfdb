@@ -858,6 +858,7 @@ class WebG2C():
         data['mw_rank_proved'] = curve['mw_rank_proved']
         data['analytic_rank_proved'] = curve['analytic_rank_proved']
         data['hasse_weil_proved'] = curve['hasse_weil_proved']
+        data['sha_proved'] = curve.get('sha_proved',False)
         data['st_group'] = curve['st_group']
         data['st_group_link'] = st_display_knowl(curve['st_label'])
         data['st0_group_name'] = st0_group_name(curve['real_geom_end_alg'])
