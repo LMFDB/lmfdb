@@ -926,7 +926,7 @@ def labels_page():
         learnmore=learnmore_list_remove("labels"),
     )
 
-sorted_code_names = ['curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
+sorted_code_names = ['curve', 'simple_curve', 'aut', 'jacobian', 'tors', 'cond', 'disc', 'ntors', 'mwgroup']
 
 Comment = {'magma': '//', 'sage': '#', 'gp': '\\\\', 'pari': '\\\\'}
 
