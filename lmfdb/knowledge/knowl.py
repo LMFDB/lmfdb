@@ -135,6 +135,44 @@ def normalize_define(term):
 def extract_defines(content):
     return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
+
+def description_metadata(kid):
+    """
+    The parts of a table or column description knowl that are determined by its id.
+
+    Unlike a normal knowl, whose title and defines are written by the editor, a
+    type 2 knowl describes a table or a column of a table, and the ``source``,
+    ``source_name``, ``title`` and ``defines`` columns just record which one.
+    So they all have to be rewritten when such a knowl moves to a new id; see
+    ``KnowlBackend.rename_description_knowl``.
+
+    The title agrees with the one that ``Knowl.__init__`` computes for display,
+    apart from the ``(DEFUNCT)`` marker it adds for a table that no longer exists,
+    which is a comment on the current database rather than part of the knowl.
+
+    INPUT:
+
+    - ``kid`` -- the id of a table or column description knowl
+
+    OUTPUT:
+
+    A dictionary giving the ``cat``, ``type``, ``source``, ``source_name``,
+    ``title`` and ``defines`` to store for every version of the knowl.
+    """
+    typ, source, name = extract_typ(kid)
+    if typ != 2:
+        raise ValueError("%s is not the id of a table or column description" % kid)
+    if source is None:
+        title = f"Table {name}"
+    else:
+        title = f"Column {name} of table {source}"
+    return {'cat': extract_cat(kid),
+            'type': typ,
+            'source': source,
+            'source_name': name,
+            'title': title,
+            'defines': [name]}
+
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
 
@@ -493,8 +531,11 @@ class KnowlBackend(PostgresBase):
         return self._safe_execute(selecter, [-2, ID])
 
     def get_column_descriptions(self, table):
+        # The subselect is sorted in descending order by timestamp, so that
+        # DISTINCT ON keeps the current version of each description rather than
+        # the one it was created with.
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp DESC) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"columns.{table}.%", 2, 0])
         return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L}
 
@@ -517,8 +558,9 @@ class KnowlBackend(PostgresBase):
         self.delete(kwl)
 
     def get_table_description(self, table):
+        # As in get_column_descriptions, descending so that we get the current version.
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp DESC) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"tables.{table}", 2, 0])
         if L:
             return Knowl(L[0][0], data=dict(zip(fields, L[0])))
@@ -786,6 +828,14 @@ class KnowlBackend(PostgresBase):
         self.actually_rename(renamed_knowl, knowl.id)
 
     def actually_rename(self, knowl, new_name=None):
+        if knowl.type != 0:
+            # Renaming is driven by source and source_name, which only mark a
+            # rename in progress on a normal knowl.  Table and column
+            # descriptions store the table and column there instead, and have
+            # other metadata derived from their id.
+            if knowl.type == 2:
+                raise ValueError("Use rename_description_knowl to rename a table or column description.")
+            raise ValueError("Only normal knowls can be renamed.")
         if new_name is None:
             new_name = knowl.source_name
             if new_name is None:
@@ -810,6 +860,61 @@ class KnowlBackend(PostgresBase):
             if knowl.id in self.cached_titles:
                 self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
             knowl.id = new_name
+
+    def rename_description_knowl(self, knowl, new_name):
+        """
+        Move a table or column description knowl to a new id.
+
+        Unlike ``actually_rename``, which only has to change the id and the
+        category, this also rewrites the metadata that ``description_metadata``
+        derives from the id, so that the edit page, knowl search and the
+        description API all describe the table and column the knowl has moved
+        to.  Every version is updated, and none is removed, so the edit history
+        is preserved as it is by ``actually_rename``.
+
+        INPUT:
+
+        - ``knowl`` -- a table or column description knowl (type 2)
+        - ``new_name`` -- the id to move it to, of the same kind
+        """
+        if knowl.type != 2:
+            raise ValueError("Only table and column descriptions can be renamed this way.")
+        meta = description_metadata(new_name)
+        old_name = knowl.id
+        if old_name == new_name:
+            return
+        # Any row under the new id, even a deleted one, would have its history
+        # interleaved with this knowl's, so we refuse rather than merge.
+        selecter = SQL("SELECT 1 FROM kwl_knowls WHERE id = %s LIMIT 1")
+        if self._safe_execute(selecter, [new_name]):
+            raise ValueError("A knowl with id %s already exists." % new_name)
+        with DelayCommit(self):
+            updator = SQL("UPDATE kwl_knowls SET (id, cat, type, source, source_name, title, defines) = (%s, %s, %s, %s, %s, %s, %s) WHERE id = %s")
+            self._execute(updator, [new_name, meta['cat'], meta['type'], meta['source'], meta['source_name'], meta['title'], meta['defines'], old_name])
+            referrers = self.ids_referencing(old_name, old=True)
+            updator = SQL("UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
+            values = [r"""['"]\s*{0}\s*['"]""".format(old_name.replace('.', r'\.')),
+                      "'{0}'".format(new_name), 'g', old_name, new_name, referrers] # g means replace all
+            self._execute(updator, values)
+            # The keywords are built from the id, title and content, and all
+            # three have just changed: the id and title on every version of this
+            # knowl, and the content on every version of the knowls that
+            # referred to it (which include this one, if it refers to itself).
+            # Unlike a normal rename we redo them all rather than only the
+            # versions on display, so that a description of a column of the old
+            # table is not found by searching for the new one on either server.
+            selecter = SQL("SELECT id, timestamp, content, title FROM kwl_knowls WHERE id = ANY(%s)")
+            updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
+            for kid, timestamp, content, title in self._safe_execute(selecter, [[new_name] + referrers]):
+                self._execute(updator, [make_keywords(content, kid, title), kid, timestamp])
+            self.cached_titles.pop(old_name, None)
+            self.cached_titles[new_name] = meta['title']
+            knowl.id = new_name
+            knowl.category = meta['cat']
+            knowl.source = meta['source']
+            knowl.source_name = meta['source_name']
+            knowl.title = meta['title']
+            knowl.defines = meta['defines']
 
     def rename_hyphens(self, execute=False):
         selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE id LIKE %s")
