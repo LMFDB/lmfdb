@@ -36,8 +36,12 @@ def pretty_document(rec, sep=", ", id=True):
 def hidden_collection(c):
     """
     hide some collections from the main page (still available via direct requests)
+
+    Test tables follow two naming conventions (``test_something`` and
+    ``something_test``) and both are hidden, as are the auxiliary tables
+    whose names carry one of the suffixes below.
     """
-    return c.startswith("test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
+    return c.startswith("test") or c.endswith("_test") or c.endswith(".rand") or c.endswith(".stats") or c.endswith(".chunks") or c.endswith(".new") or c.endswith(".old")
 
 #def collection_indexed_keys(collection):
 #    """
@@ -46,15 +50,83 @@ def hidden_collection(c):
 #    """
 #    return set([t[0] for t in sum([val['key'] for name, val in collection.index_information().items() if name!='_id_'],[])])
 
+# Human-readable names for the datasets (the prefix before the first
+# underscore in a table name), so that the API home page can explain
+# what, e.g., hgcwa stands for.  Prefixes not listed here are displayed
+# without a description.
+dataset_names = {
+    "artin": "Artin representations",
+    "av": "Abelian varieties over finite fields",
+    "belyi": "Belyi maps",
+    "bmf": "Bianchi modular forms",
+    "char": "Dirichlet characters",
+    "cluster": "Cluster pictures",
+    "data": "Data uploads",
+    "ec": "Elliptic curves",
+    "fq": "Finite fields",
+    "g2c": "Genus 2 curves",
+    "gps": "Groups",
+    "halfmf": "Half-integral weight modular forms",
+    "hecke": "Hecke algebras",
+    "hgcwa": "Higher genus curves with automorphisms",
+    "hgm": "Hypergeometric motives",
+    "hmf": "Hilbert modular forms",
+    "hmsurfaces": "Hilbert modular surfaces",
+    "inv": "Database inventory",
+    "lat": "Integral lattices",
+    "lf": "$p$-adic fields",
+    "lfunc": "L-functions",
+    "lmfdb": "LMFDB internals",
+    "maass": "Maass forms",
+    "mf": "Classical modular forms",
+    "modcurve": "Modular curves",
+    "modlgal": "mod-$\\ell$ Galois representations",
+    "modlmf": "mod-$\\ell$ modular forms",
+    "nf": "Number fields",
+    "noncong": "Noncongruence modular forms",
+    "pg": "Postgres statistics",
+    "quaternion": "Quaternion algebras",
+    "shimcurve": "Shimura curves",
+    "shimura": "Shimura curves (old)",
+    "smf": "Siegel modular forms",
+    "test": "Test tables",
+    "weil": "Weil polynomials",
+}
+
+
 def get_database_info(show_hidden=False):
+    """
+    Returns a dictionary describing the tables available through the API,
+    grouped by dataset (the prefix before the first underscore).
+
+    Each value is a list of tuples ``(tablename, shortname, count, description)``,
+    sorted by table name.  This does not query the database once per table:
+    the row counts are in-memory totals loaded from meta_tables at startup,
+    and the descriptions come from a single bulk query of the knowl database.
+
+    INPUT:
+
+    - ``show_hidden`` -- whether to include the tables (test tables and some
+      auxiliary ones) that are hidden from the main API page by default
+    """
+    try:
+        from lmfdb.knowledge.knowl import knowldb
+        descriptions = knowldb.get_table_descriptions()
+    except Exception:
+        # The API index should still work if the knowl database is unavailable,
+        # but a failure here silently empties a column of the page, so log it
+        logger.exception("Could not load the table descriptions for the API index")
+        descriptions = {}
     info = defaultdict(list)
     for table in db.tablenames:
+        if hidden_collection(table) and not show_hidden:
+            continue
         i = table.find('_')
         if i == -1:
             raise RuntimeError
         database = table[:i]
         coll = getattr(db, table)
-        info[database].append((table, table[i+1:], coll.count()))
+        info[database].append((table, table[i+1:], coll.count(), descriptions.get(table, "")))
     return info
 
 @api_page.route("/options")
@@ -74,8 +146,25 @@ def options():
 @api_page.route("/")
 def index(show_hidden=False):
     databases = get_database_info(show_hidden)
-    title = "API"
-    return render_template("api.html", **locals())
+    ntables = sum(len(tables) for tables in databases.values())
+    nrows = sum(count for tables in databases.values() for _, _, count, _ in tables)
+    nhidden = sum(1 for table in db.tablenames if hidden_collection(table))
+    dataset_totals = {database: (len(tables), sum(count for _, _, count, _ in tables))
+                      for database, tables in databases.items()}
+    return render_template("api.html",
+                           title="API",
+                           databases=databases,
+                           dataset_names=dataset_names,
+                           dataset_totals=dataset_totals,
+                           ntables=ntables,
+                           nrows=nrows,
+                           nhidden=nhidden,
+                           show_hidden=show_hidden,
+                           learnmore=[
+                               ("Access options", url_for(".options")),
+                               ("Table statistics", url_for(".stats")),
+                               ("Auxiliary datasets", url_for("datasets"))],
+                           bread=[("API", " ")])
 
 @api_page.route("/all")
 def full_index():
