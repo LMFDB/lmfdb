@@ -35,10 +35,8 @@ from lmfdb.utils import (
     parse_ints,
     parse_bool,
     clean_input,
-    parse_regex_restricted,
     parse_bracketed_posints,
     parse_noop,
-    parse_group_label_or_order,
     dispZmat,
     dispcyclomat,
     search_wrap,
@@ -51,7 +49,7 @@ from lmfdb.utils import (
     redirect_no_cache,
     CodeSnippet,
 )
-from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors)
+from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors, SearchParsingError)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
@@ -1654,6 +1652,145 @@ def group_search(info, query={}):
     group_parse(info, query)
 
 
+def normalize_group_name(name):
+    # Best-effort normalization so that TeX-like names copied from the website
+    # (e.g. C_2^3, C_2\times C_4, S_{4}) resolve the same as their plain forms
+    # (C2^3, C2xC4, S4).
+    name = name.strip()
+    name = name.replace("\\times", "x").replace("\\rtimes", ":").replace("\\ltimes", ":")
+    name = name.replace("\\", "").replace("_", "").replace("{", "").replace("}", "")
+    return name.replace(" ", "")
+
+
+def name_to_label(name):
+    # Resolve a group name to the label of the group with that name, reusing the
+    # resolution paths of the jump box (see group_jump).  Returns the label as a
+    # string, None if the name is unrecognized or the group is not in the
+    # database, and raises SearchParsingError if the name does not determine a
+    # unique group.
+    from lmfdb.galois_groups.transitive_group import Tfinder
+    name = normalize_group_name(name)
+    if not name:
+        return None
+    # already a label
+    if abstract_group_label_regex.fullmatch(name):
+        return name
+    # transitive group, e.g. 8T3
+    if Tfinder.fullmatch(name):
+        return db.gps_transitive.lookup(name, "abstract_label")
+    # product of cyclic groups, e.g. C2^3, C2xC4
+    if CYCLIC_PRODUCT_RE.fullmatch(name):
+        invs = [n.strip() for n in name.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
+        primary = canonify_abelian_label(".".join(invs))
+        if [z for z in primary if z > 2**31 - 1]:
+            return None
+        return db.gps_groups.lucky({"abelian": True, "primary_abelian_invariants": primary}, "label")
+    # stored name, e.g. S4, D8, C2*A5, SL(2,7) (also accept x for the * separator)
+    candidates = {name, name.replace("x", "*").replace("X", "*")}
+    labels = list(db.gps_groups.search({"name": {"$in": list(candidates)}}, projection="label", limit=2))
+    if len(labels) == 1:
+        return labels[0]
+    if len(labels) >= 2:
+        raise SearchParsingError(f"The name {name} does not determine a unique group; please enter a label")
+    # special name from a family, e.g. GL(2,3), PSL(2,7)
+    def int_try(x):
+        return int(x) if x.isdigit() else x
+    for family in db.gps_families.search():
+        m = re.fullmatch(family["input"], name)
+        if m:
+            m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items())
+            lab = db.gps_special_names.lucky({"family": family["family"], "parameters": m_dict}, projection="label")
+            if lab:
+                return lab
+    return None
+
+
+CLOSING_DELIMITERS = {")": "(", "]": "[", "}": "{"}
+
+
+def split_group_search_terms(inp):
+    # Split a comma-separated list of labels, orders and group names, ignoring
+    # commas inside grouping delimiters so that a name like SL(2,7) survives as
+    # a single entry.  Unlike split_top_level_commas (used for jump boxes, where
+    # unbalanced input is passed on to the jump logic) malformed input is
+    # rejected here, since a search box can report the problem to the user.
+    stack = []
+    terms = []
+    current = []
+    for c in inp:
+        if c in CLOSING_DELIMITERS.values():
+            stack.append(c)
+        elif c in CLOSING_DELIMITERS:
+            if not stack or stack.pop() != CLOSING_DELIMITERS[c]:
+                raise SearchParsingError("Mismatched parentheses or brackets")
+        if c == "," and not stack:
+            terms.append("".join(current))
+            current = []
+        else:
+            current.append(c)
+    if stack:
+        raise SearchParsingError("Mismatched parentheses or brackets")
+    terms.append("".join(current))
+    if not all(terms):
+        raise SearchParsingError("Comma-separated list has an empty entry")
+    return terms
+
+
+def strip_unary_plus(z):
+    # We used to remove every + from the input (prep_plus), which accepted a
+    # unary + on an order or label but also mangled names like SO+(4,2).
+    return z[1:] if z.startswith("+") else z
+
+
+@search_parser(clean_info=True)
+def parse_group_label_or_order_or_name(inp, query, qfield, regex):
+    # Like parse_group_label_or_order, but comma-separated entries may also be
+    # group names (e.g. C6, S4, C2^3, SL(2,7)), resolved to labels.
+    orders = []
+    labels = []
+    for z in map(strip_unary_plus, split_group_search_terms(inp)):
+        if re.fullmatch(r'\d+', z):
+            orders.append({'$startswith': f'{z}.'})
+        elif regex.fullmatch(z):
+            labels.append(z)
+        else:
+            lab = name_to_label(z)
+            if lab is None:
+                raise SearchParsingError(f"{z} is not a valid group label, order or name")
+            labels.append(lab)
+    if labels:
+        if len(labels) == 1:
+            labelquery = labels[0]
+        else:
+            labelquery = {"$in": labels}
+    if orders:
+        if labels:
+            query[qfield] = {"$or": orders + [labelquery]}
+        else:
+            query[qfield] = {"$or": orders}
+    else:
+        query[qfield] = labelquery
+
+
+@search_parser
+def parse_group_label_or_name(inp, query, qfield, regex):
+    # Like parse_regex_restricted for group labels, but comma-separated entries
+    # may also be group names (e.g. C6, S4, C2^3, SL(2,7)), resolved to labels.
+    labels = []
+    for z in split_group_search_terms(inp):
+        if regex.fullmatch(z):
+            labels.append(z)
+        else:
+            lab = name_to_label(z)
+            if lab is None:
+                raise SearchParsingError(f"{z} is not a valid group label or name")
+            labels.append(lab)
+    if len(labels) == 1:
+        query[qfield] = labels[0]
+    else:
+        query[qfield] = {"$in": labels}
+
+
 def group_parse(info, query):
     parse_ints(info, query, "order", "order")
     parse_ints(info, query, "exponent", "exponent")
@@ -1696,22 +1833,22 @@ def group_parse(info, query):
     parse_bool(info, query, "rational", "is rational")
     parse_bool(info, query, "wreath_product", "is wreath product")
     parse_bracketed_posints(info, query, "exponents_of_order", "exponents_of_order")
-    parse_group_label_or_order(info, query, "center_label", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "aut_group", regex=abstract_group_label_regex)
-    parse_group_label_or_order(info, query, "commutator_label", regex=abstract_group_label_regex)
-    parse_group_label_or_order(
+    parse_group_label_or_order_or_name(info, query, "center_label", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "aut_group", regex=abstract_group_label_regex)
+    parse_group_label_or_order_or_name(info, query, "commutator_label", regex=abstract_group_label_regex)
+    parse_group_label_or_order_or_name(
         info, query, "central_quotient", regex=abstract_group_label_regex
     )
-    parse_group_label_or_order(
+    parse_group_label_or_order_or_name(
         info, query, "abelian_quotient", regex=abstract_group_label_regex
     )
     #parse_regex_restricted(
     #    info, query, "schur_multiplier", regex=abstract_group_label_regex
     #)
-    parse_regex_restricted(
+    parse_group_label_or_name(
         info, query, "frattini_label", regex=abstract_group_label_regex
     )
-    parse_regex_restricted(info, query, "outer_group", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "outer_group", regex=abstract_group_label_regex)
     parse_noop(info, query, "name")
     parse_ints(info, query, "order_factorization_type")
     parse_family(info, query, "family", qfield="label")
@@ -1807,9 +1944,9 @@ def subgroup_search(info, query={}):
         info, query, "hall", process=lambda x: ({"$gt": 1} if x else {"$lte": 1})
     )
     parse_bool(info, query, "nontrivproper", qfield="proper")
-    parse_regex_restricted(info, query, "subgroup", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "ambient", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "quotient", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "subgroup", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "ambient", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "quotient", regex=abstract_group_label_regex)
 
 def print_type(val):
     if val == 0:
@@ -1899,9 +2036,9 @@ def complex_char_search(info, query={}):
     parse_ints(info, query, "center_index")
     parse_ints(info, query, "kernel_order")
     #parse_bracketed_posints(info,query,"nt",split=False,keepbrackets=True, allow0=False)
-    parse_regex_restricted(info, query, "group", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "group", regex=abstract_group_label_regex)
 #    parse_regex_restricted(info, query, "center", regex=abstract_group_label_regex)
-    parse_regex_restricted(info, query, "image_isoclass", regex=abstract_group_label_regex)
+    parse_group_label_or_name(info, query, "image_isoclass", regex=abstract_group_label_regex)
 #    parse_regex_restricted(info, query, "kernel", regex=abstract_group_label_regex)
 
 
