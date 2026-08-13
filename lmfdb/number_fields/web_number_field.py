@@ -297,7 +297,7 @@ def field_pretty(label, wnf=None):
                 Ksub = QuadraticField(D, 'sqrtD')
                 sqrtD = Ksub.gen(0)
 
-                # Factorise defining polynomial for K over Q(sqrt(D))
+                # Factorize defining polynomial for K over Q(sqrt(D))
                 Rsub = PolynomialRing(Ksub, 'x')
                 relative_poly = Rsub(wnf.poly()).factor()[0][0]
 
@@ -1258,4 +1258,9 @@ class WebNumberField:
             self.code['field'][lang] = self.code['field'][lang] % f
         for lang in self.code['class_number_formula']:
             self.code['class_number_formula'][lang] = self.code['class_number_formula'][lang] % self.poly()
+
+        # If field is 1.1.1.1 (the rationals), then need to define K as a special case for Magma
+        for prop in ['field', 'class_number_formula']:
+            self.code[prop]['magma'] = self.code[prop]['magma'].replace("NumberField(x)", "RationalsAsNumberField()")
+
         self.code['show'] = {lang: '' for lang in self.code['prompt']}

@@ -60,7 +60,7 @@ mathematician, or the wikipedia article of someone famous.
 
 An object's home page should provide a wide variety of information about the
 object. Basic information, of interest to both experts and non-experts,
-should appear ear the top. More specialized information should appear
+should appear near the top. More specialized information should appear
 near the bottom.
 
 In the upper right corner of each home page should be the "properties" box,
@@ -209,7 +209,7 @@ Here are some conventions the LMFDB uses:
 
 1. If X is the URL of an object, then L/X is the URL of its standard
    L-function. According to the Langlands program, other L-functions
-   associated to X may be written on the the form L(s, X, rho). Examples include
+   associated to X may be written in the form L(s, X, rho). Examples include
 
    - L(s, f, sym^2)
    - L(s, f, spin)
@@ -246,7 +246,7 @@ Here are some conventions the LMFDB uses:
    Qsqrt5 as a search parameter for the coefficient field.
 
    Note that number fields like Qsqrt5 has an "official name" as well as a
-   nickname. Many discussions have occurred for what appropriate labels for
+   nickname. Many discussions have occurred about what appropriate labels for
    objects should be. Examine the structure of existing objects in the
    LMFDB very closely to maintain correct labels and relationships.
 
@@ -269,9 +269,9 @@ Here are some conventions the LMFDB uses:
    - `/Motive/Hypergeometric/Q/\<label>`
    - `/NumberField/\<label>`
 
-In practice, prior to deciding on a labelling scheme for new objects, one
+In practice, prior to deciding on a labeling scheme for new objects, one
 should talk to the current LMFDB developers (who now have a lot of experience
-in considering labelling schemes).
+in considering labeling schemes).
 
 
 Templates
@@ -347,7 +347,7 @@ Testing
   ```
   It takes a few minutes. If sage or some additional parts are missing it may fail,
   consider updating
-  (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted) )
+  (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted))
 
 - New blueprints and features should include a `test_<name>.py` file
   which runs tests on all functions.
@@ -382,7 +382,7 @@ field:
 
 ### Snippet testing
 
-Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es, excluding magma. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
+Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
 
 ```bash
 sage --python ./lmfdb/tests/generate_snippet_tests.py  -h
@@ -430,7 +430,7 @@ this puts you inside an interactive python debugger, where you can:
 - continue executing code using the `n` command.
 
 If you get lost, the command `bt` shows you exactly where you
-are, and `up` helps you to get on step up on the stack.
+are, and `up` helps you to get one step up on the stack.
 Of course, `help <command>` will tell you more.
 
 Git Tips
@@ -438,7 +438,7 @@ Git Tips
 
 Contributing to the LMFDB requires some familiarity with git, a popular version control system which LMFDB uses. The LMFDB code base is hosted on Github, which is a common hosting service owned by Microsoft.
 - [Official git tutorial](https://git-scm.com/docs/gittutorial) and [Github's git guide](https://github.com/git-guides)
-- Use a global .gitignore file to exclude temporary files like `.DS_store` or `main.py~`; [copy-paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore).
+- Use a global .gitignore file to exclude temporary files like `.DS_Store` or `main.py~`; [copy-paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore).
 - Configure your global .gitconfig for shortcuts or global configuration options; for example:
   ```
 [alias]

@@ -12,6 +12,15 @@ from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
 from psycodict.statstable import PostgresStatsTable
 
+try:
+    from psycodict.grants import LMFDBGrantPolicy
+except ImportError:
+    # psycodict before roed314/psycodict#137, which granted these privileges
+    # unconditionally and so has nothing to be told about them.  Delete this
+    # fallback once the psycodict requirement is pinned past that PR.
+    LMFDBGrantPolicy = None
+
+
 def overrides(super_class):
     def overrider(method):
         super_method = getattr(super_class, method.__name__)
@@ -424,8 +433,19 @@ class LMFDBSearchTable(PostgresSearchTable):
         check_space(grace_space_claimed[None], grace_default, "grace.mit.edu /var/lib/postgresql", ts_filter(grace_ops, None))
         check_space(grace_space_claimed["scratch"], grace_scratch, "grace.mit.edu /scratch", ts_filter(grace_ops, "scratch"))
 
-        # Get a connection to devmirror so that we can see which operations have been mirrored there
-        devmirror = PostgresDatabase(host="devmirror.lmfdb.xyz", user="lmfdb", password="lmfdb", port="5432")
+        # Get a connection to devmirror so that we can see which operations have been mirrored there.
+        # Every connection parameter is given explicitly, but we still pass along our own
+        # configuration: without it psycodict builds a default Configuration, which reads (and
+        # creates) a config.ini in the current directory, and in some versions parses sys.argv,
+        # so that an unrelated argument to the calling script aborts the upload.
+        devmirror = PostgresDatabase(
+            config=self._db.config,
+            host="devmirror.lmfdb.xyz",
+            user="lmfdb",
+            password="lmfdb",
+            port="5432",
+            dbname="lmfdb",
+        )
         dm_ops = list(devmirror._execute(op_cmd))
         # dm_finished is a set with logids that have finished mirroring; dm_space_claimed is a dictionary (by tablespace) of how much space the in-progress operations might need
         dm_finished, dm_space_claimed = get_space_needed(dm_ops)
@@ -472,6 +492,15 @@ class LMFDBDatabase(PostgresDatabase):
             config = ConfigWrapper(config)
         # else: config is already a Configuration object, use it as-is
 
+        if LMFDBGrantPolicy is not None:
+            # psycodict's default policy grants nothing, so a table it creates
+            # -- or swaps in during a reload -- would be readable only by its
+            # owner.  This policy is what psycodict used to do: SELECT to lmfdb
+            # and webserver, INSERT to webserver on counts and stats.  It warns
+            # rather than raises when a role is missing, since a development
+            # database usually has neither; a deployment that must have both
+            # can pass LMFDBGrantPolicy(missing_role="error") instead.
+            kwargs.setdefault("grant_policy", LMFDBGrantPolicy())
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
         self.__editor = config.logging_options.get("editor", "")

@@ -120,6 +120,9 @@ def create_sage_gap_assignment(genslist):
     # For Sage (using the GAP interface)
     return " ".join(f"{var_name(j)} = G.{i};" for j, i in enumerate(genslist))
 
+def create_oscar_gap_assignment(genslist):
+    # For Oscar (using the GAP interface)
+    return " ".join(f"{var_name(j)} = gen(G, {i});" for j, i in enumerate(genslist))
 
 def create_magma_assignment(G):
     used = [u - 1 for u in sorted(G.gens_used)]
@@ -2351,7 +2354,10 @@ class WebAbstractGroup(WebObj):
             desc = "Groups of " + display_knowl("group.lie_type", "Lie type")
             reps = ", ".join(fr"$\{rep['family']}({rep['d']},{rep['q']})$" for rep in rdata)
             code_cmd = " ".join([self.create_short_snippet((rep['family'], rep['d'], rep['q'])) for rep in rdata])
-            return f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr><tr><td colspan="6">{code_cmd}</td></tr>'
+            head = f'<tr><td>{desc}:</td><td colspan="5">{reps}</td></tr>'
+            if not code_cmd.strip():
+                return head
+            return head + f'<tr><td colspan="6">{code_cmd}</td></tr>'
         elif rep_type == "PC":
             pres = self.presentation()
             if not skip_head:  #add copy button in certain cases
@@ -2511,6 +2517,8 @@ class WebAbstractGroup(WebObj):
 
                 # Display code snippets for transitive group representations
                 code_cmd = " ".join([self.create_short_snippet(trans) for trans in self.transitive_friends])
+                if not code_cmd.strip():
+                    return rep_content
                 return rep_content + f'<tr><td colspan="6">{code_cmd}</td></tr>'
 
             elif rtype == "semidirect":
@@ -2857,8 +2865,11 @@ class WebAbstractGroup(WebObj):
 
     # Used for displaying code snippets across multiple columns in a table
     def create_long_snippet(self,item):
+        code = self.code_snippets()
+        if not code or not code.get(item):
+            return ""
         col_span_val = '"6"'
-        snippet = CodeSnippet(self.code_snippets(), item,
+        snippet = CodeSnippet(code, item,
                               pre=f"<tr> <td colspan={col_span_val}>",
                               post="</td></tr>")
         return snippet.place_code()
@@ -2866,7 +2877,10 @@ class WebAbstractGroup(WebObj):
     # Used for displaying (short) code snippets in the constructions table
     # e.g. for Lie type representations or transitive groups
     def create_short_snippet(self,item):
-        snippet = CodeSnippet(self.code_snippets(), item)
+        code = self.code_snippets()
+        if not code or not code.get(item):
+            return ""
+        snippet = CodeSnippet(code, item)
         return snippet.place_code()
 
     @lazy_attribute
@@ -3039,7 +3053,7 @@ class WebAbstractGroup(WebObj):
             families['sage'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSU','Orth','Unitary','PU']
             families['oscar'] = ['GL','SL','Sp','SO','SU','Orth','Unitary']
 
-            # Prioritise displaying the first Lie type representation which is implemented in the language
+            # Prioritize displaying the first Lie type representation which is implemented in the language
             for lie_rep in self.lie_representations:
                 nLie, qLie = ZZ(lie_rep['d']), ZZ(lie_rep['q'])
                 lie_rep_key = (lie_rep['family'], nLie, qLie)
@@ -3145,9 +3159,10 @@ class WebAbstractGroup(WebObj):
             gap_assign = create_gap_assignment(self.representations["PC"]["gens"])
             magma_assign = create_magma_assignment(self)
             sage_gap_assign = create_sage_gap_assignment(self.representations["PC"]["gens"])
+            oscar_assign = create_oscar_gap_assignment(self.representations["PC"]["gens"])
         else:
             code['presentation'] = {}
-            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign = None, None, None, None, None, None, None, None
+            gens, pccodelist, pccode, ordgp, used_gens, gap_assign, magma_assign, sage_gap_assign, oscar_assign = None, None, None, None, None, None, None, None, None
         if "Perm" in self.representations:
             rdata = self.representations["Perm"]
             perms = ", ".join(self.decode_as_perm(g, as_str=True) for g in rdata["gens"])
@@ -3181,7 +3196,7 @@ class WebAbstractGroup(WebObj):
             LZN = [self.decode_as_matrix(g, "GLZN", ListForm=True) for g in self.representations["GLZN"]["gens"]]
             LZNsplit = "[" + ",".join(split_matrix_list_ZN(mat, nZN, N) for mat in LZN) + "]"
             LZNsage = "["+", ".join(["MS("+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
-            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1]"+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
+            LZNoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(N)+")[1], "+str(split_matrix_list(mat,nZN))+")" for mat in LZN])+"]"
         else:
             nZN, N, LZN, LZNsplit, LZNsage, LZNoscar = None, None, None, None, None, None
         if "GLZq" in self.representations:
@@ -3190,7 +3205,7 @@ class WebAbstractGroup(WebObj):
             LZq = [self.decode_as_matrix(g, "GLZq", ListForm=True) for g in self.representations["GLZq"]["gens"]]
             LZqsplit = "[" + ",".join([split_matrix_list_ZN(mat, nZq, Zq) for mat in LZq]) + "]"
             LZqsage = "["+", ".join(["MS("+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
-            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1]"+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
+            LZqoscar = "["+", ".join(["matrix(residue_ring(ZZ, "+str(Zq)+")[1], "+str(split_matrix_list(mat, nZq))+")" for mat in LZq])+"]"
         else:
             nZq, Zq, LZq, LZqsplit, LZqsage, LZqoscar, = None, None, None, None, None, None
         # add below for GLFq implementation
@@ -3206,7 +3221,7 @@ class WebAbstractGroup(WebObj):
             nFq, Fq, LFq, LFqsplit, LFqsage, LFqoscar = None, None, None, None, None, None
 
         data = {'gens' : gens, 'pccodelist': pccodelist, 'pccode': pccode,
-                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign,
+                'ordgp': ordgp, 'used_gens': used_gens, 'gap_assign': gap_assign, 'sage_gap_assign': sage_gap_assign, 'oscar_assign': oscar_assign,
                 'magma_assign': magma_assign, 'deg': deg, 'perms' : perms, 'perms_sage' : perms_sage,
                 'nZ': nZ, 'nFp': nFp, 'nZN': nZN, 'nZq': nZq, 'nFq': nFq,
                 'Fp': Fp, 'N': N, 'Zq': Zq, 'Fq': Fq,
@@ -3279,6 +3294,11 @@ class WebAbstractGroup(WebObj):
             if prop not in ['frontmatter', 'snippet_test']:
                 for lang in code[prop]:
                     code[prop][lang] = code[prop][lang].format(**data)
+
+        # Special fix for the trivial group 1.1  (fix Magma's PCGroup code snippet)
+        if self.order == 1:
+            code['presentation']['magma'] = code['presentation']['magma'].replace("  := Explode([]); AssignNames(~G, []);", "")
+
         return code
 
     # The following attributes are used in create_boolean_string

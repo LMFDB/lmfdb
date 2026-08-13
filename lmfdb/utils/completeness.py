@@ -12,14 +12,25 @@ EXAMPLES::
 """
 
 
+import logging
+import traceback
 from collections import defaultdict
 from sage.all import (
     factor, prod, factorial, is_prime, prime_range, ZZ, NN, RR,
     ceil, floor, RealSet, infinity, cached_function, RLF, log, sqrt)
 
+# We deliberately use the standard library logger rather than lmfdb.logger, since this
+# module is also used outside the website (e.g. from lmfdb-lite and lmfdb_search).
+# Records still propagate to the root logger that lmfdb.logger configures.
+logger = logging.getLogger(__name__)
+
 # This dictionary is filled in the __init__ method of CompletenessCheckers based on the table name;
 # specific CompletenessCheckers are created at the bottom of this file.
 lookup = {}
+
+# Caveat reported when the completeness machinery itself fails.  Callers display caveats
+# as "The completeness " + caveat, so this is phrased to fit that sentence.
+FAILED_CHECK_CAVEAT = "check did not finish, so the results may or may not be complete"
 
 
 def results_complete(table, query, db, search_array=None):
@@ -42,15 +53,35 @@ def results_complete(table, query, db, search_array=None):
 
       False if there may be objects missing (depending on the query, these objects may or may not exist)
 
-      None if the table has not implemented completeness guarantees
+      None if the table has not implemented completeness guarantees, or if the completeness
+      check could not be carried out (see below)
 
     - ``reason`` -- A string, giving a reason why results are complete.  Can be grammatically appended to "The LMFDB contains all".   ``None`` if not ``complete``.
 
     - ``caveat`` -- A string, giving any caveats (like dependence on GRH or unproven modularity theorems).  May be ``None``.
+
+    Completeness information is advisory: it annotates search results that have already been
+    computed.  A failure inside the checking machinery must therefore never propagate to the
+    caller and turn a working search into an error.  If the check raises, we log the traceback
+    and report ``(None, None, FAILED_CHECK_CAVEAT)``, i.e. "completeness unknown" together with
+    a caveat that callers can show to the user.  We never report ``True`` in that case.
     """
-    if table in lookup:
+    if table not in lookup:
+        return None, None, None
+    try:
         return lookup[table].check(query, db, search_array)
-    return None, None, None
+    except Exception:
+        # We intentionally catch broadly.  The check runs database queries (which can hit the
+        # statement timeout, as the null-count queries do when a column is unindexed), indexes
+        # into ``db`` (KeyError for a missing table), asserts invariants about the shape of the
+        # query (AssertionError), and does Sage arithmetic on user-supplied bounds (ValueError,
+        # TypeError, ...).  Enumerating those classes would leave the 500 we are fixing in place
+        # for whichever one we forgot, so anything short of a KeyboardInterrupt/SystemExit is
+        # downgraded to "unknown".
+        logger.warning(
+            "Completeness check failed for table %s with query %s\n%s",
+            table, query, traceback.format_exc())
+        return None, None, FAILED_CHECK_CAVEAT
 
 
 #################################
@@ -161,6 +192,31 @@ def to_rset(query):
         else:
             raise ValueError(f"Unsupported key {k}")
     return ans
+
+
+# Sentinel distinguishing an absent query key from an explicit null predicate:
+# query.get("rd") returns None both for {} and for {"rd": None}, but the former is
+# "no constraint" while the latter is the SQL predicate "rd IS NULL".
+_MISSING = object()
+
+
+def _contains_none(value):
+    """
+    Whether ``None`` appears anywhere in a psycodict query value's expression tree.
+
+    In psycodict queries ``None`` carries SQL-null semantics (``{"$ne": None}`` means
+    ``IS NOT NULL``), which the real-number model of ``to_rset`` cannot represent:
+    it reads ``None`` as the whole real line, so e.g. ``{"$ne": None}`` collapses to
+    the empty set.  Callers doing numeric reasoning should treat any value containing
+    ``None`` as outside the model.
+    """
+    if value is None:
+        return True
+    if isinstance(value, dict):
+        return any(_contains_none(v) for v in value.values())
+    if isinstance(value, (list, tuple, set)):
+        return any(_contains_none(v) for v in value)
+    return False
 
 
 def interval_sum(I, J):
@@ -591,8 +647,21 @@ class CompletenessChecker:
       The check returns true when any test passes.
 
       If all checkers have length 2 (just cols and test) will pass the full query dictionary to the __call__ method (after parsing through $or, $and, $not).  Otherwise, will extract the values of the columns before passing into __call__
+
+    - ``precheck`` -- an optional function taking a standardized single-branch query
+      dictionary (i.e. after the ``$or``/``$and`` decomposition performed by ``check``).
+      It runs before any database access: no table lookup, null-count query or
+      ``exists`` query has been issued when it is called, and it must not access
+      ``db`` itself.  It returns ``None`` to leave the query to the normal machinery,
+      and may return a completeness triple ``(complete, reason, caveat)`` only when
+      the conclusion is independent of database contents, missing values and indexes.
+      In practice the only intended positive result is an intrinsic contradiction:
+      the query describes no possible mathematical object, so the (empty) results
+      are complete no matter what is stored.  Ordinary coverage-based completeness
+      guarantees must stay in ``checkers``, since they can depend on all relevant
+      columns having been computed.
     """
-    def __init__(self, table, checkers, fill=[], null_override=[]):
+    def __init__(self, table, checkers, fill=[], null_override=[], precheck=None):
         self.table = table
         lookup[table] = self
         self.extract = not all(len(check) == 2 for check in checkers)
@@ -622,6 +691,7 @@ class CompletenessChecker:
         self.checkers = checkers
         self.fill = fill
         self.null_override = null_override
+        self.precheck = precheck
 
     def _standardize(self, query):
         """
@@ -689,6 +759,13 @@ class CompletenessChecker:
                     return ok, reason, caveat
             return False, None, None
         # Ignore $not: it just imposes additional constraints, and if we're complete without it then we're complete.  Note that it is accounted for in _columns_searched
+        # Intrinsic contradictions (queries describing no possible mathematical object)
+        # can be recognized without touching the database, so we test for them before
+        # the null-count machinery below issues its (potentially expensive) queries.
+        if self.precheck is not None:
+            result = self.precheck(query)
+            if result is not None:
+                return result
         table = db[self.table]
         nulls = table.stats.null_counts()
         if nulls:
@@ -774,7 +851,11 @@ class PrimeBound(Bound):
     """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
-        return all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
+        # The bound is checked first, both because a value outside it is not certified
+        # complete however prime it is, and because it rules out large ranges without
+        # iterating over them.  ``is_finite`` is still needed: the bounds are typically
+        # unbounded below, so passing it does not make the set enumerable.
+        return super().__call__(db, Ds) and all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
 
 
 class Smooth(ColTest):
@@ -1256,6 +1337,11 @@ class BianchiBound(ColTest):
 #### Number fields ####
 
 class NFBound(ColTest):
+    # Reason reported when the root discriminant range is incompatible with the
+    # Galois root discriminant range; shared by ``precheck`` and ``_one_n`` so
+    # that the two code paths cannot drift apart.
+    RD_GRD_INCOMPATIBLE = "incompatible conditions: root discriminant and Galois root discriminant"
+
     def __init__(self):
         # maxD[n][r2] is an integer M so that we have completeness in signature [n-2*r2, r2] as long as the absolute discriminant is at most M.
         self._maxD = [
@@ -1267,7 +1353,9 @@ class NFBound(ColTest):
             [10**8, 12*10**6, 12*10**6], # n=5
             [28**6, 10**7, 10**7, 10**7], # n=6
             [214942297, 2*10**8, 2*10**8, 2*10**8], # n=7
-            [17**8, 79259702, 20829049, 5726300, 1656109], # n=8
+            # r2=3,4 come from Driver doing Hunter searches for
+            # primitive fields plus older searches for non-primative
+            [17**8, 79259702, 20829049, 2*10**7, 2*10**7], # n=8
             [15**9, 27316369, 27316369, 146723910, 39657561], # n=9
             [190612177]*6, # n=10
             [5154074557]*6, # n=11
@@ -1476,9 +1564,11 @@ class NFBound(ColTest):
         # Sets of transitive group IDs with specified Galois group or subfield structure
         quartic_2_group = (1,2,3)
         octic_2_group = (1,2,3,4,5,6,7,8,9,10,11,15,16,17,18,19,20,21,22,26,27,28,29,30,31,35)
-        octwith4 = (1,2,4,6,7,8,10,12,13,14,16,17,19,20,21,23,27,28,30,38,40)
+        # Have a quartic subfield
         octic_with_quartic = tup(1,25)+tup(26,33)+(35,38,39,40,44)
+        # Have a quadratic subfield but no quartic subfield
         octic_type_2 = (33,34,41,42,45,46,47)
+        octic_imprim = tuple(set(octic_type_2).union(set(octic_with_quartic)))
         decic_with_quint = (1,2,3,4,5,8,11,12,14,15,16,22,23,24,25,29,34,36,37,38,39)
         decic_with_quad = (1,2,3,4,5,6,9,10,11,12,17,18,19,20,21,22,27,28,33,40,41,42,43)
 
@@ -1676,9 +1766,9 @@ class NFBound(ColTest):
                 11: [(42, (1,))],
                 12: [(42, (1,))],
                 13: [(42, (1,))]},
-            8: {1: [(2500, octic_2_group), (230, octwith4), (228, (37,)), (200, (25,)), (8, octic_with_quartic), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
-                2: [(250, octic_2_group), (8, octic_with_quartic), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
-                3: [(8, octic_with_quartic), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
+            8: {1: [(2500, octic_2_group), (230, octic_imprim), (228, (37,)), (200, (25,)), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
+                2: [(250, octic_2_group), (30, octic_imprim), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
+                3: [(8, octic_imprim), (8, (25,36)), (6, (33,34,41,42,45,46,47))],
                 4: [(8, (25,36))]},
             9: {1: [(6, tup(1,19)+tup(20,26)+(28,29,31)), (6, (19,26,30))],
                 2: [(6, tup(1,19)+tup(20,26)+(28,29,31)), (6, (19,26,30))],
@@ -2328,6 +2418,42 @@ class NFBound(ColTest):
         if S is not None:
             return tuple(sorted(S))
 
+    def precheck(self, query):
+        """
+        Detect queries that are intrinsically contradictory, without access to the database.
+
+        This is registered as the ``precheck`` hook of the nf_fields CompletenessChecker,
+        so it runs before the null-count machinery issues any database query.  It returns
+        a completeness triple for queries that describe no possible number field, and
+        ``None`` for anything it cannot decide, leaving the query to the normal machinery
+        (the null-data checks followed by ``__call__``).
+
+        Currently the only contradiction detected here is a root discriminant range lying
+        strictly above the Galois root discriminant range: the Galois closure contains the
+        field, so rd <= grd for every number field.  That relation does not depend on the
+        degree, so no degree constraint is required.
+
+        Constraints involving SQL-null semantics (``None`` anywhere in the value, as in
+        ``{"$ne": None}`` for ``IS NOT NULL``) are not sets of real numbers, so they
+        bypass this numeric precheck entirely rather than being misread as empty ranges.
+        """
+        # None in a predicate means SQL null, which the real-number model cannot
+        # represent (an omitted key, by contrast, is genuinely unconstrained).
+        for key in ("rd", "grd"):
+            value = query.get(key, _MISSING)
+            if value is not _MISSING and _contains_none(value):
+                return None
+        try:
+            rd = NumberSet(query.get("rd"))
+            grd = NumberSet(query.get("grd"))
+        except (ValueError, TypeError):
+            # A constraint NumberSet does not model (e.g. an unsupported operator);
+            # leave the query to the normal machinery.
+            return None
+        if grd.restricted() and not rd.pow_cap(grd, 1):
+            return True, self.display_reason({self.RD_GRD_INCOMPATIBLE}), None
+        return None
+
     def _initial(self, db, query, reasons):
         """
         Attempt to prove completeness without splitting on degree,
@@ -2372,7 +2498,7 @@ class NFBound(ColTest):
         r2, D, sign = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign")
         rd, grd, reg = NumberSet(query.get("rd")), NumberSet(query.get("grd")), NumberSet(query.get("regulator"))
 
-        # Initialise list of r2, of possible signatures (n-2*r2, r2)
+        # Initialize list of r2, of possible signatures (n-2*r2, r2)
         r2opts = list(r2.intersection(IntegerSet([0, n//2])))
         if sign == 1:
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 0]
@@ -2406,9 +2532,12 @@ class NFBound(ColTest):
 
         ## Completeness 1: degree, signature, discriminant, regulator ##
         if grd.restricted():
+            # The empty intersection is also caught (before any database access) by
+            # precheck; this narrowing of rd feeds the completeness bounds below, so
+            # it still has work to do for compatible ranges.
             rd = rd.pow_cap(grd, 1)
             if not rd:
-                reasons.add("incompatible conditions: root discriminant and Galois root discriminant")
+                reasons.add(self.RD_GRD_INCOMPATIBLE)
                 return True, None
         if rd.restricted():
             D = D.pow_cap(rd, n)
@@ -2451,7 +2580,7 @@ class NFBound(ColTest):
                 if ratio is not None:
                     grd = grd.pow_cap(rd, ratio)
                     if not grd:
-                        reasons.add("incompatible conditions: root discriminant and Galois root discriminant")
+                        reasons.add(self.RD_GRD_INCOMPATIBLE)
                         return True, None
             if grd.restricted():
                 self.clear_grd(n, grd, galt, reasons)
@@ -2866,7 +2995,10 @@ CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at
 # We handle number field completeness by a single monolithic class (rather than having individual ColTests).
 # This is because many constraints interact: e.g. a discriminant range implies a root discriminant bound,
 # which (given a Galois group) implies a Galois root discriminant bound, etc. NFBound() handles everything internally.
-CompletenessChecker("nf_fields", [((), NFBound())])
+# The precheck recognizes intrinsically impossible rd/grd ranges before the null-count
+# machinery issues its (potentially expensive) database queries.
+nf_bound = NFBound()
+CompletenessChecker("nf_fields", [((), nf_bound)], precheck=nf_bound.precheck)
 
 
 CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[MulFiller("n", "e", "f")])

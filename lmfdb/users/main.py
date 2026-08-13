@@ -247,7 +247,7 @@ def register_token(token):
     else: # must be post
         name = request.form['name']
         if not allowed_usernames.match(name):
-            flash_error("""Oops, usename '%s' is not allowed.
+            flash_error("""Oops, username '%s' is not allowed.
                   It must consist of lower/uppercase characters,
                   no spaces, numbers or '.', '_' and '-'.""", name)
             return flask.redirect(url_for(".register_new"))

@@ -2001,8 +2001,8 @@ def generic_completeness():
 
 @l_function_page.route("/Reliability")
 def generic_reliability():
-    t = 'Reliabililty of L-function data'
-    bread = get_bread(breads=[('Reliabillity', ' ')])
+    t = 'Reliability of L-function data'
+    bread = get_bread(breads=[('Reliability', ' ')])
     return render_template("single.html", kid='rcs.rigor.lfunction', title=t, bread=bread)
 
 @l_function_page.route("/<path:prepath>/Source")

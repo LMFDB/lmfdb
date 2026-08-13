@@ -238,7 +238,7 @@ class Wrapper:
             one_per = [one_per]
         return query, sort, table, title, err_title, template, one_per
 
-    def query_cancelled_error(
+    def query_canceled_error(
         self, info, query, err, err_title, template, template_kwds
     ):
         ctx = ctx_proc_userdata()
@@ -421,7 +421,7 @@ class SearchWrapper(Wrapper):
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -453,8 +453,8 @@ class SearchWrapper(Wrapper):
             info["results"] = res
             # Display warning message if user searched on column(s) with null values
             if query:
-                nulls = table.stats.null_counts()
                 try:
+                    nulls = table.stats.null_counts()
                     complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
                     if complete:
                         flash_success("The results below are complete, since the LMFDB contains all " + msg)
@@ -487,10 +487,15 @@ class SearchWrapper(Wrapper):
                         flash_info("The completeness " + caveat)
                 except Exception as err:
                     import traceback
-                    msg = f"There was an error in the completeness checking code, so the search results below may or may not be complete: \n{err}"
-                    flash_info(msg)
-                    msg += "\n" + traceback.format_exc()
-                    app.logger.warning(msg)
+                    # ``results_complete`` no longer raises, but the null-count display above
+                    # also queries the database, so we keep this net.  Note that the error is
+                    # passed as an argument rather than interpolated: flash_info applies %
+                    # formatting to its first argument, so a % in the error text would raise
+                    # from inside this handler and produce the very 500 we are avoiding.
+                    flash_info("There was an error in the completeness checking code, so the search results below may or may not be complete: %s", err)
+                    app.logger.warning(
+                        "There was an error in the completeness checking code: %s\n%s",
+                        err, traceback.format_exc())
             return render_template(template, info=info, title=title, **template_kwds)
 
     def _diagram_search(self, info):
@@ -639,7 +644,7 @@ class SearchWrapper(Wrapper):
                 one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -779,7 +784,7 @@ class CountWrapper(Wrapper):
                         tuple(key[i] for i in perm): val for (key, val) in res.items()
                     }
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         else:
@@ -864,7 +869,7 @@ class EmbedWrapper(Wrapper):
                 one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
