@@ -389,8 +389,16 @@ class WebBelyiGalmap():
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
 
         # Dessin images (one per embedding), looked up per galmap orbit so
-        # that different orbits within the same passport don't share images
+        # that different orbits within the same passport don't share images.
+        # An empty list means no images are available for this galmap; a
+        # nonempty list must have exactly one SVG per embedding, since the
+        # template indexes into it by embedding position with no fallback.
         data['dessin_svgs'] = get_belyi_images(galmap['label'])
+        if data['dessin_svgs']:
+            assert len(data['dessin_svgs']) == len(data['embeddings_and_triples']), (
+                "dessin image count ({}) does not match embedding count ({}) for {}".format(
+                    len(data['dessin_svgs']), len(data['embeddings_and_triples']), galmap['label'])
+            )
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},
