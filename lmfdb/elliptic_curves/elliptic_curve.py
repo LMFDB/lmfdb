@@ -654,7 +654,7 @@ def elliptic_curve_search(info, query):
                     info['galois_image'] = ','.join(modell_labels + elladic_labels)
                 query['modell_images'] = { '$contains': modell_labels }
 
-    # The button which used to be labelled Optimal only no/yes"
+    # The button which used to be labeled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
     # one curve in each class, currently choosing the curve with

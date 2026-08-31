@@ -188,7 +188,7 @@ function show_eqns(invstyle) {
     <tr><td>{{ KNOWL('lfunction.leading_coeff', 'Leading coefficient') }}:</td>
         <td>{% if data.leading_coefficient == 'unknown' %} unknown {% else %} \( {{ data.leading_coeff }} \) {% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.analytic_sha', 'Analytic order of &#1064;') }}:</td>
-        <td>{% if data.analytic_sha != 0 %} \( {{data.analytic_sha}} \) &nbsp;&nbsp;(rounded) {% else %} unknown {% endif %}</td></tr>
+        <td>{% if data.analytic_sha != 0 %} \( {{data.analytic_sha}} \) &nbsp;&nbsp;{% if data.sha_proved %}(verified) {% else %}(rounded){% endif %} {% else %}unknown{% endif %}</td></tr>
     <tr><td>{{ KNOWL('g2c.has_square_sha', 'Order of &#1064;') }}:</td><td>{{data.has_square_sha}}</td></tr>
 </table>
 </p>
