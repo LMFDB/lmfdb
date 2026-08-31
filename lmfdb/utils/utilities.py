@@ -605,7 +605,7 @@ def format_percentage(num, denom):
 
 def signtocolour(sign):
     """
-    Assigns an rgb string colour to a complex number based on its argument.
+    Assigns an rgb string color to a complex number based on its argument.
     """
     argument = cmath.phase(CC(str(sign)))
     r = int(255.0 * (math.cos((1.0 * math.pi / 3.0) - (argument / 2.0))) ** 2)

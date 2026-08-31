@@ -29,6 +29,22 @@ class LocalFieldTest(LmfdbTest):
         assert 'x^{2} + 7 x + 2' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
         assert 'x^{3} + 44 t + 99' in L.get_data(as_text=True) # bad (not robust) test, but it's the best i was able to find...
 
+    def test_nicknames(self):
+        # Unramified extensions are nicknamed Q_p(zeta_{p^f-1}).  Issue #6201.
+        page = self.tc.get('/padicField/2.3.1.0a1.1', follow_redirects=True).get_data(as_text=True)
+        assert r'\Q_{2}(\zeta_{7})' in page
+        # Tamely ramified with f = 1: Q_p(root(p*r)) (matches the quadratic sqrt(p*u) form).
+        page = self.tc.get('/padicField/7.1.3.2a1.2', follow_redirects=True).get_data(as_text=True)
+        assert r'\sqrt[3]{7 \cdot 2}' in page
+        # Tamely ramified with f > 1: Q_p(zeta_{p^f-1}, root(zeta^k p)).
+        page = self.tc.get('/padicField/5.2.3.4a1.1', follow_redirects=True).get_data(as_text=True)
+        assert r'\zeta_{24}' in page and r'\sqrt[3]{\zeta_{24} \cdot 5}' in page
+        page = self.tc.get('/padicField/2.2.3.4a1.2', follow_redirects=True).get_data(as_text=True)
+        assert r'\Q_{2}(\zeta_{3}, \sqrt[3]{2})' in page
+        # Wildly ramified fields have no nickname: the title falls back to the label.
+        page = self.tc.get('/padicField/2.1.4.6a1.1', follow_redirects=True).get_data(as_text=True)
+        assert r'$p$-adic field 2.1.4.6a1.1' in page
+
     def test_global_splitting_models(self):
         # The first one will have to change if we compute a GSM for it
         L = self.tc.get('/padicField/163.1.8.7a1.2')
