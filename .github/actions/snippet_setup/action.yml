@@ -83,19 +83,27 @@ runs:
 
   - name: Install the degree 32 transitive groups
     shell: bash -l {0}
+    # Sage and GAP read the conda copy of transgrp; Oscar reads its own copy,
+    # shipped as a Julia artifact by GAP_lib_jll. Both need the dat32 symlink,
+    # so this step must run after both conda and Oscar are installed.
     run: |
-      shopt -s nullglob
-      dirs=("$CONDA_PREFIX"/{lib,share}/gap/pkg/transgrp*/)
-      transgrp="${dirs[0]:-}"
-      echo "transgrp dir: $transgrp"
-      test -n "$transgrp" && test -d "$transgrp"
+      set -e
       if [ ! -d ~/.cache/transgrp/dat32 ]; then
         mkdir -p ~/.cache/transgrp /tmp/trans32
         curl -sSL https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz \
           | tar xz -C /tmp/trans32
         mv "$(find /tmp/trans32 -type d -name dat32 | head -n1)" ~/.cache/transgrp/dat32
       fi
-      ln -sfn ~/.cache/transgrp/dat32 "$transgrp/dat32"
+      shopt -s nullglob
+      dirs=("$CONDA_PREFIX"/{lib,share}/gap/pkg/transgrp*/)
+      dirs+=("$(julia -e 'using GAP
+        print(String(GAP.Globals.GAPInfo.PackagesInfo.transgrp[1].InstallationPath))')")
+      for d in "${dirs[@]}"; do
+        echo "transgrp dir: $d"
+        test -d "$d"
+        chmod u+w "$d"    # Julia marks artifact directories read-only
+        ln -sfn ~/.cache/transgrp/dat32 "$d/dat32"
+      done
       ls ~/.cache/transgrp/dat32 | head -n 3 || true
  
   - name: Check the optional CAS packages are available
@@ -106,5 +114,5 @@ runs:
       gap -b -q -T -r -A -c 'Print("hap: ", LoadPackage("hap"), "\n");
         Print("degree 32: ", TransitiveGroupsAvailable(32), "\n"); QUIT;'
       sage -c 'print("degree 32 via libgap:", libgap.TransitiveGroupsAvailable(32))'
+      julia -e 'using Oscar; println("degree 32 via Oscar: ", has_number_of_transitive_groups(32))'
       echo 'polgalois(x^8-x-1)' | gp -q
- 
