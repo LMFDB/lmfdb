@@ -12,6 +12,7 @@ channels:
 dependencies:
   - python
   - sage=10.7
+  - gap
   - tox
   - flask
   - werkzeug
