@@ -317,7 +317,9 @@ def render_sample_page(family, sam, args, bread):
         if modulus:
             try:
                 O = sam.field().ring_of_integers()
-                m = O.ideal([O(str(b)) for b in modulus.split(',')])
+                # For Sage version >= 10.5, must use fractional_ideal rather than ideal
+                # See https://github.com/sagemath/sage/pull/38671
+                m = O.fractional_ideal([O(str(b)) for b in modulus.split(',')])
             except Exception:
                 info['error'] = True
                 flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)
