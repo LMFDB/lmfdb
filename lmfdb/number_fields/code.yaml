@@ -194,6 +194,6 @@ snippet_test:
   testQi: 
     label: 2.0.4.1
     url: NumberField/2.0.4.1/download/{lang}
-  test_degree8
+  test_degree8:
     label: 8.0.1257728.1
     url: NumberField/8.0.1257728.1/download/{lang}
