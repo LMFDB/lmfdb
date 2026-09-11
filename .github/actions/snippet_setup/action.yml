@@ -97,7 +97,8 @@ runs:
       shopt -s nullglob
       dirs=("$CONDA_PREFIX"/{lib,share}/gap/pkg/transgrp*/)
       dirs+=("$(julia -e 'using GAP
-        print(String(GAP.Globals.GAPInfo.PackagesInfo.transgrp[1].InstallationPath))')")
+        print(String(GAP.Globals.GAPInfo.PackagesInfo.transgrp[1].InstallationPath))' \
+        | tail -n 1 | tr -d '[:space:]')")
       for d in "${dirs[@]}"; do
         echo "transgrp dir: $d"
         test -d "$d"
