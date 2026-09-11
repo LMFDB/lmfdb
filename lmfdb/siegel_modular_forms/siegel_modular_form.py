@@ -316,10 +316,11 @@ def render_sample_page(family, sam, args, bread):
         m = 0
         if modulus:
             try:
-                O = sam.field().ring_of_integers()
+                K = sam.field()
+                O = K.ring_of_integers()
                 # For Sage version >= 10.5, must use fractional_ideal rather than ideal
                 # See https://github.com/sagemath/sage/pull/38671
-                m = O.fractional_ideal([O(str(b)) for b in modulus.split(',')])
+                m = O.fractional_ideal([O(K(str(b).strip())) for b in modulus.split(',')])
             except Exception:
                 info['error'] = True
                 flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)
