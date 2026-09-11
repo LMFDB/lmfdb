@@ -149,7 +149,7 @@ class BMFTest(LmfdbTest):
         # We run magma when it is installed
         for label, expected in [
                 ['2.0.4.1/100.2/a',
-                 'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
+                 'ALEigenvalues[ideal<ZF | {i - 1}>] := -1;'],
                 ['2.0.11.1/933.1/a',
                  'ideal<ZF | {a + 30, 933}>;']
         ]:
