@@ -38,7 +38,7 @@ runs:
   - name: Install Oscar
     shell: bash -l {0}
     run: |
-      julia -e 'using Pkg; Pkg.add("Oscar"); using Oscar'
+      julia -e 'using Pkg; Pkg.add(["Oscar", "GAP"]); using Oscar'
 
   - name: Run install script
     shell: bash -l {0}
