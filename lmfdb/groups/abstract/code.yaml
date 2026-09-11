@@ -509,6 +509,10 @@ snippet_test:
   testD4:
     label: D4
     url: Groups/Abstract/8.3/codedownload/{lang}
+  # Matrix group C_8:C_4 (has GLZ, GLFq, and GLZq representation)
+  test_matrix_reps:
+    label: "32_14"
+    url: Groups/Abstract/32.14/codedownload/{lang}
   # Alternating group A_5
   testA5:
     label: A5
