@@ -3,7 +3,7 @@
 from io import BytesIO
 
 from flask import render_template, url_for, request, send_file, redirect
-from sage.all import latex, Set
+from sage.all import latex, Set, QQ, ZZ
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -317,10 +317,13 @@ def render_sample_page(family, sam, args, bread):
         if modulus:
             try:
                 K = sam.field()
-                O = K.ring_of_integers()
-                # For Sage version >= 10.5, must use fractional_ideal rather than ideal
-                # See https://github.com/sagemath/sage/pull/38671
-                m = O.fractional_ideal([O(K(str(b).strip())) for b in modulus.split(',')])
+                gens = [K(str(b).strip()) for b in modulus.split(',')]
+                if K is QQ:
+                    m = ZZ.ideal([ZZ(g) for g in gens])
+                else:
+                    # For Sage version >= 10.5, must use fractional_ideal for non-rational field (rather than ideal)
+                    # See https://github.com/sagemath/sage/pull/38671
+                    m = K.fractional_ideal(gens)
             except Exception:
                 info['error'] = True
                 flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)
