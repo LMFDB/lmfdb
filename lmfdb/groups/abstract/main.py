@@ -3094,7 +3094,7 @@ class GroupsSearchArray(SearchArray):
             label="Automorphism group order",
             short_label="Automorphisms",
             knowl="group.automorphism",
-            example="3",
+            example="4",
             example_span="4, or a range like 3..5",
         )
         derived_length = TextBox(
@@ -3652,7 +3652,8 @@ class ComplexCharSearchArray(SearchArray):
             name="indicator",
             label="Type",
             knowl="group.representation.type",
-            example="R, C, S, or -1, 0, 1",
+            example="R",
+            example_span="R, C, S, or -1, 0, 1",
         )
         group = TextBox(
             name="group",
@@ -3677,21 +3678,22 @@ class ComplexCharSearchArray(SearchArray):
             name="kernel_order",
             label="Kernel Order",
             knowl="group.representation.kernel",
-            example="4, or a range like 3..5",
+            example="4",
+            example_span="4, or a range like 3..5",
         )
         center_order = TextBox(
             name="center_order",
             label="Center Order",
             knowl="group.representation.center",
             example="4",
-            example_span="4, or a range line 3..5",
+            example_span="4, or a range like 3..5",
         )
         center_index = TextBox(
             name="center_index",
             label="Center Index",
             knowl="group.representation.center",
             example="4",
-            example_span="4, or a range line 3..5",
+            example_span="4, or a range like 3..5",
         )
 
         self.browse_array = [
@@ -3731,7 +3733,8 @@ class ConjugacyClassSearchArray(SearchArray):
             name="group",
             label="Group",
             knowl="group.name",
-            example="128.207, or 12",
+            example="128.207",
+            example_span="128.207, or 12",
         )
         order = TextBox(
             name="order",

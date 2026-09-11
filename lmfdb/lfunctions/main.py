@@ -472,8 +472,8 @@ class LFunctionSearchArray(SearchArray):
             name="z1",
             knowl="lfunction.zeros",
             label="Lowest zero",
-            example="9.22237",
-            example_span="9.22237, 10-20")
+            example="14.134725",
+            example_span="14.134725, 10-20")
         degree = TextBox(
             name="degree",
             knowl="lfunction.degree",
@@ -500,7 +500,7 @@ class LFunctionSearchArray(SearchArray):
             name="central_character",
             knowl="lfunction.central_character",
             label="Central character",
-            example="37.1")
+            example="1.1")
         prime_quantifier = SubsetBox(
             name="prime_quantifier",
             min_width=110)
