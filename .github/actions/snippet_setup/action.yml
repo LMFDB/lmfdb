@@ -4,8 +4,6 @@ description: 'Set up LMFDB environment for generating snippets'
 runs:
   using: 'composite'
   steps:
-  - uses: actions/checkout@v3
-
   - uses: conda-incubator/setup-miniconda@v2
     with:
       activate-environment: lmfdb
@@ -69,3 +67,44 @@ runs:
     shell: bash -l {0}
     run: |
       sage -pip install -r requirements.txt
+
+  # The degree 32 transitive groups are needed for the code snippets "TransitiveGroup(32, t)".
+  # They are a supplementary download for GAP's transgrp package (~300MB, ~1.3GB unpacked).
+  # See https://github.com/LMFDB/lmfdb/issues/7108.
+
+  - name: Cache the degree 32 transitive groups
+    uses: actions/cache@v3
+    env:
+      # Increase this value to force a re-download
+      CACHE_NUMBER: 0
+    with:
+      path: ~/.cache/transgrp
+      key: ${{ runner.os }}-trans32-${{ env.CACHE_NUMBER }}
+
+  - name: Install the degree 32 transitive groups
+    shell: bash -l {0}
+    run: |
+      shopt -s nullglob
+      dirs=("$CONDA_PREFIX"/{lib,share}/gap/pkg/transgrp*/)
+      transgrp="${dirs[0]:-}"
+      echo "transgrp dir: $transgrp"
+      test -n "$transgrp" && test -d "$transgrp"
+      if [ ! -d ~/.cache/transgrp/dat32 ]; then
+        mkdir -p ~/.cache/transgrp /tmp/trans32
+        curl -sSL https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz \
+          | tar xz -C /tmp/trans32
+        mv "$(find /tmp/trans32 -type d -name dat32 | head -n1)" ~/.cache/transgrp/dat32
+      fi
+      ln -sfn ~/.cache/transgrp/dat32 "$transgrp/dat32"
+      ls ~/.cache/transgrp/dat32 | head -n 3 || true
+ 
+  - name: Check the optional CAS packages are available
+    shell: bash -l {0}
+    # -r matches the flags generate_snippet_tests.py uses, so this tests what the
+    # snippet runner will actually see; the sage line checks libgap separately.
+    run: |
+      gap -b -q -T -r -A -c 'Print("hap: ", LoadPackage("hap"), "\n");
+        Print("degree 32: ", TransitiveGroupsAvailable(32), "\n"); QUIT;'
+      sage -c 'print("degree 32 via libgap:", libgap.TransitiveGroupsAvailable(32))'
+      echo 'polgalois(x^8-x-1)' | gp -q
+ 
