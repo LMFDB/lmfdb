@@ -961,7 +961,7 @@ class G2CSearchArray(SearchArray):
             name="geometric_invariants",
             knowl="g2c.geometric_invariants",
             label=r"\(\overline{\Q}\)-invariants",
-            example="[-1/169,33/169,43/169]",
+            example="[8,3172,30056,-692224] or [-1/169,33/169,43/169]",
             width=689,
             short_width=190 * 3 - 10 * 3,
             colspan=(1, 4, 3),

@@ -474,7 +474,7 @@ class AbvarSearchArray(SearchArray):
         dim3 = TextBox(
             "dim3_factors",
             label=long_label(3),
-            example="1",
+            example="2",
             example_col=False,
             short_label=short_label(3),
             advanced=True,
