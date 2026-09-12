@@ -129,76 +129,39 @@ Other material can appear in the lower portion of browse and search pages.
 
 #### Search box examples
 
-Each input in a search array can carry two different examples, and they play
-different roles:
+Each input in a search array can carry two different examples, and they play different roles:
 
-* `example` is the light grey text shown *inside* the input box (it is
-  rendered as the HTML `placeholder` attribute).
+* `example` is the light grey text shown *inside* the input box (it is rendered as the HTML `placeholder` attribute).
 
-* `example_span` is the text shown in the "e.g. ..." column *beside* the box.
-  If it is not given it defaults to the value of `example`.
+* `example_span` is the text shown in the "e.g. ..." column *beside* the box. If it is not given it defaults to the value of `example`.
 
-Since `example` appears inside the box, a reader will naturally assume it is
-something they could have typed themselves. It should therefore satisfy both
-of the following:
+Since `example` appears inside the box, a reader will naturally assume it is something they could have typed themselves. It should therefore satisfy both of the following properties:
 
-1. It is syntactically valid: typing it into that box and pressing search
-   returns a result page rather than an error.
+1. It should be a syntactically valid example: i.e. typing it into that box and pressing search returns a result page rather than an error.
 
-2. The resulting search is non-empty: there is at least one object in the
-   database matching it.
+2. The resulting search should be non-empty: i.e. there is at least one object in the database matching it.
 
-`example_span` is not subject to these constraints. It sits outside the box
-and is free to describe a range of possibilities, list alternatives, or
-mention syntax that only makes sense in combination with other inputs.
+`example_span` is not subject to these constraints. It sits outside the box and is free to describe a range of possibilities, list alternatives, or mention syntax that only makes sense in combination with other inputs.
 
-The most common way to violate the first property is to offer alternatives
-inside `example`, since "or" is almost never valid input. Put a single valid
-value in `example` and move the alternatives into `example_span`:
+Here are some examples of good code for search boxes:
 
 ```python
-# Bad: neither "7Cs.2.1 or 17B" nor "4, or a range like 3..5" can be entered
+# Search box for searching Galois images
 galois_image = TextBox(
     name="galois_image",
     label=r"Galois image",
-    example="7Cs.2.1 or 17B",
-    knowl="ec.galois_image_search")
-
-# Good
-galois_image = TextBox(
-    name="galois_image",
-    label=r"Galois image",
+    knowl="ec.galois_image_search",
     example="7Cs.2.1",
-    example_span="7Cs.2.1 or 17B",
-    knowl="ec.galois_image_search")
+    example_span="7Cs.2.1 or 17B")
+
+# Search box for searching intermediate fields
+subfield = TextBox(
+    name="subfield",
+    label="Intermediate field",
+    knowl="nf.intermediate_fields",
+    example="x^2-5",
+    example_span="2.2.5.1 or x^2-5 or a " + display_knowl("nf.nickname", "field nickname"))
 ```
-
-A few further points to keep in mind:
-
-* The second property is easy to break by accident, so it is worth actually
-  running the search. Examples can be valid but empty because the database
-  stores a value in a different form from the one the user sees (the base
-  change label `11a.1` never matches, since base changes are stored using
-  LMFDB labels such as `11.a1`), or because the example describes something
-  that cannot occur (no group has automorphism group of order 3), or because
-  it lies outside the range of the data (an abelian variety with two factors
-  of dimension 4 would need dimension at least 8).
-
-* These constraints apply to inputs that are actually rendered with a
-  placeholder, which in practice means `TextBox` and its variants. A
-  `SelectBox` has no placeholder, so its `example` only ever feeds the "e.g."
-  column and may be descriptive.
-
-* An example that is only valid in combination with another input is worth
-  reconsidering. For instance, searching elliptic curves over number fields
-  by $j$-invariant requires a base field to be specified as well, so the
-  $j$-invariant example alone produces an error.
-
-* The jump box has its own pair of attributes, `jump_example` and
-  `jump_egspan`, which follow the same convention: `jump_example` is the
-  placeholder and should be the label of an object that is actually in the
-  database.
-
 
 ### Knowls
 
