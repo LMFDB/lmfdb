@@ -405,6 +405,7 @@ class AbvarSearchArray(SearchArray):
             "cyclic",
             label="Cyclic group of points",
             knowl="av.fq.cyclic_group_points",
+            example_col=True,
             advanced=True,
         )
 
@@ -419,6 +420,7 @@ class AbvarSearchArray(SearchArray):
             select_box=noncyclic_mode,
             knowl="av.fq.noncyclic_primes",
             example="2,3,5",
+            example_span="2 or 2,3,5",
             advanced=True,
         )
 
