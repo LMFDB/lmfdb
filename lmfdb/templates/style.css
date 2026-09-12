@@ -1649,13 +1649,6 @@ div.maassformplot img {
     color: {{color.col_sidebar_links}};
 }
 
-#sidebar .collapsible-container > .collapsible-chevron {
-    color: {{color.col_sidebar_links}};
-    /* 2px less than the h2 chevron, cancelling the table cell's own padding,
-       so this chevron lines up with the section chevron above it */
-    margin-right: 2px;
-}
-
 #sidebar .collapsible-chevron {
     flex-shrink: 0;
     cursor: pointer;
@@ -1671,6 +1664,12 @@ div.maassformplot img {
     align-items: center;
 }
 
+#sidebar .collapsible-container > .collapsible-chevron {
+    color: {{color.col_sidebar_links}};
+    /* 2px less than the h2 chevron, cancelling the table cell's own padding,
+       so this chevron lines up with the section chevron above it */
+    margin-right: 2px;
+}
 
 #sidebar .collapsible-chevron > svg {
     width: 16px;
@@ -1678,6 +1677,10 @@ div.maassformplot img {
     object-fit: contain;
     transform: rotate(0deg);
     transition: transform 0.15s ease;
+}
+
+#sidebar .collapsible-chevron > svg path {
+    stroke-width: 2.5;
 }
 
 #sidebar .collapsible-chevron.open > svg {
