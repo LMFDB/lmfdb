@@ -54,6 +54,16 @@ h2.link > a {
     padding-top: 2px;
 }
 
+/* Stats/description line at the top of a browse-search page.  Its bottom
+   margin sets the gap before the "Browse" heading; 20px makes that gap
+   match the one between later sections (7px from the browse table cells
+   plus the 10px margin-top and 5px padding-top of the next h2).  The
+   first h2 keeps margin-top: 0 so that pages with no stats line still
+   line up with the top of the sidebar. */
+#content > .stats-summary {
+    margin-bottom: 20px;
+}
+
 #content > h2
 {
     font-family: sans-serif;
