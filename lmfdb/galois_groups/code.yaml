@@ -16,7 +16,7 @@ gg:
   gap: G := TransitiveGroup({n}, {t});
 
 n32_dbs:
-  comment: Databases for transitive groups of order 32
+  comment: URLs for databases of transitive groups of degree 32
   sage: https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz
   gap: https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz
   magma: https://magma.maths.usyd.edu.au/magma/download/db/TrnGps32.tar.gz
