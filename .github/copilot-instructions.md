@@ -8,7 +8,7 @@ Always reference these instructions first and fallback to search or bash command
 
 **Environment Setup (NEVER CANCEL - takes 20+ minutes):**
 ```bash
-# Create conda environment with Sage 10.4
+# Create conda environment with Sage 10.6
 conda env create -f .environment.yml  # Takes 20+ minutes, set timeout to 60+ minutes
 
 # Activate environment (required for all commands)
@@ -132,7 +132,7 @@ pyflakes start-lmfdb.py user-manager.py lmfdb/
 ## Technology Stack
 
 **Core Technologies:**
-- **SageMath 10.4** - Mathematical computation system
+- **SageMath 10.6** - Mathematical computation system
 - **Flask 3.1.1** - Web framework
 - **PostgreSQL** - Database (via psycodict abstraction)
 - **Jinja2** - Template engine
