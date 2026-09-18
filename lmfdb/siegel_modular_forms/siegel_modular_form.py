@@ -310,20 +310,18 @@ def render_sample_page(family, sam, args, bread):
     # otherwise sage may not even be able to factor the discriminant
     info['field'] = sam.field()
     if info['field_poly'].disc() < 10**80:
-        null_ideal = sam.field().ring_of_integers().ideal(0)
-        info['modulus'] = null_ideal
         modulus = args.get('modulus', '').strip()
         m = 0
         if modulus:
             try:
                 K = sam.field()
-                gens = [K(str(b).strip()) for b in modulus.split(',')]
-                if K is QQ:
-                    m = ZZ.ideal([ZZ(g) for g in gens])
-                else:
-                    # For Sage version >= 10.5, must use fractional_ideal for non-rational field (rather than ideal)
-                    # See https://github.com/sagemath/sage/pull/38671
-                    m = K.fractional_ideal(gens)
+                O = ZZ if K is QQ else K.ring_of_integers()
+                # Coercing into O rejects non-integral generators such as 1/2
+                gens = [O(b.strip()) for b in modulus.split(',')]
+                # An all-zero modulus means "no reduction", so m stays 0
+                if any(gens):
+                    # For Sage >= 10.5, use K.fractional_ideal rather than O.ideal for number fields
+                    m = ZZ.ideal(gens) if K is QQ else K.fractional_ideal(gens)
             except Exception:
                 info['error'] = True
                 flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)
