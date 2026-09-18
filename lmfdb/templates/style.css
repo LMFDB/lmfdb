@@ -54,6 +54,18 @@ h2.link > a {
     padding-top: 2px;
 }
 
+/* Class for the stats/description line at the top of a browse-search page.
+     Add bottom margin to stats line (before the "Browse" h2 heading).
+     Also reduce bottom margins of the h2 heading after the stats line. */
+#content > .stats-summary {
+    margin-bottom: 12px;
+}
+#content > .stats-summary + h2 {
+    margin-bottom: 3px;
+    padding-bottom: 0px;
+}
+
+
 #content > h2
 {
     font-family: sans-serif;
