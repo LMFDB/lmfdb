@@ -8,21 +8,25 @@ frontmatter:
     {lang} code for working with genus 2 curve {label}.
 
 curve:
-  comment: Define the curve
+  comment: Define the curve (minimal equation)
   magma: |
     R<x> := PolynomialRing(Rationals());
     fh := %s;
     f := R![a : a in fh[1]];
     h := R![a : a in fh[2]];
-    C := HyperellipticCurve(f, h);
+    Cmin := HyperellipticCurve(f, h);
+
+simple_curve:
+  comment: Simplified equation
+  magma: Csim := SimplifiedModel(Cmin);
 
 aut:
   comment: Automorphism group
-  magma: AutomorphismGroup(C);
+  magma: AutomorphismGroup(Cmin);
 
 jacobian:
   comment: Jacobian
-  magma: J := Jacobian(SimplifiedModel(C));
+  magma: J := Jacobian(Csim);
 
 tors:
   comment: Torsion subgroup
@@ -30,11 +34,11 @@ tors:
 
 cond:
   comment: Conductor
-  magma: Conductor(LSeries(C));
+  magma: Conductor(LSeries(Cmin%s));
 
 disc:
   comment: Discriminant
-  magma: Discriminant(C);
+  magma: Discriminant(Cmin);
 
 ntors:
   comment: Torsion order of Jacobian
