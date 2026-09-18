@@ -1144,7 +1144,8 @@ class G2CSearchArray(SearchArray):
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
-            example="2.45.1 or 3.720.4",
+            example="2.45.1",
+            example_span="2.45.1 or 3.720.4",
             knowl="g2c.galois_rep_modell_image",
             )
         nonmax_quant = SubsetBox(
