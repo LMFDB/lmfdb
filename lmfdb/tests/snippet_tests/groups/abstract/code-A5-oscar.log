@@ -129,10 +129,10 @@ julia> conjugacy_classes(G)  # Output not guaranteed to exactly match the LMFDB 
 
 julia> character_degrees(G)
 MSet{ZZRingElem} with 5 elements:
-  5
-  4
   3 : 2
   1
+  4
+  5
 
 julia> SL(2,4)
 SL(2,4)
