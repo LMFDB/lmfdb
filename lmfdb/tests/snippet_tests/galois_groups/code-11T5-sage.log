@@ -23,7 +23,7 @@ True
 sage: SymmetricGroup(11).centralizer(G).order()
 1
 sage: G.gens()
-((2,10)(3,4)(5,9)(6,7), (1,2,3,4,5,6,7,8,9,10,11))
+((1,2,3,4,5,6,7,8,9,10,11), (2,10)(3,4)(5,9)(6,7))
 sage: G.conjugacy_classes()
 [Conjugacy class of () in Transitive group number 5 of degree 11,
  Conjugacy class of (3,4)(5,7)(6,9)(8,11) in Transitive group number 5 of degree 11,
