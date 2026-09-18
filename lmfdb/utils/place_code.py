@@ -45,8 +45,10 @@ class CodeSnippet():
         code = self.code
         if code[item]:
             for L in code[item]:
-                if isinstance(code[item][L],str):
-                    lines = code[item][L].split('\n')[:-1] if '\n' in code[item][L] else [code[item][L]]
+                if isinstance(code[item][L], str):
+                    lines = code[item][L].split('\n') if '\n' in code[item][L] else [code[item][L]]
+                    # remove empty lines if any
+                    lines = [l for l in lines if l]
                     lines = [line.replace("<", "&lt;").replace(">", "&gt;") for line in lines]
                 else:
                     lines = code[item][L]
@@ -126,5 +128,5 @@ class CodeSnippet():
             assert key in self.code
             if self.code[key] is not None and lang in self.code[key]:
                 code += "\n{} {}: \n".format(self.comments[lang], self.code[key]['comment'])
-                code += self.code[key][lang] + ('\n' if '\n' not in self.code[key][lang] else '')
+                code += self.code[key][lang].rstrip('\n') + '\n'
         return code
