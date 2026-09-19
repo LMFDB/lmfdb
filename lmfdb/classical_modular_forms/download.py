@@ -313,6 +313,10 @@ class CMF_download(Downloader):
         if data is None:
             return abort(404, "Label not found: %s" % label)
         form = WebNewform(data)
+        if lang not in form.code_langs:
+            # e.g. Magma for a weight 1 newform, where no snippet can be
+            # generated; emitting a header-only script would be misleading
+            return abort(404, "%s code is not available for %s" % (Fullname[lang], label))
         code = form.code
         # 'initialize-newspace-common' is only a YAML merge anchor base (see
         # code-form.yaml): its snippet is inlined into both weight-specific
