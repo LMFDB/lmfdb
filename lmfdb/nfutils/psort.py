@@ -2,7 +2,7 @@
 # See https://github.com/JohnCremona/sorting
 #
 # This file is code/psort.py from there.  It implements the sorting
-# and labelling of ideals (including prime ideals).
+# and labeling of ideals (including prime ideals).
 #
 from sage.all import ZZ, GF, Set, prod, srange, flatten, cartesian_product_iterator
 
