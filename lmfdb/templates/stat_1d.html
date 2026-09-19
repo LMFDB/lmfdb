@@ -19,7 +19,11 @@
   <tr>
     <th>count</th>
     {% for c in r %}
+    {% if c.query %}
     <td><a href='{{c.query}}'>{{c.count}}</a></td>
+    {% else %}
+    <td>{{c.count}}</td>
+    {% endif %}
     {% endfor %}
   </tr>
   <tr>
