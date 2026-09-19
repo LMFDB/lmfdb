@@ -54,6 +54,18 @@ h2.link > a {
     padding-top: 2px;
 }
 
+/* Class for the stats/description line at the top of a browse-search page.
+     Add bottom margin to stats line (before the "Browse" h2 heading).
+     Also reduce bottom margins of the h2 heading after the stats line. */
+#content > .stats-summary {
+    margin-bottom: 12px;
+}
+#content > .stats-summary + h2 {
+    margin-bottom: 3px;
+    padding-bottom: 0px;
+}
+
+
 #content > h2
 {
     font-family: sans-serif;
@@ -702,6 +714,22 @@ table.ntdata tr.toplined {
   border-top: 2px solid {{ color.table_ntdata_border }};
 }
 
+/* schema display on API and underlying data pages */
+div.schema-holder {
+  max-height: 500px;
+  width: 97%;
+  overflow-y: auto;
+}
+table.schema-table {
+  width: 95%;
+}
+table.schema-table td.schema-example {
+  font-family: monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 40em;
+}
+
 table.ntdata th {
   text-align: left;
   padding-right: 7px;
@@ -1174,6 +1202,15 @@ table .knowl a {
  margin-left: 0;
  margin-right: 0;
 }
+/* Knowls opened inside a table cell insert a new full-width row (see
+   knowl_click_handler in lmfdb.js).  Inline-size containment keeps that row
+   from being counted when the browser computes the column widths, so opening
+   a knowl no longer pushes the other columns around (issue #6501): the box
+   simply spans the table's current width.  The .knowl-content overflow rule
+   above handles content that is wider than the available box. */
+td > .knowl-output {
+  contain: inline-size;
+}
 .knowl-output.loading {
  color: {{color.grey}};
  font-style: italic;
@@ -1601,7 +1638,7 @@ div.maassformplot img {
 
 #sidebar table td a {
     display: block;
-    padding: 2px;
+    padding: 2px 6px;
 }
 
 #sidebar table td .subtitle {
@@ -1631,11 +1668,13 @@ div.maassformplot img {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    /* border-box, so padding-left does not push the row past its own cell */
+    box-sizing: border-box;
     width: 100%;
     cursor: pointer;
     min-width: 100%;
-    padding-left: 2pt;
-    color: {{color.col_sidebar_header_links}}
+    padding-left: 6px;
+    color: {{color.col_sidebar_links}};
 }
 
 #sidebar .collapsible-chevron {
@@ -1653,6 +1692,12 @@ div.maassformplot img {
     align-items: center;
 }
 
+#sidebar .collapsible-container > .collapsible-chevron {
+    color: {{color.col_sidebar_links}};
+    /* 2px less than the h2 chevron, cancelling the table cell's own padding,
+       so this chevron lines up with the section chevron above it */
+    margin-right: 2px;
+}
 
 #sidebar .collapsible-chevron > svg {
     width: 16px;
@@ -1662,6 +1707,10 @@ div.maassformplot img {
     transition: transform 0.15s ease;
 }
 
+#sidebar .collapsible-chevron > svg path {
+    stroke-width: 2.5;
+}
+
 #sidebar .collapsible-chevron.open > svg {
     transform: rotate(90deg);
 }
@@ -1669,8 +1718,8 @@ div.maassformplot img {
 
 #sidebar .collapsible-content {
     flex-basis: 100%;
-    border-left: 2px solid {{color.col_sidebar_header_links}};
-    margin-left: 2px;
+    border-left: 2px solid {{color.col_main_l}};
+    margin-left: 4px;
     margin-top: 2px;
     padding-left: 6px;
 }
@@ -1681,7 +1730,7 @@ div.maassformplot img {
 
 #sidebar .collapsible-content .subtitle a {
     display: block;
-    padding: 2px;
+    padding: 3px 6px;
 }
 
 #sidebar .section-content {

@@ -934,7 +934,8 @@ class ECNFSearchArray(SearchArray):
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
-            example="7Cs.2.1 or 17B",
+            example="7Cs.2.1",
+            example_span="7Cs.2.1 or 17B",
             knowl="ec.galois_image_search")
         nonmax_quant = SubsetBox(
             name="nonmax_quantifier")
@@ -959,7 +960,7 @@ class ECNFSearchArray(SearchArray):
             name="base_change_label",
             label="Base change of",
             knowl="ec.base_change",
-            example="11a.1")
+            example="11.a1")
         count = CountBox()
 
         self.browse_array = [
