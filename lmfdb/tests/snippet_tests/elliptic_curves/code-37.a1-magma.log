@@ -9,13 +9,13 @@ Mapping from: Abelian Group isomorphic to Z
 Defined on 1 generator (free) to Set of points of E with coordinates in Rational Field given by a rule [no inverse]
 true true
 magma> Generators(E);
-[ (0 : -1 : 1) ]
+[ (0 : 0 : 1) ]
 true true
 magma> TorsionSubgroup(E);
 Abelian Group of order 1
 magma> IntegralPoints(E);
-[ (-1 : 0 : 1), (0 : -1 : 1), (1 : -1 : 1), (2 : 2 : 1), (6 : -15 : 1) ]
-[ <(-1 : 0 : 1), 1>, <(0 : -1 : 1), 1>, <(1 : -1 : 1), 1>, <(2 : 2 : 1), 1>, <(6 : -15 : 1), 1> ]
+[ (-1 : -1 : 1), (0 : 0 : 1), (1 : 0 : 1), (2 : -3 : 1), (6 : 14 : 1) ]
+[ <(-1 : -1 : 1), 1>, <(0 : 0 : 1), 1>, <(1 : 0 : 1), 1>, <(2 : -3 : 1), 1>, <(6 : 14 : 1), 1> ]
 magma> Conductor(E);
 37
 magma> Discriminant(E);
@@ -42,7 +42,7 @@ magma> Order(TorsionSubgroup(E));
 1
 magma> MordellWeilShaInformation(E);
 [ 1, 1 ]
-[ (0 : -1 : 1) ]
+[ (0 : 0 : 1) ]
 [
 <2, [ 0, 0 ]>
 ]
