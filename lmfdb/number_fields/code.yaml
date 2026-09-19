@@ -156,7 +156,7 @@ class_number_formula:
 galois_group:
   comment: Galois group
   sage:  K.galois_group()
-  pari:  polgalois(K.pol)
+  pari:  'if(poldegree(K.pol) > 11, "polgalois only supports degree <= 11", iferr(polgalois(K.pol), E, "polgalois in degrees 8 to 11 requires the optional galdata package", errname(E) == "e_FILE" || errname(E) == "e_PACKAGE"))'
   magma: GaloisGroup(K);
   oscar: |
     G, Gtx = galois_group(K);

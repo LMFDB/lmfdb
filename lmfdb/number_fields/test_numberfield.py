@@ -185,3 +185,24 @@ class NumberFieldTest(LmfdbTest):
         # Also ensure we're not getting quoted strings
         assert '"[0, 1]"' not in page
         assert '"[2, 0]"' not in page
+
+    def test_high_degree_gp_galois_download(self):
+        # PARI's polgalois hard-errors above degree 11, and needs the optional
+        # galdata package in degrees 8 to 11, so the snippet must be guarded.
+        # The committed gp snippet logs only exercise degrees 1 and 2, i.e. the
+        # branch where polgalois is actually called.
+        page = self.tc.get('/NumberField/12.4.320979616137216.3/download/gp').get_data(as_text=True)
+        assert 'poldegree(K.pol) > 11' in page
+        assert 'polgalois only supports degree <= 11' in page
+        assert 'requires the optional galdata package' in page
+        # polgalois is never invoked from an unguarded line
+        assert not any(line.strip() == 'polgalois(K.pol)' for line in page.split('\n'))
+
+    def test_rational_field_magma_download(self):
+        # Magma's NumberField collapses a degree 1 polynomial to the rationals,
+        # so 1.1.1.1 uses RationalsAsNumberField() instead, both when defining
+        # the field and in the self-contained class number formula snippet.
+        page = self.tc.get('/NumberField/1.1.1.1/download/magma').get_data(as_text=True)
+        assert page.count('K<a> := RationalsAsNumberField();') == 2
+        assert 'NumberField(x)' not in page
+        assert 'DoLinearExtension' not in page
