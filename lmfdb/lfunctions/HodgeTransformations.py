@@ -1,7 +1,7 @@
 
 # A file for passing between
-#  * Hodge structures and Gamma Factors (motivic normalisation)
-#  * different normalisation (GammaFactors vs SelbergParameters)
+#  * Hodge structures and Gamma Factors (motivic normalization)
+#  * different normalization (GammaFactors vs SelbergParameters)
 
 # Copied from Magma code largely for GammaFactors and HodgeStructure
 # Format of HodgeStructure is <p,q,eps>, where eps is 2 when p!=q (else 0,1)
@@ -87,7 +87,7 @@ def tensor_hodge(H1, H2):
     return H
 
 
-def hodge_to_selberg(hodge):  # normalised for s->(1-s)
+def hodge_to_selberg(hodge):  # normalized for s->(1-s)
     """
     Takes a Hodge structure, returns a
     weight, mu, nu

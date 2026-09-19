@@ -30,3 +30,9 @@ class ArtinRepTest(LmfdbTest):
     def test_underlying_data(self):
         data = self.tc.get('/ArtinRepresentation/data/2.3806401.120.b').get_data(as_text=True)
         assert 'ArtinReps' in data and 'GalConjSigns' in data
+
+    def test_proj(self):
+        data = self.tc.get('/ArtinRepresentation/?projective_image=5T2').get_data(as_text=True)
+        assert '2.47.5t2.a.a' in data
+        data = self.tc.get('/ArtinRepresentation/?projective_image=10.1').get_data(as_text=True)
+        assert '2.47.5t2.a.a' in data
