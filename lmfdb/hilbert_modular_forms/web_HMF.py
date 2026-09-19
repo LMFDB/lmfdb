@@ -34,7 +34,7 @@ class WebHMF():
             - L: a string representing one newform from a raw data file
 
         If dbdata is not None then it is expected to be a database
-        entry from which the class is initialised.  If dbdata is None,
+        entry from which the class is initialized.  If dbdata is None,
         then a form is constructed from the field label or field and
         data string given.
 
