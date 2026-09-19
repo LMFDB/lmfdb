@@ -32,6 +32,7 @@ from lmfdb.utils import (
 
 from lmfdb.utils.completeness import (
     results_complete,
+    lookup,
     IntegerSet,
     top,
     bottom,
@@ -413,3 +414,63 @@ class UtilsTest(unittest.TestCase):
                 ("gps_st", {'rational': True, 'weight': 1, 'degree': 8}),
         ]:
             self.assertEqual(results_complete(tbl, query, db)[0], False)
+
+    def test_complete_intrinsic_contradiction_avoids_db(self):
+        # An intrinsically impossible query (the root discriminant of a number field
+        # never exceeds its Galois root discriminant) must be decided by the precheck,
+        # before the completeness machinery issues any database query; under CI's
+        # statement timeout the preliminary null-data probe for this query was
+        # canceled before the mathematical contradiction check ran.  The fake db
+        # raises on any table access; results_complete downgrades such a failure to
+        # "completeness unknown", so the equality assertion detects a regression and
+        # the accessed flag makes the intent explicit.
+        class NoDatabaseAccess:
+            accessed = False
+
+            def __getitem__(self, table):
+                self.accessed = True
+                raise AssertionError(
+                    f"precheck unexpectedly accessed database table {table}"
+                )
+
+        fake_db = NoDatabaseAccess()
+        query = {
+            "degree": 5,
+            "rd": {"$gte": 40, "$lte": 60},
+            "grd": {"$gte": 20, "$lte": 30},
+        }
+        expected = (
+            True,
+            "number fields with incompatible conditions: "
+            "root discriminant and Galois root discriminant",
+            None,
+        )
+
+        self.assertEqual(results_complete("nf_fields", query, fake_db), expected)
+        self.assertFalse(fake_db.accessed)
+
+    def test_complete_precheck_does_not_claim_compatible_rd_grd(self):
+        # Compatible rd/grd ranges are not decided by the precheck: they must
+        # continue through the normal null-data and completeness machinery.
+        query = {
+            "degree": 5,
+            "rd": {"$gte": 20, "$lte": 30},
+            "grd": {"$gte": 40, "$lte": 60},
+        }
+        self.assertIsNone(lookup["nf_fields"].precheck(query))
+        # Same for a query with no grd constraint at all.
+        self.assertIsNone(lookup["nf_fields"].precheck({"degree": 5, "rd": {"$gte": 40, "$lte": 60}}))
+
+    def test_complete_precheck_declines_null_predicates(self):
+        # In psycodict queries None carries SQL-null semantics ({"$ne": None} means
+        # IS NOT NULL), which the numeric model misreads as an empty range; the
+        # precheck must decline such constraints rather than report a nonempty
+        # search as intrinsically impossible.
+        for query in [
+                {"grd": {"$ne": None}},
+                {"grd": {"$not": None}},
+                {"rd": {"$gte": 40}, "grd": {"$or": [{"$ne": None}, {"$lte": 30}]}},
+                {"rd": None, "grd": {"$lte": 30}},
+        ]:
+            with self.subTest(query=query):
+                self.assertIsNone(lookup["nf_fields"].precheck(query))
