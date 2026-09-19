@@ -9,7 +9,7 @@ def IsSquareInQp(x, p):
     v=valuation(x,p)
     if v%2:
         return False
-    # Renormalise to get a unit
+    # Renormalize to get a unit
     x//=p**v
     # Reduce mod p and conclude
     if p==2:
@@ -29,7 +29,7 @@ def HasFinitePointAt(F, p, c):
         R = F.parent()(1)
         S = F.parent()(1)
         for X in (F.base_extend(Fp)/Fp(F.leading_coefficient())).squarefree_decomposition():
-            [G,v] = X # Term of the form G(x)^v in the factorisation of F(x) mod p
+            [G,v] = X # Term of the form G(x)^v in the factorization of F(x) mod p
             S *= G**(v%2)
             R *= G**(v//2)
         r = R.degree()
@@ -81,13 +81,13 @@ def IsSolubleAt(F, p):
             return True
         # If we have a point (x,y) with v_p(x) = -A, then v_p(f(x)) = v_p(a6*x^6) = -6A so v_p(y) = -3A
         # So we have x = x'/p^A, y = y'/p^3A, with x' and y' p-adic units
-        # Renormalise : y'² = a_d x'^6 + a5 p^A x'^5 + a4 p^2A x'^4 + ...
+        # Renormalize : y'² = a_d x'^6 + a5 p^A x'^5 + a4 p^2A x'^4 + ...
         if p > 2:
             # Then a6 must be a square mod p, hence a square in Qp, contradiction
             # So x and y must be in Zp
             return HasFinitePointAt(F, p, 1)
         else:
-            # x'6 = y'² = 1 mod 8, so if A >= 3, then a6 = 1 mod 8, contradiction. So A <= 2, renormalise.
+            # x'6 = y'² = 1 mod 8, so if A >= 3, then a6 = 1 mod 8, contradiction. So A <= 2, renormalize.
             t = F.variables()[0]
             Zx = PolynomialRing(ZZ,'x')
             return HasFinitePointAt(Zx(4**6*F(t/4)),2,1)
@@ -101,7 +101,7 @@ def IsSolubleAt(F, p):
         # So if A >= 2, then 1-6A dominates, so v_p(f(x))=1-6A is odd, contradiction.
         # So A=1, and there must be cancellation mod p to prevent v_p(f(x)) = 5
         # --> x = -a5/a6 + O(p^0), and v_p(y) >= -2
-        # Just renormalise
+        # Just renormalize
         a5 = F[F.degree()-1]
         if a5 % p == 0:
             return False
