@@ -4,7 +4,7 @@ from flask import render_template, url_for, request, redirect, abort, make_respo
 from sage.all import euler_phi, PolynomialRing, QQ, gcd, ZZ
 from sage.databases.cremona import class_to_int
 from lmfdb.utils import (
-    to_dict, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
+    to_dict, get_search_type, flash_error, SearchArray, YesNoBox, display_knowl, ParityBox,
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
     StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
@@ -311,9 +311,9 @@ def dirichlet_character_search(info, query):
 @characters_page.route("/Dirichlet/")
 def render_DirichletNavigation():
     if request.args:
-        # hidden_search_type for prev/next buttons
+        # hst (hidden search type) is used by prev/next buttons and old bookmarked URLs
         info = to_dict(request.args, search_array=DirichSearchArray())
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        info["search_type"] = search_type = get_search_type(info)
         if search_type in ['List', '', 'Random']:
             return dirichlet_character_search(info)
         assert False
