@@ -654,7 +654,7 @@ def elliptic_curve_search(info, query):
                     info['galois_image'] = ','.join(modell_labels + elladic_labels)
                 query['modell_images'] = { '$contains': modell_labels }
 
-    # The button which used to be labelled Optimal only no/yes"
+    # The button which used to be labeled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
     # one curve in each class, currently choosing the curve with
@@ -1434,7 +1434,8 @@ class ECSearchArray(SearchArray):
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
-            example="13S4 or 13.91.3.2",
+            example="13.91.3.2",
+            example_span="13S4 or 13.91.3.2",
             knowl="ec.galois_image_search",
             advanced=True)
         nonmax_quant = SubsetBox(
