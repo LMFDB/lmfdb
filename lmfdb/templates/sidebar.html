@@ -51,13 +51,13 @@
           {%- for pt3 in pt2.part3 -%}
             {%- if (BETA and pt3.status == 'beta') or not pt3.status -%}
             {%- if pt3.status == "beta" -%}
-            <span class="beta", class="subitem">
+            <span class="beta subitem">
             {%- else -%}
             <span class="subitem">
             {%- endif -%}
-            {%- endif -%}
             {{ pt3.url | safe}}
             </span>
+            {%- endif -%}
           {%- endfor -%}{# for pt3 in pt2.part3 #}
         </div>
       {%- endif -%} {# if pt2.part3 #}
@@ -91,6 +91,14 @@
           $toggle.attr('aria-label', (expanded ? 'Collapse ' : 'Expand ') + label);
       }
 
+      // HTML for the chevron arrow, shared by the sub-menu and section toggles.
+      var chevronHTML =
+          '<button type="button" class="collapsible-chevron open">' +
+            '<svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M9 6L15 12L9 18" stroke="currentColor"/>' +
+            '</svg>' +
+          '</button>';
+
       // ── Collapsible sub-menu toggles (Elliptic curves, Abstract groups, …) ──
       $('.collapsible-container').each(function(index) {
           var $container = $(this);
@@ -102,7 +110,7 @@
           var contentId = 'lmfdb-sidebar-entry-' + index;
           $content.attr('id', contentId);
 
-          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          var $chev = $(chevronHTML);
           $chev.attr('aria-controls', contentId);
           $content.before($chev);
 
@@ -141,7 +149,7 @@
           $section.attr('id', sectionId);
 
           // Append the chevron into the h2
-          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          var $chev = $(chevronHTML);
           $chev.attr('aria-controls', sectionId);
           $h2.append($chev);
           $h2.css('cursor', 'pointer');
