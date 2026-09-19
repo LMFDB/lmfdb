@@ -32,6 +32,11 @@
 <h2> {{ KNOWL('hgm.zigzagplot', title='Zigzag plot') }} </h2>
 <img src="{{ family.zigzag_plot() }}" width="500">
 
+{% if family.weight > 0 %}
+<h2> {{ KNOWL('hgm.hodge_polygon', title='Hodge polygon') }} </h2>
+<img src="{{ family.hodge_polygon_plot() }}" width="500" height="250">
+{% endif %}
+
 <h2> {{ KNOWL('hgm.defining_parameter_ppart', title='$p$-parts of defining parameters') }} </h2>
 
 <table style="margin-left:1%;" border="0" class="ntdata">
