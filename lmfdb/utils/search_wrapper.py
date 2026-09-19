@@ -241,7 +241,7 @@ class Wrapper:
             one_per = [one_per]
         return query, sort, table, title, err_title, template, one_per
 
-    def query_cancelled_error(
+    def query_canceled_error(
         self, info, query, err, err_title, template, template_kwds
     ):
         ctx = ctx_proc_userdata()
@@ -365,6 +365,7 @@ class SearchWrapper(Wrapper):
         if random:
             query.pop("__projection__", None)
         proj = query.pop("__projection__", self.projection)
+        complete = query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         # It's fairly common to add virtual columns in postprocessing that are then used in MultiProcessedCols.
         # These virtual columns won't be present in the database, so we just strip them out
         # We have to do this here since we didn't have access to the table in __init__
@@ -424,7 +425,7 @@ class SearchWrapper(Wrapper):
                     split_ors=split_ors,
                 )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -458,7 +459,16 @@ class SearchWrapper(Wrapper):
             if query:
                 try:
                     nulls = table.stats.null_counts()
-                    complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                    if complete is None:
+                        complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                    elif isinstance(complete, tuple) and len(complete) == 2:
+                        msg, caveat = complete
+                        complete = True
+                    elif complete is False:
+                        # msg is not used below, but caveat is
+                        caveat = False
+                    else:
+                        raise ValueError("__complete__ key invalid")
                     if complete:
                         flash_success("The results below are complete, since the LMFDB contains all " + msg)
                     elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
@@ -619,6 +629,7 @@ class SearchWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data
         query, sort, table, title, err_title, template, one_per = data
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
 
         # Use diagram template instead of default
         template = diagram_template
@@ -647,7 +658,7 @@ class SearchWrapper(Wrapper):
                 one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -773,6 +784,7 @@ class CountWrapper(Wrapper):
             return data  # error page
         query, sort, table, title, err_title, template, one_per = data
         groupby = query.pop("__groupby__", self.groupby)
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         template_kwds = {key: info.get(key, val()) for key, val in self.kwds.items()}
         try:
             if query:
@@ -787,7 +799,7 @@ class CountWrapper(Wrapper):
                         tuple(key[i] for i in perm): val for (key, val) in res.items()
                     }
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         else:
@@ -851,6 +863,7 @@ class EmbedWrapper(Wrapper):
             return data
         query, sort, table, title, err_title, template, one_per = data
         proj = query.pop("__projection__", self.projection)
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         if isinstance(proj, list):
             proj = [col for col in proj if col in table.search_cols]
         if "result_count" in info:
@@ -872,7 +885,7 @@ class EmbedWrapper(Wrapper):
                 one_per=one_per,
             )
         except QueryCanceledError as err:
-            return self.query_cancelled_error(
+            return self.query_canceled_error(
                 info, query, err, err_title, template, template_kwds
             )
         except SearchParsingError as err:
@@ -937,6 +950,7 @@ class YieldWrapper(Wrapper):
         if not isinstance(data, tuple):
             return data
         query, sort, yielder, title, err_title, template, one_per = data
+        query.pop("__complete__", None) # Some query builders make simplifications based on the LMFDB's limits; they should add __complete__=False when they do
         if "result_count" in info:
             if one_per:
                 nres = yielder(query, one_per=one_per, count=True)
