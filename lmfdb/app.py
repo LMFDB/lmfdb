@@ -793,7 +793,6 @@ def WhiteListedRoutes():
         'alive',
         'api',
         'bigpicture',
-        'callback_ajax',
         'citation',
         'contact',
         'editorial-board',

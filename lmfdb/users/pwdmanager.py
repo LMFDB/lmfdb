@@ -23,15 +23,52 @@ class PostgresUserTable(PostgresBase):
         PostgresBase.__init__(self, 'db_users', db)
         # never narrow down the rmin-rmax range, only increase it!
         self.rmin, self.rmax = -10000, 10000
-        self._rw_userdb = (getattr(db, "_can_read_write_userdb", None) or db.can_read_write_userdb)()
         #TODO use this instead of hardcoded columns names
         #with identifiers
         self._username_full_name = ["username", "full_name"]
-        if self._rw_userdb:
-            cur = self._execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
-            self._cols = [rec[0] for rec in cur]
-        else:
-            self._cols = self._username_full_name
+        self._refresh_connection_capabilities()
+
+    def _refresh_connection_capabilities(self):
+        """
+        Ask the database what the current session may do with userdb.users,
+        and which columns it has.
+
+        This fails closed: the restricted answers are installed first and are
+        only widened once the session has been found able to read and write.
+        The query is issued on ``self.conn`` rather than through ``_execute``
+        because this also runs while psycodict is recovering from a failure
+        inside ``_execute``, which it would otherwise re-enter.
+        """
+        self._rw_userdb = False
+        self._cols = self._username_full_name
+
+        checker = getattr(db, "_can_read_write_userdb", None) or db.can_read_write_userdb
+        if not checker():
+            return
+        cur = self.conn.cursor()
+        try:
+            cur.execute(SQL("SELECT column_name FROM information_schema.columns WHERE table_schema = %s AND table_name = %s"), ['userdb', 'users'])
+            cols = [rec[0] for rec in cur.fetchall()]
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        finally:
+            cur.close()
+        self._cols = cols
+        self._rw_userdb = True
+
+    def _connection_reset(self):
+        """
+        Called by psycodict once it has replaced the connection this object
+        uses (roed314/psycodict#135); a no-op in psycodict without that hook.
+
+        Whether userdb may be written to describes the session rather than this
+        object, and a replacement connection can reach a standby, or a role
+        whose privileges have changed, so the cached answers have to be asked
+        again rather than carried over.
+        """
+        self._refresh_connection_capabilities()
 
     def can_read_write_userdb(self):
         return self._rw_userdb
