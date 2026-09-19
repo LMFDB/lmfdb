@@ -4,14 +4,6 @@
 
 <style>
   .api-entries > li { margin-bottom: 14px; }
-  #schema-table {
-    width: 95%;
-  }
-  div.schema-holder {
-    height: 300px;
-    width: 97%;
-    overflow-y: scroll;
-  }
 </style>
 
 <div>
@@ -26,6 +18,9 @@ Formats:
 </div>
 <div>
 Query: <code><a href="{{ query }}">{{ query_unquote }}</a></code>
+</div>
+<div class="table-description">
+  {{ KNOWL_INC('tables.'+table, htag='h2', show_title=True) }}
 </div>
 <div>
   {% include "apischema.html" %}
