@@ -216,8 +216,11 @@ class Wrapper:
             errpage = self.f(info, query)
             parse_labels(info, query, self.table)
         except Exception as err:
-            # Errors raised in parsing; these should mostly be SearchParsingErrors
-            if is_debug_mode():
+            # Errors raised in parsing.  A SearchParsingError reports invalid
+            # user input rather than a bug, so we redisplay the search page with
+            # the error message even in debug mode; anything else is re-raised
+            # so that developers see the traceback.
+            if is_debug_mode() and not isinstance(err, SearchParsingError):
                 raise
             info["err"] = str(err)
             err_title = query.pop("__err_title__", self.err_title)
