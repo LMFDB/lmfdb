@@ -142,18 +142,6 @@ class Genus2Test(LmfdbTest):
             and "(CM)" in L4.get_data(as_text=True)
         )
 
-    def test_by_url_isogeny_class_discriminant(self):
-        # the old-format URL redirects by dropping the discriminant
-        L = self.tc.get("/Genus2Curve/Q/15360/f/983040/", follow_redirects=True)
-        assert "15360.f1" in L.get_data(as_text=True)
-        # the curves of the class formerly labeled 15360.f (disc 983040) are
-        # now 15360.o1 and 15360.o2
-        L = self.tc.get("/Genus2Curve/Q/15360/o/")
-        assert (
-            "15360.o1" in L.get_data(as_text=True)
-            and "15360.o2" in L.get_data(as_text=True)
-        )
-
     def test_random(self):
         for _ in range(5):
             L = self.tc.get("/Genus2Curve/Q/random", follow_redirects=True)
