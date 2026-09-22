@@ -110,6 +110,11 @@ class HomePageTest(LmfdbTest):
         response = self.tc.get("/random", follow_redirects=True)
         assert "Properties" in response.get_data(as_text=True)
 
+    def test_alpha_sidebar(self):
+        """Check that future entries are still linked"""
+        homepage = self.tc.get("/").get_data(as_text=True)
+        assert '<a href="/ShimuraCurve/">Shimura curves</a>' in homepage
+
 
 # Dynamic test generation for individual boxes
 def _create_box_test(box_title, box_links):
