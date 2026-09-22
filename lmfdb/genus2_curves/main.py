@@ -368,10 +368,9 @@ def G2C_data(label):
 ################################################################################
 
 ### Regex patterns used in lookup
-OLD_LABEL_RE = re.compile(r"(\d+)\.([a-z]+)\.(\d+)\.(\d+)")
-OLD_ISOGENY_RE = re.compile(r"(\d+)\.([a-z]+)\.(\d+)")
-LABEL_RE = re.compile(r"(\d+)\.([a-z]+)(\d+)")
-ISOGENY_LABEL_RE = re.compile(r"(\d+)\.([a-z]+)")
+OLD_LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+LABEL_RE = re.compile(r"\d+\.[a-z]+\d+")
+ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")
 
 def genus2_lookup_equation(input_str):
@@ -490,14 +489,6 @@ def genus2_jump(info):
             return redirect(url_for(".index"))
         else:
             return redirect(url_for("by_label", label=new_label), 301)
-    elif OLD_ISOGENY_RE.fullmatch(jump):
-        new_label = db.g2c_curves_new.lucky({"old_label": jump+".1"}, "label")
-        if new_label is None:
-            flash_error(f"There is no isogeny class with old label {jump} in the database")
-            return redirect(url_for(".index"))
-        else:
-            cond, alpha, _ = LABEL_RE.fullmatch(new_label).groups()
-            return redirect(url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha), 301)
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves_new.lucky({"Lhash": jump[1:].strip()}, projection="class")
