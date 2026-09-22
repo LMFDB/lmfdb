@@ -488,7 +488,7 @@ def genus2_jump(info):
             flash_error(f"There is no curve with old label {jump} in the database")
             return redirect(url_for(".index"))
         else:
-            return redirect(url_for("by_label", label=new_label), 301)
+            return redirect(url_for(".by_label", label=new_label), 301)
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves_new.lucky({"Lhash": jump[1:].strip()}, projection="class")
