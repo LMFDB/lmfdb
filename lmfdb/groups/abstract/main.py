@@ -1695,6 +1695,7 @@ def name_to_label(name):
     if len(labels) >= 2:
         raise SearchParsingError(f"The name {name} does not determine a unique group; please enter a label")
     # special name from a family, e.g. GL(2,3), PSL(2,7)
+
     def int_try(x):
         return int(x) if x.isdigit() else x
     for family in db.gps_families.search():
