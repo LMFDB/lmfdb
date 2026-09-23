@@ -247,15 +247,13 @@ def by_url_curve_label(cond, alpha, num):
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/<int:num>")
 def by_url_curve_label_old(cond, alpha, disc, num):
-    # support URLs using the old label format cond.alpha.disc.num by
-    # redirecting to the new label cond.alpha+num (see genus2_jump)
-    return redirect(url_for(".by_url_curve_label", cond=cond, alpha=alpha, num=num), 301)
-
-@g2c_page.route("/Q/<int:cond>/<alpha>/<int:disc>/")
-def by_url_isogeny_class_discriminant_old(cond, alpha, disc):
-    # support old-style URLs that specified an isogeny class and discriminant
-    # by redirecting to the isogeny class page
-    return redirect(url_for(".by_url_isogeny_class_label", cond=cond, alpha=alpha), 301)
+    old_label = f"{cond}.{alpha}.{disc}.{num}"
+    new_label = db.g2c_curves_new.lucky({"old_label":old_label}, "label")
+    if new_label is None:
+        flash_error(f"There is no curve with old label {old_label} in the database")
+        return redirect(url_for(".index"))
+    else:
+        return redirect(url_for(".by_label", label=new_label), 301)
 
 @g2c_page.route("/Q/<int:cond>/<alpha>/")
 def by_url_isogeny_class_label(cond, alpha):
@@ -303,6 +301,8 @@ def render_curve_webpage(label):
     try:
         g2c = WebG2C.by_label(label)
     except (KeyError, ValueError) as err:
+        print("intentially raising error for debugging")
+        raise err
         return abort(404, err.args)
     return render_template(
         "g2c_curve.html",
@@ -350,6 +350,19 @@ def url_for_isogeny_class_label(label):
     slabel = label.split(".")
     return url_for(".by_url_isogeny_class_label", cond=slabel[0], alpha=slabel[1])
 
+def url_for_curve_label_old(old_label):
+    m = OLD_LABEL_RE.fullmatch(old_label)
+    if m is None:
+        raise ValueError("Invalid g2c old label")
+    cond, alpha, disc, num = m.groups()
+    return url_for(
+        "g2c.by_url_curve_label_old",
+        cond=cond,
+        alpha=alpha,
+        disc=disc,
+        num=num,
+    )
+
 
 def class_from_curve_label(label):
     return ".".join(split_g2c_lmfdb_label(label)[:2])
@@ -368,7 +381,7 @@ def G2C_data(label):
 ################################################################################
 
 ### Regex patterns used in lookup
-OLD_LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+OLD_LABEL_RE = re.compile(r"(\d+)\.([a-z]+)\.(\d+)\.(\d+)")
 LABEL_RE = re.compile(r"\d+\.[a-z]+\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")
@@ -483,9 +496,12 @@ def genus2_jump(info):
     elif ISOGENY_LABEL_RE.fullmatch(jump):
         return redirect(url_for_isogeny_class_label(jump), 301)
     elif OLD_LABEL_RE.fullmatch(jump):
-        s = jump.split(".")
-        jump = s[0] + "." + s[1] + s[3]
-        return redirect(url_for_curve_label(jump), 301)
+        new_label = db.g2c_curves_new.lucky({"old_label":jump}, "label")
+        if new_label is None:
+            flash_error(f"There is no curve with old label {jump} in the database")
+            return redirect(url_for(".index"))
+        else:
+            return redirect(url_for(".by_label", label=new_label), 301)
     elif LHASH_RE.fullmatch(jump) and ZZ(jump[1:]) < 2 ** 61:
         # Handle direct Lhash input
         c = db.g2c_curves_new.lucky({"Lhash": jump[1:].strip()}, projection="class")
