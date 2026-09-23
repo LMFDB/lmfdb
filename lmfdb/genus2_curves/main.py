@@ -350,6 +350,19 @@ def url_for_isogeny_class_label(label):
     slabel = label.split(".")
     return url_for(".by_url_isogeny_class_label", cond=slabel[0], alpha=slabel[1])
 
+def url_for_curve_label_old(old_label):
+    m = OLD_LABEL_RE.fullmatch(old_label)
+    if m is None:
+        raise ValueError("Invalid g2c old label")
+    cond, alpha, disc, num = m.groups()
+    return url_for(
+        "g2c.by_url_curve_label_old",
+        cond=cond,
+        alpha=alpha,
+        disc=disc,
+        num=num,
+    )
+
 
 def class_from_curve_label(label):
     return ".".join(split_g2c_lmfdb_label(label)[:2])
@@ -368,7 +381,7 @@ def G2C_data(label):
 ################################################################################
 
 ### Regex patterns used in lookup
-OLD_LABEL_RE = re.compile(r"\d+\.[a-z]+\.\d+\.\d+")
+OLD_LABEL_RE = re.compile(r"(\d+)\.([a-z]+)\.(\d+)\.(\d+)")
 LABEL_RE = re.compile(r"\d+\.[a-z]+\d+")
 ISOGENY_LABEL_RE = re.compile(r"\d+\.[a-z]+")
 LHASH_RE = re.compile(r"\#\d+")

@@ -5,7 +5,7 @@ from sage.all import lazy_attribute, Integers, GL, Sp, GF, Matrix, QQ, prime_ran
 from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.utils import WebObj, web_latex, display_knowl, web_latex_factored_integer
 from lmfdb import db
-from lmfdb.genus2_curves.main import url_for_curve_label as url_for_g2c_label
+from lmfdb.genus2_curves.main import url_for_curve_label_old as url_for_g2c_label
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.artin_representations.main import url_for_label as url_for_artin_label
 from lmfdb.number_fields.number_field import field_pretty
