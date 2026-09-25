@@ -129,11 +129,13 @@ function mytogglevert(use_big_on_top) {
 
 function mytoggleheights(use_order_for_height) {
   var who_old = whoisshowing;
-  if (use_order_for_height && (whoisshowing < 4)) {
-    whoisshowing += 4;
+  // The first half of glist lays subgroups out by number of prime divisors, the second half by order
+  var numtypes = glist.length / 2;
+  if (use_order_for_height && (whoisshowing < numtypes)) {
+    whoisshowing += numtypes;
   }
-  if ((! use_order_for_height) && whoisshowing > 3) {
-    whoisshowing -= 4;
+  if ((! use_order_for_height) && whoisshowing >= numtypes) {
+    whoisshowing -= numtypes;
   }
   if(who_old != whoisshowing) {
     glist[whoisshowing].highlit = null;
@@ -158,19 +160,20 @@ function getpositions() {
   return mylist;
 }
 
-var styles=['subgroup_diagram', 'subgroup_profile', 'subgroup_autdiagram', 'subgroup_autprofile', 'normal_diagram', 'normal_profile', 'normal_autdiagram', 'normal_autprofile'];
-var mode_pairs = [['subgroup', 'normal'], ['', 'aut'], ['diagram', 'profile']];
+var styles=['subgroup_diagram', 'subgroup_profile', 'subgroup_autdiagram', 'subgroup_autprofile', 'normal_diagram', 'normal_profile', 'normal_autdiagram', 'normal_autprofile', 'maximal_diagram', 'maximal_profile', 'maximal_autdiagram', 'maximal_autprofile'];
+var mode_groups = [['subgroup', 'normal', 'maximal'], ['', 'aut'], ['diagram', 'profile']];
 function select_subgroup_mode(mode) {
-  var cls, thismode, opposite_mode, piece;
+  var cls, thismode, others, piece;
   cls = "";
-  for (var i = 0; i < mode_pairs.length; i++) {
-    for (var j = 0; j < 2; j++) {
-      thismode = mode_pairs[i][j];
+  others = [];
+  for (var i = 0; i < mode_groups.length; i++) {
+    for (var j = 0; j < mode_groups[i].length; j++) {
+      thismode = mode_groups[i][j];
       if (thismode == mode) {
-        opposite_mode = mode_pairs[i][1-j];
         if ($("button.sub_" + mode).hasClass("sub_active")) {
           return; // already active
         }
+        others = mode_groups[i].filter(function(m) { return m != mode; });
         piece = mode;
         break;
       }
@@ -185,8 +188,10 @@ function select_subgroup_mode(mode) {
   }
   $("button.sub_" + mode).removeClass("sub_inactive");
   $("button.sub_" + mode).addClass("sub_active");
-  $("button.sub_" + opposite_mode).removeClass("sub_active");
-  $("button.sub_" + opposite_mode).addClass("sub_inactive");
+  for (var i = 0; i < others.length; i++) {
+    $("button.sub_" + others[i]).removeClass("sub_active");
+    $("button.sub_" + others[i]).addClass("sub_inactive");
+  }
   show_info(cls);
 }
 
@@ -197,15 +202,19 @@ function show_info(style) {
   }
   $('div.'+style).show();
   if (style.endsWith("diagram")) {
+    // Order within glist: subgroup, subgroup_aut, normal, normal_aut, maximal, maximal_aut,
+    // first laid out by number of prime divisors, then the same six laid out by order
     whoisshowing = 0;
     if (style.endsWith("autdiagram")) {
       whoisshowing += 1;
     }
-    if (heightstyle=='order') {
-      whoisshowing += 4;
-    }
     if (style.startsWith("normal")) {
       whoisshowing += 2;
+    } else if (style.startsWith("maximal")) {
+      whoisshowing += 4;
+    }
+    if (heightstyle=='order') {
+      whoisshowing += glist.length / 2;
     }
     sdiagram.newgraph(glist[whoisshowing]);
     sdiagram.setSize();
