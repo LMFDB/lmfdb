@@ -1,3 +1,4 @@
+import re
 import unittest
 
 from urllib.request import Request, HTTPRedirectHandler, HTTPSHandler, HTTPHandler, build_opener
@@ -15,6 +16,29 @@ from sage.all import PolynomialRing, QQ, NumberField
 assert PolynomialRing
 assert QQ
 assert NumberField
+
+
+def input_classes(html, name):
+    """
+    The CSS classes of each visible search input or select in ``html`` with
+    the given ``name``, as a list of sets of class names, one per matching
+    tag.  Hidden inputs are skipped, since they are never displayed and so
+    are never highlighted.
+
+    A tag carrying two class attributes is invalid HTML, and browsers respond
+    by discarding one of them; rather than guess which one survives, this
+    raises so that the caller's test fails.
+    """
+    classes = []
+    for tag in re.findall(r"<(?:input|select)\s[^>]*>", html):
+        if not re.search(r'\bname="%s"' % re.escape(name), tag):
+            continue
+        if re.search(r'\btype="hidden"', tag):
+            continue
+        found = re.findall(r'\bclass="([^"]*)"', tag)
+        assert len(found) < 2, "Duplicate class attributes in %s" % tag
+        classes.append(set(found[0].split()) if found else set())
+    return classes
 
 
 class CustomRedirectHandler(HTTPRedirectHandler):
@@ -44,6 +68,21 @@ class LmfdbTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.app_context.pop()
+
+    def search_classes(self, path, name):
+        """
+        The CSS classes of the search input named ``name`` on the page at
+        ``path``, for checking which inputs are marked as constraining the
+        results being displayed.
+        """
+        page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+        classes = input_classes(page, name)
+        assert len(classes) == 1, "Found %s inputs named %s at %s" % (
+            len(classes),
+            name,
+            path,
+        )
+        return classes[0]
 
     def check(self, homepage, path, text):
         assert path in homepage, "%s not in the homepage" % path
