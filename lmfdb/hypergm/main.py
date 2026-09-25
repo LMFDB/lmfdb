@@ -4,7 +4,8 @@
 
 import re
 
-from flask import render_template, request, url_for, redirect, abort
+from flask import render_template, request, url_for, redirect, abort, flash
+from markupsafe import Markup
 from sage.all import (
     is_prime, ZZ, QQ, latex, valuation, PolynomialRing, gcd)
 
@@ -23,7 +24,8 @@ from lmfdb.hypergm import hypergm_page
 from .web_family import WebHyperGeometricFamily
 
 HGM_FAMILY_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+$')
-HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+.\d+$')
+HGM_LABEL_RE = re.compile(r'^A(\d+\.)*\d+_B(\d+\.)*\d+_t-?\d+\.\d+$')
+HGM_T_LABEL_RE = re.compile(r'^t-?\d+\.\d+$')
 
 
 def learnmore_list():
@@ -280,10 +282,46 @@ def poly_with_factored_coeffs(c, p):
     return out
 
 
+# Fields that only make sense for an individual motive, not for a family.
+HGM_MOTIVE_ONLY_FIELDS = ["conductor", "hodge", "t", "sign"]
+
+# Request arguments that select the search mode, the page or a download rather
+# than constraining the objects searched for; they are not carried over when the
+# same search is rerun on families.
+HGM_MODE_ARGS = ["search_type", "hst", "start", "download", "query",
+                 "result_count", "Submit", "download_row_count"]
+
+
+def default_search_type(info):
+    # The family Hodge vector is a family-level invariant, so a bare famhodge
+    # query (the URL reported in issue #3406) should search families rather than
+    # motives, of which there may be none in the database.  Any explicit choice
+    # (search_type/hst) or motive-only constraint is respected.
+    search_type = info.get("search_type", info.get("hst", ""))
+    if search_type:
+        return search_type
+    if info.get("famhodge") and not any(info.get(k) for k in HGM_MOTIVE_ONLY_FIELDS):
+        return "Family"
+    return "Motive"
+
+
+def family_search_url():
+    # The URL for the current search with the object type switched from motives
+    # to families: motive-only constraints cannot apply to a family, and the mode,
+    # pagination and download arguments are replaced rather than carried over.
+    args = {key: val for key, val in request.args.items()
+            if val and not key.startswith("_")  # url_for's own keywords
+            and key not in HGM_MOTIVE_ONLY_FIELDS and key not in HGM_MODE_ARGS}
+    return url_for(".index", search_type="Family", **args)
+
+
 @hypergm_page.route("/")
 def index():
     info = to_dict(request.args, search_array=HGMSearchArray())
     if request.args:
+        # The search type must be settled before hgm_search is called, since the
+        # SearchWrapper dispatches shortcuts such as download before reaching it.
+        info["search_type"] = default_search_type(info)
         return hgm_search(info)
     return render_template(
         "hgm-index.html",
@@ -293,11 +331,18 @@ def index():
         learnmore=learnmore_list())
 
 
-def hgm_family_circle_plot_data(AB):
+def split_family_label(AB):
+    # Return (A, B) as lists of integers if AB is a valid family label, else None
+    if not HGM_FAMILY_LABEL_RE.match(AB):
+        return None
     A, B = AB.split("_")
+    return ([int(n) for n in A[1:].split(".")],
+            [int(n) for n in B[1:].split(".")])
+
+
+def hgm_family_circle_plot_data(AB):
     from .plot import circle_image
-    A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]
+    A, B = split_family_label(AB)
     G = circle_image(A, B)
     P = G.plot()
     import tempfile
@@ -312,33 +357,33 @@ def hgm_family_circle_plot_data(AB):
 
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
-    A, B = AB.split("_")
     from .plot import circle_image
-    A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]
-    G = circle_image(A, B)
+    AB_lists = split_family_label(AB)
+    if AB_lists is None:
+        return abort(404, "Invalid family label %s" % AB)
+    G = circle_image(*AB_lists)
     return image_callback(G)
 
 
 @hypergm_page.route("/plot/linear/<AB>")
 def hgm_family_linear_image(AB):
     # piecewise linear, as opposed to piecewise constant
-    A, B = AB.split("_")
     from .plot import piecewise_linear_image
-    A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]
-    G = piecewise_linear_image(A, B)
+    AB_lists = split_family_label(AB)
+    if AB_lists is None:
+        return abort(404, "Invalid family label %s" % AB)
+    G = piecewise_linear_image(*AB_lists)
     return image_callback(G)
 
 
 @hypergm_page.route("/plot/constant/<AB>")
 def hgm_family_constant_image(AB):
     # piecewise constant
-    A, B = AB.split("_")
     from .plot import piecewise_constant_image
-    A = [int(n) for n in A[1:].split(".")]
-    B = [int(n) for n in B[1:].split(".")]
-    G = piecewise_constant_image(A, B)
+    AB_lists = split_family_label(AB)
+    if AB_lists is None:
+        return abort(404, "Invalid family label %s" % AB)
+    G = piecewise_constant_image(*AB_lists)
     return image_callback(G)
 
 
@@ -346,19 +391,18 @@ def hgm_family_constant_image(AB):
 def by_family_label(label):
     if HGM_FAMILY_LABEL_RE.match(label):
         return render_hgm_family_webpage(normalize_family(label))
-    else:
-        flash_error('%s is not a valid label for a family of hypergeometric motives', label)
-        return redirect(url_for(".index"))
+    if HGM_LABEL_RE.match(label):
+        # A full motive label; redirect to the motive page
+        return redirect(url_for_label(normalize_motive(label)), 301)
+    return abort(404, "%s is not a valid label for a family of hypergeometric motives" % label)
 
 
 @hypergm_page.route("/<label>/<t>")
 def by_label(label, t):
-    if HGM_FAMILY_LABEL_RE.match(label):
+    if HGM_FAMILY_LABEL_RE.match(label) and HGM_T_LABEL_RE.match(t):
         full_label = normalize_family(label) + "_" + t
         return render_hgm_webpage(full_label)
-    else:
-        flash_error('%s is not a valid label for a family of hypergeometric motives', label)
-        return redirect(url_for(".index"))
+    return abort(404, "%s/%s is not a valid label for a hypergeometric motive" % (label, t))
 
 
 def hgm_jump(info):
@@ -403,11 +447,35 @@ class HGMDownload(Downloader):
     table = db.hgm_motives  # overridden if family search
 
     def get_table(self, info):
-        search_type = info.get("search_type", info.get("hst", "Motive"))
+        # Downloads reach this point without hgm_search having run, so normalize
+        # the search type here too: it also controls the sort order and which
+        # contingent columns are included, which must agree with the table.
+        search_type = info["search_type"] = default_search_type(info)
         if search_type in ["Family", "RandomFamily"]:
             return db.hgm_families
         else:
             return db.hgm_motives
+
+
+def hgm_postprocess(res, info, query):
+    # A motive search whose only Hodge constraint is the family Hodge vector may
+    # return nothing even though matching families exist (issue #3406); point the
+    # user at the same search over families in that case.  Under this guard every
+    # constraint parsed into the query is a column of hgm_families as well, so the
+    # count and the link describe the whole search, not just its famhodge part.
+    if (not res
+            and info.get("search_type", info.get("hst", "Motive")) not in ["Family", "RandomFamily"]
+            and query.get("famhodge") is not None
+            and not any(info.get(k) for k in HGM_MOTIVE_ONLY_FIELDS)):
+        nfam = db.hgm_families.count(query)
+        if nfam:
+            flash(Markup(
+                "Note: no motives in the database match this search, "
+                "but %d matching famil%s &mdash; "
+                '<a href="%s">search families instead</a>.'
+                % (nfam, "y exists" if nfam == 1 else "ies exist",
+                   family_search_url())), "info")
+    return res
 
 
 @search_wrap(table=db.hgm_motives,  # overridden if family search
@@ -417,10 +485,11 @@ class HGMDownload(Downloader):
              per_page=50,
              shortcuts={'jump': hgm_jump, 'download': HGMDownload()},
              url_for_label=url_for_label,
+             postprocess=hgm_postprocess,
              bread=lambda: get_bread([("Search results", '')]),
              learnmore=learnmore_list)
 def hgm_search(info, query):
-    info["search_type"] = search_type = info.get("search_type", info.get("hst", "Motive"))
+    info["search_type"] = search_type = default_search_type(info)
     if search_type in ["Family", "RandomFamily"]:
         query['__title__'] = r'Hypergeometric family over $\Q$ search results'
         query['__err_title__'] = r'Hypergeometric family over $\Q$ search input error'
@@ -543,6 +612,10 @@ def render_hgm_webpage(label):
                 'det': det,
                 'locinfo': locinfo
                 })
+    if data['weight'] > 0:
+        # Weight 0 gives a trivial (flat) Hodge polygon, so only show it otherwise.
+        from .plot import hodge_polygon_plot
+        info['hodge_polygon_plot'] = hodge_polygon_plot(hodge)
     AB_data, t_data = data["label"].split("_t")
     friends = [("Motive family " + AB_data.replace("_", " "), url_for(".by_family_label", label=AB_data))]
     friends.append(('L-function', url_for("l_functions.l_function_hgm_page", label=AB_data, t='t' + t_data)))
