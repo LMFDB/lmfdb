@@ -24,7 +24,7 @@
     {%- endif -%}
     {%- if entry.collapsible and entry.part2 -%}
       <span class="collapsible-container">
-        {{entry.title | safe}}
+        <span class="collapsible-title">{{entry.title | safe}}</span>
 	<div class="collapsible-content">
       {%- for pt2 in entry.part2 -%}
         {%- if not BETA and pt2.status == "notonbeta" -%}
@@ -103,8 +103,8 @@
       $('.collapsible-container').each(function(index) {
           var $container = $(this);
           var $content   = $container.find('.collapsible-content');
-          // Key from the container's OWN text only, excluding child elements
-          var ownText = $.trim($container.clone().children().remove().end().text());
+          // Key from the title text only (not the submenu links)
+          var ownText = $.trim($container.children('.collapsible-title').text());
           var key = 'lmfdb_sidebar_entry_' +
               ownText.replace(/\s+/g, '_').substring(0, 30);
           var contentId = 'lmfdb-sidebar-entry-' + index;
