@@ -57,6 +57,14 @@ Installation
    sage -pip install -r requirements.txt
    ```
 
+   This installs the LMFDB itself (in editable mode, i.e. pointing at your
+   checkout) together with its dependencies and development tools, so that
+   `import lmfdb` works from `sage` regardless of the current directory;
+   there is no need to add the checkout to your `PYTHONPATH`.  It is
+   equivalent to `sage -pip install -e ".[dev]"`.  Importing `lmfdb` does
+   not connect to the database; the connection is established the first
+   time `lmfdb.db` is used.
+
    ### Troubleshooting with packages.
 
    - If you have not run the site for a while you might get an error
@@ -129,6 +137,10 @@ Running
    sage -python start-lmfdb.py --debug
    ```
 
+   Installing the LMFDB (see above) also provides an `lmfdb` command, so
+   you can equivalently run `lmfdb --debug`, or
+   `sage -python -m lmfdb --debug`, from any directory.
+
  * The effect of the (optional) --debug is that you will be running
    with the beta flag switched on as at dev.lmfdb.org, and also that
    if code fails your browser will show useful debugging information.
@@ -162,6 +174,18 @@ Running
    on devmirror.lmfdb.xyz) is sufficient, and this step is not necessary. If you do plan
    on using a different database instance, you can do so by changing
    config.ini in the root of the lmfdb directory.
+
+ * Locations of configuration and log files: when running from a git
+   checkout, the configuration file is `config.ini` at the root of the
+   checkout, and log files (`flasklog`, `slow_queries.log`, verification
+   logs) go to its `logs/` subdirectory.  When the LMFDB is installed as a
+   package rather than run from a checkout, these files live in `~/.lmfdb`
+   (except that a `config.ini` in the current directory is used if it
+   exists).  The secret key used for login sessions is stored next to the
+   configuration file.  The environment variables `LMFDB_HOME` (the
+   directory for all of these files) and `LMFDB_CONFIG` (the path of the
+   configuration file) override these defaults, as does the `--config-file`
+   command-line option.
 
 
 CoCalc

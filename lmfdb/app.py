@@ -1,4 +1,4 @@
-from .utils.config import get_secret_key
+from .config import current_configuration
 import os
 from socket import gethostname
 import time
@@ -16,14 +16,18 @@ from flask import (
     url_for,
 )
 from markupsafe import escape
+
+# imported before sage so that a missing sage produces a helpful error message
+from .logger import critical
+
 from sage.env import SAGE_VERSION
 from sage.all import cached_function
-# acknowledgment page, reads info from CONTRIBUTORS.yaml
+# acknowledgment page, reads info from lmfdb/CONTRIBUTORS.yaml
 
-from .logger import critical
 from .homepage import load_boxes, contribs
 
-LMFDB_VERSION = "LMFDB Release 1.2.1"
+from .version import version as _lmfdb_version
+LMFDB_VERSION = "LMFDB Release " + _lmfdb_version
 
 ############################
 #         Main app         #
@@ -89,8 +93,10 @@ if app.debug:
         pass
 
 # secret key, necessary for sessions, and sessions are
-# in turn necessary for users to login
-app.secret_key = get_secret_key()
+# in turn necessary for users to login.  Using the process-wide
+# configuration means a --config-file option given to the lmfdb command
+# moves the key together with the configuration file.
+app.secret_key = current_configuration().get_secret_key()
 
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
@@ -575,8 +581,7 @@ def add_colors():
         if color not in all_color_schemes:
             color = None
         if color is None:
-            from .utils.config import Configuration
-            color = Configuration().get_color()
+            color = current_configuration().get_color()
     return {"color": all_color_schemes[color].dict()}
 
 
