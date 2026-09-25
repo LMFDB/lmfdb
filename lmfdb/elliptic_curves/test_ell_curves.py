@@ -46,6 +46,22 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/11/1', follow_redirects=True)
         assert '11.1' in L.get_data(as_text=True) and 'not a valid label for an isogeny class' in L.get_data(as_text=True)
 
+    def test_search_multiple_curves(self):
+        # A comma-separated list of LMFDB labels returns a search page listing them
+        self.check_args('/EllipticCurve/Q/?jump=11.a2%2C+389.a1&search=Go', ['11.a2', '389.a1'])
+        # A Cremona label and a coefficient vector for the same curve both resolve
+        # (and the duplicate is removed)
+        self.check_args('/EllipticCurve/Q/?jump=11a1%2C+%5B0%2C-1%2C1%2C-10%2C-20%5D&search=Go', '11.a2')
+        # An unrecognized entry mixed in is ignored; the valid labels are still shown
+        self.check_args('/EllipticCurve/Q/?jump=11.a2%2C+banana%2C+389.a1&search=Go', ['11.a2', '389.a1', 'ignored'])
+        # When no entry is valid, an error is shown
+        self.check_args('/EllipticCurve/Q/?jump=banana%2C+kiwi&search=Go', 'None of the')
+        # Regression (LMFDB#6882 review): the two-polynomial Weierstrass syntax
+        # "f, h" contains a top-level comma but denotes a single curve, so it must
+        # NOT be intercepted as a multi-entry label list. This exact input is
+        # preserved byte-for-byte from the pre-existing test_browse_page.test_jump.
+        self.check_args("/EllipticCurve/Q/?jump=x%5E3+%2B+10*x+%2B+17%2C+x", r"\frac{109902239}{176525}")
+
     def test_Cond_search(self):
         L = self.tc.get('/EllipticCurve/Q/?start=0&conductor=1200&count=100')
         assert '[0, 1, 0, -2133408, 1198675188]' in L.get_data(as_text=True)
