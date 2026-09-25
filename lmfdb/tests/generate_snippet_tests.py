@@ -123,7 +123,7 @@ def _start_snippet_procs(langs, chimp_spec=None):
             julia_env.pop('SINGULAR_BIN_DIR', None)
             spawn = pexpect.spawn(exec_dict['oscar'],
                                   ['-q', '--color=no', '--banner=no'],
-                                  env = julia_env,
+                                  env=julia_env,
                                   echo=False,
                                   encoding="utf8",
                                   )
@@ -133,8 +133,8 @@ def _start_snippet_procs(langs, chimp_spec=None):
             processes['oscar'] = pexpect.replwrap.REPLWrapper(spawn, prompt_dict[lang], None)
             processes['oscar'].run_command('using Pkg; Pkg.add("Oscar"); using Oscar', timeout=60*10)
             # conservative timeout of 10 minutes
-            # _resync since Pkg's output may contain "julia> " 
-            
+            # _resync since Pkg's output may contain "julia> "
+
             _resync(processes['oscar'], 'oscar', timeout=60*10)
             spawn.logfile = None
             print("\nOscar loaded")
@@ -270,7 +270,7 @@ def _remove_escape_chars(logfile):
     if stripped != contents:
         with logfile.open('w', encoding="utf-8", newline="\n") as f:
             f.write(stripped)
-    
+
 
 def raise_error_warning(logfile, lang, error_file=None):
     with logfile.open('r') as f:
