@@ -1,4 +1,8 @@
+from urllib.parse import parse_qsl
+
+from lmfdb import db
 from lmfdb.tests import LmfdbTest
+from lmfdb.characters.main import common_parse
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 from lmfdb.utils import comma
@@ -63,11 +67,160 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/?conductor=111')
         assert '111.m' in W.get_data(as_text=True)
 
+    def test_primitive_search(self):
+        # A primitive character has modulus equal to its conductor, which is
+        # used to answer these searches from the (conductor, modulus, orbit)
+        # index; see issue #6733
+        W = self.tc.get('/Character/Dirichlet/?conductor=17&is_primitive=yes')
+        data = W.get_data(as_text=True)
+        assert 'Results (4 matches)' in data
+        for label in ['17.b', '17.c', '17.d', '17.e']:
+            assert label in data
+        W = self.tc.get('/Character/Dirichlet/?conductor=17,61&is_primitive=yes')
+        data = W.get_data(as_text=True)
+        assert '17.e' in data and '61.b' in data
+        W = self.tc.get('/Character/Dirichlet/?modulus=61&is_primitive=yes')
+        assert '61.h' in W.get_data(as_text=True)
+        W = self.tc.get('/Character/Dirichlet/?conductor=17&modulus=10-20&is_primitive=yes')
+        assert '17.e' in W.get_data(as_text=True)
+
+    def test_contradictory_search(self):
+        # Searches that provably have no results are answered without
+        # scanning the table; see issues #6733 and #6422
+        queries = ['order=3&parity=odd',  # odd order forces even parity
+                   'order=3,5&parity=odd',  # the same, as a comma separated list
+                   'order=3&parity=odd&is_primitive=yes&is_real=no',
+                   'is_real=yes&order=5',  # real characters have order at most 2
+                   'is_real=yes&order=3,5',
+                   'is_real=no&order=1-2',
+                   'modulus=100&conductor=17',  # conductor divides modulus
+                   'modulus=17&conductor=17&is_primitive=no',
+                   'conductor=17&modulus=18-20&is_primitive=yes',
+                   'inducing=3.b&order=3',  # 3.b has order 2
+                   'inducing=3.b&order=3,5',
+                   'inducing=3.b&parity=even',  # 3.b is odd
+                   'inducing=3.b&is_real=no',  # 3.b is real
+                   'inducing=3.b&conductor=5',  # induced characters have conductor 3
+                   'inducing=3.b&conductor=5,7']
+        for q in queries:
+            W = self.tc.get('/Character/Dirichlet/?' + q)
+            data = W.get_data(as_text=True)
+            assert 'This search returns no results because' in data, q
+            assert 'No matches' in data, q
+
+    def test_no_results_search_modes(self):
+        # A search with no results must behave in every search mode; the
+        # count is fetched by an ajax call that should not leave a flashed
+        # message behind for the next page the user visits.
+        self.tc.get('/Character/Dirichlet/')  # display any pending message
+        W = self.tc.get('/Character/Dirichlet/?order=3,5&parity=odd&result_count=1')
+        assert W.json == {'nres': '0'}
+        W = self.tc.get('/Character/Dirichlet/?modulus=35')
+        assert 'This search returns no results because' not in W.get_data(as_text=True)
+        W = self.tc.get('/Character/Dirichlet/?order=3,5&parity=odd&search_type=Random')
+        data = W.get_data(as_text=True)
+        assert 'This search returns no results because' in data
+        assert 'No matches' in data
+
+    def test_inducing_search(self):
+        W = self.tc.get('/Character/Dirichlet/?inducing=3.b&modulus=1-100')
+        data = W.get_data(as_text=True)
+        assert '6.b' in data and '15.c' in data
+        # compatible constraints on inherited quantities are harmless
+        W = self.tc.get('/Character/Dirichlet/?inducing=3.b&modulus=1-100&order=2&parity=odd&is_real=yes')
+        assert '15.c' in W.get_data(as_text=True)
+
     def test_nextprev(self):
         W = self.tc.get('/Character/Dirichlet/?start=200&count=25&order=3')
         assert r'288.i' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?start=100&count=25&order=3')
         assert r'169.c' in W.get_data(as_text=True)
+
+
+class DirichletSearchQueryTest(LmfdbTest):
+    """
+    The searches below are rewritten by the parser using mathematical
+    relations between the search columns, so that postgres is not asked to
+    filter a large part of the table on a sparse boolean (issues #6733 and
+    #6422).  These tests check the rewritten query itself: the page a search
+    produces does not show whether the boolean was removed, which is the
+    point of the rewriting.
+    """
+
+    # a query that provably has no results is replaced by this one, which is
+    # answered instantly from the hash index on label
+    no_results = {'label': ''}
+
+    def parsed(self, query_string):
+        """The database query that a search url is turned into."""
+        query = {}
+        with self.app.test_request_context():
+            common_parse(dict(parse_qsl(query_string)), query)
+        return query
+
+    def labels(self, query):
+        return set(db.char_dirichlet.search(query, projection='label'))
+
+    def test_real_becomes_an_order_constraint(self):
+        # a character is real if and only if its order is at most 2, and
+        # there is no index on is_real
+        assert self.parsed('is_real=yes') == {'order': {'$lte': 2}}
+        assert self.parsed('is_real=no') == {'order': {'$gte': 3}}
+        assert self.parsed('is_real=yes&order=1-100') == {'order': {'$gte': 1, '$lte': 2}}
+        assert self.parsed('is_real=no&order=1-100') == {'order': {'$gte': 3, '$lte': 100}}
+        assert self.parsed('conductor=17&is_real=yes') == {'conductor': 17, 'order': {'$lte': 2}}
+        assert self.parsed('is_real=yes&order=5') == self.no_results
+        assert self.parsed('is_real=no&order=1-2') == self.no_results
+        # comma separated orders are stored in $or branches
+        assert self.parsed('is_real=yes&order=3,5') == self.no_results
+        assert self.parsed('is_real=yes&order=2,3') == {'order': 2}
+
+    def test_odd_order_forces_even_parity(self):
+        assert self.parsed('order=3&parity=odd') == self.no_results
+        assert self.parsed('order=3,5&parity=odd') == self.no_results
+        assert self.parsed('order=2,3&parity=odd') == {'order': 2, 'is_even': False}
+        # asking for even parity is redundant once the order is odd
+        assert self.parsed('order=3&parity=even') == {'order': 3}
+        assert self.parsed('order=3,5&parity=even') == {'$or': [{'order': 3}, {'order': 5}]}
+        # both parities occur in order 2
+        assert self.parsed('order=2&parity=odd') == {'order': 2, 'is_even': False}
+
+    def test_inducing_order(self):
+        # 3.b has order 2, and induces characters of order 2 and conductor 3
+        induced = {'conductor': 3, 'primitive_orbit': 2, 'order': 2}
+        assert self.parsed('inducing=3.b') == induced
+        assert self.parsed('inducing=3.b&order=1-2,5') == induced
+        assert self.parsed('inducing=3.b&order=3,5') == self.no_results
+        assert self.parsed('inducing=3.b&conductor=5,7') == self.no_results
+
+    def test_primitive_mirrors_conductor_and_modulus(self):
+        assert self.parsed('conductor=17&is_primitive=yes') == {'conductor': 17, 'modulus': 17}
+        assert self.parsed('modulus=61&is_primitive=yes') == {'conductor': 61, 'modulus': 61}
+        assert self.parsed('conductor=17&modulus=10-20&is_primitive=yes') == {'conductor': 17, 'modulus': 17}
+        assert self.parsed('conductor=17&modulus=18-20&is_primitive=yes') == self.no_results
+        assert self.parsed('conductor=17,61&is_primitive=yes') == {
+            'is_primitive': True,
+            '$or': [{'conductor': 17, 'modulus': 17}, {'conductor': 61, 'modulus': 61}]}
+
+    def test_rewritten_searches_agree(self):
+        # each rewritten query must select exactly the characters that the
+        # boolean predicate it replaces would have selected
+        def small(**kwds):
+            return dict({'modulus': {'$gte': 1, '$lte': 40}}, **kwds)
+        for query_string, unrewritten in [
+                ('modulus=1-40&is_real=yes', small(is_real=True)),
+                ('modulus=1-40&is_real=no&order=1-100',
+                 small(is_real=False, order={'$gte': 1, '$lte': 100})),
+                ('modulus=1-40&order=2,3&parity=odd',
+                 small(is_even=False, **{'$or': [{'order': 2}, {'order': 3}]})),
+                ('modulus=1-40&order=3,5&parity=even',
+                 small(is_even=True, **{'$or': [{'order': 3}, {'order': 5}]})),
+                ('modulus=1-40&is_primitive=yes', small(is_primitive=True)),
+                ('conductor=17&modulus=1-1000&is_real=yes',
+                 {'conductor': 17, 'modulus': {'$gte': 1, '$lte': 1000}, 'is_real': True})]:
+            found = self.labels(self.parsed(query_string))
+            assert found and found == self.labels(unrewritten), query_string
+
 
 class DirichletTableTest(LmfdbTest):
 
