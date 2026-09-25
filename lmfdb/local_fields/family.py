@@ -177,7 +177,16 @@ class pAdicSlopeFamily:
         ticklook, ticks, slopeset, meanset, rectangles = self.spread_ticks
         hscale = self.e / 18
         mindiff = min((ticklook[b]-ticklook[a]) for (a,b) in rectangles)
-        aspect = min(8, max(0.6 * (self.e + 3*hscale) / (1 + maxslope), self.e/(32*mindiff)))
+        # The image is displayed with a fixed width, so its rendered height is
+        # proportional to aspect * maxslope / xwidth.  The first term gives a
+        # pleasant default shape; the second term increases the height when
+        # needed to keep the closest pair of y-axis labels legibly separated.
+        xwidth = self.e + 3*hscale
+        aspect = max(0.6 * xwidth / (1 + maxslope), self.e/(32*mindiff))
+        # Clamp the height:width ratio of the image to [1/4, 5/4].  A fixed cap
+        # on the aspect itself (which is measured in data coordinates) would
+        # vertically compress families with small slopes and large e (#6828).
+        aspect = min(max(aspect, xwidth/(4*maxslope)), 5*xwidth/(4*maxslope))
 
         # Print the bands
         for (a,b), cnt in rectangles.items():
