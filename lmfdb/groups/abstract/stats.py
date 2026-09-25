@@ -34,7 +34,9 @@ def nilp_formatter(nilp):
     return str(nilp)
 
 def nilp_qformatter(nilp):
-    if nilp == "not":
+    # A group that is not nilpotent is stored with nilpotency class -1, which the
+    # search page does not accept; it is searched for with the nilpotent box.
+    if nilp in (-1, "not"):
         return "nilpotent=no"
     return f"nilpotency_class={nilp}"
 
