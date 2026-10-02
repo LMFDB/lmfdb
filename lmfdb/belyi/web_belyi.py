@@ -5,6 +5,7 @@ from sage.all import gcd, latex, CC, QQ, FractionField, PolynomialRing
 from lmfdb.utils import (names_and_urls, prop_int_pretty, raw_typeset,
         web_latex, compress_expression)
 from flask import url_for
+import gzip
 import re
 import os
 
@@ -12,7 +13,7 @@ from lmfdb import db
 
 
 ###############################################################################
-# Belyi dessin images from belyi_images.txt
+# Belyi dessin images from belyi_images.txt.gz
 ###############################################################################
 
 _belyi_images = None
@@ -22,11 +23,11 @@ def _load_belyi_images():
     if _belyi_images is not None:
         return _belyi_images
     _belyi_images = {}
-    txt_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'images', 'belyi_images.txt')
+    txt_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'images', 'belyi_images.txt.gz')
     txt_path = os.path.abspath(txt_path)
     if not os.path.exists(txt_path):
         return _belyi_images
-    with open(txt_path, encoding='utf-8') as f:
+    with gzip.open(txt_path, 'rt', encoding='utf-8') as f:
         for i, line in enumerate(f):
             if i < 2:  # skip header rows
                 continue
@@ -76,7 +77,10 @@ def _crop_svg_bottom(svg, crop_height=660):
 
 
 def _belyidb_to_lmfdb_plabel(belyidb_label):
-    # "4T2-[2,2,2]-22-22-22-g0" -> "4T2-2.2_2.2_2.2"
+    # "4T2-[2,2,2]-22-22-22-g0" -> "4T2-2.2_2.2_2.2-a"
+    # "9T23-[6,6,6]-621-621-621-g1-b" -> "9T23-6.2.1_6.2.1_6.2.1-b"
+    # (the optional 7th, orbit-letter component distinguishes galmaps within
+    # a passport; passports with a single orbit omit it, defaulting to "a")
     parts = belyidb_label.split('-')
     if len(parts) < 5:
         return None
@@ -85,12 +89,13 @@ def _belyidb_to_lmfdb_plabel(belyidb_label):
     sigma0 = '.'.join(list(parts[2]))
     sigma1 = '.'.join(list(parts[3]))
     sigmaoo = '.'.join(list(parts[4]))
-    return '{}-{}_{}_{}'.format(group, sigma0, sigma1, sigmaoo)
+    letter = parts[6] if len(parts) >= 7 else 'a'
+    return '{}-{}_{}_{}-{}'.format(group, sigma0, sigma1, sigmaoo, letter)
 
 
-def get_belyi_images(plabel):
-    """Return list of SVG strings for the given LMFDB passport label, or []."""
-    return _load_belyi_images().get(plabel, [])
+def get_belyi_images(label):
+    """Return list of SVG strings for the given LMFDB galmap label, or []."""
+    return _load_belyi_images().get(label, [])
 
 
 ###############################################################################
@@ -383,8 +388,17 @@ class WebBelyiGalmap():
         if galmap.get('plane_map_constant_factored'):
             data['plane_map_constant_factored'] = galmap['plane_map_constant_factored']
 
-        # Dessin images (one per embedding, or a single shared one)
-        data['dessin_svgs'] = get_belyi_images(galmap['plabel'])
+        # Dessin images (one per embedding), looked up per galmap orbit so
+        # that different orbits within the same passport don't share images.
+        # An empty list means no images are available for this galmap; a
+        # nonempty list must have exactly one SVG per embedding, since the
+        # template indexes into it by embedding position with no fallback.
+        data['dessin_svgs'] = get_belyi_images(galmap['label'])
+        if data['dessin_svgs']:
+            assert len(data['dessin_svgs']) == len(data['embeddings_and_triples']), (
+                "dessin image count ({}) does not match embedding count ({}) for {}".format(
+                    len(data['dessin_svgs']), len(data['embeddings_and_triples']), galmap['label'])
+            )
 
         # Properties
         self.plot = db.belyi_galmap_portraits.lucky({"label": galmap['label']},

@@ -145,9 +145,8 @@ function viewEmbedding(idx) {
     <div class="knowl"><div><div class="knowl-content">
       <strong>Dessin d&rsquo;enfant</strong>
       {% for g in data.embeddings_and_triples %}
-        {% set svg_idx = loop.index0 if loop.index0 < data.dessin_svgs|length else 0 %}
         <div id="dessin-svg-{{ loop.index0 }}" class="dessin-svg-item" style="display:none;">
-          {{ data.dessin_svgs[svg_idx]|safe }}
+          {{ data.dessin_svgs[loop.index0]|safe }}
         </div>
       {% endfor %}
       <p style="font-size:0.85em; margin-top:0.75em;">

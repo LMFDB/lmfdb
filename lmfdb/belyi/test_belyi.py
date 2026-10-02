@@ -1,4 +1,11 @@
+import gzip
+import os
+from collections import defaultdict
+
 from lmfdb.tests import LmfdbTest
+from lmfdb import db
+from lmfdb.belyi import web_belyi
+from lmfdb.belyi.web_belyi import get_belyi_images, _belyidb_to_lmfdb_plabel
 
 
 class BelyiTest(LmfdbTest):
@@ -11,6 +18,85 @@ class BelyiTest(LmfdbTest):
 
     def test_by_galmap_label(self):
         self.check_args("/Belyi/6T15-5.1_4.2_4.2-b", "A_6")
+
+    # dessin images (#7026)
+
+    def test_belyidb_to_lmfdb_plabel_orbit_letters(self):
+        # missing orbit-letter component defaults to "a"
+        assert _belyidb_to_lmfdb_plabel("4T2-[2,2,2]-22-22-22-g0") == "4T2-2.2_2.2_2.2-a"
+        # distinct orbit letters must map to distinct labels, across a
+        # spread of degrees, genera and letters (not just a single example)
+        cases = [
+            ("4T2-[2,2,2]-22-22-22-g0-a", "4T2-2.2_2.2_2.2-a"),
+            ("5T1-[5,5,5]-5-5-5-g0-c", "5T1-5_5_5-c"),
+            ("6T15-[5,5,5]-51-51-51-g1-d", "6T15-5.1_5.1_5.1-d"),
+            ("7T6-[7,7,322]-7-7-322-g1-c", "7T6-7_7_3.2.2-c"),
+            ("9T23-[6,6,6]-621-621-621-g1-a", "9T23-6.2.1_6.2.1_6.2.1-a"),
+            ("9T23-[6,6,6]-621-621-621-g1-b", "9T23-6.2.1_6.2.1_6.2.1-b"),
+        ]
+        for belyidb_label, expected in cases:
+            assert _belyidb_to_lmfdb_plabel(belyidb_label) == expected
+        # too few components is not a valid label
+        assert _belyidb_to_lmfdb_plabel("4T2-[2,2,2]") is None
+
+    def test_belyidb_to_lmfdb_plabel_roundtrips_for_every_shipped_image(self):
+        # regression test for #7026: parse every raw BelyiDB label in the
+        # shipped image dump and check that the conversion is (a) injective
+        # -- distinct orbits must never collide onto the same LMFDB label,
+        # the root cause of #7026 -- and (b) actually resolves to a real
+        # galmap in the database, for the whole dataset, not just an example
+        images_path = os.path.abspath(os.path.join(
+            os.path.dirname(web_belyi.__file__), "..", "static", "images", "belyi_images.txt.gz"))
+        raw_labels = []
+        with gzip.open(images_path, "rt", encoding="utf-8") as f:
+            for i, line in enumerate(f):
+                if i < 2:  # header rows
+                    continue
+                parts = line.rstrip("\n").split("|", 2)
+                if len(parts) == 3:
+                    raw_labels.append(parts[1])
+        assert len(raw_labels) > 1000  # sanity: dump did not go missing/truncated
+
+        converted = [_belyidb_to_lmfdb_plabel(label) for label in raw_labels]
+        assert all(c is not None for c in converted)
+        assert len(set(converted)) == len(converted), "orbit collision: two BelyiDB labels mapped to the same LMFDB label"
+
+        real_labels = set(db.belyi_galmaps.search({}, projection="label"))
+        missing = [c for c in converted if c not in real_labels]
+        assert not missing
+
+    def test_dessin_images_distinct_across_orbits(self):
+        # regression test for #7026: galmaps sharing a passport but in
+        # different Galois orbits must not be served the same dessin
+        # images. Check every multi-orbit passport in the database (not
+        # just one hand-picked example), pairwise within each passport.
+        orbits_by_passport = defaultdict(list)
+        for galmap in db.belyi_galmaps.search({}, projection=["label", "plabel"]):
+            orbits_by_passport[galmap["plabel"]].append(galmap["label"])
+        multi_orbit_passports = {p: labels for p, labels in orbits_by_passport.items() if len(labels) > 1}
+        assert len(multi_orbit_passports) > 50  # sanity: this is exercising a lot of passports
+
+        checked_pairs = 0
+        for plabel, labels in multi_orbit_passports.items():
+            images = {label: get_belyi_images(label) for label in labels}
+            present = [label for label in labels if images[label]]
+            for i in range(len(present)):
+                for j in range(i + 1, len(present)):
+                    a, b = present[i], present[j]
+                    assert images[a] != images[b], "orbits {} and {} of passport {} share dessin images".format(a, b, plabel)
+                    checked_pairs += 1
+        assert checked_pairs > 50  # sanity: the loop actually compared something
+
+    def test_dessin_image_counts_match_embeddings(self):
+        # every galmap that has dessin images must have exactly one image
+        # per embedding, since the template indexes into the image list by
+        # embedding position with no fallback (see PR #7189 review)
+        mismatches = []
+        for galmap in db.belyi_galmaps.search({}, projection=["label", "triples_cyc"]):
+            images = get_belyi_images(galmap["label"])
+            if images and len(images) != len(galmap["triples_cyc"]):
+                mismatches.append((galmap["label"], len(images), len(galmap["triples_cyc"])))
+        assert not mismatches, mismatches
 
     def test_passport_label(self):
         self.check_args("/Belyi/5T4-5_3.1.1_3.1.1-a", "5T4-5_3.1.1_3.1.1")
