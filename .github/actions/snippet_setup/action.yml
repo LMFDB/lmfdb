@@ -4,8 +4,6 @@ description: 'Set up LMFDB environment for generating snippets'
 runs:
   using: 'composite'
   steps:
-  - uses: actions/checkout@v3
-
   - uses: conda-incubator/setup-miniconda@v2
     with:
       activate-environment: lmfdb
@@ -40,7 +38,7 @@ runs:
   - name: Install Oscar
     shell: bash -l {0}
     run: |
-      julia -e 'using Pkg; Pkg.add("Oscar"); using Oscar'
+      julia -e 'using Pkg; Pkg.add(["Oscar", "GAP"]); using Oscar'
 
   - name: Run install script
     shell: bash -l {0}
@@ -69,3 +67,30 @@ runs:
     shell: bash -l {0}
     run: |
       sage -pip install -r requirements.txt
+
+  # The degree 32 transitive groups are needed for the code snippets "TransitiveGroup(32, t)".
+  # They are a supplementary download for GAP's transgrp package (~300MB, ~1.3GB unpacked).
+  # See https://github.com/LMFDB/lmfdb/issues/7108.
+
+  - name: Cache the degree 32 transitive groups
+    uses: actions/cache@v3
+    with:
+      path: ~/.cache/transgrp
+      key: ${{ runner.os }}-trans32-0   # bump the trailing number to force a re-download
+
+  - name: Install the degree 32 transitive groups
+    shell: bash -leo pipefail {0}
+    run: |
+      if [ ! -d ~/.cache/transgrp/dat32 ]; then
+        mkdir -p ~/.cache/transgrp
+        curl -sSL https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz | tar xz -C /tmp
+        mv "$(find /tmp -type d -name dat32 -print -quit)" ~/.cache/transgrp/
+      fi
+      shopt -s nullglob
+      dirs=("$CONDA_PREFIX"/{lib,share}/gap/pkg/transgrp*/ "$(julia -e 'using GAP
+        print(String(GAP.Globals.GAPInfo.PackagesInfo.transgrp[1].InstallationPath))' | tail -n 1 | tr -d '[:space:]')")
+      [ ${#dirs[@]} -eq 2 ]   # one conda dir + one Julia artifact dir
+      for d in "${dirs[@]}"; do
+        chmod u+w "$d"        # Julia marks artifact directories read-only
+        ln -sfn ~/.cache/transgrp/dat32 "$d/dat32"
+      done
