@@ -1326,7 +1326,8 @@ class NFSearchArray(SearchArray):
             label="Intermediate field",
             knowl="nf.intermediate_fields",
             example_span="2.2.5.1 or x^2-5 or a "
-                + display_knowl("nf.nickname", "field nickname"),
+                + display_knowl("nf.nickname", "field nickname")
+                + ", or a comma-separated list, e.g. x^2-2,x^2-3",
             example="x^2-5")
         completion = TextBox(
             name="completions",
