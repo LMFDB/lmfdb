@@ -3133,6 +3133,11 @@ class WebAbstractGroup(WebObj):
                     continue
 
                 code[trans][lang] = code["transitive"][lang].format(**trans_data)
+                # Transitive groups of degree 32 require separate database
+                if trans[:2] == "32":
+                    comments = {'magma': '//', 'sage': '#', 'oscar': '#', 'gap': '#', 'sage_gap': '#'}
+                    code[trans][lang] += " " + comments[lang] + " Requires 32T* db, see Galois group page"
+
                 code["transitive_all"][lang] += code[trans][lang]+"\n"
 
         for lang in code['prompt']:
