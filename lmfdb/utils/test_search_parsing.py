@@ -128,6 +128,13 @@ def test_parse_range2_signed():
 def test_parse_range3_signed():
     assert parse_range3("-4--1,2") == [[-4, -1], 2]
     assert parse_range3("-2-2", split0=True) == [[-2, -1], [1, 2]]
+    # Dirichlet character searches reparse the conductor with parse_range3
+    # after parse_ints has accepted it, so they must agree on ..
+    assert parse_range3("..10", lower_bound=1, upper_bound=100) == [[1, 10]]
+    assert parse_range3("..-4", lower_bound=-20, upper_bound=100) == [[-20, -4]]
+    assert parse_range3("-4..-1,..2", lower_bound=-20) == [[-4, -1], [-20, 2]]
+    with pytest.raises(SearchParsingError):
+        parse_range3("..10")
 
 
 def test_parse_ints_to_list_signed():

@@ -441,9 +441,14 @@ def parse_range3(arg, split0=False, lower_bound=None, upper_bound=None):
         arg = arg.replace(" ", "")
     if "," in arg:
         return sum([parse_range3(a, split0, lower_bound, upper_bound) for a in arg.split(",")], [])
-    elif RANGE_DASH_RE.search(arg):
-        ix = RANGE_DASH_RE.search(arg).start()
-        start, end = arg[:ix], arg[ix + 1:]
+    elif ".." in arg or RANGE_DASH_RE.search(arg):
+        if ".." in arg:
+            ix = arg.index("..")
+            stop = ix + 2
+        else:
+            ix = RANGE_DASH_RE.search(arg).start()
+            stop = ix + 1
+        start, end = arg[:ix], arg[stop:]
         if start:
             low = ZZ(str(start))
             if lower_bound is not None:
