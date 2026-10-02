@@ -58,6 +58,22 @@ class HGMTest(LmfdbTest):
 
     ### searches
 
+    def test_explicit_empty_search_type_overrides_hst(self):
+        # Clicking the motive list button submits an empty search_type, which
+        # must override a stale hst=Family left over from a family results
+        # page, and the empty value normalizes to the canonical motive list
+        # mode "Motive" (the conductor and t columns and the sort options are
+        # keyed on the named mode)
+        page = self.tc.get(
+            "/Motive/Hypergeometric/Q/?search_type=&hst=Family&conductor=32"
+        ).get_data(as_text=True)
+        assert "Hypergeometric motive over" in page
+        assert "Hypergeometric family over" not in page
+        # the form re-renders in Motive mode, so paging keeps motive mode
+        assert 'name="hst" value="Motive"' in page
+        # motive-specific columns are shown
+        assert "Conductor" in page
+
     ### family searches
 
     def test_search_degree(self):

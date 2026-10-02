@@ -47,7 +47,7 @@ from lmfdb.utils.search_parsing import (
     parse_bool, parse_ints, parse_ints_to_list, parse_floats, parse_noop, parse_mod1,
     parse_element_of, parse_not_element_of, search_parser)
 from lmfdb.utils import (
-    to_dict, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
+    to_dict, get_search_type, signtocolour, rgbtohex, key_for_numerically_sort, display_float,
     prop_int_pretty, round_to_half_int, display_complex, bigint_knowl,
     search_wrap, list_to_factored_poly_otherorder, flash_error,
     parse_primes, coeff_to_poly, Downloader,
@@ -100,7 +100,7 @@ def learnmore_list(path=None, remove=None):
 def index():
     info = to_dict(request.args, search_array=LFunctionSearchArray())
     if request.args:
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        info['search_type'] = search_type = get_search_type(info)
         if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         else:
@@ -116,7 +116,7 @@ def index():
 def rational():
     info = to_dict(request.args, search_array=LFunctionSearchArray(force_rational=True), rational="yes")
     if request.args:
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        info['search_type'] = search_type = get_search_type(info)
         if search_type in ['List', '', 'Random', 'Diagram']:
             return l_function_search(info)
         elif search_type == 'Traces':
