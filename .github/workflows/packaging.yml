@@ -1,0 +1,97 @@
+# Packaging checks that run on every push and pull request (publish.yml
+# only builds on release tags and manual dispatch): build the sdist and
+# wheel, check their metadata and contents, install the wheel into a clean
+# virtual environment -- without sage and without a database -- and
+# exercise the configuration handling, the lazy lmfdb.db object, and the
+# console script of the installed package.  Needs no secrets, so it also
+# runs on forks.
+name: Packaging
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ main, dev, web ]
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Check that the wheel ships the runtime data files
+        run: |
+          python - <<'EOF'
+          import glob, zipfile
+          wheel = glob.glob("dist/*.whl")[0]
+          names = set(zipfile.ZipFile(wheel).namelist())
+          required = [
+              "lmfdb/CONTRIBUTORS.yaml",
+              "lmfdb/templates/homepage.html",
+              "lmfdb/homepage/index_boxes.yaml",
+              "lmfdb/static/favicon.ico",
+          ]
+          missing = [n for n in required if n not in names]
+          assert not missing, "wheel is missing data files: %s" % missing
+          print("wheel contains all %d spot-checked data files" % len(required))
+          EOF
+
+      - name: Install the wheel into a clean venv
+        run: |
+          python -m venv smoke
+          smoke/bin/pip install dist/*.whl pytest
+          smoke/bin/pip check
+
+      - name: Import and introspection have no side effects (no sage, no database)
+        # run from an empty directory so the checkout cannot shadow the
+        # installed package; nothing may be created in it, in LMFDB_HOME,
+        # or anywhere else by importing and introspecting
+        run: |
+          mkdir empty && cd empty
+          export LMFDB_HOME=$PWD/lmfdb-home
+          ../smoke/bin/python -c "
+          import sys, os, lmfdb
+          assert 'lmfdb.lmfdb_database' not in sys.modules
+          assert 'psycodict' not in sys.modules
+          assert not any(m == 'sage' or m.startswith('sage.') for m in sys.modules)
+          from lmfdb import db
+          repr(db); bool(db); dir(db)
+          assert db.connected is False
+          assert 'lmfdb.lmfdb_database' not in sys.modules
+          assert not os.listdir('.'), os.listdir('.')
+          "
+          test -z "$(ls -A .)" || { echo 'files were created:'; ls -A; exit 1; }
+
+      - name: Configuration and laziness tests against the installed package
+        run: |
+          mkdir testdir && cd testdir
+          export LMFDB_HOME=$PWD/lmfdb-home
+          ../smoke/bin/python -m pytest -v --pyargs lmfdb.test_config
+
+      - name: The console script parses --help without sage and without side effects
+        run: |
+          mkdir helpdir && cd helpdir
+          export LMFDB_HOME=$PWD/lmfdb-home
+          ../smoke/bin/lmfdb --help | grep -q -- "--config-file"
+          ../smoke/bin/python -m lmfdb --help > /dev/null
+          test -z "$(ls -A .)" || { echo 'files were created by --help:'; ls -A; exit 1; }
+
+      - name: Actually starting the website fails helpfully without sage
+        run: |
+          if smoke/bin/lmfdb > out.txt 2>&1; then
+            echo "expected the lmfdb script to fail in a venv without sage"
+            cat out.txt
+            exit 1
+          fi
+          grep -q "requires SageMath" out.txt
+          grep -q "lmfdb.db) works without Sage" out.txt

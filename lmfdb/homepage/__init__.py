@@ -6,7 +6,7 @@ from .sidebar import get_sidebar
 
 # reading and sorting list of contributors once at startup
 _curdir = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(_curdir, "..", "..", "CONTRIBUTORS.yaml")) as contrib_file:
+with open(os.path.join(_curdir, "..", "CONTRIBUTORS.yaml")) as contrib_file:
     contribs = yaml.load_all(contrib_file, Loader=yaml.FullLoader)
     contribs = sorted(contribs, key=lambda x: x['name'].split()[-1])
 

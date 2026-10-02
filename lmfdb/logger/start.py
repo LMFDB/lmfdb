@@ -2,7 +2,17 @@ from logging import (FileHandler, getLogger, StreamHandler, Formatter,
                      INFO, WARNING,
                      info, warning)
 
-from sage.version import version as sage_version
+try:
+    from sage.version import version as sage_version
+except ModuleNotFoundError as e:
+    if e.name == "sage" or (e.name or "").startswith("sage."):
+        raise ImportError(
+            "The LMFDB website requires SageMath, which pip does not install.  "
+            "Install the LMFDB into Sage's Python, e.g. with `sage -pip install lmfdb` "
+            "(or `sage -pip install -e .` from a checkout).  "
+            "Database access (lmfdb.db) works without Sage."
+        ) from None
+    raise
 
 from .utils import LmfdbFormatter
 
@@ -11,9 +21,19 @@ def check_sage_version():
     if [int(c) for c in sage_version.split(".")[:2]] < [int(c) for c in LMFDB_SAGE_VERSION.split(".")[:2]]:
         warning("*** WARNING: SAGE VERSION %s IS OLDER THAN %s ***" % (sage_version,LMFDB_SAGE_VERSION))
 
+_logging_started = False
+
+
 def start_logging():
-    from lmfdb.utils.config import Configuration
-    config = Configuration()
+    # make repeated initialization (tests, notebooks, repeated app
+    # construction) a no-op instead of duplicating handlers
+    global _logging_started
+    if _logging_started:
+        return
+    _logging_started = True
+
+    from lmfdb.config import current_configuration
+    config = current_configuration()
     logging_options = config.get_logging()
 
     root_logger = getLogger()
