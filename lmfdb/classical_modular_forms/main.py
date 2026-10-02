@@ -1050,7 +1050,7 @@ def set_Trn(info, query, limit=1000):
     else:
         Trn = [n for n in Trn if n > 1]
     if any(n > limit for n in Trn):
-        msg = "Cannot display traces above 1000; more may be available by downloading individual forms"
+        msg = "Cannot display traces above %s; more may be available by downloading individual forms" % limit
         flash_error(msg)
         raise ValueError(msg)
     info['Tr_n'] = Trn

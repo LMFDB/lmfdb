@@ -1,5 +1,7 @@
 
 import json
+import re
+from ast import literal_eval
 
 from .LfunctionPlot import paintSvgFileAll
 from lmfdb.tests import LmfdbTest
@@ -611,8 +613,118 @@ class LfunctionTest(LmfdbTest):
 
     def test_trace_search_mod_q(self):
         L = self.tc.get('L/rational?conductor=37&degree=2&search_type=Traces&an_constraints=a11+%3D1&an_modulo=3&view_modp=reductions')
-        assert '2-37-1.1-c1-0-1' in L.get_data(as_text=True)
-        assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
+        page = L.get_data(as_text=True)
+        assert '2-37-1.1-c1-0-1' in page
+        assert '2-37-1.1-c1-0-0' not in page
+        # The displayed traces are reduced mod 3; 37.a has a_2 = -2, a_3 = -3, a_5 = -2
+        row = [row for row in re.findall(r'<tr>(.*?)</tr>', page, re.S) if '2-37-1.1-c1-0-1' in row]
+        assert len(row) == 1
+        cells = re.findall(r'<td class="mjx_basic right">(.*?)</td>', row[0], re.S)
+        assert [' '.join(cell.split()) for cell in cells[:3]] == [r'\(1\)', r'\(0\)', r'\(1\)']
+
+    # ------------------------------------------------------
+    # Testing downloads of trace and Euler factor searches
+    # ------------------------------------------------------
+
+    def _search_download_response(self, search_type, lang='sage', **kwds):
+        query_string = {'search_type': search_type, 'conductor': '37', 'degree': '2',
+                        'download': '1', 'Submit': lang,
+                        'query': "{'degree': 2, 'conductor': 37, 'rational': True}"}
+        query_string.update(kwds)
+        response = self.tc.get('/L/rational', query_string=query_string)
+        assert response.status_code == 200
+        return response
+
+    def _get_search_download(self, search_type, lang, **kwds):
+        response = self._search_download_response(search_type, lang, **kwds)
+        assert 'attachment' in response.headers.get('Content-Disposition', '')
+        return response.get_data(as_text=True)
+
+    def _get_search_download_error(self, search_type, **kwds):
+        # Invalid display inputs should produce the ordinary search input error
+        # page rather than an attachment
+        response = self._search_download_response(search_type, **kwds)
+        assert 'attachment' not in response.headers.get('Content-Disposition', '')
+        page = response.get_data(as_text=True)
+        assert 'L-function search input error' in page
+        return page
+
+    def _parse_sage_download(self, body):
+        columns = literal_eval(re.search(r'^columns = (.*)$', body, re.M).group(1))
+        data = literal_eval(re.search(r'^data = (\[.*?^\])$', body, re.S | re.M).group(1))
+        return [dict(zip(columns, row)) for row in data]
+
+    def test_trace_search_download(self):
+        body = self._get_search_download('Traces', 'sage')
+        recs = {rec['label']: rec for rec in self._parse_sage_download(body)}
+        assert set(recs) == {'2-37-1.1-c1-0-0', '2-37-1.1-c1-0-1'}
+        # The L-function of elliptic curve 37.a has a_2 = -2, a_3 = -3, a_11 = -5
+        rec = recs['2-37-1.1-c1-0-1']
+        assert rec['a2'] == -2 and rec['a3'] == -3 and rec['a11'] == -5
+        assert 'EllipticCurve/Q/37/a' in rec['instance_urls']
+        # Column selection via the n range
+        body = self._get_search_download('Traces', 'text', n='2-6', n_primality='all')
+        assert '[Label, Origin, $a_{2}$, $a_{3}$, $a_{4}$, $a_{5}$, $a_{6}$]' in body
+
+    def test_trace_search_download_mod_q(self):
+        body = self._get_search_download('Traces', 'sage', an_modulo='3', view_modp='reductions')
+        recs = {rec['label']: rec for rec in self._parse_sage_download(body)}
+        rec = recs['2-37-1.1-c1-0-1']
+        assert rec['a2'] == 1 and rec['a3'] == 0 and rec['a11'] == 1
+
+    def test_euler_search_download(self):
+        body = self._get_search_download('Euler', 'sage')
+        recs = {rec['label']: rec for rec in self._parse_sage_download(body)}
+        assert set(recs) == {'2-37-1.1-c1-0-0', '2-37-1.1-c1-0-1'}
+        # 37.a has F_2(T) = 1 + 2T + 2T^2 and F_37(T) = 1 + T
+        rec = recs['2-37-1.1-c1-0-1']
+        assert rec['euler2'] == [1, 2, 2]
+        body = self._get_search_download('Euler', 'sage', n='2-40')
+        recs = {rec['label']: rec for rec in self._parse_sage_download(body)}
+        assert recs['2-37-1.1-c1-0-1']['euler37'] == [1, 1, 0]
+
+    def test_trace_search_download_ignores_column_selector(self):
+        # The trace table shows a fixed set of columns, so showcol and hidecol
+        # (which may be left over from a list search) must not affect the download
+        for stale in [{'hidecol': 'origins'}, {'hidecol': 'a2'}, {'hidecol': 'origins.a2'},
+                      {'showcol': 'a37'}, {'showcol': 'a37', 'hidecol': 'origins'}]:
+            body = self._get_search_download('Traces', 'sage', n='2-11', **stale)
+            rec = self._parse_sage_download(body)[0]
+            assert set(rec) == {'label', 'instance_urls', 'a2', 'a3', 'a5', 'a7', 'a11'}, stale
+
+    def test_euler_search_download_ignores_column_selector(self):
+        # An old url can contain showcol for an Euler factor outside the n range
+        body = self._get_search_download('Euler', 'sage', n='2-7', showcol='euler37')
+        rec = self._parse_sage_download(body)[0]
+        assert set(rec) == {'label', 'instance_urls', 'euler2', 'euler3', 'euler5', 'euler7'}
+        body = self._get_search_download('Euler', 'sage', n='2-7', hidecol='euler2.origins')
+        rec = self._parse_sage_download(body)[0]
+        assert set(rec) == {'label', 'instance_urls', 'euler2', 'euler3', 'euler5', 'euler7'}
+
+    def test_trace_search_download_input_errors(self):
+        # Only 100 Dirichlet coefficients are stored
+        page = self._get_search_download_error('Traces', n='2-101')
+        assert 'Cannot display traces above 100' in page
+        # Reductions require a positive modulus
+        page = self._get_search_download_error('Traces', view_modp='reductions')
+        assert 'Must set Modulo input in order to view reductions' in page
+        for modulus in ['0', '-3', '3.5', 'q']:
+            page = self._get_search_download_error('Traces', view_modp='reductions', an_modulo=modulus)
+            assert 'Modulo must be a positive integer' in page
+        # A malformed range must not produce a labels only download
+        page = self._get_search_download_error('Traces', n='not-a-range')
+        assert 'unable to convert' in page
+
+    def test_euler_search_download_input_errors(self):
+        page = self._get_search_download_error('Euler', n='not-a-range')
+        assert 'unable to convert' in page
+
+    def test_euler_search_old_name(self):
+        # search_type=EulerL appears in old URLs
+        L = self.tc.get('L/rational?conductor=37&degree=2&search_type=EulerL')
+        page = L.get_data(as_text=True)
+        assert 'Invalid search type' not in page
+        assert '2-37-1.1-c1-0-1' in page
 
     # ------------------------------------------------------
     # Testing units not tested above
