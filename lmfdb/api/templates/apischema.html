@@ -1,15 +1,22 @@
   <a id="{{table}}-schema-shower" onclick="return show_schema('{{table}}');" href="#">Show schema</a>
   <a id="{{table}}-schema-hider" onclick="return hide_schema('{{table}}');" href="#" style="display: none;">Hide schema</a>
-  <div class="{{table}}-schema-holder" style="display: none;">
-    <table id="schema-table" class="ntdata">
+  <div class="schema-holder {{table}}-schema-holder" style="display: none;">
+    {% set example = examples.get(table) if examples is defined else none %}
+    <table class="ntdata schema-table">
       <tr>
         <th>Column</th>
         <th>Type</th>
+        {% if example is not none %}
+          <th>Example</th>
+        {% endif %}
       </tr>
       {% for col, typ in search_schema[table] %}
         <tr>
           <td>{{KNOWL('columns.'+table+'.'+col, col)}}</td>
           <td>{{typ}}</td>
+          {% if example is not none %}
+            <td class="schema-example">{{example.get(col, '')}}</td>
+          {% endif %}
         </tr>
       {% endfor %}
     </table>
