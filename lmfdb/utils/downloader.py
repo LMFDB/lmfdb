@@ -123,6 +123,13 @@ class DownloadLanguage():
         inp = inp.replace("\\", "\\\\").replace('"', '\\"')
         return '"{0}"'.format(inp)
 
+    def rational_to_lang(self, inp):
+        """
+        Override this function if plain fractions like -3/2 are not valid syntax
+        for exact rational numbers in this language.
+        """
+        return str(inp)
+
     def to_lang(self, inp, level=1):
         """
         Converts a python object into a string for use in the given language.  At a minimum,
@@ -136,7 +143,9 @@ class DownloadLanguage():
             return self.false
         if isinstance(inp, str):
             return self.string_to_lang(inp)
-        if isinstance(inp, (int, Integer, Rational)):
+        if isinstance(inp, Rational):
+            return self.rational_to_lang(inp)
+        if isinstance(inp, (int, Integer)):
             return str(inp)
         try:
             it = iter(inp)
@@ -319,6 +328,12 @@ class OscarLanguage(DownloadLanguage):
     make_data_comment = 'To create a list of {short_name}, type "{var_name} = make_data()"'
     function_start = 'function {func_name}({func_args})\n'
     function_end = 'end\n'
+
+    def rational_to_lang(self, inp):
+        # In Julia, -3/2 is floating point division; -3//2 is the exact rational
+        if inp.denominator() == 1:
+            return str(inp)
+        return "%s//%s" % (inp.numerator(), inp.denominator())
 
     def initialize(self, cols, downloader):
         from lmfdb.number_fields.number_field import PolynomialCol
