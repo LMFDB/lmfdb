@@ -1207,14 +1207,9 @@ class WebG2C():
         code['torsion_subgroup'] = {'magma':'TorsionSubgroup(Jacobian(SimplifiedModel(Cmin))); AbelianInvariants($1);'}
         code['decomp'] = {'magma':'HeuristicDecompositionFactors(Cmin);'}
         code['endos0'] = {'magma':'//Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code'}
-<<<<<<< HEAD
-        code['endos1'] = {'magma':'HeuristicIsGL2(C); HeuristicEndomorphismDescription(C); HeuristicEndomorphismFieldOfDefinition(C);'}
-        code['endos2'] = {'magma':'HeuristicIsGL2(C : Geometric := true); HeuristicEndomorphismDescription(C : Geometric := true); HeuristicEndomorphismLatticeDescription(C);'}
-=======
         code['endos1'] = {'magma':'HeuristicIsGL2(Cmin); HeuristicEndomorphismDescription(Cmin); HeuristicEndomorphismFieldOfDefinition(Cmin);'}
         code['endos2'] = {'magma':'HeuristicIsGL2(Cmin : Geometric := true); HeuristicEndomorphismDescription(Cmin : Geometric := true); HeuristicEndomorphismLatticeDescription(Cmin);'}
 
->>>>>>> b62b0cce51f572bf4ef6ca42bcc565bdfc464345
         self._code = None
 
     def get_code(self):
