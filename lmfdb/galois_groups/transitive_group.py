@@ -309,6 +309,16 @@ class WebGaloisGroup:
             for lang in self.code[prop]:
                 self.code[prop][lang] = self.code[prop][lang].format(**{'n':self.n(), 't':self.t()})
         self.code['show'] = { lang:'' for lang in self.code['prompt'] }
+        # For transitive groups of degree 32, the user needs to load an extra package
+        n32_dbs = self.code["n32_dbs"]
+
+        # TODO: Ideally, comment syntax should be resolved automatically in place_code.py, but this is a temporary fix until that is implemented.
+        comments = {'magma': '//', 'sage': '#', 'oscar': '#', 'gap': '#'}
+
+        if self.n() == 32:
+            for lang in n32_dbs:
+                if lang != "comment":
+                    self.code['gg'][lang] = f"{comments[lang]} This requires the 32T* database at {n32_dbs[lang]}\n" + self.code['gg'][lang]
 
 ############  Misc Functions
 
