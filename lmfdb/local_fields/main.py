@@ -6,7 +6,7 @@ import yaml
 
 from flask import abort, render_template, request, url_for, redirect, make_response
 from sage.all import (
-    PolynomialRing, ZZ, QQ, RR, latex, cached_function, Integers, euler_phi, is_prime)
+    PolynomialRing, ZZ, QQ, RR, GF, gcd, latex, cached_function, Integers, euler_phi, is_prime)
 from sage.plot.all import line, points, text, Graphics, polygon
 
 from lmfdb import db
@@ -141,8 +141,9 @@ def local_field_data(label):
     else:
         return "Invalid label %s" % label
     nicename = ''
-    if f['n'] < 3:
-        nicename = ' = ' + prettyname(f)
+    nick = field_nickname(f)
+    if nick is not None:
+        nicename = ' = ' + nick
     ans = '$p$-adic field %s%s<br><br>' % (label, nicename)
     ans += r'Extension of $\Q_{%s}$ defined by %s<br>' % (str(f['p']),web_latex(coeff_to_poly(f['coeffs'])))
     gn = f['n']
@@ -295,10 +296,11 @@ def ctx_local_fields():
 
 # Utilities for subfield display
 def format_lfield(label, p):
+    cols = ["n", "p", "e", "f", "rf", "eisen", "unram", "old_label", "new_label"]
     if OLD_LF_RE.fullmatch(label):
-        data = db.lf_fields.lucky({"old_label": label}, ["n", "p", "rf", "old_label", "new_label"])
+        data = db.lf_fields.lucky({"old_label": label}, cols)
     else:
-        data = db.lf_fields.lucky({"new_label": label}, ["n", "p", "rf", "old_label", "new_label"])
+        data = db.lf_fields.lucky({"new_label": label}, cols)
     return lf_display_knowl(label, name=prettyname(data))
 
 
@@ -591,13 +593,16 @@ class PercentCol(MathCol):
             return r"$100\%$"
         return fr"${100*x:.2f}\%$"
 
-def pretty_link(label, p, n, rf):
-    if OLD_LF_RE.fullmatch(label):
-        name = {"old_label": label}
-    else:
-        name = {"new_label": label}
-    name.update({"p": p, "n": n, "rf": rf})
-    name = prettyname(name)
+def pretty_link(label, p, n, rf, data=None):
+    if data is None:
+        # Minimal record: enough for the Q_p(sqrt(d)) nickname of quadratics, and a
+        # label fallback otherwise.
+        if OLD_LF_RE.fullmatch(label):
+            data = {"old_label": label}
+        else:
+            data = {"new_label": label}
+        data.update({"p": p, "n": n, "rf": rf})
+    name = prettyname(data)
     return f'<a href="{url_for_label(label)}">{name}</a>'
 
 families_columns = SearchColumns([
@@ -616,9 +621,9 @@ families_columns = SearchColumns([
     MathCol("c0", "lf.discriminant_exponent", "$c_0$", short_title="base disc. exponent", default=False, contingent=lambda info: "relative" in info),
     MathCol("c_absolute", "lf.discriminant_exponent", r"$c_{\mathrm{abs}}$", short_title="abs. disc. exponent", default=False, contingent=lambda info: "relative" in info),
     MultiProcessedCol("base_field", "lf.family_base", "Base",
-                      ["base", "p", "n0", "rf0"],
+                      ["base", "p", "n0", "rf0", "base_data"],
                       pretty_link,
-                      apply_download=lambda base, p, n0, rf0: base,
+                      apply_download=lambda base, p, n0, rf0, base_data: base,
                       contingent=lambda info: "relative" in info),
     RationalListCol("visible", "lf.slopes", "Abs. Artin slopes",
                     show_slopes2, default=False, short_title="abs. Artin slopes"),
@@ -648,14 +653,20 @@ def lf_postprocess(res, info, query):
     return res
 
 def families_postprocess(res, info, query):
-    quads = list(set(rec["base"] for rec in res if rec["n0"] == 2))
-    if quads:
-        rflook = {rec["new_label"]: rec["rf"] for rec in db.lf_fields.search({"new_label":{"$in":quads}}, ["new_label", "rf"])}
+    # Fetch the base field of each family so its "Base" column shows a nickname.
+    bases = list({rec["base"] for rec in res})
+    base_lookup = {}
+    if bases:
+        cols = ["new_label", "old_label", "p", "n", "e", "f", "rf", "eisen", "unram"]
+        base_lookup = {rec["new_label"]: rec
+                       for rec in db.lf_fields.search({"new_label": {"$in": bases}}, cols)}
     for rec in res:
+        bdata = base_lookup.get(rec["base"])
+        rec["base_data"] = bdata
         if rec["n0"] == 1:
             rec["rf0"] = [1, 0]
-        elif rec["n0"] == 2:
-            rec["rf0"] = rflook[rec["base"]]
+        elif bdata is not None:
+            rec["rf0"] = bdata.get("rf")
         else:
             rec["rf0"] = None
     return res
@@ -1195,12 +1206,117 @@ def render_field_webpage(args):
             KNOWL_ID="lf.%s" % label, # TODO: BROKEN
         )
 
+def _field_label(ent):
+    return ent.get('new_label') or ent.get('old_label')
+
+@cached_function
+def _lf_residue_field(p, f, unram):
+    # Fq together with tbar, the image in Fq of a root of the (Conway) polynomial
+    # `unram`.  tbar is a multiplicative generator of Fq^* (Conway polynomials are
+    # primitive), so its Teichmuller lift is our chosen zeta_{p^f-1}.
+    modpoly = PolynomialRing(GF(p), 't')(unram)
+    if f == 1:
+        Fp = GF(p)
+        return Fp, -Fp(modpoly[0])  # root of the monic linear t + c is -c
+    Fq = GF(p**f, 'tt', modulus=modpoly)
+    return Fq, Fq.gen()
+
+def _frob_min(k, p, g):
+    # Smallest element of the Frobenius orbit {k*p^j mod g}: k and p*k index
+    # Q_p-isomorphic tame fields (the Frobenius twist zeta -> zeta^p of U/Q_p).
+    orbit = set()
+    x = k % g
+    while x not in orbit:
+        orbit.add(x)
+        x = (x * p) % g
+    return min(orbit)
+
+def _tame_nickname(p, e, f, eisen, unram):
+    # Nickname for a tamely and genuinely ramified field (e > 1, p does not divide e).
+    # Such a field is U(pi) with pi^e = zeta^k*p up to an e-th power, U = Q_p(zeta_m),
+    # zeta = zeta_m the Teichmuller lift of tbar, m = p^f-1.  From the Eisenstein
+    # polynomial, pi^e = -a0*(1+M) with M in the maximal ideal, and 1+M is an e-th
+    # power (tame), so zeta^k*p ~ -a0 = p*w gives zeta^k ~ w mod (K^*)^e, i.e.
+    # tbar^k = wbar mod (Fq^*)^g with g = gcd(e, m).
+    try:
+        Fq, tbar = _lf_residue_field(p, f, unram)
+        m = p**f - 1
+        g = gcd(e, m)
+        Ptx = PolynomialRing(PolynomialRing(ZZ, 't'), 'x')
+        a0 = Ptx(str(eisen))[0]  # constant term, an element of Z[t] = Z_q
+        wbar = Fq(0)
+        for i, c in enumerate(a0.list()):
+            c = ZZ(c)
+            if c % p != 0:  # a0 should have p-adic valuation 1 (Eisenstein)
+                return None
+            wbar += Fq(-(c // p)) * tbar**i
+        if wbar == 0:
+            return None
+        if g == 1:
+            k = 0
+        else:
+            exp = m // g
+            target = wbar**exp
+            base = tbar**exp
+            cur = Fq(1)
+            k = None
+            for kk in range(g):
+                if cur == target:
+                    k = kk
+                    break
+                cur *= base
+            if k is None:
+                return None
+            k = _frob_min(k, p, g)
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+    Qp = r'\Q_{%s}' % p
+    root = r'\sqrt' if e == 2 else r'\sqrt[%s]' % e
+    if f == 1:
+        # zeta_{p-1} lies in Q_p; zeta^k is the Teichmuller lift of tbar^k, and any
+        # integer r = tbar^k mod p differs from it by an e-th power, so use radicand p*r.
+        r = ZZ(tbar**k)
+        if r == 1:
+            rad = str(p)
+        elif r == p - 1:
+            rad = '-' + str(p)
+        else:
+            rad = r'%s \cdot %s' % (p, r)
+        return r'$%s(%s{%s})$' % (Qp, root, rad)
+    if k == 0:
+        rad = str(p)
+    elif 2 * k == m:
+        rad = '-' + str(p)  # zeta_m^{m/2} = -1
+    else:
+        zpow = r'\zeta_{%s}' % m if k == 1 else r'\zeta_{%s}^{%s}' % (m, k)
+        rad = r'%s \cdot %s' % (zpow, p)
+    return r'$%s(\zeta_{%s}, %s{%s})$' % (Qp, m, root, rad)
+
+def field_nickname(ent):
+    # A human-readable name for a p-adic field, or None if we have no nice one.
+    # Quadratics keep the existing Q_p(sqrt(d)) form; unramified extensions become
+    # Q_p(zeta_{p^f-1}); tame extensions Q_p(zeta_{p^f-1}, root(zeta^k p)); wildly
+    # ramified fields have no nickname (fall back to the label).
+    p, n = ent.get('p'), ent.get('n')
+    if p is None or n is None:
+        return None
+    if n <= 2:
+        rf = ent.get('rf')
+        return printquad(rf, p) if rf is not None else None
+    e, f = ent.get('e'), ent.get('f')
+    if e is None or f is None:
+        return None
+    if e % p == 0:
+        return None  # wildly ramified: no nice nickname
+    if e == 1:
+        return r'$\Q_{%s}(\zeta_{%s})$' % (p, p**f - 1)  # unramified
+    eisen, unram = ent.get('eisen'), ent.get('unram')
+    if eisen is None or unram is None:
+        return None
+    return _tame_nickname(p, e, f, eisen, unram)
+
 def prettyname(ent):
-    if ent['n'] <= 2:
-        return printquad(ent['rf'], ent['p'])
-    if ent.get('new_label'):
-        return ent['new_label']
-    return ent['old_label']
+    return field_nickname(ent) or _field_label(ent)
 
 @cached_function
 def getu(p):

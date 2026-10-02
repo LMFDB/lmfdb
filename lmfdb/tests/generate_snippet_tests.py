@@ -4,12 +4,8 @@
 #
 # Author: Håvard Damm-Johnsen <havard-dj@proton.me>
 
-#  NB: Note regarding Magma:
-#  The Magma snippets are evaluated interactively via pexpect.
-#    But since Magma's default prompt "> " also occurs in ordinary output (and in the ">> " markers of error messages),
-#    the prompt is changed to a unique string at startup. See _start_snippet_procs for details.
-#  Some Magma code snippets also require CHIMP (https://github.com/edgarcosta/CHIMP) to be installed.
-#  To install CHIMP and generate the Magma snippet log files with CHIMP, run:
+# Some Magma code snippets also require CHIMP (https://github.com/edgarcosta/CHIMP) to be installed.
+# To install CHIMP and generate the Magma snippet log files with CHIMP, run:
 #    git clone --recurse-submodules -j8 https://github.com/edgarcosta/CHIMP.git ~/CHIMP
 #    sage -python lmfdb/tests/generate_snippet_tests.py generate -o magma --chimp ~/CHIMP
 
@@ -35,10 +31,46 @@ exec_dict = {'sage': 'sage --simple-prompt',
              'gp': "sage -gp -D prompt='gp> ' -D breakloop=0 -D colors='no,no,no,no,no,no,no' -D readline=0 -q",
              'gap': """sage -gap -b -T -r -A -m 256m -o 512m -x 800 -c 'SetUserPreference("UseColorsInTerminal",false); SetUserPreference("UseColorPrompt",false); ColorPrompt(false);'""",
              }
-prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia>', 'gp': 'gp> ', 'gap': 'gap> '}
+prompt_dict = {'sage': 'sage:', 'sage_gap': 'sage:', 'magma': 'magma> ', 'oscar': 'julia> ', 'gp': 'gp> ', 'gap': 'gap> '}
+version_cmd_dict = {
+    "sage": "print(version())",
+    "sage_gap": 'print(gap.eval("GAPInfo.Version"))',
+    "magma": "GetVersion();",
+    "oscar": 'println("Oscar ", Base.pkgversion(Oscar), "; Julia ", VERSION)',
+    "gp": r"\v",
+    "pari": r"\v",
+    "gap": "GAPInfo.Version;",
+}
+
+# Continuation prompts, i.e. what the REPL prints when a statement is left unfinished at the end of a line (e.g. a record or list spanning several lines).
+# Note: Oscar has no continuation prompt, so multi-line Oscar snippets are not yet supported.
+continuation_dict = {'gap': '\n> ', 'magma': 'magma> ', 'sage': '....: ', 'sage_gap': '....: '}
+
 comment_dict = {'magma': '//', 'sage': '#', 'sage_gap': '#',
                          'gp': '\\\\', 'pari': '\\\\', 'oscar': '#', 'gap': '#'}
 
+# Commands to print a unique token, used by _resync to re-align pexpect with the REPL if it gets out of sync.
+# The token is assembled from pieces by the REPL to prevent the string occuring verbatim
+# in the echo of the command (similarly to the SetPrompt call for Magma above).
+SYNC_TOKEN = 'LMFDB_SYNC_OK'
+sync_cmd_dict = {'sage': 'print("LMFDB" + "_SYNC" + "_OK")',
+                 'sage_gap': 'print("LMFDB" + "_SYNC" + "_OK")',
+                 'magma': 'print "LMFDB" cat "_SYNC" cat "_OK";',
+                 'oscar': 'println("LMFDB" * "_SYNC" * "_OK")',
+                 'gap': 'Print("LMFDB", "_SYNC", "_OK", "\\n");',
+                 'gp': 'print(Str("LMFDB", "_SYNC", "_OK"))',
+                 }
+
+# To ensure output is fully deterministic and the log files don't change between runs,
+# we set the random seed to 1 before each test run
+SEED = 1
+seed_dict = {'sage': f'set_random_seed({SEED}); gap.set_seed({SEED}); libgap.set_seed({SEED})',
+             'sage_gap': f'set_random_seed({SEED}); gap.set_seed({SEED}); libgap.set_seed({SEED})',
+             'magma': f'SetSeed({SEED});',
+             'oscar': f'import Random; Random.seed!({SEED}); Oscar.set_seed!({SEED}); Oscar.randseed!({SEED});',
+             'gap': f'Reset(GlobalMersenneTwister, {SEED}); Reset(GlobalRandomSource, {SEED});',
+             'gp': f'setrand({SEED});',
+             }
 
 def _setup_test_dir(yaml_file_path=None):
     """ Return dictionary with pair(s) 'yaml-file-path': 'test-file-path'.
@@ -55,7 +87,8 @@ def _setup_test_dir(yaml_file_path=None):
         raise Exception("Please run in same directory as test.sh")
 
     if yaml_file_path is None:
-        code_paths = lmfdb_dir.rglob("code*.yaml")
+        # Ensure snippet files are evaluated in the same order every time (for deterministic output)
+        code_paths = sorted(lmfdb_dir.rglob("code*.yaml"))
     else:
         code_paths = [Path(yaml_file_path)]
         assert code_paths[0].exists(), f"Specified path {yaml_file_path} does not exist"
@@ -84,16 +117,26 @@ def _start_snippet_procs(langs, chimp_spec=None):
     processes = {}
     for lang in langs:
         if lang == 'oscar':
-            print("Loading Oscar, this might take a while:")
-            spawn = pexpect.spawn(exec_dict['oscar'], ['-q', '--color=no', '--banner=no'],
-                                  echo=False, env=os.environ | {'TERM':'dumb'},
-                                  encoding="utf8")
+            print("Loading Oscar, this might take a while.")
+            # Ensure that Oscar uses its own Singular, not the system-wide one
+            julia_env = os.environ | {'TERM':'dumb', 'NO_COLOR': '1'}
+            julia_env.pop('SINGULAR_BIN_DIR', None)
+            spawn = pexpect.spawn(exec_dict['oscar'],
+                                  ['-q', '--color=no', '--banner=no'],
+                                  env=julia_env,
+                                  echo=False,
+                                  encoding="utf8",
+                                  )
             # for ease of debugging julia output
             spawn.logfile = sys.stdout
 
             processes['oscar'] = pexpect.replwrap.REPLWrapper(spawn, prompt_dict[lang], None)
             processes['oscar'].run_command('using Pkg; Pkg.add("Oscar"); using Oscar', timeout=60*10)
             # conservative timeout of 10 minutes
+            # _resync since Pkg's output may contain "julia> "
+
+            _resync(processes['oscar'], 'oscar', timeout=60*10)
+            spawn.logfile = None
             print("\nOscar loaded")
 
         elif lang == 'magma':
@@ -107,7 +150,7 @@ def _start_snippet_procs(langs, chimp_spec=None):
             #
             #  3. The SetPrompt command itself is echoed once (the line editor is still active when it is sent).  If the command
             #     contained the new prompt as a literal string, pexpect would match the *echo* of the command instead of the actual
-            #     prompt and permanently desynchronise.  To avoid this, the prompt string is assembled with 'cat' so that the echoed
+            #     prompt and permanently desynchronize.  To avoid this, the prompt string is assembled with 'cat' so that the echoed
             #     command never contains the full prompt.
             #
             #  SetColumns(0) disables line-wrapping, and SetAutoColumns(false) stops Magma from re-adjusting to the pty width, so that log files are stable across environments.
@@ -144,32 +187,88 @@ def _start_snippet_procs(langs, chimp_spec=None):
     return processes
 
 
+def _resync(proc, lang, timeout=60*3):
+    """
+    Resynchronize process 'proc' for language 'lang', using SYNC_TOKEN.
+    Explicitly unsets the logfile to prevent token from being printed, then reattaches it afterwards.
+    """
+    sync_cmd = sync_cmd_dict.get(lang)
+    if sync_cmd is None:
+        return
+    logfile, proc.child.logfile = proc.child.logfile, None
+    try:
+        proc.child.sendline(sync_cmd)
+        proc.child.expect_exact(SYNC_TOKEN, timeout=timeout)
+        proc.child.expect_exact(prompt_dict[lang], timeout=timeout)
+    finally:
+        proc.child.logfile = logfile
+
+
 def _eval_code_file(data, lang, proc, logfile):
     """ Evaluate code in 'data' using process 'proc' in language
-    'lang', writing output to 'logfile'
+    'lang', writing output to 'logfile'.
     """
     cmt = comment_dict[lang]
     lines = [l for l in data.splitlines() if l != '' and cmt not in l[:len(cmt)+1]]
+
+    # Get the list of prompts for which we send the next line of input
+    prompt = prompt_dict[lang]
+    cont_prompt = continuation_dict.get(lang)
+    patterns = [prompt] if cont_prompt is None else [prompt, cont_prompt]
+
+    # Reset the random state before every snippet file (to ensure log files are generated deterministically)
+    seed_cmd = seed_dict.get(lang)
+    if seed_cmd is not None:
+        try:
+            proc.run_command(seed_cmd, timeout=60)
+        except Exception as exc:
+            # Raise error if unable to set the random seed
+            raise RuntimeError(f"Error: could not reset random state in {lang} with {seed_cmd!r}") from exc
+
+    # Resync files so a desynchronized REPL does not corrupt
+    # all files evaluated after it.
+    try:
+        _resync(proc, lang)
+    except Exception:
+        print(f"Warning: could not resynchronize {lang} before {logfile}")
+
     with logfile.open('w') as f:
         proc.child.logfile = f
         proc.run_command(cmt + " snippet evaluation file generated by generate_snippet_tests.py")
+        proc.run_command(version_cmd_dict[lang])
+
         for line in lines:
             try:
-                proc.run_command(line, timeout=60*3)
+                # Send 'line' and wait for either new prompt or continuation prompt
+                proc.child.sendline(line)
+                proc.child.expect_exact(patterns, timeout=60*3)
+
             except Exception:
                 print("Timeout while running line:")
                 print(line)
+                # The REPL may still be busy with the line that timed out; realign before
+                # continuing, otherwise every later line is logged next to the wrong output.
+                try:
+                    _resync(proc, lang)
+                except Exception:
+                    print(f"Warning: could not resynchronize {lang}, "
+                          f"the remainder of {logfile} is unreliable")
 
-    # Matches ANSI escape sequences (colour codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
+    proc.child.logfile = None
+    _remove_escape_chars(logfile)
+
+def _remove_escape_chars(logfile):
+    # Matches ANSI escape sequences (color codes etc.), see e.g. https://en.wikipedia.org/wiki/ANSI_escape_code
     # E.g. this sometimes occurs in the Gap snippet log files
     ANSI_ESCAPE_RE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-    # Remove stray ANSI escape sequences from logfile
-    with logfile.open('r') as f:
+    # Remove stray ANSI escape sequences from logfile and normalize newline characters (UNIX style)
+    # set newline='' so "\r\n" is actually read into the string
+    with logfile.open('r', encoding="utf-8", newline='') as f:
         contents = f.read()
-    stripped = ANSI_ESCAPE_RE.sub('', contents)
+    stripped = ANSI_ESCAPE_RE.sub('', contents).replace('\r\n', '\n').replace('\r', '')
     if stripped != contents:
-        with logfile.open('w') as f:
+        with logfile.open('w', encoding="utf-8", newline="\n") as f:
             f.write(stripped)
 
 

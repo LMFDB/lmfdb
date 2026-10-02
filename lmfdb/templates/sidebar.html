@@ -23,7 +23,7 @@
     {%- endif -%}
     {%- if entry.collapsible and entry.part2 -%}
       <span class="collapsible-container">
-        {{entry.title | safe}}
+        <span class="collapsible-title">{{entry.title | safe}}</span>
 	<div class="collapsible-content">
       {%- for pt2 in entry.part2 -%}
         {%- if not BETA and pt2.status == "notonbeta" -%}
@@ -54,9 +54,9 @@
             {%- else -%}
             <span class="subitem">
             {%- endif -%}
-            {%- endif -%}
             {{ pt3.url | safe}}
             </span>
+            {%- endif -%}
           {%- endfor -%}{# for pt3 in pt2.part3 #}
         </div>
       {%- endif -%} {# if pt2.part3 #}
@@ -89,18 +89,26 @@
           $toggle.attr('aria-label', (expanded ? 'Collapse ' : 'Expand ') + label);
       }
 
+      // HTML for the chevron arrow, shared by the sub-menu and section toggles.
+      var chevronHTML =
+          '<button type="button" class="collapsible-chevron open">' +
+            '<svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M9 6L15 12L9 18" stroke="currentColor"/>' +
+            '</svg>' +
+          '</button>';
+
       // ── Collapsible sub-menu toggles (Elliptic curves, Abstract groups, …) ──
       $('.collapsible-container').each(function(index) {
           var $container = $(this);
           var $content   = $container.find('.collapsible-content');
-          // Key from the container's OWN text only, excluding child elements
-          var ownText = $.trim($container.clone().children().remove().end().text());
+          // Key from the title text only (not the submenu links)
+          var ownText = $.trim($container.children('.collapsible-title').text());
           var key = 'lmfdb_sidebar_entry_' +
               ownText.replace(/\s+/g, '_').substring(0, 30);
           var contentId = 'lmfdb-sidebar-entry-' + index;
           $content.attr('id', contentId);
 
-          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          var $chev = $(chevronHTML);
           $chev.attr('aria-controls', contentId);
           $content.before($chev);
 
@@ -139,7 +147,7 @@
           $section.attr('id', sectionId);
 
           // Append the chevron into the h2
-          var $chev = $('<button type="button" class="collapsible-chevron open"><svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3"/></svg></button>');
+          var $chev = $(chevronHTML);
           $chev.attr('aria-controls', sectionId);
           $h2.append($chev);
           $h2.css('cursor', 'pointer');

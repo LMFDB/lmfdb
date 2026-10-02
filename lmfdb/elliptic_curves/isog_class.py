@@ -133,7 +133,7 @@ class ECisog_class():
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
 
-        # permute rows/cols to match labelling: the rows/cols in the
+        # permute rows/cols to match labeling: the rows/cols in the
         # ec_classdata table are with respect to LMFDB ordering.
         if self.label_type == 'Cremona':
             def perm(i): return next(c for c in self.curves if c['Cnumber'] == i+1)['lmfdb_number']-1

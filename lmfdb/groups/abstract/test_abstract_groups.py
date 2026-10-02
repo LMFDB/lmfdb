@@ -30,10 +30,28 @@ class AbGpsTest(LmfdbTest):
         self.assertTrue("PcGroupCode(293961739841108398509157889,384);" in response.get_data(as_text=True))
         self.assertTrue("perfect := false," in response.get_data(as_text=True))
         self.assertTrue("chartbl_384_5458.NrConjugacyClasses:= 240;" in response.get_data(as_text=True))
+
         response = self.tc.get("/Groups/Abstract/384.5458/download/magma")
         self.assertTrue("GPerm := PermutationGroup< 23 | (1,2,4,7,5,8,11,14,3,6,9,12,10,13,15,16)(18,20), (1,3)(2,6)(4,9)(5,10)(7,12)(8,13)(11,15)(14,16)(17,18)(19,20), (1,2,4,7,5,8,11,14,3,6,9,12,10,13,15,16), (21,23,22), (17,19)(18,20), (1,4,5,11,3,9,10,15)(2,7,8,14,6,12,13,16), (1,5,3,10)(2,8,6,13)(4,11,9,15)(7,14,12,16), (1,3)(2,6)(4,9)(5,10)(7,12)(8,13)(11,15)(14,16) >;" in response.get_data(as_text=True))
         self.assertTrue("monomial := true," in response.get_data(as_text=True))
         self.assertTrue("CR := CharacterRing(G);" in response.get_data(as_text=True))
+
+        response = self.tc.get("/Groups/Abstract/384.5458/download/sage")
+        self.assertTrue("GLZN = MatrixGroup([MS([[16, 12], [6, 4]]), MS([[13, 0], [0, 13]]), MS([[8, 0], [0, 1]]), MS([[9, 19], [20, 18]]), MS([[8, 0], [0, 8]]), MS([[13, 9], [15, 4]]), MS([[4, 0], [0, 4]]), MS([[10, 6], [3, 4]])])" in response.get_data(as_text=True))
+        self.assertTrue('"metacyclic": False,' in response.get_data(as_text=True))
+        self.assertTrue('chartbl_384_5458["Size"] = 384' in response.get_data(as_text=True))
+
+        response = self.tc.get("/Groups/Abstract/384.5458/download/oscar")
+        self.assertTrue("GPerm = @permutation_group(23" in response.get_data(as_text=True))
+        self.assertTrue("quasisimple = false," in response.get_data(as_text=True))
+        self.assertTrue('chartbl_384_5458["NrConjugacyClasses"] = 240' in response.get_data(as_text=True))
+
+        # Test 5.1: |G| = 5, but |G|*phi(|G|) = 20 has prime factors [2, 5], so c.powers[0] is the 2-power map.
+        # Pairing c.powers positionally with factors_of_order = [5] would file the 2-power map under the key 5.
+        response = self.tc.get("/Groups/Abstract/5.1/download/sage")
+        self.assertTrue('chartbl_5_1["ComputedPowerMaps"] = {5: [1, 1, 1, 1, 1]}' in response.get_data(as_text=True))
+        response = self.tc.get("/Groups/Abstract/5.1/download/gap")
+        self.assertTrue("chartbl_5_1.ComputedPowerMaps[5]:= [1, 1, 1, 1, 1];" in response.get_data(as_text=True))
 
     def test_conj_decode(self):
         from lmfdb.groups.abstract.web_groups import WebAbstractGroup
@@ -74,6 +92,19 @@ class AbGpsTest(LmfdbTest):
         self.check_args("/Groups/Abstract/ab/3000", [ # large cyclic group
             r"C_2^3\times C_{100}", # automorphism group structure
         ])
+
+    def test_latex_macros(self):
+        r"""
+        Check that KaTeX macros used by group tex names are defined (issue #7048)
+        """
+        # 51840.b displays its elements as matrices in \GammaU(4,2)
+        page = self.tc.get("/Groups/Abstract/51840.b").get_data(as_text=True)
+        assert r"\GammaU(4,2)" in page
+        # macros produced by stripping the initial P from projective Lie families
+        # must be defined in base.html along with the rest of the family
+        for macro in [r'"\\GammaL"', r'"\\GammaU"', r'"\\SigmaL"', r'"\\SigmaSp"',
+                      r'"\\PGammaL"', r'"\\PGammaU"', r'"\\PSigmaL"', r'"\\PSigmaSp"']:
+            assert macro in page
 
     def test_underlying_data(self):
         self.check_args("/Groups/Abstract/data/2520.a", [

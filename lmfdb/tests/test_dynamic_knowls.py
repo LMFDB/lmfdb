@@ -1,5 +1,11 @@
 
+from unittest.mock import patch
+
+from flask import render_template
+from markupsafe import escape
+
 from lmfdb.tests import LmfdbTest
+from lmfdb.knowledge.knowl import Knowl, knowldb
 from lmfdb.utils.datetime_utils import utc_now_naive
 
 class DynamicKnowlTest(LmfdbTest):
@@ -75,3 +81,93 @@ class DynamicKnowlTest(LmfdbTest):
 
             # The timestamps and counts should be the same
             assert dev_cnt == prod_cnt and dev_t == prod_t
+
+
+class DescriptionKnowlTest(LmfdbTest):
+    """
+    These tests check that a table description knowl has a title that editors
+    can set, while a column description knowl keeps its generated title.
+    """
+
+    def test_table_title_is_kept(self):
+        k = Knowl("tables.nf_fields",
+                  data={"title": "Number field data", "content": "", "status": 0})
+        assert k.title == "Number field data"
+
+    def test_table_title_is_generated_when_absent(self):
+        k = Knowl("tables.nf_fields", data={"title": "", "content": "", "status": 0})
+        assert k.title == "Table nf_fields"
+
+    def test_defunct_table_is_marked_once(self):
+        k = Knowl("tables.not_a_table",
+                  data={"title": "Number field data", "content": "", "status": 0})
+        assert k.title == "Number field data (DEFUNCT)"
+        # a title saved while the table was defunct already carries the marker
+        again = Knowl("tables.not_a_table",
+                      data={"title": k.title, "content": "", "status": 0})
+        assert again.title == "Number field data (DEFUNCT)"
+
+    def test_column_title_is_generated(self):
+        k = Knowl("columns.nf_fields.degree",
+                  data={"title": "Number field data", "content": "", "status": 0})
+        assert k.title == "Column degree of table nf_fields"
+        assert k.coltype == self.db.nf_fields.col_type["degree"]
+
+    def test_editor_title_row(self):
+        r"""
+        The editor offers a table description an editable title and a column
+        description a read-only one; only a column has a Postgres column type.
+        """
+        def edit_page(ID):
+            # the template uses endpoints relative to the knowledge blueprint,
+            # so it has to be rendered from the edit page's own request context
+            with self.app.test_request_context("/knowledge/edit/" + ID):
+                self.app.preprocess_request()
+                k = Knowl(ID, editing=True)
+                return k, render_template("knowl-edit.html", k=k, title="", bread=[])
+
+        table_knowl, table = edit_page("tables.nf_fields")
+        column_knowl, column = edit_page("columns.nf_fields.degree")
+
+        assert '<td>Title</td>' in table
+        assert '<input size="40" name="title" id="ktitle" value="{}" />'.format(
+            escape(table_knowl.title)) in table
+        assert "Postgres column type" not in table
+
+        assert '<input name="title" id="ktitle" value="{}" type="hidden" />'.format(
+            escape(column_knowl.title)) in column
+        assert "Postgres column type" in column
+
+    def _set_table_description(self, table, description, old):
+        r"""
+        Run knowldb.set_table_description with the database write mocked out,
+        and return the knowl it would have saved.
+        """
+        saved = []
+
+        def fake_save(knowl, who, most_recent=None, minor=False):
+            saved.append(knowl)
+
+        with patch.object(knowldb, "get_knowl", return_value=old), \
+             patch.object(knowldb, "save", side_effect=fake_save), \
+             patch.object(self.db, "login", return_value="tester"):
+            knowldb.set_table_description(table, description)
+
+        assert len(saved) == 1
+        return saved[0]
+
+    def test_content_update_keeps_table_title(self):
+        r"""
+        db.<table>.description(...) updates the content, so it must carry the
+        title over rather than saving the generated fallback in its place.
+        """
+        old = {"authors": ["editor"], "title": "Number field data",
+               "content": "Number fields", "status": 0}
+        kwl = self._set_table_description("nf_fields", "Fields of finite degree", old)
+        assert kwl.title == "Number field data"
+        assert kwl.content == "Fields of finite degree"
+
+    def test_content_update_generates_missing_table_title(self):
+        # a table description that does not exist yet still gets the fallback
+        kwl = self._set_table_description("nf_fields", "Number fields", None)
+        assert kwl.title == "Table nf_fields"

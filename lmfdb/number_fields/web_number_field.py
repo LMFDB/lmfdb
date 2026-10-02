@@ -297,7 +297,7 @@ def field_pretty(label, wnf=None):
                 Ksub = QuadraticField(D, 'sqrtD')
                 sqrtD = Ksub.gen(0)
 
-                # Factorise defining polynomial for K over Q(sqrt(D))
+                # Factorize defining polynomial for K over Q(sqrt(D))
                 Rsub = PolynomialRing(Ksub, 'x')
                 relative_poly = Rsub(wnf.poly()).factor()[0][0]
 
