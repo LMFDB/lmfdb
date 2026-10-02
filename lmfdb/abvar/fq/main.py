@@ -405,6 +405,7 @@ class AbvarSearchArray(SearchArray):
             "cyclic",
             label="Cyclic group of points",
             knowl="av.fq.cyclic_group_points",
+            example_col=True,
             advanced=True,
         )
 
@@ -418,7 +419,8 @@ class AbvarSearchArray(SearchArray):
             label="Non-cyclic primes",
             select_box=noncyclic_mode,
             knowl="av.fq.noncyclic_primes",
-            example="2 or 2,3,5",
+            example="2,3,5",
+            example_span="2 or 2,3,5",
             advanced=True,
         )
 
@@ -491,7 +493,7 @@ class AbvarSearchArray(SearchArray):
         dim4 = TextBox(
             "dim4_factors",
             label=long_label(4),
-            example="2",
+            example="1",
             example_col=False,
             short_label=short_label(4),
             advanced=True,
@@ -499,7 +501,7 @@ class AbvarSearchArray(SearchArray):
         dim5 = TextBox(
             "dim5_factors",
             label=long_label(5),
-            example="2",
+            example="1",
             example_col=False,
             short_label=short_label(5),
             advanced=True,

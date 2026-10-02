@@ -127,6 +127,41 @@ in a typical browser when first visiting the page) should contain two things:
 
 Other material can appear in the lower portion of browse and search pages.
 
+#### Search box examples
+
+Each input box in a search array can provide example input in two different ways, and they play different roles:
+
+* `example` is the light grey text shown *inside* the input box (it is rendered as the HTML `placeholder` attribute).
+
+* `example_span` is the text shown in the "e.g. ..." column *beside* the box. If it is not given it defaults to the value of `example`.
+
+Since `example` appears inside the box, a user will naturally assume it is something they could have typed themselves. It should therefore satisfy both of the following properties:
+
+1. It should be a syntactically valid example: i.e. typing it into the box and pressing enter should return a result page rather than an error.
+
+2. The resulting search should be non-empty: i.e. there is at least one object in the database matching the provided example.
+
+`example_span` is not subject to these constraints. It sits outside the box and is free to describe a range of possibilities, list alternatives, or mention syntax that only makes sense in combination with other inputs.
+
+Here are some examples of good code for search boxes:
+
+```python
+# Search box for searching Galois images
+galois_image = TextBox(
+    name="galois_image",
+    label=r"Galois image",
+    knowl="ec.galois_image_search",
+    example="7Cs.2.1",
+    example_span="7Cs.2.1 or 17B")
+
+# Search box for searching intermediate fields
+subfield = TextBox(
+    name="subfield",
+    label="Intermediate field",
+    knowl="nf.intermediate_fields",
+    example="x^2-5",
+    example_span="2.2.5.1 or x^2-5 or a " + display_knowl("nf.nickname", "field nickname"))
+```
 
 ### Knowls
 
