@@ -194,6 +194,31 @@ def to_rset(query):
     return ans
 
 
+# Sentinel distinguishing an absent query key from an explicit null predicate:
+# query.get("rd") returns None both for {} and for {"rd": None}, but the former is
+# "no constraint" while the latter is the SQL predicate "rd IS NULL".
+_MISSING = object()
+
+
+def _contains_none(value):
+    """
+    Whether ``None`` appears anywhere in a psycodict query value's expression tree.
+
+    In psycodict queries ``None`` carries SQL-null semantics (``{"$ne": None}`` means
+    ``IS NOT NULL``), which the real-number model of ``to_rset`` cannot represent:
+    it reads ``None`` as the whole real line, so e.g. ``{"$ne": None}`` collapses to
+    the empty set.  Callers doing numeric reasoning should treat any value containing
+    ``None`` as outside the model.
+    """
+    if value is None:
+        return True
+    if isinstance(value, dict):
+        return any(_contains_none(v) for v in value.values())
+    if isinstance(value, (list, tuple, set)):
+        return any(_contains_none(v) for v in value)
+    return False
+
+
 def interval_sum(I, J):
     """
     `{i + j : i in I, j in J}`
@@ -622,8 +647,21 @@ class CompletenessChecker:
       The check returns true when any test passes.
 
       If all checkers have length 2 (just cols and test) will pass the full query dictionary to the __call__ method (after parsing through $or, $and, $not).  Otherwise, will extract the values of the columns before passing into __call__
+
+    - ``precheck`` -- an optional function taking a standardized single-branch query
+      dictionary (i.e. after the ``$or``/``$and`` decomposition performed by ``check``).
+      It runs before any database access: no table lookup, null-count query or
+      ``exists`` query has been issued when it is called, and it must not access
+      ``db`` itself.  It returns ``None`` to leave the query to the normal machinery,
+      and may return a completeness triple ``(complete, reason, caveat)`` only when
+      the conclusion is independent of database contents, missing values and indexes.
+      In practice the only intended positive result is an intrinsic contradiction:
+      the query describes no possible mathematical object, so the (empty) results
+      are complete no matter what is stored.  Ordinary coverage-based completeness
+      guarantees must stay in ``checkers``, since they can depend on all relevant
+      columns having been computed.
     """
-    def __init__(self, table, checkers, fill=[], null_override=[]):
+    def __init__(self, table, checkers, fill=[], null_override=[], precheck=None):
         self.table = table
         lookup[table] = self
         self.extract = not all(len(check) == 2 for check in checkers)
@@ -653,6 +691,7 @@ class CompletenessChecker:
         self.checkers = checkers
         self.fill = fill
         self.null_override = null_override
+        self.precheck = precheck
 
     def _standardize(self, query):
         """
@@ -720,6 +759,13 @@ class CompletenessChecker:
                     return ok, reason, caveat
             return False, None, None
         # Ignore $not: it just imposes additional constraints, and if we're complete without it then we're complete.  Note that it is accounted for in _columns_searched
+        # Intrinsic contradictions (queries describing no possible mathematical object)
+        # can be recognized without touching the database, so we test for them before
+        # the null-count machinery below issues its (potentially expensive) queries.
+        if self.precheck is not None:
+            result = self.precheck(query)
+            if result is not None:
+                return result
         table = db[self.table]
         nulls = table.stats.null_counts()
         if nulls:
@@ -805,7 +851,11 @@ class PrimeBound(Bound):
     """
     def __call__(self, db, Ds):
         Ds = [self.cls(D) for D in Ds]
-        return all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
+        # The bound is checked first, both because a value outside it is not certified
+        # complete however prime it is, and because it rules out large ranges without
+        # iterating over them.  ``is_finite`` is still needed: the bounds are typically
+        # unbounded below, so passing it does not make the set enumerable.
+        return super().__call__(db, Ds) and all(D.is_finite() and all(is_prime(p) for p in D) for D in Ds)
 
 
 class Smooth(ColTest):
@@ -1287,6 +1337,11 @@ class BianchiBound(ColTest):
 #### Number fields ####
 
 class NFBound(ColTest):
+    # Reason reported when the root discriminant range is incompatible with the
+    # Galois root discriminant range; shared by ``precheck`` and ``_one_n`` so
+    # that the two code paths cannot drift apart.
+    RD_GRD_INCOMPATIBLE = "incompatible conditions: root discriminant and Galois root discriminant"
+
     def __init__(self):
         # maxD[n][r2] is an integer M so that we have completeness in signature [n-2*r2, r2] as long as the absolute discriminant is at most M.
         self._maxD = [
@@ -1926,6 +1981,8 @@ class NFBound(ColTest):
             8: [((2,3), (37,48)),
                 ((2,5), (37,48)),
                 ((2,29), (25,)),
+                ((2,3,5,7,11), (4,)),
+                ((2,3,5,7), octic_2_group),
                 ((7,29), (25,)),
                 ((41, 241), octic_2_group)],
             9: [((3,7,13), (1,2,6,7,17))],
@@ -2026,16 +2083,18 @@ class NFBound(ColTest):
         INPUT:
 
         - ``reasons`` -- a set of reasons, which are either a string or
-          a tuple of the form ``(n, r2, galt, ramps, D_bound, grd_bound, reg)``,
+          a tuple of the form ``(n, r2, galt, ramps, nram, D_bound, grd_bound, reg)``,
           where entries are None if they are not applicable.
         """
         # Current tuples created:
-        # (n, r2, None, None, M, None, None)
-        # (n, r2, Gs, None, M, None, None)
-        # (n, None, Gs, None, None, M, None)
-        # (n, None, None, S, None, None, None)
-        # (n, None, Gs, S, None, None, None)
-        # (n, r2, None, None, None, None, R)
+        # (n, r2, None, None, None, M, None, None)
+        # (n, r2, Gs, None, None, M, None, None)
+        # (n, None, Gs, None, None, None, M, None)
+        # (n, None, None, S, k, None, None, None)
+        # (n, None, Gs, S, k, None, None, None)
+        # (n, r2, None, None, None, None, None, R)
+        # Here k (a bound on the number of ramified primes) is None unless
+        # completeness depends on it (i.e. unless k < len(S)).
         # We group by None pattern
         def describe(tups):
             ans = []
@@ -2065,19 +2124,26 @@ class NFBound(ColTest):
                 else:
                     ans.append(f"unramified outside {','.join()}")
             if tups[0][4] is not None:
-                Dbounds = [str(tup[4]) for tup in tups]
+                nrams = [str(tup[4]) for tup in tups]
+                if len(set(nrams)) == 1:
+                    plural = "" if tups[0][4] == 1 else "s"
+                    ans.append(f"at most {nrams[0]} ramified prime{plural}")
+                else:
+                    ans.append(f"at most {','.join(nrams)} ramified primes")
+            if tups[0][5] is not None:
+                Dbounds = [str(tup[5]) for tup in tups]
                 if len(set(Dbounds)) == 1:
                     ans.append(f"absolute discriminant at most {Dbounds[0]}")
                 else:
                     ans.append(f"absolute discriminant at most {','.join(Dbounds)}")
-            if tups[0][5] is not None:
-                grd = [str(tup[5]) for tup in tups]
+            if tups[0][6] is not None:
+                grd = [str(tup[6]) for tup in tups]
                 if len(set(grd)) == 1:
                     ans.append(f"Galois root discriminant at most {grd[0]}")
                 else:
                     ans.append(f"Galois root discriminant at most {','.join(grd)}")
-            if tups[0][6] is not None:
-                reg_bounds = [RR(tup[6]) for tup in tups]
+            if tups[0][7] is not None:
+                reg_bounds = [RR(tup[7]) for tup in tups]
                 if len(set(reg_bounds)) == 1:
                     ans.append(f"regulator less than {float(reg_bounds[0]):.2f}")
                 else:
@@ -2093,7 +2159,7 @@ class NFBound(ColTest):
                 if not reason.startswith("incompatible conditions"):
                     non_incomp.append(reason)
             else:
-                by_pattern[tuple(i for i in range(7) if reason[i] is None)].append(reason)
+                by_pattern[tuple(i for i in range(8) if reason[i] is None)].append(reason)
         if len(non_incomp) + len(by_pattern) > 0:
             strings = non_incomp
         return "number fields with " + "; ".join(strings + [describe(V) for V in by_pattern.values()])
@@ -2109,7 +2175,7 @@ class NFBound(ColTest):
                 M = self._maxD[n][r2]
                 if D.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, M, None, None))
+                    reasons.add((n, r2, None, None, None, M, None, None))
                 m = min(m, M)
             if m is not infinity:
                 D = D.intersection(bottom(m + 1))
@@ -2131,7 +2197,7 @@ class NFBound(ColTest):
                 M = maxReg - 0.00001  # Completeness only guaranteed if R *strictly less* than M
                 if R.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, None, None, maxReg))
+                    reasons.add((n, r2, None, None, None, None, None, maxReg))
                 m = min(m, M)
             if m is not infinity:
                 R = R.intersection(bottom(m))
@@ -2150,7 +2216,7 @@ class NFBound(ColTest):
             if set(r2G[t]) == set(r2opts):
                 galt.remove(t)
                 for r2, Gs, M in r2G[t].values():
-                    reasons.add((n, r2, Gs, None, M, None, None))
+                    reasons.add((n, r2, Gs, None, None, M, None, None))
 
     def clear_grd(self, n, grd, galt, reasons):
         """
@@ -2164,7 +2230,7 @@ class NFBound(ColTest):
         for t in galt.intersection(by_t):
             galt.remove(t)
             Gs, M = by_t[t]
-            reasons.add((n, None, Gs, None, None, M, None))
+            reasons.add((n, None, Gs, None, None, None, M, None))
 
     def clear_S(self, n, S, nram, galt, reasons, update_galt=True):
         """
@@ -2174,14 +2240,18 @@ class NFBound(ColTest):
             galt = set(galt)
         if nram is None:
             nram = len(S)
+        # The completeness bounds keyed on nram below only apply because the number of
+        # ramified primes is bounded; when nram < len(S) this constraint does not follow
+        # from being unramified outside S, so we record it for display in the message.
+        shown_nram = nram if nram < len(S) else None
 
         if S in self._nS.get(n, {}):
-            reasons.add((n, None, None, S, None, None, None))
+            reasons.add((n, None, None, S, None, None, None, None))
             return True
 
         M = self._nSp.get(n, {}).get(nram)
         if M is not None and all(p < M for p in S):
-            reasons.add((n, None, None, S, None, None, None))
+            reasons.add((n, None, None, S, shown_nram, None, None, None))
             return True
 
         if galt is None:
@@ -2191,7 +2261,7 @@ class NFBound(ColTest):
             if all(p < M for p in S):
                 I = galt.intersection(Gs)
                 if I:
-                    reasons.add((n, None, Gs, S, None, None, None))
+                    reasons.add((n, None, Gs, S, shown_nram, None, None, None))
                     galt.difference_update(I)
                     if not galt:
                         return True
@@ -2201,7 +2271,7 @@ class NFBound(ColTest):
                 if min(S) == p0 and max(S) < M:
                     I = galt.intersection(Gs)
                     if I:
-                        reasons.add((n, None, Gs, S, None, None, None))
+                        reasons.add((n, None, Gs, S, None, None, None, None))
                         galt.difference_update(I)
                         if not galt:
                             return True
@@ -2211,7 +2281,7 @@ class NFBound(ColTest):
             if SS.issubset(T):
                 I = galt.intersection(Gs)
                 if I:
-                    reasons.add((n, None, Gs, S, None, None, None))
+                    reasons.add((n, None, Gs, S, None, None, None, None))
                     galt.difference_update(I)
                     if not galt:
                         return True
@@ -2363,6 +2433,42 @@ class NFBound(ColTest):
         if S is not None:
             return tuple(sorted(S))
 
+    def precheck(self, query):
+        """
+        Detect queries that are intrinsically contradictory, without access to the database.
+
+        This is registered as the ``precheck`` hook of the nf_fields CompletenessChecker,
+        so it runs before the null-count machinery issues any database query.  It returns
+        a completeness triple for queries that describe no possible number field, and
+        ``None`` for anything it cannot decide, leaving the query to the normal machinery
+        (the null-data checks followed by ``__call__``).
+
+        Currently the only contradiction detected here is a root discriminant range lying
+        strictly above the Galois root discriminant range: the Galois closure contains the
+        field, so rd <= grd for every number field.  That relation does not depend on the
+        degree, so no degree constraint is required.
+
+        Constraints involving SQL-null semantics (``None`` anywhere in the value, as in
+        ``{"$ne": None}`` for ``IS NOT NULL``) are not sets of real numbers, so they
+        bypass this numeric precheck entirely rather than being misread as empty ranges.
+        """
+        # None in a predicate means SQL null, which the real-number model cannot
+        # represent (an omitted key, by contrast, is genuinely unconstrained).
+        for key in ("rd", "grd"):
+            value = query.get(key, _MISSING)
+            if value is not _MISSING and _contains_none(value):
+                return None
+        try:
+            rd = NumberSet(query.get("rd"))
+            grd = NumberSet(query.get("grd"))
+        except (ValueError, TypeError):
+            # A constraint NumberSet does not model (e.g. an unsupported operator);
+            # leave the query to the normal machinery.
+            return None
+        if grd.restricted() and not rd.pow_cap(grd, 1):
+            return True, self.display_reason({self.RD_GRD_INCOMPATIBLE}), None
+        return None
+
     def _initial(self, db, query, reasons):
         """
         Attempt to prove completeness without splitting on degree,
@@ -2407,7 +2513,7 @@ class NFBound(ColTest):
         r2, D, sign = IntegerSet(query.get("r2")), IntegerSet(query.get("disc_abs")), query.get("disc_sign")
         rd, grd, reg = NumberSet(query.get("rd")), NumberSet(query.get("grd")), NumberSet(query.get("regulator"))
 
-        # Initialise list of r2, of possible signatures (n-2*r2, r2)
+        # Initialize list of r2, of possible signatures (n-2*r2, r2)
         r2opts = list(r2.intersection(IntegerSet([0, n//2])))
         if sign == 1:
             r2opts = [r2 for r2 in r2opts if r2 % 2 == 0]
@@ -2441,9 +2547,12 @@ class NFBound(ColTest):
 
         ## Completeness 1: degree, signature, discriminant, regulator ##
         if grd.restricted():
+            # The empty intersection is also caught (before any database access) by
+            # precheck; this narrowing of rd feeds the completeness bounds below, so
+            # it still has work to do for compatible ranges.
             rd = rd.pow_cap(grd, 1)
             if not rd:
-                reasons.add("incompatible conditions: root discriminant and Galois root discriminant")
+                reasons.add(self.RD_GRD_INCOMPATIBLE)
                 return True, None
         if rd.restricted():
             D = D.pow_cap(rd, n)
@@ -2486,7 +2595,7 @@ class NFBound(ColTest):
                 if ratio is not None:
                     grd = grd.pow_cap(rd, ratio)
                     if not grd:
-                        reasons.add("incompatible conditions: root discriminant and Galois root discriminant")
+                        reasons.add(self.RD_GRD_INCOMPATIBLE)
                         return True, None
             if grd.restricted():
                 self.clear_grd(n, grd, galt, reasons)
@@ -2539,7 +2648,7 @@ class NFBound(ColTest):
 
         # We collect reasons that have contributed to completeness
         # These have the following format:
-        # (n, r2, galt, ramps, D_bound, grd_bound, Reg)
+        # (n, r2, galt, ramps, nram, D_bound, grd_bound, Reg)
         # Where entries can be None if they are not applicable
         reasons = set()
         # First check completeness without splitting on degree
@@ -2901,7 +3010,10 @@ CompletenessChecker("belyi_galmaps", [("deg", Bound(6), "Belyi maps of degree at
 # We handle number field completeness by a single monolithic class (rather than having individual ColTests).
 # This is because many constraints interact: e.g. a discriminant range implies a root discriminant bound,
 # which (given a Galois group) implies a Galois root discriminant bound, etc. NFBound() handles everything internally.
-CompletenessChecker("nf_fields", [((), NFBound())])
+# The precheck recognizes intrinsically impossible rd/grd ranges before the null-count
+# machinery issues its (potentially expensive) database queries.
+nf_bound = NFBound()
+CompletenessChecker("nf_fields", [((), nf_bound)], precheck=nf_bound.precheck)
 
 
 CompletenessChecker("lf_fields", [(("n", "p"), Bound(23, 199), "p-adic fields of degree at most 23 and residue characteristic at most 199")], fill=[MulFiller("n", "e", "f")])

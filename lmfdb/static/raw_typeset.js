@@ -12,7 +12,7 @@ function setraw(elt) {
     var properties_rect = $("#properties")[0].getBoundingClientRect();
     // we aim to avoid overlapping properties box
     // we could check for properties_rect.bottom > tset_rect.top
-    // but that creates funny behaviour as the current line
+    // but that creates funny behavior as the current line
     // might have enough space, but not one the parents, e.g. a table
     $ta.css('max-width', properties_rect.left - tset_rect.left - 75);
     $ta.height(0);

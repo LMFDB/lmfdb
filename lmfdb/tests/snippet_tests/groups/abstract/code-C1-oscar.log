@@ -91,6 +91,8 @@ julia> character_degrees(G)
 MSet{ZZRingElem} with 1 element:
   1
 
+julia> GPC = PcGroup(GAP.evalstr("PcGroupCode(0,1)")); 
+
 julia> abelian_invariants(G)
 ZZRingElem[]
 

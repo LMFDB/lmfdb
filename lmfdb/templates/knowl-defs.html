@@ -55,13 +55,13 @@
 {%- endwith %}
 {%- endmacro %}
 
-{% macro KNOWL_INC( knowlid, title=none, htag="h1", show_missing=False, backupid=none) -%}
+{% macro KNOWL_INC( knowlid, title=none, htag="h1", show_missing=False, backupid=none, show_title=False) -%}
 {% with knowl = Knowl(knowlid) -%}
 {% if knowl.exists() -%}
-  {% if title is none -%}
-    {# <{{htag}}>{{knowl.title}}</{{htag}}> #}
-  {%- else -%}
+  {% if title is not none -%}
     <{{htag}}>{{title}}</{{htag}}>
+  {%- elif show_title -%}
+    <{{htag}}>{{knowl.title}}</{{htag}}>
   {%- endif %}
   {{knowl.content|render_knowl|safe }}
   {% if user_is_authenticated -%}

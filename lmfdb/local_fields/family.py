@@ -334,7 +334,9 @@ class pAdicSlopeFamily:
     @lazy_attribute
     def base_link(self):
         from .main import pretty_link
-        return pretty_link(self.base, self.p, self.n0, self.rf0)
+        cols = ["new_label", "old_label", "p", "n", "e", "f", "rf", "eisen", "unram"]
+        data = db.lf_fields.lucky({"new_label": self.base}, cols)
+        return pretty_link(self.base, self.p, self.n0, self.rf0, data)
 
     def __iter__(self):
         # TODO: This needs to be fixed when base != Qp

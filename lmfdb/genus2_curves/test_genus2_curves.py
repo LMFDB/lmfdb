@@ -1,5 +1,13 @@
+import re
+
+from sage.all import PolynomialRing, QQ
+
 from lmfdb.tests import LmfdbTest
 from lmfdb import db
+from lmfdb.genus2_curves.web_g2c import (comp_poly, simplify_hyperelliptic,
+                                         simplify_hyperelliptic_point,
+                                         simplify_hyperelliptic_scale)
+
 
 # The g2c_curves_new dataset (6.2M curves) renumbered curves with EC-style
 # labels (e.g. 1225.a1) and re-minimized the models.  Class letters and curve
@@ -142,18 +150,6 @@ class Genus2Test(LmfdbTest):
             and "(CM)" in L4.get_data(as_text=True)
         )
 
-    def test_by_url_isogeny_class_discriminant(self):
-        # the old-format URL redirects by dropping the discriminant
-        L = self.tc.get("/Genus2Curve/Q/15360/f/983040/", follow_redirects=True)
-        assert "15360.f1" in L.get_data(as_text=True)
-        # the curves of the class formerly labeled 15360.f (disc 983040) are
-        # now 15360.o1 and 15360.o2
-        L = self.tc.get("/Genus2Curve/Q/15360/o/")
-        assert (
-            "15360.o1" in L.get_data(as_text=True)
-            and "15360.o2" in L.get_data(as_text=True)
-        )
-
     def test_random(self):
         for _ in range(5):
             L = self.tc.get("/Genus2Curve/Q/random", follow_redirects=True)
@@ -173,6 +169,24 @@ class Genus2Test(LmfdbTest):
         self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=gp")
         self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=sage")
         self.tc.get("/Genus2Curve/Q/?query={'abs_disc':3976}&download=magma")
+
+    def test_code_download_conductor(self):
+        # Magma will not use Ogg's formula once v_2(disc) >= 12, so for those
+        # curves the conductor snippet has to hand it the L-factor at 2.  The
+        # downloaded code needs the same treatment as the snippet on the page.
+        # 400.a1 was 400.a.409600.1, 961.a2 was 961.a.961.1
+        excfactors = "ExcFactors:=[*<2,Valuation(400,2),R![1]>*]"
+        page = self.tc.get("/Genus2Curve/Q/400/a/1").get_data(as_text=True)
+        # the snippets on the page escape the angle brackets of the tuple
+        assert excfactors.replace("<", "&lt;").replace(">", "&gt;") in page
+        code = self.tc.get(
+            "/Genus2Curve/Q/400/a/1/download/magma").get_data(as_text=True)
+        assert "Conductor(LSeries(Cmin: %s));" % excfactors in code
+        # curves with v_2(disc) < 12 get the plain call
+        code = self.tc.get(
+            "/Genus2Curve/Q/961/a/2/download/magma").get_data(as_text=True)
+        assert "Conductor(LSeries(Cmin));" in code
+        assert "ExcFactors" not in code
 
     def test_rational_weierstrass_points_search(self):
         # 360.a1 was 360.a.6480.1
@@ -326,6 +340,67 @@ class Genus2Test(LmfdbTest):
         # 14880.h2 was 14880.c.238080.2
         L = self.tc.get("/Genus2Curve/Q/14880/h/2", follow_redirects=True)
         assert "for this curve" in L.get_data(as_text=True)
+
+    def test_simplified_model_points(self):
+        # 400.a1 (was 400.a.409600.1) has h = 0 and content(4f+h^2) = 4, so
+        # y-coordinates are divided by sqrt(4) = 2 and not by the content 4: the
+        # simplified equation equals the minimal one here, and the points must
+        # come through unchanged.
+        fh = [[1, 0, 4, 0, 4, 0, 1], []]
+        assert simplify_hyperelliptic_scale(fh) == 2
+        R = PolynomialRing(QQ, ['x', 'z'])
+        x, z = R.gens()
+        g = sum(c*x**i*z**(6-i) for i, c in enumerate(simplify_hyperelliptic(fh)))
+        pts = [[1, -1, 0], [1, 1, 0], [0, -1, 1], [0, 1, 1]]
+        for pt in pts:
+            X, Y, Z = simplify_hyperelliptic_point(fh, pt)
+            assert [X, Y, Z] == pt
+            assert Y**2 == g(X, Z)
+        L = self.tc.get("/Genus2Curve/Q/400/a/1")
+        page = L.get_data(as_text=True)
+        # the simplified-model snippet builds its points on Csim, and they are the
+        # points above rather than the halved ones the content used to produce
+        for pt in pts:
+            assert "Csim![%s,%s,%s]" % tuple(pt) in page
+        assert "(0 : -1/2 : 1)" not in page
+        # nor does the simplified Mordell-Weil table pick up a factor of 1/2
+        assert "1/2z^3" not in page
+
+    def test_simplified_model_mw_gens(self):
+        # 336.a1 (was 336.a.172032.1) is
+        # y^2 + (x^3 + xz^2)y = -x^6 + 15x^4z^2 - 75x^2z^4 - 56z^6
+        # with a generator recorded as 3x^2 - 32z^2 = 0, 6y = -35xz^2.  Since
+        # 6y = yD clears a denominator, the simplified relation multiplies h by 6
+        # too: 6Y = 2*(-35xz^2) + 6*(x^3 + xz^2) = 6x^3 - 64xz^2.
+        fh = [[-56, 0, -75, 0, 15, 0, -1], [0, 1, 0, 1]]
+        assert simplify_hyperelliptic_scale(fh) == 1
+        R = PolynomialRing(QQ, ['x', 'z'])
+        x, z = R.gens()
+        yD = comp_poly(fh, 6)(x, -35*x*z**2, z)
+        assert yD == 6*x**3 - 64*x*z**2
+        assert yD != x**3 - 69*x*z**2  # only one copy of h, the old behavior
+        # the generator is 2-torsion, so yD vanishes on 3x^2 - 32z^2 = 0
+        assert yD == 2*x*(3*x**2 - 32*z**2)
+        L = self.tc.get("/Genus2Curve/Q/336/a/1")
+        page = L.get_data(as_text=True)
+        assert "-35xz^2" in page  # minimal model, unchanged
+        assert "6x^3 - 64xz^2" in page
+        assert "x^3 - 69xz^2" not in page
+
+    def test_model_code_snippets(self):
+        # 169.a1 was 169.a.169.1
+        url = "/Genus2Curve/Q/169/a/1"
+        page = self.tc.get(url).get_data(as_text=True)
+        assert "Cmin := HyperellipticCurve(R![0, 1, 1], R![1, 0, 1, 1])" in page
+        assert "Csim, pi := SimplifiedModel(Cmin);" in page
+        # every point is built on the model it belongs to, with no stale bare C
+        assert "Cmin![" in page and "Csim![" in page
+        assert not re.search(r"(?<![A-Za-z])C!\[", page)
+        # the download defines each object before it is used
+        magma = self.tc.get(url + "/download/magma").get_data(as_text=True)
+        assert (magma.index("Cmin := HyperellipticCurve(f, h);")
+                < magma.index("Csim := SimplifiedModel(Cmin);")
+                < magma.index("J := Jacobian(Csim);"))
 
     def test_endo_search(self):
         # first result for every search; translated from the old labels

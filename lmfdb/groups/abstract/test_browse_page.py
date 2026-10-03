@@ -1,6 +1,13 @@
+import re
 from urllib.parse import parse_qs, urlsplit
 
+from lmfdb import db
 from lmfdb.tests import LmfdbTest
+from lmfdb.groups.abstract.main import (
+    FAMILY_ALIASES,
+    FAMILY_NAME_ALIASES,
+    normalize_family_jump,
+)
 
 ## TODO
 ## Test diagram and character table displays and picture?
@@ -19,7 +26,9 @@ class AbGpsHomeTest(LmfdbTest):
     def test_legacy_search_urls(self):
         r"""
         Check that old search URLs redirect to the new landing pages without
-        dropping their filters.
+        dropping their filters.  The hidden hst field records the previous
+        search mode, so it must not survive the redirect: SearchWrapper falls
+        back to hst when there is no explicit search_type.
         """
         cases = [
             ("/Groups/Abstract/?search_type=Subgroups&ambient=128.207",
@@ -34,11 +43,25 @@ class AbGpsHomeTest(LmfdbTest):
              {"dim": ["3"], "search_type": ["RandomComplexCharacter"]}),
             ("/Groups/Abstract/?search_type=ConjugacyClasses&group=12.4",
              "/Groups/Abstract/ConjugacyClasses", {"group": ["12.4"]}),
+            # The legacy mode may only be present in the hidden hst field.
+            ("/Groups/Abstract/?hst=Subgroups&ambient=128.207",
+             "/Groups/Abstract/Subgroups", {"ambient": ["128.207"]}),
+            ("/Groups/Abstract/?hst=RandomSubgroup&ambient=128.207",
+             "/Groups/Abstract/Subgroups",
+             {"ambient": ["128.207"], "search_type": ["RandomSubgroup"]}),
+            # An explicit search_type must keep winning over a stale hst.
+            ("/Groups/Abstract/?search_type=Subgroups&hst=RandomSubgroup&ambient=128.207",
+             "/Groups/Abstract/Subgroups", {"ambient": ["128.207"]}),
+            ("/Groups/Abstract/?search_type=ComplexCharacters&hst=RandomComplexCharacter&dim=3",
+             "/Groups/Abstract/ComplexCharacters", {"dim": ["3"]}),
+            # Repeated values of a non-routing parameter are preserved.
+            ("/Groups/Abstract/?search_type=Subgroups&order=8&order=16",
+             "/Groups/Abstract/Subgroups", {"order": ["8", "16"]}),
         ]
         for source, expected_path, expected_query in cases:
             response = self.tc.get(source)
-            target = urlsplit(response.location)
             assert response.status_code == 307
+            target = urlsplit(response.location)
             assert target.path == expected_path
             assert parse_qs(target.query) == expected_query
 
@@ -74,6 +97,225 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?jump=10.1", "10.1") # by label
         self.check_args("/Groups/Abstract/?jump=SL(2,7)", "336.114") # by family name
         self.check_args("/Groups/Abstract/?jump=F5", "20.3") # by name
+
+    def test_family_alias_lookup(self):
+        r"""
+        Check that Groups/Abstract/?jump finds the members of a family that are
+        stored in gps_special_names under another family's name (issue #6654).
+
+        One stored example for each entry of FAMILY_ALIASES; the final
+        assertion keeps the two lists in sync.
+        """
+        cases = [
+            # (alias key, jump argument, label of the stored group)
+            (("Sp", 2), "Sp(2, 5)", "120.5"),            # Sp(2,q) = SL(2,q)
+            (("PSp", 2), "PSp(2,5)", "60.5"),            # PSp(2,q) = PSL(2,q)
+            (("GSp", 2), "GSp(2,7)", "2016.a"),          # GSp(2,q) = GL(2,q)
+            (("ASp", 2), "ASp(2,2)", "24.12"),           # ASp(2,q) = ASL(2,q)
+            (("PSigmaSp", 2), "PSigmaSp(2,5)", "60.5"),  # PSigmaSp(2,q) = PSigmaL(2,q)
+            (("ASigmaSp", 2), "ASigmaSp(2,2)", "24.12"), # ASigmaSp(2,q) = ASigmaL(2,q)
+            (("Spin", 3), "Spin(3,5)", "120.5"),         # Spin(3,q) = SL(2,q)
+        ]
+        for _, jump, label in cases:
+            self.check_args("/Groups/Abstract/?jump=" + jump, label)
+        assert set(alias for alias, _, _ in cases) == set(FAMILY_ALIASES), \
+            "every entry of FAMILY_ALIASES needs a jump test"
+
+    def check_jump(self, jump, label):
+        r"""
+        Check that the jump box redirects to a group's page.  This looks at the
+        redirect target rather than the rendered page, because a short label
+        such as 6.1 occurs as a substring on plenty of other pages.
+        """
+        r = self.tc.get("/Groups/Abstract/?jump=" + jump)
+        assert r.status_code == 302, "%s did not redirect (%s)" % (jump, r.status_code)
+        assert r.headers["Location"].endswith("/" + label), \
+            "%s redirected to %s, not to %s" % (jump, r.headers["Location"], label)
+
+    def test_family_name_aliases(self):
+        r"""
+        Pin down what each alias resolves to.  This table is written out again
+        rather than derived from FAMILY_NAME_ALIASES on purpose: the redirect
+        tests below cannot catch a wrong target on their own, because families
+        such as Orth and GOrth agree for many small parameters, so a typo like
+        "CO": "Orth" would still redirect to the expected group.
+        """
+        expected = {
+            # printed in the "Groups of Lie type" row: the tex_name of Orth is
+            # O, of GOrth is GO, of Unitary is U and of GUnitary is GU, and the
+            # Plus and Minus families print with a +/- exponent
+            "O": "Orth", "O+": "OrthPlus", "O-": "OrthMinus",
+            "GO": "GOrth", "GO+": "GOrthPlus", "GO-": "GOrthMinus",
+            "U": "Unitary", "GU": "GUnitary",
+            "SO+": "SOPlus", "SO-": "SOMinus",
+            "GSO+": "GSOPlus", "GSO-": "GSOMinus",
+            "PSO+": "PSOPlus", "PSO-": "PSOMinus",
+            "PO+": "POPlus", "PO-": "POMinus",
+            "Omega+": "OmegaPlus", "Omega-": "OmegaMinus",
+            "POmega+": "POmegaPlus", "POmega-": "POmegaMinus",
+            "Spin+": "SpinPlus", "Spin-": "SpinMinus",
+            # printed in the Magma snippet: the magma_cmd of GOrth is CO, of
+            # GSO is CSO, of GSp is CSp, of GSU is CSU, of GUnitary is CU, of
+            # PO is PGO and of PU is PGU
+            "CO": "GOrth", "COPlus": "GOrthPlus", "COMinus": "GOrthMinus",
+            "CSO": "GSO", "CSOPlus": "GSOPlus", "CSOMinus": "GSOMinus",
+            "CSp": "GSp", "CSU": "GSU", "CU": "GUnitary",
+            "PGO": "PO", "PGOPlus": "POPlus", "PGOMinus": "POMinus",
+            "PGU": "PU",
+        }
+        assert FAMILY_NAME_ALIASES == expected
+
+        # a +/- alias has to agree with the alias it is the exponent form of
+        for alias, family in FAMILY_NAME_ALIASES.items():
+            if alias[-1] in "+-":
+                base = FAMILY_NAME_ALIASES.get(alias[:-1], alias[:-1])
+                suffix = "Plus" if alias[-1] == "+" else "Minus"
+                assert family == base + suffix, \
+                    "%s should be %s, not %s" % (alias, base + suffix, family)
+
+    def test_normalize_family_jump(self):
+        r"""
+        The rewrite should replace the family and nothing else, and leave
+        anything it does not recognize alone.
+        """
+        assert normalize_family_jump("GO(5,3)") == "GOrth(5,3)"
+        assert normalize_family_jump("O(5,3)") == "Orth(5,3)"
+        assert normalize_family_jump("GO+(8,7)") == "GOrthPlus(8,7)"
+        assert normalize_family_jump("PGU(4, 25)") == "PU(4, 25)"  # spacing kept
+        assert normalize_family_jump("CSp(100,101)") == "GSp(100,101)"  # any parameters
+        # not aliases, and so untouched
+        for jump in ["Sp(2,5)", "PSigmaSp(2,5)", "E(6,2)", "2A(2,3)", "C5", "GOPlus(4,3)"]:
+            assert normalize_family_jump(jump) == jump
+
+    def test_magma_name_aliases_agree_with_gps_families(self):
+        r"""
+        Check the Magma half of the table against the magma_cmd column the code
+        snippets are generated from, rather than against a second copy of the
+        table.  Every family whose Magma name differs from its own should be
+        reachable by that name, except for the four we print for a different
+        group: LMFDB's GO and GU are the conformal groups Magma calls CO and
+        CU, and what the page displays wins.
+        """
+        printed_for_another_group = ["GO", "GOPlus", "GOMinus", "GU"]
+        for rec in db.gps_families.search({}, projection=["family", "magma_cmd"]):
+            cmd = rec["magma_cmd"] or ""
+            if not cmd.endswith("(n,q)"):
+                continue  # a constructor-style name such as Sym(n), out of scope
+            name = cmd[:-len("(n,q)")]
+            if name == rec["family"]:
+                continue  # already the stored spelling
+            if name in printed_for_another_group:
+                assert FAMILY_NAME_ALIASES.get(name) != rec["family"], \
+                    "%s is printed for a different group than Magma's %s" % (name, name)
+            else:
+                assert FAMILY_NAME_ALIASES.get(name) == rec["family"], \
+                    "Magma's %s is %s, but the jump box reads it as %s" % (
+                        name, rec["family"], FAMILY_NAME_ALIASES.get(name))
+
+    def test_family_name_aliases_are_unclaimed(self):
+        r"""
+        The rewrite runs before the gps_families regexes are tried, so it only
+        adds names if no alias is a spelling those regexes already accept.
+        Probe the regexes themselves, rather than just comparing against the
+        family column, since it is the regexes that decide what is accepted;
+        the parameters cover both parities and more than one field size.
+        """
+        inputs = [(rec["family"], re.compile(rec["input"]))
+                  for rec in db.gps_families.search({}, projection=["family", "input"])]
+        families = set(family for family, _ in inputs)
+        for alias, family in FAMILY_NAME_ALIASES.items():
+            assert family in families, "%s is not a family name" % family
+            for n, q in [(2, 2), (3, 5), (4, 3), (7, 11)]:
+                probe = "%s(%s,%s)" % (alias, n, q)
+                for other, regex in inputs:
+                    assert not regex.fullmatch(probe), \
+                        "%s already matches the %s regex" % (probe, other)
+
+    def test_family_name_alias_lookup(self):
+        r"""
+        Check that Groups/Abstract/?jump accepts the family name printed in a
+        group page's "Groups of Lie type" row and the one printed in its Magma
+        snippet, neither of which is always the name stored in gps_families
+        (issue #6654).
+
+        One stored example for each entry of FAMILY_NAME_ALIASES; the final
+        assertion keeps the two lists in sync.  A + is percent-encoded, since a
+        literal + in a query string means a space.  Parameters are chosen so
+        that an isometry group and its similitude group have different labels
+        wherever the database has such an example, but see
+        test_family_name_aliases for what actually pins the targets down.
+        """
+        cases = [
+            # (alias, jump argument, label of the stored group)
+            # as printed in the "Groups of Lie type" row
+            ("O", "O(3,5)", "240.189"),
+            ("O+", "O%2B(4,3)", "1152.157478"),
+            ("O-", "O-(4,3)", "1440.5842"),
+            ("GO", "GO(3,5)", "480.943"),
+            ("GO+", "GO%2B(4,3)", "2304.a"),
+            ("GO-", "GO-(4,3)", "2880.a"),
+            ("U", "U(3,5)", "2268000.a"),
+            ("GU", "GU(3,5)", "9072000.a"),
+            ("SO+", "SO%2B(4,3)", "576.8282"),
+            ("SO-", "SO-(4,3)", "720.766"),
+            ("GSO+", "GSO%2B(4,3)", "1152.157467"),
+            ("GSO-", "GSO-(4,3)", "1440.4592"),
+            ("PSO+", "PSO%2B(4,3)", "288.1026"),
+            ("PSO-", "PSO-(4,3)", "360.118"),
+            ("PO+", "PO%2B(4,3)", "576.8654"),
+            ("PO-", "PO-(4,3)", "720.763"),
+            ("Omega+", "Omega%2B(4,3)", "288.860"),
+            ("Omega-", "Omega-(4,3)", "360.118"),
+            ("POmega+", "POmega%2B(4,3)", "144.184"),
+            ("POmega-", "POmega-(4,3)", "360.118"),
+            ("Spin+", "Spin%2B(4,3)", "576.5128"),
+            ("Spin-", "Spin-(4,3)", "720.409"),
+            # as printed in the Magma snippet
+            ("CO", "CO(3,5)", "480.943"),
+            ("COPlus", "COPlus(4,3)", "2304.a"),
+            ("COMinus", "COMinus(4,3)", "2880.a"),
+            ("CSO", "CSO(3,5)", "120.34"),
+            ("CSOPlus", "CSOPlus(4,3)", "1152.157467"),
+            ("CSOMinus", "CSOMinus(4,3)", "1440.4592"),
+            ("CSp", "CSp(4,3)", "103680.b"),
+            ("CSU", "CSU(3,5)", "378000.a"),
+            ("CU", "CU(3,5)", "9072000.a"),
+            ("PGO", "PGO(3,5)", "120.34"),
+            ("PGOPlus", "PGOPlus(4,3)", "576.8654"),
+            ("PGOMinus", "PGOMinus(4,3)", "720.763"),
+            ("PGU", "PGU(3,5)", "378000.b"),
+        ]
+        for _, jump, label in cases:
+            self.check_jump(jump, label)
+        assert set(alias for alias, _, _ in cases) == set(FAMILY_NAME_ALIASES), \
+            "every entry of FAMILY_NAME_ALIASES needs a jump test"
+
+        # the name Jen Paulhus reported, and the other reading of it; these
+        # coincide at n = 5, q = 3, so both spellings reach the same group
+        self.check_jump("GO(5,3)", "103680.a")
+        self.check_jump("O(5,3)", "103680.a")
+
+    def test_absent_family_lookup(self):
+        r"""
+        Check that Groups/Abstract/?jump reports a group that exists but is not
+        in the database as missing rather than as an invalid name.  This is the
+        branch of group_jump that goes through valid_params, so it checks the
+        family names used there against gps_families.
+        """
+        absent = "has not yet been added to the database"
+        invalid = "is not a valid name for a group or subgroup"
+        # even-dimensional families: GSp and ASp are newly accepted there, and
+        # OrthPlus, POPlus, GSOPlus, GOrthPlus replace GOPlus, PGOPlus,
+        # CSOPlus, COPlus
+        for jump in ["GSp(100,5)", "ASp(100,5)", "OrthPlus(100,5)",
+                     "POPlus(100,5)", "GSOPlus(100,5)", "GOrthPlus(100,5)"]:
+            self.check_args("/Groups/Abstract/?jump=" + jump, absent)
+        # odd-dimensional families: Orth, PO, GSO, GOrth replace GO, PGO, CSO, CO
+        for jump in ["Orth(101,5)", "PO(101,5)", "GSO(101,5)", "GOrth(101,5)"]:
+            self.check_args("/Groups/Abstract/?jump=" + jump, absent)
+        # a dimension of the wrong parity is not a group at all
+        self.check_args("/Groups/Abstract/?jump=GOrthPlus(101,5)", invalid)
+        self.check_args("/Groups/Abstract/?jump=GOrth(100,5)", invalid)
 
     # test that abelian group redirect works
     def test_abelian_lookup(self):
@@ -361,6 +603,118 @@ class AbGpsHomeTest(LmfdbTest):
         """
         self.check_args("/Groups/Abstract/?frattini_label=4.2", "16.2")
         self.not_check_args("/Groups/Abstract/?frattini_label=4.2", "5.1")
+
+    def test_search_by_name(self):
+        r"""
+        Check that group-label search boxes also accept group names, resolving
+        them to labels (issue #6397).  Each case uses a name whose label is
+        already checked in a sibling test above, so name and label agree.
+        """
+        # center C2^3 == center 8.5 (cf. test_search_center)
+        self.check_args("/Groups/Abstract/?center_label=C2^3", ["64.212", "80.43"])
+        # aut_group C6 == aut_group 6.2 (cf. test_search_autgroup)
+        self.check_args("/Groups/Abstract/?aut_group=C6", ["7.1", "18.2"])
+        # commutator C8 == commutator 8.1 (cf. test_search_commutator)
+        self.check_args("/Groups/Abstract/?commutator_label=C8", ["32.20", "64.190"])
+        # central quotient C2^2 == central quotient 4.2 (cf. test_search_centralquot)
+        self.check_args("/Groups/Abstract/?central_quotient=C2^2", ["40.10", "64.87"])
+        # abelianization C8 == abelianization 8.1 (cf. test_search_abelianization)
+        self.check_args("/Groups/Abstract/?abelian_quotient=C8", ["72.19", "96.65"])
+        # Frattini C2^2 == Frattini 4.2 (cf. test_frattini_label_search)
+        self.check_args("/Groups/Abstract/?frattini_label=C2^2", "16.2")
+        # outer group C2^2 == outer group 4.2 (cf. test_outer_group_search)
+        self.check_args("/Groups/Abstract/?outer_group=C2^2", "8.1")
+        # TeX-like input is normalized (C_2^3 -> C2^3 -> 8.5)
+        self.check_args("/Groups/Abstract/?center_label=C_2^3", "64.212")
+        # a comma separated list may mix orders and names: the groups of order
+        # 6-8 whose center is of order 2 or is C6 are C6, D4 and Q8
+        self.check_args("/Groups/Abstract/?center_label=2,C6&order=6-8", ["6.2", "8.3", "8.4"])
+
+    def test_search_by_name_subgroups(self):
+        r"""
+        Check that names work in the subgroup and complex character searches.
+        """
+        # ambient C2^3 resolves to 8.5
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&ambient=C2^3", "8.5")
+        # group A5 resolves to 60.5 in the complex character search
+        self.check_args("/Groups/Abstract/?search_type=ComplexCharacters&group=A5", "60.5")
+
+    def test_search_by_name_with_commas(self):
+        r"""
+        Check that a family name whose parameters contain commas, such as
+        SL(2,7) = 336.114 or GL(2,3) = 48.29, is kept as a single entry rather
+        than being split at its internal comma.
+        """
+        # a label only box (parse_group_label_or_name): Aut(G) = GL(2,3)
+        self.check_args("/Groups/Abstract/?aut_group=GL(2,3)", ["9.2", "18.5"])
+        # an order or name box (parse_group_label_or_order_or_name): [G,G] = SL(2,7)
+        self.check_args("/Groups/Abstract/?commutator_label=SL(2,7)", "336.114")
+        # and the subgroup search
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&ambient=SL(2,7)", "336.114")
+        # only top level commas split the list: GL(2,3) = 48.29 and C6 = 6.2
+        self.check_args("/Groups/Abstract/?aut_group=GL(2,3),C6", ["9.2", "18.5", "7.1", "18.2"])
+        # such a name may also be mixed with an order in an order or name box
+        self.check_args(
+            "/Groups/Abstract/?commutator_label=8,SL(2,7)&order=336",
+            ["336.114", "336.169", "336.170", "336.213"],
+        )
+
+    def test_search_by_name_with_plus(self):
+        r"""
+        Check that a + inside a name survives, while a leading unary + on an
+        order or label is still accepted.  SO+(4,2) is 72.40, which has trivial
+        center and so occurs as a central quotient.
+        """
+        self.check_args(
+            "/Groups/Abstract/?central_quotient=SO%2B(4%2C2)&order=144",
+            ["144.115", "144.186"],
+        )
+        # +8 still means "center of order 8", +8.1 still means "center C8"
+        self.check_args("/Groups/Abstract/?center_label=%2B8&order=8", ["8.1", "8.2", "8.5"])
+        self.check_args("/Groups/Abstract/?center_label=%2B8.1&order=8", "8.1")
+        self.not_check_args("/Groups/Abstract/?center_label=%2B8.1&order=8", "8.2")
+
+    def test_search_by_bad_name(self):
+        r"""
+        Check that an unrecognized name in a search box gives a sensible error.
+        """
+        self.check_args("/Groups/Abstract/?center_label=nonsensexyz", "Abstract groups search input error")
+        self.check_args("/Groups/Abstract/?aut_group=nonsensexyz", "Abstract groups search input error")
+        # unbalanced delimiters are rejected as such, rather than being split at
+        # the internal comma and reported as a truncated name
+        for url in ["/Groups/Abstract/?aut_group=SL(2,7",
+                    "/Groups/Abstract/?commutator_label=SL(2,7"]:
+            self.check_args(url, "Abstract groups search input error")
+            self.not_check_args(url, "SL(2 is not")
+        self.check_args("/Groups/Abstract/?search_type=Subgroups&ambient=SL(2,7", "Subgroup search input error")
+        self.not_check_args("/Groups/Abstract/?search_type=Subgroups&ambient=SL(2,7", "SL(2 is not")
+        # as are empty entries in the comma separated list
+        self.check_args("/Groups/Abstract/?center_label=C2,,C6", "Abstract groups search input error")
+
+    def test_search_by_bad_name_in_debug_mode(self):
+        r"""
+        An unrecognized name says what is wrong with the input; it is not a bug.
+        So the search page is redisplayed with the error message at the top even
+        when the site is being run with debug enabled, rather than the developer
+        being shown a traceback (LMFDB#7173).
+        """
+        debug = self.app.debug
+        self.app.debug = True
+        try:
+            self.check_args(
+                "/Groups/Abstract/?aut_group=bird",
+                ["Abstract groups search input error", "bird is not a valid group label or name"],
+            )
+            self.check_args(
+                "/Groups/Abstract/?search_type=Subgroups&ambient=bird",
+                ["Subgroup search input error", "bird is not a valid group label or name"],
+            )
+            self.check_args(
+                "/Groups/Abstract/?search_type=ComplexCharacters&group=bird",
+                ["Complex character search input error", "bird is not a valid group label or name"],
+            )
+        finally:
+            self.app.debug = debug
 
     def test_supersolvable_search(self):
         r"""

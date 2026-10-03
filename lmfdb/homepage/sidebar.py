@@ -7,7 +7,8 @@ def linked_name(item, level=""):
     """ take the dictionary describing a TOC entry and return the
     title wrapped in an appropriate href link.
     """
-    if 'url_for' in item and not ('status' in item and item['status'] == 'future'):
+    # Future sections selected for the alpha sidebar must still be linked.
+    if 'url_for' in item and (item.get('status') != 'future' or item.get('show', False)):
         url = url_for(item['url_for'],**item.get('url_args',{}))
         this_entry = ''.join(['<a href="',url,'">',item['title'],'</a>'])
     else:

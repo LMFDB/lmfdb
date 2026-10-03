@@ -42,8 +42,8 @@ def hecke_algebras_render_webpage():
         weight_list = list(range(2, 20, 2))
         lvl_list_endpoints = [1, 100, 200, 300, 400, 500]
         lvl_list = ["%s-%s" % (start, end - 1) for start, end in zip(lvl_list_endpoints[:-1], lvl_list_endpoints[1:])]
-        favourite_list = ["1.12.1","139.2.1","239.2.1","9.16.1"]
-        info = {'lvl_list': lvl_list,'wt_list': weight_list, 'favourite_list': favourite_list}
+        favorite_list = ["1.12.1","139.2.1","239.2.1","9.16.1"]
+        info = {'lvl_list': lvl_list,'wt_list': weight_list, 'favorite_list': favorite_list}
         credit = hecke_algebras_credit
         t = 'Hecke algebras'
         bread = [('HeckeAlgebra', url_for(".hecke_algebras_render_webpage"))]
