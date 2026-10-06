@@ -2,16 +2,37 @@
 
 {% block content %}
 <style>
-.api-entries > li { margin-bottom: 14px; }
+details#api-docs { margin: 12px 0; }
+details#api-docs > summary { cursor: pointer; font-weight: bold; }
+div#api-filter-box { margin: 12px 0; }
+span#api-filter-count { margin-left: 12px; color: #666; }
+div#api-jump { margin: 6px 0 14px 0; }
+div.api-dataset { margin-bottom: 16px; }
+h4.api-dataset-head { margin-bottom: 3px; }
+span.api-dataset-total { font-weight: normal; color: #666; }
+table.api-table-list td { padding-right: 16px; }
+td.api-table-name { white-space: nowrap; }
+td.api-table-count { text-align: right; white-space: nowrap; }
 </style>
 
 
 <div>
-This is a very basic API for accessing the LMFDB Database.
-It lists available databases and collections,
-links to their respective descriptions,
-and has very limited query capabilities.
+This page is the entry point to the API of the LMFDB, which provides
+direct access to the underlying database.
+The <a href="#api-tables">tables</a> listed below are grouped into datasets by
+the prefix of their name; click on a table name to see its first records,
+its schema, and links to the results of your query in machine-readable formats.
+See also the <a href="{{ url_for('.stats') }}">table statistics</a> page
+for the size of each table on disk, and the
+<a href="{{ url_for('.options') }}">access options</a> page for other ways
+of getting at the data.
 </div>
+<div>
+<b>Please use this API responsibly!</b>
+</div>
+
+<details id="api-docs">
+<summary>Query syntax and examples</summary>
 <div>
 Queries are url encoded <b><code>key=value</code></b> parameters, where the value has a prefix to specify the type.
 Keys starting with "<code>_</code>" are meta-parameters further refining query.
@@ -19,9 +40,6 @@ They can be combined by specifying several ones delimited by <code>&amp;</code> 
 The result formats are JSON, YAML or HTML (default).
 Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects.
 The overall limit is at about 10000 results and beyond that it is necessary to further refine the query to the results in question.
-</div>
-<div>
-<b>Please use this API responsibly!</b>
 </div>
 <h4>Type-prefixes for query values</h4>
 <div>
@@ -47,6 +65,7 @@ use <code>_fields=name1,name2</code> to reduce the amount of data sent back to o
 where the prefix "-" indicates to sort in descending order.
 </li>
 <li>Finally, <code>_delim</code> is used to specify the delimiter (default: "<code>,</code>")</li>
+</ul>
 </div>
 <div>
 <h4>Examples</h4>
@@ -86,23 +105,79 @@ where the prefix "-" indicates to sort in descending order.
     -->
 </ul>
 </div>
+</details>
 
-<h3>Available Collections</h3>
-<ul class="api-entries">
-{% for db, collections in databases.items()|sort %}
-  <li>
-    <b>{{ db }}</b>
-    <!--
-    (<a href="https://github.com/LMFDB/lmfdb-inventory/blob/master/db-{{ db }}.md"
-    target="_blank">description</a>)
-    -->
-    <br/>
-      {% for (fullname, shortname, count) in collections %}
-        <a href="{{ url_for('.api_query', table=fullname) }}">{{ shortname }} ({{ count }})</a>
-        {% if not loop.last %}&middot;{% endif %}
-      {% endfor %}
-  </li>
+<h3 id="api-tables">Available tables</h3>
+
+<div>
+The database contains {{ ntables }} tables in {{ databases|length }} datasets,
+with a total of {{ "{:,}".format(nrows) }} rows.
+{% if show_hidden %}
+All tables are shown, including the test and auxiliary ones;
+<a href="{{ url_for('.index') }}">hide them</a>.
+{% elif nhidden %}
+{{ nhidden }} test and auxiliary table{% if nhidden != 1 %}s are{% else %} is{% endif %} hidden;
+<a href="{{ url_for('.full_index') }}">show all tables</a>.
+{% endif %}
+</div>
+
+<div id="api-filter-box">
+<input type="text" id="api-filter" size="30" placeholder="Filter tables" autocomplete="off" oninput="filterTables()" />
+<span id="api-filter-count"></span>
+</div>
+
+<div id="api-jump">
+Jump to:
+{% for database in databases|sort %}
+<a href="#{{ database }}">{{ database }}</a>{% if not loop.last %} &middot;{% endif %}
 {% endfor %}
-</ul>
+</div>
+
+{% for database, tables in databases.items()|sort %}
+<div class="api-dataset" id="{{ database }}" data-dataset="{{ database }} {{ dataset_names.get(database, '')|lower }}">
+  <h4 class="api-dataset-head">{{ database }}{% if database in dataset_names %} &mdash; {{ dataset_names[database] }}{% endif %}
+  <span class="api-dataset-total">({{ dataset_totals[database][0] }} table{% if dataset_totals[database][0] != 1 %}s{% endif %},
+    {{ "{:,}".format(dataset_totals[database][1]) }} row{% if dataset_totals[database][1] != 1 %}s{% endif %})</span></h4>
+  <table class="ntdata api-table-list">
+    <tbody>
+    {% for (fullname, shortname, count, description) in tables|sort %}
+      <tr class="api-table-row" data-name="{{ fullname|lower }}" data-desc="{{ description|lower }}">
+        <td class="api-table-name"><a href="{{ url_for('.api_query', table=fullname) }}">{{ fullname }}</a></td>
+        <td class="api-table-count" title="number of rows">{{ "{:,}".format(count) }}</td>
+        <td class="api-table-desc">{{ description }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+<div id="api-no-match" style="display: none;">No tables match your filter.</div>
+
+<script type="text/javascript">
+function filterTables() {
+  var needle = document.getElementById("api-filter").value.toLowerCase().trim();
+  var datasets = document.getElementsByClassName("api-dataset");
+  var shown = 0;
+  for (var i = 0; i < datasets.length; i++) {
+    var dsmatch = datasets[i].getAttribute("data-dataset").indexOf(needle) !== -1;
+    var rows = datasets[i].getElementsByClassName("api-table-row");
+    var visible = 0;
+    for (var j = 0; j < rows.length; j++) {
+      var match = !needle || dsmatch ||
+        rows[j].getAttribute("data-name").indexOf(needle) !== -1 ||
+        rows[j].getAttribute("data-desc").indexOf(needle) !== -1;
+      rows[j].style.display = match ? "" : "none";
+      if (match) visible++;
+    }
+    datasets[i].style.display = visible ? "" : "none";
+    shown += visible;
+  }
+  // anchor links to hidden sections are not useful while filtering
+  document.getElementById("api-jump").style.display = needle ? "none" : "";
+  document.getElementById("api-filter-count").textContent =
+    needle ? "showing " + shown + " of {{ ntables }} tables" : "";
+  document.getElementById("api-no-match").style.display = shown ? "none" : "";
+}
+</script>
 
 {% endblock %}
