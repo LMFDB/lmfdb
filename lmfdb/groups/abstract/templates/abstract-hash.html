@@ -1,0 +1,40 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+<p>
+  {{KNOWL('group.hash', 'Hash')}}: {{ value }}, order&nbsp;{{ order }}
+  (<a href="{{ order_url }}">all groups of order&nbsp;{{ order }}</a>).
+</p>
+
+{% if candidates %}
+  <p>
+    The hash tables are complete for order&nbsp;{{ order }}, so these are
+    {% if candidates|length == 1 %}
+      all the groups of order&nbsp;{{ order }} with this hash.
+    {% else %}
+      all {{ candidates|length }} groups of order&nbsp;{{ order }} with this hash:
+      they form a hash collision, and any group with this order and hash is
+      isomorphic to exactly one of them.
+    {% endif %}
+  </p>
+  <ul>
+    {% for c in candidates %}
+      <li>
+        {% if c.present or c.live %}
+          <a href="{{ url_for('.by_label', label=c.label) }}">{{ c.label }}</a>
+          {%- if not c.present %} <span class="nowrap">(not in the database)</span>{% endif %}
+        {% else %}
+          {{ c.label }} <span class="nowrap">(not in the database)</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>
+    The hash tables are complete for order&nbsp;{{ order }}, so no group of
+    order&nbsp;{{ order }} has this hash.
+  </p>
+{% endif %}
+
+{% endblock %}
