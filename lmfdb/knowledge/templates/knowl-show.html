@@ -66,12 +66,17 @@
         {% for rid in k.referrers %}
         <li>{{ KNOWL(rid, title=rid) }}</li>
         {% endfor %}
-        {% for coderef in k.code_referrers %}
+        {% for coderef in k.code_referrers or [] %}
         <li>{{ coderef | safe }}</li>
         {% endfor %}
       </ul>
+  {% elif k.code_referrers is none %}
+    <p style="text-indent: 1em">Not referenced by any knowl at the moment.</p>
   {% else %}
     <p style="text-indent: 1em">Not referenced anywhere at the moment.</p>
+  {% endif %}
+  {% if k.code_referrers is none %}
+    <p style="text-indent: 1em">References in the code could not be checked, since the LMFDB is not running from a git checkout.</p>
   {% endif %}
 </div>
 {% endif %}
