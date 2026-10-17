@@ -1,4 +1,4 @@
-from .config import current_configuration
+from .config import current_configuration, root_lmfdb_path
 import os
 from socket import gethostname
 import time
@@ -199,10 +199,11 @@ if (os.getenv('BETA') == '1'):
 
 
 def git_infos():
+    if root_lmfdb_path is None:  # not running from a git checkout
+        return '-', '-', '-'
     try:
         from subprocess import Popen, PIPE
-        # cwd should be the root of git repo
-        cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+        cwd = root_lmfdb_path
         commands = ['''git rev-parse HEAD''',
                     '''git show --format="%ci" -s HEAD''',
                     '''git branch --contains HEAD''',

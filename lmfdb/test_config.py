@@ -7,6 +7,7 @@ they run in the regular test suite from a checkout and are also exercised
 against the installed package by the packaging workflow
 (.github/workflows/packaging.yml).
 """
+import importlib.util
 import os
 import stat
 import subprocess
@@ -147,20 +148,97 @@ class TestConfiguration:
         )
         monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
         conf = config_mod.Configuration(readargs=True)
+        config_mod.set_current_configuration(conf)
         assert conf.config_file == str(cfg)
         assert conf.secrets_file == str(cfg.parent / "secrets.ini")
         assert config_mod.current_configuration() is conf
         conf.get_secret_key()
         assert (cfg.parent / "secret_key").exists()
 
-    def test_first_configuration_becomes_current(self, tmp_path, monkeypatch):
+    def test_secrets_file_option(self, tmp_path, monkeypatch):
+        cfg = tmp_path / "config.ini"
+        secrets = tmp_path / "elsewhere" / "secrets.ini"
+        monkeypatch.setattr(
+            sys, "argv", ["lmfdb", "--config-file", str(cfg), "--secrets-file", str(secrets)]
+        )
+        monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
+        conf = config_mod.Configuration(readargs=True)
+        assert conf.config_file == str(cfg)
+        assert conf.secrets_file == str(secrets)
+
+    def test_explicit_current_configuration(self, tmp_path, monkeypatch):
+        # creating a Configuration does not change the process-wide one;
+        # only set_current_configuration (or first use) does
         monkeypatch.setenv("LMFDB_CONFIG", str(tmp_path / "config.ini"))
         monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
         monkeypatch.setattr(config_mod, "_current_configuration", None)
         first = config_mod.Configuration()
+        assert config_mod._current_configuration is None
+        config_mod.set_current_configuration(first)
+        config_mod.set_current_configuration(first)  # no-op
+        assert config_mod.current_configuration() is first
         second = config_mod.Configuration()
         assert config_mod.current_configuration() is first
-        assert config_mod.current_configuration() is not second
+        with pytest.raises(RuntimeError):
+            config_mod.set_current_configuration(second)
+
+    def test_default_current_configuration(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("LMFDB_CONFIG", str(tmp_path / "config.ini"))
+        monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
+        monkeypatch.setattr(config_mod, "_current_configuration", None)
+        conf = config_mod.current_configuration()
+        assert isinstance(conf, config_mod.Configuration)
+        assert config_mod.current_configuration() is conf
+
+    def test_command_line_overrides_existing_config_file(self, tmp_path, monkeypatch):
+        # Options given on the command line apply even when the
+        # configuration file already exists (on first startup they are
+        # written into the new file, which would hide a failure to apply
+        # them), and reach every consumer of the process-wide configuration
+        cfg = tmp_path / "config.ini"
+        monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
+        monkeypatch.setenv("LMFDB_CONFIG", str(cfg))
+        config_mod.Configuration()
+        assert cfg.exists()
+        monkeypatch.setattr(config_mod, "_current_configuration", None)
+        monkeypatch.setattr(sys, "argv", ["lmfdb", "--port", "39999"])
+        conf = config_mod.Configuration(writeargstofile=True, readargs=True)
+        config_mod.set_current_configuration(conf)
+        assert config_mod.current_configuration().get_flask()["port"] == 39999
+        try:
+            from lmfdb.utils.cocalcwrap import CocalcWrap
+        except ImportError as e:
+            pytest.skip("lmfdb.utils is unavailable here (%s)" % e)
+        monkeypatch.setenv("COCALC_PROJECT_ID", "example-project")
+        assert CocalcWrap(None).app_root == "/example-project/server/39999"
+
+
+class TestLogging:
+    def test_logging_does_not_alter_configuration(self, tmp_path):
+        # logging redacts the database password in the configuration it
+        # prints, but must leave the shared configuration (which the
+        # database also uses) intact
+        if importlib.util.find_spec("sage") is None:
+            pytest.skip("logging requires sage")
+        code = (
+            "from lmfdb import config\n"
+            "conf = config.Configuration()\n"
+            "config.set_current_configuration(conf)\n"
+            "password = conf.postgresql_options['password']\n"
+            "assert password != '****'\n"
+            "import lmfdb.logger\n"
+            "assert conf.postgresql_options['password'] == password\n"
+            "assert conf.get_all()['postgresql_options']['password'] == password\n"
+            "assert conf.options['postgresql']['password'] == password\n"
+        )
+        r = run_py(
+            code,
+            cwd=str(tmp_path),
+            LMFDB_HOME=str(tmp_path),
+            LMFDB_CONFIG=str(tmp_path / "config.ini"),
+        )
+        assert r.returncode == 0, r.stderr + r.stdout
+        assert "'password': '****'" in r.stderr + r.stdout
 
 
 class TestLazyDb:
@@ -301,6 +379,50 @@ class TestCommandLine:
         assert "--config-file" in r.stdout
         assert "--postgresql-host" in r.stdout
         assert not any(tmp_path.iterdir()), "files were created by --help"
+
+    def test_cli_installs_configuration(self, tmp_path, monkeypatch):
+        # the configuration built from the command line is the one the
+        # website is started with, and the process-wide one
+        import types
+        import lmfdb
+        from lmfdb import cli
+        started = []
+        fake_website = types.ModuleType("lmfdb.website")
+        fake_website.main = started.append
+        monkeypatch.setitem(sys.modules, "lmfdb.website", fake_website)
+        monkeypatch.setattr(lmfdb, "website", fake_website, raising=False)
+        monkeypatch.setattr(config_mod, "_current_configuration", None)
+        monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
+        monkeypatch.setenv("LMFDB_CONFIG", str(tmp_path / "config.ini"))
+        monkeypatch.setattr(sys, "argv", ["lmfdb", "--port", "39999"])
+        cli.main()
+        assert len(started) == 1
+        assert started[0] is config_mod.current_configuration()
+        assert started[0].get_flask()["port"] == 39999
+
+    def test_missing_sage_message(self, tmp_path):
+        # starting the website without sage exits with an explanation
+        # rather than a traceback
+        code = (
+            "import sys\n"
+            "class Blocker:\n"
+            "    def find_spec(self, name, path=None, target=None):\n"
+            "        if name == 'sage' or name.startswith('sage.'):\n"
+            "            raise ModuleNotFoundError('No module named %r' % name, name=name)\n"
+            "sys.meta_path.insert(0, Blocker())\n"
+            "sys.argv = ['lmfdb']\n"
+            "from lmfdb.cli import main\n"
+            "main()\n"
+        )
+        r = run_py(
+            code,
+            cwd=str(tmp_path),
+            LMFDB_HOME=str(tmp_path),
+            LMFDB_CONFIG=str(tmp_path / "config.ini"),
+        )
+        assert r.returncode == 1, r.stderr + r.stdout
+        assert "requires SageMath" in r.stderr
+        assert "Traceback" not in r.stderr
 
 
 class TestUtilsConfigShim:

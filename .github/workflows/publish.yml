@@ -52,10 +52,14 @@ jobs:
           twine check --strict dist/*
 
       - name: Smoke test the wheel
+        # run from an empty directory so that the checkout cannot shadow
+        # the installed package (the packaging workflow runs fuller checks)
         run: |
           python -m venv smoke
           smoke/bin/pip install dist/*.whl
-          smoke/bin/python -c "import lmfdb, importlib.metadata; from lmfdb import db; assert not db.connected; print('wheel imports cleanly, version', importlib.metadata.version('lmfdb'))"
+          mkdir empty && cd empty
+          export LMFDB_HOME=$PWD/lmfdb-home
+          ../smoke/bin/python -c "import lmfdb, importlib.metadata; from lmfdb import db; assert not db.connected; assert 'site-packages' in lmfdb.__file__, lmfdb.__file__; print('wheel imports cleanly, version', importlib.metadata.version('lmfdb'))"
 
       - uses: actions/upload-artifact@v4
         with:

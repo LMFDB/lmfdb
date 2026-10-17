@@ -175,17 +175,34 @@ Running
    on using a different database instance, you can do so by changing
    config.ini in the root of the lmfdb directory.
 
- * Locations of configuration and log files: when running from a git
-   checkout, the configuration file is `config.ini` at the root of the
-   checkout, and log files (`flasklog`, `slow_queries.log`, verification
-   logs) go to its `logs/` subdirectory.  When the LMFDB is installed as a
-   package rather than run from a checkout, these files live in `~/.lmfdb`
-   (except that a `config.ini` in the current directory is used if it
-   exists).  The secret key used for login sessions is stored next to the
-   configuration file.  The environment variables `LMFDB_HOME` (the
-   directory for all of these files) and `LMFDB_CONFIG` (the path of the
-   configuration file) override these defaults, as does the `--config-file`
-   command-line option.
+ * Locations of configuration and log files:
+
+   - The configuration file is `config.ini` at the root of the checkout
+     when running from a git checkout.  When the LMFDB is installed as a
+     package, it is `config.ini` in the current directory if that exists,
+     and `~/.lmfdb/config.ini` otherwise.  The `--config-file` option, or
+     the `LMFDB_CONFIG` environment variable, gives a different location.
+     A missing configuration file is created with the default values.
+   - The secrets file (`secrets.ini`, whose values override those in the
+     configuration file) and the secret key used for login sessions
+     (`secret_key`) are kept in the same directory as the configuration
+     file, so they move with `--config-file`.  The `--secrets-file` option
+     gives a different secrets file.
+   - Log files (`flasklog`, `slow_queries.log` and the verification logs)
+     go to the `logs/` subdirectory of the checkout, or of `~/.lmfdb` for an
+     installed package.  They do not move with `--config-file`; set
+     `--logfile` and `--slowlogfile` (or the `logfile` and `slowlogfile`
+     entries in the configuration file) to another path to change them.
+   - The `LMFDB_HOME` environment variable replaces both the checkout root
+     and `~/.lmfdb` above, as the directory for all of these files.
+
+   Notes for existing setups: `flasklog` and `slow_queries.log` used to be
+   created in the current directory, and are now in `logs/` (update any log
+   rotation or monitoring accordingly).  `secrets.ini` used to be read from
+   the current directory, and is now read from the directory of the
+   configuration file.  When running from the root of a checkout with the
+   default configuration, as is usual, the configuration, secrets file and
+   secret key stay where they were.
 
 
 CoCalc

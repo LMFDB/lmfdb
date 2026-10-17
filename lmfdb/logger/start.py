@@ -1,3 +1,4 @@
+from copy import deepcopy
 from logging import (FileHandler, getLogger, StreamHandler, Formatter,
                      INFO, WARNING,
                      info, warning)
@@ -10,7 +11,8 @@ except ModuleNotFoundError as e:
             "The LMFDB website requires SageMath, which pip does not install.  "
             "Install the LMFDB into Sage's Python, e.g. with `sage -pip install lmfdb` "
             "(or `sage -pip install -e .` from a checkout).  "
-            "Database access (lmfdb.db) works without Sage."
+            "Database access (lmfdb.db) works without Sage.",
+            name="sage",
         ) from None
     raise
 
@@ -50,8 +52,10 @@ def start_logging():
     root_logger.addHandler(file_handler)
     root_logger.addHandler(stream_handler)
 
-    cfg = config.get_all()
-    if "postgresql_options" and "password" in cfg["postgresql_options"]:
+    # copy before redacting: get_all returns the configuration's own
+    # dictionaries, which the database also uses
+    cfg = deepcopy(config.get_all())
+    if "password" in cfg["postgresql_options"]:
         cfg["postgresql_options"]["password"] = "****"
     info("Configuration = {}".format(cfg) )
     check_sage_version()

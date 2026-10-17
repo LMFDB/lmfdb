@@ -1,31 +1,14 @@
-# LMFDB - L-function and Modular Forms Database web-site - www.lmfdb.org
-# Copyright (C) 2010-2012 by the LMFDB authors
-#
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
-
 """
-This file must not depend on other files from this project.
-It's purpose is to parse a config file (create a default one if none
-is present) and replace values stored within it with those given
-via optional command-line arguments.
+The LMFDB configuration: values are read from the configuration file
+(which is created with the default values if it does not exist), and can be
+overridden by command-line options.
 
-The location of the configuration file, the secret key and the log
-files is determined as follows.
+The locations of the configuration file, the secrets file, the secret key
+and the log files are described in GettingStarted.md, under "Locations of
+configuration and log files".
 
-- When lmfdb is used from a git checkout, the configuration file is
-  ``config.ini`` at the root of the checkout, the secret key is stored
-  next to it, and log files go to ``logs/`` at the root of the checkout.
-
-- When lmfdb is installed as a package (e.g. with ``sage -pip install .``),
-  these files live in the LMFDB home directory, ``~/.lmfdb`` by default;
-  a ``config.ini`` in the current directory takes precedence if present.
-
-- The environment variables ``LMFDB_HOME`` (directory for all of these
-  files) and ``LMFDB_CONFIG`` (path of the configuration file) override
-  the above, as does the ``--config-file`` command-line option.
+The database layer imports this module and must work without sage or
+flask, so this module must not import anything else from the LMFDB.
 """
 
 
@@ -38,14 +21,17 @@ import socket
 import tempfile
 from contextlib import closing
 from logging import INFO
+from pathlib import Path
 
 COCALC_port = 0
 
-# The root of the git checkout containing this file, or None if lmfdb is
+# The directory of the lmfdb package; use this to locate files that are
+# part of the package (templates, data files, etc.)
+lmfdb_package_dir = Path(__file__).resolve().parent
+
+# The root of the git checkout containing the package, or None if lmfdb is
 # being used as an installed package rather than from a checkout
-root_lmfdb_path = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-)
+root_lmfdb_path = str(lmfdb_package_dir.parent)
 if not os.path.exists(os.path.join(root_lmfdb_path, "start-lmfdb.py")):
     root_lmfdb_path = None
 
@@ -175,22 +161,37 @@ def _resolve_log_path(value, default_name):
     return value
 
 
-# The process-wide configuration: the first Configuration created in the
-# process (for the website, the one lmfdb.cli builds from the command line
-# before anything else is imported) is shared by every component -- logging,
-# the flask app's secret key, and the database -- so that the configuration,
-# including any --config-file option, is resolved exactly once.
+# The process-wide configuration, shared by logging, the flask app's secret
+# key, the website and the database.  The lmfdb command (lmfdb.cli) installs
+# the configuration it builds from the command line before importing
+# anything else; otherwise a default Configuration is created on first use.
 _current_configuration = None
 
 
 def current_configuration():
     """
-    The process-wide :class:`Configuration`, created on first use.
+    The process-wide :class:`Configuration`, created on first use unless
+    one has been installed with :func:`set_current_configuration`.
     """
     global _current_configuration
     if _current_configuration is None:
         _current_configuration = Configuration()
     return _current_configuration
+
+
+def set_current_configuration(config):
+    """
+    Make ``config`` the process-wide configuration returned by
+    :func:`current_configuration`.
+
+    This must happen before anything uses the process-wide configuration
+    (in particular before the database connects or the website is imported);
+    replacing a configuration that is already in use raises a RuntimeError.
+    """
+    global _current_configuration
+    if _current_configuration is not None and _current_configuration is not config:
+        raise RuntimeError("The process-wide configuration is already in use and cannot be replaced")
+    _current_configuration = config
 
 
 class Configuration(_Configuration):
@@ -439,22 +440,17 @@ class Configuration(_Configuration):
             action="store_false",
             default=argparse.SUPPRESS,
         )
-        # record the locations of the configuration and secrets files
-        # (including the --config-file and --secrets-file options when
-        # arguments are read), so that files that live next to the
-        # configuration, like the secret key, can follow it
-        known_args, _ = parser.parse_known_args(None if readargs else [])
-        self.config_file = os.path.abspath(known_args.config_file)
-        if known_args.secrets_file is None:
-            # psycodict resolves a missing secrets file the same way
-            self.secrets_file = os.path.join(os.path.dirname(self.config_file), "secrets.ini")
-        else:
-            self.secrets_file = os.path.abspath(known_args.secrets_file)
-
         _Configuration.__init__(self, parser, writeargstofile=writeargstofile, readargs=readargs)
 
         opts = self.options
         extopts = self.extra_options
+
+        # The locations of the configuration and secrets files, as resolved
+        # by psycodict (including the --config-file and --secrets-file
+        # options when arguments are read), so that files that live next to
+        # the configuration, like the secret key, can follow it
+        self.config_file = os.path.abspath(extopts["config_file"])
+        self.secrets_file = os.path.abspath(extopts["secrets_file"])
 
         # The historical default log files used to be created in the current
         # directory; they now go to the log directory.  We update the options
@@ -529,12 +525,6 @@ class Configuration(_Configuration):
             "editor": opts["logging"]["editor"],
             "loglevel": opts["logging"]["loglevel"],
         }
-
-        # the first configuration created in the process becomes the shared
-        # one (see current_configuration)
-        global _current_configuration
-        if _current_configuration is None:
-            _current_configuration = self
 
     def get_secret_key(self):
         """

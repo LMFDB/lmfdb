@@ -10,7 +10,7 @@ from collections import Counter
 # lmfdb.utils executes its heavyweight __init__, and this module must stay
 # importable without sage or flask
 from psycodict import SQL
-from lmfdb.config import ConfigWrapper, lmfdb_log_dir
+from lmfdb.config import ConfigWrapper, lmfdb_log_dir, lmfdb_package_dir
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
 from psycodict.searchtable import PostgresSearchTable
@@ -621,7 +621,7 @@ class LMFDBDatabase(PostgresDatabase):
             # Shouldn't occur....
             raise ValueError("No verification tests defined!")
         parallel = min(parallel, len(tabletypes))
-        cmd = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "verify", "verify_tables.py"))
+        cmd = str(lmfdb_package_dir / "verify" / "verify_tables.py")
         cmd = ["sage", "-python", cmd, "-j%s" % int(parallel), logdir, "all", speedtype]
         if debug:
             pipe = subprocess.Popen(cmd)

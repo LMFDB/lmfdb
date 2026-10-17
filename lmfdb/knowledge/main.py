@@ -22,14 +22,14 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason
+from .knowl import CodeSearchUnavailable, Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.logger import logger
 from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
-from lmfdb.utils import flash_error
+from lmfdb.utils import flash_error, flash_warning
 from lmfdb.knowledge import knowledge_page
 
 
@@ -547,7 +547,11 @@ def review_stale():
 @knowledge_page.route("/broken_links")
 def broken_links():
     bad_knowls = knowldb.broken_links_knowls()
-    bad_code = [(code_snippet_knowl(D[0]), D[1]) for D in knowldb.broken_links_code()]
+    try:
+        bad_code = [(code_snippet_knowl(D[0]), D[1]) for D in knowldb.broken_links_code()]
+    except CodeSearchUnavailable as err:
+        flash_warning(str(err) + "; only links in knowls were checked.")
+        bad_code = []
     b = get_bread([("Broken links", url_for('.broken_links'))])
     return render_template("knowl-broken-links.html",
                            title="Broken knowl links",
@@ -558,7 +562,11 @@ def broken_links():
 
 @knowledge_page.route("/orphans")
 def orphans():
-    orphans = knowldb.orphans()
+    try:
+        orphans = knowldb.orphans()
+    except CodeSearchUnavailable as err:
+        flash_error(str(err) + ", so orphaned knowls cannot be determined.")
+        return redirect(url_for(".index"))
     b = get_bread([("Orphaned knowls", " ")])
     return render_template("knowl-orphans.html",
                            title="Orphaned knowls",
@@ -690,6 +698,8 @@ def save_form():
                     flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
                 elif k.sed_safety == -1:
                     flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
+                elif k.sed_safety == -2:
+                    flash(Markup("Knowl rename process started.  The code could not be searched for references to this knowl, since the LMFDB is not running from a git checkout"))
                 ID = NEWID
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))

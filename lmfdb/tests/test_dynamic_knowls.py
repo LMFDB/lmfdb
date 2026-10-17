@@ -5,6 +5,7 @@ from flask import render_template
 from markupsafe import escape
 
 from lmfdb.tests import LmfdbTest
+from lmfdb.knowledge import knowl as knowl_module
 from lmfdb.knowledge.knowl import Knowl, knowldb
 from lmfdb.utils.datetime_utils import utc_now_naive
 
@@ -171,3 +172,24 @@ class DescriptionKnowlTest(LmfdbTest):
         # a table description that does not exist yet still gets the fallback
         kwl = self._set_table_description("nf_fields", "Number fields", None)
         assert kwl.title == "Table nf_fields"
+
+
+
+class KnowlCodeSearchTest(LmfdbTest):
+    def test_code_search_unavailable(self):
+        # When the code cannot be searched (lmfdb installed as a package
+        # rather than run from a git checkout), knowls referenced in the
+        # code must not be reported as unreferenced: in particular a rename
+        # must not be finalized immediately
+        kid = "ec.q.torsion_growth"
+        with self.app.test_request_context("/knowledge/show/" + kid):
+            self.app.preprocess_request()
+            k = Knowl(kid)
+            assert knowldb.check_sed_safety(kid) != 0
+            assert knowldb.code_references(k)
+            with patch.object(knowl_module, "root_lmfdb_path", None):
+                assert knowldb.check_sed_safety(kid) == -2
+                assert knowldb.code_references(k) is None
+        with patch.object(knowl_module, "root_lmfdb_path", None):
+            page = self.tc.get("/knowledge/show/" + kid).get_data(as_text=True)
+        assert "References in the code could not be checked" in page

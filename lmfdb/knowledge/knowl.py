@@ -14,7 +14,7 @@ from psycodict import DelayCommit
 from lmfdb import db
 from lmfdb.app import is_beta
 from lmfdb.utils import code_snippet_knowl
-from lmfdb.config import Configuration, root_lmfdb_path
+from lmfdb.config import current_configuration, root_lmfdb_path
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from sage.all import cached_function
@@ -136,20 +136,31 @@ def extract_defines(content):
     return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 
+class CodeSearchUnavailable(RuntimeError):
+    """
+    Raised when the LMFDB code cannot be searched for knowl references,
+    because lmfdb is not being run from a git checkout.
+    """
+
+
 def _git_grep(*args):
     """
     Run ``git grep`` with the given arguments in the LMFDB checkout,
-    returning its output.
+    returning its output, or None if there are no matches.
 
-    Returns None if there are no matches, or if lmfdb is not being run from
-    a git checkout (in which case there is no code to search).
+    Raises CodeSearchUnavailable if lmfdb is not being run from a git
+    checkout, since then the absence of matches says nothing about the code.
     """
     if root_lmfdb_path is None:
-        return None
+        raise CodeSearchUnavailable("The LMFDB code cannot be searched for knowl references, since the LMFDB is not running from a git checkout")
     try:
         return subprocess.check_output(['git', 'grep'] + list(args), encoding='utf-8', cwd=root_lmfdb_path)
-    except subprocess.CalledProcessError:  # no matches
-        return None
+    except FileNotFoundError:
+        raise CodeSearchUnavailable("The LMFDB code cannot be searched for knowl references, since git is not installed")
+    except subprocess.CalledProcessError as err:
+        if err.returncode == 1:  # no matches
+            return None
+        raise CodeSearchUnavailable("The LMFDB code cannot be searched for knowl references (git grep failed)") from err
 
 # We don't use the PostgresTable from psycodict.database
 # since it's aimed at constructing queries for mathematical objects
@@ -589,9 +600,10 @@ class KnowlBackend(PostgresBase):
                     referrers[kid].append(refid)
         for k in knowls:
             k.referrers = referrers[k.id]
-            k.code_referrers = [
+            code_refs = self.code_references(k)
+            k.code_referrers = None if code_refs is None else [
                     code_snippet_knowl(D, full=False)
-                    for D in self.code_references(k)]
+                    for D in code_refs]
 
     def needs_review(self, days):
         now = utc_now_naive()
@@ -667,6 +679,8 @@ class KnowlBackend(PostgresBase):
     def orphans(self, old=False, beta=None):
         """
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
+
+        Raises CodeSearchUnavailable if the code cannot be searched.
         """
         kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
 
@@ -745,16 +759,21 @@ class KnowlBackend(PostgresBase):
         - 'filename' -- full filename from LMFDB root
         - 'line' -- line number of match
         - 'code' -- a list of strings giving two lines of context around the match.
+
+        or None if the code cannot be searched (see CodeSearchUnavailable).
         """
         kids = [knowl.id]
         if knowl.type == 0 and knowl.source is not None and knowl.source != knowl.id:
             # Currently renaming from another name
             kids.append(knowl.source)
         matches = []
-        for kid in kids:
-            output = _git_grep('--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.')))
-            if output is not None:
-                matches.extend(output.split('\n--\n'))
+        try:
+            for kid in kids:
+                output = _git_grep('--full-name', '--line-number', '--context', '2', """['"]%s['"]""" % (kid.replace('.',r'\.')))
+                if output is not None:
+                    matches.extend(output.split('\n--\n'))
+        except CodeSearchUnavailable:
+            return None
         return [self._process_git_grep(match) for match in matches]
 
     def check_sed_safety(self, knowlid):
@@ -765,13 +784,17 @@ class KnowlBackend(PostgresBase):
         - 1 if the knowl is referenced and can be safely replaced using sed
             (does not occur without surrounding quotes)
         - -1 if the knowl is referenced but cannot be safely replaced.
+        - -2 if the code cannot be searched (see CodeSearchUnavailable), so
+            it is unknown whether the knowl is referenced.
         """
-        output = _git_grep("""['"]%s['"]""" % (knowlid.replace('.',r'\.')))
-        if output is None:  # no matches
-            return 0
+        try:
+            output = _git_grep("""['"]%s['"]""" % (knowlid.replace('.',r'\.')))
+            if output is None:  # no matches
+                return 0
+            easy_output = _git_grep(knowlid.replace('.',r'\.'))
+        except CodeSearchUnavailable:
+            return -2
         matches = output.split('\n')
-
-        easy_output = _git_grep(knowlid.replace('.',r'\.'))
         easy_matches = [] if easy_output is None else easy_output.split('\n')
         return 1 if (len(matches) == len(easy_matches)) else -1
 
@@ -868,6 +891,8 @@ class KnowlBackend(PostgresBase):
         A list of pairs ``D``, ``links``, where ``D`` is a dictionary with keys
         as in ``code_references``, and ``links`` is a list of purported knowl
         ids that show up in an expression of the form ``KNOWL('BAD_ID')``.
+
+        Raises CodeSearchUnavailable if the code cannot be searched.
         """
         all_kids = {k['id'] for k in self.get_all_knowls(['id'])}
         output = _git_grep('-E', '--full-name', '--line-number', '--context', '2', link_finder_re.pattern)
@@ -1068,7 +1093,7 @@ def knowl_url_prefix():
     """
     if one is running lmfdb in cocalc, front-end javascript (see: lmfdb.js) doesn't know your prefix isn't just a website domain.
     """
-    return Configuration().get_url_prefix()
+    return current_configuration().get_url_prefix()
 
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
@@ -1146,7 +1171,8 @@ class Knowl():
             self.comments = knowldb.get_comments(ID)
             if self.type == 0:
                 self.referrers = knowldb.ids_referencing(ID)
-                self.code_referrers = [code_snippet_knowl(D) for D in knowldb.code_references(self)]
+                code_refs = knowldb.code_references(self)
+                self.code_referrers = None if code_refs is None else [code_snippet_knowl(D) for D in code_refs]
         if saving:
             self.sed_safety = knowldb.check_sed_safety(ID)
         self.reviewed_content = self.reviewed_title = self.reviewed_timestamp = None
