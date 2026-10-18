@@ -169,7 +169,7 @@ pyflakes start-lmfdb.py user-manager.py lmfdb/
 - **40+ test files** across the codebase
 - **71,000+ lines** of Python code
 - **Complex mathematical application** with deep domain expertise required
-- **Large contributor base** (see CONTRIBUTORS.yaml)
+- **Large contributor base** (see lmfdb/CONTRIBUTORS.yaml)
 
 ## Working Effectively
 
