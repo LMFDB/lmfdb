@@ -106,7 +106,7 @@ class LMFDBSearchTable(PostgresSearchTable):
         """
         from lmfdb.knowledge.knowl import knowldb
         from lmfdb.utils.datetime_utils import utc_now_naive
-        knowls = knowldb.get_column_description(other_table)
+        knowls = knowldb.get_column_descriptions(other_table)
         with DelayCommit(self):
             for col, knowl in knowls.items():
                 if col in self.col_type:
@@ -115,7 +115,7 @@ class LMFDBSearchTable(PostgresSearchTable):
                         who = self._db.login()
                         new_knowl.save(who, most_recent=knowl, minor=True)
                     else:
-                        knowldb.actually_rename(knowl, new_name=f'columns.{self.search_table}.{col}')
+                        knowldb.rename_description_knowl(knowl, f'columns.{self.search_table}.{col}')
                 elif not keep_old:
                     knowldb.delete(knowl)
 
