@@ -146,6 +146,16 @@ class CmfTest(LmfdbTest):
             page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=%s" % j, follow_redirects=True)
             assert l in page.get_data(as_text=True)
 
+    def test_jump_multiple(self):
+        # A comma-separated list of newform labels returns a newform search page
+        self.check_args("/ModularForm/GL2/Q/holomorphic/?jump=3.6.a.a%2C+11.2.a.a&search=Go", ['3.6.a.a', '11.2.a.a'])
+        # The ':'-separated form is accepted too (11:2:1:1 -> 11.2.a.a)
+        self.check_args("/ModularForm/GL2/Q/holomorphic/?jump=3.6.a.a%2C+11%3A2%3A1%3A1&search=Go", ['3.6.a.a', '11.2.a.a'])
+        # An unrecognized entry mixed in is ignored; the valid labels are still shown
+        self.check_args("/ModularForm/GL2/Q/holomorphic/?jump=3.6.a.a%2C+banana%2C+11.2.a.a&search=Go", ['3.6.a.a', '11.2.a.a', 'ignored'])
+        # When no entry is valid, an error is shown
+        self.check_args("/ModularForm/GL2/Q/holomorphic/?jump=banana%2C+kiwi&search=Go", 'None of the')
+
     def test_failure(self):
         r"""
         Check that bad inputs are handled correctly

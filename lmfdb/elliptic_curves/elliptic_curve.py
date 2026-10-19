@@ -19,6 +19,7 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
+from lmfdb.utils.search_wrapper import multi_entry_jump_search
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
@@ -27,7 +28,7 @@ from lmfdb.logger import logger
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page
 from lmfdb.elliptic_curves.isog_class import ECisog_class
-from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
+from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec, cremona_label_to_lmfdb_label
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
 from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
@@ -348,8 +349,58 @@ def ec_lookup_equation(input_str):
     return lmfdb_label,""
 
 
+def ec_multi_label_to_lmfdb_label(entry):
+    """
+    Parse a single jump-box entry into an LMFDB elliptic curve label.
+
+    Accepts an LMFDB label, a Cremona label, or a Weierstrass coefficient vector
+    ``[a1,a2,a3,a4,a6]``. Used by ``multi_entry_jump_search`` when the Find box
+    contains a comma-separated list of curves. Raises ``ValueError`` if the entry
+    cannot be resolved to a curve label (isogeny class labels are not curve labels).
+    """
+    label = entry.replace(" ", "")
+    if match_lmfdb_label(label):
+        return label
+    if match_cremona_label(label):
+        try:
+            return cremona_label_to_lmfdb_label(label)
+        except (StopIteration, ValueError):
+            raise ValueError("%s is not a curve in the database" % entry)
+    if match_coeff_vec(label):
+        lab = re.sub(r']$', '', re.sub(r'^\[', '', label))
+        try:
+            E = EllipticCurve([QQ(str(z)) for z in lab.split(',')]).minimal_model()
+        except (ArithmeticError, TypeError, ValueError):
+            raise ValueError("%s does not define an elliptic curve" % entry)
+        lmfdb_label = db.ec_curvedata.lucky({'ainvs': EC_ainvs(E)}, 'lmfdb_label')
+        if lmfdb_label is None:
+            raise ValueError("%s is not a curve in the database" % entry)
+        return lmfdb_label
+    raise ValueError("%s is not a valid elliptic curve label" % entry)
+
+
 def elliptic_curve_jump(info):
     label = info.get('jump', '').replace(" ", "")
+    # The established single-curve input "f, h" (a two-polynomial Weierstrass equation
+    # such as "x^3 + 10*x + 17, x", meaning y^2 + h*y = f) contains a top-level comma
+    # but denotes one curve, not a list. Attempt that established parser first: only
+    # hand the input to multi_entry_jump_search (a comma-separated list of curves) when
+    # it is not a single-curve Weierstrass-polynomial input, so the equation syntax is
+    # preserved. Genuine label lists never match here (LMFDB labels contain a dot,
+    # coefficient vectors are bracketed, and Cremona labels do not fullmatch POLY_RE).
+    if not match_weierstrass_polys(label):
+        # If the Find box contains a comma-separated list of labels/coefficient vectors,
+        # multi_entry_jump_search returns a search page of those curves.
+        multi_jump = multi_entry_jump_search(
+            info,
+            parse_entry=ec_multi_label_to_lmfdb_label,
+            label_exists=db.ec_curvedata.label_exists,
+            index_endpoint=".rational_elliptic_curves",
+            object_name="elliptic curves",
+        )
+        if multi_jump is not None:
+            return multi_jump
+
     if label is None:
         return elliptic_curve_jump_error('', info)
     elif match_lmfdb_label(label):
@@ -1261,6 +1312,7 @@ app.jinja_env.globals.update(tor_struct_search_Q=tor_struct_search_Q)
 
 class ECSearchArray(SearchArray):
     noun = "curve"
+    label_knowl = "ec.q.lmfdb_label"
     sorts = [("", "conductor", ["conductor", "iso_nlabel", "lmfdb_number"]),
              #("cremona_label", "cremona label", ["conductor", "Ciso", "Cnumber"]), # Ciso is text so this doesn't sort correctly
              ("disc", "Minimal discriminant", ["absD", "signD", "conductor", "iso_nlabel", "lmfdb_number"]),
@@ -1282,7 +1334,7 @@ class ECSearchArray(SearchArray):
              ("intrinsic torsion", "Intrinsic torsion order", ["intrinsic_torsion", "conductor", "iso_nlabel", "lmfdb_number"])]
     jump_example = "11.a2"
     jump_egspan = "e.g. 11.a2 or 389.a or 11a1 or 389a or [0,1,1,-2,0] or [-3024, 46224] or y^2 = x^3 + 1"
-    jump_prompt = "Label or coefficients"
+    jump_prompt = "Label, coefficients, or comma-separated list"
     jump_knowl = "ec.q.search_input"
     null_column_explanations = {
                                  'adelic_level': False, # not applicable to CM curves, computed for all non-CM curves
