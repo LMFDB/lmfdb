@@ -372,6 +372,14 @@ class Renderer {
   }
 }
 
+// The vertical position of a node: its level is a pair, giving the row it belongs to
+// (the number of prime divisors of the order, or the order itself, depending on the
+// height mode) and the position of its order within that row.
+function nodeheight(node) {
+  var level = node.level || [0,0];
+  return -10*level[0] - level[1]; // can drop level[1] to get separation by order alone
+}
+
 class Layout {
   constructor(graph) {
     this.graph = graph;
@@ -388,10 +396,23 @@ class Layout {
     this.doiter=val;
   }
 
+  // Whether the diagram can be drawn in a single column, i.e. whether it is a chain
+  // going up from one node to the next.  Having one more node than edge is not enough:
+  // the maximal subgroup diagram is a star, and stacking its nodes in one column would
+  // suggest that each maximal subgroup is contained in the one above it.
   islinear() {
     var g = this.graph;
-    if(g.nodes.length == g.edges.length+1) return true;
-    return false;
+    if(g.nodes.length != g.edges.length+1) return false;
+    var adjacent = new Set();
+    for(var i=0, edge; edge=g.edges[i]; i++) {
+      adjacent.add(edge.source.value + " " + edge.target.value);
+      adjacent.add(edge.target.value + " " + edge.source.value);
+    }
+    var byheight = g.nodes.slice().sort(function(a,b) { return nodeheight(a) - nodeheight(b); });
+    for(var i=1; i<byheight.length; i++) {
+      if(! adjacent.has(byheight[i-1].value + " " + byheight[i].value)) return false;
+    }
+    return true;
   }
 
   layout() {
@@ -424,7 +445,7 @@ class Layout {
       }
       this.levs.get(thisLevel).push(node);
       node.layoutPosX = 0;
-      node.layoutPosY = -10*thisLevel[0] - thisLevel[1]; // can subtract thisLevel[1] to get separation by order
+      node.layoutPosY = nodeheight(node);
       node.layoutForceX = 0;
     }
     this.numlevs = this.levs.size;
@@ -449,7 +470,7 @@ class Layout {
       this.levs.get(thisLevel).push(node);
       node.layoutPosX = node.posn;
       totx += node.posn;
-      node.layoutPosY = -10*thisLevel[0] - thisLevel[1]; // can subtract thisLevel[1] to get separation by order
+      node.layoutPosY = nodeheight(node);
       node.layoutForceX = 0;
     }
     this.numlevs = this.levs.size;
