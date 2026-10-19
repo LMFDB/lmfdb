@@ -350,6 +350,33 @@ class CmfTest(LmfdbTest):
         for etl in ['59.8.a', '59.8.a.a', '59.8.a.b', '59.8.c', '59.8.c.a']:
             assert elt in page.get_data(as_text=True)
 
+    def test_search_type_switching(self):
+        # Switching from the dimensions or traces view back to the list of
+        # forms used to get stuck, because the empty search_type submitted by
+        # the "List of forms" button was overridden by the hst parameter
+        # recording the previously displayed view (see issue #5776)
+        base = "/ModularForm/GL2/Q/holomorphic/?level=200&weight=2&char_order=1"
+        data = self.tc.get(base).get_data(as_text=True)
+        assert 'Newform search results' in data
+        assert '200.2.a.a' in data
+
+        # "List of forms" clicked on the dimension table or the traces table
+        # (an empty search_type must take precedence over hst)
+        for hst in ["Dimensions", "Traces"]:
+            data = self.tc.get(base + "&search_type=&hst=" + hst).get_data(as_text=True)
+            assert 'Newform search results' in data
+            assert '200.2.a.a' in data
+
+        # "Traces table" clicked on the dimension table
+        data = self.tc.get(base + "&search_type=Traces&hst=Dimensions").get_data(as_text=True)
+        assert 'of \\(a_n\\) for the search results' in data
+
+        # Old bookmarked URLs carrying only hst still show the dimension
+        # table, and its entries link to hst-free list-of-forms searches
+        data = self.tc.get(base + "&hst=Dimensions").get_data(as_text=True)
+        assert 'Dimension search results' in data
+        assert 'hst=' not in data
+
     def test_character_parity(self):
         page = self.tc.get("/ModularForm/GL2/Q/holomorphic/12/10/c/")
         assert 'since the weight is even while the character is' in page.get_data(as_text=True)
