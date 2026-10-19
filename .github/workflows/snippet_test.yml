@@ -5,12 +5,17 @@ on:
     - cron: '0 0 1,15 * *'
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   snippet-test:
     runs-on: ubuntu-latest
+    outputs:
+      has-snippet-errors: ${{ steps.snippet_errors.outputs.exists }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Or a specific version
+        uses: actions/checkout@v7 # Or a specific version
 
       - name: Set up environment
         uses: ./.github/actions/snippet_setup
@@ -22,30 +27,42 @@ jobs:
         run: |
           sage -python lmfdb/tests/generate_snippet_tests.py generate -i magma -e snippet_error_file.md
 
-      - name: Read error file
-        if: ${{ hashFiles('**/snippet_error_file.md') }}
-        id: read_error_file
+      - name: Detect snippet errors
+        id: snippet_errors
+        if: ${{ !cancelled() }}
+        shell: bash
         run: |
-          {
-          echo 'ERROR_CONTENTS<<EOF'
-          cat snippet_error_file.md
-          echo EOF
-          } >> "$GITHUB_OUTPUT"
+          if [[ -f snippet_error_file.md ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Create or update snippet error issue
-        if: ${{ hashFiles('**/snippet_error_file.md') }}
-        uses: ovsds/create-or-update-unique-issue-action@v1
+      # The report is handed to the report-snippet-errors job as an artifact so
+      # that this job, which runs the whole Conda/Julia/Oscar setup, never holds
+      # a token that can write issues.
+      - name: Upload snippet error report
+        if: >-
+          ${{
+            !cancelled() &&
+            steps.snippet_errors.outputs.exists == 'true'
+          }}
+        uses: actions/upload-artifact@v7
         with:
-          title: "(Auto-generated) Errors in code snippets"
-          body: ${{ steps.read_error_file.outputs.ERROR_CONTENTS }}
-          unique-title-includes: "(Auto-generated) Errors in code snippets"
+          name: snippet-error-report
+          path: snippet_error_file.md
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Delete error log file
-        if: ${{ hashFiles('**/snippet_error_file.md') }}
-        shell: bash -l {0}
-        run: |
-          rm snippet_error_file.md
-        
+        if: >-
+          ${{
+            !cancelled() &&
+            steps.snippet_errors.outputs.exists == 'true'
+          }}
+        shell: bash
+        run: rm snippet_error_file.md
+
       - name: Check for diff
         id: diff_check
         run: |
@@ -58,7 +75,64 @@ jobs:
 
       - name: Upload diff as artifact
         if: ${{ failure() && steps.diff_check.conclusion == 'failure' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repo-diff
           path: changes.diff
+
+  report-snippet-errors:
+    name: Report snippet errors
+    needs: snippet-test
+    if: >-
+      ${{
+        always() &&
+        needs.snippet-test.outputs.has-snippet-errors == 'true'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    steps:
+      - name: Download snippet error report
+        uses: actions/download-artifact@v8
+        with:
+          name: snippet-error-report
+          path: snippet-error-report
+
+      - name: Create or update snippet error issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE: "(Auto-generated) Errors in code snippets"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          report_path="snippet-error-report/snippet_error_file.md"
+          issue_number="$(
+            gh issue list \
+              --repo "$GITHUB_REPOSITORY" \
+              --state open \
+              --search "\"$ISSUE_TITLE\" in:title" \
+              --limit 100 \
+              --json number,title \
+              --jq \
+                'map(
+                   select(
+                     .title ==
+                     "(Auto-generated) Errors in code snippets"
+                   )
+                 )[0].number // empty'
+          )"
+
+          if [[ -n "$issue_number" ]]; then
+            gh issue edit "$issue_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$ISSUE_TITLE" \
+              --body-file "$report_path"
+          else
+            gh issue create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$ISSUE_TITLE" \
+              --body-file "$report_path"
+          fi
