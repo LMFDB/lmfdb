@@ -18,7 +18,7 @@
 <li><p><a class="uri">/api2/inventory/&lt;searcher&gt;</a> - Describe the list of possible fields that can be returned by a searcher</p></li>
 <li><p><a class="uri">/api2/data/&lt;searcher&gt;</a> - Perform a search using a given searcher. Query parameters taken from the searcher description are provided as an ampersand delimited query string to this endpoint. Non searching parameters are available and are all prepended by “_”</p></li>
 <li><p><a class="uri">/api2/pretty/&lt;other_path&gt;</a> - This takes a valid other API path and produces a human readable (just) HTML page from the data contained. The other path should be the part after “api2” in the URL</p></li>
-<li><p><a class="uri">/api2/singleton/&lt;path&gt;</a> - This is intended to provide a URL that allows canonical reference to a single element of the database. The format of the singletons is not standardised and should not in general be used for machine readable access</p></li>
+<li><p><a class="uri">/api2/singleton/&lt;path&gt;</a> - This is intended to provide a URL that allows canonical reference to a single element of the database. The format of the singletons is not standardized and should not in general be used for machine readable access</p></li>
 <li><p><a class="uri">/api2/livepg/&lt;database&gt;</a> - This is intended to replicate the behavior of the existing API. By specifying a database name and then using a standard search string (as per the /data/&lt;searcher&gt; endpoint) a search is performed on the raw database. This is not intended for normal access, but for debugging and testing purposes only.</p></li>
 </ul>
 <h3 id="api2-singletons">API2 singleton queries</h3>
