@@ -128,6 +128,8 @@ def get_lfunction_by_url(url, **kwargs):
 def getEllipticCurveData(label):
     return db.ec_curvedata.lucky({'lmfdb_label': label})
 
+def getGenus2CurveData(label):
+    return db.g2c_curves.lucky({'class': label})
 
 def getHmfData(label):
     from lmfdb.hilbert_modular_forms.hilbert_modular_form import get_hmf, get_hmf_field
