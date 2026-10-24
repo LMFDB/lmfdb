@@ -44,7 +44,7 @@ GLZ:
   oscar: G = matrix_group({LZoscar})
 
 GLFp:
-  comment: Define the group as a matrix group with coefficients in GLFp
+  comment: Define the group as a matrix group with coefficients in F_p
   magma: G := MatrixGroup< {nFp}, GF({Fp}) | {LFp} >;
   gap: G := Group({LFpsplit});
   sage: |
@@ -54,7 +54,7 @@ GLFp:
   oscar: G = matrix_group({LFposcar})
 
 GLZN:
-  comment: Define the group as a matrix group with coefficients in GLZN
+  comment: Define the group as a matrix group with coefficients in Z/NZ
   magma: G := MatrixGroup< {nZN}, Integers({N}) | {LZN} >;
   gap: G := Group({LZNsplit});
   sage: |
@@ -64,7 +64,7 @@ GLZN:
   oscar: G = matrix_group({LZNoscar})
 
 GLZq:
-  comment: Define the group as a matrix group with coefficients in GLZq
+  comment: Define the group as a matrix group with coefficients in Z/qZ
   magma: G := MatrixGroup< {nZq}, Integers({Zq}) | {LZq} >;
   gap: G := Group({LZqsplit});
   sage: |
@@ -74,7 +74,7 @@ GLZq:
   oscar: G = matrix_group({LZqoscar})
 
 GLFq:
-  comment: Define the group as a matrix group with coefficients in GLFq
+  comment: Define the group as a matrix group with coefficients in F_q
   magma: F:=GF({Fq}); al:=F.1; G := MatrixGroup< {nFq}, F | {LFq} >;
   gap: G := Group({LFqsplit});
   sage: |
@@ -513,6 +513,10 @@ snippet_test:
   testQ8:
     label: Q8
     url: Groups/Abstract/8.4/codedownload/{lang}
+  # GU(2,2) (test for Lie-type top code snippet)
+  test_top_lie:
+    label: "18_3"
+    url: Groups/Abstract/18.3/codedownload/{lang}
   # Matrix group C_8:C_4 (has GLZ, GLFq, and GLZq representation)
   test_matrix_reps:
     label: "32_14"
