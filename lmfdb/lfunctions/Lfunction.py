@@ -706,12 +706,9 @@ class Lfunction_from_db(Lfunction):
 
     def make_code_snippets(self):
         """
-        Return the code snippets for this L-function, or None if there are no
-        code snippets for any of its origins.
-
-        The L-function is constructed from one of its origins (elliptic curve
-        over Q, genus 2 curve over Q, or Dirichlet character), using the snippets
-        in code.yaml.
+        Return the code snippets for this L-function, or None if there are no code snippets for any of its origins.
+        The L-function is constructed from one of its origins (e.g. ECQ, G2C, Dirichlet character, etc.),
+        using the snippets in code.yaml.
         """
         # read in code.yaml from current directory:
         _curdir = os.path.dirname(os.path.abspath(__file__))
@@ -751,13 +748,11 @@ class Lfunction_from_db(Lfunction):
             bad_lfactors = literal_eval(curve['bad_lfactors'])
             origin, data = 'g2c', {
                 'f': f, 'h': h,
-                'magma_cond_option': magma_cond_option({'cond': cond, 'abs_disc': ZZ(curve['abs_disc']),
-                                                        'bad_lfactors': bad_lfactors}),
+                'magma_cond_option': magma_cond_option({'cond': cond, 'abs_disc': ZZ(curve['abs_disc']), 'bad_lfactors': bad_lfactors}),
                 'sage_fix2': '', 'pari_fix2': ''}
             if cond % 2 == 0:
-                # Pari's lfungenus2 does not always determine the conductor exponent and
-                # Euler factor at 2 (and then just prints a warning), so we put in the
-                # conductor and bad Euler factors from the database.
+                # Pari's lfungenus2 does not always determine the conductor exponent and Euler factor at 2 (and then just prints a warning),
+                # so we put in the conductor and bad Euler factors from the database.
                 R = PolynomialRing(ZZ, 'x')
                 bad = "[" + ", ".join("[%s, 1/(%s)]" % (p, R(c)) if len(c) > 1 else "[%s, 1]" % p
                                       for p, c in bad_lfactors) + "]"
