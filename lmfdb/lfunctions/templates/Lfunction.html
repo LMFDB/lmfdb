@@ -187,7 +187,7 @@
       <td>\(\approx\)</td>
       {% endif %}
       <td> \({{ sv_critical_arithmetic[1] }}\) </td>
-      <td>{% if sv_critical_arithmetic[1] != 'not computed' %}{{ place_code('central_value') }}{% endif %}</td>
+      <td>{{ place_code('central_value') }}</td>
     </tr>
     <tr class="analytic nodisplay">
       <td> \({{ sv_critical_analytic[0] }}\) </td>
@@ -198,7 +198,7 @@
       {% endif %}
 
       <td> \({{ sv_critical_analytic[1] }}\) </td>
-      <td>{% if sv_critical_arithmetic[1] != 'not computed' %}{{ place_code('central_value') }}{% endif %}</td>
+      <td>{{ place_code('central_value') }}</td>
     </tr>
     {% endif %}
 
@@ -211,8 +211,8 @@
       {% else %}
       <td>\(\approx\)</td>
       <td> \({{ sv_edge_arithmetic[1] }}\) </td>
-      <td>{{ place_code('edge_value') }}</td>
       {% endif %}
+      <td>{{ place_code('edge_value') }}</td>
     </tr>
     <tr class="analytic nodisplay">
       <td> \({{ sv_edge_analytic[0] }}\) </td>
@@ -222,8 +222,8 @@
       {% else %}
       <td>\(\approx\)</td>
       <td> \({{ sv_edge_analytic[1] }}\) </td>
-      <td>{{ place_code('edge_value') }}</td>
       {% endif %}
+      <td>{{ place_code('edge_value') }}</td>
     </tr>
     {% endif %}
   </table>
