@@ -2977,7 +2977,7 @@ class WebAbstractGroup(WebObj):
         for lang in code['prompt']:
             # Use a Lie Type matrix construction (if it exists and the Lie type generators were not used)
             if (top_lie[lang] is not None) and (not used_lie_gens[lang]):
-                code['code_description'][lang] = top_lie_snippet[lang]
+                code['code_description'][lang] = top_lie_snippet(lang)
                 continue
 
             # Check if group is in the Chevalley family
@@ -3030,7 +3030,7 @@ class WebAbstractGroup(WebObj):
 
             # Finally, try using Lie constructions which required use of the generators
             if (top_lie[lang] is not None) and (lang not in code['code_description']):
-                code['code_description'][lang] = top_lie_snippet[lang]
+                code['code_description'][lang] = top_lie_snippet(lang)
 
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
         return
