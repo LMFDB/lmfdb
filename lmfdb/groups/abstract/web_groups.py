@@ -2946,8 +2946,8 @@ class WebAbstractGroup(WebObj):
                 code['code_description'][lang] = code['symmetric_group'][lang].format(**{'symn':self.name[1:]})
             return
 
-        # Check if group is dihedral
-        if self.dihedral:
+        # Check if group is dihedral (excluding C2 x C2, since e.g. Magma's DihedralGroup(n) needs n >= 3)
+        if self.dihedral and self.order > 4:
             for lang in code['dihedral_group']:
                 code['code_description'][lang] = code['dihedral_group'][lang].format(**{'ordgp':self.order, 'ordgp_half':self.order//2})
             return
@@ -2966,11 +2966,18 @@ class WebAbstractGroup(WebObj):
             for lang in code['dicyclic_group']:
                 code['code_description'][lang] = code['dicyclic_group'][lang].format(**{'ordgp':self.order, 'ordgp_quarter':self.order//4})
             return
+        
+        # Sage's matrix groups lack most group-theoretic methods (commutator, socle, derived_series, ...),
+        # so when the top construction is a Lie-type matrix group, convert it to a permutation group in Sage
+        def top_lie_snippet(lang):
+            if lang == 'sage':
+                return top_lie[lang] + "\nG = G.as_permutation_group()"
+            return top_lie[lang]
 
         for lang in code['prompt']:
             # Use a Lie Type matrix construction (if it exists and the Lie type generators were not used)
             if (top_lie[lang] is not None) and (not used_lie_gens[lang]):
-                code['code_description'][lang] = top_lie[lang]
+                code['code_description'][lang] = top_lie_snippet[lang]
                 continue
 
             # Check if group is in the Chevalley family
@@ -3023,7 +3030,7 @@ class WebAbstractGroup(WebObj):
 
             # Finally, try using Lie constructions which required use of the generators
             if (top_lie[lang] is not None) and (lang not in code['code_description']):
-                code['code_description'][lang] = top_lie[lang]
+                code['code_description'][lang] = top_lie_snippet[lang]
 
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
         return
