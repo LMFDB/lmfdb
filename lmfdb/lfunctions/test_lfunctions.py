@@ -13,7 +13,7 @@ class LfunctionTest(LmfdbTest):
         response = self.tc.get('/L/2-11-1.1-c1-0-0/download/sage')
         assert response.status_code == 200
         body = response.get_data(as_text=True)
-        assert 'E = EllipticCurve([0, -1, 1, -10, -20])' in body
+        assert 'E = EllipticCurve([0, -1, 1, -7820, -263580])' in body  # the curve 11.a1
         assert 'L = LFunction(Ldata)' in body
         body = self.tc.get('/L/2-11-1.1-c1-0-0/download/gp').get_data(as_text=True)
         assert 'L = lfuncreate(E);' in body
