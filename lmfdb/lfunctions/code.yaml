@@ -118,10 +118,17 @@ analytic_rank_ecq:
 
 # The value at the central point s0 = (w+1)/2
 central_value:
-  comment: Value at the central point
+  comment: Value at the central point s = {s0}
   sage: L({s0})
   pari: lfun(L, {s0})
   magma: Evaluate(L, {s0});
+
+# The value at the edge of the critical strip s1 = (w+2)/2
+edge_value:
+  comment: Value at the edge of the critical strip s = {s1}
+  sage: L({s1})
+  pari: lfun(L, {s1})
+  magma: Evaluate(L, {s1});
 
 # The Euler factor at the smallest good prime p
 euler_factor:

@@ -1621,7 +1621,7 @@ def download(label, L=None): # the wrapper populates the L
     return L.download()
 
 sorted_code_names = ['lfunction', 'dirichlet_series', 'functional_equation', 'conductor', 'sign',
-                     'analytic_rank', 'central_value', 'euler_factor', 'zeros']
+                     'analytic_rank', 'central_value', 'edge_value', 'euler_factor', 'zeros']
 
 
 @l_function_page.route("/<label>/download/<download_type>")

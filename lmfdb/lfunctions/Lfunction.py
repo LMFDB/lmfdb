@@ -780,8 +780,10 @@ class Lfunction_from_db(Lfunction):
             # no snippets implemented for this origin
             return None
 
-        # Central point (in the arithmetic normalization), and the smallest good prime
+        # Central point and edge of the critical strip (in the arithmetic normalization),
+        # and the smallest good prime
         data['s0'] = (ZZ(self.motivic_weight) + 1) / 2
+        data['s1'] = (ZZ(self.motivic_weight) + 2) / 2
         data['p'] = next(p for p in primes_first_n(25) if self.level % p)
 
         # We override the default code snippet keys with code snippets for specific origins
@@ -792,6 +794,10 @@ class Lfunction_from_db(Lfunction):
                 code.setdefault(key[:-len(origin) - 1], {}).update(code.pop(key))
             else:
                 code.pop(key)
+
+        # The Riemann zeta function (Dirichlet character 1.1) has a pole at the edge of the critical strip
+        if origin == 'dc' and data['modulus'] == 1:
+            code.pop('edge_value')
 
         for prop in code:
             if prop not in ['frontmatter', 'snippet_test']:
