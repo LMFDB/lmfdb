@@ -11,9 +11,12 @@ channels:
   - defaults
 dependencies:
   - python
-  - sage=10.4
+  - sage=10.6
+  - gap=4.14
   - tox
   - flask
   - werkzeug
   - parallel
   - pari-elldata
+  - pari-galdata
+  

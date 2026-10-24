@@ -15,7 +15,8 @@ def parse_nf_string(inp, query, qfield):
 def parse_galgrp(inp, query, qfield):
     from lmfdb.galois_groups.transitive_group import complete_group_codes
     try:
-        gcs = complete_group_codes(inp)
+        gcs, incomplete = complete_group_codes(inp)
+        # Galois groups are not relevant for completeness for abelian varieties, so we ignore that part of the return value
         groups = [str(n) + "T" + str(t) for n, t in gcs]
         _parse_subset(groups, query, qfield, mode=None, radical=None, product=None, cardinality=None)
     except NameError:

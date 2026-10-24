@@ -88,7 +88,7 @@ def binary_search(L,x):
         i = k
     return L[i]
 
-#note: could be optimised by precomputing the number of primes up to each norm
+#note: could be optimized by precomputing the number of primes up to each norm
 def truncation_bound(f):
     """Given an HMF f or its label, compute a bound X on the norm 
     of the primes at which the list of eigenvalues should be truncated 

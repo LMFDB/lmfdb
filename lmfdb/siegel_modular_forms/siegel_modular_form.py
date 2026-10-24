@@ -3,7 +3,7 @@
 from io import BytesIO
 
 from flask import render_template, url_for, request, send_file, redirect
-from sage.all import latex, Set
+from sage.all import latex, Set, QQ, ZZ
 
 from lmfdb import db
 from lmfdb.utils import (
@@ -310,14 +310,18 @@ def render_sample_page(family, sam, args, bread):
     # otherwise sage may not even be able to factor the discriminant
     info['field'] = sam.field()
     if info['field_poly'].disc() < 10**80:
-        null_ideal = sam.field().ring_of_integers().ideal(0)
-        info['modulus'] = null_ideal
         modulus = args.get('modulus', '').strip()
         m = 0
         if modulus:
             try:
-                O = sam.field().ring_of_integers()
-                m = O.ideal([O(str(b)) for b in modulus.split(',')])
+                K = sam.field()
+                O = ZZ if K is QQ else K.ring_of_integers()
+                # Coercing into O rejects non-integral generators such as 1/2
+                gens = [O(b.strip()) for b in modulus.split(',')]
+                # An all-zero modulus means "no reduction", so m stays 0
+                if any(gens):
+                    # For Sage >= 10.5, use K.fractional_ideal rather than O.ideal for number fields
+                    m = ZZ.ideal(gens) if K is QQ else K.fractional_ideal(gens)
             except Exception:
                 info['error'] = True
                 flash_error("Unable to construct modulus ideal from specified generators %s.", modulus)

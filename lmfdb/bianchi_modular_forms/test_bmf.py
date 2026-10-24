@@ -148,13 +148,15 @@ class BMFTest(LmfdbTest):
 
         # We run magma when it is installed
         for label, expected in [
+                # Sage < 10.6 and Sage >= 10.6 choose different (associate) generators for this prime above 2: i - 1 = i*(i + 1), so either is correct.
                 ['2.0.4.1/100.2/a',
-                 'ALEigenvalues[ideal<ZF | {i + 1}>] := -1;'],
+                 ('ALEigenvalues[ideal<ZF | {i + 1}>] := -1;',
+                  'ALEigenvalues[ideal<ZF | {i - 1}>] := -1;')],
                 ['2.0.11.1/933.1/a',
-                 'ideal<ZF | {a + 30, 933}>;']
+                 ('ideal<ZF | {a + 30, 933}>;',)]
         ]:
             page = self.tc.get('/ModularForm/GL2/ImaginaryQuadratic/{}/download/magma'.format(label)).get_data(as_text=True)
-            assert expected in page
+            assert any(e in page for e in expected)
             assert 'make_newform' in page
 
             magma_code = page + '\n'

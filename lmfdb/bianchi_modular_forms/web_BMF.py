@@ -115,7 +115,7 @@ class WebBMF():
             - dbdata: the data from the database
 
         dbdata is expected to be a database entry from which the class
-        is initialised.
+        is initialized.
 
         """
         self.__dict__.update(dbdata)
