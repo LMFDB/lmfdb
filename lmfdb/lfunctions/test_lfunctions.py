@@ -13,15 +13,38 @@ class LfunctionTest(LmfdbTest):
         response = self.tc.get('/L/2-11-1.1-c1-0-0/download/sage')
         assert response.status_code == 200
         body = response.get_data(as_text=True)
-        assert 'E = EllipticCurve' in body
-        assert 'L = E.lseries()' in body
+        assert 'E = EllipticCurve([0, -1, 1, -10, -20])' in body
+        assert 'L = LFunction(Ldata)' in body
+        body = self.tc.get('/L/2-11-1.1-c1-0-0/download/gp').get_data(as_text=True)
+        assert 'L = lfuncreate(E);' in body
+        assert 'lfuneuler(L, 2)' in body  # 2 is the smallest good prime
+        body = self.tc.get('/L/2-11-1.1-c1-0-0/download/magma').get_data(as_text=True)
+        assert 'AnalyticRank(E);' in body
 
-    def test_dirichlet_code_snippet_download(self):
-        response = self.tc.get('/L/1-19-19.9-r0-0-0/download/sage')
+    def test_genus2_code_snippet_download(self):
+        response = self.tc.get('/L/4-13e2-1.1-c1e2-0-0/download/gp')
         assert response.status_code == 200
         body = response.get_data(as_text=True)
-        assert 'DirichletCharacter(19, 9)' in body
-        assert 'chi = DirichletCharacter(19, 9)' in body
+        assert 'lfungenus2' in body
+        assert 'lfuneuler(L, 2)' in body
+
+    def test_dirichlet_code_snippet_download(self):
+        response = self.tc.get('/L/1-19-19.9-r0-0-0/download/gp')
+        assert response.status_code == 200
+        body = response.get_data(as_text=True)
+        assert 'znchar(Mod(9, 19))' in body
+        body = self.tc.get('/L/1-19-19.9-r0-0-0/download/magma').get_data(as_text=True)
+        assert 'DirichletCharacter("19.9")' in body
+
+    def test_code_snippets_on_page(self):
+        page = self.tc.get('/L/2/11/1.1/c1/0/0').get_data(as_text=True)
+        assert 'Show commands' in page
+        assert 'lfuncreate(E)' in page
+        assert 'PariGP commands' in page
+
+    def test_code_snippet_download_errors(self):
+        assert self.tc.get('/L/not-a-label/download/gp').status_code == 404
+        assert self.tc.get('/L/2-11-1.1-c1-0-0/download/oscar').status_code == 404
 
     #------------------------------------------------------
     # Testing at least one example of each type of L-function page

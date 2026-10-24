@@ -2,7 +2,6 @@ prompt:
   sage:   'sage'
   pari:   'gp'
   magma:  'magma'
-  oscar:  'oscar'
 
 frontmatter:
   all: |
@@ -11,124 +10,140 @@ frontmatter:
     Note that the code below is using the arithmetic normalization.
 
 
-# Here we give seperate code snippets for constructing  L-functions based on the origin of the L-function
-# e.g. code for elliptic curves, genus 2 curves, modular forms, Dirichlet characters, etc...
+# Here we give separate code snippets for constructing L-functions based on the origin of the L-function
+# e.g. code for elliptic curves, genus 2 curves, Dirichlet characters, etc...
+# In Sage, we use the Pari L-function constructors: Ldata is the Pari L-function data, and L the Sage L-function.
 
 lfunction_ecq:
   comment: Define the L-function of the elliptic curve over Q
   sage: |
+    from sage.lfunctions.pari import lfun_elliptic_curve, LFunction
     E = EllipticCurve({ainvs})
-    L = E.lseries()
+    Ldata = lfun_elliptic_curve(E)
+    L = LFunction(Ldata)
   pari: |
     E = ellinit({ainvs});
     L = lfuncreate(E);
   magma: |
     E := EllipticCurve({ainvs});
     L := LSeries(E);
-  oscar: |
-    E = elliptic_curve({ainvs})
-    L = lseries(E)
 
+# For genus 2 curves, Pari does not always determine the conductor exponent at 2 (see ?lfungenus2),
+# in which case {sage_fix2} and {pari_fix2} insert the conductor and bad Euler factors from the LMFDB.
 lfunction_g2c:
   comment: Define the L-function of the genus 2 curve
   sage: |
-    R = PolynomialRing(QQ, 'x')
-    fh = {fh}
-    C = HyperellipticCurve(R(fh[0]), R(fh[1]))
     from sage.lfunctions.pari import lfun_genus2, LFunction
-    L = LFunction(lfun_genus2(C))
+    R.<x> = PolynomialRing(QQ)
+    C = HyperellipticCurve(R({f}), R({h}))
+    Ldata = lfun_genus2(C){sage_fix2}
+    L = LFunction(Ldata)
   pari: |
-    fh = {fh};
-    L = lfungenus2([Polrev(fh[1]), Polrev(fh[2])] );
+    L = lfungenus2([Polrev({f}), Polrev({h})]);{pari_fix2}
   magma: |
-    fh := {fh};
-    L := LSeries(Genus2Curve(fh));
-  oscar: |
-    R, x = polynomial_ring(QQ, "x")
-    fh = {fh}
-    C = hyperelliptic_curve(R(fh[0]), R(fh[1]))
-    L = lseries(C)
+    R<x> := PolynomialRing(Rationals());
+    C := HyperellipticCurve(R!{f}, R!{h});
+    L := LSeries(C{magma_cond_option});
 
 lfunction_dc:
   comment: Define the L-function of the Dirichlet character
   sage: |
-    chi = DirichletCharacter({modulus}, {number})
-    L = chi.lseries()
+    from sage.modular.dirichlet import DirichletCharacter
+    from sage.lfunctions.pari import lfun_character, LFunction
+    H = DirichletGroup({modulus}, base_ring=CyclotomicField({sage_zeta_order}))
+    chi = DirichletCharacter(H, H._module([{sage_dirichlet_gens}]))
+    Ldata = lfun_character(chi)
+    L = LFunction(Ldata)
   pari: |
-    chi = charinit({modulus}, {number});
-    L = lfuncreate(chi);
+    [G, chi] = znchar(Mod({number}, {modulus}));
+    L = lfuncreate([G, chi]);
   magma: |
-    chi := DirichletCharacter({modulus}, {number});
+    // Please install CHIMP (https://github.com/edgarcosta/CHIMP) if you want to run this code
+    chi := DirichletCharacter("{modulus}.{number}");
     L := LSeries(chi);
-  oscar: |
-    test
-    
-# For each L-function invariant (degree, conductor, sign, etc.), we give a "generic" code snippet,
-# and then give specific code snippets which depend on the origin of the L-function (which overrides the generic snippet)
 
-# Give the Dirichlet series, or a list of Dirichlet coefficients
+# For each L-function invariant (conductor, sign, etc.), we give a "generic" code snippet,
+# and then possibly give specific code snippets which depend on the origin of the L-function
+# (which override the generic snippet for those languages)
+
+# Give a list of Dirichlet coefficients
 dirichlet_series:
   comment: First 10 Dirichlet coefficients
+  sage: pari.lfunan(Ldata, 10)
   pari: lfunan(L, 10)
   magma: LGetCoefficients(L, 10);
 
-
+# Check the functional equation numerically
+functional_equation:
+  comment: Check the functional equation numerically (the output should be close to 0)
+  sage: L.check_functional_equation()
+  pari: 2.^lfuncheckfeq(L)
+  magma: CFENew(L);
 
 # The conductor of the L-function
 conductor:
   comment: Conductor
+  sage: L.conductor
   pari: lfunparams(L)[1]
   magma: Conductor(L);
-  sage: conductor(L)
-  oscar: conductor(L)
 conductor_ecq:
   sage: E.conductor()
   pari: ellglobalred(E)[1]
   magma: Conductor(E);
-  oscar: conductor(E)
-conductor_g2c:
-  sage: L.conductor
-  pari: lfunparams(L)[1]
-  magma: Conductor(L);
-  oscar: conductor(L)
 conductor_dc:
   sage: chi.conductor()
-  pari: charconductor(chi)
+  pari: zncharconductor(G, chi)
   magma: Conductor(chi);
-  oscar: conductor(chi)
 
-# The imaginary parts of the zeros on the critial line
+# The sign of the functional equation
+sign:
+  comment: Sign of the functional equation
+  sage: pari.lfunrootres(Ldata)[2]
+  pari: lfunrootres(L)[3]
+  magma: Sign(L);
+sign_ecq:
+  sage: E.root_number()
+  pari: ellrootno(E)
+  magma: RootNumber(E);
+
+# The order of vanishing at the central point
+analytic_rank:
+  comment: Analytic rank
+  sage: pari.lfunorderzero(Ldata)
+  pari: lfunorderzero(L)
+analytic_rank_ecq:
+  sage: E.analytic_rank()
+  pari: ellanalyticrank(E)[1]
+  magma: AnalyticRank(E);
+
+# The value at the central point s0 = (w+1)/2
+central_value:
+  comment: Value at the central point
+  sage: L({s0})
+  pari: lfun(L, {s0})
+  magma: Evaluate(L, {s0});
+
+# The Euler factor at the smallest good prime p
+euler_factor:
+  comment: Euler factor at p = {p}
+  sage: pari.lfuneuler(Ldata, {p})
+  pari: lfuneuler(L, {p})
+  magma: EulerFactor(L, {p});
+
+# The imaginary parts of the zeros on the critical line
 zeros:
-  comment: Zeros on the critical line
-  pari: lfunzeros(L, 20)
-  sage: L.zeros(20)
-  magma: Zeros(L, 20);
-  oscar: zeros(L, 20)
-zeros_ecq:
-  comment: Imaginary parts of the first 10 zeros on the critical line
-  sage: L.zeros(10)
-  pari: lfunzeros(L, 10)
-  magma: Zeros(L, 10);
-  oscar: zeros(L, 10)
-zeros_g2c:
+  comment: Imaginary parts of the zeros on the critical line, up to height 20
   sage: L.zeros(20)
   pari: lfunzeros(L, 20)
-  magma: Zeros(L, 20);
-  oscar: zeros(L, 20)
-zeros_dc:
-  sage: L.zeros(20)
-  pari: lfunzeros(L, 20)
-  magma: Zeros(L, 20);
-  oscar: zeros(L, 20)
 
 
-# Tests for L-function code snippets 
+# Tests for L-function code snippets
 snippet_test:
   # Riemann zeta function
   test_riemann:
     label: 1-1-1.1-r0-0-0
     url: L/1-1-1.1-r0-0-0/download/{lang}
-  # L-function of Dirichlet character 5.4
+  # L-function of Dirichlet character 19.9
   test_dc:
     label: 1-19-19.9-r0-0-0
     url: L/1-19-19.9-r0-0-0/download/{lang}
@@ -136,6 +151,10 @@ snippet_test:
   test_ec:
     label: 2-11-1.1-c1-0-0
     url: L/2-11-1.1-c1-0-0/download/{lang}
+  # L-function of elliptic curve 37.a (analytic rank 1)
+  test_ec_rank1:
+    label: 2-37-1.1-c1-0-0
+    url: L/2-37-1.1-c1-0-0/download/{lang}
   # L-function of genus 2 curve 169.a
   test_g2c:
     label: 4-13e2-1.1-c1e2-0-0

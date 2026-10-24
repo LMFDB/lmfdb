@@ -73,6 +73,9 @@
 {% else %}
 <div id="functionalEqText">\[{{ functionalequation }}\]</div>
 {% endif %}
+{% if code and code.functional_equation %}
+<div style="margin-top:-15px; margin-bottom:30px;">{{ place_code('functional_equation') }}</div>
+{% endif %}
 
 <h2 style="margin-top:-25px;"> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
 
@@ -96,6 +99,7 @@
     <td> {{ KNOWL('lfunction.sign', title="Sign") }}: </td>
     <td> {{ sign }}
     </td>
+    <td> {{ place_code('sign') }} </td>
   </tr>
 
   {% if analytic_conductor %}
@@ -159,6 +163,7 @@
     <td> {{ KNOWL('lfunction.analytic_rank', title="Analytic rank") }}: </td>
     <td> \({{ rank }}\)
     </td>
+    <td> {{ place_code('analytic_rank') }} </td>
   </tr>
   {% endif %}
 
@@ -240,6 +245,9 @@
   {% endif %}
   </p>
 {% endif %}
+{% if dirichlet_arithmetic or algebraic %}
+{{ place_code('central_value') }}
+{% endif %}
 
 <h2>{{ KNOWL('lfunction.euler_product', title='Euler product') }}</h2>
 {% if dirichlet_arithmetic -%}
@@ -248,6 +256,7 @@
 {% else %}
   <div>{{ eulerproduct }}</div>
 {% endif %}
+{{ place_code('euler_factor') }}
 
 {% if factorization is defined %}
 <h2>Factorization</h2>
