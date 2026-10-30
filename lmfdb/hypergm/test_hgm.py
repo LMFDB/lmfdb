@@ -1,4 +1,16 @@
+import re
+from html import unescape
+from urllib.parse import unquote
+
 from lmfdb.tests import LmfdbTest
+
+# The Hodge polygon heading followed by its plot.  Both pages carry other base64
+# plots, so the two have to be matched together rather than separately.
+HODGE_POLYGON_RE = re.compile(r'Hodge polygon\s*(?:</a>)?\s*</h2>\s*<img src="data:image/png;base64,')
+# The Download link rendered by templates/download_search_results.html
+DOWNLOAD_LINK_RE = re.compile(r'href="([^"]*download=1[^"]*)"')
+# The "search families instead" link flashed by hgm_postprocess
+FAMILY_HINT_RE = re.compile(r'no motives in the database match this search.*?href="([^"]*)"', re.S)
 
 
 class HGMTest(LmfdbTest):
@@ -72,6 +84,59 @@ class HGMTest(LmfdbTest):
         self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C1%2C1%2C1]&search_type=Family", "A5_B6.6")
         self.not_check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C1%2C1%2C1]&search_type=Family", "A15_B8.1.1.1.1")
 
+    def test_search_famhodge_bare(self):
+        # issue #3406: the family Hodge vector is a family-level invariant, so a
+        # bare famhodge query (no search_type) should return matching families
+        # rather than zero motives.
+        self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]", "A7.2_B5.3.1")
+        self.not_check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]", "search families instead")
+
+    def test_search_famhodge_bare_download(self):
+        # The Download link on the bare famhodge results page must return the same
+        # family dataset the page displays.  SearchWrapper dispatches the download
+        # shortcut before hgm_search runs, so the search type has to be settled at
+        # the route entry point; otherwise the download runs the family query
+        # against hgm_motives and comes back empty.
+        page = self.tc.get("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]").get_data(as_text=True)
+        link = DOWNLOAD_LINK_RE.search(page)
+        assert link is not None, "no download link on the search results page"
+        response = self.tc.get(unescape(link.group(1)))
+        self.assertEqual(response.status_code, 200)
+        text = response.get_data(as_text=True)
+        self.assertIn("A7.2_B5.3.1", text)
+        self.assertNotIn("returned 0", text)
+        # family labels, not motive labels
+        assert re.search(r"A[\d.]+_B[\d.]+_t", text) is None, "motive labels in a family download"
+
+    def test_search_famhodge_motive_hint(self):
+        # An explicit motive search on a family Hodge vector with no matching
+        # motives points the user at the family search instead.
+        self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&search_type=Motive",
+                        ["search families instead", "matching famil"])
+
+    def test_search_famhodge_hint_incompatible(self):
+        # The count and the link cover every family-compatible constraint, so a
+        # search that no family satisfies gets no hint at all.
+        self.not_check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&degree=999&search_type=Motive",
+                            "search families instead")
+
+    def test_search_famhodge_hint_keeps_constraints(self):
+        # The family link is the same search with only the object type changed.
+        page = self.tc.get("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&A=[7%2C2]&search_type=Motive").get_data(as_text=True)
+        hint = FAMILY_HINT_RE.search(page)
+        assert hint is not None, "no family hint on a motive search with matching families"
+        link = unescape(hint.group(1))
+        self.assertIn("search_type=Family", link)
+        self.assertIn("A=[7,2]", unquote(link))
+        families = self.tc.get(link, follow_redirects=True).get_data(as_text=True)
+        self.assertIn("A7.2_B5.3.1", families)
+        # not broadened back to every family with this Hodge vector
+        self.assertNotIn("A10.3.2_B7.1", families)
+
+    def test_search_famhodge_hint_singular(self):
+        self.check_args("/Motive/Hypergeometric/Q/?famhodge=[1%2C5%2C1]&A=[7%2C2]&B=[5%2C3%2C1]&search_type=Motive",
+                        "1 matching family exists")
+
     def test_search_A(self):
         self.check_args("/Motive/Hypergeometric/Q/?A=[3%2C2%2C2]&search_type=Family", "A3.2.2_B5")
         self.not_check_args("/Motive/Hypergeometric/Q/?A=[3%2C2%2C2]&search_type=Family", "A3.2_B1.1.1")
@@ -128,3 +193,36 @@ class HGMTest(LmfdbTest):
     def test_friends_motive(self):
         self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "Motive family A2.2.2 B4.1") # containing family
         self.check_args("/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1", "/L/Motive/Hypergeometric/Q/A2.2.2_B4.1/t2.1") # L-function
+
+    ### Hodge polygon (issue #3406)
+
+    def test_hodge_polygon(self):
+        # The Hodge polygon plot is shown on family and motive pages of positive weight.
+        for path in ["/Motive/Hypergeometric/Q/A10.6.3.2_B14.1.1.1",
+                     "/Motive/Hypergeometric/Q/A2.2.2_B4.1/t9.8"]:
+            page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+            assert HODGE_POLYGON_RE.search(page) is not None, "no Hodge polygon plot on %s" % path
+
+    def test_no_hodge_polygon_weight_zero(self):
+        # The polygon of a weight 0 object is flat, so it is deliberately omitted.
+        self.not_check_args("/Motive/Hypergeometric/Q/A10.2_B5.1", "Hodge polygon")
+        self.not_check_args("/Motive/Hypergeometric/Q/A4_B2.1/t-8.1", "Hodge polygon")
+
+    ### malformed labels (issue #3406)
+
+    def test_bad_labels(self):
+        # Malformed labels should return a clean 404, not a 500 or a redirect-with-flash.
+        self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/banana").status_code, 404)
+        self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/A2.2_B1.1/tbanana").status_code, 404)
+        self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/data/banana").status_code, 404)
+        for kind in ["circle", "linear", "constant"]:
+            self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/plot/%s/banana" % kind).status_code, 404)
+
+    def test_full_label_redirect(self):
+        # A full motive label pasted as a single path segment redirects to the motive page.
+        self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/A2.2_B1.1_t1.2").status_code, 301)
+        self.check_args("/Motive/Hypergeometric/Q/A2.2_B1.1_t1.2", "Hypergeometric motive")
+
+    def test_jump_malformed(self):
+        # A malformed jump input flashes an error rather than raising.
+        self.check_args("/Motive/Hypergeometric/Q/?jump=A2_B1_t1x2", "not a valid")
