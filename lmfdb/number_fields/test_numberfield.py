@@ -248,17 +248,18 @@ class NumberFieldTest(LmfdbTest):
         assert '"[0, 1]"' not in page
         assert '"[2, 0]"' not in page
 
-    def test_high_degree_gp_galois_download(self):
+    def test_gp_galois_snippet_by_degree(self):
         # PARI's polgalois hard-errors above degree 11, and needs the optional
-        # galdata package in degrees 8 to 11, so the snippet must be guarded.
-        # The committed gp snippet logs only exercise degrees 1 and 2, i.e. the
-        # branch where polgalois is actually called.
+        # galdata package in degrees 8 to 11, so the gp snippet depends on the degree.
+        page = self.tc.get('/NumberField/2.0.11.1/download/gp').get_data(as_text=True)
+        assert any(line.strip() == 'polgalois(K.pol)' for line in page.split('\n'))
+        assert 'galdata' not in page
+        page = self.tc.get('/NumberField/8.0.1265625.1/download/gp').get_data(as_text=True)
+        assert 'polgalois(K.pol)  \\\\ requires the optional galdata package' in page
         page = self.tc.get('/NumberField/12.4.320979616137216.3/download/gp').get_data(as_text=True)
-        assert 'poldegree(K.pol) > 11' in page
-        assert 'polgalois only supports degree <= 11' in page
-        assert 'requires the optional galdata package' in page
-        # polgalois is never invoked from an unguarded line
-        assert not any(line.strip() == 'polgalois(K.pol)' for line in page.split('\n'))
+        assert '\\\\ polgalois only supports degree <= 11' in page
+        # polgalois is never actually called above degree 11
+        assert not any(line.strip().startswith('polgalois(') for line in page.split('\n'))
 
     def test_rational_field_magma_download(self):
         # Magma's NumberField collapses a degree 1 polynomial to the rationals,
