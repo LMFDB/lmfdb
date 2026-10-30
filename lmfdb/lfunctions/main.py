@@ -53,6 +53,7 @@ from lmfdb.utils import (
     parse_primes, coeff_to_poly, Downloader,
     SearchArray, TextBox, SelectBox, YesNoBox, CountBox,
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
+from lmfdb.utils.place_code import CodeSnippet
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
@@ -1235,6 +1236,8 @@ def initLfunction(L, args, request):
     info = L.info
     info['args'] = args
     info['properties'] = set_gaga_properties(L)
+    if isinstance(L, Lfunction_from_db):
+        info['code'] = L.code_snippets
 
     set_bread_and_friends(info, L, request)
 
@@ -1298,7 +1301,7 @@ def set_bread_and_friends(info, L, request):
     Depends on the type of L-function and needs to be added to for new types
     """
 
-    # bread crums on top
+    # bread crumbs on top
     info['bread'] = []
     info['origins'] = []
     info['friends'] = []
@@ -1334,7 +1337,12 @@ def set_bread_and_friends(info, L, request):
         info['factors_origins'] = L.factors_origins
         info['Linstances'] = L.instances
         info['downloads'] = L.downloads
-        info['downloads'].append(("Underlying data", url_for(".lfunc_data", label=L.label)))
+
+        if L.code_snippets:
+            for lang, name in [('magma', 'Magma'), ('gp', 'PariGP'), ('sage', 'SageMath')]:
+                info['downloads'].append((f'{name} commands', url_for('.lf_code_download', label=L.label, download_type=lang)))
+
+        info['downloads'].append(("Underlying data", url_for('.lfunc_data', label=L.label)))
 
         for elt in [info['origins'], info['friends'], info['factors_origins'], info['Linstances']]:
             if elt is not None:
@@ -1611,6 +1619,30 @@ def download_dirichlet_coeff(label, L=None): # the wrapper populates the L
 def download(label, L=None): # the wrapper populates the L
     assert label
     return L.download()
+
+sorted_code_names = ['lfunction', 'dirichlet_series', 'functional_equation', 'conductor', 'sign',
+                     'analytic_rank', 'central_value', 'edge_value', 'euler_factor', 'zeros']
+
+
+@l_function_page.route("/<label>/download/<download_type>")
+def lf_code_download(**args):
+    label = args['label']
+    download_type = args['download_type']
+    if not LFUNC_LABEL_RE.fullmatch(label):
+        return abort(404, "Invalid label")
+    if download_type not in ['magma', 'gp', 'sage']:
+        return abort(404, "Invalid download type")
+    if not db.lfunc_lfunctions.exists({'label': label}):
+        return abort(404, "There is no L-function in the database with label %s" % label)
+
+    code_snippets = Lfunction_from_db(label=label).code_snippets
+    if code_snippets is None:
+        return abort(404, "No code snippets are available for L-function %s" % label)
+    code = CodeSnippet(code_snippets)
+    names = [name for name in sorted_code_names if name in code_snippets]
+    response = make_response(code.export_code(label, download_type, names))
+    response.headers['Content-type'] = 'text/plain'
+    return response
 
 @l_function_page.route("/data/<label>")
 def lfunc_data(label):
