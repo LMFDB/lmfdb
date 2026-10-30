@@ -54,6 +54,15 @@ class EllCurveTest(LmfdbTest):
         L = self.tc.get('/EllipticCurve/Q/210', follow_redirects=True)
         assert '/EllipticCurve/Q/210/' in L.get_data(as_text=True)
 
+    def test_Cond_multiple_search(self):
+        # Searching for curves whose conductor is a multiple of a given integer
+        # used to raise an error in the completeness checker; see
+        # https://github.com/LMFDB/lmfdb/issues/6822
+        L = self.tc.get('/EllipticCurve/Q/?conductor=389&conductor_type=multiple')
+        data = L.get_data(as_text=True)
+        assert '389.a1' in data
+        assert 'error in the completeness checking code' not in data
+
     def test_Weierstrass_search(self):
         L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]', follow_redirects=True)
         assert '/EllipticCurve/Q/10351/b/1' in L.get_data(as_text=True)
