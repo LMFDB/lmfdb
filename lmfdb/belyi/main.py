@@ -9,6 +9,7 @@ from psycodict.encoding import Json
 from lmfdb import db
 from lmfdb.utils import (
     to_dict,
+    get_search_type,
     comma,
     flash_error,
     display_knowl,
@@ -70,7 +71,7 @@ def get_bread(tail=None):
 def index():
     info = to_dict(request.args, search_array=BelyiSearchArray())
     if request.args:
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        info["search_type"] = search_type = get_search_type(info)
         if search_type in ["List", "", "Random"]:
             return belyi_search(info)
         elif search_type in ["Passports", "RandomPassport"]:
