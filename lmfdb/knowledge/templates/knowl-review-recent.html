@@ -39,12 +39,12 @@ $(document).ready(function () {
                 {% for rid in k.referrers %}
                   <li>{{ KNOWL(rid, title=rid) }}</li>
                 {% endfor %}
-                {% for coderef in k.code_referrers %}
+                {% for coderef in k.code_referrers or [] %}
                   <li>{{ coderef | safe }}</li>
                 {% endfor %}
               </ul>
             {% else %}
-              No referrers <br>
+              No referrers{% if k.code_referrers is none %} among knowls (the code could not be checked){% endif %} <br>
             {% endif %}
             {% set kid = k.id.replace('.','') %}
             {% if k.reviewed_content != "null" %}
