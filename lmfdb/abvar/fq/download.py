@@ -29,5 +29,14 @@ class AbvarFq_download(Downloader):
                           lang=lang,
                           title='Curves in abelian variety isogeny class %s,' % (label))
 
+    def get_projection(self, info, table, columns):
+        proj = super().get_projection(info, table, columns)
+        # The curves arrays are large, so only fetch them when the Curves column is
+        # actually included in the download (see LMFDB#6975).
+        if ("curves" in table.search_cols and "curves" not in proj
+                and any(col.name == "curves" and col.default(info) for col in columns.columns)):
+            proj = proj + ["curves"]
+        return proj
+
     def postprocess(self, rec, info, query):
         return AbvarFq_isoclass(rec)
