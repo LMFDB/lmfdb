@@ -193,7 +193,7 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='knowl_edit.js') }}"></script>
 <script type="text/javascript">
-var render_url = "{{ url_for('.render', ID=k.id)}}";
+var render_url = "{{ url_for('.preview', ID=k.id)}}";
 /* edit history */
 var edit_history = {
   {% for version in k.edit_history %}

@@ -16,6 +16,7 @@ import re
 import json
 import time
 from collections import Counter, defaultdict
+from urllib.parse import urlencode
 from lmfdb.app import app, is_beta
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
@@ -697,13 +698,20 @@ def save_form():
         return redirect(url_for(".show", ID=ID))
 
 
-@knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
+@knowledge_page.route("/render/<ID>")
 def render(ID):
     return render_knowl(ID)
 
 
+@knowledge_page.route("/preview/<ID>", methods=["POST"])
+@login_required
+def preview(ID):
+    return render_knowl(ID, footer=request.form.get('footer', '0'),
+                        content=request.form['content'])
+
+
 def render_knowl(ID, footer=None, kwargs=None,
-        raw=False, k=None, allow_deleted=False, timestamp=None):
+        raw=False, k=None, allow_deleted=False, timestamp=None, content=None):
     """
     this method renders the given Knowl (ID) to insert it
     dynamically in a website. It is intended to be used
@@ -716,6 +724,9 @@ def render_knowl(ID, footer=None, kwargs=None,
 
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
+
+    the keyword 'content' replaces the knowl's saved content; it is
+    only for the editor's preview, which requires a login.
     """
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(request.args.items())
@@ -740,21 +751,23 @@ def render_knowl(ID, footer=None, kwargs=None,
         if timestamp is None and k.status == 1 and not is_beta():
             kwargs['timestamp'] = k.ms_timestamp
 
-    # kw_params is inserted *verbatim* into the url_for(...) function inside the template
-    # the idea is to pass the keyword arguments of the knowl further along the chain
-    # of links, in this case the title and the permalink!
-    # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (key, val) for key, val in kwargs.items()))
-    logger.debug("kw_params: %s" % kw_params)
+    # the keyword arguments of the knowl are passed further along the chain
+    # of links, in this case the permalink.
+    # Only knowl content is template source: the ID, title and keyword arguments
+    # come from the request, so they reach the template as variables.
+    permalink = url_for('.show', ID=k.id)
+    if kwargs:
+        permalink += '?' + urlencode(kwargs)
+    header_title = Markup(k.title) if k.title else k.id
+    # The names the template sets win over query parameters of the same name;
+    # "source" is render_template_string's own argument, so it cannot be passed.
+    context = {key: val for key, val in kwargs.items() if key != 'source'}
+    context.update(k=k, knowl_permalink=permalink, knowl_header_title=header_title)
 
     # this is a very simple template based on no other template to render one single Knowl
     # for inserting into a website via AJAX or for server-side operations.
-    if request.method == "POST":
-        con = request.form['content']
-        foot = footer or request.form['footer']
-    else:
-        con = request.args.get("content", k.content)
-        foot = footer or request.args.get("footer", "1")
+    con = k.content if content is None else content
+    foot = footer or request.args.get("footer", "1")
 
     # authors = []
     # for a in k.author_links():
@@ -775,8 +788,8 @@ def render_knowl(ID, footer=None, kwargs=None,
     if foot == "1":
         render_me += """\
   <div class="knowl-header">
-    <a href="{{ url_for('.show', ID='%(ID)s', %(kw_params)s ) }}">%(title)s</a>
-  </div>""" % {'ID': k.id, 'title': (k.title or k.id), 'kw_params': kw_params}
+    <a href="{{ knowl_permalink }}">{{ knowl_header_title }}</a>
+  </div>"""
 
     render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
 
@@ -784,10 +797,10 @@ def render_knowl(ID, footer=None, kwargs=None,
     if foot == "1":
         render_me += """\
   <div class="knowl-footer">
-    <a href="{{ url_for('.show', ID='%(ID)s', %(kw_params)s) }}">permalink</a>
+    <a href="{{ knowl_permalink }}">permalink</a>
     {%% if user_is_authenticated %%}
       &middot;
-      <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a>
+      <a href="{{ url_for('.edit', ID=k.id) }}">edit</a>
     {%% endif %%}
     %(review_status)s
   </div>"""
@@ -800,8 +813,7 @@ def render_knowl(ID, footer=None, kwargs=None,
 
     # markdown enabled
     render_me = render_me % {'content': md.convert(con),
-                             'ID': k.id, 'review_status': review_status,
-                             'kw_params': kw_params}  # , 'authors' : authors }
+                             'review_status': review_status}  # , 'authors' : authors }
     # Pass the text on to markdown.  Note, backslashes need to be escaped for
     # this, but not for the javascript markdown parser
 
@@ -810,7 +822,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # TODO improve the error message
     # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
     try:
-        data = render_template_string(render_me, k=k, **kwargs)
+        data = render_template_string(render_me, **context)
         if raw:
             # note, this is just internally for the .show method, raw rendering
             # doesn't exist right now and will wrap this into a make_reponse!
