@@ -41,6 +41,7 @@ from lmfdb.utils import (
     key_for_numerically_sort
 )
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_wrapper import multi_entry_jump_search
 from lmfdb.utils.search_columns import (
     SearchColumns, MathCol, FloatCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
 )
@@ -273,7 +274,32 @@ def modcurve_lmfdb_label(label):
         lmfdb_label = None
     return lmfdb_label, label_type
 
+def modcurve_multi_label_to_lmfdb_label(entry):
+    """
+    Parse a single jump-box entry (LMFDB label, name, or an RSZB/CP/SZ/RZB/S label)
+    into an LMFDB modular curve label. Used by ``multi_entry_jump_search`` when the
+    Find box contains a comma-separated list. Raises ``ValueError`` if the entry
+    does not correspond to a modular curve in the database.
+    """
+    lmfdb_label, label_type = modcurve_lmfdb_label(entry)
+    if lmfdb_label is None:
+        raise ValueError("no modular curve with %s %s" % (label_type, entry))
+    return lmfdb_label
+
+
 def modcurve_jump(info):
+    # If the Find box contains a comma-separated list of labels/names, return a search
+    # page of those modular curves. (Fiber products use "*" and remain single-entry.)
+    multi_jump = multi_entry_jump_search(
+        info,
+        parse_entry=modcurve_multi_label_to_lmfdb_label,
+        label_exists=db.gps_gl2zhat_fine.label_exists,
+        index_endpoint=".index_Q",
+        object_name="modular curves",
+    )
+    if multi_jump is not None:
+        return multi_jump
+
     labels = (info["jump"]).split("*")
     lmfdb_labels = []
     for label in labels:
@@ -761,9 +787,10 @@ modcurve_sorts = [
 ]
 class ModCurveSearchArray(SearchArray):
     noun = "curve"
+    label_knowl = "modcurve.label"
     jump_example = "13.78.3.a.1"
     jump_egspan = "e.g. 13.78.3.a.1, 13.78.3.a, 13.78.3.1, XNS+(13), 13Nn, 13A3, or X0(3)*X1(5) (fiber product over $X(1)$)"
-    jump_prompt = "Label or name"
+    jump_prompt = "Label, name, or comma-separated list"
     jump_knowl = "modcurve.search_input"
 
     def __init__(self):
