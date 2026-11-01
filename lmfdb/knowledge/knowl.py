@@ -8,6 +8,7 @@ import subprocess
 import time
 import yaml
 import difflib
+from markupsafe import escape
 
 from psycodict.base import PostgresBase
 from psycodict import DelayCommit
@@ -1106,7 +1107,7 @@ class Knowl():
             pieces = ID.split(".")
             if len(pieces) == 3:
                 # Column: the title is generated, so ignore the title passed in
-                self.title = f"Column {pieces[2]} of table {pieces[1]}"
+                self.title = f"Column {escape(pieces[2])} of table {escape(pieces[1])}"
                 if pieces[1] in db.tablenames:
                     self.coltype = db[pieces[1]].col_type.get(pieces[2], "DEFUNCT")
                 else:
@@ -1116,7 +1117,7 @@ class Knowl():
                 # so it is only generated for records that don't have one yet
                 self.coltype = None
                 if not self.title:
-                    self.title = f"Table {pieces[1]}"
+                    self.title = f"Table {escape(pieces[1])}"
                 if pieces[1] not in db.tablenames and not self.title.endswith(" (DEFUNCT)"):
                     self.title += " (DEFUNCT)"
 

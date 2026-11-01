@@ -190,19 +190,10 @@ prime_cycle_types:
 snippet_test:                   
   testQ: 
     label: 1.1.1.1
-    langs:
-      - sage
-      - magma
-      - oscar
-      - gp
     url: NumberField/1.1.1.1/download/{lang}
   testQi: 
     label: 2.0.4.1
-    langs:
-      - sage
-      - magma
-      - oscar
-      - gp
     url: NumberField/2.0.4.1/download/{lang}
-
-
+  test_degree8:
+    label: 8.0.1257728.1
+    url: NumberField/8.0.1257728.1/download/{lang}
