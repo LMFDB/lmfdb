@@ -168,7 +168,7 @@ def login(**kwargs):
     user = LmfdbUser(name)
     if user and user.authenticate(password):
         login_user(user, remember=remember)
-        flask.flash(Markup("Hello %s, your login was successful!" % user.name))
+        flask.flash(Markup("Hello {}, your login was successful!").format(user.name))
         logger.info("login: '%s' - '%s'" % (user.get_id(), user.name))
         # FIXME add color cookie, see change_colors
         return flask.redirect(nxt or url_for(".info"))
@@ -274,7 +274,7 @@ def register_token(token):
         #newuser.full_name = full_name
         #newuser.save()
         login_user(newuser, remember=True)
-        flask.flash(Markup("Hello %s! Congratulations, you are a new user!" % newuser.name))
+        flask.flash(Markup("Hello {}! Congratulations, you are a new user!").format(newuser.name))
         logger.debug("removed login token '%s'" % token)
         logger.info("new user: '%s' - '%s'" % (newuser.get_id(), newuser.name))
         return flask.redirect(url_for(".info"))

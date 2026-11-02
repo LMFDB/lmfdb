@@ -457,7 +457,7 @@ def comment_history(limit=25):
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flash(Markup("Knowl %s has been deleted." % ID))
+    flash(Markup("Knowl {} has been deleted.").format(ID))
     return redirect(url_for(".index"))
 
 
@@ -466,7 +466,7 @@ def delete(ID):
 def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
-    flash(Markup("Knowl %s has been resurrected." % ID))
+    flash(Markup("Knowl {} has been resurrected.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -476,7 +476,7 @@ def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
-    flash(Markup("Knowl %s has been positively reviewed." % ID))
+    flash(Markup("Knowl {} has been positively reviewed.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -486,7 +486,7 @@ def demote(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
-    flash(Markup("Knowl %s has been returned to beta." % ID))
+    flash(Markup("Knowl {} has been returned to beta.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -644,12 +644,12 @@ def save_form():
     if FINISH_RENAME:
         k = Knowl(ID)
         k.actually_rename()
-        flash(Markup("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name)))
+        flash(Markup("Renaming complete; the history of {} has been merged into {}").format(ID, k.source_name))
         return redirect(url_for(".show", ID=k.source_name))
     elif UNDO_RENAME:
         k = Knowl(ID)
         k.undo_rename()
-        flash(Markup("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID)))
+        flash(Markup("Renaming undone; the history of {} has been merged back into {}").format(k.source_name, ID))
         return redirect(url_for(".show", ID=ID))
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
@@ -679,7 +679,7 @@ def save_form():
                 if k.sed_safety == 0:
                     time.sleep(0.01)
                     k.actually_rename(NEWID)
-                    flash(Markup("Knowl renamed to {0} successfully.".format(NEWID)))
+                    flash(Markup("Knowl renamed to {0} successfully.").format(NEWID))
                 else:
                     k.start_rename(NEWID, who)
             except ValueError as err:
@@ -687,8 +687,8 @@ def save_form():
             else:
                 if k.sed_safety == 1:
                     flash(Markup("Knowl rename process started. You can change code references using"))
-                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
-                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)").format(ID, NEWID))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)").format(ID, NEWID))
                 elif k.sed_safety == -1:
                     flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
