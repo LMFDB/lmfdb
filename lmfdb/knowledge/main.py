@@ -739,7 +739,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # fetch and convert the ms timestamp to datetime
         try:
             timestamp = timestamp_in_ms_to_datetime(int(kwargs['timestamp']))
-        except KeyError:
+        except (KeyError, ValueError, OverflowError, OSError):
             pass
 
     if k is None:

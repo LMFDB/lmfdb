@@ -193,6 +193,20 @@ class KnowlRenderTest(LmfdbTest):
         assert "<svg" not in text
         assert "&lt;svg" in text
 
+    def test_invalid_timestamp_is_ignored(self):
+        page = self.tc.get("/knowledge/render/nf.degree?timestamp=abc")
+        assert page.status_code == 200
+        assert 'class="knowl-content"' in page.get_data(as_text=True)
+
+    def test_out_of_range_timestamp_is_ignored(self):
+        for timestamp in ["1" + "0" * 20, "1" + "0" * 400]:
+            with self.subTest(timestamp=timestamp):
+                page = self.tc.get("/knowledge/render/nf.degree", query_string={"timestamp": timestamp})
+                assert page.status_code == 200
+                text = page.get_data(as_text=True)
+                assert 'class="knowl-content"' in text
+                assert "ERROR in the template" not in text
+
     def test_parameters_named_like_template_variables(self):
         names = ["k", "source", "knowl_permalink", "knowl_header_title"]
         page = self.tc.get("/knowledge/render/nf.degree", query_string={n: "1" for n in names})
