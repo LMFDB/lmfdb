@@ -763,9 +763,13 @@ def render_knowl(ID, footer=None, kwargs=None,
     if kwargs:
         permalink += '?' + urlencode(kwargs)
     header_title = Markup(k.title) if k.title else k.id
-    # The names the template sets win over query parameters of the same name;
+    # Flask's explicit template arguments override its context processors.
+    # Reserve their names and Jinja globals before adding query parameters.
     # "source" is render_template_string's own argument, so it cannot be passed.
-    context = {key: val for key, val in kwargs.items() if key != 'source'}
+    context = {}
+    app.update_template_context(context)
+    reserved = context.keys() | app.jinja_env.globals.keys() | {'source'}
+    context.update({key: val for key, val in kwargs.items() if key not in reserved})
     context.update(k=k, knowl_permalink=permalink, knowl_header_title=header_title)
 
     # this is a very simple template based on no other template to render one single Knowl

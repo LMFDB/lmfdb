@@ -35,6 +35,8 @@ class DynamicKnowlTest(LmfdbTest):
     def test_number_field_knowl(self):
         L = self.tc.get('/knowledge/show/nf.field.data?label=6.0.21296.1', follow_redirects=True)
         assert '-21296' in L.get_data(as_text=True)
+        L = self.tc.get('/knowledge/render/nf.field.data?label=6.0.21296.1&number_field_data=x&url_for=x')
+        assert '-21296' in L.get_data(as_text=True)
 
     def test_local_field_knowl(self):
         L = self.tc.get('/knowledge/show/lf.field.data?label=2.2.3.4', follow_redirects=True)
@@ -213,6 +215,15 @@ class KnowlRenderTest(LmfdbTest):
         text = page.get_data(as_text=True)
         assert "ERROR in the template" not in text
         assert 'href="/knowledge/show/nf.degree?' in text
+
+    def test_parameters_named_like_context_variables(self):
+        for name in ["url_for", "knowl_title", "user_is_authenticated"]:
+            with self.subTest(name=name):
+                page = self.tc.get("/knowledge/render/nf.degree", query_string={name: "x"})
+                text = page.get_data(as_text=True)
+                assert "ERROR in the template" not in text
+                assert 'class="knowl-content"' in text
+                assert 'href="/knowledge/edit/nf.degree"' not in text
 
 
 class KnowlEditorTest(LmfdbTest):
