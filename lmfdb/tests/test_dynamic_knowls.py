@@ -1,5 +1,6 @@
 
 from unittest.mock import patch
+import re
 
 from flask import render_template
 from markupsafe import escape
@@ -198,3 +199,45 @@ class KnowlRenderTest(LmfdbTest):
         text = page.get_data(as_text=True)
         assert "ERROR in the template" not in text
         assert 'href="/knowledge/show/nf.degree?' in text
+
+
+class KnowlEditorTest(LmfdbTest):
+    def setUp(self):
+        login = patch.dict(self.app.config, LOGIN_DISABLED=True)
+        login.start()
+        self.addCleanup(login.stop)
+        self.tc = self.app.test_client()
+
+    def test_preview_requires_session_token(self):
+        with self.tc.session_transaction() as session:
+            session["_csrf_token"] = "session-token"
+        for token in [None, "wrong", "\u00e9"]:
+            with self.subTest(token=token):
+                data = {"content": "Preview text", "footer": "0"}
+                if token is not None:
+                    data["csrf_token"] = token
+                with patch("lmfdb.knowledge.main.Knowl", side_effect=AssertionError("Preview read the database before checking the token")):
+                    page = self.tc.post("/knowledge/preview/nf.degree", data=data)
+                assert page.status_code == 400
+
+    def test_save_requires_session_token(self):
+        with self.tc.session_transaction() as session:
+            session["_csrf_token"] = "session-token"
+        for token in [None, "wrong"]:
+            with self.subTest(token=token):
+                data = {"id": "nf.degree", "title": "Degree", "content": "Preview text"}
+                if token is not None:
+                    data["csrf_token"] = token
+                with patch("lmfdb.knowledge.main.Knowl", side_effect=AssertionError("Save read the database before checking the token")):
+                    page = self.tc.post("/knowledge/save", data=data)
+                assert page.status_code == 400
+
+    def test_editor_token_allows_preview(self):
+        with patch.object(knowldb, "set_locked"):
+            page = self.tc.get("/knowledge/edit/nf.degree?lock=ignore")
+        assert page.status_code == 200
+        token = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', page.get_data(as_text=True)).group(1)
+        page = self.tc.post("/knowledge/preview/nf.degree",
+                            data={"csrf_token": token, "content": "Preview text", "footer": "0"})
+        assert page.status_code == 200
+        assert "Preview text" in page.get_data(as_text=True)

@@ -31,6 +31,7 @@ import markdown
 from lmfdb.logger import logger
 from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error
+from lmfdb.utils.csrf import csrf_token, require_csrf_token
 from lmfdb.knowledge import knowledge_page
 
 
@@ -212,7 +213,8 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl,
+    return {'csrf_token': csrf_token,
+            'Knowl': Knowl,
             'knowl_title': knowl_title,
             'knowl_url_prefix': knowl_url_prefix,
             "KNOWL_EXISTS": knowl_exists,
@@ -632,6 +634,7 @@ def edit_form():
 @knowledge_page.route("/save", methods=["POST"])
 @login_required
 def save_form():
+    require_csrf_token()
     ID = request.form['id']
     if not ID:
         raise Exception("no id")
@@ -706,6 +709,7 @@ def render(ID):
 @knowledge_page.route("/preview/<ID>", methods=["POST"])
 @login_required
 def preview(ID):
+    require_csrf_token()
     return render_knowl(ID, footer=request.form.get('footer', '0'),
                         content=request.form['content'])
 
