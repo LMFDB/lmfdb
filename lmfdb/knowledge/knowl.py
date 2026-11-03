@@ -139,8 +139,8 @@ def extract_defines(content):
 
 class CodeSearchUnavailable(RuntimeError):
     """
-    Raised when the LMFDB code cannot be searched for knowl references,
-    because lmfdb is not being run from a git checkout.
+    Raised when the LMFDB code cannot be searched for knowl references
+    (for example because git is not installed).
     """
 
 
@@ -149,11 +149,10 @@ def _git_grep(*args):
     Run ``git grep`` with the given arguments in the LMFDB checkout,
     returning its output, or None if there are no matches.
 
-    Raises CodeSearchUnavailable if lmfdb is not being run from a git
-    checkout, since then the absence of matches says nothing about the code.
+    Raises CodeSearchUnavailable if the search fails (git is missing, or
+    the checkout is not a git repository), since then the absence of
+    matches says nothing about the code.
     """
-    if root_lmfdb_path is None:
-        raise CodeSearchUnavailable("The LMFDB code cannot be searched for knowl references, since the LMFDB is not running from a git checkout")
     try:
         return subprocess.check_output(['git', 'grep'] + list(args), encoding='utf-8', cwd=root_lmfdb_path)
     except FileNotFoundError:

@@ -703,7 +703,7 @@ def save_form():
                 elif k.sed_safety == -1:
                     flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 elif k.sed_safety == -2:
-                    flash(Markup("Knowl rename process started.  The code could not be searched for references to this knowl, since the LMFDB is not running from a git checkout"))
+                    flash(Markup("Knowl rename process started.  The code could not be searched for references to this knowl"))
                 ID = NEWID
     if k.type == -2:
         return redirect(url_for(".show", ID=k.source))

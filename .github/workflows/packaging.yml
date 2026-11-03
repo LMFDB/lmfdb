@@ -1,10 +1,11 @@
-# Packaging checks that run on every push and pull request (publish.yml
-# only builds on release tags and manual dispatch): build the sdist and
-# wheel, check their metadata and contents, install the wheel into a clean
-# virtual environment -- without sage and without a database -- and
-# exercise the configuration handling, the lazy lmfdb.db object, and the
-# console script of the installed package.  Needs no secrets, so it also
-# runs on forks.
+# Packaging checks for lmfdb-client, the package built from packages/ and
+# published on PyPI (publish.yml publishes them).  On every
+# push and pull request: build each sdist and wheel, check their metadata and
+# contents, install the wheel into a clean virtual environment -- without
+# sage -- and run the package's tests against the installed wheel.  The
+# lmfdb-client tests connect to devmirror.lmfdb.xyz (the LMFDB's own test
+# suite runs them under sage too).  Needs no secrets, so it also runs on
+# forks.
 name: Packaging
 
 on:
@@ -14,8 +15,13 @@ on:
     branches: [ main, dev, web ]
 
 jobs:
-  build-and-smoke:
+  build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [lmfdb-client]
+    name: ${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,24 +32,31 @@ jobs:
       - name: Build sdist and wheel
         run: |
           python -m pip install build twine
-          python -m build
+          python -m build --outdir dist packages/${{ matrix.package }}
           twine check --strict dist/*
 
-      - name: Check that the wheel ships the runtime data files
+      - name: Check the contents of the wheel
+        env:
+          PACKAGE: ${{ matrix.package }}
         run: |
           python - <<'EOF'
-          import glob, zipfile
-          wheel = glob.glob("dist/*.whl")[0]
-          names = set(zipfile.ZipFile(wheel).namelist())
-          required = [
-              "lmfdb/CONTRIBUTORS.yaml",
-              "lmfdb/templates/homepage.html",
-              "lmfdb/homepage/index_boxes.yaml",
-              "lmfdb/static/favicon.ico",
-          ]
-          missing = [n for n in required if n not in names]
-          assert not missing, "wheel is missing data files: %s" % missing
-          print("wheel contains all %d spot-checked data files" % len(required))
+          import glob, os, zipfile
+          package = os.environ["PACKAGE"]
+          module = package.replace("-", "_")
+          names = set(zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist())
+          sources = {
+              "%s/%s" % (module, f)
+              for f in os.listdir(os.path.join("packages", package, module))
+              if f.endswith(".py")
+          }
+          missing = sources - names
+          assert not missing, "the wheel is missing %s" % sorted(missing)
+          assert any(n.endswith("/licenses/LICENSE") for n in names), "the wheel has no license"
+          if package == "lmfdb-client":
+              assert "lmf/__init__.py" in names
+          stray = [n for n in names if n.split("/")[0] not in (module, "lmf") and ".dist-info/" not in n]
+          assert not stray, "the wheel contains unexpected files: %s" % stray
+          print("the wheel contains the %d modules of %s" % (len(sources), module))
           EOF
 
       - name: Install the wheel into a clean venv
@@ -52,46 +65,14 @@ jobs:
           smoke/bin/pip install dist/*.whl pytest
           smoke/bin/pip check
 
-      - name: Import and introspection have no side effects (no sage, no database)
-        # run from an empty directory so the checkout cannot shadow the
-        # installed package; nothing may be created in it, in LMFDB_HOME,
-        # or anywhere else by importing and introspecting
+      - name: Run the tests against the installed wheel
+        # from an empty directory outside the checkout, so that the
+        # installed package is the one tested; nothing may be created there
         run: |
           mkdir empty && cd empty
-          export LMFDB_HOME=$PWD/lmfdb-home
-          ../smoke/bin/python -c "
-          import sys, os, lmfdb
-          assert 'lmfdb.lmfdb_database' not in sys.modules
-          assert 'psycodict' not in sys.modules
-          assert not any(m == 'sage' or m.startswith('sage.') for m in sys.modules)
-          from lmfdb import db
-          repr(db); bool(db); dir(db)
-          assert db.connected is False
-          assert 'lmfdb.lmfdb_database' not in sys.modules
-          assert not os.listdir('.'), os.listdir('.')
-          "
+          export LMFDB_HOME=$RUNNER_TEMP/lmfdb-home
+          ../smoke/bin/python -c "import os, ${PACKAGE_MODULE}; assert 'site-packages' in ${PACKAGE_MODULE}.__file__, ${PACKAGE_MODULE}.__file__"
+          ../smoke/bin/python -m pytest -v -p no:cacheprovider ../packages/${{ matrix.package }}/tests
           test -z "$(ls -A .)" || { echo 'files were created:'; ls -A; exit 1; }
-
-      - name: Configuration and laziness tests against the installed package
-        run: |
-          mkdir testdir && cd testdir
-          export LMFDB_HOME=$PWD/lmfdb-home
-          ../smoke/bin/python -m pytest -v --pyargs lmfdb.test_config
-
-      - name: The console script parses --help without sage and without side effects
-        run: |
-          mkdir helpdir && cd helpdir
-          export LMFDB_HOME=$PWD/lmfdb-home
-          ../smoke/bin/lmfdb --help | grep -q -- "--config-file"
-          ../smoke/bin/python -m lmfdb --help > /dev/null
-          test -z "$(ls -A .)" || { echo 'files were created by --help:'; ls -A; exit 1; }
-
-      - name: Actually starting the website fails helpfully without sage
-        run: |
-          if smoke/bin/lmfdb > out.txt 2>&1; then
-            echo "expected the lmfdb script to fail in a venv without sage"
-            cat out.txt
-            exit 1
-          fi
-          grep -q "requires SageMath" out.txt
-          grep -q "lmfdb.db) works without Sage" out.txt
+        env:
+          PACKAGE_MODULE: ${{ matrix.package == 'lmfdb-client' && 'lmfdb_client' || 'lmfdb_utils' }}

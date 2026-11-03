@@ -3,18 +3,7 @@ from logging import (FileHandler, getLogger, StreamHandler, Formatter,
                      INFO, WARNING,
                      info, warning)
 
-try:
-    from sage.version import version as sage_version
-except ModuleNotFoundError as e:
-    if e.name == "sage" or (e.name or "").startswith("sage."):
-        raise ImportError(
-            "The LMFDB website requires SageMath, which pip does not install.  "
-            "Install the LMFDB into Sage's Python, e.g. with `sage -pip install lmfdb` "
-            "(or `sage -pip install -e .` from a checkout).  "
-            "Database access (lmfdb.db) works without Sage.",
-            name="sage",
-        ) from None
-    raise
+from sage.version import version as sage_version
 
 from .utils import LmfdbFormatter
 

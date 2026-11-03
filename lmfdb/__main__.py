@@ -1,6 +1,6 @@
 """
-Start the LMFDB website via ``sage -python -m lmfdb`` (the website requires
-SageMath; database access through ``lmfdb.db`` does not).
+Start the LMFDB website via ``sage -python -m lmfdb`` from the root of the
+checkout (equivalent to ``sage -python start-lmfdb.py``).
 """
 from lmfdb.cli import main
 

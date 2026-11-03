@@ -1,11 +1,12 @@
+import os
 import yaml
 
-from lmfdb.config import lmfdb_package_dir
+from lmfdb.config import root_lmfdb_path
 from .boxes import load_boxes
 from .sidebar import get_sidebar
 
 # reading and sorting list of contributors once at startup
-with open(lmfdb_package_dir / "CONTRIBUTORS.yaml") as contrib_file:
+with open(os.path.join(root_lmfdb_path, "CONTRIBUTORS.yaml")) as contrib_file:
     contribs = yaml.load_all(contrib_file, Loader=yaml.FullLoader)
     contribs = sorted(contribs, key=lambda x: x['name'].split()[-1])
 

@@ -16,18 +16,14 @@ from flask import (
     url_for,
 )
 from markupsafe import escape
-
-# imported before sage so that a missing sage produces a helpful error message
-from .logger import critical
-
 from sage.env import SAGE_VERSION
 from sage.all import cached_function
-# acknowledgment page, reads info from lmfdb/CONTRIBUTORS.yaml
+# acknowledgment page, reads info from CONTRIBUTORS.yaml
 
+from .logger import critical
 from .homepage import load_boxes, contribs
 
-from .version import version as _lmfdb_version
-LMFDB_VERSION = "LMFDB Release " + _lmfdb_version
+LMFDB_VERSION = "LMFDB Release 1.2.1"
 
 ############################
 #         Main app         #
@@ -94,7 +90,7 @@ if app.debug:
 
 # secret key, necessary for sessions, and sessions are
 # in turn necessary for users to login.  Using the process-wide
-# configuration means a --config-file option given to the lmfdb command
+# configuration means a --config-file option given to start-lmfdb.py
 # moves the key together with the configuration file.
 app.secret_key = current_configuration().get_secret_key()
 
@@ -199,8 +195,6 @@ if (os.getenv('BETA') == '1'):
 
 
 def git_infos():
-    if root_lmfdb_path is None:  # not running from a git checkout
-        return '-', '-', '-'
     try:
         from subprocess import Popen, PIPE
         cwd = root_lmfdb_path

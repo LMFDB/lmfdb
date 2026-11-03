@@ -1,7 +1,25 @@
-# The LMFDB is pip installable (see pyproject.toml, which is where the
-# dependencies are now recorded); this file remains as the traditional
-# entry point:
+# The dependencies of the LMFDB website, for a checkout:
 #     sage -pip install -r requirements.txt
-# installs the LMFDB in editable ("develop") mode, together with its
-# dependencies and development tools.
--e .[dev]
+#
+# lmfdb-client (the database connection) is built from this repository and
+# published on PyPI; here it is installed from the checkout in editable mode,
+# so that changes to it take effect immediately.  It brings in psycodict
+# (with its driver).
+-e ./packages/lmfdb-client
+bcrypt
+flask
+flask-login
+markdown
+markupsafe
+mpmath
+pexpect
+pyyaml
+requests
+svg.py
+timeout-decorator
+werkzeug
+# development tools
+pyflakes
+pytest
+pytest-cov
+pytest-xdist

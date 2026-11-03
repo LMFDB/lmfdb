@@ -2,10 +2,9 @@
 Tests for lmfdb.config, the lazy ``lmfdb.db`` object, and the command-line
 entry point.
 
-These tests need neither sage, nor flask, nor a database connection, so
-they run in the regular test suite from a checkout and are also exercised
-against the installed package by the packaging workflow
-(.github/workflows/packaging.yml).
+These tests need neither sage, nor flask, nor a database connection.  The
+configuration and the lazy database object are built on lmfdb-client, which
+has its own tests in packages/lmfdb-client/tests.
 """
 import importlib.util
 import os
@@ -16,15 +15,24 @@ import threading
 
 import pytest
 
+import lmfdb_client.config
 from lmfdb import config as config_mod
-from lmfdb import _lazy_database as lazy_mod
+
+
+def subprocess_env(**env_overrides):
+    # the checkout is importable from any directory
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(
+        [config_mod.root_lmfdb_path] + [p for p in env.get("PYTHONPATH", "").split(os.pathsep) if p]
+    )
+    env.update(env_overrides)
+    return env
 
 
 def run_py(code, cwd=None, **env_overrides):
-    env = dict(os.environ)
-    env.update(env_overrides)
     return subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True, env=env, cwd=cwd
+        [sys.executable, "-c", code], capture_output=True, text=True,
+        env=subprocess_env(**env_overrides), cwd=cwd,
     )
 
 
@@ -34,34 +42,25 @@ class TestFileLocations:
         monkeypatch.setenv("LMFDB_CONFIG", str(target))
         assert config_mod.find_config_file() == str(target)
 
-    def test_home_fallback(self, tmp_path, monkeypatch):
-        # in installed mode (no checkout), files go to the LMFDB home directory
+    def test_lmfdb_home_env(self, tmp_path, monkeypatch):
         monkeypatch.delenv("LMFDB_CONFIG", raising=False)
         monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
-        monkeypatch.setattr(config_mod, "root_lmfdb_path", None)
-        monkeypatch.chdir(tmp_path)  # a directory without a config.ini
         assert config_mod.lmfdb_home() == str(tmp_path)
         assert config_mod.lmfdb_log_dir() == str(tmp_path / "logs")
         assert config_mod.find_config_file() == str(tmp_path / "config.ini")
 
-    def test_cwd_config_used_when_installed(self, tmp_path, monkeypatch):
-        monkeypatch.delenv("LMFDB_CONFIG", raising=False)
-        monkeypatch.setattr(config_mod, "root_lmfdb_path", None)
-        (tmp_path / "config.ini").write_text("")
-        monkeypatch.chdir(tmp_path)
-        assert config_mod.find_config_file() == str(tmp_path / "config.ini")
-
     def test_checkout_ignores_cwd_config(self, tmp_path, monkeypatch):
-        # a checkout keeps its configuration at its root, wherever it is run from
-        if config_mod.root_lmfdb_path is None:
-            pytest.skip("only applies when running from a checkout")
+        # the website keeps its configuration at the root of the checkout,
+        # wherever it is run from
         monkeypatch.delenv("LMFDB_CONFIG", raising=False)
         monkeypatch.delenv("LMFDB_HOME", raising=False)
         (tmp_path / "config.ini").write_text("")
         monkeypatch.chdir(tmp_path)
+        assert config_mod.lmfdb_home() == config_mod.root_lmfdb_path
         assert config_mod.find_config_file() == os.path.join(
             config_mod.root_lmfdb_path, "config.ini"
         )
+        assert os.path.exists(os.path.join(config_mod.root_lmfdb_path, "start-lmfdb.py"))
 
 
 class TestSecretKey:
@@ -135,6 +134,25 @@ class TestConfiguration:
         assert (tmp_path / "secret_key").exists()
         # the TCP keepalives on the database connection survive the defaults
         assert int(conf.options["postgresql"]["keepalives"]) == 1
+
+    def test_extends_client_configuration(self, tmp_path, monkeypatch):
+        # the website's configuration is lmfdb-client's, with the website's
+        # options and defaults added
+        monkeypatch.setenv("LMFDB_CONFIG", str(tmp_path / "config.ini"))
+        monkeypatch.setenv("LMFDB_HOME", str(tmp_path))
+        conf = config_mod.Configuration()
+        assert isinstance(conf, lmfdb_client.config.Configuration)
+        assert conf.postgresql_options["host"] == "devmirror.lmfdb.xyz"
+        assert conf.get_flask()["port"] == 37777
+        logging = conf.get_logging()
+        assert logging["slowcutoff"] == 0.1
+        assert logging["logfile"] == str(tmp_path / "logs" / "flasklog")
+        assert logging["slowlogfile"] == str(tmp_path / "logs" / "slow_queries.log")
+        assert conf.config_file == str(tmp_path / "config.ini")
+        # and lmfdb-client can read the website's configuration file
+        client = lmfdb_client.config.Configuration()
+        assert client.config_file == conf.config_file
+        assert client.postgresql_options == conf.postgresql_options
 
     def test_config_file_option_moves_everything(self, tmp_path, monkeypatch):
         # what lmfdb.cli does: parse the command line into a Configuration,
@@ -265,112 +283,34 @@ class TestLazyDb:
         assert r.returncode == 0, r.stderr
         assert not any(tmp_path.iterdir()), "files were created by import/introspection"
 
-    def test_factory_called_exactly_once(self, monkeypatch):
-        calls = []
-
-        def fake_factory(config=None, **kwargs):
-            calls.append((config, kwargs))
-            return object()
-
-        monkeypatch.setattr(lazy_mod, "_make_database", fake_factory)
-        d = lazy_mod.LazyDatabase()
-        assert not d.connected
-        first = d.connect()
-        second = d.connect()
-        assert first is second
-        assert len(calls) == 1
-        assert d.connected
-
-    def test_factory_called_once_concurrently(self, monkeypatch):
-        barrier = threading.Barrier(8)
-        calls = []
-
-        def fake_factory(config=None, **kwargs):
-            calls.append(1)
-            return object()
-
-        monkeypatch.setattr(lazy_mod, "_make_database", fake_factory)
-        d = lazy_mod.LazyDatabase()
-        results = []
-
-        def worker():
-            barrier.wait()
-            results.append(d.connect())
-
-        threads = [threading.Thread(target=worker) for _ in range(8)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-        assert len(calls) == 1
-        assert len(set(map(id, results))) == 1
-
-    def test_second_connect_with_config_raises(self, monkeypatch):
-        monkeypatch.setattr(lazy_mod, "_make_database", lambda config=None, **k: object())
-        d = lazy_mod.LazyDatabase()
-        d.connect()
-        with pytest.raises(RuntimeError):
-            d.connect(config={"postgresql_options": {}})
-
-    def test_missing_dependency_message(self, tmp_path):
-        # with psycodict missing, importing and introspecting still works;
-        # the first real use gives a single error explaining what to do
-        code = (
-            "import sys\n"
-            "class Blocker:\n"
-            "    def find_spec(self, name, path=None, target=None):\n"
-            "        if name.split('.')[0] == 'psycodict':\n"
-            "            raise ModuleNotFoundError('psycodict blocked for testing', name='psycodict')\n"
-            "sys.meta_path.insert(0, Blocker())\n"
-            "import lmfdb\n"
-            "import pydoc\n"
-            "pydoc.render_doc(lmfdb)\n"
-            "from lmfdb import db\n"
-            "repr(db); bool(db); dir(db)\n"
-            "assert not db.connected\n"
-            "try:\n"
-            "    db.tablenames\n"
-            "except ModuleNotFoundError as e:\n"
-            "    assert 'sage -pip install' in str(e), e\n"
-            "else:\n"
-            "    raise SystemExit('expected a ModuleNotFoundError')\n"
-        )
+    def test_db_objects(self):
+        # lmfdb.db is lmfdb-client's lazy proxy, with the website's database
+        # class (whose configuration is the website's), and the historical
+        # lmfdb.lmfdb_database.db is the same object
+        import lmfdb
+        from lmfdb_client import LazyDatabase
+        assert isinstance(lmfdb.db, LazyDatabase)
+        assert lmfdb.db is not lmfdb_client.db
         r = run_py(
-            code,
-            LMFDB_HOME=str(tmp_path),
-            LMFDB_CONFIG=str(tmp_path / "config.ini"),
+            "import lmfdb, lmfdb.lmfdb_database as d, lmfdb_client.database as c\n"
+            "assert d.db is lmfdb.db\n"
+            "assert issubclass(d.LMFDBDatabase, c.LMFDBDatabase)\n"
+            "assert issubclass(d.LMFDBSearchTable, c.LMFDBSearchTable)\n"
+            "assert d.LMFDBDatabase._search_table_class_ is d.LMFDBSearchTable\n"
+            "from lmfdb.config import Configuration\n"
+            "assert type(d.LMFDBDatabase.default_configuration()) is Configuration\n"
         )
-        assert r.returncode == 0, r.stderr + r.stdout
-
-    def test_unrelated_import_error_not_masked(self, tmp_path):
-        # an import failure that is not a missing database dependency must
-        # propagate untouched rather than being relabeled
-        code = (
-            "import sys\n"
-            "class Blocker:\n"
-            "    def find_spec(self, name, path=None, target=None):\n"
-            "        if name == 'lmfdb.config':\n"
-            "            raise ModuleNotFoundError('broken internal module', name='lmfdb.config')\n"
-            "sys.meta_path.insert(0, Blocker())\n"
-            "from lmfdb import db\n"
-            "try:\n"
-            "    db.tablenames\n"
-            "except ModuleNotFoundError as e:\n"
-            "    assert 'sage -pip install' not in str(e), 'internal error was masked: %s' % e\n"
-            "else:\n"
-            "    raise SystemExit('expected a ModuleNotFoundError')\n"
-        )
-        r = run_py(code)
-        assert r.returncode == 0, r.stderr + r.stdout
+        assert r.returncode == 0, r.stderr
 
 
 class TestCommandLine:
     def test_help_is_fast_and_clean(self, tmp_path):
         # --help is handled before the website (or sage) is imported, and
         # creates no files
-        env = dict(os.environ)
-        env["LMFDB_HOME"] = str(tmp_path / "home")
-        env["LMFDB_CONFIG"] = str(tmp_path / "home" / "config.ini")
+        env = subprocess_env(
+            LMFDB_HOME=str(tmp_path / "home"),
+            LMFDB_CONFIG=str(tmp_path / "home" / "config.ini"),
+        )
         r = subprocess.run(
             [sys.executable, "-m", "lmfdb", "--help"],
             capture_output=True, text=True, env=env, cwd=str(tmp_path),
