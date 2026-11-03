@@ -31,6 +31,7 @@ import markdown
 from lmfdb.logger import logger
 from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error
+from lmfdb.utils.csrf import csrf_token, require_csrf_token
 from lmfdb.knowledge import knowledge_page
 
 
@@ -212,7 +213,8 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl,
+    return {'csrf_token': csrf_token,
+            'Knowl': Knowl,
             'knowl_title': knowl_title,
             'knowl_url_prefix': knowl_url_prefix,
             "KNOWL_EXISTS": knowl_exists,
@@ -632,6 +634,7 @@ def edit_form():
 @knowledge_page.route("/save", methods=["POST"])
 @login_required
 def save_form():
+    require_csrf_token()
     ID = request.form['id']
     if not ID:
         raise Exception("no id")
@@ -706,6 +709,7 @@ def render(ID):
 @knowledge_page.route("/preview/<ID>", methods=["POST"])
 @login_required
 def preview(ID):
+    require_csrf_token()
     return render_knowl(ID, footer=request.form.get('footer', '0'),
                         content=request.form['content'])
 
@@ -735,7 +739,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # fetch and convert the ms timestamp to datetime
         try:
             timestamp = timestamp_in_ms_to_datetime(int(kwargs['timestamp']))
-        except KeyError:
+        except (KeyError, ValueError, OverflowError, OSError):
             pass
 
     if k is None:
@@ -759,9 +763,13 @@ def render_knowl(ID, footer=None, kwargs=None,
     if kwargs:
         permalink += '?' + urlencode(kwargs)
     header_title = Markup(k.title) if k.title else k.id
-    # The names the template sets win over query parameters of the same name;
+    # Flask's explicit template arguments override its context processors.
+    # Reserve their names and Jinja globals before adding query parameters.
     # "source" is render_template_string's own argument, so it cannot be passed.
-    context = {key: val for key, val in kwargs.items() if key != 'source'}
+    context = {}
+    app.update_template_context(context)
+    reserved = context.keys() | app.jinja_env.globals.keys() | {'source'}
+    context.update({key: val for key, val in kwargs.items() if key not in reserved})
     context.update(k=k, knowl_permalink=permalink, knowl_header_title=header_title)
 
     # this is a very simple template based on no other template to render one single Knowl
