@@ -20,9 +20,9 @@ from .isog_class import validate_label, AbvarFq_isoclass
 from .stats import AbvarFqStats
 from lmfdb.number_fields.web_number_field import nf_display_knowl, field_pretty
 from lmfdb.utils import redirect_no_cache
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, CheckCol, CheckMaybeCol
+from lmfdb_utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, ProcessedCol, CheckCol, CheckMaybeCol
 from lmfdb.abvar.fq.download import AbvarFq_download
-from lmfdb.utils.search_parsing import parse_primes
+from lmfdb_utils.search_parsing import parse_primes
 
 #########################
 #    Top level

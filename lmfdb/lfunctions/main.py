@@ -43,7 +43,7 @@ from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.classical_modular_forms.web_newform import convert_newformlabel_from_conrey
 from lmfdb.classical_modular_forms.main import set_Trn, process_an_constraints
 from lmfdb.artin_representations.main import parse_artin_label
-from lmfdb.utils.search_parsing import (
+from lmfdb_utils.search_parsing import (
     parse_bool, parse_ints, parse_ints_to_list, parse_floats, parse_noop, parse_mod1,
     parse_element_of, parse_not_element_of, search_parser)
 from lmfdb.utils import (
@@ -55,7 +55,7 @@ from lmfdb.utils import (
     SubsetBox, TextBoxWithSelect, RowSpacer, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.names_and_urls import names_and_urls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
+from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from psycodict.utils import SearchParsingError
 from lmfdb.app import is_debug_mode, _single_knowl

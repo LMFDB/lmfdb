@@ -1,4 +1,12 @@
 
+"""
+The utilities used throughout the LMFDB website.
+
+Most of them come from lmfdb-utils (packages/lmfdb-utils), which other
+websites can use too; they are re-exported here together with the ones
+specific to the LMFDB, so that ``from lmfdb.utils import ...`` gives both.
+"""
+
 # make pyflakes happy, define interface for import *
 __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'send_file', 'list_to_factored_poly_otherorder', 'prop_int_pretty',
@@ -57,7 +65,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
 from flask import (request, make_response, flash, url_for,
                    render_template, send_file)
 
-from .utilities import (
+from lmfdb_utils.utilities import (
     integer_divisors,
     integer_prime_divisors,
     integer_squarefree_part,
@@ -107,7 +115,7 @@ from .graph_utils import (
     GRAPH_LAYOUTS,
 )
 
-from .web_display import (
+from lmfdb_utils.web_display import (
     add_space_if_positive,
     bigint_knowl,
     bigpoly_knowl,
@@ -141,35 +149,35 @@ from .web_display import (
     web_latex_split_on_re,
 )
 
-from .search_parsing import (
-    parse_ints, parse_signed_ints, parse_posints,
-    parse_floats, parse_mod1, parse_rational, parse_padicsubfields,
-    parse_rational_to_list, parse_padicfields, parse_rats, parse_inertia,
-    parse_bracketed_posints, parse_bracketed_rats, parse_bool,
-    parse_bool_unknown, parse_primes, parse_kerpol_string,
-    parse_element_of, parse_not_element_of, parse_subset, parse_submultiset, parse_list,
-    parse_list_start, parse_string_start, parse_restricted,
-    parse_regex_restricted, parse_noop, parse_group_label_or_order,
-    parse_equality_constraints, parse_gap_id, parse_galgrp, parse_nf_string, parse_newton_polygon,
-    parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, parse_count, parse_start,
-    parse_ints_to_list_flash, integer_options, nf_string_to_label,
-    parse_subfield, parse_interval,
-    unparse_range,
-    clean_input, prep_ranges, input_string_to_poly)
+from lmfdb_utils.search_parsing import (
+    parse_ints, parse_signed_ints, parse_posints, parse_floats, parse_mod1,
+    parse_rational, parse_rational_to_list, parse_rats, parse_bracketed_posints,
+    parse_bracketed_rats, parse_bool, parse_bool_unknown, parse_primes,
+    parse_element_of, parse_not_element_of, parse_subset, parse_submultiset,
+    parse_list, parse_list_start, parse_string_start, parse_restricted,
+    parse_regex_restricted, parse_noop, parse_equality_constraints,
+    parse_newton_polygon, parse_count, parse_start, parse_ints_to_list_flash,
+    integer_options, parse_interval, unparse_range, clean_input, prep_ranges)
+from .lmfdb_search_parsing import (
+    parse_padicsubfields, parse_padicfields, parse_inertia, parse_kerpol_string,
+    parse_group_label_or_order, parse_gap_id, parse_galgrp, parse_nf_string,
+    parse_nf_elt, parse_nf_jinv, parse_container, parse_hmf_weight, nf_string_to_label,
+    parse_subfield, input_string_to_poly)
 
-from .search_wrapper import search_wrap, count_wrap, embed_wrap, yield_wrap
-from .search_boxes import (
+from lmfdb_utils.search_wrapper import search_wrap, count_wrap, embed_wrap, yield_wrap
+from lmfdb_utils.search_boxes import (
     SearchArray, EmbeddedSearchArray, TextBox, TextBoxNoEg, TextBoxWithSelect, BasicSpacer,
     SkipBox, CheckBox, CheckboxSpacer, DoubleSelectBox, HiddenBox,
     SelectBox, YesNoBox, YesNoMaybeBox, ExcludeOnlyBox,
     ParityBox, ParityMod, SubsetBox, SubsetNoExcludeBox, SelectBoxNoEg, CountBox,
     SneakyTextBox, SneakySelectBox,
     SearchButton, SearchButtonWithSelect, RowSpacer)
-from .downloader import Downloader, send_file_from_beta
-from .display_stats import formatters, proportioners, totaler, StatsDisplay
+from lmfdb_utils.downloader import Downloader
+from .beta import send_file_from_beta
+from lmfdb_utils.display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url
 from .trace_hash import TraceHash, TraceHashClass
-from .random_wrap import redirect_no_cache
-from .place_code import CodeSnippet
-from .datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from lmfdb_utils.random_wrap import redirect_no_cache
+from lmfdb_utils.place_code import CodeSnippet
+from lmfdb_utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime

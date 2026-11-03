@@ -57,11 +57,13 @@ Installation
    sage -pip install -r requirements.txt
    ```
 
-   This installs the dependencies and development tools, together with
+   This installs the dependencies and development tools, together with the
+   two packages that are built from this repository and published on PyPI:
    `lmfdb-client` (in `packages/lmfdb-client`: the connection to the
-   database), which is built from this repository and published on PyPI.
-   It is installed in editable mode, i.e. pointing at your checkout, so
-   that your changes to it take effect immediately.  The website itself is not
+   database) and `lmfdb-utils` (in `packages/lmfdb-utils`: search forms,
+   results, downloads and statistics, shared with other websites).  They are
+   installed in editable mode, i.e. pointing at your checkout, so that your
+   changes to them take effect immediately.  The website itself is not
    installed: run it from the root of the checkout.  Importing `lmfdb` does
    not connect to the database; the connection is established the first
    time `lmfdb.db` is used.

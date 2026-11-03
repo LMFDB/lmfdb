@@ -1,11 +1,11 @@
-# Packaging checks for lmfdb-client, the package built from packages/ and
-# published on PyPI (publish.yml publishes them).  On every
+# Packaging checks for lmfdb-client and lmfdb-utils, the packages built from
+# packages/ and published on PyPI (publish.yml publishes them).  On every
 # push and pull request: build each sdist and wheel, check their metadata and
 # contents, install the wheel into a clean virtual environment -- without
 # sage -- and run the package's tests against the installed wheel.  The
-# lmfdb-client tests connect to devmirror.lmfdb.xyz (the LMFDB's own test
-# suite runs them under sage too).  Needs no secrets, so it also runs on
-# forks.
+# lmfdb-client tests connect to devmirror.lmfdb.xyz; without sage only the
+# sage-free part of lmfdb-utils is tested (the LMFDB's own test suite tests
+# both packages under sage).  Needs no secrets, so it also runs on forks.
 name: Packaging
 
 on:
@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [lmfdb-client]
+        package: [lmfdb-client, lmfdb-utils]
     name: ${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4

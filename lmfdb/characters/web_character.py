@@ -52,7 +52,7 @@ from sage.all import (gcd, ZZ, Rational, Integers, cached_method,
 from sage.misc.lazy_attribute import lazy_attribute
 from lmfdb import db
 from lmfdb.utils import prop_int_pretty
-from lmfdb.utils.utilities import num2letters
+from lmfdb_utils.utilities import num2letters
 from lmfdb.number_fields.web_number_field import WebNumberField, formatfield, nf_display_knowl
 from lmfdb.characters.TinyConrey import (ConreyCharacter, kronecker_symbol,
                 symbol_numerator, PariConreyGroup, get_sage_genvalues)

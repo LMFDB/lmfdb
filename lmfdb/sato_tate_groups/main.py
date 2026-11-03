@@ -10,9 +10,9 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, CountBox, YesNoBox, Downloader,
     StatsDisplay, totaler, proportioners, prop_int_pretty,
     parse_ints, parse_rational, parse_bool, clean_input, redirect_no_cache)
-from lmfdb.utils.search_parsing import search_parser
+from lmfdb_utils.search_parsing import search_parser
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, RationalCol
+from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, ProcessedCol, RationalCol
 from lmfdb.api import datapage
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.sato_tate_groups import st_page

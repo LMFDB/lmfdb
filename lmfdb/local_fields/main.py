@@ -21,12 +21,12 @@ from lmfdb.utils import (
     search_wrap, count_wrap, embed_wrap, Downloader, StatsDisplay, totaler, proportioners, encode_plot,
     EmbeddedSearchArray, integer_options,
     redirect_no_cache, raw_typeset)
-from lmfdb.utils.place_code import CodeSnippet
+from lmfdb_utils.place_code import CodeSnippet
 from psycodict.utils import SearchParsingError, range_formatter
-from lmfdb.utils.display_stats import NO_SEARCH_QUERY
+from lmfdb_utils.display_stats import NO_SEARCH_QUERY
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
-from lmfdb.utils.search_parsing import QQ_DEC_RE, QQ_RE, search_parser
+from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, MultiProcessedCol, RationalListCol, PolynomialCol, eval_rational_list
+from lmfdb_utils.search_parsing import QQ_DEC_RE, QQ_RE, search_parser
 from lmfdb.api import datapage
 from lmfdb.logger import logger
 from lmfdb.local_fields import local_fields_page

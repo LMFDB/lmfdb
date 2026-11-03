@@ -302,6 +302,14 @@ class TestLazyDb:
         )
         assert r.returncode == 0, r.stderr
 
+    def test_site_installed(self):
+        # importing lmfdb describes the LMFDB to lmfdb-utils
+        import lmfdb
+        from lmfdb.site import LMFDBSite
+        from lmfdb_utils.site import current_site
+        assert lmfdb
+        assert isinstance(current_site(), LMFDBSite)
+
 
 class TestCommandLine:
     def test_help_is_fast_and_clean(self, tmp_path):

@@ -8,6 +8,12 @@ instead (``from lmfdb_client import db``), which works without Sage.
 """
 
 from lmfdb_client import LazyDatabase
+from lmfdb_utils.site import set_current_site
+
+from .site import LMFDBSite
+
+# Describe the LMFDB to lmfdb-utils (knowls, completeness, ...)
+set_current_site(LMFDBSite())
 
 
 def _make_database(config=None, **kwargs):

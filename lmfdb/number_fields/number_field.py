@@ -17,10 +17,10 @@ from lmfdb.utils import (
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
     raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache)
-from lmfdb.utils.search_wrapper import multi_entry_jump_search
-from lmfdb.utils.web_display import compress_int
+from lmfdb_utils.search_wrapper import multi_entry_jump_search
+from lmfdb_utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
+from lmfdb_utils.search_columns import SearchColumns, SearchCol, CheckCol, MathCol, ProcessedCol, MultiProcessedCol, CheckMaybeCol, PolynomialCol
 from lmfdb.api import datapage
 from lmfdb.galois_groups.transitive_group import (
     cclasses_display_knowl,character_table_display_knowl,

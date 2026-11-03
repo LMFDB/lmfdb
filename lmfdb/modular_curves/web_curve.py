@@ -5,7 +5,7 @@ from flask import url_for
 
 from sage.all import lazy_attribute, prod, euler_phi, ZZ, QQ, latex, PolynomialRing, lcm, NumberField
 from lmfdb.utils import WebObj, integer_prime_divisors, teXify_pol, web_latex, pluralize, display_knowl, raw_typeset, prop_int_pretty
-from lmfdb.utils.web_display import compress_multipolynomial
+from lmfdb_utils.web_display import compress_multipolynomial
 from lmfdb import db
 from lmfdb.classical_modular_forms.main import url_for_label as url_for_mf_label
 from lmfdb.elliptic_curves.elliptic_curve import url_for_label as url_for_EC_label

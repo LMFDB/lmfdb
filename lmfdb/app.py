@@ -561,7 +561,7 @@ def add_colors():
     #       - from the config file
     # - remove cookie at logout (see line 307 of users/main)
     # - add cookie at login or when a color change happens (see line 175 of users/main)
-    from .utils.color import all_color_schemes
+    from lmfdb_utils.color import all_color_schemes
     color = request.args.get('color')
     if color and color.isdigit():
         color = int(color)

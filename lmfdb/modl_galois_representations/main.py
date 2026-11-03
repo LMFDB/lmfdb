@@ -35,7 +35,7 @@ from lmfdb.utils import (
     Downloader,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import (
+from lmfdb_utils.search_columns import (
     SearchColumns, MathCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol, RationalCol,
 )
 from lmfdb.api import datapage

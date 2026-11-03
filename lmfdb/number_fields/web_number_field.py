@@ -14,7 +14,7 @@ from lmfdb.utils import (web_latex, coeff_to_poly,
         raw_typeset_poly, display_multiset, factor_base_factor,
         integer_squarefree_part, integer_is_squarefree,
         factor_base_factorization_latex)
-from lmfdb.utils.web_display import compress_int
+from lmfdb_utils.web_display import compress_int
 from lmfdb.galois_groups.transitive_group import WebGaloisGroup, transitive_group_display_knowl, galois_module_knowl, group_pretty_and_nTj
 from lmfdb.number_fields.draw_spectrum import draw_spec, draw_gaga
 

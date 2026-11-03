@@ -1,8 +1,5 @@
-from lmfdb.utils.search_parsing import (
-    search_parser,
-    nf_string_to_label,
-    _parse_subset,
-)
+from lmfdb_utils.search_parsing import search_parser, _parse_subset
+from lmfdb.utils.lmfdb_search_parsing import nf_string_to_label
 
 
 @search_parser  # see SearchParser.__call__ for actual arguments when calling

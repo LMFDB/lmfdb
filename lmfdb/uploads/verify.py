@@ -7,7 +7,7 @@ This script is used to perform additional verification on uploads before review 
 import os
 import sys
 import tempfile
-from lmfdb.utils.datetime_utils import utc_now_naive
+from lmfdb_utils.datetime_utils import utc_now_naive
 here = os.path.dirname(os.path.abspath(__file__))
 upone, _ = os.path.split(here)
 uptwo, _ = os.path.split(upone)

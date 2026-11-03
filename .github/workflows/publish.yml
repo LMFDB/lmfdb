@@ -1,4 +1,4 @@
-# Build lmfdb-client (see packages/) and publish it to PyPI.
+# Build lmfdb-client or lmfdb-utils (see packages/) and publish it to PyPI.
 #
 # Triggers:
 #  - pushing a tag <package>-v<version> (e.g. lmfdb-client-v0.1.0) publishes
@@ -8,8 +8,8 @@
 #    package to TestPyPI, as a dry run.
 #
 # Before this can succeed, one-time setup is needed for each package:
-#  - a "Trusted Publisher" must be configured for the lmfdb-client
-#    project on https://pypi.org (and https://test.pypi.org),
+#  - a "Trusted Publisher" must be configured for the lmfdb-client and
+#    lmfdb-utils projects on https://pypi.org (and https://test.pypi.org),
 #    pointing at this repository, this workflow file (publish.yml) and the
 #    environment names below (no API tokens are needed with trusted
 #    publishing);
@@ -24,14 +24,14 @@ name: Publish to PyPI
 
 on:
   push:
-    tags: ["lmfdb-client-v*"]
+    tags: ["lmfdb-client-v*", "lmfdb-utils-v*"]
   workflow_dispatch:
     inputs:
       package:
         description: "Package to publish to TestPyPI"
         required: true
         type: choice
-        options: [lmfdb-client]
+        options: [lmfdb-client, lmfdb-utils]
 
 jobs:
   build:

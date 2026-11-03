@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
-from lmfdb.utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
+from lmfdb_utils.datetime_utils import utc_now_naive, ensure_naive_utc, datetime_to_timestamp_in_ms
 import re
 import subprocess
 import time
@@ -1069,7 +1069,7 @@ def external_definition_link(site, xid):
 def knowl_definition(title,
                      clarification_kid=None,
                      kwargs={}):
-    from lmfdb.utils.web_display import display_knowl
+    from lmfdb_utils.web_display import display_knowl
     if clarification_kid is None:
         if not kwargs:
             return f"<strong>{title}</strong>"

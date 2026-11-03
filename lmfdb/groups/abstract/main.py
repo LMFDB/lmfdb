@@ -49,9 +49,9 @@ from lmfdb.utils import (
     redirect_no_cache,
     CodeSnippet,
 )
-from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors, SearchParsingError)
+from lmfdb_utils.search_parsing import (parse_multiset, search_parser, collapse_ors, SearchParsingError)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
+from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page
 from .web_groups import (

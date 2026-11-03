@@ -12,7 +12,7 @@ from psycodict.base import PostgresBase
 from psycodict.encoding import Array
 from lmfdb.utils.psycopg_compat import SQL, Identifier, Placeholder
 from datetime import timedelta
-from lmfdb.utils.datetime_utils import utc_now_naive
+from lmfdb_utils.datetime_utils import utc_now_naive
 from lmfdb.logger import logger
 
 # Read about flask-login if you are unfamiliar with this UserMixin/Login

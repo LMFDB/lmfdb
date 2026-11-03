@@ -1,5 +1,4 @@
 import re
-from flask import url_for
 from urllib.parse import urlencode
 from markupsafe import escape
 from sage.all import (
@@ -12,7 +11,8 @@ from sage.all import (
     TermOrder,
     matrix
 )
-from . import coeff_to_poly
+from .site import current_site
+from .utilities import coeff_to_poly
 ################################################################################
 #  latex/math rendering utilities
 ################################################################################
@@ -68,19 +68,18 @@ def display_knowl(kid, title=None, kwargs={}, strong=False):
     the only difference with the KNOWL macro is that
     there will be no edit link for authenticated users.
     """
-    from lmfdb.knowledge.knowl import knowl_title
-    from flask_login import current_user
-    from lmfdb.users.pwdmanager import userdb
-    ktitle = knowl_title(kid)
+    site = current_site()
+    ktitle = site.knowl_title(kid)
     if ktitle is None:
         # Knowl not found
-        if current_user.is_authenticated and userdb.can_read_write_userdb():
+        create_url = site.knowl_create_url(kid)
+        if create_url is not None:
             if title is None:
-                return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
+                return f"""<span class="knowl knowl-error">'{kid}'<a href="{ create_url }">Create it</a>. </span>"""
             else:
                 if strong:
                     title = f"<strong>{title}</strong>"
-                return f"""<a href="{ url_for('knowledge.edit', ID=kid) }"><span class="knowl knowl-error">{title}</span></a>"""
+                return f"""<a href="{ create_url }"><span class="knowl knowl-error">{title}</span></a>"""
         elif title is None:
             return f"""<span class="knowl knowl-error">'{kid}'</span>"""
         else:

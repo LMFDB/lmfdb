@@ -9,7 +9,7 @@ from markupsafe import escape
 from lmfdb.tests import LmfdbTest
 from lmfdb.knowledge import knowl as knowl_module
 from lmfdb.knowledge.knowl import Knowl, knowldb
-from lmfdb.utils.datetime_utils import utc_now_naive
+from lmfdb_utils.datetime_utils import utc_now_naive
 
 class DynamicKnowlTest(LmfdbTest):
     """

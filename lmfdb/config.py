@@ -256,7 +256,7 @@ class Configuration(_ClientConfiguration):
             "--color",
             dest="core_color",
             metavar="COLOR",
-            help="color template (see lmfdb/utils/color.py)",
+            help="color template (see packages/lmfdb-utils/lmfdb_utils/color.py)",
             default=19,
             type=int,
         )

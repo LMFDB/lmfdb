@@ -1,5 +1,5 @@
 """
-This file defines two kinds of classes used in constructing download files for the LMFDB:
+This file defines two kinds of classes used in constructing download files:
 
 * ``DownloadLanguage``, representing languages such as Sage and Magma
 * ``Downloader``, provides utility functions for downloading both search results and a single object.
@@ -17,7 +17,7 @@ import itertools
 import csv
 import io
 
-from flask import abort, send_file, stream_with_context, Response, request, redirect, url_for
+from flask import abort, send_file, stream_with_context, Response, redirect, request
 from urllib.parse import urlparse, urlunparse
 
 from werkzeug.datastructures import Headers
@@ -25,26 +25,10 @@ from ast import literal_eval
 from io import BytesIO
 from sage.all import Integer, Rational, lazy_attribute
 
-from lmfdb.utils import plural_form, pluralize, flash_error
-from lmfdb.utils.datetime_utils import utc_now_naive
-
-def send_file_from_beta(filepath, line_matcher, **kwds):
-    """
-    If running on beta.lmfdb.org, return the file as an attachment (potentially filtering lines).  Otherwise, return a redirect to the current URL on beta.
-    """
-    urlparts = urlparse(request.url)
-    if urlparts.netloc != "beta.lmfdb.org":
-        replaced = urlparts._replace(netloc="beta.lmfdb.org", scheme="https")
-        return redirect(urlunparse(replaced), code=301)
-    if line_matcher is None:
-        return send_file(filepath, **kwds)
-    bIO = BytesIO()
-    with open(filepath) as F:
-        for i, line in enumerate(F):
-            if line_matcher(i, line):
-                bIO.write(line.encode('utf-8'))
-    bIO.seek(0)
-    return send_file(bIO, **kwds)
+from .datetime_utils import utc_now_naive
+from .search_columns import PolynomialCol
+from .site import current_site
+from .utilities import plural_form, pluralize, flash_error
 
 class DownloadLanguage():
     # We choose the most common values; override these if needed in each subclass
@@ -255,7 +239,6 @@ class MagmaLanguage(DownloadLanguage):
         return "[", "]"
 
     def initialize(self, cols, downloader):
-        from lmfdb.number_fields.number_field import PolynomialCol
         column_names = [(col.name if col.download_col is None else col.download_col) for col in cols]
         for var, (require, bylang) in downloader.inclusions.items():
             if "magma" in bylang and all(col in column_names for col in require):
@@ -279,7 +262,6 @@ class SageLanguage(DownloadLanguage):
     function_end = ''
 
     def initialize(self, cols, downloader):
-        from lmfdb.number_fields.number_field import PolynomialCol
         if any(isinstance(c, PolynomialCol) for c in cols):
             return '\nZZx.<x> = ZZ[]\n\n'
         else:
@@ -336,7 +318,6 @@ class OscarLanguage(DownloadLanguage):
         return "%s//%s" % (inp.numerator(), inp.denominator())
 
     def initialize(self, cols, downloader):
-        from lmfdb.number_fields.number_field import PolynomialCol
         if any(isinstance(c, PolynomialCol) for c in cols):
             return '\nZZx,x = polynomial_ring(QQ)\n\n'
         else:
@@ -402,9 +383,10 @@ class CSVLanguage(DownloadLanguage):
         out = []
         for col, name in zip(columns, column_names):
             # Make hyperlink of column name, if col.knowl exists
-            if getattr(col, "knowl", None):
+            path = current_site().knowl_url(col.knowl) if getattr(col, "knowl", None) else None
+            if path is not None:
                 url = urlunparse(urlparts._replace(
-                    path=url_for("knowledge.show", ID=col.knowl),
+                    path=path,
                     params="",
                     query="",
                     fragment=""
@@ -546,7 +528,7 @@ class Downloader():
         filename = filebase + lang.file_suffix
         mydate = time.strftime("%d %B %Y")
         s = '\n'
-        s += lang.comment(' %s downloaded from the LMFDB on %s.\n' % (title, mydate))
+        s += lang.comment(' %s downloaded from the %s on %s.\n' % (title, current_site().name, mydate))
         s += result
         bIO = BytesIO()
         bIO.write(s.encode('utf-8'))
@@ -580,7 +562,7 @@ class Downloader():
 
         @stream_with_context
         def _generator():
-            yield lang.comment('\n %s downloaded from the LMFDB on %s.\n' % (title, mydate))
+            yield lang.comment('\n %s downloaded from the %s on %s.\n' % (title, current_site().name, mydate))
             # Rather than just doing `yield from generator`, we need to buffer
             # since otherwise the response is inefficiently broken up into tiny chunks
             # causing the download to slow.
@@ -704,7 +686,7 @@ class Downloader():
         self.search_array = info.get("search_array")
         filename = self.filebase
         ts = utc_now_naive().strftime("%m%d_%H%M")
-        filename = f"lmfdb_{filename}_{ts}"
+        filename = f"{current_site().download_prefix}_{filename}_{ts}"
         urlparts = urlparse(request.url)
         pieces = urlparts.query.split("&")
         # We omit the download-specific parts that were added in lmfdb/templates/download_search_results.html
@@ -794,7 +776,7 @@ class Downloader():
             if size_estimate > 100 * 1024**2: # 100MB
                 # We need to delete the data iterator, otherwise it will try to go through all of the records when another connection to the database is opened.
                 del data
-                raise ValueError("Download file too large.  You can try either using the API or directly connecting to the LMFDB's PostgreSQL database")
+                raise ValueError("Download file too large.  You can try either using the API or directly connecting to the %s's PostgreSQL database" % current_site().name)
         #print("FIRST FIFTY", first50)
 
         # Create a generator that produces the lines of the download file
@@ -841,8 +823,7 @@ class Downloader():
 
             # We do some global preprocessing to get access to knowls that define the columns
             if any(col.download_desc is None for col in cols):
-                from lmfdb.knowledge.knowl import knowldb
-                all_knowls = {rec["id"]: (rec["title"], rec["content"]) for rec in knowldb.get_all_knowls(fields=["id", "title", "content"])}
+                all_knowls = current_site().all_knowls()
                 knowl_re = re.compile(r"""\{\{\s*KNOWL\(\s*["'](?:[^"']+)["'],\s*(?:title\s*=\s*)?['"]([^"']+)['"]\s*\)\s*\}\}""")
                 defines_re = re.compile(r"""\{\{\s*DEFINES\(\s*"([^"]+)"[^)]*\)\s*\}\}""")
                 jinja_comment_re = re.compile(r"""\{#.*?#\}""")
