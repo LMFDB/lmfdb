@@ -1677,6 +1677,10 @@ div.maassformplot img {
     color: {{color.col_sidebar_links}};
 }
 
+#sidebar .collapsible-title {
+    padding: 2px 0;
+}
+
 #sidebar .collapsible-chevron {
     flex-shrink: 0;
     cursor: pointer;

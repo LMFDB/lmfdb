@@ -45,6 +45,7 @@
     {% endif %}
 
     <form action="{{ url_for('.save_form') }}" method="POST" id=>
+      <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}"/>
       <input type="hidden" name="id" value="{{ k.id }}"/>
       <table>
         {% if renaming_this_to_other %}
@@ -193,7 +194,7 @@
 
 <script type="text/javascript" src="{{ url_for('static', filename='knowl_edit.js') }}"></script>
 <script type="text/javascript">
-var render_url = "{{ url_for('.render', ID=k.id)}}";
+var render_url = "{{ url_for('.preview', ID=k.id)}}";
 /* edit history */
 var edit_history = {
   {% for version in k.edit_history %}

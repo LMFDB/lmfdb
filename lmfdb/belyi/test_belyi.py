@@ -1,4 +1,9 @@
+from collections import defaultdict
+from unittest.mock import patch
+
 from lmfdb.tests import LmfdbTest
+from lmfdb import db
+from lmfdb.belyi import web_belyi
 
 
 class BelyiTest(LmfdbTest):
@@ -11,6 +16,85 @@ class BelyiTest(LmfdbTest):
 
     def test_by_galmap_label(self):
         self.check_args("/Belyi/6T15-5.1_4.2_4.2-b", "A_6")
+
+    # dessin images (#7026)
+
+    def test_dessin_table_matches_galmaps(self):
+        # each row must name a real galmap and carry exactly one SVG per
+        # embedding, because the template indexes the list by embedding
+        # position with no fallback
+        triples = {}
+        orbit = {}
+        for galmap in db.belyi_galmaps.search({}, projection=["label", "plabel", "triples_cyc"]):
+            triples[galmap["label"]] = galmap["triples_cyc"]
+            orbit[galmap["label"]] = galmap["plabel"]
+
+        unknown = []
+        mismatches = []
+        by_passport = defaultdict(dict)
+        n_rows = 0
+        for row in db.belyi_galmap_dessins.search({}, projection=["label", "dessins"]):
+            n_rows += 1
+            label = row["label"]
+            if label not in triples:
+                unknown.append(label)
+                continue
+            if len(row["dessins"]) != len(triples[label]):
+                mismatches.append((label, len(row["dessins"]), len(triples[label])))
+            by_passport[orbit[label]][label] = row["dessins"]
+        assert not unknown, unknown
+        assert not mismatches, mismatches
+        assert n_rows > 1000, n_rows
+
+        # #7026: orbits sharing a passport must not share dessins
+        checked_pairs = 0
+        for plabel, dessins in by_passport.items():
+            labels = sorted(dessins)
+            for i in range(len(labels)):
+                for j in range(i + 1, len(labels)):
+                    a, b = labels[i], labels[j]
+                    assert dessins[a] != dessins[b], "orbits {} and {} of passport {} share dessins".format(a, b, plabel)
+                    checked_pairs += 1
+        assert checked_pairs > 50, checked_pairs
+
+    def test_dessin_differs_between_orbits_7026(self):
+        # before #7189 both orbits of this passport rendered the same dessin
+        def dessin(path):
+            page = self.tc.get(path, follow_redirects=True).get_data(as_text=True)
+            marker = 'id="dessin-svg-0"'
+            start = page.index(marker) + len(marker)
+            return page[start:page.index("</div>", start)]
+
+        a = dessin("/Belyi/9T23/6.2.1/6.2.1/6.2.1/a/")
+        b = dessin("/Belyi/9T23/6.2.1/6.2.1/6.2.1/b/")
+        assert a and "<svg" in a
+        assert b and "<svg" in b
+        assert a != b
+
+    def check_galmap_page_without_dessins(self):
+        response = self.tc.get("/Belyi/9T23/6.2.1/6.2.1/6.2.1/a/")
+        page = response.get_data(as_text=True)
+        assert response.status_code == 200
+        assert "(1,5,9,3,2,4)(6,7)" in page and "(1,3)(2,7,4,5,6,9)" in page
+        assert 'id="dessin-svg-0"' not in page
+
+    def test_dessin_count_mismatch_hides_dessins(self):
+        # this galmap has two embeddings
+        with patch.object(web_belyi, "get_belyi_images", return_value=["<svg></svg>"]):
+            self.check_galmap_page_without_dessins()
+
+    def test_dessins_without_dessin_table(self):
+        # a database that predates belyi_galmap_dessins, such as a developer snapshot
+        class NoDessinTable:
+            tablenames = [t for t in db.tablenames if t != "belyi_galmap_dessins"]
+
+            def __getattr__(self, name):
+                if name == "belyi_galmap_dessins":
+                    raise AttributeError(name)
+                return getattr(db, name)
+
+        with patch.object(web_belyi, "db", NoDessinTable()):
+            self.check_galmap_page_without_dessins()
 
     def test_passport_label(self):
         self.check_args("/Belyi/5T4-5_3.1.1_3.1.1-a", "5T4-5_3.1.1_3.1.1")

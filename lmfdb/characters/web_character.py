@@ -1224,7 +1224,7 @@ class WebDBDirichletOrbit(WebChar, WebDBDirichlet):
         code["character_init"]["comment"] = code["character_init"]["comment"].replace("character", "character orbit")
         for lang in code["character_init"]:
             if lang != "comment":
-                code["character_init"][lang] += code["galois_orbit"][lang] + "\n"
+                code["character_init"][lang] += code["galois_orbit"][lang]
         return code
 
 
