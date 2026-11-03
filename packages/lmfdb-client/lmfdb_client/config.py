@@ -26,6 +26,20 @@ import os
 
 from psycodict.config import Configuration as _Configuration
 
+# The default connection: read-only, to the LMFDB's public mirror, with TCP
+# keepalives (see Configuration.add_postgresql_arguments)
+POSTGRESQL_DEFAULTS = {
+    "host": "devmirror.lmfdb.xyz",
+    "port": 5432,
+    "user": "lmfdb",
+    "password": "lmfdb",
+    "dbname": "lmfdb",
+    "keepalives": 1,
+    "keepalives_idle": 30,
+    "keepalives_interval": 10,
+    "keepalives_count": 5,
+}
+
 
 def lmfdb_home():
     """
@@ -200,7 +214,7 @@ class Configuration(_Configuration):
             dest="postgresql_host",
             metavar="HOST",
             help="PostgreSQL server host or socket directory [default: %(default)s]",
-            default="devmirror.lmfdb.xyz",
+            default=POSTGRESQL_DEFAULTS["host"],
         )
         group.add_argument(
             "--postgresql-port",
@@ -208,28 +222,28 @@ class Configuration(_Configuration):
             metavar="PORT",
             type=int,
             help="PostgreSQL server port [default: %(default)d]",
-            default=5432,
+            default=POSTGRESQL_DEFAULTS["port"],
         )
         group.add_argument(
             "--postgresql-user",
             dest="postgresql_user",
             metavar="USER",
             help="PostgreSQL username [default: %(default)s]",
-            default="lmfdb",
+            default=POSTGRESQL_DEFAULTS["user"],
         )
         group.add_argument(
             "--postgresql-pass",
             dest="postgresql_password",
             metavar="PASS",
             help="PostgreSQL password [default: %(default)s]",
-            default="lmfdb",
+            default=POSTGRESQL_DEFAULTS["password"],
         )
         group.add_argument(
             "--postgresql-dbname",
             dest="postgresql_dbname",
             metavar="DBNAME",
             help="PostgreSQL database name [default: %(default)s]",
-            default="lmfdb",
+            default=POSTGRESQL_DEFAULTS["dbname"],
         )
 
         # TCP keepalives on the database connection.  LMFDB usually talks to a
@@ -250,7 +264,7 @@ class Configuration(_Configuration):
             metavar="0|1",
             type=int,
             help="use TCP keepalives on the database connection, 0 to disable [default: %(default)s]",
-            default=1,
+            default=POSTGRESQL_DEFAULTS["keepalives"],
         )
         group.add_argument(
             "--postgresql-keepalives-idle",
@@ -258,7 +272,7 @@ class Configuration(_Configuration):
             metavar="SECONDS",
             type=int,
             help="idle time before the first keepalive probe is sent [default: %(default)s]",
-            default=30,
+            default=POSTGRESQL_DEFAULTS["keepalives_idle"],
         )
         group.add_argument(
             "--postgresql-keepalives-interval",
@@ -266,7 +280,7 @@ class Configuration(_Configuration):
             metavar="SECONDS",
             type=int,
             help="time between keepalive probes [default: %(default)s]",
-            default=10,
+            default=POSTGRESQL_DEFAULTS["keepalives_interval"],
         )
         group.add_argument(
             "--postgresql-keepalives-count",
@@ -274,7 +288,7 @@ class Configuration(_Configuration):
             metavar="N",
             type=int,
             help="unanswered keepalive probes before the connection is dropped [default: %(default)s]",
-            default=5,
+            default=POSTGRESQL_DEFAULTS["keepalives_count"],
         )
 
     def get_all(self):
@@ -292,16 +306,33 @@ class Configuration(_Configuration):
 
 class ConfigWrapper:
     """
-    A wrapper class that provides the same interface as Configuration
-    but is initialized from a dictionary of options.
+    A configuration given by a dictionary rather than read from files.
+
+    The dictionary can have the keys
+
+    - ``postgresql_options`` -- the connection parameters (``host``,
+      ``port``, ``user``, ``password``, ``dbname``, and any other parameter
+      of ``psycopg.connect``); missing ones take the values in
+      :data:`POSTGRESQL_DEFAULTS`
+    - ``logging_options`` -- ``editor`` (the editor's LMFDB username),
+      ``slowcutoff`` (in seconds; by default nothing is slow) and
+      ``slowlogfile`` (by default slow queries are only printed)
+    - ``flask_options`` -- used by the LMFDB website
     """
     def __init__(self, config_dict):
-        # Set default values and update with provided config
-        self.postgresql_options = config_dict.get('postgresql_options', {})
+        self.postgresql_options = dict(POSTGRESQL_DEFAULTS)
+        self.postgresql_options.update(config_dict.get('postgresql_options', {}))
         self.flask_options = config_dict.get('flask_options', {})
-        self.logging_options = config_dict.get('logging_options', {'editor': ''})
+        self.logging_options = {"editor": "", "slowcutoff": float("inf"), "slowlogfile": os.devnull}
+        self.logging_options.update(config_dict.get('logging_options', {}))
+        # What psycodict reads, in the format of Configuration.options
+        self.options = {"postgresql": self.postgresql_options, "logging": self.logging_options}
+        self.extra_options = {}
         # No configuration file is involved
         self.config_file = None
+
+    def get_postgresql_default(self):
+        return dict(POSTGRESQL_DEFAULTS)
 
     # Add the get methods that might be expected
     def get_postgresql(self):

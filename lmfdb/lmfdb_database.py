@@ -32,6 +32,10 @@ assert SQL and LMFDBStatsTable  # re-exported
 
 
 class LMFDBSearchTable(_ClientSearchTable):
+    # descriptions are edited through the knowl backend (see below), so the
+    # schema changes that set them are possible here
+    _can_edit_descriptions = True
+
     def __init__(self, *args, **kwds):
         _ClientSearchTable.__init__(self, *args, **kwds)
         self._verifier = None  # set when importing lmfdb.verify

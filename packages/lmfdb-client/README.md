@@ -164,11 +164,20 @@ Setting `slowcutoff` to a number of seconds logs slower queries to `slowlogfile`
 >>> db.connect(Configuration())
 ```
 
-or give `db.connect` a dictionary such as `{"postgresql_options": {"host": ..., "port": ..., "user": ..., "password": ..., "dbname": ...}}`.
+or give `db.connect` a dictionary, in which case no file is read or created:
+
+```python
+>>> db.connect({"postgresql_options": {"user": "editor", "password": "..."},
+...             "logging_options": {"editor": "my_lmfdb_username"}})
+```
+
+The connection parameters it omits (`host`, `port`, `user`, `password`, `dbname` and the keepalives) take their default values, and slow queries are not logged unless `logging_options` gives a `slowcutoff`.
 
 ## Making changes
 
-Editors with write access make data changes through the same interface (`insert_many`, `update_from_file`, `create_table`, ...), using the editor credentials in their `secrets.ini`.  Changes are recorded together with the editor's LMFDB username (the `editor` setting, or asked for on the first change), and before large changes lmfdb-client checks that the database servers have enough disk space.  Table and column descriptions, which are stored as knowls, can be read here but are edited from a checkout of the [LMFDB repository](https://github.com/LMFDB/lmfdb), which also runs the data verification checks.
+Editors with write access can change data through the same interface (`insert_many`, `upsert`, `update`, `update_from_file`, `delete`, `reload`, ...), using the editor credentials in their `secrets.ini`.  Changes are recorded together with the editor's LMFDB username (the `editor` setting, or asked for on the first change), and before large changes lmfdb-client checks that the database servers have enough disk space.
+
+Table and column descriptions are stored as knowls, which lmfdb-client can read but not edit.  The schema changes that set or delete descriptions (`create_table`, `create_table_like`, `drop_table`, `add_column` and `drop_column`) are therefore refused, before anything is changed.  Make them from a checkout of the [LMFDB repository](https://github.com/LMFDB/lmfdb) (with `from lmfdb import db`), which also edits descriptions and runs the data verification checks.
 
 ## Troubleshooting
 

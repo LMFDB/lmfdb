@@ -302,6 +302,30 @@ class TestLazyDb:
         )
         assert r.returncode == 0, r.stderr
 
+    def test_schema_changes_reach_psycodict(self, monkeypatch):
+        # lmfdb-client refuses schema changes, which set descriptions; the
+        # website edits descriptions, so its classes pass them to psycodict
+        from psycodict.database import PostgresDatabase
+        from psycodict.searchtable import PostgresSearchTable
+        from lmfdb.lmfdb_database import LMFDBDatabase, LMFDBSearchTable
+        calls = []
+
+        def recorder(name):
+            def method(self, *args, **kwds):
+                calls.append(name)
+            return method
+
+        for cls, name in [(PostgresDatabase, "create_table"), (PostgresDatabase, "create_table_like"),
+                          (PostgresSearchTable, "add_column"), (PostgresSearchTable, "drop_column")]:
+            monkeypatch.setattr(cls, name, recorder(name))
+        db = LMFDBDatabase.__new__(LMFDBDatabase)
+        table = LMFDBSearchTable.__new__(LMFDBSearchTable)
+        db.create_table("test_table", {"text": ["label"]}, "label", "A table", {"label": "The label"})
+        db.create_table_like("test_copy", "test_table")
+        table.add_column("degree", "smallint", "The degree")
+        table.drop_column("degree", force=True)
+        assert calls == ["create_table", "create_table_like", "add_column", "drop_column"]
+
     def test_site_installed(self):
         # importing lmfdb describes the LMFDB to lmfdb-utils
         import lmfdb

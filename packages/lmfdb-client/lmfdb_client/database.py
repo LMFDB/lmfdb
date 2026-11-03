@@ -8,7 +8,9 @@ check that the servers have enough disk space.
 
 The LMFDB website subclasses them in ``lmfdb/lmfdb_database.py`` to add what
 needs the rest of the LMFDB: editing table and column descriptions (which
-are knowls), and the verification framework.
+are knowls), and the verification framework.  Here descriptions can only be
+read, so the schema changes that set or delete them are refused: see
+``_require_editable_descriptions``.
 """
 
 import datetime
@@ -62,8 +64,30 @@ _nolog_changetypes = ["delete", "resort", "add_column", "drop_column", "create_t
 _NO_DESCRIPTION = "(description not yet updated on this server)"
 
 
+def _require_editable_descriptions(table_class, operation):
+    """
+    Refuse a schema change that sets or deletes table and column
+    descriptions, unless the search table class can edit them.
+
+    This is checked when the operation starts, before anything is changed:
+    psycodict sets the descriptions part way through (for create_table,
+    after it has committed the new tables).
+    """
+    if not table_class._can_edit_descriptions:
+        raise NotImplementedError(
+            "%s changes table and column descriptions, which are knowls and can only be "
+            "edited from an LMFDB checkout (use `from lmfdb import db` there)" % operation
+        )
+
+
 class LMFDBSearchTable(PostgresSearchTable):
     _stats_table_class_ = LMFDBStatsTable
+
+    # Whether descriptions can be edited: here they can only be read, so
+    # the schema changes that set or delete them (create_table,
+    # create_table_like, drop_table, add_column, drop_column) are refused.
+    # The LMFDB website's subclass edits them through its knowl backend.
+    _can_edit_descriptions = False
 
     # Table and column descriptions are stored as knowls.  The queries below
     # match KnowlBackend.get_table_description and get_column_descriptions in
@@ -106,9 +130,15 @@ class LMFDBSearchTable(PostgresSearchTable):
 
     @overrides(PostgresSearchTable)
     def add_column(self, *args, **kwds):
+        _require_editable_descriptions(type(self), "add_column")
         if "force_description" not in kwds:
             kwds["force_description"] = True
         return super().add_column(*args, **kwds)
+
+    @overrides(PostgresSearchTable)
+    def drop_column(self, *args, **kwds):
+        _require_editable_descriptions(type(self), "drop_column")
+        return super().drop_column(*args, **kwds)
 
     @overrides(PostgresSearchTable)
     def _check_locks(self, changetype, datafile=None, suffix=""):
@@ -356,8 +386,19 @@ class LMFDBDatabase(PostgresDatabase):
 
     @overrides(PostgresDatabase)
     def create_table(self, name, *args, **kwargs):
+        _require_editable_descriptions(self._search_table_class_, "create_table")
         if "_" not in name:
             raise ValueError("Table name '%s' must contain an underscore; first part gives the LMFDB section" % name,)
         if "force_description" not in kwargs:
             kwargs["force_description"] = True
         return PostgresDatabase.create_table(self, name, *args, **kwargs)
+
+    @overrides(PostgresDatabase)
+    def create_table_like(self, *args, **kwargs):
+        _require_editable_descriptions(self._search_table_class_, "create_table_like")
+        return super().create_table_like(*args, **kwargs)
+
+    @overrides(PostgresDatabase)
+    def drop_table(self, *args, **kwargs):
+        _require_editable_descriptions(self._search_table_class_, "drop_table")
+        return super().drop_table(*args, **kwargs)

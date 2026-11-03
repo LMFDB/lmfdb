@@ -274,6 +274,103 @@ class TestLazyDb:
         assert not d.connected
 
 
+class TestConfigWrapper:
+    def test_defaults(self):
+        # a dictionary gives the connection without reading or writing any
+        # file; what it omits takes the default values
+        w = config_mod.ConfigWrapper({"postgresql_options": {"user": "editor", "password": "secret"}})
+        pg = w.options["postgresql"]
+        assert pg["host"] == "devmirror.lmfdb.xyz" and pg["dbname"] == "lmfdb"
+        assert pg["user"] == "editor" and pg["password"] == "secret"
+        assert pg["keepalives"] == 1
+        assert w.postgresql_options["user"] == "editor"
+        assert w.options["logging"]["slowcutoff"] == float("inf")
+        assert w.logging_options["editor"] == ""
+        assert w.get_postgresql_default()["user"] == "lmfdb"
+
+    def test_logging_options(self):
+        w = config_mod.ConfigWrapper({"logging_options": {"editor": "someone", "slowcutoff": 2}})
+        assert w.options["logging"]["editor"] == "someone"
+        assert w.options["logging"]["slowcutoff"] == 2
+
+    def test_matches_configuration_defaults(self, home):
+        conf = config_mod.Configuration()
+        w = config_mod.ConfigWrapper({})
+        for key, value in conf.options["postgresql"].items():
+            assert w.options["postgresql"][key] == value, key
+
+
+class TestSchemaChanges:
+    """
+    Schema changes set or delete table and column descriptions, which
+    lmfdb-client cannot edit (they are knowls), so they are refused before
+    anything happens.  These go through the inherited psycodict methods, with
+    psycodict's implementations replaced by recorders, so no database is
+    needed.
+    """
+    @pytest.fixture
+    def calls(self, monkeypatch):
+        from psycodict.base import PostgresBase
+        from psycodict.database import PostgresDatabase
+        from psycodict.searchtable import PostgresSearchTable
+        calls = []
+
+        def recorder(name):
+            def method(self, *args, **kwds):
+                calls.append(name)
+            return method
+
+        def no_sql(self, *args, **kwds):
+            raise AssertionError("SQL was executed")
+
+        for cls, name in [(PostgresDatabase, "create_table"), (PostgresDatabase, "create_table_like"),
+                          (PostgresDatabase, "drop_table"), (PostgresSearchTable, "add_column"),
+                          (PostgresSearchTable, "drop_column")]:
+            monkeypatch.setattr(cls, name, recorder(name))
+        monkeypatch.setattr(PostgresBase, "_execute", no_sql)
+        return calls
+
+    def test_refused(self, calls):
+        from lmfdb_client.database import LMFDBDatabase, LMFDBSearchTable
+        db = LMFDBDatabase.__new__(LMFDBDatabase)
+        table = LMFDBSearchTable.__new__(LMFDBSearchTable)
+        operations = [
+            lambda: db.create_table("test_table", {"text": ["label"]}, "label", "A table", {"label": "The label"}),
+            lambda: db.create_table("test_table", {"text": ["label"]}, "label", force_description=False),
+            lambda: db.create_table_like("test_copy", "test_table"),
+            lambda: db.drop_table("test_table", force=True),
+            lambda: table.add_column("degree", "smallint", "The degree"),
+            lambda: table.drop_column("degree", force=True),
+        ]
+        for operation in operations:
+            with pytest.raises(NotImplementedError, match="LMFDB checkout"):
+                operation()
+        assert calls == []
+
+    def test_allowed_with_editable_descriptions(self, calls):
+        # a subclass that can edit descriptions (like the LMFDB website's)
+        # reaches psycodict
+        from lmfdb_client.database import LMFDBDatabase, LMFDBSearchTable
+
+        class EditableTable(LMFDBSearchTable):
+            _can_edit_descriptions = True
+
+        class EditableDatabase(LMFDBDatabase):
+            _search_table_class_ = EditableTable
+
+        db = EditableDatabase.__new__(EditableDatabase)
+        table = EditableTable.__new__(EditableTable)
+        db.create_table("test_table", {"text": ["label"]}, "label", "A table", {"label": "The label"})
+        db.create_table_like("test_copy", "test_table")
+        db.drop_table("test_table", force=True)
+        table.add_column("degree", "smallint", "The degree")
+        table.drop_column("degree", force=True)
+        assert calls == ["create_table", "create_table_like", "drop_table", "add_column", "drop_column"]
+        # and the LMFDB's own rules still apply
+        with pytest.raises(ValueError, match="underscore"):
+            db.create_table("table", {"text": ["label"]}, "label")
+
+
 @pytest.fixture(scope="module")
 def db(tmp_path_factory):
     # a connection to devmirror.lmfdb.xyz with the default settings, but
@@ -328,6 +425,30 @@ class TestDatabase:
             db.nf_fields.description("New description")
         with pytest.raises(NotImplementedError):
             db.nf_fields.column_description("degree", "New description")
+
+    def test_schema_changes_refused(self, db, monkeypatch):
+        # through the real database object: nothing reaches the database
+        def no_sql(*args, **kwds):
+            raise AssertionError("SQL was executed")
+        monkeypatch.setattr(db, "_execute", no_sql)
+        with pytest.raises(NotImplementedError):
+            db.create_table("test_new", {"text": ["label"]}, "label", "A table", {"label": "The label"})
+        assert "test_new" not in db.tablenames
+
+    def test_dictionary_configuration(self, tmp_path):
+        # as in the README: connecting with a dictionary reads and writes no
+        # files
+        r = run_py(
+            "from lmfdb_client import db\n"
+            "db.connect({'postgresql_options': {'host': 'devmirror.lmfdb.xyz', 'user': 'lmfdb', 'password': 'lmfdb', 'dbname': 'lmfdb'}})\n"
+            "assert db.nf_fields.lookup('2.2.5.1', 'degree') == 2\n"
+            "assert db.config.options['logging']['slowcutoff'] == float('inf')\n",
+            cwd=str(tmp_path),
+            LMFDB_HOME=str(tmp_path / "home"),
+            LMFDB_CONFIG="",
+        )
+        assert r.returncode == 0, r.stderr
+        assert not any(tmp_path.iterdir()), "files were created"
 
     def test_data_changes_need_editor(self, db):
         with pytest.raises(RuntimeError, match="editor"):
