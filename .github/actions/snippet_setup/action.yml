@@ -4,10 +4,13 @@ description: 'Set up LMFDB environment for generating snippets'
 runs:
   using: 'composite'
   steps:
-  - uses: conda-incubator/setup-miniconda@v2
+  - uses: conda-incubator/setup-miniconda@v4
     with:
+      # Runner images no longer ship Miniconda (ubuntu-26.04), so download
+      # Miniforge; it installs to ~/miniconda3, which the conda cache below names.
+      miniforge-version: latest
       activate-environment: lmfdb
-      auto-activate-base: false
+      auto-activate: false
       # environment-file: .environment.yml # now we install after cache
       channel-priority: strict
       # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
@@ -21,7 +24,7 @@ runs:
       CACHE_NUMBER: 0
     with:
       path: |
-        /usr/share/miniconda/envs/lmfdb
+        ~/miniconda3/envs/lmfdb
       key:
         ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
         hashFiles('.environment.yml') }}
