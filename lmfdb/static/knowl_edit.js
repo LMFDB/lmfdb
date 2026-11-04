@@ -314,7 +314,7 @@ function refresh_preview() {
   var $kcontent = $("#kcontent");
   var $content = $("#knowl-content");
   var $refresh = $("#refresh-view");
-  $.post(render_url, { "content" : $kcontent.val(), "footer" : "0" },
+  $.post(render_url, { "content" : $kcontent.val(), "footer" : "0", "csrf_token" : $("#csrf_token").val() },
     function(data) {
       $title.html("Processing ...");
       $content.html(data);
