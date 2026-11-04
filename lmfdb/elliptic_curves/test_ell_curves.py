@@ -1,3 +1,5 @@
+import os
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -240,6 +242,12 @@ class EllCurveTest(LmfdbTest):
         # Check that D3 diagram template elements are present
         assert 'my_dataviz' in data
         assert 'pointRadius' in data
+
+    def test_congruent_number_file_outside_dataset(self):
+        resp = self.tc.get('/EllipticCurve/Q/CongruentNumbers',
+                           query_string={'filename': os.path.abspath(__file__)})
+        assert resp.status_code == 302
+        assert resp.headers['Location'].endswith('/EllipticCurve/Q/CongruentNumbers')
 
     def test_dataset_files_from_beta(self):
         for url in ['/EllipticCurve/Q/stein-watkins?ctype=prime&k=0&Fetch=fetch',
