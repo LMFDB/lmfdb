@@ -240,3 +240,10 @@ class EllCurveTest(LmfdbTest):
         # Check that D3 diagram template elements are present
         assert 'my_dataviz' in data
         assert 'pointRadius' in data
+
+    def test_dataset_files_from_beta(self):
+        for url in ['/EllipticCurve/Q/stein-watkins?ctype=prime&k=0&Fetch=fetch',
+                    '/EllipticCurve/Q/BHKSSW?k=0&Fetch=fetch']:
+            resp = self.tc.get(url)
+            assert resp.status_code == 301, url
+            assert resp.headers['Location'] == 'https://beta.lmfdb.org' + url

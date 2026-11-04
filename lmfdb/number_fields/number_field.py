@@ -16,7 +16,8 @@ from lmfdb.utils import (
     parse_signed_ints, parse_primes, parse_bracketed_posints, parse_nf_string,
     parse_floats, parse_subfield, search_wrap, parse_padicfields, integer_options,
     raw_typeset, raw_typeset_poly, flash_info, input_string_to_poly,
-    raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache)
+    raw_typeset_int, compress_poly_Q, compress_polynomial, CodeSnippet, redirect_no_cache,
+    redirect_to_beta)
 from lmfdb.utils.search_wrapper import multi_entry_jump_search
 from lmfdb.utils.web_display import compress_int
 from lmfdb.utils.interesting import interesting_knowls
@@ -214,6 +215,9 @@ def render_class_group_data():
     info['message'] = ''
     info['filename'] = 'none'
     if 'Fetch' in info:
+        moved = redirect_to_beta()
+        if moved is not None:
+            return moved
         if 'k' in info:
             # remove non-digits
             k = re.sub(r'\D', '', info['k'])
