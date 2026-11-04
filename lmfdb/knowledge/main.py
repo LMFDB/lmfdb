@@ -31,6 +31,7 @@ import markdown
 from lmfdb.logger import logger
 from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error
+from lmfdb.utils.csrf import csrf_token, require_csrf_token
 from lmfdb.knowledge import knowledge_page
 
 
@@ -212,7 +213,8 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl,
+    return {'csrf_token': csrf_token,
+            'Knowl': Knowl,
             'knowl_title': knowl_title,
             'knowl_url_prefix': knowl_url_prefix,
             "KNOWL_EXISTS": knowl_exists,
@@ -457,7 +459,7 @@ def comment_history(limit=25):
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flash(Markup("Knowl %s has been deleted." % ID))
+    flash(Markup("Knowl {} has been deleted.").format(ID))
     return redirect(url_for(".index"))
 
 
@@ -466,7 +468,7 @@ def delete(ID):
 def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
-    flash(Markup("Knowl %s has been resurrected." % ID))
+    flash(Markup("Knowl {} has been resurrected.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -476,7 +478,7 @@ def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
-    flash(Markup("Knowl %s has been positively reviewed." % ID))
+    flash(Markup("Knowl {} has been positively reviewed.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -486,7 +488,7 @@ def demote(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
-    flash(Markup("Knowl %s has been returned to beta." % ID))
+    flash(Markup("Knowl {} has been returned to beta.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -632,6 +634,7 @@ def edit_form():
 @knowledge_page.route("/save", methods=["POST"])
 @login_required
 def save_form():
+    require_csrf_token()
     ID = request.form['id']
     if not ID:
         raise Exception("no id")
@@ -644,12 +647,12 @@ def save_form():
     if FINISH_RENAME:
         k = Knowl(ID)
         k.actually_rename()
-        flash(Markup("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name)))
+        flash(Markup("Renaming complete; the history of {} has been merged into {}").format(ID, k.source_name))
         return redirect(url_for(".show", ID=k.source_name))
     elif UNDO_RENAME:
         k = Knowl(ID)
         k.undo_rename()
-        flash(Markup("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID)))
+        flash(Markup("Renaming undone; the history of {} has been merged back into {}").format(k.source_name, ID))
         return redirect(url_for(".show", ID=ID))
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
@@ -679,7 +682,7 @@ def save_form():
                 if k.sed_safety == 0:
                     time.sleep(0.01)
                     k.actually_rename(NEWID)
-                    flash(Markup("Knowl renamed to {0} successfully.".format(NEWID)))
+                    flash(Markup("Knowl renamed to {0} successfully.").format(NEWID))
                 else:
                     k.start_rename(NEWID, who)
             except ValueError as err:
@@ -687,8 +690,8 @@ def save_form():
             else:
                 if k.sed_safety == 1:
                     flash(Markup("Knowl rename process started. You can change code references using"))
-                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
-                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)").format(ID, NEWID))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)").format(ID, NEWID))
                 elif k.sed_safety == -1:
                     flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
@@ -706,6 +709,7 @@ def render(ID):
 @knowledge_page.route("/preview/<ID>", methods=["POST"])
 @login_required
 def preview(ID):
+    require_csrf_token()
     return render_knowl(ID, footer=request.form.get('footer', '0'),
                         content=request.form['content'])
 
@@ -735,7 +739,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # fetch and convert the ms timestamp to datetime
         try:
             timestamp = timestamp_in_ms_to_datetime(int(kwargs['timestamp']))
-        except KeyError:
+        except (KeyError, ValueError, OverflowError, OSError):
             pass
 
     if k is None:
@@ -759,9 +763,13 @@ def render_knowl(ID, footer=None, kwargs=None,
     if kwargs:
         permalink += '?' + urlencode(kwargs)
     header_title = Markup(k.title) if k.title else k.id
-    # The names the template sets win over query parameters of the same name;
+    # Flask's explicit template arguments override its context processors.
+    # Reserve their names and Jinja globals before adding query parameters.
     # "source" is render_template_string's own argument, so it cannot be passed.
-    context = {key: val for key, val in kwargs.items() if key != 'source'}
+    context = {}
+    app.update_template_context(context)
+    reserved = context.keys() | app.jinja_env.globals.keys() | {'source'}
+    context.update({key: val for key, val in kwargs.items() if key not in reserved})
     context.update(k=k, knowl_permalink=permalink, knowl_header_title=header_title)
 
     # this is a very simple template based on no other template to render one single Knowl

@@ -18,7 +18,8 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet,
+    redirect_to_beta)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
@@ -992,6 +993,9 @@ def render_sw_ecdb():
     t = 'Stein-Watkins elliptic curve database'
     bread = [("Datasets", url_for("datasets")), ("Stein-Watkins dataset", " ")]
     if 'Fetch' in info:
+        moved = redirect_to_beta()
+        if moved is not None:
+            return moved
         errors = []
         if info.get("ctype") == "all":
             fname = "a.{:03d}"
@@ -1067,6 +1071,9 @@ def render_bhkssw():
     #    (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
     #]
     if 'Fetch' in info:
+        moved = redirect_to_beta()
+        if moved is not None:
+            return moved
         fname = "{}.txt"
         kmax = 2699
         errors = []

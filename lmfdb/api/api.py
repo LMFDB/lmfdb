@@ -174,7 +174,7 @@ def stats():
 
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
-    if id == 'schema':
+    if id == 'schema' and table in db.tablenames:
         out = ''
         table = getattr(db, table)
         col_type = table.col_type
@@ -226,10 +226,9 @@ def api_query(table, id=None):
         return apierror("offset %s too large, please refine your query.", [offset])
 
     # preparing the actual database query q
-    try:
-        coll = getattr(db, table)
-    except AttributeError:
+    if table not in db.tablenames:
         return apierror("table %s does not exist", [table], table=False)
+    coll = getattr(db, table)
     q = {}
 
     # if id is set, just go and get it, ignore query parameters
