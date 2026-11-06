@@ -70,7 +70,7 @@ __all__ = ['request', 'make_response', 'flash', 'url_for', 'render_template',
            'SelectBox', 'YesNoBox', 'YesNoMaybeBox', 'ExcludeOnlyBox',
            'ParityBox', 'ParityMod', 'SubsetBox', 'SubsetNoExcludeBox', 'SelectBoxNoEg', 'CountBox',
            'SneakyTextBox', 'SneakySelectBox',
-           'Downloader', 'WebObj', 'send_file_from_beta',
+           'Downloader', 'WebObj', 'send_file_from_beta', 'redirect_to_beta',
            'formatters', 'proportioners', 'totaler', 'StatsDisplay',
            'Configuration', 'plural_form', 'pluralize',
            'names_and_urls', 'name_and_object_from_url',
@@ -194,7 +194,7 @@ from lmfdb_utils.search_boxes import (
     SneakyTextBox, SneakySelectBox,
     SearchButton, SearchButtonWithSelect, RowSpacer)
 from lmfdb_utils.downloader import Downloader
-from .beta import send_file_from_beta
+from .beta import send_file_from_beta, redirect_to_beta
 from lmfdb_utils.display_stats import formatters, proportioners, totaler, StatsDisplay
 from .config import Configuration
 from .names_and_urls import names_and_urls, name_and_object_from_url

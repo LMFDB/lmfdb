@@ -144,6 +144,12 @@ class NumberFieldTest(LmfdbTest):
     def test_imaginary_quadratic_page(self):
         self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'extensive computations')
 
+    def test_imaginary_quadratic_file_from_beta(self):
+        url = '/NumberField/QuadraticImaginaryClassGroups?filenamebase=cl3mod8&k=0&Fetch=fetch'
+        resp = self.tc.get(url)
+        assert resp.status_code == 301
+        assert resp.headers['Location'] == 'https://beta.lmfdb.org' + url
+
     def test_discriminants_page(self):
         self.check_args('/NumberField/Source', 'Jones-David Roberts')
 

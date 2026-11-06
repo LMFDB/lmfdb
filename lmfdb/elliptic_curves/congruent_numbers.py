@@ -8,6 +8,10 @@ from sage.all import EllipticCurve, QQ
 
 congruent_number_data_directory = os.path.expanduser('~/data/congruent_number_curves')
 
+# The files offered by the download buttons in templates/congruent_number_data.html.
+congruent_number_data_files = ['CN.conductor', 'CN.rank', 'CN.MWgroup', 'CN.height',
+                               'CN.regulator', 'CN.root.number', 'CN.Tate-Sha', 'CN.classes']
+
 
 def CNfilename(file_suffix):
     return os.path.join(congruent_number_data_directory, "CN.{}".format(file_suffix))
