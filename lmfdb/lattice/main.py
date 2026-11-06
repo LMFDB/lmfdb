@@ -11,7 +11,7 @@ from lmfdb.utils import (
     parse_ints, parse_list, parse_count, parse_start, clean_input,
     search_wrap, redirect_no_cache, Downloader)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.api import datapage
 from lmfdb.lattice import lattice_page
 from lmfdb.lattice.isom import isom

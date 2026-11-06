@@ -7,8 +7,8 @@ from lmfdb.number_fields.web_number_field import formatfield
 from lmfdb.number_fields.number_field import unlatex
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.utils import web_latex, encode_plot, prop_int_pretty, raw_typeset, display_knowl, integer_squarefree_part, integer_prime_divisors, web_latex_factored_integer
-from lmfdb_utils.web_display import dispZmat_from_list
-from lmfdb_utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
+from lmfdb.utils.web_display import dispZmat_from_list
+from lmfdb.utils.common_regex import G1_LOOKUP_RE, ZLIST_RE
 
 from sage.all import EllipticCurve, KodairaSymbol, latex, lazy_attribute, ZZ, QQ, prod, Factorization, PowerSeriesRing, prime_range, RealField, euler_phi, GL, Integers
 

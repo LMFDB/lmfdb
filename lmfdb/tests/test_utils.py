@@ -39,7 +39,7 @@ from lmfdb.utils.completeness import (
     infinity,
 )
 
-from lmfdb_utils.downloader import OscarLanguage, SageLanguage
+from lmfdb.utils.downloader import OscarLanguage, SageLanguage
 
 class UtilsTest(unittest.TestCase):
     """

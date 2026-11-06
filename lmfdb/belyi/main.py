@@ -27,7 +27,7 @@ from lmfdb.utils import (
     CountBox,
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol, LinkCol, MultiProcessedCol
 from lmfdb.api import datapage
 from . import belyi_page
 from .web_belyi import (

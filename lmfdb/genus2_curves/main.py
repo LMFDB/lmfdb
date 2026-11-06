@@ -39,8 +39,8 @@ from lmfdb.utils import (
     CodeSnippet
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol, RationalListCol
-from lmfdb_utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
+from lmfdb.utils.search_columns import SearchColumns, MathCol, CheckCol, LinkCol, ProcessedCol, MultiProcessedCol, ProcessedLinkCol, ListCol, RationalListCol
+from lmfdb.utils.common_regex import ZLIST_RE, ZLLIST_RE, G2_LOOKUP_RE
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import st_link_by_name, st_display_knowl
 from lmfdb.genus2_curves import g2c_page

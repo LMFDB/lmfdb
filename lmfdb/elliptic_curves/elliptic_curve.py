@@ -20,9 +20,9 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
     StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
-from lmfdb_utils.common_regex import ZLLIST_RE
-from lmfdb_utils.web_display import dispZmat_from_list
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
+from lmfdb.utils.common_regex import ZLLIST_RE
+from lmfdb.utils.web_display import dispZmat_from_list
 from lmfdb.logger import logger
 from lmfdb.api import datapage
 from lmfdb.elliptic_curves import ec_page

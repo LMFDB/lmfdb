@@ -8,7 +8,7 @@ import os
 import sys
 import tempfile
 from collections import defaultdict
-from lmfdb_utils.datetime_utils import utc_now_naive
+from lmfdb.utils.datetime_utils import utc_now_naive
 here = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(here, "data")
 upone, _ = os.path.split(here)

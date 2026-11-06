@@ -18,8 +18,8 @@ from lmfdb.utils import (
     parse_ints, clean_input, parse_bracketed_posints, parse_gap_id,
     search_wrap, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_parsing import (search_parser, collapse_ors)
-from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, CheckCol
+from lmfdb.utils.search_parsing import (search_parser, collapse_ors)
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, ProcessedCol, CheckCol
 from lmfdb.api import datapage
 from lmfdb.sato_tate_groups.main import sg_pretty
 from lmfdb.higher_genus_w_automorphisms import higher_genus_w_automorphisms_page

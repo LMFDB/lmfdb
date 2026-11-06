@@ -9,9 +9,9 @@ from lmfdb.utils import (
     nf_string_to_label, parse_nf_string, parse_noop, parse_start, parse_count, parse_ints, parse_primes,
     SearchArray, TextBox, SelectBox, ExcludeOnlyBox, CountBox, SubsetBox, TextBoxWithSelect,
     teXify_pol, search_wrap, Downloader, redirect_no_cache)
-from lmfdb_utils.display_stats import StatsDisplay, totaler, proportioners
+from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import WebNumberField, nf_display_knowl, field_pretty
 from lmfdb.nfutils.psort import ideal_from_label, primes_iter

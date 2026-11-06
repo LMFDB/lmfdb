@@ -14,10 +14,10 @@ from lmfdb.utils import (
     SearchArray, TextBox, TextBoxNoEg, ParityBox, CountBox,
     SubsetNoExcludeBox, TextBoxWithSelect, SelectBoxNoEg, Downloader,
     display_knowl, search_wrap, to_dict, comma, prop_int_pretty, redirect_no_cache)
-from lmfdb_utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
+from lmfdb.utils.display_stats import StatsDisplay, totaler, proportioners, range_formatter
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_parsing import search_parser
-from lmfdb_utils.search_columns import SearchColumns, SearchCol, MathCol
+from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_columns import SearchColumns, SearchCol, MathCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.galois_groups.transitive_group import (

@@ -122,7 +122,7 @@ def info():
     info['logout'] = url_for(".logout")
     info['user'] = current_user
     info['next'] = request.referrer
-    from lmfdb_utils.color import all_color_schemes
+    from lmfdb.utils.color import all_color_schemes
     return render_template("user-info.html",
                            all_colors=all_color_schemes.values(),
                            info=info, title="Userinfo",

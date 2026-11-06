@@ -10,7 +10,7 @@ from lmfdb.utils import (
     parse_ints, parse_bool, clean_input, to_dict, sparse_cyclotomic_to_latex,
     # parse_gap_id, parse_bracketed_posints,
     search_wrap, redirect_no_cache)
-from lmfdb_utils.search_columns import SearchColumns, LinkCol, MathCol
+from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol
 from lmfdb.groups.abstract.web_groups import group_names_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl, abstract_subgroup_label_regex
 

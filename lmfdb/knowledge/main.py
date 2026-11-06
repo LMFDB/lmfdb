@@ -29,9 +29,9 @@ from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
 import markdown
 from lmfdb.logger import logger
-from lmfdb_utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
+from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error, flash_warning
-from lmfdb_utils.csrf import csrf_token, require_csrf_token
+from lmfdb.utils.csrf import csrf_token, require_csrf_token
 from lmfdb.knowledge import knowledge_page
 
 

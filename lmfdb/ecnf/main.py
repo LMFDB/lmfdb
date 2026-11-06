@@ -17,10 +17,10 @@ from lmfdb.utils import (
     SearchArray, TextBox, SelectBox, CountBox, SubsetBox, TextBoxWithSelect,
     search_wrap, redirect_no_cache, web_latex, web_latex_factored_integer, CodeSnippet
     )
-from lmfdb_utils.search_parsing import search_parser
+from lmfdb.utils.search_parsing import search_parser
 
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol, PolynomialCol
+from lmfdb.utils.search_columns import SearchColumns, MathCol, ProcessedCol, MultiProcessedCol, CheckCol, SearchCol, FloatCol, PolynomialCol
 from lmfdb.api import datapage
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.number_fields.web_number_field import nf_display_knowl

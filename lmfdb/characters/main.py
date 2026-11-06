@@ -8,8 +8,8 @@ from lmfdb.utils import (
     TextBox, CountBox, parse_bool, parse_ints, search_wrap, raw_typeset_poly,
     StatsDisplay, totaler, proportioners, comma, flash_warning, Downloader, redirect_no_cache, CodeSnippet)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_parsing import parse_range3
-from lmfdb_utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_parsing import parse_range3
+from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, CheckCol, ProcessedCol, MultiProcessedCol
 from lmfdb.characters.utils import url_character
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from lmfdb.api import datapage

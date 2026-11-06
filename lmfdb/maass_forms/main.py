@@ -7,10 +7,10 @@ from lmfdb.utils import (
     SearchArray, search_wrap, TextBox, SelectBox, CountBox, to_dict, comma,
     parse_ints, parse_floats, rgbtohex, signtocolour, flash_error, redirect_no_cache)
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_parsing import search_parser
-from lmfdb_utils.display_stats import StatsDisplay, proportioners, totaler
+from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.display_stats import StatsDisplay, proportioners, totaler
 from lmfdb.utils import display_knowl
-from lmfdb_utils.search_columns import SearchColumns, ProcessedLinkCol, MathCol, ProcessedCol, MultiProcessedCol
+from lmfdb.utils.search_columns import SearchColumns, ProcessedLinkCol, MathCol, ProcessedCol, MultiProcessedCol
 from lmfdb.api import datapage
 from lmfdb.maass_forms.plot import paintSvgMaass
 from lmfdb.maass_forms.web_maassform import character_link, fricke_pretty, symmetry_pretty, short_label, long_label, WebMaassForm, MaassFormDownloader

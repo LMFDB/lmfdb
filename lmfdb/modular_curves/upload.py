@@ -1,6 +1,6 @@
 
 import re
-from lmfdb_utils.datetime_utils import utc_now_naive
+from lmfdb.utils.datetime_utils import utc_now_naive
 from flask import url_for
 from sage.all import ZZ, QQ, lazy_attribute, NumberField
 from lmfdb import db

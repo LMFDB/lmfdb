@@ -41,10 +41,10 @@ from lmfdb.utils import (
     key_for_numerically_sort
 )
 from lmfdb.utils.interesting import interesting_knowls
-from lmfdb_utils.search_columns import (
+from lmfdb.utils.search_columns import (
     SearchColumns, MathCol, FloatCol, CheckCol, SearchCol, LinkCol, ProcessedCol, MultiProcessedCol,
 )
-from lmfdb_utils.search_parsing import search_parser
+from lmfdb.utils.search_parsing import search_parser
 from lmfdb.api import datapage
 from psycodict.encoding import Json
 

@@ -7,7 +7,7 @@ from lmfdb.utils.psycopg_compat import QueryCanceledError
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma
-from lmfdb_utils.datetime_utils import utc_now_naive
+from lmfdb.utils.datetime_utils import utc_now_naive
 from lmfdb.logger import logger
 from flask import (render_template, request, url_for, current_app,
                    abort, redirect, Response)
