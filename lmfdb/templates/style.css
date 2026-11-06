@@ -1220,13 +1220,6 @@ div.limit-height {
   max-height: 500px;
   overflow-y: auto;
 }
-
-/* wrapper to prevent knowl from going to bottom (and add padding) */
-div.contain-knowl {
-    display: flow-root;
-    padding-left: 10px;
-}
-
 .knowl-output h1, .knowl-output h2 {
   margin: 5px 0;
 }
