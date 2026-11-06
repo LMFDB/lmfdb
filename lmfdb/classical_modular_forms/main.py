@@ -12,7 +12,7 @@ from lmfdb.utils import (
     parse_ints, parse_floats, parse_bool, parse_primes, parse_nf_string,
     parse_noop, parse_equality_constraints, integer_options, parse_subset,
     search_wrap, display_float, factor_base_factorization_latex,
-    flash_error, to_dict, comma, display_knowl, bigint_knowl, num2letters,
+    flash_error, to_dict, get_search_type, comma, display_knowl, bigint_knowl, num2letters,
     SearchArray, TextBox, TextBoxNoEg, SelectBox, TextBoxWithSelect, YesNoBox,
     DoubleSelectBox, RowSpacer, HiddenBox, SearchButtonWithSelect,
     SubsetBox, ParityMod, CountBox, send_file_from_beta,
@@ -166,8 +166,8 @@ def set_info_funcs(info):
 def index():
     info = to_dict(request.args, search_array=CMFSearchArray())
     if len(request.args) > 0:
-        # hidden_search_type for prev/next buttons
-        info['search_type'] = search_type = info.get('search_type', info.get('hst', ''))
+        # hst (hidden search type) is used by prev/next buttons and old bookmarked URLs
+        info['search_type'] = search_type = get_search_type(info)
 
         if search_type in ['List', '', 'Random', 'Diagram']:
             return newform_search(info)
@@ -1150,11 +1150,12 @@ def dimension_space_postprocess(res, info, query):
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
     # Remove entries that are unused for dimension tables
-    urlgen_info.pop('hidden_search_type', None)
+    urlgen_info.pop('hst', None)
     urlgen_info.pop('number', None)
     urlgen_info.pop('numforms', None)
     urlgen_info.pop('dim', None)
     urlgen_info.pop('search_array', None)
+    urlgen_info.pop('has_diagram', None)
 
     def url_generator_list(N, k):
         info_copy = dict(urlgen_info)
@@ -1202,9 +1203,10 @@ def dimension_form_postprocess(res, info, query):
     urlgen_info = dict(info)
     urlgen_info['count'] = 50
     # Remove entries that are unused for dimension tables
-    urlgen_info.pop('hidden_search_type', None)
+    urlgen_info.pop('hst', None)
     urlgen_info.pop('number', None)
     urlgen_info.pop('search_array', None)
+    urlgen_info.pop('has_diagram', None)
 
     def url_generator(N, k):
         info_copy = dict(urlgen_info)
@@ -1829,7 +1831,7 @@ class CMFSearchArray(SearchArray):
     def main_array(self, info):
         if info is None:
             return self.browse_array
-        search_type = info.get('search_type', info.get('hst', ''))
+        search_type = self._st(info)
         if search_type == 'Spaces':
             return self.space_array
         elif search_type == 'SpaceDimensions':

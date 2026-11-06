@@ -814,6 +814,14 @@ $(document).ready(function () {
     form => form.addEventListener('formdata',
     function(event) {
       let formData = event.formData;
+      if (formData.has("search_type")) {
+        // A search button was clicked, and its value (which is empty for
+        // list-mode buttons) determines the search type, so the hidden hst
+        // input recording the previously displayed mode is dropped.  Form
+        // submissions without a button (the prev/next paging links) have no
+        // search_type entry and keep hst.
+        formData.delete("hst");
+      }
       let alldeleted = true;
       for (let [name, value] of Array.from(formData.entries())) {
         if (value === '' ||
@@ -822,9 +830,6 @@ $(document).ready(function () {
         } else {
           alldeleted = false;
         }
-      }
-      if (formData.has("hst") && formData.has("search_type") && formData.get("hst") == formData.get("search_type")) {
-        formData.delete("hst");
       }
       if (alldeleted) {
         // Need at least one parameter to trigger search results.
