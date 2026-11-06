@@ -509,7 +509,7 @@ snippet_test:
   testD4:
     label: D4
     url: Groups/Abstract/8.3/codedownload/{lang}
-  # Quarternion group Q_8 (of order 8), also dicyclic group
+  # Quaternion group Q_8 (of order 8), also dicyclic group
   testQ8:
     label: Q8
     url: Groups/Abstract/8.4/codedownload/{lang}
@@ -525,6 +525,10 @@ snippet_test:
   testA5:
     label: A5
     url: Groups/Abstract/60.5/codedownload/{lang}
+  # PSU(3,2) (Sage returns projective Lie-type groups as permutation groups)
+  test_top_lie_proj:
+    label: "72_41"
+    url: Groups/Abstract/72.41/codedownload/{lang}
 
   # Tests for the group construction download pages
   # (incl. constructing the boolean invariants and character table)
