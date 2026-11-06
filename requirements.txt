@@ -1,20 +1,27 @@
+# The dependencies of the LMFDB website, for a checkout:
+#     sage -pip install -r requirements.txt
+#
+# lmfdb-client (the database connection) and lmfdb-utils (utilities shared
+# with other websites) are built from this repository and published on PyPI;
+# here they are installed from the checkout in editable mode, so that changes
+# to them take effect immediately.  They bring in psycodict (with its driver),
+# flask, markupsafe and werkzeug.
+-e ./packages/lmfdb-client
+-e ./packages/lmfdb-utils
 bcrypt
-cython
 flask
-flask-cache
 flask-login
-flask-markdown
+markdown
 markupsafe
-itsdangerous
-# the pgbinary extra installs the driver psycodict itself is built on.  We track
-# released versions rather than a git branch, so that what an install gets doesn't
-# depend on the day it was run; the upper bound is psycodict's next major version,
-# where its versioning policy allows breaking changes.
-psycodict[pgbinary]>=1.0.0rc1,<2
+mpmath
+pexpect
+pyyaml
+requests
+svg.py
+timeout-decorator
+werkzeug
+# development tools
 pyflakes
 pytest
 pytest-cov
 pytest-xdist
-pyyaml
-svg.py
-timeout_decorator

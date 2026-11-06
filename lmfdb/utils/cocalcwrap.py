@@ -9,8 +9,8 @@ class CocalcWrap():
 
     def __init__(self, app):
         self.app = app
-        from .config import Configuration
-        flask_options = Configuration().get_flask()
+        from lmfdb.config import current_configuration
+        flask_options = current_configuration().get_flask()
         self.app_root = '/' + os.environ['COCALC_PROJECT_ID'] + "/server/" + str(flask_options['port'])
 
     def __call__(self, environ, start_response):
