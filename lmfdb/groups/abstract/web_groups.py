@@ -2966,18 +2966,11 @@ class WebAbstractGroup(WebObj):
             for lang in code['dicyclic_group']:
                 code['code_description'][lang] = code['dicyclic_group'][lang].format(**{'ordgp':self.order, 'ordgp_quarter':self.order//4})
             return
-        
-        # Sage's matrix groups lack most group-theoretic methods (commutator, socle, derived_series, ...),
-        # so when the top construction is a Lie-type matrix group, convert it to a permutation group in Sage
-        def top_lie_snippet(lang):
-            if lang == 'sage':
-                return top_lie[lang] + "\nG = G.as_permutation_group()"
-            return top_lie[lang]
 
         for lang in code['prompt']:
             # Use a Lie Type matrix construction (if it exists and the Lie type generators were not used)
             if (top_lie[lang] is not None) and (not used_lie_gens[lang]):
-                code['code_description'][lang] = top_lie_snippet(lang)
+                code['code_description'][lang] = top_lie[lang]
                 continue
 
             # Check if group is in the Chevalley family
@@ -3030,7 +3023,7 @@ class WebAbstractGroup(WebObj):
 
             # Finally, try using Lie constructions which required use of the generators
             if (top_lie[lang] is not None) and (lang not in code['code_description']):
-                code['code_description'][lang] = top_lie_snippet(lang)
+                code['code_description'][lang] = top_lie[lang]
 
         # Otherwise, if absolutely all else fails, we display no code snippet at the top :(
         return
@@ -3059,6 +3052,9 @@ class WebAbstractGroup(WebObj):
             families['gap'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSO','PSU','Orth','Unitary','Omega','PO','PU','POmega','PGammaL','PSigmaL']
             families['sage'] = ['GL','SL','PSL','PGL','Sp','SO','SU','PSp','PSU','Orth','Unitary','PU']
             families['oscar'] = ['GL','SL','Sp','SO','SU','Orth','Unitary']
+            # Of the Sage families, these return matrix groups (the projective ones PSL, PGL, PSp, PSU, PU return permutation groups)
+            sage_matrix_families = ['GL','SL','Sp','SO','SU','Orth','Unitary']
+            sage_top_is_matrix = False
 
             # Prioritize displaying the first Lie type representation which is implemented in the language
             for lie_rep in self.lie_representations:
@@ -3079,6 +3075,8 @@ class WebAbstractGroup(WebObj):
                         if (top_lie[lang] is None) or used_lie_gens[lang]:
                             top_lie[lang] = code[lie_rep_key][lang]
                             used_lie_gens[lang] = False
+                            if lang == 'sage':
+                                sage_top_is_matrix = lie_rep['family'] in sage_matrix_families
                     elif "gens" in lie_rep:
                         lie_mats = [self.decode_as_matrix(g, "Lie", ListForm=True) for g in lie_rep["gens"]]
 
@@ -3096,10 +3094,12 @@ class WebAbstractGroup(WebObj):
                             LFqsage = "["+", ".join(["MS("+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                             LFqoscar = "["+", ".join(["matrix(GF("+str(qLie)+"), "+str(split_matrix_Fq_add_al(mat, nLie))+")" for mat in lie_mats])+"]"
                             lie_data = {'LFqsplit':LFqsplit, 'LFqsage':LFqsage, 'LFqoscar':LFqoscar, 'nFq':nLie, 'Fq':qLie}
-                            lie_code_snippet = code['GLFq']['sage'].format(**lie_data)
+                            lie_code_snippet = code['GLFq'][lang].format(**lie_data)
 
                         if top_lie[lang] is None:
                             top_lie[lang], used_lie_gens[lang] = lie_code_snippet, True
+                            if lang == 'sage':
+                                sage_top_is_matrix = True
 
             # In the case no Lie type representation is implemented natively in Sage or GAP, we display the first one with gens as a matrix group
             # as a code snippet in the "Constructions" header (and as a possible candidate for the top code snippet)
@@ -3111,6 +3111,12 @@ class WebAbstractGroup(WebObj):
                             code[lie_rep_key][lang] = top_lie[lang]
                             code["lie_reps_all"][lang] += code[lie_rep_key][lang]+"\n"
                             break
+
+            # Sage's matrix groups lack most group-theoretic methods (commutator, socle, derived_series, ...),
+            # so if the Sage top Lie snippet is a matrix group, convert it to a permutation group
+            # (done last, so that the Constructions table snippets are unaffected)
+            if sage_top_is_matrix:
+                top_lie['sage'] = top_lie['sage'].rstrip() + "\nG = G.as_permutation_group()"
 
         # If no Lie representation can be implemented in a given language lang, remove lang from code["lie_reps_all"]
         for lang in code['prompt']:
