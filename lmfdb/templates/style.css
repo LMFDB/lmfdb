@@ -1208,7 +1208,7 @@ table .knowl a {
    a knowl no longer pushes the other columns around (issue #6501): the box
    simply spans the table's current width.  The .knowl-content overflow rule
    above handles content that is wider than the available box. */
-td > .knowl-output {
+table.rcs-main-table td > .knowl-output {
   contain: inline-size;
 }
 .knowl-output.loading {
