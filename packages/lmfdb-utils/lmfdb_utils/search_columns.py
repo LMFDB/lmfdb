@@ -12,7 +12,7 @@ The three main entry points to ``SearchCol`` are
 * its ``display`` method, which returns a string to be displayed in the html corresponding to
   the column within a row corresponding to a provided dictionary,
 * its ``download`` method, which returns a Python object that is then encoded using a download
-  language (in ``lmfdb/utils/downloader.py``) when creating a download file,
+  language (in ``downloader.py``) when creating a download file,
 * its ``show`` method, which is used to iterate over columns, and usually just yields the
   column, but can yield nothing (if the column shouldn't be displayed) or multiple subcolumns
   (in the case of column groups).
@@ -20,7 +20,7 @@ The three main entry points to ``SearchCol`` are
 
 import re
 from .web_display import display_knowl
-from lmfdb.utils import coeff_to_poly
+from .utilities import coeff_to_poly
 from sage.all import Rational, latex
 
 def get_default_func(default, name):
@@ -449,7 +449,7 @@ class ColGroup(SearchCol):
     There is also a subtle difference in behavior depending on whether the name of the column group
     is the same as the name of each sub column.  In this case, the columns are all shown and hidden
     together in the column dropdown; otherwise, they are controlled independently.  See the
-    ``ColumnController`` class in ``lmfdb/utils/search_boxes.py`` for more details.
+    ``ColumnController`` class in ``search_boxes.py`` for more details.
 
     There is one additional input:
 

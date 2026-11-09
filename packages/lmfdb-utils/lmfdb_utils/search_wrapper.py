@@ -1,15 +1,14 @@
 import time
 from random import randrange
-from flask import render_template, jsonify, redirect, request, url_for
-from urllib.parse import urlparse
-from lmfdb.utils.psycopg_compat import QueryCanceledError, NumericValueOutOfRange
+from flask import current_app, render_template, jsonify, redirect, url_for
+from psycopg.errors import NumericValueOutOfRange
+from psycopg.errors import QueryCanceled as QueryCanceledError
 from sage.misc.decorators import decorator_keywords
 from sage.misc.cachefunc import cached_function
 
-from lmfdb.app import app, ctx_proc_userdata, is_debug_mode
-from lmfdb.utils.search_parsing import parse_start, parse_count, SearchParsingError
-from lmfdb.utils.utilities import flash_error, flash_warning, flash_info, flash_success, to_dict
-from lmfdb.utils.completeness import results_complete
+from .search_parsing import parse_start, parse_count, SearchParsingError
+from .site import current_site
+from .utilities import flash_error, flash_warning, flash_info, flash_success, is_debug_mode, to_dict
 
 # For diagram search support in SearchWrapper:
 from psycodict.base import number_types
@@ -244,18 +243,7 @@ class Wrapper:
     def query_canceled_error(
         self, info, query, err, err_title, template, template_kwds
     ):
-        ctx = ctx_proc_userdata()
-        if urlparse(request.url).netloc == "beta.lmfdb.org":
-            flash_error(
-                'The search query took longer than expected! Please try again later; if your search still times out, please help us improve by reporting this error <a href="%s" target=_blank>here</a>.'
-            % ctx["feedbackpage"]
-            )
-        else:
-            beta_link = ctx["modify_url"](scheme="https", netloc="beta.lmfdb.org")
-            flash_error(
-                'The search query took longer than expected! The <a href="%s">same search</a> on beta.lmfdb.org may succeed (it is running on a server with faster disks).  You can also try again later; if your search still times out, please help us improve by reporting this error  <a href="%s" target=_blank>here</a>.'
-                % (beta_link, ctx["feedbackpage"])
-            )
+        flash_error(current_site().query_timeout_message())
         info["err"] = str(err)
         info["query"] = dict(query)
         return render_template(
@@ -460,7 +448,7 @@ class SearchWrapper(Wrapper):
                 try:
                     nulls = table.stats.null_counts()
                     if complete is None:
-                        complete, msg, caveat = results_complete(table.search_table, query, table._db, info.get("search_array"))
+                        complete, msg, caveat = current_site().results_complete(table.search_table, query, table._db, info.get("search_array"))
                     elif isinstance(complete, tuple) and len(complete) == 2:
                         msg, caveat = complete
                         complete = True
@@ -470,7 +458,7 @@ class SearchWrapper(Wrapper):
                     else:
                         raise ValueError("__complete__ key invalid")
                     if complete:
-                        flash_success("The results below are complete, since the LMFDB contains all " + msg)
+                        flash_success("The results below are complete, since the %s contains all " % current_site().name + msg)
                     elif nulls: # TODO: We already run a version of this inside results_complete.  Should be combined
                         search_columns = table._columns_searched(query)
                         nulls = {col: cnt for col, cnt in nulls.items() if col in search_columns}
@@ -506,7 +494,7 @@ class SearchWrapper(Wrapper):
                     # formatting to its first argument, so a % in the error text would raise
                     # from inside this handler and produce the very 500 we are avoiding.
                     flash_info("There was an error in the completeness checking code, so the search results below may or may not be complete: %s", err)
-                    app.logger.warning(
+                    current_app.logger.warning(
                         "There was an error in the completeness checking code: %s\n%s",
                         err, traceback.format_exc())
             return render_template(template, info=info, title=title, **template_kwds)

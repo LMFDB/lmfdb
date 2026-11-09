@@ -1,4 +1,4 @@
-from lmfdb.utils.utilities import key_for_numerically_sort
+from lmfdb_utils.utilities import key_for_numerically_sort
 from flask import url_for
 #######################################################################
 # Functions for interacting with web structure
