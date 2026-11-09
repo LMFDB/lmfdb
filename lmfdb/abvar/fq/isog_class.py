@@ -69,6 +69,30 @@ def validate_label(label):
         raise ValueError("the final part must be of the form c1_c2_..._cg, with each ci consisting of lower case letters")
 
 
+def formatted_curve_equation(cv):
+    """
+    TeXify a curve equation as stored in the curves column of av_fq_isog,
+    appending "=0" if the stored string is a bare polynomial.
+    """
+    cv = teXify_pol(cv)
+    if "=" not in cv:
+        cv = cv + "=0"
+    return cv
+
+
+def curves_display_search(curves):
+    """
+    A compact rendering of the curves column for search results pages;
+    the full list is available on the homepage and in downloads.
+    """
+    if not curves:
+        return ""
+    disp = "$%s$" % formatted_curve_equation(curves[0])
+    if len(curves) > 1:
+        disp += " and %s more" % (len(curves) - 1)
+    return disp
+
+
 class AbvarFq_isoclass():
     """
     Class for an isogeny class of abelian varieties over a finite field
@@ -80,6 +104,8 @@ class AbvarFq_isoclass():
             dbdata["hyp_count"] = None
         if "jacobian_count" not in dbdata:
             dbdata["jacobian_count"] = None
+        if "curves" not in dbdata:
+            dbdata["curves"] = None
         # New invariants: cyclicity and noncyclic primes
         if "is_cyclic" not in dbdata:
             dbdata["is_cyclic"] = None
@@ -466,10 +492,7 @@ class AbvarFq_isoclass():
 
     def curve_display(self):
         def show_curve(cv):
-            cv = teXify_pol(cv)
-            if "=" not in cv:
-                cv = cv + "=0"
-            return "  <li>$%s$</li>\n" % cv
+            return "  <li>$%s$</li>\n" % formatted_curve_equation(cv)
         if hasattr(self, "curves") and self.curves:
             s = "\n<ul>\n"
             cutoff = 20 if len(self.curves) > 30 else len(self.curves)
