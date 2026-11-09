@@ -355,11 +355,18 @@ class ModCrvTest(LmfdbTest):
             ('32.1536.41.1175','32.1536.41-32.bz.3.6'),
             ('7B.6.2','7.24.0.b.1'),
             ('4E0-8b','8.12.0.a.1'),
+            ('100A7','100.120.7.a.1'), # CP label matching a unique curve
             ('banana','Error: There is no modular curve in the database')
         ]
         for j,l in jump_set:
             L = self.tc.get("/ModularCurve/Q/?jump=%s" % j,follow_redirects=True)
             assert l in L.get_data(as_text=True)
+        # A CP label shared by several curves redirects to the search results listing all of them
+        L = self.tc.get("/ModularCurve/Q/?jump=113A17",follow_redirects=True)
+        text = L.get_data(as_text=True)
+        assert "Modular curve search results" in text
+        for l in ['113.228.17.a.1','113.228.17.a.2']:
+            assert l in text
 
     def test_related_objects(self):
         for url, friends in [
