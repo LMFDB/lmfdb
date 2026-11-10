@@ -1,0 +1,71 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% set res = info.res %}
+
+<p>
+  Enter a description of a finite group below.  The server computes its
+  {{KNOWL('group.hash', 'hash')}} in&nbsp;GAP and looks for groups in the
+  database with the same order and hash.  In some cases (see the note under the
+  results) the group is pinned down up to isomorphism; otherwise a hash match
+  only narrows it to a short list, since distinct groups can share a hash.
+</p>
+
+<form name="identify" method="get" action="{{ url_for('.identify_group_page') }}">
+  <input type="text" name="description" size="52" value="{{ res.input }}"
+         placeholder="(1,2,3)(4,5),(1,2)" />
+  <input type="submit" value="Identify" />
+</form>
+
+<p>Accepted formats:</p>
+<table class="ntdata">
+  <tr><th>Type</th><th>Description</th><th>Example</th></tr>
+  {% for name, blurb, example in info.formats %}
+    <tr>
+      <td>{{ name }}</td>
+      <td>{{ blurb }}</td>
+      <td><a href="{{ url_for('.identify_group_page', description=example) }}"><tt>{{ example }}</tt></a></td>
+    </tr>
+  {% endfor %}
+</table>
+
+{% if res.status == 'error' %}
+  <h2>Result</h2>
+  <p class="red">{{ res.error }}</p>
+  {% if res.show_order_link and info.order_url %}
+    <p>You can still <a href="{{ info.order_url }}">list all groups of order&nbsp;{{ res.order }}</a>.</p>
+  {% endif %}
+
+{% elif res.status == 'list' %}
+  <h2>Result</h2>
+  <p>
+    Input <tt>{{ res.input }}</tt>{% if res.kind %} ({{ res.kind }} group){% endif %}{% if res.order %},
+    order&nbsp;${{ res.order }}${% if res.order_factored and res.order > 1 %} $= {{ res.order_factored }}${% endif %}{% endif %}.
+  </p>
+  {% if res.hash is not none %}
+    <p>
+      {{KNOWL('group.hash', 'Hash')}}: {{ res.hash }}{% if info.hash_url %}
+      (<a href="{{ info.hash_url }}">all groups with this order and hash</a>){% endif %}.
+    </p>
+  {% endif %}
+  {% if res.candidates %}
+    <p>{{ res.caveat }}</p>
+    <ul>
+      {% for c in res.candidates %}
+        <li>
+          {% if c.present or c.live %}
+            <a href="{{ url_for('.by_label', label=c.label) }}">{{ c.label }}</a>
+            {%- if not c.present %} <span class="nowrap">(not in the database)</span>{% endif %}
+          {% else %}
+            {{ c.label }} <span class="nowrap">(not in the database)</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p{% if res.data_error %} class="red"{% endif %}>{{ res.note }}</p>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

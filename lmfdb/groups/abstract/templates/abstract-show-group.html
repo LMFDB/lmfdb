@@ -40,6 +40,10 @@
       <tr><td>{{KNOWL('group.nilpotent', title='Nilpotency class:')}}</td><td>${{gp.nilpotency_class}}$  </td> <td>{{ place_code('nilpotency_class') }}  </td></tr>
     {% endif %}
     <tr><td>{{KNOWL('group.derived_series', title='Derived length:')}}</td><td>${{gp.derived_length}}$  </td> <td>{{ place_code('derived_length') }}  </td></tr>
+    {% if gp.show_hash %}
+      <tr><td>{{KNOWL('group.hash', title='Hash:')}}</td>
+          <td>{{ gp.show_hash }} (<a href="{{ gp.hash_url }}">all groups with this order and hash</a>)</td></tr>
+    {% endif %}
   </table>
 </p>
 <p>
