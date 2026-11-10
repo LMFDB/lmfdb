@@ -414,6 +414,11 @@ class WebHyperGeometricFamily():
             expand_hodge += [i] * h
         return NewtonPolygon(expand_hodge).vertices()
 
+    @cached_method
+    def hodge_polygon_plot(self):
+        from .plot import hodge_polygon_plot
+        return hodge_polygon_plot(self.hodge)
+
     @lazy_attribute
     def ordinary(self):
         if self.weight > 0:
