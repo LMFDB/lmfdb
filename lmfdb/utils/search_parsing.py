@@ -1306,10 +1306,14 @@ def _nf_string_to_qqbar(s):
         raise SearchParsingError("The algebraic expression is empty.")
 
     def _normalize_radicals(t):
-        # Convert shorthand like sqrt5, root-3, cbrt7 into function-call form: sqrt(5), root(-3), cbrt(7).
-        t = re.sub(r"\b(sqrt|root|cbrt)([+-]?\d+)\b", r"\1(\2)", t)
+        # Separate i from a following function or bracket: isqrt3 -> i*sqrt3, 2i(1+i) -> 2i*(1+i)
+        t = re.sub(r"(?<![a-z_])i(?=sqrt|cbrt|root|zeta|phi|\()", "i*", t)
+        # Convert shorthand like sqrt5, root-3, cbrt7, 2sqrt3 into function-call form: sqrt(5), root(-3), cbrt(7), 2sqrt(3).
+        t = re.sub(r"(?<![a-z_])(sqrt|root|cbrt)([+-]?\d+)", r"\1(\2)", t)
         # Convert zeta shorthand like zeta5 or zeta_5 into zeta(5).
-        t = re.sub(r"\bzeta_?(\d+)\b", r"zeta(\1)", t)
+        t = re.sub(r"(?<![a-z_])zeta_?(\d+)", r"zeta(\1)", t)
+        # Implicit multiplication, as in displayed names: 2sqrt(3) -> 2*sqrt(3), sqrt(2)sqrt(3), 2i, (1+i)(1-i)
+        t = implicit_mul(t).replace(")(", ")*(")
         # Convert ^ to ** for exponentiation (Python uses ** for exponentiation)
         t = t.replace("^", "**")
         return t
@@ -1405,7 +1409,7 @@ def nf_string_to_label(FF):
     Uses _nf_string_to_qqbar to safely parse algebraic expressions into elements in QQbar.
     Uses number_field_elements_from_algebraics to compute the minimal number field containing the specified elements.
 
-    Examples: Q, Qsqrt2, Qsqrt-4, Qzeta5, Q(sqrt2+sqrt3), Qcbrt2, Q(sqrt(2 + 3*sqrt2)), Q(sqrt2, cbrt3), Q(2^(1/5)), etc.
+    Examples: Q, Qsqrt2, Qsqrt-4, Qzeta5, Qzeta7+, Q(sqrt2+sqrt3), Qcbrt2, Q(sqrt(2 + 3*sqrt2)), Q(sqrt2, cbrt3), Q(2^(1/5)), etc.
     """
 
     # Check if the rationals Q or Q(i)
@@ -1452,6 +1456,7 @@ def nf_string_to_label(FF):
             return "2.%s.%s.1" % (s, str(absD))
 
         # Case 2: Check if cyclotomic field (or its maximal real subfield)
+        # Qzeta5, Qzeta_5, Q(zeta5), Qzeta7+, Qzeta7plus, Q(zeta7)+, Q(zeta_(7))^+
         if Fstrip[:4] == "zeta" and re.match(r"^qzeta\d+(\+|plus)?$", F.replace("_", "")):
             match_obj = re.match(r"^qzeta(\d+)(\+|plus)?$", F.replace("_", ""))
             if not match_obj:
@@ -1459,7 +1464,7 @@ def nf_string_to_label(FF):
 
             d = ZZ(str(match_obj.group(1)))
             if d % 4 == 2:
-                d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
+                d //= 2  # Q(zeta_6)=Q(zeta_3), etc)
 
             # Check if matches maximal real subfield of a cyclotomic field
             if match_obj.group(2):
@@ -1488,7 +1493,10 @@ def nf_string_to_label(FF):
 
         from sage.rings.qqbar import number_field_elements_from_algebraics
         alphas = [_nf_string_to_qqbar(piece) for piece in pieces]
-        K, _, _ = number_field_elements_from_algebraics(alphas)
+
+        # minimal=True is essential: otherwise Sage may return a larger field,
+        # e.g. Q(zeta_7) for Q(zeta_7 + zeta_7^2 + zeta_7^4) = Q(sqrt(-7)).
+        K, _, _ = number_field_elements_from_algebraics(alphas, minimal=True)
         pol = PolynomialRing(QQ, 'x')(K.defining_polynomial())
         if pol.degree() <= 1:
             return "1.1.1.1"
