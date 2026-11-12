@@ -123,10 +123,11 @@ class NumberFieldTest(LmfdbTest):
         # Rational field:
         self.check_args('/NumberField/Q', '1.1.1.1')
         self.check_args('/NumberField/Q(sqrt4)', '1.1.1.1')
+        self.check_args('/NumberField/Q(root(2,1))', '1.1.1.1')
         self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
         self.check_args('/NumberField/Q(cbrt2^3)', '1.1.1.1')
         self.check_args('/NumberField/Qcbrt-1', '1.1.1.1')
-        self.check_args('/NumberField/Q((-8)^(1/3))', '1.1.1.1')
+        self.check_args('/NumberField/?jump=Q((-8)^(1/3))', '1.1.1.1')
         self.check_args('/NumberField/Q(cbrt(-2+sqrt5)+cbrt(-2-sqrt5))', '1.1.1.1')
 
         # Quadratic fields:
@@ -148,6 +149,7 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/Q(sqrt2+sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt(1 + sqrt2))', '4.2.1024.1')
+        self.check_args('/NumberField/Q(root(2,5))', '5.1.50000.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3,cbrt2)', '12.4.320979616137216.3')
         
         

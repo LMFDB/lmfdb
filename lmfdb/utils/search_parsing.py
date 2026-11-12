@@ -1259,6 +1259,18 @@ def input_string_to_poly(FF):
     except Exception:
         return None, F, FF
 
+def _split_top_level_commas(s):
+    pieces, depth, start = [], 0, 0
+    for i, ch in enumerate(s):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            pieces.append(s[start:i])
+            start = i + 1
+    pieces.append(s[start:])
+    return [p.strip() for p in pieces]
 
 def _strip_matching_outer_parens(s):
     """Remove only parentheses that wrap the entire string, preserving inner grouping."""
@@ -1326,7 +1338,7 @@ def _nf_string_to_qqbar(s):
     except SyntaxError as err:
         raise SearchParsingError(f"Could not parse algebraic expression '{s}': {err.msg}")
 
-    def _root(x, n, key):
+    def _root(x, n):
         # Define the n-th root of x
         # Our convention: If x is real and n is odd, then take the real root. Otherwise, always take the principal root.
         n = ZZ(n)
@@ -1337,6 +1349,16 @@ def _nf_string_to_qqbar(s):
         if n % 2 == 1 and x.imag().is_zero() and AA(x) < 0:
             return -QQbar(AA(-x).nth_root(n))
         return x.nth_root(n)
+
+    def _as_integer(v, what):
+        # Parse an input v as an integer
+        try:
+            q = QQ(v)
+        except (TypeError, ValueError):
+            raise SearchParsingError(f"{what} must be an integer.")
+        if q not in ZZ:
+            raise SearchParsingError(f"{what} must be an integer.")
+        return ZZ(q)
 
     def _eval_ast(n):
         if isinstance(n, ast.Expression):
@@ -1396,18 +1418,17 @@ def _nf_string_to_qqbar(s):
             if n.keywords or not (len(n.args) == 1 or (fname == "root" and len(n.args) == 2)):
                 raise SearchParsingError(f"Function '{fname}' takes exactly one argument (root takes one or two).")
             arg = _eval_ast(n.args[0])
-            if fname in {"sqrt", "root"}:
-                return arg.sqrt()
-            if fname == "zeta":
-                try:
-                    n_q = QQ(arg)
-                    n_int = ZZ(n_q)
-                except (TypeError, ValueError):
-                    raise SearchParsingError("zeta(...) requires a positive integer argument.")
-                if n_q != n_int or n_int <= 0:
-                    raise SearchParsingError("zeta(...) requires a positive integer argument.")
-                return QQbar.zeta(n_int)
-            return arg.nth_root(3)
+            if fname == "sqrt" or (fname == "root" and len(n.args) == 1):
+                return _root(arg, 2)
+            if fname == "root":
+                return _root(arg, _as_integer(_eval_ast(n.args[1]), "The index of root(x, n)"))
+            if fname == "cbrt":
+                return _root(arg, 3)
+            # zeta
+            m = _as_integer(arg, "The argument of zeta(...)")
+            if m <= 0:
+                raise SearchParsingError("zeta(...) requires a positive integer argument.")
+            return QQbar.zeta(m)
         raise SearchParsingError("Unsupported syntax in algebraic expression.")
 
     try:
@@ -1504,7 +1525,7 @@ def nf_string_to_label(FF):
         from lmfdb.number_fields.number_field import poly_to_field_label
 
         # Support comma-separated generators Q(s1, s2, ..., sk).
-        pieces = [piece.strip() for piece in Fstrip.split(",")]
+        pieces = _split_top_level_commas(Fstrip)
         if any(not piece for piece in pieces):
             raise SearchParsingError("Empty generator in comma-separated field nickname.")
 
