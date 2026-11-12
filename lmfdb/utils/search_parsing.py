@@ -1287,7 +1287,7 @@ def _nf_string_to_qqbar(s):
     Supported syntax:
     - binary operators: +, -, *, /, ^ (exponentiation)
     - unary operators: +, -
-    - functions: sqrt(...), root(...), cbrt(...)
+    - functions: sqrt(...), cbrt(...), root(x, n) (n-th root), root(x) (= sqrt(x), for backwards compatibility)
     - zeta roots of unity: zeta(...), zeta_N, zetaN
     - imaginary unit: i
     - golden ratio constant: phi = (1 + sqrt(5))/2
@@ -1297,7 +1297,7 @@ def _nf_string_to_qqbar(s):
 
     The expression is safely parsed with a restricted Python AST and then evaluated as a Sage object in QQbar.
 
-    Examples: sqrt2, sqrt2 + cbrt3, zeta4 - 1/phi, sqrt(2 + 3*sqrt(2)), 2^(1/3), phi^(3/4)
+    Examples: sqrt2, sqrt2 + cbrt3, zeta4 - 1/phi, sqrt(2 + 3*sqrt(2)), 2^(1/3), phi^(3/4), root(2, 5)
 
     """
 
@@ -1325,6 +1325,18 @@ def _nf_string_to_qqbar(s):
     except SyntaxError as err:
         raise SearchParsingError(f"Could not parse algebraic expression '{s}': {err.msg}")
 
+    def _root(x, n, key):
+        # Define the n-th root of x
+        # Our convention: If x is real and n is odd, then take the real root. Otherwise, always take the principal root.
+        n = ZZ(n)
+        if n <= 0:
+            raise SearchParsingError("Roots must have a positive index")
+        if n == 1:
+            return x
+        if n % 2 == 1 and x.imag().is_zero() and AA(x) < 0:
+            return -QQbar(AA(-x).nth_root(n))
+        return x.nth_root(n)
+
     def _eval_ast(n):
         if isinstance(n, ast.Expression):
             return _eval_ast(n.body)
@@ -1337,7 +1349,7 @@ def _nf_string_to_qqbar(s):
             if n.id == "i":
                 return QQbar.zeta(4)
             if n.id == "phi":
-                return (QQbar(1) + QQbar(5).sqrt()) / 2
+                return (QQbar(1) + _root(QQbar(5), 2)) / 2
             raise SearchParsingError(f"Unsupported symbol '{n.id}' in algebraic expressions.")
         if isinstance(n, ast.UnaryOp):
             v = _eval_ast(n.operand)
@@ -1362,13 +1374,17 @@ def _nf_string_to_qqbar(s):
             if isinstance(n.op, ast.Pow):
                 # Support for arbitrary nth-roots via exponentiation: base^(exponent)
                 # The exponent should be a rational number for algebraic evaluation
+                # We define base^(p/q) as (q-th root of base)^p, where q-th roots are evaluated using _root
                 try:
                     exp_rational = QQ(right)
                 except (TypeError, ValueError):
                     raise SearchParsingError(f"Exponent must be a rational number, got {right}.")
                 # Use QQbar's power operator to handle rational exponents
                 # This computes base^exp_rational in QQbar
-                return left ** exp_rational
+                p, q = exp_rational.numerator(), exp_rational.denominator()
+                if left == 0 and p < 0:
+                    raise SearchParsingError("Division by zero in algebraic expression.")
+                return _root(left, q) ** p
             raise SearchParsingError("Unsupported binary operator in algebraic expression.")
         if isinstance(n, ast.Call):
             if not isinstance(n.func, ast.Name):
@@ -1376,8 +1392,8 @@ def _nf_string_to_qqbar(s):
             fname = n.func.id
             if fname not in {"sqrt", "root", "cbrt", "zeta"}:
                 raise SearchParsingError(f"Unsupported function '{fname}' in algebraic expression.")
-            if len(n.args) != 1 or n.keywords:
-                raise SearchParsingError(f"Function '{fname}' takes exactly one argument.")
+            if n.keywords or not (len(n.args) == 1 or (fname == "root" and len(n.args) == 2)):
+                raise SearchParsingError(f"Function '{fname}' takes exactly one argument (root takes one or two).")
             arg = _eval_ast(n.args[0])
             if fname in {"sqrt", "root"}:
                 return arg.sqrt()
