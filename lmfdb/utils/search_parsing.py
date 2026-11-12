@@ -1300,6 +1300,7 @@ def _nf_string_to_qqbar(s):
     Examples: sqrt2, sqrt2 + cbrt3, zeta4 - 1/phi, sqrt(2 + 3*sqrt(2)), 2^(1/3), phi^(3/4), root(2, 5)
 
     """
+    from sage.all import AA
 
     s = s.lower().strip().replace(" ", "")
     if not s:
@@ -1510,7 +1511,7 @@ def nf_string_to_label(FF):
         from sage.rings.qqbar import number_field_elements_from_algebraics
         alphas = [_nf_string_to_qqbar(piece) for piece in pieces]
 
-        # minimal=True is essential: otherwise Sage may return a larger field,
+        # minimal=True is essential here, otherwise Sage may return a larger field.
         # e.g. Q(zeta_7) for Q(zeta_7 + zeta_7^2 + zeta_7^4) = Q(sqrt(-7)).
         K, _, _ = number_field_elements_from_algebraics(alphas, minimal=True)
         pol = PolynomialRing(QQ, 'x')(K.defining_polynomial())
