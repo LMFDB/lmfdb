@@ -676,19 +676,21 @@ def save_form():
         return redirect(url_for(".show", ID=ID))
     new_content = request.form['content']
     who = current_user.get_id()
-    # Saving an AI-written knowl, even without changes, makes it human-written
-    if new_title != k.title or new_content != k.content or k.ai_written:
+    # Saving an AI-written knowl, even without changes, makes it human-written,
+    # unless the editor ticked the box to keep it marked as AI-written
+    keep_ai = k.ai_written and request.form.get('keep_ai', '') == 'on'
+    if new_title != k.title or new_content != k.content or (k.ai_written and not keep_ai):
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
             k.resurrect()
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
-        if k.ai_written:
+        if k.ai_written and not keep_ai:
             flash(Markup("Knowl {} is no longer marked as AI-written, so it is now shown to users who are not logged in.").format(ID))
         k.title = new_title
         k.content = new_content
         k.timestamp = utc_now_naive()
         k.status = 0
-        k.ai_written = False
+        k.ai_written = keep_ai
         k.save(who=who)
     if NEWID:
         if not current_user.is_admin():

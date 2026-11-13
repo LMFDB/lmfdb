@@ -373,6 +373,48 @@ class AIWrittenKnowlTest(LmfdbTest):
             assert "AI-written content" in page.get_data(as_text=True)
             assert "private" in page.headers["Cache-Control"]
 
+    def _save_form(self, form, ai_written=True):
+        r"""
+        Post the editor's form for a knowl with title "Title" and content
+        "Content", and return what it would have saved.
+        """
+        saved = []
+
+        class FakeKnowl:
+            def __init__(self, ID, **kwds):
+                self.id, self.title, self.content, self.type = ID, "Title", "Content", 0
+                self.ai_written = ai_written
+
+            def exists(self, allow_deleted=False):
+                return True
+
+            def save(self, who):
+                saved.append((self.title, self.content, self.ai_written))
+
+        tc = self.app.test_client()
+        with tc.session_transaction() as session:
+            session["_csrf_token"] = "token"
+        data = dict({"id": "test.ai_written", "title": "Title", "content": "Content", "csrf_token": "token"}, **form)
+        with patch.dict(self.app.config, LOGIN_DISABLED=True), patch("lmfdb.knowledge.main.Knowl", FakeKnowl):
+            assert tc.post("/knowledge/save", data=data).status_code == 302
+        return saved
+
+    def test_saving_makes_normal_knowl(self):
+        assert self._save_form({}) == [("Title", "Content", False)]
+        assert self._save_form({"content": "Changed"}) == [("Title", "Changed", False)]
+
+    def test_saving_can_keep_ai(self):
+        assert self._save_form({"keep_ai": "on"}) == []
+        assert self._save_form({"content": "Changed", "keep_ai": "on"}) == [("Title", "Changed", True)]
+        # the box cannot mark a human-written knowl as AI-written
+        assert self._save_form({"content": "Changed", "keep_ai": "on"}, ai_written=False) == [("Title", "Changed", False)]
+
+    def test_edit_page_offers_to_keep_ai(self):
+        checkbox = '<input type="checkbox" name="keep_ai" id="keep_ai" value="on" />'
+        with patch.dict(self.app.config, LOGIN_DISABLED=True), patch.object(knowldb, "set_locked"):
+            assert checkbox in self._page("/knowledge/edit/test.ai_written?lock=ignore", True).get_data(as_text=True)
+            assert "keep_ai" not in self._page("/knowledge/edit/nf.degree?lock=ignore", True).get_data(as_text=True)
+
     def test_type_options(self):
         assert 'name="ai"' not in self._page("/knowledge/", False).get_data(as_text=True)
         text = self._page("/knowledge/", True).get_data(as_text=True)

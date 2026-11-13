@@ -43,7 +43,7 @@
     <li>This knowl is being {{KNOWL('doc.knowl.rename', 'renamed')}} from {{KNOWL(k.source, k.source)}}</li>
     {% endif %}
     {% if k.ai_written %}
-    <li>This knowl was written by AI, so it is only shown to logged-in users.  Editing it and saving makes it a normal knowl.</li>
+    <li>This knowl was written by AI, so it is only shown to logged-in users.  Saving it in the editor makes it a normal knowl, unless you choose to keep it marked as AI-written.</li>
     {% endif %}
     <li>Review status: {{ k.quality }}
       {% if user_can_review_knowls %}

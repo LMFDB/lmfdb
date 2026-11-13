@@ -46,6 +46,7 @@
       <div style="margin: 10px;">
         This knowl was written by AI, so it is only shown to logged-in users.
         Saving it, with or without changes, makes it a normal knowl that everyone can see, so check its content carefully first.
+        If it still needs work, tick "Keep marked as AI-written" below.
       </div>
       {% endif %}
     {% endif %}
@@ -120,6 +121,12 @@
             {{ k.quality }}
           </td>
         </tr>
+        {% if k.ai_written %}
+        <tr>
+          <td><label for="keep_ai">Keep marked as AI-written</label></td>
+          <td><input type="checkbox" name="keep_ai" id="keep_ai" value="on" /></td>
+        </tr>
+        {% endif %}
       {% endif %} {# k.type == -2 #}
         <tr>
           <td colspan="2"><textarea cols="40" rows="10"
