@@ -42,6 +42,12 @@
         Before editing, make sure you read the {{ KNOWL("doc.knowl.annotation_guidelines", title="Annotation Guidelines") }}.
         {% endif %}
       </div>
+      {% if k.ai_written %}
+      <div style="margin: 10px;">
+        This knowl was written by AI, so it is only shown to logged-in users.
+        Saving it, with or without changes, makes it a normal knowl that everyone can see, so check its content carefully first.
+      </div>
+      {% endif %}
     {% endif %}
 
     <form action="{{ url_for('.save_form') }}" method="POST" id=>

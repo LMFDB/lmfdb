@@ -8,6 +8,8 @@ import subprocess
 import time
 import yaml
 import difflib
+from flask import has_request_context
+from flask_login import current_user
 from markupsafe import escape
 
 from psycodict.base import PostgresBase
@@ -121,6 +123,16 @@ def extract_typ(kid):
     return typ, url, name
 
 
+def show_ai_knowls():
+    """
+    Whether AI-written knowls are visible: on the website only to logged-in
+    users, and always in scripts run outside of a request.
+    """
+    if not has_request_context():
+        return True
+    return userdb.can_read_write_userdb() and current_user.is_authenticated
+
+
 def extract_links(content):
     return sorted({x[2] for x in link_finder_re.findall(content) if x[2]})
 
@@ -151,6 +163,7 @@ class KnowlBackend(PostgresBase):
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
         self.cached_titles = {}
+        self.cached_ai_titles = {}
 
     def _refresh_connection_capabilities(self):
         """
@@ -188,11 +201,31 @@ class KnowlBackend(PostgresBase):
 
     @property
     def titles(self):
+        """
+        The titles of knowls visible to users who are not logged in, which do not include AI-written versions.
+        """
+        self._refresh_titles()
+        return self.cached_titles
+
+    @property
+    def ai_titles(self):
+        """
+        The titles of knowls whose most recent version is AI-written.
+        """
+        self._refresh_titles()
+        return self.cached_ai_titles
+
+    def _refresh_titles(self):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
-        return self.cached_titles
+            titles, ai_titles = {}, {}
+            for elt in self.get_all_knowls(['id','title','type'], ai=True):
+                (ai_titles if elt['type'] in ai_types else titles)[elt['id']] = elt['title']
+            if ai_titles:
+                # Users who are not logged in see the most recent human-written version of these, if any
+                titles.update((elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'], ids=list(ai_titles), ai=False))
+            self.cached_titles, self.cached_ai_titles = titles, ai_titles
 
     @property
     def all_defines(self):
@@ -208,15 +241,37 @@ class KnowlBackend(PostgresBase):
     def can_read_write_knowls(self):
         return self._rw_knowldb
 
+    @staticmethod
+    def _hide_ai(ai):
+        """
+        Whether to exclude AI-written versions of knowls, given the ``ai`` argument of the methods below: whether to include them, with None meaning that they are included if the current user may see them (see ``show_ai_knowls``).
+
+        The exclusion applies to individual versions, so a knowl whose most recent version is AI-written is represented by its most recent human-written version (if any).
+        """
+        if ai is None:
+            ai = show_ai_knowls()
+        return not ai
+
+    def _ai_restriction(self, ai, values):
+        """
+        An SQL restriction, starting with AND, excluding AI-written versions of knowls if ``_hide_ai(ai)``; the AI-written type codes are then appended to ``values``.
+        """
+        if not self._hide_ai(ai):
+            return SQL("")
+        values.append(ai_types)
+        return SQL(" AND type != ALL(%s)")
+
     def get_knowl(self, ID,
-            fields=None, beta=None, allow_deleted=False, timestamp=None):
+            fields=None, beta=None, allow_deleted=False, timestamp=None, ai=None):
         if fields is None:
             fields = ['id'] + self._default_fields
+        values = []
+        ai_restriction = self._ai_restriction(ai, values)
         if timestamp is not None:
             timestamp = ensure_naive_utc(timestamp)
             logger.debug("Fetching knowl with ID: %s and timestamp: %s", ID, timestamp)
-            selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
-            L = self._safe_execute(selecter, [ID, timestamp])
+            selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND timestamp = %s{1} LIMIT 1").format(SQL(", ").join(map(Identifier, fields)), ai_restriction)
+            L = self._safe_execute(selecter, [ID, timestamp] + values)
             if L:
                 return dict(zip(fields, L[0]))
             else:
@@ -224,18 +279,31 @@ class KnowlBackend(PostgresBase):
 
         if beta is None:
             beta = is_beta()
-        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND status >= %s ORDER BY timestamp DESC LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE id = %s AND status >= %s{1} ORDER BY timestamp DESC LIMIT 1").format(SQL(", ").join(map(Identifier, fields)), ai_restriction)
         if not beta:
-            L = self._safe_execute(selecter, [ID, 1])
+            L = self._safe_execute(selecter, [ID, 1] + values)
             if L:
                 return dict(zip(fields, L[0]))
-        L = self._safe_execute(selecter, [ID, -2 if allow_deleted else 0])
+        L = self._safe_execute(selecter, [ID, -2 if allow_deleted else 0] + values)
         if L:
             return dict(zip(fields, L[0]))
 
-    def get_all_knowls(self, fields=None, types=[2, 1,0,-1,-2], ids=None, start=None):
+    def get_all_knowls(self, fields=None, types=None, ids=None, start=None, ai=None):
+        """
+        The most recent version of each knowl.
+
+        INPUT:
+
+        - ``fields`` -- the columns to return; defaults to ``id`` and ``_default_fields``
+        - ``types`` -- a list of type codes (see ``knowl_type_code``), defaulting to all types; ignored if ``ids`` or ``start`` is given
+        - ``ids`` -- a list of knowl ids
+        - ``start`` -- a string; if given, only knowl ids starting with it are returned
+        - ``ai`` -- whether AI-written versions are included (whatever ``types`` says); if None, whether the current user may see them (see ``show_ai_knowls``)
+        """
         if fields is None:
             fields = ['id'] + self._default_fields
+        if types is None:
+            types = [2, 1, 0, -1, -2] + ai_types
         if ids is not None:
             where = SQL("WHERE status >= %s AND id = ANY(%s)")
             values = [0, ids]
@@ -245,6 +313,7 @@ class KnowlBackend(PostgresBase):
         else:
             where = SQL("WHERE status >= %s AND type = ANY(%s)")
             values = [0, types]
+        where += self._ai_restriction(ai, values)
         selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls {1} ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)), where)
         L = self._safe_execute(selecter, values)
         return [dict(zip(fields, res)) for res in L]
@@ -257,25 +326,29 @@ class KnowlBackend(PostgresBase):
                  for k, v in zip(['id', 'defines'], res)} for res in L]
 
     #FIXME shouldn't I be allowed to search on id? or something?
-    def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False):
+    def search(self, category="", filters=[], types=[], keywords="", author=None, sort=[], projection=['id', 'title'], regex=False, ai=None):
         """
         INPUT:
 
         - ``category`` -- a knowl category such as "ec"  or "mf".
         - ``filters`` -- a list, giving a subset of "beta", "reviewed", "in progress" and "deleted".
             Knowls in the returned list will have their most recent status among the provided values.
-        - ``types`` -- a list, giving a subset of ["normal", "annotations"]
+        - ``types`` -- a list of keys of ``knowl_type_code``, such as "normal" or "ai"; defaults to ["normal"]
         - ``keywords`` -- a string giving a space separated list of lower case keywords from the id, title and content.  If regex is set, will be used instead as a regular expression to match against content, title and knowl id.
         - ``author`` -- a string or list of strings giving authors
         - ``sort`` -- a list of strings or pairs (x, dir) where x is a column name and dir is 1 or -1.
         - ``projection`` -- a list of column names, not including ``_keywords``
         - ``regex`` -- whether to use regular expressions rather than keyword search
+        - ``ai`` -- whether to include AI-written versions; if None, whether the current user may see them (see ``show_ai_knowls``)
         """
         restrictions = []
         values = []
         if 'in progress' not in filters:
             restrictions.append(SQL("status != %s"))
             values.append(-1)
+        if self._hide_ai(ai):
+            restrictions.append(SQL("type != ALL(%s)"))
+            values.append(ai_types)
         # In order to be able to sort by arbitrary columns, we have to select everything here.
         # We therefore do the projection in Python, which is fine for the knowls table since it's tiny
         fields = ['id', '_keywords'] + self._default_fields
@@ -330,7 +403,7 @@ class KnowlBackend(PostgresBase):
         """who is the ID of the user, who wants to save the knowl"""
         authors = []
         if most_recent is None:
-            most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False)
+            most_recent = self.get_knowl(knowl.id, ['id'] + self._default_fields, allow_deleted=False, ai=True)
         if isinstance(most_recent, Knowl):
             most_recent = {"authors": most_recent.authors}
         if most_recent is not None:
@@ -351,13 +424,28 @@ class KnowlBackend(PostgresBase):
             defines = [name]
         else:
             defines = extract_defines(knowl.content)
+        if knowl.ai_written:
+            if typ not in ai_type_code:
+                raise ValueError("Only normal, top and bottom knowls can be AI-written")
+            typ = ai_type_code[typ]
         # id, authors, cat, content, last_author, timestamp, title, status, type, links, defines, source, source_name
         values = (knowl.id, authors, cat, knowl.content, who, knowl.timestamp, knowl.title, knowl.status, typ, links, defines, source, name, search_keywords)
         with DelayCommit(self):
             inserter = SQL("INSERT INTO kwl_knowls (id, {0}, _keywords) VALUES ({1})")
             inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
-        self.cached_titles[knowl.id] = knowl.title
+        self._cache_title(knowl)
+
+    def _cache_title(self, knowl):
+        """
+        Update the cached titles after saving or resurrecting a knowl.
+        """
+        if knowl.ai_written:
+            # Users who are not logged in still see the most recent human-written version
+            self.cached_ai_titles[knowl.id] = knowl.title
+        else:
+            self.cached_titles[knowl.id] = knowl.title
+            self.cached_ai_titles.pop(knowl.id, None)
 
     def yaml_export(self, filename, ids=0, fields=None):
         """
@@ -368,7 +456,7 @@ class KnowlBackend(PostgresBase):
         INPUT:
 
         - ``filename`` -- the filename to write output
-        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls of those types will be output; the default ``0`` gives normal knowls, as opposed to top/bottom annotations, comments and column descriptions -- see ``knowl_type_code``), or a string (in which case all knowl ids starting with that string will be output)
+        - ``ids`` -- either a list of knowl IDs, an integer/list of integers (in which case all knowls of those types will be output; the default ``0`` gives normal knowls, as opposed to top/bottom annotations, comments, column descriptions and AI-written knowls -- see ``knowl_type_code``), or a string (in which case all knowl ids starting with that string will be output)
         - ``fields`` -- include these fields; defaults to id, content and title
 
         OUTPUT:
@@ -391,7 +479,7 @@ class KnowlBackend(PostgresBase):
         with open(filename, "w", encoding="utf-8") as F:
             yaml.safe_dump([{"written": timestamp}] + knowls, F, default_flow_style=False, sort_keys=False)
 
-    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False, minor=True):
+    def yaml_import(self, filename, who, dryrun=False, straight_to_production=False, minor=True, ai=False):
         """
         This function provides a mechanism for updating many knowls at once from a yaml file, as produced by ``yaml_export``.
         It is not currently exposed to the web interface, so must be run manually by an LMFDB editor.
@@ -405,6 +493,7 @@ class KnowlBackend(PostgresBase):
         - ``dryrun`` -- if True, print the changes that would be made without saving anything
         - ``straight_to_production`` -- if False (the default), updated knowls are reset to beta status so that they can be reviewed.  WARNING: if True, an updated knowl keeps its current status, so a reviewed knowl will remain marked as reviewed even though its new content has not been; only use this for edits that do not require review.  Newly created knowls always start in beta status.
         - ``minor`` -- if True (the default), the person performing the import is not added to the author list of updated knowls (though they are still recorded as the last author).  Set to False for imports that make substantial changes.  The creator of a newly created knowl is always added as an author.
+        - ``ai`` -- if True, the created and updated knowls are marked as AI-written: they are then in beta status and only shown to logged-in users until someone edits them on the website (users who are not logged in see the most recent version that is not AI-written, if there is one).  Only normal, top and bottom knowls can be AI-written; other records are skipped.  If False (the default), knowls keep their type: created knowls are human-written, and updated knowls that were AI-written stay AI-written.
         """
         with open(filename, encoding="utf-8") as F:
             records = yaml.safe_load(F)
@@ -420,12 +509,24 @@ class KnowlBackend(PostgresBase):
             knowl.update(records[knowl["id"]])
         count = 0
         ccount = 0
+
+        def cannot_be_ai(kid):
+            if ai and extract_typ(kid)[0] not in ai_type_code:
+                print(f"Cannot mark {kid} as AI-written: only normal, top and bottom knowls can be")
+                return True
+            return False
+
         with DelayCommit(self):
             for old, new in zip(knowls, updated):
                 assert old['id'] == new['id']
                 if old != new:
+                    if cannot_be_ai(old['id']):
+                        continue
+                    knowl = Knowl(new['id'], data=new)
+                    if ai:
+                        knowl.ai_written = True
                     if dryrun:
-                        print(f"Updating {old['id']}:")
+                        print(f"Updating {old['id']}{' (AI-written)' if knowl.ai_written else ''}:")
                         for col, oval in old.items():
                             if col != "content":
                                 nval = new[col]
@@ -437,10 +538,10 @@ class KnowlBackend(PostgresBase):
                                 diff = difflib.ndiff(ocontent.split("\n"), ncontent.split("\n"))
                                 print("  " + "\n  ".join(diff))
                     else:
-                        if not straight_to_production:
-                            new['status'] = 0
-                        new['timestamp'] = utc_now_naive()
-                        self.save(Knowl(new['id'], data=new), who, most_recent=Knowl(old['id'], data=old), minor=minor)
+                        if not straight_to_production or knowl.ai_written:
+                            knowl.status = 0
+                        knowl.timestamp = utc_now_naive()
+                        self.save(knowl, who, most_recent=Knowl(old['id'], data=old), minor=minor)
                     count += 1
             for kid, rec in creating.items():
                 reason = bad_knowl_id_reason(kid)
@@ -451,12 +552,19 @@ class KnowlBackend(PostgresBase):
                 if not ("content" in rec and "title" in rec):
                     print(f"{kid} missing required content/title")
                     continue
+                if cannot_be_ai(kid):
+                    continue
                 if dryrun:
-                    print(f"Creating {kid}")
+                    print(f"Creating {kid}{' (AI-written)' if ai else ''}")
                 else:
                     rec['status'] = 0
                     rec['timestamp'] = utc_now_naive()
-                    self.save(Knowl(kid, data=rec), who)
+                    knowl = Knowl(kid, data=rec)
+                    if ai:
+                        knowl.ai_written = True
+                    # There are no previous authors to look up (which would
+                    # need a request, since get_knowl calls is_beta)
+                    self.save(knowl, who, most_recent={})
                 ccount += 1
         if count:
             print(f"{count} knowls updated")
@@ -465,13 +573,14 @@ class KnowlBackend(PostgresBase):
         if too_new:
             print(f"{len(too_new)} knowls have changed since the yaml file was created, and are thus not being updated:\n{','.join(too_new)}")
 
-    def get_history(self, limit=25):
+    def get_history(self, limit=25, ai=None):
         """
-        returns the last @limit history items
+        returns the last @limit history items, including AI-written versions if @ai (by default, if the current user may see them)
         """
         cols = ("id", "title", "timestamp", "last_author")
-        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)))
-        L = self._safe_execute(selecter, [0, -2, limit])
+        values = [0, -2]
+        selecter = SQL("SELECT {0} FROM kwl_knowls WHERE status >= %s AND type != %s{1} ORDER BY timestamp DESC LIMIT %s").format(SQL(", ").join(map(Identifier, cols)), self._ai_restriction(ai, values))
+        L = self._safe_execute(selecter, values + [limit])
         return [dict(zip(cols, res)) for res in L]
 
     def get_comment_history(self, limit=25):
@@ -483,10 +592,11 @@ class KnowlBackend(PostgresBase):
         L = self._safe_execute(selecter, [0, -2, 0, -2, limit])
         return [dict(zip(["knowl_id", "knowl_title", "knowl_timestamp", "knowl_author", "comment_id", "comment_timestamp", "comment_author"], res)) for res in L]
 
-    def get_edit_history(self, ID):
-        selecter = SQL("SELECT timestamp, last_author, content, status FROM kwl_knowls WHERE status >= %s AND id = %s ORDER BY timestamp")
-        L = self._safe_execute(selecter, [0, ID])
-        return [dict(zip(["timestamp", "last_author", "content", "status"], rec)) for rec in L]
+    def get_edit_history(self, ID, ai=None):
+        values = [0, ID]
+        selecter = SQL("SELECT timestamp, last_author, content, status, type FROM kwl_knowls WHERE status >= %s AND id = %s{0} ORDER BY timestamp").format(self._ai_restriction(ai, values))
+        L = self._safe_execute(selecter, values)
+        return [dict(zip(["timestamp", "last_author", "content", "status", "type"], rec)) for rec in L]
 
     def get_comments(self, ID):
         # Note that the subselect is sorted in ascending order by timestamp
@@ -550,14 +660,14 @@ class KnowlBackend(PostgresBase):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
         updator = SQL("UPDATE kwl_knowls SET status=%s WHERE id=%s")
         self._execute(updator, [-2, knowl.id])
-        if knowl.id in self.cached_titles:
-            self.cached_titles.pop(knowl.id)
+        self.cached_titles.pop(knowl.id, None)
+        self.cached_ai_titles.pop(knowl.id, None)
 
     def resurrect(self, knowl):
         """Sets the status for all deleted copies of the knowl to beta"""
         updator = SQL("UPDATE kwl_knowls SET status=%s WHERE status=%s AND id=%s")
         self._execute(updator, [0, -2, knowl.id])
-        self.cached_titles[knowl.id] = knowl.title
+        self._cache_title(knowl)
 
     def review(self, knowl, who, set_beta=False):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
@@ -598,12 +708,13 @@ class KnowlBackend(PostgresBase):
         return knowls
 
     def stale_knowls(self):
+        # AI-written versions are not reviewed: they become human-written when edited
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
+        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 AND type != ALL(%s) ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 AND type != ALL(%s) ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
             SQL(", ").join(SQL("a.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(SQL("b.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(map(Identifier, fields)))
-        data = self._safe_execute(selecter)
+        data = self._safe_execute(selecter, [ai_types, ai_types])
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in data]
         for knowl, rec in zip(knowls, data):
             D = dict(zip(fields, rec[len(fields):]))
@@ -611,7 +722,7 @@ class KnowlBackend(PostgresBase):
         self._set_referrers(knowls)
         return knowls
 
-    def ids_referencing(self, knowlid, old=False, beta=None):
+    def ids_referencing(self, knowlid, old=False, beta=None, ai=None):
         """
         Returns all ids that reference the given one.
 
@@ -624,24 +735,27 @@ class KnowlBackend(PostgresBase):
         - ``knowlid`` -- a knowl id in the database
         - ``old`` -- whether to include knowls that used to reference this one, but no longer do.
         - ``beta`` -- if False, use the most recent positively reviewed knowl, rather than the most recent.
+        - ``ai`` -- whether to include AI-written versions; by default, if the current user may see them.
         """
-        values = [0, -2, [knowlid]]
+        values = [0, -2]
+        ai_restriction = self._ai_restriction(ai, values)
+        values.append([knowlid])
         if old:
-            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s AND links @> %s")
+            selecter = SQL("SELECT DISTINCT ON (id) id FROM kwl_knowls WHERE status >= %s AND type != %s{0} AND links @> %s").format(ai_restriction)
         else:
             if beta is None:
                 beta = is_beta()
             if not beta:
                 # Have to make sure we do display references where the most recent positively reviewed knowl does reference this, but the most recent beta does not.
-                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s{0} ORDER BY id, timestamp DESC) knowls WHERE links @> %s").format(ai_restriction)
                 L = self._safe_execute(selecter, values)
                 good_ids = [rec[0] for rec in L]
                 # Have to make sure that we don't display knowls as referencing this one when the most recent positively reviewed knowl doesn't but the most recent beta knowl does.
-                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE NOT (links @> %s)")
+                selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status > %s AND type != %s{0} ORDER BY id, timestamp DESC) knowls WHERE NOT (links @> %s)").format(ai_restriction)
                 L = self._safe_execute(selecter, values)
                 bad_ids = [rec[0] for rec in L]
             # We also need new knowls that have never been reviewed
-            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s ORDER BY id, timestamp DESC) knowls WHERE links @> %s")
+            selecter = SQL("SELECT id FROM (SELECT DISTINCT ON (id) id, links FROM kwl_knowls WHERE status >= %s AND type != %s{0} ORDER BY id, timestamp DESC) knowls WHERE links @> %s").format(ai_restriction)
         L = self._safe_execute(selecter, values)
         if not beta and not old:
             new_ids = [rec[0] for rec in L if rec[0] not in bad_ids]
@@ -649,11 +763,12 @@ class KnowlBackend(PostgresBase):
         else:
             return [rec[0] for rec in L]
 
-    def orphans(self, old=False, beta=None):
+    def orphans(self, old=False, beta=None, ai=None):
         """
         Returns lists of knowl ids (grouped by category) that are not referenced by any code or other knowl.
+        AI-written knowls are included if ``ai`` (by default, if the current user may see them).
         """
-        kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0]) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
+        kids = {k['id'] for k in self.get_all_knowls(['id'], types=[0, ai_type_code[0]], ai=ai) if not any(k['id'].startswith(x) for x in ["users.", "test."])}
 
         def filter_from_matches(pattern):
             matches = subprocess.check_output(['git', 'grep', '-E', '--full-name', '--line-number', '--context', '2', pattern],encoding='utf-8').split('\n--\n')
@@ -668,8 +783,9 @@ class KnowlBackend(PostgresBase):
 
         # Find references in the codebase
         filter_from_matches(link_finder_re.pattern)
-        selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s ORDER BY id, timestamp DESC")
-        L = self._safe_execute(selecter, [0])
+        values = [0]
+        selecter = SQL("SELECT DISTINCT ON (id) id, links, cat, title FROM kwl_knowls WHERE status >= %s{0} ORDER BY id, timestamp DESC").format(self._ai_restriction(ai, values))
+        L = self._safe_execute(selecter, values)
         categories = {}
         titles = {}
         for rec in L:
@@ -807,13 +923,14 @@ class KnowlBackend(PostgresBase):
             self._execute(updator, [make_keywords(knowl.content, new_name, knowl.title), new_name, knowl.timestamp])
             if knowl.reviewed_timestamp and knowl.reviewed_timestamp != knowl.timestamp:
                 self._execute(updator, [make_keywords(knowl.reviewed_content, new_name, knowl.reviewed_title), new_name, knowl.reviewed_timestamp])
-            referrers = self.ids_referencing(knowl.id, old=True)
+            referrers = self.ids_referencing(knowl.id, old=True, ai=True)
             updator = SQL("UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
             values = [r"""['"]\s*{0}\s*['"]""".format(knowl.id.replace('.', r'\.')),
                       "'{0}'".format(new_name), 'g', knowl.id, new_name, referrers] # g means replace all
             self._execute(updator, values)
-            if knowl.id in self.cached_titles:
-                self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
+            for cache in [self.cached_titles, self.cached_ai_titles]:
+                if knowl.id in cache:
+                    cache[new_name] = cache.pop(knowl.id)
             knowl.id = new_name
 
     def rename_hyphens(self, execute=False):
@@ -827,17 +944,22 @@ class KnowlBackend(PostgresBase):
         else:
             print(bad_names)
 
-    def broken_links_knowls(self):
+    def broken_links_knowls(self, ai=None):
         """
         A list of knowl ids that have broken links.
+
+        INPUT:
+
+        - ``ai`` -- whether to include AI-written versions; by default, if the current user may see them.
 
         OUTPUT:
 
         A list of pairs ``kid``, ``links``, where ``links`` is a list of broken links on the knowl with id ``kid``.
         """
-        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0 ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0")
+        values = []
+        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0{0} ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0").format(self._ai_restriction(ai, values))
         results = defaultdict(list)
-        for kid, link in self._safe_execute(selecter):
+        for kid, link in self._safe_execute(selecter, values):
             results[kid].append(link)
         return [(kid, results[kid]) for kid in sorted(results)]
 
@@ -894,21 +1016,27 @@ class KnowlBackend(PostgresBase):
         now = utc_now_naive()
         self._execute(inserter, [knowl.id, now, username])
 
-    def knowl_title(self, kid):
+    def knowl_title(self, kid, ai=None):
         """
         just the title, used in the knowls in the templates for the pages.
         returns None, if knowl does not exist.
+        AI-written versions are used if @ai (by default, if the current user may see them).
         """
+        if not self._hide_ai(ai):
+            title = self.ai_titles.get(kid)
+            if title is not None:
+                return title
         return self.titles.get(kid)
 
-    def knowl_exists(self, kid, allow_deleted=False):
+    def knowl_exists(self, kid, allow_deleted=False, ai=None):
         """
         checks if the given knowl with ID=@kid exists
+        (AI-written knowls count if @ai; by default, if the current user may see them)
         """
-        kt = self.knowl_title(kid)
+        kt = self.knowl_title(kid, ai=ai)
         if kt is not None:
             return True
-        k = self.get_knowl(kid, ['id'], beta=True, allow_deleted=allow_deleted)
+        k = self.get_knowl(kid, ['id'], beta=True, allow_deleted=allow_deleted, ai=ai)
         return k is not None
 
     def get_categories(self):
@@ -1052,7 +1180,14 @@ def knowl_url_prefix():
 # allowed qualities for knowls
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
 reverse_status_code = {v:k for k,v in knowl_status_code.items()}
-knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2}
+# Comments have type -2.  AI-written knowls are only shown to logged-in users
+# (see show_ai_knowls), and become human-written when edited on the website.
+knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2, 'ai': 3, 'ai_top': 4, 'ai_bottom': 5}
+knowl_type_names = {'normal': 'Normal', 'top': 'Top', 'bottom': 'Bottom', 'column': 'Column', 'ai': 'AI-written', 'ai_top': 'AI-written top', 'ai_bottom': 'AI-written bottom'}
+# the type of an AI-written knowl, given the type of the corresponding human-written knowl
+ai_type_code = {0: 3, 1: 4, -1: 5}
+human_type_code = {v: k for k, v in ai_type_code.items()}
+ai_types = sorted(human_type_code)
 
 class Knowl():
     """
@@ -1082,6 +1217,10 @@ class Knowl():
                     timestamp = None
                 data = knowldb.get_knowl(ID,
                         allow_deleted=allow_deleted, timestamp=timestamp)
+                if data is None:
+                    # No version with this timestamp is visible, such as an
+                    # AI-written one for a user who is not logged in
+                    data = knowldb.get_knowl(ID, allow_deleted=allow_deleted) or {}
             else:
                 data = {}
         self.title = data.get('title', '')
@@ -1099,6 +1238,12 @@ class Knowl():
         self.source = data.get('source')
         self.source_name = data.get('source_name')
         self.type = data.get('type')
+        # An AI-written knowl has the type of the corresponding human-written knowl,
+        # with ai_written set; its own type code is only used in the database.
+        self.ai_written = data.get('ai_written', False)
+        if self.type in human_type_code:
+            self.type = human_type_code[self.type]
+            self.ai_written = True
         self.editing = editing
         # We need to have the source available on comments being created
         if self.type is None:
@@ -1158,6 +1303,7 @@ class Knowl():
             for i, elt in enumerate(self.edit_history):
                 elt['ms_timestamp'] = datetime_to_timestamp_in_ms(elt['timestamp'])
                 elt['author_full_name'] = full_names.get(elt['last_author'], "")
+                elt['ai_written'] = elt.pop('type') in ai_types
                 if elt['status'] == 1 and i != len(self.edit_history) - 1:
                     self.previous_review_spot = elt['ms_timestamp']
 

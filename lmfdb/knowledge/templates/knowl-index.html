@@ -70,9 +70,9 @@ $(function() {
             <td>
               Type:
             </td>
-            {% for kt in knowl_types -%}
+            {% for kt, kt_name in knowl_types -%}
               <td>
-                <label for="{{ kt }}">{{ kt|capitalize }}</label>:
+                <label for="{{ kt }}">{{ kt_name }}</label>:
                 <input type="checkbox" name="{{ kt }}" value="on" {% if kt in types -%}checked="checked"{%- endif %} />
               </td>
             {%- endfor %}
@@ -122,6 +122,7 @@ $(function() {
         <div title="{{k.title|striptags}} [{{k.id}}]" kid="{{k.id}}">
           <span>{{ k.id }}</span>
           <a href="{{ url_for('.show', ID=k.id) }}" >{{ k.title|safe }}</a>
+          {%- if k.type in ai_types %} (AI-written){% endif %}
         </div>
       {% endfor %}
      </td>
