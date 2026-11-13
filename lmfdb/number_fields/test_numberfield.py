@@ -151,8 +151,6 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/Q(sqrt(1 + sqrt2))', '4.2.1024.1')
         self.check_args('/NumberField/Q(root(2,5))', '5.1.50000.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3,cbrt2)', '12.4.320979616137216.3')
-        
-        
 
     def test_arith_equiv(self):
         self.check_args('/NumberField/7.3.6431296.1', '7.3.6431296.2') # arith equiv field
