@@ -650,6 +650,10 @@ class SearchArray(UniqueRepresentation):
     The goal is to be able to use create one object for each input which can then
     be reused in multiple locations.
 
+    Each subclass has one instance per process (it is a ``UniqueRepresentation``),
+    so it is created with AI-written knowls hidden (see ``public_knowls``): the
+    labels built in ``__init__`` are shown to everyone.
+
     You should set the following attributes/functions to make this work.
 
     - ``browse_array`` and ``refine_array`` -- each a list of lists of ``SearchBox`` objects.
@@ -661,6 +665,13 @@ class SearchArray(UniqueRepresentation):
         for the search buttons
     - ``hidden`` -- returns a list of pairs giving the name and info key for the hidden inputs
     """
+
+    @staticmethod
+    def __classcall__(cls, *args, **kwds):
+        from lmfdb.knowledge.knowl import public_knowls
+        with public_knowls():
+            return super().__classcall__(cls, *args, **kwds)
+
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
     label_knowl = None  # Link to knowl for label (used for "labels" SneakyBox)

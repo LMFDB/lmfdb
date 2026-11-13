@@ -66,7 +66,8 @@
   {{knowl.content|render_knowl|safe }}
   {% if user_is_authenticated -%}
     <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit
-    '{%- if title is none or title == "" -%}{{knowl.title|safe}}{%- else -%}{{ title|safe }}{%- endif -%}'</a></div>
+    '{%- if title is none or title == "" -%}{{knowl.title|safe}}{%- else -%}{{ title|safe }}{%- endif -%}'</a>
+    {%- if knowl.ai_written %} (AI-written, so only shown to logged-in users){% endif %}</div>
   {%- endif %}
 
 {%- else -%}
@@ -77,6 +78,10 @@
           <{{htag}}>{{title}}</{{htag}}>
         {%- endif %}
         {{ bknowl.content|render_knowl|safe }}
+        {% if bknowl.ai_written -%}
+          <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=backupid) }}">edit
+          '{{bknowl.title|safe}}'</a> (AI-written, so only shown to logged-in users)</div>
+        {%- endif %}
       {%- endif %}
     {%- endwith %}
   {%- endif %}

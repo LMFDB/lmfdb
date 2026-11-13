@@ -69,12 +69,14 @@ def display_knowl(kid, title=None, kwargs={}, strong=False):
     there will be no edit link for authenticated users.
     """
     from lmfdb.knowledge.knowl import knowl_title
+    from flask import has_request_context
     from flask_login import current_user
     from lmfdb.users.pwdmanager import userdb
     ktitle = knowl_title(kid)
     if ktitle is None:
-        # Knowl not found
-        if current_user.is_authenticated and userdb.can_read_write_userdb():
+        # Knowl not found (or AI-written, and so hidden); outside a request,
+        # such as at import time, there is no current user
+        if has_request_context() and current_user.is_authenticated and userdb.can_read_write_userdb():
             if title is None:
                 return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
             else:

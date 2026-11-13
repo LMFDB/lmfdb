@@ -2,6 +2,7 @@ import re
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler, formatters
+from lmfdb.knowledge.knowl import public_knowls
 from sage.misc.lazy_attribute import lazy_attribute
 
 
@@ -213,22 +214,28 @@ class GroupStats(StatsDisplay):
     dynamic_parent_page = "abstract-refine-search.html"
     dynamic_cols = ["order", "order_factorization_type", "abelian"]
 
+    # These lazy attributes are kept for everyone, so AI-written knowls are left out
     @lazy_attribute
     def short_summary(self):
-        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroup_search.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'# or <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
+        with public_knowls():
+            return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroup_search.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.  You can <a href="{url_for(".statistics")}">browse further statistics</a>.'# or <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
 
     @lazy_attribute
     def summary(self):
-        return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroup_search.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.' #  In addition to the statistics below, you can also <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
+        with public_knowls():
+            return fr'The database currently contains {comma(db.gps_groups.count())} {display_knowl("group", "groups")} from {display_knowl("rcs.source.groups.abstract", "many different sources")}, the largest of which is $S_{{47}}$ of {display_knowl("group.order", "order")} $47!$.  In addition, it contains {comma(db.gps_subgroup_search.count())} of their {display_knowl("group.subgroup", "subgroups")} and {comma(db.gps_char.count())} of their {display_knowl("group.representation.character", "irreducible complex characters")}.' #  In addition to the statistics below, you can also <a href="{url_for(".dynamic_statistics")}">create your own</a>.'
 
     @lazy_attribute
     def subgroup_summary(self):
-        return fr'The database currently contains {comma(db.gps_subgroup_search.count())}  {display_knowl("group.subgroup", "subgroups")} from among {comma(db.gps_groups.count())} different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+        with public_knowls():
+            return fr'The database currently contains {comma(db.gps_subgroup_search.count())}  {display_knowl("group.subgroup", "subgroups")} from among {comma(db.gps_groups.count())} different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
 
     @lazy_attribute
     def char_summary(self):
-        return fr'The database currently contains {comma(db.gps_char.count())} {display_knowl("group.representation.character", "irreducible complex characters")} from among {comma(db.gps_groups.count({"complex_characters_known":True}))} different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+        with public_knowls():
+            return fr'The database currently contains {comma(db.gps_char.count())} {display_knowl("group.representation.character", "irreducible complex characters")} from among {comma(db.gps_groups.count({"complex_characters_known":True}))} different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
 
     @lazy_attribute
     def cc_summary(self):
-        return fr'The database currently contains {comma(db.gps_conj_classes.count())} {display_knowl("group.conjugacy_class", "conjugacy classes")} from among {comma(db.gps_groups.count({"conjugacy_classes_known":True}))}  different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'
+        with public_knowls():
+            return fr'The database currently contains {comma(db.gps_conj_classes.count())} {display_knowl("group.conjugacy_class", "conjugacy classes")} from among {comma(db.gps_groups.count({"conjugacy_classes_known":True}))}  different  {display_knowl("group", "groups")}. You can <a href="{url_for(".statistics")}">browse further statistics</a>.'

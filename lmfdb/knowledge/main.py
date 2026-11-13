@@ -23,7 +23,7 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason, show_ai_knowls
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -332,6 +332,8 @@ def edit(ID):
     else:
         ann_type = 'Top' if knowl.type == 1 else 'Bottom'
         title = 'Edit %s Knowl for <a href="/%s">%s</a>' % (ann_type, knowl.source, knowl.source_name)
+    if knowl.ai_written:
+        title += " (AI-written)"
     return render_template("knowl-edit.html",
                            title=title,
                            k=knowl,
@@ -352,7 +354,9 @@ def show(ID):
     if k.exists():
         r = render_knowl(ID, footer="0", raw=True)
         title = k.title or "'%s'" % k.id
-        if not is_beta():
+        if k.ai_written:
+            title += " (AI-written)"
+        elif not is_beta():
             if k.status == 0:
                 title += " (awaiting review)"
             else:
@@ -406,12 +410,18 @@ def remove_author(ID):
 def content(ID, timestamp):
     if timestamp is not None:
         timestamp = timestamp_in_ms_to_datetime(timestamp)
-    data = Knowl(ID, timestamp=timestamp).content
-    resp = make_response(data)
+    k = Knowl(ID, timestamp=timestamp)
+    resp = make_response(k.content)
     # cache and allow CORS
-    resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
+    resp.headers['Cache-Control'] = cache_control()
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
+
+
+def cache_control():
+    # Logged-in users can see AI-written knowls, in the knowl itself or in
+    # the titles of knowls it links to, so shared caches must not keep them
+    return 'max-age=%d, %s' % (_cache_time, 'private' if show_ai_knowls() else 'public')
 
 
 @knowledge_page.route("/content/<ID>")
@@ -424,7 +434,7 @@ def raw(ID):
     data = render_knowl(ID, footer="0", raw=True)
     resp = make_response(data)
     # cache  and allow CORS
-    resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
+    resp.headers['Cache-Control'] = cache_control()
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
@@ -477,6 +487,9 @@ def resurrect(ID):
 def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
+    if k.ai_written:
+        flash_error("AI-written knowls need to be edited before they can be reviewed")
+        return redirect(url_for(".show", ID=ID))
     k.review(who=current_user.get_id())
     flash(Markup("Knowl {} has been positively reviewed.").format(ID))
     return redirect(url_for(".show", ID=ID))
@@ -505,6 +518,8 @@ def review_helper(data):
                 beta = True
         if beta is not None:
             k = Knowl(ID)
+            if k.ai_written:
+                raise ValueError
             k.review(who=current_user.get_id(), set_beta=beta)
             return jsonify({"success": 1})
         raise ValueError
@@ -662,15 +677,21 @@ def save_form():
         return redirect(url_for(".show", ID=ID))
     new_content = request.form['content']
     who = current_user.get_id()
-    if new_title != k.title or new_content != k.content:
+    # Saving an AI-written knowl, even without changes, makes it human-written,
+    # unless the editor ticked the box to keep it marked as AI-written
+    keep_ai = k.ai_written and request.form.get('keep_ai', '') == 'on'
+    if new_title != k.title or new_content != k.content or (k.ai_written and not keep_ai):
         if not k.content and not k.title and k.exists(allow_deleted=True):
             # Creating a new knowl with the same id as one that had previously been deleted
             k.resurrect()
             flash(Markup("Knowl successfully created.  Note that a knowl with this id existed previously but was deleted; its history has been restored."))
+        if k.ai_written and not keep_ai:
+            flash(Markup("Knowl {} is no longer marked as AI-written, so it is now shown to users who are not logged in.").format(ID))
         k.title = new_title
         k.content = new_content
         k.timestamp = utc_now_naive()
         k.status = 0
+        k.ai_written = keep_ai
         k.save(who=who)
     if NEWID:
         if not current_user.is_admin():
@@ -813,7 +834,9 @@ def render_knowl(ID, footer=None, kwargs=None,
     %(review_status)s
   </div>"""
         # """ &middot; Authors: %(authors)s """
-        if k.status == 0 and k.type != -2:
+        if k.ai_written:
+            review_status = """&middot; (AI-written)"""
+        elif k.status == 0 and k.type != -2:
             review_status = """&middot; (awaiting review)"""
     render_me += "</div>"
     # render_me = render_me % {'content' : con, 'ID' : k.id }
@@ -838,7 +861,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         resp = make_response(data)
         # cache if it is a usual GET
         if request.method != 'POST':
-            resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
+            resp.headers['Cache-Control'] = cache_control()
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
     except Exception as e:
@@ -850,7 +873,7 @@ def index():
     from lmfdb.utils.psycopg_compat import DataError
     cur_cat = request.args.get("category", "")
 
-    from .knowl import knowl_status_code, knowl_type_code
+    from .knowl import knowl_status_code, knowl_type_code, knowl_type_names, ai_types
     if request.method == 'POST':
         data = request.form
     else:
@@ -859,7 +882,10 @@ def index():
     if not qualities:
         qualities = ["reviewed", "beta"]
 
-    types = [typ for typ in knowl_type_code if data.get(typ, "") == "on"]
+    # Only logged-in users can see AI-written knowls
+    show_ai = show_ai_knowls()
+    knowl_types = [typ for typ in knowl_type_code if show_ai or knowl_type_code[typ] not in ai_types]
+    types = [typ for typ in knowl_types if data.get(typ, "") == "on"]
     if not types:
         types = ["normal"]
 
@@ -868,11 +894,11 @@ def index():
     keywords = search if regex else search.lower()
     # for the moment the two boxes types and search are two forms, thus as temporary fix we search on all types when one searches by keyword or regex
     if search:
-        types = list(knowl_type_code)
+        types = knowl_types
     try:
         # We omit the category so that we can compute the number of results in each category.
         # Eventually it would be good to do the category filtering client-side
-        all_knowls = knowldb.search(filters=qualities, types=types, keywords=keywords, regex=regex)
+        all_knowls = knowldb.search(filters=qualities, types=types, keywords=keywords, regex=regex, projection=['id', 'title', 'type'])
     except DataError as e:
         knowls = {}
         if regex and "invalid regular expression" in str(e):
@@ -936,5 +962,6 @@ def index():
                            use_regex=regex,
                            categories=categories,
                            cur_cat=cur_cat,
-                           knowl_types=list(knowl_type_code),
+                           knowl_types=[(typ, knowl_type_names[typ]) for typ in knowl_types],
+                           ai_types=ai_types,
                            types=types)

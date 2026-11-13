@@ -3,6 +3,7 @@ from collections import defaultdict
 from flask import url_for
 from lmfdb import db
 from lmfdb.utils import comma, display_knowl, StatsDisplay, proportioners, totaler
+from lmfdb.knowledge.knowl import public_knowls
 from psycodict.utils import range_formatter
 from sage.misc.lazy_attribute import lazy_attribute
 from sage.misc.cachefunc import cached_method
@@ -182,13 +183,16 @@ class AbvarFqStats(StatsDisplay):
     def gs(self):
         return sorted({g for g, q in self._counts()})
 
+    # These lazy attributes are kept for everyone, so AI-written knowls are left out
     @lazy_attribute
     def isogeny_knowl(self):
-        return display_knowl("av.isogeny_class", "isogeny classes")
+        with public_knowls():
+            return display_knowl("av.isogeny_class", "isogeny classes")
 
     @lazy_attribute
     def abvar_knowl(self):
-        return display_knowl("ag.abelian_variety", "abelian varieties")
+        with public_knowls():
+            return display_knowl("ag.abelian_variety", "abelian varieties")
 
     @lazy_attribute
     def short_summary(self):
