@@ -119,15 +119,40 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_naturallabel_custom(self):
         # Test various different custom nicknames for number fields
+
+        # Rational field:
+        self.check_args('/NumberField/Q', '1.1.1.1')
+        self.check_args('/NumberField/Q(sqrt4)', '1.1.1.1')
+        self.check_args('/NumberField/Q(root(2,1))', '1.1.1.1')
+        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
+        self.check_args('/NumberField/Q(cbrt2^3)', '1.1.1.1')
+        self.check_args('/NumberField/Qcbrt-1', '1.1.1.1')
+        self.check_args('/NumberField/?jump=Q((-8)^(1/3))', '1.1.1.1')
+        self.check_args('/NumberField/Q(cbrt(-2+sqrt5)+cbrt(-2-sqrt5))', '1.1.1.1')
+
+        # Quadratic fields:
         self.check_args('/NumberField/Qi', '2.0.4.1')
+        self.check_args('/NumberField/Q(1+2i)', '2.0.4.1')
+        self.check_args('/NumberField/Q(zeta8*sqrt2)', '2.0.4.1')
+        self.check_args('/NumberField/Q(sqrt(2)*i)', '2.0.8.1')
         self.check_args('/NumberField/Qphi', '2.2.5.1')
+        self.check_args('/NumberField/Qsqrt5', '2.2.5.1')
+        self.check_args('/NumberField/Q(sqrt5)', '2.2.5.1')
+        self.check_args('/NumberField/Qsqrt8', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2+sqrt3-sqrt3)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2*sqrt3)', '2.2.24.1')
+
+        # Higher degrees:
         self.check_args('/NumberField/Qcbrt2', '3.1.108.1')
+        self.check_args('/NumberField/Q(zeta3*cbrt2)', '3.1.108.1')
         self.check_args('/NumberField/Q(sqrt2+sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt(1 + sqrt2))', '4.2.1024.1')
+        self.check_args('/NumberField/Q(root(2,5))', '5.1.50000.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3,cbrt2)', '12.4.320979616137216.3')
-        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
-        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
+        
+        
 
     def test_arith_equiv(self):
         self.check_args('/NumberField/7.3.6431296.1', '7.3.6431296.2') # arith equiv field
