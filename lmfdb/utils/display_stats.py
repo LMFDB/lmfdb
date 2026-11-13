@@ -440,6 +440,12 @@ class StatsDisplay(UniqueRepresentation):
     A class for displaying statistics in a uniform way.
 
     It is used in conjunction with the display_stats.html template.
+
+    Each subclass has one instance per process (it is a ``UniqueRepresentation``),
+    so anything it computes from knowls is shown to everyone: it is created,
+    and its ``prep`` run, with AI-written knowls hidden (see ``public_knowls``).
+    Lazy attributes in subclasses that call ``display_knowl`` need the same.
+
     You should inherit from this class, providing
 
     - a ``summary`` attribute, which is displayed at the top of the page
@@ -894,7 +900,19 @@ class StatsDisplay(UniqueRepresentation):
         else:
             raise NotImplementedError
 
+    @staticmethod
+    def __classcall__(cls, *args, **kwds):
+        from lmfdb.knowledge.knowl import public_knowls
+        with public_knowls():
+            return super().__classcall__(cls, *args, **kwds)
+
     def prep(self, attr):
+        # This changes attr, often an entry of the class's stat_list
+        from lmfdb.knowledge.knowl import public_knowls
+        with public_knowls():
+            return self._prep(attr)
+
+    def _prep(self, attr):
         if isinstance(attr['cols'], str):
             attr['cols'] = [attr['cols']]
         cols = attr['cols']

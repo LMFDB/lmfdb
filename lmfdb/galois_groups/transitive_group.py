@@ -9,6 +9,7 @@ import yaml
 from flask import render_template, url_for
 
 from lmfdb.utils import list_to_latex_matrix, integer_divisors, sparse_cyclotomic_to_mathml, raw_typeset, display_knowl
+from lmfdb.knowledge.knowl import public_knowls
 from lmfdb.groups.abstract.main import abstract_group_namecache, abstract_group_display_knowl
 from lmfdb.groups.abstract.web_groups import WebAbstractGroup
 
@@ -553,7 +554,9 @@ def group_cclasses_knowl_guts(n, t):
 @cached_function
 def group_character_table_knowl_guts(n, t):
     wgg = WebGaloisGroup.from_nt(n,t)
-    return wgg.chartable()
+    # The result is cached for everyone, so AI-written knowls are left out
+    with public_knowls():
+        return wgg.chartable()
 
 @cached_function
 def galois_module_knowl_guts(n, t, index):

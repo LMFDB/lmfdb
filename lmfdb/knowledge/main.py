@@ -413,14 +413,15 @@ def content(ID, timestamp):
     k = Knowl(ID, timestamp=timestamp)
     resp = make_response(k.content)
     # cache and allow CORS
-    resp.headers['Cache-Control'] = cache_control(k)
+    resp.headers['Cache-Control'] = cache_control()
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
 
-def cache_control(k):
-    # AI-written knowls are only shown to logged-in users, so shared caches must not keep them
-    return 'max-age=%d, %s' % (_cache_time, 'private' if k.ai_written else 'public')
+def cache_control():
+    # Logged-in users can see AI-written knowls, in the knowl itself or in
+    # the titles of knowls it links to, so shared caches must not keep them
+    return 'max-age=%d, %s' % (_cache_time, 'private' if show_ai_knowls() else 'public')
 
 
 @knowledge_page.route("/content/<ID>")
@@ -433,7 +434,7 @@ def raw(ID):
     data = render_knowl(ID, footer="0", raw=True)
     resp = make_response(data)
     # cache  and allow CORS
-    resp.headers['Cache-Control'] = 'max-age=%d, public' % (_cache_time,)
+    resp.headers['Cache-Control'] = cache_control()
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
@@ -860,7 +861,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         resp = make_response(data)
         # cache if it is a usual GET
         if request.method != 'POST':
-            resp.headers['Cache-Control'] = cache_control(k)
+            resp.headers['Cache-Control'] = cache_control()
             resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp
     except Exception as e:

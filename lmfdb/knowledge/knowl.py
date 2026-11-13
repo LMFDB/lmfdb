@@ -8,6 +8,8 @@ import subprocess
 import time
 import yaml
 import difflib
+from contextlib import contextmanager
+from contextvars import ContextVar
 from flask import has_request_context
 from flask_login import current_user
 from markupsafe import escape
@@ -123,14 +125,37 @@ def extract_typ(kid):
     return typ, url, name
 
 
+_public_knowls_only = ContextVar("public_knowls_only", default=False)
+
+
 def show_ai_knowls():
     """
-    Whether AI-written knowls are visible: on the website only to logged-in
-    users, and always in scripts run outside of a request.
+    Whether AI-written knowls are visible by default: only during a request
+    from a logged-in user, outside a ``public_knowls`` block.
+
+    Code run outside a request, such as module imports and scripts, does not
+    see them unless it asks for them (``ai=True`` in the methods of ``knowldb``),
+    since what it builds may later be shown to anyone.
     """
-    if not has_request_context():
-        return True
+    if _public_knowls_only.get() or not has_request_context():
+        return False
     return userdb.can_read_write_userdb() and current_user.is_authenticated
+
+
+@contextmanager
+def public_knowls():
+    """
+    Hide AI-written knowls within this block, whoever is logged in.
+
+    Use this (as a context manager or a decorator) when building something
+    from knowls that is kept beyond the current request, such as the result
+    of a cached function, so that it is safe to show to anyone.
+    """
+    token = _public_knowls_only.set(True)
+    try:
+        yield
+    finally:
+        _public_knowls_only.reset(token)
 
 
 def extract_links(content):
@@ -226,6 +251,9 @@ class KnowlBackend(PostgresBase):
                 # Users who are not logged in see the most recent human-written version of these, if any
                 titles.update((elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'], ids=list(ai_titles), ai=False))
             self.cached_titles, self.cached_ai_titles = titles, ai_titles
+            # Count the caching time from now: if the queries took longer than
+            # that, setting it only beforehand would make every lookup refresh again
+            self.cached_titles_timestamp = time.time()
 
     @property
     def all_defines(self):
@@ -469,11 +497,11 @@ class KnowlBackend(PostgresBase):
         if isinstance(ids, int):
             ids = [ids]
         if isinstance(ids, str):
-            knowls = self.get_all_knowls(fields, start=ids)
+            knowls = self.get_all_knowls(fields, start=ids, ai=True)
         elif all(isinstance(n, int) for n in ids):
-            knowls = self.get_all_knowls(fields, types=ids)
+            knowls = self.get_all_knowls(fields, types=ids, ai=True)
         elif all(isinstance(kid, str) for kid in ids):
-            knowls = self.get_all_knowls(fields, ids=ids)
+            knowls = self.get_all_knowls(fields, ids=ids, ai=True)
         else:
             raise ValueError("ids must either be a list of integers, a string, or a list of ids")
         with open(filename, "w", encoding="utf-8") as F:
@@ -499,7 +527,7 @@ class KnowlBackend(PostgresBase):
             records = yaml.safe_load(F)
         timestamp = records[0]["written"]
         records = {rec['id']: rec for rec in records[1:]}
-        knowls = self.get_all_knowls(['id'] + self._default_fields, ids=list(records))
+        knowls = self.get_all_knowls(['id'] + self._default_fields, ids=list(records), ai=True)
         existing = set(rec['id'] for rec in knowls)
         creating = {kid: rec for kid, rec in records.items() if kid not in existing}
         too_new = [rec["id"] for rec in knowls if rec["timestamp"] >= timestamp]
@@ -693,8 +721,10 @@ class KnowlBackend(PostgresBase):
         tdelta = timedelta(days=days)
         time = now - tdelta
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND type >= -1 AND type <= 1 ORDER BY id, timestamp DESC) knowls WHERE status = 0 ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
-        L = self._safe_execute(selecter, [time, 0])
+        # Knowls whose most recent version is AI-written are left out: they need
+        # to be edited before they are reviewed (see review_helper in main.py)
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE timestamp >= %s AND status >= %s AND (type >= -1 AND type <= 1 OR type = ANY(%s)) ORDER BY id, timestamp DESC) knowls WHERE status = 0 AND type != ALL(%s) ORDER BY timestamp DESC").format(SQL(", ").join(map(Identifier, fields)))
+        L = self._safe_execute(selecter, [time, 0, ai_types, ai_types])
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L]
 
         kids = [k.id for k in knowls]
@@ -708,13 +738,14 @@ class KnowlBackend(PostgresBase):
         return knowls
 
     def stale_knowls(self):
-        # AI-written versions are not reviewed: they become human-written when edited
+        # Knowls whose most recent version is AI-written are left out: they need
+        # to be edited before they are reviewed (see review_helper in main.py)
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 AND type != ALL(%s) ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 AND type != ALL(%s) ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp ORDER BY a.timestamp").format(
+        selecter = SQL("SELECT {0}, {1} FROM (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 0 AND type != -2 ORDER BY id, timestamp DESC) a, (SELECT DISTINCT ON (id) {2} FROM kwl_knowls WHERE status = 1 AND type != -2 ORDER BY id, timestamp DESC) b WHERE a.id = b.id AND a.timestamp > b.timestamp AND a.type != ALL(%s) ORDER BY a.timestamp").format(
             SQL(", ").join(SQL("a.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(SQL("b.{0}").format(Identifier(col)) for col in fields),
             SQL(", ").join(map(Identifier, fields)))
-        data = self._safe_execute(selecter, [ai_types, ai_types])
+        data = self._safe_execute(selecter, [ai_types])
         knowls = [Knowl(rec[0], data=dict(zip(fields, rec))) for rec in data]
         for knowl, rec in zip(knowls, data):
             D = dict(zip(fields, rec[len(fields):]))
@@ -886,7 +917,7 @@ class KnowlBackend(PostgresBase):
             raise ValueError("Only normal knowls can be renamed.")
         if knowl.source is not None or knowl.source_name is not None:
             raise ValueError("This knowl is already involved in a rename.  Use undo_rename or actually_rename instead.")
-        if self.knowl_exists(new_name):
+        if self.knowl_exists(new_name, ai=True):
             raise ValueError("A knowl with id %s already exists." % new_name)
         updater = SQL("UPDATE kwl_knowls SET (source, source_name) = (%s, %s) WHERE id = %s AND timestamp = %s")
         old_name = knowl.id
@@ -957,7 +988,8 @@ class KnowlBackend(PostgresBase):
         A list of pairs ``kid``, ``links``, where ``links`` is a list of broken links on the knowl with id ``kid``.
         """
         values = []
-        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0{0} ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link) = 0").format(self._ai_restriction(ai, values))
+        # The restriction applies both to the linking knowls and to the knowls linked to
+        selecter = SQL("SELECT id, link FROM (SELECT DISTINCT ON (id) id, UNNEST(links) AS link FROM kwl_knowls WHERE status >= 0{0} ORDER BY id, timestamp DESC) knowls WHERE (SELECT COUNT(*) FROM kwl_knowls kw WHERE kw.id = link{1}) = 0").format(self._ai_restriction(ai, values), self._ai_restriction(ai, values))
         results = defaultdict(list)
         for kid, link in self._safe_execute(selecter, values):
             results[kid].append(link)
@@ -1085,7 +1117,7 @@ def bad_knowl_id_reason(ID):
     """
     if ID.endswith('comment'):
         main_knowl = ".".join(ID.split(".")[:-2])
-        if not knowldb.knowl_exists(main_knowl):
+        if not knowldb.knowl_exists(main_knowl, ai=True):
             return ("Knowl '%s' does not exist, so it cannot be commented on", (main_knowl,))
     elif ID.endswith('top') or ID.endswith('bottom') or ID.startswith("columns."):
         if not allowed_annotation_id.match(ID):

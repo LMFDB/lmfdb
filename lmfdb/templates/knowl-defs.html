@@ -78,6 +78,10 @@
           <{{htag}}>{{title}}</{{htag}}>
         {%- endif %}
         {{ bknowl.content|render_knowl|safe }}
+        {% if bknowl.ai_written -%}
+          <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=backupid) }}">edit
+          '{{bknowl.title|safe}}'</a> (AI-written, so only shown to logged-in users)</div>
+        {%- endif %}
       {%- endif %}
     {%- endwith %}
   {%- endif %}

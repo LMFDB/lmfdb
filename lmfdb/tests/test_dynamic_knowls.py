@@ -2,7 +2,7 @@
 from unittest.mock import patch
 import re
 
-from flask import render_template
+from flask import render_template, render_template_string
 from markupsafe import escape
 
 from lmfdb.tests import LmfdbTest
@@ -303,17 +303,91 @@ class AIWrittenKnowlTest(LmfdbTest):
             self._saved_type("columns.nf_fields.degree", True)
 
     def test_show_ai_knowls(self):
-        from lmfdb.knowledge.knowl import show_ai_knowls
-        # scripts see AI-written knowls
-        assert show_ai_knowls()
+        from lmfdb.knowledge.knowl import show_ai_knowls, public_knowls
+        # code run outside a request, such as module imports, does not see them by default
+        assert not show_ai_knowls()
+
+        @public_knowls()
+        def decorated():
+            return show_ai_knowls()
+
         with self.app.test_request_context("/"):
             assert not show_ai_knowls()
             with patch("lmfdb.knowledge.knowl.userdb.can_read_write_userdb", return_value=True), \
                  patch("lmfdb.knowledge.knowl.current_user") as user:
                 user.is_authenticated = True
                 assert show_ai_knowls()
+                with public_knowls():
+                    assert not show_ai_knowls()
+                assert show_ai_knowls()
+                assert not decorated()
                 user.is_authenticated = False
                 assert not show_ai_knowls()
+
+    def _logged_in(self):
+        """
+        Patches making the current request look as if it came from a logged-in user.
+        """
+        user = patch("lmfdb.knowledge.knowl.current_user")
+        rw = patch("lmfdb.knowledge.knowl.userdb.can_read_write_userdb", return_value=True)
+        return user, rw
+
+    def test_shared_objects_hide_ai(self):
+        # Objects kept for the life of the process are built from public knowls only
+        from lmfdb.knowledge.knowl import show_ai_knowls
+        from lmfdb.utils import StatsDisplay, SearchArray
+
+        class StatsProbe(StatsDisplay):
+            def __init__(self):
+                self.seen = show_ai_knowls()
+
+        class SearchProbe(SearchArray):
+            def __init__(self):
+                self.seen = show_ai_knowls()
+
+        user, rw = self._logged_in()
+        with self.app.test_request_context("/"), user as current_user, rw:
+            current_user.is_authenticated = True
+            assert show_ai_knowls()
+            assert not StatsProbe().seen
+            assert not SearchProbe().seen
+            with patch.object(StatsProbe, "_prep", lambda self, attr: show_ai_knowls()):
+                assert StatsProbe().prep({}) is False
+
+    def test_display_knowl_outside_request(self):
+        # At import time an AI-only knowl looks missing, and there is no current user
+        from lmfdb.utils import display_knowl
+        assert display_knowl("test.no_such_knowl", "Title") == "Title"
+
+    def test_announcements_box_hides_ai(self):
+        from lmfdb.homepage.boxes import Box
+        self.real_get_knowl = knowldb.get_knowl
+
+        def get_knowl(ID, fields=None, beta=None, allow_deleted=False, timestamp=None, ai=None):
+            assert ID == "content.announcements"
+            item = "* AI-written item" if not knowldb._hide_ai(ai) else "* Human item"
+            return {"content": item}
+
+        user, rw = self._logged_in()
+        with self.app.test_request_context("/"), user as current_user, rw, \
+             patch.object(knowldb, "get_knowl", side_effect=get_knowl):
+            current_user.is_authenticated = True
+            box = Box({"title": "Announcements", "image": "announcements"})
+        assert "Human item" in box.content
+        assert "AI-written item" not in box.content
+
+    def test_backup_annotation_is_labelled(self):
+        self.real_get_knowl = knowldb.get_knowl
+        with self.app.test_request_context("/"), \
+             patch.object(knowldb, "get_knowl", side_effect=self._get_knowl), \
+             patch("lmfdb.knowledge.knowl.show_ai_knowls", return_value=True):
+            self.app.preprocess_request()
+            html = render_template_string(
+                "{% from 'knowl-defs.html' import KNOWL_INC with context %}"
+                "{{ KNOWL_INC('test.no_such_knowl.top', title='', backupid='test.ai_written') }}",
+                user_is_authenticated=True)
+        assert "AI-written content" in html
+        assert "AI-written, so only shown to logged-in users" in html
 
     def test_queries_run_with_and_without_ai(self):
         # The knowl database used for tests has no AI-written knowls, so this
@@ -335,6 +409,7 @@ class AIWrittenKnowlTest(LmfdbTest):
         with self.app.test_request_context("/"):
             self.app.preprocess_request()
             knowldb.stale_knowls()
+            knowldb.needs_review(1)
 
     def _get_knowl(self, ID, fields=None, beta=None, allow_deleted=False, timestamp=None, ai=None):
         """
