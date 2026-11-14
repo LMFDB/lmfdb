@@ -555,3 +555,18 @@ class SmfTest(LmfdbTest):
         self.check("2/K/992/3.0/a/t/", r"\Z[\lambda_1, \ldots, \lambda_{9}]")
         data = self.check("2/K/992/3.0/a/t/", "Coefficient ring")
         assert r"\Z[a_1" not in data
+
+    def test_multiplicity_and_conjectural_dims(self):
+        """
+        A form of multiplicity > 1 gets a Mult column, and a conjectural
+        dimension a starred knowl; NULL means multiplicity 1 and proved
+        """
+        from lmfdb.siegel_modular_forms.web_space import display_dim
+        from lmfdb.siegel_modular_forms.siegel_modular_form import show_mult_col
+        assert display_dim(24) == r'\(24\)'
+        assert display_dim(24, None) == r'\(24\)'
+        with self.app.test_request_context():
+            starred = display_dim(24, False)
+        assert starred.startswith(r'\(24\)') and r'\(^*\)' in starred
+        assert not show_mult_col({'results': [{'multiplicity': None}, {'multiplicity': 1}, {}]})
+        assert show_mult_col({'results': [{'multiplicity': 1}, {'multiplicity': 5}]})

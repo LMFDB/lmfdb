@@ -33,7 +33,7 @@ from lmfdb.siegel_modular_forms.web_space import (
     aut_rep_type_sort_key, family_str_to_char, family_char_to_str,
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_table, HAS_MULTIPLICITY, HAS_DIMS_PROVED, display_dim, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.siegel_modular_forms.download import SMF_download
 
 INT_RE = re.compile("^[0-9]*$")
@@ -144,6 +144,9 @@ def display_ALdims(level, weight, al_dims, al_dims_G):
         return ALdims_knowl(al_dims, al_dims_G, level, weight)
     else:
         return ''
+
+def show_mult_col(info):
+    return any((f.get('multiplicity') or 1) > 1 for f in info["results"])
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -964,6 +967,8 @@ newform_columns = SearchColumns([
                       short_title="primitive character"),
     MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
     MathCol("dim", "mf.siegel.dimension", "Dim", default=True, align="right", short_title="dimension"),
+    *([ProcessedCol("multiplicity", "mf.siegel.multiplicity", "Mult", lambda m: 1 if m is None else m, mathmode=True,
+                    contingent=show_mult_col, default=True, align="right", short_title="multiplicity")] if HAS_MULTIPLICITY else []),
     MathCol("relative_dim", "mf.siegel.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
     MultiProcessedCol("field", "mf.siegel.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
@@ -1398,7 +1403,8 @@ space_columns = SearchColumns([
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True),
+    (MultiProcessedCol("cusp_dim", "smf.display_dim", "Cusp Dim", ["cusp_dim", "dims_proved"], display_dim, short_title="cuspidal dimension", default=True)
+     if HAS_DIMS_PROVED else MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True)),
     MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims", "ALdims_G"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 

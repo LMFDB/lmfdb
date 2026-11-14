@@ -13,6 +13,25 @@ from flask import url_for
 
 import re
 
+# Two columns not yet in the database (see the description of the PR adding them):
+# smf_newforms.multiplicity, the multiplicity of the form in its space, and
+# smf_newspaces.dims_proved, False when the dimensions of the space are only
+# conjectural.  Until they exist every form has multiplicity 1 and every
+# dimension is proved, and the pages are as before.
+HAS_MULTIPLICITY = 'multiplicity' in db.smf_newforms.search_cols
+HAS_DIMS_PROVED = 'dims_proved' in db.smf_newspaces.search_cols
+
+
+def conjectural_mark():
+    return display_knowl('mf.siegel.conjectural_dimension', title=r'\(^*\)')
+
+
+def display_dim(dim, dims_proved=True):
+    """A dimension, marked when it is conjectural (NULL counts as proved)."""
+    if dim is None:
+        return ''
+    return r'\(%s\)' % dim + ('' if dims_proved is not False else conjectural_mark())
+
 NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
@@ -289,6 +308,7 @@ class WebNewformSpace():
 #        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
         self.num_forms = data.get('num_forms')
+        self.dims_proved = data.get('dims_proved') is not False
 #        self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
 #        self.char_conrey = self.conrey_indexes[0]
@@ -319,7 +339,7 @@ class WebNewformSpace():
             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
 #            ('Rep. character', '$%s$' % self.char_conrey_str),
             ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
-            ('Dimension', prop_int_pretty(self.cusp_dim)),
+            ('Dimension', prop_int_pretty(self.cusp_dim) + ('' if self.dims_proved else conjectural_mark())),
         ]
         if self.num_forms is not None:
             self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))

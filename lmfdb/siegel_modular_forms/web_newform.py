@@ -556,6 +556,8 @@ class WebNewform():
             self.properties += [('Analytic rank', prop_int_pretty(self.analytic_rank))]
 
         self.properties += [('Dimension', prop_int_pretty(self.dim))]
+        if (getattr(self, 'multiplicity', None) or 1) > 1:
+            self.properties += [('Multiplicity', prop_int_pretty(self.multiplicity))]
 
 #        if self.projective_image:
 #            self.properties += [('Projective image', '$%s$' % self.projective_image_latex)]
