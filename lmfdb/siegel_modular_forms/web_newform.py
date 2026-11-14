@@ -435,6 +435,16 @@ class WebNewform():
         self.has_exact_lfunc = False
         self.has_exact_qexp = False
  
+        # With the normalization of mf.siegel.hecke_operator, T_0(p^2) and T_1(p^2)
+        # have denominators p in weight k = 2, and T_2(p^2) = p^(2k+j-6) has p^2 when
+        # j = 0.  The Yoshida lifts of weight k = 2 store p T_0(p^2), p T_1(p^2) and,
+        # when j = 0, p^2 T_2(p^2), and the table says so.
+        self.hecke_scale = {}
+        if self.weight[0] == 2 and self.aut_rep_type == 'Y':
+            self.hecke_scale = {'lambda_p_square_0': 'p', 'lambda_p_square_1': 'p'}
+            if self.weight[1] == 0:
+                self.hecke_scale['lambda_p_square_2'] = 'p^2'
+
         if self.embedding_label is None:
             hecke_cols = ['hecke_ring_numerators', 'hecke_ring_denominators', 'hecke_ring_inverse_numerators', 'hecke_ring_inverse_denominators', 'hecke_ring_cyclotomic_generator', 'hecke_ring_character_values', 'hecke_ring_power_basis', 'maxp', 'maxp_square']
             self.hecke_types = ['lambda_p', 'lambda_p_square', 'lambda_p_square_0', 'lambda_p_square_1', 'lambda_p_square_2']

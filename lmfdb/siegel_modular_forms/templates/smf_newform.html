@@ -273,7 +273,7 @@ function show_qexp(qstyle) {
     <tr>
       {% set hd = newform.hecke_disp[ht] %}
       <td rowspan="{{headcol_rowspan}}" class="{{shade}} sticky-col border-right" style="min-width: 40px;" align="center">
-	\( T_{ {{ hd }} } \)
+	\( {{ newform.hecke_scale.get(ht, '') }} T_{ {{ hd }} } \)
       </td>
       {% for n in newform.range_evs %}
       <td align="right">
@@ -288,6 +288,9 @@ function show_qexp(qstyle) {
   </tbody>
 </table>
 </div>
+{% if newform.hecke_scale and 'lambda_p_square_0' in newform.hecke_types %}
+<p>In weight \(k = 2\), with the normalization of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operators') }}, the eigenvalues of \(T_{p^2,0}\) and \(T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and of \(T_{p^2,2}\),{% endif %} are not integral, so the table gives those of \(p\,T_{p^2,0}\) and \(p\,T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and \(p^2\,T_{p^2,2}\){% endif %}. The eigenvalues of \(T_p\) and \(T_{p^2}\) are as stated.</p>
+{% endif %}
 {% endif %}
 
 {% if newform.char_orbit_index == 1 and newform.atkin_lehner_eigenvals %}

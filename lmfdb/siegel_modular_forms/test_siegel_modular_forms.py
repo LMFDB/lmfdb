@@ -528,3 +528,20 @@ class SmfTest(LmfdbTest):
             "S_{14,2}(\\Gamma_0(2))",
             "Cusp forms 16 0 16",
         ])
+
+    def test_weight2_yoshida_scaling(self):
+        """
+        The Yoshida lifts of weight k = 2 store p T_{p^2,0} and p T_{p^2,1},
+        and the eigenvalue table labels those rows accordingly; other forms
+        are unchanged
+        """
+        self.need_forms("2.P.2.2.12.a.a")
+        self.check("2/P/2/2.12/a/a/", [
+            "p T_{ p^2, 0 }",
+            "p T_{ p^2, 1 }",
+            "T_{ p^2, 2 }",
+            "so the table gives those of",
+        ])
+        self.need_forms("2.P.2.3.6.a.a")
+        data = self.check("2/P/2/3.6/a/a/", "T_{ p^2, 0 }")
+        assert "so the table gives those of" not in data and "p T_{" not in data
