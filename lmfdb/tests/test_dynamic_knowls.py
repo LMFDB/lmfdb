@@ -101,6 +101,16 @@ def query_text(query):
         return query.as_string(knowldb.conn)  # psycopg2 wants a connection
 
 
+def like(text, pattern):
+    r"""
+    Whether ``text`` matches the SQL ``LIKE`` pattern ``pattern``, in which
+    ``%`` and ``_`` are wildcards unless escaped with ``\``.
+    """
+    regex = "".join(".*" if tok == "%" else "." if tok == "_" else re.escape(tok[-1])
+                    for tok in re.findall(r"\\.|.", pattern, re.S))
+    return re.fullmatch(regex, text, re.S) is not None
+
+
 def description_row(kid, content, timestamp, status=0, authors=None, links=None):
     """
     A row of kwl_knowls holding one version of a table or column description,
@@ -135,6 +145,19 @@ def normal_row(kid, content, timestamp, links=None):
             "_keywords": make_keywords(content, kid, kid)}
 
 
+def comment_row(source, ms, content, timestamp, status=0, links=None):
+    """
+    A row of kwl_knowls holding a comment on the knowl ``source``, as saved
+    from the page created by new_comment.
+    """
+    kid = f"{source}.{ms}.comment"
+    return {"id": kid, "authors": ["editor"], "cat": kid.split(".")[0],
+            "content": content, "last_author": "editor", "timestamp": timestamp,
+            "title": "", "status": status, "type": -2, "links": links or [],
+            "defines": [], "source": source, "source_name": None,
+            "_keywords": make_keywords(content, kid, "")}
+
+
 class FakeKnowlTable:
     """
     Enough of the kwl_knowls table to run port_column_knowls in memory.
@@ -167,19 +190,26 @@ class FakeKnowlTable:
         raise AssertionError("unexpected query: %s" % sql)
 
     def select(self, sql, values):
-        if sql.startswith("SELECT 1 FROM kwl_knowls WHERE id = %s"):
-            return [(1,) for row in self.rows if row["id"] == values[0]][:1]
+        if sql.startswith("SELECT 1 FROM kwl_knowls WHERE id = %s OR (type = %s AND source = %s)"):
+            kid, typ, source = values
+            return [(1,) for row in self.rows
+                    if row["id"] == kid or (row["type"] == typ and row["source"] == source)][:1]
         if sql.startswith("SELECT id, timestamp, content, title FROM kwl_knowls WHERE id = ANY(%s)"):
             return [(row["id"], row["timestamp"], row["content"], row["title"])
                     for row in self.rows if row["id"] in values[0]]
-        if "links @> %s" in sql:  # ids_referencing
-            status, typ, links = values
+        if sql.startswith("SELECT timestamp, title FROM kwl_knowls WHERE id = %s"):
+            return [(row["timestamp"], row["title"]) for row in self.rows if row["id"] == values[0]]
+        if sql.startswith("SELECT DISTINCT id FROM kwl_knowls WHERE type = %s AND source = %s"):
+            typ, source = values
             return sorted({(row["id"],) for row in self.rows
-                           if row["status"] >= status and row["type"] != typ
+                           if row["type"] == typ and row["source"] == source})
+        if sql.startswith("SELECT DISTINCT id FROM kwl_knowls WHERE status >= %s AND links @> %s"):
+            status, links = values
+            return sorted({(row["id"],) for row in self.rows if row["status"] >= status
                            and all(link in row["links"] for link in links)})
         if "id LIKE %s AND type = %s AND status >= %s" in sql:  # get_column_descriptions
             pattern, typ, status = values
-            matches = [row for row in self.rows if row["id"].startswith(pattern[:-1])
+            matches = [row for row in self.rows if like(row["id"], pattern)
                        and row["type"] == typ and row["status"] >= status]
         elif "id = %s AND type = %s AND status >= %s" in sql:  # get_table_description
             kid, typ, status = values
@@ -198,12 +228,18 @@ class FakeKnowlTable:
                 for row in sorted(chosen.values(), key=lambda row: row["id"])]
 
     def update(self, sql, values):
-        if "SET (id, cat, type, source, source_name, title, defines)" in sql:
-            new_id, cat, typ, source, source_name, title, defines, old_id = values
+        m = re.fullmatch(r"UPDATE kwl_knowls SET \(([^()]*)\) = \((%s(?:, %s)*)\) WHERE id = %s", sql)
+        if m:  # rename_description_knowl moving a description or a comment
+            fields = [field.strip('"') for field in m.group(1).split(", ")]
+            new_values, old_id = dict(zip(fields, values)), values[-1]
             for row in self.rows:
                 if row["id"] == old_id:
-                    row.update(id=new_id, cat=cat, type=typ, source=source,
-                               source_name=source_name, title=title, defines=defines)
+                    row.update(new_values)
+        elif "SET title = %s WHERE id = %s AND timestamp = %s" in sql:
+            title, kid, timestamp = values
+            for row in self.rows:
+                if row["id"] == kid and row["timestamp"] == timestamp:
+                    row["title"] = title
         elif "SET _keywords = %s WHERE id = %s AND timestamp = %s" in sql:
             keywords, kid, timestamp = values
             for row in self.rows:
@@ -399,6 +435,94 @@ class PortColumnKnowlsTest(LmfdbTest):
                       data=description_row("columns.old_nf_fields.degree", "The degree text", NEWER))
         with self.assertRaises(ValueError):
             knowldb.actually_rename(knowl, "columns.nf_fields.degree")
+
+    def test_only_the_named_table_is_ported(self):
+        # an underscore in a LIKE pattern matches any character, so
+        # old_nf_fields must not pick up the descriptions of oldxnf_fields
+        table = self.port([
+            description_row("columns.old_nf_fields.degree", "The degree text", NEWER),
+            description_row("columns.oldxnf_fields.obsolete", "Another table", NEWER),
+            description_row("columns.oldxnf_fields.r2", "Another table's r2", NEWER)],
+            keep_old=False)
+
+        ids = sorted((row["id"], row["status"]) for row in table.rows)
+        assert ids == [("columns.nf_fields.degree", 0),
+                       ("columns.oldxnf_fields.obsolete", 0),
+                       ("columns.oldxnf_fields.r2", 0)]
+
+    def test_comments_move_with_a_description(self):
+        old = "columns.oldtable.degree"
+        table = self.port([
+            description_row(old, "The degree of the field", NEWER),
+            comment_row(old, 1700000000000, "Should this be the absolute degree?", OLDER),
+            comment_row(old, 1700000000001, "A deleted comment", NEWER, status=-2),
+            # a comment on another knowl that refers to the description
+            comment_row("nf.degree", 1700000000002, "Compare {{KNOWL('columns.oldtable.degree')}}",
+                        NEWER, links=[old])],
+            keep_old=False, other_table="oldtable")
+
+        new = "columns.nf_fields.degree"
+        comments = sorted((row["id"], row["status"]) for row in table.rows
+                          if row["type"] == -2 and row["source"] == new)
+        assert comments == [(new + ".1700000000000.comment", 0),
+                            (new + ".1700000000001.comment", -2)]
+        assert not [row for row in table.rows if row["id"].startswith(old)]
+        for row in table.rows:
+            if row["type"] == -2:
+                assert row["cat"] == "columns" or row["id"].startswith("nf.")
+                assert row["_keywords"] == make_keywords(row["content"], row["id"], row["title"])
+                assert "oldtable" not in row["_keywords"]
+
+        referring = [row for row in table.rows if row["source"] == "nf.degree"][0]
+        assert referring["content"] == "Compare {{KNOWL('columns.nf_fields.degree')}}"
+        assert referring["links"] == [new]
+
+    def rename(self, rows, old_name, new_name):
+        r"""
+        Rename the description ``old_name`` to ``new_name`` in an in-memory
+        kwl_knowls holding ``rows``, and return the table and the knowl.
+        """
+        table = FakeKnowlTable(rows)
+        current = max((row for row in table.rows if row["id"] == old_name),
+                      key=lambda row: row["timestamp"])
+        knowl = Knowl(old_name, data=current)
+        with patch.object(knowldb, "_execute", side_effect=table.execute):
+            knowldb.rename_description_knowl(knowl, new_name)
+        return table, knowl
+
+    def test_a_table_description_keeps_an_edited_title(self):
+        def version(title, timestamp):
+            row = description_row("tables.oldtable", "Number fields", timestamp)
+            row["title"] = title
+            return row
+        table, knowl = self.rename([
+            version("Table oldtable", OLDER - timedelta(days=1)),
+            version("Number field data", OLDER),
+            # saved while the table was defunct, so with the marker
+            version("Number fields and their invariants (DEFUNCT)", NEWER)],
+            "tables.oldtable", "tables.nf_fields")
+
+        titles = sorted((row["timestamp"], row["title"]) for row in table.rows)
+        assert [title for _, title in titles] == [
+            "Table nf_fields", "Number field data", "Number fields and their invariants"]
+        for row in table.rows:
+            assert row["id"] == "tables.nf_fields" and row["source_name"] == "nf_fields"
+            assert row["_keywords"] == make_keywords(row["content"], row["id"], row["title"])
+            assert "oldtable" not in row["_keywords"]
+        assert knowl.title == "Number fields and their invariants"
+        assert knowldb.cached_titles["tables.nf_fields"] == knowl.title
+
+    def test_a_generated_table_title_follows_the_id(self):
+        row = description_row("tables.oldtable", "Number fields", NEWER)
+        row["title"] = "Table oldtable (DEFUNCT)"
+        table, knowl = self.rename([row], "tables.oldtable", "tables.nf_fields")
+        assert table.rows[0]["title"] == "Table nf_fields"
+        assert knowl.title == "Table nf_fields"
+
+    def test_a_description_keeps_its_kind(self):
+        rows = [description_row("tables.oldtable", "Number fields", NEWER)]
+        with self.assertRaises(ValueError):
+            self.rename(rows, "tables.oldtable", "columns.nf_fields.degree")
 
     def test_stored_title_matches_the_displayed_one(self):
         # rename_description_knowl stores the title that Knowl computes for display

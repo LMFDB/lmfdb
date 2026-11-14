@@ -136,6 +136,14 @@ def extract_defines(content):
     return sorted({(x or y).strip() for x,y in defines_finder_re.findall(content)})
 
 
+def like_escape(text):
+    r"""
+    Escape the characters that a SQL ``LIKE`` pattern treats specially, so that
+    ``text`` is matched literally (with the default escape character ``\``).
+    """
+    return text.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
+
+
 def description_metadata(kid):
     """
     The parts of a table or column description knowl that are determined by its id.
@@ -149,6 +157,8 @@ def description_metadata(kid):
     The title agrees with the one that ``Knowl.__init__`` computes for display,
     apart from the ``(DEFUNCT)`` marker it adds for a table that no longer exists,
     which is a comment on the current database rather than part of the knowl.
+    For a table description this is only the fallback: its title can be edited,
+    and ``rename_description_knowl`` keeps one that has been.
 
     INPUT:
 
@@ -536,7 +546,9 @@ class KnowlBackend(PostgresBase):
         # the one it was created with.
         fields = ['id'] + self._default_fields
         selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp DESC) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
-        L = self._safe_execute(selecter, [f"columns.{table}.%", 2, 0])
+        # Table names contain underscores, which LIKE would otherwise read as
+        # wildcards, so that old_nf_fields would also match oldxnf_fields.
+        L = self._safe_execute(selecter, [f"columns.{like_escape(table)}.%", 2, 0])
         return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L}
 
     def set_column_description(self, table, col, description):
@@ -874,7 +886,12 @@ class KnowlBackend(PostgresBase):
         derives from the id, so that the edit page, knowl search and the
         description API all describe the table and column the knowl has moved
         to.  Every version is updated, and none is removed, so the edit history
-        is preserved as it is by ``actually_rename``.
+        is preserved as it is by ``actually_rename``.  The comments on the
+        knowl move with it.
+
+        The title of a column description is generated from its id, and so is
+        rewritten.  The title of a table description can be edited, so each
+        version keeps its own unless it is the generated one.
 
         INPUT:
 
@@ -887,37 +904,81 @@ class KnowlBackend(PostgresBase):
         old_name = knowl.id
         if old_name == new_name:
             return
+        old_meta = description_metadata(old_name)
+        if (old_meta['source'] is None) != (meta['source'] is None):
+            raise ValueError("A table description can only be renamed to a table description, and a column description to a column description.")
         # Any row under the new id, even a deleted one, would have its history
         # interleaved with this knowl's, so we refuse rather than merge.
-        selecter = SQL("SELECT 1 FROM kwl_knowls WHERE id = %s LIMIT 1")
-        if self._safe_execute(selecter, [new_name]):
+        # The same goes for comments already attached to the new id.
+        selecter = SQL("SELECT 1 FROM kwl_knowls WHERE id = %s OR (type = %s AND source = %s) LIMIT 1")
+        if self._safe_execute(selecter, [new_name, -2, new_name]):
             raise ValueError("A knowl with id %s already exists." % new_name)
         with DelayCommit(self):
-            updator = SQL("UPDATE kwl_knowls SET (id, cat, type, source, source_name, title, defines) = (%s, %s, %s, %s, %s, %s, %s) WHERE id = %s")
-            self._execute(updator, [new_name, meta['cat'], meta['type'], meta['source'], meta['source_name'], meta['title'], meta['defines'], old_name])
-            referrers = self.ids_referencing(old_name, old=True)
+            fields = ['cat', 'type', 'source', 'source_name', 'defines']
+            if meta['source'] is not None:
+                fields.append('title')
+            updator = SQL("UPDATE kwl_knowls SET ({0}) = ({1}) WHERE id = %s").format(
+                SQL(", ").join(map(Identifier, ['id'] + fields)),
+                SQL(", ").join(Placeholder() * (len(fields) + 1)))
+            self._execute(updator, [new_name] + [meta[field] for field in fields] + [old_name])
+            if meta['source'] is None:
+                # Only a generated title follows the id.  Knowl.__init__ adds the
+                # (DEFUNCT) marker when it is displayed, and it gets saved with
+                # the title, so drop it rather than carry it to a table that may
+                # exist.
+                generated = {old_meta['title'], old_meta['title'] + " (DEFUNCT)"}
+                selecter = SQL("SELECT timestamp, title FROM kwl_knowls WHERE id = %s")
+                updator = SQL("UPDATE kwl_knowls SET title = %s WHERE id = %s AND timestamp = %s")
+                for timestamp, title in self._safe_execute(selecter, [new_name]):
+                    if not title or title in generated:
+                        new_title = meta['title']
+                    else:
+                        new_title = title.removesuffix(" (DEFUNCT)")
+                    if new_title != title:
+                        self._execute(updator, [new_title, new_name, timestamp])
+            # Comments are separate knowls, with ids built from the id of the
+            # knowl they comment on, which is also stored as their source.
+            selecter = SQL("SELECT DISTINCT id FROM kwl_knowls WHERE type = %s AND source = %s")
+            updator = SQL("UPDATE kwl_knowls SET (id, cat, source) = (%s, %s, %s) WHERE id = %s")
+            comments = []
+            for (cid,) in self._safe_execute(selecter, [-2, old_name]):
+                m = comment_knowl_re.match(cid)
+                if not m or m.group(1) != old_name:
+                    raise ValueError("Comment %s does not have an id built from %s" % (cid, old_name))
+                new_cid = f"{new_name}.{m.group(2)}.comment"
+                self._execute(updator, [new_cid, meta['cat'], new_name, cid])
+                comments.append(new_cid)
+            # Unlike ids_referencing, this includes comments, which can also
+            # refer to the knowl.
+            selecter = SQL("SELECT DISTINCT id FROM kwl_knowls WHERE status >= %s AND links @> %s")
+            referrers = [rec[0] for rec in self._safe_execute(selecter, [0, [old_name]])]
             updator = SQL("UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
             values = [r"""['"]\s*{0}\s*['"]""".format(old_name.replace('.', r'\.')),
                       "'{0}'".format(new_name), 'g', old_name, new_name, referrers] # g means replace all
             self._execute(updator, values)
             # The keywords are built from the id, title and content, and all
-            # three have just changed: the id and title on every version of this
-            # knowl, and the content on every version of the knowls that
-            # referred to it (which include this one, if it refers to itself).
-            # Unlike a normal rename we redo them all rather than only the
-            # versions on display, so that a description of a column of the old
-            # table is not found by searching for the new one on either server.
+            # three may have just changed: the id and title on every version of
+            # this knowl and its comments, and the content on every version of
+            # the knowls that referred to it (which include this one, if it
+            # refers to itself).  Unlike a normal rename we redo them all rather
+            # than only the versions on display, so that a description of a
+            # column of the old table is not found by searching for the new one
+            # on either server.
             selecter = SQL("SELECT id, timestamp, content, title FROM kwl_knowls WHERE id = ANY(%s)")
             updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
-            for kid, timestamp, content, title in self._safe_execute(selecter, [[new_name] + referrers]):
-                self._execute(updator, [make_keywords(content, kid, title), kid, timestamp])
+            for kid, timestamp, content, title in self._safe_execute(selecter, [[new_name] + comments + referrers]):
+                self._execute(updator, [make_keywords(content, kid, title or ""), kid, timestamp])
+            if meta['source'] is None and knowl.title and knowl.title.removesuffix(" (DEFUNCT)") != old_meta['title']:
+                title = knowl.title.removesuffix(" (DEFUNCT)")
+            else:
+                title = meta['title']
             self.cached_titles.pop(old_name, None)
-            self.cached_titles[new_name] = meta['title']
+            self.cached_titles[new_name] = title
             knowl.id = new_name
             knowl.category = meta['cat']
             knowl.source = meta['source']
             knowl.source_name = meta['source_name']
-            knowl.title = meta['title']
+            knowl.title = title
             knowl.defines = meta['defines']
 
     def rename_hyphens(self, execute=False):
