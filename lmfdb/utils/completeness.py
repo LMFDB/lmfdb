@@ -2083,16 +2083,18 @@ class NFBound(ColTest):
         INPUT:
 
         - ``reasons`` -- a set of reasons, which are either a string or
-          a tuple of the form ``(n, r2, galt, ramps, D_bound, grd_bound, reg)``,
+          a tuple of the form ``(n, r2, galt, ramps, nram, D_bound, grd_bound, reg)``,
           where entries are None if they are not applicable.
         """
         # Current tuples created:
-        # (n, r2, None, None, M, None, None)
-        # (n, r2, Gs, None, M, None, None)
-        # (n, None, Gs, None, None, M, None)
-        # (n, None, None, S, None, None, None)
-        # (n, None, Gs, S, None, None, None)
-        # (n, r2, None, None, None, None, R)
+        # (n, r2, None, None, None, M, None, None)
+        # (n, r2, Gs, None, None, M, None, None)
+        # (n, None, Gs, None, None, None, M, None)
+        # (n, None, None, S, k, None, None, None)
+        # (n, None, Gs, S, k, None, None, None)
+        # (n, r2, None, None, None, None, None, R)
+        # Here k (a bound on the number of ramified primes) is None unless
+        # completeness depends on it (i.e. unless k < len(S)).
         # We group by None pattern
         def describe(tups):
             ans = []
@@ -2122,19 +2124,26 @@ class NFBound(ColTest):
                 else:
                     ans.append(f"unramified outside {','.join()}")
             if tups[0][4] is not None:
-                Dbounds = [str(tup[4]) for tup in tups]
+                nrams = [str(tup[4]) for tup in tups]
+                if len(set(nrams)) == 1:
+                    plural = "" if tups[0][4] == 1 else "s"
+                    ans.append(f"at most {nrams[0]} ramified prime{plural}")
+                else:
+                    ans.append(f"at most {','.join(nrams)} ramified primes")
+            if tups[0][5] is not None:
+                Dbounds = [str(tup[5]) for tup in tups]
                 if len(set(Dbounds)) == 1:
                     ans.append(f"absolute discriminant at most {Dbounds[0]}")
                 else:
                     ans.append(f"absolute discriminant at most {','.join(Dbounds)}")
-            if tups[0][5] is not None:
-                grd = [str(tup[5]) for tup in tups]
+            if tups[0][6] is not None:
+                grd = [str(tup[6]) for tup in tups]
                 if len(set(grd)) == 1:
                     ans.append(f"Galois root discriminant at most {grd[0]}")
                 else:
                     ans.append(f"Galois root discriminant at most {','.join(grd)}")
-            if tups[0][6] is not None:
-                reg_bounds = [RR(tup[6]) for tup in tups]
+            if tups[0][7] is not None:
+                reg_bounds = [RR(tup[7]) for tup in tups]
                 if len(set(reg_bounds)) == 1:
                     ans.append(f"regulator less than {float(reg_bounds[0]):.2f}")
                 else:
@@ -2150,7 +2159,7 @@ class NFBound(ColTest):
                 if not reason.startswith("incompatible conditions"):
                     non_incomp.append(reason)
             else:
-                by_pattern[tuple(i for i in range(7) if reason[i] is None)].append(reason)
+                by_pattern[tuple(i for i in range(8) if reason[i] is None)].append(reason)
         if len(non_incomp) + len(by_pattern) > 0:
             strings = non_incomp
         return "number fields with " + "; ".join(strings + [describe(V) for V in by_pattern.values()])
@@ -2166,7 +2175,7 @@ class NFBound(ColTest):
                 M = self._maxD[n][r2]
                 if D.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, M, None, None))
+                    reasons.add((n, r2, None, None, None, M, None, None))
                 m = min(m, M)
             if m is not infinity:
                 D = D.intersection(bottom(m + 1))
@@ -2188,7 +2197,7 @@ class NFBound(ColTest):
                 M = maxReg - 0.00001  # Completeness only guaranteed if R *strictly less* than M
                 if R.bounded(M):
                     r2opts.remove(r2)
-                    reasons.add((n, r2, None, None, None, None, maxReg))
+                    reasons.add((n, r2, None, None, None, None, None, maxReg))
                 m = min(m, M)
             if m is not infinity:
                 R = R.intersection(bottom(m))
@@ -2207,7 +2216,7 @@ class NFBound(ColTest):
             if set(r2G[t]) == set(r2opts):
                 galt.remove(t)
                 for r2, Gs, M in r2G[t].values():
-                    reasons.add((n, r2, Gs, None, M, None, None))
+                    reasons.add((n, r2, Gs, None, None, M, None, None))
 
     def clear_grd(self, n, grd, galt, reasons):
         """
@@ -2221,7 +2230,7 @@ class NFBound(ColTest):
         for t in galt.intersection(by_t):
             galt.remove(t)
             Gs, M = by_t[t]
-            reasons.add((n, None, Gs, None, None, M, None))
+            reasons.add((n, None, Gs, None, None, None, M, None))
 
     def clear_S(self, n, S, nram, galt, reasons, update_galt=True):
         """
@@ -2231,14 +2240,18 @@ class NFBound(ColTest):
             galt = set(galt)
         if nram is None:
             nram = len(S)
+        # The completeness bounds keyed on nram below only apply because the number of
+        # ramified primes is bounded; when nram < len(S) this constraint does not follow
+        # from being unramified outside S, so we record it for display in the message.
+        shown_nram = nram if nram < len(S) else None
 
         if S in self._nS.get(n, {}):
-            reasons.add((n, None, None, S, None, None, None))
+            reasons.add((n, None, None, S, None, None, None, None))
             return True
 
         M = self._nSp.get(n, {}).get(nram)
         if M is not None and all(p < M for p in S):
-            reasons.add((n, None, None, S, None, None, None))
+            reasons.add((n, None, None, S, shown_nram, None, None, None))
             return True
 
         if galt is None:
@@ -2248,7 +2261,7 @@ class NFBound(ColTest):
             if all(p < M for p in S):
                 I = galt.intersection(Gs)
                 if I:
-                    reasons.add((n, None, Gs, S, None, None, None))
+                    reasons.add((n, None, Gs, S, shown_nram, None, None, None))
                     galt.difference_update(I)
                     if not galt:
                         return True
@@ -2258,7 +2271,7 @@ class NFBound(ColTest):
                 if min(S) == p0 and max(S) < M:
                     I = galt.intersection(Gs)
                     if I:
-                        reasons.add((n, None, Gs, S, None, None, None))
+                        reasons.add((n, None, Gs, S, None, None, None, None))
                         galt.difference_update(I)
                         if not galt:
                             return True
@@ -2268,7 +2281,7 @@ class NFBound(ColTest):
             if SS.issubset(T):
                 I = galt.intersection(Gs)
                 if I:
-                    reasons.add((n, None, Gs, S, None, None, None))
+                    reasons.add((n, None, Gs, S, None, None, None, None))
                     galt.difference_update(I)
                     if not galt:
                         return True
@@ -2635,7 +2648,7 @@ class NFBound(ColTest):
 
         # We collect reasons that have contributed to completeness
         # These have the following format:
-        # (n, r2, galt, ramps, D_bound, grd_bound, Reg)
+        # (n, r2, galt, ramps, nram, D_bound, grd_bound, Reg)
         # Where entries can be None if they are not applicable
         reasons = set()
         # First check completeness without splitting on degree
