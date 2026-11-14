@@ -781,6 +781,11 @@ class CompletenessChecker:
         for cols, test, reason, caveat, filt in self.checkers:
             if all(col in query for col in cols) and filt(query):
                 if self.extract:
+                    # SQL-null predicates (e.g. {"$ne": None}) are outside the numeric
+                    # model of the column tests, which would read {"$ne": None} as an
+                    # empty set satisfying every bound; such columns certify nothing.
+                    if any(_contains_none(query[col]) for col in cols):
+                        continue
                     # In this case, we use the reason specified in the list of checkers
                     if test(db, [query[col] for col in cols]):
                         return True, reason, caveat
@@ -1030,6 +1035,10 @@ class MulFiller:
     def __call__(self, query):
         C = self.cls
         n, e, f = self.n, self.e, self.f
+        # SQL-null predicates (e.g. {"$ne": None}) are outside the numeric model of C,
+        # which would read them as empty sets; make no inference from them.
+        if any(_contains_none(query.get(col)) for col in (n, e, f) if col in query):
+            return
         if e in query and f in query:
             query[n] = C(query.get(n)).intersection(C(query[e]) * C(query[f]))
         if self.backfill:
@@ -1093,7 +1102,13 @@ class UnramifiedFiller:
     """
 
     def __call__(self, query):
-        if "c" in query and IntegerSet(query["c"]).is_subset(IntegerSet(0)):
+        if "c" not in query:
+            return
+        # SQL-null predicates (e.g. {"$ne": None}) are outside the numeric model of
+        # IntegerSet, which reads {"$ne": None} as the empty set; make no inference.
+        if _contains_none(query["c"]) or ("e" in query and _contains_none(query["e"])):
+            return
+        if IntegerSet(query["c"]).is_subset(IntegerSet(0)):
             query["e"] = IntegerSet(query.get("e")).intersection(IntegerSet(1))
 
 
@@ -2568,17 +2583,23 @@ class NFBound(ColTest):
             return True, None
         if n == 2 and r2opts == [1]:
             # Imaginary quadratic fields, where we can use Mark Watkins' paper (Class groups of imaginary quadratic fields) to guarantee completeness based on class number
-            h = query.get("class_number")
-            C = query.get("class_group")
             # Imaginary quadratic fields have r_1 = 0, so the narrow class number/group
-            # coincides with the ordinary class number/group.
-            if h is None:
-                h = query.get("narrow_class_number")
-            if C is None:
-                C = query.get("narrow_class_group")
-            if isinstance(C, list) and h is None:
-                h = prod(C)
-            h = IntegerSet(h)
+            # coincides with the ordinary class number/group, and we can intersect all
+            # the constraints on the class number and on the order of the class group.
+            # Predicates involving SQL nulls (e.g. {"$ne": None}) give no numeric
+            # information (IntegerSet would misread {"$ne": None} as empty), so we skip them.
+            h = IntegerSet(None)
+            for col in ["class_number", "narrow_class_number"]:
+                val = query.get(col)
+                if val is not None and not _contains_none(val):
+                    h = h.intersection(IntegerSet(val))
+            C = None
+            for col in ["class_group", "narrow_class_group"]:
+                G = query.get(col)
+                if isinstance(G, list) and not _contains_none(G):
+                    h = h.intersection(IntegerSet(prod(G)))
+                    if C is None:
+                        C = G
             if h.is_subset(top(97).union(IntegerSet([99,100]))):
                 # Class number 98 has entries slightly outside our bounds
                 # Watkins' result is actually unconditional

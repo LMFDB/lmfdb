@@ -371,6 +371,10 @@ class UtilsTest(unittest.TestCase):
                 ("nf_fields", {'degree': 3, 'cm': True}, "number fields with incompatible conditions: CM and signature"),
                 # For imaginary quadratic fields the narrow class number equals the class number
                 ("nf_fields", {'degree': 2, 'r2': 1, 'narrow_class_number': 1}, "number fields with signature [0,1], class number at most 100 (except 98)"),
+                # A narrow class number range must not override the class number implied by the class group
+                ("nf_fields", {'degree': 2, 'r2': 1, 'class_group': [3], 'narrow_class_number': {'$gte': 1, '$lte': 1000}}, "number fields with signature [0,1], class number at most 100 (except 98)"),
+                # ... and the class number and narrow class number constraints are intersected
+                ("nf_fields", {'degree': 2, 'r2': 1, 'class_number': {'$gte': 1, '$lte': 1000}, 'narrow_class_number': 7}, "number fields with signature [0,1], class number at most 100 (except 98)"),
                 ("artin_reps", {'GaloisLabel': '6T6', 'Conductor': {'$gte': 1, '$lte': 20000}}, "Artin representations with group 6T6, and conductor at most 22497"),
                 ("gps_groups", {'order': {'$gte': 300, '$lte': 500}}, "groups of order at most 2000 except orders larger than 500 that are multiples of 128"),
                 ("gps_groups", {'perfect': True, 'order': {'$gte': 20000, '$lte': 40000}}, "perfect groups of order at most 50000"),
@@ -456,6 +460,13 @@ class UtilsTest(unittest.TestCase):
                 ("char_dirichlet", {'modulus': {'$gte': 400000, '$lte': 3000000}}),
                 # Without primitivity, a conductor bound does not bound the modulus
                 ("char_dirichlet", {'conductor': {'$gte': 1, '$lte': 1000}}),
+                # SQL-null predicates ({"$ne": None} means IS NOT NULL) carry no numeric bound
+                ("char_dirichlet", {'is_primitive': True, 'conductor': {'$ne': None}}),
+                ("char_dirichlet", {'modulus': {'$ne': None}}),
+                ("lf_fields", {'p': 2, 'f': 1, 'c': {'$ne': None}}),
+                ("lf_fields", {'p': 2, 'c': 0, 'f': {'$ne': None}}),
+                ("nf_fields", {'degree': 2, 'r2': 1, 'narrow_class_number': {'$ne': None}}),
+                ("nf_fields", {'degree': 2, 'r2': 1, 'class_number': {'$ne': None}}),
                 ("hgm_families", {'degree': 8}),
                 ("gps_transitive", {'n': 32, 'solv': 1}),
                 ("gps_st", {'rational': True, 'weight': 1, 'degree': 8}),
