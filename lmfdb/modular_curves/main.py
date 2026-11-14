@@ -767,10 +767,9 @@ class ModCurveSearchArray(SearchArray):
     jump_knowl = "modcurve.search_input"
 
     def __init__(self):
-        # Unlike most quantifier selects, this one restricts the results on
-        # its own: prime/p-power/sq-free set num_bad_primes and
-        # level_is_squarefree whether or not a level was entered, and
-        # modcurve_browse.html links straight to ?level_type=... searches
+        # prime/p-power/sq-free filter on num_bad_primes and
+        # level_is_squarefree even when no level is entered (the browse page
+        # links to such searches), hence is_constraint=True
         level_quantifier = SelectBox(
             name="level_type",
             options=[('', ''),

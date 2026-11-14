@@ -1298,9 +1298,8 @@ class ECSearchArray(SearchArray):
                                }
 
     def __init__(self):
-        # Unlike most quantifier selects, this one restricts the results on
-        # its own: prime/p-power/sq-free set num_bad_primes and semistable
-        # whether or not a conductor was entered
+        # prime/p-power/sq-free filter on num_bad_primes and semistable even
+        # when no conductor is entered, hence is_constraint=True
         conductor_quantifier = SelectBox(
             name='conductor_type',
             options=[('', ''),

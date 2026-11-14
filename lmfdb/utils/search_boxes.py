@@ -4,22 +4,22 @@ from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form
 
-# Matches an attribute string like 'class="family"' from a box's ``extra``
+# Matches an attribute string like 'class="family"' from a box's ``html_attrs``
 _class_attr_re = re.compile(r'\s*class\s*=\s*(.*)\Z', re.DOTALL)
 
-def _split_class_attrs(extra):
+def _split_class_attrs(html_attrs):
     """
     Split a list of raw HTML attribute strings into the class tokens they
     contain and the attributes that remain.
 
     Class names should be given using the ``classes`` argument rather than
-    written into ``extra`` by hand, but we merge any that show up there so
+    written into ``html_attrs`` by hand, but we merge any that show up there so
     that a tag can never end up with two ``class`` attributes (which is
     invalid HTML, and browsers respond by discarding one of them).
     """
     classes = []
     rest = []
-    for attr in extra:
+    for attr in html_attrs:
         match = _class_attr_re.match(attr)
         if match:
             classes.extend(match.group(1).strip().strip('"\'').split())
@@ -148,7 +148,7 @@ class SearchBox(TdElt):
 
     def _attrs(self, info):
         """
-        This box's ``extra`` attributes, followed by a single ``class``
+        This box's ``html_attrs``, followed by a single ``class``
         attribute (if there are any classes to set) merging:
 
         - the classes requested via the ``classes`` argument,
@@ -163,8 +163,8 @@ class SearchBox(TdElt):
         results currently on screen, so they are only set when rendering the
         refine-search form (``info`` is None on browse pages).
         """
-        extra_classes, attrs = _split_class_attrs(self.extra)
-        classes = list(self.classes) + extra_classes
+        attr_classes, attrs = _split_class_attrs(self.html_attrs)
+        classes = list(self.classes) + attr_classes
         if self.advanced:
             classes.append("advanced")
         if info is not None and self.constrains(info):
@@ -194,11 +194,11 @@ class SearchBox(TdElt):
         example_col=False,
         id=None,
         qfield=None,
-        extra=[],
+        html_attrs=[],
         classes=[],
         is_constraint=None,
     ):
-        self.extra = list(extra)
+        self.html_attrs = list(html_attrs)
         self.classes = list(classes)
         if is_constraint is not None:
             self.is_constraint = is_constraint
@@ -275,45 +275,13 @@ class TextBox(SearchBox):
         self,
         name=None,
         label=None,
-        knowl=None,
-        example=None,
-        example_span=None,
-        example_span_colspan=1,
+        *,
         example_value=False,
-        colspan=(1, 1, 1),
-        rowspan=(1, 1),
         width=160,
-        short_width=None,
-        short_label=None,
-        advanced=False,
         example_col=None,
-        id=None,
-        qfield=None,
-        extra=[],
-        classes=[],
-        is_constraint=None,
+        **kwds,
     ):
-        SearchBox.__init__(
-            self,
-            name,
-            label,
-            knowl=knowl,
-            example=example,
-            example_span=example_span,
-            example_span_colspan=example_span_colspan,
-            colspan=colspan,
-            rowspan=rowspan,
-            width=width,
-            short_width=short_width,
-            short_label=short_label,
-            advanced=advanced,
-            example_col=example_col,
-            id=id,
-            qfield=qfield,
-            extra=extra,
-            classes=classes,
-            is_constraint=is_constraint,
-        )
+        super().__init__(name, label, width=width, example_col=example_col, **kwds)
         self.example_value = example_value
 
     def _input(self, info):
@@ -359,52 +327,14 @@ class SelectBox(SearchBox):
         name=None,
         label=None,
         options=None,
-        knowl=None,
-        example=None,
-        example_span=None,
-        example_span_colspan=1,
-        colspan=(1, 1, 1),
-        rowspan=(1, 1),
-        width=None,
+        *,
         min_width=None,
-        short_width=None,
-        short_label=None,
-        advanced=False,
-        example_col=False,
         example_value=False,
-        id=None,
-        qfield=None,
-        extra=[],
-        classes=[],
-        is_constraint=None,
+        **kwds,
     ):
-        SearchBox.__init__(
-            self,
-            name,
-            label,
-            knowl=knowl,
-            example=example,
-            example_span=example_span,
-            example_span_colspan=example_span_colspan,
-            colspan=colspan,
-            rowspan=rowspan,
-            width=width,
-            short_width=short_width,
-            short_label=short_label,
-            advanced=advanced,
-            example_col=example_col,
-            id=id,
-            qfield=qfield,
-            extra=extra,
-            classes=classes,
-            is_constraint=is_constraint,
-        )
-        if options is None:
-            options = self._options
-        self.options = options
-        if min_width is None:
-            min_width = self._default_min_width
-        self.min_width = min_width
+        super().__init__(name, label, **kwds)
+        self.options = self._options if options is None else options
+        self.min_width = self._default_min_width if min_width is None else min_width
         self.example_value = example_value
 
     def _input(self, info):
@@ -675,7 +605,7 @@ class SortController(SelectBox):
     is_constraint = False
 
     def __init__(self, options, knowl):
-        extra = [
+        html_attrs = [
             '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
             '''onmousemove="return false;"''',
             '''onmouseup="this.focus();"''',
@@ -690,7 +620,7 @@ class SortController(SelectBox):
             options=options,
             knowl=knowl,
             width=None,
-            extra=extra,
+            html_attrs=html_attrs,
         )
 
     #sort_box = SelectBox(
@@ -701,7 +631,7 @@ class SortController(SelectBox):
     #    name='sort_dir',
     #    options=[('', '&#9650;'), ('op', '&#9660;')],
     #    width=None,
-    #    extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
+    #    html_attrs=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
     #)
     #sort_ord = DoubleSelectBox(
     #    name='sort_combo',
@@ -896,7 +826,7 @@ class SearchArray(UniqueRepresentation):
                     label="",
                     width=150,
                     options=info["stats"]._dynamic_cols,
-                    extra=['onchange="set_buckets(this, \'buckets%s\')"' % i],
+                    html_attrs=['onchange="set_buckets(this, \'buckets%s\')"' % i],
                     is_constraint=False)
                 buckets = TextBox(
                     name="buckets%s" % i,

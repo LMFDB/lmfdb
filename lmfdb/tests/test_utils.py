@@ -567,24 +567,24 @@ class SearchBoxTest(unittest.TestCase):
             {"family", "search_constraint", "search_active"})
         self.assertEqual(self.classes(box, None), {"family"})
 
-    def test_class_in_extra(self):
+    def test_class_in_html_attrs(self):
         r"""
-        Checking that a class written into extra is merged rather than repeated
+        Checking that a class written into html_attrs is merged rather than repeated
         """
-        box = TextBox(name="degree", label="Degree", extra=['class="family"'])
+        box = TextBox(name="degree", label="Degree", html_attrs=['class="family"'])
         self.assertEqual(
             self.classes(box, {"degree": "4"}),
             {"family", "search_constraint", "search_active"})
 
-    def test_select_box_extra_preserved(self):
+    def test_select_box_html_attrs_preserved(self):
         r"""
-        Checking that other attributes in extra survive alongside the classes
+        Checking that other attributes in html_attrs survive alongside the classes
         """
         box = SelectBox(
             name="weight_parity",
             options=[("", ""), ("odd", "odd")],
             classes=["simult_select"],
-            extra=['onchange="simult_change(event);"'])
+            html_attrs=['onchange="simult_change(event);"'])
         rendered = box._input({"weight_parity": "odd"})
         self.assertIn('onchange="simult_change(event);"', rendered)
         self.assertEqual(

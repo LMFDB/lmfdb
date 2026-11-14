@@ -1586,9 +1586,8 @@ class CMFSearchArray(SearchArray):
     }
 
     def __init__(self):
-        # Unlike most quantifier selects, this one restricts the results on
-        # its own: common_parse turns prime/square/squarefree/... into a
-        # level_is_* condition whether or not a level was entered
+        # common_parse turns prime/square/squarefree/... into a level_is_*
+        # condition even when no level is entered, hence is_constraint=True
         level_quantifier = SelectBox(
             name='level_type',
             options=[('', ''),
@@ -1611,13 +1610,13 @@ class CMFSearchArray(SearchArray):
             example_span='4, 1-20',
             select_box=level_quantifier)
 
-        # The parities also restrict the results on their own, and in fact
-        # usually arrive that way: simult_change() sets every simult_select
-        # at once, so both are submitted even with the text boxes empty
+        # The parities filter the results even when the weight and character
+        # boxes are empty (simult_change() sets every simult_select at once,
+        # so both are usually submitted), hence is_constraint=True
         weight_quantifier = ParityMod(
             name='weight_parity',
             classes=["simult_select"],
-            extra=['onchange="simult_change(event);"'],
+            html_attrs=['onchange="simult_change(event);"'],
             is_constraint=True)
 
         weight = TextBoxWithSelect(
@@ -1631,7 +1630,7 @@ class CMFSearchArray(SearchArray):
         character_quantifier = ParityMod(
             name='char_parity',
             classes=["simult_select"],
-            extra=['onchange="simult_change(event);"'],
+            html_attrs=['onchange="simult_change(event);"'],
             is_constraint=True)
 
         character = TextBoxWithSelect(
