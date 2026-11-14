@@ -88,6 +88,7 @@ dataset_names = {
     "hmf": "Hilbert modular forms",
     "hmsurfaces": "Hilbert modular surfaces",
     "inv": "Database inventory",
+    "k3": "K3 surfaces over finite fields",
     "lat": "Integral lattices",
     "lf": "$p$-adic fields",
     "lfunc": "L-functions",

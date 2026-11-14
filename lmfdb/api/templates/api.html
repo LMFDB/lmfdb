@@ -13,6 +13,7 @@ span.api-dataset-total { font-weight: normal; color: #666; }
 table.api-table-list td { padding-right: 16px; }
 td.api-table-name { white-space: nowrap; }
 td.api-table-count { text-align: right; white-space: nowrap; }
+td.api-table-desc p { margin: 0; }
 </style>
 
 
@@ -134,17 +135,20 @@ Jump to:
 </div>
 
 {% for database, tables in databases.items()|sort %}
-<div class="api-dataset" id="{{ database }}" data-dataset="{{ database }} {{ dataset_names.get(database, '')|lower }}">
+<div class="api-dataset" id="{{ database }}" data-dataset="{{ database }} {{ dataset_names.get(database, '')|replace('$', '')|replace('\\', '')|lower }}">
   <h4 class="api-dataset-head">{{ database }}{% if database in dataset_names %} &mdash; {{ dataset_names[database] }}{% endif %}
   <span class="api-dataset-total">({{ dataset_totals[database][0] }} table{% if dataset_totals[database][0] != 1 %}s{% endif %},
     {{ "{:,}".format(dataset_totals[database][1]) }} row{% if dataset_totals[database][1] != 1 %}s{% endif %})</span></h4>
   <table class="ntdata api-table-list">
     <tbody>
     {% for (fullname, shortname, count, description) in tables|sort %}
-      <tr class="api-table-row" data-name="{{ fullname|lower }}" data-desc="{{ description|lower }}">
+      {# descriptions are knowls, so they may contain Markdown, HTML and KNOWL() calls;
+         the filter searches the text that is displayed, without TeX delimiters #}
+      {% set rendered = description|render_knowl if description else "" %}
+      <tr class="api-table-row" data-name="{{ fullname|lower }}" data-desc="{{ rendered|striptags|replace('$', '')|replace('\\', '')|lower }}">
         <td class="api-table-name"><a href="{{ url_for('.api_query', table=fullname) }}">{{ fullname }}</a></td>
         <td class="api-table-count" title="number of rows">{{ "{:,}".format(count) }}</td>
-        <td class="api-table-desc">{{ description }}</td>
+        <td class="api-table-desc">{{ rendered|safe }}</td>
       </tr>
     {% endfor %}
     </tbody>

@@ -122,18 +122,42 @@ class ApiTest(LmfdbTest):
 
     def test_api_home_descriptions(self):
         r"""
-        Check that the description of a table is shown in its row and is
-        searchable by the filter box
+        Check that the description of a table is rendered as a knowl in its
+        row, and that its displayed text is searchable by the filter box
         """
+        def cell(data, table):
+            r"""
+            The description cell and the data-desc attribute of a table's row
+            """
+            m = re.search(r'data-name="%s" data-desc="([^"]*)">.*?<td class="api-table-desc">(.*?)</td>' % table, data, re.S)
+            assert m, "no row for %s" % table
+            return m.group(2).strip(), m.group(1)
+
         description = "The table that the api tests use"
         with patch.object(knowldb, "get_table_descriptions", return_value={"test_table": description}):
             data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
-        assert '<td class="api-table-desc">%s</td>' % description in data
-        assert 'data-desc="%s"' % description.lower() in data
+        html, desc = cell(data, "test_table")
+        assert html == "<p>%s</p>" % description
+        assert desc == description.lower()
+
+        # descriptions are knowls, so markup in them is rendered, not shown as source
+        description = 'Fields of {{ KNOWL("nf.degree", title="degree") }} $n$, see [the docs](/intro) & *more*'
+        with patch.object(knowldb, "get_table_descriptions", return_value={"test_table": description}):
+            data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+        html, desc = cell(data, "test_table")
+        assert "KNOWL" not in html and "](" not in html
+        assert 'knowl="nf.degree"' in html
+        assert '<a href="/intro">the docs</a>' in html
+        assert "<em>more</em>" in html
+        # the filter sees the displayed text, without tags or TeX delimiters
+        assert desc == "fields of degree n, see the docs &amp; more"
+
         # the real descriptions are not all empty either
         data = self.tc.get("/api", follow_redirects=True).get_data(as_text=True)
-        described = [desc for desc in re.findall(r'<td class="api-table-desc">([^<]*)</td>', data) if desc.strip()]
+        described = [d for d in re.findall(r'<td class="api-table-desc">(.*?)</td>', data, re.S) if d.strip()]
         assert len(described) > 20, "only %s tables have a description" % len(described)
+        # and the dataset names are searchable without their TeX
+        assert 'data-dataset="lf p-adic fields"' in data
 
     def test_api_databases(self):
         r"""
