@@ -112,8 +112,8 @@ absolute_polynomial:
 l-function:
   comment: L function, special value at s=1
   pari: |
-    L = lfunmf(mf,f);
-    lfun(L,1)
+    L = lfunmf(mf,f); \\ one L-function for each embedding if f is not defined over Q(chi)
+    if(poldegree(mfparams(f)[4]) > 1, vector(#L, i, lfun(L[i],1)), lfun(L,1))
 
 # Code snippet tests for newform pages; all of these labels are in spaces with
 # several newform orbits, so they exercise the trace-based selection
