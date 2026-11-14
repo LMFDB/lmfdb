@@ -23,7 +23,7 @@ from flask import (abort, flash, jsonify, make_response,
                    request, url_for)
 from markupsafe import Markup
 from flask_login import login_required, current_user
-from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason, show_ai_knowls
+from .knowl import Knowl, knowldb, knowl_title, knowl_exists, knowl_url_prefix, knowl_definition, external_definition_link, utc_now_naive, bad_knowl_id_reason, show_ai_knowls, ai_knowls_public
 from lmfdb.users import admin_required, knowl_reviewer_required
 from lmfdb.users.pwdmanager import userdb
 from lmfdb.utils import to_dict, code_snippet_knowl
@@ -219,7 +219,8 @@ def ctx_knowledge():
             'knowl_url_prefix': knowl_url_prefix,
             "KNOWL_EXISTS": knowl_exists,
             "knowl_definition": knowl_definition,
-            "external_definition_link": external_definition_link}
+            "external_definition_link": external_definition_link,
+            "ai_knowls_public": ai_knowls_public}
 
 
 @app.template_filter("render_knowl")
@@ -419,8 +420,8 @@ def content(ID, timestamp):
 
 
 def cache_control():
-    # Logged-in users can see AI-written knowls, in the knowl itself or in
-    # the titles of knowls it links to, so shared caches must not keep them
+    # Responses that may show AI-written knowls, in the knowl itself or in
+    # the titles of knowls it links to, must not be kept by shared caches
     return 'max-age=%d, %s' % (_cache_time, 'private' if show_ai_knowls() else 'public')
 
 

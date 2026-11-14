@@ -55,6 +55,11 @@
 {%- endwith %}
 {%- endmacro %}
 
+{# the label of an AI-written knowl included in a page #}
+{% macro AI_NOTE() -%}
+(AI-written{% if not ai_knowls_public() %}, so only shown to logged-in users{% endif %})
+{%- endmacro %}
+
 {% macro KNOWL_INC( knowlid, title=none, htag="h1", show_missing=False, backupid=none, show_title=False) -%}
 {% with knowl = Knowl(knowlid) -%}
 {% if knowl.exists() -%}
@@ -67,7 +72,9 @@
   {% if user_is_authenticated -%}
     <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=knowlid) }}">edit
     '{%- if title is none or title == "" -%}{{knowl.title|safe}}{%- else -%}{{ title|safe }}{%- endif -%}'</a>
-    {%- if knowl.ai_written %} (AI-written, so only shown to logged-in users){% endif %}</div>
+    {%- if knowl.ai_written %} {{ AI_NOTE() }}{% endif %}</div>
+  {%- elif knowl.ai_written -%}
+    <div class="knowl-inc-edit">{{ AI_NOTE() }}</div>
   {%- endif %}
 
 {%- else -%}
@@ -79,8 +86,8 @@
         {%- endif %}
         {{ bknowl.content|render_knowl|safe }}
         {% if bknowl.ai_written -%}
-          <div class="knowl-inc-edit"><a href="{{ url_for('knowledge.edit', ID=backupid) }}">edit
-          '{{bknowl.title|safe}}'</a> (AI-written, so only shown to logged-in users)</div>
+          <div class="knowl-inc-edit">{% if user_is_authenticated %}<a href="{{ url_for('knowledge.edit', ID=backupid) }}">edit
+          '{{bknowl.title|safe}}'</a> {% endif %}{{ AI_NOTE() }}</div>
         {%- endif %}
       {%- endif %}
     {%- endwith %}

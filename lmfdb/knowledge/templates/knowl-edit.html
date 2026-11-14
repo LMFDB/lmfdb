@@ -44,7 +44,7 @@
       </div>
       {% if k.ai_written %}
       <div style="margin: 10px;">
-        This knowl was written by AI, so it is only shown to logged-in users.
+        This knowl was written by AI, so it is only shown to logged-in users{% if ai_knowls_public() %}, except on this site{% endif %}.
         Saving it, with or without changes, makes it a normal knowl that everyone can see, so check its content carefully first.
         If it still needs work, tick "Keep marked as AI-written" below.
       </div>

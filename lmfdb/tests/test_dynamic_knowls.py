@@ -323,6 +323,11 @@ class AIWrittenKnowlTest(LmfdbTest):
                 assert not decorated()
                 user.is_authenticated = False
                 assert not show_ai_knowls()
+        # alpha.lmfdb.org shows them to everyone, except in what is kept beyond the request
+        with self.app.test_request_context("/", base_url="https://alpha.lmfdb.org"):
+            assert show_ai_knowls()
+            with public_knowls():
+                assert not show_ai_knowls()
 
     def _logged_in(self):
         """
@@ -489,6 +494,27 @@ class AIWrittenKnowlTest(LmfdbTest):
         with patch.dict(self.app.config, LOGIN_DISABLED=True), patch.object(knowldb, "set_locked"):
             assert checkbox in self._page("/knowledge/edit/test.ai_written?lock=ignore", True).get_data(as_text=True)
             assert "keep_ai" not in self._page("/knowledge/edit/nf.degree?lock=ignore", True).get_data(as_text=True)
+
+    def test_shown_to_everyone_on_alpha(self):
+        self.real_get_knowl = knowldb.get_knowl
+        alpha = {"base_url": "https://alpha.lmfdb.org"}
+        with patch.object(knowldb, "get_knowl", side_effect=self._get_knowl):
+            page = self.tc.get("/knowledge/show/test.ai_written", **alpha)
+            assert page.status_code == 200
+            text = page.get_data(as_text=True)
+            assert "AI-written content" in text
+            assert "only shown to logged-in users, except on this site" in text
+            assert "Saving it in the editor" not in text
+            assert 'name="ai"' in self.tc.get("/knowledge/", **alpha).get_data(as_text=True)
+            assert self.tc.get("/knowledge/show/test.ai_written").status_code == 404
+            with self.app.test_request_context("/", **alpha):
+                self.app.preprocess_request()
+                html = render_template_string(
+                    "{% from 'knowl-defs.html' import KNOWL_INC with context %}"
+                    "{{ KNOWL_INC('test.ai_written', title='') }}")
+        assert "AI-written content" in html
+        assert "(AI-written)" in html
+        assert "/knowledge/edit/" not in html
 
     def test_type_options(self):
         assert 'name="ai"' not in self._page("/knowledge/", False).get_data(as_text=True)

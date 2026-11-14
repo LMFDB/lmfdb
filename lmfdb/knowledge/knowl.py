@@ -10,7 +10,7 @@ import yaml
 import difflib
 from contextlib import contextmanager
 from contextvars import ContextVar
-from flask import has_request_context
+from flask import has_request_context, request
 from flask_login import current_user
 from markupsafe import escape
 
@@ -127,11 +127,23 @@ def extract_typ(kid):
 
 _public_knowls_only = ContextVar("public_knowls_only", default=False)
 
+# Sites that show AI-written knowls to everyone, not only to logged-in users
+ai_knowl_hosts = ["alpha.lmfdb.org"]
+
+
+def ai_knowls_public():
+    """
+    Whether the current request is to a site that shows AI-written knowls to
+    everyone (see ``ai_knowl_hosts``).
+    """
+    return has_request_context() and request.host in ai_knowl_hosts
+
 
 def show_ai_knowls():
     """
     Whether AI-written knowls are visible by default: only during a request
-    from a logged-in user, outside a ``public_knowls`` block.
+    from a logged-in user, or to a site in ``ai_knowl_hosts``, outside a
+    ``public_knowls`` block.
 
     Code run outside a request, such as module imports and scripts, does not
     see them unless it asks for them (``ai=True`` in the methods of ``knowldb``),
@@ -139,6 +151,8 @@ def show_ai_knowls():
     """
     if _public_knowls_only.get() or not has_request_context():
         return False
+    if ai_knowls_public():
+        return True
     return userdb.can_read_write_userdb() and current_user.is_authenticated
 
 
@@ -1213,7 +1227,8 @@ def knowl_url_prefix():
 knowl_status_code = {'reviewed':1, 'beta':0, 'in progress': -1, 'deleted': -2}
 reverse_status_code = {v:k for k,v in knowl_status_code.items()}
 # Comments have type -2.  AI-written knowls are only shown to logged-in users
-# (see show_ai_knowls), and become human-written when edited on the website.
+# and on alpha.lmfdb.org (see show_ai_knowls), and become human-written when
+# edited on the website.
 knowl_type_code = {'normal': 0, 'top': 1, 'bottom': -1, 'column': 2, 'ai': 3, 'ai_top': 4, 'ai_bottom': 5}
 knowl_type_names = {'normal': 'Normal', 'top': 'Top', 'bottom': 'Bottom', 'column': 'Column', 'ai': 'AI-written', 'ai_top': 'AI-written top', 'ai_bottom': 'AI-written bottom'}
 # the type of an AI-written knowl, given the type of the corresponding human-written knowl
