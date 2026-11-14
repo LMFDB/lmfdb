@@ -387,9 +387,13 @@ def elliptic_curve_jump(info):
     # but denotes one curve, not a list. Attempt that established parser first: only
     # hand the input to multi_entry_jump_search (a comma-separated list of curves) when
     # it is not a single-curve Weierstrass-polynomial input, so the equation syntax is
-    # preserved. Genuine label lists never match here (LMFDB labels contain a dot,
-    # coefficient vectors are bracketed, and Cremona labels do not fullmatch POLY_RE).
-    if not match_weierstrass_polys(label):
+    # preserved. Genuine label lists rarely match here (LMFDB labels contain a dot,
+    # coefficient vectors are bracketed, and Cremona curve labels do not fullmatch
+    # POLY_RE); the exception is a pair of Cremona class labels such as "11a, 37a"
+    # ("11a" reads as the polynomial 11*a), which we treat as a list.
+    is_weierstrass_polys = match_weierstrass_polys(label) and not all(
+        match_cremona_label(part) for part in label.split(","))
+    if not is_weierstrass_polys:
         # If the Find box contains a comma-separated list of labels/coefficient vectors,
         # multi_entry_jump_search returns a search page of those curves.
         multi_jump = multi_entry_jump_search(

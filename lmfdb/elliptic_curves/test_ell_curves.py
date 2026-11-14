@@ -58,6 +58,9 @@ class EllCurveTest(LmfdbTest):
         self.check_args('/EllipticCurve/Q/?jump=11.a2%2C+banana%2C+389.a1&search=Go', ['11.a2', '389.a1', 'ignored'])
         # When no entry is valid, an error is shown
         self.check_args('/EllipticCurve/Q/?jump=banana%2C+kiwi&search=Go', 'None of the')
+        # A pair of Cremona class labels also matches the "f, h" polynomial syntax
+        # ("11a" reads as 11*a); it must be treated as a list, not as an equation
+        self.check_args('/EllipticCurve/Q/?jump=11a%2C+37a&search=Go', 'None of the')
         # Regression (LMFDB#6882 review): the two-polynomial Weierstrass syntax
         # "f, h" contains a top-level comma but denotes a single curve, so it must
         # NOT be intercepted as a multi-entry label list. This exact input is
