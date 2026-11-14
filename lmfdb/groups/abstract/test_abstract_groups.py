@@ -145,6 +145,9 @@ class AbGpsTest(LmfdbTest):
         # which is documented for the subgroup, the ambient group and the quotient
         for what in ["subgroup", "ambient group", "quotient"]:
             self.assertIn(f"A two-element list [label, name] for the {what} as an abstract group", page)
+        # and the quotient group explains which of its entries are null for non-normal subgroups
+        self.assertIn("Quotient (quotient_cols) --", page)
+        self.assertIn("When the subgroup is not normal the quotient is not defined", page)
 
         # Finally, the downloaded rows have the documented shape
         rows = [line for line in page.split("\n") if line.startswith('"8.3.')]

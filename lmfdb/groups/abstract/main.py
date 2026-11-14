@@ -1924,7 +1924,9 @@ subgroup_columns = SearchColumns([
         CheckCol("quotient_simple", "group.simple", "simp", unknown="$-$", short_title="Quo. simple", default=False),
         CheckCol("quotient_Agroup", "group.a_group", "Agp", unknown="$-$", short_title="Quo. Agroup", default=False),
         CheckCol("quotient_metabelian", "group.metabelian", "metab", unknown="$-$", short_title="Quo. metabelian", default=False),
-    ])],
+    ], download_desc=("Properties of the quotient of the ambient group by the subgroup.\n"
+                      "When the subgroup is not normal the quotient is not defined, so Quo. name and the "
+                      "quotient properties from Quo. cyclic onwards are null."))],
     tr_class=["bottom-align", ""])
 
 class Subgroup_download(Downloader):
