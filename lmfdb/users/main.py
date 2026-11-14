@@ -46,9 +46,12 @@ def get_username(uid):
 
 @app.context_processor
 def ctx_proc_userdata():
+    # What is built for everyone, such as a template rendered in a public_knowls
+    # block, is rendered as for an anonymous visitor
+    from lmfdb.knowledge.knowl import public_view
     userdata = {}
     userdata['user_can_write'] = userdb.can_read_write_userdb()
-    if not userdata['user_can_write']:
+    if not userdata['user_can_write'] or public_view():
         userdata['userid'] = 'anon'
         userdata['username'] = 'Anonymous'
         userdata['user_is_admin'] = False

@@ -68,15 +68,13 @@ def display_knowl(kid, title=None, kwargs={}, strong=False):
     the only difference with the KNOWL macro is that
     there will be no edit link for authenticated users.
     """
-    from lmfdb.knowledge.knowl import knowl_title
-    from flask import has_request_context
-    from flask_login import current_user
-    from lmfdb.users.pwdmanager import userdb
+    from lmfdb.knowledge.knowl import knowl_title, logged_in_view
     ktitle = knowl_title(kid)
     if ktitle is None:
-        # Knowl not found (or AI-written, and so hidden); outside a request,
-        # such as at import time, there is no current user
-        if has_request_context() and current_user.is_authenticated and userdb.can_read_write_userdb():
+        # Knowl not found (or AI-written, and so hidden).  Only a logged-in
+        # user gets links to the editor, and not in what is built for
+        # everyone (at import time, or in a public_knowls block)
+        if logged_in_view():
             if title is None:
                 return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
             else:

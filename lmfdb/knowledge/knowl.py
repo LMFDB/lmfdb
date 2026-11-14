@@ -139,27 +139,44 @@ def ai_knowls_public():
     return has_request_context() and request.host in ai_knowl_hosts
 
 
+def public_view():
+    """
+    Whether what is being built is for everyone, rather than for the current
+    user: outside a request (such as at import time), or in a
+    ``public_knowls`` block.
+    """
+    return _public_knowls_only.get() or not has_request_context()
+
+
+def logged_in_view():
+    """
+    Whether what is being built is for a logged-in user (see ``public_view``).
+    """
+    return not public_view() and userdb.can_read_write_userdb() and current_user.is_authenticated
+
+
 def show_ai_knowls():
     """
-    Whether AI-written knowls are visible by default: only during a request
-    from a logged-in user, or to a site in ``ai_knowl_hosts``, outside a
-    ``public_knowls`` block.
+    Whether AI-written knowls are visible by default: only to a logged-in
+    user, or on a site in ``ai_knowl_hosts``, and never in what is built for
+    everyone (see ``public_view``).
 
     Code run outside a request, such as module imports and scripts, does not
     see them unless it asks for them (``ai=True`` in the methods of ``knowldb``),
     since what it builds may later be shown to anyone.
     """
-    if _public_knowls_only.get() or not has_request_context():
+    if public_view():
         return False
-    if ai_knowls_public():
-        return True
-    return userdb.can_read_write_userdb() and current_user.is_authenticated
+    return ai_knowls_public() or logged_in_view()
 
 
 @contextmanager
 def public_knowls():
     """
-    Hide AI-written knowls within this block, whoever is logged in.
+    Within this block, build things from knowls as for a visitor who is not
+    logged in: AI-written knowls are hidden, and missing knowls get no links
+    to the editor, both in ``display_knowl`` and in templates (whose user
+    data is that of an anonymous visitor).
 
     Use this (as a context manager or a decorator) when building something
     from knowls that is kept beyond the current request, such as the result
@@ -337,7 +354,7 @@ class KnowlBackend(PostgresBase):
         INPUT:
 
         - ``fields`` -- the columns to return; defaults to ``id`` and ``_default_fields``
-        - ``types`` -- a list of type codes (see ``knowl_type_code``), defaulting to all types; ignored if ``ids`` or ``start`` is given
+        - ``types`` -- a list of type codes (see ``knowl_type_code``), defaulting to all types: only knowls whose most recent version has one of these types are returned.  Ignored if ``ids`` or ``start`` is given
         - ``ids`` -- a list of knowl ids
         - ``start`` -- a string; if given, only knowl ids starting with it are returned
         - ``ai`` -- whether AI-written versions are included (whatever ``types`` says); if None, whether the current user may see them (see ``show_ai_knowls``)
@@ -346,17 +363,26 @@ class KnowlBackend(PostgresBase):
             fields = ['id'] + self._default_fields
         if types is None:
             types = [2, 1, 0, -1, -2] + ai_types
+        values = [0]
         if ids is not None:
             where = SQL("WHERE status >= %s AND id = ANY(%s)")
-            values = [0, ids]
+            values.append(ids)
         elif start is not None and isinstance(start, str):
             where = SQL("WHERE status >= %s AND id LIKE %s")
-            values = [0, start + "%"]
+            values.append(start + "%")
         else:
-            where = SQL("WHERE status >= %s AND type = ANY(%s)")
-            values = [0, types]
+            where = SQL("WHERE status >= %s")
         where += self._ai_restriction(ai, values)
-        selecter = SQL("SELECT DISTINCT ON (id) {0} FROM kwl_knowls {1} ORDER BY id, timestamp DESC").format(SQL(", ").join(map(Identifier, fields)), where)
+        # Find the most recent version of each knowl before restricting the
+        # type, since a knowl can change between human-written and AI-written
+        # types; otherwise an older version of another type could be returned
+        inner = fields + [col for col in ['id', 'type'] if col not in fields]
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {1} FROM kwl_knowls {2} ORDER BY id, timestamp DESC) knowls").format(
+            SQL(", ").join(map(Identifier, fields)), SQL(", ").join(map(Identifier, inner)), where)
+        if ids is None and not isinstance(start, str):
+            selecter += SQL(" WHERE type = ANY(%s)")
+            values.append(types)
+        selecter += SQL(" ORDER BY id")
         L = self._safe_execute(selecter, values)
         return [dict(zip(fields, res)) for res in L]
 

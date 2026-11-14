@@ -359,6 +359,23 @@ class AIWrittenKnowlTest(LmfdbTest):
             with patch.object(StatsProbe, "_prep", lambda self, attr: show_ai_knowls()):
                 assert StatsProbe().prep({}) is False
 
+    def test_no_editor_links_in_public_view(self):
+        # A missing knowl (as an AI-only one looks) only gets links to the
+        # editor for a logged-in user, and not in what is built for everyone
+        from lmfdb.knowledge.knowl import public_knowls
+        from lmfdb.utils import display_knowl
+        macro = "{% from 'knowl-defs.html' import KNOWL with context %}{{ KNOWL('test.no_such_knowl', 'Title') }}"
+        user, rw = self._logged_in()
+        with self.app.test_request_context("/"), user as current_user, rw, \
+             patch("lmfdb.users.main.current_user", current_user):
+            self.app.preprocess_request()
+            current_user.is_authenticated = True
+            assert "/knowledge/edit/test.no_such_knowl" in display_knowl("test.no_such_knowl", "Title")
+            assert "/knowledge/edit/test.no_such_knowl" in render_template_string(macro)
+            with public_knowls():
+                assert display_knowl("test.no_such_knowl", "Title") == "Title"
+                assert "/knowledge/edit/" not in render_template_string(macro)
+
     def test_display_knowl_outside_request(self):
         # At import time an AI-only knowl looks missing, and there is no current user
         from lmfdb.utils import display_knowl
@@ -405,6 +422,10 @@ class AIWrittenKnowlTest(LmfdbTest):
             assert knowldb.get_edit_history("nf.degree", ai=ai)
             assert "nf.degree" in [k["id"] for k in knowldb.search(types=["normal", "ai"], keywords="degree", ai=ai)]
             assert "nf.degree" in [k["id"] for k in knowldb.get_all_knowls(["id"], ids=["nf.degree"], ai=ai)]
+            normal = knowldb.get_all_knowls(["id", "type"], types=[0], ai=ai)
+            assert "nf.degree" in [k["id"] for k in normal]
+            assert all(k["type"] == 0 for k in normal)
+            assert knowldb.get_all_knowls(["title"], ids=["nf.degree"], ai=ai)[0]["title"]
             assert len(knowldb.get_history(5, ai=ai)) == 5
             for beta in [True, False]:
                 assert knowldb.ids_referencing("nf.degree", beta=beta, ai=ai)
