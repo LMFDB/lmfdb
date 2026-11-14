@@ -633,16 +633,21 @@ class WebEC():
         # database, and for these we just link to an ECNF search.  The
         # query must agree with the one that search makes for
         # base_change_label (see lmfdb/ecnf/main.py), so that the two
-        # ways of listing the base changes give the same set of curves.
+        # ways of listing the base changes give the same set of curves;
+        # we also list them in that search's default order (by degree,
+        # signature and |disc| of the field first), rather than in the
+        # table's default order, which sorts field labels as strings.
         # This is one query per page, using the GIN index on
         # base_change: 2ms or less on the server even for the curves
         # with 200+ base changes, such as 14.a1.
+        from lmfdb.ecnf.main import ECNFSearchArray
+        from lmfdb.ecnf.WebEllipticCurve import split_full_label
         bc_query = {'q_curve': True, 'base_change': {'$contains': self.lmfdb_label}}
-        bc_labels = list(db.ec_nfcurves.search(bc_query, projection='label', limit=MAX_BC_LINKS + 1))
+        bc_sort = ECNFSearchArray.sorts[0][2]
+        bc_labels = list(db.ec_nfcurves.search(bc_query, projection='label', sort=bc_sort, limit=MAX_BC_LINKS + 1))
         if len(bc_labels) > MAX_BC_LINKS:
             self.friends.append(('Base changes ', url_for('ecnf.index', base_change_label=self.lmfdb_label)))
         else:
-            from lmfdb.ecnf.WebEllipticCurve import split_full_label
             for bc_label in bc_labels:
                 (nf, cond_label, class_label, number) = split_full_label(bc_label)
                 self.friends.append(('Base change ' + bc_label,

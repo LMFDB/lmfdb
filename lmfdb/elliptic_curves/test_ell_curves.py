@@ -1,7 +1,9 @@
 import os
+import re
 from unittest.mock import patch
 
 from lmfdb import db
+from lmfdb.ecnf.main import ECNFSearchArray
 from lmfdb.ecnf.WebEllipticCurve import split_full_label
 from lmfdb.elliptic_curves.web_ec import MAX_BC_LINKS
 from lmfdb.tests import LmfdbTest
@@ -200,9 +202,12 @@ class EllCurveTest(LmfdbTest):
             text = self.tc.get(url).get_data(as_text=True)
         # whatever the number of base changes, the page makes exactly one
         # query for them, with the predicate used by the ECNF search for
-        # base_change_label, projecting just the label
+        # base_change_label and that search's default sort, projecting
+        # just the label
+        default_sort = ECNFSearchArray.sorts[0]
+        assert default_sort[0] == ''
         assert queries == [({'q_curve': True, 'base_change': {'$contains': label}},
-                            'label', {'limit': MAX_BC_LINKS + 1})]
+                            'label', {'sort': default_sort[2], 'limit': MAX_BC_LINKS + 1})]
         return text
 
     def test_base_change_friends_none(self):
@@ -222,9 +227,13 @@ class EllCurveTest(LmfdbTest):
         """
         labels = ['2.0.3.1-%s.1-a1' % (i + 1) for i in range(MAX_BC_LINKS)]
         text = self.base_change_page(labels)
+        positions = []
         for i, bc_label in enumerate(labels):
             link = '<a href="/EllipticCurve/2.0.3.1/%s.1/a/1">Base change %s</a>' % (i + 1, bc_label)
             assert text.count(link) == 1
+            positions.append(text.index(link))
+        # in the order given by the query
+        assert positions == sorted(positions)
         # no link to an ECNF search in addition to the individual ones
         assert 'base_change_label' not in text
 
@@ -241,7 +250,8 @@ class EllCurveTest(LmfdbTest):
     def test_base_change_friends_live(self):
         """
         Test the base changes displayed on a curve page against the ones
-        actually in the database.
+        actually in the database, and against the ECNF search for them,
+        which should list the same curves in the same order.
         """
         bc_labels = list(db.ec_nfcurves.search({'q_curve': True, 'base_change': {'$contains': '131.a1'}},
                                                projection='label', limit=MAX_BC_LINKS + 1))
@@ -250,10 +260,14 @@ class EllCurveTest(LmfdbTest):
         if len(bc_labels) > MAX_BC_LINKS:
             assert 'base_change_label=131.a1' in text
         else:
-            for bc_label in bc_labels:
+            listed = re.findall(r'<a href="([^"]*)">Base change ([^<]*)</a>', text)
+            assert sorted(label for url, label in listed) == sorted(bc_labels)
+            for url, bc_label in listed:
                 nf, cond_label, class_label, number = split_full_label(bc_label)
-                url = '/EllipticCurve/%s/%s/%s/%s' % (nf, cond_label, class_label, number)
-                assert '<a href="%s">Base change %s</a>' % (url, bc_label) in text
+                assert url == '/EllipticCurve/%s/%s/%s/%s' % (nf, cond_label, class_label, number)
+            search = self.tc.get('/EllipticCurve/?base_change_label=131.a1').get_data(as_text=True)
+            search_urls = list(dict.fromkeys(re.findall(r'href="(/EllipticCurve/[0-9.]+/[0-9.]+/[a-zA-Z]+/[0-9]+)"', search)))
+            assert search_urls == [url for url, label in listed]
 
     def test_990h(self):
         """
