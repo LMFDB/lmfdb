@@ -55,6 +55,17 @@ class BMFTest(LmfdbTest):
         self.check_args(base_url+"?field_label=2.0.7.1&level_norm=322&count=10", 'Results (4 matches)')
         self.check_args(base_url+"?start=0&include_base_change=off&include_cm=only&count=100", 'ModularForm/GL2/ImaginaryQuadratic/2.0.1007.1/9.1/a/')
 
+    def test_sign_active_classes(self):
+        r"""
+        Check that the sign select is only highlighted as constraining the
+        results when a sign was chosen (the search stores sfe="any" when none
+        was, which matches no option, so the select displays blank)
+        """
+        url = base_url + "?field_label=2.0.4.1"
+        self.assertEqual(self.search_classes(url, "sfe"), {"search_constraint"})
+        self.assertEqual(self.search_classes(url + "&sfe=-1", "sfe"),
+                         {"search_constraint", "search_active"})
+
     # tests for newspace pages
     def test_newspace(self):
         r"""

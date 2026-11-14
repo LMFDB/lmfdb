@@ -337,6 +337,16 @@ class SelectBox(SearchBox):
         self.min_width = self._default_min_width if min_width is None else min_width
         self.example_value = example_value
 
+    def _is_filled(self, info):
+        """
+        Whether one of this select's non-blank options is the one shown as
+        selected.  Search code sometimes stores a value of its own under the
+        select's name (such as ``sfe="any"`` for Bianchi modular forms); no
+        option matches it, so the select displays blank and is not filled in.
+        """
+        value = info.get(self.name)
+        return bool(value) and any(value == opt for opt, _ in self.options)
+
     def _input(self, info):
         keys = self._attrs(info) + ['name="%s"' % self.name]
         if self.id is not None:

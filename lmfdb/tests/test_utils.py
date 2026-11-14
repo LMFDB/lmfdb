@@ -613,6 +613,20 @@ class SearchBoxTest(unittest.TestCase):
         self.assertEqual(self.classes(box, {"cm": False}), {"search_constraint"})
         self.assertEqual(self.classes(box, None), set())
 
+    def test_select_box_unmatched_value(self):
+        r"""
+        Checking that a select is only active when a non-blank option is the
+        one shown as selected, so that a value which search code stores under
+        its name but which matches no option (like the Bianchi ``sfe="any"``)
+        does not highlight a select that displays blank
+        """
+        box = SelectBox(name="sfe", label="Sign",
+                        options=[("", ""), ("+1", "+1"), ("-1", "-1")])
+        self.assertEqual(self.classes(box, {"sfe": "-1"}),
+                         {"search_constraint", "search_active"})
+        self.assertEqual(self.classes(box, {"sfe": "any"}), {"search_constraint"})
+        self.assertEqual(self.classes(box, {"sfe": ""}), {"search_constraint"})
+
     def test_display_controls(self):
         r"""
         Checking that controls which only affect the display are not constraints
