@@ -1674,11 +1674,18 @@ def parse_subfield(inp, query, qfield):
         parts = inp.split(",")
         if not all(parts):
             raise SearchParsingError(empty_entry)
-        sfs = [input_to_subfield(part) for part in parts]
-        # input_to_subfield returns None for an entry that is empty once
-        # unsupported characters have been removed.
-        if not all(sfs):
-            raise SearchParsingError(empty_entry)
+        sfs = []
+        for part in parts:
+            try:
+                sf = input_to_subfield(part)
+            except SearchParsingError as err:
+                # Say which entry of the list is at fault
+                raise SearchParsingError("Problem with entry %s: %s" % (part, err))
+            # input_to_subfield returns None for an entry that is empty once
+            # unsupported characters have been removed.
+            if not sf:
+                raise SearchParsingError(empty_entry)
+            sfs.append(sf)
         query[qfield] = {"$contains": sfs}
     else:
         sf = input_to_subfield(inp)

@@ -104,6 +104,9 @@ class NumberFieldTest(LmfdbTest):
                             '4.0.256.1')
         # A malformed or empty entry gives a clean error page, not a 500
         self.check_args('/NumberField/?subfield=x%5E2-2%2Cnotafield', 'not a valid field nickname or label')
+        # and the error names the offending entry
+        self.check_args('/NumberField/?subfield=x%5E2-2%2Cnotafield', 'Problem with entry notafield:')
+        self.check_args('/NumberField/?subfield=x%5E2-2%2Cx', ['Problem with entry x:', 'cannot be a proper intermediate field'])
         self.check_args('/NumberField/?subfield=x%5E2-2%2C', 'Entries in the comma-separated list must be nonempty')
 
     def test_search_abelian_jump(self):
