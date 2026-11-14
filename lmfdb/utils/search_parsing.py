@@ -1259,6 +1259,18 @@ def input_string_to_poly(FF):
     except Exception:
         return None, F, FF
 
+def _split_top_level_commas(s):
+    pieces, depth, start = [], 0, 0
+    for i, ch in enumerate(s):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            pieces.append(s[start:i])
+            start = i + 1
+    pieces.append(s[start:])
+    return [p.strip() for p in pieces]
 
 def _strip_matching_outer_parens(s):
     """Remove only parentheses that wrap the entire string, preserving inner grouping."""
@@ -1287,7 +1299,7 @@ def _nf_string_to_qqbar(s):
     Supported syntax:
     - binary operators: +, -, *, /, ^ (exponentiation)
     - unary operators: +, -
-    - functions: sqrt(...), root(...), cbrt(...)
+    - functions: sqrt(...), cbrt(...), root(x, n) (n-th root), root(x) (= sqrt(x), for backwards compatibility)
     - zeta roots of unity: zeta(...), zeta_N, zetaN
     - imaginary unit: i
     - golden ratio constant: phi = (1 + sqrt(5))/2
@@ -1297,19 +1309,24 @@ def _nf_string_to_qqbar(s):
 
     The expression is safely parsed with a restricted Python AST and then evaluated as a Sage object in QQbar.
 
-    Examples: sqrt2, sqrt2 + cbrt3, zeta4 - 1/phi, sqrt(2 + 3*sqrt(2)), 2^(1/3), phi^(3/4)
+    Examples: sqrt2, sqrt2 + cbrt3, zeta4 - 1/phi, sqrt(2 + 3*sqrt(2)), 2^(1/3), phi^(3/4), root(2, 5)
 
     """
+    from sage.all import AA
 
     s = s.lower().strip().replace(" ", "")
     if not s:
         raise SearchParsingError("The algebraic expression is empty.")
 
     def _normalize_radicals(t):
-        # Convert shorthand like sqrt5, root-3, cbrt7 into function-call form: sqrt(5), root(-3), cbrt(7).
-        t = re.sub(r"\b(sqrt|root|cbrt)([+-]?\d+)\b", r"\1(\2)", t)
+        # Separate i from a following function or bracket: isqrt3 -> i*sqrt3, 2i(1+i) -> 2i*(1+i)
+        t = re.sub(r"(?<![a-z_])i(?=sqrt|cbrt|root|zeta|phi|\()", "i*", t)
+        # Convert shorthand like sqrt5, root-3, cbrt7, 2sqrt3 into function-call form: sqrt(5), root(-3), cbrt(7), 2sqrt(3).
+        t = re.sub(r"(?<![a-z_])(sqrt|root|cbrt)([+-]?\d+)", r"\1(\2)", t)
         # Convert zeta shorthand like zeta5 or zeta_5 into zeta(5).
-        t = re.sub(r"\bzeta_?(\d+)\b", r"zeta(\1)", t)
+        t = re.sub(r"(?<![a-z_])zeta_?(\d+)", r"zeta(\1)", t)
+        # Implicit multiplication, as in displayed names: 2sqrt(3) -> 2*sqrt(3), sqrt(2)sqrt(3), 2i, (1+i)(1-i)
+        t = implicit_mul(t).replace(")(", ")*(")
         # Convert ^ to ** for exponentiation (Python uses ** for exponentiation)
         t = t.replace("^", "**")
         return t
@@ -1320,6 +1337,28 @@ def _nf_string_to_qqbar(s):
         node = ast.parse(s, mode="eval")
     except SyntaxError as err:
         raise SearchParsingError(f"Could not parse algebraic expression '{s}': {err.msg}")
+
+    def _root(x, n):
+        # Define the n-th root of x
+        # Our convention: If x is real and n is odd, then take the real root. Otherwise, always take the principal root.
+        n = ZZ(n)
+        if n <= 0:
+            raise SearchParsingError("Roots must have a positive index")
+        if n == 1:
+            return x
+        if n % 2 == 1 and x.imag().is_zero() and AA(x) < 0:
+            return -QQbar(AA(-x).nth_root(n))
+        return x.nth_root(n)
+
+    def _as_integer(v, what):
+        # Parse an input v as an integer
+        try:
+            q = QQ(v)
+        except (TypeError, ValueError):
+            raise SearchParsingError(f"{what} must be an integer.")
+        if q not in ZZ:
+            raise SearchParsingError(f"{what} must be an integer.")
+        return ZZ(q)
 
     def _eval_ast(n):
         if isinstance(n, ast.Expression):
@@ -1333,7 +1372,7 @@ def _nf_string_to_qqbar(s):
             if n.id == "i":
                 return QQbar.zeta(4)
             if n.id == "phi":
-                return (QQbar(1) + QQbar(5).sqrt()) / 2
+                return (QQbar(1) + _root(QQbar(5), 2)) / 2
             raise SearchParsingError(f"Unsupported symbol '{n.id}' in algebraic expressions.")
         if isinstance(n, ast.UnaryOp):
             v = _eval_ast(n.operand)
@@ -1358,13 +1397,17 @@ def _nf_string_to_qqbar(s):
             if isinstance(n.op, ast.Pow):
                 # Support for arbitrary nth-roots via exponentiation: base^(exponent)
                 # The exponent should be a rational number for algebraic evaluation
+                # We define base^(p/q) as (q-th root of base)^p, where q-th roots are evaluated using _root
                 try:
                     exp_rational = QQ(right)
                 except (TypeError, ValueError):
                     raise SearchParsingError(f"Exponent must be a rational number, got {right}.")
                 # Use QQbar's power operator to handle rational exponents
                 # This computes base^exp_rational in QQbar
-                return left ** exp_rational
+                p, q = exp_rational.numerator(), exp_rational.denominator()
+                if left == 0 and p < 0:
+                    raise SearchParsingError("Division by zero in algebraic expression.")
+                return _root(left, q) ** p
             raise SearchParsingError("Unsupported binary operator in algebraic expression.")
         if isinstance(n, ast.Call):
             if not isinstance(n.func, ast.Name):
@@ -1372,21 +1415,20 @@ def _nf_string_to_qqbar(s):
             fname = n.func.id
             if fname not in {"sqrt", "root", "cbrt", "zeta"}:
                 raise SearchParsingError(f"Unsupported function '{fname}' in algebraic expression.")
-            if len(n.args) != 1 or n.keywords:
-                raise SearchParsingError(f"Function '{fname}' takes exactly one argument.")
+            if n.keywords or not (len(n.args) == 1 or (fname == "root" and len(n.args) == 2)):
+                raise SearchParsingError(f"Function '{fname}' takes exactly one argument (root takes one or two).")
             arg = _eval_ast(n.args[0])
-            if fname in {"sqrt", "root"}:
-                return arg.sqrt()
-            if fname == "zeta":
-                try:
-                    n_q = QQ(arg)
-                    n_int = ZZ(n_q)
-                except (TypeError, ValueError):
-                    raise SearchParsingError("zeta(...) requires a positive integer argument.")
-                if n_q != n_int or n_int <= 0:
-                    raise SearchParsingError("zeta(...) requires a positive integer argument.")
-                return QQbar.zeta(n_int)
-            return arg.nth_root(3)
+            if fname == "sqrt" or (fname == "root" and len(n.args) == 1):
+                return _root(arg, 2)
+            if fname == "root":
+                return _root(arg, _as_integer(_eval_ast(n.args[1]), "The index of root(x, n)"))
+            if fname == "cbrt":
+                return _root(arg, 3)
+            # zeta
+            m = _as_integer(arg, "The argument of zeta(...)")
+            if m <= 0:
+                raise SearchParsingError("zeta(...) requires a positive integer argument.")
+            return QQbar.zeta(m)
         raise SearchParsingError("Unsupported syntax in algebraic expression.")
 
     try:
@@ -1405,7 +1447,7 @@ def nf_string_to_label(FF):
     Uses _nf_string_to_qqbar to safely parse algebraic expressions into elements in QQbar.
     Uses number_field_elements_from_algebraics to compute the minimal number field containing the specified elements.
 
-    Examples: Q, Qsqrt2, Qsqrt-4, Qzeta5, Q(sqrt2+sqrt3), Qcbrt2, Q(sqrt(2 + 3*sqrt2)), Q(sqrt2, cbrt3), Q(2^(1/5)), etc.
+    Examples: Q, Qsqrt2, Qsqrt-4, Qzeta5, Qzeta7+, Q(sqrt2+sqrt3), Qcbrt2, Q(sqrt(2 + 3*sqrt2)), Q(sqrt2, cbrt3), Q(2^(1/5)), etc.
     """
 
     # Check if the rationals Q or Q(i)
@@ -1452,6 +1494,7 @@ def nf_string_to_label(FF):
             return "2.%s.%s.1" % (s, str(absD))
 
         # Case 2: Check if cyclotomic field (or its maximal real subfield)
+        # Qzeta5, Qzeta_5, Q(zeta5), Qzeta7+, Qzeta7plus, Q(zeta7)+, Q(zeta_(7))^+
         if Fstrip[:4] == "zeta" and re.match(r"^qzeta\d+(\+|plus)?$", F.replace("_", "")):
             match_obj = re.match(r"^qzeta(\d+)(\+|plus)?$", F.replace("_", ""))
             if not match_obj:
@@ -1459,7 +1502,7 @@ def nf_string_to_label(FF):
 
             d = ZZ(str(match_obj.group(1)))
             if d % 4 == 2:
-                d /= 2  # Q(zeta_6)=Q(zeta_3), etc)
+                d //= 2  # Q(zeta_6)=Q(zeta_3), etc)
 
             # Check if matches maximal real subfield of a cyclotomic field
             if match_obj.group(2):
@@ -1482,13 +1525,16 @@ def nf_string_to_label(FF):
         from lmfdb.number_fields.number_field import poly_to_field_label
 
         # Support comma-separated generators Q(s1, s2, ..., sk).
-        pieces = [piece.strip() for piece in Fstrip.split(",")]
+        pieces = _split_top_level_commas(Fstrip)
         if any(not piece for piece in pieces):
             raise SearchParsingError("Empty generator in comma-separated field nickname.")
 
         from sage.rings.qqbar import number_field_elements_from_algebraics
         alphas = [_nf_string_to_qqbar(piece) for piece in pieces]
-        K, _, _ = number_field_elements_from_algebraics(alphas)
+
+        # minimal=True is essential here, otherwise Sage may return a larger field.
+        # e.g. Q(zeta_7) for Q(zeta_7 + zeta_7^2 + zeta_7^4) = Q(sqrt(-7)).
+        K, _, _ = number_field_elements_from_algebraics(alphas, minimal=True)
         pol = PolynomialRing(QQ, 'x')(K.defining_polynomial())
         if pol.degree() <= 1:
             return "1.1.1.1"
