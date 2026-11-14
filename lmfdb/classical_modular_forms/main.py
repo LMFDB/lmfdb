@@ -1871,7 +1871,10 @@ class CMFSearchArray(SearchArray):
             return self.sd_array
         else:
             # search_type in ['List', '', 'Dimensions', 'Traces', 'DynStats']:
-            return self.refine_array
+            # The shared implementation appends the "labels" box (shown only when a
+            # multi-label Find has set it), so that the label restriction survives
+            # "Search again", switching to the traces/dimension tables, and paging.
+            return super().main_array(info)
 
     def search_types(self, info):
         basic = [('', 'List of forms'),

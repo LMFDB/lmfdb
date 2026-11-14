@@ -156,6 +156,16 @@ class CmfTest(LmfdbTest):
         # When no entry is valid, an error is shown
         self.check_args("/ModularForm/GL2/Q/holomorphic/?jump=banana%2C+kiwi&search=Go", 'None of the')
 
+    def test_jump_multiple_refine(self):
+        # The results form keeps the label restriction (as a "labels" box), so that
+        # "Search again", the traces/dimension tables and paging stay restricted
+        page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?jump=3.6.a.a%2C+11.2.a.a&search=Go", follow_redirects=True).get_data(as_text=True)
+        assert 'name="labels"' in page and 'value="3.6.a.a,11.2.a.a"' in page
+        for search_type in ["Traces", "Dimensions"]:
+            page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?labels=3.6.a.a,11.2.a.a&search_type=%s" % search_type).get_data(as_text=True)
+            assert 'value="3.6.a.a,11.2.a.a"' in page
+        self.check_args("/ModularForm/GL2/Q/holomorphic/?labels=3.6.a.a,11.2.a.a&search_type=Traces", ['3.6.a.a', '11.2.a.a', 'both matches'])
+
     def test_failure(self):
         r"""
         Check that bad inputs are handled correctly
