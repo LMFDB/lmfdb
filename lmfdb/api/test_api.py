@@ -171,6 +171,15 @@ class ApiTest(LmfdbTest):
         data = self.tc.get('/api/gps_gl2zhat_fine/?q_gonality=None&_format=json&_fields=q_gonality,label', follow_redirects=True).get_json()
         assert data['data'] and all(rec['q_gonality'] is None for rec in data['data'])
 
+    def test_api_query_error_redirect(self):
+        r"""
+        Check that a failing query in html format redirects back to its table
+        """
+        # a malformed range is kept as a string, which a bigint column rejects
+        response = self.tc.get('/api/ec_curvedata/?conductor=iabc..100')
+        assert response.status_code == 302
+        assert response.headers['Location'].endswith('/api/ec_curvedata/')
+
     def test_api_usage(self):
         r"""
         Check that the queries used by ODK demo all work

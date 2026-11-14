@@ -264,10 +264,10 @@ def api_query(table, id=None):
     fields = request.args.get("_fields", None)
     sortby = request.args.get("_sort", None)
 
-    def apierror(msg, flash_extras=[], code=404, table=True):
+    def apierror(msg, flash_extras=[], code=404, to_table=True):
         if format == "html":
             flash_error(msg, *flash_extras)
-            if table:
+            if to_table:
                 return redirect(url_for(".api_query", table=table))
             else:
                 return redirect(url_for(".index"))
@@ -287,7 +287,7 @@ def api_query(table, id=None):
 
     # preparing the actual database query q
     if table not in db.tablenames:
-        return apierror("table %s does not exist", [table], table=False)
+        return apierror("table %s does not exist", [table], to_table=False)
     coll = getattr(db, table)
     q = {}
 
