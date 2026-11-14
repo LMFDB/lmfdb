@@ -235,6 +235,19 @@ class SmfTest(LmfdbTest):
             "2.K.",
         ])
 
+    def test_space_search_aldims(self):
+        """
+        The Atkin-Lehner dimensions column of the newspace search, in the
+        sign-vector order of the space page: in S_{3,0}^new(K(161)) the
+        classes (w_7, w_23) = (+,+), (+,-), (-,+), (-,-) have dimensions
+        0, 12, 6, 1, of which 0, 3, 1, 0 are of general type
+        """
+        self.need_spaces("2.K.161.3.0.a")
+        self.check("?search_type=Spaces&degree=2&family=K&level=161&weight=3", [
+            "AL-dims.",
+            r"\(0\)+\(12\)+\(6\)+\(1\)",
+        ])
+
     def test_trace_search(self):
         """
         Test the trace search results
@@ -290,7 +303,7 @@ class SmfTest(LmfdbTest):
         Test the download links that appear on newform and newspace pages
         """
         self.need_forms("2.P.2.2.12.a.a")
-        self.check("download_traces/2.P.2.2.12.a.a", "[0, 1, 0, -600, -4, -53460")
+        self.check("download_traces/2.P.2.2.12.a.a", "[0, 1, null, -600, null, -53460")
         self.check("download_newform/2.P.2.2.12.a.a", [
             "Stored data for newform 2.P.2.2.12.a.a",
             '"analytic_rank_proved"',
@@ -370,7 +383,7 @@ class SmfTest(LmfdbTest):
             "Modular form 1.22.a.a",
         ])
         self.check("download_traces/2.S.1.12.0.a.c",
-                   "[0, 1, 2784, 107352, -1778648202240, 80234700")
+                   "[0, 1, 2784, 107352, 4441088, 80234700")
 
     def test_eisenstein_series(self):
         """
@@ -468,11 +481,11 @@ class SmfTest(LmfdbTest):
             "(4, 0) 1 (5, 0) 0 (6, 0) 1 (7, 0) 0 (8, 0) 1 (9, 0) 0 (10, 0) 2 (11, 0) 0 (12, 0) 3",
             "(14, 0) 2 (15, 0) 0 (16, 0) 4 (17, 0) 0 (18, 0) 4 (19, 0) 0 (20, 0) 5",
         ])
-        # newform dimensions (including the odd-weight Saito-Kurokawa forms)
+        # newform dimensions (there are no scalar-valued forms of odd weight below 35)
         self.check("?search_type=Dimensions&degree=2&family=S&level=1&weight=6-20", [
             "The dimensions shown below are for the space of newforms",
-            "(10, 0) 2 (11, 0) 1 (12, 0) 3",
-            "(16, 0) 4 (17, 0) 2 (18, 0) 4 (19, 0) 3 (20, 0) 5",
+            "(10, 0) 2 (11, 0) 0 (12, 0) 3",
+            "(16, 0) 4 (17, 0) 0 (18, 0) 4 (19, 0) 0 (20, 0) 5",
         ])
         # the weight-12 space page: 3 = Eisenstein (F) + Klingen (Q) + Maass (P),
         # with the eigenvalue columns of the decomposition table
