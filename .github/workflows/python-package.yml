@@ -8,12 +8,14 @@ on:
 
 # Only one Tests run per pull request at a time: a new push supersedes the
 # run for the commit it replaces, instead of leaving it to occupy job slots
-# to completion.  Pushes keep their own group (keyed by ref rather than PR
-# number), so the push and pull_request runs of a commit do not cancel each
-# other, and nothing is canceled on main/dev/web, where every commit should
-# be tested.
+# to completion.  Every other run (pushes to main/dev/web or any branch) gets
+# a group of its own via github.run_id, so it is never canceled: a group
+# holds one running and one pending run, and a newly queued run would cancel
+# the pending one, skipping a commit whenever pushes land in quick
+# succession.  The event name keeps the push and pull_request runs of a
+# commit in separate groups.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
