@@ -82,7 +82,7 @@ runs:
   # See https://github.com/LMFDB/lmfdb/issues/7108.
 
   - name: Cache the degree 32 transitive groups
-    uses: actions/cache@v3
+    uses: actions/cache@v6
     with:
       path: ~/.cache/transgrp
       key: ${{ runner.os }}-trans32-0   # bump the trailing number to force a re-download
