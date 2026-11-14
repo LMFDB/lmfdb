@@ -865,8 +865,10 @@ def index():
     # than context-free definitions.  They should not clutter the public knowl
     # browse/search index, so we hide them -- and their "ui" category -- from
     # visitors who are not logged in.  See LMFDB issue #3721.
+    # We filter on the category (the part of the id before the first dot, as
+    # computed below) so that even a dotless id "ui" cannot resurface it.
     if not current_user.is_authenticated:
-        all_knowls = [k for k in all_knowls if not k["id"].startswith("ui.")]
+        all_knowls = [k for k in all_knowls if k["id"].split(".")[0] != "ui"]
         if cur_cat == "ui":
             cur_cat = ""
     categories = Counter()

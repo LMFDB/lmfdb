@@ -12,11 +12,15 @@ class KnowlUIVisibilityTest(LmfdbTest):
     (logged-out) knowl browse/search index, together with their ``ui`` category.
     """
 
-    # Stand-in for a knowldb.search() response: one ui. helper and one ordinary
-    # (context-free) math-definition knowl.
+    # Stand-in for a knowldb.search() response: ui. helpers (including a dotless
+    # "ui" id, which allowed_knowl_id permits and which also lands in the "ui"
+    # category), an ordinary (context-free) math-definition knowl, and a knowl
+    # in a different category that merely starts with "ui".
     _fake_knowls = [
         {"id": "ui.demo_helper", "title": "Demo UI helper"},
+        {"id": "ui", "title": "Bare ui knowl"},
         {"id": "ec.q.conductor", "title": "Conductor of an elliptic curve"},
+        {"id": "uifoo.bar", "title": "Not a UI helper"},
     ]
 
     def _get_index(self):
@@ -37,10 +41,14 @@ class KnowlUIVisibilityTest(LmfdbTest):
         page = self._get_index()
         # The ui. helper and its "ui" category are hidden from a logged-out user ...
         assert "ui.demo_helper" not in page
+        assert "Bare ui knowl" not in page
         assert "ui(1)" not in page
+        assert "ui(2)" not in page
         # ... while ordinary knowls and their categories remain visible.
         assert "ec.q.conductor" in page
         assert "ec(1)" in page
+        assert "uifoo.bar" in page
+        assert "uifoo(1)" in page
 
     def test_ui_category_query_hidden_when_logged_out(self):
         # Explicitly requesting ?category=ui must not surface an empty "ui" category.
@@ -52,6 +60,7 @@ class KnowlUIVisibilityTest(LmfdbTest):
         assert "ui.demo_helper" not in page
         assert "ui(0)" not in page
         assert "ui(1)" not in page
+        assert "ui(2)" not in page
 
     def test_ui_knowl_visible_when_logged_in(self):
         # When authenticated, the filter is skipped and ui. knowls are listed.
@@ -70,4 +79,5 @@ class KnowlUIVisibilityTest(LmfdbTest):
             knowl_main.current_user = orig_user
             del knowl_main.knowldb.search
         assert "ui.demo_helper" in page
+        assert "ui(2)" in page
         assert "ec.q.conductor" in page
