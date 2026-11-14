@@ -3981,7 +3981,8 @@ def sub_data(label):
     return Markup(shortsubinfo(".".join(label[:2]), ".".join(label[2:])))
 
 
-def group_data(label, ambient=None, aut=False, profiledata=None):
+def group_data(label, ambient=None, aut=False, profiledata=None, maximal="False"):
+    # maximal is "True" when the knowl comes from the maximal subgroup profile, in which case only maximal subgroups are listed
     gp = None
     quotient_tex = None
     if profiledata is None:
@@ -4039,10 +4040,11 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f"Order: {order}<br />"
         ans += f"Exponent: {gp.exponent}<br />"
         if quotient_label == "None":
+            sub_kind = "maximal subgroups" if maximal == "True" else "subgroups"
             if aut == "True":
-                isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type: "
+                isomorphism_label = f"Representatives of classes of {sub_kind} up to automorphism with this isomorphism type: "
             else:
-                isomorphism_label = "Representatives of classes of subgroups up to conjugation with this isomorphism type: "
+                isomorphism_label = f"Representatives of classes of {sub_kind} up to conjugation with this isomorphism type: "
         else:
             if aut == "True":
                 isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type and quotient: "
@@ -4112,6 +4114,8 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                 return all(a == b for a, b in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
 
             subs = [H for H in ambient.subgroups.values() if sub_matches(H)]
+            if maximal == "True":
+                subs = [H for H in subs if H.maximal]
             if aut == "True" and not ambient.outer_equivalence:
                 # TODO: need to deal with non-canonical labels
                 subs = [H for H in subs if H.label.split(".")[-1] == "a1"]

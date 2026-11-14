@@ -293,3 +293,35 @@ class AbGpsTest(LmfdbTest):
         assert r"$D_4\times C_2^6$</a> x 3" in profile
         assert r"$C_2^8.C_2$</a> x 3" in profile
         assert r"$C_2^9$</a>" in profile
+
+    def test_maximal_subgroups_profile_knowls(self):
+        r"""
+        Check that the knowls in the maximal subgroup profile only list maximal subgroups
+        """
+        from html import unescape
+        from lmfdb.groups.abstract.web_groups import WebAbstractGroup
+        # A_5 x A_5 has four classes of subgroups isomorphic to A_5: the two diagonal
+        # ones (60.d1) are maximal, while the two direct factors (60.a1) are normal but
+        # not maximal.  Up to automorphism there is one class of each kind.
+        G = WebAbstractGroup("3600.a")
+        for sub_aut, maximal_reps, other_reps in [
+                ("", ["3600.a.60.d1.a1", "3600.a.60.d1.b1"], ["3600.a.60.a1.a1", "3600.a.60.a1.b1"]),
+                ("aut", ["3600.a.60.d1.a1"], ["3600.a.60.a1.a1"])]:
+            profile, desc, summary = G.get_profile("maximal", sub_aut)
+            line = dict(profile)[60]
+            args = re.search(r'kwargs="(args=[^"]*&func=group_data)">\$A_5\$</a>', line).group(1)
+            knowl = self.tc.get("/knowledge/show/lmfdb.object_information?" + unescape(args),
+                                follow_redirects=True).get_data(as_text=True)
+            assert "classes of maximal subgroups" in knowl
+            for label in maximal_reps:
+                assert ">%s</a>" % label in knowl, label
+            for label in other_reps:
+                assert ">%s</a>" % label not in knowl, label
+            # The same knowl in the profile of all subgroups lists all of them
+            profile, desc, summary = G.get_profile("subgroup", sub_aut)
+            args = re.search(r'kwargs="(args=[^"]*&func=group_data)">\$A_5\$</a>', dict(profile)[60]).group(1)
+            knowl = self.tc.get("/knowledge/show/lmfdb.object_information?" + unescape(args),
+                                follow_redirects=True).get_data(as_text=True)
+            assert "classes of maximal subgroups" not in knowl
+            for label in maximal_reps + other_reps:
+                assert ">%s</a>" % label in knowl, label

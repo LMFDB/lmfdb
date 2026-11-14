@@ -249,8 +249,8 @@ def cc_data_to_gp_label(order,counter):
     return str(order) + '.' + cremona_letter_code(counter-1)
 
 
-@cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,cache: (label,name,pretty,ambient,aut,profiledata))
-def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, cache={}):
+@cached_function(key=lambda label,name,pretty,ambient,aut,profiledata,maximal,cache: (label,name,pretty,ambient,aut,profiledata,maximal))
+def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, aut=False, profiledata=None, maximal=False, cache={}):
     # If you have the group in hand, set the name using gp.tex_name since that will avoid a database call
     if name and '?' in name:
         name = None
@@ -276,6 +276,9 @@ def abstract_group_display_knowl(label, name=None, pretty=True, ambient=None, au
             # We use $ as a separator since it won't be in latex strings
             profiledata = '%24'.join(quote_plus(str(c)) for c in profiledata)
         args = f"{label}%7C{ambient}%7C{aut}%7C{profiledata}"
+        if maximal:
+            # Only list the maximal subgroups with this data (used in the maximal subgroup profile)
+            args += "%7CTrue"
     return f'<a title = "{name} [lmfdb.object_information]" knowl="lmfdb.object_information" kwargs="args={args}&func=group_data">{name}</a>'
 
 def primary_to_smith(invs):
@@ -1297,7 +1300,7 @@ class WebAbstractGroup(WebObj):
                     seen.add(s.aut_label)
             return self._finalize_profile(by_order)
 
-    def _display_profile(self, profile, aut):
+    def _display_profile(self, profile, aut, maximal=False):
         def display_profile_line(order, subs):
             l = []
             sep = ", "
@@ -1320,7 +1323,7 @@ class WebAbstractGroup(WebObj):
                         else:
                             ord_str = rf'${tup[5]}$'
                 l.append(
-                    abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup))
+                    abstract_group_display_knowl(label, name=f"${tex}$", ambient=self.label, aut=bool(aut), profiledata=tuple(tup), maximal=maximal)
                     + ("" if len(tup) == 3 else " (%s)" % (ord_str))
                     + (" x " + str(cnt) if cnt > 1 else "")
                 )
@@ -1389,7 +1392,7 @@ class WebAbstractGroup(WebObj):
             summary = self._normal_summary()
         if profile is None:
             summary = "not computed"
-        return self._display_profile(profile, bool(sub_aut)), desc, summary
+        return self._display_profile(profile, bool(sub_aut), maximal=(sub_all == "maximal")), desc, summary
 
     @cached_method
     def diagram_count(self, sub_all, sub_aut, limit=0):
