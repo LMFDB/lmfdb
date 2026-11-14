@@ -53,7 +53,12 @@
 <h2>{{ KNOWL_INC(KNOWL_ID+'.top',title='') }}</h2>
 {% endif %}
 
+{% if code %}
+<p>{{ place_code('lfunction', is_top_snippet=True) }}</p>
+{% endif %}
+
 <h2 style="margin-top:5px;"> {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }}</h2>
+{{ place_code('dirichlet_series') }}
 {% if dirichlet_arithmetic -%}
 <div class="arithmetic" style="margin-left:10px;">{{ dirichlet_arithmetic|safe }}</div>
 <div class="analytic nodisplay" style="margin-left:10px;">{{ dirichlet|safe }}</div>
@@ -67,6 +72,9 @@
 <div id="functionalEqText" class="analytic nodisplay">\[{{ functionalequation }}\]</div>
 {% else %}
 <div id="functionalEqText">\[{{ functionalequation }}\]</div>
+{% endif %}
+{% if code and code.functional_equation %}
+<div style="margin-top:-15px; margin-bottom:30px;">{{ place_code('functional_equation') }}</div>
 {% endif %}
 
 <h2 style="margin-top:-25px;"> {{ KNOWL('lfunction.invariants', title='Invariants') }}  </h2>
@@ -84,12 +92,14 @@
       &nbsp;&nbsp;  = &nbsp;&nbsp; \({{ conductor_factored }}\)
       {% endif %}
     </td>
+    <td> {{ place_code('conductor') }} </td>
   </tr>
 
   <tr>
     <td> {{ KNOWL('lfunction.sign', title="Sign") }}: </td>
     <td> {{ sign }}
     </td>
+    <td> {{ place_code('sign') }} </td>
   </tr>
 
   {% if analytic_conductor %}
@@ -153,6 +163,7 @@
     <td> {{ KNOWL('lfunction.analytic_rank', title="Analytic rank") }}: </td>
     <td> \({{ rank }}\)
     </td>
+    <td> {{ place_code('analytic_rank') }} </td>
   </tr>
   {% endif %}
 
@@ -176,6 +187,7 @@
       <td>\(\approx\)</td>
       {% endif %}
       <td> \({{ sv_critical_arithmetic[1] }}\) </td>
+      <td>{{ place_code('central_value') }}</td>
     </tr>
     <tr class="analytic nodisplay">
       <td> \({{ sv_critical_analytic[0] }}\) </td>
@@ -186,6 +198,7 @@
       {% endif %}
 
       <td> \({{ sv_critical_analytic[1] }}\) </td>
+      <td>{{ place_code('central_value') }}</td>
     </tr>
     {% endif %}
 
@@ -199,6 +212,7 @@
       <td>\(\approx\)</td>
       <td> \({{ sv_edge_arithmetic[1] }}\) </td>
       {% endif %}
+      <td>{{ place_code('edge_value') }}</td>
     </tr>
     <tr class="analytic nodisplay">
       <td> \({{ sv_edge_analytic[0] }}\) </td>
@@ -209,6 +223,7 @@
       <td>\(\approx\)</td>
       <td> \({{ sv_edge_analytic[1] }}\) </td>
       {% endif %}
+      <td>{{ place_code('edge_value') }}</td>
     </tr>
     {% endif %}
   </table>
@@ -242,6 +257,7 @@
 {% else %}
   <div>{{ eulerproduct }}</div>
 {% endif %}
+{{ place_code('euler_factor') }}
 
 {% if factorization is defined %}
 <h2>Factorization</h2>
@@ -251,6 +267,7 @@
 {% endif %}
 
 <h2> Imaginary part of the first few zeros on the {{ KNOWL('lfunction.critical_line', title='critical line') }}</h2>
+{{ place_code('zeros') }}
 <p>
 {% if positive_zeros %}
 <span class='redhighlight'>{{negative_zeros | safe}}</span>
