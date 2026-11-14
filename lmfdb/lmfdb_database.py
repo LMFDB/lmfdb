@@ -20,13 +20,9 @@ except ImportError:
     # fallback once the psycodict requirement is pinned past that PR.
     LMFDBGrantPolicy = None
 
-# Whether this psycodict takes session settings as a constructor argument.  One
-# that predates it (1.0.0rc1, which requirements.txt still allows) forwards
-# unknown keywords to psycopg.connect, where session_settings is not a
-# connection parameter and so would break the connection outright; it also
-# still applies its own 25 second timeout to the webserver role, so there is
-# nothing to restore there.  Delete this flag and its use below once the
-# psycodict requirement is pinned past the first release with the argument.
+# psycodict 1.0.0rc1 has no session_settings argument: it would forward it to
+# psycopg.connect, which rejects it, and it sets the webserver timeout itself.
+# Delete this flag once the psycodict requirement excludes rc1.
 _PSYCODICT_HAS_SESSION_SETTINGS = (
     "session_settings" in inspect.signature(PostgresDatabase.__init__).parameters
 )
@@ -513,15 +509,9 @@ class LMFDBDatabase(PostgresDatabase):
             # can pass LMFDBGrantPolicy(missing_role="error") instead.
             kwargs.setdefault("grant_policy", LMFDBGrantPolicy())
         if _PSYCODICT_HAS_SESSION_SETTINGS:
-            # The web workers connect as the ``webserver`` role and must not
-            # run a query forever.  psycodict used to hand that role a 25
-            # second statement timeout by inferring it from the role name; a
-            # generic library should not act on a role name, so LMFDB asks for
-            # the timeout explicitly here (roed314/psycodict#146).  A keyword
-            # picks the role by being passed at all, not by being truthy, and
-            # session_settings=None asks psycodict for no settings of its own,
-            # which for the LMFDB means these.  An explicit mapping is left
-            # alone, including {} for a caller that wants no timeout.
+            # The web workers (role webserver) need a statement timeout, which
+            # psycodict stops inferring from the role in roed314/psycodict#146.
+            # None counts as unset; an explicit mapping, even {}, is kept.
             postgresql_options = getattr(config, "postgresql_options", {}) or {}
             user = kwargs["user"] if "user" in kwargs else postgresql_options.get("user")
             if user == "webserver" and kwargs.get("session_settings") is None:
