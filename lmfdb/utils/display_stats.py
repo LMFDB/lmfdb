@@ -1,11 +1,89 @@
 from collections import defaultdict
+from urllib.parse import quote
 
 from flask import url_for
 from sage.all import UniqueRepresentation, lazy_attribute, infinity
 
-from .utilities import format_percentage
+from .utilities import format_percentage, flash_error
 from .web_display import display_knowl
-from psycodict.utils import KeyedDefaultDict, range_formatter
+from psycodict.utils import KeyedDefaultDict, SearchParsingError, range_formatter
+
+# Included in a drill-down url by a query formatter when the value being counted
+# cannot be expressed as a search: a not-computed (NULL) value for example.
+# ``display_data`` shows the count of such a cell without a link, rather than
+# linking to a search that returns the wrong records (an empty url parameter is
+# ignored by the search parsers, so it would return everything).  A NUL byte
+# cannot occur in a url, which makes the marker unambiguous, and it is a url
+# fragment in its own right, so it survives the intersection that ``totaler``
+# uses to build the link for a row or column total.
+NO_SEARCH_QUERY = "\x00"
+
+# Characters left alone when a search box value is copied into a drill-down url.
+# Brackets, commas and slashes are common in LMFDB search input and are safe in a
+# query string; everything else that is special (notably '&', '=', '#', '%', '+'
+# and spaces) is escaped.
+URL_SAFE = "[](),/:"
+
+def _hashable(val):
+    """
+    A hashable canonical form of a value as stored in the database, used to match
+    up the counts returned by the statistics backend with the rows and columns of
+    the table being displayed.  Distinct values always get distinct keys, unlike
+    the strings produced by the formatters.
+    """
+    if isinstance(val, dict):
+        return ("$dict",) + tuple((key, _hashable(val[key])) for key in sorted(val))
+    elif isinstance(val, (list, tuple)):
+        return ("$list",) + tuple(_hashable(x) for x in val)
+    return val
+
+class StatHeader():
+    """
+    One row or column of a statistics table.
+
+    Separating the three roles of a value keeps drill-down links correct even
+    when displaying a value loses information: ``label`` is shown to the user,
+    ``keys`` are used to look up counts, and ``fragment`` constrains a search to
+    this value and is built from the value as stored in the database.
+
+    INPUT:
+
+    - ``label`` -- the string displayed as the header
+    - ``value`` -- a value taken on by the column, as stored in the database
+      (or the bucket string, for a bucketed column)
+    - ``key`` -- the key under which the statistics backend stores counts for ``value``
+    - ``fragment`` -- url fragment(s) constraining a search to ``value``
+    """
+    def __init__(self, label, value, key, fragment):
+        self.label = label
+        self.value = value
+        self.keys = [key]
+        self.fragment = fragment
+
+    def add(self, key, fragment):
+        """
+        Include another value in this header.
+
+        Two values that display identically have to share a row, since the user
+        cannot tell them apart; their counts are added.  A link is only shown if
+        they also constrain the search in the same way, since a search for the
+        union of two values usually cannot be expressed.
+        """
+        self.keys.append(key)
+        if fragment != self.fragment:
+            self.fragment = NO_SEARCH_QUERY
+
+    def count(self, data, other=None):
+        """
+        The number of rows with this value (and ``other``'s value, in the 2d case),
+        given the ``data`` returned by the statistics backend.
+        """
+        if other is None:
+            keys = self.keys
+        else:
+            keys = [(key, okey) for key in self.keys for okey in other.keys]
+        # data is a KeyedDefaultDict, so we must avoid looking up absent keys
+        return sum(data[key]["count"] for key in keys if key in data)
 
 class formatters():
     @classmethod
@@ -157,6 +235,7 @@ class proportioners():
         attr = dict(attr)
         attr['base_url'] = '' # urls aren't used below
         attr['constraint'] = {}
+        attr['link_constraint'] = None
         attr['proportioner'] = False
         attr['totaler'] = False
 
@@ -190,6 +269,7 @@ class proportioners():
         attr = dict(attr)
         attr['base_url'] = ''
         attr['constraint'] = None
+        attr['link_constraint'] = None
         attr['proportioner'] = False
         attr['totaler'] = False
 
@@ -231,18 +311,24 @@ class totaler():
         """
         Takes a nonempty list of links to search pages and returns the link with search options
         the intersection of the search options.  The initial part of the link must be the same for all.
+
+        The options are kept in the order they appear in the first link, so that
+        the same table always produces the same urls.
         """
         def _split(link):
             H, T = link.split('?')
-            T = set(T.split('&'))
-            return H, T
-        head, tails = _split(link_list[0])
+            return H, [frag for frag in T.split('&') if frag]
+        head, tail = _split(link_list[0])
+        common = set(tail)
         for link in link_list[1:]:
             H, T = _split(link)
             if H != head:
                 raise ValueError("Cannot vary main url")
-            tails.intersection_update(T)
-        return head + '?' + '&'.join(tails)
+            common.intersection_update(T)
+        seen = set()
+        fragments = [frag for frag in tail
+                     if frag in common and not (frag in seen or seen.add(frag))]
+        return head + '?' + '&'.join(fragments)
 
     def __init__(self, row_counts=True, row_proportions=True, col_counts=True, col_proportions=True, corner_count=None, corner_proportion=None, include_links=True, row_total_label='Total', col_total_label='Total'):
         if corner_count and not (row_counts and col_counts):
@@ -260,7 +346,8 @@ class totaler():
         self.col_total_label = col_total_label
 
     def __call__(self, grid, row_headers, col_headers, stats):
-        if not grid:
+        if not grid or not grid[0]:
+            # No cells to total, which happens when no statistics are available
             return
         row_counts = self.row_counts
         row_proportions = self.row_proportions
@@ -285,6 +372,10 @@ class totaler():
             for i, row in enumerate(grid):
                 total = sum(D['count'] for D in row)
                 query = self.common_link([D['query'] for D in row]) if include_links else None
+                if query is not None and query[-1] == '?':
+                    # No search options are common to the whole row, so a link
+                    # would return every record rather than the ones counted
+                    query = None
                 if recursive_prop:
                     overall = sum(D['count'] for D in stats._total_grid[i])
                     if corner_count:
@@ -382,8 +473,19 @@ class StatsDisplay(UniqueRepresentation):
           values or ranges like '2-10'.
       - ``formatters`` -- callables as values.  Input a database value or bucket,
           output the text to display in the header.
-      - ``query_formatters`` -- callables as values.  Input a database value or output of formatter,
-          output the text to insert into the url, such as 'level=2-10'.
+      - ``query_formatters`` -- callables as values.  Input a database value or bucket,
+          output the text to insert into the url, such as 'level=2-10'.  The input is
+          never the output of a formatter, so a formatter is free to produce TeX or
+          html that could not be parsed as search input.  Return ``NO_SEARCH_QUERY``
+          for a value that cannot be searched for, such as a value that is not
+          computed; its count is then displayed without a link.
+      - ``bucket_encoders`` -- callables as values.  Input an endpoint of a bucket, as
+          typed into the search box for that column, output the corresponding value
+          to compare against the database.  Needed for a column whose database
+          representation does not sort in the same way as the values shown to users.
+      - ``url_params`` -- lists of strings as values.  The parameters of the search
+          page that constrain this column, if they are not just the column name.
+          Used to avoid constraining a column that is being displayed.
       - ``sort_keys`` -- callables as values.  Custom sorting for this column (as in ``sorted``)
       - ``reverses`` -- boolean values.  Whether to reverse the order of the header (as in ``sorted``)
       - ``split_lists`` -- boolean values.  Whether to count entries from lists individually.
@@ -411,6 +513,18 @@ class StatsDisplay(UniqueRepresentation):
     def _buckets(self):
         A = defaultdict(lambda: None)
         A.update(getattr(self, 'buckets', {}))
+        return A
+
+    @property
+    def _bucket_encoders(self):
+        A = defaultdict(lambda: None)
+        A.update(getattr(self, 'bucket_encoders', {}))
+        return A
+
+    @property
+    def _url_params(self):
+        A = KeyedDefaultDict(lambda col: [col])
+        A.update(getattr(self, 'url_params', {}))
         return A
 
     @property
@@ -469,9 +583,160 @@ class StatsDisplay(UniqueRepresentation):
     def stats(self):
         return self
 
+    def _bucket_endpoints(self, bucket):
+        """
+        Split a bucket into its endpoints, using the same syntax as the statistics
+        backend: '2' is a single value, '2-10' a closed range and '10-' a range
+        unbounded above.
+
+        OUTPUT:
+
+        A pair (endpoints, rebuild), where ``rebuild`` reassembles a bucket from a
+        list of endpoints of the same length.
+        """
+        if bucket[-1] == '-':
+            return [bucket[:-1]], (lambda L: L[0] + '-')
+        elif '-' not in bucket[1:]:
+            return [bucket], (lambda L: L[0])
+        elif bucket[0] == '-':
+            # a negative lower endpoint, as in '-10-5'
+            L = bucket[1:].split('-')
+            L[0] = '-' + L[0]
+        else:
+            L = bucket.split('-')
+        if len(L) != 2:
+            raise SearchParsingError("%s is not a single value or a range such as 2-10." % bucket)
+        return L, (lambda L: '%s-%s' % tuple(L))
+
+    def _encode_buckets(self, buckets):
+        """
+        Rewrite bucket strings into the form used to compare against the database.
+
+        This is the identity for a column with no entry in ``bucket_encoders``,
+        which covers every column whose database representation sorts in the same
+        way as the values shown to users.
+        """
+        encoded = {}
+        for col, bucket_list in buckets.items():
+            encoder = self._bucket_encoders[col]
+            if encoder is None:
+                encoded[col] = bucket_list
+                continue
+            encoded[col] = elist = []
+            for bucket in bucket_list:
+                endpoints, rebuild = self._bucket_endpoints(bucket)
+                endpoints = [encoder(endpoint) for endpoint in endpoints]
+                if any('-' in endpoint for endpoint in endpoints):
+                    raise ValueError("Bucket encoder for %s produced a '-'" % col)
+                elist.append(rebuild(endpoints))
+        return encoded
+
+    def _bucket_key(self, bucket):
+        """
+        The key under which the statistics backend stores the counts for a bucket.
+
+        It normalizes a range with equal endpoints, since the backend stores such
+        a bucket as a single value.
+        """
+        endpoints, _ = self._bucket_endpoints(bucket)
+        if len(endpoints) == 2 and endpoints[0] == endpoints[1]:
+            return endpoints[0]
+        return bucket
+
+    def _make_headers(self, col, values, buckets):
+        """
+        Assemble the headers for the rows or columns of a statistics table.
+
+        INPUT:
+
+        - ``col`` -- the column being displayed
+        - ``values`` -- the values it takes on, as stored in the database
+          (ignored when the column is bucketed)
+        - ``buckets`` -- the list of buckets for this column, or None if it is not bucketed
+
+        OUTPUT:
+
+        A list of ``StatHeader`` objects, in the order they should be displayed.
+        """
+        formatter = self._formatters[col]
+        query_formatter = self._query_formatters[col]
+        if buckets is None:
+            # Distinct values can display the same way, so deduplicate on the values
+            # themselves, keeping one of each to build the header and its links from
+            distinct = {}
+            for val in values:
+                distinct.setdefault(_hashable(val), val)
+            pairs = sorted(distinct.items(), key=lambda kv: self._sort_keys[col](kv[1]),
+                           reverse=self._reverses[col])
+        else:
+            encoded = self._encode_buckets({col: buckets})[col]
+            pairs = [(self._bucket_key(bucket), public)
+                     for public, bucket in zip(buckets, encoded)]
+        headers = []
+        by_label = {}
+        for key, val in pairs:
+            label = formatter(val)
+            fragment = query_formatter(val)
+            if label in by_label:
+                by_label[label].add(key, fragment)
+            else:
+                by_label[label] = header = StatHeader(label, val, key, fragment)
+                headers.append(header)
+        return headers
+
+    @staticmethod
+    def _total_url(base_url, extras, table, cols, constraint, total, buckets, split_list):
+        """
+        The url for the total of a one-dimensional table, or the empty string when
+        the records it counts cannot be described by a search.
+
+        The only aggregate a search page can express here is the constraint itself,
+        which is the right one exactly when every record satisfying the constraint
+        is included in the total.  That fails in four ways:
+
+        - a total over buckets covers only the buckets displayed, which need not
+          exhaust the column, and a union of buckets is not a search anyway;
+        - a total over a column whose lists are split counts the entries of those
+          lists rather than records;
+        - the statistics backend leaves out records where the column is null, so a
+          column that is not computed for every record is totaled over only some
+          of them;
+        - a constraint on the column being displayed is left out of the urls, since
+          each cell constrains that column itself, so the total would claim more
+          records than it counted.
+
+        The column name on its own used to be appended as a marker, but an empty
+        parameter is ignored by the search parsers, so such a link silently
+        returned every record rather than the ones counted (and the parameter is
+        often not one the search page accepts, as with galois_label and gal).
+        """
+        constraint = constraint or {}
+        if buckets or split_list or any(col in constraint for col in cols):
+            return ''
+        if total != table.table.count(constraint):
+            # Some records have no value in this column, and no search selects
+            # exactly the ones that do
+            return ''
+        return base_url + '&'.join(extras)
+
+    @staticmethod
+    def _suppress_unsearchable(data):
+        """
+        Blank the url of any cell whose value cannot be searched for, so that its
+        count is displayed without a link.
+        """
+        def fix(cells):
+            for cell in cells:
+                if cell.get('query') and NO_SEARCH_QUERY in cell['query']:
+                    cell['query'] = ''
+        fix(data.get('counts', []))
+        for _row_header, row in data.get('grid', []):
+            fix(row)
+        return data
+
     def display_data(self, cols, table=None, constraint=None, avg=None,
                      buckets=None, totaler=None, proportioner=None,
-                     baseurl_func=None, url_extras=None, **kwds):
+                     baseurl_func=None, url_extras=None, link_constraint=None, **kwds):
         """
         Returns statistics data in a common format that is used by page templates.
 
@@ -492,6 +757,10 @@ class StatsDisplay(UniqueRepresentation):
         - ``baseurl_func`` -- a base url, to which url_for is applied and then col=value tags are appended.
             Defaults to the url for ``self.baseurl_func``.
         - ``url_extras`` -- Text to add to the url after the '?'.
+        - ``link_constraint`` -- url fragments expressing ``constraint`` in terms of
+            the search page's parameters, used in place of ``constraint`` when
+            building urls.  Needed when the query used for counting is not in terms
+            of the columns accepted by the search page.
         - ``kwds`` -- used to discard unused extraneous arguments.
 
         OUTPUT:
@@ -523,90 +792,93 @@ class StatsDisplay(UniqueRepresentation):
                 raise ValueError("buckets should be a dictionary with columns as keys")
         else:
             buckets = {col: buckets[col] for col in cols if col in buckets}
-        formatter = self._formatters
-        query_formatter = self._query_formatters
-        sort_key = self._sort_keys
-        reverse = self._reverses
+        if any(col not in cols for col in buckets):
+            raise ValueError("Bucket keys must be a subset of columns")
+        buckets = {col: [bucket for bucket in bucket_list if bucket]
+                   for col, bucket_list in buckets.items()}
+        buckets = {col: bucket_list for col, bucket_list in buckets.items() if bucket_list}
         if baseurl_func is None:
             baseurl_func = self.baseurl_func
         base_url = url_for(baseurl_func) + '?'
-        if url_extras:
-            base_url += url_extras
-        if constraint:
-            base_url += "".join("%s&" % query_formatter[col](val) for col, val in constraint.items() if col not in cols)
+        # Url fragments shared by every cell of the table.  Each cell's url is
+        # assembled from these together with the fragments for its row and column,
+        # so that a totaler can recover the constraint on a row or column by
+        # intersecting the urls of its cells.
+        extras = [frag for frag in (url_extras or '').split('&') if frag]
+        if link_constraint is not None:
+            extras.extend(frag for frag in link_constraint.split('&') if frag)
+        elif constraint:
+            extras.extend(self._query_formatters[col](val)
+                          for col, val in constraint.items() if col not in cols)
+
+        def cell_url(*headers):
+            return base_url + '&'.join(extras + [header.fragment for header in headers])
+
         if table is None:
             table = self.table
         self._tmp_table = table = table.stats
+        # The backend indexes its counts by the output of ``formatter``, so we give
+        # it functions that are injective on database values rather than the ones
+        # used for display, which may not be.  Urls are built here instead, from the
+        # values themselves, so we do not ask it to build any.
+        keyer = {col: (range_formatter if col in buckets else _hashable) for col in cols}
+        no_urls = KeyedDefaultDict(lambda col: (lambda val: ''))
+        db_buckets = self._encode_buckets(buckets)
 
         if len(cols) == 1:
             avg = totaler.get('avg', False) if totaler else False
             show_total = bool(totaler)
             col = cols[0]
             split_list = self._split_lists[col]
-            headers, counts = table._get_values_counts(cols, constraint, split_list=split_list, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
-            old_headers = headers  ## Preserve the original headers for later lookups
-            if not buckets:
-                if show_total or proportioner is None:
+            if buckets and (split_list or avg):
+                raise ValueError("Unsupported option")
+            values, data = table._get_values_counts(cols, constraint, split_list=split_list, formatter=keyer, query_formatter=no_urls, base_url='', buckets=db_buckets)
+            headers = self._make_headers(col, values, buckets.get(col))
+            counts = [{'count': header.count(data),
+                       'query': cell_url(header),
+                       'proportion': "      0.00%",  # overridden below for nonzero counts
+                       'value': header.label}
+                      for header in headers]
+            if 'addl_row_title' in kwds:
+                addl_row_title = kwds['addl_row_title']
+                for D, header in zip(counts, headers):
+                    D['value2'] = self._formatters[addl_row_title](header.value)
+            if show_total or proportioner is None:
+                if buckets:
+                    total = sum(D['count'] for D in counts)
+                else:
                     total, avg = table._get_total_avg(cols, constraint, avg, split_list)
-                headers = [formatter[col](val) for val in sorted(headers, key=sort_key[col], reverse=reverse[col])]
-            elif cols == list(buckets):
-                if split_list or avg or sort_key[col] is not default_sort_key:
-                    raise ValueError("Unsupported option")
-                headers = [formatter[col](bucket) for bucket in buckets[col]]
-                if show_total or proportioner is None:
-                    total = sum(counts[bucket]['count'] for bucket in headers)
-            else:
-                raise ValueError("Bucket keys must be subset of columns")
-            counts = [counts[val] for val in headers]
-
-            for D, val, old_val in zip(counts, headers, old_headers):
-                D['value'] = val
-                if 'addl_row_title' in kwds.keys():
-                    addl_row_title = kwds['addl_row_title']
-                    D['value2'] = formatter[addl_row_title](old_val)
-
-            if proportioner is None or show_total:
                 self._overall = total
             if proportioner is None or isinstance(proportioner, dict):
                 proportioner = proportioners.ratio_1d(proportioner)
             if proportioner:
-                proportioner(counts, headers, self)
+                proportioner(counts, [header.label for header in headers], self)
             else:
                 for D in counts:
                     D['proportion'] = ''
             if show_total:
                 total = {'count': total,
-                         'query':"{0}{1}".format(base_url, cols[0]),
+                         'query': self._total_url(base_url, extras, table, cols, constraint,
+                                                  total, buckets, split_list),
                          'proportion':_format_percentage(total, self._overall, show_zero=True)}
                 if avg is False: # Want to show avg even if 0
                     total['value'] = 'Total'
                 else:
                     total['value'] = r'\(\mathrm{avg}\ %.2f\)' % avg
                 counts.append(total)
-            return {'counts': counts}
+            return self._suppress_unsearchable({'counts': counts})
         elif len(cols) == 2:
             if avg:
                 raise ValueError("unsupported option")
-            non_buckets = [col for col in cols if col not in buckets]
-            if len(buckets) + len(non_buckets) != 2:
-                raise ValueError("Bucket keys must be a subset of columns")
-            headers, grid = table._get_values_counts(cols, constraint, split_list=False, formatter=formatter, query_formatter=query_formatter, base_url=base_url, buckets=buckets)
-            for i, col in enumerate(cols):
-                if col in buckets:
-                    headers[i] = [formatter[col](bucket) for bucket in buckets[col]]
-                else:
-                    try:
-                        dup_free = set(headers[i])
-                    except TypeError:
-                        # The headers may not all be hashable
-                        dup_free = []
-                        for h in headers[i]:
-                            if h not in dup_free:
-                                dup_free.append(h)
-                    headers[i] = [formatter[col](val) for val in
-                                  sorted(dup_free, key=sort_key[col], reverse=reverse[col])]
-            row_headers, col_headers = headers
-            grid = [[grid[(rw,cl)] for cl in col_headers] for rw in row_headers]
+            values, data = table._get_values_counts(cols, constraint, split_list=False, formatter=keyer, query_formatter=no_urls, base_url='', buckets=db_buckets)
+            rows = self._make_headers(cols[0], values[0], buckets.get(cols[0]))
+            columns = self._make_headers(cols[1], values[1], buckets.get(cols[1]))
+            grid = [[{'count': row.count(data, column),
+                      'query': cell_url(row, column),
+                      'proportion': ''}
+                     for column in columns] for row in rows]
+            row_headers = [row.label for row in rows]
+            col_headers = [column.label for column in columns]
             # _total_grid is used for recursive proportions; such proportioners
             # will set it for use in a totaler.  Otherwise, we set it to None
             # here to signal that unrecursive totaling should be used.
@@ -615,8 +887,8 @@ class StatsDisplay(UniqueRepresentation):
                 proportioner(grid, row_headers, col_headers, self)
             if totaler:
                 totaler(grid, row_headers, col_headers, self)
-            return {'grid': list(zip(row_headers, grid)),
-                    'col_headers': col_headers}
+            return self._suppress_unsearchable({'grid': list(zip(row_headers, grid)),
+                                                'col_headers': col_headers})
         elif not cols:
             return {}
         else:
@@ -688,6 +960,7 @@ class StatsDisplay(UniqueRepresentation):
             buckets = attr.get('buckets', {col: self._buckets[col] for col in cols if self._buckets[col]})
             if isinstance(buckets, list) and len(cols) == 1:
                 buckets = {cols[0]: buckets}
+            buckets = self._encode_buckets(buckets)
             constraint = attr.get("constraint")
             table = attr.get("table", self.table)
             split_list = all(self._split_lists[col] for col in cols)
@@ -736,21 +1009,53 @@ class StatsDisplay(UniqueRepresentation):
         if prop == 'none':
             attributes['proportioner'] = False
 
+    # Parameters of the dynamic statistics page itself, rather than of the search
+    # that determines which records are counted.
+    dynamic_params = ['col1', 'col2', 'buckets1', 'buckets2', 'totals1', 'totals2',
+                      'proportions', 'search_type', 'search_array', 'count', 'start',
+                      'hst', 'err', 'd', 'stats']
+
+    def dynamic_link_constraint(self, info, cols):
+        """
+        The url fragments constraining the drill-down links on the dynamic
+        statistics page to the records being counted.
+
+        We echo back the search boxes that the user filled in, rather than the
+        query that ``dynamic_parse`` produced from them, since the columns of that
+        query are often not parameters that the search page accepts: a search box
+        may be renamed, combined with a quantifier, or encoded before being
+        compared with the database.  The search boxes reproduce the same search by
+        construction, being the input that produced the query in the first place.
+        """
+        skip = set(self.dynamic_params)
+        for col in cols:
+            skip.update(self._url_params[col])
+        return "&".join("%s=%s" % (key, quote(val, safe=URL_SAFE))
+                        for key, val in info.items()
+                        if key not in skip and isinstance(val, str) and val)
+
     def dynamic_setup(self, info):
         if not info:
-            attr = {'cols':[], 'buckets':{}}
+            info["d"] = self.prep({'cols':[], 'buckets':{}})
         else:
-            constraint = {}
             try:
                 # parse the constraint
+                constraint = {}
                 self.dynamic_parse(info, constraint)
                 attr = {'constraint': constraint}
                 # add in the columns and proportioner+totaller strategies
                 self._dyn_attribute_parse(info, attr)
-            except Exception:
-                # Should provide nice error message
-                raise
-        info["d"] = self.prep(attr)
+                # the same constraint, in terms of the search page's parameters
+                attr['link_constraint'] = self.dynamic_link_constraint(info, attr['cols'])
+                info["d"] = self.prep(attr)
+            except (ValueError, AttributeError, TypeError) as err:
+                # These are the errors raised for invalid search input.  The search
+                # parsers flash their own message, and set info['err'] when they have.
+                if "err" not in info:
+                    flash_error("%s", str(err))
+                    info["err"] = ""
+                # Show the search form and the error message, without any table
+                info["d"] = self.prep({'cols':[], 'buckets':{}})
         info["stats"] = self
         info["get_bucket"] = (lambda i: info.get("buckets%s" % i, ""))
         info["get_col"] = (lambda i: info.get("col%s" % i, "none"))
