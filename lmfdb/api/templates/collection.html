@@ -9,10 +9,10 @@
 <div>
 Formats:
 - <a href="{{ url }}">HTML</a>
-- <a href="{{ url_for('.api_query', table=table, _format = 'yaml', **url_args) }}">YAML</a>
-- <a href="{{ url_for('.api_query', table=table, _format = 'json', **url_args) }}">JSON</a>
-{% if url_args.get('_fields') %}
-- <a href="{{ url_for('.api_query', table=table, _format = 'raw', **url_args) }}">Raw</a>
+- <a href="{{ url_for(format_endpoint, table=table, _format='yaml', **format_args) }}">YAML</a>
+- <a href="{{ url_for(format_endpoint, table=table, _format='json', **format_args) }}">JSON</a>
+{% if format_args.get('_fields') %}
+- <a href="{{ url_for(format_endpoint, table=table, _format='raw', **format_args) }}">Raw</a>
 {% endif %}
 - {{ timestamp }}
 {% if not single_object %}

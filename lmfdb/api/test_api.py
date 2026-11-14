@@ -1,3 +1,4 @@
+import html
 import json
 import re
 from decimal import Decimal
@@ -145,6 +146,28 @@ class ApiTest(LmfdbTest):
         # raw format requires _fields
         response = self.tc.get('/api/ec_curvedata/?label=11a1&_format=raw')
         assert response.status_code == 400
+
+    def test_api_format_links(self):
+        r"""
+        The format links on a single record's page fetch that record, not the
+        first page of the table; on a table page they keep the query.
+        """
+        def format_links(page):
+            return {fmt: html.unescape(link) for link, fmt in
+                    re.findall(r'href="([^"]*_format=(raw|json|yaml)[^"]*)"', page)}
+        rec_id = self.tc.get('/api/ec_curvedata/?label=11a1&_format=raw&_fields=id').get_data(as_text=True).strip()
+        page = self.tc.get('/api/ec_curvedata/%s?_fields=lmfdb_label' % rec_id).get_data(as_text=True)
+        links = format_links(page)
+        assert sorted(links) == ['json', 'raw', 'yaml']
+        assert self.tc.get(links['raw']).get_data(as_text=True) == '"11.a2"\n'
+        data = json.loads(self.tc.get(links['json']).get_data(as_text=True))['data']
+        assert [rec['lmfdb_label'] for rec in data] == ['11.a2']
+        # a table page keeps its query, and offers raw output only with _fields
+        page = self.tc.get('/api/ec_curvedata/?conductor=i11&_fields=lmfdb_label&_sort=lmfdb_label').get_data(as_text=True)
+        links = format_links(page)
+        assert self.tc.get(links['raw']).get_data(as_text=True) == '"11.a1"\n"11.a2"\n"11.a3"\n'
+        page = self.tc.get('/api/ec_curvedata/?conductor=i11').get_data(as_text=True)
+        assert sorted(format_links(page)) == ['json', 'yaml']
 
     def test_api_usage(self):
         r"""

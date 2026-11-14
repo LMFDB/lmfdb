@@ -416,6 +416,15 @@ def api_query(table, id=None):
     url_args = next_req.copy()
     # Remove _format so that we don't specify that keyword twice
     url_args.pop("_format", None)
+    if single_object:
+        # The format links on a single record's page keep its id, so that
+        # they fetch that record rather than the first page of the table.
+        format_endpoint = ".api_query_id"
+        format_args = {key: val for key, val in url_args.items() if key != "_offset"}
+        format_args["id"] = id
+    else:
+        format_endpoint = ".api_query"
+        format_args = url_args
     query = url_for(".api_query", table=table, **next_req)
     offset += len(data)
     next_req["_offset"] = offset
@@ -471,7 +480,8 @@ def api_query(table, id=None):
                                examples=examples,
                                single_object=single_object,
                                query_unquote=query_unquote,
-                               url_args=url_args,
+                               format_endpoint=format_endpoint,
+                               format_args=format_args,
                                bread=bc,
                                **data)
 
