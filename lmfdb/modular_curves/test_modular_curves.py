@@ -356,6 +356,8 @@ class ModCrvTest(LmfdbTest):
             ('7B.6.2','7.24.0.b.1'),
             ('4E0-8b','8.12.0.a.1'),
             ('100A7','100.120.7.a.1'), # CP label matching a unique curve
+            ('%20100A7%20','100.120.7.a.1'), # surrounding whitespace is ignored
+            ('X0%283%29%20*%20X1%285%29','15.96.1-15.a.1.1'), # fiber product, spaces around * are ignored
             ('banana','Error: There is no modular curve in the database')
         ]
         for j,l in jump_set:
