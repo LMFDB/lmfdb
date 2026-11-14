@@ -1,5 +1,6 @@
 from lmfdb.app import app
 import re
+from copy import deepcopy
 from flask import render_template, url_for, request, redirect, abort, make_response
 from sage.all import euler_phi, pari, PolynomialRing, QQ, gcd, ZZ
 from sage.databases.cremona import class_to_int
@@ -342,6 +343,26 @@ def collapse_single_branch(info, query):
     return False
 
 
+def real_orders(conductor):
+    """
+    The orders allowed for a real character whose conductor satisfies the
+    constraint ``conductor`` (of the shape produced by ``parse_ints``).  A real
+    character has order at most 2, and only the trivial character, whose
+    conductor is 1, has order 1.  So the order of a real character is pinned
+    down once we know whether its conductor is 1; this matters because
+    ``conductor=17&order=2`` is read off the (conductor, order, modulus,
+    orbit) index already in the default sort order, while
+    ``conductor=17&order=1-2`` makes postgres fetch and sort every real
+    character of conductor 17, which times out.
+    """
+    lo, hi = int_bounds(conductor)
+    if lo is not None and lo >= 2:
+        return 2
+    if hi is not None and hi <= 1:
+        return 1
+    return {"$lte": 2}
+
+
 def refine_real_search(info, query):
     """
     A Dirichlet character is real if and only if its order is at most 2.
@@ -356,7 +377,13 @@ def refine_real_search(info, query):
     if is_real is None:
         return False
     if is_real:
-        allowed, reason = {"$lte": 2}, "a real character has order at most 2"
+        allowed = real_orders(query.get("conductor"))
+        if allowed == 1:
+            reason = "the only character of conductor 1 is the trivial character, which has order 1"
+        elif allowed == 2:
+            reason = "a real character has order at most 2, and only the trivial character (of conductor 1) has order 1"
+        else:
+            reason = "a real character has order at most 2"
     else:
         allowed, reason = {"$gte": 3}, "every character of order at most 2 is real"
     narrowed = intersect_ints(query.get("order"), allowed)
@@ -366,7 +393,29 @@ def refine_real_search(info, query):
         return False
     query["order"] = narrowed
     del query["is_real"]
-    return prune_or_branches(info, query, "order", reason)
+    if prune_or_branches(info, query, "order", reason):
+        return True
+    ors = query.get("$or")
+    if is_real and isinstance(ors, list):
+        # comma separated conductors are stored in $or branches; pin the
+        # order within each of them
+        newors = []
+        for branch in ors:
+            if "conductor" in branch:
+                conductor = intersect_ints(query.get("conductor"), branch["conductor"])
+                if conductor is not EMPTY and conductor is not UNSUPPORTED:
+                    order = intersect_ints(intersect_ints(query["order"], branch.get("order")),
+                                           real_orders(conductor))
+                    if order is EMPTY:
+                        continue
+                    if order is not UNSUPPORTED:
+                        branch = dict(branch)
+                        branch["order"] = order
+            newors.append(branch)
+        if not newors:
+            return force_no_results(info, query, "a real character has order at most 2, and only the trivial character (of conductor 1) has order 1")
+        query["$or"] = newors
+    return False
 
 
 def refine_parity_search(info, query):
@@ -394,10 +443,34 @@ def refine_parity_search(info, query):
             # the order constraint already forces the character to be even
             del query["is_even"]
     elif all(odd):
-        return force_no_results(info, query, "a character of odd order is even, so there are no odd characters of order %s", ", ".join(str(n) for n in forced))
+        return force_no_results(info, query, "a character of odd order is even, so there are no odd characters of order %s", ", ".join(str(n) for n in sorted(set(forced))))
     elif isinstance(ors, list) and any(odd):
         query["$or"] = [branch for branch, branch_odd in zip(branches, odd) if not branch_odd]
     return False
+
+
+def prefer_cached_count(query, parsed):
+    """
+    Undo the rewriting of ``parsed`` into ``query`` when the count of
+    ``parsed`` is cached.
+
+    The statistics page links to searches such as
+    ``modulus=100001-1000000&is_real=no``, whose counts are cached under the
+    query as parsed.  The rewritten query has different keys, so its count is
+    not found, and the result count, the "Get exact count" link and downloads
+    fall back to counting hundreds of millions of rows.  Searching with the
+    original query keeps the cached count.  We do not do this when the
+    conductor is constrained: that is the case where the rewriting is needed
+    to retrieve the results at all (issue #6733), and a cached count does not
+    make retrieving them any faster.
+    """
+    if query == parsed:
+        return
+    if "conductor" in parsed or any("conductor" in branch for branch in parsed.get("$or", [])):
+        return
+    if db.char_dirichlet.stats.quick_count(parsed) is not None:
+        query.clear()
+        query.update(parsed)
 
 
 def common_parse(info, query):
@@ -413,6 +486,7 @@ def common_parse(info, query):
     parse_bool(info, query, "is_primitive", name="is_primitive")
     parse_bool(info, query, "is_real", name="is_real")
     parse_bool(info, query, "is_minimal", name="is_minimal")
+    parsed = deepcopy(query)
     if 'inducing' in info:
         try:
             validate_label(info['inducing'])
@@ -487,7 +561,11 @@ def common_parse(info, query):
         return True
     if refine_parity_search(info, query):
         return True
-    return collapse_single_branch(info, query)
+    if collapse_single_branch(info, query):
+        return True
+    if 'inducing' not in info:
+        prefer_cached_count(query, parsed)
+    return False
 
 
 def validate_label(label):

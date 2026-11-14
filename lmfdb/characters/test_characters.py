@@ -1,4 +1,5 @@
 from math import gcd, sqrt
+from unittest.mock import patch
 from urllib.parse import parse_qsl
 
 from lmfdb import db
@@ -223,13 +224,28 @@ class DirichletSearchQueryTest(LmfdbTest):
     #6422).  These tests check the rewritten query itself: the page a search
     produces does not show whether the boolean was removed, which is the
     point of the rewriting.
+
+    The parser keeps the original query when its count is cached (see
+    ``prefer_cached_count``), so ``parsed`` hides the count cache, which
+    would otherwise make these tests depend on which counts are cached.
     """
 
     # a query that provably has no results is replaced by this one, which is
     # answered instantly from the hash index on label
     no_results = {'label': ''}
 
-    def parsed(self, query_string):
+    def parsed(self, query_string, cached_count=None):
+        """
+        The database query that a search url is turned into, when the
+        count of the original query is ``cached_count``.
+        """
+        query = {}
+        with patch.object(db.char_dirichlet.stats, 'quick_count', return_value=cached_count):
+            with self.app.test_request_context():
+                common_parse(dict(parse_qsl(query_string)), query)
+        return query
+
+    def parsed_with_cache(self, query_string):
         """The database query that a search url is turned into."""
         query = {}
         with self.app.test_request_context():
@@ -246,7 +262,19 @@ class DirichletSearchQueryTest(LmfdbTest):
         assert self.parsed('is_real=no') == {'order': {'$gte': 3}}
         assert self.parsed('is_real=yes&order=1-100') == {'order': {'$gte': 1, '$lte': 2}}
         assert self.parsed('is_real=no&order=1-100') == {'order': {'$gte': 3, '$lte': 100}}
-        assert self.parsed('conductor=17&is_real=yes') == {'conductor': 17, 'order': {'$lte': 2}}
+        # only the trivial character, of conductor 1, has order 1, so the
+        # conductor pins down the order of a real character; a range on the
+        # order would make postgres sort all the real characters of conductor 17
+        assert self.parsed('conductor=17&is_real=yes') == {'conductor': 17, 'order': 2}
+        assert self.parsed('conductor=2-&is_real=yes') == {'conductor': {'$gte': 2}, 'order': 2}
+        assert self.parsed('conductor=1&is_real=yes') == {'conductor': 1, 'order': 1}
+        assert self.parsed('conductor=1-17&is_real=yes') == {'conductor': {'$gte': 1, '$lte': 17}, 'order': {'$lte': 2}}
+        assert self.parsed('conductor=17,61&is_real=yes') == {
+            'order': {'$lte': 2},
+            '$or': [{'conductor': 17, 'order': 2}, {'conductor': 61, 'order': 2}]}
+        assert self.parsed('conductor=17&order=1&is_real=yes') == self.no_results
+        assert self.parsed('conductor=1&order=2&is_real=yes') == self.no_results
+        assert self.parsed('conductor=1,17&order=1&is_real=yes') == {'conductor': 1, 'order': 1}
         assert self.parsed('is_real=yes&order=5') == self.no_results
         assert self.parsed('is_real=no&order=1-2') == self.no_results
         # comma separated orders are stored in $or branches
@@ -295,9 +323,33 @@ class DirichletSearchQueryTest(LmfdbTest):
                  small(is_even=True, **{'$or': [{'order': 3}, {'order': 5}]})),
                 ('modulus=1-40&is_primitive=yes', small(is_primitive=True)),
                 ('conductor=17&modulus=1-1000&is_real=yes',
-                 {'conductor': 17, 'modulus': {'$gte': 1, '$lte': 1000}, 'is_real': True})]:
+                 {'conductor': 17, 'modulus': {'$gte': 1, '$lte': 1000}, 'is_real': True}),
+                ('conductor=1,17&modulus=1-100&is_real=yes',
+                 {'$or': [{'conductor': 1}, {'conductor': 17}],
+                  'modulus': {'$gte': 1, '$lte': 100}, 'is_real': True})]:
             found = self.labels(self.parsed(query_string))
             assert found and found == self.labels(unrewritten), query_string
+
+    def test_cached_counts_are_kept(self):
+        # The statistics page links to searches whose counts are cached under
+        # the query as parsed; rewriting them would lose the cached count, and
+        # counting them is very slow.
+        for query_string in ['modulus=100001-1000000&is_real=no',
+                             'modulus=100001-1000000&is_primitive=yes',
+                             'is_real=yes']:
+            query = self.parsed_with_cache(query_string)
+            assert db.char_dirichlet.stats.quick_count(query) is not None, query_string
+        assert self.parsed('modulus=1-40&is_real=yes', cached_count=4) == {
+            'modulus': {'$gte': 1, '$lte': 40}, 'is_real': True}
+        assert self.parsed('modulus=17&is_primitive=yes', cached_count=4) == {
+            'modulus': 17, 'is_primitive': True}
+        # but constraints on the conductor are rewritten regardless, since
+        # retrieving the results needs the rewritten query (issue #6733)
+        assert self.parsed('conductor=17&is_primitive=yes', cached_count=4) == {
+            'conductor': 17, 'modulus': 17}
+        assert self.parsed('conductor=17,61&is_real=yes', cached_count=4)['order'] == {'$lte': 2}
+        # and contradictions are still detected
+        assert self.parsed('order=3&parity=odd', cached_count=0) == self.no_results
 
 
 class DirichletTableTest(LmfdbTest):
