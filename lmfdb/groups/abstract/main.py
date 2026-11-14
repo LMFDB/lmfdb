@@ -1272,22 +1272,23 @@ def normalize_family_jump(jump):
 #### Searching
 def group_multi_label_to_label(entry):
     """
-    Parse a single jump-box entry into an abstract group label. Only group labels
-    (e.g. 8.3) are supported in multi-entry lists. Used by ``multi_entry_jump_search``
-    when the Find box contains a comma-separated list. Raises ``ValueError`` otherwise.
-
-    Single-entry names and other formats are handled by ``group_jump`` below; name
-    support inside multi-entry lists can be added by extending this parser once a
-    shared group-name -> label resolver is available (see LMFDB#6882).
+    Parse a single jump-box entry into an abstract group label. Accepts a group
+    label (e.g. 8.3) or a group name resolved by ``name_to_label`` (e.g. S4, C2^3,
+    8T3, GL(2,3)). Used by ``multi_entry_jump_search`` when the Find box contains
+    a comma-separated list. Raises ``ValueError`` (or ``SearchParsingError`` for an
+    ambiguous name) if the entry does not determine a group.
     """
     entry = entry.strip()
     if abstract_group_label_regex.fullmatch(entry):
         return entry
-    raise ValueError("%s is not a valid group label" % entry)
+    label = name_to_label(entry)
+    if label is None:
+        raise ValueError("%s is not a valid group label or name" % entry)
+    return label
 
 
 def group_jump(info):
-    # If the Find box holds a comma-separated list of group labels, return a search
+    # If the Find box holds a comma-separated list of group labels or names, return a search
     # page of those groups. This runs before the single-entry parsing below, so it
     # composes with the label/name/abelian/transitive lookups for a single entry.
     multi_jump = multi_entry_jump_search(

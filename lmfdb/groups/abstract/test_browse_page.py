@@ -107,6 +107,8 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?jump=8.3%2C+banana%2C+16.5&search=Go", ["8.3", "16.5", "ignored"])
         # When no entry is valid, an error is shown
         self.check_args("/Groups/Abstract/?jump=banana%2C+kiwi&search=Go", "None of the")
+        # Names are accepted in lists too (S4 -> 24.12, GL(2,3) -> 48.29, 8T3 -> 8.5)
+        self.check_args("/Groups/Abstract/?jump=8.3%2C+S4%2C+GL%282%2C3%29%2C+8T3&search=Go", ["8.3", "24.12", "48.29", "8.5"])
 
     def test_family_alias_lookup(self):
         r"""
