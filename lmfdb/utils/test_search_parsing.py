@@ -11,9 +11,11 @@ import pytest
 from psycodict.utils import SearchParsingError
 
 from lmfdb.app import app
+import lmfdb.utils.search_parsing as search_parsing
 from lmfdb.utils.search_parsing import (
     LIST_RE,
     LIST_FLOAT_RE,
+    integer_options,
     parse_floats,
     parse_ints,
     parse_ints_to_list,
@@ -233,3 +235,24 @@ def test_parse_floats_open_left():
     parse_floats({"c": "--4.5"}, query, "c")
     assert set(query["c"]) == {"$lte"}
     assert query["c"]["$lte"] == pytest.approx(-4.5, abs=1e-9)
+
+
+def test_integer_options_bounded_work(monkeypatch):
+    # parse_ints accepts a very negative lower endpoint, and count tables pass
+    # the result to integer_options; that must not enumerate the whole interval
+    real_range = range
+
+    def guarded_range(*args):
+        r = real_range(*args)
+        assert len(r) <= 10**6, "integer_options enumerated %r" % (r,)
+        return r
+    monkeypatch.setattr(search_parsing, "range", guarded_range, raising=False)
+    wide = "-10000000000-3"
+    assert integer_options(wide, contained_in=[1, 2, 3, 5]) == [1, 2, 3]
+    assert integer_options(wide, contained_in=lambda: [1, 2, 3, 5]) == [1, 2, 3]
+    assert integer_options("..3", contained_in=[1, 2, 3, 5], lower_bound=-10**10) == [1, 2, 3]
+    assert integer_options(wide, lower_bound=1, upper_bound=200) == [1, 2, 3]
+    assert integer_options("2-4,7", contained_in=[1, 3, 5, 7]) == [3, 7]
+    assert integer_options("2-4,7", lower_bound=1, upper_bound=200) == [2, 3, 4, 7]
+    with pytest.raises(ValueError):
+        integer_options(wide, max_opts=100)

@@ -779,7 +779,7 @@ def count_postprocess(res, info, query):
         if groupby == ["p", "n"]:
             if "e" in info:
                 # We need to handle the possibility that there are constraints on e
-                eopts = integer_options(info["e"], upper_bound=47)
+                eopts = integer_options(info["e"], lower_bound=1, upper_bound=47)
             else:
                 eopts = None
 
@@ -850,12 +850,12 @@ def local_field_count(info, query):
     for col in ["p", "n", "e", "c", "top_slope"]:
         if col in "pne" and info["search_type"] == "Counts":
             # Allow user to get virtual counts outside the specified range
-            tmp = integer_options(info.get(col, f"1-{maxval[col]}"), upper_bound=maxval[col])
+            tmp = integer_options(info.get(col, f"1-{maxval[col]}"), lower_bound=1, upper_bound=maxval[col])
             if col == "p":
                 tmp = [p for p in tmp if ZZ(p).is_prime()]
             elif col == "n" and "e" in info:
                 # Constrain degrees to b only multiples of some e
-                eopts = integer_options(info["e"], upper_bound=47)
+                eopts = integer_options(info["e"], lower_bound=1, upper_bound=47)
                 if 1 not in eopts:
                     emuls = set()
                     for e in eopts:

@@ -498,18 +498,18 @@ def integer_options(arg, max_opts=None, contained_in=None, lower_bound=None, upp
         if not isinstance(contained_in, (list, tuple)):
             # Allow for lazy evaluation here
             contained_in = contained_in()
-        M = max(contained_in)
     ans = set()
     for interval in intervals:
         if isinstance(interval, list):
             a, b = interval
             if contained_in is not None:
-                b = min(b, M)
-            if check and len(ans) + b - a + 1 > max_opts:
-                raise ValueError("Too many options")
-            for n in range(a, b + 1):
-                if contained_in is None or n in contained_in:
-                    ans.add(n)
+                # Scan the finite domain rather than the interval, which can be
+                # arbitrarily wide (a lower endpoint such as -10^10, say)
+                ans.update(int(n) for n in contained_in if a <= n <= b)
+            else:
+                if check and len(ans) + b - a + 1 > max_opts:
+                    raise ValueError("Too many options")
+                ans.update(range(a, b + 1))
         else:
             ans.add(int(interval))
         if max_opts is not None and len(ans) >= max_opts:
