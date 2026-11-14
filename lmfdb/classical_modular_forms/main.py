@@ -19,7 +19,7 @@ from lmfdb.utils import (
     StatsDisplay, proportioners, totaler, integer_divisors,
     redirect_no_cache)
 from psycodict.utils import range_formatter
-from lmfdb.utils.search_parsing import search_parser
+from lmfdb.utils.search_parsing import search_parser, SearchParsingError
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, FloatCol, CheckCol, ProcessedCol, MultiProcessedCol, ColGroup, SpacerCol
 from lmfdb.api import datapage
@@ -839,12 +839,11 @@ def common_parse(info, query, na_check=False):
                                     'square', 'squarefree', 'powerful']:
             query['level_is_' + info['level_type']] = True
         else:
-            # Raise rather than redirect: our callers use the query we build
-            # and ignore what we return, so a redirect here would be dropped
-            # and the search would run with no condition on the level at all
-            msg = "The level type %s is invalid." % info['level_type']
-            flash_error(msg)
-            raise ValueError(msg)
+            # Callers ignore our return value, so stop the search by raising.
+            # The level type comes from the URL: pass it to flash_error as an
+            # argument so that it is escaped.
+            flash_error("The level type %s is invalid.", info['level_type'])
+            raise SearchParsingError("The level type %s is invalid." % info['level_type'])
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
     parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
     parse_ints(info, query, 'char_order', name="Character order")

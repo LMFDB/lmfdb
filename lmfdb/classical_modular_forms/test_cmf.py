@@ -54,6 +54,14 @@ class CmfTest(LmfdbTest):
         assert invalid, "an unknown level type was accepted"
         assert not found, "an unknown level type still returned results"
 
+        # The invalid level type is echoed in the error message, so it must be
+        # escaped there
+        page = self.tc.get(base + '&level_type=%3Cscript%3Ealert(1)%3C/script%3E',
+                           follow_redirects=True).get_data(as_text=True)
+        assert 'is invalid' in page
+        assert '<script>alert(1)</script>' not in page
+        assert '&lt;script&gt;alert(1)&lt;/script&gt;' in page
+
     def test_browse_page(self):
         r"""
         Check browsing for elliptic modular forms
