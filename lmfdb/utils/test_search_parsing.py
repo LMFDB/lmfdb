@@ -13,12 +13,14 @@ from psycodict.utils import SearchParsingError
 from lmfdb.app import app
 import lmfdb.utils.search_parsing as search_parsing
 from lmfdb.utils.search_parsing import (
+    LIST_POSINT_RE,
     LIST_RE,
     LIST_FLOAT_RE,
     integer_options,
     parse_floats,
     parse_ints,
     parse_ints_to_list,
+    parse_posints,
     parse_range2,
     parse_range3,
     prep_ranges,
@@ -235,6 +237,24 @@ def test_parse_floats_open_left():
     parse_floats({"c": "--4.5"}, query, "c")
     assert set(query["c"]) == {"$lte"}
     assert query["c"]["$lte"] == pytest.approx(-4.5, abs=1e-9)
+
+
+def test_parse_posints_open_left():
+    # prep_ranges leaves ..3 alone, so the positive integer grammar must accept
+    # it (it used to become -3, a search for a negative class number, say)
+    for ok in ["3", "..3", "1,..3", "2-", "2-5", "..03"]:
+        assert LIST_POSINT_RE.match(ok), ok
+    for bad in ["..", "..0", "..-3", "...3", "3.."]:
+        assert not LIST_POSINT_RE.match(bad), bad
+    query = {}
+    parse_posints({"c": "..3"}, query, "c")
+    assert query == {"c": {"$lte": 3}}
+    query = {}
+    parse_posints({"c": "1,..3"}, query, "c")
+    assert query == {"$or": [{"c": 1}, {"c": {"$lte": 3}}]}
+    query = {}
+    parse_posints({"c": "2..5"}, query, "c")
+    assert query == {"c": {"$gte": 2, "$lte": 5}}
 
 
 def test_integer_options_bounded_work(monkeypatch):
