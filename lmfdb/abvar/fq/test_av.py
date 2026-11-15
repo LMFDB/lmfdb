@@ -219,6 +219,28 @@ class AVTest(LmfdbTest):
         assert "ak_by_age_nw_awu" in page
         assert "$=0$" not in page
 
+    def test_geom_decomp_checkbox(self):
+        r"""
+        The geometric decomposition checkbox submits "yes", and older URLs use "on"; both must
+        select the geometric fields, so that resubmitting the refine form (for instance when the
+        Curves column is switched on) does not change the search.
+        """
+        from lmfdb.abvar.fq.main import common_parse
+        url = "/Variety/Abelian/Fq/?g=2&q=4&use_geom_decomp=%s&dim1_factors=2"
+        page = self.tc.get(url % "on").get_data(as_text=True)
+        assert re.search(r'<input type="checkbox" name="use_geom_decomp" value="yes"[^>]*checked', page)
+        with self.app.test_request_context(url % "on"):
+            for val in ["on", "yes"]:
+                query = {}
+                common_parse({"g": "2", "q": "4", "use_geom_decomp": val, "dim1_factors": "2"}, query)
+                assert query.get("geom_dim1_factors") == 2 and "dim1_factors" not in query
+            query = {}
+            common_parse({"g": "2", "q": "4", "dim1_factors": "2"}, query)
+            assert query.get("dim1_factors") == 2 and "geom_dim1_factors" not in query
+        resubmitted = self.tc.get(url % "yes" + "&showcol=curves").get_data(as_text=True)
+        labels = re.findall(r'2\.4\.[a-z_]+', page)
+        assert labels and set(labels) == set(re.findall(r'2\.4\.[a-z_]+', resubmitted))
+
     def test_curves_projection(self):
         r"""
         Check that the (heavy) curves arrays are fetched from the database only when the
