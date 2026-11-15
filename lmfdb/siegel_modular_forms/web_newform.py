@@ -1460,11 +1460,17 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + r'+O(q^{%d})\)' % prec
 
+    def no_hecke_at(self, p):
+        """In the principal family there is no Hecke operator T(p) at p | N: its column is blank."""
+        return self.family == 'P' and self.level > 1 and self.level % p == 0
+
     def hecke_eigenvalue(self, hecke_type, n):
         # Display the hecke eigenvalue of this hecke_type at place n. Will be inside \( \).
         m = self.hecke_ring_cyclotomic_generator
         evs = getattr(self, hecke_type)
         if evs is None:
+            return ''
+        if self.no_hecke_at(self.primes[n]):
             return '' 
         ev = getattr(self, hecke_type)[n]
         if m is not None and m != 0:

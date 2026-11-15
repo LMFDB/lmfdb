@@ -943,8 +943,14 @@ def newspace_parse(info, query):
             query['num_forms'] = {'$exists':True}
 
 def _trace_col(i):
-    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp:\
- "" if ((tdisp == '') or (tdisp[i] is None)) else bigint_knowl(tdisp[i], 12), orig="trace_lambda_p", align="right", default=True)
+    p = nth_prime(i+1)
+    # In the principal family there is no Hecke operator T(p) at p | N (Gamma[N] is not Gamma_0-type)
+    def disp(tdisp, level, family):
+        if tdisp == '' or tdisp is None or tdisp[i] is None or (family == 'P' and level and level % p == 0):
+            return ""
+        return bigint_knowl(tdisp[i], 12)
+    return MultiProcessedCol("traces", None, rf"$a_{{{p}}}$", ["trace_lambda_p", "level", "family"], disp,
+                             download_col="trace_lambda_p", align="right", default=True)
 #    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
 
 def _AL_col(i, p):
