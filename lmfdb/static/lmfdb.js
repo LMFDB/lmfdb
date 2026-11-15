@@ -597,9 +597,18 @@ function reload_unloaded_columns() {
   if (form.length > 0) {
     // Resubmit the search form, as the pagination links do, so that pending changes to the
     // search inputs and sort order are kept.
+    form = form.first();
     form.find("input[name=showcol]").val(show.join("."));
     form.find("input[name=hidecol]").val(hide.join("."));
-    form.first().submit();
+    // Keep constraints from the current URL that have no control in the form (e.g. size for
+    // abelian varieties over Fq); those with a control take the control's current value.
+    var current = new URL(window.location.href).searchParams;
+    for (const [name, value] of current.entries()) {
+      if (!form[0].elements.namedItem(name)) {
+        $('<input type="hidden">').attr("name", name).val(value).appendTo(form);
+      }
+    }
+    form.submit();
     return;
   }
   var url = new URL(window.location.href);
