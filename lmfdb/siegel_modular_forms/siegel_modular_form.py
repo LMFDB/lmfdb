@@ -944,7 +944,7 @@ def newspace_parse(info, query):
 
 def _trace_col(i):
     p = nth_prime(i+1)
-    # In the principal family there is no Hecke operator T(p) at p | N (Gamma[N] is not Gamma_0-type)
+    # In the principal family the eigenvalues at p | N are not stored (the stored values there are the level-1 formulas)
     def disp(tdisp, level, family):
         if tdisp == '' or tdisp is None or tdisp[i] is None or (family == 'P' and level and level % p == 0):
             return ""

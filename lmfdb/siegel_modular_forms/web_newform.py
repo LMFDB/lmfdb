@@ -1462,7 +1462,8 @@ function switch_basis(btype) {
         return s + r'+O(q^{%d})\)' % prec
 
     def no_hecke_at(self, p):
-        """In the principal family there is no Hecke operator T(p) at p | N: the table omits it."""
+        """In the principal family the eigenvalues at p | N are not stored (the stored values at
+        p | N are the level-1 formulas, not eigenvalues of the Hecke operators of Gamma(N)): the table omits p."""
         return self.family == 'P' and self.level > 1 and self.level % p == 0
 
     def hecke_eigenvalue(self, hecke_type, n):
