@@ -15,6 +15,7 @@ import string
 import re
 import json
 import time
+import uuid
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
 from flask import (abort, flash, jsonify, make_response,
@@ -219,33 +220,70 @@ def ctx_knowledge():
             "external_definition_link": external_definition_link}
 
 
+# The macros available in a knowl, which is rendered as a jinja template
+_knowl_template_header = """\
+  {% include "knowl-defs.html" %}
+  {% from "knowl-defs.html" import KNOWL with context %}
+  {% from "knowl-defs.html" import KNOWL_LINK with context %}
+  {% from "knowl-defs.html" import KNOWL_INC with context %}
+  {% from "knowl-defs.html" import DEFINES with context %}
+  {% from "knowl-defs.html" import TEXT_DATA with context %}
+  {% from "knowl-defs.html" import LINK_EXT with context %}
+
+"""
+
+
+def _knowl_markdown(knowl_content):
+    # Pass the text on to markdown.  Note, backslashes need to be escaped for
+    # this, but not for the javascript markdown parser
+    return md.convert(md_preprocess(knowl_content))
+
+
 @app.template_filter("render_knowl")
 def render_knowl_in_template(knowl_content, **kwargs):
     """
     This function does the actual rendering, for render and the template_filter
     render_knowl_in_template (ultimately for KNOWL_INC)
     """
-    render_me = """\
-  {%% include "knowl-defs.html" %%}
-  {%% from "knowl-defs.html" import KNOWL with context %%}
-  {%% from "knowl-defs.html" import KNOWL_LINK with context %%}
-  {%% from "knowl-defs.html" import KNOWL_INC with context %%}
-  {%% from "knowl-defs.html" import DEFINES with context %%}
-  {%% from "knowl-defs.html" import TEXT_DATA with context %%}
-  {%% from "knowl-defs.html" import LINK_EXT with context %%}
-
-  %(content)s
-  """
-    knowl_content = md_preprocess(knowl_content)
-
-    # markdown enabled
-    render_me = render_me % {'content': md.convert(knowl_content)}
-    # Pass the text on to markdown.  Note, backslashes need to be escaped for
-    # this, but not for the javascript markdown parser
+    render_me = _knowl_template_header + "  " + _knowl_markdown(knowl_content) + "\n  "
     try:
         return render_template_string(render_me, **kwargs)
     except Exception as e:
         return "ERROR in the template: %s. Please edit it to resolve the problem." % e
+
+
+def render_knowls_in_template(knowl_contents, **kwargs):
+    """
+    Render several knowl contents, as :func:`render_knowl_in_template` does,
+    but in a single template rendering.
+
+    Every call to ``render_template_string`` reruns the application's
+    context processors, some of which query the database (e.g. the colour
+    scheme of a signed-in user), so a page showing many knowls should use
+    this rather than applying the ``render_knowl`` filter to each of them.
+
+    INPUT:
+
+    - ``knowl_contents`` -- a list of knowl contents (strings)
+
+    OUTPUT:
+
+    The list of the rendered contents, in the same order.  If one of them
+    is not a valid template, they are rendered one at a time instead, so
+    that the error is confined to that knowl.
+    """
+    knowl_contents = list(knowl_contents)
+    if not knowl_contents:
+        return []
+    separator = "<!-- knowl separator %s -->" % uuid.uuid4().hex
+    render_me = _knowl_template_header + separator.join(_knowl_markdown(content) for content in knowl_contents)
+    try:
+        rendered = render_template_string(render_me, **kwargs).split(separator)
+    except Exception:
+        rendered = []
+    if len(rendered) != len(knowl_contents):
+        return [render_knowl_in_template(content, **kwargs) for content in knowl_contents]
+    return rendered
 
 
 # a jinja test for figuring out if this is a knowl or not

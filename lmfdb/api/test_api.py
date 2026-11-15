@@ -159,6 +159,42 @@ class ApiTest(LmfdbTest):
         # and the dataset names are searchable without their TeX
         assert 'data-dataset="lf p-adic fields"' in data
 
+    def test_api_home_renders_descriptions_together(self):
+        r"""
+        Check that the descriptions are rendered in one go: every template
+        rendering reruns the context processors, some of which query the
+        database (e.g. the colour scheme of a signed-in user), so their number
+        must not grow with the number of described tables.  Check also that a
+        description that is not a valid template only breaks its own row.
+        """
+        calls = []
+
+        def counter():
+            calls.append(None)
+            return {}
+
+        names = sorted(self.db.tablenames)
+        processors = self.app.template_context_processors[None]
+        processors.append(counter)
+        try:
+            counts = []
+            for n in [1, 50]:
+                descriptions = {name: "Table *number %s*" % i for i, name in enumerate(names[:n])}
+                del calls[:]
+                with patch.object(knowldb, "get_table_descriptions", return_value=descriptions):
+                    data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+                counts.append(len(calls))
+                assert data.count("<em>number ") == n
+            assert counts[0] == counts[1], "context processors ran %s times for 1 description, %s times for 50" % tuple(counts)
+
+            descriptions = {names[0]: "Fine *one*", names[1]: "Broken {{ KNOWL(", names[2]: "Fine *two*"}
+            with patch.object(knowldb, "get_table_descriptions", return_value=descriptions):
+                data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+            assert "<em>one</em>" in data and "<em>two</em>" in data
+            assert data.count("ERROR in the template") == 1
+        finally:
+            processors.remove(counter)
+
     def test_api_databases(self):
         r"""
         Check that one collection from each database works

@@ -167,11 +167,21 @@ def index(show_hidden=False):
     nhidden = sum(1 for table in db.tablenames if hidden_collection(table))
     dataset_totals = {database: (len(tables), sum(count for _, _, count, _ in tables))
                       for database, tables in databases.items()}
+    # The descriptions are knowls, so they may contain Markdown, HTML and
+    # KNOWL() calls.  They are rendered together: rendering each of them
+    # separately would rerun the context processors (some of which query
+    # the database) once per table.
+    from lmfdb.knowledge.main import render_knowls_in_template
+    described = [(table, description) for tables in databases.values()
+                 for table, _, _, description in tables if description]
+    rendered = render_knowls_in_template(description for _, description in described)
+    descriptions = {table: html for (table, _), html in zip(described, rendered)}
     return render_template("api.html",
                            title="API",
                            databases=databases,
                            dataset_names=dataset_names,
                            dataset_totals=dataset_totals,
+                           descriptions=descriptions,
                            ntables=ntables,
                            nrows=nrows,
                            nhidden=nhidden,

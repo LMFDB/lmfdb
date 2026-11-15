@@ -142,9 +142,9 @@ Jump to:
   <table class="ntdata api-table-list">
     <tbody>
     {% for (fullname, shortname, count, description) in tables|sort %}
-      {# descriptions are knowls, so they may contain Markdown, HTML and KNOWL() calls;
-         the filter searches the text that is displayed, without TeX delimiters #}
-      {% set rendered = description|render_knowl if description else "" %}
+      {# descriptions are knowls, rendered in index(); the filter searches
+         the text that is displayed, without TeX delimiters #}
+      {% set rendered = descriptions.get(fullname, "") %}
       <tr class="api-table-row" data-name="{{ fullname|lower }}" data-desc="{{ rendered|striptags|replace('$', '')|replace('\\', '')|lower }}">
         <td class="api-table-name"><a href="{{ url_for('.api_query', table=fullname) }}">{{ fullname }}</a></td>
         <td class="api-table-count" title="number of rows">{{ "{:,}".format(count) }}</td>
