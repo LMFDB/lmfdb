@@ -50,6 +50,7 @@ from lmfdb.utils.search_boxes import (
     SortController,
     TextBox,
     TextBoxWithSelect,
+    YesNoBox,
 )
 
 from lmfdb.classical_modular_forms.main import an_modulo_is_constraint
@@ -613,19 +614,32 @@ class SearchBoxTest(unittest.TestCase):
         self.assertEqual(self.classes(box, {"cm": False}), {"search_constraint"})
         self.assertEqual(self.classes(box, None), set())
 
-    def test_select_box_unmatched_value(self):
+    def test_select_box_aliases(self):
         r"""
-        Checking that a select is only active when a non-blank option is the
-        one shown as selected, so that a value which search code stores under
-        its name but which matches no option (like the Bianchi ``sfe="any"``)
-        does not highlight a select that displays blank
+        Checking that a value the search accepts in place of an option counts
+        as that option: it is shown as selected and highlighted like it, and
+        one standing for no constraint (like the Bianchi ``sfe="any"``) does
+        not highlight a select that displays blank
         """
         box = SelectBox(name="sfe", label="Sign",
-                        options=[("", ""), ("+1", "+1"), ("-1", "-1")])
+                        options=[("", ""), ("+1", "+1"), ("-1", "-1")],
+                        aliases={"any": ""})
         self.assertEqual(self.classes(box, {"sfe": "-1"}),
                          {"search_constraint", "search_active"})
         self.assertEqual(self.classes(box, {"sfe": "any"}), {"search_constraint"})
         self.assertEqual(self.classes(box, {"sfe": ""}), {"search_constraint"})
+        yesno = YesNoBox(name="cyc", label="Cyclic", aliases={"0": ""})
+        for value, shown in [("True", "yes"), ("False", "no"), ("yes", "yes")]:
+            rendered = yesno._input({"cyc": value})
+            self.assertIn('value="%s" selected' % shown, rendered)
+            self.assertEqual(self.classes(yesno, {"cyc": value}),
+                             {"search_constraint", "search_active"})
+        # aliases passed in are added to the class defaults
+        self.assertEqual(self.classes(yesno, {"cyc": "0"}), {"search_constraint"})
+        # a value that is neither an option nor an alias may still filter the
+        # results, so it is highlighted
+        self.assertEqual(self.classes(yesno, {"cyc": "unknown"}),
+                         {"search_constraint", "search_active"})
 
     def test_display_controls(self):
         r"""

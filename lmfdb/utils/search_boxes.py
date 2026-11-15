@@ -321,6 +321,11 @@ class SelectBox(SearchBox):
     _options = []
     _default_width = 170
     _default_min_width = 85
+    # Values that the search accepts for this select but that are not option
+    # values (legacy URLs, browse page links, values that search code stores
+    # in info), mapped to the option they are equivalent to; map a value to
+    # "" if it does not constrain the results.  See ``_value``.
+    aliases = {}
 
     def __init__(
         self,
@@ -330,22 +335,36 @@ class SelectBox(SearchBox):
         *,
         min_width=None,
         example_value=False,
+        aliases=None,
         **kwds,
     ):
         super().__init__(name, label, **kwds)
+        if aliases is not None:
+            self.aliases = dict(self.aliases, **aliases)
         self.options = self._options if options is None else options
         self.min_width = self._default_min_width if min_width is None else min_width
         self.example_value = example_value
 
+    def _value(self, info):
+        """
+        The value of this select in ``info``, with any alias replaced by the
+        option it stands for, so that for example a browse page link to
+        ``?cyc=True`` shows ``yes`` as selected.
+        """
+        value = info.get(self.name, "")
+        if isinstance(value, str):
+            return self.aliases.get(value, value)
+        return value
+
     def _is_filled(self, info):
         """
-        Whether one of this select's non-blank options is the one shown as
-        selected.  Search code sometimes stores a value of its own under the
-        select's name (such as ``sfe="any"`` for Bianchi modular forms); no
-        option matches it, so the select displays blank and is not filled in.
+        Whether the search supplied a value for this select that constrains
+        the results.  Aliases count as the option they stand for, so one
+        mapped to "" (like the ``sfe="any"`` that Bianchi modular form
+        searches store) is not filled in.  Any other non-blank value counts,
+        even if no option matches it: the search may still be filtering on it.
         """
-        value = info.get(self.name)
-        return bool(value) and any(value == opt for opt, _ in self.options)
+        return SearchBox._is_filled(self, {self.name: self._value(info)})
 
     def _input(self, info):
         keys = self._attrs(info) + ['name="%s"' % self.name]
@@ -365,7 +384,7 @@ class SelectBox(SearchBox):
                 info is None
                 and value == ""
                 or info is not None
-                and info.get(self.name, "") == value
+                and self._value(info) == value
             ):
                 selected = " selected"
             else:
@@ -487,6 +506,8 @@ class YesNoBox(SelectBox):
     _options = [("", ""),
                 ("yes", "yes"),
                 ("no", "no")]
+    # parse_bool accepts True and False too
+    aliases = {"True": "yes", "False": "no"}
 
 class YesNoMaybeBox(SelectBox):
     _default_min_width = 130

@@ -736,6 +736,8 @@ class BMFSearchArray(SearchArray):
             label='Sign',
             knowl='mf.bianchi.sign',
             options=[("", ""), ("+1", "+1"), ("-1", "-1")],
+            # the search stores sfe="any" when no sign was chosen
+            aliases={"any": ""},
             example_col=True
         )
         base_change = ExcludeOnlyBox(

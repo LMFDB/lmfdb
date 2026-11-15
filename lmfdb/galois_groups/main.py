@@ -175,6 +175,13 @@ def gg_postprocess(res, info, query):
         rec["cache"] = cache
     return res
 
+# Values accepted in URLs besides the options of the search boxes (see
+# SelectBox.aliases): parse_bool also takes 1 and -1, and treats 0 and Any as
+# no constraint
+BOOL_ALIASES = {"1": "yes", "-1": "no", "0": "", "Any": ""}
+PARITY_ALIASES = {"1": "even", "-1": "odd", "0": ""}
+
+
 @search_wrap(table=db.gps_transitive,
              title='Galois group search results',
              err_title='Galois group search input error',
@@ -234,9 +241,11 @@ def galois_group_search(info, query):
     parse_galgrp(info, query, qfield=['label','n'], name='Galois group', field='gal')
     for param in ('cyc', 'solv', 'prim'):
         parse_bool(info, query, param, process=int, blank=['0','Any'])
-    if info.get("parity") == "even":
+    # Older links give the parity as 1 or -1
+    parity = PARITY_ALIASES.get(info.get("parity"), info.get("parity"))
+    if parity == "even":
         query["parity"] = 1
-    elif info.get("parity") == "odd":
+    elif parity == "odd":
         query["parity"] = -1
     #parse_restricted(info,query,'parity',allowed=[1,-1],process=int,blank=['0','Any'])
 
@@ -484,19 +493,23 @@ class GalSearchArray(SearchArray):
         parity = ParityBox(
             name="parity",
             label="Parity",
-            knowl="gg.parity")
+            knowl="gg.parity",
+            aliases=PARITY_ALIASES)
         cyc = YesNoBox(
             name="cyc",
             label="Cyclic",
-            knowl="group.cyclic")
+            knowl="group.cyclic",
+            aliases=BOOL_ALIASES)
         solv = YesNoBox(
             name="solv",
             label="Solvable",
-            knowl="group.solvable")
+            knowl="group.solvable",
+            aliases=BOOL_ALIASES)
         prim = YesNoBox(
             name="prim",
             label="Primitive",
-            knowl="gg.primitive")
+            knowl="gg.primitive",
+            aliases=BOOL_ALIASES)
 
         n = TextBox(
             name="n",
