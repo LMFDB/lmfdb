@@ -81,6 +81,7 @@ from .identify import (
 )
 from .hash_lookup import (
     SMALLHASH_ORDERS,
+    column_hash,
     hash_constraint,
     hash_search_url,
     live_pages_available,
@@ -88,7 +89,6 @@ from .hash_lookup import (
     order_search_url,
     resolve_order_hash,
     searched_hash,
-    structural_hash,
 )
 
 
@@ -1562,6 +1562,14 @@ class Group_download(Downloader):
     table = db.gps_groups
     title = "Abstract groups"
 
+    def postprocess(self, row, info, query):
+        # The Hash column reads the searched-for hash from public_hash, which
+        # group_postprocess sets for the results page; do the same here so that
+        # a download shows the hash the page shows.
+        asked = searched_hash(info)
+        row["public_hash"] = asked[1] if asked and row.get("order") == asked[0] else None
+        return row
+
 
 def group_postprocess(res, info, query):
     # We want to get latex for all of the centers, central quotients, commutators and abelianizations in one query
@@ -1674,13 +1682,15 @@ group_columns = SearchColumns([
                       ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"],
                       show_type,
                       align="center"),
-    # The hash the group.hash knowl describes: the stored value where that is
-    # the hash, the searched-for value where the search supplies one, and
-    # nothing rather than a label counter (see hash_lookup.structural_hash).
+    # The hash the group.hash knowl describes: the searched-for value where the
+    # search supplies one, else the stored value where that is the hash, and
+    # nothing rather than a label counter (see hash_lookup.column_hash).
+    # Downloads get the same value as an integer (or None).
     MultiProcessedCol("hash", "group.hash", "Hash",
-                      ["counter", "hash", "public_hash"],
-                      lambda counter, h, asked: str(asked) if asked is not None
-                      else ("" if structural_hash(counter, h) is None else str(h)),
+                      ["order", "hash", "public_hash"],
+                      lambda order, h, asked: "" if column_hash(order, h, asked) is None
+                      else str(column_hash(order, h, asked)),
+                      apply_download=column_hash,
                       default=False, align="right", short_title="hash")])
 
 @search_wrap(
@@ -2974,7 +2984,7 @@ def download_trivial_construction(dltype):
     }.get(dltype, "")
 
 
-@abstract_page.route("/hash/<int:order>/<int:value>")
+@abstract_page.route("/hash/<int:order>/<int(signed=True):value>")
 def by_hash(order, value):
     """All the groups of a given order and hash.
 
@@ -2982,15 +2992,12 @@ def by_hash(order, value):
     group, including the ones with no database row, which an ordinary search of
     ``gps_groups`` cannot do; the other orders go on to the search page, where
     the stored column is the hash and the usual search machinery applies.
+    Those include orders far beyond 32 bits (``gps_groups.order`` is numeric),
+    so no bound is imposed on them here.
     """
-    # Orders and hashes are stored as 32- and 64-bit integers, so anything
-    # larger is not one, and asking the database would be an error.
-    if order >= 2**31 or value >= 2**63:
-        flash_error("No group has order %s and hash %s.", order, value)
-        return redirect(url_for(".index"))
-    res = resolve_order_hash(order, value)
-    if not res.complete:
+    if order not in SMALLHASH_ORDERS:
         return redirect(url_for(".index", hash=f"{order}#{value}", search_type="List"))
+    res = resolve_order_hash(order, value)
     label = res.unique_label()
     if label is not None:
         return redirect(url_for(".by_label", label=label))

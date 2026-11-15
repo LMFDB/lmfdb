@@ -180,9 +180,21 @@ class AbGpsTest(LmfdbTest):
         r = self.tc.get("/Groups/Abstract/hash/2016/374703223365377769")
         assert r.status_code in (301, 302)
         assert "hash=2016%23374703223365377769" in r.headers["Location"]
-        # A value too large to be a stored hash is refused, not queried.
-        self.check_args("/Groups/Abstract/hash/512/99999999999999999999",
-                        "No group has order")
+        # A value outside the range of a stored hash is the hash of no group,
+        # and so is a negative one (the hash search box accepts both).
+        self.check_args("/Groups/Abstract/hash/512/99999999999999999999", "no group of")
+        self.check_args("/Groups/Abstract/hash/512/-5", "no group of")
+        self.check_args("/Groups/Abstract/?hash=512%23-5", "no group of")
+        # ... including from the find box and in a search with other conditions,
+        # where an out-of-range value must not reach a bigint cast.
+        self.check_args("/Groups/Abstract/?jump=512%2399999999999999999999", "no group of")
+        self.check_args("/Groups/Abstract/?order=512&hash=99999999999999999999&abelian=no",
+                        "No matches")
+        # Orders beyond 32 bits are in gps_groups (its order column is numeric),
+        # so their hash links go on to the search page rather than being refused.
+        r = self.tc.get("/Groups/Abstract/hash/4030387200/1")
+        assert r.status_code in (301, 302)
+        assert "hash=4030387200%231" in r.headers["Location"]
 
     def test_hash_page_without_homepage(self):
         # A unique complete-table match with neither a database row nor a GAP
@@ -295,15 +307,21 @@ class AbGpsTest(LmfdbTest):
         assert "/hash/512/1584677793794603025" in r.headers["Location"]
 
     def test_hash_column(self):
-        # The column shows the structural hash, never a label counter, and the
+        # The column shows the stored hash, never a label counter, and the
         # hash a search asked for when the row cannot supply it.
         from lmfdb.groups.abstract.main import group_columns
         col = [C for C in group_columns.columns if C.name == "hash"][0]
-        assert col.display({"counter": 11, "hash": 11, "public_hash": None}) == ""
-        assert col.display({"counter": 1, "hash": 374703223365377769,
+        # 512.11 stores its counter in the hash column
+        assert col.display({"order": 512, "hash": 11, "public_hash": None}) == ""
+        assert col.download({"order": 512, "hash": 11, "public_hash": None}) is None
+        assert col.display({"order": 2016, "hash": 374703223365377769,
                             "public_hash": None}) == "374703223365377769"
-        assert col.display({"counter": 11, "hash": 11,
+        assert col.download({"order": 2016, "hash": 374703223365377769,
+                             "public_hash": None}) == 374703223365377769
+        assert col.display({"order": 512, "hash": 11,
                             "public_hash": 1584677793794603025}) == "1584677793794603025"
+        # At an identifiable order the stored small-group index is the hash.
+        assert col.display({"order": 60, "hash": 5, "public_hash": None}) == "5"
         self.check_args("/Groups/Abstract/?order=2016&search_type=List&showcol=hash",
                         "374703223365377769")
         # An order and a hash on their own are answered by the hash page, so a
@@ -314,6 +332,12 @@ class AbGpsTest(LmfdbTest):
         assert r.status_code == 200, "the search was answered by a redirect"
         page = r.get_data(as_text=True)
         assert "512.11" in page and "1584677793794603025" in page
+        # The download of the displayed columns carries the same hash.
+        from urllib.parse import quote
+        query = quote(str({"order": 512, "counter": {"$in": [11]}, "solvable": True}))
+        dl = self.tc.get("/Groups/Abstract/?order=512&hash=1584677793794603025&solvable=yes"
+                         f"&showcol=hash&Submit=sage&download=1&query={query}").get_data(as_text=True)
+        assert '"512.11"' in dl and "1584677793794603025" in dl
 
     def test_hash_popup_links(self):
         # The subgroup and quotient popups link to the same complete cluster.
@@ -408,6 +432,14 @@ class AbGpsTest(LmfdbTest):
         # Oversized permutation degree is rejected before any GAP computation.
         self.check_args("/Groups/Abstract/identify?description=(513,1)",
                         "Permutation degree must be at most 512")
+        # Overlapping cycles are rejected: Sage would read (1,2)(1,2) as the
+        # transposition (1,2) instead of the identity.
+        for desc in ["(1,2)(1,2)", "(1,2,3)(1,3,2)", "(1,2)(2,3),(1,2)"]:
+            self.check_args(f"/Groups/Abstract/identify?description={desc}",
+                            "cycles of a generator must be disjoint")
+        # ... but a point may recur in different generators.
+        r = self.tc.get("/Groups/Abstract/identify?description=(1,2),(2,3)")
+        assert r.status_code in (301, 302) and r.headers["Location"].endswith("/6.1")
 
     def test_identify_guards(self):
         # Parsing, construction and the order computation are inside the alarm,

@@ -35,10 +35,11 @@ Index note: ``gps_smallhash`` has 4.2*10^8 rows and a single index, on
 devmirror), so a group at one of the six counter-storing orders cannot be asked
 for its own hash.  A row of such an order therefore shows no hash on its
 homepage and an empty cell in the optional search column, rather than its
-counter under a "hash" heading (:func:`structural_hash`); the exception is a
-search that named one hash at one order, where :func:`searched_hash` recovers
-the value from the query itself.  Displaying these hashes in general would take
-an ``(order, counter)`` index on ``gps_smallhash``.
+counter under a "hash" heading (:func:`structural_hash`, :func:`column_hash`);
+the exception is a search that named one hash at one order, where
+:func:`searched_hash` recovers the value from the query itself.  Displaying
+these hashes in general would take an ``(order, counter)`` index on
+``gps_smallhash``.
 """
 
 from dataclasses import dataclass, field
@@ -105,20 +106,32 @@ def _sorted_labels(labels):
     return sorted(labels, key=label_sortkey)
 
 
+def _bigints(values):
+    """The ``values`` that fit the ``bigint`` hash columns.  Anything else is
+    the hash of no group, and would make an ``$in`` query fail on its cast."""
+    return [int(v) for v in values if -2**63 <= int(v) < 2**63]
+
+
 def smallhash_counters(order, values):
     """The counters of the groups of ``order`` whose hash is one of ``values``,
     from the complete ``gps_smallhash`` table."""
+    values = _bigints(values)
+    if not values:
+        return []
     return sorted({int(c) for c in db.gps_smallhash.search(
-        {"order": int(order), "hash": {"$in": [int(v) for v in values]}}, "counter")})
+        {"order": int(order), "hash": {"$in": values}}, "counter")})
 
 
 def smallhash_counters_by_order(orders, values):
     """The counters of the groups of any of these ``orders`` whose hash is one
     of ``values``, as a dict keyed by order.  One indexed query."""
+    values = _bigints(values)
+    if not values:
+        return {}
     out = {}
     for rec in db.gps_smallhash.search(
             {"order": {"$in": [int(N) for N in orders]},
-             "hash": {"$in": [int(v) for v in values]}}, ["order", "counter"]):
+             "hash": {"$in": values}}, ["order", "counter"]):
         out.setdefault(int(rec["order"]), []).append(int(rec["counter"]))
     return {N: sorted(counters) for N, counters in out.items()}
 
@@ -130,6 +143,8 @@ def resolve_order_hash(order, value):
     if order in SMALLHASH_ORDERS:
         labels = [f"{order}.{c}" for c in smallhash_counters(order, [value])]
         return HashResolution(order, value, labels, True, "gps_smallhash")
+    if not _bigints([value]):
+        return HashResolution(order, value, [], False, "gps_groups")
     labels = _sorted_labels(db.gps_groups.search({"order": order, "hash": value}, "label"))
     return HashResolution(order, value, labels, False, "gps_groups")
 
@@ -221,6 +236,25 @@ def structural_hash(counter, stored):
     *is* the small-group index and so is already visible in the label.
     """
     if stored is None or counter is None or int(stored) == int(counter):
+        return None
+    return int(stored)
+
+
+def column_hash(order, stored, asked=None):
+    """The hash to show for a ``gps_groups`` row in a column of search results
+    or a download, or ``None`` if it is not known.
+
+    ``asked`` is the hash the search named for this row's order (see
+    :func:`searched_hash`), which is the answer whatever the row stores.
+    Otherwise the stored value is shown except at the six orders where it is
+    the label counter.  Unlike :func:`structural_hash` this keeps the
+    identifiable orders, where the stored hash is the small-group index: there
+    it repeats the label, but it is the hash, and a search for ``hash=11``
+    should not come back with an empty Hash column.
+    """
+    if asked is not None:
+        return int(asked)
+    if stored is None or order is None or int(order) in COUNTER_HASH_ORDERS:
         return None
     return int(stored)
 

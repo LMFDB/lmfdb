@@ -228,12 +228,22 @@ def parse_permutation_group(s):
     maxpt = 0
     for gs in gen_strs:
         cycles = []
+        # Sage builds a permutation from its cycles by letting later cycles
+        # overwrite earlier images, so (1,2)(1,2) would silently become (1,2)
+        # rather than the identity: overlapping cycles have to be rejected here.
+        used = set()
         for cyc in _CYCLE_RE.findall(gs):
             pts = [int(x) for x in cyc.split(",")]
             if any(p < 1 for p in pts):
                 raise DescriptionError("Permutation points must be positive integers.")
             if len(set(pts)) != len(pts):
                 raise DescriptionError("A cycle may not repeat a point.")
+            if used.intersection(pts):
+                raise DescriptionError(
+                    "The cycles of a generator must be disjoint: write each generator "
+                    "as a product of disjoint cycles, e.g. (1,2,3)(4,5), and separate "
+                    "generators with commas.")
+            used.update(pts)
             if pts:
                 maxpt = max(maxpt, max(pts))
             cycles.append(tuple(pts))
