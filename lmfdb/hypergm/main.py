@@ -340,6 +340,16 @@ def split_family_label(AB):
             [int(n) for n in B[1:].split(".")])
 
 
+def plottable_family(AB):
+    # (A, B) for the /plot routes, or None unless AB names a family in the
+    # database.  The plots loop over (and circle_drops allocates a list of size)
+    # lcm(A + B), so arbitrary labels such as A99999999_B1 must not reach them.
+    AB_lists = split_family_label(AB)
+    if AB_lists is None or not db.hgm_families.label_exists(normalize_family(AB)):
+        return None
+    return AB_lists
+
+
 def hgm_family_circle_plot_data(AB):
     from .plot import circle_image
     A, B = split_family_label(AB)
@@ -358,7 +368,7 @@ def hgm_family_circle_plot_data(AB):
 @hypergm_page.route("/plot/circle/<AB>")
 def hgm_family_circle_image(AB):
     from .plot import circle_image
-    AB_lists = split_family_label(AB)
+    AB_lists = plottable_family(AB)
     if AB_lists is None:
         return abort(404, "Invalid family label %s" % AB)
     G = circle_image(*AB_lists)
@@ -369,7 +379,7 @@ def hgm_family_circle_image(AB):
 def hgm_family_linear_image(AB):
     # piecewise linear, as opposed to piecewise constant
     from .plot import piecewise_linear_image
-    AB_lists = split_family_label(AB)
+    AB_lists = plottable_family(AB)
     if AB_lists is None:
         return abort(404, "Invalid family label %s" % AB)
     G = piecewise_linear_image(*AB_lists)
@@ -380,7 +390,7 @@ def hgm_family_linear_image(AB):
 def hgm_family_constant_image(AB):
     # piecewise constant
     from .plot import piecewise_constant_image
-    AB_lists = split_family_label(AB)
+    AB_lists = plottable_family(AB)
     if AB_lists is None:
         return abort(404, "Invalid family label %s" % AB)
     G = piecewise_constant_image(*AB_lists)
@@ -400,7 +410,15 @@ def by_family_label(label):
 @hypergm_page.route("/<label>/<t>")
 def by_label(label, t):
     if HGM_FAMILY_LABEL_RE.match(label) and HGM_T_LABEL_RE.match(t):
-        full_label = normalize_family(label) + "_" + t
+        given = label + "_" + t
+        # Normalizing may swap A and B, which replaces t by 1/t
+        full_label = normalize_motive(given)
+        if full_label != given:
+            # Only redirect to a motive that exists: for invalid families with
+            # A[0] == B[0], normalize_motive swaps back and forth indefinitely.
+            if not db.hgm_motives.label_exists(full_label):
+                return abort(404, "Hypergeometric motive %s was not found in the database." % given)
+            return redirect(url_for_label(full_label), 301)
         return render_hgm_webpage(full_label)
     return abort(404, "%s/%s is not a valid label for a hypergeometric motive" % (label, t))
 

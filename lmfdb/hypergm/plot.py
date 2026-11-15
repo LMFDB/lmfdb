@@ -40,7 +40,7 @@ def piecewise_constant_image(A, B):
     G = Graphics()
     w = ((Rational(i) / len(v), j) for i, j in enumerate(v))
     for p0, p1 in w:
-        G += line([(p0, p1), (p0 + Rational(1) / len(w), p1)])
+        G += line([(p0, p1), (p0 + Rational(1) / len(v), p1)])
     return G
 
 

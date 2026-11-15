@@ -226,3 +226,24 @@ class HGMTest(LmfdbTest):
     def test_jump_malformed(self):
         # A malformed jump input flashes an error rather than raising.
         self.check_args("/Motive/Hypergeometric/Q/?jump=A2_B1_t1x2", "not a valid")
+
+    def test_plot_routes(self):
+        # The /plot routes return a PNG for a family in the database and a 404
+        # (quickly) for labels that match the regex but name no family.
+        for kind in ["circle", "linear", "constant"]:
+            response = self.tc.get("/Motive/Hypergeometric/Q/plot/%s/A2.2_B1.1" % kind)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.headers["Content-type"], "image/png")
+            self.assertTrue(response.get_data().startswith(b"\x89PNG"))
+            for label in ["A0_B0", "A99999999_B1"]:
+                self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/plot/%s/%s" % (kind, label)).status_code, 404)
+
+    def test_swapped_motive_label(self):
+        # Writing A and B the other way round replaces t by 1/t, both for the
+        # /<family>/<t> route and for a full label in a single path segment.
+        for path in ["/Motive/Hypergeometric/Q/A4_B2.2/t2.1", "/Motive/Hypergeometric/Q/A4_B2.2_t2.1"]:
+            response = self.tc.get(path)
+            self.assertEqual(response.status_code, 301)
+            self.assertTrue(response.headers["Location"].endswith("/Motive/Hypergeometric/Q/A2.2_B4/t1.2"))
+        # A and B sharing a cyclotomic index: no redirect loop
+        self.assertEqual(self.tc.get("/Motive/Hypergeometric/Q/A3_B3.2/t1.2").status_code, 404)
