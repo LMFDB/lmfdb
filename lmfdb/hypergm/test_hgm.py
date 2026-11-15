@@ -1,3 +1,6 @@
+import html
+import re
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -73,6 +76,24 @@ class HGMTest(LmfdbTest):
         assert 'name="hst" value="Motive"' in page
         # motive-specific columns are shown
         assert "Conductor" in page
+
+    def test_explicit_empty_search_type_download(self):
+        # The Download link keeps the original request arguments, so the
+        # downloader must normalize the empty search_type to "Motive" as the
+        # search page does, keeping the motive columns and the selected sort
+        def download(args):
+            page = self.tc.get("/Motive/Hypergeometric/Q/?" + args).get_data(as_text=True)
+            link = re.search(r'<a class="like-button" href="([^"]*download=1[^"]*)"', page)
+            assert link is not None
+            data = self.tc.get(html.unescape(link.group(1)) + "&Submit=text").get_data(as_text=True)
+            # drop the date and search link, which legitimately differ
+            return [line for line in data.splitlines()
+                    if not line.startswith(("# hgm_motives downloaded", "# Search link"))]
+        sort = "&conductor=32&sort_order=weight&sort_dir=op"
+        empty = download("search_type=&hst=Family" + sort)
+        assert "#    [Label, $A$, $B$, $t$, Conductor, Degree, Weight, Hodge]" in empty
+        assert any("sorted by weight (reversed)" in line for line in empty)
+        assert empty == download("search_type=Motive" + sort)
 
     ### family searches
 

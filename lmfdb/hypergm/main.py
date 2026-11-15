@@ -402,11 +402,17 @@ hgm_columns.db_cols = 1  # all cols, since the table varies
 class HGMDownload(Downloader):
     table = db.hgm_motives  # overridden if family search
 
+    def __call__(self, info):
+        # The download shortcut runs before hgm_search, so normalize the mode
+        # here as hgm_search does: an explicitly empty search_type (overriding
+        # a stale hst) means the motive list, whose canonical name here is
+        # "Motive".  It must be stored in info, since the downloaded columns
+        # and the sort options are keyed on the named mode
+        info["search_type"] = get_search_type(info, default="Motive") or "Motive"
+        return super().__call__(info)
+
     def get_table(self, info):
-        # An explicitly empty search_type (overriding a stale hst) means the
-        # motive list, whose canonical name here is "Motive"
-        search_type = get_search_type(info, default="Motive") or "Motive"
-        if search_type in ["Family", "RandomFamily"]:
+        if info["search_type"] in ["Family", "RandomFamily"]:
             return db.hgm_families
         else:
             return db.hgm_motives
