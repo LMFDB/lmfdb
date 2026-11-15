@@ -188,6 +188,24 @@ class AVTest(LmfdbTest):
         assert "y^2+a*y=x^3" in data
         assert "Conway polynomial" not in data
 
+    def test_curves_magma_empty_list(self):
+        r"""
+        A Magma download of only the Curves column, for a class without curves, gives [[]]
+        (rather than failing in MagmaLanguage.delim on the empty nested list).
+        """
+        from lmfdb.utils.downloader import MagmaLanguage
+        from lmfdb.abvar.fq.main import abvar_columns
+        assert MagmaLanguage().to_lang([[]]) == "[[]]"
+        assert MagmaLanguage().to_lang([[], [[]]]) == "[[], [[]]]"
+        assert MagmaLanguage().to_lang([[], ["y^2=x^3+1"]]) == '[[], ["y^2=x^3+1"]]'
+        hidecol = ".".join(col.name for col in abvar_columns.columns if col.default({}))
+        url = "/Variety/Abelian/Fq/?g=2&q=3&showcol=curves&hidecol=%s&download=1&Submit=magma&query=%%7B%%27label%%27%%3A+%%272.3.ag_p%%27%%7D" % hidecol
+        response = self.tc.get(url)
+        assert response.status_code == 200
+        data = response.get_data(as_text=True)
+        assert "[[]]" in data
+        assert "function make_data" in data
+
     def test_curves_projection(self):
         r"""
         Check that the (heavy) curves arrays are fetched from the database only when the

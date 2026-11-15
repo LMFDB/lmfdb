@@ -238,6 +238,9 @@ class MagmaLanguage(DownloadLanguage):
             leveled = []
             for x in inp:
                 leveled.extend(x)
+            if not leveled:
+                # only empty sequences at this level, e.g. [[]]
+                return "[", "]"
             typ = set(type(x) for x in leveled)
             if len(typ) > 1:
                 return "[*", "*]"
