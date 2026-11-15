@@ -586,8 +586,6 @@ function reload_unloaded_columns() {
   if (missing.length == 0) {
     return;
   }
-  var url = new URL(window.location.href);
-  var params = url.searchParams;
   var show = $("input[name=showcol]").val().split(".").filter(o=>o);
   var hide = $("input[name=hidecol]").val().split(".").filter(o=>o && !missing.includes(o));
   for (var i = 0; i < missing.length; i++) {
@@ -595,11 +593,29 @@ function reload_unloaded_columns() {
       show.push(missing[i]);
     }
   }
+  var form = $('form.re-search');
+  if (form.length > 0) {
+    // Resubmit the search form, as the pagination links do, so that pending changes to the
+    // search inputs and sort order are kept.
+    form.find("input[name=showcol]").val(show.join("."));
+    form.find("input[name=hidecol]").val(hide.join("."));
+    form.first().submit();
+    return;
+  }
+  var url = new URL(window.location.href);
+  var params = url.searchParams;
   params.set("showcol", show.join("."));
   if (hide.length == 0) {
     params.delete("hidecol");
   } else {
     params.set("hidecol", hide.join("."));
+  }
+  var keys = ["sort_order", "sort_dir"];
+  for (var i = 0; i < keys.length; i++) {
+    var val = $("input[name=" + keys[i] + "]").val();
+    if (val) {
+      params.set(keys[i], val);
+    }
   }
   url.search = params.toString();
   window.location.href = url.href;
