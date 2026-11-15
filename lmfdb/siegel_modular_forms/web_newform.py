@@ -471,7 +471,8 @@ class WebNewform():
                 if eigenvals.get('an'):
                     self.has_exact_lfunc = True
                     self.primes = prime_range(self.maxp_square+1)
-                    self.range_evs = range(len(self.primes))
+                    # no column for the p | N without a Hecke operator
+                    self.range_evs = [i for i, p in enumerate(self.primes) if not self.no_hecke_at(p)]
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
                     m = 0
@@ -1461,7 +1462,7 @@ function switch_basis(btype) {
         return s + r'+O(q^{%d})\)' % prec
 
     def no_hecke_at(self, p):
-        """In the principal family there is no Hecke operator T(p) at p | N: its column is blank."""
+        """In the principal family there is no Hecke operator T(p) at p | N: the table omits it."""
         return self.family == 'P' and self.level > 1 and self.level % p == 0
 
     def hecke_eigenvalue(self, hecke_type, n):
@@ -1470,8 +1471,6 @@ function switch_basis(btype) {
         evs = getattr(self, hecke_type)
         if evs is None:
             return ''
-        if self.no_hecke_at(self.primes[n]):
-            return '' 
         ev = getattr(self, hecke_type)[n]
         if m is not None and m != 0:
             # sum of powers of zeta_m
