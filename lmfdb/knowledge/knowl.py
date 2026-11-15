@@ -537,17 +537,41 @@ class KnowlBackend(PostgresBase):
         if L:
             return Knowl(L[0][0], data=dict(zip(fields, L[0])))
 
-    def get_table_descriptions(self):
+    def _table_descriptions_selecter(self, beta, source=SQL("kwl_knowls")):
+        """
+        The query behind :meth:`get_table_descriptions`, which takes the id
+        pattern, the knowl type and the minimum status as parameters.
+
+        It picks the revision of each knowl that :meth:`get_knowl` would show:
+        on beta the newest one, and otherwise the newest reviewed one, or the
+        newest one if the knowl has never been reviewed.  ``source`` is the
+        relation holding the revisions; it is only changed for testing.
+        """
+        if beta:
+            order = SQL("timestamp DESC")
+        else:
+            order = SQL("(status >= 1) DESC, timestamp DESC")
+        return SQL("SELECT id, content FROM (SELECT DISTINCT ON (id) id, content FROM {0} WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, {1}) knowls ORDER BY id").format(source, order)
+
+    def get_table_descriptions(self, beta=None):
         """
         The descriptions of all tables (the ``tables.<name>`` knowls),
         fetched in a single query.
+
+        INPUT:
+
+        - ``beta`` -- whether to show the newest revision of each description
+          even if it has not been reviewed, as :meth:`get_knowl` does on beta
+          (default: whether this is the beta server)
 
         OUTPUT:
 
         A dictionary with table names as keys and description strings as values;
         tables with no description knowl are omitted.
         """
-        selecter = self._description_selecter(["id", "content"], SQL("id LIKE %s"))
+        if beta is None:
+            beta = is_beta()
+        selecter = self._table_descriptions_selecter(beta)
         L = self._safe_execute(selecter, ["tables.%", 2, 0])
         return {rec[0].split(".", 1)[1]: rec[1] for rec in L}
 

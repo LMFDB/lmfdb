@@ -38,16 +38,73 @@ class DescriptionKnowlTest(LmfdbTest):
     def test_table_descriptions_are_current(self):
         r"""
         Check that both the single and the bulk table description lookups
-        return the newest revision of an edited knowl
+        return the newest revision of an edited knowl (on beta, for the bulk
+        one; see test_table_descriptions_revision_policy for production)
         """
         edited = self._edited("tables.%")
         assert edited, "no edited table description knowl to test against"
-        bulk = knowldb.get_table_descriptions()
+        bulk = knowldb.get_table_descriptions(beta=True)
         for kid in edited:
             table = kid.split(".", 1)[1]
             current = self._current(kid)
             assert bulk[table] == current, "stale description for %s" % table
             assert knowldb.get_table_description(table).content == current
+
+    def test_table_descriptions_revision_policy(self):
+        r"""
+        Check that the bulk table description lookup picks the revision that
+        get_knowl shows: on beta the newest one, and on production the newest
+        reviewed one, or the newest one if the knowl was never reviewed.
+
+        The query is run on fixture revisions in place of kwl_knowls, since
+        the test database cannot be written to.
+        """
+        revisions = [
+            # an older reviewed revision followed by a newer beta edit
+            ("tables.reviewed_then_edited", 2, 1, "2020-01-01", "Reviewed description"),
+            ("tables.reviewed_then_edited", 2, 0, "2021-01-01", "New unreviewed description"),
+            # never reviewed
+            ("tables.never_reviewed", 2, 0, "2020-01-01", "First draft"),
+            ("tables.never_reviewed", 2, 0, "2021-01-01", "Second draft"),
+            # reviewed twice, then edited
+            ("tables.reviewed_twice", 2, 1, "2020-01-01", "First reviewed"),
+            ("tables.reviewed_twice", 2, 1, "2021-01-01", "Second reviewed"),
+            ("tables.reviewed_twice", 2, 0, "2022-01-01", "Later edit"),
+            # neither deleted revisions nor other ids or types are used
+            ("tables.deleted_edit", 2, 0, "2020-01-01", "Kept"),
+            ("tables.deleted_edit", 2, -2, "2021-01-01", "Deleted"),
+            ("columns.nf_fields.degree", 2, 1, "2020-01-01", "A column"),
+            ("tables.wrong_type", 0, 1, "2020-01-01", "Not a description"),
+        ]
+        source = SQL("(VALUES {0}) AS kwl_knowls(id, type, status, timestamp, content)").format(
+            SQL(", ").join(SQL("(%s, %s, %s, %s::timestamp, %s)") for _ in revisions))
+        values = [x for rev in revisions for x in rev]
+
+        def descriptions(beta):
+            selecter = knowldb._table_descriptions_selecter(beta, source)
+            return {rec[0]: rec[1] for rec in knowldb._safe_execute(selecter, values + ["tables.%", 2, 0])}
+
+        assert descriptions(False) == {
+            "tables.reviewed_then_edited": "Reviewed description",
+            "tables.never_reviewed": "Second draft",
+            "tables.reviewed_twice": "Second reviewed",
+            "tables.deleted_edit": "Kept"}
+        assert descriptions(True) == {
+            "tables.reviewed_then_edited": "New unreviewed description",
+            "tables.never_reviewed": "Second draft",
+            "tables.reviewed_twice": "Later edit",
+            "tables.deleted_edit": "Kept"}
+
+    def test_table_descriptions_match_get_knowl(self):
+        r"""
+        Check on the real knowls that the bulk table description lookup agrees
+        with get_knowl, which the table pages use, on beta and on production
+        """
+        for beta in [False, True]:
+            bulk = knowldb.get_table_descriptions(beta=beta)
+            assert bulk, "no table description knowls"
+            for table in sorted(bulk)[:10]:
+                assert bulk[table] == knowldb.get_knowl("tables." + table, ["content"], beta=beta)["content"], table
 
     def test_column_descriptions_are_current(self):
         r"""
