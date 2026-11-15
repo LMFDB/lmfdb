@@ -948,7 +948,7 @@ def _trace_col(i):
 #    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
 
 def _AL_col(i, p):
-    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
+    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "" if not evs or i >= len(evs) else ("+" if evs[i][1] == 1 else "-"), orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
 
 newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
