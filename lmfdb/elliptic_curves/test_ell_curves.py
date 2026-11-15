@@ -62,6 +62,15 @@ class EllCurveTest(LmfdbTest):
         data = L.get_data(as_text=True)
         assert '389.a1' in data
         assert 'error in the completeness checking code' not in data
+        # A negative conductor means the same as its absolute value, and the only
+        # multiple of 0 is 0 (this used to be a server error)
+        L = self.tc.get('/EllipticCurve/Q/?conductor=-389&conductor_type=multiple')
+        data = L.get_data(as_text=True)
+        assert '389.a1' in data
+        assert 'check did not finish' not in data
+        L = self.tc.get('/EllipticCurve/Q/?conductor=0&conductor_type=multiple')
+        assert L.status_code == 200
+        assert 'No matches' in L.get_data(as_text=True)
 
     def test_Weierstrass_search(self):
         L = self.tc.get('/EllipticCurve/Q/[1,2,3,4,5]', follow_redirects=True)

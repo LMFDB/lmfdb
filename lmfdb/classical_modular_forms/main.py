@@ -834,7 +834,10 @@ def common_parse(info, query, na_check=False):
             elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
-                query['level'] = {'$mod': [0, ZZ(query['level'])]}
+                # The multiples of N are those of |N|, and the only multiple of 0 is 0
+                # ($mod needs a nonzero modulus)
+                N = ZZ(query['level'])
+                query['level'] = {'$mod': [0, abs(N)]} if N else 0
         elif info['level_type'] in ['prime', 'prime_power', 'square', 'squarefree']:
             query['level_is_' + info['level_type']] = True
         else:

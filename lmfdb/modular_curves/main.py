@@ -696,7 +696,10 @@ def modcurve_search(info, query):
             elif info['level_type'] == 'divides':
                 query['level'] = {'$in': integer_divisors(ZZ(query['level']))}
             else:
-                query['level'] = {'$mod': [0, ZZ(query['level'])]}
+                # The multiples of N are those of |N|, and the only multiple of 0 is 0
+                # ($mod needs a nonzero modulus)
+                N = ZZ(query['level'])
+                query['level'] = {'$mod': [0, abs(N)]} if N else 0
     parse_family(info, query, "family", qfield="name")
     parse_ints(info, query, "index")
     parse_ints(info, query, "genus")
