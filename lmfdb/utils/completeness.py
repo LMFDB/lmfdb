@@ -558,10 +558,15 @@ class NumberSet:
         """
         The set of numbers satisfying the given congruence.  A NumberSet cannot record a
         congruence condition, so this is the whole line, marked inexact.
+
+        This includes the modulus 1 congruence: it imposes no condition on integers, but
+        on a real-valued column ``{"$mod": [0, 1]}`` still excludes every nonintegral
+        value, so the whole line is only an over-approximation (and its complement must
+        not be computed as the empty set).
         """
         if cong.is_empty():
             return NumberSet._from_rset(RealSet())
-        return NumberSet._from_rset(_full_rset(), cong.is_trivial())
+        return NumberSet._from_rset(_full_rset(), False)
 
     @classmethod
     def _empty(cls):
@@ -643,7 +648,11 @@ class NumberSet:
         a = other.rset.sup()
         if a is infinity:
             return self
-        ans = self.intersection(top(a**k))
+        # The cap a**k is real in general.  For an integer set, capping at its floor is
+        # exact, but for a set of real numbers (a root discriminant, say) flooring would
+        # discard the values in (floor(a**k), a**k] and could certify a nonempty query
+        # as empty, so the cap has to be a real interval.
+        ans = self.intersection(top(a**k, IntegerSet if isinstance(self, IntegerSet) else NumberSet))
         # The cap is computed from other's representation, so it is only known to be
         # sharp when other is exact
         return ans._reexact(ans.exact and other.exact)
@@ -720,7 +729,7 @@ class NumberSet:
         """
         Every element of this set is greater than every element of the other set
         """
-        return other.__gt__(self)
+        return other.__lt__(self)
 
     def bounded(self, a, b=None):
         """
@@ -1780,7 +1789,7 @@ class CMFFiller:
 
     In particular:
      - If projective_image specified, sets weight to be 1.
-     - If level N, weight k specified, sets "Nk2" = N*k^2.
+     - If level N, weight k specified, sets "Nk2" = N*k^2 (within any given constraint on Nk2).
      - If char_orbit or prim_orbit index is 1, sets char_order to 1 (i.e. trivial character).
     """
 
@@ -1791,7 +1800,12 @@ class CMFFiller:
         # TODO: set weight/level from analytic conductor
         N, k = query.get("level"), query.get("weight")
         if N is not None and k is not None:
-            query["Nk2"] = C(N) * C(k) * C(k)
+            Nk2 = C(N) * C(k) * C(k)
+            if "Nk2" in query:
+                # Keep the user's own constraint on Nk2: both sets contain every value
+                # of Nk2 that the query can match, so their intersection does too
+                Nk2 = C(query["Nk2"]).intersection(Nk2)
+            query["Nk2"] = Nk2
         if query.get("char_orbit_index") == 1 or query.get("prim_orbit_index") == 1:
             query["char_order"] = 1
 

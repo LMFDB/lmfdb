@@ -39,6 +39,8 @@ from lmfdb.utils.completeness import (
     NumberSet,
     Smooth,
     PrimeBound,
+    MaassBound,
+    CMFFiller,
     to_rset,
     top,
     bottom,
@@ -442,6 +444,69 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(C == Congruence(7, [0]), True)
         self.assertEqual(C != Congruence(7, [1]), True)
         self.assertEqual(len({C, Congruence(7, [7])}), 1)
+
+        # Strict and non-strict ordering of sets with a congruence set on either side.
+        # Python tries the reflected method of a subclass operand first, so these
+        # exercise __gt__/__ge__ delegating to the right operand's __lt__/__le__.
+        one = IntegerSet(1)
+        evens = IntegerSet({"$mod": [0, 2], "$gte": 2, "$lte": 4})
+        self.assertIsInstance(evens, CongruenceSet)
+        self.assertEqual(one < evens, True)
+        self.assertEqual(evens > one, True)
+        self.assertEqual(evens < one, False)
+        self.assertEqual(one > evens, False)
+        self.assertEqual(one <= evens, True)
+        self.assertEqual(evens >= one, True)
+        self.assertEqual(IntegerSet(4) < evens, False)
+        self.assertEqual(IntegerSet(4) <= evens, False)
+        self.assertEqual(IntegerSet(5) > evens, True)
+        self.assertEqual(IntegerSet([5, 6]) > IntegerSet([1, 4]), True)
+        self.assertEqual(IntegerSet([4, 6]) > IntegerSet([1, 4]), False)
+
+    def test_cmf_filler_keeps_nk2(self):
+        # The filler derives Nk2 from the level and weight, but must not discard a
+        # constraint on Nk2 given in the query
+        from lmfdb import db
+        query = {"level": {"$mod": [0, 7]}, "weight": 2, "Nk2": {"$lte": 4000}}
+        CMFFiller()(query)
+        self.assertEqual(query["Nk2"].is_subset(top(4000)), True)
+        self.assertEqual(results_complete("mf_newforms", {"level": {"$mod": [0, 7]}, "weight": 2, "Nk2": {"$lte": 4000}}, db),
+                         (True, "newforms with $Nk^2$ at most 4000", None))
+        query = {"level": 7, "weight": 2}
+        CMFFiller()(query)
+        self.assertEqual(str(query["Nk2"]), "{28}")
+
+    def test_real_valued_sets(self):
+        # On a real-valued column {"$mod": [0, 1]} selects the integers, so the whole
+        # line is only an over-approximation of it, and its negation (the nonintegral
+        # values) must not become an exact empty set
+        mod1 = NumberSet({"$mod": [0, 1]})
+        self.assertEqual(mod1.exact, False)
+        predicate = {"$gt": 1000, "$not": {"$mod": [0, 1]}}
+        S = NumberSet(predicate)
+        self.assertEqual(bool(S), True)
+        self.assertEqual(S.exact, False)
+        self.assertEqual(1000.5 in S, True)
+        ok, _, _ = MaassBound()(None, {"level": 1, "spectral_parameter": predicate})
+        self.assertFalse(ok)
+        # For integer sets modulus 1 is no condition at all
+        self.assertEqual(IntegerSet({"$mod": [0, 1]}).exact, True)
+        self.assertEqual(bool(IntegerSet({"$gt": 1000, "$not": {"$mod": [0, 1]}})), False)
+
+        # pow_cap caps a set of reals at a real bound, not at its floor
+        rd = NumberSet({"$gte": 3.5})
+        self.assertEqual(bool(rd.pow_cap(IntegerSet({"$lte": 15}), 1/2)), True)
+        self.assertEqual(bool(rd.pow_cap(IntegerSet({"$lte": 12}), 1/2)), False)
+        self.assertEqual(str(NumberSet({"$gte": 34.2}).pow_cap(NumberSet({"$lte": 34.5}), 1)),
+                         str(NumberSet([34.2, 34.5])))
+        # while an integer set is still capped at the floor
+        self.assertEqual(str(IntegerSet({"$gte": 10}).pow_cap(NumberSet({"$lte": 3.5}), 2)), "[10, 12]")
+        # so the precheck does not call rd in (34.2, 34.5], grd <= 34.5 incompatible
+        # (rd <= grd always, with equality for Galois fields)
+        self.assertIsNone(lookup["nf_fields"].precheck(
+            {"degree": 5, "rd": {"$gte": 34.2}, "grd": {"$lte": 34.5}}))
+        self.assertIsNotNone(lookup["nf_fields"].precheck(
+            {"degree": 5, "rd": {"$gte": 34.6}, "grd": {"$lte": 34.5}}))
 
     def test_congruence_mod_semantics(self):
         # psycodict's query language is {"$mod": [r, m]} with m positive, and it reduces
