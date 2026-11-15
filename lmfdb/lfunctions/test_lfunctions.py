@@ -1,4 +1,5 @@
 
+import html
 import json
 import re
 from ast import literal_eval
@@ -718,6 +719,24 @@ class LfunctionTest(LmfdbTest):
     def test_euler_search_download_input_errors(self):
         page = self._get_search_download_error('Euler', n='not-a-range')
         assert 'unable to convert' in page
+
+    def test_search_download_later_page(self):
+        # On a later page of results, both download controls (above and below the
+        # table) should select the displayed rows, and the download should
+        # contain exactly these rows
+        for search_type in ['Traces', 'Euler']:
+            page = self.tc.get('/L/rational', query_string={
+                'search_type': search_type, 'degree': '2', 'conductor': '1-500',
+                'start': '50', 'count': '50'}).get_data(as_text=True)
+            row_counts = re.findall(r'name="download_row_count\d" type="text" value="([^"]*)"', page)
+            assert row_counts == ['51-100', '51-100'], (search_type, row_counts)
+            labels = re.findall(r'<td style="text-align: left;"> <a href="[^"]*"> (\S+) </a>', page)
+            assert len(labels) == 50
+            link = html.unescape(re.search(r'<a class="like-button" href="([^"]*download=1[^"]*)"', page).group(1))
+            response = self.tc.get(link + '&Submit=sage&download_row_count=51-100')
+            assert 'attachment' in response.headers.get('Content-Disposition', '')
+            recs = self._parse_sage_download(response.get_data(as_text=True))
+            assert [rec['label'] for rec in recs] == labels, search_type
 
     def test_euler_search_old_name(self):
         # search_type=EulerL appears in old URLs
