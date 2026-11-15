@@ -998,7 +998,8 @@ def canonify_abelian_label(label, smith=False):
 def by_abelian_label(label):
     # For convenience, we provide redirects for abelian groups:
     # m1_e1.m2_e2... represents C_{m1}^e1 x C_{m2}^e2 x ...
-    if not AB_LABEL_RE.fullmatch(label):
+    # (a factor of 0 matches the regex but is not a finite cyclic group)
+    if not AB_LABEL_RE.fullmatch(label) or any(ZZ(piece.split("_")[0]) == 0 for piece in label.split(".")):
         flash_error(
             r"The abelian label %s is invalid; it must be of the form m1_e1.m2_e2... representing $C_{m_1}^{e_1} \times C_{m_2}^{e_2} \times \cdots$",
             label,
@@ -1281,7 +1282,11 @@ def group_multi_label_to_label(entry):
     entry = entry.strip()
     if abstract_group_label_regex.fullmatch(entry):
         return entry
-    label = name_to_label(entry)
+    try:
+        label = name_to_label(entry)
+    except ArithmeticError:
+        # e.g. an impossible cyclic factor; drop this entry, keep the rest of the list
+        label = None
     if label is None:
         raise ValueError("%s is not a valid group label or name" % entry)
     return label
@@ -1714,6 +1719,9 @@ def name_to_label(name):
     # product of cyclic groups, e.g. C2^3, C2xC4
     if CYCLIC_PRODUCT_RE.fullmatch(name):
         invs = [n.strip() for n in name.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
+        if any(ZZ(inv.split("_")[0]) == 0 for inv in invs):
+            # C0 is not a finite cyclic group (and 0 cannot be factored)
+            return None
         primary = canonify_abelian_label(".".join(invs))
         if [z for z in primary if z > 2**31 - 1]:
             return None
@@ -1729,11 +1737,18 @@ def name_to_label(name):
 
     def int_try(x):
         return int(x) if x.isdigit() else x
+    # As in group_jump, accept the alternative family spellings and the
+    # low-dimensional aliases (e.g. Sp(2,q) = SL(2,q)) that are not stored.
+    fam_name = normalize_family_jump(name)
     for family in db.gps_families.search():
-        m = re.fullmatch(family["input"], name)
+        m = re.fullmatch(family["input"], fam_name)
         if m:
             m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items())
-            lab = db.gps_special_names.lucky({"family": family["family"], "parameters": m_dict}, projection="label")
+            fam, params = family["family"], m_dict
+            if (fam, params.get("n")) in FAMILY_ALIASES:
+                fam, n = FAMILY_ALIASES[fam, params.get("n")]
+                params = dict(params, n=n)
+            lab = db.gps_special_names.lucky({"family": fam, "parameters": params}, projection="label")
             if lab:
                 return lab
     return None
