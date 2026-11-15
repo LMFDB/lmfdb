@@ -165,6 +165,10 @@ class CmfTest(LmfdbTest):
             page = self.tc.get("/ModularForm/GL2/Q/holomorphic/?labels=3.6.a.a,11.2.a.a&search_type=%s" % search_type).get_data(as_text=True)
             assert 'value="3.6.a.a,11.2.a.a"' in page
         self.check_args("/ModularForm/GL2/Q/holomorphic/?labels=3.6.a.a,11.2.a.a&search_type=Traces", ['3.6.a.a', '11.2.a.a', 'both matches'])
+        # The labels value is HTML-escaped when rendered in the form
+        page = self.tc.get('/ModularForm/GL2/Q/holomorphic/?labels=3.6.a.a,%22%3E%3Ci%3Eq%3C/i%3E').get_data(as_text=True)
+        assert '<i>q</i>' not in page
+        assert 'value="3.6.a.a,&#34;&gt;&lt;i&gt;q&lt;/i&gt;"' in page
 
     def test_failure(self):
         r"""
