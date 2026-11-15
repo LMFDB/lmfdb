@@ -1708,6 +1708,17 @@ group_columns = SearchColumns([
     diagram_opts={
         "title": "Abstract group diagrams",
         "bread": lambda: get_bread([("Diagram search", "")]),
+        # The Hash column makes "hash" an axis and colour option.  Without this
+        # the diagram would plot the raw gps_groups.hash, which is the label
+        # counter at the orders in COUNTER_HASH_ORDERS; use the value the Hash
+        # column shows instead (public_hash comes from group_postprocess).
+        "computed_cols": {
+            "hash": {
+                "label": "hash",
+                "cols": ["order", "hash"],
+                "func": lambda r: column_hash(r.get("order"), r.get("hash"), r.get("public_hash")),
+            },
+        },
     },
 )
 def group_search(info, query={}):

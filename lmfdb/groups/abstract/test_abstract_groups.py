@@ -263,6 +263,25 @@ class AbGpsTest(LmfdbTest):
                          ).get_data(as_text=True)
         assert '"512.11"' in dl and "1584677793794603025" in dl
 
+    def test_hash_diagram(self):
+        # Diagram axes and colours use the hash the Hash column shows, so the
+        # counter stored for 512.11 is never plotted as its hash.
+        import json
+        import re
+
+        def points(args):
+            page = self.tc.get("/Groups/Abstract/?search_type=Diagram&x-axis=hash"
+                               f"&y-axis=order&color=hash&{args}").get_data(as_text=True)
+            data = json.loads(re.search(r"let data = (\[.*?\]);", page, re.S).group(1))
+            return {pt["label"]: pt for pt in data}
+
+        pt = points("order=512&hash=1584677793794603025")["512.11"]
+        assert pt["x"] == pt["color"] == "1584677793794603025"
+        pt = points("order=512&count=20")["512.11"]
+        assert pt["x"] == pt["color"] == "None"
+        pt = points("order=2016")["2016.a"]
+        assert pt["x"] == pt["color"] == "374703223365377769"
+
     def test_hash_search_false_positives(self):
         # A stored counter must not answer a search for a structural hash:
         # 512.11 has hash 1584677793794603025, and stores 11.
