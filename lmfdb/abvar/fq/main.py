@@ -716,8 +716,12 @@ abvar_columns = SearchColumns([
                  "For a base field GF(p^r) with r > 1, the variable a is the image of x in GF(p)[x]/(C(x)),\n"
                  "where C is the degree r Conway polynomial over GF(p) used by the LMFDB;\n"
                  "equivalently, a is a root of that Conway polynomial.\n"
-                 "A null value means that the curves in this isogeny class have not been computed;\n"
-                 "an empty list means that the computation was carried out and there are no such curves."),
+                 "The list is complete when its length is jacobian_count, the number of Jacobians in the class.\n"
+                 "Otherwise only the hyperelliptic curves are listed (hyp_count of them): this happens when\n"
+                 "jacobian_count is null (unknown), and for a few classes such as 4.2.ac_c_ae_i;\n"
+                 "an empty list then only means that the class contains no Jacobian of a hyperelliptic curve.\n"
+                 "A null value means that the curves in this isogeny class have not been computed\n"
+                 "(Magma and GAP have no null value and write it as an empty list)."),
     MathCol("twist_count", "av.twist", "Num. twists", default=False),
     MathCol("max_twist_degree", "av.twist", "Max. twist degree", default=False),
     MathCol("geometric_extension_degree", "av.endomorphism_field", "End. degree", default=False),

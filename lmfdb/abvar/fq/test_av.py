@@ -206,6 +206,19 @@ class AVTest(LmfdbTest):
         assert "[[]]" in data
         assert "function make_data" in data
 
+    def test_curves_blank_entries(self):
+        r"""
+        Some classes without curves store [""] instead of []; these are shown and downloaded as
+        empty lists rather than as the equation "=0".
+        """
+        from lmfdb.abvar.fq.isog_class import AbvarFq_isoclass
+        label = "5.2.ak_by_age_nw_awu"
+        assert self.db.av_fq_isog.lookup(label, "curves") == [""]
+        assert AbvarFq_isoclass(self.db.av_fq_isog.lookup(label, ["label", "curves"])).curves == []
+        page = self.tc.get("/Variety/Abelian/Fq/?q=2&g=5&showcol=curves").get_data(as_text=True)
+        assert "ak_by_age_nw_awu" in page
+        assert "$=0$" not in page
+
     def test_curves_projection(self):
         r"""
         Check that the (heavy) curves arrays are fetched from the database only when the

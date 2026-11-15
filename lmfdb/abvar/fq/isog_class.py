@@ -106,6 +106,9 @@ class AbvarFq_isoclass():
             dbdata["jacobian_count"] = None
         if "curves" not in dbdata:
             dbdata["curves"] = None
+        elif dbdata["curves"] is not None:
+            # Some classes without curves (e.g. in dimension 5 over F_2) store [""] rather than []
+            dbdata["curves"] = [cv for cv in dbdata["curves"] if cv.strip()]
         # New invariants: cyclicity and noncyclic primes
         if "is_cyclic" not in dbdata:
             dbdata["is_cyclic"] = None
