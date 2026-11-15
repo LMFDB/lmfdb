@@ -17,7 +17,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       # Required as the JSON input file needs to be read
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Only devmirror entries can run without the proddb password, so forks
       # (which have no LMFDB_CI_ACCESS secret) get the devmirror half of
@@ -79,9 +79,9 @@ jobs:
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: conda-incubator/setup-miniconda@v4
+    - uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
       with:
         # Runner images no longer ship Miniconda (ubuntu-26.04), so download
         # Miniforge; it installs to ~/miniconda3, which the conda cache below names.
@@ -94,7 +94,7 @@ jobs:
         use-only-tar-bz2: false
 
     - name: Cache conda
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
@@ -120,7 +120,7 @@ jobs:
         conda list
 
     - name: Cache pip
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
