@@ -158,6 +158,10 @@ def comment_row(source, ms, content, timestamp, status=0, links=None):
             "_keywords": make_keywords(content, kid, "")}
 
 
+class FakeDatabaseError(Exception):
+    pass
+
+
 class FakeKnowlTable:
     """
     Enough of the kwl_knowls table to run port_column_knowls in memory.
@@ -171,14 +175,22 @@ class FakeKnowlTable:
     created with gets that version.
     """
 
-    def __init__(self, rows):
+    def __init__(self, rows, fail_on=None):
         self.rows = [dict(row) for row in rows]
         # the depth of the surrounding transaction at each write
         self.write_depths = []
+        # a query to fail the first time it is run, as a database error
+        # would, and the number of writes made before it failed
+        self.fail_on = fail_on
+        self.writes_before_failure = None
 
     def execute(self, query, values=None, **kwds):
         sql = query_text(query)
         values = list(values) if values else []
+        if self.fail_on is not None and sql.startswith(self.fail_on):
+            self.fail_on = None
+            self.writes_before_failure = len(self.write_depths)
+            raise FakeDatabaseError("could not serialize access")
         if sql.startswith("SELECT"):
             return self.select(sql, values)
         self.write_depths.append(knowldb._db._nocommit_stack)
@@ -476,6 +488,48 @@ class PortColumnKnowlsTest(LmfdbTest):
         referring = [row for row in table.rows if row["source"] == "nf.degree"][0]
         assert referring["content"] == "Compare {{KNOWL('columns.nf_fields.degree')}}"
         assert referring["links"] == [new]
+
+    def test_references_to_moved_comments_follow_them(self):
+        old = "columns.oldtable.degree"
+        first, second, gone = (f"{old}.{ms}.comment" for ms in [100, 200, 300])
+        table = self.port([
+            description_row(old, "The degree of the field", NEWER),
+            comment_row(old, 100, "Is this the absolute degree?", OLDER),
+            # a comment answering another
+            comment_row(old, 200, f"Yes, see {{{{KNOWL('{first}')}}}}", NEWER, links=[first]),
+            # a deleted comment, which may yet be restored
+            comment_row(old, 300, f"Compare {{{{KNOWL('{old}')}}}}", NEWER, status=-2, links=[old]),
+            normal_row("nf.degree", f"As discussed in {{{{KNOWL('{second}')}}}}", NEWER,
+                       links=[second])],
+            keep_old=False, other_table="oldtable")
+
+        new = "columns.nf_fields.degree"
+        rows = {row["id"]: row for row in table.rows}
+        assert rows[new + ".200.comment"]["content"] == f"Yes, see {{{{KNOWL('{new}.100.comment')}}}}"
+        assert rows[new + ".200.comment"]["links"] == [new + ".100.comment"]
+        assert rows[new + ".300.comment"]["content"] == f"Compare {{{{KNOWL('{new}')}}}}"
+        assert rows[new + ".300.comment"]["links"] == [new]
+        assert rows["nf.degree"]["content"] == f"As discussed in {{{{KNOWL('{new}.200.comment')}}}}"
+        assert rows["nf.degree"]["links"] == [new + ".200.comment"]
+        for row in table.rows:
+            assert "oldtable" not in row["content"] and not any("oldtable" in link for link in row["links"])
+            assert row["_keywords"] == make_keywords(row["content"], row["id"], row["title"])
+        assert gone not in rows
+
+    def test_a_failed_read_aborts_the_port(self):
+        # psycodict rolls back the transaction when a statement fails, so
+        # retrying the read and carrying on would leave half a rename
+        table = FakeKnowlTable([
+            description_row("columns.oldtable.degree", "The degree of the field", NEWER),
+            comment_row("columns.oldtable.degree", 100, "Is this the absolute degree?", NEWER)],
+            fail_on="SELECT DISTINCT id FROM kwl_knowls WHERE type = %s AND source = %s")
+        with self.assertRaises(FakeDatabaseError), \
+             patch.object(knowldb, "_execute", side_effect=table.execute), \
+             patch.object(self.db, "login", return_value="tester"):
+            self.db.nf_fields.port_column_knowls("oldtable", keep_old=False)
+        # the description had been moved, but nothing was written after the failure
+        assert table.writes_before_failure == 1
+        assert len(table.write_depths) == 1
 
     def rename(self, rows, old_name, new_name):
         r"""

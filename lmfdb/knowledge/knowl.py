@@ -897,6 +897,12 @@ class KnowlBackend(PostgresBase):
 
         - ``knowl`` -- a table or column description knowl (type 2)
         - ``new_name`` -- the id to move it to, of the same kind
+
+        All of this happens in one transaction, which may be part of a larger
+        one (as in ``port_column_knowls``).  So the reads use ``_execute``
+        rather than ``_safe_execute``: psycodict rolls the transaction back when
+        a statement fails, and retrying just the read would then carry on with
+        the earlier writes undone.
         """
         if knowl.type != 2:
             raise ValueError("Only table and column descriptions can be renamed this way.")
@@ -911,7 +917,7 @@ class KnowlBackend(PostgresBase):
         # interleaved with this knowl's, so we refuse rather than merge.
         # The same goes for comments already attached to the new id.
         selecter = SQL("SELECT 1 FROM kwl_knowls WHERE id = %s OR (type = %s AND source = %s) LIMIT 1")
-        if self._safe_execute(selecter, [new_name, -2, new_name]):
+        if list(self._execute(selecter, [new_name, -2, new_name])):
             raise ValueError("A knowl with id %s already exists." % new_name)
         with DelayCommit(self):
             fields = ['cat', 'type', 'source', 'source_name', 'defines']
@@ -929,7 +935,7 @@ class KnowlBackend(PostgresBase):
                 generated = {old_meta['title'], old_meta['title'] + " (DEFUNCT)"}
                 selecter = SQL("SELECT timestamp, title FROM kwl_knowls WHERE id = %s")
                 updator = SQL("UPDATE kwl_knowls SET title = %s WHERE id = %s AND timestamp = %s")
-                for timestamp, title in self._safe_execute(selecter, [new_name]):
+                for timestamp, title in list(self._execute(selecter, [new_name])):
                     if not title or title in generated:
                         new_title = meta['title']
                     else:
@@ -940,33 +946,40 @@ class KnowlBackend(PostgresBase):
             # knowl they comment on, which is also stored as their source.
             selecter = SQL("SELECT DISTINCT id FROM kwl_knowls WHERE type = %s AND source = %s")
             updator = SQL("UPDATE kwl_knowls SET (id, cat, source) = (%s, %s, %s) WHERE id = %s")
-            comments = []
-            for (cid,) in self._safe_execute(selecter, [-2, old_name]):
+            moved = {old_name: new_name}
+            for (cid,) in list(self._execute(selecter, [-2, old_name])):
                 m = comment_knowl_re.match(cid)
                 if not m or m.group(1) != old_name:
                     raise ValueError("Comment %s does not have an id built from %s" % (cid, old_name))
                 new_cid = f"{new_name}.{m.group(2)}.comment"
                 self._execute(updator, [new_cid, meta['cat'], new_name, cid])
-                comments.append(new_cid)
-            # Unlike ids_referencing, this includes comments, which can also
-            # refer to the knowl.
+                moved[cid] = new_cid
+            # Now rewrite the references to the knowl and to each of its
+            # comments.  Unlike ids_referencing, the lookup includes comments,
+            # which can also refer to them; and the knowl and comments that
+            # moved are rewritten whatever their status, so that a deleted
+            # comment that is later restored does not have a broken link.
             selecter = SQL("SELECT DISTINCT id FROM kwl_knowls WHERE status >= %s AND links @> %s")
-            referrers = [rec[0] for rec in self._safe_execute(selecter, [0, [old_name]])]
             updator = SQL("UPDATE kwl_knowls SET (content, links) = (regexp_replace(content, %s, %s, %s), array_replace(links, %s, %s)) WHERE id = ANY(%s)")
-            values = [r"""['"]\s*{0}\s*['"]""".format(old_name.replace('.', r'\.')),
-                      "'{0}'".format(new_name), 'g', old_name, new_name, referrers] # g means replace all
-            self._execute(updator, values)
+            rewritten = set(moved.values())
+            for old_id, new_id in moved.items():
+                referrers = [rec[0] for rec in self._execute(selecter, [0, [old_id]])]
+                values = [r"""['"]\s*{0}\s*['"]""".format(old_id.replace('.', r'\.')),
+                          "'{0}'".format(new_id), 'g', old_id, new_id,
+                          sorted(set(referrers) | set(moved.values()))] # g means replace all
+                self._execute(updator, values)
+                rewritten.update(referrers)
             # The keywords are built from the id, title and content, and all
             # three may have just changed: the id and title on every version of
             # this knowl and its comments, and the content on every version of
-            # the knowls that referred to it (which include this one, if it
+            # the knowls that referred to them (which include this one, if it
             # refers to itself).  Unlike a normal rename we redo them all rather
             # than only the versions on display, so that a description of a
             # column of the old table is not found by searching for the new one
             # on either server.
             selecter = SQL("SELECT id, timestamp, content, title FROM kwl_knowls WHERE id = ANY(%s)")
             updator = SQL("UPDATE kwl_knowls SET _keywords = %s WHERE id = %s AND timestamp = %s")
-            for kid, timestamp, content, title in self._safe_execute(selecter, [[new_name] + comments + referrers]):
+            for kid, timestamp, content, title in list(self._execute(selecter, [sorted(rewritten)])):
                 self._execute(updator, [make_keywords(content, kid, title or ""), kid, timestamp])
             if meta['source'] is None and knowl.title and knowl.title.removesuffix(" (DEFUNCT)") != old_meta['title']:
                 title = knowl.title.removesuffix(" (DEFUNCT)")
