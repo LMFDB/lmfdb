@@ -197,6 +197,31 @@ def merge_constraint(query, constraint):
         query.update(constraint)
 
 
+def single_order(raw):
+    """The order that the Order input ``raw`` pins a search to, or ``None`` if
+    it is empty or names several orders (a range, a list, a negation).
+
+    This reads the input the way the search does (``parse_ints``, so ``5^7``
+    and ``78125`` are the same order), without the flashed error messages that
+    the search itself produces for bad input.
+    """
+    from lmfdb.utils.search_parsing import clean_input, parse_ints, prep_ranges
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    query = {}
+    try:
+        # parse_ints.f is the parser body; the wrapper adds the same cleaning
+        # and the error reporting, which a lookup like this one must not do.
+        parse_ints.f(prep_ranges(clean_input(raw)), query, "order")
+    except Exception:
+        return None
+    N = query.get("order")
+    if isinstance(N, bool) or not isinstance(N, int) or set(query) != {"order"}:
+        return None
+    return int(N)
+
+
 def searched_hash(info):
     """The ``(order, value)`` that a search asked for, when it asked for one
     hash at one order and so knows a value that the row itself may not record.
@@ -204,7 +229,8 @@ def searched_hash(info):
     Both ``N#h`` in the hash box and a hash with the order box pinned to a
     single order count; a list of hashes or a range of orders does not, and
     neither does an ``N#h`` that the order box contradicts, which is the
-    conflict ``parse_hashes`` rejects.
+    conflict ``parse_hashes`` rejects.  The order box is read as the search
+    reads it (:func:`single_order`), so ``order=2^9`` counts as order 512.
     """
     raw = (info.get("hash") or "").strip()
     if not raw or "," in raw:
@@ -216,10 +242,13 @@ def searched_hash(info):
             order = int(order)
             # A separate order has to be this order; a different one, a range
             # or a list is a search that names two orders, not one.
-            if order_raw and int(order_raw) != order:
+            if order_raw and single_order(order_raw) != order:
                 return None
             return order, int(value)
-        return int(order_raw), int(raw)
+        order = single_order(order_raw)
+        if order is None:
+            return None
+        return order, int(raw)
     except ValueError:
         return None
 

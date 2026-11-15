@@ -233,6 +233,36 @@ class AbGpsTest(LmfdbTest):
             assert lab in page, "%s not in hash search" % lab
         assert "4714647875464396655" in page
 
+    def test_hash_search_equivalent_inputs(self):
+        # Spellings of the order that the Order box accepts, and display-only
+        # options such as a reversed sort, reach the same complete cluster,
+        # including 78125.82, which has no gps_groups row.
+        import re
+        cluster = {"78125.82", "78125.335", "78125.340"}
+        for args in ["order=78125", "order=5%5E7", "order=78125&sort_dir=op",
+                     "order=5%5E7&sort_order=exponent&sort_dir=op"]:
+            page = self.tc.get(f"/Groups/Abstract/?{args}&hash=3521944227884464685",
+                               follow_redirects=True).get_data(as_text=True)
+            assert set(re.findall(r"78125\.\d+", page)) == cluster, args
+        from lmfdb.groups.abstract.hash_lookup import searched_hash, single_order
+        assert single_order("2^9") == single_order("512") == 512
+        for raw in ["", "1-10", "512,1024", "~512", "abc", "2^"]:
+            assert single_order(raw) is None, raw
+        assert searched_hash({"order": "2^9", "hash": "11"}) == (512, 11)
+        assert searched_hash({"order": "2^9", "hash": "512#11"}) == (512, 11)
+        assert searched_hash({"order": "2^10", "hash": "512#11"}) is None
+        # The hash is displayed and downloaded whichever spelling found the row.
+        args = "order=2%5E9&hash=1584677793794603025&solvable=yes&showcol=hash"
+        page = self.tc.get(f"/Groups/Abstract/?{args}").get_data(as_text=True)
+        # (in a table cell, not just in the refine form's hash box)
+        assert "512.11" in page
+        assert re.search(r"<td[^>]*>\s*1584677793794603025\s*</td>", page)
+        from urllib.parse import quote
+        query = quote(str({"order": 512, "counter": {"$in": [11]}, "solvable": True}))
+        dl = self.tc.get(f"/Groups/Abstract/?{args}&Submit=sage&download=1&query={query}"
+                         ).get_data(as_text=True)
+        assert '"512.11"' in dl and "1584677793794603025" in dl
+
     def test_hash_search_false_positives(self):
         # A stored counter must not answer a search for a structural hash:
         # 512.11 has hash 1584677793794603025, and stores 11.

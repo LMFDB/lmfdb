@@ -3019,7 +3019,8 @@ def by_hash(order, value):
 
 # Arguments that say how to display a search rather than what to search for.
 HASH_SEARCH_ARGS = {"hash", "order", "search_type", "hst", "count", "start",
-                    "showcol", "hidecol", "sort_order", "sorts", "columns", "submit"}
+                    "showcol", "hidecol", "sort_order", "sort_dir", "sorts",
+                    "columns", "submit"}
 
 
 def hash_only_search(args):
