@@ -1,3 +1,5 @@
+import re
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -162,9 +164,13 @@ class AVTest(LmfdbTest):
         r"""
         Test the curves column on search results pages, including downloads.
         """
-        # The column is available in the column dropdown
+        # The column is available in the column dropdown; since the equations are not fetched
+        # unless the column is shown, its header asks the column selector to rerun the search
+        # when it is switched on (see reload_unloaded_columns in lmfdb.js)
         page = self.tc.get("/Variety/Abelian/Fq/?q=4&g=1").get_data(as_text=True)
         assert '<option value="curves">' in page
+        assert re.search(r'<th class="col-curves"[^>]*data-reload-on-show', page)
+        assert len(re.findall(r'data-reload-on-show', page)) == 1
         # A single curve is displayed as is, longer lists are truncated
         page = self.tc.get("/Variety/Abelian/Fq/?q=4&g=1&showcol=curves").get_data(as_text=True)
         assert "$y^2+y=x^3+a$" in page
@@ -222,7 +228,6 @@ class AVTest(LmfdbTest):
         Isogeny classes whose curves have not been computed (NULL in the database) must be
         distinguishable in downloads from those searched without finding a curve (an empty list).
         """
-        import re
         from lmfdb.utils.downloader import GPLanguage, SageLanguage
         from lmfdb.abvar.fq.isog_class import AbvarFq_isoclass
         from lmfdb.abvar.fq.main import abvar_columns

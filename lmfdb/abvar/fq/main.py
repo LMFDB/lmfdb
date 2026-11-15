@@ -708,7 +708,10 @@ abvar_columns = SearchColumns([
     MathCol("abvar_counts", "ag.fq.point_counts", r"$\mathbb{F}_{q^k}$ points on variety", short_title="Fq^k points on variety", default=False),
     MathCol("jacobian_count", "av.jacobian_count", "Jacobians", default=False),
     MathCol("hyp_count", "av.hyperelliptic_count", "Hyperelliptic Jacobians", default=False),
+    # The curves are only fetched when this column is requested (see below), so the column
+    # selector has to rerun the search when it is switched on (data-reload-on-show, see lmfdb.js).
     ProcessedCol("curves", "ag.jacobian", "Curves", curves_display_search, default=False,
+                 th_content=" data-reload-on-show",
                  download_desc="Equations of curves whose Jacobians are in the isogeny class.\n"
                  "For a base field GF(p^r) with r > 1, the variable a is the image of x in GF(p)[x]/(C(x)),\n"
                  "where C is the degree r Conway polynomial over GF(p) used by the LMFDB;\n"

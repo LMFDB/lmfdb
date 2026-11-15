@@ -484,6 +484,13 @@ function control_column(S, i) {
   var label = S.options[i].text;
   var label = label.slice(2, label.length);
   var value = S.options[i].value;
+  // Columns marked data-reload-on-show are only filled in by the server when they are shown
+  // at page load; remember whether that was the case before the first toggle.
+  $('th.col-'+value+'[data-reload-on-show]').each(function() {
+    if ($(this).data('loaded') === undefined) {
+      $(this).data('loaded', $(this).is(':visible'));
+    }
+  });
   $('.col-'+value).toggle();
   // For column groups, have to adjust the width of the top column
   $('th.col-'+value).each(function(i, obj) {
@@ -557,7 +564,45 @@ function control_columns(S) {
     } else {
       toggler.text = toggler.text.slice(0, 6) + "show all";
     }
+    reload_unloaded_columns();
   }
+};
+
+function reload_unloaded_columns() {
+  // Some columns are too expensive to fetch unless they are displayed (e.g. the curves of
+  // abelian varieties over finite fields), so the server leaves their cells empty when they are
+  // hidden at page load.  If such a column has just been switched on, rerun the search with it.
+  var missing = [];
+  $('th[data-reload-on-show]').each(function() {
+    if ($(this).data('loaded') === false && $(this).is(':visible')) {
+      var classes = $(this).attr('class').split(' ');
+      for (var i = 0; i < classes.length; i++) {
+        if (classes[i].startsWith('col-')) {
+          missing.push(classes[i].slice(4));
+        }
+      }
+    }
+  });
+  if (missing.length == 0) {
+    return;
+  }
+  var url = new URL(window.location.href);
+  var params = url.searchParams;
+  var show = $("input[name=showcol]").val().split(".").filter(o=>o);
+  var hide = $("input[name=hidecol]").val().split(".").filter(o=>o && !missing.includes(o));
+  for (var i = 0; i < missing.length; i++) {
+    if (!show.includes(missing[i])) {
+      show.push(missing[i]);
+    }
+  }
+  params.set("showcol", show.join("."));
+  if (hide.length == 0) {
+    params.delete("hidecol");
+  } else {
+    params.set("hidecol", hide.join("."));
+  }
+  url.search = params.toString();
+  window.location.href = url.href;
 };
 
 function control_sort(S) {
