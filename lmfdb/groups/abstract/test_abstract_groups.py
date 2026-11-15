@@ -440,6 +440,9 @@ class AbGpsTest(LmfdbTest):
         # ... but a point may recur in different generators.
         r = self.tc.get("/Groups/Abstract/identify?description=(1,2),(2,3)")
         assert r.status_code in (301, 302) and r.headers["Location"].endswith("/6.1")
+        # The index page explains the accepted formats next to the form.
+        self.check_args("/Groups/Abstract/", ['<button type="submit">Identify</button>',
+                                              "8PC4", "Mat(1,4):[[2]]"])
 
     def test_identify_guards(self):
         # Parsing, construction and the order computation are inside the alarm,

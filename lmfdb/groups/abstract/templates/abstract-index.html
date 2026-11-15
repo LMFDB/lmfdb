@@ -71,10 +71,21 @@
 </p>
 
 <form name="identify" method="get" action="{{url_for('.identify_group_page')}}">
-  <input type="text" name="description" size="40" placeholder="(1,2,3)(4,5),(1,2)" />
-  <input type="submit" value="Identify" />
-  <span class="formexample" style="display:none"> e.g. (1,2,3)(4,5),(1,2) </span>
+  <table>
+    <tr>
+      <td>Description</td>
+      <td><input type="text" name="description" placeholder="(1,2,3)(4,5),(1,2)" style="width:320px;" /></td>
+      <td><button type="submit">Identify</button></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan="2"><span class="formexample">e.g. (1,2,3)(4,5),(1,2) or 8PC4 or Mat(2,3):[[1,1],[0,1]],[[0,1],[1,0]]</span></td>
+    </tr>
+  </table>
 </form>
+
+<p>Accepted descriptions:</p>
+{% include "abstract-identify-formats.html" %}
 
 
 {% endblock %}

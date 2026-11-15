@@ -850,6 +850,7 @@ def index():
     ]
     info["maxgrp"] = db.gps_groups.max("order")
     info["families"] = group_families()
+    info["formats"] = describe_formats()
 
     return render_template(
         "abstract-index.html",

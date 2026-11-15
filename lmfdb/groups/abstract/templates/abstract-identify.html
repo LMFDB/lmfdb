@@ -13,22 +13,18 @@
 </p>
 
 <form name="identify" method="get" action="{{ url_for('.identify_group_page') }}">
-  <input type="text" name="description" size="52" value="{{ res.input }}"
-         placeholder="(1,2,3)(4,5),(1,2)" />
-  <input type="submit" value="Identify" />
+  <table>
+    <tr>
+      <td>Description</td>
+      <td><input type="text" name="description" value="{{ res.input }}"
+                 placeholder="(1,2,3)(4,5),(1,2)" style="width:420px;" /></td>
+      <td><button type="submit">Identify</button></td>
+    </tr>
+  </table>
 </form>
 
 <p>Accepted formats:</p>
-<table class="ntdata">
-  <tr><th>Type</th><th>Description</th><th>Example</th></tr>
-  {% for name, blurb, example in info.formats %}
-    <tr>
-      <td>{{ name }}</td>
-      <td>{{ blurb }}</td>
-      <td><a href="{{ url_for('.identify_group_page', description=example) }}"><tt>{{ example }}</tt></a></td>
-    </tr>
-  {% endfor %}
-</table>
+{% include "abstract-identify-formats.html" %}
 
 {% if res.status == 'error' %}
   <h2>Result</h2>
