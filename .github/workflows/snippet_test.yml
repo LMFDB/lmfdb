@@ -12,7 +12,10 @@ jobs:
   snippet-test:
     runs-on: ubuntu-latest
     outputs:
-      has-snippet-errors: ${{ steps.snippet_errors.outputs.exists }}
+      # Empty unless this attempt uploaded the report.  On a partial rerun an
+      # artifact of the same name from an earlier attempt can still exist, so
+      # the reporting job downloads by this ID rather than by name.
+      snippet-report-artifact-id: ${{ steps.upload_snippet_report.outputs.artifact-id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7 # Or a specific version
@@ -42,6 +45,7 @@ jobs:
       # that this job, which runs the whole Conda/Julia/Oscar setup, never holds
       # a token that can write issues.
       - name: Upload snippet error report
+        id: upload_snippet_report
         if: >-
           ${{
             !cancelled() &&
@@ -86,7 +90,7 @@ jobs:
     if: >-
       ${{
         always() &&
-        needs.snippet-test.outputs.has-snippet-errors == 'true'
+        needs.snippet-test.outputs.snippet-report-artifact-id != ''
       }}
     runs-on: ubuntu-latest
     permissions:
@@ -97,7 +101,7 @@ jobs:
       - name: Download snippet error report
         uses: actions/download-artifact@v8
         with:
-          name: snippet-error-report
+          artifact-ids: ${{ needs.snippet-test.outputs.snippet-report-artifact-id }}
           path: snippet-error-report
 
       - name: Create or update snippet error issue
