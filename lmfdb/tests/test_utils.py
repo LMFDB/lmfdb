@@ -476,6 +476,29 @@ class UtilsTest(unittest.TestCase):
         CMFFiller()(query)
         self.assertEqual(str(query["Nk2"]), "{28}")
 
+    def test_null_predicates_not_certified(self):
+        # In psycodict queries None is SQL null: {"$ne": None} means IS NOT NULL, which
+        # allows any value, so it must not be parsed as the (exact) empty set
+        from lmfdb import db
+        for value in [{"$ne": None}, {"$not": None}, {"$or": [{"$ne": None}, {"$lte": 5}]},
+                      {"$gte": 10**6, "$ne": None}]:
+            with self.subTest(value=value):
+                S = IntegerSet(value)
+                self.assertEqual(S.exact, False)
+                self.assertEqual(10**7 in S, True)
+                self.assertEqual(10**7 in NumberSet(value), True)
+                self.assertEqual(results_complete("ec_curvedata", {"conductor": value}, db)[0], False)
+                self.assertEqual(results_complete("mf_newforms", {"Nk2": value}, db)[0], False)
+        # The CMF filler must not intersect the derived Nk2 with a null predicate
+        for level in [{"$gte": 10**6}, 10**6]:
+            for nk2 in [{"$ne": None}, {"$or": [{"$ne": None}, {"$lte": 5}]}]:
+                with self.subTest(level=level, nk2=nk2):
+                    query = {"level": level, "weight": 2, "Nk2": nk2}
+                    CMFFiller()(query)
+                    self.assertEqual(bool(query["Nk2"]), True)
+                    self.assertEqual(query["Nk2"].is_subset(top(4000)), False)
+                    self.assertEqual(results_complete("mf_newforms", {"level": level, "weight": 2, "Nk2": nk2}, db)[0], False)
+
     def test_real_valued_sets(self):
         # On a real-valued column {"$mod": [0, 1]} selects the integers, so the whole
         # line is only an over-approximation of it, and its negation (the nonintegral

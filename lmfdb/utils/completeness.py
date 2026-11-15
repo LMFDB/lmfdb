@@ -1273,7 +1273,14 @@ def parse_set(query, cls=NumberSet):
         elif k == "$and":
             cur = cls._full().intersection(*[parse_set(D, cls) for D in val])
         elif k in ["$not", "$ne"]:
-            cur = parse_set(val, cls).complement()
+            if _contains_none(val):
+                # None here is SQL null ({"$ne": None} means IS NOT NULL), not the
+                # "no constraint" that parse_set(None) describes, so complementing
+                # would give the empty set; any non-null value may match, so the
+                # whole line is the safe over-approximation
+                cur = cls._full()._reexact(False)
+            else:
+                cur = parse_set(val, cls).complement()
         elif k == "$lte":
             cur = cls._from_rset(RealSet.unbounded_below_closed(val))
         elif k == "$lt":
@@ -1801,9 +1808,11 @@ class CMFFiller:
         N, k = query.get("level"), query.get("weight")
         if N is not None and k is not None:
             Nk2 = C(N) * C(k) * C(k)
-            if "Nk2" in query:
+            if "Nk2" in query and not _contains_none(query["Nk2"]):
                 # Keep the user's own constraint on Nk2: both sets contain every value
-                # of Nk2 that the query can match, so their intersection does too
+                # of Nk2 that the query can match, so their intersection does too.
+                # (A constraint involving SQL nulls is not modelled faithfully by the
+                # set parser, so we do not rely on it.)
                 Nk2 = C(query["Nk2"]).intersection(Nk2)
             query["Nk2"] = Nk2
         if query.get("char_orbit_index") == 1 or query.get("prim_orbit_index") == 1:
