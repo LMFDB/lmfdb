@@ -15,7 +15,6 @@ import string
 import re
 import json
 import time
-import uuid
 from collections import Counter, defaultdict
 from lmfdb.app import app, is_beta
 from flask import (abort, flash, jsonify, make_response,
@@ -239,50 +238,62 @@ def _knowl_markdown(knowl_content):
     return md.convert(md_preprocess(knowl_content))
 
 
+def _knowl_source(knowl_content):
+    return _knowl_template_header + "  " + _knowl_markdown(knowl_content) + "\n  "
+
+
+def _template_error(e):
+    return "ERROR in the template: %s. Please edit it to resolve the problem." % e
+
+
 @app.template_filter("render_knowl")
 def render_knowl_in_template(knowl_content, **kwargs):
     """
     This function does the actual rendering, for render and the template_filter
     render_knowl_in_template (ultimately for KNOWL_INC)
     """
-    render_me = _knowl_template_header + "  " + _knowl_markdown(knowl_content) + "\n  "
     try:
-        return render_template_string(render_me, **kwargs)
+        return render_template_string(_knowl_source(knowl_content), **kwargs)
     except Exception as e:
-        return "ERROR in the template: %s. Please edit it to resolve the problem." % e
+        return _template_error(e)
 
 
 def render_knowls_in_template(knowl_contents, **kwargs):
     """
     Render several knowl contents, as :func:`render_knowl_in_template` does,
-    but in a single template rendering.
+    but building the template context only once.
 
     Every call to ``render_template_string`` reruns the application's
     context processors, some of which query the database (e.g. the colour
     scheme of a signed-in user), so a page showing many knowls should use
     this rather than applying the ``render_knowl`` filter to each of them.
+    Each knowl is still rendered as a template of its own, so assignments
+    and macros in one of them do not leak into the others, and an error in
+    one of them is confined to it.
 
     INPUT:
 
-    - ``knowl_contents`` -- a list of knowl contents (strings)
+    - ``knowl_contents`` -- an iterable of knowl contents (strings)
 
     OUTPUT:
 
-    The list of the rendered contents, in the same order.  If one of them
-    is not a valid template, they are rendered one at a time instead, so
-    that the error is confined to that knowl.
+    The list of the rendered contents, in the same order.
     """
     knowl_contents = list(knowl_contents)
     if not knowl_contents:
         return []
-    separator = "<!-- knowl separator %s -->" % uuid.uuid4().hex
-    render_me = _knowl_template_header + separator.join(_knowl_markdown(content) for content in knowl_contents)
+    # what render_template_string does, but with the context processors run once
+    context = dict(kwargs)
     try:
-        rendered = render_template_string(render_me, **kwargs).split(separator)
-    except Exception:
-        rendered = []
-    if len(rendered) != len(knowl_contents):
-        return [render_knowl_in_template(content, **kwargs) for content in knowl_contents]
+        app.update_template_context(context)
+    except Exception as e:
+        return [_template_error(e)] * len(knowl_contents)
+    rendered = []
+    for content in knowl_contents:
+        try:
+            rendered.append(app.jinja_env.from_string(_knowl_source(content)).render(context))
+        except Exception as e:
+            rendered.append(_template_error(e))
     return rendered
 
 

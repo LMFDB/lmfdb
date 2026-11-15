@@ -168,9 +168,9 @@ def index(show_hidden=False):
     dataset_totals = {database: (len(tables), sum(count for _, _, count, _ in tables))
                       for database, tables in databases.items()}
     # The descriptions are knowls, so they may contain Markdown, HTML and
-    # KNOWL() calls.  They are rendered together: rendering each of them
-    # separately would rerun the context processors (some of which query
-    # the database) once per table.
+    # KNOWL() calls.  They are rendered with a shared template context:
+    # rendering each of them with the render_knowl filter would rerun the
+    # context processors (some of which query the database) once per table.
     from lmfdb.knowledge.main import render_knowls_in_template
     described = [(table, description) for tables in databases.values()
                  for table, _, _, description in tables if description]

@@ -161,11 +161,13 @@ class ApiTest(LmfdbTest):
 
     def test_api_home_renders_descriptions_together(self):
         r"""
-        Check that the descriptions are rendered in one go: every template
-        rendering reruns the context processors, some of which query the
-        database (e.g. the colour scheme of a signed-in user), so their number
-        must not grow with the number of described tables.  Check also that a
-        description that is not a valid template only breaks its own row.
+        Check that the descriptions share one template context: building it
+        runs the context processors, some of which query the database (e.g.
+        the colour scheme of a signed-in user), so their number of runs must
+        not grow with the number of described tables.  Check also that each
+        description is still rendered on its own: one that is not a valid
+        template only breaks its own row, and assignments and macros do not
+        leak from one description into the next.
         """
         calls = []
 
@@ -192,6 +194,17 @@ class ApiTest(LmfdbTest):
                 data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
             assert "<em>one</em>" in data and "<em>two</em>" in data
             assert data.count("ERROR in the template") == 1
+
+            # each description is a template of its own: assignments and
+            # macros in one of them do not leak into the next ones
+            descriptions = {names[0]: '{% set label = "FIRST" %}First table: {{ label }}',
+                            names[1]: 'Second table: {{ label|default("SECOND") }}',
+                            names[2]: '{% macro tag() %}MACRO{% endmacro %}Third table: {{ tag() }}',
+                            names[3]: 'Fourth table: {{ "defined" if tag is defined else "undefined" }}'}
+            with patch.object(knowldb, "get_table_descriptions", return_value=descriptions):
+                data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+            for text in ["First table: FIRST", "Second table: SECOND", "Third table: MACRO", "Fourth table: undefined"]:
+                assert text in data, text
         finally:
             processors.remove(counter)
 
