@@ -51,6 +51,9 @@
 
 <p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.cusp_latex()}}\).</p>
 
+{% endif %}
+
+{% if not (space.degree == 2 and (space.weight[0] == 1 or space.weight_parity * space.char_parity == -1)) %}
 
 <table class="dimgrid">
   <thead>
