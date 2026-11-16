@@ -69,7 +69,8 @@ def major_from_file(path):
     return int(m.group(1))
 
 
-def record_deploy(db, commit, major=None, config=None, dry_run=False):
+def record_deploy(db, commit, major=None, config=None, dry_run=False,
+                  head=None):
     """
     Record ``commit``, just pushed to the web branch, as the next code
     version (or as a major version bump if ``major`` exceeds the current
@@ -79,6 +80,9 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False):
     - ``major`` -- MAJOR at ``commit``; fetched from GitHub when None
     - ``config`` -- anything with ``editor`` and ``grace_dsn`` attributes
       (default: the local Zenodo configuration)
+    - ``head`` -- the current head of the web branch, if known: a commit
+      that is no longer the head is not recorded, since numbering it now
+      would place it after the newer deploy
     """
     from . import state
     from .backup import _mirror_to_grace
@@ -92,26 +96,29 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False):
     if state.code_rows_for_commit(db, commit):
         print("Commit %s already has a code version" % commit[:12])
         return None
+    if head is not None and head != commit:
+        print("Commit %s is no longer the head of web (now %s); not recorded"
+              % (commit[:12], head[:12]))
+        return None
     if major is None:
         major = major_at_commit(commit, current["major"])
     editor = cfg.editor or "deploy-watcher"
     if major > current["major"]:
         event = {"kind": "major", "major": major, "seq": 0, "git_hash": commit}
+        rows = state.major_rows(major, git_hash=commit, editor=editor)
         if not dry_run:
-            state.insert_major(db, major, git_hash=commit, editor=editor)
-            _mirror_to_grace(cfg, "major", major, major, git_hash=commit,
-                             editor=editor)
-            _mirror_to_grace(cfg, "code", major, 0, git_hash=commit,
-                             editor=editor, comment="code counter reset")
+            state.insert_version_rows(db, rows)
+            _mirror_to_grace(cfg, rows)
         print("Recorded major version bump to %s.0-0 (commit %s)%s"
               % (major, commit[:12], " [dry run]" if dry_run else ""))
     else:
         seq = current["code_seq"] + 1 if major == current["major"] else 0
         event = {"kind": "code", "major": major, "seq": seq, "git_hash": commit}
+        rows = [state.version_row(major, "code", seq, git_hash=commit,
+                                  editor=editor)]
         if not dry_run:
-            state.insert_code(db, major, seq, commit, editor=editor)
-            _mirror_to_grace(cfg, "code", major, seq, git_hash=commit,
-                             editor=editor)
+            state.insert_version_rows(db, rows)
+            _mirror_to_grace(cfg, rows)
         print("Recorded frontend release %s.*-%s (commit %s)%s"
               % (major, seq, commit[:12],
                  " [dry run]" if dry_run else ""))
@@ -120,8 +127,8 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False):
 
 def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
     """Record the current head of the deployed branch (see ``record_deploy``)."""
-    return record_deploy(db, deployed_commit(repo, branch), config=config,
-                         dry_run=dry_run)
+    head = deployed_commit(repo, branch)
+    return record_deploy(db, head, config=config, dry_run=dry_run, head=head)
 
 
 class _Connection:
@@ -155,12 +162,13 @@ def main():
     # SQL objects in state come from psycodict, so connect with its driver
     import psycopg
     major = major_from_file(args.version_file) if args.version_file else None
-    cfg = SimpleNamespace(editor="github-actions",
+    cfg = SimpleNamespace(editor="github-actions", sandbox=False,
                           grace_dsn=os.environ.get("LMFDB_VERSION_GRACE_DSN"))
+    head = deployed_commit(branch=args.branch)
     with psycopg.connect(os.environ["LMFDB_VERSION_DSN"],
                          autocommit=True) as conn:
         record_deploy(_Connection(conn), args.commit, major=major,
-                      config=cfg, dry_run=args.dry_run)
+                      config=cfg, dry_run=args.dry_run, head=head)
 
 
 if __name__ == "__main__":

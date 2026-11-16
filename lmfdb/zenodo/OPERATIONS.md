@@ -6,8 +6,8 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
 
 ## One-time setup (proddb)
 
-1. Finalize [tables.yaml](tables.yaml): resolve every `review` entry to
-   `yes`/`no` and assign `owner`s (Zenodo accounts) to the largest tables.
+1. Resolve the remaining `review` entries in [tables.yaml](tables.yaml)
+   (owners are assigned from the 2026-11-16 owner list).
 2. Create `~/.lmfdb_zenodo.ini` (mode 0600) on proddb; see the docstring in
    [config.py](config.py).  Start with `sandbox = true`.
 3. In sage on proddb: `db.zenodo_setup()` — creates `version_history` (public
@@ -33,21 +33,36 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
    environment `lmfdb-version` whose deployment branches are limited to
    `web`, holding the secrets `LMFDB_VERSION_DSN` (e.g.
    `host=proddb.lmfdb.xyz dbname=lmfdb user=lmfdb_version password=...`) and
-   optionally `LMFDB_VERSION_GRACE_DSN`.  If a run fails, rerun it from the
-   Actions tab, or run `python3 -m lmfdb.zenodo.watcher` on proddb, which
-   records the current head of `web`.
-6. Zenodo side: make sure the `lmfdb` community exists and each owner's token
-   (scopes `deposit:write` + `deposit:actions`) is in the config.
+   optionally `LMFDB_VERSION_GRACE_DSN`.  A run only records its commit while
+   that commit is still the head of `web`, so a stale rerun cannot number
+   an old commit after a newer deploy.  If the latest run failed, rerun it
+   from the Actions tab, or run `python3 -m lmfdb.zenodo.watcher` on proddb,
+   which records the current head of `web`.
+6. Zenodo side: each owner's token (scopes `deposit:write` +
+   `deposit:actions`) goes in the config under the key `tables.yaml` uses
+   for them.  The `lmfdb` community exists, with review policy `closed`:
+   each new record's inclusion then waits for a curator to accept it (new
+   versions stay in the community).  To avoid accepting ~100 requests by
+   hand during the backfill, make the owners curators and relax the review
+   policy, or accept them in bulk afterwards.
 
 ## Sandbox rehearsal, then backfill
 
 1. With `sandbox = true`, run a full cycle on a couple of small tables:
    `db.zenodo_backfill(tables=[...], dry_run=False, live=True)`, then push one
    of them again to exercise the new-version path, then check the records on
-   sandbox.zenodo.org.
-2. Flip `sandbox = false`, then `db.zenodo_backfill(dry_run=True)` to see the
-   batch plan, and run it for real off-peak (resumable; re-run after any
-   interruption).  This creates data version `{MAJOR}.1` at the end.
+   sandbox.zenodo.org.  In sandbox mode all archive state lives in
+   `userdb.zenodo_backups_sandbox` and `userdb.version_history_sandbox`
+   (created on first use), dumps and packages go to `{staging_dir}/sandbox`,
+   and nothing is mirrored to grace: the rehearsal leaves the production
+   state, the public version history and the footer untouched.  Also check
+   whether a raised quota carries over to a record's next version.
+2. Flip `sandbox = false`, then `db.zenodo_backfill(dry_run=True)` to see
+   the plan, and run it for real off-peak.  Tables are dumped, uploaded and
+   deleted one at a time, smallest first; re-run after any interruption
+   (completed dumps are reused, published tables skipped).  Once every
+   table is published it creates data version `{MAJOR}.1`; while any upload
+   is paused for quota, it does not.
 
 ## Per-push workflow (replaces the manual 2-step process)
 
@@ -73,7 +88,9 @@ anything.
 If an upload needs more than 50 GB it pauses with status `awaiting_quota`:
 the owner raises the quota via "Manage storage" on the draft, then re-run
 `db.zenodo_backup(folder, dry_run=False, live=True)` to resume (the
-description and bump given originally are reused).  Quota above 50 GB/record
+description and bump given originally are reused).  No data version is
+created while any table upload is unfinished, so the push gets a single data
+version, created by the run that completes it; keep the folder until then.  Quota above 50 GB/record
 comes from a 150 GB allowance per Zenodo account (records under 50 GB use
 none of it), so the large tables need to be spread across owners in
 tables.yaml.  Zenodo's docs don't say whether a raised quota carries over to a

@@ -13,7 +13,7 @@ import html
 from datetime import datetime, timezone
 
 # Decided by the managing editors (2026-07-18)
-LICENSE_ID = "cc-by-sa-4.0"  # verify against /api/licenses before first live upload
+LICENSE_ID = "cc-by-sa-4.0"  # listed at zenodo.org/api/vocabularies/licenses
 CREATORS = [{"name": "The LMFDB Collaboration"}]
 DEFAULT_COMMUNITY = "lmfdb"
 LMFDB_URL = "https://www.lmfdb.org"
@@ -127,7 +127,7 @@ def table_description_html(db, tablename, version, nrows=None,
         "copy with <a href=\"https://github.com/roed314/psycodict\">"
         "psycodict</a>'s <code>reload_all</code>.  See README.md and "
         "MANIFEST.json inside the record for details, and "
-        "<code>%s_sample.txt</code> for a preview of the first rows.</p>"
+        "<code>%s_sample.md</code> for a preview of the first rows.</p>"
         % e(tablename))
     if cols:
         rows = "".join(
@@ -150,7 +150,8 @@ consumes.  To rebuild the table in a PostgreSQL database:
    installation.
 2. Download the files of this record into a folder and decompress them
    (`zstd -d *.zst`; for split files first `cat NAME.zst.part* > NAME.zst`,
-   see MANIFEST.json).
+   see MANIFEST.json).  The folder must not contain other `.txt` files:
+   `reload_all` loads every one of them as a table.
 3. From an LMFDB installation, run
 
        from lmfdb import db

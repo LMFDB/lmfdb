@@ -70,7 +70,12 @@ class ZenodoClient:
         url = path if path.startswith("http") else self.base + path
         headers = kwds.pop("headers", {})
         headers["Authorization"] = "Bearer %s" % self.token
+        # a failed attempt may have consumed a streamed upload body
+        body = kwds.get("data")
+        start = body.tell() if hasattr(body, "seek") else None
         for attempt in range(self.max_retries):
+            if start is not None:
+                body.seek(start)
             wait = self.min_interval - (time.time() - self._last_request)
             if wait > 0:
                 time.sleep(wait)

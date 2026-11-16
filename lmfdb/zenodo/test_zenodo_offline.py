@@ -145,11 +145,14 @@ def test_package_table(tmp_path):
         assert hashlib.md5(blob).hexdigest() == art["md5"]
         assert gzip.decompress(blob) == (dump / art["source"]).read_bytes()
 
-    # sample: 3 header lines + 10 rows of the search file
-    sample = (outdir / (name + "_sample.txt")).read_text().splitlines()
-    assert len(sample) == 13
-    assert sample[0] == "id|label|dim"
-    assert sample[3] == "0|lab.0|0"
+    # sample: Markdown with 3 header lines + 10 rows of the search file, as
+    # an indented code block; not a .txt file, which reload_all would load
+    sample = (outdir / (name + "_sample.md")).read_text().splitlines()
+    code = [line[4:] for line in sample if line.startswith("    ")]
+    assert sample[0] == "# Sample of `%s`" % name
+    assert code[0] == "id|label|dim" and code[3] == "0|lab.0|0"
+    assert len(code) == 13
+    assert not list(outdir.glob("*.txt"))
 
     # README and MANIFEST written; manifest on disk matches return value
     assert (outdir / "README.md").read_text() == "# test readme\n"
@@ -160,7 +163,7 @@ def test_package_table(tmp_path):
 
     # upload order: README, sample, MANIFEST, then artifacts
     names = [p.name for p in packaging.upload_list(outdir)]
-    assert names[:3] == ["README.md", name + "_sample.txt", "MANIFEST.json"]
+    assert names[:3] == ["README.md", name + "_sample.md", "MANIFEST.json"]
 
 
 def test_split_and_reassemble(tmp_path):
@@ -206,7 +209,7 @@ def test_sample_truncation(tmp_path):
     with open(dump / "zzz_big.txt", "w") as F:
         F.write("id|blob\nbigint|text\n\n")
         F.write("0|" + "x" * 10**6 + "\n")
-    dst = dump / "sample.txt"
+    dst = dump / "sample.md"
     packaging.write_sample(dump / "zzz_big.txt", dst, max_bytes=1000)
     text = dst.read_text()
     assert len(text) < 2000
@@ -325,6 +328,16 @@ def test_tables_yaml():
 # record versions and change notes in the backup plan                #
 ######################################################################
 
+def prod_config(tmp_path, enabled=False):
+    """A configuration for the production archive (the default is sandbox)."""
+    path = tmp_path / "zenodo.ini"
+    path.write_text("[zenodo]\nenabled = %s\nsandbox = false\nstaging_dir = %s\n"
+                    "default_owner = roed\n\n[tokens]\nroed = fake-token\n"
+                    % ("true" if enabled else "false", tmp_path / "staging"))
+    os.chmod(path, 0o600)
+    return ZenodoConfig(path=str(path))
+
+
 @pytest.fixture
 def offline_backup(monkeypatch):
     """lmfdb.zenodo.backup with the database-backed state replaced by dicts."""
@@ -345,7 +358,7 @@ def offline_backup(monkeypatch):
     return backup, published, attempts
 
 
-def test_change_info(offline_backup):
+def test_change_info(offline_backup, tmp_path):
     backup, published, attempts = offline_backup
     first = backup._change_info(None, "zzz_other", None, None, None)
     assert first == {"version": "1.0", "bump": None, "missing": [],
@@ -368,15 +381,16 @@ def test_change_info(offline_backup):
     assert info["missing"] == ["bump", "description"]
     with pytest.raises(ValueError, match=r"zzz_demo \(bump, description\)"):
         backup.require_change_info(None, ["zzz_demo", "zzz_other", "zzz_skip"],
-                                   None, None)
-    backup.require_change_info(None, ["zzz_demo", "zzz_other"], "Fixed.", "minor")
+                                   None, None, config=prod_config(tmp_path))
+    backup.require_change_info(None, ["zzz_demo", "zzz_other"], "Fixed.", "minor",
+                               config=prod_config(tmp_path))
 
 
 def test_backup_plan(offline_backup, tmp_path):
     backup, published, attempts = offline_backup
     make_dump(tmp_path / "dump", "zzz_demo")
     make_dump(tmp_path / "dump", "zzz_other")
-    cfg = ZenodoConfig(path=str(tmp_path / "missing.ini"))
+    cfg = prod_config(tmp_path)
     plan = backup.backup_folder(None, tmp_path / "dump", config=cfg,
                                 description="Added rows.", bump="minor")
     assert plan["version"] == "2.3"
@@ -390,3 +404,320 @@ def test_backup_plan(offline_backup, tmp_path):
     with pytest.raises(ValueError, match="zzz_demo"):
         backup.backup_folder(None, tmp_path / "dump", config=cfg,
                              dry_run=False)
+
+
+######################################################################
+# upload retries, deploy ordering, backfill retries                  #
+######################################################################
+
+class _Response:
+    def __init__(self, status, payload=None):
+        self.status_code = status
+        self.headers = {}
+        self._payload = payload or {}
+        self.content = json.dumps(self._payload).encode()
+        self.text = self.content.decode()
+
+    def json(self):
+        return self._payload
+
+
+def test_upload_retry_resends_whole_file(tmp_path, monkeypatch):
+    pytest.importorskip("requests")
+    import time
+    monkeypatch.setattr(time, "sleep", lambda seconds: None)
+    payload = b"payload" * 1000
+    path = tmp_path / "zzz_demo.txt.zst"
+    path.write_bytes(payload)
+    bodies = []
+
+    class Session:
+        def request(self, method, url, data=None, **kwds):
+            bodies.append(data.read())
+            if len(bodies) == 1:
+                return _Response(503)
+            return _Response(200, {"checksum": "md5:" + hashlib.md5(payload).hexdigest()})
+
+    client = ZenodoClient("fake-token", live=True, min_interval=0, log=lambda msg: None)
+    client._session = Session()
+    client.upload_file("https://example.org/bucket", path)
+    assert bodies == [payload, payload]
+
+
+def test_record_deploy_ignores_superseded_commits(monkeypatch):
+    pytest.importorskip("psycodict")
+    from types import SimpleNamespace
+    from lmfdb.zenodo import state, watcher
+    calls = []
+    monkeypatch.setattr(state, "latest_versions", lambda db: {
+        "major": 2, "data_seq": 0, "code_seq": 1, "time": None})
+    monkeypatch.setattr(state, "code_rows_for_commit", lambda db, commit: [
+        r for rows in calls for r in rows if r["git_hash"] == commit])
+    monkeypatch.setattr(state, "insert_version_rows", lambda db, rows: calls.append(rows))
+    cfg = SimpleNamespace(editor=None, grace_dsn=None, sandbox=False)
+    b, c, d = "b" * 40, "c" * 40, "d" * 40
+    # B's workflow failed, C was pushed and recorded, then B is rerun
+    assert watcher.record_deploy(None, b, major=2, config=cfg, head=c) is None
+    event = watcher.record_deploy(None, c, major=2, config=cfg, head=c)
+    assert (event["kind"], event["seq"]) == ("code", 2)
+    assert watcher.record_deploy(None, c, major=2, config=cfg, head=c) is None
+    assert len(calls) == 1
+    # a major bump writes its two rows in a single statement
+    watcher.record_deploy(None, d, major=3, config=cfg, head=d)
+    assert [(r["kind"], r["major"], r["seq"]) for r in calls[-1]] == [
+        ("major", 3, 3), ("code", 3, 0)]
+
+
+def test_backfill_retries(offline_backup, tmp_path, monkeypatch):
+    backup, published, attempts = offline_backup
+    published.clear()
+    names = ["zzz_a", "zzz_b", "zzz_c"]
+    monkeypatch.setattr(backup, "load_tables_yaml", lambda path=None: {
+        t: {"backup": "yes"} for t in names})
+    dumped, uploaded, finalized = [], [], []
+    fail, pause = {"zzz_b"}, {"zzz_c"}
+
+    class DB:
+        tablenames = names
+
+        def table_sizes(self):
+            return {t: {"table_bytes": i} for i, t in enumerate(names)}
+
+        def copy_to(self, tables, folder):
+            folder.mkdir(parents=True)  # like psycodict, refuses an existing folder
+            for t in tables:
+                make_dump(folder, t)
+            dumped.extend(tables)
+
+    def fake_backup_folder(db, folder, tables, **kwds):
+        (t,) = tables
+        assert (folder / (t + ".txt")).exists()
+        if t in fail:
+            fail.discard(t)
+            raise RuntimeError("network down")
+        if t in pause:
+            pause.discard(t)
+            return {"paused": [t]}
+        published[t] = {"version": "1.0", "source_md5s": {}, "owner": "roed"}
+        uploaded.append(t)
+        return {"paused": []}
+
+    monkeypatch.setattr(backup, "backup_folder", fake_backup_folder)
+    monkeypatch.setattr(backup, "finalize",
+                        lambda db, **kwds: finalized.append(1) or "2.1")
+    cfg = prod_config(tmp_path)
+    root = tmp_path / "staging" / "backfill"
+    with pytest.raises(RuntimeError):
+        backup.backfill(DB(), dry_run=False, config=cfg)
+    assert (dumped, uploaded) == (["zzz_a", "zzz_b"], ["zzz_a"])
+    # an interrupted dump of zzz_c is redone, not reused
+    (root / "zzz_c").mkdir()
+    (root / "zzz_c" / "zzz_c.txt").write_text("partial")
+    # zzz_b's completed dump is reused; zzz_c pauses for quota
+    assert backup.backfill(DB(), dry_run=False, config=cfg) is None
+    assert dumped == ["zzz_a", "zzz_b", "zzz_c"] and not finalized
+    assert [p.name for p in root.iterdir()] == ["zzz_c"]
+    assert backup.backfill(DB(), dry_run=False, config=cfg) == "2.1"
+    assert dumped == ["zzz_a", "zzz_b", "zzz_c"] and finalized == [1]
+    assert uploaded == names and not list(root.iterdir())
+
+
+######################################################################
+# against a scratch PostgreSQL database (opt-in)                     #
+######################################################################
+# Set LMFDB_ZENODO_TEST_DB to a libpq connection string for a disposable
+# database, e.g. "host=127.0.0.1 port=5439 dbname=zenodo_test user=postgres":
+# these tests drop and recreate the archive state and knowl tables there.
+
+KNOWL_DDL = {
+    "kwl_knowls": "id text, cat text, title text, content text, last_author text, "
+                  "timestamp timestamp, status smallint, type smallint, links text[], "
+                  "defines text[], source text, source_name text, reviewer text, "
+                  "reviewer_timestamp timestamp, authors text[], _keywords text[]",
+    "kwl_deleted": "id text, cat text, title text, content text, authors jsonb, "
+                   "last_author text, quality text, timestamp timestamp, "
+                   "_keywords jsonb, history jsonb",
+}
+
+
+@pytest.fixture
+def scratch_db(tmp_path):
+    dsn = os.environ.get("LMFDB_ZENODO_TEST_DB")
+    if not dsn:
+        pytest.skip("LMFDB_ZENODO_TEST_DB not set")
+    from psycopg.conninfo import conninfo_to_dict
+    from psycodict import SQL
+    from psycodict.database import PostgresDatabase
+    from psycodict.config import Configuration
+    config = Configuration(readargs=False,
+                           defaults={"config_file": str(tmp_path / "psycodict.ini")})
+    db = PostgresDatabase(config=config, create=True, **conninfo_to_dict(dsn))
+    db._execute(SQL("CREATE SCHEMA IF NOT EXISTS userdb"))
+    for t in ["version_history", "userdb.zenodo_backups", "kwl_knowls", "kwl_deleted",
+              "userdb.version_history_sandbox", "userdb.zenodo_backups_sandbox"]:
+        db._execute(SQL("DROP TABLE IF EXISTS " + t))
+    for t, cols in KNOWL_DDL.items():
+        db._execute(SQL("CREATE TABLE %s (%s)" % (t, cols)))
+    db._execute(SQL(
+        "INSERT INTO kwl_knowls (id, title, content, timestamp, status, links, "
+        "authors) VALUES (%s, %s, %s, '2026-11-16 12:00', 1, %s::text[], "
+        "%s::text[]), (%s, %s, NULL, '2026-11-16 12:01', 0, NULL, '{}')"),
+        ["ec.rank", "Rank | of E", "line one\nline\ttwo \\ backslash",
+         '{"ec.conductor","a,b|c"}', '{"Ann O\'Nymous"}',
+         "nf.degree", "Degree"])
+    db._execute(SQL(
+        "INSERT INTO kwl_deleted (id, authors, timestamp, history) VALUES "
+        "(%s, %s::jsonb, '2026-11-16 12:02', %s::jsonb)"),
+        ["old.knowl", '["x", "y|z"]', '[{"rev": 1}]'])
+    yield db
+    db.conn.close()
+
+
+def test_knowls_dump_restores(scratch_db, tmp_path):
+    from psycodict import SQL, Identifier
+    db = scratch_db
+    dump = tmp_path / "dump"
+    packaging.dump_knowls(db, dump)
+    header = (dump / "kwl_knowls.txt").read_text().split("\n")[1].split("|")
+    assert "text[]" in header and "ARRAY" not in header
+    # restore following the README: run the schema files, then COPY the data
+    # (minus the three header lines) into the new tables
+    db._execute(SQL("DROP SCHEMA IF EXISTS restored CASCADE"))
+    db._execute(SQL("CREATE SCHEMA restored"))
+    for t in packaging.KNOWL_TABLES:
+        db._execute(SQL("SET search_path TO restored"))
+        db._execute(SQL((dump / (t + "_schema.sql")).read_text()))
+        db._execute(SQL("SET search_path TO public"))
+        data = (dump / (t + ".txt")).read_text().split("\n", 3)[3]
+        cur = db._cursor()
+        with cur.copy(SQL("COPY restored.{0} FROM STDIN (DELIMITER '|')").format(
+                Identifier(t))) as copy:
+            copy.write(data)
+        db.conn.commit()
+        rows = [db._execute(SQL("SELECT * FROM %s.%s ORDER BY id" % (schema, t))).fetchall()
+                for schema in ["public", "restored"]]
+        assert rows[0] == rows[1] and rows[0]
+    db._execute(SQL("DROP SCHEMA restored CASCADE"))
+    # an unchanged knowl database dumps identically
+    again = tmp_path / "again"
+    packaging.dump_knowls(db, again)
+    assert (again / "kwl_knowls.txt").read_bytes() == (dump / "kwl_knowls.txt").read_bytes()
+
+
+def test_sandbox_state_is_separate(scratch_db, tmp_path, monkeypatch):
+    from lmfdb.zenodo import backup, state
+    db = scratch_db
+    monkeypatch.setattr(backup, "_current_major", lambda: 2)
+    state.ensure_tables(db)
+    state.insert_major(db, 2, comment="activated")
+    sandbox = ZenodoConfig(path=str(tmp_path / "missing.ini"))
+    assert sandbox.sandbox
+    sdb = backup._state_db(db, sandbox)
+    aid = state.start_attempt(sdb, "nf_fields", "roed", "1.0", {})
+    state.update_attempt(sdb, aid, status="verified", recid="1")
+    state.insert_version_rows(sdb, [state.version_row(2, "data", 1, tables={})])
+    assert state.latest_published(backup._state_db(db, sandbox), "nf_fields")["recid"] == "1"
+    assert state.latest_published(db, "nf_fields") is None
+    assert state.current_version_string(db) == "2.0-0"
+    # the production backfill still has nf_fields to do
+    assert backup.backfill(db, tables=["nf_fields"], config=prod_config(tmp_path)) == ["nf_fields"]
+
+
+def test_major_rows_land_together(scratch_db):
+    from lmfdb.zenodo import state
+    db = scratch_db
+    state.ensure_tables(db)
+    state.insert_version_rows(db, [state.version_row(3, "code", 0, git_hash="x")])
+    with pytest.raises(Exception):  # the code row collides, so neither lands
+        state.insert_major(db, 3, git_hash="y")
+    assert not [r for r in state.history(db) if r["kind"] == "major"]
+
+
+class FakeZenodo:
+    """In-memory stand-in for ZenodoClient; ``blocked`` tables exceed quota."""
+
+    def __init__(self):
+        self.deps, self.next_id, self.blocked = {}, 100, set()
+
+    def _new(self, files=None, concept=None):
+        dep_id = self.next_id
+        self.next_id += 1
+        self.deps[dep_id] = {"id": dep_id, "files": dict(files or {}),
+                             "concept": concept or dep_id, "metadata": {},
+                             "links": {"bucket": "bucket/%s" % dep_id}}
+        return self.deps[dep_id]
+
+    def create_deposition(self, metadata=None):
+        return self._new()
+
+    def get_deposition(self, dep_id):
+        return self.deps[int(dep_id)]
+
+    def new_version(self, recid):
+        prev = self.deps[int(recid)]
+        return self._new(prev["files"], prev["concept"])
+
+    def update_metadata(self, dep_id, metadata):
+        self.deps[int(dep_id)]["metadata"] = metadata["metadata"]
+
+    def list_files(self, dep_id):
+        return [{"filename": name, "checksum": "md5:" + md5,
+                 "links": {"self": (int(dep_id), name)}}
+                for name, md5 in self.deps[int(dep_id)]["files"].items()]
+
+    def delete_file(self, link):
+        del self.deps[link[0]]["files"][link[1]]
+
+    def upload_file(self, bucket, path, name=None):
+        from lmfdb.zenodo.client import QuotaExceeded
+        dep = self.deps[int(bucket.split("/")[1])]
+        if dep["metadata"].get("title", "").split()[-1] in self.blocked:
+            raise QuotaExceeded("quota")
+        md5 = hashlib.md5(path.read_bytes()).hexdigest()
+        dep["files"][name] = md5
+        return {"checksum": "md5:" + md5}
+
+    def publish(self, dep_id):
+        dep = self.deps[int(dep_id)]
+        return {"id": dep["id"], "doi": "10.5072/zenodo.%s" % dep["id"],
+                "conceptrecid": dep["concept"],
+                "conceptdoi": "10.5072/zenodo.%s" % dep["concept"]}
+
+    def verify_record(self, recid, local_md5s):
+        return []
+
+
+def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
+    from lmfdb.zenodo import backup, state
+    db = scratch_db
+    fake = FakeZenodo()
+    monkeypatch.setattr(backup, "ZenodoClient", lambda *args, **kwds: fake)
+    monkeypatch.setattr(backup, "_current_major", lambda: 2)
+    monkeypatch.setattr(backup, "load_tables_yaml", lambda path=None: {
+        "zzz_a": {"backup": "yes"}, "zzz_b": {"backup": "yes"}})
+    state.ensure_tables(db)
+    state.insert_major(db, 2)
+    cfg = prod_config(tmp_path, enabled=True)
+    for t in ["zzz_a", "zzz_b"]:
+        make_dump(tmp_path / "push1", t)
+        make_dump(tmp_path / "push2", t, nrows=30)
+    plan = backup.backup_folder(db, tmp_path / "push1", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "2.1"
+    # both tables change; zzz_b needs more quota than its owner has
+    fake.blocked.add("zzz_b")
+    plan = backup.backup_folder(db, tmp_path / "push2", dry_run=False, live=True,
+                                config=cfg, description="More rows.", bump="minor")
+    assert plan["paused"] == ["zzz_b"] and plan["version"] is None
+    assert state.current_version_string(db) == "2.1-0"
+    with pytest.raises(RuntimeError):
+        backup.finalize(db, cfg=cfg, live=True)
+    # once the quota is raised, re-running completes the push as one version
+    fake.blocked.clear()
+    plan = backup.backup_folder(db, tmp_path / "push2", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["skip_unchanged"] == ["zzz_a"] and plan["version"] == "2.2"
+    tables = state.resolve_version(db, 2, 2)["tables"]
+    assert tables["zzz_a"]["version"] == tables["zzz_b"]["version"] == "1.1"
+    assert tables["zzz_b"]["notes"] == "More rows."
+    assert [r["seq"] for r in state.history(db) if r["kind"] == "data"] == [2, 1]

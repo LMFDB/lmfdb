@@ -25,7 +25,11 @@ Two tables are used:
   ``lmfdb_version`` the data version (e.g. ``2.3``) it was published in.
 
 All functions take the database object as first argument; nothing here opens
-connections of its own.
+connections of its own.  Passing ``Sandbox(db)`` instead points them at
+separate tables (``userdb.version_history_sandbox`` and
+``userdb.zenodo_backups_sandbox``), so that a rehearsal against
+sandbox.zenodo.org never shares record ids, drafts or version history with
+the production archive.
 """
 
 import json
@@ -59,6 +63,45 @@ def table_exists(db, name):
     return cur.fetchone()[0] is not None
 
 
+class Sandbox:
+    """
+    The database, with the state tables of a sandbox rehearsal in place of
+    the production ones.  Everything else is delegated to the wrapped object.
+    """
+    history_table = "userdb.version_history_sandbox"
+    backups_table = "userdb.zenodo_backups_sandbox"
+
+    def __init__(self, db):
+        self.wrapped = db
+
+    def __getattr__(self, name):
+        return getattr(self.wrapped, name)
+
+    def __getitem__(self, name):
+        return self.wrapped[name]
+
+
+def unwrap(db):
+    """The database object itself, without any ``Sandbox`` around it."""
+    return db.wrapped if isinstance(db, Sandbox) else db
+
+
+def _history_name(db):
+    return db.history_table if isinstance(db, Sandbox) else "version_history"
+
+
+def _backups_name(db):
+    return db.backups_table if isinstance(db, Sandbox) else "userdb.zenodo_backups"
+
+
+def _history(db):
+    return SQL(_history_name(db))
+
+
+def _backups(db):
+    return SQL(_backups_name(db))
+
+
 def ensure_tables(db, grant_select_to=("lmfdb",)):
     """
     Create the state tables if they do not exist.  Run once (per database) by
@@ -68,8 +111,9 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
     web frontend can render the /version page; grant failures (e.g. a missing
     role on a private installation) are ignored.
     """
+    history, backups = _history_name(db), _backups_name(db)
     db._execute(SQL("""
-        CREATE TABLE IF NOT EXISTS version_history (
+        CREATE TABLE IF NOT EXISTS {0} (
             id bigserial PRIMARY KEY,
             major smallint NOT NULL,
             kind text NOT NULL CHECK (kind IN ('major', 'data', 'code')),
@@ -79,23 +123,22 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
             git_hash text,
             tables jsonb,
             comment text
-        )"""))
-    db._execute(SQL(
-        "CREATE INDEX IF NOT EXISTS version_history_time ON version_history (time)"
-    ))
+        )""").format(SQL(history)))
+    base = history.split(".")[-1]
+    db._execute(SQL("CREATE INDEX IF NOT EXISTS {0} ON {1} (time)").format(
+        SQL(base + "_time"), SQL(history)))
     # rejects a second row for the same version if two writers race
     db._execute(SQL(
-        "CREATE UNIQUE INDEX IF NOT EXISTS version_history_seq "
-        "ON version_history (major, kind, seq)"
-    ))
+        "CREATE UNIQUE INDEX IF NOT EXISTS {0} ON {1} (major, kind, seq)"
+    ).format(SQL(base + "_seq"), SQL(history)))
     for role in grant_select_to:
         try:
-            db._execute(SQL("GRANT SELECT ON version_history TO {0}").format(
-                SQL(role)))
+            db._execute(SQL("GRANT SELECT ON {0} TO {1}").format(
+                SQL(history), SQL(role)))
         except Exception:
             pass
     db._execute(SQL("""
-        CREATE TABLE IF NOT EXISTS userdb.zenodo_backups (
+        CREATE TABLE IF NOT EXISTS {0} (
             id bigserial PRIMARY KEY,
             tablename text NOT NULL,
             owner text NOT NULL,
@@ -115,39 +158,59 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
             started timestamp without time zone,
             finished timestamp without time zone,
             error text
-        )"""))
-    db._execute(SQL(
-        "CREATE INDEX IF NOT EXISTS zenodo_backups_tablename "
-        "ON userdb.zenodo_backups (tablename, id)"
-    ))
+        )""").format(SQL(backups)))
+    db._execute(SQL("CREATE INDEX IF NOT EXISTS {0} ON {1} (tablename, id)").format(
+        SQL(backups.split(".")[-1] + "_tablename"), SQL(backups)))
 
 
 ######################################################################
 # version_history                                                    #
 ######################################################################
 
-def _insert_version_row(db, major, kind, seq, time=None, editor=None,
-                        git_hash=None, tables=None, comment=None):
+def version_row(major, kind, seq, time=None, editor=None, git_hash=None,
+                tables=None, comment=None):
+    """A version_history row as a dict (see ``insert_version_rows``)."""
+    return {"major": major, "kind": kind, "seq": seq, "time": time or utcnow(),
+            "editor": editor, "git_hash": git_hash, "tables": tables,
+            "comment": comment}
+
+
+def insert_version_rows(db, rows):
+    """Insert version_history rows in one statement, so all or none land."""
     db._execute(
-        SQL("INSERT INTO version_history "
+        SQL("INSERT INTO {0} "
             "(major, kind, seq, time, editor, git_hash, tables, comment) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s)"),
-        [major, kind, seq, time or utcnow(), editor, git_hash,
-         None if tables is None else json.dumps(tables), comment],
+            "VALUES ").format(_history(db))
+        + SQL(", ").join([SQL("(%s, %s, %s, %s, %s, %s, %s::jsonb, %s)")]
+                         * len(rows)),
+        [val for r in rows for val in
+         (r["major"], r["kind"], r["seq"], r["time"], r["editor"],
+          r["git_hash"], None if r["tables"] is None else json.dumps(r["tables"]),
+          r["comment"])],
     )
 
 
-def insert_major(db, major, git_hash=None, editor=None, comment=None, time=None):
+def _insert_version_row(db, major, kind, seq, **kwds):
+    insert_version_rows(db, [version_row(major, kind, seq, **kwds)])
+
+
+def major_rows(major, git_hash=None, editor=None, comment=None, time=None):
     """
-    Record a major version bump.  Also records a code row with seq 0 (the
-    frontend state at the moment of the bump), so that ``{major}.0-0`` is
-    resolvable.
+    The rows recording a major version bump: the bump itself and a code row
+    with seq 0 (the frontend at the moment of the bump), so that
+    ``{major}.0-0`` is resolvable.
     """
     time = time or utcnow()
-    _insert_version_row(db, major, "major", major, time=time, editor=editor,
-                        git_hash=git_hash, comment=comment)
-    _insert_version_row(db, major, "code", 0, time=time, editor=editor,
-                        git_hash=git_hash, comment="code counter reset")
+    return [version_row(major, "major", major, time=time, editor=editor,
+                        git_hash=git_hash, comment=comment),
+            version_row(major, "code", 0, time=time, editor=editor,
+                        git_hash=git_hash, comment="code counter reset")]
+
+
+def insert_major(db, major, git_hash=None, editor=None, comment=None, time=None):
+    """Record a major version bump (see ``major_rows``)."""
+    insert_version_rows(db, major_rows(major, git_hash=git_hash, editor=editor,
+                                       comment=comment, time=time))
 
 
 def insert_code(db, major, seq, git_hash, editor=None, comment=None, time=None):
@@ -172,7 +235,7 @@ _HISTORY_COLS = "id, major, kind, seq, time, editor, git_hash, tables, comment"
 
 
 def _history_rows(db, where=SQL(""), values=None, order="time, id", limit=None):
-    query = SQL("SELECT {0} FROM version_history").format(SQL(_HISTORY_COLS))
+    query = SQL("SELECT {0} FROM {1}").format(SQL(_HISTORY_COLS), _history(db))
     query += where
     query += SQL(" ORDER BY %s" % order)
     if limit is not None:
@@ -302,7 +365,7 @@ _BACKUP_COLS = ("id, tablename, owner, concept_recid, concept_doi, recid, doi, "
 
 
 def _backup_rows(db, where, values):
-    query = SQL("SELECT {0} FROM userdb.zenodo_backups").format(SQL(_BACKUP_COLS))
+    query = SQL("SELECT {0} FROM {1}").format(SQL(_BACKUP_COLS), _backups(db))
     query += where
     cur = db._execute(query, values)
     cols = [c.strip() for c in _BACKUP_COLS.split(",")]
@@ -318,10 +381,10 @@ def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
     increment (None for a first version) and ``notes`` the change description.
     """
     cur = db._execute(
-        SQL("INSERT INTO userdb.zenodo_backups "
+        SQL("INSERT INTO {0} "
             "(tablename, owner, version, bump, notes, status, source_md5s, "
             "started) VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s) "
-            "RETURNING id"),
+            "RETURNING id").format(_backups(db)),
         [tablename, owner, version, bump, notes, "pending",
          json.dumps(source_md5s), utcnow()],
     )
@@ -349,8 +412,8 @@ def update_attempt(db, attempt_id, **fields):
             values.append(val)
     values.append(attempt_id)
     db._execute(
-        SQL("UPDATE userdb.zenodo_backups SET " + ", ".join(sets)
-            + " WHERE id = %s"),
+        SQL("UPDATE {0} SET " + ", ".join(sets) + " WHERE id = %s").format(
+            _backups(db)),
         values,
     )
 

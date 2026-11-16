@@ -751,15 +751,14 @@ class LMFDBDatabase(PostgresDatabase):
         return backup_folder(self, data_folder, tables=tables,
                              dry_run=dry_run, live=live, **kwds)
 
-    def zenodo_backfill(self, tables=None, batch_gb=150, dry_run=True,
-                        live=False, **kwds):
+    def zenodo_backfill(self, tables=None, dry_run=True, live=False, **kwds):
         """
         Initial archiving of all eligible tables, dumped from this database
-        in batches; resumable.  See ``lmfdb.zenodo.backup.backfill``.
+        one at a time; resumable.  See ``lmfdb.zenodo.backup.backfill``.
         """
         from lmfdb.zenodo.backup import backfill
-        return backfill(self, tables=tables, batch_gb=batch_gb,
-                        dry_run=dry_run, live=live, **kwds)
+        return backfill(self, tables=tables, dry_run=dry_run, live=live,
+                        **kwds)
 
     def zenodo_status(self):
         """Summary of the archive and version state."""

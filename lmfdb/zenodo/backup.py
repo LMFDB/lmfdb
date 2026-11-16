@@ -94,6 +94,33 @@ def _owner_for(name, spec, cfg, prev):
     return cfg.default_owner
 
 
+def _state_db(db, cfg):
+    """
+    The database object to keep archive state in: ``db`` itself, or for a
+    sandbox configuration a ``state.Sandbox`` around it, whose state tables
+    are created (with an initial version) on first use.
+    """
+    if not cfg.sandbox or isinstance(db, state.Sandbox):
+        return db
+    sdb = state.Sandbox(db)
+    state.ensure_tables(sdb, grant_select_to=())
+    if state.latest_versions(sdb) is None:
+        state.insert_major(sdb, _current_major(), comment="sandbox rehearsal")
+    return sdb
+
+
+def _staging(cfg, staging_dir=None):
+    """The staging directory, kept apart for sandbox rehearsals."""
+    root = Path(staging_dir or cfg.staging_dir)
+    return root / "sandbox" if cfg.sandbox else root
+
+
+def _unfinished_tables(db):
+    """Tables (not the knowls/registry records) with an upload in progress."""
+    return sorted({r["tablename"] for r in state.unfinished(db)
+                   if r["tablename"] not in SPECIAL_RECORDS})
+
+
 ######################################################################
 # Uploading one packaged record                                      #
 ######################################################################
@@ -235,12 +262,13 @@ def _change_info(db, name, prev, description, bump, md5s=None):
             "bump": how, "notes": notes, "missing": missing}
 
 
-def require_change_info(db, tables, description, bump):
+def require_change_info(db, tables, description, bump, config=None):
     """
     Raise ValueError unless every eligible table among ``tables`` that
     already has a published record is given both a ``bump`` and a
     ``description``.  Used to fail fast before pushing tables to production.
     """
+    db = _state_db(db, config or ZenodoConfig())
     include = classify(tables, load_tables_yaml())[0]
     missing = {}
     for name in include:
@@ -285,8 +313,9 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
     - ``editor``, ``comment`` -- recorded in the version history (``comment``
       defaults to ``description`` when that is a string)
     - ``finalize_version`` -- allocate the next data version, refresh the
-      knowls and registry records and write ``version_history`` (set to False
-      for backfill batches; see ``backfill``)
+      knowls and registry records and write ``version_history``, once no
+      table upload is unfinished (set to False by ``backfill``, which
+      finalizes once at the end)
     - ``force`` -- upload even if the table matches its last published version
 
     When resuming an interrupted upload of the same content, ``description``
@@ -295,6 +324,7 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
     Returns a report dict.
     """
     cfg = config or ZenodoConfig()
+    db = _state_db(db, cfg)
     spec = load_tables_yaml()
     editor = editor or cfg.editor
     if comment is None and isinstance(description, str):
@@ -320,6 +350,7 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
         "review": review,
         "unlisted": unlisted,
         "published": {},
+        "paused": [],
     }
     for name in include:
         md5s = packaging.source_md5s(data_folder, name)
@@ -352,7 +383,7 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
             "Uploads are disabled (%s).  Set enabled = true in the [zenodo] "
             "section once the managing editors approve." % cfg.path)
 
-    staging = Path(staging_dir or cfg.staging_dir) / "records"
+    staging = _staging(cfg, staging_dir) / "records"
     for item in plan["upload"]:
         name = item["table"]
         if item["owner"] == "UNASSIGNED":
@@ -382,12 +413,23 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
                               sandbox=cfg.sandbox, live=live)
         row = _upload_record(db, client, cfg, attempt, name,
                              staging / name, manifest, deposit_md)
-        if row is not None:
+        if row is None:
+            plan["paused"].append(name)
+        else:
             plan["published"][name] = _tables_entry(row)
 
     if finalize_version:
-        plan["version"] = finalize(db, cfg=cfg, live=live, editor=editor,
-                                   comment=comment)
+        waiting = _unfinished_tables(db)
+        if waiting:
+            # The data version must map every pushed table to its new record,
+            # so it waits until the paused uploads are resumed and published.
+            plan["version"] = None
+            print("Not creating a data version yet: uploads unfinished for %s."
+                  "  Resolve them and re-run zenodo_backup on the same folder."
+                  % ", ".join(waiting))
+        else:
+            plan["version"] = finalize(db, cfg=cfg, live=live, editor=editor,
+                                       comment=comment)
     return plan
 
 
@@ -456,14 +498,25 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     data version to all newly published attempts, publish the registry
     record, and write ``version_history`` (mirroring to grace when
     configured).  Called automatically by ``backup_folder`` unless
-    ``finalize_version=False``; call directly after the last backfill batch.
+    ``finalize_version=False``.  Raises if any table upload is unfinished.
     """
     cfg = cfg or ZenodoConfig()
+    db = _state_db(db, cfg)
     editor = editor or cfg.editor
+    waiting = _unfinished_tables(db)
+    if waiting:
+        raise RuntimeError("uploads unfinished for %s; a data version can only "
+                           "be created once they are published"
+                           % ", ".join(waiting))
+    # attempts at the knowls/registry records left by an interrupted
+    # finalize; their open drafts are picked up again by new_version
+    for row in state.unfinished(db):
+        state.update_attempt(db, row["id"], status="failed",
+                             error="superseded by a later finalize")
     major = _current_major()
     seq = state.next_data_seq(db, major)
     version = format_version(major, seq)
-    staging = Path(cfg.staging_dir) / "records"
+    staging = _staging(cfg) / "records"
 
     # 1. Knowls record (refreshed on every data push, since knowls change
     # live); its record version gets a minor bump each time
@@ -474,7 +527,8 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     kbump = None if prev is None else "minor"
     kversion = next_record_version(prev and prev["version"], kbump)
     manifest = packaging.package_knowls(
-        db, staging, chunk_gb=cfg.chunk_gb, level=cfg.compression_level,
+        state.unwrap(db), staging, chunk_gb=cfg.chunk_gb,
+        level=cfg.compression_level,
         lmfdb_version=version, record_version=kversion,
         readme=metadata.knowls_readme(version))
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
@@ -538,9 +592,10 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
         batch[REGISTRY_NAME] = _tables_entry(row)
 
     # 4. Write the version history (prod, then grace for beta's benefit)
-    state.insert_data(db, major, seq, batch, editor=editor, comment=comment)
-    _mirror_to_grace(cfg, "data", major, seq, tables=batch, editor=editor,
-                     comment=comment)
+    row = state.version_row(major, "data", seq, editor=editor, tables=batch,
+                            comment=comment)
+    state.insert_version_rows(db, [row])
+    _mirror_to_grace(cfg, [row])
     print("Created LMFDB data version %s (%d records)" % (version, len(batch)))
     return version
 
@@ -562,13 +617,13 @@ def build_registry(db, version):
     }
 
 
-def _mirror_to_grace(cfg, kind, major, seq, tables=None, git_hash=None,
-                     editor=None, comment=None):
+def _mirror_to_grace(cfg, rows):
     """
-    Best-effort insertion of a version_history row on grace (whence it
-    mirrors to devmirror so that beta can display the version history).
+    Best-effort insertion of version_history rows (see
+    ``state.version_row``) on grace, whence they mirror to devmirror so that
+    beta can display the version history.  All rows land or none do.
     """
-    if not cfg.grace_dsn:
+    if not cfg.grace_dsn or getattr(cfg, "sandbox", False):
         return
     try:
         import json
@@ -580,42 +635,68 @@ def _mirror_to_grace(cfg, kind, major, seq, tables=None, git_hash=None,
         conn = driver.connect(cfg.grace_dsn)
         try:
             with conn.cursor() as cur:
-                cur.execute(
-                    "INSERT INTO version_history (major, kind, seq, time, "
-                    "editor, git_hash, tables, comment) VALUES "
-                    "(%s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
-                    [major, kind, seq, state.utcnow(), editor, git_hash,
-                     None if tables is None else json.dumps(tables), comment])
+                for r in rows:
+                    cur.execute(
+                        "INSERT INTO version_history (major, kind, seq, time, "
+                        "editor, git_hash, tables, comment) VALUES "
+                        "(%s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
+                        [r["major"], r["kind"], r["seq"], r["time"],
+                         r["editor"], r["git_hash"],
+                         None if r["tables"] is None else json.dumps(r["tables"]),
+                         r["comment"]])
             conn.commit()
         finally:
             conn.close()
     except Exception as err:
-        print("WARNING: could not mirror version row to grace: %s" % err)
+        print("WARNING: could not mirror version rows to grace: %s" % err)
 
 
 ######################################################################
 # Backfill, audit, status                                            #
 ######################################################################
 
-def backfill(db, tables=None, batch_gb=150, dry_run=True, live=False,
-             config=None, editor=None):
-    """
-    Initial population of the archive: dump eligible tables *from the
-    production database itself* in batches of at most ``batch_gb``
-    (uncompressed, estimated from table sizes), upload each batch, and
-    finally create a single data version covering everything.
+DUMP_COMPLETE = ".dump-complete"
 
-    Resumable: already-published tables are skipped, so re-running after an
-    interruption continues where it left off.  Run off-peak; dumping reads
-    from the live production database.
+
+def _dump_once(db, tablename, folder):
     """
+    Dump ``tablename`` into ``folder`` unless a completed dump is already
+    there; a folder without the completion marker (an interrupted dump) is
+    discarded and dumped again.
+    """
+    import shutil
+    folder = Path(folder)
+    if (folder / DUMP_COMPLETE).exists():
+        return
+    if folder.exists():
+        shutil.rmtree(folder)
+    db.copy_to([tablename], folder)
+    (folder / DUMP_COMPLETE).write_text(tablename + "\n")
+
+
+def backfill(db, tables=None, dry_run=True, live=False, config=None,
+             editor=None):
+    """
+    Initial population of the archive: dump each eligible table *from the
+    production database itself*, smallest first, upload it, and delete its
+    dump; once every table is published, create a single data version
+    covering them all.
+
+    Resumable: published tables are skipped, completed dumps are reused (an
+    interrupted dump is redone), and a table paused for a quota increase
+    keeps its dump so that re-running resumes its upload.  Peak disk use is
+    one table's dump plus its compressed copy (plus the dumps of paused
+    tables).  Run off-peak; dumping reads from the live production database.
+    """
+    import shutil
     cfg = config or ZenodoConfig()
+    sdb = _state_db(db, cfg)
     spec = load_tables_yaml()
     if tables is None:
         tables = [t for t in db.tablenames if t in spec
                   and spec[t]["backup"] == "yes"]
     include, excluded, review, unlisted = classify(tables, spec)
-    todo = [t for t in include if state.latest_published(db, t) is None]
+    todo = [t for t in include if state.latest_published(sdb, t) is None]
 
     sizes = db.table_sizes()
 
@@ -625,37 +706,36 @@ def backfill(db, tables=None, batch_gb=150, dry_run=True, live=False,
             + (s.get("extras_bytes", 0) or 0)
 
     todo.sort(key=est)
-    batches, current, cur_size = [], [], 0
-    for t in todo:
-        if current and cur_size + est(t) > batch_gb * 10**9:
-            batches.append(current)
-            current, cur_size = [], 0
-        current.append(t)
-        cur_size += est(t)
-    if current:
-        batches.append(current)
-
-    print("Backfill: %d tables in %d batches (<= %.0f GB each); "
-          "%d already archived"
-          % (len(todo), len(batches), float(batch_gb),
+    print("Backfill: %d tables, %.1f GB, smallest first; %d already archived"
+          % (len(todo), sum(est(t) for t in todo) / 1e9,
              len(include) - len(todo)))
-    for i, batch in enumerate(batches):
-        print("  batch %d: %.1f GB: %s"
-              % (i, sum(est(t) for t in batch) / 1e9, ", ".join(batch)))
+    for t in todo:
+        print("  %-35s %8.2f GB" % (t, est(t) / 1e9))
     if dry_run:
-        return batches
+        return todo
 
-    staging = Path(cfg.staging_dir)
-    for i, batch in enumerate(batches):
-        folder = staging / ("backfill-%02d" % i)
-        if not folder.exists():  # copy_to requires a fresh folder
-            db.copy_to(batch, folder)
-        backup_folder(db, folder, tables=batch, dry_run=False, live=live,
-                      config=cfg, editor=editor, finalize_version=False)
-        import shutil
-        shutil.rmtree(folder)
-    finalize(db, cfg=cfg, live=live, editor=editor,
-             comment="initial backfill")
+    root = _staging(cfg) / "backfill"
+    if root.exists():  # dumps of tables published since, e.g. before a crash
+        for folder in root.iterdir():
+            if folder.name not in todo:
+                shutil.rmtree(folder)
+    paused = []
+    for t in todo:
+        folder = root / t
+        _dump_once(db, t, folder)
+        plan = backup_folder(sdb, folder, tables=[t], dry_run=False, live=live,
+                             config=cfg, editor=editor, finalize_version=False)
+        if t in plan["paused"]:
+            paused.append(t)
+        else:
+            shutil.rmtree(folder)
+    if paused:
+        print("Not creating the data version yet: %s awaiting a quota "
+              "increase.  Raise it on the draft and re-run the backfill."
+              % ", ".join(paused))
+        return None
+    return finalize(sdb, cfg=cfg, live=live, editor=editor,
+                    comment="initial backfill")
 
 
 def audit(db, config=None):
@@ -669,6 +749,7 @@ def audit(db, config=None):
     - unfinished or failed upload attempts
     """
     from psycodict import SQL
+    db = _state_db(db, config or ZenodoConfig())
     spec = load_tables_yaml()
     include, excluded, review, unlisted_spec = classify(db.tablenames, spec)
     published = state.all_latest_published(db)
@@ -709,8 +790,11 @@ def audit(db, config=None):
     return report
 
 
-def status(db):
+def status(db, config=None):
     """Print a summary of the archive and version state."""
+    db = _state_db(db, config or ZenodoConfig())
+    if isinstance(db, state.Sandbox):
+        print("(sandbox state)")
     cur = state.latest_versions(db)
     if cur is None:
         print("Versioning not yet activated (version_history empty).")
