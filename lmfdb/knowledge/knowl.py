@@ -8,8 +8,6 @@ import subprocess
 import time
 import yaml
 import difflib
-from contextlib import contextmanager
-from contextvars import ContextVar
 from flask import has_request_context, request
 from flask_login import current_user
 from markupsafe import escape
@@ -125,8 +123,6 @@ def extract_typ(kid):
     return typ, url, name
 
 
-_public_knowls_only = ContextVar("public_knowls_only", default=False)
-
 # Sites that show AI-written knowls to everyone, not only to logged-in users
 ai_knowl_hosts = ["alpha.lmfdb.org"]
 
@@ -139,54 +135,19 @@ def ai_knowls_public():
     return has_request_context() and request.host in ai_knowl_hosts
 
 
-def public_view():
-    """
-    Whether what is being built is for everyone, rather than for the current
-    user: outside a request (such as at import time), or in a
-    ``public_knowls`` block.
-    """
-    return _public_knowls_only.get() or not has_request_context()
-
-
-def logged_in_view():
-    """
-    Whether what is being built is for a logged-in user (see ``public_view``).
-    """
-    return not public_view() and userdb.can_read_write_userdb() and current_user.is_authenticated
-
-
 def show_ai_knowls():
     """
-    Whether AI-written knowls are visible by default: only to a logged-in
-    user, or on a site in ``ai_knowl_hosts``, and never in what is built for
-    everyone (see ``public_view``).
+    Whether AI-written knowls are visible by default: only during a request
+    from a logged-in user, or to a site in ``ai_knowl_hosts``.
 
     Code run outside a request, such as module imports and scripts, does not
     see them unless it asks for them (``ai=True`` in the methods of ``knowldb``),
-    since what it builds may later be shown to anyone.
+    since what it builds may later be shown to anyone.  So does ``display_knowl``
+    by default, since its result is often kept.
     """
-    if public_view():
+    if not has_request_context():
         return False
-    return ai_knowls_public() or logged_in_view()
-
-
-@contextmanager
-def public_knowls():
-    """
-    Within this block, build things from knowls as for a visitor who is not
-    logged in: AI-written knowls are hidden, and missing knowls get no links
-    to the editor, both in ``display_knowl`` and in templates (whose user
-    data is that of an anonymous visitor).
-
-    Use this (as a context manager or a decorator) when building something
-    from knowls that is kept beyond the current request, such as the result
-    of a cached function, so that it is safe to show to anyone.
-    """
-    token = _public_knowls_only.set(True)
-    try:
-        yield
-    finally:
-        _public_knowls_only.reset(token)
+    return ai_knowls_public() or (userdb.can_read_write_userdb() and current_user.is_authenticated)
 
 
 def extract_links(content):

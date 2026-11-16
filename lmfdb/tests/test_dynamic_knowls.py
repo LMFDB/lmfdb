@@ -303,31 +303,20 @@ class AIWrittenKnowlTest(LmfdbTest):
             self._saved_type("columns.nf_fields.degree", True)
 
     def test_show_ai_knowls(self):
-        from lmfdb.knowledge.knowl import show_ai_knowls, public_knowls
+        from lmfdb.knowledge.knowl import show_ai_knowls
         # code run outside a request, such as module imports, does not see them by default
         assert not show_ai_knowls()
-
-        @public_knowls()
-        def decorated():
-            return show_ai_knowls()
-
         with self.app.test_request_context("/"):
             assert not show_ai_knowls()
             with patch("lmfdb.knowledge.knowl.userdb.can_read_write_userdb", return_value=True), \
                  patch("lmfdb.knowledge.knowl.current_user") as user:
                 user.is_authenticated = True
                 assert show_ai_knowls()
-                with public_knowls():
-                    assert not show_ai_knowls()
-                assert show_ai_knowls()
-                assert not decorated()
                 user.is_authenticated = False
                 assert not show_ai_knowls()
-        # alpha.lmfdb.org shows them to everyone, except in what is kept beyond the request
+        # alpha.lmfdb.org shows them to everyone
         with self.app.test_request_context("/", base_url="https://alpha.lmfdb.org"):
             assert show_ai_knowls()
-            with public_knowls():
-                assert not show_ai_knowls()
 
     def _logged_in(self):
         """
@@ -337,47 +326,31 @@ class AIWrittenKnowlTest(LmfdbTest):
         rw = patch("lmfdb.knowledge.knowl.userdb.can_read_write_userdb", return_value=True)
         return user, rw
 
-    def test_shared_objects_hide_ai(self):
-        # Objects kept for the life of the process are built from public knowls only
-        from lmfdb.knowledge.knowl import show_ai_knowls
-        from lmfdb.utils import StatsDisplay, SearchArray
-
-        class StatsProbe(StatsDisplay):
-            def __init__(self):
-                self.seen = show_ai_knowls()
-
-        class SearchProbe(SearchArray):
-            def __init__(self):
-                self.seen = show_ai_knowls()
-
-        user, rw = self._logged_in()
-        with self.app.test_request_context("/"), user as current_user, rw:
-            current_user.is_authenticated = True
-            assert show_ai_knowls()
-            assert not StatsProbe().seen
-            assert not SearchProbe().seen
-            with patch.object(StatsProbe, "_prep", lambda self, attr: show_ai_knowls()):
-                assert StatsProbe().prep({}) is False
-
-    def test_no_editor_links_in_public_view(self):
-        # A missing knowl (as an AI-only one looks) only gets links to the
-        # editor for a logged-in user, and not in what is built for everyone
-        from lmfdb.knowledge.knowl import public_knowls
+    def test_display_knowl_is_public_by_default(self):
+        # Its result is often kept and shown to everyone, so by default an
+        # AI-only knowl is displayed as missing, with no link to the editor,
+        # even for a logged-in user
         from lmfdb.utils import display_knowl
-        macro = "{% from 'knowl-defs.html' import KNOWL with context %}{{ KNOWL('test.no_such_knowl', 'Title') }}"
+
+        def knowl_title(kid, ai=None):
+            if kid == "test.ai_written" and not knowldb._hide_ai(ai):
+                return "AI-written title"
+
         user, rw = self._logged_in()
         with self.app.test_request_context("/"), user as current_user, rw, \
-             patch("lmfdb.users.main.current_user", current_user):
-            self.app.preprocess_request()
+             patch("flask_login.current_user", current_user), \
+             patch.object(knowldb, "knowl_title", side_effect=knowl_title):
             current_user.is_authenticated = True
+            assert display_knowl("test.ai_written", "Title") == "Title"
+            assert 'knowl="test.ai_written"' in display_knowl("test.ai_written", "Title", public=False)
+            # a knowl that does not exist at all gets a link to the editor, as before
             assert "/knowledge/edit/test.no_such_knowl" in display_knowl("test.no_such_knowl", "Title")
-            assert "/knowledge/edit/test.no_such_knowl" in render_template_string(macro)
-            with public_knowls():
-                assert display_knowl("test.no_such_knowl", "Title") == "Title"
-                assert "/knowledge/edit/" not in render_template_string(macro)
+        with self.app.test_request_context("/"), \
+             patch.object(knowldb, "knowl_title", side_effect=knowl_title):
+            assert display_knowl("test.ai_written", "Title", public=False) == "Title"
 
     def test_display_knowl_outside_request(self):
-        # At import time an AI-only knowl looks missing, and there is no current user
+        # At import time there is no current user
         from lmfdb.utils import display_knowl
         assert display_knowl("test.no_such_knowl", "Title") == "Title"
 

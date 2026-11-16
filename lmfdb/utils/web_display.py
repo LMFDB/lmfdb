@@ -61,20 +61,30 @@ def raw_typeset(raw, typeset='', extra='', compressed=False):
 </span>"""
     return out
 
-def display_knowl(kid, title=None, kwargs={}, strong=False):
+def display_knowl(kid, title=None, kwargs={}, strong=False, public=True):
     """
     Allows for the construction of knowls from python code
     (to be displayed using the ``safe`` flag in jinja);
     the only difference with the KNOWL macro is that
     there will be no edit link for authenticated users.
+
+    Its result is often kept and shown to everyone (in statistics and search
+    pages, for example), so by default it ignores AI-written knowls, which
+    only some users may see (see ``show_ai_knowls``): one with no
+    human-written version is displayed as missing, with no link to the editor.
+    Pass ``public=False`` to show them to the users who may see them, when the
+    result is only used for the current request.
     """
-    from lmfdb.knowledge.knowl import knowl_title, logged_in_view
-    ktitle = knowl_title(kid)
+    from flask import has_request_context
+    from flask_login import current_user
+    from lmfdb.knowledge.knowl import knowldb
+    from lmfdb.users.pwdmanager import userdb
+    ktitle = knowldb.knowl_title(kid, ai=False if public else None)
     if ktitle is None:
-        # Knowl not found (or AI-written, and so hidden).  Only a logged-in
-        # user gets links to the editor, and not in what is built for
-        # everyone (at import time, or in a public_knowls block)
-        if logged_in_view():
+        # Knowl not found.  An AI-written knowl with no human-written version
+        # gets no link to the editor here, since the result may be shown to anyone
+        ai_only = public and knowldb.knowl_title(kid, ai=True) is not None
+        if not ai_only and has_request_context() and current_user.is_authenticated and userdb.can_read_write_userdb():
             if title is None:
                 return f"""<span class="knowl knowl-error">'{kid}'<a href="{ url_for('knowledge.edit', ID=kid) }">Create it</a>. </span>"""
             else:
