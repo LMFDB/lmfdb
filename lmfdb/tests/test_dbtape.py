@@ -248,24 +248,52 @@ class DbTapeTest(unittest.TestCase):
         self.assertEqual(len(tapes), 12)
         dbtape.merge(self.path("merged.sqlite"), tapes)
 
+    def test_unfinished_runs_leave_no_tape(self):
+        outdir = self.path("out")
+        env = {k: v for k, v in os.environ.items() if not k.startswith("DBTAPE_") and k != "GITHUB_STEP_SUMMARY"}
+        env.update(DBTAPE_MODE="record", DBTAPE_OUT=outdir, DBTAPE_SEED="1",
+                   PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(dbtape.__file__), env.get("PYTHONPATH")])))
+        for name, body, finished in [("test_pass.py", "def test_x():\n    pass\n", True),
+                                     ("test_fail.py", "def test_x():\n    assert False\n", True),
+                                     ("test_broken.py", "raise RuntimeError('database unreachable')\n", False)]:
+            with open(self.path(name), "w") as F:
+                F.write(body)
+            subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "conftest", "-p", "no:cacheprovider", name],
+                           cwd=self.dir, env=env, capture_output=True)
+            made = [f for f in os.listdir(outdir) if f.startswith(name)]
+            self.assertEqual([f.endswith(".sqlite") for f in made], [finished], made)
+
     def test_merge(self):
-        tapes = []
-        for name, (complete, n, recorded) in [("a", (0, 5, "2026-01-02T00:00:00")),
-                                              ("b", (1, 3, "2026-01-01T00:00:00"))]:
-            tapes.append(self.path(name + ".sqlite"))
-            conn = sqlite3.connect(tapes[-1])
-            dbtape.create_tables(conn)
-            conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', '5')", (dbtape.FORMAT,))
-            conn.execute("INSERT INTO tape VALUES ('k', ?, ?, ?, 't', 'q', x'00')", (complete, n, recorded))
-            conn.commit()
-            conn.close()
-        merged = self.path("merged.sqlite")
-        dbtape.merge(merged, tapes)
-        # A complete result beats a longer partial one.
-        self.assertEqual(sqlite3.connect(merged).execute("SELECT c, n FROM tape").fetchone(), (1, 3))
-        conn = sqlite3.connect(tapes[1])
-        conn.execute("UPDATE meta SET v = '6' WHERE k = 'seed'")
-        conn.commit()
-        conn.close()
+        one, two = [("2.0.3.1",)], [("2.0.3.1",), ("2.0.4.1",)]
+        early, late = "2026-01-01T08:00:00", "2026-01-01T09:00:00"
+
+        def merged(*recordings, seeds=("5", "5")):
+            tapes = []
+            for i, (complete, rows, recorded) in enumerate(recordings):
+                tapes.append(self.path("in%s.sqlite" % i))
+                conn = sqlite3.connect(tapes[-1])
+                dbtape.create_tables(conn)
+                conn.execute("DELETE FROM meta")
+                conn.execute("DELETE FROM tape")
+                conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)", (dbtape.FORMAT, seeds[i]))
+                conn.execute("INSERT INTO tape VALUES ('k', ?, ?, ?, 't', 'q', ?)",
+                             (complete, len(rows), recorded, dbtape._pack(len(rows), rows)))
+                conn.commit()
+                conn.close()
+            out = self.path("merged.sqlite")
+            dbtape.merge(out, tapes)
+            complete, recorded, blob = sqlite3.connect(out).execute("SELECT c, r, v FROM tape").fetchone()
+            return complete, recorded, dbtape._unpack(blob)[1]
+
+        # Of two complete results the newer wins, in either order: a row may
+        # have been deleted in between.
+        self.assertEqual(merged((1, two, early), (1, one, late)), (1, late, one))
+        self.assertEqual(merged((1, one, late), (1, two, early)), (1, late, one))
+        # A newer partial result gives way to an older one that agrees with it
+        # and covers more,
+        self.assertEqual(merged((1, two, early), (0, one, late)), (1, early, two))
+        self.assertEqual(merged((0, one, late), (0, two, early)), (0, early, two))
+        # but not to one that contradicts it.
+        self.assertEqual(merged((1, [("2.0.7.1",)], early), (0, one, late)), (0, late, one))
         with self.assertRaises(ValueError):
-            dbtape.merge(merged, tapes)
+            merged((1, one, early), (1, one, late), seeds=("5", "6"))

@@ -243,14 +243,31 @@ def create_tables(conn):
                  "(k TEXT PRIMARY KEY, c INTEGER, n INTEGER, r TEXT, t TEXT, q TEXT, v BLOB)")
 
 
+def _stored_rows(blob):
+    # The rows as stored, which compare equal exactly when the results do.
+    return json.loads(zlib.decompress(blob))[1]
+
+
+def preferred(new, old):
+    """
+    Which of two recordings (tape rows) of one query to keep: the newer,
+    since the data may have changed in between, unless the older agrees with
+    it as far as it goes and covers more of the result.
+    """
+    if new[3] < old[3]:
+        new, old = old, new
+    _, new_complete, new_n, _, _, _, new_v = new
+    _, old_complete, old_n, _, _, _, old_v = old
+    if (not new_complete and (old_complete or old_n > new_n)
+            and _stored_rows(old_v)[:new_n] == _stored_rows(new_v)):
+        return old
+    return new
+
+
 def upsert(conn, row):
-    # Keep whichever recording of a query covers more of its result, then the newer.
-    conn.execute(
-        "INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(k) DO UPDATE "
-        "SET c = excluded.c, n = excluded.n, r = excluded.r, t = excluded.t, v = excluded.v "
-        "WHERE excluded.c > tape.c OR (excluded.c = tape.c AND (excluded.n > tape.n "
-        "OR (excluded.n = tape.n AND excluded.r >= tape.r)))",
-        row)
+    old = conn.execute("SELECT * FROM tape WHERE k = ?", (row[0],)).fetchone()
+    if old is None or preferred(tuple(row), old) is not old:
+        conn.execute("INSERT OR REPLACE INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)", row)
 
 
 class _Entry:
@@ -271,7 +288,9 @@ class _Entry:
 class Tape:
     """
     A tape being replayed (``src``, if it exists) and, in record mode, the
-    tape being written (``out``, a file only this process writes to).
+    tape being written (``out``, a file only this process writes to).  It is
+    written as ``out``.part and only renamed to ``out`` when closed as
+    complete, so a run that crashed or never got to its tests leaves no tape.
     """
 
     def __init__(self, mode, src=None, out=None, stale=(), max_age=datetime.timedelta(days=14),
@@ -290,6 +309,8 @@ class Tape:
         self.now = _utcnow()
         self.src = None
         self.out = None
+        self.out_file = out
+        self.finished = False
         meta = {}
         if src is not None and os.path.exists(src):
             self.src = sqlite3.connect("file:%s?mode=ro&immutable=1" % src, uri=True)
@@ -307,7 +328,7 @@ class Tape:
             if oldest is not None:
                 self.since = datetime.datetime.fromisoformat(oldest) - CLOCK_SKEW
         if mode == "record":
-            self.out = sqlite3.connect(out, isolation_level=None)
+            self.out = sqlite3.connect(out + ".part", isolation_level=None)
             self.out.execute("PRAGMA synchronous=OFF")
             create_tables(self.out)
             self.out.execute("INSERT OR IGNORE INTO meta VALUES ('format', ?), ('seed', ?)", (FORMAT, self.seed))
@@ -316,11 +337,13 @@ class Tape:
     def recording(self):
         return self.mode == "record" and self.out is not None
 
-    def close(self):
+    def close(self, complete=True):
         if self.recording:
             self.flush()
             self.out.close()
             self.out = None
+            if complete:
+                os.replace(self.out_file + ".part", self.out_file)
 
     def read_edit_log(self, conn):
         """
@@ -655,9 +678,16 @@ def pytest_terminal_summary(terminalreporter, config):
             F.write("- %s\n" % line)
 
 
+def pytest_sessionfinish(session, exitstatus):
+    if _tape is not None:
+        # Failing tests still leave a usable tape; errors in collection,
+        # interruptions and internal errors do not.
+        _tape.finished = int(exitstatus) in (0, 1)
+
+
 def pytest_unconfigure(config):
     if _tape is not None:
-        _tape.close()
+        _tape.close(complete=_tape.finished)
 
 
 def merge(out, inputs):

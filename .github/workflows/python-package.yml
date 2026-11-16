@@ -156,7 +156,9 @@ jobs:
 
     # The published tape keeps only results some shard used, so a shard missing
     # a test file's tape would drop that file's results.  Upload nothing then
-    # (nor after a timeout), and the publishing job keeps the old tape.
+    # (nor after a timeout), and the publishing job keeps the old tape.  A test
+    # file's tape only appears once its tests have run, whether or not they
+    # passed: collection errors, interruptions and crashes leave a .part file.
     - name: Check that every test file recorded a tape
       if: (success() || failure()) && env.DBTAPE_MODE == 'record'
       id: recorded
