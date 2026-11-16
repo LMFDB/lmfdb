@@ -4,6 +4,7 @@
 import datetime
 import decimal
 import hashlib
+import itertools
 import os
 import shutil
 import sqlite3
@@ -267,17 +268,24 @@ class DbTapeTest(unittest.TestCase):
         one, two = [("2.0.3.1",)], [("2.0.3.1",), ("2.0.4.1",)]
         early, late = "2026-01-01T08:00:00", "2026-01-01T09:00:00"
 
-        def merged(*recordings, seeds=("5", "5")):
+        def merged(*recordings, seeds=None, one_file=False):
+            """
+            Merge tapes holding ``recordings`` (complete, rows, recorded) of
+            one query: a tape each, or all on one process's tape.
+            """
+            groups = [recordings] if one_file else [[rec] for rec in recordings]
             tapes = []
-            for i, (complete, rows, recorded) in enumerate(recordings):
+            for i, group in enumerate(groups):
                 tapes.append(self.path("in%s.sqlite" % i))
+                if os.path.exists(tapes[-1]):
+                    os.remove(tapes[-1])
                 conn = sqlite3.connect(tapes[-1])
-                dbtape.create_tables(conn)
-                conn.execute("DELETE FROM meta")
-                conn.execute("DELETE FROM tape")
-                conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)", (dbtape.FORMAT, seeds[i]))
-                conn.execute("INSERT INTO tape VALUES ('k', ?, ?, ?, 't', 'q', ?)",
-                             (complete, len(rows), recorded, dbtape._pack(len(rows), rows)))
+                dbtape.create_tables(conn, recordings=True)
+                conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)",
+                             (dbtape.FORMAT, seeds[i] if seeds else "5"))
+                for complete, rows, recorded in group:
+                    conn.execute("INSERT INTO tape VALUES ('k', ?, ?, ?, 't', 'q', ?)",
+                                 (complete, len(rows), recorded, dbtape._pack(len(rows), rows)))
                 conn.commit()
                 conn.close()
             out = self.path("merged.sqlite")
@@ -293,7 +301,19 @@ class DbTapeTest(unittest.TestCase):
         # and covers more,
         self.assertEqual(merged((1, two, early), (0, one, late)), (1, early, two))
         self.assertEqual(merged((0, one, late), (0, two, early)), (0, early, two))
-        # but not to one that contradicts it.
+        # but not to one that contradicts it,
         self.assertEqual(merged((1, [("2.0.7.1",)], early), (0, one, late)), (0, late, one))
+        # nor to one that differs in type only (== would call these equal).
+        flags = [({"flag": True},), ({"flag": False},)]
+        for recs in [((1, flags, early), (0, [({"flag": 1},)], late)),
+                     ((0, [({"flag": 1},)], late), (1, flags, early))]:
+            self.assertEqual(merged(*recs)[:2], (0, late))
+        # Neither the order of the recordings nor how they are split between
+        # tapes changes the outcome; an intermediate recording that
+        # contradicts the newest cannot win.
+        a, b, c = (1, [("a",), ("b",)], "08:00"), (1, [("c",), ("d",)], "09:00"), (0, [("a",)], "10:00")
+        for order in itertools.permutations([a, b, c]):
+            self.assertEqual(merged(*order), (1, "08:00", a[1]), order)
+            self.assertEqual(merged(*order, one_file=True), (1, "08:00", a[1]), order)
         with self.assertRaises(ValueError):
             merged((1, one, early), (1, one, late), seeds=("5", "6"))

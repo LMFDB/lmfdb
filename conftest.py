@@ -30,6 +30,7 @@ import base64
 import datetime
 import decimal
 import hashlib
+import itertools
 import json
 import math
 import os
@@ -235,39 +236,37 @@ def _family(table):
     return table
 
 
-def create_tables(conn):
+def create_tables(conn, recordings=False):
+    """
+    The tables of a tape: one result per query, or with ``recordings`` (a
+    process's own tape) every recording made, for merge() to choose from.
+    """
     conn.execute("CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)")
     # k: hash of the SQL q; c: whether all n rows of the result are stored;
     # r: when it was recorded (UTC); t: the tables q reads; v: the result
-    conn.execute("CREATE TABLE IF NOT EXISTS tape "
-                 "(k TEXT PRIMARY KEY, c INTEGER, n INTEGER, r TEXT, t TEXT, q TEXT, v BLOB)")
+    conn.execute("CREATE TABLE IF NOT EXISTS tape (k TEXT%s, c INTEGER, n INTEGER, r TEXT, t TEXT, q TEXT, v BLOB)"
+                 % ("" if recordings else " PRIMARY KEY"))
 
 
 def _stored_rows(blob):
-    # The rows as stored, which compare equal exactly when the results do.
     return json.loads(zlib.decompress(blob))[1]
 
 
-def preferred(new, old):
+def choose(recordings):
     """
-    Which of two recordings (tape rows) of one query to keep: the newer,
-    since the data may have changed in between, unless the older agrees with
-    it as far as it goes and covers more of the result.
+    Which of all the recordings (tape rows) of one query to keep: the newest,
+    since the data may have changed in between, unless it is partial and an
+    older one agrees with it as far as it goes and covers more.  That one
+    keeps its own recording time, so it goes stale no later than it should.
     """
-    if new[3] < old[3]:
-        new, old = old, new
-    _, new_complete, new_n, _, _, _, new_v = new
-    _, old_complete, old_n, _, _, _, old_v = old
-    if (not new_complete and (old_complete or old_n > new_n)
-            and _stored_rows(old_v)[:new_n] == _stored_rows(new_v)):
-        return old
-    return new
-
-
-def upsert(conn, row):
-    old = conn.execute("SELECT * FROM tape WHERE k = ?", (row[0],)).fetchone()
-    if old is None or preferred(tuple(row), old) is not old:
-        conn.execute("INSERT OR REPLACE INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)", row)
+    newest = max(recordings, key=lambda rec: (rec[3], rec[1], rec[2], rec[6]))
+    if newest[1]:
+        return newest
+    rows = _stored_rows(newest[6])
+    # _same, unlike ==, tells true, 1 and 1.0 apart.
+    covering = [rec for rec in recordings
+                if (rec[1] or rec[2] > newest[2]) and _same(_stored_rows(rec[6])[:newest[2]], rows)]
+    return max(covering, key=lambda rec: (rec[1], rec[2], rec[3], rec[6]), default=newest)
 
 
 class _Entry:
@@ -330,7 +329,7 @@ class Tape:
         if mode == "record":
             self.out = sqlite3.connect(out + ".part", isolation_level=None)
             self.out.execute("PRAGMA synchronous=OFF")
-            create_tables(self.out)
+            create_tables(self.out, recordings=True)
             self.out.execute("INSERT OR IGNORE INTO meta VALUES ('format', ?), ('seed', ?)", (FORMAT, self.seed))
 
     @property
@@ -415,7 +414,8 @@ class Tape:
             return "stale"
         if self.recording and key not in self.copied:
             self.copied.add(key)
-            upsert(self.out, self.src.execute("SELECT * FROM tape WHERE k = ?", (key,)).fetchone())
+            self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)",
+                             self.src.execute("SELECT * FROM tape WHERE k = ?", (key,)).fetchone())
         rowcount, rows = _unpack(blob)
         return rowcount, rows, bool(complete)
 
@@ -432,7 +432,8 @@ class Tape:
             self.stats["unrecordable"] += 1
             self.log("unrecordable (%s)" % err, entry.sql)
             return
-        upsert(self.out, (entry.key, int(entry.complete), len(entry.rows), entry.recorded,
+        self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)",
+                         (entry.key, int(entry.complete), len(entry.rows), entry.recorded,
                           " ".join(tables_read(entry.sql)), entry.sql, blob))
         self.stats["recorded"] += 1
 
@@ -692,12 +693,15 @@ def pytest_unconfigure(config):
 
 def merge(out, inputs):
     """
-    Combine the tapes written by several test processes into one.
+    Combine the tapes written by several test processes into one, choosing
+    among all the recordings of each query at once, so that the order of
+    ``inputs`` does not matter.
     """
     if os.path.exists(out):
         os.remove(out)
     conn = sqlite3.connect(out, isolation_level=None)
     create_tables(conn)
+    conn.execute("CREATE TEMP TABLE seen AS SELECT * FROM tape WHERE 0")
     seeds = set()
     for path in inputs:
         src = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
@@ -706,12 +710,17 @@ def merge(out, inputs):
             raise ValueError("%s has tape format %s, not %s" % (path, meta.get("format"), FORMAT))
         seeds.add(meta["seed"])
         conn.execute("BEGIN")
-        for row in src.execute("SELECT * FROM tape"):
-            upsert(conn, row)
+        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?, ?, ?)", src.execute("SELECT * FROM tape"))
         conn.execute("COMMIT")
         src.close()
     if len(seeds) != 1:
         raise ValueError("tapes recorded with different seeds: %s" % sorted(seeds))
+    conn.execute("BEGIN")
+    seen = conn.cursor().execute("SELECT * FROM seen ORDER BY k")
+    for _, recordings in itertools.groupby(seen, key=lambda rec: rec[0]):
+        conn.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)", choose(list(recordings)))
+    conn.execute("COMMIT")
+    conn.execute("DROP TABLE seen")
     conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?), ('created', ?)",
                  (FORMAT, seeds.pop(), datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")))
     conn.execute("VACUUM")
