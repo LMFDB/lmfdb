@@ -9,8 +9,9 @@ so that test runs can be served from the tape instead.
   lacks, and queries reading a table edited since they were recorded, go to
   the database in config.ini as usual.
 - DBTAPE_MODE=record: the same, except the results fetched from the database
-  are recorded, and every entry used is written to the tape DBTAPE_OUT.
-  Without DBTAPE_FILE this records the whole run.
+  are recorded, and every entry used is written to a new tape in the
+  directory DBTAPE_OUT, one per pytest process; `python3 conftest.py merge`
+  combines them.  Without DBTAPE_FILE this records the whole run.
 - Without DBTAPE_MODE this file does nothing.
 
 A table counts as edited when userdb.dbrecord, where LMFDB's _log_db_change
@@ -40,21 +41,16 @@ import time
 import zlib
 
 MODE = os.environ.get("DBTAPE_MODE", "")
-TAPE_FILE = os.environ.get("DBTAPE_FILE", "dbtape.sqlite")
-OUT_FILE = os.environ.get("DBTAPE_OUT", "dbtape-out.sqlite")
-MISSLOG = os.environ.get("DBTAPE_MISSLOG")
-FORCED_STALE = set(os.environ.get("DBTAPE_STALE", "").split())
-MAX_AGE = datetime.timedelta(days=float(os.environ.get("DBTAPE_MAX_AGE_DAYS", "14")))
 # Edit-log times come from the editors' clocks.
 CLOCK_SKEW = datetime.timedelta(hours=1)
 # Bump when the encoding changes; a tape of another format is ignored.
 FORMAT = "1"
 
+_tape = None
+
 
 def _utcnow():
     return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
-
-_tape = None
 
 
 class Unrecordable(Exception):
@@ -213,8 +209,6 @@ def _unpack(blob):
 
 
 _TABLE_RE = re.compile(r'\b(?:FROM|JOIN)\s+((?:"[^"]+"|\w+)(?:\.(?:"[^"]+"|\w+))?)', re.IGNORECASE)
-# Every query reading these depends on the shape of all the other tables.
-_CATALOGS = {"meta_tables", "information_schema.columns", "information_schema.tables", "pg_catalog.pg_class"}
 
 
 def tables_read(sql):
@@ -223,6 +217,14 @@ def tables_read(sql):
     EXTRACT(... FROM col), say) only make an entry go stale more often.
     """
     return sorted({m.replace('"', "") for m in _TABLE_RE.findall(sql)})
+
+
+def is_catalog(table):
+    """
+    Whether ``table`` is one psycodict reads its registry of tables and
+    columns from, which any edit can change.
+    """
+    return table.startswith(("pg_", "information_schema.", "meta_"))
 
 
 def _family(table):
@@ -251,14 +253,6 @@ def upsert(conn, row):
         row)
 
 
-def _open_for_writing(path):
-    conn = sqlite3.connect(path, timeout=600, isolation_level=None)
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA synchronous=OFF")
-    create_tables(conn)
-    return conn
-
-
 class _Entry:
     """
     A result being recorded.  Rows from a server-side cursor are recorded as
@@ -275,8 +269,17 @@ class _Entry:
 
 
 class Tape:
-    def __init__(self, mode):
+    """
+    A tape being replayed (``src``, if it exists) and, in record mode, the
+    tape being written (``out``, a file only this process writes to).
+    """
+
+    def __init__(self, mode, src=None, out=None, stale=(), max_age=datetime.timedelta(days=14),
+                 misslog=None, seed=None):
         self.mode = mode
+        self.forced = set(stale)
+        self.max_age = max_age
+        self.misslog = misslog
         self.where = "collection"
         self.stats = dict.fromkeys(["hit", "miss", "stale", "partial", "recorded", "unrecordable"], 0)
         self.pending = set()
@@ -288,23 +291,25 @@ class Tape:
         self.src = None
         self.out = None
         meta = {}
-        if os.path.exists(TAPE_FILE):
-            self.src = sqlite3.connect("file:%s?mode=ro&immutable=1" % TAPE_FILE, uri=True)
+        if src is not None and os.path.exists(src):
+            self.src = sqlite3.connect("file:%s?mode=ro&immutable=1" % src, uri=True)
             meta = dict(self.src.execute("SELECT k, v FROM meta"))
             if meta.get("format") != FORMAT:
                 sys.stderr.write("dbtape: ignoring %s, which has format %s rather than %s\n"
-                                 % (TAPE_FILE, meta.get("format"), FORMAT))
+                                 % (src, meta.get("format"), FORMAT))
                 self.src, meta = None, {}
         self.seed = meta.get("seed")
-        if self.seed is None or (mode == "record" and "all" in FORCED_STALE):
+        if self.seed is None or (mode == "record" and "all" in self.forced):
             # A full recording is free to pick new random objects.
-            self.seed = os.environ.get("DBTAPE_SEED") or str(int(time.time()))
+            self.seed = seed or str(int(time.time()))
         if self.src is not None:
             oldest = self.src.execute("SELECT min(r) FROM tape").fetchone()[0]
             if oldest is not None:
                 self.since = datetime.datetime.fromisoformat(oldest) - CLOCK_SKEW
         if mode == "record":
-            self.out = _open_for_writing(OUT_FILE)
+            self.out = sqlite3.connect(out, isolation_level=None)
+            self.out.execute("PRAGMA synchronous=OFF")
+            create_tables(self.out)
             self.out.execute("INSERT OR IGNORE INTO meta VALUES ('format', ?), ('seed', ?)", (FORMAT, self.seed))
 
     @property
@@ -312,10 +317,10 @@ class Tape:
         return self.mode == "record" and self.out is not None
 
     def close(self):
-        self.flush()
-        # Closing folds the write-ahead log into the file, which is what gets uploaded.
-        self.out.close()
-        self.out = None
+        if self.recording:
+            self.flush()
+            self.out.close()
+            self.out = None
 
     def read_edit_log(self, conn):
         """
@@ -352,22 +357,23 @@ class Tape:
                 self.changes[family] = max(self.changes.get(family, when), when)
 
     def is_stale(self, key, tables, recorded):
-        if "all" in FORCED_STALE:
+        if "all" in self.forced:
             return True
         families = {_family(t) for t in tables}
-        if families & FORCED_STALE:
+        catalog = any(is_catalog(t) for t in tables)
+        if families & self.forced or (catalog and self.forced):
             return True
         recorded = datetime.datetime.fromisoformat(recorded)
         if self.recording:
-            # Spread expiry over 0.5 to 1.5 times MAX_AGE so a tape recorded
+            # Spread expiry over 0.5 to 1.5 times max_age so a tape recorded
             # all at once is refreshed a little at a time.
             spread = 0.5 + int(key[:8], 16) / 2**32
-            if self.now - recorded > MAX_AGE * spread:
+            if self.now - recorded > self.max_age * spread:
                 return True
         if not self.changes:
             return False
         cutoff = recorded - CLOCK_SKEW
-        if families & _CATALOGS:
+        if catalog:
             return max(self.changes.values()) > cutoff
         return any(f in self.changes and self.changes[f] > cutoff for f in families)
 
@@ -412,8 +418,8 @@ class Tape:
             self.write(entry)
 
     def log(self, kind, sql):
-        if MISSLOG:
-            with open(MISSLOG, "a") as F:
+        if self.misslog:
+            with open(self.misslog, "a") as F:
                 F.write("%s\t%s\t%s\n" % (kind, self.where, " ".join(sql.split())[:1000]))
 
 
@@ -423,10 +429,14 @@ class TapeCursor:
     only opened when the database is actually needed.
     """
 
-    def __init__(self, db, make_real):
+    def __init__(self, tape, db, buffered, make_real):
+        self._tape = tape
         self._db = db
         self._make_real = make_real
         self._real = None
+        # psycodict's server-side cursors are the buffered ones, made WITH HOLD.
+        self.withhold = buffered
+        self.closed = False
         self.rowcount = -1
         self._rows = None
         self._pos = 0
@@ -434,6 +444,17 @@ class TapeCursor:
         self._live = None
         self._replayed = None
         self._entry = None
+
+    @property
+    def __class__(self):
+        # psycodict closes a search's cursor, and commits after a server-side
+        # one, only for instances of psycopg's cursor classes.
+        from psycopg import Cursor, ServerCursor
+        return ServerCursor if self.withhold else Cursor
+
+    @property
+    def connection(self):
+        return self._db.conn if self._real is None else self._real.connection
 
     def _get_real(self):
         if self._real is None:
@@ -450,18 +471,19 @@ class TapeCursor:
         self.close()
 
     def execute(self, query, params=None, **kwargs):
-        from psycopg import ClientCursor, ServerCursor
-        if _tape.edit_log == "not read":
-            _tape.read_edit_log(self._db.conn)
+        from psycopg import ClientCursor
+        tape = self._tape
+        if tape.edit_log == "not read":
+            tape.read_edit_log(self._db.conn)
         sql = ClientCursor(self._db.conn).mogrify(query, params)
         key = hashlib.sha256(sql.encode()).hexdigest()
         self._finish_entry()
         self._pos = 0
         self._live = None
         self._replayed = None
-        found = _tape.lookup(key)
+        found = tape.lookup(key)
         if type(found) is tuple:
-            _tape.stats["hit"] += 1
+            tape.stats["hit"] += 1
             self.rowcount, self._rows, self._complete = found
             self._replayed = (query, params, kwargs, key, sql)
             return self
@@ -472,9 +494,9 @@ class TapeCursor:
             # SET, BEGIN and the like: always run, never recorded
             self._rows, self._complete = None, True
             return self
-        _tape.stats[found] += 1
-        _tape.log(found, sql)
-        if isinstance(real, ServerCursor):
+        tape.stats[found] += 1
+        tape.log(found, sql)
+        if self.withhold:
             self._rows, self._complete, self._live = [], False, iter(real)
         else:
             self._rows, self._complete = real.fetchall(), True
@@ -482,13 +504,13 @@ class TapeCursor:
         return self
 
     def _record(self, key, sql):
-        if _tape.recording:
+        if self._tape.recording:
             self._entry = _Entry(key, sql, self.rowcount, self._rows, self._complete)
-            _tape.track(self._entry)
+            self._tape.track(self._entry)
 
     def _finish_entry(self):
-        if self._entry is not None and self._entry in _tape.pending:
-            _tape.write(self._entry)
+        if self._entry is not None and self._entry in self._tape.pending:
+            self._tape.write(self._entry)
         self._entry = None
 
     def _next(self):
@@ -503,9 +525,9 @@ class TapeCursor:
         if self._live is None:
             # Read past the stored part of a result: rerun it live and skip
             # the rows already served.
-            _tape.stats["partial"] += 1
+            self._tape.stats["partial"] += 1
             query, params, kwargs, key, sql = self._replayed
-            _tape.log("partial", sql)
+            self._tape.log("partial", sql)
             real = self._get_real()
             real.execute(query, params, **kwargs)
             self._live = iter(real)
@@ -546,14 +568,24 @@ class TapeCursor:
         self._finish_entry()
         if self._real is not None:
             self._real.close()
+        self.closed = True
 
 
-def _install():
+def install():
+    """
+    Route psycodict's cursors through the active tape, if any.  Safe to call
+    more than once.
+    """
     from psycodict.database import PostgresDatabase
+    if getattr(PostgresDatabase._cursor, "dbtape", False):
+        return
     original = PostgresDatabase._cursor
 
     def _cursor(self, buffered=False):
-        return TapeCursor(self, lambda: original(self, buffered=buffered))
+        if _tape is None:
+            return original(self, buffered=buffered)
+        return TapeCursor(_tape, self, buffered, lambda: original(self, buffered=buffered))
+    _cursor.dbtape = True
     PostgresDatabase._cursor = _cursor
 
 
@@ -569,18 +601,34 @@ def _seed(label):
         set_random_seed(n)
 
 
+def out_path(outdir, args):
+    """
+    The tape this process records to: one per process, merged afterwards, so
+    that processes starting together never contend for a SQLite file.
+    """
+    os.makedirs(outdir, exist_ok=True)
+    name = re.sub(r"[^\w.-]+", "_", " ".join(args))[-100:]
+    return os.path.join(outdir, "%s-%s.sqlite" % (name, os.getpid()))
+
+
 def pytest_configure(config):
     global _tape
     if not MODE:
         return
     if MODE not in ("record", "replay"):
         raise ValueError("DBTAPE_MODE must be record or replay, not %r" % MODE)
-    _tape = Tape(MODE)
-    if _tape.src is None and not _tape.recording:
-        sys.stderr.write("dbtape: no usable tape at %s, so every query goes to the database\n" % TAPE_FILE)
-        _tape = None
+    out = None
+    if MODE == "record":
+        out = out_path(os.environ.get("DBTAPE_OUT", "dbtape-out"), config.args)
+    tape = Tape(MODE, src=os.environ.get("DBTAPE_FILE", "dbtape.sqlite"), out=out,
+                stale=os.environ.get("DBTAPE_STALE", "").split(),
+                max_age=datetime.timedelta(days=float(os.environ.get("DBTAPE_MAX_AGE_DAYS", "14"))),
+                misslog=os.environ.get("DBTAPE_MISSLOG"), seed=os.environ.get("DBTAPE_SEED"))
+    if tape.src is None and not tape.recording:
+        sys.stderr.write("dbtape: no usable tape, so every query goes to the database\n")
         return
-    _install()
+    _tape = tape
+    install()
     _seed("collection")
 
 
@@ -608,13 +656,13 @@ def pytest_terminal_summary(terminalreporter, config):
 
 
 def pytest_unconfigure(config):
-    if _tape is not None and _tape.recording:
+    if _tape is not None:
         _tape.close()
 
 
 def merge(out, inputs):
     """
-    Combine the tapes written by several test runs into one, ready to publish.
+    Combine the tapes written by several test processes into one.
     """
     if os.path.exists(out):
         os.remove(out)
