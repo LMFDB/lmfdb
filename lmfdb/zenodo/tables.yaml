@@ -1,17 +1,20 @@
 # Which production tables are archived on Zenodo, and by whom.
 #
-# STATUS: TENTATIVE -- generated 2026-07-18 from the production table list;
-# the include/exclude decisions below must be finalized by the managing
-# editors before any uploads happen.  In particular the `review` entries
-# (suspected alpha-serving, legacy, or regenerable tables) are treated the
-# same as `no` until they are resolved to yes/no.
+# STATUS: owners and inclusion from the managing editors' owner list of
+# 2026-11-16.  `review` entries are treated as `no` until resolved; they are
+# the tables missing from that list and gps_small (no host).
 #
 # Semantics per entry:
-#   backup: yes | no | review    (review == not backed up, but reported)
-#   owner:  Zenodo account that owns the table's record (sticky once the
-#           first version is published; assigned from [zenodo] default_owner
-#           in the local config when absent here)
-#   note:   free text
+#   backup:  yes | no | review    (review == not backed up, but reported)
+#   owner:   Zenodo account that owns the table's record: a key of the
+#            [tokens] section of ~/.lmfdb_zenodo.ini (sticky once the first
+#            version is published; [zenodo] default_owner when absent here)
+#   overage: from the owner list, the size above Zenodo's free 50 GB per
+#            record, which the owner covers from their account's 150 GB
+#   note:    free text
+#
+# Owner keys: costa = Edgar Costa, cremona = John Cremona, jones = John
+# Jones, paulhus = Jen Paulhus, roe = David Roe, sutherland = Drew Sutherland.
 #
 # Tables that appear in a dump folder (or in db.tablenames) but not here are
 # reported by dry runs and by zenodo_audit as needing classification.
@@ -20,131 +23,133 @@
 # not search tables and are not listed here).
 
 tables:
-  artin_field_data: {backup: yes}
-  artin_old2new_labels: {backup: review, note: "label conversion helper; archive?"}
-  artin_reps: {backup: yes}
-  av_fq_endalg_data: {backup: yes}
-  av_fq_endalg_factors: {backup: yes}
-  av_fq_isog: {backup: yes}
-  belyi_galmap_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  belyi_galmaps: {backup: yes}
+  artin_field_data: {backup: yes, owner: jones}
+  artin_old2new_labels: {backup: yes, owner: jones}
+  artin_reps: {backup: yes, owner: jones}
+  av_fq_endalg_data: {backup: yes, owner: roe}
+  av_fq_endalg_factors: {backup: yes, owner: roe}
+  av_fq_isog: {backup: yes, owner: roe}
+  belyi_galmap_portraits: {backup: yes, owner: roe}
+  belyi_galmaps: {backup: yes, owner: roe}
   belyi_galmaps_fixed: {backup: review, note: "migration artifact?"}
-  belyi_galmaps_prim: {backup: yes}
-  belyi_passports: {backup: yes}
+  belyi_galmaps_prim: {backup: review, note: "not in the owner list of 2026-11-16"}
+  belyi_passports: {backup: yes, owner: roe}
   belyi_passports_fixed: {backup: review, note: "migration artifact?"}
   belyi_specializations: {backup: review, note: "confirm production status"}
-  bmf_dims: {backup: yes}
-  bmf_forms: {backup: yes}
-  char_dirichlet: {backup: yes}
-  cluster_pictures: {backup: yes}
-  ec_classdata: {backup: yes}
-  ec_curvedata: {backup: yes}
-  ec_galrep: {backup: yes}
+  bmf_dims: {backup: yes, owner: cremona}
+  bmf_forms: {backup: yes, owner: cremona}
+  char_dirichlet: {backup: yes, owner: sutherland}
+  cluster_pictures: {backup: yes, owner: roe}
+  data_uploads: {backup: yes, owner: roe}
+  ec_classdata: {backup: yes, owner: cremona}
+  ec_curvedata: {backup: yes, owner: cremona}
+  ec_galrep: {backup: yes, owner: cremona}
   ec_iqf_labels: {backup: review, note: "label conversion helper; archive?"}
-  ec_iwasawa: {backup: yes}
-  ec_localdata: {backup: yes}
-  ec_mwbsd: {backup: yes}
-  ec_nfcurves: {backup: yes}
-  ec_nfportraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  ec_padic: {backup: yes}
-  ec_torsion_growth: {backup: yes}
+  ec_iwasawa: {backup: yes, owner: cremona}
+  ec_localdata: {backup: yes, owner: cremona}
+  ec_mwbsd: {backup: yes, owner: cremona}
+  ec_nfcurves: {backup: yes, owner: cremona}
+  ec_nfportraits: {backup: yes, owner: cremona}
+  ec_padic: {backup: yes, owner: cremona}
+  ec_torsion_growth: {backup: yes, owner: cremona}
   fq_fields: {backup: review, note: "confirm which section this serves"}
-  g2c_curves: {backup: yes}
-  g2c_endomorphisms: {backup: yes}
-  g2c_galrep: {backup: yes}
-  g2c_plots: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  g2c_ratpts: {backup: yes}
-  g2c_tamagawa: {backup: yes}
-  gps_char: {backup: yes}
+  g2c_curves: {backup: yes, owner: sutherland}
+  g2c_endomorphisms: {backup: yes, owner: sutherland}
+  g2c_galrep: {backup: yes, owner: sutherland}
+  g2c_plots: {backup: yes, owner: sutherland}
+  g2c_ratpts: {backup: yes, owner: sutherland}
+  g2c_tamagawa: {backup: yes, owner: sutherland}
+  gps_char: {backup: yes, owner: paulhus, overage: 99G}
   gps_char_test: {backup: no, note: "test table"}
-  gps_conj_classes: {backup: yes}
-  gps_crep: {backup: yes}
-  gps_families: {backup: yes}
+  gps_conj_classes: {backup: yes, owner: roe}
+  gps_crep: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_families: {backup: yes, owner: roe}
   gps_gl2zhat: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
   gps_gl2zhat_coarse: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
-  gps_gl2zhat_fine: {backup: yes}
-  gps_gl2zhat_nonsurjdet: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
-  gps_gmodules: {backup: yes}
-  gps_groups: {backup: yes}
-  gps_groups_cc: {backup: yes}
+  gps_gl2zhat_fine: {backup: yes, owner: sutherland}
+  gps_gl2zhat_nonsurjdet: {backup: yes, owner: sutherland}
+  gps_gmodules: {backup: yes, owner: roe}
+  gps_groups: {backup: yes, owner: roe}
+  gps_groups_cc: {backup: review, note: "not in the owner list of 2026-11-16"}
   gps_groups_cc_test: {backup: no, note: "test table"}
   gps_groups_test: {backup: no, note: "test table"}
-  gps_gsp4zhat: {backup: review, note: "Siegel modular curves; alpha?"}
-  gps_images: {backup: yes}
-  gps_qchar: {backup: yes}
+  gps_gsp4zhat: {backup: yes, owner: sutherland}
+  gps_images: {backup: yes, owner: roe}
+  gps_qchar: {backup: yes, owner: roe}
   gps_qchar_test: {backup: no, note: "test table"}
-  gps_qrep: {backup: yes}
-  gps_regular_polynomials: {backup: review, note: "confirm production status"}
-  gps_small: {backup: yes}
-  gps_smallhash: {backup: yes}
-  gps_special_names: {backup: yes}
-  gps_st: {backup: yes}
-  gps_st0: {backup: yes}
-  gps_subgroup_data: {backup: yes}
-  gps_subgroup_search: {backup: yes}
+  gps_qrep: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_regular_polynomials: {backup: yes, owner: jones}
+  gps_small: {backup: review, note: "no host in the owner list; being phased out"}
+  gps_smallhash: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_special_names: {backup: yes, owner: roe}
+  gps_st: {backup: yes, owner: sutherland}
+  gps_st0: {backup: yes, owner: sutherland}
+  gps_subgroup_data: {backup: yes, owner: roe, overage: 73G}
+  gps_subgroup_search: {backup: yes, owner: roe, overage: 7G}
   gps_subgroups_test: {backup: no, note: "test table"}
-  gps_transitive: {backup: yes}
-  gps_transitive_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  halfmf_forms: {backup: yes}
+  gps_transitive: {backup: yes, owner: jones}
+  gps_transitive_portraits: {backup: yes, owner: jones}
+  halfmf_forms: {backup: review, note: "not in the owner list of 2026-11-16"}
   hecke_algebras: {backup: review, note: "Hecke algebra section; hidden/beta?"}
   hecke_ladic: {backup: review, note: "Hecke algebra section; hidden/beta?"}
   hecke_orbits: {backup: review, note: "Hecke algebra section; hidden/beta?"}
-  hgcwa_complete: {backup: yes}
-  hgcwa_passports: {backup: yes}
-  hgcwa_unique_groups: {backup: yes}
-  hgm_euler_survey: {backup: review, note: "in development?"}
-  hgm_families: {backup: yes}
+  hgcwa_complete: {backup: yes, owner: paulhus}
+  hgcwa_passports: {backup: yes, owner: paulhus}
+  hgcwa_unique_groups: {backup: review, note: "not in the owner list of 2026-11-16"}
+  hgm_euler_survey: {backup: yes, owner: costa}
+  hgm_families: {backup: yes, owner: costa}
   hgm_monodromy: {backup: review, note: "confirm production status"}
-  hgm_motives: {backup: yes}
-  hmf_fields: {backup: yes}
-  hmf_forms: {backup: yes}
-  hmf_hecke: {backup: yes}
+  hgm_motives: {backup: yes, owner: costa}
+  hmf_fields: {backup: yes, owner: roe}
+  hmf_forms: {backup: yes, owner: roe}
+  hmf_hecke: {backup: yes, owner: sutherland, overage: 19G}
   inv_dbs: {backup: no, note: "legacy inventory system"}
   inv_fields_auto: {backup: no, note: "legacy inventory system"}
   inv_fields_human: {backup: no, note: "legacy inventory system"}
   inv_ops: {backup: no, note: "legacy inventory system"}
   inv_rollback: {backup: no, note: "legacy inventory system"}
   inv_tables: {backup: no, note: "legacy inventory system"}
-  lat_lattices: {backup: yes}
-  lf_families: {backup: yes}
-  lf_fields: {backup: yes}
-  lfunc_instances: {backup: yes}
-  lfunc_lfunctions: {backup: yes}
-  lfunc_rs_knowls: {backup: yes}
-  lfunc_search: {backup: yes}
-  maass_newforms: {backup: yes}
-  maass_newforms_coefficients: {backup: yes}
+  lat_lattices: {backup: yes, owner: roe}
+  lf_families: {backup: yes, owner: jones}
+  lf_fields: {backup: yes, owner: jones}
+  lfunc_data: {backup: yes, owner: costa}
+  lfunc_instances: {backup: yes, owner: costa}
+  lfunc_lfunctions: {backup: yes, owner: costa, overage: 316G}
+  lfunc_rs_knowls: {backup: yes, owner: costa}
+  lfunc_search: {backup: yes, owner: costa}
+  maass_newforms: {backup: review, note: "not in the owner list of 2026-11-16"}
+  maass_newforms_coefficients: {backup: review, note: "not in the owner list of 2026-11-16"}
   maass_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  maass_rigor: {backup: yes}
-  maass_rigor_coefficients: {backup: yes}
-  maass_rigor_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  mf_boxes: {backup: yes}
-  mf_gamma1: {backup: yes}
-  mf_gamma1_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  mf_hecke_cc: {backup: yes}
-  mf_hecke_charpolys: {backup: yes}
-  mf_hecke_lpolys: {backup: yes}
-  mf_hecke_nf: {backup: yes}
-  mf_hecke_traces: {backup: yes}
-  mf_newform_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  mf_newforms: {backup: yes}
-  mf_newspace_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  mf_newspaces: {backup: yes}
-  mf_stark: {backup: review, note: "confirm production status"}
-  mf_twists_cc: {backup: yes}
-  mf_twists_nf: {backup: yes}
-  modcurve_modelmaps: {backup: yes}
-  modcurve_models: {backup: yes}
-  modcurve_pictures: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  modcurve_points: {backup: yes}
-  modcurve_teximages: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
-  modlgal_reps: {backup: yes}
-  modlmf_forms: {backup: yes}
-  nf_fields: {backup: yes}
-  nf_fields_extra: {backup: yes, note: "extra table registered separately in meta_tables; confirm pairing with nf_fields"}
-  nf_fields_reflex: {backup: review, note: "confirm production status"}
-  smf_dims: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
-  smf_ev: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
-  smf_families: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
-  smf_fc: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
-  smf_samples: {backup: review, note: "Siegel modular forms; confirm production vs alpha status"}
+  maass_rigor: {backup: yes, owner: roe}
+  maass_rigor_coefficients: {backup: yes, owner: roe}
+  maass_rigor_portraits: {backup: yes, owner: roe}
+  mf_boxes: {backup: yes, owner: costa}
+  mf_gamma1: {backup: yes, owner: costa}
+  mf_gamma1_portraits: {backup: yes, owner: costa}
+  mf_hecke_cc: {backup: yes, owner: sutherland, overage: 25G}
+  mf_hecke_charpolys: {backup: yes, owner: costa}
+  mf_hecke_lpolys: {backup: yes, owner: costa}
+  mf_hecke_nf: {backup: yes, owner: costa}
+  mf_hecke_traces: {backup: yes, owner: costa}
+  mf_newform_portraits: {backup: yes, owner: costa}
+  mf_newforms: {backup: yes, owner: costa}
+  mf_newspace_portraits: {backup: yes, owner: costa}
+  mf_newspaces: {backup: yes, owner: costa}
+  mf_stark: {backup: yes, owner: costa}
+  mf_twists_cc: {backup: yes, owner: costa}
+  mf_twists_nf: {backup: yes, owner: costa}
+  modcurve_modelmaps: {backup: yes, owner: roe}
+  modcurve_models: {backup: yes, owner: roe}
+  modcurve_pictures: {backup: yes, owner: roe}
+  modcurve_points: {backup: yes, owner: roe}
+  modcurve_teximages: {backup: yes, owner: roe}
+  modlgal_reps: {backup: review, note: "not in the owner list of 2026-11-16"}
+  modlmf_forms: {backup: review, note: "not in the owner list of 2026-11-16"}
+  nf_fields: {backup: yes, owner: jones}
+  nf_fields_extra: {backup: yes, owner: jones, overage: 36G}
+  nf_fields_reflex: {backup: yes, owner: jones}
+  smf_dims: {backup: yes, owner: roe}
+  smf_ev: {backup: yes, owner: roe}
+  smf_families: {backup: yes, owner: roe}
+  smf_fc: {backup: yes, owner: roe}
+  smf_samples: {backup: yes, owner: roe}
