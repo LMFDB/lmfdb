@@ -13,15 +13,16 @@ Two tables are used:
 
   * ``major`` -- a major version bump (seq is the new major, for convenience)
   * ``data`` -- a data push: ``seq`` is the data counter within ``major`` and
-    ``tables`` records ``{tablename: {version, recid, doi, concept_doi}}`` for
-    the tables published in this batch
+    ``tables`` records ``{tablename: {version, recid, doi, concept_doi,
+    notes}}`` for the tables published in this batch, where ``version`` is
+    the table's own record version (e.g. ``1.4``)
   * ``code`` -- a frontend release: ``seq`` is the code counter within
-    ``major`` (displayed via the letter code) and ``git_hash`` records the
-    commit deployed to the web branch
+    ``major`` and ``git_hash`` records the commit deployed to the web branch
 
 - ``userdb.zenodo_backups`` (proddb only) -- operational state of the upload
-  pipeline, one row per (table, version) upload attempt, driving idempotent
-  resume after failures.
+  pipeline, one row per (table, record version) upload attempt, driving
+  idempotent resume after failures.  ``version`` is the record version,
+  ``lmfdb_version`` the data version (e.g. ``2.3``) it was published in.
 
 All functions take the database object as first argument; nothing here opens
 connections of its own.
@@ -30,7 +31,7 @@ connections of its own.
 import json
 from datetime import datetime, timezone
 
-from psycopg2.sql import SQL
+from psycodict import SQL
 
 from .versioning import format_version
 
@@ -44,6 +45,7 @@ STATUSES = [
     "verified",       # checksums on Zenodo confirmed against local values
     "failed",         # gave up; error column has details
 ]
+UNFINISHED = ("pending", "packaging", "uploading", "awaiting_quota")
 
 
 def utcnow():
@@ -81,6 +83,11 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
     db._execute(SQL(
         "CREATE INDEX IF NOT EXISTS version_history_time ON version_history (time)"
     ))
+    # rejects a second row for the same version if two writers race
+    db._execute(SQL(
+        "CREATE UNIQUE INDEX IF NOT EXISTS version_history_seq "
+        "ON version_history (major, kind, seq)"
+    ))
     for role in grant_select_to:
         try:
             db._execute(SQL("GRANT SELECT ON version_history TO {0}").format(
@@ -97,6 +104,9 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
             recid text,
             doi text,
             version text,
+            bump text,
+            notes text,
+            lmfdb_version text,
             status text NOT NULL,
             draft_id text,
             source_md5s jsonb,
@@ -130,7 +140,7 @@ def _insert_version_row(db, major, kind, seq, time=None, editor=None,
 def insert_major(db, major, git_hash=None, editor=None, comment=None, time=None):
     """
     Record a major version bump.  Also records a code row with seq 0 (the
-    frontend state at the moment of the bump), so that ``{major}.0.a`` is
+    frontend state at the moment of the bump), so that ``{major}.0-0`` is
     resolvable.
     """
     time = time or utcnow()
@@ -151,7 +161,8 @@ def insert_data(db, major, seq, tables, editor=None, comment=None, time=None):
     Record a data push.
 
     - ``tables`` -- dict ``{tablename: {"version": ..., "recid": ...,
-      "doi": ..., "concept_doi": ...}}`` for the tables published in this batch
+      "doi": ..., "concept_doi": ..., "notes": ...}}`` for the tables
+      published in this batch
     """
     _insert_version_row(db, major, "data", seq, time=time, editor=editor,
                         tables=tables, comment=comment)
@@ -209,7 +220,7 @@ def next_data_seq(db, major):
 
 def current_version_string(db):
     """
-    The full current version, e.g. ``"2.3.ba"``, or None if the version
+    The full current version, e.g. ``"2.3-5"``, or None if the version
     history table is missing or empty (callers should then fall back to
     ``lmfdb.version.LEGACY_VERSION``).  Never raises: intended for the footer.
     """
@@ -233,8 +244,9 @@ def resolve_version(db, major, data_seq, code_seq=None):
     - ``version`` -- the normalized version string
     - ``git_hash``, ``git_time`` -- the frontend commit (None if ``code_seq``
       is None or unknown)
-    - ``tables`` -- dict ``{tablename: {version, recid, doi, concept_doi}}``
-      giving the version of every table at this LMFDB version
+    - ``tables`` -- dict ``{tablename: {version, recid, doi, concept_doi,
+      notes}}`` giving the record version of every table at this LMFDB
+      version
     - ``time`` -- the timestamp at which this data version was created
 
     Raises ValueError if the version does not appear in the history.
@@ -262,7 +274,7 @@ def resolve_version(db, major, data_seq, code_seq=None):
                 if r["kind"] == "code" and r["major"] == major
                 and r["seq"] == code_seq]
         if not code:
-            raise ValueError("unknown code version %s.*.%s" % (major, code_seq))
+            raise ValueError("unknown code version %s.*-%s" % (major, code_seq))
         git_hash, git_time = code[0]["git_hash"], code[0]["time"]
     return {
         "version": format_version(major, data_seq, code_seq),
@@ -273,11 +285,10 @@ def resolve_version(db, major, data_seq, code_seq=None):
     }
 
 
-def latest_code_deploy(db):
-    """The most recent code row (any major), or None -- used by the watcher."""
-    rows = _history_rows(db)
-    code = [r for r in rows if r["kind"] == "code"]
-    return code[-1] if code else None
+def code_rows_for_commit(db, git_hash):
+    """The code rows recording ``git_hash`` (empty if it has no version yet)."""
+    return _history_rows(db, SQL(" WHERE kind = 'code' AND git_hash = %s"),
+                         [git_hash])
 
 
 ######################################################################
@@ -285,8 +296,9 @@ def latest_code_deploy(db):
 ######################################################################
 
 _BACKUP_COLS = ("id, tablename, owner, concept_recid, concept_doi, recid, doi, "
-                "version, status, draft_id, source_md5s, uploaded_files, "
-                "total_size, started, finished, error")
+                "version, bump, notes, lmfdb_version, status, draft_id, "
+                "source_md5s, uploaded_files, total_size, started, finished, "
+                "error")
 
 
 def _backup_rows(db, where, values):
@@ -297,13 +309,21 @@ def _backup_rows(db, where, values):
     return [dict(zip(cols, row)) for row in cur]
 
 
-def start_attempt(db, tablename, owner, version, source_md5s):
-    """Insert a new upload attempt (status ``pending``); returns its id."""
+def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
+                  notes=None):
+    """
+    Insert a new upload attempt (status ``pending``); returns its id.
+
+    ``version`` is the record version being uploaded, ``bump`` the requested
+    increment (None for a first version) and ``notes`` the change description.
+    """
     cur = db._execute(
         SQL("INSERT INTO userdb.zenodo_backups "
-            "(tablename, owner, version, status, source_md5s, started) "
-            "VALUES (%s, %s, %s, %s, %s::jsonb, %s) RETURNING id"),
-        [tablename, owner, version, "pending", json.dumps(source_md5s), utcnow()],
+            "(tablename, owner, version, bump, notes, status, source_md5s, "
+            "started) VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s) "
+            "RETURNING id"),
+        [tablename, owner, version, bump, notes, "pending",
+         json.dumps(source_md5s), utcnow()],
     )
     return cur.fetchone()[0]
 
@@ -311,8 +331,9 @@ def start_attempt(db, tablename, owner, version, source_md5s):
 def update_attempt(db, attempt_id, **fields):
     """Update columns of an upload attempt (e.g. status, recid, error)."""
     allowed = {"owner", "concept_recid", "concept_doi", "recid", "doi",
-               "version", "status", "draft_id", "source_md5s",
-               "uploaded_files", "total_size", "finished", "error"}
+               "version", "bump", "notes", "lmfdb_version", "status",
+               "draft_id", "source_md5s", "uploaded_files", "total_size",
+               "finished", "error"}
     bad = set(fields) - allowed
     if bad:
         raise ValueError("cannot update %s" % ", ".join(sorted(bad)))
@@ -357,10 +378,25 @@ def unfinished(db):
     """All attempts in a non-terminal status (for resume and status display)."""
     return _backup_rows(
         db,
-        SQL(" WHERE status IN ('pending', 'packaging', 'uploading', "
-            "'awaiting_quota') ORDER BY id"),
-        None,
+        SQL(" WHERE status IN (" + ", ".join(["%s"] * len(UNFINISHED))
+            + ") ORDER BY id"),
+        list(UNFINISHED),
     )
+
+
+def uploaded_bytes_since(db, since):
+    """
+    Bytes actually sent to Zenodo by uploads finished at or after ``since``
+    (files reused from a record's previous version are not counted).
+    """
+    rows = _backup_rows(
+        db,
+        SQL(" WHERE status IN ('published', 'verified') AND finished >= %s"),
+        [since],
+    )
+    return sum(info.get("size", 0)
+               for r in rows for info in (r["uploaded_files"] or {}).values()
+               if not info.get("reused"))
 
 
 def all_latest_published(db):

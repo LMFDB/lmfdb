@@ -22,7 +22,7 @@ Default location ``~/.lmfdb_zenodo.ini``, overridden by the
     editor = roed
     # owner of new records when tables.yaml does not assign one
     default_owner = roed
-    # for mirroring version_history rows to grace (optional; psycopg2 DSN)
+    # for mirroring version_history rows to grace (optional; libpq DSN)
     # grace_dsn = host=... dbname=... user=editor password=...
 
     [tokens]

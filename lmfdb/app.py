@@ -26,7 +26,7 @@ from .homepage import load_boxes, contribs
 from lmfdb.version import LEGACY_VERSION
 
 # Once the versioning system is activated (version_history table populated),
-# the footer shows the full version {major}.{data}.{code} -- see
+# the footer shows the full version {major}.{data}-{code} -- see
 # lmfdb/version.py and /version; until then this legacy string is displayed.
 LMFDB_VERSION = LEGACY_VERSION
 
@@ -476,7 +476,7 @@ def workshops():
 
 def _version_events(rows):
     """Prepare version_history rows for display on the /version page."""
-    from .zenodo.versioning import format_version, cremona_letter_code
+    from .zenodo.versioning import format_version
     kinds = {"data": "data push", "code": "frontend release",
              "major": "major version bump"}
     events = []
@@ -484,7 +484,7 @@ def _version_events(rows):
         if row["kind"] == "data":
             display = format_version(row["major"], row["seq"])
         elif row["kind"] == "code":
-            display = "%s.*.%s" % (row["major"], cremona_letter_code(row["seq"]))
+            display = "%s.*-%s" % (row["major"], row["seq"])
         else:
             display = format_version(row["major"], 0, 0)
         tables = sorted((row.get("tables") or {}).items())
@@ -521,7 +521,7 @@ def version_page():
 @app.route("/api/version/<v>")
 def version_api(v):
     """
-    Machine-readable version resolution: /api/version/2.3.ba returns the
+    Machine-readable version resolution: /api/version/2.3-5 returns the
     frontend git commit and the Zenodo record version of every table at that
     LMFDB version; /api/version/current resolves the current version.
     """

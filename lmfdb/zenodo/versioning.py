@@ -1,70 +1,39 @@
 """
-Parsing and formatting of LMFDB version strings ``{major}.{data}.{code}``.
+Version strings: LMFDB versions ``{major}.{data}-{code}`` and the
+``{major}.{minor}`` versions of individual Zenodo records.
 
-The ``code`` component uses the letter encoding of ``sage.databases.cremona``
-(``cremona_letter_code``/``class_to_int``: a=0, ..., z=25, ba=26, bb=27, ...).
-When sage is available we use its implementations directly; otherwise the
-pure-python fallbacks below are used (the test suite checks that the two
-agree).
+- An LMFDB version such as ``2.3-5`` has a major version (bumped manually), a
+  data counter (one per push of tables to production) and a code counter (one
+  per push to the web branch); the two counters reset when the major version
+  changes.  The data-only prefix ``2.3`` names a data version.
+- Each archived table has its own record version such as ``1.4``, starting at
+  ``1.0`` and bumped (major or minor) by the editor pushing the change, as
+  requested by the contributor of the data.
 
-This module deliberately has no dependencies beyond the standard library (and
-optionally sage), so that it can be used by the deploy watcher on machines
-without sage and by the web frontend alike.
+This module deliberately has no dependencies beyond the standard library, so
+that it can be used by the deploy watcher on machines without sage and by the
+web frontend alike.
 """
 
 import re
 
 __all__ = [
-    "cremona_letter_code",
-    "class_to_int",
+    "BUMPS",
+    "FIRST_RECORD_VERSION",
     "format_version",
+    "next_record_version",
+    "parse_record_version",
     "parse_version",
     "VERSION_RE",
 ]
 
 
-def _cremona_letter_code(n):
-    """
-    Pure-python version of ``sage.databases.cremona.cremona_letter_code``:
-    0 -> 'a', 25 -> 'z', 26 -> 'ba', 27 -> 'bb', ...
-    """
-    n = int(n)
-    if n < 0:
-        raise ValueError("n (=%s) must be a non-negative integer" % n)
-    if n == 0:
-        return "a"
-    s = ""
-    while n:
-        s = chr(ord("a") + n % 26) + s
-        n //= 26
-    return s
+# A full version like 2.3-5; we also accept the data-only prefix 2.3
+VERSION_RE = re.compile(r"^(\d+)\.(\d+)(?:-(\d+))?$")
+RECORD_VERSION_RE = re.compile(r"^(\d+)\.(\d+)$")
 
-
-def _class_to_int(k):
-    """
-    Pure-python version of ``sage.databases.cremona.class_to_int``,
-    restricted to lower-case letter codes: 'a' -> 0, 'z' -> 25, 'ba' -> 26.
-    """
-    if not k or not re.fullmatch(r"[a-z]+", k):
-        raise ValueError("invalid letter code %r" % (k,))
-    n = 0
-    for c in k:
-        n = 26 * n + (ord(c) - ord("a"))
-    return n
-
-
-try:  # pragma: no cover - exercised only when sage is installed
-    # broad except: importing sage outside of sage.all can raise more than
-    # ImportError (partially initialized modules); the fallbacks are
-    # equivalent (see test_letter_code_matches_sage)
-    from sage.databases.cremona import cremona_letter_code, class_to_int
-except Exception:
-    cremona_letter_code = _cremona_letter_code
-    class_to_int = _class_to_int
-
-
-# A full version like 2.3.ba; we also accept the data-only prefix 2.3
-VERSION_RE = re.compile(r"^(\d+)\.(\d+)(?:\.([a-z]+))?$")
+BUMPS = ("major", "minor")
+FIRST_RECORD_VERSION = "1.0"
 
 
 def format_version(major, data_seq, code_seq=None):
@@ -78,7 +47,7 @@ def format_version(major, data_seq, code_seq=None):
     - ``code_seq`` -- non-negative integer, the frontend release counter,
       or None to produce the data-only form ``{major}.{data}``
 
-    EXAMPLES: ``format_version(2, 3, 26) == "2.3.ba"``,
+    EXAMPLES: ``format_version(2, 3, 5) == "2.3-5"``,
     ``format_version(2, 3) == "2.3"``.
     """
     major, data_seq = int(major), int(data_seq)
@@ -86,7 +55,10 @@ def format_version(major, data_seq, code_seq=None):
         raise ValueError("version components must be non-negative")
     if code_seq is None:
         return "%s.%s" % (major, data_seq)
-    return "%s.%s.%s" % (major, data_seq, cremona_letter_code(int(code_seq)))
+    code_seq = int(code_seq)
+    if code_seq < 0:
+        raise ValueError("version components must be non-negative")
+    return "%s.%s-%s" % (major, data_seq, code_seq)
 
 
 def parse_version(v):
@@ -95,20 +67,53 @@ def parse_version(v):
 
     INPUT:
 
-    - ``v`` -- a string like ``"2.3.ba"`` or ``"2.3"``
+    - ``v`` -- a string like ``"2.3-5"`` or ``"2.3"``
 
     OUTPUT:
 
     A tuple ``(major, data_seq, code_seq)`` of integers; ``code_seq`` is None
     for the data-only form.
 
-    EXAMPLES: ``parse_version("2.3.ba") == (2, 3, 26)``.
+    EXAMPLES: ``parse_version("2.3-5") == (2, 3, 5)``.
     """
     m = VERSION_RE.fullmatch(v.strip())
     if not m:
         raise ValueError(
-            "invalid LMFDB version %r (expected e.g. '2.3.ba' or '2.3')" % (v,)
+            "invalid LMFDB version %r (expected e.g. '2.3-5' or '2.3')" % (v,)
         )
-    major, data_seq, letters = m.groups()
-    code_seq = None if letters is None else class_to_int(letters)
-    return int(major), int(data_seq), code_seq
+    major, data_seq, code_seq = m.groups()
+    return int(major), int(data_seq), None if code_seq is None else int(code_seq)
+
+
+def parse_record_version(v):
+    """
+    Parse a record version such as ``"1.4"`` into ``(major, minor)``.
+    """
+    m = RECORD_VERSION_RE.fullmatch(str(v).strip())
+    if not m:
+        raise ValueError("invalid record version %r (expected e.g. '1.4')" % (v,))
+    return int(m.group(1)), int(m.group(2))
+
+
+def next_record_version(previous, bump):
+    """
+    The version of the next Zenodo version of a record.
+
+    INPUT:
+
+    - ``previous`` -- the record's latest published version, or None if the
+      record has never been published (then the result is ``"1.0"`` and
+      ``bump`` is ignored)
+    - ``bump`` -- ``"major"`` or ``"minor"``
+
+    EXAMPLES: ``next_record_version("1.4", "minor") == "1.5"``,
+    ``next_record_version("1.4", "major") == "2.0"``.
+    """
+    if previous is None:
+        return FIRST_RECORD_VERSION
+    major, minor = parse_record_version(previous)
+    if bump == "major":
+        return "%s.0" % (major + 1)
+    if bump == "minor":
+        return "%s.%s" % (major, minor + 1)
+    raise ValueError("bump must be one of %s, not %r" % (", ".join(BUMPS), bump))

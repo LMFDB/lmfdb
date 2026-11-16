@@ -298,7 +298,8 @@ def upload_list(outdir):
 
 
 def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
-                  force_gzip=False, lmfdb_version=None, readme=None):
+                  force_gzip=False, lmfdb_version=None, readme=None,
+                  record_version=None):
     """
     Package one table's dump files from ``data_folder`` into
     ``{staging_dir}/{tablename}/``; returns the manifest dict.
@@ -314,6 +315,7 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
     - ``force_gzip`` -- use gzip even if zstd is available (mainly for tests)
     - ``lmfdb_version`` -- the data version string being published (e.g. "2.1")
     - ``readme`` -- contents for README.md (from lmfdb.zenodo.metadata)
+    - ``record_version`` -- the record's own version (e.g. "1.4")
     """
     sources = table_files(data_folder, tablename)
     if not sources or sources[0].name != tablename + ".txt":
@@ -322,6 +324,7 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
         tablename, sources, Path(staging_dir) / tablename,
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
         lmfdb_version=lmfdb_version, readme=readme, sample_source=sources[0],
+        extra_manifest={"record_version": record_version},
     )
 
 
@@ -349,7 +352,7 @@ def dump_knowls(db, dump_folder, sep="|"):
     Unlike search tables, the knowl database is updated live on the website,
     so this is called at backup time to snapshot its current state.
     """
-    from psycopg2.sql import SQL, Identifier
+    from psycodict import SQL, Identifier
 
     dump_folder = Path(dump_folder)
     dump_folder.mkdir(parents=True, exist_ok=True)
@@ -382,7 +385,7 @@ def dump_knowls(db, dump_folder, sep="|"):
 
 
 def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
-                   lmfdb_version=None, readme=None):
+                   lmfdb_version=None, readme=None, record_version=None):
     """
     Dump and package the knowl database as one record ("lmfdb_knowls");
     returns the manifest dict.
@@ -397,7 +400,8 @@ def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
         lmfdb_version=lmfdb_version, readme=readme,
         sample_source=dump_folder / (KNOWL_TABLES[0] + ".txt"),
-        extra_manifest={"knowl_tables": KNOWL_TABLES},
+        extra_manifest={"knowl_tables": KNOWL_TABLES,
+                        "record_version": record_version},
     )
     shutil.rmtree(dump_folder)
     return manifest

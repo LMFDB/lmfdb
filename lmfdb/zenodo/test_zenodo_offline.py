@@ -11,9 +11,9 @@ import os
 import pytest
 
 from lmfdb.zenodo.versioning import (
-    _class_to_int,
-    _cremona_letter_code,
     format_version,
+    next_record_version,
+    parse_record_version,
     parse_version,
 )
 from lmfdb.zenodo import packaging
@@ -26,48 +26,36 @@ from lmfdb.zenodo import metadata
 # versioning                                                         #
 ######################################################################
 
-def test_letter_code_known_values():
-    for n, code in [(0, "a"), (1, "b"), (25, "z"), (26, "ba"), (27, "bb"),
-                    (51, "bz"), (52, "ca"), (675, "zz"), (676, "baa")]:
-        assert _cremona_letter_code(n) == code
-        assert _class_to_int(code) == n
-
-
-def test_letter_code_roundtrip():
-    for n in range(2000):
-        assert _class_to_int(_cremona_letter_code(n)) == n
-
-
-def test_letter_code_matches_sage():
-    try:
-        import sage.all  # noqa: F401 -- initializes sage's import machinery
-        from sage.databases.cremona import cremona_letter_code
-    except Exception:
-        pytest.skip("sage not available")
-    for n in range(2000):
-        assert _cremona_letter_code(n) == cremona_letter_code(n)
-        assert _class_to_int(cremona_letter_code(n)) == n
-
-
-def test_letter_code_errors():
-    with pytest.raises(ValueError):
-        _cremona_letter_code(-1)
-    for bad in ["", "A", "b1", "2.3"]:
-        with pytest.raises(ValueError):
-            _class_to_int(bad)
-
-
 def test_format_parse_version():
-    assert format_version(2, 3, 26) == "2.3.ba"
-    assert format_version(2, 0, 0) == "2.0.a"
+    assert format_version(2, 3, 5) == "2.3-5"
+    assert format_version(2, 0, 0) == "2.0-0"
     assert format_version(2, 3) == "2.3"
-    assert parse_version("2.3.ba") == (2, 3, 26)
-    assert parse_version("2.0.a") == (2, 0, 0)
+    assert parse_version("2.3-5") == (2, 3, 5)
+    assert parse_version("2.0-0") == (2, 0, 0)
     assert parse_version("2.3") == (2, 3, None)
-    assert parse_version(" 10.20.zz ") == (10, 20, 675)
-    for bad in ["", "2", "2.3.", "2.3.A", "1.2.1.4", "a.b.c", "2.-1.a"]:
+    assert parse_version(" 10.20-675 ") == (10, 20, 675)
+    for bad in ["", "2", "2.3-", "2.3.ba", "1.2.1", "a.b-c", "2.-1-0",
+                "2.3-a", "2.3-5-1"]:
         with pytest.raises(ValueError):
             parse_version(bad)
+    with pytest.raises(ValueError):
+        format_version(2, 3, -1)
+
+
+def test_record_versions():
+    assert next_record_version(None, None) == "1.0"
+    assert next_record_version(None, "major") == "1.0"
+    assert next_record_version("1.0", "minor") == "1.1"
+    assert next_record_version("1.4", "major") == "2.0"
+    assert next_record_version("9.9", "minor") == "9.10"
+    assert parse_record_version("9.10") == (9, 10)
+    with pytest.raises(ValueError):
+        next_record_version("1.4", "patch")
+    with pytest.raises(ValueError):
+        next_record_version("1.4", None)
+    for bad in ["1", "1.2.3", "2.3-5", "v1.0"]:
+        with pytest.raises(ValueError):
+            parse_record_version(bad)
 
 
 ######################################################################
@@ -134,7 +122,7 @@ def test_package_table(tmp_path):
     staging = tmp_path / "staging"
     manifest = packaging.package_table(
         dump, name, staging, force_gzip=True, lmfdb_version="2.1",
-        readme="# test readme\n")
+        readme="# test readme\n", record_version="1.4")
     outdir = staging / name
 
     # sources: all seven files hashed, with correct row counts
@@ -168,6 +156,7 @@ def test_package_table(tmp_path):
     ondisk = json.loads((outdir / "MANIFEST.json").read_text())
     assert ondisk == manifest
     assert manifest["lmfdb_version"] == "2.1"
+    assert manifest["record_version"] == "1.4"
 
     # upload order: README, sample, MANIFEST, then artifacts
     names = [p.name for p in packaging.upload_list(outdir)]
@@ -242,18 +231,27 @@ def test_source_md5s_change_detection(tmp_path):
 ######################################################################
 
 def test_metadata_without_db():
-    desc = metadata.table_description_html(None, "zzz_demo", "2.1", nrows=17)
+    notes = "Added <weight 1> forms & fixed labels."
+    desc = metadata.table_description_html(None, "zzz_demo", "1.4", nrows=17,
+                                           lmfdb_version="2.3", notes=notes)
     assert "zzz_demo" in desc and "17" in desc
-    readme = metadata.table_readme(None, "zzz_demo", "2.1")
-    assert readme.startswith("# LMFDB table `zzz_demo`")
+    assert "Version 1.4 of" in desc and "LMFDB data version 2.3" in desc
+    assert "Added &lt;weight 1&gt; forms &amp; fixed labels." in desc
+    readme = metadata.table_readme(None, "zzz_demo", "1.4",
+                                   lmfdb_version="2.3", notes=notes)
+    assert readme.startswith("# LMFDB table `zzz_demo`, version 1.4")
+    assert "LMFDB data version 2.3" in readme
+    assert "Changes in this version: " + notes in readme
     assert "reload_all" in readme
     md = metadata.deposit_metadata(
-        metadata.table_title("zzz_demo"), desc, "2.1",
-        related_url="https://www.lmfdb.org/api/zzz_demo")["metadata"]
+        metadata.table_title("zzz_demo"), desc, "1.4",
+        related_url="https://www.lmfdb.org/api/zzz_demo",
+        notes=notes)["metadata"]
     assert md["title"] == "LMFDB table zzz_demo"
     assert md["license"] == "cc-by-sa-4.0"
     assert md["creators"] == [{"name": "The LMFDB Collaboration"}]
-    assert md["version"] == "2.1"
+    assert md["version"] == "1.4"
+    assert md["notes"] == notes
     assert md["communities"] == [{"identifier": "lmfdb"}]
     assert md["upload_type"] == "dataset"
     assert md["related_identifiers"][0]["identifier"].endswith("zzz_demo")
@@ -306,11 +304,11 @@ roed = abc123
 
 
 ######################################################################
-# tables.yaml / eligibility (needs psycopg2 only for module import)  #
+# tables.yaml / eligibility (needs psycodict only for module import)  #
 ######################################################################
 
 def test_tables_yaml():
-    pytest.importorskip("psycopg2")
+    pytest.importorskip("psycodict")
     from lmfdb.zenodo.backup import load_tables_yaml, classify
     spec = load_tables_yaml()
     assert all(e["backup"] in ("yes", "no", "review") for e in spec.values())
@@ -321,3 +319,74 @@ def test_tables_yaml():
     assert include == ["nf_fields"]
     assert excluded == ["gps_groups_test"]
     assert unlisted == ["totally_new_table"]
+
+
+######################################################################
+# record versions and change notes in the backup plan                #
+######################################################################
+
+@pytest.fixture
+def offline_backup(monkeypatch):
+    """lmfdb.zenodo.backup with the database-backed state replaced by dicts."""
+    pytest.importorskip("psycodict")
+    from lmfdb.zenodo import backup, state
+    published = {"zzz_demo": {"version": "1.4", "source_md5s": {},
+                              "owner": "roed"}}
+    attempts = {}
+    monkeypatch.setattr(backup, "load_tables_yaml", lambda path=None: {
+        "zzz_demo": {"backup": "yes"}, "zzz_other": {"backup": "yes"},
+        "zzz_skip": {"backup": "no"}})
+    monkeypatch.setattr(backup, "_current_major", lambda: 2)
+    monkeypatch.setattr(state, "latest_published",
+                        lambda db, name: published.get(name))
+    monkeypatch.setattr(state, "latest_attempt",
+                        lambda db, name, statuses=None: attempts.get(name))
+    monkeypatch.setattr(state, "next_data_seq", lambda db, major: 3)
+    return backup, published, attempts
+
+
+def test_change_info(offline_backup):
+    backup, published, attempts = offline_backup
+    first = backup._change_info(None, "zzz_other", None, None, None)
+    assert first == {"version": "1.0", "bump": None, "missing": [],
+                     "notes": backup.FIRST_VERSION_NOTES}
+    prev = published["zzz_demo"]
+    info = backup._change_info(None, "zzz_demo", prev, None, None)
+    assert info["version"] is None
+    assert info["missing"] == ["bump", "description"]
+    info = backup._change_info(None, "zzz_demo", prev, {"zzz_demo": "Fixed."},
+                               {"zzz_demo": "major"})
+    assert (info["version"], info["notes"], info["missing"]) == ("2.0", "Fixed.", [])
+    with pytest.raises(ValueError):
+        backup._change_info(None, "zzz_demo", prev, "Fixed.", "patch")
+    # resuming an interrupted upload of the same content reuses its arguments
+    attempts["zzz_demo"] = {"status": "awaiting_quota", "source_md5s": {"a": "1"},
+                            "bump": "minor", "notes": "Fixed."}
+    info = backup._change_info(None, "zzz_demo", prev, None, None, {"a": "1"})
+    assert (info["version"], info["notes"], info["missing"]) == ("1.5", "Fixed.", [])
+    info = backup._change_info(None, "zzz_demo", prev, None, None, {"a": "2"})
+    assert info["missing"] == ["bump", "description"]
+    with pytest.raises(ValueError, match=r"zzz_demo \(bump, description\)"):
+        backup.require_change_info(None, ["zzz_demo", "zzz_other", "zzz_skip"],
+                                   None, None)
+    backup.require_change_info(None, ["zzz_demo", "zzz_other"], "Fixed.", "minor")
+
+
+def test_backup_plan(offline_backup, tmp_path):
+    backup, published, attempts = offline_backup
+    make_dump(tmp_path / "dump", "zzz_demo")
+    make_dump(tmp_path / "dump", "zzz_other")
+    cfg = ZenodoConfig(path=str(tmp_path / "missing.ini"))
+    plan = backup.backup_folder(None, tmp_path / "dump", config=cfg,
+                                description="Added rows.", bump="minor")
+    assert plan["version"] == "2.3"
+    items = {item["table"]: item for item in plan["upload"]}
+    assert items["zzz_demo"]["previous_version"] == "1.4"
+    assert items["zzz_demo"]["version"] == "1.5"
+    assert items["zzz_demo"]["notes"] == "Added rows."
+    assert items["zzz_other"]["version"] == "1.0"
+    assert items["zzz_other"]["first_version"]
+    # a live run refuses to start without the change information
+    with pytest.raises(ValueError, match="zzz_demo"):
+        backup.backup_folder(None, tmp_path / "dump", config=cfg,
+                             dry_run=False)

@@ -7,21 +7,20 @@
   </p>
   <p>
     LMFDB version numbers have the form
-    <b>{major}.{data}.{code}</b> (for example <code>2.3.ba</code>):
+    <b>{major}.{data}-{code}</b> (for example <code>2.3-5</code>):
   </p>
   <ul>
     <li><b>major</b> is incremented by the managing editors for major
       milestones; the other two components reset when it is bumped.</li>
     <li><b>data</b> is incremented every time a batch of database tables is
       pushed to production.  Each push archives the changed tables on
-      <a href="https://zenodo.org/communities/lmfdb">Zenodo</a>, so every
-      table carries its own version of the form {major}.{data}, namely the
-      LMFDB version at which it last changed; the data of any LMFDB version
-      can be recovered from the corresponding Zenodo records.</li>
-    <li><b>code</b> counts releases of the website code, written in the
-      letter encoding used for elliptic curve isogeny classes
-      (a, b, &hellip;, z, ba, bb, &hellip;).  Each release corresponds to a
-      commit in the
+      <a href="https://zenodo.org/communities/lmfdb">Zenodo</a>, where every
+      table has its own record with its own version number (major.minor,
+      starting at 1.0) and a description of what changed; the data of any
+      LMFDB version can be recovered from the corresponding Zenodo
+      records.</li>
+    <li><b>code</b> counts releases of the website code.  Each release
+      corresponds to a commit in the
       <a href="https://github.com/LMFDB/lmfdb">LMFDB git repository</a>.</li>
   </ul>
   <p>
@@ -32,7 +31,7 @@
 <h2>Look up a version</h2>
 
 <form method="get" action="{{ url_for('version_page') }}">
-  <input type="text" name="v" value="{{ query }}" placeholder="e.g. 2.3.ba or 2.3" size="12">
+  <input type="text" name="v" value="{{ query }}" placeholder="e.g. 2.3-5 or 2.3" size="12">
   <button type="submit">Resolve</button>
   (also available as <a href="{{ url_for('version_api', v=(query if query else 'current')) }}">JSON</a>)
 </form>
@@ -51,7 +50,7 @@
   {% endif %}
   <table class="ntdata">
     <thead>
-      <tr><th>table</th><th>version</th><th>Zenodo record</th></tr>
+      <tr><th>table</th><th>record version</th><th>Zenodo record</th><th>changes in this record version</th></tr>
     </thead>
     <tbody>
       {% for name, info in resolved.table_list %}
@@ -59,6 +58,7 @@
           <td><code>{{ name }}</code></td>
           <td>{{ info.version }}</td>
           <td>{% if info.doi %}<a href="https://doi.org/{{ info.doi }}">{{ info.doi }}</a>{% endif %}</td>
+          <td>{{ info.notes or '' }}</td>
         </tr>
       {% endfor %}
     </tbody>
@@ -85,9 +85,9 @@
               {{ e.table_list | length }} record{{ '' if e.table_list|length == 1 else 's' }} updated:
               {% for name, info in e.table_list %}
                 {%- if info.doi -%}
-                  <a href="https://doi.org/{{ info.doi }}">{{ name }}</a>
+                  <a href="https://doi.org/{{ info.doi }}" title="{{ info.notes or '' }}">{{ name }} {{ info.version }}</a>
                 {%- else -%}
-                  {{ name }}
+                  {{ name }} {{ info.version }}
                 {%- endif -%}
                 {{ ", " if not loop.last else "" }}
               {% endfor %}

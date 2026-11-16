@@ -1,28 +1,35 @@
 """
-The deploy watcher: assigns frontend code versions with no change to anyone's
-release workflow.
+Frontend code versions: each push to the ``web`` branch (which the web
+servers pull on a cron) gets the next ``code`` number in ``version_history``.
+MAJOR is read from ``lmfdb/version.py`` at the pushed commit, so a major
+version bump is just an ordinary pull request editing that file.
 
-Deploying the LMFDB website means pushing to the ``web`` branch on GitHub
-(the web servers pull it on a cron).  This script, run from cron on proddb,
-polls the public head of that branch with ``git ls-remote``; when it changes
-it records a new ``code`` row in ``version_history`` (bumping the letter
-code), reading MAJOR out of ``lmfdb/version.py`` at the deployed commit so
-that major version bumps are also detected -- a major bump is therefore just
-an ordinary pull request editing that file.
+This normally runs in the GitHub Action ``.github/workflows/code-version.yml``
+on every push to ``web``, which copies this directory out of the checkout and
+runs
 
-Suggested crontab entry (as the account holding editor credentials):
+    python -m zenodo.watcher --commit SHA --version-file .../lmfdb/version.py
 
-    */15 * * * * python3 -m lmfdb.zenodo.watcher >> ~/logs/version_watcher.log 2>&1
+connecting with the DSN in ``$LMFDB_VERSION_DSN`` (and mirroring the row to
+``$LMFDB_VERSION_GRACE_DSN`` when set).  The copy imports this package on its
+own: importing ``lmfdb`` itself needs sage and connects to the configured
+database.
 
-Requires network access to github.com only; nothing here talks to Zenodo.
+Without ``--commit`` it polls the head of ``web`` with ``git ls-remote`` and
+uses the configured LMFDB database; run ``python3 -m lmfdb.zenodo.watcher``
+that way on proddb to catch up after a failed workflow run.
+
+Nothing here talks to Zenodo.
 """
 
+import os
 import re
 import subprocess
 
 REPO = "https://github.com/LMFDB/lmfdb.git"
 RAW_VERSION_FILE = "https://raw.githubusercontent.com/LMFDB/lmfdb/%s/lmfdb/version.py"
 BRANCH = "web"
+MAJOR_RE = re.compile(r"^MAJOR\s*=\s*(\d+)", re.MULTILINE)
 
 
 def deployed_commit(repo=REPO, branch=BRANCH):
@@ -45,7 +52,7 @@ def major_at_commit(commit, current_major):
     try:
         resp = requests.get(RAW_VERSION_FILE % commit, timeout=60)
         if resp.status_code == 200:
-            m = re.search(r"^MAJOR\s*=\s*(\d+)", resp.text, re.MULTILINE)
+            m = MAJOR_RE.search(resp.text)
             if m:
                 return int(m.group(1))
     except Exception as err:
@@ -53,26 +60,40 @@ def major_at_commit(commit, current_major):
     return current_major
 
 
-def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
+def major_from_file(path):
+    """MAJOR as declared in a checked-out lmfdb/version.py."""
+    with open(path) as F:
+        m = MAJOR_RE.search(F.read())
+    if not m:
+        raise ValueError("no MAJOR in %s" % path)
+    return int(m.group(1))
+
+
+def record_deploy(db, commit, major=None, config=None, dry_run=False):
     """
-    Record a new code version if the deployed branch moved since the last
-    recorded deploy.  Returns the new version event as a dict, or None.
+    Record ``commit``, just pushed to the web branch, as the next code
+    version (or as a major version bump if ``major`` exceeds the current
+    one).  Commits that already have a code version are skipped, so re-runs
+    are harmless.  Returns the new version event as a dict, or None.
+
+    - ``major`` -- MAJOR at ``commit``; fetched from GitHub when None
+    - ``config`` -- anything with ``editor`` and ``grace_dsn`` attributes
+      (default: the local Zenodo configuration)
     """
     from . import state
     from .backup import _mirror_to_grace
     from .config import ZenodoConfig
-    from .versioning import cremona_letter_code
 
     cfg = config or ZenodoConfig()
     current = state.latest_versions(db)
     if current is None:
         raise RuntimeError(
             "version history is empty; run db.zenodo_setup() first")
-    commit = deployed_commit(repo, branch)
-    last = state.latest_code_deploy(db)
-    if last is not None and last["git_hash"] == commit:
+    if state.code_rows_for_commit(db, commit):
+        print("Commit %s already has a code version" % commit[:12])
         return None
-    major = major_at_commit(commit, current["major"])
+    if major is None:
+        major = major_at_commit(commit, current["major"])
     editor = cfg.editor or "deploy-watcher"
     if major > current["major"]:
         event = {"kind": "major", "major": major, "seq": 0, "git_hash": commit}
@@ -82,7 +103,7 @@ def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
                              editor=editor)
             _mirror_to_grace(cfg, "code", major, 0, git_hash=commit,
                              editor=editor, comment="code counter reset")
-        print("Recorded major version bump to %s.0.a (commit %s)%s"
+        print("Recorded major version bump to %s.0-0 (commit %s)%s"
               % (major, commit[:12], " [dry run]" if dry_run else ""))
     else:
         seq = current["code_seq"] + 1 if major == current["major"] else 0
@@ -91,21 +112,55 @@ def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
             state.insert_code(db, major, seq, commit, editor=editor)
             _mirror_to_grace(cfg, "code", major, seq, git_hash=commit,
                              editor=editor)
-        print("Recorded frontend release %s.*.%s (commit %s)%s"
-              % (major, cremona_letter_code(seq), commit[:12],
+        print("Recorded frontend release %s.*-%s (commit %s)%s"
+              % (major, seq, commit[:12],
                  " [dry run]" if dry_run else ""))
     return event
 
 
+def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
+    """Record the current head of the deployed branch (see ``record_deploy``)."""
+    return record_deploy(db, deployed_commit(repo, branch), config=config,
+                         dry_run=dry_run)
+
+
+class _Connection:
+    """The part of psycodict's database interface that ``state`` uses."""
+
+    def __init__(self, conn):
+        self.conn = conn
+
+    def _execute(self, query, values=None):
+        cur = self.conn.cursor()
+        cur.execute(query, values)
+        return cur
+
+
 def main():
     import argparse
+    from types import SimpleNamespace
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true",
                         help="report without writing to the database")
     parser.add_argument("--branch", default=BRANCH)
+    parser.add_argument("--commit",
+                        help="the pushed commit; connect using $LMFDB_VERSION_DSN")
+    parser.add_argument("--version-file",
+                        help="lmfdb/version.py as of --commit")
     args = parser.parse_args()
-    from lmfdb import db
-    check_deploy(db, dry_run=args.dry_run, branch=args.branch)
+    if args.commit is None:
+        from lmfdb import db
+        check_deploy(db, dry_run=args.dry_run, branch=args.branch)
+        return
+    # SQL objects in state come from psycodict, so connect with its driver
+    import psycopg
+    major = major_from_file(args.version_file) if args.version_file else None
+    cfg = SimpleNamespace(editor="github-actions",
+                          grace_dsn=os.environ.get("LMFDB_VERSION_GRACE_DSN"))
+    with psycopg.connect(os.environ["LMFDB_VERSION_DSN"],
+                         autocommit=True) as conn:
+        record_deploy(_Connection(conn), args.commit, major=major,
+                      config=cfg, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

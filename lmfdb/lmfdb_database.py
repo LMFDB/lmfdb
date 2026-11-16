@@ -655,8 +655,9 @@ class LMFDBDatabase(PostgresDatabase):
     # Zenodo archiving and the LMFDB version                         #
     ##################################################################
 
-    def update_prod(self, search_tables, data_folder=None, remote_opts=None,
-                    dry_run_backup=True, live=False, **kwds):
+    def update_prod(self, search_tables, description=None, bump=None,
+                    data_folder=None, remote_opts=None, dry_run_backup=True,
+                    live=False, **kwds):
         """
         Push tables to production and archive them on Zenodo: the one-stop
         replacement (run on proddb) for the manual sequence of
@@ -665,6 +666,13 @@ class LMFDBDatabase(PostgresDatabase):
         INPUT:
 
         - ``search_tables`` -- the tables to copy from devmirror
+        - ``description`` -- what changed, as given in the request to move
+            the data to production; shown on the new Zenodo versions.  A
+            string for all tables or a dict by table name.
+        - ``bump`` -- ``"minor"`` or ``"major"`` (or a dict by table name), as
+            given in the request: how each table's record version changes.
+            Both are required for tables already archived on Zenodo, and are
+            checked before anything is copied when the backup is live.
         - ``data_folder`` -- where to put the dump (must not exist yet);
             defaults to a dated folder under the staging directory of the
             Zenodo configuration.  Note that /tmp is a poor choice: the
@@ -677,6 +685,9 @@ class LMFDBDatabase(PostgresDatabase):
         - ``**kwds`` -- passed to ``reload_all``
         """
         from lmfdb.zenodo.config import ZenodoConfig
+        if not dry_run_backup:
+            from lmfdb.zenodo.backup import require_change_info
+            require_change_info(self, search_tables, description, bump)
         if data_folder is None:
             from lmfdb.zenodo.state import utcnow
             data_folder = os.path.join(
@@ -688,7 +699,8 @@ class LMFDBDatabase(PostgresDatabase):
         kwds.setdefault("restat", False)
         self.reload_all(data_folder, **kwds)
         return self.zenodo_backup(data_folder, dry_run=dry_run_backup,
-                                  live=live)
+                                  live=live, description=description,
+                                  bump=bump)
 
     def zenodo_backup(self, data_folder, tables=None, dry_run=True,
                       live=False, **kwds):
@@ -697,7 +709,9 @@ class LMFDBDatabase(PostgresDatabase):
         (skipping unchanged tables and those excluded in
         lmfdb/zenodo/tables.yaml), then update the knowls and registry
         records and increment the LMFDB data version.  With ``dry_run=True``
-        (the default) just report what would happen.
+        (the default) just report what would happen.  Pass ``description``
+        and ``bump`` as for ``update_prod``; see
+        ``lmfdb.zenodo.backup.backup_folder`` for the other options.
         """
         from lmfdb.zenodo.backup import backup_folder
         return backup_folder(self, data_folder, tables=tables,
@@ -739,17 +753,17 @@ class LMFDBDatabase(PostgresDatabase):
         state.ensure_tables(self)
         if state.latest_versions(self) is None:
             if git_hash is None:
-                # record the currently deployed commit so the watcher's first
-                # run doesn't count it as a new frontend release
+                # record the currently deployed commit as {MAJOR}.0-0, so it
+                # is never counted as a new frontend release
                 try:
                     from lmfdb.zenodo.watcher import deployed_commit
                     git_hash = deployed_commit()
                 except Exception as err:
                     print("Could not determine the deployed commit (%s); "
-                          "the first watcher run will record it" % err)
+                          "the next push to web will be recorded" % err)
             state.insert_major(self, MAJOR, git_hash=git_hash, editor=editor,
                                comment="versioning system activated")
-            print("Version history initialized at %s.0.a" % MAJOR)
+            print("Version history initialized at %s.0-0" % MAJOR)
 
 
 db = LMFDBDatabase()

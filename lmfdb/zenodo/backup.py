@@ -34,7 +34,7 @@ from pathlib import Path
 from . import metadata, packaging, state
 from .client import ZenodoClient, QuotaExceeded, DEFAULT_QUOTA
 from .config import ZenodoConfig
-from .versioning import format_version
+from .versioning import BUMPS, format_version, next_record_version
 
 KNOWLS_NAME = "lmfdb_knowls"
 REGISTRY_NAME = "lmfdb_version_registry"
@@ -154,7 +154,8 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
     try:
         for fname, (path, md5) in sorted(files.items()):
             if md5 is not None and existing.get(fname, "").endswith(md5):
-                uploaded[fname] = {"size": path.stat().st_size, "md5": md5}
+                uploaded[fname] = {"size": path.stat().st_size, "md5": md5,
+                                   "reused": True}
                 continue
             info = client.upload_file(bucket, path, name=fname)
             uploaded[fname] = {"size": path.stat().st_size,
@@ -194,9 +195,76 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
 # The main entry point                                               #
 ######################################################################
 
+FIRST_VERSION_NOTES = "First version archived on Zenodo."
+
+
+def _for_table(value, name):
+    """``value`` itself, or ``value[name]`` when it is a dict keyed by table."""
+    if isinstance(value, dict):
+        return value.get(name)
+    return value
+
+
+def _change_info(db, name, prev, description, bump, md5s=None):
+    """
+    The record version, bump and notes for uploading a new version of
+    ``name`` (whose latest published attempt is ``prev``), as a dict with keys
+    ``version``, ``bump``, ``notes`` and ``missing`` (the arguments that still
+    need to be supplied).
+
+    When ``md5s`` matches an interrupted attempt, that attempt's bump and
+    notes fill in for missing arguments, so resuming needs neither.
+    """
+    notes, how = _for_table(description, name), _for_table(bump, name)
+    if how is not None and how not in BUMPS:
+        raise ValueError("bump for %s must be one of %s, not %r"
+                         % (name, ", ".join(BUMPS), how))
+    if md5s is not None:
+        last = state.latest_attempt(db, name)
+        if (last and last["status"] in state.UNFINISHED
+                and last["source_md5s"] == md5s):
+            notes = notes or last["notes"]
+            how = how or last["bump"]
+    if prev is None:
+        return {"version": next_record_version(None, None), "bump": None,
+                "notes": notes or FIRST_VERSION_NOTES, "missing": []}
+    missing = [arg for arg, val in [("bump", how), ("description", notes)]
+               if not val]
+    return {"version": None if how is None
+            else next_record_version(prev["version"], how),
+            "bump": how, "notes": notes, "missing": missing}
+
+
+def require_change_info(db, tables, description, bump):
+    """
+    Raise ValueError unless every eligible table among ``tables`` that
+    already has a published record is given both a ``bump`` and a
+    ``description``.  Used to fail fast before pushing tables to production.
+    """
+    include = classify(tables, load_tables_yaml())[0]
+    missing = {}
+    for name in include:
+        info = _change_info(db, name, state.latest_published(db, name),
+                            description, bump)
+        if info["missing"]:
+            missing[name] = info["missing"]
+    if missing:
+        raise ValueError(_missing_message(missing))
+
+
+def _missing_message(missing):
+    return ("For tables that already have a Zenodo record, give a "
+            "description of the change and whether it is a major or minor "
+            "version update (description=..., bump='minor'|'major'; either "
+            "may be a dict by table name).  Missing: %s"
+            % "; ".join("%s (%s)" % (name, ", ".join(args))
+                        for name, args in sorted(missing.items())))
+
+
 def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
                   config=None, editor=None, comment=None, staging_dir=None,
-                  finalize_version=True, force=False):
+                  finalize_version=True, force=False, description=None,
+                  bump=None):
     """
     Archive the tables whose dump files are in ``data_folder`` (the folder
     just passed to ``reload_all``) on Zenodo.
@@ -204,20 +272,33 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
     INPUT:
 
     - ``tables`` -- restrict to these tables (default: everything found)
+    - ``description`` -- what changed, as supplied by the contributor of the
+      data; shown on each new Zenodo version.  A string applying to every
+      table, or a dict by table name.  Required for tables that already have
+      a published record.
+    - ``bump`` -- ``"major"`` or ``"minor"`` (or a dict by table name): how
+      the record version of each changed table is incremented.  Required
+      like ``description``; first versions are always ``1.0``.
     - ``dry_run`` -- report what would happen without packaging or uploading
     - ``live`` -- must be True (in addition to ``dry_run=False`` and
       ``enabled = true`` in the local config) for any network traffic
-    - ``editor``, ``comment`` -- recorded in the version history
+    - ``editor``, ``comment`` -- recorded in the version history (``comment``
+      defaults to ``description`` when that is a string)
     - ``finalize_version`` -- allocate the next data version, refresh the
       knowls and registry records and write ``version_history`` (set to False
       for backfill batches; see ``backfill``)
     - ``force`` -- upload even if the table matches its last published version
+
+    When resuming an interrupted upload of the same content, ``description``
+    and ``bump`` default to those given originally.
 
     Returns a report dict.
     """
     cfg = config or ZenodoConfig()
     spec = load_tables_yaml()
     editor = editor or cfg.editor
+    if comment is None and isinstance(description, str):
+        comment = description
 
     found = packaging.discover_tables(data_folder)
     if tables is not None:
@@ -248,17 +329,24 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
             continue
         size = sum(p.stat().st_size
                    for p in packaging.table_files(data_folder, name))
-        plan["upload"].append({
+        item = {
             "table": name,
             "first_version": prev is None,
+            "previous_version": prev and prev["version"],
             "owner": _owner_for(name, spec, cfg, prev) or "UNASSIGNED",
             "uncompressed_bytes": size,
             "source_md5s": md5s,
-        })
+        }
+        item.update(_change_info(db, name, prev, description, bump, md5s))
+        plan["upload"].append(item)
 
     _print_plan(plan, dry_run)
     if dry_run:
         return plan
+    missing = {item["table"]: item["missing"] for item in plan["upload"]
+               if item["missing"]}
+    if missing:
+        raise ValueError(_missing_message(missing))
     if not cfg.enabled:
         raise RuntimeError(
             "Uploads are disabled (%s).  Set enabled = true in the [zenodo] "
@@ -270,20 +358,26 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
         if item["owner"] == "UNASSIGNED":
             raise ValueError("no owner for %s: set it in tables.yaml or "
                              "default_owner in %s" % (name, cfg.path))
+        version, notes = item["version"], item["notes"]
         attempt = _resume_or_start(db, name, item)
         state.update_attempt(db, attempt["id"], status="packaging")
         manifest = packaging.package_table(
             data_folder, name, staging,
             chunk_gb=cfg.chunk_gb, level=cfg.compression_level,
-            lmfdb_version=pending_version,
-            readme=metadata.table_readme(db, name, pending_version))
+            lmfdb_version=pending_version, record_version=version,
+            readme=metadata.table_readme(db, name, version,
+                                         lmfdb_version=pending_version,
+                                         notes=notes))
         nrows = manifest["source_files"][name + ".txt"]["rows"]
         deposit_md = metadata.deposit_metadata(
             metadata.table_title(name),
-            metadata.table_description_html(db, name, pending_version, nrows),
-            pending_version,
+            metadata.table_description_html(db, name, version, nrows,
+                                            lmfdb_version=pending_version,
+                                            notes=notes),
+            version,
             community=cfg.community,
-            related_url="%s/api/%s" % (metadata.LMFDB_URL, name))
+            related_url="%s/api/%s" % (metadata.LMFDB_URL, name),
+            notes=notes)
         client = ZenodoClient(cfg.token_for(item["owner"]),
                               sandbox=cfg.sandbox, live=live)
         row = _upload_record(db, client, cfg, attempt, name,
@@ -292,25 +386,29 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
             plan["published"][name] = _tables_entry(row)
 
     if finalize_version:
-        finalize(db, cfg=cfg, live=live, editor=editor, comment=comment,
-                 pending=plan)
+        plan["version"] = finalize(db, cfg=cfg, live=live, editor=editor,
+                                   comment=comment)
     return plan
 
 
 def _resume_or_start(db, name, item):
     """Reuse an unfinished attempt for the same content, else start fresh."""
     prev = state.latest_attempt(db, name)
-    if (prev and prev["status"] in ("pending", "packaging", "uploading",
-                                    "awaiting_quota")
+    if (prev and prev["status"] in state.UNFINISHED
             and prev["source_md5s"] == item["source_md5s"]):
-        return prev
-    state.start_attempt(db, name, item["owner"], None, item["source_md5s"])
+        state.update_attempt(db, prev["id"], version=item["version"],
+                             bump=item["bump"], notes=item["notes"])
+    else:
+        state.start_attempt(db, name, item["owner"], item["version"],
+                            item["source_md5s"], bump=item["bump"],
+                            notes=item["notes"])
     return state.latest_attempt(db, name)
 
 
 def _tables_entry(row):
     return {"version": row["version"], "recid": row["recid"],
-            "doi": row["doi"], "concept_doi": row["concept_doi"]}
+            "doi": row["doi"], "concept_doi": row["concept_doi"],
+            "notes": row.get("notes")}
 
 
 def _current_major():
@@ -325,10 +423,21 @@ def _print_plan(plan, dry_run):
     print("To upload: %d tables, %.1f GB uncompressed"
           % (len(plan["upload"]), total / 1e9))
     for item in plan["upload"]:
-        print("  %-35s %8.2f GB  owner=%s%s"
+        if item["first_version"]:
+            change = "new record, version %s" % item["version"]
+        else:
+            change = "%s -> %s (%s)" % (item["previous_version"],
+                                        item["version"] or "?",
+                                        item["bump"] or "bump missing")
+        print("  %-35s %8.2f GB  owner=%s  %s"
               % (item["table"], item["uncompressed_bytes"] / 1e9,
-                 item["owner"],
-                 "  (first version)" if item["first_version"] else ""))
+                 item["owner"], change))
+        if item["notes"]:
+            print("  %-35s notes: %s" % ("", item["notes"]))
+    missing = {item["table"]: item["missing"] for item in plan["upload"]
+               if item["missing"]}
+    if missing:
+        print("MISSING: " + _missing_message(missing))
     for key, label in [("skip_unchanged", "unchanged since last archive"),
                        ("excluded", "excluded by tables.yaml"),
                        ("review", "PENDING REVIEW in tables.yaml (skipped)"),
@@ -341,8 +450,7 @@ def _print_plan(plan, dry_run):
 # Version finalization (knowls + registry + version_history)         #
 ######################################################################
 
-def finalize(db, cfg=None, live=False, editor=None, comment=None,
-             pending=None):
+def finalize(db, cfg=None, live=False, editor=None, comment=None):
     """
     Complete a data push: refresh the knowl-database record, assign the next
     data version to all newly published attempts, publish the registry
@@ -357,25 +465,31 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None,
     version = format_version(major, seq)
     staging = Path(cfg.staging_dir) / "records"
 
-    # 1. Knowls record (refreshed on every data push, since knowls change live)
+    # 1. Knowls record (refreshed on every data push, since knowls change
+    # live); its record version gets a minor bump each time
     owner = cfg.default_owner
     if owner is None:
         raise ValueError("default_owner must be set in %s" % cfg.path)
+    prev = state.latest_published(db, KNOWLS_NAME)
+    kbump = None if prev is None else "minor"
+    kversion = next_record_version(prev and prev["version"], kbump)
     manifest = packaging.package_knowls(
         db, staging, chunk_gb=cfg.chunk_gb, level=cfg.compression_level,
-        lmfdb_version=version, readme=metadata.knowls_readme(version))
+        lmfdb_version=version, record_version=kversion,
+        readme=metadata.knowls_readme(version))
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
-    prev = state.latest_published(db, KNOWLS_NAME)
     tables_dict = {}
     if prev and prev["source_md5s"] == md5s:
         tables_dict[KNOWLS_NAME] = _tables_entry(prev)
     else:
-        state.start_attempt(db, KNOWLS_NAME, owner, version, md5s)
+        knotes = "Knowls as of LMFDB data version %s." % version
+        state.start_attempt(db, KNOWLS_NAME, owner, kversion, md5s,
+                            bump=kbump, notes=knotes)
         deposit_md = metadata.deposit_metadata(
             "LMFDB knowledge database (knowls)",
-            metadata.knowls_description_html(version), version,
+            metadata.knowls_description_html(version), kversion,
             community=cfg.community,
-            related_url="%s/knowledge/" % metadata.LMFDB_URL)
+            related_url="%s/knowledge/" % metadata.LMFDB_URL, notes=knotes)
         client = ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox,
                               live=live)
         row = _upload_record(db, client, cfg,
@@ -387,18 +501,17 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None,
                                "finalize")
         tables_dict[KNOWLS_NAME] = _tables_entry(row)
 
-    # 2. Assign the version to newly published attempts
+    # 2. Assign the data version to newly published attempts
     for name, row in state.all_latest_published(db).items():
-        if row["version"] is None:
-            state.update_attempt(db, row["id"], version=version)
-        if pending and name in pending.get("published", {}):
-            pending["published"][name]["version"] = version
+        if row["lmfdb_version"] is None:
+            state.update_attempt(db, row["id"], lmfdb_version=version)
     batch = {name: _tables_entry(row)
              for name, row in state.all_latest_published(db).items()
-             if row["version"] == version and name != REGISTRY_NAME}
+             if row["lmfdb_version"] == version and name != REGISTRY_NAME}
     batch.update(tables_dict)
 
-    # 3. Registry record: full table -> record/version mapping at this version
+    # 3. Registry record: full table -> record/version mapping at this
+    # version; its record versions are the LMFDB data versions themselves
     registry = build_registry(db, version)
     regdir = staging / REGISTRY_NAME
     regdir.mkdir(parents=True, exist_ok=True)
@@ -408,12 +521,15 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None,
         json.dump(registry, F, indent=2, default=str)
         F.write("\n")
     reg_md5s = {regfile.name: packaging.hash_file(regfile)[1]}
-    state.start_attempt(db, REGISTRY_NAME, owner, version, reg_md5s)
+    reg_notes = "Registry for LMFDB data version %s." % version
+    aid = state.start_attempt(db, REGISTRY_NAME, owner, version, reg_md5s,
+                              notes=reg_notes)
+    state.update_attempt(db, aid, lmfdb_version=version)
     manifest = {"artifacts": [], "source_files": {}}
     deposit_md = metadata.deposit_metadata(
         "LMFDB version registry", metadata.registry_description_html(),
         version, community=cfg.community,
-        related_url="%s/version" % metadata.LMFDB_URL)
+        related_url="%s/version" % metadata.LMFDB_URL, notes=reg_notes)
     client = ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox, live=live)
     row = _upload_record(db, client, cfg,
                          state.latest_attempt(db, REGISTRY_NAME),
@@ -456,8 +572,12 @@ def _mirror_to_grace(cfg, kind, major, seq, tables=None, git_hash=None,
         return
     try:
         import json
-        import psycopg2
-        conn = psycopg2.connect(cfg.grace_dsn)
+        # an independent connection, so either driver will do
+        try:
+            import psycopg as driver
+        except ImportError:
+            import psycopg2 as driver
+        conn = driver.connect(cfg.grace_dsn)
         try:
             with conn.cursor() as cur:
                 cur.execute(
@@ -548,7 +668,7 @@ def audit(db, config=None):
     - tables in db.tablenames missing from tables.yaml
     - unfinished or failed upload attempts
     """
-    from psycopg2.sql import SQL
+    from psycodict import SQL
     spec = load_tables_yaml()
     include, excluded, review, unlisted_spec = classify(db.tablenames, spec)
     published = state.all_latest_published(db)
@@ -601,4 +721,9 @@ def status(db):
     print("%d records archived" % len(published))
     for row in state.unfinished(db):
         print("  in flight: %s (%s)" % (row["tablename"], row["status"]))
-    return {"version": cur, "published": published}
+    # Zenodo support (April 2026) considers ~2 TB fair use, but not ~2 TB
+    # uploaded every year
+    from datetime import timedelta
+    year = state.uploaded_bytes_since(db, state.utcnow() - timedelta(days=365))
+    print("Uploaded to Zenodo in the last 365 days: %.1f GB" % (year / 1e9))
+    return {"version": cur, "published": published, "uploaded_last_year": year}

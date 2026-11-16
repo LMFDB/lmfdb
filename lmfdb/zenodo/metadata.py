@@ -31,8 +31,9 @@ def deposit_metadata(title, description_html, version, keywords=None,
     """
     The ``{"metadata": ...}`` payload for the Zenodo deposit API.
 
-    - ``version`` -- the LMFDB data version being published, e.g. ``"2.1"``
+    - ``version`` -- the record version being published, e.g. ``"1.4"``
     - ``related_url`` -- e.g. ``https://www.lmfdb.org/api/nf_fields``
+    - ``notes`` -- description of the changes in this version
     """
     md = {
         "upload_type": "dataset",
@@ -93,20 +94,29 @@ def table_title(tablename):
     return "LMFDB table %s" % tablename
 
 
-def table_description_html(db, tablename, version, nrows=None):
+def table_description_html(db, tablename, version, nrows=None,
+                           lmfdb_version=None, notes=None):
     """
     HTML description for a table's Zenodo record (shown on the record page).
+
+    - ``version`` -- the record version, e.g. ``"1.4"``
+    - ``lmfdb_version`` -- the LMFDB data version it is part of, e.g. ``"2.3"``
+    - ``notes`` -- description of the changes in this version
     """
     desc, cols, dbrows = _table_info(db, tablename)
     nrows = nrows if nrows is not None else dbrows
     e = html.escape
     parts = [
-        "<p>The search table <code>%s</code> of the L-functions and modular "
-        "forms database (<a href=\"%s\">LMFDB</a>), archived from the "
-        "production database as part of LMFDB version %s.</p>"
-        % (e(tablename), LMFDB_URL, e(str(version))),
-        "<p>%s</p>" % e(desc),
+        "<p>Version %s of the search table <code>%s</code> of the L-functions "
+        "and modular forms database (<a href=\"%s\">LMFDB</a>), archived from "
+        "the production database%s.</p>"
+        % (e(str(version)), e(tablename), LMFDB_URL,
+           " as part of LMFDB data version %s" % e(str(lmfdb_version))
+           if lmfdb_version else ""),
     ]
+    if notes:
+        parts.append("<p><b>Changes in this version:</b> %s</p>" % e(notes))
+    parts.append("<p>%s</p>" % e(desc))
     if nrows is not None:
         parts.append("<p>Number of rows: %s.</p>" % nrows)
     parts.append(
@@ -155,17 +165,26 @@ compressed and uncompressed, plus row counts.
 """
 
 
-def table_readme(db, tablename, version, date=None):
-    """Markdown README.md content for a table record."""
+def table_readme(db, tablename, version, date=None, lmfdb_version=None,
+                 notes=None):
+    """
+    Markdown README.md content for a table record; the arguments are as for
+    ``table_description_html``.
+    """
     desc, cols, nrows = _table_info(db, tablename)
     date = date or _today()
     lines = [
-        "# LMFDB table `%s`" % tablename,
+        "# LMFDB table `%s`, version %s" % (tablename, version),
         "",
-        "Archived from the production database of the "
-        "[LMFDB](%s) on %s, as part of LMFDB version %s."
-        % (LMFDB_URL, date, version),
+        "Archived from the production database of the [LMFDB](%s) on %s%s."
+        % (LMFDB_URL, date,
+           ", as part of LMFDB data version %s" % lmfdb_version
+           if lmfdb_version else ""),
         "",
+    ]
+    if notes:
+        lines += ["Changes in this version: %s" % notes, ""]
+    lines += [
         desc,
         "",
     ]
@@ -236,7 +255,7 @@ def registry_description_html():
         "database (<a href=\"%s\">LMFDB</a>).  Each version of this record "
         "corresponds to an LMFDB version and contains a JSON file mapping "
         "every archived search table to the Zenodo record and version "
-        "holding its data at that LMFDB version, together with the git "
-        "commit of the website frontend.  See "
+        "holding its data at that LMFDB version, together with the version "
+        "history (including the git commits of the website frontend).  See "
         "<a href=\"%s/version\">%s/version</a> for the human-readable "
         "version history.</p>" % (LMFDB_URL, LMFDB_URL, LMFDB_URL))
