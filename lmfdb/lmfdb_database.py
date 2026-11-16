@@ -9,6 +9,7 @@ from lmfdb.utils.psycopg_compat import SQL
 from lmfdb.utils.config import Configuration, ConfigWrapper
 from psycodict.utils import DelayCommit
 from psycodict.database import PostgresDatabase
+from psycodict.encoding import Json
 from psycodict.searchtable import PostgresSearchTable
 from psycodict.statstable import PostgresStatsTable
 
@@ -38,6 +39,34 @@ class LMFDBStatsTable(PostgresStatsTable):
 
 # These are the operations where we don't insert records into the ongoing_operations table since they don't take noticeable space.
 _nolog_changetypes = ["delete", "resort", "add_column", "drop_column", "create_table"]
+
+# userdb.dbrecord gets a row per write call, so a script that upserts a million
+# records would otherwise store a million copies of their contents.
+_LOG_PAYLOAD_CAP = 2000
+
+
+def _cap_log_payload(data, cap=_LOG_PAYLOAD_CAP):
+    """
+    Shrink a ``_log_db_change`` payload whose json is over ``cap`` bytes.
+
+    Top-level values of at most 200 bytes are kept, dictionaries (the new
+    values of an upsert or update) are replaced by their sorted keys, anything
+    else by its size, and ``omitted_bytes`` records the original size.
+    """
+    size = len(Json.dumps(data).encode())
+    if size <= cap:
+        return data
+    capped = {}
+    for key, value in data.items():
+        value_size = len(Json.dumps(value).encode())
+        if value_size <= 200:
+            capped[key] = value
+        elif isinstance(value, dict):
+            capped[key] = sorted(map(str, value))
+        else:
+            capped[key] = "<%s bytes omitted>" % value_size
+    capped["omitted_bytes"] = size
+    return capped
 
 
 class LMFDBSearchTable(PostgresSearchTable):
@@ -538,7 +567,8 @@ class LMFDBDatabase(PostgresDatabase):
 
         - ``operation`` -- a string, explaining what operation was performed
         - ``tablename`` -- the name of the table that the change is affecting
-        - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary)
+        - ``**data`` -- any additional information to install in the logging table (will be stored as a json dictionary,
+          shortened by ``_cap_log_payload`` when its json is over ``_LOG_PAYLOAD_CAP`` bytes)
         """
         if aborted:
             if socket.gethostname() != "proddb":
@@ -552,7 +582,7 @@ class LMFDBDatabase(PostgresDatabase):
                 "INSERT INTO userdb.dbrecord (username, time, tablename, logid, operation, data) "
                 "VALUES (%s, %s, %s, %s, %s, %s)"
             )
-            self._execute(inserter, [uid, utc_now_naive(), tablename, logid, operation, data])
+            self._execute(inserter, [uid, utc_now_naive(), tablename, logid, operation, _cap_log_payload(data)])
             if operation not in _nolog_changetypes and socket.gethostname() != "proddb":
                 # This table is used by _check_locks to determine if there is enough space to execute an upload
                 inserter = SQL(
