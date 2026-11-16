@@ -95,13 +95,6 @@ def learnmore_list(path=None, remove=None):
 
 # Top page #####################################################################
 
-@l_function_page.route("/contents")
-def contents():
-    return render_template(
-        "LfunctionContents.html",
-        title="L-functions",
-        learnmore=learnmore_list(),
-        bread=[("L-functions", " ")])
 
 @l_function_page.route("/")
 def index():
@@ -479,8 +472,8 @@ class LFunctionSearchArray(SearchArray):
             name="z1",
             knowl="lfunction.zeros",
             label="Lowest zero",
-            example="9.22237",
-            example_span="9.22237, 10-20")
+            example="14.134725",
+            example_span="14.13473, 10-20")
         degree = TextBox(
             name="degree",
             knowl="lfunction.degree",
@@ -507,7 +500,8 @@ class LFunctionSearchArray(SearchArray):
             name="central_character",
             knowl="lfunction.central_character",
             label="Central character",
-            example="37.1")
+            example="1.1",
+            example_span="1.1 or 5.4")
         prime_quantifier = SubsetBox(
             name="prime_quantifier",
             min_width=110)
@@ -2008,8 +2002,8 @@ def generic_completeness():
 
 @l_function_page.route("/Reliability")
 def generic_reliability():
-    t = 'Reliabililty of L-function data'
-    bread = get_bread(breads=[('Reliabillity', ' ')])
+    t = 'Reliability of L-function data'
+    bread = get_bread(breads=[('Reliability', ' ')])
     return render_template("single.html", kid='rcs.rigor.lfunction', title=t, bread=bread)
 
 @l_function_page.route("/<path:prepath>/Source")

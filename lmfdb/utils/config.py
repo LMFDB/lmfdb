@@ -220,6 +220,51 @@ class Configuration(_Configuration):
             default="lmfdb",
         )
 
+        # TCP keepalives on the database connection.  LMFDB usually talks to a
+        # remote database (see --postgresql-host), where a connection can be
+        # silently dropped by the server, a load balancer, or the network.
+        # Keepalives let libpq detect a dead connection within about a minute
+        # (with the defaults below) instead of blocking on the OS TCP timeout
+        # for several minutes; this is a recurring source of spurious CI
+        # failures that pass on a rerun.  psycodict passes these parameters
+        # straight through to psycopg2.connect, for both the initial connection
+        # and every reconnection.  They are ignored for local unix-socket
+        # connections and never interrupt a running query.  Pass
+        # --postgresql-keepalives 0 to fall back to the operating system
+        # defaults.
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives",
+            dest="postgresql_keepalives",
+            metavar="0|1",
+            type=int,
+            help="use TCP keepalives on the database connection, 0 to disable [default: %(default)s]",
+            default=1,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-idle",
+            dest="postgresql_keepalives_idle",
+            metavar="SECONDS",
+            type=int,
+            help="idle time before the first keepalive probe is sent [default: %(default)s]",
+            default=30,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-interval",
+            dest="postgresql_keepalives_interval",
+            metavar="SECONDS",
+            type=int,
+            help="time between keepalive probes [default: %(default)s]",
+            default=10,
+        )
+        postgresqlgroup.add_argument(
+            "--postgresql-keepalives-count",
+            dest="postgresql_keepalives_count",
+            metavar="N",
+            type=int,
+            help="unanswered keepalive probes before the connection is dropped [default: %(default)s]",
+            default=5,
+        )
+
         # undocumented options
         parser.add_argument(
             "--enable-profiler",

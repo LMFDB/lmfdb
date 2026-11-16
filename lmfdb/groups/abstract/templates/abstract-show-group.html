@@ -78,9 +78,9 @@
         <td>{{KNOWL('group.conjugacy_class', 'Conjugacy classes ')}}&nbsp;</td>
 	{% if gp.cc_known %}
         {% for c in gp.cc_statistics %}
-	<td><a href={{ url_for('.index', group=gp.label, order=c[0], search_type="ConjugacyClasses") }}>{{ c[1] }}</a></td>
+	<td><a href={{ url_for('.conjugacy_class_index', group=gp.label, order=c[0]) }}>{{ c[1] }}</a></td>
         {% endfor %}
-        <td class="border-left"><a href={{url_for('.index', group=gp.label, search_type="ConjugacyClasses") }}>{{ gp.number_conjugacy_classes }}</td>
+        <td class="border-left"><a href={{url_for('.conjugacy_class_index', group=gp.label) }}>{{ gp.number_conjugacy_classes }}</td>
       </tr>
       {% else %}
  {% for c in gp.cc_statistics %}
@@ -501,10 +501,10 @@ Statistics about orders of elements in this group have not been computed.
 <h2> Supergroups </h2>
 
 {% if gp.max_sub_cnt %}
-<p>This group is a {{KNOWL('group.maximal_subgroup', "maximal subgroup")}} of <a href="{{url_for('.index', search_type='Subgroups', maximal='yes', subgroup=gp.label)}}">{{gp.max_sub_cnt}} larger groups</a> in the database.</p>
+<p>This group is a {{KNOWL('group.maximal_subgroup', "maximal subgroup")}} of <a href="{{url_for('.sub_index', maximal='yes', subgroup=gp.label)}}">{{gp.max_sub_cnt}} larger groups</a> in the database.</p>
 {% endif %}
 {% if gp.max_sub_cnt %}
-<p>This group is a {{KNOWL('group.maximal_quotient', "maximal quotient")}} of <a href="{{url_for('.index', search_type='Subgroups', minimal_normal='yes', quotient=gp.label)}}">{{gp.max_quo_cnt}} larger groups</a> in the database.</p>
+<p>This group is a {{KNOWL('group.maximal_quotient', "maximal quotient")}} of <a href="{{url_for('.sub_index', minimal_normal='yes', quotient=gp.label)}}">{{gp.max_quo_cnt}} larger groups</a> in the database.</p>
 {% endif %}
 
 {#
@@ -591,7 +591,7 @@ Statistics about orders of elements in this group have not been computed.
 
     <p>
       See the <a href="{{url_for('.char_table', label=gp.label)}}">${{gp.number_conjugacy_classes}} \times {{gp.number_conjugacy_classes}}$ character table</a>{% if gp.number_conjugacy_classes >= 128 %} (warning: may be slow to load){% endif %}.
-      Alternatively, you may <a href="{{url_for('.index', group=gp.label, search_type='ComplexCharacters')}}">search for characters</a> of this group with desired properties.
+      Alternatively, you may <a href="{{url_for('.char_index', group=gp.label)}}">search for characters</a> of this group with desired properties.
     </p>
 
   {% endif %}
@@ -613,7 +613,7 @@ Statistics about orders of elements in this group have not been computed.
     <p>
       See the <a href="{{url_for('.Qchar_table', label=gp.label)}}">${{gp.number_divisions}} \times {{gp.number_divisions}}$ rational character table</a>{% if gp.number_divisions >= 128 %} (warning: may be slow to load){% endif %}.
       {% if gp.number_divisions == gp.number_conjugacy_classes %}
-        Alternatively, you may <a href="{{url_for('.index', group=gp.label, search_type='ComplexCharacters')}}">search for characters</a> of this group with desired properties.
+        Alternatively, you may <a href="{{url_for('.char_index', group=gp.label)}}">search for characters</a> of this group with desired properties.
       {% endif %}
     </p>
   {% endif %}

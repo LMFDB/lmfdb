@@ -60,7 +60,7 @@ mathematician, or the wikipedia article of someone famous.
 
 An object's home page should provide a wide variety of information about the
 object. Basic information, of interest to both experts and non-experts,
-should appear ear the top. More specialized information should appear
+should appear near the top. More specialized information should appear
 near the bottom.
 
 In the upper right corner of each home page should be the "properties" box,
@@ -127,6 +127,41 @@ in a typical browser when first visiting the page) should contain two things:
 
 Other material can appear in the lower portion of browse and search pages.
 
+#### Search box examples
+
+Each input box in a search array can provide example input in two different ways, and they play different roles:
+
+* `example` is the light grey text shown *inside* the input box (it is rendered as the HTML `placeholder` attribute).
+
+* `example_span` is the text shown in the "e.g. ..." column *beside* the box. If it is not given it defaults to the value of `example`.
+
+Since `example` appears inside the box, a user will naturally assume it is something they could have typed themselves. It should therefore satisfy both of the following properties:
+
+1. It should be a syntactically valid example: i.e. typing it into the box and pressing enter should return a result page rather than an error.
+
+2. The resulting search should be non-empty: i.e. there is at least one object in the database matching the provided example.
+
+`example_span` is not subject to these constraints. It sits outside the box and is free to describe a range of possibilities, list alternatives, or mention syntax that only makes sense in combination with other inputs.
+
+Here are some examples of good code for search boxes:
+
+```python
+# Search box for searching Galois images
+galois_image = TextBox(
+    name="galois_image",
+    label=r"Galois image",
+    knowl="ec.galois_image_search",
+    example="7Cs.2.1",
+    example_span="7Cs.2.1 or 17B")
+
+# Search box for searching intermediate fields
+subfield = TextBox(
+    name="subfield",
+    label="Intermediate field",
+    knowl="nf.intermediate_fields",
+    example="x^2-5",
+    example_span="2.2.5.1 or x^2-5 or a " + display_knowl("nf.nickname", "field nickname"))
+```
 
 ### Knowls
 
@@ -209,7 +244,7 @@ Here are some conventions the LMFDB uses:
 
 1. If X is the URL of an object, then L/X is the URL of its standard
    L-function. According to the Langlands program, other L-functions
-   associated to X may be written on the the form L(s, X, rho). Examples include
+   associated to X may be written in the form L(s, X, rho). Examples include
 
    - L(s, f, sym^2)
    - L(s, f, spin)
@@ -246,7 +281,7 @@ Here are some conventions the LMFDB uses:
    Qsqrt5 as a search parameter for the coefficient field.
 
    Note that number fields like Qsqrt5 has an "official name" as well as a
-   nickname. Many discussions have occurred for what appropriate labels for
+   nickname. Many discussions have occurred about what appropriate labels for
    objects should be. Examine the structure of existing objects in the
    LMFDB very closely to maintain correct labels and relationships.
 
@@ -269,9 +304,9 @@ Here are some conventions the LMFDB uses:
    - `/Motive/Hypergeometric/Q/\<label>`
    - `/NumberField/\<label>`
 
-In practice, prior to deciding on a labelling scheme for new objects, one
+In practice, prior to deciding on a labeling scheme for new objects, one
 should talk to the current LMFDB developers (who now have a lot of experience
-in considering labelling schemes).
+in considering labeling schemes).
 
 
 Templates
@@ -341,13 +376,25 @@ who are mainly involved in coding this particular python file.
 Testing
 -------
 
-- Any contribution to the main LMFDB branch must *pass all the tests*. From the lmfdb folder:
+- Any contribution to the main LMFDB branch must *pass all the tests*. The tests query the database set in your `config.ini` (by default `devmirror.lmfdb.xyz`), so they also need a network connection. To run the full test suite, use the `test.sh` script in the top-level folder of the repository:
   ```
   ./test.sh
   ```
   It takes a few minutes. If sage or some additional parts are missing it may fail,
   consider updating
-  (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted) )
+  (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted))
+
+- The full test suite is rather large, so while developing it is usually easier to run only the tests for the part of the LMFDB you are working on. To do this, you can give one or more folders or files as arguments to `test.sh`:
+  ```
+  ./test.sh lmfdb/elliptic_curves                      # one section
+  ./test.sh lmfdb/elliptic_curves/test_ell_curves.py   # one file
+  ./test.sh lmfdb/number_fields lmfdb/galois_groups    # several sections
+  ./test.sh -n 3 lmfdb/elliptic_curves                 # in parallel, on 3 cores
+  ```
+  You can also run just a single test function by giving its file, class and name, separated by `::`
+  ```
+  ./test.sh lmfdb/elliptic_curves/test_ell_curves.py::EllCurveTest::test_isogeny_class
+  ```
 
 - New blueprints and features should include a `test_<name>.py` file
   which runs tests on all functions.
@@ -356,7 +403,7 @@ Testing
   ```
   ./test.sh coverage
   ```
-  which produces coverage scores saved in `lmfdb/htmlcov`.
+  (optionally followed by folders or files, as above), which produces coverage scores saved in `lmfdb/htmlcov`.
 
 Code Snippets 
 -------------
@@ -382,7 +429,7 @@ field:
 
 ### Snippet testing
 
-Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es, excluding magma. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
+Sometimes computer algebra systems make breaking changes which render the code snippets invalid. To catch this, there's a testing system for snippets implemented in `lmfdb/tests/generate_snippet_tests.py`. This runs the code line by line in the various CAS-es. It does not test correctness of the results, only consistency, by comparing with previous results stored in the `lmfdb/tests/snippet_tests` directory. Normally (and at the time of writing), this is run automatically by Github Actions, which generates the relevant log files. However, it is possible to run it manually using the CLI tool
 
 ```bash
 sage --python ./lmfdb/tests/generate_snippet_tests.py  -h
@@ -430,7 +477,7 @@ this puts you inside an interactive python debugger, where you can:
 - continue executing code using the `n` command.
 
 If you get lost, the command `bt` shows you exactly where you
-are, and `up` helps you to get on step up on the stack.
+are, and `up` helps you to get one step up on the stack.
 Of course, `help <command>` will tell you more.
 
 Git Tips
@@ -438,7 +485,7 @@ Git Tips
 
 Contributing to the LMFDB requires some familiarity with git, a popular version control system which LMFDB uses. The LMFDB code base is hosted on Github, which is a common hosting service owned by Microsoft.
 - [Official git tutorial](https://git-scm.com/docs/gittutorial) and [Github's git guide](https://github.com/git-guides)
-- Use a global .gitignore file to exclude temporary files like `.DS_store` or `main.py~`; [copy-paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore).
+- Use a global .gitignore file to exclude temporary files like `.DS_Store` or `main.py~`; [copy-paste ready instructions on github](https://help.github.com/articles/ignoring-files#global-gitignore).
 - Configure your global .gitconfig for shortcuts or global configuration options; for example:
   ```
 [alias]

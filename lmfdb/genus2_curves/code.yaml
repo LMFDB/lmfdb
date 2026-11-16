@@ -3,39 +3,30 @@ prompt:
   pari:   'gp'
   magma:  'magma'
 
-logo:
-  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  pari: <img src = "https://pari.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_PARI-GP_Couleurs_L150px.png" width="50px">
-  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
-
-not-implemented:
-  sage: |
-    # (not yet implemented)
-  pari: |
-    \\\\ (not yet implemented)
-  magma: |
-    // (not yet implemented)
-
 frontmatter:
   all: |
     {lang} code for working with genus 2 curve {label}.
 
 curve:
-  comment: Define the curve
+  comment: Define the curve (minimal equation)
   magma: |
     R<x> := PolynomialRing(Rationals());
     fh := %s;
     f := R![a : a in fh[1]];
     h := R![a : a in fh[2]];
-    C := HyperellipticCurve(f, h);
+    Cmin := HyperellipticCurve(f, h);
+
+simple_curve:
+  comment: Simplified equation
+  magma: Csim := SimplifiedModel(Cmin);
 
 aut:
   comment: Automorphism group
-  magma: AutomorphismGroup(C);
+  magma: AutomorphismGroup(Cmin);
 
 jacobian:
   comment: Jacobian
-  magma: J := Jacobian(SimplifiedModel(C));
+  magma: J := Jacobian(Csim);
 
 tors:
   comment: Torsion subgroup
@@ -43,11 +34,11 @@ tors:
 
 cond:
   comment: Conductor
-  magma: Conductor(LSeries(C));
+  magma: Conductor(LSeries(Cmin%s));
 
 disc:
   comment: Discriminant
-  magma: Discriminant(C);
+  magma: Discriminant(Cmin);
 
 ntors:
   comment: Torsion order of Jacobian

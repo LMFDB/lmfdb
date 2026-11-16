@@ -86,7 +86,7 @@ class LmfdbTest(unittest.TestCase):
             http_handler = HTTPHandler()
             https_handler = HTTPSHandler(context=context)
             opener = build_opener(redirect_handler, http_handler, https_handler)
-            response = opener.open(request)
+            response = opener.open(request, timeout=30)
 
             # Check if we were redirected
             final_url = response.geturl()
@@ -96,14 +96,20 @@ class LmfdbTest(unittest.TestCase):
             response_text = response.read().decode("utf-8")
 
             assert text in response_text, f"Text '{text}' not found in response from {path} (final URL: {final_url})"
-        except URLError as e:
-            if e.errno in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN]:
-                pass
-            elif "Connection refused" in str(e):  # not every error comes with a errno
-                pass
+        except (URLError, TimeoutError, ConnectionError) as e:
+            # An unreachable external server is not an LMFDB bug, so skip
+            # rather than fail.  urllib wraps the underlying socket error,
+            # so the errno lives on e.reason, not on the URLError itself
+            # (URLError.errno is always None).
+            reason = getattr(e, "reason", e)
+            errnum = getattr(reason, "errno", None)
+            if (isinstance(reason, (TimeoutError, ConnectionError))
+                    or errnum in [errno.ETIMEDOUT, errno.ECONNREFUSED, errno.EHOSTDOWN,
+                                  errno.EHOSTUNREACH, errno.ENETUNREACH, errno.ECONNRESET]
+                    or "timed out" in str(e)
+                    or "Connection refused" in str(e)):
+                self.skipTest(f"External server unreachable for {path}: {e}")
             else:
-                print(e)
-                print(e.errno)
                 raise
 
     def assert_if_magma(self, expected, magma_code, mode='equal'):

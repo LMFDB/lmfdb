@@ -18,7 +18,8 @@ from lmfdb.utils import (coeff_to_poly, coeff_to_poly_multi,
     web_latex, to_dict, comma, flash_error, display_knowl, raw_typeset, integer_divisors, integer_squarefree_part,
     parse_rational_to_list, parse_ints, parse_floats, parse_bracketed_posints, parse_primes,
     SearchArray, TextBox, SelectBox, SubsetBox, TextBoxWithSelect, CountBox, Downloader,
-    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet)
+    StatsDisplay, parse_element_of, parse_signed_ints, search_wrap, redirect_no_cache, web_latex_factored_integer, CodeSnippet,
+    redirect_to_beta)
 from lmfdb.utils.interesting import interesting_knowls
 from lmfdb.utils.search_columns import SearchColumns, MathCol, LinkCol, ProcessedCol, MultiProcessedCol, CheckCol, FloatCol, ListCol
 from lmfdb.utils.common_regex import ZLLIST_RE
@@ -30,7 +31,7 @@ from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
-from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
+from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory, congruent_number_data_files
 from lmfdb.sato_tate_groups.main import st_display_knowl
 
 q = ZZ['x'].gen()
@@ -48,7 +49,7 @@ def sorting_label(lab1):
     return (int(a), class_to_int(b), int(c))
 
 def get_bread(tail=[]):
-    base = [('Elliptic curves', url_for("ecnf.index")), (r'$\Q$', url_for(".rational_elliptic_curves"))]
+    base = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves"))]
     if not isinstance(tail, list):
         tail = [(tail, " ")]
     return base + tail
@@ -123,6 +124,10 @@ def rational_elliptic_curves(err_args=None):
                            title=t,
                            bread=get_bread(),
                            learnmore=learnmore_list(),
+                           related_sections=[
+                               (r'Elliptic curves over $\Q(\alpha)$', url_for("ecnf.index")),
+                               ('Classical modular forms', url_for("cmf.index")),
+                           ],
                            calling_function="ec.rational_elliptic_curves",
                            **err_args)
 
@@ -650,7 +655,7 @@ def elliptic_curve_search(info, query):
                     info['galois_image'] = ','.join(modell_labels + elladic_labels)
                 query['modell_images'] = { '$contains': modell_labels }
 
-    # The button which used to be labelled Optimal only no/yes"
+    # The button which used to be labeled Optimal only no/yes"
     # (default: no) has been renamed "Curves per isogeny class
     # all/one" (default: all).  When this option is "one" we only list
     # one curve in each class, currently choosing the curve with
@@ -963,7 +968,7 @@ def render_congruent_number_data():
     bread = [("Datasets", url_for("datasets")), (t, " ")]
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
-        if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+        if info['filename'] in congruent_number_data_files and os.path.isfile(filepath) and os.access(filepath, os.R_OK):
             return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
@@ -988,6 +993,9 @@ def render_sw_ecdb():
     t = 'Stein-Watkins elliptic curve database'
     bread = [("Datasets", url_for("datasets")), ("Stein-Watkins dataset", " ")]
     if 'Fetch' in info:
+        moved = redirect_to_beta()
+        if moved is not None:
+            return moved
         errors = []
         if info.get("ctype") == "all":
             fname = "a.{:03d}"
@@ -1063,6 +1071,9 @@ def render_bhkssw():
     #    (7312946, 567, r"2.6 \cdot 10^{10}", r"2.7 \cdot 10^{10}", "27e9db.txt"),
     #]
     if 'Fetch' in info:
+        moved = redirect_to_beta()
+        if moved is not None:
+            return moved
         fname = "{}.txt"
         kmax = 2699
         errors = []
@@ -1426,7 +1437,8 @@ class ECSearchArray(SearchArray):
             name="galois_image",
             label=r"Galois image",
             short_label=r"Galois image",
-            example="13S4 or 13.91.3.2",
+            example="13.91.3.2",
+            example_span="13S4 or 13.91.3.2",
             knowl="ec.galois_image_search",
             advanced=True)
         nonmax_quant = SubsetBox(
