@@ -34,4 +34,6 @@ Submodules
 Nothing here talks to Zenodo (or the network) unless explicitly asked to.
 """
 
-from .versioning import format_version, parse_version  # noqa: F401
+from .versioning import format_version, parse_version
+
+__all__ = ["format_version", "parse_version"]

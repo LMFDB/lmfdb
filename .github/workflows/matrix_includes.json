@@ -20,13 +20,13 @@
         "server": "devmirror"
     },
     {
-        "files": "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py",
-        "folders": "galois_groups siegel_modular_forms",
+        "files": "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/zenodo/test_zenodo_offline.py",
+        "folders": "galois_groups siegel_modular_forms zenodo",
         "server": "proddb"
     },
     {
-        "files": "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py",
-        "folders": "galois_groups siegel_modular_forms",
+        "files": "lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/zenodo/test_zenodo_offline.py",
+        "folders": "galois_groups siegel_modular_forms zenodo",
         "server": "devmirror"
     },
     {
