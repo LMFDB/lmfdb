@@ -252,21 +252,34 @@ def _stored_rows(blob):
     return json.loads(zlib.decompress(blob))[1]
 
 
+def _agrees(older, older_rows, newer, newer_rows):
+    """
+    Whether the result recorded in ``older`` can still be the current one,
+    given the later recording ``newer``.
+    """
+    if older[6] == newer[6]:
+        return True
+    shared = min(older[2], newer[2])
+    # _same, unlike ==, tells true, 1 and 1.0 apart.
+    if not _same(older_rows[:shared], newer_rows[:shared]):
+        return False
+    if newer[1]:
+        return older[2] == newer[2] if older[1] else older[2] <= newer[2]
+    return not older[1] or older[2] >= newer[2]
+
+
 def choose(recordings):
     """
-    Which of all the recordings (tape rows) of one query to keep: the newest,
-    since the data may have changed in between, unless it is partial and an
-    older one agrees with it as far as it goes and covers more.  That one
-    keeps its own recording time, so it goes stale no later than it should.
+    Which of all the recordings (tape rows) of one query to keep: of those
+    every later recording agrees with, the one covering the most of the
+    result.  The newest always qualifies; an older one keeps its own
+    recording time, so it goes stale no later than it should.
     """
-    newest = max(recordings, key=lambda rec: (rec[3], rec[1], rec[2], rec[6]))
-    if newest[1]:
-        return newest
-    rows = _stored_rows(newest[6])
-    # _same, unlike ==, tells true, 1 and 1.0 apart.
-    covering = [rec for rec in recordings
-                if (rec[1] or rec[2] > newest[2]) and _same(_stored_rows(rec[6])[:newest[2]], rows)]
-    return max(covering, key=lambda rec: (rec[1], rec[2], rec[3], rec[6]), default=newest)
+    recordings = sorted(set(recordings), key=lambda rec: (rec[3], rec[1], rec[2], rec[6]))
+    rows = [_stored_rows(rec[6]) for rec in recordings]
+    current = [rec for i, rec in enumerate(recordings)
+               if all(_agrees(rec, rows[i], recordings[j], rows[j]) for j in range(i + 1, len(recordings)))]
+    return max(current, key=lambda rec: (rec[1], rec[2], rec[3], rec[6]))
 
 
 class _Entry:

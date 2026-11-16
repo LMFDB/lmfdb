@@ -308,12 +308,20 @@ class DbTapeTest(unittest.TestCase):
         for recs in [((1, flags, early), (0, [({"flag": 1},)], late)),
                      ((0, [({"flag": 1},)], late), (1, flags, early))]:
             self.assertEqual(merged(*recs)[:2], (0, late))
-        # Neither the order of the recordings nor how they are split between
-        # tapes changes the outcome; an intermediate recording that
-        # contradicts the newest cannot win.
-        a, b, c = (1, [("a",), ("b",)], "08:00"), (1, [("c",), ("d",)], "09:00"), (0, [("a",)], "10:00")
-        for order in itertools.permutations([a, b, c]):
-            self.assertEqual(merged(*order), (1, "08:00", a[1]), order)
-            self.assertEqual(merged(*order, one_file=True), (1, "08:00", a[1]), order)
+        # A recording is only kept if every later one agrees with it, however
+        # the recordings are ordered or split between tapes.
+        a = (1, [("a",), ("b",)], "08:00")
+        cases = [
+            # b was deleted by 09:00; a partial read at 10:00 cannot bring it back.
+            ((a, (1, [("a",)], "09:00"), (0, [("a",)], "10:00")), (1, "09:00", [("a",)])),
+            # The result changed at 09:00, so only the 10:00 read is current.
+            ((a, (1, [("c",), ("d",)], "09:00"), (0, [("a",)], "10:00")), (0, "10:00", [("a",)])),
+            # Nothing contradicts the 08:00 result, which covers the most.
+            ((a, (0, [("a",), ("b",)], "09:00"), (0, [("a",)], "10:00")), (1, "08:00", [("a",), ("b",)])),
+        ]
+        for recordings, expected in cases:
+            for order in itertools.permutations(recordings):
+                self.assertEqual(merged(*order), expected, order)
+                self.assertEqual(merged(*order, one_file=True), expected, order)
         with self.assertRaises(ValueError):
             merged((1, one, early), (1, one, late), seeds=("5", "6"))
