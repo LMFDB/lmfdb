@@ -44,20 +44,20 @@ def deployed_commit(repo=REPO, branch=BRANCH):
 
 def major_at_commit(commit, current_major):
     """
-    MAJOR as declared in lmfdb/version.py at the given commit; falls back to
-    ``current_major`` when the file does not exist there (commits predating
-    the versioning system) or cannot be fetched.
+    MAJOR as declared in lmfdb/version.py at the given commit, or
+    ``current_major`` for commits predating the versioning system (no such
+    file).  Any other failure to read it raises, so that the commit is not
+    recorded under a guessed major version.
     """
     import requests
-    try:
-        resp = requests.get(RAW_VERSION_FILE % commit, timeout=60)
-        if resp.status_code == 200:
-            m = MAJOR_RE.search(resp.text)
-            if m:
-                return int(m.group(1))
-    except Exception as err:
-        print("WARNING: could not read version.py at %s: %s" % (commit, err))
-    return current_major
+    resp = requests.get(RAW_VERSION_FILE % commit, timeout=60)
+    if resp.status_code == 404:
+        return current_major
+    resp.raise_for_status()
+    m = MAJOR_RE.search(resp.text)
+    if not m:
+        raise ValueError("no MAJOR in lmfdb/version.py at %s" % commit)
+    return int(m.group(1))
 
 
 def major_from_file(path):

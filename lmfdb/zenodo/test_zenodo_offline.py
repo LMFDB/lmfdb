@@ -444,6 +444,70 @@ def test_upload_retry_resends_whole_file(tmp_path, monkeypatch):
     assert bodies == [payload, payload]
 
 
+def test_quota_response_is_classified(tmp_path):
+    pytest.importorskip("requests")
+    from lmfdb.zenodo.client import QuotaExceeded, ZenodoError
+    path = tmp_path / "zzz_demo.txt.zst"
+    path.write_bytes(b"payload")
+    message = {}
+
+    class Session:
+        def request(self, method, url, data=None, **kwds):
+            return _Response(400, {"status": 400, "message": message["text"]})
+
+    client = ZenodoClient("fake-token", live=True, min_interval=0, log=lambda msg: None)
+    client._session = Session()
+    # what Zenodo returns for an upload beyond the record's remaining quota
+    message["text"] = "File size limit exceeded."
+    with pytest.raises(QuotaExceeded):
+        client.upload_file("https://example.org/bucket", path)
+    message["text"] = "Validation error."
+    with pytest.raises(ZenodoError) as err:
+        client.upload_file("https://example.org/bucket", path)
+    assert type(err.value) is ZenodoError
+
+
+def test_major_at_commit(monkeypatch):
+    requests = pytest.importorskip("requests")
+    from lmfdb.zenodo import watcher
+
+    class Resp:
+        def __init__(self, status, text=""):
+            self.status_code, self.text = status, text
+
+        def raise_for_status(self):
+            if self.status_code >= 400:
+                raise requests.HTTPError(str(self.status_code))
+
+    responses = {"a": Resp(200, "MAJOR = 3\n"), "b": Resp(404), "c": Resp(503),
+                 "d": Resp(200, "LEGACY_VERSION = 'x'\n")}
+    monkeypatch.setattr(requests, "get",
+                        lambda url, timeout: responses[url.split("/")[-3]])
+    assert watcher.major_at_commit("a", 2) == 3
+    assert watcher.major_at_commit("b", 2) == 2  # predates lmfdb/version.py
+    with pytest.raises(requests.HTTPError):  # never guess on a transient error
+        watcher.major_at_commit("c", 2)
+    with pytest.raises(ValueError):
+        watcher.major_at_commit("d", 2)
+
+
+def test_readme_lists_columns():
+    from types import SimpleNamespace
+    # the interface of psycodict 1.0's search tables (no extra_cols)
+    table = SimpleNamespace(
+        search_cols=["label", "dim"],
+        col_type={"id": "bigint", "label": "text", "dim": "integer"},
+        description=lambda: "A test table",
+        column_description=lambda: {"label": "The label", "dim": "The dimension"},
+        stats=SimpleNamespace(quick_count=lambda query: 1))
+    db = {"zzz_demo": table}
+    assert metadata._table_info(db, "zzz_demo") == ("A test table", [
+        ("id", "bigint", ""), ("label", "text", "The label"),
+        ("dim", "integer", "The dimension")], 1)
+    assert "| `dim` | `integer` | The dimension |" in metadata.table_readme(
+        db, "zzz_demo", "1.0")
+
+
 def test_record_deploy_ignores_superseded_commits(monkeypatch):
     pytest.importorskip("psycodict")
     from types import SimpleNamespace
@@ -554,6 +618,7 @@ def scratch_db(tmp_path):
     db = PostgresDatabase(config=config, create=True, **conninfo_to_dict(dsn))
     db._execute(SQL("CREATE SCHEMA IF NOT EXISTS userdb"))
     for t in ["version_history", "userdb.zenodo_backups", "kwl_knowls", "kwl_deleted",
+              "userdb.dbrecord",
               "userdb.version_history_sandbox", "userdb.zenodo_backups_sandbox"]:
         db._execute(SQL("DROP TABLE IF EXISTS " + t))
     for t, cols in KNOWL_DDL.items():
@@ -634,16 +699,23 @@ def test_major_rows_land_together(scratch_db):
 
 
 class FakeZenodo:
-    """In-memory stand-in for ZenodoClient; ``blocked`` tables exceed quota."""
+    """
+    In-memory stand-in for ZenodoClient.  Uploads for ``blocked`` tables get
+    Zenodo's over-quota response, classified by the real client; published
+    depositions refuse edits; ``lose_publish_response`` makes the next
+    publication succeed but its response fail.
+    """
 
     def __init__(self):
         self.deps, self.next_id, self.blocked = {}, 100, set()
+        self.lose_publish_response = False
 
     def _new(self, files=None, concept=None):
         dep_id = self.next_id
         self.next_id += 1
         self.deps[dep_id] = {"id": dep_id, "files": dict(files or {}),
                              "concept": concept or dep_id, "metadata": {},
+                             "submitted": False, "state": "unsubmitted",
                              "links": {"bucket": "bucket/%s" % dep_id}}
         return self.deps[dep_id]
 
@@ -658,7 +730,11 @@ class FakeZenodo:
         return self._new(prev["files"], prev["concept"])
 
     def update_metadata(self, dep_id, metadata):
-        self.deps[int(dep_id)]["metadata"] = metadata["metadata"]
+        from lmfdb.zenodo.client import ZenodoError
+        dep = self.deps[int(dep_id)]
+        if dep["submitted"]:
+            raise ZenodoError("published depositions cannot be edited")
+        dep["metadata"] = metadata["metadata"]
 
     def list_files(self, dep_id):
         return [{"filename": name, "checksum": "md5:" + md5,
@@ -669,27 +745,39 @@ class FakeZenodo:
         del self.deps[link[0]]["files"][link[1]]
 
     def upload_file(self, bucket, path, name=None):
-        from lmfdb.zenodo.client import QuotaExceeded
         dep = self.deps[int(bucket.split("/")[1])]
         if dep["metadata"].get("title", "").split()[-1] in self.blocked:
-            raise QuotaExceeded("quota")
+            over = {"status": 400, "message": "File size limit exceeded."}
+
+            class Session:
+                def request(self, method, url, **kwds):
+                    return _Response(400, over)
+
+            client = ZenodoClient("fake-token", live=True, min_interval=0,
+                                  log=lambda msg: None)
+            client._session = Session()
+            return client.upload_file(bucket, path, name=name)
         md5 = hashlib.md5(path.read_bytes()).hexdigest()
         dep["files"][name] = md5
         return {"checksum": "md5:" + md5}
 
     def publish(self, dep_id):
         dep = self.deps[int(dep_id)]
-        return {"id": dep["id"], "doi": "10.5072/zenodo.%s" % dep["id"],
-                "conceptrecid": dep["concept"],
-                "conceptdoi": "10.5072/zenodo.%s" % dep["concept"]}
+        dep.update(submitted=True, state="done", doi="10.5072/zenodo.%s" % dep["id"],
+                   conceptrecid=dep["concept"],
+                   conceptdoi="10.5072/zenodo.%s" % dep["concept"])
+        if self.lose_publish_response:
+            self.lose_publish_response = False
+            raise ConnectionError("connection reset after publishing")
+        return {k: dep[k] for k in ["id", "doi", "conceptrecid", "conceptdoi"]}
 
     def verify_record(self, recid, local_md5s):
         return []
 
 
-def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
+def push_setup(db, tmp_path, monkeypatch):
+    """A production archive at version 2.0 of tables zzz_a, zzz_b, on a fake Zenodo."""
     from lmfdb.zenodo import backup, state
-    db = scratch_db
     fake = FakeZenodo()
     monkeypatch.setattr(backup, "ZenodoClient", lambda *args, **kwds: fake)
     monkeypatch.setattr(backup, "_current_major", lambda: 2)
@@ -697,7 +785,12 @@ def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
         "zzz_a": {"backup": "yes"}, "zzz_b": {"backup": "yes"}})
     state.ensure_tables(db)
     state.insert_major(db, 2)
-    cfg = prod_config(tmp_path, enabled=True)
+    return backup, state, fake, prod_config(tmp_path, enabled=True)
+
+
+def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
     for t in ["zzz_a", "zzz_b"]:
         make_dump(tmp_path / "push1", t)
         make_dump(tmp_path / "push2", t, nrows=30)
@@ -721,3 +814,59 @@ def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
     assert tables["zzz_a"]["version"] == tables["zzz_b"]["version"] == "1.1"
     assert tables["zzz_b"]["notes"] == "More rows."
     assert [r["seq"] for r in state.history(db) if r["kind"] == "data"] == [2, 1]
+
+
+def test_newer_dump_supersedes_paused_attempt(scratch_db, tmp_path, monkeypatch):
+    from psycodict import SQL
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "v1", "zzz_a")
+    make_dump(tmp_path / "v2", "zzz_a", nrows=30)
+    fake.blocked.add("zzz_a")
+    plan = backup.backup_folder(db, tmp_path / "v1", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["paused"] == ["zzz_a"]
+    # a corrected dump replaces the paused one before its quota is raised
+    fake.blocked.clear()
+    plan = backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "2.1"
+    rows = state._backup_rows(db, SQL(" WHERE tablename = 'zzz_a' ORDER BY id"), None)
+    assert [r["status"] for r in rows] == ["superseded", "verified"]
+    assert rows[1]["recid"] == rows[0]["draft_id"]  # the paused draft was reused
+
+
+def test_lost_publish_response_is_recovered(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.lose_publish_response = True
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                             config=cfg)
+    row = state.latest_attempt(db, "zzz_a")
+    assert row["status"] == "uploading" and row["draft_id"]
+    draft = row["draft_id"]
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "2.1"
+    row = state.latest_attempt(db, "zzz_a")
+    assert (row["status"], row["recid"]) == ("verified", draft)
+
+
+def test_audit_compares_with_snapshot_time(scratch_db, tmp_path, monkeypatch):
+    from datetime import datetime
+    from psycodict import SQL
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    db._execute(SQL("CREATE TABLE userdb.dbrecord "
+                    "(tablename text, operation text, time timestamp)"))
+    db.tablenames = ["zzz_a"]
+    # dumped at 12:00, production reloaded at 12:05, upload finished at 12:10
+    aid = state.start_attempt(db, "zzz_a", "roe", "1.0", {},
+                              source_time=datetime(2026, 11, 16, 12, 0))
+    state.update_attempt(db, aid, status="verified",
+                         finished=datetime(2026, 11, 16, 12, 10))
+    db._execute(SQL("INSERT INTO userdb.dbrecord VALUES "
+                    "('zzz_a', 'reload', '2026-11-16 12:05')"))
+    assert backup.audit(db, config=cfg)["changed_since_archive"] == ["zzz_a"]

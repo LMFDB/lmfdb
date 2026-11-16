@@ -95,7 +95,12 @@ class ZenodoClient:
                 detail = resp.json()
             except Exception:
                 detail = resp.text[:500]
-            if resp.status_code == 413 or "quota" in str(detail).lower():
+            # Zenodo answers an upload beyond the record's remaining quota
+            # with 400 "File size limit exceeded." (its per-file limit gives
+            # the same message, but our parts stay below it)
+            text = str(detail).lower()
+            if (resp.status_code == 413 or "quota" in text
+                    or "size limit exceeded" in text):
                 raise QuotaExceeded("%s: %s %s" % (desc, resp.status_code, detail))
             raise ZenodoError("%s failed: %s %s" % (desc, resp.status_code, detail))
         if resp.status_code == 204 or not resp.content:

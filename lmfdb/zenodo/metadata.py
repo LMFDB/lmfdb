@@ -78,7 +78,9 @@ def _table_info(db, tablename):
     except Exception:
         coldesc = {}
     try:
-        for col in ["id"] + table.search_cols + table.extra_cols:
+        # extra_cols only exists before psycodict 1.0
+        for col in (["id"] + list(table.search_cols)
+                    + list(getattr(table, "extra_cols", []))):
             typ = table.col_type.get(col, "")
             cols.append((col, typ, coldesc.get(col, "")))
     except Exception:

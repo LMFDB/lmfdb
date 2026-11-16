@@ -48,6 +48,7 @@ STATUSES = [
     "published",      # publish action succeeded
     "verified",       # checksums on Zenodo confirmed against local values
     "failed",         # gave up; error column has details
+    "superseded",     # replaced by a later attempt (e.g. for newer content)
 ]
 UNFINISHED = ("pending", "packaging", "uploading", "awaiting_quota")
 
@@ -150,6 +151,7 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
             bump text,
             notes text,
             lmfdb_version text,
+            source_time timestamp without time zone,
             status text NOT NULL,
             draft_id text,
             source_md5s jsonb,
@@ -359,7 +361,7 @@ def code_rows_for_commit(db, git_hash):
 ######################################################################
 
 _BACKUP_COLS = ("id, tablename, owner, concept_recid, concept_doi, recid, doi, "
-                "version, bump, notes, lmfdb_version, status, draft_id, "
+                "version, bump, notes, lmfdb_version, source_time, status, draft_id, "
                 "source_md5s, uploaded_files, total_size, started, finished, "
                 "error")
 
@@ -373,19 +375,21 @@ def _backup_rows(db, where, values):
 
 
 def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
-                  notes=None):
+                  notes=None, source_time=None):
     """
     Insert a new upload attempt (status ``pending``); returns its id.
 
     ``version`` is the record version being uploaded, ``bump`` the requested
-    increment (None for a first version) and ``notes`` the change description.
+    increment (None for a first version), ``notes`` the change description
+    and ``source_time`` when the archived data was taken from production.
     """
     cur = db._execute(
         SQL("INSERT INTO {0} "
-            "(tablename, owner, version, bump, notes, status, source_md5s, "
-            "started) VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s) "
+            "(tablename, owner, version, bump, notes, source_time, status, "
+            "source_md5s, started) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s) "
             "RETURNING id").format(_backups(db)),
-        [tablename, owner, version, bump, notes, "pending",
+        [tablename, owner, version, bump, notes, source_time, "pending",
          json.dumps(source_md5s), utcnow()],
     )
     return cur.fetchone()[0]
@@ -394,7 +398,8 @@ def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
 def update_attempt(db, attempt_id, **fields):
     """Update columns of an upload attempt (e.g. status, recid, error)."""
     allowed = {"owner", "concept_recid", "concept_doi", "recid", "doi",
-               "version", "bump", "notes", "lmfdb_version", "status",
+               "version", "bump", "notes", "lmfdb_version", "source_time",
+               "status",
                "draft_id", "source_md5s", "uploaded_files", "total_size",
                "finished", "error"}
     bad = set(fields) - allowed

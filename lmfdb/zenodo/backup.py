@@ -153,6 +153,13 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
 
     if attempt.get("draft_id"):
         dep = client.get_deposition(attempt["draft_id"])
+        if dep.get("submitted") and dep.get("state") == "done":
+            # published by an earlier run whose response (or our record of
+            # it) was lost; Zenodo rejects edits to it, so just record it
+            print("%s: draft %s was already published; recording it"
+                  % (name, dep["id"]))
+            return _record_publication(db, client, aid, name, dep, files,
+                                       attempt.get("uploaded_files") or {})
     elif attempt.get("recid") or state.latest_published(db, name):
         prev = attempt.get("recid") or state.latest_published(db, name)["recid"]
         dep = client.new_version(prev)
@@ -195,6 +202,12 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
         return None
 
     published = client.publish(dep_id)
+    return _record_publication(db, client, aid, name, published, files,
+                               uploaded)
+
+
+def _record_publication(db, client, aid, name, published, files, uploaded):
+    """Store a published deposition in the attempt and verify its files."""
     state.update_attempt(
         db, aid,
         status="published",
@@ -292,7 +305,7 @@ def _missing_message(missing):
 def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
                   config=None, editor=None, comment=None, staging_dir=None,
                   finalize_version=True, force=False, description=None,
-                  bump=None):
+                  bump=None, source_time=None):
     """
     Archive the tables whose dump files are in ``data_folder`` (the folder
     just passed to ``reload_all``) on Zenodo.
@@ -317,6 +330,9 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
       table upload is unfinished (set to False by ``backfill``, which
       finalizes once at the end)
     - ``force`` -- upload even if the table matches its last published version
+    - ``source_time`` -- when the dumps matched production (naive UTC), for
+      ``audit``: ``update_prod`` passes the end of its reload; by default the
+      time the dump files were written
 
     When resuming an interrupted upload of the same content, ``description``
     and ``bump`` default to those given originally.
@@ -367,6 +383,7 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
             "owner": _owner_for(name, spec, cfg, prev) or "UNASSIGNED",
             "uncompressed_bytes": size,
             "source_md5s": md5s,
+            "source_time": source_time or packaging.files_time(data_folder, name),
         }
         item.update(_change_info(db, name, prev, description, bump, md5s))
         plan["upload"].append(item)
@@ -434,16 +451,30 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
 
 
 def _resume_or_start(db, name, item):
-    """Reuse an unfinished attempt for the same content, else start fresh."""
+    """
+    Reuse an unfinished attempt for the same content.  Otherwise start a new
+    attempt, retiring any unfinished ones for the table (so that they cannot
+    block finalization) and taking over the latest one's draft and owner:
+    the upload then replaces that draft's files, leaving no orphaned draft.
+    """
     prev = state.latest_attempt(db, name)
     if (prev and prev["status"] in state.UNFINISHED
             and prev["source_md5s"] == item["source_md5s"]):
         state.update_attempt(db, prev["id"], version=item["version"],
                              bump=item["bump"], notes=item["notes"])
-    else:
-        state.start_attempt(db, name, item["owner"], item["version"],
-                            item["source_md5s"], bump=item["bump"],
-                            notes=item["notes"])
+        return state.latest_attempt(db, name)
+    stale = [r for r in state.unfinished(db) if r["tablename"] == name]
+    drafts = [r for r in stale if r["draft_id"]]
+    owner = drafts[-1]["owner"] if drafts else item["owner"]
+    aid = state.start_attempt(db, name, owner, item["version"],
+                              item["source_md5s"], bump=item["bump"],
+                              notes=item["notes"],
+                              source_time=item["source_time"])
+    for r in stale:
+        state.update_attempt(db, r["id"], status="superseded",
+                             error="superseded by attempt %s" % aid)
+    if drafts:
+        state.update_attempt(db, aid, draft_id=drafts[-1]["draft_id"])
     return state.latest_attempt(db, name)
 
 
@@ -511,7 +542,7 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     # attempts at the knowls/registry records left by an interrupted
     # finalize; their open drafts are picked up again by new_version
     for row in state.unfinished(db):
-        state.update_attempt(db, row["id"], status="failed",
+        state.update_attempt(db, row["id"], status="superseded",
                              error="superseded by a later finalize")
     major = _current_major()
     seq = state.next_data_seq(db, major)
@@ -662,16 +693,21 @@ def _dump_once(db, tablename, folder):
     """
     Dump ``tablename`` into ``folder`` unless a completed dump is already
     there; a folder without the completion marker (an interrupted dump) is
-    discarded and dumped again.
+    discarded and dumped again.  Returns the time the dump started (naive
+    UTC), which the marker records.
     """
     import shutil
+    from datetime import datetime
     folder = Path(folder)
-    if (folder / DUMP_COMPLETE).exists():
-        return
+    marker = folder / DUMP_COMPLETE
+    if marker.exists():
+        return datetime.fromisoformat(marker.read_text().split()[1])
     if folder.exists():
         shutil.rmtree(folder)
+    started = state.utcnow()
     db.copy_to([tablename], folder)
-    (folder / DUMP_COMPLETE).write_text(tablename + "\n")
+    marker.write_text("%s %s\n" % (tablename, started.isoformat()))
+    return started
 
 
 def backfill(db, tables=None, dry_run=True, live=False, config=None,
@@ -722,9 +758,10 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
     paused = []
     for t in todo:
         folder = root / t
-        _dump_once(db, t, folder)
+        dumped = _dump_once(db, t, folder)
         plan = backup_folder(sdb, folder, tables=[t], dry_run=False, live=live,
-                             config=cfg, editor=editor, finalize_version=False)
+                             config=cfg, editor=editor, finalize_version=False,
+                             source_time=dumped)
         if t in plan["paused"]:
             paused.append(t)
         else:
@@ -754,6 +791,9 @@ def audit(db, config=None):
     include, excluded, review, unlisted_spec = classify(db.tablenames, spec)
     published = state.all_latest_published(db)
 
+    # compare against when the archived dump was taken, not when its upload
+    # finished: a paused upload can publish a dump that production has since
+    # replaced
     changed, never = [], []
     cur = db._execute(SQL(
         "SELECT tablename, MAX(time) FROM userdb.dbrecord "
@@ -765,9 +805,11 @@ def audit(db, config=None):
         row = published.get(name)
         if row is None:
             never.append(name)
-        elif name in last_change and row["finished"] is not None \
-                and last_change[name] > row["finished"]:
-            changed.append(name)
+        else:
+            taken = row["source_time"] or row["finished"]
+            if name in last_change and taken is not None \
+                    and last_change[name] > taken:
+                changed.append(name)
 
     report = {
         "changed_since_archive": changed,

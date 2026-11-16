@@ -336,6 +336,12 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
     )
 
 
+def files_time(data_folder, tablename):
+    """When a table's dump files were last written, as naive UTC."""
+    mtime = max(p.stat().st_mtime for p in table_files(data_folder, tablename))
+    return datetime.fromtimestamp(mtime, timezone.utc).replace(tzinfo=None)
+
+
 def source_md5s(data_folder, tablename):
     """
     ``{filename: md5}`` of a table's uncompressed dump files -- the change

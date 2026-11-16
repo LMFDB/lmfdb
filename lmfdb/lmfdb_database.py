@@ -732,9 +732,10 @@ class LMFDBDatabase(PostgresDatabase):
         kwds.setdefault("adjust_schema", True)
         kwds.setdefault("restat", False)
         self.reload_all(data_folder, **kwds)
+        from lmfdb.zenodo.state import utcnow
         return self.zenodo_backup(data_folder, dry_run=dry_run_backup,
                                   live=live, description=description,
-                                  bump=bump)
+                                  bump=bump, source_time=utcnow())
 
     def zenodo_backup(self, data_folder, tables=None, dry_run=True,
                       live=False, **kwds):
