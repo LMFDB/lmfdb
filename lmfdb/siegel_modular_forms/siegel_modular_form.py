@@ -33,7 +33,7 @@ from lmfdb.siegel_modular_forms.web_space import (
     aut_rep_type_sort_key, family_str_to_char, family_char_to_str,
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, HAS_MULTIPLICITY, HAS_DIMS_PROVED, display_dim, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_table, HAS_MULTIPLICITY, HAS_DIMS_PROVED, conjectural_mark, display_dim, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.siegel_modular_forms.download import SMF_download
 
 INT_RE = re.compile("^[0-9]*$")
@@ -111,29 +111,50 @@ def display_Fricke(info):
     return any(mf['char_order'] == 1 for mf in info["results"])
 
 # For spaces
-def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
-    # input: ['level', 'weight', 'char_orbit_label', 'hecke_orbit_dims']
-    if hecke_orbit_dims is None: # shouldn't happen
-        return 'unknown'
+def decomp_postprocess(res, info, query):
+    """
+    The Galois orbits of cusp forms stored in each space of the results, as
+    hecke_orbit_dims: a list of (dim, multiplicity).  smf_newspaces has no such
+    column, and the forms stored in a space need not fill it.
+    """
+    if not res:
+        return res
+    proj = ['space_label', 'dim'] + (['multiplicity'] if HAS_MULTIPLICITY else [])
+    orbits = defaultdict(list)
+    for f in db.smf_newforms.search({'space_label': {'$in': [r['label'] for r in res]}, 'is_cuspidal': True}, proj):
+        orbits[f['space_label']].append((f['dim'], f.get('multiplicity') or 1))
+    for r in res:
+        r['hecke_orbit_dims'] = orbits.get(r['label'], [])
+    return res
+
+def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims, new_cusp_dim):
+    # hecke_orbit_dims: the (dim, multiplicity) of the stored orbits of cusp forms (decomp_postprocess)
+    if not hecke_orbit_dims:
+        return ''
     dim_dict = defaultdict(int)
     terms = []
-    for dim in hecke_orbit_dims:
-        dim_dict[dim] += 1
-    for dim in sorted(dim_dict.keys()):
-        count = dim_dict[dim]
+    for dm in hecke_orbit_dims:
+        dim_dict[dm] += 1
+    for dim, mult in sorted(dim_dict):
+        count = dim_dict[(dim, mult)]
+        term = r'%s' % dim if mult == 1 else r'%s\times%s' % (dim, mult)
         query = {'weight':weight,
                  'char_label':'%s.%s'%(level,char_orbit_label),
                  'cusp_dim':dim}
         if count > 3:
-            short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
+            short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(term)
             title = '%s newforms' % count
         else:
-            short = '+'.join([r'\(%s\)'%dim]*count)
+            short = '+'.join([r'\(%s\)'%term]*count)
             title=None
         if count == 1:
             query['jump'] = 'yes'
         link = newform_search_link(short, title=title, **query)
         terms.append(link)
+    # the forms not in the database
+    rest = (new_cusp_dim or 0) - sum(dim * mult for dim, mult in hecke_orbit_dims)
+    if rest > 0:
+        terms.append(r'\(%s\) not computed' % rest)
     return r'+'.join(terms)
 
 def show_ALdims_col(info):
@@ -1263,11 +1284,16 @@ def dimension_space_postprocess(res, info, query):
     dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
                                  url_generator, pick_table, switch_text)
     dim_dict = {}
+    # the entries made of spaces whose dimensions are only conjectural
+    info['conjectural'] = set()
+    info['conjectural_mark'] = conjectural_mark
     for space in res:
         g = int(space['degree'])
         F = ord(space['family'])
         N = space['level']
         k = tuple(space['weight'])
+        if space.get('dims_proved') is False:
+            info['conjectural'].add((g,F,N,k))
         dims = DimGrid.from_db(space)
        # if space.get('num_forms') is None:
         #    dim_dict[g,F,N,k] = False
@@ -1380,7 +1406,7 @@ def dimension_form_search(info, query):
                          'old_eis_F_dim',
                          'old_cusp_Y_dim',
                          'old_cusp_P_dim',
-                         'old_cusp_G_dim'],
+                         'old_cusp_G_dim'] + (['dims_proved'] if HAS_DIMS_PROVED else []),
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1411,13 +1437,14 @@ space_columns = SearchColumns([
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     (MultiProcessedCol("cusp_dim", "smf.display_dim", "Cusp Dim", ["cusp_dim", "dims_proved"], display_dim, short_title="cuspidal dimension", default=True)
      if HAS_DIMS_PROVED else MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True)),
-    MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
+    MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims", "new_cusp_dim"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims", "ALdims_G"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.smf_newspaces,
              title='Newspace search results',
              err_title='Newspace search input error',
              columns=space_columns,
+             postprocess=decomp_postprocess,
              shortcuts={'jump':jump_box,
                         'download':SMF_download().download_spaces},
              url_for_label=url_for_label,
