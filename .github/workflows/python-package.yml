@@ -5,6 +5,15 @@ on:
     branches: [ '**' ]
   pull_request:
     branches: [ main, dev, web ]
+  # Runs on main refresh the query tape (see "Query tape" in Development.md);
+  # the daily one picks up data edits made between pushes.
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      stale_tables:
+        description: 'Tables to fetch again for the query tape even if the edit log does not show a change ("all" for everything)'
+        default: ''
 
 jobs:
   matrix_prep:
@@ -22,7 +31,9 @@ jobs:
         with:
           # Filtering the default input file: '.github/workflows/matrix_includes.json'
           # using JMESPath https://jmespath.org/examples.html
-          filter: "[? '${{ secrets.LMFDB_CI_ACCESS }}' || server == 'devmirror']"
+          # Scheduled and manual runs only refresh the query tape, which the
+          # proddb shards do not use.
+          filter: "[? server == 'devmirror' || ('${{ secrets.LMFDB_CI_ACCESS }}' && '${{ github.event_name }}' != 'schedule' && '${{ github.event_name }}' != 'workflow_dispatch')]"
 
 
   test:
@@ -33,7 +44,9 @@ jobs:
     # environment on a cache miss.  GitHub's default is six hours, which is long
     # enough for a job stuck on the database to hold a runner all morning -- one
     # recently ran for five and a half.  Fail such a job in an hour instead.
-    timeout-minutes: 60
+    # Runs recording the query tape get four hours, since a first recording
+    # (or stale_tables=all) fetches everything from the rate-limited devmirror.
+    timeout-minutes: ${{ github.repository == 'LMFDB/lmfdb' && github.ref == 'refs/heads/main' && matrix.server == 'devmirror' && 240 || 60 }}
     strategy:
       # The devmirror shards share one database.  Bound concurrent jobs so required
       # functional CI does not become an uncontrolled database load test.
@@ -112,14 +125,97 @@ jobs:
       run: |
         sage -python lmfdb/utils/config.py  --postgresql-host proddb.lmfdb.xyz  --postgresql-pass "$LMFDB_CI_ACCESS"
 
+    - name: Fetch the query tape
+      if: matrix.files != 'lint' && matrix.server == 'devmirror'
+      shell: bash
+      env:
+        RECORD: ${{ github.repository == 'LMFDB/lmfdb' && github.ref == 'refs/heads/main' }}
+        STALE_TABLES: ${{ inputs.stale_tables }}
+      run: |
+        url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz
+        if curl -fsSL --retry 3 "$url" | gunzip > dbtape.sqlite; then
+          echo "DBTAPE_FILE=$PWD/dbtape.sqlite" >> "$GITHUB_ENV"
+        else
+          rm -f dbtape.sqlite
+          echo "::warning::Could not fetch the query tape, so every query goes to devmirror"
+        fi
+        if [ "$RECORD" = true ]; then
+          echo "DBTAPE_MODE=record" >> "$GITHUB_ENV"
+          echo "DBTAPE_OUT=$PWD/dbtape-out.sqlite" >> "$GITHUB_ENV"
+          echo "DBTAPE_SEED=${{ github.run_id }}" >> "$GITHUB_ENV"
+          echo "DBTAPE_STALE=$STALE_TABLES" >> "$GITHUB_ENV"
+        else
+          echo "DBTAPE_MODE=replay" >> "$GITHUB_ENV"
+        fi
+        echo "DBTAPE_MISSLOG=$PWD/dbtape-log.txt" >> "$GITHUB_ENV"
+
     - name: Run LMFDB tests
       if: matrix.files != 'lint'
       shell: bash -l {0}
       run: tox -e tests -- ${{ matrix.files}}
 
+    - name: Upload the recorded query tape
+      # Not after a timeout: a partial tape would lose this shard's other results.
+      if: (success() || failure()) && env.DBTAPE_MODE == 'record'
+      uses: actions/upload-artifact@v4
+      with:
+        name: dbtape-${{ strategy.job-index }}
+        path: dbtape-out.sqlite
+        retention-days: 3
+
+    - name: Upload the list of queries not served from the tape
+      if: always() && env.DBTAPE_MODE != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: dbtape-log-${{ strategy.job-index }}
+        path: dbtape-log.txt
+        if-no-files-found: ignore
+        retention-days: 7
 
 
     - name: Run linting
       if: matrix.files == 'lint'
       shell: bash -l {0}
       run: tox -e lint
+
+
+  publish-tape:
+    name: Publish the query tape
+    needs: [matrix_prep, test]
+    # Test failures do not stop publication: the tape records what the data is,
+    # and a failure caused by the data should show up in replays too.
+    if: always() && needs.matrix_prep.result == 'success' && github.repository == 'LMFDB/lmfdb' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: dbtape-publish
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: dbtape-[0-9]*
+        path: tapes
+
+    - name: Merge the shards' tapes and publish the result
+      env:
+        GH_TOKEN: ${{ github.token }}
+        MATRIX: ${{ needs.matrix_prep.outputs.matrix }}
+      run: |
+        # Each shard's tape holds only the results its tests used, so a missing
+        # shard would drop that shard's results; keep the old tape instead.
+        expected=$(jq '[(.include // .)[] | select(.server == "devmirror" and .files != "lint")] | length' <<< "$MATRIX")
+        found=$(ls tapes/*/dbtape-out.sqlite 2> /dev/null | wc -l)
+        if [ "$found" -ne "$expected" ]; then
+          echo "::warning::Only $found of $expected shards recorded a tape, so the published one is unchanged"
+          exit 0
+        fi
+        python3 conftest.py merge dbtape.sqlite tapes/*/dbtape-out.sqlite
+        { echo '```'; python3 conftest.py describe dbtape.sqlite; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        gzip -9 dbtape.sqlite
+        if ! gh release view ci-dbtape > /dev/null 2>&1; then
+          gh release create ci-dbtape --prerelease --latest=false --title "CI query tape" \
+            --notes "Database results replayed by the Tests workflow, replaced on every run on main. See \"Query tape\" in Development.md."
+        fi
+        gh release upload ci-dbtape dbtape.sqlite.gz --clobber

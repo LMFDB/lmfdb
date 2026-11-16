@@ -19,6 +19,8 @@ slow_queries.log
 htmlcov
 .coverage*
 .pytest_cache/
+dbtape*.sqlite*
+dbtape*.txt
 
 # vim swap files
 .*.sw?

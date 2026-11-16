@@ -405,6 +405,22 @@ Testing
   ```
   (optionally followed by folders or files, as above), which produces coverage scores saved in `lmfdb/htmlcov`.
 
+### Query tape
+
+The devmirror test jobs in CI do not fetch most of their data from devmirror, whose bandwidth is limited. They replay database results from a *query tape*: a SQLite file published as `dbtape.sqlite.gz` in the [`ci-dbtape` release](https://github.com/LMFDB/lmfdb/releases/tag/ci-dbtape). The plugin that records and replays it is `conftest.py`, at the top of the repository.
+
+- Queries missing from the tape go to devmirror as usual, so a pull request that adds queries still works; those queries just run live. Each test job's summary says how many queries the tape served, and its `dbtape-log-*` artifact lists the ones it did not.
+- Every run of the Tests workflow on `main` (each push, and one a day) records what its tests fetched and publishes a new tape.
+- Results for a table go stale when the table is edited. LMFDB logs every psycodict editing operation (`reload`, `update_from_file`, `add_column`, ...) in `userdb.dbrecord`, and when the public `lmfdb` role can read that table's `tablename` and `time` columns and it has an index on `time`, replays fetch tables edited since they were recorded from the database instead. So after changing data that a pull request depends on, rerunning its tests is enough.
+- For an edit the log does not show, run the Tests workflow on `main` from the Actions tab with the table names in `stale_tables` (or `all`). Results more than one to three weeks old are refreshed anyway.
+
+To run tests locally against the tape:
+```
+curl -L https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz | gunzip > dbtape.sqlite
+DBTAPE_MODE=replay PYTHONHASHSEED=0 ./test.sh lmfdb/elliptic_curves
+```
+and `python3 conftest.py describe dbtape.sqlite` summarizes what it holds.
+
 Code Snippets 
 -------------
 
