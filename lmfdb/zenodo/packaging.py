@@ -444,6 +444,23 @@ def dump_knowls(db, dump_folder, sep="|"):
     return written
 
 
+def shown_knowls(path):
+    """
+    The ``(id, timestamp)`` of the latest reviewed revision of each knowl in
+    a ``kwl_knowls`` dump: the text www.lmfdb.org shows for it.
+    """
+    latest = {}
+    with open(path, encoding="utf-8", errors="replace") as F:
+        names = copy_fields(F.readline().rstrip("\n"))
+        F.readline()
+        F.readline()
+        for line in F:
+            row = dict(zip(names, copy_fields(line.rstrip("\n"))))
+            if row.get("status") == "1" and row.get("timestamp", "") > latest.get(row["id"], ""):
+                latest[row["id"]] = row["timestamp"]
+    return set(latest.items())
+
+
 def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
                    readme=None, record_version=None, extra_manifest=None):
     """
@@ -455,13 +472,16 @@ def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
     if dump_folder.exists():
         shutil.rmtree(dump_folder)
     files = dump_knowls(db, dump_folder)
+    knowls = dump_folder / (KNOWL_TABLES[0] + ".txt")
+    shown = shown_knowls(knowls)
     manifest = _package_files(
         "lmfdb_knowls", files, staging_dir / "lmfdb_knowls",
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
-        readme=readme,
-        sample_source=dump_folder / (KNOWL_TABLES[0] + ".txt"),
-        sample_options={"keep": lambda r: r.get("status") == "1",
-                        "chosen": "the reviewed revisions"},
+        readme=readme, sample_source=knowls,
+        sample_options={
+            "keep": lambda r: (r.get("id"), r.get("timestamp")) in shown,
+            "chosen": "the knowls as www.lmfdb.org shows them (the latest "
+                      "reviewed revision of each)"},
         extra_manifest=dict(extra_manifest or {}, knowl_tables=KNOWL_TABLES,
                             record_version=record_version),
     )

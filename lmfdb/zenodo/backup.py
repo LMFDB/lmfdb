@@ -572,6 +572,8 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
                if item["missing"]}
     if missing:
         raise ValueError(_missing_message(missing))
+    if plan["upload"]:
+        _ensure_registry(db, cfg, live, staging)
 
     for item in plan["upload"]:
         name = item["table"]
@@ -592,6 +594,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
                 registry_doi=registry_doi,
                 psycodict_version=provenance["exporter"].get("psycodict")))
         nrows = manifest["source_files"][name + ".txt"]["rows"]
+        state.update_attempt(db, attempt["id"], nrows=nrows)
         related = [("%s/api/%s" % (metadata.LMFDB_URL, name), "isSupplementTo")]
         if registry_doi:
             related.append((registry_doi, "isPartOf"))
@@ -680,7 +683,8 @@ def _resume_or_start(db, name, item):
 def _tables_entry(row):
     return {"version": row["version"], "recid": row["recid"],
             "doi": row["doi"], "concept_doi": row["concept_doi"],
-            "notes": row.get("notes"), "size": row.get("total_size")}
+            "notes": row.get("notes"), "size": row.get("total_size"),
+            "rows": row.get("nrows")}
 
 
 def _registry_doi(db):
@@ -775,11 +779,10 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
 
 
 def _finalize(db, cfg, live, editor, comment):
-    owner = cfg.default_owner
-    if owner is None:
-        raise ValueError("default_owner must be set in %s" % cfg.path)
+    owner = _default_owner(cfg)
     staging = _staging(cfg) / "records"
     _complete_registry(db, cfg, live, owner, staging)
+    _ensure_registry(db, cfg, live, staging)
     waiting = _unfinished_tables(db)
     if waiting:
         raise RuntimeError("uploads unfinished for %s; a data version can only "
@@ -806,11 +809,13 @@ def _finalize(db, cfg, live, editor, comment):
     prev = state.latest_published(db, KNOWLS_NAME)
     kbump = None if prev is None else "minor"
     kversion = next_record_version(prev and prev["version"], kbump)
+    registry_doi = _registry_doi(db)
     manifest = packaging.package_knowls(
         state.unwrap(db), staging, chunk_gb=cfg.chunk_gb,
         level=cfg.compression_level, record_version=kversion,
         extra_manifest=_provenance(state.utcnow()),
-        readme=metadata.knowls_readme)
+        readme=lambda manifest: metadata.knowls_readme(
+            manifest, registry_doi=registry_doi))
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
     if not (prev and prev["status"] == "verified"
             and prev["source_md5s"] == md5s):
@@ -820,10 +825,11 @@ def _finalize(db, cfg, live, editor, comment):
             "notes": knotes, "source_md5s": md5s, "source_time": None})
         deposit_md = metadata.deposit_metadata(
             "LMFDB knowledge database (knowls)",
-            metadata.knowls_description_html(), kversion,
+            metadata.knowls_description_html(registry_doi), kversion,
             keywords=["knowls", "mathematical definitions"],
             community=cfg.community,
-            related=[("%s/knowledge/" % metadata.LMFDB_URL, "isSupplementTo")],
+            related=[("%s/knowledge/" % metadata.LMFDB_URL, "isSupplementTo")]
+            + ([(registry_doi, "isPartOf")] if registry_doi else []),
             notes=knotes)
         _require_verified(
             _upload_record(db, _client(db, cfg, attempt["owner"], live), cfg,
@@ -856,16 +862,48 @@ def _complete_registry(db, cfg, live, owner, staging):
     names its data version, so it is published only once the version is
     recorded; an interrupted finalize is completed by the next one.
     """
-    import json
     row = state.latest_data_row(db)
     if row is None or REGISTRY_NAME in (row["tables"] or {}):
         return
+    published = _publish_registry(db, cfg, live, owner, staging,
+                                  row["major"], row["seq"])
+    state.add_to_data_row(db, row["major"], row["seq"], REGISTRY_NAME,
+                          _tables_entry(published))
+
+
+def _ensure_registry(db, cfg, live, staging):
+    """
+    Make sure the registry record exists before anything else is published,
+    so that every record can link to it: if it has no version yet, publish
+    the one for the latest data version, or for ``{major}.0`` (no records
+    yet) before the first.
+    """
     _reconcile(db, cfg, live, [REGISTRY_NAME])
-    version = format_version(row["major"], row["seq"])
+    if state.latest_published(db, REGISTRY_NAME) is not None:
+        return
+    owner = _default_owner(cfg)
+    if state.latest_data_row(db) is not None:
+        _complete_registry(db, cfg, live, owner, staging)
+    else:
+        _publish_registry(db, cfg, live, owner, staging,
+                          state.latest_versions(db)["major"], 0)
+
+
+def _default_owner(cfg):
+    if cfg.default_owner is None:
+        raise ValueError("default_owner must be set in %s" % cfg.path)
+    return cfg.default_owner
+
+
+def _publish_registry(db, cfg, live, owner, staging, major, seq):
+    """Publish (or reuse) the registry record for data version major.seq."""
+    import json
+    _reconcile(db, cfg, live, [REGISTRY_NAME])
+    version = format_version(major, seq)
     regdir = Path(staging) / REGISTRY_NAME
     regdir.mkdir(parents=True, exist_ok=True)
     regfile = regdir / "lmfdb_version_registry.json"
-    registry = build_registry(db, row["major"], row["seq"])
+    registry = build_registry(db, major, seq)
     with open(regfile, "w") as F:
         json.dump(registry, F, indent=2)
         F.write("\n")
@@ -895,9 +933,8 @@ def _complete_registry(db, cfg, live, owner, staging):
                                    {"artifacts": [], "source_files": {}},
                                    deposit_md)
         _require_verified(published, REGISTRY_NAME)
-    state.add_to_data_row(db, row["major"], row["seq"], REGISTRY_NAME,
-                          _tables_entry(published))
     _remove_package(staging, REGISTRY_NAME)
+    return published
 
 
 def _require_verified(row, name):
@@ -917,8 +954,10 @@ def build_registry(db, major, seq):
     recognize a registry it already published.
     """
     rows = state.history(db)
-    anchor = next(r for r in rows if r["kind"] == "data"
-                  and (r["major"], r["seq"]) == (major, seq))
+    # data version {major}.0 is the major bump itself
+    kind = "data" if seq else "major"
+    anchor = next(r for r in rows if r["kind"] == kind and r["major"] == major
+                  and (seq == 0 or r["seq"] == seq))
     tables = state.resolve_version(db, major, seq)["tables"]
     return {
         "lmfdb_version": format_version(major, seq),

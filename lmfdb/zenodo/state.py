@@ -159,6 +159,7 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
             source_md5s jsonb,
             uploaded_files jsonb,
             total_size bigint,
+            nrows bigint,
             quota_gb integer,
             started timestamp without time zone,
             finished timestamp without time zone,
@@ -506,8 +507,8 @@ def code_rows_for_commit(db, git_hash):
 
 _BACKUP_COLS = ("id, tablename, owner, concept_recid, concept_doi, recid, doi, "
                 "version, bump, notes, lmfdb_version, source_time, status, draft_id, "
-                "source_md5s, uploaded_files, total_size, quota_gb, started, "
-                "finished, error")
+                "source_md5s, uploaded_files, total_size, nrows, quota_gb, "
+                "started, finished, error")
 
 
 def _backup_rows(db, where, values):
@@ -545,7 +546,7 @@ def update_attempt(db, attempt_id, **fields):
                "version", "bump", "notes", "lmfdb_version", "source_time",
                "status",
                "draft_id", "source_md5s", "uploaded_files", "total_size",
-               "quota_gb",
+               "nrows", "quota_gb",
                "finished", "error"}
     bad = set(fields) - allowed
     if bad:

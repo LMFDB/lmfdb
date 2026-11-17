@@ -196,6 +196,16 @@ def test_sample_shows_a_row_by_field(tmp_path):
     assert packaging.copy_fields("a|b\\|c|\\N") == ["a", "b\\|c", "\\N"]
 
 
+def test_shown_knowls(tmp_path):
+    dump = tmp_path / "kwl_knowls.txt"
+    dump.write_text("id|status|timestamp|content\ntext|smallint|timestamp|text\n\n"
+                    "a.b|1|2026-01-01 00:00:00|old\n"
+                    "a.b|1|2026-02-01 00:00:00|reviewed\n"
+                    "a.b|0|2026-03-01 00:00:00|beta\n"
+                    "c.d|-2|2026-03-01 00:00:00|deleted\n")
+    assert packaging.shown_knowls(dump) == {("a.b", "2026-02-01 00:00:00")}
+
+
 def test_split_refuses_empty_parts(tmp_path):
     path = tmp_path / "x.zst"
     path.write_bytes(b"data")
@@ -752,13 +762,15 @@ def test_render_knowl():
 def test_registry_readme():
     registry = {"lmfdb_version": "2.2", "tables": {
         "zzz_a": {"version": "1.1", "doi": "10.5281/zenodo.3", "size": 12_400_000,
-                  "notes": "More rows."},
+                  "rows": 66158, "notes": "More rows."},
         "lmfdb_knowls": {"version": "1.0", "doi": "10.5281/zenodo.5", "notes": None}}}
     readme = metadata.registry_readme(registry, {"zzz_a": "Curves (LMFDB table zzz_a)"},
                                       "This data version includes 1 of the 2 tables.")
     assert "# LMFDB version registry, data version 2.2" in readme
     assert ("| Curves (LMFDB table zzz_a) | 1.1 | [10.5281/zenodo.3]"
-            "(https://doi.org/10.5281/zenodo.3) | 12.4 MB | More rows. |") in readme
+            "(https://doi.org/10.5281/zenodo.3) | 66158 | 12.4 MB | More rows. |") in readme
+    assert "(none yet)" in metadata.registry_readme(
+        {"lmfdb_version": "2.0", "tables": {}}, {}, "")
     assert "includes 1 of the 2 tables" in readme
 
 
@@ -1279,6 +1291,8 @@ def test_lost_special_record_response_is_recovered(scratch_db, tmp_path,
     db = scratch_db
     backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
     make_dump(tmp_path / "push", "zzz_a")
+    # the registry's first version (2.0), published before any other record
+    backup._ensure_registry(db, cfg, True, tmp_path / "staging" / "records")
     fake.lose_publish_response = record
     with pytest.raises(ConnectionError):
         backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
@@ -1287,8 +1301,9 @@ def test_lost_special_record_response_is_recovered(scratch_db, tmp_path,
     # version is recorded
     assert (state.latest_data_row(db) is not None) == (record == "registry")
     backup.finalize(db, cfg=cfg, live=True)
-    # each record was published exactly once, and no draft was left behind
-    assert len(fake.deps) == 3
+    # each record was published exactly once, and no draft was left behind:
+    # registry 2.0, zzz_a, the knowls and registry 2.1
+    assert len(fake.deps) == 4
     assert all(dep["submitted"] for dep in fake.deps.values())
     assert set(state.resolve_version(db, 2, 1)["tables"]) == {
         "zzz_a", backup.KNOWLS_NAME, backup.REGISTRY_NAME}
@@ -1503,7 +1518,8 @@ def test_quota_is_raised_for_large_records(scratch_db, tmp_path, monkeypatch):
                                 config=cfg)
     row = state.latest_attempt(db, "zzz_a")
     assert plan["paused"] == ["zzz_a"] and row["status"] == "awaiting_quota"
-    assert "quota increase to 1 GB refused" in row["error"] and not fake.uploads
+    assert "quota increase to 1 GB refused" in row["error"]
+    assert not [name for name in fake.uploads if name.startswith("zzz_a")]
     # once it is freed, re-running raises the quota and completes the push
     fake.refuse_quota = False
     plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
@@ -1636,11 +1652,17 @@ def test_records_link_to_the_registry(scratch_db, tmp_path, monkeypatch):
     registry = state.latest_published(db, backup.REGISTRY_NAME)
     table = state.latest_published(db, "zzz_a")
     reg_md = fake.deps[int(registry["recid"])]["metadata"]
+    assert reg_md["version"] == "2.1"
     assert {"identifier": table["doi"], "relation": "hasPart"} in reg_md["related_identifiers"]
     assert "README.md" in fake.deps[int(registry["recid"])]["files"]
-    # once the registry exists, new table versions point to it
+    # the registry's first version, 2.0, was published before anything else,
+    # so even the first versions of the table and the knowls point to it
+    link = {"identifier": registry["concept_doi"], "relation": "isPartOf"}
+    knowls = state.latest_published(db, backup.KNOWLS_NAME)
+    for row in (table, knowls):
+        assert link in fake.deps[int(row["recid"])]["metadata"]["related_identifiers"]
+    assert table["nrows"] == 20 and state.resolve_version(db, 2, 1)["tables"]["zzz_a"]["rows"] == 20
     backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True, config=cfg,
                          description="More rows.", bump="minor")
     table_md = fake.deps[int(state.latest_published(db, "zzz_a")["recid"])]["metadata"]
-    assert {"identifier": registry["concept_doi"], "relation": "isPartOf"} in \
-        table_md["related_identifiers"]
+    assert link in table_md["related_identifiers"]

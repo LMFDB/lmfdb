@@ -426,9 +426,10 @@ distinguished by `timestamp`.  Its codes:
 - `status`: 1 reviewed, 0 beta (written but not yet reviewed), -1 in
   progress, -2 deleted;
 - `type`: 0 an ordinary knowl, 1 and -1 the annotations shown at the top and
-  bottom of a page, 2 a description of a search table or one of its
-  columns (ids `columns.TABLE` and `columns.TABLE.COLUMN`), -2 a comment on
-  another knowl (`source`).
+  bottom of a page (ids ending in `.top` and `.bottom`), 2 a description of
+  a search table or one of its columns (ids `tables.TABLE` and
+  `columns.TABLE.COLUMN`), -2 a comment on another knowl (`source`; ids
+  ending in `.N.comment`).
 
 www.lmfdb.org shows, for each `id`, the latest revision with status 1, or if
 there is none the latest with status 0 (beta.lmfdb.org shows the latest with
@@ -444,7 +445,7 @@ macros: `{{ KNOWL('id', 'text') }}` links to another knowl, which is at
 """ % (KNOWL_URL % "ID")
 
 
-def knowls_description_html():
+def knowls_description_html(registry_doi=None):
     return (
         "<p>The knowledge database (knowls) of the L-functions and modular "
         "forms database (<a href=\"%s\">LMFDB</a>): the mathematical "
@@ -453,15 +454,15 @@ def knowls_description_html():
         "search tables, with the full revision history.</p>"
         "<p>Unlike the search tables, knowls are edited live on the website, "
         "so this record is refreshed with each LMFDB data push.  %s</p>"
-        % (LMFDB_URL, _html(versions_note(), inline=True)))
+        % (LMFDB_URL, _html(versions_note(registry_doi), inline=True)))
 
 
-def knowls_readme(manifest=None, date=None):
+def knowls_readme(manifest=None, date=None, registry_doi=None):
     lines = [
         "# LMFDB knowledge database (knowls)",
         "",
         "Archived from the production database of the [LMFDB](%s) on %s.  %s"
-        % (LMFDB_URL, date or _today(), versions_note()),
+        % (LMFDB_URL, date or _today(), versions_note(registry_doi)),
         "",
         "License: CC BY-SA 4.0.",
         "",
@@ -513,13 +514,16 @@ def registry_readme(registry, titles, coverage):
         "information, and the version history, in machine-readable form.  "
         "%s" % (LMFDB_URL, registry["lmfdb_version"], coverage),
         "",
-        "| record | version | DOI | size | changes in this version |",
-        "|---|---|---|---|---|",
+        "| record | version | DOI | rows | size | changes in this version |",
+        "|---|---|---|---|---|---|",
     ]
     for name, entry in sorted(registry["tables"].items()):
-        lines.append("| %s | %s | [%s](https://doi.org/%s) | %s | %s |" % (
+        lines.append("| %s | %s | [%s](https://doi.org/%s) | %s | %s | %s |" % (
             titles.get(name, name), entry["version"], entry["doi"],
-            entry["doi"], _size(entry["size"]) if entry.get("size") else "",
+            entry["doi"], entry.get("rows") or "",
+            _size(entry["size"]) if entry.get("size") else "",
             (entry.get("notes") or "").replace("|", "\\|").replace("\n", " ")))
+    if not registry["tables"]:
+        lines.append("| (none yet) | | | | | |")
     lines.append("")
     return "\n".join(lines)
