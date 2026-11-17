@@ -192,27 +192,27 @@ def table_keywords(db, tablename):
     return [tablename] + ([subject] if subject else [])
 
 
-def versions_note(registry_doi=None):
+def versions_note(registry_url=None):
     """
     Records are published before the LMFDB data version that includes them
     is assigned, so they point to the version history rather than name it.
     """
     registry = "the LMFDB version registry on Zenodo"
-    if registry_doi:
-        registry = "the [LMFDB version registry](https://doi.org/%s)" % registry_doi
+    if registry_url:
+        registry = "the [LMFDB version registry](%s)" % registry_url
     return ("The LMFDB versions that include this record version are listed "
             "at %s/version and in %s." % (LMFDB_URL, registry))
 
 
 def table_description_html(db, tablename, version, nrows=None, notes=None,
-                           registry_doi=None):
+                           registry_url=None):
     """
     HTML description for a table's Zenodo record (shown on the record page):
     the mathematics first, then the archive.
 
     - ``version`` -- the record version, e.g. ``"1.4"``
     - ``notes`` -- description of the changes in this version
-    - ``registry_doi`` -- concept DOI of the version registry, if it exists
+    - ``registry_url`` -- link to the version registry, if it exists
     """
     desc, cols, dbrows = _table_info(db, tablename)
     nrows = nrows if nrows is not None else dbrows
@@ -224,7 +224,7 @@ def table_description_html(db, tablename, version, nrows=None, notes=None,
         "the production database%s.  %s</p>"
         % (e(str(version)), e(tablename), LMFDB_URL,
            "" if nrows is None else ", with %s rows" % nrows,
-           _html(versions_note(registry_doi), inline=True)))
+           _html(versions_note(registry_url), inline=True)))
     if notes:
         parts.append("<p><b>Changes in this version:</b> %s</p>" % e(notes))
     parts.append(
@@ -362,7 +362,7 @@ Both ways were tested with %s.
 
 
 def table_readme(db, tablename, version, manifest, date=None, notes=None,
-                 registry_doi=None, psycodict_version=None):
+                 registry_url=None, psycodict_version=None):
     """
     Markdown README.md content for a table record; ``manifest`` is the
     package's MANIFEST.json, the other arguments are as for
@@ -379,7 +379,7 @@ def table_readme(db, tablename, version, manifest, date=None, notes=None,
         "its production database on %s%s.  %s"
         % (version, tablename, LMFDB_URL, date or _today(),
            "" if nrows is None else ", with %s rows" % nrows,
-           versions_note(registry_doi)),
+           versions_note(registry_url)),
         "",
     ]
     if notes:
@@ -445,7 +445,7 @@ macros: `{{ KNOWL('id', 'text') }}` links to another knowl, which is at
 """ % (KNOWL_URL % "ID")
 
 
-def knowls_description_html(registry_doi=None):
+def knowls_description_html(registry_url=None):
     return (
         "<p>The knowledge database (knowls) of the L-functions and modular "
         "forms database (<a href=\"%s\">LMFDB</a>): the mathematical "
@@ -454,15 +454,15 @@ def knowls_description_html(registry_doi=None):
         "search tables, with the full revision history.</p>"
         "<p>Unlike the search tables, knowls are edited live on the website, "
         "so this record is refreshed with each LMFDB data push.  %s</p>"
-        % (LMFDB_URL, _html(versions_note(registry_doi), inline=True)))
+        % (LMFDB_URL, _html(versions_note(registry_url), inline=True)))
 
 
-def knowls_readme(manifest=None, date=None, registry_doi=None):
+def knowls_readme(manifest=None, date=None, registry_url=None):
     lines = [
         "# LMFDB knowledge database (knowls)",
         "",
         "Archived from the production database of the [LMFDB](%s) on %s.  %s"
-        % (LMFDB_URL, date or _today(), versions_note(registry_doi)),
+        % (LMFDB_URL, date or _today(), versions_note(registry_url)),
         "",
         "License: CC BY-SA 4.0.",
         "",
@@ -497,7 +497,11 @@ def registry_description_html():
         "version history on the site.</p>" % (LMFDB_URL, LMFDB_URL, LMFDB_URL))
 
 
-def registry_readme(registry, titles, coverage):
+def doi_url(entry):
+    return "https://doi.org/%s" % entry["doi"]
+
+
+def registry_readme(registry, titles, coverage, record_url=doi_url):
     """
     Markdown README.md for a registry record: a catalog of the records in
     the data version.
@@ -505,6 +509,7 @@ def registry_readme(registry, titles, coverage):
     - ``registry`` -- the registry JSON (see ``backup.build_registry``)
     - ``titles`` -- ``{name: title}`` of the records
     - ``coverage`` -- a sentence on which tables the archive covers
+    - ``record_url`` -- the link for a record's entry (its DOI by default)
     """
     lines = [
         "# LMFDB version registry, data version %s" % registry["lmfdb_version"],
@@ -518,9 +523,9 @@ def registry_readme(registry, titles, coverage):
         "|---|---|---|---|---|---|",
     ]
     for name, entry in sorted(registry["tables"].items()):
-        lines.append("| %s | %s | [%s](https://doi.org/%s) | %s | %s | %s |" % (
+        lines.append("| %s | %s | [%s](%s) | %s | %s | %s |" % (
             titles.get(name, name), entry["version"], entry["doi"],
-            entry["doi"], entry.get("rows") or "",
+            record_url(entry), entry.get("rows") or "",
             _size(entry["size"]) if entry.get("size") else "",
             (entry.get("notes") or "").replace("|", "\\|").replace("\n", " ")))
     if not registry["tables"]:

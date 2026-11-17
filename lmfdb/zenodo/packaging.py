@@ -148,7 +148,7 @@ def copy_fields(line, sep="|"):
 
 
 def write_sample(searchfile, dst, max_rows=10, max_bytes=500000, keep=None,
-                 chosen="the first rows"):
+                 chosen=None):
     """
     Write a Markdown preview of a search file to ``dst``: its first data row
     field by field, then its three header lines and up to ``max_rows`` data
@@ -180,7 +180,8 @@ def write_sample(searchfile, dst, max_rows=10, max_bytes=500000, keep=None,
                 break
     out = ["# Sample of `%s`" % searchfile.stem, ""]
     if rows:
-        out += ["The first of %s, field by field (`\\N` is NULL):" % chosen, "",
+        out += ["The first %s, field by field (`\\N` is NULL):"
+                % ("row" if chosen is None else "of " + chosen), "",
                 "| column | type | value |", "|---|---|---|"]
         for name, typ, value in zip(names, types, copy_fields(rows[0])):
             if len(value) > 300:
@@ -190,7 +191,7 @@ def write_sample(searchfile, dst, max_rows=10, max_bytes=500000, keep=None,
         out.append("")
     out += ["The header of `%s` (column names, column types, a blank line) "
             "and %s, as stored (`|`-separated, in PostgreSQL COPY format):"
-            % (searchfile.name, chosen), ""]
+            % (searchfile.name, chosen or "the first rows"), ""]
     out += ["    " + line for line in header + rows]
     with open(dst, "w", encoding="utf-8") as G:
         G.write("\n".join(out) + "\n")

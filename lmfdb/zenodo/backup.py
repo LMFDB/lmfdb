@@ -590,6 +590,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
         attempt = _resume_or_start(db, name, item)
         state.update_attempt(db, attempt["id"], status="packaging")
         registry_doi = _registry_doi(db)
+        registry_url = _registry_url(db, cfg)
         provenance = _provenance(item["source_time"])
         manifest = packaging.package_table(
             data_folder, name, staging,
@@ -597,7 +598,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
             record_version=version, extra_manifest=provenance,
             readme=lambda manifest: metadata.table_readme(
                 db, name, version, manifest, notes=notes,
-                registry_doi=registry_doi,
+                registry_url=registry_url,
                 psycodict_version=provenance["exporter"].get("psycodict")))
         nrows = manifest["source_files"][name + ".txt"]["rows"]
         state.update_attempt(db, attempt["id"], nrows=nrows)
@@ -608,7 +609,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
             metadata.table_title(db, name),
             metadata.table_description_html(db, name, version, nrows,
                                             notes=notes,
-                                            registry_doi=registry_doi),
+                                            registry_url=registry_url),
             version, keywords=metadata.table_keywords(db, name),
             community=cfg.community, related=related, notes=notes)
         row = _upload_record(db, _client(db, cfg, attempt["owner"], live), cfg,
@@ -697,6 +698,24 @@ def _registry_doi(db):
     """The concept DOI of the version registry, once it has been published."""
     row = state.latest_published(db, REGISTRY_NAME)
     return row and row["concept_doi"]
+
+
+def _record_url(cfg):
+    """
+    How documentation links to a record (given its registry entry): by DOI,
+    or on the sandbox, whose test DOIs do not resolve, by its record page.
+    """
+    if cfg.sandbox:
+        return lambda entry: "https://sandbox.zenodo.org/records/%s" % entry["recid"]
+    return metadata.doi_url
+
+
+def _registry_url(db, cfg):
+    """A link to the version registry (its latest version), once published."""
+    row = state.latest_published(db, REGISTRY_NAME)
+    if row is None:
+        return None
+    return _record_url(cfg)({"doi": row["concept_doi"], "recid": row["concept_recid"]})
 
 
 def _provenance(source_time=None):
@@ -817,12 +836,13 @@ def _finalize(db, cfg, live, editor, comment, force=False):
     kbump = None if prev is None else "minor"
     kversion = next_record_version(prev and prev["version"], kbump)
     registry_doi = _registry_doi(db)
+    registry_url = _registry_url(db, cfg)
     manifest = packaging.package_knowls(
         state.unwrap(db), staging, chunk_gb=cfg.chunk_gb,
         level=cfg.compression_level, record_version=kversion,
         extra_manifest=_provenance(state.utcnow()),
         readme=lambda manifest: metadata.knowls_readme(
-            manifest, registry_doi=registry_doi))
+            manifest, registry_url=registry_url))
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
     if force or not (prev and prev["status"] == "verified"
                      and prev["source_md5s"] == md5s):
@@ -832,7 +852,7 @@ def _finalize(db, cfg, live, editor, comment, force=False):
             "notes": knotes, "source_md5s": md5s, "source_time": None})
         deposit_md = metadata.deposit_metadata(
             "LMFDB knowledge database (knowls)",
-            metadata.knowls_description_html(registry_doi), kversion,
+            metadata.knowls_description_html(registry_url), kversion,
             keywords=["knowls", "mathematical definitions"],
             community=cfg.community,
             related=[("%s/knowledge/" % metadata.LMFDB_URL, "isSupplementTo")]
@@ -917,7 +937,8 @@ def _publish_registry(db, cfg, live, owner, staging, major, seq):
     titles = {name: metadata.table_title(db, name) for name in registry["tables"]}
     titles[KNOWLS_NAME] = "LMFDB knowledge database (knowls)"
     with open(regdir / "README.md", "w") as F:
-        F.write(metadata.registry_readme(registry, titles, _coverage(registry)))
+        F.write(metadata.registry_readme(registry, titles, _coverage(registry),
+                                         record_url=_record_url(cfg)))
     # README.md describes the JSON, so the JSON decides what is new
     reg_md5s = {regfile.name: packaging.hash_file(regfile)[1]}
     published = state.latest_published(db, REGISTRY_NAME)

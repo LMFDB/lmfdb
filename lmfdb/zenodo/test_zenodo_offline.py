@@ -186,6 +186,7 @@ def test_sample_shows_a_row_by_field(tmp_path):
     src = tmp_path / "dump" / (name + ".txt")
     packaging.write_sample(src, tmp_path / "s.md")
     text = (tmp_path / "s.md").read_text()
+    assert "The first row, field by field" in text
     assert "| `label` | `text` | lab.0 |" in text
     assert "    0|lab.0|0" in text and "    4|lab.4|16" in text
     packaging.write_sample(src, tmp_path / "t.md", keep=lambda r: r["dim"] == "9",
@@ -758,6 +759,19 @@ def test_render_knowl():
     assert render("{{ TEXT_DATA(f, p) }}") == "{{ TEXT_DATA(f, p) }}"
     html = metadata._html("over $\\mathbb{Q}_{p}$ and *a* $x_1 * y_2$")
     assert "$\\mathbb{Q}_{p}$" in html and "$x_1 * y_2$" in html and "<em>a</em>" in html
+
+
+def test_sandbox_links_go_to_record_pages(tmp_path):
+    pytest.importorskip("psycodict")
+    from lmfdb.zenodo import backup
+    entry = {"doi": "10.5072/zenodo.7", "recid": "7"}
+    sandbox = ZenodoConfig(path=str(tmp_path / "missing.ini"))
+    # test DOIs (10.5072) do not resolve, so the sandbox links record pages
+    assert backup._record_url(sandbox)(entry) == "https://sandbox.zenodo.org/records/7"
+    assert backup._record_url(prod_config(tmp_path))(entry) == "https://doi.org/10.5072/zenodo.7"
+    readme = metadata.registry_readme({"lmfdb_version": "2.1", "tables": {"zzz_a": dict(
+        entry, version="1.0")}}, {}, "", record_url=backup._record_url(sandbox))
+    assert "[10.5072/zenodo.7](https://sandbox.zenodo.org/records/7)" in readme
 
 
 def test_registry_readme():
