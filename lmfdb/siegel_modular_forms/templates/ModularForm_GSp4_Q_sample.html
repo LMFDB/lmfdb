@@ -41,9 +41,9 @@
 
 <h2>{{KNOWL('mf.siegel.field',title='Coefficient field')}}</h2>
 {% if info.fdeg == 1 %}
-{% set K='\mathbb{Q}' %}
+{% set K='\\mathbb{Q}' %}
 {% else %}
-{% set K='\mathbb{Q}(a)' %} 
+{% set K='\\mathbb{Q}(a)' %} 
 {% endif %}
 <table>
   <tr> <td>Field:</td> <td>{% if info.field_href %} {{info.field_href|safe}} {% else %} $\mathbb{Q}(a)$ {% endif %}</td> </tr>
@@ -89,7 +89,7 @@
 {% set ev_dict = sam.eigenvalues(info.evs_to_show) %}
   <table>
     <thead>
-      <tr><th>$l$</th><th>${{ '\lambda(l)' + mod_m }}$</th></tr>
+      <tr><th>$l$</th><th>${{ '\\lambda(l)' + mod_m }}$</th></tr>
     </thead>
     {% for l in ev_dict|sort %}
     {% set ev = info.reduce(ev_dict[l]) %}
