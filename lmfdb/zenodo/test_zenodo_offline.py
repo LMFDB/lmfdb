@@ -638,6 +638,9 @@ def test_record_deploy_ignores_superseded_commits(monkeypatch):
     event = watcher.record_deploy(None, c, major=2, config=cfg, head=c)
     assert (event["kind"], event["seq"]) == ("code", 2)
     assert watcher.record_deploy(None, c, major=2, config=cfg, head=c) is None
+    # a concurrent recorder that checked before C was recorded rechecks
+    # once it holds the history lock
+    assert watcher._record(None, c, 2, "proddb", dry_run=False) is None
     assert len(calls) == 1
     # a major bump writes its two rows in a single statement
     watcher.record_deploy(None, d, major=3, config=cfg, head=d)
@@ -833,6 +836,7 @@ class FakeZenodo:
         self.deps, self.next_id, self.blocked = {}, 100, set()
         self.lose_publish_response = self.fail_upload = self.on_publish = None
         self.uploads, self.quota_raises, self.refuse_quota = [], [], False
+        self.ops = []  # ("delete" | "upload", filename), in order
 
     def _new(self, files=None, concept=None):
         dep_id = self.next_id
@@ -885,6 +889,7 @@ class FakeZenodo:
 
     def delete_file(self, link):
         del self.deps[link[0]]["files"][link[1]]
+        self.ops.append(("delete", link[1]))
 
     def upload_file(self, bucket, path, name=None):
         dep = self.deps[int(bucket.split("/")[1])]
@@ -905,6 +910,7 @@ class FakeZenodo:
         md5 = hashlib.md5(path.read_bytes()).hexdigest()
         dep["files"][name] = md5
         self.uploads.append(name)
+        self.ops.append(("upload", name))
         return {"checksum": "md5:" + md5}
 
     def publish(self, dep_id):
@@ -1282,3 +1288,49 @@ def test_quota_is_raised_for_large_records(scratch_db, tmp_path, monkeypatch):
                                 config=cfg)
     recid = int(state.latest_published(db, "zzz_a")["recid"])
     assert plan["version"] == "2.1" and (recid, 1) in fake.quota_raises
+
+
+def test_update_prod_lock_is_reentrant(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+    # as in update_prod: reload and archive under one hold of the lock
+    with backup.archive_lock(db, cfg):
+        plan = backup.backup_folder(db, tmp_path / "push", dry_run=False,
+                                    live=True, config=cfg)
+    assert plan["version"] == "2.1"
+
+
+def test_lost_lock_stops_zenodo_calls(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.blocked.add("zzz_a")
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    draft = int(state.latest_attempt(db, "zzz_a")["draft_id"])
+    with state.lock(db):
+        db.conn.close()  # the lock goes with the connection
+        with pytest.raises(state.LockLost):
+            backup._retire(db, cfg, True, "zzz_a", "production restored")
+    assert draft in fake.deps
+
+
+def test_changed_files_are_removed_before_uploads(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(packaging, "zstd_available", lambda: False)
+    monkeypatch.setattr(backup, "DEFAULT_QUOTA", 1000)  # every table is "large"
+    make_dump(tmp_path / "v1", "zzz_a")
+    make_dump(tmp_path / "v2", "zzz_a", nrows=30)
+    backup.backup_folder(db, tmp_path / "v1", dry_run=False, live=True, config=cfg)
+    raises = len(fake.quota_raises)
+    fake.ops.clear()
+    backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True, config=cfg,
+                         description="More rows.", bump="minor")
+    table_ops = [op for op, name in fake.ops if name.startswith("zzz_a")]
+    deleted = {name for op, name in fake.ops if op == "delete"}
+    # the new version's draft never holds both contents of a changed file
+    assert {"zzz_a.txt.gz", "zzz_a_extras.txt.gz"} <= deleted
+    assert table_ops == sorted(table_ops)  # every "delete" before any "upload"
+    # and the quota already set for the record is not set again
+    assert len(fake.quota_raises) == raises

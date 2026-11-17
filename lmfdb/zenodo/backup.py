@@ -28,6 +28,7 @@ uploaded.
 """
 
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 from . import metadata, packaging, state
@@ -142,8 +143,30 @@ def _record_files(outdir, manifest):
             if path.exists()}
 
 
-def _client(cfg, owner, live):
-    return ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox, live=live)
+class _Guarded:
+    """
+    A Zenodo client whose every call first checks that the archive run still
+    holds its lock (``state.check_lock``): after a reconnect, another run may
+    be working on the same drafts.
+    """
+
+    def __init__(self, client, db):
+        self._client, self._db = client, db
+
+    def __getattr__(self, name):
+        attr = getattr(self._client, name)
+        if not callable(attr):
+            return attr
+
+        def call(*args, **kwds):
+            state.check_lock(self._db)
+            return attr(*args, **kwds)
+        return call
+
+
+def _client(db, cfg, owner, live):
+    return _Guarded(ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox,
+                                 live=live), db)
 
 
 def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md):
@@ -173,20 +196,27 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
     state.update_attempt(db, aid, draft_id=str(dep_id))
     client.update_metadata(dep_id, deposit_md)
 
-    # Upload anything not already present with the right checksum (files
-    # inherited from the previous version or uploaded before a pause are
-    # skipped, preserving Zenodo's file-level deduplication).
-    existing = {f["filename"]: f.get("checksum", "")
-                for f in client.list_files(dep_id)}
-    bucket = dep["links"]["bucket"]
-    # Remove stale files (e.g. renamed parts, files gone from this version)
+    # Delete files gone from this version, and the old contents of changed
+    # files, before uploading anything: Zenodo counts every file present
+    # against the quota, so the draft then never needs more than the final
+    # record.  Files already present with the right checksum (inherited, or
+    # uploaded before an interruption) stay, for Zenodo's deduplication.
+    files = {fname: (path, md5 or packaging.hash_file(path, count_lines=False)[1])
+             for fname, (path, md5) in files.items()}
+    present = set()
     for f in client.list_files(dep_id):
-        if f["filename"] not in files:
+        fname = f["filename"]
+        if fname in files and f.get("checksum", "").endswith(files[fname][1]):
+            present.add(fname)
+        else:
             client.delete_file(f["links"]["self"])
-    # Zenodo refuses a quota below what an earlier version of the record uses
+    bucket = dep["links"]["bucket"]
+    # Zenodo refuses a quota below what an earlier version of the record
+    # uses.  Raised only beyond what the pipeline set before, so that a
+    # larger quota set by hand stays.
     needed = max(total, state.max_published_size(db, name))
-    if needed > DEFAULT_QUOTA:
-        gb = -(-needed // 10**9)
+    gb = -(-needed // 10**9)
+    if needed > DEFAULT_QUOTA and gb > (state.max_quota_gb(db, name) or 0):
         try:
             client.raise_quota(dep_id, gb)
         except NotLive:
@@ -202,6 +232,7 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
                   "draft, then re-run."
                   % (name, dep_id, gb, err, attempt["owner"]))
             return None
+        state.update_attempt(db, aid, quota_gb=gb)
         print("%s: quota of draft %s set to %s GB from %s's allowance"
               % (name, dep_id, gb, attempt["owner"]))
     # what this attempt has sent, saved after every file so that an
@@ -211,8 +242,7 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
     uploaded = {}
     try:
         for fname, (path, md5) in sorted(files.items()):
-            md5 = md5 or packaging.hash_file(path, count_lines=False)[1]
-            if existing.get(fname, "").endswith(md5):
+            if fname in present:
                 # sent by this attempt earlier, or inherited
                 earlier = before.get(fname, {})
                 uploaded[fname] = (earlier if earlier.get("md5") == md5 else
@@ -290,7 +320,7 @@ def _reconcile(db, cfg, live, names):
         name = row["tablename"]
         if name not in names or not row["draft_id"]:
             continue
-        client = _client(cfg, row["owner"], live)
+        client = _client(db, cfg, row["owner"], live)
         try:
             dep = client.get_deposition(row["draft_id"])
         except NotFound:
@@ -306,7 +336,7 @@ def _reconcile(db, cfg, live, names):
     for name in sorted(names):
         row = state.latest_published(db, name)
         if row is not None and row["status"] == "published":
-            _verify(db, _client(cfg, row["owner"], live), row["id"], name,
+            _verify(db, _client(db, cfg, row["owner"], live), row["id"], name,
                     row["recid"], row["uploaded_files"])
 
 
@@ -320,7 +350,7 @@ def _retire(db, cfg, live, name, reason):
             continue
         if row["draft_id"]:
             try:
-                _client(cfg, row["owner"], live).delete_draft(row["draft_id"])
+                _client(db, cfg, row["owner"], live).delete_draft(row["draft_id"])
             except NotFound:
                 pass
         state.update_attempt(db, row["id"], status="superseded", draft_id=None,
@@ -559,7 +589,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
             community=cfg.community,
             related_url="%s/api/%s" % (metadata.LMFDB_URL, name),
             notes=notes)
-        row = _upload_record(db, _client(cfg, attempt["owner"], live), cfg,
+        row = _upload_record(db, _client(db, cfg, attempt["owner"], live), cfg,
                              attempt, name, staging / name, manifest,
                              deposit_md)
         if row is None:
@@ -582,6 +612,17 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
             plan["version"] = finalize(db, cfg=cfg, live=live, editor=editor,
                                        comment=comment)
     return plan
+
+
+@contextmanager
+def archive_lock(db, config=None):
+    """
+    The archive lock (see ``state.lock``) for callers that change production
+    and archive the change in one step, so that pushes are archived in the
+    order in which they reached production.
+    """
+    with state.lock(_state_db(db, config or ZenodoConfig())):
+        yield
 
 
 def _require_enabled(cfg):
@@ -735,7 +776,7 @@ def _finalize(db, cfg, live, editor, comment):
             community=cfg.community,
             related_url="%s/knowledge/" % metadata.LMFDB_URL, notes=knotes)
         _require_verified(
-            _upload_record(db, _client(cfg, attempt["owner"], live), cfg,
+            _upload_record(db, _client(db, cfg, attempt["owner"], live), cfg,
                            attempt, KNOWLS_NAME, staging / KNOWLS_NAME,
                            manifest, deposit_md), KNOWLS_NAME)
     _remove_package(staging, KNOWLS_NAME)
@@ -791,7 +832,7 @@ def _complete_registry(db, cfg, live, owner, staging):
             "LMFDB version registry", metadata.registry_description_html(),
             version, community=cfg.community,
             related_url="%s/version" % metadata.LMFDB_URL, notes=reg_notes)
-        published = _upload_record(db, _client(cfg, attempt["owner"], live),
+        published = _upload_record(db, _client(db, cfg, attempt["owner"], live),
                                    cfg, attempt, REGISTRY_NAME, regdir,
                                    {"artifacts": [], "source_files": {}},
                                    deposit_md)
@@ -907,26 +948,29 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
     if dry_run:
         return todo
     _require_enabled(cfg)
-    with state.lock(sdb):
-        return _backfill(db, sdb, cfg, todo, live, editor)
+    return _backfill(db, sdb, cfg, todo, live, editor)
 
 
 def _backfill(db, sdb, cfg, todo, live, editor):
+    """
+    Dump and upload each table under the archive lock, released between
+    tables so that production pushes are not held up by the whole backfill.
+    """
     import shutil
-    # another run may have archived some while this one waited for the lock
-    todo = [t for t in todo if state.latest_published(sdb, t) is None]
     root = _staging(cfg) / "backfill"
-    if root.exists():  # dumps of tables published since, e.g. before a crash
-        for folder in root.iterdir():
-            if folder.name not in todo:
-                shutil.rmtree(folder)
     paused = []
     for t in todo:
         folder = root / t
-        dumped = _dump_once(db, t, folder)
-        plan = backup_folder(sdb, folder, tables=[t], dry_run=False, live=live,
-                             config=cfg, editor=editor, finalize_version=False,
-                             source_time=dumped)
+        with state.lock(sdb):
+            # a push may have archived it meanwhile
+            if state.latest_published(sdb, t) is not None:
+                if folder.exists():
+                    shutil.rmtree(folder)
+                continue
+            dumped = _dump_once(db, t, folder)
+            plan = backup_folder(sdb, folder, tables=[t], dry_run=False,
+                                 live=live, config=cfg, editor=editor,
+                                 finalize_version=False, source_time=dumped)
         if t in plan["paused"]:
             paused.append(t)
         else:

@@ -722,25 +722,28 @@ class LMFDBDatabase(PostgresDatabase):
 
         See also ``update_prod_from_issue``.
         """
+        from contextlib import nullcontext
+        from lmfdb.zenodo.backup import archive_lock, require_change_info
         from lmfdb.zenodo.config import ZenodoConfig
+        from lmfdb.zenodo.state import utcnow
         if not dry_run_backup:
-            from lmfdb.zenodo.backup import require_change_info
             require_change_info(self, search_tables, description, bump)
         if data_folder is None:
-            from lmfdb.zenodo.state import utcnow
             data_folder = os.path.join(
                 ZenodoConfig().staging_dir,
                 "push-%s" % utcnow().strftime("%Y%m%d-%H%M"))
-        self.copy_to_from_remote(search_tables, data_folder,
-                                 remote_opts=remote_opts)
         kwds.setdefault("adjust_schema", True)
         kwds.setdefault("restat", False)
-        self.reload_all(data_folder, **kwds)
-        from lmfdb.zenodo.state import utcnow
-        return self.zenodo_backup(data_folder, dry_run=dry_run_backup,
-                                  live=live, description=description,
-                                  bump=bump, comment=comment,
-                                  source_time=utcnow())
+        # a live push reloads and archives under the archive lock, so that
+        # pushes are archived in the order in which they reached production
+        with nullcontext() if dry_run_backup else archive_lock(self):
+            self.copy_to_from_remote(search_tables, data_folder,
+                                     remote_opts=remote_opts)
+            self.reload_all(data_folder, **kwds)
+            return self.zenodo_backup(data_folder, dry_run=dry_run_backup,
+                                      live=live, description=description,
+                                      bump=bump, comment=comment,
+                                      source_time=utcnow())
 
     def update_prod_from_issue(self, issue, confirm=True, **kwds):
         """

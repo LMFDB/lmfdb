@@ -94,7 +94,8 @@ anything.
 
 A record over 50 GB gets its draft's quota raised automatically (through
 the API, with the owner's token) to its size rounded up to whole GB, never
-below an earlier version's size.  If Zenodo refuses, typically because the
+below an earlier version's size, and only beyond what the pipeline set
+before (so a larger quota set by hand stays).  If Zenodo refuses, typically because the
 owner's allowance is used up, the upload pauses with status
 `awaiting_quota` and the reason in its error: free some allowance or raise
 the quota via "Manage storage" on the draft, then re-run
@@ -146,7 +147,9 @@ the LMFDB data versions themselves (`2.3`, ...).
   against the uploaded checksums.  Packages are deleted from the staging
   area once verified.
 - Archive runs take a database lock, so overlapping pushes run one after
-  the other.  Table and knowls records do not name a data version (it is
+  the other.  A live `update_prod` holds it from the copy through the
+  archive, so pushes are archived in the order they reached production; the
+  backfill takes it one table at a time, so it does not hold pushes up.  Table and knowls records do not name a data version (it is
   assigned later); the registry record does, and is published only after
   its version is recorded.
 - Published records are permanent: the md5 gate prevents junk versions.

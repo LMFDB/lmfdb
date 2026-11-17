@@ -159,6 +159,7 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
             source_md5s jsonb,
             uploaded_files jsonb,
             total_size bigint,
+            quota_gb integer,
             started timestamp without time zone,
             finished timestamp without time zone,
             error text
@@ -390,18 +391,27 @@ def _write(db, query, values=None):
     is still the one holding the lock: on a dropped connection psycodict
     would otherwise replay it on a new session, outside the lock.
     """
-    held = _held.get(id(unwrap(db)))
-    if held is None:
+    if id(unwrap(db)) not in _held:
         cur = db._execute(query, values)
         return cur.fetchall() if cur.description else None
     from psycodict.utils import DelayCommit
     with DelayCommit(unwrap(db)):
-        if _session(db) != held:
-            raise LockLost("the database connection was reset during an "
-                           "archive run, so another run may hold the lock "
-                           "now; re-run to resume")
+        check_lock(db)
         cur = db._execute(query, values)
         return cur.fetchall() if cur.description else None
+
+
+def check_lock(db):
+    """
+    Within ``lock``, raise ``LockLost`` unless this is still the session that
+    took the lock; called before every state write and every Zenodo request
+    of an archive run.
+    """
+    held = _held.get(id(unwrap(db)))
+    if held is not None and _session(db) != held:
+        raise LockLost("the database connection was reset during an archive "
+                       "run, so another run may hold the lock now; re-run "
+                       "to resume")
 
 
 def current_version_string(db):
@@ -483,8 +493,8 @@ def code_rows_for_commit(db, git_hash):
 
 _BACKUP_COLS = ("id, tablename, owner, concept_recid, concept_doi, recid, doi, "
                 "version, bump, notes, lmfdb_version, source_time, status, draft_id, "
-                "source_md5s, uploaded_files, total_size, started, finished, "
-                "error")
+                "source_md5s, uploaded_files, total_size, quota_gb, started, "
+                "finished, error")
 
 
 def _backup_rows(db, where, values):
@@ -522,6 +532,7 @@ def update_attempt(db, attempt_id, **fields):
                "version", "bump", "notes", "lmfdb_version", "source_time",
                "status",
                "draft_id", "source_md5s", "uploaded_files", "total_size",
+               "quota_gb",
                "finished", "error"}
     bad = set(fields) - allowed
     if bad:
@@ -557,6 +568,13 @@ def latest_attempt(db, tablename, statuses=None):
         values.extend(statuses)
     rows = _backup_rows(db, where + SQL(" ORDER BY id DESC LIMIT 1"), values)
     return rows[0] if rows else None
+
+
+def max_quota_gb(db, tablename):
+    """The largest quota the pipeline has set on a record's drafts, or None."""
+    return db._execute(
+        SQL("SELECT MAX(quota_gb) FROM {0} WHERE tablename = %s").format(
+            _backups(db)), [tablename]).fetchone()[0]
 
 
 def max_published_size(db, tablename):

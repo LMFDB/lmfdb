@@ -108,6 +108,10 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
 
 def _record(db, commit, major, editor, dry_run):
     from . import state
+    # again, now that no other recorder can be between check and insert
+    if state.code_rows_for_commit(db, commit):
+        print("Commit %s already has a code version" % commit[:12])
+        return None
     current = state.latest_versions(db)
     if major > current["major"]:
         event = {"kind": "major", "major": major, "seq": 0, "git_hash": commit}
