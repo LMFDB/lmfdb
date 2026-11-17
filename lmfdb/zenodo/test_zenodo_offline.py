@@ -66,7 +66,7 @@ def test_record_versions():
 SEP = "|"
 
 
-def make_dump(folder, name="zzz_demo", nrows=20, extras=True):
+def make_dump(folder, name="zzz_demo", nrows=20):
     """A minimal but format-faithful psycodict dump folder."""
     folder.mkdir(parents=True, exist_ok=True)
     with open(folder / (name + ".txt"), "w") as F:
@@ -74,12 +74,6 @@ def make_dump(folder, name="zzz_demo", nrows=20, extras=True):
         F.write(SEP.join(["bigint", "text", "integer"]) + "\n\n")
         for i in range(nrows):
             F.write(SEP.join([str(i), "lab.%s" % i, str(i * i)]) + "\n")
-    if extras:
-        with open(folder / (name + "_extras.txt"), "w") as F:
-            F.write(SEP.join(["id", "bigdata"]) + "\n")
-            F.write(SEP.join(["bigint", "jsonb"]) + "\n\n")
-            for i in range(nrows):
-                F.write(SEP.join([str(i), json.dumps(list(range(i)))]) + "\n")
     for end, rows in [("_counts.txt", 2), ("_stats.txt", 1),
                       ("_indexes.txt", 1), ("_constraints.txt", 0),
                       ("_meta.txt", 1)]:
@@ -91,14 +85,19 @@ def make_dump(folder, name="zzz_demo", nrows=20, extras=True):
 
 def test_discover_and_table_files(tmp_path):
     make_dump(tmp_path / "dump", "zzz_demo")
-    make_dump(tmp_path / "dump", "zzz_other", extras=False)
+    make_dump(tmp_path / "dump", "zzz_other")
     assert packaging.discover_tables(tmp_path / "dump") == ["zzz_demo",
                                                             "zzz_other"]
     files = packaging.table_files(tmp_path / "dump", "zzz_demo")
     assert [f.name for f in files] == [
-        "zzz_demo.txt", "zzz_demo_extras.txt", "zzz_demo_counts.txt",
+        "zzz_demo.txt", "zzz_demo_counts.txt",
         "zzz_demo_stats.txt", "zzz_demo_indexes.txt",
         "zzz_demo_constraints.txt", "zzz_demo_meta.txt"]
+    # psycodict 1.0 has no extras tables: a leftover extras file is not part
+    # of zzz_demo's record, and reload_all would call it a table of its own
+    (tmp_path / "dump" / "zzz_demo_extras.txt").write_text("id\nbigint\n\n")
+    assert "zzz_demo_extras" in packaging.discover_tables(tmp_path / "dump")
+    assert len(packaging.table_files(tmp_path / "dump", "zzz_demo")) == 6
     assert [f.name for f in packaging.table_files(tmp_path / "dump",
                                                   "zzz_other")] == [
         "zzz_other.txt", "zzz_other_counts.txt", "zzz_other_stats.txt",
@@ -126,13 +125,12 @@ def test_package_table(tmp_path):
         readme="# test readme\n", record_version="1.4")
     outdir = staging / name
 
-    # sources: all seven files hashed, with correct row counts
+    # sources: all six files hashed, with correct row counts
     assert set(manifest["source_files"]) == {
-        name + end for end in ["", "_extras", "_counts", "_stats", "_indexes",
+        name + end for end in ["", "_counts", "_stats", "_indexes",
                                "_constraints", "_meta"]
         for end in [end + ".txt"]}
     assert manifest["source_files"][name + ".txt"]["rows"] == 50
-    assert manifest["source_files"][name + "_extras.txt"]["rows"] == 50
     assert manifest["source_files"][name + "_counts.txt"]["rows"] == 2
     assert manifest["source_files"][name + "_constraints.txt"]["rows"] == 0
     src = dump / (name + ".txt")
@@ -185,7 +183,7 @@ def test_gzip_output_is_reproducible(tmp_path, monkeypatch):
 
 def test_split_and_reassemble(tmp_path):
     dump = tmp_path / "dump"
-    name = make_dump(dump, nrows=2000, extras=False)
+    name = make_dump(dump, nrows=2000)
     staging = tmp_path / "staging"
     # chunk of 5000 bytes forces the main artifact into several parts
     manifest = packaging.package_table(dump, name, staging, force_gzip=True,
@@ -210,7 +208,7 @@ def test_split_and_reassemble(tmp_path):
 def test_package_with_zstd(tmp_path):
     import subprocess
     dump = tmp_path / "dump"
-    name = make_dump(dump, nrows=30, extras=False)
+    name = make_dump(dump, nrows=30)
     manifest = packaging.package_table(dump, name, tmp_path / "staging")
     art = manifest["artifacts"][0]
     assert art["name"].endswith(".zst")
@@ -243,7 +241,7 @@ def test_source_md5s_change_detection(tmp_path):
         F.write("20|lab.20|400\n")
     after = packaging.source_md5s(dump, name)
     assert after != before
-    assert after[name + "_extras.txt"] == before[name + "_extras.txt"]
+    assert after[name + "_counts.txt"] == before[name + "_counts.txt"]
 
 
 ######################################################################
@@ -1383,7 +1381,7 @@ def test_changed_files_are_removed_before_uploads(scratch_db, tmp_path, monkeypa
     table_ops = [op for op, name in fake.ops if name.startswith("zzz_a")]
     deleted = {name for op, name in fake.ops if op == "delete"}
     # the new version's draft never holds both contents of a changed file
-    assert {"zzz_a.txt.gz", "zzz_a_extras.txt.gz"} <= deleted
+    assert "zzz_a.txt.gz" in deleted
     assert table_ops == sorted(table_ops)  # every "delete" before any "upload"
     # and the quota already set for the record is not set again
     assert len(fake.quota_raises) == raises

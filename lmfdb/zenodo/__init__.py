@@ -9,7 +9,7 @@ Each search table gets its own Zenodo record (grouped under a concept DOI);
 every time a table is pushed to production a new version of its record is
 published (with a major or minor version bump and a description of the
 change, as requested by the contributor of the data), containing exactly the
-files that ``db.reload_all`` loaded (search/extras data, counts, stats,
+files that ``db.reload_all`` loaded (search data, counts, stats,
 indexes, constraints and meta files), each individually compressed,
 together with a generated README, a Markdown sample for Zenodo's preview,
 and a MANIFEST.json with checksums.  Two additional

@@ -3,9 +3,9 @@ Packaging of psycodict dump folders into Zenodo-ready artifact sets.
 
 The input is a folder as produced by ``db.copy_to_from_remote`` /
 ``db.copy_to`` (and consumed by ``db.reload_all``): for each table
-``{t}.txt`` plus the optional companions ``{t}_extras.txt``,
-``{t}_counts.txt``, ``{t}_stats.txt``, ``{t}_indexes.txt``,
-``{t}_constraints.txt``, ``{t}_meta.txt``.  Note that the last three contain
+``{t}.txt`` plus the optional companions ``{t}_counts.txt``,
+``{t}_stats.txt``, ``{t}_indexes.txt``, ``{t}_constraints.txt``,
+``{t}_meta.txt``.  Note that the last three contain
 the relevant rows of ``meta_indexes``, ``meta_constraints`` and
 ``meta_tables``, so each record carries everything needed to reconstruct a
 fully functional table (the ``meta_*`` tables themselves do not get separate
@@ -14,7 +14,7 @@ records).
 For each table we produce, in a staging directory:
 
 - each dump file individually compressed (zstd by default, gzip fallback), so
-  consumers can fetch e.g. just the schema or skip a large extras file;
+  consumers can fetch e.g. just the schema or the statistics;
   compressed files larger than ``chunk_gb`` are split into parts to keep
   uploads restartable and well under Zenodo's per-file limits
 - ``{t}_sample.md`` -- the header (column names, types) and the first few
@@ -42,17 +42,15 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Must match the endings used by psycodict's reload_all/copy_to
+# Must match the endings used by psycodict's reload_all/copy_to (1.0 has no
+# extras tables, and reload_all refuses a {t}_extras.txt)
 COMPANION_ENDINGS = [
-    "_extras.txt",
     "_counts.txt",
     "_stats.txt",
     "_indexes.txt",
     "_constraints.txt",
     "_meta.txt",
 ]
-# Files with the three header lines (column names, column types, blank)
-HEADERED_ENDINGS = [".txt", "_extras.txt"]
 
 # The knowl database is not a search table; it gets one record, updated on
 # every data push.  kwl_locks is transient editing state and is not archived.
@@ -118,16 +116,14 @@ def hash_file(path, count_lines=True):
 
 def data_rows(path, nlines):
     """
-    Number of data rows in a dump file with ``nlines`` lines: ``{t}.txt`` and
-    ``{t}_extras.txt`` have 3 header lines... except that ``_extras`` is also
-    a companion; concretely, the main ``{t}.txt`` (and knowl dumps) subtract
-    3, headerless companion files don't, and non-.txt files return None.
+    Number of data rows in a dump file with ``nlines`` lines: the search
+    file ``{t}.txt`` (and the knowl dumps) start with 3 header lines (column
+    names, column types, blank), the companion files have none, and non-.txt
+    files return None.
     """
     name = os.path.basename(str(path))
     if not name.endswith(".txt"):
         return None
-    if name.endswith("_extras.txt"):
-        return max(nlines - 3, 0)
     if any(name.endswith(end) for end in COMPANION_ENDINGS):
         return nlines
     return max(nlines - 3, 0)
@@ -135,7 +131,7 @@ def data_rows(path, nlines):
 
 def write_sample(searchfile, dst, max_rows=10, max_bytes=500000):
     """
-    Write a Markdown preview of a search (or extras) file to ``dst``: its
+    Write a Markdown preview of a search file to ``dst``: its
     three header lines and up to ``max_rows`` data rows as an indented code
     block.  Individual rows can be enormous (jsonb columns), so the sample
     is capped at ``max_bytes``, truncating with a marker if necessary.

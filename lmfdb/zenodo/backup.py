@@ -936,8 +936,7 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
 
     def est(t):
         s = sizes.get(t, {})
-        return (s.get("table_bytes", 0) or 0) + (s.get("toast_bytes", 0) or 0) \
-            + (s.get("extras_bytes", 0) or 0)
+        return (s.get("table_bytes", 0) or 0) + (s.get("toast_bytes", 0) or 0)
 
     first = list(first or ())
     todo.sort(key=lambda t: (first.index(t) if t in first else len(first),

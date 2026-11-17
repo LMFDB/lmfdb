@@ -78,9 +78,7 @@ def _table_info(db, tablename):
     except Exception:
         coldesc = {}
     try:
-        # extra_cols only exists before psycodict 1.0
-        for col in (["id"] + list(table.search_cols)
-                    + list(getattr(table, "extra_cols", []))):
+        for col in ["id"] + list(table.search_cols):
             typ = table.col_type.get(col, "")
             cols.append((col, typ, coldesc.get(col, "")))
     except Exception:
@@ -125,8 +123,8 @@ def table_description_html(db, tablename, version, nrows=None, notes=None):
     if nrows is not None:
         parts.append("<p>Number of rows: %s.</p>" % nrows)
     parts.append(
-        "<p>The record contains the table's data (and, where present, its "
-        "extra table, statistics and counts) as compressed "
+        "<p>The record contains the table's data (with its statistics and "
+        "counts) as compressed "
         "<code>|</code>-separated files, together with the index, constraint "
         "and schema information needed to reconstruct a fully functional "
         "copy with <a href=\"https://github.com/roed314/psycodict\">"
