@@ -55,6 +55,8 @@ class ZenodoConfig:
         self.community = z.get("community", "lmfdb")
         self.staging_dir = z.get("staging_dir", "/scratch/zenodo")
         self.chunk_gb = float(z.get("chunk_gb", 20))
+        if int(self.chunk_gb * 10**9) <= 0:
+            raise ValueError("chunk_gb must be positive in %s" % self.path)
         self.compression_level = int(z.get("compression_level", 12))
         self.editor = z.get("editor") or None
         self.default_owner = z.get("default_owner") or None

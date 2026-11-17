@@ -193,6 +193,8 @@ def split_file(path, chunk_bytes):
     if it is larger than ``chunk_bytes`` (removing the original), returning
     the list of part Paths; otherwise return ``[path]`` unchanged.
     """
+    if chunk_bytes <= 0:
+        raise ValueError("chunk size must be positive, not %s" % chunk_bytes)
     path = Path(path)
     if path.stat().st_size <= chunk_bytes:
         return [path]

@@ -181,6 +181,15 @@ def test_gzip_output_is_reproducible(tmp_path, monkeypatch):
     assert gzip.decompress(out[0]) == src.read_bytes()
 
 
+def test_split_refuses_empty_parts(tmp_path):
+    path = tmp_path / "x.zst"
+    path.write_bytes(b"data")
+    for size in [0, -1]:
+        with pytest.raises(ValueError):
+            packaging.split_file(path, size)
+    assert path.read_bytes() == b"data"
+
+
 def test_split_and_reassemble(tmp_path):
     dump = tmp_path / "dump"
     name = make_dump(dump, nrows=2000)
@@ -318,6 +327,12 @@ roed = abc123
     assert cfg.token_for("roed") == "abc123"
     with pytest.raises(ValueError):
         cfg.token_for("nobody")
+    # a part size of 0 would split every file into nothing
+    bad = tmp_path / "bad.ini"
+    bad.write_text("[zenodo]\nchunk_gb = 0\n")
+    os.chmod(bad, 0o600)
+    with pytest.raises(ValueError, match="chunk_gb"):
+        ZenodoConfig(path=str(bad))
     # set from Python, e.g. in a Sage session, the variable keeps its ~
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("LMFDB_ZENODO_CONFIG", "~/zenodo.ini")
