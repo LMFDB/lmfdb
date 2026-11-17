@@ -1065,9 +1065,11 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
     cfg = config or ZenodoConfig()
     sdb = _state_db(db, cfg)
     spec = load_tables_yaml()
+    absent = []
     if tables is None:
-        tables = [t for t in db.tablenames if t in spec
-                  and spec[t]["backup"] == "yes"]
+        tables = [t for t in db.tablenames if t in spec]
+        absent = sorted(t for t, e in spec.items()
+                        if e["backup"] == "yes" and t not in tables)
     split = classify(tables, spec)
     include = split["yes"]
     todo = [t for t in include if state.latest_published(sdb, t) is None]
@@ -1088,6 +1090,9 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
         print("  %-35s %8.2f GB" % (t, est(t) / 1e9))
     if split["hold"]:
         print("On hold in tables.yaml (skipped): %s" % ", ".join(split["hold"]))
+    if absent:
+        print("In tables.yaml but not in the database (skipped): %s"
+              % ", ".join(absent))
     if dry_run:
         return todo
     _require_enabled(cfg)

@@ -883,6 +883,25 @@ def test_backfill_redumps_after_a_newer_push(offline_backup, tmp_path, monkeypat
     assert len(dumps) == 2
 
 
+def test_backfill_reports_skipped_tables(offline_backup, tmp_path, monkeypatch, capsys):
+    backup, published, attempts = offline_backup
+    published.clear()
+    monkeypatch.setattr(backup, "load_tables_yaml", lambda path=None: {
+        "zzz_a": {"backup": "yes"}, "zzz_b": {"backup": "hold"},
+        "zzz_c": {"backup": "no"}, "zzz_gone": {"backup": "yes"}})
+
+    class DB:
+        tablenames = ["zzz_a", "zzz_b", "zzz_c", "zzz_new"]
+
+        def table_sizes(self):
+            return {}
+
+    assert backup.backfill(DB(), config=prod_config(tmp_path)) == ["zzz_a"]
+    out = capsys.readouterr().out
+    assert "On hold in tables.yaml (skipped): zzz_b\n" in out
+    assert "not in the database (skipped): zzz_gone\n" in out
+
+
 def test_backfill_retries(offline_backup, tmp_path, monkeypatch):
     backup, published, attempts = offline_backup
     published.clear()

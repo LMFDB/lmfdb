@@ -43,7 +43,7 @@ tables:
   bmf_forms: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
   char_dirichlet: {backup: yes, owner: sutherland}
   cluster_pictures: {backup: yes, owner: roe}
-  data_uploads: {backup: yes, owner: roe}
+  data_uploads: {backup: hold, owner: roe, note: "not a table in the production database"}
   ec_classdata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
   ec_curvedata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
   ec_galrep: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
