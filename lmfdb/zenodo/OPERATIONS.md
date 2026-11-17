@@ -92,8 +92,12 @@ Until uploads are approved, the backup step defaults to a dry run: pass
 every already-archived table has a description and bump *before* copying
 anything.
 
-If an upload needs more than 50 GB it pauses with status `awaiting_quota`:
-the owner raises the quota via "Manage storage" on the draft, then re-run
+A record over 50 GB gets its draft's quota raised automatically (through
+the API, with the owner's token) to its size rounded up to whole GB, never
+below an earlier version's size.  If Zenodo refuses, typically because the
+owner's allowance is used up, the upload pauses with status
+`awaiting_quota` and the reason in its error: free some allowance or raise
+the quota via "Manage storage" on the draft, then re-run
 `db.zenodo_backup(folder, dry_run=False, live=True)` to resume (the
 description and bump given originally are reused).  No data version is
 created while any table upload is unfinished, so the push gets a single data
@@ -102,8 +106,8 @@ comes from a 150 GB allowance per Zenodo account (records under 50 GB use
 none of it), so the large tables need to be spread across owners in
 tables.yaml.  A raised quota belongs to the record as a whole: each new
 version's draft inherits it, and it counts once against the allowance
-(Zenodo's source, confirmed on the sandbox 2026-11-17).  It can also be
-raised through the API, `POST /api/records/<draft id>/quota-increase` with
+(Zenodo's source, confirmed on the sandbox 2026-11-17).  The pipeline raises
+it with `POST /api/records/<draft id>/quota-increase` and
 `{"quota_size": "<total GB>"}`, which the owner's deposit token may call.
 Separately, Zenodo's web proxy refuses any single upload above roughly
 50 GB (between 51 and 55 GB on the sandbox), so keep `chunk_gb` well below

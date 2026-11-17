@@ -31,8 +31,8 @@ import os
 from pathlib import Path
 
 from . import metadata, packaging, state
-from .client import (ZenodoClient, ZenodoError, NotFound, QuotaExceeded,
-                     DEFAULT_QUOTA)
+from .client import (ZenodoClient, ZenodoError, NotFound, NotLive,
+                     QuotaExceeded, DEFAULT_QUOTA)
 from .config import ZenodoConfig
 from .versioning import BUMPS, format_version, next_record_version
 
@@ -149,9 +149,10 @@ def _client(cfg, owner, live):
 def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md):
     """
     Drive one record from packaged files to published+verified, resuming a
-    stored draft if present (``_reconcile`` must have run first).  Returns the
-    updated attempt row dict on success, or None if paused awaiting a quota
-    increase.
+    stored draft if present (``_reconcile`` must have run first).  Records
+    over 50 GB get their quota raised from the owner's allowance first.
+    Returns the updated attempt row dict on success, or None if paused
+    awaiting a quota increase that Zenodo refused.
     """
     aid = attempt["id"]
     files = _record_files(outdir, manifest)
@@ -172,11 +173,6 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
     state.update_attempt(db, aid, draft_id=str(dep_id))
     client.update_metadata(dep_id, deposit_md)
 
-    if total > DEFAULT_QUOTA:
-        print("NOTE: %s needs %.1f GB > 50 GB; the owner (%s) may need to "
-              "raise the quota via 'Manage storage' on the draft."
-              % (name, total / 1e9, attempt["owner"]))
-
     # Upload anything not already present with the right checksum (files
     # inherited from the previous version or uploaded before a pause are
     # skipped, preserving Zenodo's file-level deduplication).
@@ -187,6 +183,27 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
     for f in client.list_files(dep_id):
         if f["filename"] not in files:
             client.delete_file(f["links"]["self"])
+    # Zenodo refuses a quota below what an earlier version of the record uses
+    needed = max(total, state.max_published_size(db, name))
+    if needed > DEFAULT_QUOTA:
+        gb = -(-needed // 10**9)
+        try:
+            client.raise_quota(dep_id, gb)
+        except NotLive:
+            raise
+        except ZenodoError as err:
+            state.update_attempt(db, aid, status="awaiting_quota",
+                                 error="quota increase to %s GB refused: %s"
+                                 % (gb, err))
+            print("PAUSED %s: Zenodo refused to raise the quota of draft %s "
+                  "to %s GB (%s).  A record can have at most 200 GB, the part "
+                  "above 50 GB from its owner's 150 GB allowance: free some of "
+                  "%s's allowance or raise it with 'Manage storage' on the "
+                  "draft, then re-run."
+                  % (name, dep_id, gb, err, attempt["owner"]))
+            return None
+        print("%s: quota of draft %s set to %s GB from %s's allowance"
+              % (name, dep_id, gb, attempt["owner"]))
     # what this attempt has sent, saved after every file so that an
     # interrupted upload still counts towards uploaded_bytes_since
     before = attempt.get("uploaded_files") or {}

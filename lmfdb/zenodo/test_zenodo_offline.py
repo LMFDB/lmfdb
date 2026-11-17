@@ -832,7 +832,7 @@ class FakeZenodo:
     def __init__(self):
         self.deps, self.next_id, self.blocked = {}, 100, set()
         self.lose_publish_response = self.fail_upload = self.on_publish = None
-        self.uploads = []
+        self.uploads, self.quota_raises, self.refuse_quota = [], [], False
 
     def _new(self, files=None, concept=None):
         dep_id = self.next_id
@@ -859,6 +859,12 @@ class FakeZenodo:
     def new_version(self, recid):
         prev = self.deps[int(recid)]
         return self._new(prev["files"], prev["concept"])
+
+    def raise_quota(self, dep_id, gb):
+        from lmfdb.zenodo.client import ZenodoError
+        if self.refuse_quota:
+            raise ZenodoError("raise quota of %s: 403 permission denied" % dep_id)
+        self.quota_raises.append((int(dep_id), gb))
 
     def delete_draft(self, dep_id):
         from lmfdb.zenodo.client import NotFound
@@ -1256,3 +1262,23 @@ def test_audit_reports_unverified_records(scratch_db, tmp_path, monkeypatch):
                          error="zzz_a.txt.zst: checksum mismatch")
     report = backup.audit(db, config=cfg)
     assert [r["tablename"] for r in report["unverified"]] == ["zzz_a"]
+
+
+def test_quota_is_raised_for_large_records(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(backup, "DEFAULT_QUOTA", 1000)  # every table is "large"
+    make_dump(tmp_path / "push", "zzz_a")
+    # the owner's allowance is used up
+    fake.refuse_quota = True
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg)
+    row = state.latest_attempt(db, "zzz_a")
+    assert plan["paused"] == ["zzz_a"] and row["status"] == "awaiting_quota"
+    assert "quota increase to 1 GB refused" in row["error"] and not fake.uploads
+    # once it is freed, re-running raises the quota and completes the push
+    fake.refuse_quota = False
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg)
+    recid = int(state.latest_published(db, "zzz_a")["recid"])
+    assert plan["version"] == "2.1" and (recid, 1) in fake.quota_raises

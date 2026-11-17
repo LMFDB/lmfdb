@@ -559,6 +559,14 @@ def latest_attempt(db, tablename, statuses=None):
     return rows[0] if rows else None
 
 
+def max_published_size(db, tablename):
+    """The largest total size of the published versions of a record."""
+    return db._execute(
+        SQL("SELECT MAX(total_size) FROM {0} WHERE tablename = %s "
+            "AND status IN ('published', 'verified')").format(_backups(db)),
+        [tablename]).fetchone()[0] or 0
+
+
 def get_attempt(db, attempt_id):
     """The attempt row with the given id."""
     return _backup_rows(db, SQL(" WHERE id = %s"), [attempt_id])[0]

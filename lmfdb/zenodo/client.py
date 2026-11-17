@@ -139,6 +139,17 @@ class ZenodoClient:
         return self._request("DELETE", "/deposit/depositions/%s" % dep_id,
                              "discard draft %s" % dep_id)
 
+    def raise_quota(self, dep_id, gb):
+        """
+        Set the storage quota of draft ``dep_id`` to ``gb`` (decimal) GB,
+        taking the part above 50 GB from the token owner's 150 GB allowance.
+        Zenodo applies it at once, or refuses; it holds for the record's
+        later versions too.
+        """
+        return self._request("POST", "/records/%s/quota-increase" % dep_id,
+                             "raise quota of %s to %s GB" % (dep_id, gb),
+                             json={"quota_size": str(gb)})
+
     def publish(self, dep_id):
         return self._request("POST",
                              "/deposit/depositions/%s/actions/publish" % dep_id,
