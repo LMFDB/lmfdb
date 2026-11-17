@@ -391,6 +391,12 @@ def lock(db):
         db._execute(SQL("SELECT pg_advisory_unlock(hashtext(%s))"), [name])
 
 
+def transaction(db):
+    """A context in which state writes commit together or not at all."""
+    from psycodict.utils import DelayCommit
+    return DelayCommit(unwrap(db))
+
+
 def _write(db, query, values=None):
     """
     Execute a statement changing archive state, returning its rows if any.
@@ -513,7 +519,7 @@ def _backup_rows(db, where, values):
 
 
 def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
-                  notes=None, source_time=None):
+                  notes=None, source_time=None, draft_id=None):
     """
     Insert a new upload attempt (status ``pending``); returns its id.
 
@@ -525,11 +531,11 @@ def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
         db,
         SQL("INSERT INTO {0} "
             "(tablename, owner, version, bump, notes, source_time, status, "
-            "source_md5s, started) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s) "
+            "source_md5s, started, draft_id) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s) "
             "RETURNING id").format(_backups(db)),
         [tablename, owner, version, bump, notes, source_time, "pending",
-         json.dumps(source_md5s), utcnow()],
+         json.dumps(source_md5s), utcnow(), draft_id],
     )[0][0]
 
 

@@ -561,6 +561,33 @@ def test_guard_runs_before_every_request(monkeypatch):
     assert len(responses) == 1
 
 
+def test_new_version_reuses_an_open_draft():
+    pytest.importorskip("requests")
+    sent, draft_files = [], []
+
+    class Session:
+        def request(self, method, url, data=None, **kwds):
+            path = url.split("/api", 1)[1]
+            sent.append((method, path))
+            if path == "/records/5/versions":
+                return _Response(201, {"id": "7"})
+            if path == "/deposit/depositions/7/files":
+                return _Response(200, list(draft_files))
+            if path == "/records/7/draft/actions/files-import":
+                draft_files.append({"filename": "a.txt"})
+                return _Response(201, {})
+            return _Response(200, {"id": 7, "links": {"bucket": "b"}})
+
+    client = ZenodoClient("fake-token", live=True, min_interval=0,
+                          log=lambda msg: None)
+    client._session = Session()
+    importing = ("POST", "/records/7/draft/actions/files-import")
+    assert client.new_version(5)["id"] == 7 and importing in sent
+    # asked again (e.g. after a lost response): the same draft, imported once
+    sent.clear()
+    assert client.new_version(5)["id"] == 7 and importing not in sent
+
+
 def test_upload_retry_resends_whole_file(tmp_path, monkeypatch):
     pytest.importorskip("requests")
     import time
@@ -715,6 +742,40 @@ def test_record_deploy_ignores_superseded_commits(monkeypatch):
     watcher.record_deploy(None, d, major=3, config=cfg, observe=lambda: d)
     assert [(r["kind"], r["major"], r["seq"]) for r in calls[-1]] == [
         ("major", 3, 3), ("code", 3, 0)]
+
+
+def test_backfill_redumps_after_a_newer_push(offline_backup, tmp_path, monkeypatch):
+    from datetime import timedelta
+    backup, published, attempts = offline_backup
+    published.clear()
+    monkeypatch.setattr(backup, "load_tables_yaml", lambda path=None: {
+        "zzz_a": {"backup": "yes"}})
+    dumps = []
+
+    class DB:
+        tablenames = ["zzz_a"]
+
+        def table_sizes(self):
+            return {}
+
+        def copy_to(self, tables, folder):
+            make_dump(folder, tables[0])
+            dumps.append(folder)
+
+    monkeypatch.setattr(backup, "backup_folder",
+                        lambda db, folder, tables, **kwds: {"paused": tables})
+    cfg = prod_config(tmp_path, enabled=True)
+    backup.backfill(DB(), dry_run=False, config=cfg)
+    taken = backup._dump_time(dumps[0])
+    # the backfill's own paused upload: its dump is reused
+    attempts["zzz_a"] = {"status": "awaiting_quota", "source_time": taken}
+    backup.backfill(DB(), dry_run=False, config=cfg)
+    assert len(dumps) == 1
+    # a push reloaded zzz_a since, and its upload paused too: dump again
+    attempts["zzz_a"] = {"status": "awaiting_quota",
+                         "source_time": taken + timedelta(seconds=1)}
+    backup.backfill(DB(), dry_run=False, config=cfg)
+    assert len(dumps) == 2
 
 
 def test_backfill_retries(offline_backup, tmp_path, monkeypatch):
@@ -911,6 +972,7 @@ class FakeZenodo:
         self.lose_publish_response = self.fail_upload = self.on_publish = None
         self.uploads, self.quota_raises, self.refuse_quota = [], [], False
         self.ops = []  # ("delete" | "upload", filename), in order
+        self.lose_new_version_response = False
 
     def _new(self, files=None, concept=None):
         dep_id = self.next_id
@@ -935,8 +997,15 @@ class FakeZenodo:
                           for name, md5 in self.deps[int(recid)]["files"].items()]}
 
     def new_version(self, recid):
+        # like Zenodo's RDM API: an open new-version draft is returned again
         prev = self.deps[int(recid)]
-        return self._new(prev["files"], prev["concept"])
+        open_ = [d for d in self.deps.values()
+                 if d["concept"] == prev["concept"] and not d["submitted"]]
+        dep = open_[0] if open_ else self._new(prev["files"], prev["concept"])
+        if self.lose_new_version_response:
+            self.lose_new_version_response = False
+            raise ConnectionError("connection reset after creating the draft")
+        return dep
 
     def raise_quota(self, dep_id, gb):
         from lmfdb.zenodo.client import ZenodoError
@@ -1427,3 +1496,45 @@ def test_quota_requested_again_for_a_new_record(scratch_db, tmp_path, monkeypatc
     backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
     second = int(state.latest_published(db, "zzz_a")["recid"])
     assert [d for d, gb in fake.quota_raises if d in (first, second)] == [first, second]
+
+
+def test_lost_new_version_response(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "v1", "zzz_a")
+    make_dump(tmp_path / "v2", "zzz_a", nrows=30)
+    backup.backup_folder(db, tmp_path / "v1", dry_run=False, live=True, config=cfg)
+    fake.lose_new_version_response = True
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True,
+                             config=cfg, description="More rows.", bump="minor")
+    plan = backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "2.2"
+    # the draft made by the lost call became version 1.1; none is left over
+    concept = fake.deps[int(state.latest_published(db, "zzz_a")["recid"])]["concept"]
+    assert [d["submitted"] for d in fake.deps.values()
+            if d["concept"] == concept] == [True, True]
+
+
+def test_attempt_handover_is_atomic(scratch_db, monkeypatch):
+    from psycodict import SQL
+    from lmfdb.zenodo import backup, state
+    db = scratch_db
+    state.ensure_tables(db)
+    old = state.start_attempt(db, "zzz_a", "roe", "1.0", {"a": "1"})
+    state.update_attempt(db, old, status="awaiting_quota", draft_id="100")
+    update = state.update_attempt
+
+    def interrupted(db, aid, **fields):
+        if fields.get("status") == "superseded":
+            raise RuntimeError("interrupted")
+        update(db, aid, **fields)
+
+    monkeypatch.setattr(state, "update_attempt", interrupted)
+    with pytest.raises(RuntimeError):
+        backup._resume_or_start(db, "zzz_a", {
+            "owner": "roe", "version": "1.0", "bump": None, "notes": None,
+            "source_md5s": {"a": "2"}, "source_time": None})
+    rows = state._backup_rows(db, SQL(" ORDER BY id"), None)
+    assert [(r["status"], r["draft_id"]) for r in rows] == [("awaiting_quota", "100")]

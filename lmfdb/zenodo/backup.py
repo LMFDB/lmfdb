@@ -656,15 +656,17 @@ def _resume_or_start(db, name, item):
     stale = [r for r in state.unfinished(db) if r["tablename"] == name]
     drafts = [r for r in stale if r["draft_id"]]
     owner = drafts[-1]["owner"] if drafts else item["owner"]
-    aid = state.start_attempt(db, name, owner, item["version"],
-                              item["source_md5s"], bump=item["bump"],
-                              notes=item["notes"],
-                              source_time=item["source_time"])
-    for r in stale:
-        state.update_attempt(db, r["id"], status="superseded",
-                             error="superseded by attempt %s" % aid)
-    if drafts:
-        state.update_attempt(db, aid, draft_id=drafts[-1]["draft_id"])
+    # in one transaction, so that the draft is never held only by a
+    # superseded attempt (which reconciliation does not look at)
+    with state.transaction(db):
+        aid = state.start_attempt(db, name, owner, item["version"],
+                                  item["source_md5s"], bump=item["bump"],
+                                  notes=item["notes"],
+                                  source_time=item["source_time"],
+                                  draft_id=drafts[-1]["draft_id"] if drafts else None)
+        for r in stale:
+            state.update_attempt(db, r["id"], status="superseded",
+                                 error="superseded by attempt %s" % aid)
     return state.latest_attempt(db, name)
 
 
@@ -895,17 +897,22 @@ def _dump_once(db, tablename, folder):
     UTC), which the marker records.
     """
     import shutil
-    from datetime import datetime
     folder = Path(folder)
-    marker = folder / DUMP_COMPLETE
-    if marker.exists():
-        return datetime.fromisoformat(marker.read_text().split()[1])
+    if (folder / DUMP_COMPLETE).exists():
+        return _dump_time(folder)
     if folder.exists():
         shutil.rmtree(folder)
     started = state.utcnow()
     db.copy_to([tablename], folder)
-    marker.write_text("%s %s\n" % (tablename, started.isoformat()))
+    (folder / DUMP_COMPLETE).write_text("%s %s\n" % (tablename, started.isoformat()))
     return started
+
+
+def _dump_time(folder):
+    """When the completed dump in ``folder`` was started (naive UTC)."""
+    from datetime import datetime
+    return datetime.fromisoformat(
+        (Path(folder) / DUMP_COMPLETE).read_text().split()[1])
 
 
 def backfill(db, tables=None, dry_run=True, live=False, config=None,
@@ -974,6 +981,12 @@ def _backfill(db, sdb, cfg, todo, live, editor):
                 if folder.exists():
                     shutil.rmtree(folder)
                 continue
+            # or reloaded it since this dump was taken, and paused uploading
+            last = state.latest_attempt(sdb, t)
+            if ((folder / DUMP_COMPLETE).exists() and last
+                    and last["status"] in state.UNFINISHED and last["source_time"]
+                    and last["source_time"] > _dump_time(folder)):
+                shutil.rmtree(folder)
             dumped = _dump_once(db, t, folder)
             plan = backup_folder(sdb, folder, tables=[t], dry_run=False,
                                  live=live, config=cfg, editor=editor,

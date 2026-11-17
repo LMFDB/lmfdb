@@ -162,19 +162,22 @@ class ZenodoClient:
 
     def new_version(self, dep_id):
         """
-        Create (or fetch, if one is already open) the draft for a new version
-        of a published record; returns the draft deposition JSON.  Files are
-        inherited from the previous version: delete the changed ones and
-        upload replacements, leaving unchanged files to Zenodo's
-        deduplication.
+        Open the draft for a new version of published record ``dep_id``, or
+        reuse the one already open (e.g. made by a run whose response was
+        lost), importing the previous version's files unless it has files
+        already; returns the draft's deposition JSON.  Unchanged files then
+        stay for Zenodo's file-level deduplication.
+
+        This uses the RDM API: the legacy ``actions/newversion`` refuses,
+        while a new-version draft with files exists, to return it.
         """
-        dep = self._request(
-            "POST", "/deposit/depositions/%s/actions/newversion" % dep_id,
-            "new version of %s" % dep_id)
-        draft = dep.get("links", {}).get("latest_draft")
-        if not draft:
-            raise ZenodoError("no latest_draft link on %s" % dep_id)
-        return self._request("GET", draft, "get draft of %s" % dep_id)
+        draft_id = self._request("POST", "/records/%s/versions" % dep_id,
+                                 "new version of %s" % dep_id)["id"]
+        if not self.list_files(draft_id):
+            self._request("POST",
+                          "/records/%s/draft/actions/files-import" % draft_id,
+                          "import files into %s" % draft_id)
+        return self.get_deposition(draft_id)
 
     # Files ##########################################################
 

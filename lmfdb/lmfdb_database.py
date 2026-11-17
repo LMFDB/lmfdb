@@ -718,7 +718,8 @@ class LMFDBDatabase(PostgresDatabase):
             (flip both once uploads are approved)
         - ``comment`` -- for the version history (defaults to ``description``
             when that is a string)
-        - ``**kwds`` -- passed to ``reload_all``
+        - ``**kwds`` -- passed to ``reload_all``; ``halt_on_errors=False`` is
+            refused for a live backup, which would archive failed reloads too
 
         See also ``update_prod_from_issue``.
         """
@@ -726,6 +727,9 @@ class LMFDBDatabase(PostgresDatabase):
         from lmfdb.zenodo.backup import archive_lock, require_change_info
         from lmfdb.zenodo.config import ZenodoConfig
         from lmfdb.zenodo.state import utcnow
+        if not dry_run_backup and not kwds.get("halt_on_errors", True):
+            raise ValueError("halt_on_errors=False would archive tables whose "
+                             "reload failed; push those tables separately")
         if data_folder is None:
             data_folder = os.path.join(
                 ZenodoConfig().staging_dir,
