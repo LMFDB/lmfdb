@@ -38,7 +38,8 @@ DEFAULT_PATH = os.path.expanduser("~/.lmfdb_zenodo.ini")
 
 class ZenodoConfig:
     def __init__(self, path=None):
-        self.path = path or os.environ.get("LMFDB_ZENODO_CONFIG", DEFAULT_PATH)
+        self.path = os.path.expanduser(
+            path or os.environ.get("LMFDB_ZENODO_CONFIG", DEFAULT_PATH))
         self.exists = os.path.exists(self.path)
         parser = configparser.ConfigParser()
         if self.exists:

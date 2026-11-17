@@ -293,7 +293,7 @@ def test_client_not_live():
 # config                                                             #
 ######################################################################
 
-def test_config_defaults_and_parsing(tmp_path):
+def test_config_defaults_and_parsing(tmp_path, monkeypatch):
     cfg = ZenodoConfig(path=str(tmp_path / "missing.ini"))
     assert not cfg.exists and not cfg.enabled and cfg.sandbox
     assert cfg.community == "lmfdb"
@@ -318,6 +318,10 @@ roed = abc123
     assert cfg.token_for("roed") == "abc123"
     with pytest.raises(ValueError):
         cfg.token_for("nobody")
+    # set from Python, e.g. in a Sage session, the variable keeps its ~
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("LMFDB_ZENODO_CONFIG", "~/zenodo.ini")
+    assert ZenodoConfig().enabled
 
 
 ######################################################################
