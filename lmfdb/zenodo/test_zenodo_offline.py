@@ -12,7 +12,9 @@ import os
 import pytest
 
 from lmfdb.zenodo.versioning import (
+    format_time,
     format_version,
+    history_events,
     next_record_version,
     parse_record_version,
     parse_version,
@@ -57,6 +59,33 @@ def test_record_versions():
     for bad in ["1", "1.2.3", "2.3-5", "v1.0"]:
         with pytest.raises(ValueError):
             parse_record_version(bad)
+
+
+def test_format_time():
+    from datetime import datetime
+    assert format_time(datetime(2026, 11, 17, 19, 3, 59, 499999)) == "2026-11-17 19:03:59 UTC"
+    assert format_time(datetime(2026, 12, 31, 23, 59, 59, 500000)) == "2027-01-01 00:00:00 UTC"
+    assert format_time(None) == ""
+
+
+def test_history_events():
+    from datetime import datetime
+
+    def row(id, kind, major, seq, minute, git_hash=None, tables=None):
+        return dict(id=id, kind=kind, major=major, seq=seq, git_hash=git_hash,
+                    time=datetime(2026, 11, 17, 12, minute), tables=tables,
+                    editor=None, comment=None)
+    rows = [row(1, "major", 2, 2, 0, "aaa"), row(2, "code", 2, 0, 0, "aaa"),
+            row(3, "data", 2, 1, 5, tables={"zzz_a": {"version": "1.0"}}),
+            row(4, "code", 2, 1, 7, "bbb"), row(5, "data", 2, 2, 9),
+            row(6, "major", 3, 3, 11, "ccc"), row(7, "code", 3, 0, 11, "ccc")]
+    events = history_events(rows[::-1])
+    assert [(e["version"], e["kind"]) for e in events] == [
+        ("3.0-0", "major"), ("2.2-1", "data"), ("2.1-1", "code"),
+        ("2.1-0", "data"), ("2.0-0", "major")]
+    assert events[0]["git_hash"] == "ccc"
+    assert events[-1]["kind_label"] == "major version bump"
+    assert history_events([]) == []
 
 
 ######################################################################
@@ -782,6 +811,7 @@ def test_registry_readme():
     readme = metadata.registry_readme(registry, {"zzz_a": "Curves (LMFDB table zzz_a)"},
                                       "This data version includes 1 of the 2 tables.")
     assert "# LMFDB version registry, data version 2.2" in readme
+    assert "data version [2.2](https://www.lmfdb.org/version?v=2.2)" in readme
     assert ("| Curves (LMFDB table zzz_a) | 1.1 | [10.5281/zenodo.3]"
             "(https://doi.org/10.5281/zenodo.3) | 66158 | 12.4 MB | More rows. |") in readme
     assert "(none yet)" in metadata.registry_readme(

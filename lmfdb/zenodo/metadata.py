@@ -515,9 +515,11 @@ def registry_readme(registry, titles, coverage, record_url=doi_url):
         "# LMFDB version registry, data version %s" % registry["lmfdb_version"],
         "",
         "The records of the [LMFDB](%s) archived on Zenodo that make up its "
-        "data version %s; `lmfdb_version_registry.json` has the same "
-        "information, and the version history, in machine-readable form.  "
-        "%s" % (LMFDB_URL, registry["lmfdb_version"], coverage),
+        "data version [%s](%s/version?v=%s); `lmfdb_version_registry.json` "
+        "has the same information, and the version history, in "
+        "machine-readable form.  %s" % (
+            LMFDB_URL, registry["lmfdb_version"], LMFDB_URL,
+            registry["lmfdb_version"], coverage),
         "",
         "| record | version | DOI | rows | size | changes in this version |",
         "|---|---|---|---|---|---|",

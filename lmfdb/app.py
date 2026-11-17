@@ -475,48 +475,36 @@ def workshops():
     return render_template("workshops.html", title="LMFDB Activities", contribs=contribs, bread=bread)
 
 
-def _version_events(rows):
-    """Prepare version_history rows for display on the /version page."""
-    from .zenodo.versioning import format_version
-    kinds = {"data": "data push", "code": "frontend release",
-             "major": "major version bump"}
-    events = []
-    for row in rows:
-        if row["kind"] == "data":
-            display = format_version(row["major"], row["seq"])
-        elif row["kind"] == "code":
-            display = "%s.*-%s" % (row["major"], row["seq"])
-        else:
-            display = format_version(row["major"], 0, 0)
-        tables = sorted((row.get("tables") or {}).items())
-        events.append(dict(row, display=display, kind_label=kinds[row["kind"]],
-                           table_list=tables))
-    return events
-
-
 @app.route("/version")
 def version_page():
     from . import db
     from .zenodo import state as version_state
-    from .zenodo.versioning import parse_version
+    from .zenodo.versioning import format_time, history_events, parse_version
+    from lmfdb.utils import flash_error
     bread = [("Version", '')]
     try:
-        events = _version_events(version_state.history(db))
+        events = history_events(version_state.history(db))
     except Exception:
         events = []
-    resolved = error = None
+    current = events[0]["version"] if events else None
+    resolved = None
     query = request.args.get("v", "").strip()
-    if query:
+    if events:
         try:
-            major, data_seq, code_seq = parse_version(query)
+            major, data_seq, code_seq = parse_version(query or current)
+        except ValueError:
+            flash_error("%s is not a valid LMFDB version, which has the form "
+                        "2.3-5 or 2.3", query)
+            return redirect(url_for("version_page"))
+        try:
             resolved = version_state.resolve_version(db, major, data_seq, code_seq)
-            resolved["table_list"] = sorted(resolved["tables"].items())
-        except Exception as err:
-            error = str(err)
+        except ValueError:
+            flash_error("LMFDB version %s does not exist", query)
+            return redirect(url_for("version_page"))
     return render_template("version.html", title="LMFDB version history",
                            bread=bread, events=events, resolved=resolved,
-                           error=error, query=query,
-                           current=lmfdb_version_string())
+                           query=query, current=current,
+                           format_time=format_time)
 
 
 @app.route("/api/version/<v>")

@@ -16,11 +16,14 @@ web frontend alike.
 """
 
 import re
+from datetime import timedelta
 
 __all__ = [
     "BUMPS",
     "FIRST_RECORD_VERSION",
+    "format_time",
     "format_version",
+    "history_events",
     "next_record_version",
     "parse_record_version",
     "parse_version",
@@ -117,3 +120,51 @@ def next_record_version(previous, bump):
     if bump == "minor":
         return "%s.%s" % (major, minor + 1)
     raise ValueError("bump must be one of %s, not %r" % (", ".join(BUMPS), bump))
+
+
+def format_time(t):
+    """
+    A naive UTC datetime as ``"YYYY-MM-DD HH:MM:SS UTC"``, rounded to the
+    nearest second; ``""`` for None.
+    """
+    if t is None:
+        return ""
+    return (t + timedelta(microseconds=500000)).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+HISTORY_KINDS = {"data": "data push", "code": "frontend release",
+                 "major": "major version bump"}
+
+
+def history_events(rows):
+    """
+    The version history for display, most recent first.
+
+    INPUT:
+
+    - ``rows`` -- ``version_history`` rows as dicts, in any order
+
+    OUTPUT:
+
+    A list of copies of the rows, each with ``version``, the LMFDB version
+    current right after it, and ``kind_label``.  A major row and the code
+    row recorded with it (see ``state.major_rows``) become a single event.
+    """
+    events = []
+    major = data_seq = code_seq = None
+    for row in sorted(rows, key=lambda r: (r["time"], r["id"])):
+        if row["kind"] == "major" or row["major"] != major:
+            major, data_seq, code_seq = row["major"], 0, None
+        if row["kind"] == "data":
+            data_seq = row["seq"]
+        elif row["kind"] == "code":
+            code_seq = row["seq"]
+        version = format_version(major, data_seq, code_seq)
+        if row["kind"] == "code" and events and events[-1]["kind"] == "major":
+            events[-1]["version"] = version
+            events[-1]["git_hash"] = events[-1]["git_hash"] or row["git_hash"]
+            continue
+        events.append(dict(row, version=version,
+                           kind_label=HISTORY_KINDS[row["kind"]]))
+    events.reverse()
+    return events
