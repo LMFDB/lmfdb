@@ -140,33 +140,55 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
                 SQL(history), SQL(role)))
         except Exception:
             pass
-    db._execute(SQL("""
-        CREATE TABLE IF NOT EXISTS {0} (
-            id bigserial PRIMARY KEY,
-            tablename text NOT NULL,
-            owner text NOT NULL,
-            concept_recid text,
-            concept_doi text,
-            recid text,
-            doi text,
-            version text,
-            bump text,
-            notes text,
-            lmfdb_version text,
-            source_time timestamp without time zone,
-            status text NOT NULL,
-            draft_id text,
-            source_md5s jsonb,
-            uploaded_files jsonb,
-            total_size bigint,
-            nrows bigint,
-            quota_gb integer,
-            started timestamp without time zone,
-            finished timestamp without time zone,
-            error text
-        )""").format(SQL(backups)))
+    db._execute(SQL("CREATE TABLE IF NOT EXISTS {0} (%s)" % ", ".join(
+        "%s %s" % col for col in BACKUP_COLUMNS)).format(SQL(backups)))
+    add_missing_columns(db)
     db._execute(SQL("CREATE INDEX IF NOT EXISTS {0} ON {1} (tablename, id)").format(
         SQL(backups.split(".")[-1] + "_tablename"), SQL(backups)))
+
+
+BACKUP_COLUMNS = [
+    ("id", "bigserial PRIMARY KEY"),
+    ("tablename", "text NOT NULL"),
+    ("owner", "text NOT NULL"),
+    ("concept_recid", "text"),
+    ("concept_doi", "text"),
+    ("recid", "text"),
+    ("doi", "text"),
+    ("version", "text"),
+    ("bump", "text"),
+    ("notes", "text"),
+    ("lmfdb_version", "text"),
+    ("source_time", "timestamp without time zone"),
+    ("status", "text NOT NULL"),
+    ("draft_id", "text"),
+    ("source_md5s", "jsonb"),
+    ("uploaded_files", "jsonb"),
+    ("total_size", "bigint"),
+    ("nrows", "bigint"),
+    ("quota_gb", "integer"),
+    ("started", "timestamp without time zone"),
+    ("finished", "timestamp without time zone"),
+    ("error", "text"),
+]
+
+
+def add_missing_columns(db):
+    """
+    Add the columns of ``BACKUP_COLUMNS`` that the upload-state table lacks
+    (because it was created by an earlier version of this code); new
+    columns must therefore allow NULL.  Does nothing if the table is absent.
+    """
+    schema, table = _backups_name(db).split(".")
+    have = {row[0] for row in db._execute(SQL(
+        "SELECT column_name FROM information_schema.columns "
+        "WHERE table_schema = %s AND table_name = %s"), [schema, table])}
+    if not have:
+        return
+    for col, typ in BACKUP_COLUMNS:
+        if col not in have:
+            db._execute(SQL("ALTER TABLE {0} ADD COLUMN %s %s" % (col, typ)).format(
+                _backups(db)))
 
 
 ######################################################################

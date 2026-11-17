@@ -503,6 +503,7 @@ def offline_backup(monkeypatch):
     monkeypatch.setattr(state, "next_data_version", lambda db: (2, 3))
     monkeypatch.setattr(state, "unfinished", lambda db: [])
     monkeypatch.setattr(state, "lock", lambda db: contextlib.nullcontext())
+    monkeypatch.setattr(state, "add_missing_columns", lambda db: None)
     return backup, published, attempts
 
 
@@ -1682,3 +1683,22 @@ def test_force_regenerates_every_record(scratch_db, tmp_path, monkeypatch):
     tables = state.resolve_version(db, 2, 2)["tables"]
     assert (tables["zzz_a"]["version"], tables[backup.KNOWLS_NAME]["version"]) == ("1.1", "1.1")
     assert len({dep["concept"] for dep in fake.deps.values()}) == 3
+
+
+def test_state_tables_gain_new_columns(scratch_db, tmp_path):
+    from psycodict import SQL
+    from lmfdb.zenodo import backup, state
+    db = scratch_db
+    state.ensure_tables(db)
+    aid = state.start_attempt(db, "zzz_a", "roe", "1.0", {})
+    # as created by an earlier version of this code
+    db._execute(SQL("ALTER TABLE userdb.zenodo_backups DROP COLUMN nrows"))
+    backup._state_db(db, prod_config(tmp_path))
+    state.update_attempt(db, aid, nrows=5)
+    assert state.get_attempt(db, aid)["nrows"] == 5
+    # and for the sandbox state, which is created on first use
+    sandbox = ZenodoConfig(path=str(tmp_path / "missing.ini"))
+    sdb = backup._state_db(db, sandbox)
+    db._execute(SQL("ALTER TABLE userdb.zenodo_backups_sandbox DROP COLUMN quota_gb"))
+    sdb = backup._state_db(db, sandbox)
+    assert state.unfinished(sdb) == []

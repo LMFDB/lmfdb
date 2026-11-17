@@ -101,9 +101,13 @@ def _state_db(db, cfg):
     """
     The database object to keep archive state in: ``db`` itself, or for a
     sandbox configuration a ``state.Sandbox`` around it, whose state tables
-    are created (with an initial version) on first use.
+    are created (with an initial version) on first use.  Columns added to
+    the upload-state table since it was created are added to it here.
     """
-    if not cfg.sandbox or isinstance(db, state.Sandbox):
+    if isinstance(db, state.Sandbox):
+        return db
+    if not cfg.sandbox:
+        state.add_missing_columns(db)
         return db
     sdb = state.Sandbox(db)
     state.ensure_tables(sdb, grant_select_to=())
