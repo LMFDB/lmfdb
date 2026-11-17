@@ -33,53 +33,65 @@
 
 {% if events %}
 
-<div class="tab">
-  <button type="button" class="tablinks" id="version-button"
-    onclick="openVersionTab('version')">{{ 'LMFDB ' + resolved.version if resolved else 'Look up a version' }}</button>
-  <button type="button" class="tablinks" id="history-button"
+<style>
+  div.version-tabs { margin: 1.5em 0 1em 0; }
+  div.version-panel h2 { margin-top: 1.5em; }
+  table.version-info td { padding: 2px 10px 2px 0; }
+</style>
+
+<form method="get" action="{{ url_for('version_page') }}">
+  <p>
+    Look up a version:
+    <input type="text" name="v" value="{{ query }}" placeholder="e.g. 2.3-5 or 2.3" size="16">
+    <button type="submit">Look up</button>
+  </p>
+</form>
+
+<div class="version-tabs">
+  <button type="button" class="ver_version ver_active"
+    onclick="openVersionTab('version')">Version information</button>
+  <button type="button" class="ver_history ver_inactive"
     onclick="openVersionTab('history')">Version history</button>
 </div>
 
-<div id="version-tab" class="tabcontent">
-  <form method="get" action="{{ url_for('version_page') }}">
-    <p>
-      <input type="text" name="v" value="{{ query }}" placeholder="e.g. 2.3-5 or 2.3" size="12">
-      <button type="submit">Look up</button>
-      (also available as <a href="{{ url_for('version_api', v=(resolved.version if resolved else 'current')) }}">JSON</a>)
-    </p>
-  </form>
-
-  {% if resolved %}
-    <h2>LMFDB {{ resolved.version }}{% if resolved.version == current %} (current version){% endif %}</h2>
-    <p><b>Data version created:</b> {{ format_time(resolved.time) }}.</p>
+<div id="version-tab" class="version-panel">
+  <table class="version-info">
+    <tr><td><b>Version:</b></td>
+      <td>{{ resolved.version }}{% if resolved.version == current %} (current){% endif %}</td></tr>
+    <tr><td><b>Data version created:</b></td><td>{{ format_time(resolved.time) }}</td></tr>
     {% if resolved.git_hash %}
-      <p><b>Website code:</b>
-        <a href="https://github.com/LMFDB/lmfdb/tree/{{ resolved.git_hash }}">{{ resolved.git_hash[:12] }}</a>
-        (deployed {{ format_time(resolved.git_time) }}).</p>
+    <tr><td><b>Website code:</b></td>
+      <td><a href="https://github.com/LMFDB/lmfdb/tree/{{ resolved.git_hash }}">{{ resolved.git_hash[:12] }}</a>,
+        deployed {{ format_time(resolved.git_time) }}</td></tr>
     {% endif %}
-    {% if resolved.tables %}
-      <table class="ntdata">
-        <thead>
-          <tr><th>table</th><th>record version</th><th>Zenodo record</th><th>changes in this record version</th></tr>
-        </thead>
-        <tbody>
-          {% for name, info in resolved.tables|dictsort %}
-            <tr>
-              <td><code>{{ name }}</code></td>
-              <td>{{ info.version }}</td>
-              <td>{% if info.doi %}<a href="https://doi.org/{{ info.doi }}">{{ info.doi }}</a>{% endif %}</td>
-              <td>{{ info.notes or '' }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>There are no Zenodo records associated with this version.</p>
-    {% endif %}
+  </table>
+
+  <h2>Zenodo records</h2>
+  {% if resolved.tables %}
+    <table class="ntdata">
+      <thead>
+        <tr><th>table</th><th>record version</th><th>Zenodo record</th><th>changes in this record version</th></tr>
+      </thead>
+      <tbody>
+        {% for name, info in resolved.tables|dictsort %}
+          <tr>
+            <td><code>{{ name }}</code></td>
+            <td>{{ info.version }}</td>
+            <td>{% if info.doi %}<a href="https://doi.org/{{ info.doi }}">{{ info.doi }}</a>{% endif %}</td>
+            <td>{{ info.notes or '' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>There are no Zenodo records associated with this version.</p>
   {% endif %}
+
+  <p>This information is also available as
+    <a href="{{ url_for('version_api', v=resolved.version) }}">JSON</a>.</p>
 </div>
 
-<div id="history-tab" class="tabcontent">
+<div id="history-tab" class="version-panel">
   <table class="ntdata">
     <thead>
       <tr><th>version</th><th>type</th><th>date</th><th>details</th></tr>
@@ -91,6 +103,7 @@
           <td>{{ e.kind_label }}</td>
           <td>{{ format_time(e.time) }}</td>
           <td style="white-space: normal;"><span>
+            {% if e.comment %}{{ e.comment }}<br>{% endif %}
             {% if e.kind != 'data' and e.git_hash %}
               commit <a href="https://github.com/LMFDB/lmfdb/tree/{{ e.git_hash }}">{{ e.git_hash[:12] }}</a>
             {% elif e.kind == 'data' %}
@@ -105,7 +118,6 @@
                 {{ ", " if not loop.last else "" }}
               {% endfor %}
             {% endif %}
-            {% if e.comment %} {{ e.comment }}{% endif %}
             {% if e.editor %} <i>({{ e.editor }})</i>{% endif %}
           </span>
           </td>
@@ -117,9 +129,9 @@
 
 <script>
 function openVersionTab(name) {
-  $(".tabcontent").hide();
-  $(".tablinks").removeClass("active");
-  $("#" + name + "-button").addClass("active");
+  $("button.ver_active").addClass("ver_inactive").removeClass("ver_active");
+  $("button.ver_" + name).removeClass("ver_inactive").addClass("ver_active");
+  $("div.version-panel").hide();
   $("#" + name + "-tab").show();
   history.replaceState(null, "", location.pathname + location.search
                        + (name == "history" ? "#history" : ""));
@@ -127,7 +139,7 @@ function openVersionTab(name) {
 function openTabFromHash() {
   openVersionTab(location.hash == "#history" ? "history" : "version");
 }
-$(document).ready(openTabFromHash);
+openTabFromHash();
 $(window).on("hashchange", openTabFromHash);
 </script>
 
