@@ -22,8 +22,6 @@ Default location ``~/.lmfdb_zenodo.ini``, overridden by the
     editor = roed
     # owner of new records when tables.yaml does not assign one
     default_owner = roed
-    # for mirroring version_history rows to grace (optional; libpq DSN)
-    # grace_dsn = host=... dbname=... user=editor password=...
 
     [tokens]
     roed = <personal access token>
@@ -59,7 +57,6 @@ class ZenodoConfig:
         self.compression_level = int(z.get("compression_level", 12))
         self.editor = z.get("editor") or None
         self.default_owner = z.get("default_owner") or None
-        self.grace_dsn = z.get("grace_dsn") or None
         self.tokens = dict(parser["tokens"]) if parser.has_section("tokens") else {}
 
     def token_for(self, owner):

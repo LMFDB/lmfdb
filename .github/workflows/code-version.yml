@@ -34,7 +34,6 @@ jobs:
       - name: Record the pushed commit
         env:
           LMFDB_VERSION_DSN: ${{ secrets.LMFDB_VERSION_DSN }}
-          LMFDB_VERSION_GRACE_DSN: ${{ secrets.LMFDB_VERSION_GRACE_DSN }}
         run: |
           cp -r lmfdb/zenodo "$RUNNER_TEMP/zenodo"
           cd "$RUNNER_TEMP"

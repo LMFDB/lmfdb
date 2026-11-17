@@ -3,11 +3,11 @@ Database state for the Zenodo backup system and the LMFDB version history.
 
 Two tables are used:
 
-- ``version_history`` (public schema) -- one row per version event.  This
-  table lives on proddb (for www) and on grace (from where it is mirrored to
-  devmirror, so that beta can display it); rows are inserted by the backup
-  pipeline and the deploy watcher.  It is in the public schema so that the
-  read-only web connection can display the /version page.
+- ``version_history`` (public schema, proddb only) -- one row per version
+  event, inserted by the backup pipeline and the deploy watcher.  It is in
+  the public schema so that the read-only web connection can display the
+  /version page.  Beta has no version: its data and code are both ahead of
+  any release.
 
   Row kinds:
 

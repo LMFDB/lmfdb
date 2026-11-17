@@ -28,7 +28,8 @@ from lmfdb.version import LEGACY_VERSION
 # Once the versioning system is activated (version_history table populated),
 # the footer shows the full version {major}.{data}-{code} -- see
 # lmfdb/version.py and /version; until then this legacy string is displayed.
-LMFDB_VERSION = LEGACY_VERSION
+# Beta has no version table: its data and code are ahead of any release.
+LMFDB_VERSION = "LMFDB beta" if os.getenv("BETA") == "1" else LEGACY_VERSION
 
 _version_cache = {"time": 0.0, "value": LMFDB_VERSION}
 

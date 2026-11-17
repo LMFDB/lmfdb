@@ -10,10 +10,9 @@ runs
 
     python -m zenodo.watcher --commit SHA --version-file .../lmfdb/version.py
 
-connecting with the DSN in ``$LMFDB_VERSION_DSN`` (and mirroring the row to
-``$LMFDB_VERSION_GRACE_DSN`` when set).  The copy imports this package on its
-own: importing ``lmfdb`` itself needs sage and connects to the configured
-database.
+connecting with the DSN in ``$LMFDB_VERSION_DSN``.  The copy imports this
+package on its own: importing ``lmfdb`` itself needs sage and connects to the
+configured database.
 
 Without ``--commit`` it polls the head of ``web`` with ``git ls-remote`` and
 uses the configured LMFDB database; run ``python3 -m lmfdb.zenodo.watcher``
@@ -78,14 +77,13 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
     are harmless.  Returns the new version event as a dict, or None.
 
     - ``major`` -- MAJOR at ``commit``; fetched from GitHub when None
-    - ``config`` -- anything with ``editor`` and ``grace_dsn`` attributes
-      (default: the local Zenodo configuration)
+    - ``config`` -- anything with an ``editor`` attribute (default: the
+      local Zenodo configuration)
     - ``head`` -- the current head of the web branch, if known: a commit
       that is no longer the head is not recorded, since numbering it now
       would place it after the newer deploy
     """
     from . import state
-    from .backup import _mirror_to_grace
     from .config import ZenodoConfig
 
     cfg = config or ZenodoConfig()
@@ -108,7 +106,6 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
         rows = state.major_rows(major, git_hash=commit, editor=editor)
         if not dry_run:
             state.insert_version_rows(db, rows)
-            _mirror_to_grace(cfg, rows)
         print("Recorded major version bump to %s.0-0 (commit %s)%s"
               % (major, commit[:12], " [dry run]" if dry_run else ""))
     else:
@@ -118,7 +115,6 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
                                   editor=editor)]
         if not dry_run:
             state.insert_version_rows(db, rows)
-            _mirror_to_grace(cfg, rows)
         print("Recorded frontend release %s.*-%s (commit %s)%s"
               % (major, seq, commit[:12],
                  " [dry run]" if dry_run else ""))
@@ -162,8 +158,7 @@ def main():
     # SQL objects in state come from psycodict, so connect with its driver
     import psycopg
     major = major_from_file(args.version_file) if args.version_file else None
-    cfg = SimpleNamespace(editor="github-actions", sandbox=False,
-                          grace_dsn=os.environ.get("LMFDB_VERSION_GRACE_DSN"))
+    cfg = SimpleNamespace(editor="github-actions")
     head = deployed_commit(branch=args.branch)
     with psycopg.connect(os.environ["LMFDB_VERSION_DSN"],
                          autocommit=True) as conn:

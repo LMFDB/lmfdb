@@ -1,11 +1,12 @@
 # Which production tables are archived on Zenodo, and by whom.
 #
 # STATUS: owners and inclusion from the managing editors' owner list of
-# 2026-11-16.  `review` entries are treated as `no` until resolved; they are
-# the tables missing from that list and gps_small (no host).
+# 2026-11-16, with the remaining tables decided the same day.
 #
 # Semantics per entry:
-#   backup:  yes | no | review    (review == not backed up, but reported)
+#   backup:  yes | no | hold | review
+#            hold == yes once the issues in the note are fixed; until then
+#            skipped by pushes and the backfill, and reported (like review)
 #   owner:   Zenodo account that owns the table's record: a key of the
 #            [tokens] section of ~/.lmfdb_zenodo.ini (sticky once the first
 #            version is published; [zenodo] default_owner when absent here)
@@ -31,11 +32,11 @@ tables:
   av_fq_isog: {backup: yes, owner: roe}
   belyi_galmap_portraits: {backup: yes, owner: roe}
   belyi_galmaps: {backup: yes, owner: roe}
-  belyi_galmaps_fixed: {backup: review, note: "migration artifact?"}
-  belyi_galmaps_prim: {backup: review, note: "not in the owner list of 2026-11-16"}
+  belyi_galmaps_fixed: {backup: no}
+  belyi_galmaps_prim: {backup: no}
   belyi_passports: {backup: yes, owner: roe}
-  belyi_passports_fixed: {backup: review, note: "migration artifact?"}
-  belyi_specializations: {backup: review, note: "confirm production status"}
+  belyi_passports_fixed: {backup: no}
+  belyi_specializations: {backup: no}
   bmf_dims: {backup: yes, owner: cremona}
   bmf_forms: {backup: yes, owner: cremona}
   char_dirichlet: {backup: yes, owner: sutherland}
@@ -44,7 +45,7 @@ tables:
   ec_classdata: {backup: yes, owner: cremona}
   ec_curvedata: {backup: yes, owner: cremona}
   ec_galrep: {backup: yes, owner: cremona}
-  ec_iqf_labels: {backup: review, note: "label conversion helper; archive?"}
+  ec_iqf_labels: {backup: no}
   ec_iwasawa: {backup: yes, owner: cremona}
   ec_localdata: {backup: yes, owner: cremona}
   ec_mwbsd: {backup: yes, owner: cremona}
@@ -52,35 +53,35 @@ tables:
   ec_nfportraits: {backup: yes, owner: cremona}
   ec_padic: {backup: yes, owner: cremona}
   ec_torsion_growth: {backup: yes, owner: cremona}
-  fq_fields: {backup: review, note: "confirm which section this serves"}
+  fq_fields: {backup: no}
   g2c_curves: {backup: yes, owner: sutherland}
   g2c_endomorphisms: {backup: yes, owner: sutherland}
   g2c_galrep: {backup: yes, owner: sutherland}
   g2c_plots: {backup: yes, owner: sutherland}
   g2c_ratpts: {backup: yes, owner: sutherland}
   g2c_tamagawa: {backup: yes, owner: sutherland}
-  gps_char: {backup: yes, owner: paulhus, overage: 99G}
+  gps_char: {backup: hold, owner: paulhus, overage: 99G, note: "issues to fix first"}
   gps_char_test: {backup: no, note: "test table"}
   gps_conj_classes: {backup: yes, owner: roe}
-  gps_crep: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_crep: {backup: no}
   gps_families: {backup: yes, owner: roe}
-  gps_gl2zhat: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
-  gps_gl2zhat_coarse: {backup: review, note: "superseded by gps_gl2zhat_fine?"}
+  gps_gl2zhat: {backup: no}
+  gps_gl2zhat_coarse: {backup: no}
   gps_gl2zhat_fine: {backup: yes, owner: sutherland}
   gps_gl2zhat_nonsurjdet: {backup: yes, owner: sutherland}
   gps_gmodules: {backup: yes, owner: roe}
   gps_groups: {backup: yes, owner: roe}
-  gps_groups_cc: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_groups_cc: {backup: no}
   gps_groups_cc_test: {backup: no, note: "test table"}
   gps_groups_test: {backup: no, note: "test table"}
   gps_gsp4zhat: {backup: yes, owner: sutherland}
   gps_images: {backup: yes, owner: roe}
-  gps_qchar: {backup: yes, owner: roe}
+  gps_qchar: {backup: hold, owner: roe, note: "issues to fix first"}
   gps_qchar_test: {backup: no, note: "test table"}
-  gps_qrep: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_qrep: {backup: no}
   gps_regular_polynomials: {backup: yes, owner: jones}
-  gps_small: {backup: review, note: "no host in the owner list; being phased out"}
-  gps_smallhash: {backup: review, note: "not in the owner list of 2026-11-16"}
+  gps_small: {backup: no, note: "being phased out"}
+  gps_smallhash: {backup: yes, owner: roe}
   gps_special_names: {backup: yes, owner: roe}
   gps_st: {backup: yes, owner: sutherland}
   gps_st0: {backup: yes, owner: sutherland}
@@ -89,16 +90,16 @@ tables:
   gps_subgroups_test: {backup: no, note: "test table"}
   gps_transitive: {backup: yes, owner: jones}
   gps_transitive_portraits: {backup: yes, owner: jones}
-  halfmf_forms: {backup: review, note: "not in the owner list of 2026-11-16"}
-  hecke_algebras: {backup: review, note: "Hecke algebra section; hidden/beta?"}
-  hecke_ladic: {backup: review, note: "Hecke algebra section; hidden/beta?"}
-  hecke_orbits: {backup: review, note: "Hecke algebra section; hidden/beta?"}
+  halfmf_forms: {backup: no}
+  hecke_algebras: {backup: no}
+  hecke_ladic: {backup: no}
+  hecke_orbits: {backup: no}
   hgcwa_complete: {backup: yes, owner: paulhus}
   hgcwa_passports: {backup: yes, owner: paulhus}
-  hgcwa_unique_groups: {backup: review, note: "not in the owner list of 2026-11-16"}
+  hgcwa_unique_groups: {backup: yes, owner: paulhus}
   hgm_euler_survey: {backup: yes, owner: costa}
   hgm_families: {backup: yes, owner: costa}
-  hgm_monodromy: {backup: review, note: "confirm production status"}
+  hgm_monodromy: {backup: no}
   hgm_motives: {backup: yes, owner: costa}
   hmf_fields: {backup: yes, owner: roe}
   hmf_forms: {backup: yes, owner: roe}
@@ -114,12 +115,12 @@ tables:
   lf_fields: {backup: yes, owner: jones}
   lfunc_data: {backup: yes, owner: costa}
   lfunc_instances: {backup: yes, owner: costa}
-  lfunc_lfunctions: {backup: yes, owner: costa, overage: 316G}
+  lfunc_lfunctions: {backup: hold, owner: costa, overage: 316G, note: "issues to fix first; overage exceeds one account's 150 GB"}
   lfunc_rs_knowls: {backup: yes, owner: costa}
   lfunc_search: {backup: yes, owner: costa}
-  maass_newforms: {backup: review, note: "not in the owner list of 2026-11-16"}
-  maass_newforms_coefficients: {backup: review, note: "not in the owner list of 2026-11-16"}
-  maass_portraits: {backup: review, note: "regenerable images/portraits; confirm whether to archive"}
+  maass_newforms: {backup: no}
+  maass_newforms_coefficients: {backup: no}
+  maass_portraits: {backup: no}
   maass_rigor: {backup: yes, owner: roe}
   maass_rigor_coefficients: {backup: yes, owner: roe}
   maass_rigor_portraits: {backup: yes, owner: roe}
@@ -143,8 +144,8 @@ tables:
   modcurve_pictures: {backup: yes, owner: roe}
   modcurve_points: {backup: yes, owner: roe}
   modcurve_teximages: {backup: yes, owner: roe}
-  modlgal_reps: {backup: review, note: "not in the owner list of 2026-11-16"}
-  modlmf_forms: {backup: review, note: "not in the owner list of 2026-11-16"}
+  modlgal_reps: {backup: yes, owner: sutherland}
+  modlmf_forms: {backup: no}
   nf_fields: {backup: yes, owner: jones}
   nf_fields_extra: {backup: yes, owner: jones, overage: 36G}
   nf_fields_reflex: {backup: yes, owner: jones}

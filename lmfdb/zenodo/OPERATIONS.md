@@ -6,22 +6,21 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
 
 ## One-time setup (proddb)
 
-1. Resolve the remaining `review` entries in [tables.yaml](tables.yaml)
-   (owners are assigned from the 2026-11-16 owner list).
+1. [tables.yaml](tables.yaml) is decided (2026-11-16); three tables are on
+   `hold` until their issues are fixed.
 2. Create `~/.lmfdb_zenodo.ini` (mode 0600) on proddb; see the docstring in
    [config.py](config.py).  Start with `sandbox = true`.
 3. In sage on proddb: `db.zenodo_setup()` — creates `version_history` (public
    schema; grants SELECT to the web role) and `userdb.zenodo_backups`, and
    records the initial major version from [lmfdb/version.py](../version.py).
-   Run the same on grace (for beta's version page) with `ensure_tables`.
+   Beta has no version table (its footer says "LMFDB beta").
 4. Weekly audit cron entry on proddb:
 
        0 3 * * 0     sage -python -c "from lmfdb import db; db.zenodo_audit()"
 
 5. Code versions: the GitHub Action
    [code-version.yml](../../.github/workflows/code-version.yml) records each
-   push to `web`.  Give it a role that can only add version rows, on proddb
-   (and on grace, for beta):
+   push to `web`.  Give it a role on proddb that can only add version rows:
 
        CREATE ROLE lmfdb_version LOGIN PASSWORD '...';
        GRANT SELECT, INSERT ON version_history TO lmfdb_version;
@@ -32,8 +31,8 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
    and the test workflow hands it to every branch.  On GitHub, create an
    environment `lmfdb-version` whose deployment branches are limited to
    `web`, holding the secrets `LMFDB_VERSION_DSN` (e.g.
-   `host=proddb.lmfdb.xyz dbname=lmfdb user=lmfdb_version password=...`) and
-   optionally `LMFDB_VERSION_GRACE_DSN`.  A run only records its commit while
+   `host=proddb.lmfdb.xyz dbname=lmfdb user=lmfdb_version password=...`).
+   A run only records its commit while
    that commit is still the head of `web`, so a stale rerun cannot number
    an old commit after a newer deploy.  If the latest run failed, rerun it
    from the Actions tab, or run `python3 -m lmfdb.zenodo.watcher` on proddb,
@@ -53,14 +52,17 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
    of them again to exercise the new-version path, then check the records on
    sandbox.zenodo.org.  In sandbox mode all archive state lives in
    `userdb.zenodo_backups_sandbox` and `userdb.version_history_sandbox`
-   (created on first use), dumps and packages go to `{staging_dir}/sandbox`,
-   and nothing is mirrored to grace: the rehearsal leaves the production
-   state, the public version history and the footer untouched.  Also check
+   (created on first use) and dumps and packages go to
+   `{staging_dir}/sandbox`: the rehearsal leaves the production state, the
+   public version history and the footer untouched.  Also check
    whether a raised quota carries over to a record's next version.
 2. Flip `sandbox = false`, then `db.zenodo_backfill(dry_run=True)` to see
    the plan, and run it for real off-peak.  Tables are dumped, uploaded and
-   deleted one at a time, smallest first; re-run after any interruption
-   (completed dumps are reused, published tables skipped).  Once every
+   deleted one at a time: gps_transitive, lf_fields, nf_fields and
+   nf_fields_extra first (for IGP24 stage 2; `BACKFILL_FIRST` in
+   [backup.py](backup.py)), then smallest first, skipping tables on `hold`.
+   Re-run after any interruption (completed dumps are reused, published
+   tables skipped).  Once every
    table is published it creates data version `{MAJOR}.1`; while any upload
    is paused for quota, it does not.
 
@@ -69,13 +71,19 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
 Requests to move data to production use the "Move data to production" issue
 form (`.github/ISSUE_TEMPLATE/data-to-prod.yml`), which asks for a
 description of the change and whether it is a major or minor version update.
-Copy both into the call:
+Push the request by its issue number:
+
+    db.update_prod_from_issue(7123)
+
+which reads the tables, description and bump from the issue (public GitHub
+API, no token), prints them, and asks for confirmation before calling
 
     db.update_prod(["mf_newforms", "mf_hecke_traces"],
                    description="Added newforms of weight 1 and level up to 4000.",
                    bump="minor")
 
-Either argument may be a dict by table name when tables differ.  This runs
+which can also be called directly.  Either argument may be a dict by table
+name when tables differ.  This runs
 `copy_to_from_remote` (devmirror → staging folder) + `reload_all` +
 `zenodo_backup` (which skips unchanged tables, gives each changed table a new
 record version with the description as its notes, refreshes the knowls

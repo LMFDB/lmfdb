@@ -691,7 +691,7 @@ class LMFDBDatabase(PostgresDatabase):
 
     def update_prod(self, search_tables, description=None, bump=None,
                     data_folder=None, remote_opts=None, dry_run_backup=True,
-                    live=False, **kwds):
+                    live=False, comment=None, **kwds):
         """
         Push tables to production and archive them on Zenodo: the one-stop
         replacement (run on proddb) for the manual sequence of
@@ -716,7 +716,11 @@ class LMFDBDatabase(PostgresDatabase):
         - ``dry_run_backup``, ``live`` -- passed to ``zenodo_backup``; the
             defaults report what would be archived without touching Zenodo
             (flip both once uploads are approved)
+        - ``comment`` -- for the version history (defaults to ``description``
+            when that is a string)
         - ``**kwds`` -- passed to ``reload_all``
+
+        See also ``update_prod_from_issue``.
         """
         from lmfdb.zenodo.config import ZenodoConfig
         if not dry_run_backup:
@@ -735,7 +739,34 @@ class LMFDBDatabase(PostgresDatabase):
         from lmfdb.zenodo.state import utcnow
         return self.zenodo_backup(data_folder, dry_run=dry_run_backup,
                                   live=live, description=description,
-                                  bump=bump, source_time=utcnow())
+                                  bump=bump, comment=comment,
+                                  source_time=utcnow())
+
+    def update_prod_from_issue(self, issue, confirm=True, **kwds):
+        """
+        ``update_prod`` for the tables, description and version update
+        requested in a "Move data to production" issue on GitHub, e.g.
+        ``db.update_prod_from_issue(7123, dry_run_backup=False, live=True)``.
+
+        The request is printed first and, unless ``confirm=False``, pushed
+        only after you answer y (issues can be edited by their author at any
+        time).  The issue's URL goes into the version history.  Other
+        arguments are passed to ``update_prod``.
+        """
+        from lmfdb.zenodo.issues import fetch_issue, change_request, summary
+        request = change_request(fetch_issue(issue))
+        print(summary(request))
+        if confirm and input("Push these tables to production? [y/N] "
+                             ).strip().lower() not in ("y", "yes"):
+            print("Nothing pushed.")
+            return None
+        comment = request["url"]
+        if isinstance(request["description"], str):
+            comment = "%s (%s)" % (request["description"], comment)
+        kwds.setdefault("comment", comment)
+        return self.update_prod(request["tables"],
+                                description=request["description"],
+                                bump=request["bump"], **kwds)
 
     def zenodo_backup(self, data_folder, tables=None, dry_run=True,
                       live=False, **kwds):

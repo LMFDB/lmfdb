@@ -330,14 +330,94 @@ def test_tables_yaml():
     pytest.importorskip("psycodict")
     from lmfdb.zenodo.backup import load_tables_yaml, classify
     spec = load_tables_yaml()
-    assert all(e["backup"] in ("yes", "no", "review") for e in spec.values())
+    assert all(e["backup"] in ("yes", "no", "hold", "review") for e in spec.values())
+    assert all(e.get("owner") for e in spec.values() if e["backup"] in ("yes", "hold"))
     assert spec["nf_fields"]["backup"] == "yes"
     assert spec["gps_groups_test"]["backup"] == "no"
-    include, excluded, review, unlisted = classify(
-        ["nf_fields", "gps_groups_test", "totally_new_table"], spec)
-    assert include == ["nf_fields"]
-    assert excluded == ["gps_groups_test"]
-    assert unlisted == ["totally_new_table"]
+    split = classify(["nf_fields", "gps_groups_test", "lfunc_lfunctions",
+                      "totally_new_table"], spec)
+    assert split == {"yes": ["nf_fields"], "no": ["gps_groups_test"],
+                     "hold": ["lfunc_lfunctions"], "review": [],
+                     "unlisted": ["totally_new_table"]}
+
+
+######################################################################
+# change requests from GitHub issues                                 #
+######################################################################
+
+FORM_BODY = """### Tables
+
+- `mf_newforms`
+- mf_hecke_traces, mf_hecke_cc
+
+### Description of the change
+
+Added newforms of weight 1.
+
+### Version update
+
+minor
+
+### Per-table details (optional)
+
+_No response_
+
+### Checks
+
+- [X] I have checked the pages that use this data on beta.lmfdb.org.
+"""
+
+
+def issue_json(body, state="open"):
+    return {"html_url": "https://github.com/LMFDB/lmfdb/issues/7123",
+            "title": "[Data to prod] newforms", "state": state,
+            "user": {"login": "someone"}, "updated_at": "2026-11-16T12:00:00Z",
+            "body": body}
+
+
+def test_change_request_from_issue():
+    from lmfdb.zenodo.issues import change_request, summary
+    req = change_request(issue_json(FORM_BODY.replace("\n", "\r\n")))
+    assert req["tables"] == ["mf_newforms", "mf_hecke_traces", "mf_hecke_cc"]
+    assert (req["description"], req["bump"]) == ("Added newforms of weight 1.", "minor")
+    # per-table details override the form's description and version update
+    body = FORM_BODY.replace(
+        "minor\n\n### Per", "different for different tables (explain below)\n\n### Per"
+    ).replace("_No response_", "mf_newforms: major, Relabeled.\n"
+              "mf_hecke_traces: minor\nmf_hecke_cc: Minor")
+    req = change_request(issue_json(body))
+    assert req["bump"] == {"mf_newforms": "major", "mf_hecke_traces": "minor",
+                           "mf_hecke_cc": "minor"}
+    assert req["description"]["mf_newforms"] == "Relabeled."
+    assert req["description"]["mf_hecke_cc"] == "Added newforms of weight 1."
+    assert "major: Relabeled." in summary(req)
+    # anything ambiguous is refused rather than guessed
+    for bad in [body.replace("mf_hecke_cc: Minor", ""),
+                body.replace("mf_hecke_cc: Minor", "and please check cc"),
+                body.replace("mf_hecke_cc: Minor", "mf_other: minor"),
+                FORM_BODY.replace("mf_hecke_cc", "mf_hecke_cc; drop"),
+                FORM_BODY.replace("\nminor\n", "\npatch\n"),
+                "Please copy mf_newforms"]:
+        with pytest.raises(ValueError):
+            change_request(issue_json(bad))
+    with pytest.raises(ValueError, match="closed"):
+        change_request(issue_json(FORM_BODY, state="closed"))
+
+
+def test_issue_form_labels():
+    yaml = pytest.importorskip("yaml")
+    from pathlib import Path
+    from lmfdb.zenodo import issues
+    path = (Path(__file__).resolve().parents[2] / ".github" / "ISSUE_TEMPLATE"
+            / "data-to-prod.yml")
+    if not path.exists():
+        pytest.skip("not in a git checkout")
+    fields = {f["id"]: f["attributes"] for f in yaml.safe_load(path.read_text())["body"]
+              if "id" in f}
+    assert [fields[k]["label"] for k in ["tables", "description", "bump", "per_table"]] == [
+        issues.TABLES, issues.DESCRIPTION, issues.BUMP, issues.PER_TABLE]
+    options = fields["bump"]["options"]
+    assert options[:2] == ["minor", "major"] and options[2].startswith("different")
 
 
 ######################################################################
@@ -539,7 +619,7 @@ def test_record_deploy_ignores_superseded_commits(monkeypatch):
     monkeypatch.setattr(state, "code_rows_for_commit", lambda db, commit: [
         r for rows in calls for r in rows if r["git_hash"] == commit])
     monkeypatch.setattr(state, "insert_version_rows", lambda db, rows: calls.append(rows))
-    cfg = SimpleNamespace(editor=None, grace_dsn=None, sandbox=False)
+    cfg = SimpleNamespace(editor=None)
     b, c, d = "b" * 40, "c" * 40, "d" * 40
     # B's workflow failed, C was pushed and recorded, then B is rerun
     assert watcher.record_deploy(None, b, major=2, config=cfg, head=c) is None
@@ -591,6 +671,8 @@ def test_backfill_retries(offline_backup, tmp_path, monkeypatch):
     monkeypatch.setattr(backup, "finalize",
                         lambda db, **kwds: finalized.append(1) or "2.1")
     cfg = prod_config(tmp_path)
+    assert backup.backfill(DB(), config=cfg) == names
+    assert backup.backfill(DB(), config=cfg, first=["zzz_c"]) == ["zzz_c", "zzz_a", "zzz_b"]
     root = tmp_path / "staging" / "backfill"
     with pytest.raises(RuntimeError):
         backup.backfill(DB(), dry_run=False, config=cfg)

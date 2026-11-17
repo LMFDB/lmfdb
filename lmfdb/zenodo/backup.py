@@ -16,8 +16,7 @@ which, for every eligible table whose dump files appear in the folder:
    uploads the files, publishes, and verifies checksums;
 4. then refreshes the knowl-database record, increments the LMFDB data
    version, publishes the version-registry record, and records everything in
-   ``version_history`` (on prod, and on grace if configured, from where it
-   mirrors to devmirror/beta).
+   ``version_history``.
 
 Everything is written to be resumable: state lives in
 ``userdb.zenodo_backups`` and re-running ``backup_folder`` picks up
@@ -46,10 +45,16 @@ SPECIAL_RECORDS = [KNOWLS_NAME, REGISTRY_NAME]
 # Table classification (tables.yaml)                                 #
 ######################################################################
 
+BACKUP_VALUES = ("yes", "no", "hold", "review")
+
+# archived before the rest of the backfill, for stage 2 of IGP24
+BACKFILL_FIRST = ("gps_transitive", "lf_fields", "nf_fields", "nf_fields_extra")
+
+
 def load_tables_yaml(path=None):
     """
     The archive/skip classification, as ``{tablename: {"backup":
-    "yes"|"no"|"review", "owner": ..., "note": ...}}``.
+    "yes"|"no"|"hold"|"review", "owner": ..., "note": ...}}``.
     """
     import yaml
     if path is None:
@@ -64,7 +69,7 @@ def load_tables_yaml(path=None):
             backup = "yes"
         elif backup is False:
             backup = "no"
-        if backup not in ("yes", "no", "review"):
+        if backup not in BACKUP_VALUES:
             raise ValueError("bad backup value %r for %s" % (backup, name))
         entry["backup"] = backup
         spec[name] = entry
@@ -72,18 +77,14 @@ def load_tables_yaml(path=None):
 
 
 def classify(names, spec):
-    """Split table names into (include, excluded, review, unlisted) lists."""
-    include, excluded, review, unlisted = [], [], [], []
+    """
+    Split table names by their ``backup`` value in tables.yaml, as a dict
+    with keys ``yes``, ``no``, ``hold``, ``review`` and ``unlisted``.
+    """
+    split = {key: [] for key in BACKUP_VALUES + ("unlisted",)}
     for name in names:
-        if name not in spec:
-            unlisted.append(name)
-        elif spec[name]["backup"] == "yes":
-            include.append(name)
-        elif spec[name]["backup"] == "review":
-            review.append(name)
-        else:
-            excluded.append(name)
-    return include, excluded, review, unlisted
+        split[spec[name]["backup"] if name in spec else "unlisted"].append(name)
+    return split
 
 
 def _owner_for(name, spec, cfg, prev):
@@ -359,7 +360,7 @@ def require_change_info(db, tables, description, bump, config=None):
     ``description``.  Used to fail fast before pushing tables to production.
     """
     db = _state_db(db, config or ZenodoConfig())
-    include = classify(tables, load_tables_yaml())[0]
+    include = classify(tables, load_tables_yaml())["yes"]
     missing = {}
     for name in include:
         info = _change_info(db, name, state.latest_published(db, name),
@@ -432,7 +433,8 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
             raise ValueError("no dump files for %s in %s"
                              % (", ".join(sorted(missing)), data_folder))
         found = [t for t in found if t in tables]
-    include, excluded, review, unlisted = classify(found, spec)
+    split = classify(found, spec)
+    include = split["yes"]
     staging = _staging(cfg, staging_dir) / "records"
     if not dry_run:
         _require_enabled(cfg)
@@ -445,9 +447,10 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
         "version": pending_version,
         "upload": [],
         "skip_unchanged": [],
-        "excluded": excluded,
-        "review": review,
-        "unlisted": unlisted,
+        "excluded": split["no"],
+        "held": split["hold"],
+        "review": split["review"],
+        "unlisted": split["unlisted"],
         "published": {},
         "paused": [],
     }
@@ -602,6 +605,7 @@ def _print_plan(plan, dry_run):
         print("MISSING: " + _missing_message(missing))
     for key, label in [("skip_unchanged", "unchanged since last archive"),
                        ("excluded", "excluded by tables.yaml"),
+                       ("held", "ON HOLD in tables.yaml (skipped)"),
                        ("review", "PENDING REVIEW in tables.yaml (skipped)"),
                        ("unlisted", "NOT CLASSIFIED in tables.yaml (skipped)")]:
         if plan[key]:
@@ -616,8 +620,8 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     """
     Complete a data push: refresh the knowl-database record, assign the next
     data version to all published attempts not yet in a recorded data
-    version, publish the registry record, and write ``version_history``
-    (mirroring to grace when configured).  Called automatically by
+    version, publish the registry record, and write ``version_history``.
+    Called automatically by
     ``backup_folder`` unless ``finalize_version=False``.  Raises if any table
     upload is unfinished or any record of the batch fails verification.
     Re-running after an interruption resumes the knowls and registry records
@@ -724,11 +728,10 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     batch[REGISTRY_NAME] = _tables_entry(row)
     _remove_package(staging, REGISTRY_NAME)
 
-    # 4. Write the version history (prod, then grace for beta's benefit)
+    # 4. Write the version history
     row = state.version_row(major, "data", seq, editor=editor, tables=batch,
                             comment=comment)
     state.insert_version_rows(db, [row])
-    _mirror_to_grace(cfg, [row])
     print("Created LMFDB data version %s (%d records)" % (version, len(batch)))
     return version
 
@@ -762,40 +765,6 @@ def build_registry(db, version):
     }
 
 
-def _mirror_to_grace(cfg, rows):
-    """
-    Best-effort insertion of version_history rows (see
-    ``state.version_row``) on grace, whence they mirror to devmirror so that
-    beta can display the version history.  All rows land or none do.
-    """
-    if not cfg.grace_dsn or getattr(cfg, "sandbox", False):
-        return
-    try:
-        import json
-        # an independent connection, so either driver will do
-        try:
-            import psycopg as driver
-        except ImportError:
-            import psycopg2 as driver
-        conn = driver.connect(cfg.grace_dsn)
-        try:
-            with conn.cursor() as cur:
-                for r in rows:
-                    cur.execute(
-                        "INSERT INTO version_history (major, kind, seq, time, "
-                        "editor, git_hash, tables, comment) VALUES "
-                        "(%s, %s, %s, %s, %s, %s, %s::jsonb, %s)",
-                        [r["major"], r["kind"], r["seq"], r["time"],
-                         r["editor"], r["git_hash"],
-                         None if r["tables"] is None else json.dumps(r["tables"]),
-                         r["comment"]])
-            conn.commit()
-        finally:
-            conn.close()
-    except Exception as err:
-        print("WARNING: could not mirror version rows to grace: %s" % err)
-
-
 ######################################################################
 # Backfill, audit, status                                            #
 ######################################################################
@@ -825,12 +794,13 @@ def _dump_once(db, tablename, folder):
 
 
 def backfill(db, tables=None, dry_run=True, live=False, config=None,
-             editor=None):
+             editor=None, first=BACKFILL_FIRST):
     """
     Initial population of the archive: dump each eligible table *from the
-    production database itself*, smallest first, upload it, and delete its
-    dump; once every table is published, create a single data version
-    covering them all.
+    production database itself*, the tables ``first`` in that order and then
+    the rest smallest first, upload it, and delete its dump; once every table
+    is published, create a single data version covering them all.  Tables on
+    hold in tables.yaml are skipped.
 
     Resumable: published tables are skipped, completed dumps are reused (an
     interrupted dump is redone), and a table paused for a quota increase
@@ -846,7 +816,8 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
     if tables is None:
         tables = [t for t in db.tablenames if t in spec
                   and spec[t]["backup"] == "yes"]
-    include, excluded, review, unlisted = classify(tables, spec)
+    split = classify(tables, spec)
+    include = split["yes"]
     todo = [t for t in include if state.latest_published(sdb, t) is None]
 
     sizes = db.table_sizes()
@@ -856,12 +827,16 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
         return (s.get("table_bytes", 0) or 0) + (s.get("toast_bytes", 0) or 0) \
             + (s.get("extras_bytes", 0) or 0)
 
-    todo.sort(key=est)
-    print("Backfill: %d tables, %.1f GB, smallest first; %d already archived"
+    first = list(first or ())
+    todo.sort(key=lambda t: (first.index(t) if t in first else len(first),
+                             est(t)))
+    print("Backfill: %d tables, %.1f GB, in this order; %d already archived"
           % (len(todo), sum(est(t) for t in todo) / 1e9,
              len(include) - len(todo)))
     for t in todo:
         print("  %-35s %8.2f GB" % (t, est(t) / 1e9))
+    if split["hold"]:
+        print("On hold in tables.yaml (skipped): %s" % ", ".join(split["hold"]))
     if dry_run:
         return todo
 
@@ -897,13 +872,15 @@ def audit(db, config=None):
     - tables reloaded on production (per userdb.dbrecord) after their last
       archived version
     - eligible tables never archived
-    - tables in db.tablenames missing from tables.yaml
+    - tables in db.tablenames missing from tables.yaml, on hold, or pending
+      review
     - unfinished or failed upload attempts
     """
     from psycodict import SQL
     db = _state_db(db, config or ZenodoConfig())
     spec = load_tables_yaml()
-    include, excluded, review, unlisted_spec = classify(db.tablenames, spec)
+    split = classify(db.tablenames, spec)
+    include = split["yes"]
     published = state.all_latest_published(db)
 
     # compare against when the archived dump was taken, not when its upload
@@ -928,8 +905,9 @@ def audit(db, config=None):
     report = {
         "changed_since_archive": changed,
         "never_archived": never,
-        "unclassified": unlisted_spec,
-        "pending_review": review,
+        "unclassified": split["unlisted"],
+        "on_hold": split["hold"],
+        "pending_review": split["review"],
         "unfinished": state.unfinished(db),
         "failed": [r for r in
                    state._backup_rows(db, SQL(" WHERE status = 'failed'"), None)],
