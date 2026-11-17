@@ -49,24 +49,27 @@ def _cap_log_payload(data, cap=_LOG_PAYLOAD_CAP):
     """
     Shrink a ``_log_db_change`` payload whose json is over ``cap`` bytes.
 
-    Top-level values of at most 200 bytes are kept, dictionaries (the new
-    values of an upsert or update) are replaced by their sorted keys, anything
-    else by its size, and ``omitted_bytes`` records the original size.
+    Top-level values over 200 bytes are replaced: dictionaries (the new values
+    of an upsert or update) by their sorted keys, anything else by its size,
+    and ``omitted_bytes`` records the original size.  ``cap`` triggers this
+    and does not bound the result; a payload with no large value is returned
+    as is.
     """
     size = len(Json.dumps(data).encode())
     if size <= cap:
         return data
-    capped = {}
+    shortened = {}
     for key, value in data.items():
         value_size = len(Json.dumps(value).encode())
         if value_size <= 200:
-            capped[key] = value
-        elif isinstance(value, dict):
-            capped[key] = sorted(map(str, value))
+            continue
+        if isinstance(value, dict):
+            shortened[key] = sorted(map(str, value))
         else:
-            capped[key] = "<%s bytes omitted>" % value_size
-    capped["omitted_bytes"] = size
-    return capped
+            shortened[key] = "<%s bytes omitted>" % value_size
+    if not shortened:
+        return data
+    return {**data, **shortened, "omitted_bytes": size}
 
 
 class LMFDBSearchTable(PostgresSearchTable):

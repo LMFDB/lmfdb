@@ -20,6 +20,11 @@ def test_large_payload_keeps_shape():
     assert capped["omitted_bytes"] > 5000
 
 
+def test_payload_without_large_values_unchanged():
+    data = {"k%s" % i: "x" * 190 for i in range(12)}
+    assert _cap_log_payload(data) is data
+
+
 def test_log_db_change_stores_capped_payload():
     calls = []
     fake_db = SimpleNamespace(login=lambda: "editor", _execute=lambda sql, values: calls.append(values))
