@@ -581,20 +581,27 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
         version, notes = item["version"], item["notes"]
         attempt = _resume_or_start(db, name, item)
         state.update_attempt(db, attempt["id"], status="packaging")
+        registry_doi = _registry_doi(db)
+        provenance = _provenance(item["source_time"])
         manifest = packaging.package_table(
             data_folder, name, staging,
             chunk_gb=cfg.chunk_gb, level=cfg.compression_level,
-            record_version=version,
-            readme=metadata.table_readme(db, name, version, notes=notes))
+            record_version=version, extra_manifest=provenance,
+            readme=lambda manifest: metadata.table_readme(
+                db, name, version, manifest, notes=notes,
+                registry_doi=registry_doi,
+                psycodict_version=provenance["exporter"].get("psycodict")))
         nrows = manifest["source_files"][name + ".txt"]["rows"]
+        related = [("%s/api/%s" % (metadata.LMFDB_URL, name), "isSupplementTo")]
+        if registry_doi:
+            related.append((registry_doi, "isPartOf"))
         deposit_md = metadata.deposit_metadata(
-            metadata.table_title(name),
+            metadata.table_title(db, name),
             metadata.table_description_html(db, name, version, nrows,
-                                            notes=notes),
-            version,
-            community=cfg.community,
-            related_url="%s/api/%s" % (metadata.LMFDB_URL, name),
-            notes=notes)
+                                            notes=notes,
+                                            registry_doi=registry_doi),
+            version, keywords=metadata.table_keywords(db, name),
+            community=cfg.community, related=related, notes=notes)
         row = _upload_record(db, _client(db, cfg, attempt["owner"], live), cfg,
                              attempt, name, staging / name, manifest,
                              deposit_md)
@@ -673,7 +680,39 @@ def _resume_or_start(db, name, item):
 def _tables_entry(row):
     return {"version": row["version"], "recid": row["recid"],
             "doi": row["doi"], "concept_doi": row["concept_doi"],
-            "notes": row.get("notes")}
+            "notes": row.get("notes"), "size": row.get("total_size")}
+
+
+def _registry_doi(db):
+    """The concept DOI of the version registry, once it has been published."""
+    row = state.latest_published(db, REGISTRY_NAME)
+    return row and row["concept_doi"]
+
+
+def _provenance(source_time=None):
+    """When a package's data was taken and what made it, for MANIFEST.json."""
+    import importlib.metadata
+    import subprocess
+    exporter = {}
+    try:
+        exporter["psycodict"] = importlib.metadata.version("psycodict")
+    except Exception:
+        pass
+    try:
+        exporter["lmfdb_commit"] = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=os.path.dirname(__file__),
+            capture_output=True, text=True, check=True).stdout.strip()
+    except Exception:
+        pass
+    out = {"exporter": exporter}
+    if source_time is not None:
+        out["source_time"] = _utc_iso(source_time)
+    return out
+
+
+def _utc_iso(t):
+    """A naive UTC timestamp in ISO 8601, marked as UTC."""
+    return t.isoformat(timespec="seconds") + "Z"
 
 
 def _current_major():
@@ -770,7 +809,8 @@ def _finalize(db, cfg, live, editor, comment):
     manifest = packaging.package_knowls(
         state.unwrap(db), staging, chunk_gb=cfg.chunk_gb,
         level=cfg.compression_level, record_version=kversion,
-        readme=metadata.knowls_readme())
+        extra_manifest=_provenance(state.utcnow()),
+        readme=metadata.knowls_readme)
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
     if not (prev and prev["status"] == "verified"
             and prev["source_md5s"] == md5s):
@@ -781,8 +821,10 @@ def _finalize(db, cfg, live, editor, comment):
         deposit_md = metadata.deposit_metadata(
             "LMFDB knowledge database (knowls)",
             metadata.knowls_description_html(), kversion,
+            keywords=["knowls", "mathematical definitions"],
             community=cfg.community,
-            related_url="%s/knowledge/" % metadata.LMFDB_URL, notes=knotes)
+            related=[("%s/knowledge/" % metadata.LMFDB_URL, "isSupplementTo")],
+            notes=knotes)
         _require_verified(
             _upload_record(db, _client(db, cfg, attempt["owner"], live), cfg,
                            attempt, KNOWLS_NAME, staging / KNOWLS_NAME,
@@ -823,10 +865,15 @@ def _complete_registry(db, cfg, live, owner, staging):
     regdir = Path(staging) / REGISTRY_NAME
     regdir.mkdir(parents=True, exist_ok=True)
     regfile = regdir / "lmfdb_version_registry.json"
+    registry = build_registry(db, row["major"], row["seq"])
     with open(regfile, "w") as F:
-        json.dump(build_registry(db, row["major"], row["seq"]), F, indent=2,
-                  default=str)
+        json.dump(registry, F, indent=2)
         F.write("\n")
+    titles = {name: metadata.table_title(db, name) for name in registry["tables"]}
+    titles[KNOWLS_NAME] = "LMFDB knowledge database (knowls)"
+    with open(regdir / "README.md", "w") as F:
+        F.write(metadata.registry_readme(registry, titles, _coverage(registry)))
+    # README.md describes the JSON, so the JSON decides what is new
     reg_md5s = {regfile.name: packaging.hash_file(regfile)[1]}
     published = state.latest_published(db, REGISTRY_NAME)
     if not (published and published["status"] == "verified"
@@ -838,8 +885,11 @@ def _complete_registry(db, cfg, live, owner, staging):
         state.update_attempt(db, attempt["id"], lmfdb_version=version)
         deposit_md = metadata.deposit_metadata(
             "LMFDB version registry", metadata.registry_description_html(),
-            version, community=cfg.community,
-            related_url="%s/version" % metadata.LMFDB_URL, notes=reg_notes)
+            version, keywords=["version registry"], community=cfg.community,
+            related=[("%s/version" % metadata.LMFDB_URL, "isSupplementTo")]
+            + [(entry["doi"], "hasPart") for entry in registry["tables"].values()
+               if entry.get("doi")],
+            notes=reg_notes)
         published = _upload_record(db, _client(db, cfg, attempt["owner"], live),
                                    cfg, attempt, REGISTRY_NAME, regdir,
                                    {"artifacts": [], "source_files": {}},
@@ -875,11 +925,25 @@ def build_registry(db, major, seq):
         "tables": {name: entry for name, entry in tables.items()
                    if name != REGISTRY_NAME},
         "history": [
-            {k: r[k] for k in ("major", "kind", "seq", "time", "git_hash",
-                               "comment") if r.get(k) is not None}
+            {k: (_utc_iso(r[k]) if k == "time" else r[k])
+             for k in ("major", "kind", "seq", "time", "git_hash", "comment")
+             if r.get(k) is not None}
             for r in rows if (r["time"], r["id"]) <= (anchor["time"], anchor["id"])
         ],
     }
+
+
+def _coverage(registry):
+    """A sentence on how much of the LMFDB the registry's archive covers."""
+    split = classify(list(load_tables_yaml()), load_tables_yaml())
+    listed = [t for t in split["yes"] if t in registry["tables"]]
+    sentence = ("This data version includes %d of the %d search tables chosen "
+                "for archiving" % (len(listed), len(split["yes"])))
+    if split["hold"]:
+        sentence += ", and %d more are on hold" % len(split["hold"])
+    return sentence + (".  The other search tables of the LMFDB are not "
+                       "archived (see `lmfdb/zenodo/tables.yaml` in the LMFDB "
+                       "repository).")
 
 
 ######################################################################

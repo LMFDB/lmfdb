@@ -181,6 +181,21 @@ def test_gzip_output_is_reproducible(tmp_path, monkeypatch):
     assert gzip.decompress(out[0]) == src.read_bytes()
 
 
+def test_sample_shows_a_row_by_field(tmp_path):
+    name = make_dump(tmp_path / "dump", nrows=5)
+    src = tmp_path / "dump" / (name + ".txt")
+    packaging.write_sample(src, tmp_path / "s.md")
+    text = (tmp_path / "s.md").read_text()
+    assert "| `label` | `text` | lab.0 |" in text
+    assert "    0|lab.0|0" in text and "    4|lab.4|16" in text
+    packaging.write_sample(src, tmp_path / "t.md", keep=lambda r: r["dim"] == "9",
+                           chosen="the rows of dimension 9")
+    text = (tmp_path / "t.md").read_text()
+    assert "The first of the rows of dimension 9" in text
+    assert "| `label` | `text` | lab.3 |" in text and "lab.4" not in text
+    assert packaging.copy_fields("a|b\\|c|\\N") == ["a", "b\\|c", "\\N"]
+
+
 def test_split_refuses_empty_parts(tmp_path):
     path = tmp_path / "x.zst"
     path.write_bytes(b"data")
@@ -257,21 +272,29 @@ def test_source_md5s_change_detection(tmp_path):
 # metadata                                                           #
 ######################################################################
 
-def test_metadata_without_db():
+def test_metadata_without_db(tmp_path):
     notes = "Added <weight 1> forms & fixed labels."
     desc = metadata.table_description_html(None, "zzz_demo", "1.4", nrows=17,
                                            notes=notes)
     assert "zzz_demo" in desc and "17" in desc
     assert "Version 1.4 of" in desc and "lmfdb.org/version" in desc
     assert "Added &lt;weight 1&gt; forms &amp; fixed labels." in desc
-    readme = metadata.table_readme(None, "zzz_demo", "1.4", notes=notes)
-    assert readme.startswith("# LMFDB table `zzz_demo`, version 1.4")
+    # the README is written once the files are packaged, and lists them
+    name = make_dump(tmp_path / "dump")
+    packaging.package_table(
+        tmp_path / "dump", name, tmp_path / "staging", force_gzip=True,
+        readme=lambda manifest: metadata.table_readme(
+            None, name, "1.4", manifest, notes=notes, psycodict_version="1.0.0"))
+    readme = (tmp_path / "staging" / name / "README.md").read_text()
+    assert readme.startswith("# LMFDB table zzz_demo, version 1.4")
     assert "lmfdb.org/version" in readme
     assert "Changes in this version: " + notes in readme
-    assert "reload_all" in readme
+    assert "| `zzz_demo.txt.gz` |" in readme and "**the data**" in readme
+    assert "| `zzz_demo_sample.md` |" in readme and "`\\N` is NULL" in readme
+    assert "reload_all" in readme and "psycodict 1.0.0" in readme
     md = metadata.deposit_metadata(
-        metadata.table_title("zzz_demo"), desc, "1.4",
-        related_url="https://www.lmfdb.org/api/zzz_demo",
+        metadata.table_title(None, "zzz_demo"), desc, "1.4",
+        related=[("https://www.lmfdb.org/api/zzz_demo", "isSupplementTo")],
         notes=notes)["metadata"]
     assert md["title"] == "LMFDB table zzz_demo"
     assert md["license"] == "cc-by-sa-4.0"
@@ -692,15 +715,51 @@ def test_readme_lists_columns():
     table = SimpleNamespace(
         search_cols=["label", "dim"],
         col_type={"id": "bigint", "label": "text", "dim": "integer"},
-        description=lambda: "A test table",
-        column_description=lambda: {"label": "The label", "dim": "The dimension"},
+        description=lambda: "Test curves over *Q*",
+        column_description=lambda: {
+            "label": "The {{ KNOWL('ec.label', 'label') }}", "dim": "The dimension"},
         stats=SimpleNamespace(quick_count=lambda query: 1))
     db = {"zzz_demo": table}
-    assert metadata._table_info(db, "zzz_demo") == ("A test table", [
-        ("id", "bigint", ""), ("label", "text", "The label"),
+    assert metadata._table_info(db, "zzz_demo") == ("Test curves over *Q*", [
+        ("id", "bigint", ""), ("label", "text", "The {{ KNOWL('ec.label', 'label') }}"),
         ("dim", "integer", "The dimension")], 1)
-    assert "| `dim` | `integer` | The dimension |" in metadata.table_readme(
-        db, "zzz_demo", "1.0")
+    readme = metadata.table_readme(db, "zzz_demo", "1.0",
+                                   {"artifacts": [], "source_files": {}})
+    assert readme.startswith("# Test curves over Q (LMFDB table zzz_demo), version 1.0")
+    assert "| `dim` | `integer` | The dimension |" in readme
+    # knowl references become links, on the README and on the record page
+    assert "The [label](https://www.lmfdb.org/knowledge/show/ec.label) |" in readme
+    page = metadata.table_description_html(db, "zzz_demo", "1.0")
+    assert '<a href="https://www.lmfdb.org/knowledge/show/ec.label">label</a>' in page
+    assert "<em>Q</em>" in page and "KNOWL" not in page
+    assert metadata.table_keywords(db, "zzz_demo") == ["zzz_demo", "Test curves over Q"]
+
+
+def test_render_knowl():
+    render = metadata.render_knowl
+    assert render("{{KNOWL('ag.aut_group', 'automorphism group')}}") == (
+        "[automorphism group](https://www.lmfdb.org/knowledge/show/ag.aut_group)")
+    assert render("{{ KNOWL_LINK('nf.degree') }}") == (
+        "[nf.degree](https://www.lmfdb.org/knowledge/show/nf.degree)")
+    assert render('{{ KNOWL("a.b", title="t") }}, {{ LINK_EXT("x", "https://x.org") }}, '
+                  "{{ DEFINES('field') }}") == (
+        "[t](https://www.lmfdb.org/knowledge/show/a.b), [x](https://x.org), **field**")
+    assert render("{{ TEXT_DATA(f, p) }}") == "{{ TEXT_DATA(f, p) }}"
+    html = metadata._html("over $\\mathbb{Q}_{p}$ and *a* $x_1 * y_2$")
+    assert "$\\mathbb{Q}_{p}$" in html and "$x_1 * y_2$" in html and "<em>a</em>" in html
+
+
+def test_registry_readme():
+    registry = {"lmfdb_version": "2.2", "tables": {
+        "zzz_a": {"version": "1.1", "doi": "10.5281/zenodo.3", "size": 12_400_000,
+                  "notes": "More rows."},
+        "lmfdb_knowls": {"version": "1.0", "doi": "10.5281/zenodo.5", "notes": None}}}
+    readme = metadata.registry_readme(registry, {"zzz_a": "Curves (LMFDB table zzz_a)"},
+                                      "This data version includes 1 of the 2 tables.")
+    assert "# LMFDB version registry, data version 2.2" in readme
+    assert ("| Curves (LMFDB table zzz_a) | 1.1 | [10.5281/zenodo.3]"
+            "(https://doi.org/10.5281/zenodo.3) | 12.4 MB | More rows. |") in readme
+    assert "includes 1 of the 2 tables" in readme
 
 
 def test_record_deploy_ignores_superseded_commits(monkeypatch):
@@ -1557,3 +1616,31 @@ def test_attempt_handover_is_atomic(scratch_db, monkeypatch):
             "source_md5s": {"a": "2"}, "source_time": None})
     rows = state._backup_rows(db, SQL(" ORDER BY id"), None)
     assert [(r["status"], r["draft_id"]) for r in rows] == [("awaiting_quota", "100")]
+
+
+def test_provenance():
+    from datetime import datetime
+    pytest.importorskip("psycodict")
+    from lmfdb.zenodo import backup
+    info = backup._provenance(datetime(2026, 11, 17, 7, 22, 26, 635241))
+    assert info["source_time"] == "2026-11-17T07:22:26Z"
+    assert info["exporter"]["psycodict"]
+
+
+def test_records_link_to_the_registry(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "v1", "zzz_a")
+    make_dump(tmp_path / "v2", "zzz_a", nrows=30)
+    backup.backup_folder(db, tmp_path / "v1", dry_run=False, live=True, config=cfg)
+    registry = state.latest_published(db, backup.REGISTRY_NAME)
+    table = state.latest_published(db, "zzz_a")
+    reg_md = fake.deps[int(registry["recid"])]["metadata"]
+    assert {"identifier": table["doi"], "relation": "hasPart"} in reg_md["related_identifiers"]
+    assert "README.md" in fake.deps[int(registry["recid"])]["files"]
+    # once the registry exists, new table versions point to it
+    backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True, config=cfg,
+                         description="More rows.", bump="minor")
+    table_md = fake.deps[int(state.latest_published(db, "zzz_a")["recid"])]["metadata"]
+    assert {"identifier": registry["concept_doi"], "relation": "isPartOf"} in \
+        table_md["related_identifiers"]

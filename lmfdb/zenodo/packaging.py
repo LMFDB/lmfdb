@@ -129,35 +129,71 @@ def data_rows(path, nlines):
     return max(nlines - 3, 0)
 
 
-def write_sample(searchfile, dst, max_rows=10, max_bytes=500000):
+def copy_fields(line, sep="|"):
+    """The fields of a PostgreSQL COPY text-format line (escapes kept)."""
+    fields, cur, i = [], [], 0
+    while i < len(line):
+        if line[i] == "\\" and i + 1 < len(line):
+            cur.append(line[i:i + 2])
+            i += 2
+            continue
+        if line[i] == sep:
+            fields.append("".join(cur))
+            cur = []
+        else:
+            cur.append(line[i])
+        i += 1
+    fields.append("".join(cur))
+    return fields
+
+
+def write_sample(searchfile, dst, max_rows=10, max_bytes=500000, keep=None,
+                 chosen="the first rows"):
     """
-    Write a Markdown preview of a search file to ``dst``: its
-    three header lines and up to ``max_rows`` data rows as an indented code
-    block.  Individual rows can be enormous (jsonb columns), so the sample
-    is capped at ``max_bytes``, truncating with a marker if necessary.
+    Write a Markdown preview of a search file to ``dst``: its first data row
+    field by field, then its three header lines and up to ``max_rows`` data
+    rows as stored.  Rows can be enormous (jsonb columns), so the raw part is
+    capped at ``max_bytes`` and the field values at 300 characters.
+
+    - ``keep`` -- if given, only rows ``r`` (a dict by column name) with
+      ``keep(r)`` true are shown, described as ``chosen``
 
     The preview is Markdown rather than ``.txt`` because ``reload_all``
     treats every ``.txt`` file in a folder as a table to load.
     """
     searchfile = Path(searchfile)
-    lines, written = [], 0
-    with open(searchfile, "rb") as F:
-        for i, line in enumerate(F):
-            if i >= 3 + max_rows:
-                break
+    with open(searchfile, encoding="utf-8", errors="replace") as F:
+        header = [F.readline().rstrip("\n") for _ in range(3)]
+        names, types = copy_fields(header[0]), copy_fields(header[1])
+        rows, written = [], 0
+        for line in F:
+            line = line.rstrip("\n")
+            if keep is not None and not keep(dict(zip(names, copy_fields(line)))):
+                continue
             if written + len(line) > max_bytes:
-                lines.append(line[:max(max_bytes - written, 0)].rstrip(b"\n"))
-                lines.append(b"... (truncated for preview)")
+                rows.append(line[:max(max_bytes - written, 0)])
+                rows.append("... (truncated for preview)")
                 break
-            lines.append(line.rstrip(b"\n"))
+            rows.append(line)
             written += len(line)
-    with open(dst, "wb") as G:
-        G.write(("# Sample of `%s`\n\nThe first lines of `%s`: column names, "
-                 "column types, a blank line, then data rows (`|`-separated, "
-                 "in PostgreSQL COPY format).\n\n"
-                 % (searchfile.stem, searchfile.name)).encode())
-        for line in lines:
-            G.write(b"    " + line + b"\n")
+            if len(rows) >= max_rows:
+                break
+    out = ["# Sample of `%s`" % searchfile.stem, ""]
+    if rows:
+        out += ["The first of %s, field by field (`\\N` is NULL):" % chosen, "",
+                "| column | type | value |", "|---|---|---|"]
+        for name, typ, value in zip(names, types, copy_fields(rows[0])):
+            if len(value) > 300:
+                value = value[:300] + " ..."
+            out.append("| `%s` | `%s` | %s |" % (
+                name, typ, value.replace("|", "\\|").replace("`", "'")))
+        out.append("")
+    out += ["The header of `%s` (column names, column types, a blank line) "
+            "and %s, as stored (`|`-separated, in PostgreSQL COPY format):"
+            % (searchfile.name, chosen), ""]
+    out += ["    " + line for line in header + rows]
+    with open(dst, "w", encoding="utf-8") as G:
+        G.write("\n".join(out) + "\n")
     return dst
 
 
@@ -221,12 +257,14 @@ def split_file(path, chunk_bytes):
 
 
 def _package_files(name, sources, outdir, chunk_bytes, level, force_gzip,
-                   readme=None, sample_source=None, extra_manifest=None):
+                   readme=None, sample_source=None, extra_manifest=None,
+                   sample_options=None):
     """
     Shared packaging core: compress+split each source file into ``outdir``,
     write the sample, README and MANIFEST.json, and return the manifest dict.
 
-    ``outdir`` is wiped first (it is a per-record staging area).
+    ``readme`` is the README's text, or a function of the manifest returning
+    it.  ``outdir`` is wiped first (it is a per-record staging area).
     """
     outdir = Path(outdir)
     if outdir.exists():
@@ -278,11 +316,11 @@ def _package_files(name, sources, outdir, chunk_bytes, level, force_gzip,
 
     if sample_source is not None:
         sample = outdir / (name + "_sample.md")
-        write_sample(sample_source, sample)
+        write_sample(sample_source, sample, **(sample_options or {}))
         manifest["sample"] = sample.name
     if readme is not None:
         with open(outdir / "README.md", "w") as F:
-            F.write(readme)
+            F.write(readme(manifest) if callable(readme) else readme)
 
     with open(outdir / "MANIFEST.json", "w") as F:
         json.dump(manifest, F, indent=2)
@@ -304,7 +342,8 @@ def upload_list(outdir):
 
 
 def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
-                  force_gzip=False, readme=None, record_version=None):
+                  force_gzip=False, readme=None, record_version=None,
+                  extra_manifest=None):
     """
     Package one table's dump files from ``data_folder`` into
     ``{staging_dir}/{tablename}/``; returns the manifest dict.
@@ -318,8 +357,10 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
       (decimal) GB
     - ``level`` -- zstd compression level
     - ``force_gzip`` -- use gzip even if zstd is available (mainly for tests)
-    - ``readme`` -- contents for README.md (from lmfdb.zenodo.metadata)
+    - ``readme`` -- contents for README.md, or a function of the manifest
+      returning them (see lmfdb.zenodo.metadata)
     - ``record_version`` -- the record's own version (e.g. "1.4")
+    - ``extra_manifest`` -- more entries for MANIFEST.json (provenance)
     """
     sources = table_files(data_folder, tablename)
     if not sources or sources[0].name != tablename + ".txt":
@@ -328,7 +369,7 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
         tablename, sources, Path(staging_dir) / tablename,
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
         readme=readme, sample_source=sources[0],
-        extra_manifest={"record_version": record_version},
+        extra_manifest=dict(extra_manifest or {}, record_version=record_version),
     )
 
 
@@ -404,7 +445,7 @@ def dump_knowls(db, dump_folder, sep="|"):
 
 
 def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
-                   readme=None, record_version=None):
+                   readme=None, record_version=None, extra_manifest=None):
     """
     Dump and package the knowl database as one record ("lmfdb_knowls");
     returns the manifest dict.
@@ -419,8 +460,10 @@ def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
         readme=readme,
         sample_source=dump_folder / (KNOWL_TABLES[0] + ".txt"),
-        extra_manifest={"knowl_tables": KNOWL_TABLES,
-                        "record_version": record_version},
+        sample_options={"keep": lambda r: r.get("status") == "1",
+                        "chosen": "the reviewed revisions"},
+        extra_manifest=dict(extra_manifest or {}, knowl_tables=KNOWL_TABLES,
+                            record_version=record_version),
     )
     shutil.rmtree(dump_folder)
     return manifest
