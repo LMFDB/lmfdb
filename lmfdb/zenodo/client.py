@@ -41,12 +41,15 @@ MAX_FILES = 100
 
 class ZenodoClient:
     def __init__(self, token, sandbox=False, live=False, log=print,
-                 min_interval=0.7, max_retries=6):
+                 min_interval=0.7, max_retries=6, guard=None):
         """
         - ``token`` -- a personal access token of the record's owner
         - ``sandbox`` -- use sandbox.zenodo.org (separate tokens!)
         - ``live`` -- unless True, any network access raises ``NotLive``
+        - ``guard`` -- called before every HTTP request, retries included;
+          an exception from it stops the request
         """
+        self.guard = guard
         self.token = token
         self.sandbox = sandbox
         self.live = live
@@ -84,6 +87,8 @@ class ZenodoClient:
             if wait > 0:
                 time.sleep(wait)
             self._last_request = time.time()
+            if self.guard is not None:
+                self.guard()
             resp = self._session.request(method, url, headers=headers,
                                          timeout=(30, 600), **kwds)
             if resp.status_code in (429, 500, 502, 503, 504):

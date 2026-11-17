@@ -69,7 +69,7 @@ def major_from_file(path):
 
 
 def record_deploy(db, commit, major=None, config=None, dry_run=False,
-                  head=None):
+                  head=None, seen=None):
     """
     Record ``commit``, just pushed to the web branch, as the next code
     version (or as a major version bump if ``major`` exceeds the current
@@ -82,6 +82,9 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
     - ``head`` -- the current head of the web branch, if known: a commit
       that is no longer the head is not recorded, since numbering it now
       would place it after the newer deploy
+    - ``seen`` -- ``state.latest_deploy_id`` from before ``head`` was
+      observed: if another deploy has been recorded since, this observation
+      is out of date and nothing is recorded
     """
     from . import state
     from .config import ZenodoConfig
@@ -103,14 +106,18 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
     editor = cfg.editor or "deploy-watcher"
     # numbered under the lock that data pushes take to number theirs
     with state.history_lock(db):
-        return _record(db, commit, major, editor, dry_run)
+        return _record(db, commit, major, editor, dry_run, seen)
 
 
-def _record(db, commit, major, editor, dry_run):
+def _record(db, commit, major, editor, dry_run, seen=None):
     from . import state
     # again, now that no other recorder can be between check and insert
     if state.code_rows_for_commit(db, commit):
         print("Commit %s already has a code version" % commit[:12])
+        return None
+    if seen is not None and state.latest_deploy_id(db) != seen:
+        print("Another deploy was recorded while %s was being checked; not "
+              "recorded (re-run to record the current head)" % commit[:12])
         return None
     current = state.latest_versions(db)
     if major > current["major"]:
@@ -135,8 +142,11 @@ def _record(db, commit, major, editor, dry_run):
 
 def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
     """Record the current head of the deployed branch (see ``record_deploy``)."""
+    from . import state
+    seen = state.latest_deploy_id(db)
     head = deployed_commit(repo, branch)
-    return record_deploy(db, head, config=config, dry_run=dry_run, head=head)
+    return record_deploy(db, head, config=config, dry_run=dry_run, head=head,
+                         seen=seen)
 
 
 class _Connection:
@@ -171,11 +181,14 @@ def main():
     import psycopg
     major = major_from_file(args.version_file) if args.version_file else None
     cfg = SimpleNamespace(editor="github-actions")
-    head = deployed_commit(branch=args.branch)
     with psycopg.connect(os.environ["LMFDB_VERSION_DSN"],
                          autocommit=True) as conn:
-        record_deploy(_Connection(conn), args.commit, major=major,
-                      config=cfg, dry_run=args.dry_run, head=head)
+        db = _Connection(conn)
+        from . import state
+        seen = state.latest_deploy_id(db)
+        head = deployed_commit(branch=args.branch)
+        record_deploy(db, args.commit, major=major, config=cfg,
+                      dry_run=args.dry_run, head=head, seen=seen)
 
 
 if __name__ == "__main__":

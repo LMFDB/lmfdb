@@ -166,7 +166,8 @@ class _Guarded:
 
 def _client(db, cfg, owner, live):
     return _Guarded(ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox,
-                                 live=live), db)
+                                 live=live, guard=lambda: state.check_lock(db)),
+                    db)
 
 
 def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md):
@@ -191,6 +192,9 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
         prev = attempt.get("recid") or state.latest_published(db, name)["recid"]
         dep = client.new_version(prev)
     else:
+        # quotas remembered for this table were set on drafts of an earlier,
+        # never published record, which are gone
+        state.forget_quota(db, name)
         dep = client.create_deposition()
     dep_id = dep["id"]
     state.update_attempt(db, aid, draft_id=str(dep_id))
@@ -365,11 +369,11 @@ def _remove_package(staging, name):
         shutil.rmtree(Path(staging) / name)
 
 
-def _sweep_packages(db, staging):
+def _sweep(db, staging):
     """
-    Delete packages left in the staging area (e.g. by a crash) for records
-    whose latest attempt is verified; packages of paused or unresolved
-    attempts are kept.
+    Delete per-record folders (packages, or backfill dumps) left in
+    ``staging`` (e.g. by a crash) for records whose latest attempt is
+    verified; those of paused or unresolved attempts are kept.
     """
     if not Path(staging).exists():
         return
@@ -522,7 +526,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
     staging = _staging(cfg, staging_dir) / "records"
     if not dry_run:
         _reconcile(db, cfg, live, include)
-        _sweep_packages(db, staging)
+        _sweep(db, staging)
 
     plan = {
         "version": format_version(*state.next_data_version(db)),
@@ -958,6 +962,8 @@ def _backfill(db, sdb, cfg, todo, live, editor):
     """
     import shutil
     root = _staging(cfg) / "backfill"
+    with state.lock(sdb):
+        _sweep(sdb, root)
     paused = []
     for t in todo:
         folder = root / t

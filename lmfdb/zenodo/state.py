@@ -282,6 +282,13 @@ def next_data_version(db):
     return cur["major"], cur["data_seq"] + 1
 
 
+def latest_deploy_id(db):
+    """The id of the latest code or major row (0 if none)."""
+    return db._execute(
+        SQL("SELECT COALESCE(MAX(id), 0) FROM {0} "
+            "WHERE kind IN ('code', 'major')").format(_history(db))).fetchone()[0]
+
+
 def recorded_records(db):
     """
     The ``(tablename, recid)`` pairs listed in some data version, i.e. the
@@ -575,6 +582,12 @@ def max_quota_gb(db, tablename):
     return db._execute(
         SQL("SELECT MAX(quota_gb) FROM {0} WHERE tablename = %s").format(
             _backups(db)), [tablename]).fetchone()[0]
+
+
+def forget_quota(db, tablename):
+    """Forget the quotas set for a record whose drafts are gone."""
+    _write(db, SQL("UPDATE {0} SET quota_gb = NULL WHERE tablename = %s").format(
+        _backups(db)), [tablename])
 
 
 def max_published_size(db, tablename):

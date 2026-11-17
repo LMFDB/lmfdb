@@ -524,6 +524,45 @@ class _Response:
         return self._payload
 
 
+def test_guard_runs_before_every_request(monkeypatch):
+    import time
+    pytest.importorskip("requests")
+    monkeypatch.setattr(time, "sleep", lambda seconds: None)
+    responses, checks = [], []
+
+    class Session:
+        def request(self, method, url, data=None, **kwds):
+            return responses.pop(0)
+
+    def guard():
+        checks.append(len(responses))
+        if lock_lost:
+            raise RuntimeError("lock lost")
+
+    client = ZenodoClient("fake-token", live=True, min_interval=0,
+                          log=lambda msg: None, guard=guard)
+    client._session = Session()
+    lock_lost = False
+    responses[:] = [_Response(503), _Response(204)]
+    client.delete_draft(1)
+    assert checks == [2, 1]  # before the request, and again before its retry
+    # the lock is lost during the backoff: the retry is not sent
+    responses[:] = [_Response(503), _Response(204)]
+    checks.clear()
+
+    class LoseLock:
+        def request(self, method, url, data=None, **kwds):
+            nonlocal lock_lost
+            lock_lost = True
+            return responses.pop(0)
+
+    client._session = LoseLock()
+    lock_lost = False
+    with pytest.raises(RuntimeError, match="lock lost"):
+        client.delete_draft(1)
+    assert len(responses) == 1
+
+
 def test_upload_retry_resends_whole_file(tmp_path, monkeypatch):
     pytest.importorskip("requests")
     import time
@@ -642,6 +681,15 @@ def test_record_deploy_ignores_superseded_commits(monkeypatch):
     # once it holds the history lock
     assert watcher._record(None, c, 2, "proddb", dry_run=False) is None
     assert len(calls) == 1
+    # E was the head when observed, but F was recorded while E's MAJOR was
+    # being looked up: E is not recorded after F
+    monkeypatch.setattr(state, "latest_deploy_id", lambda db: len(calls))
+    e, f = "e" * 40, "f" * 40
+    seen = state.latest_deploy_id(None)
+    watcher.record_deploy(None, f, major=2, config=cfg, head=f)
+    assert watcher.record_deploy(None, e, major=2, config=cfg, head=e,
+                                 seen=seen) is None
+    assert [r[0]["git_hash"] for r in calls] == [c, f]
     # a major bump writes its two rows in a single statement
     watcher.record_deploy(None, d, major=3, config=cfg, head=d)
     assert [(r["kind"], r["major"], r["seq"]) for r in calls[-1]] == [
@@ -702,6 +750,11 @@ def test_backfill_retries(offline_backup, tmp_path, monkeypatch):
     assert backup.backfill(DB(), dry_run=False, config=cfg) == "2.1"
     assert dumped == ["zzz_a", "zzz_b", "zzz_c"] and finalized == [1]
     assert uploaded == names and not list(root.iterdir())
+    # a run interrupted after verifying zzz_a, before deleting its dump
+    (root / "zzz_a").mkdir()
+    attempts["zzz_a"] = {"status": "verified"}
+    backup.backfill(DB(), dry_run=False, config=cfg)
+    assert not list(root.iterdir())
 
 
 ######################################################################
@@ -1334,3 +1387,20 @@ def test_changed_files_are_removed_before_uploads(scratch_db, tmp_path, monkeypa
     assert table_ops == sorted(table_ops)  # every "delete" before any "upload"
     # and the quota already set for the record is not set again
     assert len(fake.quota_raises) == raises
+
+
+def test_quota_requested_again_for_a_new_record(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(packaging, "zstd_available", lambda: False)
+    monkeypatch.setattr(backup, "DEFAULT_QUOTA", 1000)  # every table is "large"
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.fail_upload = "zzz_a_stats.txt.gz"
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                             config=cfg)
+    first = int(state.latest_attempt(db, "zzz_a")["draft_id"])
+    del fake.deps[first]  # the owner discards the unpublished draft
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    second = int(state.latest_published(db, "zzz_a")["recid"])
+    assert [d for d, gb in fake.quota_raises if d in (first, second)] == [first, second]
