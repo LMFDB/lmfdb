@@ -344,10 +344,11 @@ def _reconcile(db, cfg, live, names):
                     row["recid"], row["uploaded_files"])
 
 
-def _retire(db, cfg, live, name, reason):
+def _retire(db, cfg, live, name, reason, staging):
     """
     Supersede the unfinished attempts for ``name`` (e.g. a paused upload of
-    data that production no longer has), discarding their drafts on Zenodo.
+    data that production no longer has), discarding their drafts on Zenodo
+    and their packages in ``staging``.
     """
     for row in state.unfinished(db):
         if row["tablename"] != name:
@@ -360,6 +361,7 @@ def _retire(db, cfg, live, name, reason):
         state.update_attempt(db, row["id"], status="superseded", draft_id=None,
                              error=reason)
         print("%s: retired the unfinished upload %s (%s)" % (name, row["id"], reason))
+        _remove_package(staging, name)
 
 
 def _remove_package(staging, name):
@@ -373,13 +375,13 @@ def _sweep(db, staging):
     """
     Delete per-record folders (packages, or backfill dumps) left in
     ``staging`` (e.g. by a crash) for records whose latest attempt is
-    verified; those of paused or unresolved attempts are kept.
+    verified or superseded; those of paused or unresolved attempts are kept.
     """
     if not Path(staging).exists():
         return
     for folder in Path(staging).iterdir():
         row = state.latest_attempt(db, folder.name)
-        if row is not None and row["status"] == "verified":
+        if row is not None and row["status"] in ("verified", "superseded"):
             _remove_package(staging, folder.name)
 
 
@@ -547,7 +549,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
             plan["skip_unchanged"].append(name)
             if not dry_run:
                 _retire(db, cfg, live, name, "production matches archived "
-                        "version %s again" % prev["version"])
+                        "version %s again" % prev["version"], staging)
             continue
         size = sum(p.stat().st_size
                    for p in packaging.table_files(data_folder, name))

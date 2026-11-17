@@ -668,28 +668,51 @@ def test_record_deploy_ignores_superseded_commits(monkeypatch):
         r for rows in calls for r in rows if r["git_hash"] == commit])
     monkeypatch.setattr(state, "insert_version_rows", lambda db, rows: calls.append(rows))
     monkeypatch.setattr(state, "history_lock", lambda db: contextlib.nullcontext())
+    monkeypatch.setattr(state, "latest_deploy_id", lambda db: len(calls))
     cfg = SimpleNamespace(editor=None)
-    b, c, d = "b" * 40, "c" * 40, "d" * 40
+    b, c, d, e, f, g, x = (ch * 40 for ch in "bcdefgx")
     # B's workflow failed, C was pushed and recorded, then B is rerun
-    assert watcher.record_deploy(None, b, major=2, config=cfg, head=c) is None
-    event = watcher.record_deploy(None, c, major=2, config=cfg, head=c)
+    assert watcher.record_deploy(None, b, major=2, config=cfg, observe=lambda: c) is None
+    event = watcher.record_deploy(None, c, major=2, config=cfg, observe=lambda: c)
     assert (event["kind"], event["seq"]) == ("code", 2)
-    assert watcher.record_deploy(None, c, major=2, config=cfg, head=c) is None
+    assert watcher.record_deploy(None, c, major=2, config=cfg, observe=lambda: c) is None
     # a concurrent recorder that checked before C was recorded rechecks
     # once it holds the history lock
     assert watcher._record(None, c, 2, "proddb", dry_run=False) is None
     assert len(calls) == 1
-    # E was the head when observed, but F was recorded while E's MAJOR was
-    # being looked up: E is not recorded after F
-    monkeypatch.setattr(state, "latest_deploy_id", lambda db: len(calls))
-    e, f = "e" * 40, "f" * 40
-    seen = state.latest_deploy_id(None)
-    watcher.record_deploy(None, f, major=2, config=cfg, head=f)
-    assert watcher.record_deploy(None, e, major=2, config=cfg, head=e,
-                                 seen=seen) is None
-    assert [r[0]["git_hash"] for r in calls] == [c, f]
+
+    # E was the head when observed, but F was pushed and recorded while E was
+    # being checked: looking again, E is no longer the head
+    heads = [e, f]
+
+    def observe_e():
+        if heads[0] == e:
+            watcher.record_deploy(None, f, major=2, config=cfg)
+        return heads.pop(0)
+
+    assert watcher.record_deploy(None, e, major=2, config=cfg, observe=observe_e) is None
+    # conversely, a late fallback records an older X while the Action for the
+    # head G checks: looking again, G is still the head, so it is recorded
+    late = [x]
+
+    def observe_g():
+        if late:
+            watcher.record_deploy(None, late.pop(), major=2, config=cfg)
+        return g
+
+    assert watcher.record_deploy(None, g, major=2, config=cfg,
+                                 observe=observe_g)["git_hash"] == g
+    assert [r[0]["git_hash"] for r in calls] == [c, f, x, g]
+
+    # and if other deploys keep landing, it fails rather than succeed silently
+    def busy():
+        watcher.record_deploy(None, "%040d" % len(calls), major=2, config=cfg)
+        return d
+
+    with pytest.raises(RuntimeError, match="re-run"):
+        watcher.record_deploy(None, d, major=2, config=cfg, observe=busy, tries=2)
     # a major bump writes its two rows in a single statement
-    watcher.record_deploy(None, d, major=3, config=cfg, head=d)
+    watcher.record_deploy(None, d, major=3, config=cfg, observe=lambda: d)
     assert [(r["kind"], r["major"], r["seq"]) for r in calls[-1]] == [
         ("major", 3, 3), ("code", 3, 0)]
 
@@ -1259,7 +1282,7 @@ def test_major_bump_during_finalize(scratch_db, tmp_path, monkeypatch):
 
     def deploy(dep):  # major 3 is deployed while the knowls record goes up
         if "knowls" in dep["metadata"]["title"]:
-            watcher.record_deploy(db, "c" * 40, major=3, head="c" * 40,
+            watcher.record_deploy(db, "c" * 40, major=3, observe=lambda: "c" * 40,
                                   config=SimpleNamespace(editor=None))
 
     fake.on_publish = deploy
@@ -1301,6 +1324,7 @@ def test_restored_data_retires_paused_upload(scratch_db, tmp_path, monkeypatch):
                                 config=cfg)
     assert plan["skip_unchanged"] == ["zzz_a"] and draft not in fake.deps
     assert state.latest_attempt(db, "zzz_a")["status"] == "superseded"
+    assert not (tmp_path / "staging" / "records" / "zzz_a").exists()
     # so other pushes are not blocked
     plan = backup.backup_folder(db, tmp_path / "c", dry_run=False, live=True,
                                 config=cfg)
@@ -1362,7 +1386,8 @@ def test_lost_lock_stops_zenodo_calls(scratch_db, tmp_path, monkeypatch):
     with state.lock(db):
         db.conn.close()  # the lock goes with the connection
         with pytest.raises(state.LockLost):
-            backup._retire(db, cfg, True, "zzz_a", "production restored")
+            backup._retire(db, cfg, True, "zzz_a", "production restored",
+                           tmp_path / "staging" / "records")
     assert draft in fake.deps
 
 

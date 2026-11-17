@@ -68,8 +68,11 @@ def major_from_file(path):
     return int(m.group(1))
 
 
+_CONFLICT = object()
+
+
 def record_deploy(db, commit, major=None, config=None, dry_run=False,
-                  head=None, seen=None):
+                  observe=None, tries=5):
     """
     Record ``commit``, just pushed to the web branch, as the next code
     version (or as a major version bump if ``major`` exceeds the current
@@ -79,34 +82,43 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
     - ``major`` -- MAJOR at ``commit``; fetched from GitHub when None
     - ``config`` -- anything with an ``editor`` attribute (default: the
       local Zenodo configuration)
-    - ``head`` -- the current head of the web branch, if known: a commit
-      that is no longer the head is not recorded, since numbering it now
-      would place it after the newer deploy
-    - ``seen`` -- ``state.latest_deploy_id`` from before ``head`` was
-      observed: if another deploy has been recorded since, this observation
-      is out of date and nothing is recorded
+    - ``observe`` -- returns the current head of the web branch.  When given,
+      a commit that is no longer the head is not recorded (numbering it now
+      would place it after the newer deploy), and if another deploy is
+      recorded between observing the head and numbering, the head is
+      observed again (up to ``tries`` times, then RuntimeError)
     """
     from . import state
     from .config import ZenodoConfig
 
     cfg = config or ZenodoConfig()
-    current = state.latest_versions(db)
-    if current is None:
-        raise RuntimeError(
-            "version history is empty; run db.zenodo_setup() first")
-    if state.code_rows_for_commit(db, commit):
-        print("Commit %s already has a code version" % commit[:12])
-        return None
-    if head is not None and head != commit:
-        print("Commit %s is no longer the head of web (now %s); not recorded"
-              % (commit[:12], head[:12]))
-        return None
-    if major is None:
-        major = major_at_commit(commit, current["major"])
     editor = cfg.editor or "deploy-watcher"
-    # numbered under the lock that data pushes take to number theirs
-    with state.history_lock(db):
-        return _record(db, commit, major, editor, dry_run, seen)
+    for _ in range(tries):
+        current = state.latest_versions(db)
+        if current is None:
+            raise RuntimeError(
+                "version history is empty; run db.zenodo_setup() first")
+        seen = state.latest_deploy_id(db) if observe else None
+        if state.code_rows_for_commit(db, commit):
+            print("Commit %s already has a code version" % commit[:12])
+            return None
+        if observe is not None:
+            head = observe()
+            if head != commit:
+                print("Commit %s is no longer the head of web (now %s); not "
+                      "recorded" % (commit[:12], head[:12]))
+                return None
+        if major is None:
+            major = major_at_commit(commit, current["major"])
+        # numbered under the lock that data pushes take to number theirs
+        with state.history_lock(db):
+            event = _record(db, commit, major, editor, dry_run, seen)
+        if event is not _CONFLICT:
+            return event
+        print("Another deploy was recorded while %s was being checked; "
+              "checking the head again" % commit[:12])
+    raise RuntimeError("could not record %s: other deploys were recorded "
+                       "during each of %s attempts; re-run" % (commit, tries))
 
 
 def _record(db, commit, major, editor, dry_run, seen=None):
@@ -116,9 +128,7 @@ def _record(db, commit, major, editor, dry_run, seen=None):
         print("Commit %s already has a code version" % commit[:12])
         return None
     if seen is not None and state.latest_deploy_id(db) != seen:
-        print("Another deploy was recorded while %s was being checked; not "
-              "recorded (re-run to record the current head)" % commit[:12])
-        return None
+        return _CONFLICT
     current = state.latest_versions(db)
     if major > current["major"]:
         event = {"kind": "major", "major": major, "seq": 0, "git_hash": commit}
@@ -142,11 +152,9 @@ def _record(db, commit, major, editor, dry_run, seen=None):
 
 def check_deploy(db, config=None, dry_run=False, repo=REPO, branch=BRANCH):
     """Record the current head of the deployed branch (see ``record_deploy``)."""
-    from . import state
-    seen = state.latest_deploy_id(db)
-    head = deployed_commit(repo, branch)
-    return record_deploy(db, head, config=config, dry_run=dry_run, head=head,
-                         seen=seen)
+    return record_deploy(db, deployed_commit(repo, branch), config=config,
+                         dry_run=dry_run,
+                         observe=lambda: deployed_commit(repo, branch))
 
 
 class _Connection:
@@ -183,12 +191,9 @@ def main():
     cfg = SimpleNamespace(editor="github-actions")
     with psycopg.connect(os.environ["LMFDB_VERSION_DSN"],
                          autocommit=True) as conn:
-        db = _Connection(conn)
-        from . import state
-        seen = state.latest_deploy_id(db)
-        head = deployed_commit(branch=args.branch)
-        record_deploy(db, args.commit, major=major, config=cfg,
-                      dry_run=args.dry_run, head=head, seen=seen)
+        record_deploy(_Connection(conn), args.commit, major=major, config=cfg,
+                      dry_run=args.dry_run,
+                      observe=lambda: deployed_commit(branch=args.branch))
 
 
 if __name__ == "__main__":
