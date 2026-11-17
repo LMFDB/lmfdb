@@ -136,4 +136,8 @@ the LMFDB data versions themselves (`2.3`, ...).
 - A data version is created only once every record in it is verified
   against the uploaded checksums.  Packages are deleted from the staging
   area once verified.
+- Archive runs take a database lock, so overlapping pushes run one after
+  the other.  Table and knowls records do not name a data version (it is
+  assigned later); the registry record does, and is published only after
+  its version is recorded.
 - Published records are permanent: the md5 gate prevents junk versions.

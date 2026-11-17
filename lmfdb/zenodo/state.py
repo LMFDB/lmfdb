@@ -22,7 +22,7 @@ Two tables are used:
 - ``userdb.zenodo_backups`` (proddb only) -- operational state of the upload
   pipeline, one row per (table, record version) upload attempt, driving
   idempotent resume after failures.  ``version`` is the record version,
-  ``lmfdb_version`` the data version (e.g. ``2.3``) it was published in.
+  ``lmfdb_version`` the data version (e.g. ``2.3``) that first included it.
 
 All functions take the database object as first argument; nothing here opens
 connections of its own.  Passing ``Sandbox(db)`` instead points them at
@@ -33,6 +33,8 @@ the production archive.
 """
 
 import json
+import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 
 from psycodict import SQL
@@ -289,10 +291,56 @@ def next_data_version(db):
     return cur["major"], cur["data_seq"] + 1
 
 
-def recorded_data_versions(db):
-    """The data versions (e.g. ``"2.3"``) that have a version_history row."""
-    return {format_version(r["major"], r["seq"])
-            for r in _history_rows(db, SQL(" WHERE kind = 'data'"))}
+def recorded_records(db):
+    """
+    The ``(tablename, recid)`` pairs listed in some data version, i.e. the
+    published records that are part of the version history.
+    """
+    return {(name, entry.get("recid"))
+            for r in _history_rows(db, SQL(" WHERE kind = 'data'"))
+            for name, entry in (r["tables"] or {}).items()}
+
+
+def latest_data_row(db):
+    """The most recent data version row, or None."""
+    rows = _history_rows(db, SQL(" WHERE kind = 'data'"),
+                         order="time DESC, id DESC", limit=1)
+    return rows[0] if rows else None
+
+
+def add_to_data_row(db, major, seq, name, entry):
+    """Add ``{name: entry}`` to the ``tables`` of data version major.seq."""
+    db._execute(
+        SQL("UPDATE {0} SET tables = COALESCE(tables, '{{}}'::jsonb) "
+            "|| jsonb_build_object(%s::text, %s::jsonb) "
+            "WHERE kind = 'data' AND major = %s AND seq = %s").format(_history(db)),
+        [name, json.dumps(entry), major, seq])
+
+
+LOCK_POLL = 30
+
+
+@contextmanager
+def lock(db):
+    """
+    Hold the archive lock (a PostgreSQL advisory lock, separate for sandbox
+    state) for the duration: archive runs are serialized, so that two of
+    them never number a data version, or edit the same draft, at once.
+    Re-entrant within one connection; released if the connection dies.
+    """
+    name = _history_name(db)
+    waiting = False
+    while not db._execute(SQL("SELECT pg_try_advisory_lock(hashtext(%s))"),
+                          [name]).fetchone()[0]:
+        if not waiting:
+            print("Another archive run is in progress; waiting for it to "
+                  "finish (interrupt to give up, then re-run later).")
+            waiting = True
+        time.sleep(LOCK_POLL)
+    try:
+        yield
+    finally:
+        db._execute(SQL("SELECT pg_advisory_unlock(hashtext(%s))"), [name])
 
 
 def current_version_string(db):
@@ -471,14 +519,13 @@ def unfinished(db):
 
 def uploaded_bytes_since(db, since):
     """
-    Bytes actually sent to Zenodo by uploads finished at or after ``since``
-    (files reused from a record's previous version are not counted).
+    Bytes actually sent to Zenodo by attempts (in any status) finished, or
+    if unfinished started, at or after ``since``; files an attempt found
+    already on Zenodo (inherited, or sent by an attempt it replaced) are
+    counted only for the attempt that sent them.
     """
     rows = _backup_rows(
-        db,
-        SQL(" WHERE status IN ('published', 'verified') AND finished >= %s"),
-        [since],
-    )
+        db, SQL(" WHERE COALESCE(finished, started) >= %s"), [since])
     return sum(info.get("size", 0)
                for r in rows for info in (r["uploaded_files"] or {}).values()
                if not info.get("reused"))

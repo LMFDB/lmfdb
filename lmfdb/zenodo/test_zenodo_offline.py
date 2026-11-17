@@ -3,6 +3,7 @@ Offline tests for the Zenodo backup system: no database, no network, no sage
 required (tests comparing against sage are skipped when it is absent).
 """
 
+import contextlib
 import gzip
 import hashlib
 import json
@@ -121,7 +122,7 @@ def test_package_table(tmp_path):
     name = make_dump(dump, nrows=50)
     staging = tmp_path / "staging"
     manifest = packaging.package_table(
-        dump, name, staging, force_gzip=True, lmfdb_version="2.1",
+        dump, name, staging, force_gzip=True,
         readme="# test readme\n", record_version="1.4")
     outdir = staging / name
 
@@ -158,7 +159,7 @@ def test_package_table(tmp_path):
     assert (outdir / "README.md").read_text() == "# test readme\n"
     ondisk = json.loads((outdir / "MANIFEST.json").read_text())
     assert ondisk == manifest
-    assert manifest["lmfdb_version"] == "2.1"
+    assert "lmfdb_version" not in manifest
     assert manifest["record_version"] == "1.4"
 
     # upload order: README, sample, MANIFEST, then artifacts
@@ -252,14 +253,13 @@ def test_source_md5s_change_detection(tmp_path):
 def test_metadata_without_db():
     notes = "Added <weight 1> forms & fixed labels."
     desc = metadata.table_description_html(None, "zzz_demo", "1.4", nrows=17,
-                                           lmfdb_version="2.3", notes=notes)
+                                           notes=notes)
     assert "zzz_demo" in desc and "17" in desc
-    assert "Version 1.4 of" in desc and "LMFDB data version 2.3" in desc
+    assert "Version 1.4 of" in desc and "lmfdb.org/version" in desc
     assert "Added &lt;weight 1&gt; forms &amp; fixed labels." in desc
-    readme = metadata.table_readme(None, "zzz_demo", "1.4",
-                                   lmfdb_version="2.3", notes=notes)
+    readme = metadata.table_readme(None, "zzz_demo", "1.4", notes=notes)
     assert readme.startswith("# LMFDB table `zzz_demo`, version 1.4")
-    assert "LMFDB data version 2.3" in readme
+    assert "lmfdb.org/version" in readme
     assert "Changes in this version: " + notes in readme
     assert "reload_all" in readme
     md = metadata.deposit_metadata(
@@ -452,6 +452,7 @@ def offline_backup(monkeypatch):
                         lambda db, name, statuses=None: attempts.get(name))
     monkeypatch.setattr(state, "next_data_version", lambda db: (2, 3))
     monkeypatch.setattr(state, "unfinished", lambda db: [])
+    monkeypatch.setattr(state, "lock", lambda db: contextlib.nullcontext())
     return backup, published, attempts
 
 
@@ -670,7 +671,7 @@ def test_backfill_retries(offline_backup, tmp_path, monkeypatch):
     monkeypatch.setattr(backup, "backup_folder", fake_backup_folder)
     monkeypatch.setattr(backup, "finalize",
                         lambda db, **kwds: finalized.append(1) or "2.1")
-    cfg = prod_config(tmp_path)
+    cfg = prod_config(tmp_path, enabled=True)
     assert backup.backfill(DB(), config=cfg) == names
     assert backup.backfill(DB(), config=cfg, first=["zzz_c"]) == ["zzz_c", "zzz_a", "zzz_b"]
     root = tmp_path / "staging" / "backfill"
@@ -807,13 +808,14 @@ class FakeZenodo:
     Zenodo's over-quota response, classified by the real client; published
     depositions refuse edits; setting ``lose_publish_response`` to a word of
     a record's title makes its next publication succeed but its response
-    fail.  Records are verified by the real client's checks.
+    fail; ``fail_upload`` names a file whose next upload fails.  Records are
+    verified by the real client's checks.
     """
     verify_record = ZenodoClient.verify_record
 
     def __init__(self):
         self.deps, self.next_id, self.blocked = {}, 100, set()
-        self.lose_publish_response = None
+        self.lose_publish_response = self.fail_upload = None
         self.uploads = []
 
     def _new(self, files=None, concept=None):
@@ -870,6 +872,9 @@ class FakeZenodo:
                                   log=lambda msg: None)
             client._session = Session()
             return client.upload_file(bucket, path, name=name)
+        if name == self.fail_upload:
+            self.fail_upload = None
+            raise ConnectionError("connection reset during upload")
         md5 = hashlib.md5(path.read_bytes()).hexdigest()
         dep["files"][name] = md5
         self.uploads.append(name)
@@ -1022,7 +1027,10 @@ def test_lost_special_record_response_is_recovered(scratch_db, tmp_path,
     with pytest.raises(ConnectionError):
         backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
                              config=cfg)
-    assert backup.finalize(db, cfg=cfg, live=True) == "2.1"
+    # the registry names its data version, so it is published only after the
+    # version is recorded
+    assert (state.latest_data_row(db) is not None) == (record == "registry")
+    backup.finalize(db, cfg=cfg, live=True)
     # each record was published exactly once, and no draft was left behind
     assert len(fake.deps) == 3
     assert all(dep["submitted"] for dep in fake.deps.values())
@@ -1060,6 +1068,63 @@ def test_data_version_follows_active_major(scratch_db, tmp_path, monkeypatch):
     assert (tables["zzz_a"]["version"], tables["zzz_b"]["version"]) == ("1.1", "1.0")
     assert [(r["major"], r["seq"]) for r in state.history(db)
             if r["kind"] == "data"] == [(4, 1), (2, 1)]
+    # published while 3.1 was expected, the record names no data version
+    description = fake.deps[int(tables["zzz_a"]["recid"])]["metadata"]["description"]
+    assert "3.1" not in description and "lmfdb.org/version" in description
+
+
+def test_finalize_lists_records_missing_from_history(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "a", "zzz_a")
+    make_dump(tmp_path / "b", "zzz_b")
+    assert backup.backup_folder(db, tmp_path / "a", dry_run=False, live=True,
+                                config=cfg)["version"] == "2.1"
+    backup.backup_folder(db, tmp_path / "b", dry_run=False, live=True, config=cfg,
+                         finalize_version=False)
+    # as left by a finalize that also picked 2.1 and lost the race to record it
+    state.update_attempt(db, state.latest_published(db, "zzz_b")["id"],
+                         lmfdb_version="2.1")
+    assert backup.finalize(db, cfg=cfg, live=True) == "2.2"
+    assert "zzz_b" in state.resolve_version(db, 2, 2)["tables"]
+
+
+def test_archive_runs_are_serialized(scratch_db, tmp_path, monkeypatch):
+    import threading
+    import psycopg
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(state, "LOCK_POLL", 0.05)
+    make_dump(tmp_path / "push", "zzz_a")
+    result = {}
+    with psycopg.connect(os.environ["LMFDB_ZENODO_TEST_DB"], autocommit=True) as other:
+        other.execute("SELECT pg_advisory_lock(hashtext('version_history'))")
+        run = threading.Thread(target=lambda: result.update(plan=backup.backup_folder(
+            db, tmp_path / "push", dry_run=False, live=True, config=cfg)))
+        run.start()
+        run.join(1)
+        assert run.is_alive() and not fake.deps  # waiting, nothing uploaded
+        other.execute("SELECT pg_advisory_unlock(hashtext('version_history'))")
+        run.join(60)
+    assert result["plan"]["version"] == "2.1"
+
+
+def test_interrupted_upload_counts_sent_bytes(scratch_db, tmp_path, monkeypatch):
+    from datetime import datetime
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(packaging, "zstd_available", lambda: False)
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.fail_upload = "zzz_a_stats.txt.gz"
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                             config=cfg)
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    row = state.latest_published(db, "zzz_a")
+    # a first version: this attempt sent every file, before or after the failure
+    assert sum(f["size"] for f in row["uploaded_files"].values()
+               if not f.get("reused")) == row["total_size"]
+    assert state.uploaded_bytes_since(db, datetime(2026, 1, 1)) >= row["total_size"]
 
 
 def test_gzip_artifacts_of_unchanged_files_are_reused(scratch_db, tmp_path,

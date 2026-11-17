@@ -223,8 +223,7 @@ def split_file(path, chunk_bytes):
 
 
 def _package_files(name, sources, outdir, chunk_bytes, level, force_gzip,
-                   lmfdb_version=None, readme=None, sample_source=None,
-                   extra_manifest=None):
+                   readme=None, sample_source=None, extra_manifest=None):
     """
     Shared packaging core: compress+split each source file into ``outdir``,
     write the sample, README and MANIFEST.json, and return the manifest dict.
@@ -240,7 +239,6 @@ def _package_files(name, sources, outdir, chunk_bytes, level, force_gzip,
     manifest = {
         "format": MANIFEST_FORMAT,
         "name": name,
-        "lmfdb_version": lmfdb_version,
         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sep": "|",
         "compression": compression,
@@ -308,8 +306,7 @@ def upload_list(outdir):
 
 
 def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
-                  force_gzip=False, lmfdb_version=None, readme=None,
-                  record_version=None):
+                  force_gzip=False, readme=None, record_version=None):
     """
     Package one table's dump files from ``data_folder`` into
     ``{staging_dir}/{tablename}/``; returns the manifest dict.
@@ -323,7 +320,6 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
       (decimal) GB
     - ``level`` -- zstd compression level
     - ``force_gzip`` -- use gzip even if zstd is available (mainly for tests)
-    - ``lmfdb_version`` -- the data version string being published (e.g. "2.1")
     - ``readme`` -- contents for README.md (from lmfdb.zenodo.metadata)
     - ``record_version`` -- the record's own version (e.g. "1.4")
     """
@@ -333,7 +329,7 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
     return _package_files(
         tablename, sources, Path(staging_dir) / tablename,
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
-        lmfdb_version=lmfdb_version, readme=readme, sample_source=sources[0],
+        readme=readme, sample_source=sources[0],
         extra_manifest={"record_version": record_version},
     )
 
@@ -410,7 +406,7 @@ def dump_knowls(db, dump_folder, sep="|"):
 
 
 def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
-                   lmfdb_version=None, readme=None, record_version=None):
+                   readme=None, record_version=None):
     """
     Dump and package the knowl database as one record ("lmfdb_knowls");
     returns the manifest dict.
@@ -423,7 +419,7 @@ def package_knowls(db, staging_dir, chunk_gb=20, level=12, force_gzip=False,
     manifest = _package_files(
         "lmfdb_knowls", files, staging_dir / "lmfdb_knowls",
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
-        lmfdb_version=lmfdb_version, readme=readme,
+        readme=readme,
         sample_source=dump_folder / (KNOWL_TABLES[0] + ".txt"),
         extra_manifest={"knowl_tables": KNOWL_TABLES,
                         "record_version": record_version},

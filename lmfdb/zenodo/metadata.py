@@ -96,13 +96,18 @@ def table_title(tablename):
     return "LMFDB table %s" % tablename
 
 
-def table_description_html(db, tablename, version, nrows=None,
-                           lmfdb_version=None, notes=None):
+# Records are published before the LMFDB data version that includes them is
+# assigned, so they point to the version history rather than naming it.
+VERSIONS_NOTE = ("The LMFDB versions that include this record version are "
+                 "listed at %s/version and in the LMFDB version registry "
+                 "record on Zenodo." % LMFDB_URL)
+
+
+def table_description_html(db, tablename, version, nrows=None, notes=None):
     """
     HTML description for a table's Zenodo record (shown on the record page).
 
     - ``version`` -- the record version, e.g. ``"1.4"``
-    - ``lmfdb_version`` -- the LMFDB data version it is part of, e.g. ``"2.3"``
     - ``notes`` -- description of the changes in this version
     """
     desc, cols, dbrows = _table_info(db, tablename)
@@ -111,10 +116,8 @@ def table_description_html(db, tablename, version, nrows=None,
     parts = [
         "<p>Version %s of the search table <code>%s</code> of the L-functions "
         "and modular forms database (<a href=\"%s\">LMFDB</a>), archived from "
-        "the production database%s.</p>"
-        % (e(str(version)), e(tablename), LMFDB_URL,
-           " as part of LMFDB data version %s" % e(str(lmfdb_version))
-           if lmfdb_version else ""),
+        "the production database.  %s</p>"
+        % (e(str(version)), e(tablename), LMFDB_URL, e(VERSIONS_NOTE)),
     ]
     if notes:
         parts.append("<p><b>Changes in this version:</b> %s</p>" % e(notes))
@@ -168,8 +171,7 @@ compressed and uncompressed, plus row counts.
 """
 
 
-def table_readme(db, tablename, version, date=None, lmfdb_version=None,
-                 notes=None):
+def table_readme(db, tablename, version, date=None, notes=None):
     """
     Markdown README.md content for a table record; the arguments are as for
     ``table_description_html``.
@@ -179,10 +181,8 @@ def table_readme(db, tablename, version, date=None, lmfdb_version=None,
     lines = [
         "# LMFDB table `%s`, version %s" % (tablename, version),
         "",
-        "Archived from the production database of the [LMFDB](%s) on %s%s."
-        % (LMFDB_URL, date,
-           ", as part of LMFDB data version %s" % lmfdb_version
-           if lmfdb_version else ""),
+        "Archived from the production database of the [LMFDB](%s) on %s.  %s"
+        % (LMFDB_URL, date, VERSIONS_NOTE),
         "",
     ]
     if notes:
@@ -216,25 +216,24 @@ def table_readme(db, tablename, version, date=None, lmfdb_version=None,
     return "\n".join(lines)
 
 
-def knowls_description_html(version):
-    e = html.escape
+def knowls_description_html():
     return (
         "<p>The knowledge database (knowls) of the L-functions and modular "
         "forms database (<a href=\"%s\">LMFDB</a>): the mathematical "
         "background, definitions and descriptions displayed throughout the "
         "site, including the table and column descriptions of the archived "
-        "search tables.  Archived together with LMFDB version %s.</p>"
+        "search tables.</p>"
         "<p>Unlike the search tables, knowls are edited live on the website, "
-        "so this record is refreshed on every LMFDB data push.</p>"
-        % (LMFDB_URL, e(str(version))))
+        "so this record is refreshed on every LMFDB data push.  %s</p>"
+        % (LMFDB_URL, html.escape(VERSIONS_NOTE)))
 
 
-def knowls_readme(version, date=None):
+def knowls_readme(date=None):
     return "\n".join([
         "# LMFDB knowledge database (knowls)",
         "",
-        "Archived from the production database of the [LMFDB](%s) on %s, "
-        "together with LMFDB version %s." % (LMFDB_URL, date or _today(), version),
+        "Archived from the production database of the [LMFDB](%s) on %s.  %s"
+        % (LMFDB_URL, date or _today(), VERSIONS_NOTE),
         "",
         "Contains the tables `kwl_knowls` (current knowls, including table "
         "and column descriptions) and `kwl_deleted` (deleted knowls), each "
