@@ -1666,3 +1666,19 @@ def test_records_link_to_the_registry(scratch_db, tmp_path, monkeypatch):
                          description="More rows.", bump="minor")
     table_md = fake.deps[int(state.latest_published(db, "zzz_a")["recid"])]["metadata"]
     assert link in table_md["related_identifiers"]
+
+
+def test_force_regenerates_every_record(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    # the same data again, forced: new versions of the table and the knowls
+    # (not new records), so their documentation is regenerated
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg, force=True,
+                                description="Regenerated documentation.", bump="minor")
+    assert plan["version"] == "2.2"
+    tables = state.resolve_version(db, 2, 2)["tables"]
+    assert (tables["zzz_a"]["version"], tables[backup.KNOWLS_NAME]["version"]) == ("1.1", "1.1")
+    assert len({dep["concept"] for dep in fake.deps.values()}) == 3

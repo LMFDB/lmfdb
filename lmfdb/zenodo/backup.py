@@ -485,7 +485,9 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
       knowls and registry records and write ``version_history``, once no
       table upload is unfinished (set to False by ``backfill``, which
       finalizes once at the end)
-    - ``force`` -- upload even if the table matches its last published version
+    - ``force`` -- upload even if the table matches its last published
+      version, and republish the knowls record even if the knowls have not
+      changed (e.g. to regenerate the records' documentation)
     - ``source_time`` -- when the dumps matched production (naive UTC), for
       ``audit``: ``update_prod`` passes the end of its reload; by default the
       time the dump files were written
@@ -626,7 +628,7 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
                   % ", ".join(waiting))
         else:
             plan["version"] = finalize(db, cfg=cfg, live=live, editor=editor,
-                                       comment=comment)
+                                       comment=comment, force=force)
     return plan
 
 
@@ -759,7 +761,7 @@ def _print_plan(plan, dry_run):
 # Version finalization (knowls + registry + version_history)         #
 ######################################################################
 
-def finalize(db, cfg=None, live=False, editor=None, comment=None):
+def finalize(db, cfg=None, live=False, editor=None, comment=None, force=False):
     """
     Complete a data push: refresh the knowl-database record, record the next
     data version in ``version_history`` (listing every published record not
@@ -769,16 +771,17 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     Returns the new version, or None if there are no new records.  Raises if
     any table upload is unfinished or a new record fails verification.
     Re-running after an interruption resumes where it stopped, including
-    publishing the registry of a version that was already recorded.
+    publishing the registry of a version that was already recorded.  With
+    ``force``, the knowls record gets a new version even if unchanged.
     """
     cfg = cfg or ZenodoConfig()
     _require_enabled(cfg)
     db = _state_db(db, cfg)
     with state.lock(db):
-        return _finalize(db, cfg, live, editor or cfg.editor, comment)
+        return _finalize(db, cfg, live, editor or cfg.editor, comment, force)
 
 
-def _finalize(db, cfg, live, editor, comment):
+def _finalize(db, cfg, live, editor, comment, force=False):
     owner = _default_owner(cfg)
     staging = _staging(cfg) / "records"
     _complete_registry(db, cfg, live, owner, staging)
@@ -817,8 +820,8 @@ def _finalize(db, cfg, live, editor, comment):
         readme=lambda manifest: metadata.knowls_readme(
             manifest, registry_doi=registry_doi))
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
-    if not (prev and prev["status"] == "verified"
-            and prev["source_md5s"] == md5s):
+    if force or not (prev and prev["status"] == "verified"
+                     and prev["source_md5s"] == md5s):
         knotes = "Knowls as of %s." % state.utcnow().date().isoformat()
         attempt = _resume_or_start(db, KNOWLS_NAME, {
             "owner": owner, "version": kversion, "bump": kbump,
