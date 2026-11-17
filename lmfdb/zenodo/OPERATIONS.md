@@ -6,8 +6,9 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
 
 ## One-time setup (proddb)
 
-1. [tables.yaml](tables.yaml) is decided (2026-11-16); three tables are on
-   `hold` until their issues are fixed.
+1. [tables.yaml](tables.yaml) is decided (2026-11-16).  Tables on `hold`
+   wait for their issues to be fixed or for their owner's Zenodo token;
+   change them to `yes` when ready, and the next backfill picks them up.
 2. Create `~/.lmfdb_zenodo.ini` (mode 0600) on proddb; see the docstring in
    [config.py](config.py).  Start with `sandbox = true`.
 3. In sage on proddb: `db.zenodo_setup()` — creates `version_history` (public
