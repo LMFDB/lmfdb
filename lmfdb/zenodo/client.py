@@ -101,10 +101,14 @@ class ZenodoClient:
                 detail = resp.text[:500]
             # Zenodo answers an upload beyond the record's remaining quota
             # with 400 "File size limit exceeded." (its per-file limit gives
-            # the same message, but our parts stay below it)
+            # the same message, but our parts stay below it).  A 413 comes
+            # from the web proxy's cap on one request (between 51 and 55 GB
+            # on the sandbox, 2026-11), which no quota increase lifts.
             text = str(detail).lower()
-            if (resp.status_code == 413 or "quota" in text
-                    or "size limit exceeded" in text):
+            if resp.status_code == 413:
+                raise ZenodoError("%s: %s from Zenodo's proxy; lower chunk_gb"
+                                  % (desc, resp.status_code))
+            if "quota" in text or "size limit exceeded" in text:
                 raise QuotaExceeded("%s: %s %s" % (desc, resp.status_code, detail))
             if resp.status_code in (404, 410):
                 raise NotFound("%s: %s %s" % (desc, resp.status_code, detail))

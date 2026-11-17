@@ -54,8 +54,7 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
    `userdb.zenodo_backups_sandbox` and `userdb.version_history_sandbox`
    (created on first use) and dumps and packages go to
    `{staging_dir}/sandbox`: the rehearsal leaves the production state, the
-   public version history and the footer untouched.  Also check
-   whether a raised quota carries over to a record's next version.
+   public version history and the footer untouched.
 2. Flip `sandbox = false`, then `db.zenodo_backfill(dry_run=True)` to see
    the plan, and run it for real off-peak.  Tables are dumped, uploaded and
    deleted one at a time: gps_transitive, lf_fields, nf_fields and
@@ -101,8 +100,14 @@ created while any table upload is unfinished, so the push gets a single data
 version, created by the run that completes it; keep the folder until then.  Quota above 50 GB/record
 comes from a 150 GB allowance per Zenodo account (records under 50 GB use
 none of it), so the large tables need to be spread across owners in
-tables.yaml.  Zenodo's docs don't say whether a raised quota carries over to a
-record's next version: check this in the sandbox rehearsal.
+tables.yaml.  A raised quota belongs to the record as a whole: each new
+version's draft inherits it, and it counts once against the allowance
+(Zenodo's source, confirmed on the sandbox 2026-11-17).  It can also be
+raised through the API, `POST /api/records/<draft id>/quota-increase` with
+`{"quota_size": "<total GB>"}`, which the owner's deposit token may call.
+Separately, Zenodo's web proxy refuses any single upload above roughly
+50 GB (between 51 and 55 GB on the sandbox), so keep `chunk_gb` well below
+that.
 
 `db.zenodo_status()` reports the volume uploaded in the last 365 days.
 Zenodo support (April 2026) described ~2 TB in total as fair use, but not

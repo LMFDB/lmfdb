@@ -568,6 +568,16 @@ def test_quota_response_is_classified(tmp_path):
         client.upload_file("https://example.org/bucket", path)
     assert type(err.value) is ZenodoError
 
+    # the web proxy's cap on one request, which raising the quota cannot lift
+    class ProxySession:
+        def request(self, method, url, data=None, **kwds):
+            return _Response(413, {})
+
+    client._session = ProxySession()
+    with pytest.raises(ZenodoError, match="chunk_gb") as err:
+        client.upload_file("https://example.org/bucket", path)
+    assert type(err.value) is ZenodoError
+
 
 def test_major_at_commit(monkeypatch):
     requests = pytest.importorskip("requests")
@@ -620,6 +630,7 @@ def test_record_deploy_ignores_superseded_commits(monkeypatch):
     monkeypatch.setattr(state, "code_rows_for_commit", lambda db, commit: [
         r for rows in calls for r in rows if r["git_hash"] == commit])
     monkeypatch.setattr(state, "insert_version_rows", lambda db, rows: calls.append(rows))
+    monkeypatch.setattr(state, "history_lock", lambda db: contextlib.nullcontext())
     cfg = SimpleNamespace(editor=None)
     b, c, d = "b" * 40, "c" * 40, "d" * 40
     # B's workflow failed, C was pushed and recorded, then B is rerun
@@ -717,9 +728,14 @@ def scratch_db(tmp_path):
     from psycodict import SQL
     from psycodict.database import PostgresDatabase
     from psycodict.config import Configuration
-    config = Configuration(readargs=False,
-                           defaults={"config_file": str(tmp_path / "psycodict.ini")})
-    db = PostgresDatabase(config=config, create=True, **conninfo_to_dict(dsn))
+    params = conninfo_to_dict(dsn)
+    # psycodict reconnects with the configured options, not the connect
+    # arguments, so the configuration must name the scratch database too
+    defaults = {"postgresql_" + k: v for k, v in params.items()
+                if k in ("host", "port", "user", "password", "dbname")}
+    defaults["config_file"] = str(tmp_path / "psycodict.ini")
+    config = Configuration(readargs=False, defaults=defaults)
+    db = PostgresDatabase(config=config, create=True, **params)
     db._execute(SQL("CREATE SCHEMA IF NOT EXISTS userdb"))
     for t in ["version_history", "userdb.zenodo_backups", "kwl_knowls", "kwl_deleted",
               "userdb.dbrecord",
@@ -815,7 +831,7 @@ class FakeZenodo:
 
     def __init__(self):
         self.deps, self.next_id, self.blocked = {}, 100, set()
-        self.lose_publish_response = self.fail_upload = None
+        self.lose_publish_response = self.fail_upload = self.on_publish = None
         self.uploads = []
 
     def _new(self, files=None, concept=None):
@@ -843,6 +859,11 @@ class FakeZenodo:
     def new_version(self, recid):
         prev = self.deps[int(recid)]
         return self._new(prev["files"], prev["concept"])
+
+    def delete_draft(self, dep_id):
+        from lmfdb.zenodo.client import NotFound
+        if self.deps.pop(int(dep_id), None) is None:
+            raise NotFound("discard draft %s: 404" % dep_id)
 
     def update_metadata(self, dep_id, metadata):
         from lmfdb.zenodo.client import ZenodoError
@@ -882,6 +903,8 @@ class FakeZenodo:
 
     def publish(self, dep_id):
         dep = self.deps[int(dep_id)]
+        if self.on_publish:
+            self.on_publish(dep)
         dep.update(submitted=True, state="done", doi="10.5072/zenodo.%s" % dep["id"],
                    conceptrecid=dep["concept"],
                    conceptdoi="10.5072/zenodo.%s" % dep["concept"])
@@ -1162,3 +1185,74 @@ def test_audit_compares_with_snapshot_time(scratch_db, tmp_path, monkeypatch):
                     "('zzz_a', 'drop_column', '2026-11-16 12:05'), "
                     "('zzz_b', 'create_table_like', '2026-11-16 12:05')"))
     assert backup.audit(db, config=cfg)["changed_since_archive"] == ["zzz_a"]
+
+
+def test_major_bump_during_finalize(scratch_db, tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from lmfdb.zenodo import watcher
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+
+    def deploy(dep):  # major 3 is deployed while the knowls record goes up
+        if "knowls" in dep["metadata"]["title"]:
+            watcher.record_deploy(db, "c" * 40, major=3, head="c" * 40,
+                                  config=SimpleNamespace(editor=None))
+
+    fake.on_publish = deploy
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "3.1" and state.current_version_string(db) == "3.1-0"
+    assert "zzz_a" in state.resolve_version(db, 3, 1)["tables"]
+
+
+def test_reconnect_loses_the_archive_lock(scratch_db):
+    from lmfdb.zenodo import state
+    db = scratch_db
+    state.ensure_tables(db)
+    aid = state.start_attempt(db, "zzz_a", "roe", "1.0", {})
+    assert db.config.options["postgresql"]["port"] == db.conn.info.port
+    with state.lock(db):
+        db.conn.close()  # the connection drops, and the lock with it
+        # psycodict reconnects, but does not replay the write on the new session
+        with pytest.raises(Exception):
+            state.update_attempt(db, aid, error="written without the lock")
+        with pytest.raises(state.LockLost):
+            state.update_attempt(db, aid, error="written without the lock")
+    assert state.get_attempt(db, aid)["error"] is None
+
+
+def test_restored_data_retires_paused_upload(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "a", "zzz_a")
+    make_dump(tmp_path / "b", "zzz_a", nrows=30)
+    make_dump(tmp_path / "c", "zzz_b")
+    backup.backup_folder(db, tmp_path / "a", dry_run=False, live=True, config=cfg)
+    fake.blocked.add("zzz_a")
+    backup.backup_folder(db, tmp_path / "b", dry_run=False, live=True, config=cfg,
+                         description="More rows.", bump="minor")
+    draft = int(state.latest_attempt(db, "zzz_a")["draft_id"])
+    # production is restored to the archived data before the quota is raised
+    plan = backup.backup_folder(db, tmp_path / "a", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["skip_unchanged"] == ["zzz_a"] and draft not in fake.deps
+    assert state.latest_attempt(db, "zzz_a")["status"] == "superseded"
+    # so other pushes are not blocked
+    plan = backup.backup_folder(db, tmp_path / "c", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "2.2"
+
+
+def test_audit_reports_unverified_records(scratch_db, tmp_path, monkeypatch):
+    from psycodict import SQL
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    db._execute(SQL("CREATE TABLE userdb.dbrecord "
+                    "(tablename text, operation text, time timestamp)"))
+    db.tablenames = ["zzz_a"]
+    aid = state.start_attempt(db, "zzz_a", "roe", "1.0", {})
+    state.update_attempt(db, aid, status="published", recid="1",
+                         error="zzz_a.txt.zst: checksum mismatch")
+    report = backup.audit(db, config=cfg)
+    assert [r["tablename"] for r in report["unverified"]] == ["zzz_a"]

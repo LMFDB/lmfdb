@@ -293,6 +293,24 @@ def _reconcile(db, cfg, live, names):
                     row["recid"], row["uploaded_files"])
 
 
+def _retire(db, cfg, live, name, reason):
+    """
+    Supersede the unfinished attempts for ``name`` (e.g. a paused upload of
+    data that production no longer has), discarding their drafts on Zenodo.
+    """
+    for row in state.unfinished(db):
+        if row["tablename"] != name:
+            continue
+        if row["draft_id"]:
+            try:
+                _client(cfg, row["owner"], live).delete_draft(row["draft_id"])
+            except NotFound:
+                pass
+        state.update_attempt(db, row["id"], status="superseded", draft_id=None,
+                             error=reason)
+        print("%s: retired the unfinished upload %s (%s)" % (name, row["id"], reason))
+
+
 def _remove_package(staging, name):
     """Delete a record's package from the staging area, if present."""
     import shutil
@@ -476,6 +494,9 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
         if (not force and prev and prev["status"] == "verified"
                 and prev["source_md5s"] == md5s):
             plan["skip_unchanged"].append(name)
+            if not dry_run:
+                _retire(db, cfg, live, name, "production matches archived "
+                        "version %s again" % prev["version"])
             continue
         size = sum(p.stat().st_size
                    for p in packaging.table_files(data_folder, name))
@@ -674,8 +695,6 @@ def _finalize(db, cfg, live, editor, comment):
     if not pending:
         print("No new table records, so no new data version.")
         return None
-    major, seq = state.next_data_version(db)
-    version = format_version(major, seq)
 
     # 1. Knowls record (refreshed on every data push, since knowls change
     # live); its record version gets a minor bump each time
@@ -704,16 +723,18 @@ def _finalize(db, cfg, live, editor, comment):
                            manifest, deposit_md), KNOWLS_NAME)
     _remove_package(staging, KNOWLS_NAME)
 
-    # 2. Record the data version: the new table records, and the knowls
-    batch = {}
-    for name in pending + [KNOWLS_NAME]:
-        row = state.latest_published(db, name)
+    # 2. Record the data version: the new table records, and the knowls;
+    # numbered only now, so a major bump during the knowls upload counts
+    rows = {name: state.latest_published(db, name)
+            for name in pending + [KNOWLS_NAME]}
+    major, seq = state.insert_data_version(
+        db, {name: _tables_entry(row) for name, row in rows.items()},
+        editor=editor, comment=comment)
+    version = format_version(major, seq)
+    for name, row in rows.items():
         if (name, row["recid"]) not in recorded:
             state.update_attempt(db, row["id"], lmfdb_version=version)
-        batch[name] = _tables_entry(row)
-    state.insert_version_rows(db, [state.version_row(
-        major, "data", seq, editor=editor, tables=batch, comment=comment)])
-    print("Created LMFDB data version %s (%d records)" % (version, len(batch)))
+    print("Created LMFDB data version %s (%d records)" % (version, len(rows)))
 
     # 3. Registry record for it
     _complete_registry(db, cfg, live, owner, staging)
@@ -911,7 +932,8 @@ def audit(db, config=None):
     - eligible tables never archived
     - tables in db.tablenames missing from tables.yaml, on hold, or pending
       review
-    - unfinished or failed upload attempts
+    - unfinished or failed upload attempts, and published records not
+      verified against their checksums
     """
     from psycodict import SQL
     db = _state_db(db, config or ZenodoConfig())
@@ -946,14 +968,16 @@ def audit(db, config=None):
         "on_hold": split["hold"],
         "pending_review": split["review"],
         "unfinished": state.unfinished(db),
+        "unverified": [r for r in published.values() if r["status"] != "verified"],
         "failed": [r for r in
                    state._backup_rows(db, SQL(" WHERE status = 'failed'"), None)],
     }
     for key, val in report.items():
         if val:
-            if key in ("unfinished", "failed"):
+            if key in ("unfinished", "failed", "unverified"):
                 print("%s: %s" % (key, ", ".join(
-                    "%s(%s)" % (r["tablename"], r["status"]) for r in val)))
+                    "%s(%s: %s)" % (r["tablename"], r["status"], r["error"])
+                    for r in val)))
             else:
                 print("%s: %s" % (key, ", ".join(val)))
     if not any(report.values()):

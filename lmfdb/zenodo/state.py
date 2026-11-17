@@ -173,19 +173,28 @@ def ensure_tables(db, grant_select_to=("lmfdb",)):
 
 def version_row(major, kind, seq, time=None, editor=None, git_hash=None,
                 tables=None, comment=None):
-    """A version_history row as a dict (see ``insert_version_rows``)."""
-    return {"major": major, "kind": kind, "seq": seq, "time": time or utcnow(),
+    """
+    A version_history row as a dict (see ``insert_version_rows``); ``time``
+    defaults to the database server's clock at insertion.
+    """
+    return {"major": major, "kind": kind, "seq": seq, "time": time,
             "editor": editor, "git_hash": git_hash, "tables": tables,
             "comment": comment}
 
 
 def insert_version_rows(db, rows):
-    """Insert version_history rows in one statement, so all or none land."""
-    db._execute(
+    """
+    Insert version_history rows in one statement, so all or none land.
+    Rows without a time get the server's, so that the order of events does
+    not depend on the clocks of the machines recording them.
+    """
+    _write(
+        db,
         SQL("INSERT INTO {0} "
             "(major, kind, seq, time, editor, git_hash, tables, comment) "
             "VALUES ").format(_history(db))
-        + SQL(", ").join([SQL("(%s, %s, %s, %s, %s, %s, %s::jsonb, %s)")]
+        + SQL(", ").join([SQL("(%s, %s, %s, COALESCE(%s::timestamp, "
+                              "timezone('UTC', now())), %s, %s, %s::jsonb, %s)")]
                          * len(rows)),
         [val for r in rows for val in
          (r["major"], r["kind"], r["seq"], r["time"], r["editor"],
@@ -204,7 +213,6 @@ def major_rows(major, git_hash=None, editor=None, comment=None, time=None):
     with seq 0 (the frontend at the moment of the bump), so that
     ``{major}.0-0`` is resolvable.
     """
-    time = time or utcnow()
     return [version_row(major, "major", major, time=time, editor=editor,
                         git_hash=git_hash, comment=comment),
             version_row(major, "code", 0, time=time, editor=editor,
@@ -215,24 +223,6 @@ def insert_major(db, major, git_hash=None, editor=None, comment=None, time=None)
     """Record a major version bump (see ``major_rows``)."""
     insert_version_rows(db, major_rows(major, git_hash=git_hash, editor=editor,
                                        comment=comment, time=time))
-
-
-def insert_code(db, major, seq, git_hash, editor=None, comment=None, time=None):
-    """Record a frontend release (deploy of the web branch)."""
-    _insert_version_row(db, major, "code", seq, time=time, editor=editor,
-                        git_hash=git_hash, comment=comment)
-
-
-def insert_data(db, major, seq, tables, editor=None, comment=None, time=None):
-    """
-    Record a data push.
-
-    - ``tables`` -- dict ``{tablename: {"version": ..., "recid": ...,
-      "doi": ..., "concept_doi": ..., "notes": ...}}`` for the tables
-      published in this batch
-    """
-    _insert_version_row(db, major, "data", seq, time=time, editor=editor,
-                        tables=tables, comment=comment)
 
 
 _HISTORY_COLS = "id, major, kind, seq, time, editor, git_hash, tables, comment"
@@ -308,9 +298,38 @@ def latest_data_row(db):
     return rows[0] if rows else None
 
 
+def insert_data_version(db, tables, editor=None, comment=None):
+    """
+    Record a data push as the next data version of the active major, and
+    return its ``(major, seq)``.  The number is chosen under ``history_lock``,
+    which the deploy watcher also takes, so a major bump recorded meanwhile
+    is never skipped.
+    """
+    with history_lock(db):
+        major, seq = next_data_version(db)
+        insert_version_rows(db, [version_row(major, "data", seq, editor=editor,
+                                             tables=tables, comment=comment)])
+    return major, seq
+
+
+@contextmanager
+def history_lock(db):
+    """
+    Serialize reading the current version and inserting the next one
+    (briefly; separate from the archive lock, which is held for hours).
+    """
+    name = _history_name(db) + ":insert"
+    db._execute(SQL("SELECT pg_advisory_lock(hashtext(%s))"), [name])
+    try:
+        yield
+    finally:
+        db._execute(SQL("SELECT pg_advisory_unlock(hashtext(%s))"), [name])
+
+
 def add_to_data_row(db, major, seq, name, entry):
     """Add ``{name: entry}`` to the ``tables`` of data version major.seq."""
-    db._execute(
+    _write(
+        db,
         SQL("UPDATE {0} SET tables = COALESCE(tables, '{{}}'::jsonb) "
             "|| jsonb_build_object(%s::text, %s::jsonb) "
             "WHERE kind = 'data' AND major = %s AND seq = %s").format(_history(db)),
@@ -320,14 +339,33 @@ def add_to_data_row(db, major, seq, name, entry):
 LOCK_POLL = 30
 
 
+class LockLost(RuntimeError):
+    """The session holding the archive lock was replaced by a reconnect."""
+
+
+# id of the database object -> the session (pid, start) holding the lock
+_held = {}
+
+
+def _session(db):
+    return tuple(db._execute(SQL(
+        "SELECT pid, backend_start FROM pg_stat_activity "
+        "WHERE pid = pg_backend_pid()")).fetchone())
+
+
 @contextmanager
 def lock(db):
     """
     Hold the archive lock (a PostgreSQL advisory lock, separate for sandbox
     state) for the duration: archive runs are serialized, so that two of
-    them never number a data version, or edit the same draft, at once.
-    Re-entrant within one connection; released if the connection dies.
+    them never edit the same draft or archive state at once.  Re-entrant;
+    released if the connection dies, after which every state write of the
+    run raises ``LockLost``.
     """
+    key = id(unwrap(db))
+    if key in _held:
+        yield
+        return
     name = _history_name(db)
     waiting = False
     while not db._execute(SQL("SELECT pg_try_advisory_lock(hashtext(%s))"),
@@ -337,10 +375,33 @@ def lock(db):
                   "finish (interrupt to give up, then re-run later).")
             waiting = True
         time.sleep(LOCK_POLL)
+    _held[key] = _session(db)
     try:
         yield
     finally:
+        del _held[key]
         db._execute(SQL("SELECT pg_advisory_unlock(hashtext(%s))"), [name])
+
+
+def _write(db, query, values=None):
+    """
+    Execute a statement changing archive state, returning its rows if any.
+    Within ``lock``, it runs in one transaction with a check that the session
+    is still the one holding the lock: on a dropped connection psycodict
+    would otherwise replay it on a new session, outside the lock.
+    """
+    held = _held.get(id(unwrap(db)))
+    if held is None:
+        cur = db._execute(query, values)
+        return cur.fetchall() if cur.description else None
+    from psycodict.utils import DelayCommit
+    with DelayCommit(unwrap(db)):
+        if _session(db) != held:
+            raise LockLost("the database connection was reset during an "
+                           "archive run, so another run may hold the lock "
+                           "now; re-run to resume")
+        cur = db._execute(query, values)
+        return cur.fetchall() if cur.description else None
 
 
 def current_version_string(db):
@@ -443,7 +504,8 @@ def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
     increment (None for a first version), ``notes`` the change description
     and ``source_time`` when the archived data was taken from production.
     """
-    cur = db._execute(
+    return _write(
+        db,
         SQL("INSERT INTO {0} "
             "(tablename, owner, version, bump, notes, source_time, status, "
             "source_md5s, started) "
@@ -451,8 +513,7 @@ def start_attempt(db, tablename, owner, version, source_md5s, bump=None,
             "RETURNING id").format(_backups(db)),
         [tablename, owner, version, bump, notes, source_time, "pending",
          json.dumps(source_md5s), utcnow()],
-    )
-    return cur.fetchone()[0]
+    )[0][0]
 
 
 def update_attempt(db, attempt_id, **fields):
@@ -476,7 +537,8 @@ def update_attempt(db, attempt_id, **fields):
             sets.append("%s = %%s" % col)
             values.append(val)
     values.append(attempt_id)
-    db._execute(
+    _write(
+        db,
         SQL("UPDATE {0} SET " + ", ".join(sets) + " WHERE id = %s").format(
             _backups(db)),
         values,

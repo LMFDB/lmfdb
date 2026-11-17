@@ -101,6 +101,14 @@ def record_deploy(db, commit, major=None, config=None, dry_run=False,
     if major is None:
         major = major_at_commit(commit, current["major"])
     editor = cfg.editor or "deploy-watcher"
+    # numbered under the lock that data pushes take to number theirs
+    with state.history_lock(db):
+        return _record(db, commit, major, editor, dry_run)
+
+
+def _record(db, commit, major, editor, dry_run):
+    from . import state
+    current = state.latest_versions(db)
     if major > current["major"]:
         event = {"kind": "major", "major": major, "seq": 0, "git_hash": commit}
         rows = state.major_rows(major, git_hash=commit, editor=editor)
