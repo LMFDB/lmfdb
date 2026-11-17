@@ -30,6 +30,7 @@ tables:
   av_fq_endalg_data: {backup: yes, owner: roe}
   av_fq_endalg_factors: {backup: yes, owner: roe}
   av_fq_isog: {backup: yes, owner: roe}
+  belyi_galmap_dessins: {backup: no}
   belyi_galmap_portraits: {backup: yes, owner: roe}
   belyi_galmaps: {backup: yes, owner: roe}
   belyi_galmaps_fixed: {backup: no}
