@@ -1,7 +1,8 @@
 # Which production tables are archived on Zenodo, and by whom.
 #
 # STATUS: owners and inclusion from the managing editors' owner list of
-# 2026-11-16, with the remaining tables decided the same day.
+# 2026-11-16, with the remaining tables decided the same day.  Tables whose
+# owner has no Zenodo token yet are on hold until it is added to the config.
 #
 # Semantics per entry:
 #   backup:  yes | no | hold | review
@@ -38,22 +39,22 @@ tables:
   belyi_passports: {backup: yes, owner: roe}
   belyi_passports_fixed: {backup: no}
   belyi_specializations: {backup: no}
-  bmf_dims: {backup: yes, owner: cremona}
-  bmf_forms: {backup: yes, owner: cremona}
+  bmf_dims: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  bmf_forms: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
   char_dirichlet: {backup: yes, owner: sutherland}
   cluster_pictures: {backup: yes, owner: roe}
   data_uploads: {backup: yes, owner: roe}
-  ec_classdata: {backup: yes, owner: cremona}
-  ec_curvedata: {backup: yes, owner: cremona}
-  ec_galrep: {backup: yes, owner: cremona}
+  ec_classdata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_curvedata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_galrep: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
   ec_iqf_labels: {backup: no}
-  ec_iwasawa: {backup: yes, owner: cremona}
-  ec_localdata: {backup: yes, owner: cremona}
-  ec_mwbsd: {backup: yes, owner: cremona}
-  ec_nfcurves: {backup: yes, owner: cremona}
-  ec_nfportraits: {backup: yes, owner: cremona}
-  ec_padic: {backup: yes, owner: cremona}
-  ec_torsion_growth: {backup: yes, owner: cremona}
+  ec_iwasawa: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_localdata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_mwbsd: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_nfcurves: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_nfportraits: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_padic: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_torsion_growth: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
   fq_fields: {backup: no}
   g2c_curves: {backup: yes, owner: sutherland}
   g2c_endomorphisms: {backup: yes, owner: sutherland}
@@ -95,13 +96,13 @@ tables:
   hecke_algebras: {backup: no}
   hecke_ladic: {backup: no}
   hecke_orbits: {backup: no}
-  hgcwa_complete: {backup: yes, owner: paulhus}
-  hgcwa_passports: {backup: yes, owner: paulhus}
-  hgcwa_unique_groups: {backup: yes, owner: paulhus}
-  hgm_euler_survey: {backup: yes, owner: costa}
-  hgm_families: {backup: yes, owner: costa}
+  hgcwa_complete: {backup: hold, owner: paulhus, note: "owner has no Zenodo token yet"}
+  hgcwa_passports: {backup: hold, owner: paulhus, note: "owner has no Zenodo token yet"}
+  hgcwa_unique_groups: {backup: hold, owner: paulhus, note: "owner has no Zenodo token yet"}
+  hgm_euler_survey: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  hgm_families: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
   hgm_monodromy: {backup: no}
-  hgm_motives: {backup: yes, owner: costa}
+  hgm_motives: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
   hmf_fields: {backup: yes, owner: roe}
   hmf_forms: {backup: yes, owner: roe}
   hmf_hecke: {backup: yes, owner: sutherland, overage: 19G}
@@ -114,32 +115,32 @@ tables:
   lat_lattices: {backup: yes, owner: roe}
   lf_families: {backup: yes, owner: jones}
   lf_fields: {backup: yes, owner: jones}
-  lfunc_data: {backup: yes, owner: costa}
-  lfunc_instances: {backup: yes, owner: costa}
+  lfunc_data: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  lfunc_instances: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
   lfunc_lfunctions: {backup: hold, owner: costa, overage: 316G, note: "issues to fix first; overage exceeds one account's 150 GB"}
-  lfunc_rs_knowls: {backup: yes, owner: costa}
-  lfunc_search: {backup: yes, owner: costa}
+  lfunc_rs_knowls: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  lfunc_search: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
   maass_newforms: {backup: no}
   maass_newforms_coefficients: {backup: no}
   maass_portraits: {backup: no}
   maass_rigor: {backup: yes, owner: roe}
   maass_rigor_coefficients: {backup: yes, owner: roe}
   maass_rigor_portraits: {backup: yes, owner: roe}
-  mf_boxes: {backup: yes, owner: costa}
-  mf_gamma1: {backup: yes, owner: costa}
-  mf_gamma1_portraits: {backup: yes, owner: costa}
+  mf_boxes: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_gamma1: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_gamma1_portraits: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
   mf_hecke_cc: {backup: yes, owner: sutherland, overage: 25G}
-  mf_hecke_charpolys: {backup: yes, owner: costa}
-  mf_hecke_lpolys: {backup: yes, owner: costa}
-  mf_hecke_nf: {backup: yes, owner: costa}
-  mf_hecke_traces: {backup: yes, owner: costa}
-  mf_newform_portraits: {backup: yes, owner: costa}
-  mf_newforms: {backup: yes, owner: costa}
-  mf_newspace_portraits: {backup: yes, owner: costa}
-  mf_newspaces: {backup: yes, owner: costa}
-  mf_stark: {backup: yes, owner: costa}
-  mf_twists_cc: {backup: yes, owner: costa}
-  mf_twists_nf: {backup: yes, owner: costa}
+  mf_hecke_charpolys: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_lpolys: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_nf: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_traces: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newform_portraits: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newforms: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newspace_portraits: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newspaces: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_stark: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_twists_cc: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_twists_nf: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
   modcurve_modelmaps: {backup: yes, owner: roe}
   modcurve_models: {backup: yes, owner: roe}
   modcurve_pictures: {backup: yes, owner: roe}
