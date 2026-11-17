@@ -105,7 +105,9 @@ Zenodo support (April 2026) described ~2 TB in total as fair use, but not
 LMFDB versions are `{major}.{data}-{code}` (e.g. `2.3-5`); see
 [lmfdb/version.py](../version.py) and the /version page.  Major bumps: edit
 `MAJOR` in a PR; the code-version Action records the bump when it reaches
-the `web` branch.  Nobody's release workflow changes.
+the `web` branch.  Nobody's release workflow changes.  Data pushes take the
+major from the version history, not from the editor's checkout, so a stale
+session on proddb still numbers its push correctly.
 
 Each table's Zenodo record has its own version `{major}.{minor}`, starting at
 `1.0` and bumped as requested in the data request.  The knowls record gets a
@@ -120,4 +122,10 @@ the LMFDB data versions themselves (`2.3`, ...).
   Zenodo's file-level deduplication (new-version drafts inherit files).
 - Every step is resumable via `userdb.zenodo_backups` (including crashed
   uploads and quota pauses); `db.zenodo_audit()` catches anything missed.
+  A live run first asks Zenodo about unfinished drafts, so a publication
+  whose response was lost is credited to the dump it holds, and newer data
+  becomes the next version.
+- A data version is created only once every record in it is verified
+  against the uploaded checksums.  Packages are deleted from the staging
+  area once verified.
 - Published records are permanent: the md5 gate prevents junk versions.

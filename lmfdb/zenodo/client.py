@@ -22,6 +22,10 @@ class NotLive(ZenodoError):
     """Raised when a non-live client is asked to perform a network request."""
 
 
+class NotFound(ZenodoError):
+    """The deposition or record does not exist (e.g. a discarded draft)."""
+
+
 class QuotaExceeded(ZenodoError):
     """The draft needs more than the available quota (owner must raise it
     via the record's "Manage storage" button in the Zenodo UI)."""
@@ -102,6 +106,8 @@ class ZenodoClient:
             if (resp.status_code == 413 or "quota" in text
                     or "size limit exceeded" in text):
                 raise QuotaExceeded("%s: %s %s" % (desc, resp.status_code, detail))
+            if resp.status_code in (404, 410):
+                raise NotFound("%s: %s %s" % (desc, resp.status_code, detail))
             raise ZenodoError("%s failed: %s %s" % (desc, resp.status_code, detail))
         if resp.status_code == 204 or not resp.content:
             return {}

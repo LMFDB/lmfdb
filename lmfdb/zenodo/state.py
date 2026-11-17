@@ -275,12 +275,24 @@ def latest_versions(db):
     }
 
 
-def next_data_seq(db, major):
-    """The data counter to use for the next push within ``major``."""
+def next_data_version(db):
+    """
+    The ``(major, seq)`` of the next data push.  The major is the active one
+    in the history (a major bump becomes active when its deploy is recorded),
+    not ``lmfdb.version.MAJOR`` of the process doing the push, which may be
+    stale.
+    """
     cur = latest_versions(db)
-    if cur is None or cur["major"] != major:
-        return 1
-    return cur["data_seq"] + 1
+    if cur is None:
+        raise ValueError("version_history is empty: activate versioning with "
+                         "db.zenodo_setup() first")
+    return cur["major"], cur["data_seq"] + 1
+
+
+def recorded_data_versions(db):
+    """The data versions (e.g. ``"2.3"``) that have a version_history row."""
+    return {format_version(r["major"], r["seq"])
+            for r in _history_rows(db, SQL(" WHERE kind = 'data'"))}
 
 
 def current_version_string(db):
@@ -435,6 +447,11 @@ def latest_attempt(db, tablename, statuses=None):
         values.extend(statuses)
     rows = _backup_rows(db, where + SQL(" ORDER BY id DESC LIMIT 1"), values)
     return rows[0] if rows else None
+
+
+def get_attempt(db, attempt_id):
+    """The attempt row with the given id."""
+    return _backup_rows(db, SQL(" WHERE id = %s"), [attempt_id])[0]
 
 
 def latest_published(db, tablename):

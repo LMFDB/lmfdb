@@ -166,6 +166,22 @@ def test_package_table(tmp_path):
     assert names[:3] == ["README.md", name + "_sample.md", "MANIFEST.json"]
 
 
+def test_gzip_output_is_reproducible(tmp_path, monkeypatch):
+    import itertools
+    from types import SimpleNamespace
+    src = tmp_path / "t.txt"
+    src.write_text("1|2\n" * 1000)
+    clock = itertools.count(10**9, 10**9)
+    monkeypatch.setattr(gzip, "time", SimpleNamespace(time=lambda: next(clock)))
+    out = []
+    for d in ["a", "b"]:
+        (tmp_path / d).mkdir()
+        out.append(packaging.compress_file(src, tmp_path / d,
+                                           force_gzip=True).read_bytes())
+    assert out[0] == out[1]
+    assert gzip.decompress(out[0]) == src.read_bytes()
+
+
 def test_split_and_reassemble(tmp_path):
     dump = tmp_path / "dump"
     name = make_dump(dump, nrows=2000, extras=False)
@@ -344,7 +360,7 @@ def offline_backup(monkeypatch):
     pytest.importorskip("psycodict")
     from lmfdb.zenodo import backup, state
     published = {"zzz_demo": {"version": "1.4", "source_md5s": {},
-                              "owner": "roed"}}
+                              "owner": "roed", "status": "verified"}}
     attempts = {}
     monkeypatch.setattr(backup, "load_tables_yaml", lambda path=None: {
         "zzz_demo": {"backup": "yes"}, "zzz_other": {"backup": "yes"},
@@ -354,7 +370,8 @@ def offline_backup(monkeypatch):
                         lambda db, name: published.get(name))
     monkeypatch.setattr(state, "latest_attempt",
                         lambda db, name, statuses=None: attempts.get(name))
-    monkeypatch.setattr(state, "next_data_seq", lambda db, major: 3)
+    monkeypatch.setattr(state, "next_data_version", lambda db: (2, 3))
+    monkeypatch.setattr(state, "unfinished", lambda db: [])
     return backup, published, attempts
 
 
@@ -400,10 +417,14 @@ def test_backup_plan(offline_backup, tmp_path):
     assert items["zzz_demo"]["notes"] == "Added rows."
     assert items["zzz_other"]["version"] == "1.0"
     assert items["zzz_other"]["first_version"]
-    # a live run refuses to start without the change information
-    with pytest.raises(ValueError, match="zzz_demo"):
+    # a live run refuses to start while disabled, or without the change
+    # information
+    with pytest.raises(RuntimeError, match="disabled"):
         backup.backup_folder(None, tmp_path / "dump", config=cfg,
                              dry_run=False)
+    with pytest.raises(ValueError, match="zzz_demo"):
+        backup.backup_folder(None, tmp_path / "dump", dry_run=False,
+                             config=prod_config(tmp_path, enabled=True))
 
 
 ######################################################################
@@ -702,13 +723,16 @@ class FakeZenodo:
     """
     In-memory stand-in for ZenodoClient.  Uploads for ``blocked`` tables get
     Zenodo's over-quota response, classified by the real client; published
-    depositions refuse edits; ``lose_publish_response`` makes the next
-    publication succeed but its response fail.
+    depositions refuse edits; setting ``lose_publish_response`` to a word of
+    a record's title makes its next publication succeed but its response
+    fail.  Records are verified by the real client's checks.
     """
+    verify_record = ZenodoClient.verify_record
 
     def __init__(self):
         self.deps, self.next_id, self.blocked = {}, 100, set()
-        self.lose_publish_response = False
+        self.lose_publish_response = None
+        self.uploads = []
 
     def _new(self, files=None, concept=None):
         dep_id = self.next_id
@@ -723,7 +747,14 @@ class FakeZenodo:
         return self._new()
 
     def get_deposition(self, dep_id):
+        from lmfdb.zenodo.client import NotFound
+        if int(dep_id) not in self.deps:
+            raise NotFound("get deposition %s: 404" % dep_id)
         return self.deps[int(dep_id)]
+
+    def get_record(self, recid):
+        return {"files": [{"key": name, "checksum": "md5:" + md5}
+                          for name, md5 in self.deps[int(recid)]["files"].items()]}
 
     def new_version(self, recid):
         prev = self.deps[int(recid)]
@@ -759,6 +790,7 @@ class FakeZenodo:
             return client.upload_file(bucket, path, name=name)
         md5 = hashlib.md5(path.read_bytes()).hexdigest()
         dep["files"][name] = md5
+        self.uploads.append(name)
         return {"checksum": "md5:" + md5}
 
     def publish(self, dep_id):
@@ -766,13 +798,11 @@ class FakeZenodo:
         dep.update(submitted=True, state="done", doi="10.5072/zenodo.%s" % dep["id"],
                    conceptrecid=dep["concept"],
                    conceptdoi="10.5072/zenodo.%s" % dep["concept"])
-        if self.lose_publish_response:
-            self.lose_publish_response = False
+        lose = self.lose_publish_response
+        if lose and lose in dep["metadata"]["title"]:
+            self.lose_publish_response = None
             raise ConnectionError("connection reset after publishing")
         return {k: dep[k] for k in ["id", "doi", "conceptrecid", "conceptdoi"]}
-
-    def verify_record(self, recid, local_md5s):
-        return []
 
 
 def push_setup(db, tmp_path, monkeypatch):
@@ -794,14 +824,16 @@ def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
     for t in ["zzz_a", "zzz_b"]:
         make_dump(tmp_path / "push1", t)
         make_dump(tmp_path / "push2", t, nrows=30)
+    records = tmp_path / "staging" / "records"
     plan = backup.backup_folder(db, tmp_path / "push1", dry_run=False, live=True,
                                 config=cfg)
-    assert plan["version"] == "2.1"
+    assert plan["version"] == "2.1" and not list(records.iterdir())
     # both tables change; zzz_b needs more quota than its owner has
     fake.blocked.add("zzz_b")
     plan = backup.backup_folder(db, tmp_path / "push2", dry_run=False, live=True,
                                 config=cfg, description="More rows.", bump="minor")
     assert plan["paused"] == ["zzz_b"] and plan["version"] is None
+    assert [p.name for p in records.iterdir()] == ["zzz_b"]
     assert state.current_version_string(db) == "2.1-0"
     with pytest.raises(RuntimeError):
         backup.finalize(db, cfg=cfg, live=True)
@@ -814,6 +846,7 @@ def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
     assert tables["zzz_a"]["version"] == tables["zzz_b"]["version"] == "1.1"
     assert tables["zzz_b"]["notes"] == "More rows."
     assert [r["seq"] for r in state.history(db) if r["kind"] == "data"] == [2, 1]
+    assert not list(records.iterdir())
 
 
 def test_newer_dump_supersedes_paused_attempt(scratch_db, tmp_path, monkeypatch):
@@ -840,18 +873,127 @@ def test_lost_publish_response_is_recovered(scratch_db, tmp_path, monkeypatch):
     db = scratch_db
     backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
     make_dump(tmp_path / "push", "zzz_a")
-    fake.lose_publish_response = True
+    fake.lose_publish_response = "zzz_a"
     with pytest.raises(ConnectionError):
         backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
                              config=cfg)
     row = state.latest_attempt(db, "zzz_a")
     assert row["status"] == "uploading" and row["draft_id"]
     draft = row["draft_id"]
+    package = tmp_path / "staging" / "records" / "zzz_a"
+    assert package.exists()
     plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
                                 config=cfg)
-    assert plan["version"] == "2.1"
+    assert plan["version"] == "2.1" and not package.exists()
     row = state.latest_attempt(db, "zzz_a")
     assert (row["status"], row["recid"]) == ("verified", draft)
+
+
+def test_newer_dump_after_lost_publish_response(scratch_db, tmp_path, monkeypatch):
+    from psycodict import SQL
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "v1", "zzz_a")
+    make_dump(tmp_path / "v2", "zzz_a", nrows=30)
+    fake.lose_publish_response = "zzz_a"
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "v1", dry_run=False, live=True,
+                             config=cfg)
+    # v1 was published without our hearing back; then a corrected v2 arrives,
+    # which becomes the next version rather than being credited to v1's record
+    plan = backup.backup_folder(db, tmp_path / "v2", dry_run=False, live=True,
+                                config=cfg, description="Corrected.", bump="minor")
+    assert plan["version"] == "2.1"
+    rows = state._backup_rows(db, SQL(" WHERE tablename = 'zzz_a' ORDER BY id"), None)
+    assert [(r["status"], r["version"]) for r in rows] == [
+        ("verified", "1.0"), ("verified", "1.1")]
+    assert rows[0]["source_md5s"] == packaging.source_md5s(tmp_path / "v1", "zzz_a")
+    assert rows[1]["recid"] != rows[0]["recid"]
+    assert state.resolve_version(db, 2, 1)["tables"]["zzz_a"]["version"] == "1.1"
+    assert backup.backup_folder(db, tmp_path / "v2", config=cfg)["skip_unchanged"] == ["zzz_a"]
+
+
+def test_discarded_draft_is_replaced(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.blocked.add("zzz_a")
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    draft = int(state.latest_attempt(db, "zzz_a")["draft_id"])
+    # the owner discards the paused draft on Zenodo instead of raising the quota
+    del fake.deps[draft]
+    fake.blocked.clear()
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg)
+    row = state.latest_attempt(db, "zzz_a")
+    assert plan["version"] == "2.1" and row["status"] == "verified"
+    assert int(row["recid"]) != draft
+
+
+@pytest.mark.parametrize("record", ["knowls", "registry"])
+def test_lost_special_record_response_is_recovered(scratch_db, tmp_path,
+                                                   monkeypatch, record):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.lose_publish_response = record
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                             config=cfg)
+    assert backup.finalize(db, cfg=cfg, live=True) == "2.1"
+    # each record was published exactly once, and no draft was left behind
+    assert len(fake.deps) == 3
+    assert all(dep["submitted"] for dep in fake.deps.values())
+    assert set(state.resolve_version(db, 2, 1)["tables"]) == {
+        "zzz_a", backup.KNOWLS_NAME, backup.REGISTRY_NAME}
+
+
+def test_data_version_follows_active_major(scratch_db, tmp_path, monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    make_dump(tmp_path / "push1", "zzz_a")
+    plan = backup.backup_folder(db, tmp_path / "push1", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["version"] == "2.1"
+    # major 3 is deployed while this session's lmfdb.version still says 2
+    state.insert_major(db, 3)
+    make_dump(tmp_path / "push2", "zzz_a", nrows=30)
+    make_dump(tmp_path / "push2", "zzz_b")
+    insert = state.insert_version_rows
+
+    def fail_once(db, rows):
+        monkeypatch.setattr(state, "insert_version_rows", insert)
+        raise RuntimeError("connection lost")
+
+    monkeypatch.setattr(state, "insert_version_rows", fail_once)
+    with pytest.raises(RuntimeError, match="connection lost"):
+        backup.backup_folder(db, tmp_path / "push2", dry_run=False, live=True,
+                             config=cfg, description="More rows.", bump="minor")
+    # major 4 arrives before the push is finalized: the batch keeps its tables
+    state.insert_major(db, 4)
+    plan = backup.backup_folder(db, tmp_path / "push2", dry_run=False, live=True,
+                                config=cfg)
+    assert plan["skip_unchanged"] == ["zzz_a", "zzz_b"] and plan["version"] == "4.1"
+    tables = state.resolve_version(db, 4, 1)["tables"]
+    assert (tables["zzz_a"]["version"], tables["zzz_b"]["version"]) == ("1.1", "1.0")
+    assert [(r["major"], r["seq"]) for r in state.history(db)
+            if r["kind"] == "data"] == [(4, 1), (2, 1)]
+
+
+def test_gzip_artifacts_of_unchanged_files_are_reused(scratch_db, tmp_path,
+                                                      monkeypatch):
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(packaging, "zstd_available", lambda: False)
+    make_dump(tmp_path / "push", "zzz_a")
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    (tmp_path / "push" / "zzz_a_counts.txt").write_text("row0|recounted\n")
+    fake.uploads.clear()
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                         config=cfg, description="Recounted.", bump="minor")
+    assert "zzz_a_counts.txt.gz" in fake.uploads
+    assert "zzz_a.txt.gz" not in fake.uploads
+    assert state.latest_published(db, "zzz_a")["uploaded_files"]["zzz_a.txt.gz"]["reused"]
 
 
 def test_audit_compares_with_snapshot_time(scratch_db, tmp_path, monkeypatch):
@@ -861,12 +1003,15 @@ def test_audit_compares_with_snapshot_time(scratch_db, tmp_path, monkeypatch):
     backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
     db._execute(SQL("CREATE TABLE userdb.dbrecord "
                     "(tablename text, operation text, time timestamp)"))
-    db.tablenames = ["zzz_a"]
-    # dumped at 12:00, production reloaded at 12:05, upload finished at 12:10
-    aid = state.start_attempt(db, "zzz_a", "roe", "1.0", {},
-                              source_time=datetime(2026, 11, 16, 12, 0))
-    state.update_attempt(db, aid, status="verified",
-                         finished=datetime(2026, 11, 16, 12, 10))
+    db.tablenames = ["zzz_a", "zzz_b"]
+    # dumped at 12:00, changed on production at 12:05, upload finished at 12:10
+    for name in db.tablenames:
+        aid = state.start_attempt(db, name, "roe", "1.0", {},
+                                  source_time=datetime(2026, 11, 16, 12, 0))
+        state.update_attempt(db, aid, status="verified",
+                             finished=datetime(2026, 11, 16, 12, 10))
+    # a dropped column changes the archived dump; copying the table does not
     db._execute(SQL("INSERT INTO userdb.dbrecord VALUES "
-                    "('zzz_a', 'reload', '2026-11-16 12:05')"))
+                    "('zzz_a', 'drop_column', '2026-11-16 12:05'), "
+                    "('zzz_b', 'create_table_like', '2026-11-16 12:05')"))
     assert backup.audit(db, config=cfg)["changed_since_archive"] == ["zzz_a"]

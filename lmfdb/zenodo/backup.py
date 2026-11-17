@@ -32,7 +32,8 @@ import os
 from pathlib import Path
 
 from . import metadata, packaging, state
-from .client import ZenodoClient, QuotaExceeded, DEFAULT_QUOTA
+from .client import (ZenodoClient, ZenodoError, NotFound, QuotaExceeded,
+                     DEFAULT_QUOTA)
 from .config import ZenodoConfig
 from .versioning import BUMPS, format_version, next_record_version
 
@@ -140,11 +141,16 @@ def _record_files(outdir, manifest):
             if path.exists()}
 
 
+def _client(cfg, owner, live):
+    return ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox, live=live)
+
+
 def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md):
     """
     Drive one record from packaged files to published+verified, resuming a
-    stored draft if present.  Returns the updated attempt row dict on
-    success, or None if paused awaiting a quota increase.
+    stored draft if present (``_reconcile`` must have run first).  Returns the
+    updated attempt row dict on success, or None if paused awaiting a quota
+    increase.
     """
     aid = attempt["id"]
     files = _record_files(outdir, manifest)
@@ -153,13 +159,9 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
 
     if attempt.get("draft_id"):
         dep = client.get_deposition(attempt["draft_id"])
-        if dep.get("submitted") and dep.get("state") == "done":
-            # published by an earlier run whose response (or our record of
-            # it) was lost; Zenodo rejects edits to it, so just record it
-            print("%s: draft %s was already published; recording it"
-                  % (name, dep["id"]))
-            return _record_publication(db, client, aid, name, dep, files,
-                                       attempt.get("uploaded_files") or {})
+        if dep.get("submitted"):
+            raise ZenodoError("draft %s of %s is already published; re-run to "
+                              "record it" % (dep["id"], name))
     elif attempt.get("recid") or state.latest_published(db, name):
         prev = attempt.get("recid") or state.latest_published(db, name)["recid"]
         dep = client.new_version(prev)
@@ -175,7 +177,7 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
               % (name, total / 1e9, attempt["owner"]))
 
     # Upload anything not already present with the right checksum (files
-    # inherited from the previous version or uploaded before a crash are
+    # inherited from the previous version or uploaded before a pause are
     # skipped, preserving Zenodo's file-level deduplication).
     existing = {f["filename"]: f.get("checksum", "")
                 for f in client.list_files(dep_id)}
@@ -184,16 +186,20 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
     for f in client.list_files(dep_id):
         if f["filename"] not in files:
             client.delete_file(f["links"]["self"])
+    before = attempt.get("uploaded_files") or {}
     uploaded = {}
     try:
         for fname, (path, md5) in sorted(files.items()):
-            if md5 is not None and existing.get(fname, "").endswith(md5):
-                uploaded[fname] = {"size": path.stat().st_size, "md5": md5,
-                                   "reused": True}
+            md5 = md5 or packaging.hash_file(path, count_lines=False)[1]
+            if existing.get(fname, "").endswith(md5):
+                # sent by this attempt before a pause, or inherited
+                sent = before.get(fname, {})
+                uploaded[fname] = (sent if sent.get("md5") == md5 else
+                                   {"size": path.stat().st_size, "md5": md5,
+                                    "reused": True})
                 continue
-            info = client.upload_file(bucket, path, name=fname)
-            uploaded[fname] = {"size": path.stat().st_size,
-                               "md5": info.get("checksum", "")}
+            client.upload_file(bucket, path, name=fname)
+            uploaded[fname] = {"size": path.stat().st_size, "md5": md5}
     except QuotaExceeded as err:
         state.update_attempt(db, aid, status="awaiting_quota",
                              uploaded_files=uploaded, error=str(err))
@@ -201,12 +207,14 @@ def _upload_record(db, client, cfg, attempt, name, outdir, manifest, deposit_md)
               "after raising it in the Zenodo UI." % (name, err))
         return None
 
+    # saved first, so that a publication whose response is lost can still
+    # be verified (see _reconcile)
+    state.update_attempt(db, aid, uploaded_files=uploaded)
     published = client.publish(dep_id)
-    return _record_publication(db, client, aid, name, published, files,
-                               uploaded)
+    return _record_publication(db, client, aid, name, published, uploaded)
 
 
-def _record_publication(db, client, aid, name, published, files, uploaded):
+def _record_publication(db, client, aid, name, published, uploaded):
     """Store a published deposition in the attempt and verify its files."""
     state.update_attempt(
         db, aid,
@@ -220,15 +228,84 @@ def _record_publication(db, client, aid, name, published, files, uploaded):
         finished=state.utcnow(),
         error=None,
     )
-    local_md5s = {fname: packaging.hash_file(path, count_lines=False)[1]
-                  for fname, (path, _) in files.items()}
-    problems = client.verify_record(published["id"], local_md5s)
+    return _verify(db, client, aid, name, published["id"], uploaded)
+
+
+def _verify(db, client, aid, name, recid, uploaded):
+    """
+    Compare a published record with the files the attempt uploaded (each
+    checked against the local package as it went up), marking the attempt
+    verified if they agree.  Returns the attempt row.
+    """
+    if uploaded:
+        problems = client.verify_record(
+            recid, {f: info["md5"] for f, info in uploaded.items()})
+    else:
+        problems = ["no record of the uploaded files"]
     if problems:
         state.update_attempt(db, aid, error="; ".join(problems))
         print("VERIFICATION PROBLEMS for %s: %s" % (name, problems))
     else:
-        state.update_attempt(db, aid, status="verified")
-    return state.latest_attempt(db, name)
+        state.update_attempt(db, aid, status="verified", error=None)
+    return state.get_attempt(db, aid)
+
+
+def _reconcile(db, cfg, live, names):
+    """
+    Bring the attempts for the records ``names`` up to date with Zenodo before
+    anything new is planned or uploaded:
+
+    - an unfinished attempt whose draft has been published (by a run whose
+      response was lost) is recorded as published, with that attempt's own
+      source hashes, so that newer content becomes a new version;
+    - an unfinished attempt whose draft no longer exists forgets it;
+    - the latest publication of each record is verified again if it is not
+      yet verified.
+    """
+    names = set(names)
+    for row in state.unfinished(db):
+        name = row["tablename"]
+        if name not in names or not row["draft_id"]:
+            continue
+        client = _client(cfg, row["owner"], live)
+        try:
+            dep = client.get_deposition(row["draft_id"])
+        except NotFound:
+            state.update_attempt(db, row["id"], draft_id=None,
+                                 error="draft %s no longer exists on Zenodo"
+                                 % row["draft_id"])
+            continue
+        if dep.get("submitted"):
+            print("%s: draft %s was published by an earlier run; recording it"
+                  % (name, dep["id"]))
+            _record_publication(db, client, row["id"], name, dep,
+                                row["uploaded_files"])
+    for name in sorted(names):
+        row = state.latest_published(db, name)
+        if row is not None and row["status"] == "published":
+            _verify(db, _client(cfg, row["owner"], live), row["id"], name,
+                    row["recid"], row["uploaded_files"])
+
+
+def _remove_package(staging, name):
+    """Delete a record's package from the staging area, if present."""
+    import shutil
+    if (Path(staging) / name).exists():
+        shutil.rmtree(Path(staging) / name)
+
+
+def _sweep_packages(db, staging):
+    """
+    Delete packages left in the staging area (e.g. by a crash) for records
+    whose latest attempt is verified; packages of paused or unresolved
+    attempts are kept.
+    """
+    if not Path(staging).exists():
+        return
+    for folder in Path(staging).iterdir():
+        row = state.latest_attempt(db, folder.name)
+        if row is not None and row["status"] == "verified":
+            _remove_package(staging, folder.name)
 
 
 ######################################################################
@@ -321,6 +398,8 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
       the record version of each changed table is incremented.  Required
       like ``description``; first versions are always ``1.0``.
     - ``dry_run`` -- report what would happen without packaging or uploading
+      (or contacting Zenodo: the live run first checks unfinished drafts,
+      which can change the plan if a publication's response was lost)
     - ``live`` -- must be True (in addition to ``dry_run=False`` and
       ``enabled = true`` in the local config) for any network traffic
     - ``editor``, ``comment`` -- recorded in the version history (``comment``
@@ -354,9 +433,13 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
                              % (", ".join(sorted(missing)), data_folder))
         found = [t for t in found if t in tables]
     include, excluded, review, unlisted = classify(found, spec)
+    staging = _staging(cfg, staging_dir) / "records"
+    if not dry_run:
+        _require_enabled(cfg)
+        _reconcile(db, cfg, live, include)
+        _sweep_packages(db, staging)
 
-    major = _current_major()
-    pending_version = format_version(major, state.next_data_seq(db, major))
+    pending_version = format_version(*state.next_data_version(db))
 
     plan = {
         "version": pending_version,
@@ -371,7 +454,8 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
     for name in include:
         md5s = packaging.source_md5s(data_folder, name)
         prev = state.latest_published(db, name)
-        if not force and prev and prev["source_md5s"] == md5s:
+        if (not force and prev and prev["status"] == "verified"
+                and prev["source_md5s"] == md5s):
             plan["skip_unchanged"].append(name)
             continue
         size = sum(p.stat().st_size
@@ -395,12 +479,7 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
                if item["missing"]}
     if missing:
         raise ValueError(_missing_message(missing))
-    if not cfg.enabled:
-        raise RuntimeError(
-            "Uploads are disabled (%s).  Set enabled = true in the [zenodo] "
-            "section once the managing editors approve." % cfg.path)
 
-    staging = _staging(cfg, staging_dir) / "records"
     for item in plan["upload"]:
         name = item["table"]
         if item["owner"] == "UNASSIGNED":
@@ -426,14 +505,15 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
             community=cfg.community,
             related_url="%s/api/%s" % (metadata.LMFDB_URL, name),
             notes=notes)
-        client = ZenodoClient(cfg.token_for(item["owner"]),
-                              sandbox=cfg.sandbox, live=live)
-        row = _upload_record(db, client, cfg, attempt, name,
-                             staging / name, manifest, deposit_md)
+        row = _upload_record(db, _client(cfg, attempt["owner"], live), cfg,
+                             attempt, name, staging / name, manifest,
+                             deposit_md)
         if row is None:
             plan["paused"].append(name)
         else:
             plan["published"][name] = _tables_entry(row)
+            if row["status"] == "verified":
+                _remove_package(staging, name)
 
     if finalize_version:
         waiting = _unfinished_tables(db)
@@ -450,12 +530,21 @@ def backup_folder(db, data_folder, tables=None, dry_run=True, live=False,
     return plan
 
 
+def _require_enabled(cfg):
+    if not cfg.enabled:
+        raise RuntimeError(
+            "Uploads are disabled (%s).  Set enabled = true in the [zenodo] "
+            "section once the managing editors approve." % cfg.path)
+
+
 def _resume_or_start(db, name, item):
     """
     Reuse an unfinished attempt for the same content.  Otherwise start a new
-    attempt, retiring any unfinished ones for the table (so that they cannot
+    attempt, retiring any unfinished ones for the record (so that they cannot
     block finalization) and taking over the latest one's draft and owner:
     the upload then replaces that draft's files, leaving no orphaned draft.
+    Only valid after ``_reconcile``, which records drafts that were in fact
+    published under the attempt they belong to.
     """
     prev = state.latest_attempt(db, name)
     if (prev and prev["status"] in state.UNFINISHED
@@ -526,12 +615,16 @@ def _print_plan(plan, dry_run):
 def finalize(db, cfg=None, live=False, editor=None, comment=None):
     """
     Complete a data push: refresh the knowl-database record, assign the next
-    data version to all newly published attempts, publish the registry
-    record, and write ``version_history`` (mirroring to grace when
-    configured).  Called automatically by ``backup_folder`` unless
-    ``finalize_version=False``.  Raises if any table upload is unfinished.
+    data version to all published attempts not yet in a recorded data
+    version, publish the registry record, and write ``version_history``
+    (mirroring to grace when configured).  Called automatically by
+    ``backup_folder`` unless ``finalize_version=False``.  Raises if any table
+    upload is unfinished or any record of the batch fails verification.
+    Re-running after an interruption resumes the knowls and registry records
+    where they stopped.
     """
     cfg = cfg or ZenodoConfig()
+    _require_enabled(cfg)
     db = _state_db(db, cfg)
     editor = editor or cfg.editor
     waiting = _unfinished_tables(db)
@@ -539,21 +632,27 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
         raise RuntimeError("uploads unfinished for %s; a data version can only "
                            "be created once they are published"
                            % ", ".join(waiting))
-    # attempts at the knowls/registry records left by an interrupted
-    # finalize; their open drafts are picked up again by new_version
-    for row in state.unfinished(db):
-        state.update_attempt(db, row["id"], status="superseded",
-                             error="superseded by a later finalize")
-    major = _current_major()
-    seq = state.next_data_seq(db, major)
+    owner = cfg.default_owner
+    if owner is None:
+        raise ValueError("default_owner must be set in %s" % cfg.path)
+    recorded = state.recorded_data_versions(db)
+    pending = [name for name, row in state.all_latest_published(db).items()
+               if name not in SPECIAL_RECORDS
+               and row["lmfdb_version"] not in recorded]
+    _reconcile(db, cfg, live, pending + SPECIAL_RECORDS)
+    unverified = [name for name in pending
+                  if state.latest_published(db, name)["status"] != "verified"]
+    if unverified:
+        raise RuntimeError(
+            "not verified on Zenodo: %s (see the error column of "
+            "userdb.zenodo_backups); once resolved, re-run, or upload a "
+            "corrected version with force=True" % ", ".join(unverified))
+    major, seq = state.next_data_version(db)
     version = format_version(major, seq)
     staging = _staging(cfg) / "records"
 
     # 1. Knowls record (refreshed on every data push, since knowls change
     # live); its record version gets a minor bump each time
-    owner = cfg.default_owner
-    if owner is None:
-        raise ValueError("default_owner must be set in %s" % cfg.path)
     prev = state.latest_published(db, KNOWLS_NAME)
     kbump = None if prev is None else "minor"
     kversion = next_record_version(prev and prev["version"], kbump)
@@ -564,35 +663,34 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
         readme=metadata.knowls_readme(version))
     md5s = {f: info["md5"] for f, info in manifest["source_files"].items()}
     tables_dict = {}
-    if prev and prev["source_md5s"] == md5s:
+    if prev and prev["status"] == "verified" and prev["source_md5s"] == md5s:
         tables_dict[KNOWLS_NAME] = _tables_entry(prev)
     else:
         knotes = "Knowls as of LMFDB data version %s." % version
-        state.start_attempt(db, KNOWLS_NAME, owner, kversion, md5s,
-                            bump=kbump, notes=knotes)
+        attempt = _resume_or_start(db, KNOWLS_NAME, {
+            "owner": owner, "version": kversion, "bump": kbump,
+            "notes": knotes, "source_md5s": md5s, "source_time": None})
         deposit_md = metadata.deposit_metadata(
             "LMFDB knowledge database (knowls)",
             metadata.knowls_description_html(version), kversion,
             community=cfg.community,
             related_url="%s/knowledge/" % metadata.LMFDB_URL, notes=knotes)
-        client = ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox,
-                              live=live)
-        row = _upload_record(db, client, cfg,
-                             state.latest_attempt(db, KNOWLS_NAME),
-                             KNOWLS_NAME, staging / KNOWLS_NAME, manifest,
-                             deposit_md)
-        if row is None:
-            raise RuntimeError("knowls upload paused; resolve and re-run "
-                               "finalize")
+        row = _upload_record(db, _client(cfg, attempt["owner"], live), cfg,
+                             attempt, KNOWLS_NAME, staging / KNOWLS_NAME,
+                             manifest, deposit_md)
+        _require_verified(row, KNOWLS_NAME)
         tables_dict[KNOWLS_NAME] = _tables_entry(row)
+    _remove_package(staging, KNOWLS_NAME)
 
-    # 2. Assign the data version to newly published attempts
+    # 2. Assign the data version to the published attempts not yet in one
+    # (including any stamped by an interrupted finalize with a version that
+    # was never recorded, e.g. before a major bump)
+    batch = {}
     for name, row in state.all_latest_published(db).items():
-        if row["lmfdb_version"] is None:
-            state.update_attempt(db, row["id"], lmfdb_version=version)
-    batch = {name: _tables_entry(row)
-             for name, row in state.all_latest_published(db).items()
-             if row["lmfdb_version"] == version and name != REGISTRY_NAME}
+        if name != REGISTRY_NAME and row["lmfdb_version"] not in recorded:
+            if row["lmfdb_version"] != version:
+                state.update_attempt(db, row["id"], lmfdb_version=version)
+            batch[name] = _tables_entry(row)
     batch.update(tables_dict)
 
     # 3. Registry record: full table -> record/version mapping at this
@@ -606,21 +704,25 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
         json.dump(registry, F, indent=2, default=str)
         F.write("\n")
     reg_md5s = {regfile.name: packaging.hash_file(regfile)[1]}
-    reg_notes = "Registry for LMFDB data version %s." % version
-    aid = state.start_attempt(db, REGISTRY_NAME, owner, version, reg_md5s,
-                              notes=reg_notes)
-    state.update_attempt(db, aid, lmfdb_version=version)
-    manifest = {"artifacts": [], "source_files": {}}
-    deposit_md = metadata.deposit_metadata(
-        "LMFDB version registry", metadata.registry_description_html(),
-        version, community=cfg.community,
-        related_url="%s/version" % metadata.LMFDB_URL, notes=reg_notes)
-    client = ZenodoClient(cfg.token_for(owner), sandbox=cfg.sandbox, live=live)
-    row = _upload_record(db, client, cfg,
-                         state.latest_attempt(db, REGISTRY_NAME),
-                         REGISTRY_NAME, regdir, manifest, deposit_md)
-    if row is not None:
-        batch[REGISTRY_NAME] = _tables_entry(row)
+    prev = state.latest_published(db, REGISTRY_NAME)
+    if prev and prev["status"] == "verified" and prev["source_md5s"] == reg_md5s:
+        row = prev  # published by an interrupted finalize of this version
+    else:
+        reg_notes = "Registry for LMFDB data version %s." % version
+        attempt = _resume_or_start(db, REGISTRY_NAME, {
+            "owner": owner, "version": version, "bump": None,
+            "notes": reg_notes, "source_md5s": reg_md5s, "source_time": None})
+        state.update_attempt(db, attempt["id"], lmfdb_version=version)
+        deposit_md = metadata.deposit_metadata(
+            "LMFDB version registry", metadata.registry_description_html(),
+            version, community=cfg.community,
+            related_url="%s/version" % metadata.LMFDB_URL, notes=reg_notes)
+        row = _upload_record(db, _client(cfg, attempt["owner"], live), cfg,
+                             attempt, REGISTRY_NAME, regdir,
+                             {"artifacts": [], "source_files": {}}, deposit_md)
+        _require_verified(row, REGISTRY_NAME)
+    batch[REGISTRY_NAME] = _tables_entry(row)
+    _remove_package(staging, REGISTRY_NAME)
 
     # 4. Write the version history (prod, then grace for beta's benefit)
     row = state.version_row(major, "data", seq, editor=editor, tables=batch,
@@ -631,12 +733,24 @@ def finalize(db, cfg=None, live=False, editor=None, comment=None):
     return version
 
 
+def _require_verified(row, name):
+    if row is None:
+        raise RuntimeError("%s upload paused awaiting quota; resolve and "
+                           "re-run finalize" % name)
+    if row["status"] != "verified":
+        raise RuntimeError("%s record %s not verified: %s; resolve and re-run "
+                           "finalize" % (name, row["recid"], row["error"]))
+
+
 def build_registry(db, version):
-    """The JSON content of the registry record for a given data version."""
+    """
+    The JSON content of the registry record for a given data version.  It is
+    a function of the archive state alone (no timestamp of its own), so that
+    an interrupted finalize can recognize a registry it already published.
+    """
     published = state.all_latest_published(db)
     return {
         "lmfdb_version": version,
-        "generated": state.utcnow().isoformat(),
         "tables": {name: _tables_entry(row)
                    for name, row in published.items()
                    if name != REGISTRY_NAME},
@@ -721,8 +835,9 @@ def backfill(db, tables=None, dry_run=True, live=False, config=None,
     Resumable: published tables are skipped, completed dumps are reused (an
     interrupted dump is redone), and a table paused for a quota increase
     keeps its dump so that re-running resumes its upload.  Peak disk use is
-    one table's dump plus its compressed copy (plus the dumps of paused
-    tables).  Run off-peak; dumping reads from the live production database.
+    one table's dump plus its compressed copy (plus the dumps and packages
+    of paused or unverified tables).  Run off-peak; dumping reads from the
+    live production database.
     """
     import shutil
     cfg = config or ZenodoConfig()
@@ -793,13 +908,12 @@ def audit(db, config=None):
 
     # compare against when the archived dump was taken, not when its upload
     # finished: a paused upload can publish a dump that production has since
-    # replaced
+    # replaced.  Every logged operation changes the dump (schema changes and
+    # resorts included) except create_table_like, logged under its source.
     changed, never = [], []
     cur = db._execute(SQL(
         "SELECT tablename, MAX(time) FROM userdb.dbrecord "
-        "WHERE operation NOT IN ('resort', 'add_column', 'drop_column', "
-        "'create_table', 'create_extra_table', 'move_column') "
-        "GROUP BY tablename"))
+        "WHERE operation <> 'create_table_like' GROUP BY tablename"))
     last_change = dict(cur)
     for name in include:
         row = published.get(name)

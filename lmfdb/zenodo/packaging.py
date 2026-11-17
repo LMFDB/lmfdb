@@ -183,8 +183,10 @@ def compress_file(src, dst_dir, level=12, force_gzip=False):
         )
     else:
         dst = dst_dir / (src.name + ".gz")
-        with open(src, "rb") as F, gzip.open(dst, "wb",
-                                             compresslevel=min(level, 9)) as G:
+        # mtime=0 keeps the output byte-identical across runs, so that an
+        # unchanged file is not uploaded again
+        with open(src, "rb") as F, gzip.GzipFile(dst, "wb", mtime=0,
+                                                 compresslevel=min(level, 9)) as G:
             shutil.copyfileobj(F, G, BLOCKSIZE)
     return dst
 
