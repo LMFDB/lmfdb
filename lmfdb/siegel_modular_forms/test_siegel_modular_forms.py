@@ -545,3 +545,13 @@ class SmfTest(LmfdbTest):
         self.need_forms("2.P.2.3.6.a.a")
         data = self.check("2/P/2/3.6/a/a/", "T_{ p^2, 0 }")
         assert "so the table gives those of" not in data and "p T_{" not in data
+
+    def test_coefficient_ring(self):
+        """
+        The coefficient ring is shown as Z[lambda_1, ..., lambda_n], n the
+        hecke_ring_generator_nbound of the form
+        """
+        self.need_forms("2.K.992.3.0.a.t")
+        self.check("2/K/992/3.0/a/t/", r"\Z[\lambda_1, \ldots, \lambda_{9}]")
+        data = self.check("2/K/992/3.0/a/t/", "Coefficient ring")
+        assert r"\Z[a_1" not in data
