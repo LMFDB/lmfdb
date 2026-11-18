@@ -129,7 +129,7 @@ def decomp_postprocess(res, info, query):
 
 def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims, new_cusp_dim):
     # hecke_orbit_dims: the (dim, multiplicity) of the stored orbits of cusp forms (decomp_postprocess)
-    if not hecke_orbit_dims:
+    if not hecke_orbit_dims and not new_cusp_dim:
         return ''
     dim_dict = defaultdict(int)
     terms = []
@@ -960,8 +960,20 @@ def newspace_parse(info, query):
     if info['search_type'] != 'SpaceDimensions':
         parse_ints(info, query, 'num_forms', name='Number of newforms')
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
-            # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
-            query['num_forms'] = {'$exists':True}
+            # Don't show spaces that only include dimension data but no newforms.  num_forms
+            # is set only where the stored forms fill the space; the spaces where only some
+            # are stored (their Decomp. ends in "not computed") are shown too.
+            shown = {'$or': [{'num_forms': {'$exists': True}},
+                             {'label': {'$in': spaces_with_some_forms()}}]}
+            if '$or' in query:
+                query['$and'] = query.get('$and', []) + [{'$or': query.pop('$or')}, shown]
+            else:
+                query.update(shown)
+
+def spaces_with_some_forms():
+    """The labels of the spaces with num_forms NULL in which some forms are stored."""
+    complete = set(db.smf_newspaces.search({'num_forms': {'$exists': True}}, 'label'))
+    return sorted(set(db.smf_newforms.search({}, 'space_label')) - complete)
 
 def _trace_col(i):
     p = nth_prime(i+1)

@@ -577,11 +577,14 @@ class SmfTest(LmfdbTest):
         """
         from lmfdb.siegel_modular_forms.siegel_modular_form import display_decomp
         with self.app.test_request_context():
-            assert display_decomp(2, [10, 12], 'a', [], 27) == ''
+            assert display_decomp(2, [10, 12], 'a', [], 0) == ''
+            assert display_decomp(2, [10, 12], 'a', [], 27) == r'\(27\) not computed'
             full = display_decomp(924, [3, 0], 'a', [(1, 1), (1, 1), (2, 1)], 4)
             assert 'not computed' not in full and r'\(1\)+\(1\)' in full and r'\(2\)' in full
             part = display_decomp(2, [10, 12], 'a', [(1, 1), (1, 5), (1, 5)], 27)
             assert r'\(1\times5\)+\(1\times5\)' in part and r'\(16\) not computed' in part
-        # on the site: a level-2 space with lifts of multiplicity 5, partly stored (num_forms is NULL, hence all_spaces)
-        self.check("?search_type=Spaces&degree=2&family=P&level=2&weight=%2810%2C12%29&all_spaces=yes",
-                   ["2.P.2.10.12.a", r"\times5\)", "not computed"])
+        # on the site: a level-2 space with lifts of multiplicity 5, partly stored (num_forms is NULL);
+        # it is shown by default, since some of its forms are stored
+        for extra in ["&all_spaces=yes", ""]:
+            self.check("?search_type=Spaces&degree=2&family=P&level=2&weight=%2810%2C12%29" + extra,
+                       ["2.P.2.10.12.a", r"\times5\)", "not computed"])
