@@ -15,9 +15,10 @@ version footer keeps showing the legacy string until `zenodo_setup()` is run.
    schema; grants SELECT to the web role) and `userdb.zenodo_backups`, and
    records the initial major version from [lmfdb/version.py](../version.py).
    Beta has no version table (its footer says "LMFDB beta").
-4. Weekly audit cron entry on proddb:
+4. Weekly audit cron entry on proddb (`live=True` adds read-only lookups
+   of every record in the community listing on Zenodo):
 
-       0 3 * * 0     sage -python -c "from lmfdb import db; db.zenodo_audit()"
+       0 3 * * 0     sage -python -c "from lmfdb import db; db.zenodo_audit(live=True)"
 
 5. Code versions: the GitHub Action
    [code-version.yml](../../.github/workflows/code-version.yml) records each
@@ -154,3 +155,12 @@ the LMFDB data versions themselves (`2.3`, ...).
   assigned later); the registry record does, and is published only after
   its version is recorded.
 - Published records are permanent: the md5 gate prevents junk versions.
+- After each data version, its records are looked up in the community
+  listing, which Zenodo builds from its search index.  That index can miss
+  a record whose own metadata names the community (two records of the first
+  backfill, 2026-11-18), so a record still missing after two minutes is
+  re-published unchanged (same DOI, version and files), which has Zenodo
+  index it again.  A record that is not in the community at all, e.g. one
+  whose inclusion awaits a curator, is reported instead.
+  `db.zenodo_audit(live=True)` reports records missing from the listing and
+  `db.zenodo_reindex(live=True)` repairs them.

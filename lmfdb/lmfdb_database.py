@@ -805,15 +805,25 @@ class LMFDBDatabase(PostgresDatabase):
         from lmfdb.zenodo.backup import status
         return status(self)
 
-    def zenodo_audit(self):
+    def zenodo_audit(self, live=False):
         """
         Cross-check the Zenodo archive against the production change log
         (userdb.dbrecord), reporting tables changed since their last archive,
-        never archived, or not yet classified in tables.yaml.  Suitable for a
-        cron job.
+        never archived, or not yet classified in tables.yaml; with ``live``,
+        also records missing from the community listing on Zenodo.  Suitable
+        for a cron job.
         """
         from lmfdb.zenodo.backup import audit
-        return audit(self)
+        return audit(self, live=live)
+
+    def zenodo_reindex(self, tables=None, live=False):
+        """
+        Re-publish, unchanged, archived records missing from the community
+        listing on Zenodo, so that Zenodo indexes them again (record IDs,
+        DOIs, versions and files stay the same).
+        """
+        from lmfdb.zenodo.backup import reindex
+        return reindex(self, tables=tables, live=live)
 
     def zenodo_setup(self, git_hash=None, editor=None):
         """

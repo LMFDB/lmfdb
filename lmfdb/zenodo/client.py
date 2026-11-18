@@ -179,6 +179,21 @@ class ZenodoClient:
                           "import files into %s" % draft_id)
         return self.get_deposition(draft_id)
 
+    def republish(self, recid):
+        """
+        Publish record ``recid`` again unchanged (same DOI, version and
+        files), which makes Zenodo index it anew; an edit that fails to
+        publish is discarded, so no draft is left open.
+        """
+        self._request("POST", "/records/%s/draft" % recid, "edit %s" % recid)
+        try:
+            return self._request("POST", "/records/%s/draft/actions/publish"
+                                 % recid, "re-publish %s" % recid)
+        except Exception:
+            self._request("DELETE", "/records/%s/draft" % recid,
+                          "discard the edit of %s" % recid)
+            raise
+
     # Files ##########################################################
 
     def list_files(self, dep_id):
@@ -213,6 +228,18 @@ class ZenodoClient:
     def get_record(self, recid):
         return self._request("GET", "/records/%s" % recid,
                              "get record %s" % recid)
+
+    def in_community(self, community, recid):
+        """
+        Whether the community's listing on Zenodo shows record ``recid``
+        (latest versions only, as the listing does).  This asks Zenodo's
+        search index, which can miss a record that ``get_record`` reports as
+        a member.
+        """
+        found = self._request("GET", "/communities/%s/records" % community,
+                              "look up %s in %s" % (recid, community),
+                              params={"q": "id:%s" % recid, "size": 1})
+        return found["hits"]["total"] > 0
 
     def verify_record(self, recid, local_md5s):
         """

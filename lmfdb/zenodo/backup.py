@@ -28,6 +28,7 @@ uploaded.
 """
 
 import os
+import time
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -309,6 +310,88 @@ def _verify(db, client, aid, name, recid, uploaded):
     else:
         state.update_attempt(db, aid, status="verified", error=None)
     return state.get_attempt(db, aid)
+
+
+# Zenodo normally lists a new record in its community within seconds
+LISTING_WAIT = 120
+LISTING_POLL = 15
+
+
+def _check_listings(cfg, rows, client_for, repair, wait=None):
+    """
+    Check that the community's listing on Zenodo shows the records ``rows``
+    (``{name: attempt row}``), waiting up to ``wait`` seconds (default
+    ``LISTING_WAIT``) for recent ones to be indexed.  Zenodo's search index
+    can miss a record whose own metadata names the community (2026-11); with
+    ``repair``, such a record is re-published unchanged, which has Zenodo
+    index it again.  ``client_for(owner)`` gives a client with the owner's
+    token.  Returns ``{name: problem}`` for the records still not listed.
+    """
+    rows = {name: row for name, row in rows.items() if row is not None}
+    clients = {}
+
+    def client(row):
+        if row["owner"] not in clients:
+            clients[row["owner"]] = client_for(row["owner"])
+        return clients[row["owner"]]
+
+    def unlisted(names, wait):
+        deadline = time.time() + wait
+        while True:
+            names = [n for n in names if not client(rows[n]).in_community(
+                cfg.community, rows[n]["recid"])]
+            if not names or time.time() >= deadline:
+                return names
+            time.sleep(LISTING_POLL)
+
+    problems, repaired = {}, []
+    for name in unlisted(sorted(rows), LISTING_WAIT if wait is None else wait):
+        row = rows[name]
+        record = client(row).get_record(row["recid"])
+        members = [c.get("id") for c in
+                   record.get("metadata", {}).get("communities") or []]
+        if cfg.community not in members:
+            problems[name] = ("not in the %s community (inclusion awaiting a "
+                              "curator?)" % cfg.community)
+        elif repair:
+            print("%s: record %s is missing from the %s community listing; "
+                  "re-publishing it unchanged" % (name, row["recid"], cfg.community))
+            client(row).republish(row["recid"])
+            repaired.append(name)
+        else:
+            problems[name] = ("missing from the %s community listing; "
+                              "db.zenodo_reindex(live=True) re-publishes it"
+                              % cfg.community)
+    for name in unlisted(repaired, LISTING_WAIT):
+        problems[name] = ("still missing from the %s community listing after "
+                          "re-publishing" % cfg.community)
+    for name, problem in sorted(problems.items()):
+        print("LISTING PROBLEM for %s (record %s): %s"
+              % (name, rows[name]["recid"], problem))
+    return problems
+
+
+def reindex(db, tables=None, live=False, config=None):
+    """
+    Re-publish, unchanged, the archived records of ``tables`` (default: all)
+    that belong to the community but are missing from its listing on Zenodo
+    (see ``_check_listings``).  Returns ``{name: problem}`` for the records
+    still not listed.
+    """
+    cfg = config or ZenodoConfig()
+    _require_enabled(cfg)
+    if not live:
+        raise NotLive("reindex looks the records up on Zenodo; pass live=True")
+    db = _state_db(db, cfg)
+    with state.lock(db):
+        published = state.all_latest_published(db)
+        names = sorted(published) if tables is None else list(tables)
+        unknown = [n for n in names if n not in published]
+        if unknown:
+            raise ValueError("never archived: %s" % ", ".join(unknown))
+        return _check_listings(cfg, {n: published[n] for n in names},
+                               lambda owner: _client(db, cfg, owner, live),
+                               repair=True, wait=0)
 
 
 def _reconcile(db, cfg, live, names):
@@ -879,6 +962,15 @@ def _finalize(db, cfg, live, editor, comment, force=False):
 
     # 3. Registry record for it
     _complete_registry(db, cfg, live, owner, staging)
+
+    # 4. The community listing, which does not affect the version
+    rows[REGISTRY_NAME] = state.latest_published(db, REGISTRY_NAME)
+    try:
+        _check_listings(cfg, rows, lambda owner: _client(db, cfg, owner, live),
+                        repair=True)
+    except Exception as err:
+        print("Could not check the %s community listing (%s); run "
+              "db.zenodo_audit(live=True) later." % (cfg.community, err))
     return version
 
 
@@ -1140,7 +1232,7 @@ def _backfill(db, sdb, cfg, todo, live, editor):
                     comment="initial backfill")
 
 
-def audit(db, config=None):
+def audit(db, config=None, live=False):
     """
     Cross-check the archive against reality; returns (and prints) a report:
 
@@ -1151,9 +1243,12 @@ def audit(db, config=None):
       review
     - unfinished or failed upload attempts, and published records not
       verified against their checksums
+    - with ``live``, verified records missing from the community listing on
+      Zenodo (only lookups; ``reindex`` repairs them)
     """
     from psycodict import SQL
-    db = _state_db(db, config or ZenodoConfig())
+    cfg = config or ZenodoConfig()
+    db = _state_db(db, cfg)
     spec = load_tables_yaml()
     split = classify(db.tablenames, spec)
     include = split["yes"]
@@ -1188,7 +1283,13 @@ def audit(db, config=None):
         "unverified": [r for r in published.values() if r["status"] != "verified"],
         "failed": [r for r in
                    state._backup_rows(db, SQL(" WHERE status = 'failed'"), None)],
+        "unlisted": [],
     }
+    if live:
+        verified = {n: r for n, r in published.items() if r["status"] == "verified"}
+        report["unlisted"] = sorted(_check_listings(
+            cfg, verified, lambda owner: _client(db, cfg, owner, live),
+            repair=False, wait=0))
     for key, val in report.items():
         if val:
             if key in ("unfinished", "failed", "unverified"):

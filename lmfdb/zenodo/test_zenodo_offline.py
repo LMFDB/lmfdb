@@ -671,6 +671,34 @@ def test_new_version_reuses_an_open_draft():
     assert client.new_version(5)["id"] == 7 and importing not in sent
 
 
+def test_republish_discards_a_failed_edit():
+    pytest.importorskip("requests")
+    from lmfdb.zenodo.client import ZenodoError
+    sent = []
+
+    class Session:
+        def request(self, method, url, data=None, params=None, **kwds):
+            path = url.split("/api", 1)[1]
+            sent.append((method, path, params))
+            if path.endswith("/actions/publish"):
+                return _Response(400, {"message": "validation error"})
+            if path.startswith("/communities/"):
+                return _Response(200, {"hits": {"total": 1}})
+            return _Response(201, {})
+
+    client = ZenodoClient("fake-token", live=True, min_interval=0,
+                          log=lambda msg: None)
+    client._session = Session()
+    with pytest.raises(ZenodoError):
+        client.republish(7)
+    assert [s[:2] for s in sent] == [
+        ("POST", "/records/7/draft"), ("POST", "/records/7/draft/actions/publish"),
+        ("DELETE", "/records/7/draft")]
+    sent.clear()
+    assert client.in_community("lmfdb", 7)
+    assert sent == [("GET", "/communities/lmfdb/records", {"q": "id:7", "size": 1})]
+
+
 def test_upload_retry_resends_whole_file(tmp_path, monkeypatch):
     pytest.importorskip("requests")
     import time
@@ -1117,7 +1145,9 @@ class FakeZenodo:
     depositions refuse edits; setting ``lose_publish_response`` to a word of
     a record's title makes its next publication succeed but its response
     fail; ``fail_upload`` names a file whose next upload fails.  Records are
-    verified by the real client's checks.
+    verified by the real client's checks.  The community listing leaves out
+    the records in ``unlisted`` until they are re-published (unless also
+    ``stuck``), and those in ``outside``, which are not members.
     """
     verify_record = ZenodoClient.verify_record
 
@@ -1127,6 +1157,8 @@ class FakeZenodo:
         self.uploads, self.quota_raises, self.refuse_quota = [], [], False
         self.ops = []  # ("delete" | "upload", filename), in order
         self.lose_new_version_response = False
+        self.unlisted, self.stuck, self.outside = set(), set(), set()
+        self.republished = []
 
     def _new(self, files=None, concept=None):
         dep_id = self.next_id
@@ -1147,8 +1179,19 @@ class FakeZenodo:
         return self.deps[int(dep_id)]
 
     def get_record(self, recid):
+        files = self.deps.get(int(recid), {}).get("files", {})
         return {"files": [{"key": name, "checksum": "md5:" + md5}
-                          for name, md5 in self.deps[int(recid)]["files"].items()]}
+                          for name, md5 in files.items()],
+                "metadata": {"communities": [] if int(recid) in self.outside
+                             else [{"id": "lmfdb"}]}}
+
+    def in_community(self, community, recid):
+        return int(recid) not in self.unlisted | self.outside
+
+    def republish(self, recid):
+        self.republished.append(int(recid))
+        if int(recid) not in self.stuck:
+            self.unlisted.discard(int(recid))
 
     def new_version(self, recid):
         # like Zenodo's RDM API: an open new-version draft is returned again
@@ -1235,6 +1278,39 @@ def push_setup(db, tmp_path, monkeypatch):
     state.ensure_tables(db)
     state.insert_major(db, 2)
     return backup, state, fake, prod_config(tmp_path, enabled=True)
+
+
+def test_check_listings(tmp_path, monkeypatch):
+    pytest.importorskip("psycodict")
+    from lmfdb.zenodo import backup
+    sleeps = []
+    monkeypatch.setattr(backup.time, "sleep", sleeps.append)
+    fake = FakeZenodo()
+    cfg = ZenodoConfig(path=str(tmp_path / "missing.ini"))
+    rows = {name: {"recid": str(i), "owner": "roe"}
+            for i, name in [(1, "zzz_a"), (2, "zzz_b"), (3, "zzz_c"), (4, "zzz_d")]}
+    fake.unlisted, fake.stuck, fake.outside = {2, 4}, {4}, {3}
+
+    def check(repair, wait=0):
+        return backup._check_listings(cfg, rows, lambda owner: fake, repair, wait)
+    problems = check(repair=False)
+    assert sorted(problems) == ["zzz_b", "zzz_c", "zzz_d"] and not fake.republished
+    assert "awaiting a curator" in problems["zzz_c"]
+    monkeypatch.setattr(backup, "LISTING_WAIT", 0)
+    problems = check(repair=True)
+    assert fake.republished == [2, 4]
+    assert sorted(problems) == ["zzz_c", "zzz_d"]
+    assert "after re-publishing" in problems["zzz_d"]
+    # a record indexed a little late needs no repair
+    rows = {"zzz_e": {"recid": "5", "owner": "roe"}}
+    lookups = []
+
+    def late(community, recid):
+        lookups.append(recid)
+        return len(lookups) > 2
+    fake.in_community = late
+    assert check(repair=True, wait=1000) == {}
+    assert len(lookups) == 3 and len(sleeps) == 2 and fake.republished == [2, 4]
 
 
 def test_push_waits_for_paused_upload(scratch_db, tmp_path, monkeypatch):
@@ -1590,6 +1666,33 @@ def test_quota_is_raised_for_large_records(scratch_db, tmp_path, monkeypatch):
                                 config=cfg)
     recid = int(state.latest_published(db, "zzz_a")["recid"])
     assert plan["version"] == "2.1" and (recid, 1) in fake.quota_raises
+
+
+def test_push_republishes_records_missing_from_the_listing(scratch_db, tmp_path,
+                                                        monkeypatch):
+    from psycodict import SQL
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(backup, "LISTING_WAIT", 0)
+    for t in ["zzz_a", "zzz_b"]:
+        make_dump(tmp_path / "push", t)
+    fake.on_publish = lambda dep: (fake.unlisted.add(dep["id"])
+                                   if "zzz_b" in dep["metadata"]["title"] else None)
+    plan = backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                                config=cfg)
+    recid = int(state.latest_published(db, "zzz_b")["recid"])
+    assert plan["version"] == "2.1" and fake.republished == [recid]
+    assert not fake.unlisted
+    # the audit only reports; reindex repairs
+    db._execute(SQL("CREATE TABLE userdb.dbrecord "
+                    "(tablename text, operation text, time timestamp)"))
+    db.tablenames = ["zzz_a", "zzz_b"]
+    fake.unlisted.add(recid)
+    assert backup.audit(db, config=cfg, live=True)["unlisted"] == ["zzz_b"]
+    assert backup.audit(db, config=cfg)["unlisted"] == []
+    assert fake.republished == [recid]
+    assert backup.reindex(db, tables=["zzz_b"], live=True, config=cfg) == {}
+    assert fake.republished == [recid, recid] and not fake.unlisted
 
 
 def test_update_prod_lock_is_reentrant(scratch_db, tmp_path, monkeypatch):
