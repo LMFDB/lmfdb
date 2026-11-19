@@ -410,7 +410,7 @@ Testing
 The devmirror test jobs in CI do not fetch most of their data from devmirror, whose bandwidth is limited. They replay database results from a *query tape*: a SQLite file published as `dbtape.sqlite.gz` in the [`ci-dbtape` release](https://github.com/LMFDB/lmfdb/releases/tag/ci-dbtape). The plugin that records and replays it is `conftest.py`, at the top of the repository.
 
 - Queries missing from the tape go to devmirror as usual, so a pull request that adds queries still works; those queries just run live. Each test job's summary says how many queries the tape served, and its `dbtape-log-*` artifact lists the ones it did not.
-- Every run of the Tests workflow on `main` (each push, and one a day) records what its tests fetched and publishes a new tape.
+- Every run of the Tests workflow on `main` (each push, and one a day) records what its tests fetched and publishes a new tape. Only results read to the end are recorded, so a search that a test stops reading early always runs live.
 - Results for a table go stale when the table is edited. LMFDB logs every psycodict editing operation (`reload`, `update_from_file`, `add_column`, ...) in `userdb.dbrecord`, and when the public `lmfdb` role can read that table's `tablename` and `time` columns and it has an index on `time`, replays fetch tables edited since they were recorded from the database instead. So after changing data that a pull request depends on, rerunning its tests is enough.
 - For an edit the log does not show, run the Tests workflow on `main` from the Actions tab with the table names in `stale_tables` (or `all`). Results more than one to three weeks old are refreshed anyway.
 
@@ -420,6 +420,17 @@ curl -L https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite
 DBTAPE_MODE=replay PYTHONHASHSEED=0 ./test.sh lmfdb/elliptic_curves
 ```
 and `python3 conftest.py describe dbtape.sqlite` summarizes what it holds.
+
+A first tape, or a refresh with `stale_tables=all`, cannot be recorded through devmirror within a test job's time limit: the largest test files fetch about 50 MB each. Record it where the database is fast instead, from a checkout whose `config.ini` points there and with the psycodict version CI installs, and upload it (this needs write access to LMFDB/lmfdb):
+```bash
+jq -r '.[] | select(.server == "devmirror" and .files != "lint") | .files' .github/workflows/matrix_includes.json | tr ' ' '\n' > dbtape-files.txt
+DBTAPE_MODE=record DBTAPE_FILE=none DBTAPE_OUT=dbtape-out tox -e tests -- $(cat dbtape-files.txt)
+test $(ls dbtape-out/*.sqlite | wc -l) -eq $(wc -l < dbtape-files.txt)
+python3 conftest.py merge dbtape.sqlite dbtape-out/*.sqlite
+gzip -9 dbtape.sqlite
+gh release upload ci-dbtape dbtape.sqlite.gz --clobber --repo LMFDB/lmfdb
+```
+The `test` line checks that every test file ran to the end and left a tape. If the release does not exist yet, create it first with `gh release create ci-dbtape --repo LMFDB/lmfdb --prerelease --latest=false --title "CI query tape" --notes "See Query tape in Development.md"`. The runs on `main` continue from the uploaded tape.
 
 Code Snippets 
 -------------

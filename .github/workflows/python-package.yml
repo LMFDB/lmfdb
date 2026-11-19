@@ -133,10 +133,17 @@ jobs:
         STALE_TABLES: ${{ inputs.stale_tables }}
       run: |
         url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz
-        if curl -fsSL --retry 3 "$url" | gunzip > dbtape.sqlite; then
+        code=$(curl -sSL --retry 3 -o dbtape.sqlite.gz -w '%{http_code}' "$url") || true
+        if [ "$code" = 200 ] && gunzip -f dbtape.sqlite.gz; then
           echo "DBTAPE_FILE=$PWD/dbtape.sqlite" >> "$GITHUB_ENV"
         else
-          rm -f dbtape.sqlite
+          rm -f dbtape.sqlite dbtape.sqlite.gz
+          # A shard recording without the tape picks its own seed, and the
+          # shards' tapes then cannot be merged.  404 means there is no tape yet.
+          if [ "$RECORD" = true ] && [ "$code" != 404 ]; then
+            echo "::error::Could not fetch the query tape (HTTP $code), so this shard cannot record"
+            exit 1
+          fi
           echo "::warning::Could not fetch the query tape, so every query goes to devmirror"
         fi
         if [ "$RECORD" = true ]; then

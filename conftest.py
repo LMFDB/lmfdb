@@ -1,3 +1,4 @@
+# Author: David Roe
 """
 Record and replay the database queries made by the test suite.
 
@@ -11,15 +12,19 @@ so that test runs can be served from the tape instead.
 - DBTAPE_MODE=record: the same, except the results fetched from the database
   are recorded, and every entry used is written to a new tape in the
   directory DBTAPE_OUT, one per pytest process; `python3 conftest.py merge`
-  combines them.  Without DBTAPE_FILE this records the whole run.
+  combines them.  Without DBTAPE_FILE this records the whole run.  Only
+  results read to the end are recorded, so a search stopped early always
+  runs live.
 - Without DBTAPE_MODE this file does nothing.
 
 A table counts as edited when userdb.dbrecord, where LMFDB's _log_db_change
 logs every psycodict editing operation, has an entry for it later than the
 recording.  DBTAPE_STALE lists further tables to treat as edited ("all" for
-every table).  When recording, results older than DBTAPE_MAX_AGE_DAYS (7 to
-21 days by default) are fetched again too, which catches edits made outside
-psycodict.  See the "Query tape" section of Development.md.
+every table).  The results of catalog queries, which psycodict reads its
+registry of tables from, go stale together after any edit.  When recording,
+results older than DBTAPE_MAX_AGE_DAYS (7 to 21 days by default, 14 for the
+catalog) are fetched again too, which catches edits made outside psycodict.
+See the "Query tape" section of Development.md.
 
 This is a root conftest.py so that pytest loads it before any test module
 imports lmfdb, which connects and reads the table metadata at import time.
@@ -45,7 +50,7 @@ MODE = os.environ.get("DBTAPE_MODE", "")
 # Edit-log times come from the editors' clocks.
 CLOCK_SKEW = datetime.timedelta(hours=1)
 # Bump when the encoding changes; a tape of another format is ignored.
-FORMAT = "1"
+FORMAT = "2"
 
 _tape = None
 
@@ -184,28 +189,34 @@ def _same(a, b):
         return False
 
 
-def _pack(rowcount, rows):
+def _row_json(row):
     """
-    The stored form of a result.  Raises Unrecordable unless unpacking it
-    gives back the same rows.
+    The stored form of one row.  Raises Unrecordable unless decoding it gives
+    back the same row.
     """
+    row = tuple(row)
     try:
-        stored = [rowcount, [_encode(list(r)) for r in rows]]
-        blob = json.dumps(stored, separators=(",", ":")).encode()
-        same = _same(list(rows), _unpack(blob)[1])
+        text = json.dumps(_encode(list(row)), separators=(",", ":"))
+        same = _same(row, tuple(_decode(json.loads(text))))
     except Unrecordable:
         raise
     except Exception as err:
         raise Unrecordable("%s: %s" % (type(err).__name__, err))
     if not same:
         raise Unrecordable("round trip")
-    return zlib.compress(blob, 6)
+    return text
+
+
+def _pack(rowcount, rows):
+    """
+    The stored form of a result, from its rows or (as str) their stored forms.
+    """
+    rows = [r if type(r) is str else _row_json(r) for r in rows]
+    return zlib.compress(("[%d,[%s]]" % (rowcount, ",".join(rows))).encode(), 6)
 
 
 def _unpack(blob):
-    if blob[:1] != b"[":
-        blob = zlib.decompress(blob)
-    rowcount, rows = json.loads(blob)
+    rowcount, rows = json.loads(zlib.decompress(blob))
     return rowcount, [tuple(_decode(r)) for r in rows]
 
 
@@ -228,12 +239,13 @@ def is_catalog(table):
     return table.startswith(("pg_", "information_schema.", "meta_"))
 
 
-def _family(table):
-    # psycodict rebuilds a table's _counts and _stats along with it.
-    for suffix in ("_counts", "_stats"):
-        if table.endswith(suffix):
-            return table[:-len(suffix)]
-    return table
+def edited_relations(table):
+    """
+    The relations an edit logged for ``table`` can change.  psycodict logs
+    edits under the search table's name, and names its counts and stats
+    tables by appending these suffixes to it.
+    """
+    return (table, table + "_counts", table + "_stats")
 
 
 def create_tables(conn, recordings=False):
@@ -242,59 +254,40 @@ def create_tables(conn, recordings=False):
     process's own tape) every recording made, for merge() to choose from.
     """
     conn.execute("CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)")
-    # k: hash of the SQL q; c: whether all n rows of the result are stored;
-    # r: when it was recorded (UTC); t: the tables q reads; v: the result
-    conn.execute("CREATE TABLE IF NOT EXISTS tape (k TEXT%s, c INTEGER, n INTEGER, r TEXT, t TEXT, q TEXT, v BLOB)"
+    # k: hash of the SQL q; r: when it was recorded (UTC); t: the tables q
+    # reads; v: the result
+    conn.execute("CREATE TABLE IF NOT EXISTS tape (k TEXT%s, r TEXT, t TEXT, q TEXT, v BLOB)"
                  % ("" if recordings else " PRIMARY KEY"))
-
-
-def _stored_rows(blob):
-    return json.loads(zlib.decompress(blob))[1]
-
-
-def _agrees(older, older_rows, newer, newer_rows):
-    """
-    Whether the result recorded in ``older`` can still be the current one,
-    given the later recording ``newer``.
-    """
-    if older[6] == newer[6]:
-        return True
-    shared = min(older[2], newer[2])
-    # _same, unlike ==, tells true, 1 and 1.0 apart.
-    if not _same(older_rows[:shared], newer_rows[:shared]):
-        return False
-    if newer[1]:
-        return older[2] == newer[2] if older[1] else older[2] <= newer[2]
-    return not older[1] or older[2] >= newer[2]
 
 
 def choose(recordings):
     """
-    Which of all the recordings (tape rows) of one query to keep: of those
-    every later recording agrees with, the one covering the most of the
-    result.  The newest always qualifies; an older one keeps its own
-    recording time, so it goes stale no later than it should.
+    Which of all the recordings (tape rows) of one query to keep: the newest,
+    and of those made in the same second, the same one whatever their order.
     """
-    recordings = sorted(set(recordings), key=lambda rec: (rec[3], rec[1], rec[2], rec[6]))
-    rows = [_stored_rows(rec[6]) for rec in recordings]
-    current = [rec for i, rec in enumerate(recordings)
-               if all(_agrees(rec, rows[i], recordings[j], rows[j]) for j in range(i + 1, len(recordings)))]
-    return max(current, key=lambda rec: (rec[1], rec[2], rec[3], rec[6]))
+    return max(recordings, key=lambda rec: (rec[1], rec[4]))
 
 
 class _Entry:
     """
-    A result being recorded.  Rows from a server-side cursor are recorded as
-    the caller reads them, so a long result read only in part is stored in part.
+    A result being recorded.  Each row is stored as it is fetched, before the
+    caller can change it.
     """
 
-    def __init__(self, key, sql, rowcount, rows, complete):
+    def __init__(self, key, sql, rowcount):
         self.key = key
         self.sql = sql
         self.rowcount = rowcount
-        self.rows = rows
-        self.complete = complete
+        self.rows = []
+        self.error = None
         self.recorded = _utcnow().isoformat(timespec="seconds")
+
+    def add(self, rows):
+        if self.error is None:
+            try:
+                self.rows.extend(_row_json(r) for r in rows)
+            except Unrecordable as err:
+                self.error = str(err)
 
 
 class Tape:
@@ -308,16 +301,17 @@ class Tape:
     def __init__(self, mode, src=None, out=None, stale=(), max_age=datetime.timedelta(days=14),
                  misslog=None, seed=None):
         self.mode = mode
-        self.forced = set(stale)
+        self.all_stale = "all" in stale
+        self.forced = {rel for table in stale for rel in edited_relations(table)}
         self.max_age = max_age
         self.misslog = misslog
         self.where = "collection"
-        self.stats = dict.fromkeys(["hit", "miss", "stale", "partial", "recorded", "unrecordable"], 0)
-        self.pending = set()
+        self.stats = dict.fromkeys(["hit", "miss", "stale", "recorded", "unrecordable", "unfinished"], 0)
         self.copied = set()
         self.changes = None
         self.edit_log = "not read"
         self.since = None
+        self.catalog_recorded = None
         self.now = _utcnow()
         self.src = None
         self.out = None
@@ -332,13 +326,17 @@ class Tape:
                                  % (src, meta.get("format"), FORMAT))
                 self.src, meta = None, {}
         self.seed = meta.get("seed")
-        if self.seed is None or (mode == "record" and "all" in self.forced):
+        if self.seed is None or (mode == "record" and self.all_stale):
             # A full recording is free to pick new random objects.
             self.seed = seed or str(int(time.time()))
         if self.src is not None:
             oldest = self.src.execute("SELECT min(r) FROM tape").fetchone()[0]
             if oldest is not None:
                 self.since = datetime.datetime.fromisoformat(oldest) - CLOCK_SKEW
+            catalog = [r for t, r in self.src.execute("SELECT t, r FROM tape")
+                       if any(is_catalog(x) for x in t.split())]
+            if catalog:
+                self.catalog_recorded = min(catalog)
         if mode == "record":
             self.out = sqlite3.connect(out + ".part", isolation_level=None)
             self.out.execute("PRAGMA synchronous=OFF")
@@ -351,7 +349,6 @@ class Tape:
 
     def close(self, complete=True):
         if self.recording:
-            self.flush()
             self.out.close()
             self.out = None
             if complete:
@@ -388,71 +385,67 @@ class Tape:
         self.changes = {}
         for table, when in rows:
             if table and when:
-                family = _family(table)
-                self.changes[family] = max(self.changes.get(family, when), when)
+                for rel in edited_relations(table):
+                    self.changes[rel] = max(self.changes.get(rel, when), when)
 
     def is_stale(self, key, tables, recorded):
-        if "all" in self.forced:
+        if self.all_stale:
             return True
-        families = {_family(t) for t in tables}
         catalog = any(is_catalog(t) for t in tables)
-        if families & self.forced or (catalog and self.forced):
-            return True
-        recorded = datetime.datetime.fromisoformat(recorded)
-        if self.recording:
+        if catalog:
+            # psycodict checks the catalog results against each other, so
+            # they must all describe the database at the same time.
+            if self.forced:
+                return True
+            recorded, spread = self.catalog_recorded or recorded, 1
+        else:
+            if self.forced.intersection(tables):
+                return True
             # Spread expiry over 0.5 to 1.5 times max_age so a tape recorded
             # all at once is refreshed a little at a time.
             spread = 0.5 + int(key[:8], 16) / 2**32
-            if self.now - recorded > self.max_age * spread:
-                return True
+        recorded = datetime.datetime.fromisoformat(recorded)
+        if self.recording and self.now - recorded > self.max_age * spread:
+            return True
         if not self.changes:
             return False
         cutoff = recorded - CLOCK_SKEW
         if catalog:
             return max(self.changes.values()) > cutoff
-        return any(f in self.changes and self.changes[f] > cutoff for f in families)
+        return any(self.changes.get(t, cutoff) > cutoff for t in tables)
 
     def lookup(self, key):
         """
-        The stored result for ``key`` as (rowcount, rows, complete), or why
-        there is none to use: "miss" or "stale".
+        The stored result for ``key`` as (rowcount, rows), or why there is
+        none to use: "miss" or "stale".
         """
         if self.src is None:
             return "miss"
-        row = self.src.execute("SELECT c, r, t, v FROM tape WHERE k = ?", (key,)).fetchone()
+        row = self.src.execute("SELECT r, t, v FROM tape WHERE k = ?", (key,)).fetchone()
         if row is None:
             return "miss"
-        complete, recorded, tables, blob = row
+        recorded, tables, blob = row
         if self.is_stale(key, tables.split(), recorded):
             return "stale"
         if self.recording and key not in self.copied:
             self.copied.add(key)
-            self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)",
+            self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)",
                              self.src.execute("SELECT * FROM tape WHERE k = ?", (key,)).fetchone())
-        rowcount, rows = _unpack(blob)
-        return rowcount, rows, bool(complete)
-
-    def track(self, entry):
-        self.pending.add(entry)
-        if entry.complete:
-            self.write(entry)
+        return _unpack(blob)
 
     def write(self, entry):
-        self.pending.discard(entry)
-        try:
-            blob = _pack(entry.rowcount, entry.rows)
-        except Unrecordable as err:
+        if entry.error is not None:
             self.stats["unrecordable"] += 1
-            self.log("unrecordable (%s)" % err, entry.sql)
+            self.log("unrecordable (%s)" % entry.error, entry.sql)
             return
-        self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)",
-                         (entry.key, int(entry.complete), len(entry.rows), entry.recorded,
-                          " ".join(tables_read(entry.sql)), entry.sql, blob))
+        self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)",
+                         (entry.key, entry.recorded, " ".join(tables_read(entry.sql)), entry.sql,
+                          _pack(entry.rowcount, entry.rows)))
         self.stats["recorded"] += 1
 
-    def flush(self):
-        for entry in list(self.pending):
-            self.write(entry)
+    def drop(self, entry):
+        self.stats["unfinished"] += 1
+        self.log("unfinished", entry.sql)
 
     def log(self, kind, sql):
         if self.misslog:
@@ -477,9 +470,7 @@ class TapeCursor:
         self.rowcount = -1
         self._rows = None
         self._pos = 0
-        self._complete = True
         self._live = None
-        self._replayed = None
         self._entry = None
 
     @property
@@ -514,74 +505,54 @@ class TapeCursor:
             tape.read_edit_log(self._db.conn)
         sql = ClientCursor(self._db.conn).mogrify(query, params)
         key = hashlib.sha256(sql.encode()).hexdigest()
-        self._finish_entry()
-        self._pos = 0
-        self._live = None
-        self._replayed = None
+        self._drop_entry()
+        self._rows, self._pos, self._live = None, 0, None
         found = tape.lookup(key)
         if type(found) is tuple:
             tape.stats["hit"] += 1
-            self.rowcount, self._rows, self._complete = found
-            self._replayed = (query, params, kwargs, key, sql)
+            self.rowcount, self._rows = found
             return self
         real = self._get_real()
         real.execute(query, params, **kwargs)
         self.rowcount = real.rowcount
         if real.description is None:
             # SET, BEGIN and the like: always run, never recorded
-            self._rows, self._complete = None, True
             return self
         tape.stats[found] += 1
         tape.log(found, sql)
+        if tape.recording:
+            self._entry = _Entry(key, sql, self.rowcount)
         if self.withhold:
-            self._rows, self._complete, self._live = [], False, iter(real)
+            self._live = iter(real)
         else:
-            self._rows, self._complete = real.fetchall(), True
-        self._record(key, sql)
+            self._rows = real.fetchall()
+            self._finish_entry(self._rows)
         return self
 
-    def _record(self, key, sql):
-        if self._tape.recording:
-            self._entry = _Entry(key, sql, self.rowcount, self._rows, self._complete)
-            self._tape.track(self._entry)
-
-    def _finish_entry(self):
-        if self._entry is not None and self._entry in self._tape.pending:
+    def _finish_entry(self, rows):
+        if self._entry is not None:
+            self._entry.add(rows)
             self._tape.write(self._entry)
-        self._entry = None
+            self._entry = None
+
+    def _drop_entry(self):
+        if self._entry is not None:
+            self._tape.drop(self._entry)
+            self._entry = None
 
     def _next(self):
-        rows = self._rows
-        if rows is None:
+        if self._live is not None:
+            row = next(self._live, None)
+            if row is None:
+                self._live = None
+                self._finish_entry(())
+            elif self._entry is not None:
+                self._entry.add((row,))
+            return row
+        if self._rows is None or self._pos == len(self._rows):
             return None
-        if self._pos < len(rows):
-            self._pos += 1
-            return rows[self._pos - 1]
-        if self._complete:
-            return None
-        if self._live is None:
-            # Read past the stored part of a result: rerun it live and skip
-            # the rows already served.
-            self._tape.stats["partial"] += 1
-            query, params, kwargs, key, sql = self._replayed
-            self._tape.log("partial", sql)
-            real = self._get_real()
-            real.execute(query, params, **kwargs)
-            self._live = iter(real)
-            for _ in range(len(rows)):
-                next(self._live, None)
-            self._record(key, sql)
-        try:
-            row = next(self._live)
-        except StopIteration:
-            self._complete = True
-            if self._entry is not None:
-                self._entry.complete = True
-                self._finish_entry()
-            return None
-        rows.append(row)
         self._pos += 1
-        return row
+        return self._rows[self._pos - 1]
 
     def fetchone(self):
         return self._next()
@@ -602,7 +573,7 @@ class TapeCursor:
         return iter(self._next, None)
 
     def close(self):
-        self._finish_entry()
+        self._drop_entry()
         if self._real is not None:
             self._real.close()
         self.closed = True
@@ -678,12 +649,10 @@ def pytest_runtest_setup(item):
 def pytest_terminal_summary(terminalreporter, config):
     if _tape is None:
         return
-    if _tape.recording:
-        _tape.flush()
     s = _tape.stats
-    line = "%s hits, %s misses, %s stale, %s partial" % (s["hit"], s["miss"], s["stale"], s["partial"])
+    line = "%s hits, %s misses, %s stale" % (s["hit"], s["miss"], s["stale"])
     if _tape.recording:
-        line += ", %s recorded, %s unrecordable" % (s["recorded"], s["unrecordable"])
+        line += ", %s recorded, %s unrecordable, %s read in part" % (s["recorded"], s["unrecordable"], s["unfinished"])
     line = "dbtape %s (%s): %s; edit log %s" % (MODE, " ".join(config.args), line, _tape.edit_log)
     terminalreporter.write_line(line)
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -706,9 +675,8 @@ def pytest_unconfigure(config):
 
 def merge(out, inputs):
     """
-    Combine the tapes written by several test processes into one, choosing
-    among all the recordings of each query at once, so that the order of
-    ``inputs`` does not matter.
+    Combine the tapes written by several test processes into one, keeping
+    the newest recording of each query whatever the order of ``inputs``.
     """
     if os.path.exists(out):
         os.remove(out)
@@ -723,7 +691,7 @@ def merge(out, inputs):
             raise ValueError("%s has tape format %s, not %s" % (path, meta.get("format"), FORMAT))
         seeds.add(meta["seed"])
         conn.execute("BEGIN")
-        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?, ?, ?)", src.execute("SELECT * FROM tape"))
+        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)", src.execute("SELECT * FROM tape"))
         conn.execute("COMMIT")
         src.close()
     if len(seeds) != 1:
@@ -731,7 +699,7 @@ def merge(out, inputs):
     conn.execute("BEGIN")
     seen = conn.cursor().execute("SELECT * FROM seen ORDER BY k")
     for _, recordings in itertools.groupby(seen, key=lambda rec: rec[0]):
-        conn.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?, ?, ?)", choose(list(recordings)))
+        conn.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)", choose(recordings))
     conn.execute("COMMIT")
     conn.execute("DROP TABLE seen")
     conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?), ('created', ?)",
@@ -744,10 +712,9 @@ def describe(path):
     conn = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
     for k, v in conn.execute("SELECT k, v FROM meta ORDER BY k"):
         print("%s: %s" % (k, v))
-    n, size, partial, oldest, newest = conn.execute(
-        "SELECT count(*), sum(length(v)), sum(1 - c), min(r), max(r) FROM tape").fetchone()
-    print("%s results, %.1f MB compressed, %s partial, recorded %s to %s"
-          % (n, (size or 0) / 1e6, partial or 0, oldest, newest))
+    n, size, oldest, newest = conn.execute(
+        "SELECT count(*), sum(length(v)), min(r), max(r) FROM tape").fetchone()
+    print("%s results, %.1f MB compressed, recorded %s to %s" % (n, (size or 0) / 1e6, oldest, newest))
     print("largest tables:")
     sizes = {}
     for tables, size in conn.execute("SELECT t, length(v) FROM tape"):

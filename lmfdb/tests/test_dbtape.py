@@ -1,3 +1,4 @@
+# Author: David Roe
 # Tests for the query tape: conftest.py at the top of the repository, which
 # lets CI replay database results instead of fetching them from devmirror.
 
@@ -112,7 +113,7 @@ class DbTapeTest(unittest.TestCase):
         dbtape.create_tables(conn)
         conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', '5')", (dbtape.FORMAT,))
         for name, tables, recorded in entries:
-            conn.execute("INSERT INTO tape VALUES (?, 1, 1, ?, ?, 'q', ?)",
+            conn.execute("INSERT INTO tape VALUES (?, ?, ?, 'q', ?)",
                          (key(name), recorded.isoformat(timespec="seconds"), tables, dbtape._pack(1, [(1,)])))
         conn.commit()
         conn.close()
@@ -126,6 +127,7 @@ class DbTapeTest(unittest.TestCase):
         with using(rec):
             result = action()
         self.assertEqual(rec.stats["unrecordable"], 0)
+        self.recorded_stats = rec.stats
         dbtape.merge(self.path("tape.sqlite"), [self.path("rec.sqlite")])
         return result, self.path("tape.sqlite")
 
@@ -150,19 +152,33 @@ class DbTapeTest(unittest.TestCase):
             return (db.nf_fields.lookup("2.0.3.1", ["label", "disc_abs", "coeffs"]),
                     list(db.nf_fields.search({"degree": 2, "disc_abs": {"$lte": 20}}, ["label", "class_number"])),
                     db.nf_fields.count({"degree": 2, "disc_abs": {"$lte": 20}}),
+                    list(db.nf_fields.search({"degree": 2, "disc_abs": {"$lte": 20}}, "label", limit=None)),
                     list(islice(db.nf_fields.search({"degree": 2}, "label", limit=None), 3)))
         recorded, path = self.record(queries)
+        self.assertEqual(self.recorded_stats["unfinished"], 1)
         replay = dbtape.Tape("replay", src=path)
         with using(replay):
             replayed = queries()
-            # Only three rows of this search were recorded.
             longer = list(islice(db.nf_fields.search({"degree": 2}, "label", limit=None), 5))
         self.assertEqual(replayed, recorded)
-        self.assertEqual(longer[:3], recorded[3])
+        self.assertEqual(longer[:3], recorded[4])
         self.assertEqual(len(longer), 5)
         self.assertGreater(replay.stats["hit"], 0)
-        self.assertEqual(replay.stats["miss"], 0)
-        self.assertEqual(replay.stats["partial"], 1)
+        # The search read only in part was not recorded, so it ran live both times.
+        self.assertEqual(replay.stats["miss"], 2)
+
+    def test_rows_are_recorded_as_fetched(self):
+        def search(limit):
+            out = []
+            for rec in db.nf_fields.search({"degree": 2, "disc_abs": {"$lte": 20}}, ["label", "coeffs"], limit=limit):
+                out.append(str(rec))
+                # As lmfdb/utils/uploader.py does with a jsonb column
+                rec["coeffs"].append(99)
+            return out
+        for limit in [None, 100]:
+            recorded, path = self.record(lambda: search(limit))
+            with using(dbtape.Tape("replay", src=path)):
+                self.assertEqual(search(limit), recorded)
 
     def test_server_side_cursors_are_closed(self):
         def search():
@@ -204,22 +220,38 @@ class DbTapeTest(unittest.TestCase):
                    ("edited before", "nf_fields", now - DAY),
                    ("within clock skew", "g2c_curves", now - 2 * DAY + HOUR / 2),
                    ("catalog", "pg_class pg_namespace", now - DAY),
-                   ("untouched", "lfunc_lfunctions", now - 3 * DAY)]
+                   ("older catalog", "meta_tables", now - 3 * DAY),
+                   ("untouched", "lfunc_lfunctions", now - 3 * DAY),
+                   # a search table whose own name ends in _stats
+                   ("stats-named", "hgcwa_per_group_stats", now - DAY),
+                   ("its stats", "hgcwa_per_group_stats_stats", now - DAY)]
         path = self.make_tape(entries)
 
         def stale(tape):
             return {name for name, _, _ in entries if tape.lookup(key(name)) == "stale"}
         tape = dbtape.Tape("replay", src=path)
         self.assertEqual(stale(tape), set())
-        tape.changes = {"ec_curvedata": now - 5 * HOUR, "nf_fields": now - 2 * DAY, "g2c_curves": now - 2 * DAY}
-        self.assertEqual(stale(tape), {"edited", "same family", "within clock skew", "catalog"})
+        tape.read_edit_log(FakeConnection(rows=[("ec_curvedata", now - 5 * HOUR), ("nf_fields", now - 2 * DAY),
+                                                ("g2c_curves", now - 2 * DAY)]))
+        self.assertEqual(stale(tape), {"edited", "same family", "within clock skew", "catalog", "older catalog"})
+        tape.read_edit_log(FakeConnection(rows=[("hgcwa_per_group_stats", now - 5 * HOUR)]))
+        self.assertEqual(stale(tape), {"stats-named", "its stats", "catalog", "older catalog"})
+        # The catalog results go stale together, even when only the older
+        # ones were recorded before the edit.
+        tape.read_edit_log(FakeConnection(rows=[("mf_newforms", now - 2 * DAY)]))
+        self.assertEqual(stale(tape), {"catalog", "older catalog"})
         tape = dbtape.Tape("replay", src=path, stale=["lfunc_lfunctions"])
-        self.assertEqual(stale(tape), {"untouched", "catalog"})
-        # Only recording refreshes results by age.
+        self.assertEqual(stale(tape), {"untouched", "catalog", "older catalog"})
+        tape = dbtape.Tape("replay", src=path, stale=["hgcwa_per_group_stats"])
+        self.assertEqual(stale(tape), {"stats-named", "its stats", "catalog", "older catalog"})
+        # Only recording refreshes results by age, and the catalog all at once.
         tape = dbtape.Tape("replay", src=path, max_age=HOUR)
         self.assertEqual(stale(tape), set())
         tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=HOUR)
         self.assertEqual(stale(tape), {name for name, _, _ in entries})
+        tape.close()
+        tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=2 * DAY)
+        self.assertTrue({"catalog", "older catalog"} <= stale(tape))
         tape.close()
 
     def test_edit_log(self):
@@ -231,8 +263,10 @@ class DbTapeTest(unittest.TestCase):
         self.assertIsNone(tape.changes)
         tape.read_edit_log(FakeConnection(error=psycopg.errors.InsufficientPrivilege("denied")))
         self.assertEqual(tape.edit_log, "unreadable (InsufficientPrivilege)")
-        tape.read_edit_log(FakeConnection(rows=[("ec_curvedata_stats", now), ("ec_curvedata", now - HOUR)]))
-        self.assertEqual(tape.changes, {"ec_curvedata": now})
+        tape.read_edit_log(FakeConnection(rows=[("ec_curvedata", now - HOUR), ("ec_curvedata_counts", now)]))
+        self.assertEqual(tape.changes, {"ec_curvedata": now - HOUR, "ec_curvedata_stats": now - HOUR,
+                                        "ec_curvedata_counts": now, "ec_curvedata_counts_counts": now,
+                                        "ec_curvedata_counts_stats": now})
         # Whatever the real database allows, reading the log leaves the connection usable.
         tape.read_edit_log(db.conn)
         self.assertTrue(db.nf_fields.exists({"label": "2.0.3.1"}))
@@ -264,64 +298,60 @@ class DbTapeTest(unittest.TestCase):
             made = [f for f in os.listdir(outdir) if f.startswith(name)]
             self.assertEqual([f.endswith(".sqlite") for f in made], [finished], made)
 
-    def test_merge(self):
-        one, two = [("2.0.3.1",)], [("2.0.3.1",), ("2.0.4.1",)]
-        early, late = "2026-01-01T08:00:00", "2026-01-01T09:00:00"
+    def write_recordings(self, name, recordings, seed="5"):
+        """
+        A process's tape holding ``recordings`` (rows, recorded) of one query.
+        """
+        path = self.path(name)
+        if os.path.exists(path):
+            os.remove(path)
+        conn = sqlite3.connect(path)
+        dbtape.create_tables(conn, recordings=True)
+        conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)", (dbtape.FORMAT, seed))
+        for rows, recorded in recordings:
+            conn.execute("INSERT INTO tape VALUES ('k', ?, 'nf_fields', 'q', ?)",
+                         (recorded, dbtape._pack(len(rows), rows)))
+        conn.commit()
+        conn.close()
+        return path
 
-        def merged(*recordings, seeds=None, one_file=False):
-            """
-            Merge tapes holding ``recordings`` (complete, rows, recorded) of
-            one query: a tape each, or all on one process's tape.
-            """
+    def test_merge(self):
+        def merged(*recordings, one_file=False):
             groups = [recordings] if one_file else [[rec] for rec in recordings]
-            tapes = []
-            for i, group in enumerate(groups):
-                tapes.append(self.path("in%s.sqlite" % i))
-                if os.path.exists(tapes[-1]):
-                    os.remove(tapes[-1])
-                conn = sqlite3.connect(tapes[-1])
-                dbtape.create_tables(conn, recordings=True)
-                conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)",
-                             (dbtape.FORMAT, seeds[i] if seeds else "5"))
-                for complete, rows, recorded in group:
-                    conn.execute("INSERT INTO tape VALUES ('k', ?, ?, ?, 't', 'q', ?)",
-                                 (complete, len(rows), recorded, dbtape._pack(len(rows), rows)))
-                conn.commit()
-                conn.close()
+            tapes = [self.write_recordings("in%s.sqlite" % i, group) for i, group in enumerate(groups)]
             out = self.path("merged.sqlite")
             dbtape.merge(out, tapes)
-            complete, recorded, blob = sqlite3.connect(out).execute("SELECT c, r, v FROM tape").fetchone()
-            return complete, recorded, dbtape._unpack(blob)[1]
+            recorded, blob = sqlite3.connect(out).execute("SELECT r, v FROM tape").fetchone()
+            return recorded, dbtape._unpack(blob)[1]
 
-        # Of two complete results the newer wins, in either order: a row may
-        # have been deleted in between.
-        self.assertEqual(merged((1, two, early), (1, one, late)), (1, late, one))
-        self.assertEqual(merged((1, one, late), (1, two, early)), (1, late, one))
-        # A newer partial result gives way to an older one that agrees with it
-        # and covers more,
-        self.assertEqual(merged((1, two, early), (0, one, late)), (1, early, two))
-        self.assertEqual(merged((0, one, late), (0, two, early)), (0, early, two))
-        # but not to one that contradicts it,
-        self.assertEqual(merged((1, [("2.0.7.1",)], early), (0, one, late)), (0, late, one))
-        # nor to one that differs in type only (== would call these equal).
-        flags = [({"flag": True},), ({"flag": False},)]
-        for recs in [((1, flags, early), (0, [({"flag": 1},)], late)),
-                     ((0, [({"flag": 1},)], late), (1, flags, early))]:
-            self.assertEqual(merged(*recs)[:2], (0, late))
-        # A recording is only kept if every later one agrees with it, however
-        # the recordings are ordered or split between tapes.
-        a = (1, [("a",), ("b",)], "08:00")
+        a, b, c = [("a",)], [("a",), ("b",)], [("b",), ("a",)]
         cases = [
-            # b was deleted by 09:00; a partial read at 10:00 cannot bring it back.
-            ((a, (1, [("a",)], "09:00"), (0, [("a",)], "10:00")), (1, "09:00", [("a",)])),
-            # The result changed at 09:00, so only the 10:00 read is current.
-            ((a, (1, [("c",), ("d",)], "09:00"), (0, [("a",)], "10:00")), (0, "10:00", [("a",)])),
-            # Nothing contradicts the 08:00 result, which covers the most.
-            ((a, (0, [("a",), ("b",)], "09:00"), (0, [("a",)], "10:00")), (1, "08:00", [("a",), ("b",)])),
+            # The newest recording wins: a row may have been added or deleted.
+            ([(b, "08:00"), (a, "09:00")], ("09:00", a)),
+            ([(a, "08:00"), (b, "09:00")], ("09:00", b)),
+            # Recordings made in the same second (an unordered search, say)
+            # merge to the same result whatever their order.
+            ([(b, "08:00"), (c, "08:00"), (a, "07:00")], ("08:00", max(b, c, key=lambda rows: dbtape._pack(2, rows)))),
         ]
         for recordings, expected in cases:
             for order in itertools.permutations(recordings):
                 self.assertEqual(merged(*order), expected, order)
                 self.assertEqual(merged(*order, one_file=True), expected, order)
         with self.assertRaises(ValueError):
-            merged((1, one, early), (1, one, late), seeds=("5", "6"))
+            dbtape.merge(self.path("merged.sqlite"), [self.write_recordings("x.sqlite", [(a, "08:00")], seed="5"),
+                                                      self.write_recordings("y.sqlite", [(a, "08:00")], seed="6")])
+
+    def test_command_line(self):
+        tapes = [self.write_recordings("in%s.sqlite" % i, [([("a",)], "2026-01-01T0%s:00:00" % i)]) for i in range(2)]
+        out = self.path("merged.sqlite")
+
+        def run(*args):
+            return subprocess.run([sys.executable, dbtape.__file__] + list(args), capture_output=True, text=True)
+        self.assertEqual(run("merge", out, *tapes).returncode, 0)
+        described = run("describe", out)
+        self.assertEqual(described.returncode, 0, described.stderr)
+        self.assertIn("seed: 5", described.stdout)
+        self.assertIn("1 results, 0.0 MB compressed, recorded 2026-01-01T01:00:00 to 2026-01-01T01:00:00",
+                      described.stdout)
+        self.assertIn("nf_fields", described.stdout)
+        self.assertIn("usage", run("describe").stderr)
