@@ -454,12 +454,12 @@ def current_version_string(db):
     """
     The full current version, e.g. ``"2.3-5"``, or None if the version
     history table is missing or empty (callers should then fall back to
-    ``lmfdb.version.LEGACY_VERSION``).  Never raises: intended for the footer.
+    ``lmfdb.version.LEGACY_VERSION``).  Database errors propagate, so that
+    the footer can keep the last version it knew.
     """
-    try:
-        cur = latest_versions(db)
-    except Exception:
+    if not table_exists(db, _history_name(db)):
         return None
+    cur = latest_versions(db)
     if cur is None:
         return None
     return format_version(cur["major"], cur["data_seq"], cur["code_seq"])

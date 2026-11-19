@@ -43,9 +43,11 @@ def lmfdb_version_string():
             from . import db
             from .zenodo.state import current_version_string
             v = current_version_string(db)
-            _version_cache["value"] = "LMFDB %s" % v if v else LMFDB_VERSION
         except Exception:
-            _version_cache["value"] = LMFDB_VERSION
+            # a dropped connection keeps the last version shown; retry in 30 s
+            _version_cache["time"] -= 270
+        else:
+            _version_cache["value"] = "LMFDB %s" % v if v else LMFDB_VERSION
     return _version_cache["value"]
 
 ############################

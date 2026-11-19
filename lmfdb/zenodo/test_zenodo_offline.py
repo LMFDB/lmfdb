@@ -88,6 +88,16 @@ def test_history_events():
     assert history_events([]) == []
 
 
+def test_current_version_string_raises_on_database_errors():
+    from lmfdb.zenodo import state
+
+    class Down:
+        def _execute(self, query, values=None):
+            raise OSError("connection refused")
+    with pytest.raises(OSError):
+        state.current_version_string(Down())
+
+
 ######################################################################
 # packaging                                                          #
 ######################################################################
@@ -1107,6 +1117,16 @@ def test_knowls_dump_restores(scratch_db, tmp_path):
     again = tmp_path / "again"
     packaging.dump_knowls(db, again)
     assert (again / "kwl_knowls.txt").read_bytes() == (dump / "kwl_knowls.txt").read_bytes()
+
+
+def test_current_version_string(scratch_db):
+    from lmfdb.zenodo import state
+    db = scratch_db
+    assert state.current_version_string(db) is None
+    state.ensure_tables(db)
+    assert state.current_version_string(db) is None
+    state.insert_major(db, 2)
+    assert state.current_version_string(db) == "2.0-0"
 
 
 def test_sandbox_state_is_separate(scratch_db, tmp_path, monkeypatch):
