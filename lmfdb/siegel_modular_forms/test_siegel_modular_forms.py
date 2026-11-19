@@ -570,6 +570,20 @@ class SmfTest(LmfdbTest):
         assert starred.startswith(r'\(24\)') and r'\(^*\)' in starred
         assert not show_mult_col({'results': [{'multiplicity': None}, {'multiplicity': 1}, {}]})
         assert show_mult_col({'results': [{'multiplicity': 1}, {'multiplicity': 5}]})
+    def test_unknown_dims(self):
+        """
+        A NULL dimension (the Eisenstein part of some spaces of weight (2, j) on
+        Gamma[2] is not known) is '?' in the dimension grid, as a missing one, and
+        stays '?' in sums; the space page then shows only the cusp forms
+        """
+        from lmfdb.siegel_modular_forms.web_space import DimGrid
+        data = {'total_dim': None, 'new_total_dim': None, 'old_total_dim': 0,
+                'cusp_dim': 6, 'new_cusp_dim': 6, 'old_cusp_dim': 0,
+                'eis_dim': None, 'new_eis_dim': None, 'old_eis_dim': 0}
+        d = DimGrid.from_db(data)
+        assert d['M']['all'] == '?' and d['E']['new'] == '?' and d['S']['new'] == 6
+        assert not d.has_eis_dim() and d.disp_keys() == ['S']
+        assert (d + d)['M']['all'] == '?' and (d + d)['S']['all'] == 12 and (2 * d)['E']['all'] == '?'
     def test_space_decomposition(self):
         """
         The Decomp. column of the space search: the stored orbits of cusp

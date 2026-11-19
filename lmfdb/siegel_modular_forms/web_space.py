@@ -246,7 +246,8 @@ class DimGrid():
             for X in ['M','S','E']:
                 grid[X] = {}
                 for typ in ['all','new','old']:
-                    grid[X][typ] = self._grid[X][typ] + other._grid[X][typ]
+                    a, b = self._grid[X][typ], other._grid[X][typ]
+                    grid[X][typ] = '?' if '?' in (a, b) else a + b
             return DimGrid(grid)
         else:
             raise TypeError
@@ -257,7 +258,8 @@ class DimGrid():
             for X in ['M','S','E']:
                 grid[X] = {}
                 for typ in ['all','new','old']:
-                    grid[X][typ] = other * self._grid[X][typ]
+                    a = self._grid[X][typ]
+                    grid[X][typ] = '?' if a == '?' else other * a
             return DimGrid(grid)
         else:
             raise TypeError
@@ -294,7 +296,11 @@ class DimGrid():
                'G' : 'cusp_G'
                }
         
-        grid = { subsp : { sub : data.get(prefix[sub] + col[subsp] + '_dim', '?')
+        # '?' for a dimension that is not known (NULL), as for one that is not stored
+        def dim(c):
+            d = data.get(c)
+            return '?' if d is None else d
+        grid = { subsp : { sub : dim(prefix[sub] + col[subsp] + '_dim')
                            for sub in prefix.keys()} for subsp in col.keys()}
        
         return DimGrid(grid)
