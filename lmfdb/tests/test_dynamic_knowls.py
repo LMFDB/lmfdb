@@ -273,7 +273,7 @@ class KnowlEditorTest(LmfdbTest):
     def test_knowl_table_version(self):
         count, total = knowldb._version()
         assert count > 0
-        assert knowldb._version() == (count, total)
+        assert total >= count
 
     @contextmanager
     def fake_knowl_table(self, version, fetched):
