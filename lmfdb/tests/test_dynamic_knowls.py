@@ -266,3 +266,38 @@ class KnowlEditorTest(LmfdbTest):
                             data={"csrf_token": token, "content": "Preview text", "footer": "0"})
         assert page.status_code == 200
         assert "Preview text" in page.get_data(as_text=True)
+
+    def test_knowl_table_version(self):
+        count, total = knowldb._version()
+        assert count > 0
+        assert knowldb._version() == (count, total)
+
+    def test_knowl_caches_follow_the_table(self):
+        version = [(1, 1)]
+        fetched = []
+
+        def get_titles(fields):
+            fetched.append("titles")
+            return [{"id": "nf.degree", "title": "Degree %s" % len(fetched)}]
+
+        def get_defines():
+            fetched.append("defines")
+            return [{"id": "nf.degree", "defines": ["degree %s" % len(fetched)]}]
+
+        with patch("lmfdb.knowledge.knowl.time") as clock, \
+                patch.object(knowldb, "_version", lambda: version[0]), \
+                patch.object(knowldb, "get_all_knowls", get_titles), \
+                patch.object(knowldb, "get_all_defines", get_defines), \
+                patch.multiple(knowldb, create=True, cached_titles={}, cached_defines={},
+                               cached_titles_timestamp=0, cached_defines_timestamp=0,
+                               cached_titles_version=None, cached_defines_version=None):
+            def read(now):
+                clock.time.return_value = now
+                return knowldb.titles["nf.degree"], list(knowldb.all_defines)
+            first = read(1000)
+            assert read(1100) == first
+            version[0] = (1, 2)
+            # Changes are only looked for every caching_time seconds.
+            assert read(1105) == first
+            assert read(1200) != first
+        assert fetched == ["titles", "defines", "titles", "defines"]

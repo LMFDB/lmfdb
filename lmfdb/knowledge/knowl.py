@@ -146,10 +146,13 @@ class KnowlBackend(PostgresBase):
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._refresh_connection_capabilities()
-        # we cache knowl titles for 10s
+        # knowl titles and defines are refetched when kwl_knowls has changed,
+        # which is checked at most every 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
+        self.cached_titles_version = None
+        self.cached_defines_version = None
         self.cached_titles = {}
 
     def _refresh_connection_capabilities(self):
@@ -186,12 +189,25 @@ class KnowlBackend(PostgresBase):
             time.sleep(1)
             return list(self._execute(query, values))
 
+    def _version(self):
+        """
+        A value that changes whenever kwl_knowls does.  Deleting, reviewing
+        and renaming a knowl keep its timestamp, so this is built from the
+        transaction id (xmin) that wrote each row, which a standby such as
+        devmirror reports the same as its primary.
+        """
+        return tuple(self._safe_execute(SQL("SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls"))[0])
+
     @property
     def titles(self):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
+            # Read before fetching: a change in between is then fetched next time.
+            version = self._version()
+            if version != self.cached_titles_version:
+                self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
+                self.cached_titles_version = version
         return self.cached_titles
 
     @property
@@ -199,10 +215,13 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_defines_timestamp > self.caching_time:
             self.cached_defines_timestamp = now
-            self.cached_defines = defaultdict(list)
-            for elt in self.get_all_defines():
-                for term in elt['defines']:
-                    self.cached_defines[term].append(elt['id'])
+            version = self._version()
+            if version != self.cached_defines_version:
+                self.cached_defines = defaultdict(list)
+                for elt in self.get_all_defines():
+                    for term in elt['defines']:
+                        self.cached_defines[term].append(elt['id'])
+                self.cached_defines_version = version
         return self.cached_defines
 
     def can_read_write_knowls(self):
