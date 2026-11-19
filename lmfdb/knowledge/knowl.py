@@ -198,6 +198,14 @@ class KnowlBackend(PostgresBase):
         """
         return tuple(self._safe_execute(SQL("SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls"))[0])
 
+    def _titles_edited(self):
+        """
+        Called after editing cached_titles directly.  An enclosing transaction
+        can still roll the edit back, leaving kwl_knowls and its version as
+        they were, so the cache must be refetched at the next check anyway.
+        """
+        self.cached_titles_version = None
+
     @property
     def titles(self):
         now = time.time()
@@ -377,6 +385,7 @@ class KnowlBackend(PostgresBase):
             inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
+        self._titles_edited()
 
     def yaml_export(self, filename, ids=0, fields=None):
         """
@@ -571,12 +580,14 @@ class KnowlBackend(PostgresBase):
         self._execute(updator, [-2, knowl.id])
         if knowl.id in self.cached_titles:
             self.cached_titles.pop(knowl.id)
+            self._titles_edited()
 
     def resurrect(self, knowl):
         """Sets the status for all deleted copies of the knowl to beta"""
         updator = SQL("UPDATE kwl_knowls SET status=%s WHERE status=%s AND id=%s")
         self._execute(updator, [0, -2, knowl.id])
         self.cached_titles[knowl.id] = knowl.title
+        self._titles_edited()
 
     def review(self, knowl, who, set_beta=False):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
@@ -833,6 +844,7 @@ class KnowlBackend(PostgresBase):
             self._execute(updator, values)
             if knowl.id in self.cached_titles:
                 self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
+                self._titles_edited()
             knowl.id = new_name
 
     def rename_hyphens(self, execute=False):

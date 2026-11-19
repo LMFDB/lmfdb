@@ -1,9 +1,12 @@
 
+from contextlib import contextmanager
 from unittest.mock import patch
 import re
 
 from flask import render_template
 from markupsafe import escape
+
+from psycodict import DelayCommit
 
 from lmfdb.tests import LmfdbTest
 from lmfdb.knowledge.knowl import Knowl, knowldb
@@ -272,10 +275,13 @@ class KnowlEditorTest(LmfdbTest):
         assert count > 0
         assert knowldb._version() == (count, total)
 
-    def test_knowl_caches_follow_the_table(self):
-        version = [(1, 1)]
-        fetched = []
-
+    @contextmanager
+    def fake_knowl_table(self, version, fetched):
+        """
+        Serve knowldb's caches from a fake kwl_knowls whose fingerprint is
+        ``version[0]``, with a clock the caller sets, and record each fetch
+        in ``fetched``.
+        """
         def get_titles(fields):
             fetched.append("titles")
             return [{"id": "nf.degree", "title": "Degree %s" % len(fetched)}]
@@ -291,6 +297,12 @@ class KnowlEditorTest(LmfdbTest):
                 patch.multiple(knowldb, create=True, cached_titles={}, cached_defines={},
                                cached_titles_timestamp=0, cached_defines_timestamp=0,
                                cached_titles_version=None, cached_defines_version=None):
+            yield clock
+
+    def test_knowl_caches_follow_the_table(self):
+        version = [(1, 1)]
+        fetched = []
+        with self.fake_knowl_table(version, fetched) as clock:
             def read(now):
                 clock.time.return_value = now
                 return knowldb.titles["nf.degree"], list(knowldb.all_defines)
@@ -301,3 +313,19 @@ class KnowlEditorTest(LmfdbTest):
             assert read(1105) == first
             assert read(1200) != first
         assert fetched == ["titles", "defines", "titles", "defines"]
+
+    def test_knowl_cache_after_rolled_back_save(self):
+        # As in yaml_import when a later record fails: the earlier save has
+        # updated the cache, but the table is back as it was.
+        fetched = []
+        with self.fake_knowl_table([(1, 1)], fetched) as clock, \
+                patch.object(knowldb, "_execute"):
+            clock.time.return_value = 1000
+            assert "test.phantom" not in knowldb.titles
+            with self.assertRaises(RuntimeError), DelayCommit(knowldb):
+                knowldb.save(Knowl("test.phantom", data={"title": "Phantom", "content": "x", "type": 0}),
+                             "tester", most_recent={})
+                raise RuntimeError("a later record fails")
+            clock.time.return_value = 1100
+            assert "test.phantom" not in knowldb.titles
+        assert fetched == ["titles", "titles"]
