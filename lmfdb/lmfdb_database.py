@@ -20,6 +20,13 @@ except ImportError:
     # fallback once the psycodict requirement is pinned past that PR.
     LMFDBGrantPolicy = None
 
+# psycodict 1.0.0rc1 has no session_settings argument: it would forward it to
+# psycopg.connect, which rejects it, and it sets the webserver timeout itself.
+# Delete this flag once the psycodict requirement excludes rc1.
+_PSYCODICT_HAS_SESSION_SETTINGS = (
+    "session_settings" in inspect.signature(PostgresDatabase.__init__).parameters
+)
+
 
 def overrides(super_class):
     def overrider(method):
@@ -501,6 +508,14 @@ class LMFDBDatabase(PostgresDatabase):
             # database usually has neither; a deployment that must have both
             # can pass LMFDBGrantPolicy(missing_role="error") instead.
             kwargs.setdefault("grant_policy", LMFDBGrantPolicy())
+        if _PSYCODICT_HAS_SESSION_SETTINGS:
+            # The web workers (role webserver) need a statement timeout, which
+            # psycodict stops inferring from the role in roed314/psycodict#146.
+            # None counts as unset; an explicit mapping, even {}, is kept.
+            postgresql_options = getattr(config, "postgresql_options", {}) or {}
+            user = kwargs["user"] if "user" in kwargs else postgresql_options.get("user")
+            if user == "webserver" and kwargs.get("session_settings") is None:
+                kwargs["session_settings"] = {"statement_timeout": "25s"}
         PostgresDatabase.__init__(self, config, **kwargs)
         self.is_verifying = False  # set to true when importing lmfdb.verify
         self.__editor = config.logging_options.get("editor", "")
