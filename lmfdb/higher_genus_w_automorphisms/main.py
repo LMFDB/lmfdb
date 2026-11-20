@@ -832,7 +832,7 @@ def render_passport(args):
 
         gp_string = str(gn) + '.' + str(gt)
         pretty_group = sg_pretty(gp_string)
-        info['cyclic'] = db.gps_small.lookup(gp_string,projection="cyclic")
+        info['cyclic'] = db.gps_groups.lookup(gp_string, projection="cyclic")
 
         if gp_string == pretty_group:
             spname = False

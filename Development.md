@@ -376,13 +376,25 @@ who are mainly involved in coding this particular python file.
 Testing
 -------
 
-- Any contribution to the main LMFDB branch must *pass all the tests*. From the lmfdb folder:
+- Any contribution to the main LMFDB branch must *pass all the tests*. The tests query the database set in your `config.ini` (by default `devmirror.lmfdb.xyz`), so they also need a network connection. To run the full test suite, use the `test.sh` script in the top-level folder of the repository:
   ```
   ./test.sh
   ```
   It takes a few minutes. If sage or some additional parts are missing it may fail,
   consider updating
   (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted))
+
+- The full test suite is rather large, so while developing it is usually easier to run only the tests for the part of the LMFDB you are working on. To do this, you can give one or more folders or files as arguments to `test.sh`:
+  ```
+  ./test.sh lmfdb/elliptic_curves                      # one section
+  ./test.sh lmfdb/elliptic_curves/test_ell_curves.py   # one file
+  ./test.sh lmfdb/number_fields lmfdb/galois_groups    # several sections
+  ./test.sh -n 3 lmfdb/elliptic_curves                 # in parallel, on 3 cores
+  ```
+  You can also run just a single test function by giving its file, class and name, separated by `::`
+  ```
+  ./test.sh lmfdb/elliptic_curves/test_ell_curves.py::EllCurveTest::test_isogeny_class
+  ```
 
 - New blueprints and features should include a `test_<name>.py` file
   which runs tests on all functions.
@@ -391,7 +403,38 @@ Testing
   ```
   ./test.sh coverage
   ```
-  which produces coverage scores saved in `lmfdb/htmlcov`.
+  (optionally followed by folders or files, as above), which produces coverage scores saved in `lmfdb/htmlcov`.
+
+### Query tape
+
+The devmirror test jobs in CI do not fetch most of their data from devmirror, whose bandwidth is limited. They replay database results from a *query tape*: a SQLite file published as `dbtape.sqlite.gz` in the [`ci-dbtape` release](https://github.com/LMFDB/lmfdb/releases/tag/ci-dbtape). The plugin that records and replays it is `conftest.py`, at the top of the repository.
+
+- Queries missing from the tape go to devmirror as usual, so a pull request that adds queries still works; those queries just run live. Each test job's summary says how many queries the tape served, and its `dbtape-log-*` artifact lists the ones it did not.
+- Every run of the Tests workflow on `main` (each push, and one a day) records what its tests fetched and publishes a new tape, unless another run published one while it was recording. Only results read to the end are recorded, so a search that a test stops reading early always runs live.
+- Results for a table go stale when the table is edited. LMFDB logs every psycodict editing operation (`reload`, `update_from_file`, `add_column`, ...) in `userdb.dbrecord`, and when the public `lmfdb` role can read that table's `tablename` and `time` columns, replays fetch tables edited since they were recorded from the database instead. So after changing data that a pull request depends on, rerunning its tests is enough.
+- Knowls are saved without that log, so for `kwl_knowls` the tape stores a fingerprint of the table (its row count with a sum of the ids of the transactions that wrote its rows) and treats the table as edited when the fingerprint changes.
+- Queries on the `userdb` schema (accounts and the edit log) are never recorded or replayed: the tape is public. Neither are queries that read no table (such as `pg_is_in_recovery()`, which differs between grace and devmirror) or whose SQL the plugin cannot follow.
+- The catalog results (psycodict's registry of tables and columns) go stale after any logged edit, and also when a fingerprint of the table definitions changes, which catches tables dropped or renamed: psycodict does not log those.
+- For an edit neither shows, such as one made with raw SQL, run the Tests workflow on `main` from the Actions tab with the table names in `stale_tables` (or `all`). Nothing goes stale with age alone, so a recording run that cannot read the edit log or a fingerprint fails and publishes nothing; a replay that cannot only warns.
+
+To run tests locally against the tape:
+```
+curl -L https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz | gunzip > dbtape.sqlite
+DBTAPE_MODE=replay PYTHONHASHSEED=0 ./test.sh lmfdb/elliptic_curves
+```
+and `python3 conftest.py describe dbtape.sqlite` summarizes what it holds.
+
+A first tape, or a refresh with `stale_tables=all`, cannot be recorded through devmirror within a test job's time limit: the largest test files fetch about 50 MB each. Record it against grace, devmirror's primary, instead, as the public `lmfdb` role (`user = lmfdb`, `password = lmfdb` in the `[postgresql]` section of `config.ini`) and with the psycodict version CI installs, and upload it (this needs write access to LMFDB/lmfdb):
+```bash
+rm -rf dbtape-out dbtape.sqlite.gz
+jq -r '.[] | select(.server == "devmirror" and .files != "lint") | .files' .github/workflows/matrix_includes.json | tr ' ' '\n' > dbtape-files.txt
+DBTAPE_SEED=$(date +%s) DBTAPE_MODE=record DBTAPE_FILE=none DBTAPE_OUT=dbtape-out tox -e tests -- $(cat dbtape-files.txt)
+test $(ls dbtape-out/*.sqlite | wc -l) -eq $(wc -l < dbtape-files.txt) &&
+  python3 conftest.py merge dbtape.sqlite dbtape-out/*.sqlite &&
+  gzip -9 dbtape.sqlite &&
+  gh release upload ci-dbtape dbtape.sqlite.gz --clobber --repo LMFDB/lmfdb
+```
+The plugin refuses to record as a role that can read user passwords, such as an editor's. It has to be grace (or devmirror itself), not a copy restored from a dump: the `kwl_knowls` fingerprint is built from the transaction ids that wrote its rows, which only a replica shares, so a tape recorded from a copy makes every replay fetch the knowls again until the next recording on `main`. `DBTAPE_SEED` gives every test process the same random objects, which merging requires. Failing tests still leave a tape, but the last command uploads only if every test file ran to the end and left one. If the release does not exist yet, create it first with `gh release create ci-dbtape --repo LMFDB/lmfdb --prerelease --latest=false --title "CI query tape" --notes "See Query tape in Development.md"`. The runs on `main` continue from the uploaded tape.
 
 Code Snippets 
 -------------

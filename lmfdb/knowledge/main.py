@@ -16,6 +16,7 @@ import re
 import json
 import time
 from collections import Counter, defaultdict
+from urllib.parse import urlencode
 from lmfdb.app import app, is_beta
 from flask import (abort, flash, jsonify, make_response,
                    redirect, render_template, render_template_string,
@@ -30,6 +31,7 @@ import markdown
 from lmfdb.logger import logger
 from lmfdb.utils.datetime_utils import datetime_to_timestamp_in_ms, timestamp_in_ms_to_datetime
 from lmfdb.utils import flash_error
+from lmfdb.utils.csrf import csrf_token, require_csrf_token
 from lmfdb.knowledge import knowledge_page
 
 
@@ -211,7 +213,8 @@ def md_preprocess(text):
 
 @app.context_processor
 def ctx_knowledge():
-    return {'Knowl': Knowl,
+    return {'csrf_token': csrf_token,
+            'Knowl': Knowl,
             'knowl_title': knowl_title,
             'knowl_url_prefix': knowl_url_prefix,
             "KNOWL_EXISTS": knowl_exists,
@@ -456,7 +459,7 @@ def comment_history(limit=25):
 def delete(ID):
     k = Knowl(ID)
     k.delete()
-    flash(Markup("Knowl %s has been deleted." % ID))
+    flash(Markup("Knowl {} has been deleted.").format(ID))
     return redirect(url_for(".index"))
 
 
@@ -465,7 +468,7 @@ def delete(ID):
 def resurrect(ID):
     k = Knowl(ID)
     k.resurrect()
-    flash(Markup("Knowl %s has been resurrected." % ID))
+    flash(Markup("Knowl {} has been resurrected.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -475,7 +478,7 @@ def review(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id())
-    flash(Markup("Knowl %s has been positively reviewed." % ID))
+    flash(Markup("Knowl {} has been positively reviewed.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -485,7 +488,7 @@ def demote(ID, timestamp):
     timestamp = timestamp_in_ms_to_datetime(timestamp)
     k = Knowl(ID, timestamp=timestamp)
     k.review(who=current_user.get_id(), set_beta=True)
-    flash(Markup("Knowl %s has been returned to beta." % ID))
+    flash(Markup("Knowl {} has been returned to beta.").format(ID))
     return redirect(url_for(".show", ID=ID))
 
 
@@ -631,6 +634,7 @@ def edit_form():
 @knowledge_page.route("/save", methods=["POST"])
 @login_required
 def save_form():
+    require_csrf_token()
     ID = request.form['id']
     if not ID:
         raise Exception("no id")
@@ -643,12 +647,12 @@ def save_form():
     if FINISH_RENAME:
         k = Knowl(ID)
         k.actually_rename()
-        flash(Markup("Renaming complete; the history of %s has been merged into %s" % (ID, k.source_name)))
+        flash(Markup("Renaming complete; the history of {} has been merged into {}").format(ID, k.source_name))
         return redirect(url_for(".show", ID=k.source_name))
     elif UNDO_RENAME:
         k = Knowl(ID)
         k.undo_rename()
-        flash(Markup("Renaming undone; the history of %s has been merged back into %s" % (k.source_name, ID)))
+        flash(Markup("Renaming undone; the history of {} has been merged back into {}").format(k.source_name, ID))
         return redirect(url_for(".show", ID=ID))
     NEWID = request.form.get('krename', '').strip()
     k = Knowl(ID, saving=True, renaming=bool(NEWID))
@@ -678,7 +682,7 @@ def save_form():
                 if k.sed_safety == 0:
                     time.sleep(0.01)
                     k.actually_rename(NEWID)
-                    flash(Markup("Knowl renamed to {0} successfully.".format(NEWID)))
+                    flash(Markup("Knowl renamed to {0} successfully.").format(NEWID))
                 else:
                     k.start_rename(NEWID, who)
             except ValueError as err:
@@ -686,8 +690,8 @@ def save_form():
             else:
                 if k.sed_safety == 1:
                     flash(Markup("Knowl rename process started. You can change code references using"))
-                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)".format(ID, NEWID)))
-                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)".format(ID, NEWID)))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i '' -e 's/{0}/{1}/g' (Mac)").format(ID, NEWID))
+                    flash(Markup("git grep -l '{0}' | xargs sed -i 's/{0}/{1}/g' (Linux)").format(ID, NEWID))
                 elif k.sed_safety == -1:
                     flash(Markup("Knowl rename process started.  This knowl appears in the code (see references below), but cannot trivially be replaced with grep/sed"))
                 ID = NEWID
@@ -697,13 +701,21 @@ def save_form():
         return redirect(url_for(".show", ID=ID))
 
 
-@knowledge_page.route("/render/<ID>", methods=["GET", "POST"])
+@knowledge_page.route("/render/<ID>")
 def render(ID):
     return render_knowl(ID)
 
 
+@knowledge_page.route("/preview/<ID>", methods=["POST"])
+@login_required
+def preview(ID):
+    require_csrf_token()
+    return render_knowl(ID, footer=request.form.get('footer', '0'),
+                        content=request.form['content'])
+
+
 def render_knowl(ID, footer=None, kwargs=None,
-        raw=False, k=None, allow_deleted=False, timestamp=None):
+        raw=False, k=None, allow_deleted=False, timestamp=None, content=None):
     """
     this method renders the given Knowl (ID) to insert it
     dynamically in a website. It is intended to be used
@@ -716,6 +728,9 @@ def render_knowl(ID, footer=None, kwargs=None,
 
     the keyword 'raw' is used in knowledge.show and knowl_inc to
     include *just* the string and not the response object.
+
+    the keyword 'content' replaces the knowl's saved content; it is
+    only for the editor's preview, which requires a login.
     """
     # logger.debug("kwargs: %s", request.args)
     kwargs = kwargs or dict(request.args.items())
@@ -724,7 +739,7 @@ def render_knowl(ID, footer=None, kwargs=None,
         # fetch and convert the ms timestamp to datetime
         try:
             timestamp = timestamp_in_ms_to_datetime(int(kwargs['timestamp']))
-        except KeyError:
+        except (KeyError, ValueError, OverflowError, OSError):
             pass
 
     if k is None:
@@ -740,21 +755,27 @@ def render_knowl(ID, footer=None, kwargs=None,
         if timestamp is None and k.status == 1 and not is_beta():
             kwargs['timestamp'] = k.ms_timestamp
 
-    # kw_params is inserted *verbatim* into the url_for(...) function inside the template
-    # the idea is to pass the keyword arguments of the knowl further along the chain
-    # of links, in this case the title and the permalink!
-    # so, this kw_params should be plain python, e.g. "a=1, b='xyz'"
-    kw_params = ', '.join(('%s="%s"' % (key, val) for key, val in kwargs.items()))
-    logger.debug("kw_params: %s" % kw_params)
+    # the keyword arguments of the knowl are passed further along the chain
+    # of links, in this case the permalink.
+    # Only knowl content is template source: the ID, title and keyword arguments
+    # come from the request, so they reach the template as variables.
+    permalink = url_for('.show', ID=k.id)
+    if kwargs:
+        permalink += '?' + urlencode(kwargs)
+    header_title = Markup(k.title) if k.title else k.id
+    # Flask's explicit template arguments override its context processors.
+    # Reserve their names and Jinja globals before adding query parameters.
+    # "source" is render_template_string's own argument, so it cannot be passed.
+    context = {}
+    app.update_template_context(context)
+    reserved = context.keys() | app.jinja_env.globals.keys() | {'source'}
+    context.update({key: val for key, val in kwargs.items() if key not in reserved})
+    context.update(k=k, knowl_permalink=permalink, knowl_header_title=header_title)
 
     # this is a very simple template based on no other template to render one single Knowl
     # for inserting into a website via AJAX or for server-side operations.
-    if request.method == "POST":
-        con = request.form['content']
-        foot = footer or request.form['footer']
-    else:
-        con = request.args.get("content", k.content)
-        foot = footer or request.args.get("footer", "1")
+    con = k.content if content is None else content
+    foot = footer or request.args.get("footer", "1")
 
     # authors = []
     # for a in k.author_links():
@@ -775,8 +796,8 @@ def render_knowl(ID, footer=None, kwargs=None,
     if foot == "1":
         render_me += """\
   <div class="knowl-header">
-    <a href="{{ url_for('.show', ID='%(ID)s', %(kw_params)s ) }}">%(title)s</a>
-  </div>""" % {'ID': k.id, 'title': (k.title or k.id), 'kw_params': kw_params}
+    <a href="{{ knowl_permalink }}">{{ knowl_header_title }}</a>
+  </div>"""
 
     render_me += """<div><div class="knowl-content">%(content)s</div></div>"""
 
@@ -784,10 +805,10 @@ def render_knowl(ID, footer=None, kwargs=None,
     if foot == "1":
         render_me += """\
   <div class="knowl-footer">
-    <a href="{{ url_for('.show', ID='%(ID)s', %(kw_params)s) }}">permalink</a>
+    <a href="{{ knowl_permalink }}">permalink</a>
     {%% if user_is_authenticated %%}
       &middot;
-      <a href="{{ url_for('.edit', ID='%(ID)s') }}">edit</a>
+      <a href="{{ url_for('.edit', ID=k.id) }}">edit</a>
     {%% endif %%}
     %(review_status)s
   </div>"""
@@ -800,8 +821,7 @@ def render_knowl(ID, footer=None, kwargs=None,
 
     # markdown enabled
     render_me = render_me % {'content': md.convert(con),
-                             'ID': k.id, 'review_status': review_status,
-                             'kw_params': kw_params}  # , 'authors' : authors }
+                             'review_status': review_status}  # , 'authors' : authors }
     # Pass the text on to markdown.  Note, backslashes need to be escaped for
     # this, but not for the javascript markdown parser
 
@@ -810,7 +830,7 @@ def render_knowl(ID, footer=None, kwargs=None,
     # TODO improve the error message
     # so that the user has a clue. Most likely, the {{ KNOWL('...') }} has the wrong syntax!
     try:
-        data = render_template_string(render_me, k=k, **kwargs)
+        data = render_template_string(render_me, **context)
         if raw:
             # note, this is just internally for the .show method, raw rendering
             # doesn't exist right now and will wrap this into a make_reponse!
