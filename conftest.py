@@ -19,12 +19,16 @@ so that test runs can be served from the tape instead.
 
 A table counts as edited when userdb.dbrecord, where LMFDB's _log_db_change
 logs every psycodict editing operation, has an entry for it later than the
-recording.  DBTAPE_STALE lists further tables to treat as edited ("all" for
-every table).  The results of catalog queries, which psycodict reads its
-registry of tables from, go stale together after any edit.  When recording,
-results older than DBTAPE_MAX_AGE_DAYS (7 to 21 days by default, 14 for the
-catalog) are fetched again too, which catches edits made outside psycodict.
-See the "Query tape" section of Development.md.
+recording.  Knowls and user accounts are saved without that log, so for them
+a fingerprint of the table (FINGERPRINTS) is compared with the one recorded.
+DBTAPE_STALE lists further tables to treat as edited ("all" for every table),
+which is the way to refresh after editing data with raw SQL.  The results of
+catalog queries, which psycodict reads its registry of tables from, go stale
+together after any logged edit.  Only when the edit log or a fingerprint
+cannot be read do recordings fall back on age, refetching the results it
+leaves unchecked once they are older than DBTAPE_MAX_AGE_DAYS (7 to 21 days
+by default, 14 for the catalog).  See the "Query tape" section of
+Development.md.
 
 This is a root conftest.py so that pytest loads it before any test module
 imports lmfdb, which connects and reads the table metadata at import time.
@@ -51,6 +55,15 @@ MODE = os.environ.get("DBTAPE_MODE", "")
 CLOCK_SKEW = datetime.timedelta(hours=1)
 # Bump when the encoding changes; a tape of another format is ignored.
 FORMAT = "2"
+# Tables edited without psycodict's logging (knowls by lmfdb.knowledge,
+# accounts by lmfdb.users), each with a query whose result changes whenever
+# what the tests can read of the table does.
+FINGERPRINTS = {
+    "kwl_knowls": "SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls",
+    # The lmfdb role may read only these columns, and not xmin.
+    "userdb.users": "SELECT count(username), md5(string_agg(username || ' ' || coalesce(full_name, ''), "
+                    "',' ORDER BY username)) FROM userdb.users",
+}
 
 _tape = None
 
@@ -309,7 +322,10 @@ class Tape:
         self.stats = dict.fromkeys(["hit", "miss", "stale", "recorded", "unrecordable", "unfinished"], 0)
         self.copied = set()
         self.changes = None
+        self.unlogged = {}
+        self.unverified = set()
         self.edit_log = "not read"
+        self.fingerprint_status = ""
         self.since = None
         self.catalog_recorded = None
         self.now = _utcnow()
@@ -326,6 +342,7 @@ class Tape:
                                  % (src, meta.get("format"), FORMAT))
                 self.src, meta = None, {}
         self.seed = meta.get("seed")
+        self.fingerprints = {k[len("fingerprint "):]: v for k, v in meta.items() if k.startswith("fingerprint ")}
         # Which published tape this recording builds on, so that publishing
         # can refuse to replace a newer one.
         self.base = meta.get("created", "")
@@ -358,6 +375,33 @@ class Tape:
             if complete:
                 os.replace(self.out_file + ".part", self.out_file)
 
+    def read_fingerprints(self, conn):
+        """
+        Compare the fingerprints of the tables edited without the edit log
+        with the ones recorded, and record the current ones.
+        """
+        current = {}
+        for table, query in FINGERPRINTS.items():
+            try:
+                with conn.transaction():
+                    with conn.cursor() as cur:
+                        cur.execute(query)
+                        current[table] = "%s %s" % tuple(cur.fetchone())
+            except Exception:
+                self.unverified.add(table)
+        status = []
+        for table in FINGERPRINTS:
+            if table in self.unverified:
+                status.append("%s unreadable" % table)
+            elif self.src is not None and current[table] != self.fingerprints.get(table):
+                status.append("%s changed" % table)
+                for rel in edited_relations(table):
+                    self.unlogged[rel] = self.now
+        self.fingerprint_status = ", ".join(status) or ("no unlogged changes" if self.src else "fingerprints read")
+        if self.recording:
+            self.out.executemany("INSERT OR REPLACE INTO meta VALUES (?, ?)",
+                                 [("fingerprint " + t, f) for t, f in current.items()])
+
     def read_edit_log(self, conn):
         """
         Find which tables were edited since the oldest result on the tape was
@@ -365,6 +409,7 @@ class Tape:
         query.  The log has no index unless one is added for this, and is far
         too large to scan from every test process, so without one it is skipped.
         """
+        self.read_fingerprints(conn)
         if self.since is None:
             self.edit_log = "not needed"
             return
@@ -410,13 +455,14 @@ class Tape:
             spread = 0.5 + int(key[:8], 16) / 2**32
         recorded = datetime.datetime.fromisoformat(recorded)
         if self.recording and self.now - recorded > self.max_age * spread:
-            return True
-        if not self.changes:
-            return False
+            # Age is the only sign left of edits that neither the edit log
+            # nor a fingerprint could be read for.
+            if self.changes is None or self.unverified.intersection(tables):
+                return True
         cutoff = recorded - CLOCK_SKEW
         if catalog:
-            return max(self.changes.values()) > cutoff
-        return any(self.changes.get(t, cutoff) > cutoff for t in tables)
+            return bool(self.changes) and max(self.changes.values()) > cutoff
+        return any(changes.get(t, cutoff) > cutoff for changes in (self.changes or {}, self.unlogged) for t in tables)
 
     def lookup(self, key):
         """
@@ -657,7 +703,8 @@ def pytest_terminal_summary(terminalreporter, config):
     line = "%s hits, %s misses, %s stale" % (s["hit"], s["miss"], s["stale"])
     if _tape.recording:
         line += ", %s recorded, %s unrecordable, %s read in part" % (s["recorded"], s["unrecordable"], s["unfinished"])
-    line = "dbtape %s (%s): %s; edit log %s" % (MODE, " ".join(config.args), line, _tape.edit_log)
+    line = "dbtape %s (%s): %s; edit log %s; %s" % (MODE, " ".join(config.args), line, _tape.edit_log,
+                                                     _tape.fingerprint_status)
     terminalreporter.write_line(line)
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
@@ -681,7 +728,8 @@ def merge(out, inputs):
     """
     Combine the tapes written by several test processes into one, keeping
     the newest recording of each query whatever the order of ``inputs``.
-    Its base is the published tape they started from, or "mixed".
+    Its base is the published tape they started from, and its fingerprints
+    the ones they all recorded; either is "mixed" where they differ.
     """
     if os.path.exists(out):
         os.remove(out)
@@ -690,6 +738,7 @@ def merge(out, inputs):
     conn.execute("CREATE TEMP TABLE seen AS SELECT * FROM tape WHERE 0")
     seeds = set()
     bases = set()
+    metas = []
     for path in inputs:
         src = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
         meta = dict(src.execute("SELECT k, v FROM meta"))
@@ -697,6 +746,7 @@ def merge(out, inputs):
             raise ValueError("%s has tape format %s, not %s" % (path, meta.get("format"), FORMAT))
         seeds.add(meta["seed"])
         bases.add(meta.get("base", ""))
+        metas.append(meta)
         conn.execute("BEGIN")
         conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)", src.execute("SELECT * FROM tape"))
         conn.execute("COMMIT")
@@ -712,6 +762,9 @@ def merge(out, inputs):
     conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?), ('created', ?), ('base', ?)",
                  (FORMAT, seeds.pop(), datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
                   bases.pop() if len(bases) == 1 else "mixed"))
+    for k in sorted({k for meta in metas for k in meta if k.startswith("fingerprint ")}):
+        values = {meta.get(k) for meta in metas}
+        conn.execute("INSERT INTO meta VALUES (?, ?)", (k, values.pop() if len(values) == 1 else "mixed"))
     conn.execute("VACUUM")
     conn.close()
 

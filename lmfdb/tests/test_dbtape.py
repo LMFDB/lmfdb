@@ -62,13 +62,15 @@ def open_cursors():
 
 class FakeConnection:
     """
-    Answers the two queries Tape.read_edit_log makes.
+    Answers the queries Tape.read_edit_log makes.  A table missing from
+    ``fingerprints`` cannot be fingerprinted.
     """
 
-    def __init__(self, indexed=True, rows=(), error=None):
+    def __init__(self, indexed=True, rows=(), error=None, fingerprints={}):
         self.indexed = indexed
         self.rows = list(rows)
         self.error = error
+        self.fingerprints = fingerprints
         self.result = []
 
     @contextmanager
@@ -82,7 +84,12 @@ class FakeConnection:
     def execute(self, query, params=None):
         if self.error is not None:
             raise self.error
-        if "pg_index" in query:
+        tables = [t for t, q in dbtape.FINGERPRINTS.items() if q == query]
+        if tables:
+            if tables[0] not in self.fingerprints:
+                raise psycopg.errors.InsufficientPrivilege("denied")
+            self.result = [self.fingerprints[tables[0]]]
+        elif "pg_index" in query:
             self.result = [(1,)] if self.indexed else []
         else:
             self.result = self.rows
@@ -104,7 +111,7 @@ class DbTapeTest(unittest.TestCase):
     def path(self, name):
         return os.path.join(self.dir, name)
 
-    def make_tape(self, entries):
+    def make_tape(self, entries, meta={}):
         """
         A tape holding a dummy result for each (name, tables, recorded).
         """
@@ -112,6 +119,7 @@ class DbTapeTest(unittest.TestCase):
         conn = sqlite3.connect(path)
         dbtape.create_tables(conn)
         conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', '5')", (dbtape.FORMAT,))
+        conn.executemany("INSERT INTO meta VALUES (?, ?)", meta.items())
         for name, tables, recorded in entries:
             conn.execute("INSERT INTO tape VALUES (?, ?, ?, 'q', ?)",
                          (key(name), recorded.isoformat(timespec="seconds"), tables, dbtape._pack(1, [(1,)])))
@@ -244,15 +252,49 @@ class DbTapeTest(unittest.TestCase):
         self.assertEqual(stale(tape), {"untouched", "catalog", "older catalog"})
         tape = dbtape.Tape("replay", src=path, stale=["hgcwa_per_group_stats"])
         self.assertEqual(stale(tape), {"stats-named", "its stats", "catalog", "older catalog"})
-        # Only recording refreshes results by age, and the catalog all at once.
+        # Without the edit log, recording refreshes results by age, and the
+        # catalog all at once; replaying does not.
         tape = dbtape.Tape("replay", src=path, max_age=HOUR)
         self.assertEqual(stale(tape), set())
         tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=HOUR)
         self.assertEqual(stale(tape), {name for name, _, _ in entries})
         tape.close()
+        tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=HOUR)
+        tape.read_edit_log(FakeConnection())
+        self.assertEqual(stale(tape), set())
+        tape.close()
         tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=2 * DAY)
         self.assertTrue({"catalog", "older catalog"} <= stale(tape))
         tape.close()
+
+    def test_fingerprints(self):
+        # Knowls and accounts are edited without the edit log.
+        now = dbtape._utcnow()
+        entries = [("knowl", "kwl_knowls", now - DAY), ("account", "userdb.users", now - DAY),
+                   ("field", "nf_fields", now - DAY), ("catalog", "meta_tables", now - DAY)]
+        path = self.make_tape(entries, {"fingerprint kwl_knowls": "1 10", "fingerprint userdb.users": "2 ab"})
+
+        def stale(tape):
+            return {name for name, _, _ in entries if tape.lookup(key(name)) == "stale"}
+        recorded = {"kwl_knowls": (1, 10), "userdb.users": (2, "ab")}
+        tape = dbtape.Tape("replay", src=path)
+        tape.read_edit_log(FakeConnection(fingerprints=recorded))
+        self.assertEqual(stale(tape), set())
+        tape = dbtape.Tape("replay", src=path)
+        tape.read_edit_log(FakeConnection(fingerprints=dict(recorded, kwl_knowls=(1, 11))))
+        # The catalog only follows logged edits.
+        self.assertEqual(stale(tape), {"knowl"})
+        self.assertEqual(tape.fingerprint_status, "kwl_knowls changed")
+        # A table that cannot be fingerprinted is refreshed by age instead.
+        out = self.path("out.sqlite")
+        tape = dbtape.Tape("record", src=path, out=out, max_age=HOUR)
+        tape.read_edit_log(FakeConnection(fingerprints={"userdb.users": (2, "ab")}))
+        self.assertEqual(stale(tape), {"knowl"})
+        tape.close()
+        # The recording keeps the fingerprints it could read.
+        meta = dict(sqlite3.connect(out).execute("SELECT k, v FROM meta"))
+        self.assertEqual({k: v for k, v in meta.items() if k.startswith("fingerprint")},
+                         {"fingerprint userdb.users": "2 ab"})
 
     def test_edit_log(self):
         now = dbtape._utcnow()
@@ -298,7 +340,7 @@ class DbTapeTest(unittest.TestCase):
             made = [f for f in os.listdir(outdir) if f.startswith(name)]
             self.assertEqual([f.endswith(".sqlite") for f in made], [finished], made)
 
-    def write_recordings(self, name, recordings, seed="5"):
+    def write_recordings(self, name, recordings, seed="5", meta={}):
         """
         A process's tape holding ``recordings`` (rows, recorded) of one query.
         """
@@ -308,6 +350,7 @@ class DbTapeTest(unittest.TestCase):
         conn = sqlite3.connect(path)
         dbtape.create_tables(conn, recordings=True)
         conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?)", (dbtape.FORMAT, seed))
+        conn.executemany("INSERT INTO meta VALUES (?, ?)", meta.items())
         for rows, recorded in recordings:
             conn.execute("INSERT INTO tape VALUES ('k', ?, 'nf_fields', 'q', ?)",
                          (recorded, dbtape._pack(len(rows), rows)))
@@ -340,6 +383,17 @@ class DbTapeTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             dbtape.merge(self.path("merged.sqlite"), [self.write_recordings("x.sqlite", [(a, "08:00")], seed="5"),
                                                       self.write_recordings("y.sqlite", [(a, "08:00")], seed="6")])
+        # Fingerprints are kept where every process recorded the same one.
+        fp = {"fingerprint kwl_knowls": "1 10", "fingerprint userdb.users": "2 ab"}
+        dbtape.merge(self.path("merged.sqlite"), [
+            self.write_recordings("x.sqlite", [(a, "08:00")], meta=fp),
+            self.write_recordings("y.sqlite", [(a, "08:00")], meta={"fingerprint kwl_knowls": "1 11"})])
+        meta = dict(sqlite3.connect(self.path("merged.sqlite")).execute("SELECT k, v FROM meta"))
+        self.assertEqual((meta["fingerprint kwl_knowls"], meta["fingerprint userdb.users"]), ("mixed", "mixed"))
+        dbtape.merge(self.path("merged.sqlite"), [self.write_recordings("x.sqlite", [(a, "08:00")], meta=fp),
+                                                  self.write_recordings("y.sqlite", [(a, "08:00")], meta=fp)])
+        meta = dict(sqlite3.connect(self.path("merged.sqlite")).execute("SELECT k, v FROM meta"))
+        self.assertEqual(meta["fingerprint kwl_knowls"], "1 10")
 
     def test_base(self):
         # Publishing compares a recording's base with the published tape's
