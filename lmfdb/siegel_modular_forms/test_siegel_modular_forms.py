@@ -118,6 +118,19 @@ class HomePageTest(LmfdbTest):
             ["$5$", "$-1378 a - 22820$", "(2, 2, 2)", "$32016 a + 5274$"],
         )
 
+        # Non-integral modulus should give the validation message, not an exception
+        self.check(
+            "Sp4Z.18_Maass/?ev_index=&fc_det=&modulus=1%2F2&update=1",
+            "Unable to construct modulus ideal",
+        )
+        # Zero modulus means no reduction and should not flash an error
+        data = self.tc.get(
+            "/ModularForm/GSp/Q/Sp4Z.18_Maass/?ev_index=&fc_det=&modulus=0&update=1",
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        assert "Unable to construct modulus ideal" not in data
+        assert "$-144 a + 135840$" in data
+
     def test_huge_sample(self):
         """
         Test sample page with defining equation and explicit formula too large to display
