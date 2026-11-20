@@ -34,7 +34,7 @@ from .Lfunction import (
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (
     p2sage, styleTheSign, get_bread, parse_codename,
-    getConductorIsogenyFromLabel, z_plot_points)
+    getConductorIsogenyFromLabel, z_plot_points, z_plot_range)
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -1654,11 +1654,10 @@ def getLfunctionPlot(request, *args):
         else:
             return render_lfunction_exception(err)
 
+    plotrange = z_plot_range(pythonL)
     if getattr(pythonL, 'plot_record', None) is not None:
-        F_interp = z_plot_points(pythonL.plot_record, pythonL.plot_dual)
+        F_interp = z_plot_points(pythonL.plot_record, pythonL.plot_dual, plotrange)
     elif getattr(pythonL, 'plotpoints', None):
-        # Figure out plotrange
-        plotrange = 30
         F = p2sage(pythonL.plotpoints)
         #  F[0][0] is the lowest t-coordinated that we have a value for L
         #  F[-1][0] is the highest t-coordinated that we have a value for L
@@ -1671,27 +1670,6 @@ def getLfunctionPlot(request, *args):
                 break
 
         plotrange = min(plotrange, -F[0][0], F[-1][0])
-        # aim to display at most 25 axis crossings
-        # if the L-function is nonprimitive
-        if (hasattr(pythonL, 'positive_zeros')
-            and hasattr(pythonL, 'primitive')
-            and not pythonL.primitive):
-            # we stored them ready to display
-            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
-            if len(zeros) >= 25:
-                zero_range = zeros[24]
-            else:
-                zero_range = zeros[-1]*25/len(zeros)
-            zero_range *= 1.2
-            plotrange = min(plotrange, zero_range)
-
-            for t, x in F:
-                if t > 0:
-                    if t < zeros[0]:
-                        assert x > 0
-                    else:
-                        break
-
         interpolation = spline(F)
         F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
     else:
