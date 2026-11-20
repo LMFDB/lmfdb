@@ -142,6 +142,10 @@ the LMFDB data versions themselves (`2.3`, ...).
   Zenodo's file-level deduplication (new-version drafts inherit files).
 - Every step is resumable via `userdb.zenodo_backups` (including crashed
   uploads and quota pauses); `db.zenodo_audit()` catches anything missed.
+  A dropped connection during an upload is retried for about 15 minutes
+  before the run stops.  Re-running `zenodo_backup` on the same folder then
+  keeps the package already in the staging area, so it sends the same bytes
+  without compressing the table again.
   A live run first asks Zenodo about unfinished drafts, so a publication
   whose response was lost is credited to the dump it holds, and newer data
   becomes the next version.

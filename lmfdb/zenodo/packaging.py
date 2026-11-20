@@ -257,22 +257,80 @@ def split_file(path, chunk_bytes):
     return parts
 
 
+def _earlier_package(outdir, sources, compression, level, chunk_bytes,
+                     source_md5s=None):
+    """
+    The manifest of a complete package in ``outdir`` of the same ``sources``
+    (by size and md5, taken from ``source_md5s`` when given), made with the
+    same settings and with every artifact file present at its size; else None.
+    """
+    try:
+        with open(Path(outdir) / "MANIFEST.json") as F:
+            old = json.load(F)
+    except (OSError, ValueError):
+        return None
+    if (old.get("format") != MANIFEST_FORMAT
+            or old.get("compression") != compression
+            or old.get("compression_level") != level
+            or set(old.get("source_files", {})) != {src.name for src in sources}):
+        return None
+    for src in sources:
+        info = old["source_files"][src.name]
+        if src.stat().st_size != info["size"]:
+            return None
+        md5 = (source_md5s or {}).get(src.name)
+        if (md5 or hash_file(src, count_lines=False)[1]) != info["md5"]:
+            return None
+    for art in old["artifacts"]:
+        pieces = art.get("parts", [art])
+        if ("parts" in art) != (art["size"] > chunk_bytes):
+            return None
+        if any(piece["size"] > chunk_bytes for piece in pieces):
+            return None
+        for piece in pieces:
+            path = Path(outdir) / piece["name"]
+            if not path.is_file() or path.stat().st_size != piece["size"]:
+                return None
+    return old
+
+
 def _package_files(name, sources, outdir, chunk_bytes, level, force_gzip,
                    readme=None, sample_source=None, extra_manifest=None,
-                   sample_options=None):
+                   sample_options=None, source_md5s=None):
     """
     Shared packaging core: compress+split each source file into ``outdir``,
     write the sample, README and MANIFEST.json, and return the manifest dict.
 
     ``readme`` is the README's text, or a function of the manifest returning
-    it.  ``outdir`` is wiped first (it is a per-record staging area).
+    it.  ``outdir`` is wiped first (it is a per-record staging area), unless
+    it holds a complete package of the same sources: then its artifacts are
+    kept and only the sample, README and manifest are written again.  A
+    resumed upload thus sends the same bytes as the interrupted one (zstd
+    output varies between runs) without compressing everything again.
+    ``source_md5s`` (``{filename: md5}``) saves hashing the sources for that
+    comparison.
     """
     outdir = Path(outdir)
-    if outdir.exists():
-        shutil.rmtree(outdir)
-    outdir.mkdir(parents=True)
-
+    sources = [Path(src) for src in sources]
     compression = "gzip" if (force_gzip or not zstd_available()) else "zstd"
+    earlier = _earlier_package(outdir, sources, compression, level,
+                               chunk_bytes, source_md5s)
+    if earlier is not None:
+        # MANIFEST.json is overwritten last, so that a crash before then
+        # still leaves a reusable package
+        keep = {piece["name"] for art in earlier["artifacts"]
+                for piece in art.get("parts", [art])} | {"MANIFEST.json"}
+        for path in outdir.iterdir():
+            if path.name not in keep:
+                if path.is_dir():
+                    shutil.rmtree(path)
+                else:
+                    path.unlink()
+    else:
+        if outdir.exists():
+            shutil.rmtree(outdir)
+        outdir.mkdir(parents=True)
+
     manifest = {
         "format": MANIFEST_FORMAT,
         "name": name,
@@ -286,8 +344,11 @@ def _package_files(name, sources, outdir, chunk_bytes, level, force_gzip,
     if extra_manifest:
         manifest.update(extra_manifest)
 
+    if earlier is not None:
+        manifest["source_files"] = earlier["source_files"]
+        manifest["artifacts"] = earlier["artifacts"]
+        sources = []
     for src in sources:
-        src = Path(src)
         size, md5, sha256, nlines = hash_file(src)
         manifest["source_files"][src.name] = {
             "size": size,
@@ -344,10 +405,11 @@ def upload_list(outdir):
 
 def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
                   force_gzip=False, readme=None, record_version=None,
-                  extra_manifest=None):
+                  extra_manifest=None, source_md5s=None):
     """
     Package one table's dump files from ``data_folder`` into
-    ``{staging_dir}/{tablename}/``; returns the manifest dict.
+    ``{staging_dir}/{tablename}/``, keeping the artifacts of a complete
+    earlier package of the same files there; returns the manifest dict.
 
     INPUT:
 
@@ -362,6 +424,8 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
       returning them (see lmfdb.zenodo.metadata)
     - ``record_version`` -- the record's own version (e.g. "1.4")
     - ``extra_manifest`` -- more entries for MANIFEST.json (provenance)
+    - ``source_md5s`` -- the dump files' md5s, as from ``source_md5s``,
+      to compare with an earlier package without hashing the files again
     """
     sources = table_files(data_folder, tablename)
     if not sources or sources[0].name != tablename + ".txt":
@@ -371,6 +435,7 @@ def package_table(data_folder, tablename, staging_dir, chunk_gb=20, level=12,
         chunk_bytes=int(chunk_gb * 10**9), level=level, force_gzip=force_gzip,
         readme=readme, sample_source=sources[0],
         extra_manifest=dict(extra_manifest or {}, record_version=record_version),
+        source_md5s=source_md5s,
     )
 
 

@@ -674,11 +674,13 @@ def _backup_folder(db, cfg, data_folder, tables, dry_run, live, editor,
         state.update_attempt(db, attempt["id"], status="packaging")
         registry_doi = _registry_doi(db)
         registry_url = _registry_url(db, cfg)
-        provenance = _provenance(item["source_time"])
+        # a resumed attempt keeps the time of the run that started it
+        provenance = _provenance(attempt["source_time"] or item["source_time"])
         manifest = packaging.package_table(
             data_folder, name, staging,
             chunk_gb=cfg.chunk_gb, level=cfg.compression_level,
             record_version=version, extra_manifest=provenance,
+            source_md5s=item["source_md5s"],
             readme=lambda manifest: metadata.table_readme(
                 db, name, version, manifest, notes=notes,
                 registry_url=registry_url,

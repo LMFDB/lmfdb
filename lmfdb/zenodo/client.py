@@ -38,6 +38,11 @@ SANDBOX_API = "https://sandbox.zenodo.org/api"
 DEFAULT_QUOTA = 50 * 10**9
 MAX_FILES = 100
 
+# Requests sent again after a dropped connection: a PUT into a bucket replaces
+# the file.  A POST could create a second draft or act twice; the next run's
+# reconciliation recovers those instead.
+RESEND_AFTER_DISCONNECT = ("GET", "PUT")
+
 
 class ZenodoClient:
     def __init__(self, token, sandbox=False, live=False, log=print,
@@ -62,9 +67,10 @@ class ZenodoClient:
 
     def _request(self, method, path, desc, **kwds):
         """
-        Perform one API request (with retry/backoff on 429/5xx), returning
-        the parsed JSON.  ``path`` may be a full URL (bucket links) or a
-        path relative to the API base.
+        Perform one API request (with retry/backoff on 429/5xx, and on a
+        dropped connection for the methods in ``RESEND_AFTER_DISCONNECT``),
+        returning the parsed JSON.  ``path`` may be a full URL (bucket links)
+        or a path relative to the API base.
         """
         if not self.live:
             raise NotLive(
@@ -89,8 +95,19 @@ class ZenodoClient:
             self._last_request = time.time()
             if self.guard is not None:
                 self.guard()
-            resp = self._session.request(method, url, headers=headers,
-                                         timeout=(30, 600), **kwds)
+            try:
+                resp = self._session.request(method, url, headers=headers,
+                                             timeout=(30, 600), **kwds)
+            except (requests.ConnectionError, requests.Timeout,
+                    requests.exceptions.ChunkedEncodingError) as err:
+                if (method not in RESEND_AFTER_DISCONNECT
+                        or attempt == self.max_retries - 1):
+                    raise
+                delay = min(30 * 2 ** attempt, 600)
+                self.log("Connection to Zenodo lost during %s (%s); retrying "
+                         "in %ss" % (desc, err, delay))
+                time.sleep(delay)
+                continue
             if resp.status_code in (429, 500, 502, 503, 504):
                 delay = resp.headers.get("Retry-After")
                 delay = int(delay) if delay and delay.isdigit() else 2 ** attempt

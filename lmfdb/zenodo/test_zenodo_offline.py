@@ -204,6 +204,47 @@ def test_package_table(tmp_path):
     assert names[:3] == ["README.md", name + "_sample.md", "MANIFEST.json"]
 
 
+def test_package_reuses_an_earlier_package(tmp_path, monkeypatch):
+    dump = tmp_path / "dump"
+    name = make_dump(dump, nrows=50)
+    staging, outdir = tmp_path / "staging", tmp_path / "staging" / name
+    # 100-byte parts, so that the search file's artifact is split
+    first = packaging.package_table(dump, name, staging, force_gzip=True,
+                                    chunk_gb=1e-7, readme="# v1\n",
+                                    record_version="1.0")
+    (outdir / "stray.txt").write_text("left over")
+    calls = []
+    real = packaging.compress_file
+    monkeypatch.setattr(packaging, "compress_file",
+                        lambda *args, **kwds: calls.append(args) or real(*args, **kwds))
+
+    second = packaging.package_table(dump, name, staging, force_gzip=True,
+                                     chunk_gb=1e-7, readme="# v2\n",
+                                     record_version="1.1",
+                                     source_md5s=packaging.source_md5s(dump, name))
+    assert not calls
+    assert second["artifacts"] == first["artifacts"]
+    assert second["record_version"] == "1.1"
+    assert (outdir / "README.md").read_text() == "# v2\n"
+    assert not (outdir / "stray.txt").exists()
+    assert json.loads((outdir / "MANIFEST.json").read_text()) == second
+
+    # packaged again after losing a part, with another chunk size, or for
+    # changed sources
+    parts = [p for art in second["artifacts"] for p in art.get("parts", [])]
+    assert parts
+    (outdir / parts[0]["name"]).unlink()
+    packaging.package_table(dump, name, staging, force_gzip=True, chunk_gb=1e-7)
+    assert len(calls) == 6
+    packaging.package_table(dump, name, staging, force_gzip=True)
+    assert len(calls) == 12
+    with open(dump / (name + ".txt"), "a") as F:
+        F.write("50|lab.50|2500\n")
+    third = packaging.package_table(dump, name, staging, force_gzip=True)
+    assert len(calls) == 18
+    assert third["source_files"][name + ".txt"]["rows"] == 51
+
+
 def test_gzip_output_is_reproducible(tmp_path, monkeypatch):
     import itertools
     from types import SimpleNamespace
@@ -729,6 +770,37 @@ def test_upload_retry_resends_whole_file(tmp_path, monkeypatch):
     client._session = Session()
     client.upload_file("https://example.org/bucket", path)
     assert bodies == [payload, payload]
+
+
+def test_dropped_connection_is_retried_for_uploads(tmp_path, monkeypatch):
+    requests = pytest.importorskip("requests")
+    import time
+    sleeps = []
+    monkeypatch.setattr(time, "sleep", sleeps.append)
+    payload = b"payload" * 1000
+    path = tmp_path / "zzz_demo.txt.zst"
+    path.write_bytes(payload)
+    calls, bodies = [], []
+
+    class Session:
+        def request(self, method, url, data=None, **kwds):
+            calls.append(method)
+            if data is not None:
+                bodies.append(data.read())
+            if len(calls) == 1:
+                raise requests.exceptions.SSLError(
+                    "EOF occurred in violation of protocol")
+            return _Response(200, {"checksum": "md5:" + hashlib.md5(payload).hexdigest()})
+
+    client = ZenodoClient("fake-token", live=True, min_interval=0, log=lambda msg: None)
+    client._session = Session()
+    client.upload_file("https://example.org/bucket", path)
+    assert bodies == [payload, payload] and sleeps == [30]
+    # a POST is not sent again: it could create a second draft
+    calls.clear()
+    with pytest.raises(requests.ConnectionError):
+        client.create_deposition()
+    assert calls == ["POST"]
 
 
 def test_quota_response_is_classified(tmp_path):
@@ -1556,6 +1628,36 @@ def test_interrupted_upload_counts_sent_bytes(scratch_db, tmp_path, monkeypatch)
     assert sum(f["size"] for f in row["uploaded_files"].values()
                if not f.get("reused")) == row["total_size"]
     assert state.uploaded_bytes_since(db, datetime(2026, 1, 1)) >= row["total_size"]
+
+
+def test_resumed_upload_keeps_its_package(scratch_db, tmp_path, monkeypatch):
+    from datetime import datetime
+    db = scratch_db
+    backup, state, fake, cfg = push_setup(db, tmp_path, monkeypatch)
+    monkeypatch.setattr(packaging, "zstd_available", lambda: False)
+    manifests = []
+    real = packaging.package_table
+    monkeypatch.setattr(packaging, "package_table", lambda *args, **kwds:
+                        manifests.append(real(*args, **kwds)) or manifests[-1])
+    make_dump(tmp_path / "push", "zzz_a")
+    fake.fail_upload = "zzz_a_stats.txt.gz"
+    reloaded = datetime(2026, 1, 2, 3, 4, 5)
+    with pytest.raises(ConnectionError):
+        backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True,
+                             config=cfg, source_time=reloaded)
+
+    compress = packaging.compress_file
+
+    def compress_knowls(src, *args, **kwds):
+        assert not src.name.startswith("zzz_a"), "compressed again"
+        return compress(src, *args, **kwds)
+    monkeypatch.setattr(packaging, "compress_file", compress_knowls)
+    fake.uploads.clear()
+    backup.backup_folder(db, tmp_path / "push", dry_run=False, live=True, config=cfg)
+    assert [f for f in fake.uploads
+            if f.startswith("zzz_a") and f.endswith(".gz")] == ["zzz_a_stats.txt.gz"]
+    assert manifests[-1]["source_time"] == "2026-01-02T03:04:05Z"
+    assert state.latest_published(db, "zzz_a")["status"] == "verified"
 
 
 def test_gzip_artifacts_of_unchanged_files_are_reused(scratch_db, tmp_path,
