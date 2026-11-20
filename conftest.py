@@ -22,13 +22,16 @@ logs every psycodict editing operation, has an entry for it later than the
 recording.  Knowls are saved without that log, so for them a fingerprint of
 the table (FINGERPRINTS) is compared with the one recorded.  Tapes are
 published, so queries on the userdb schema are never recorded, and recording
-refuses to run as a role that can read user passwords.
+refuses to run as a role that can read user passwords.  Queries not tied to
+any table, or whose SQL cannot be followed, always run live.
 DBTAPE_STALE lists further tables to treat as edited ("all" for every table),
 which is the way to refresh after editing data with raw SQL.  The results of
 catalog queries, which psycodict reads its registry of tables from, go stale
-together after any logged edit.  Nothing goes stale with age alone, so a
-recording that cannot read the edit log or a fingerprint fails and leaves no
-tape; a replay that cannot only warns.  See the "Query tape" section of
+together after any logged edit, or when a fingerprint of the table
+definitions changes (psycodict does not log dropping or renaming a table).
+Nothing goes stale with age alone, so a recording that cannot read the edit
+log or a fingerprint fails and leaves no tape; a replay that cannot only
+warns.  See the "Query tape" section of
 Development.md.
 
 This is a root conftest.py so that pytest loads it before any test module
@@ -58,8 +61,15 @@ CLOCK_SKEW = datetime.timedelta(hours=1)
 FORMAT = "2"
 # Tables edited without psycodict's logging (knowls by lmfdb.knowledge), each
 # with a query whose result changes whenever the table does.
+CATALOG = "catalog"
 FINGERPRINTS = {
     "kwl_knowls": "SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls",
+    # psycodict does not log dropping or renaming a table.  DDL writes new
+    # pg_class rows (data edits, VACUUM and ANALYZE do not), and metadata
+    # changes write new meta_tables rows.
+    CATALOG: "SELECT (SELECT count(*) FROM pg_class WHERE relnamespace = 'public'::regnamespace), "
+             "(SELECT sum(xmin::text::bigint) FROM pg_class WHERE relnamespace = 'public'::regnamespace) "
+             "+ (SELECT coalesce(sum(xmin::text::bigint), 0) FROM meta_tables)",
 }
 # Tapes are published, so nothing from the schema holding accounts and the
 # edit log is ever recorded or replayed, whatever role a recording runs as.
@@ -237,15 +247,85 @@ def _unpack(blob):
     return rowcount, [tuple(_decode(r)) for r in rows]
 
 
-_TABLE_RE = re.compile(r'\b(?:FROM|JOIN)\s+((?:"[^"]+"|\w+)(?:\.(?:"[^"]+"|\w+))?)', re.IGNORECASE)
+_TOKEN_RE = re.compile(r"""
+    (?P<str>[Ee]'(?:[^'\\]|\\.|'')*'|'(?:[^']|'')*')
+  | (?P<qid>"(?:[^"]|"")*")
+  | (?P<word>[A-Za-z_][\w$]*)
+  | (?P<num>\d[\w.]*)
+  | (?P<other>\S)
+""", re.VERBOSE)
+# Words that end a FROM item, so cannot be its alias
+_CLAUSE_WORDS = {"WHERE", "GROUP", "ORDER", "LIMIT", "OFFSET", "HAVING", "WINDOW", "UNION", "EXCEPT",
+                 "INTERSECT", "FETCH", "FOR", "ON", "USING", "JOIN", "INNER", "LEFT", "RIGHT", "FULL",
+                 "CROSS", "NATURAL", "TABLESAMPLE", "RETURNING"}
 
 
 def tables_read(sql):
     """
-    The tables a query reads, as far as its text shows.  Extra names (from
+    The tables a query reads, as far as its text shows, or None if it cannot
+    be followed (unbalanced quotes or parentheses).  Extra names (from
     EXTRACT(... FROM col), say) only make an entry go stale more often.
     """
-    return sorted({m.replace('"', "") for m in _TABLE_RE.findall(sql)})
+    tokens = [(m.lastgroup, m.group()) for m in _TOKEN_RE.finditer(sql)]
+    depth = 0
+    for kind, tok in tokens:
+        if kind == "other" and tok in "'\"":
+            return None
+        depth += (tok == "(") - (tok == ")")
+        if depth < 0:
+            return None
+    if depth:
+        return None
+
+    def skip_parens(i):
+        depth = 0
+        for j in range(i, len(tokens)):
+            depth += (tokens[j][1] == "(") - (tokens[j][1] == ")")
+            if not depth:
+                return j + 1
+        return len(tokens)
+
+    def name_at(i):
+        parts = []
+        while i < len(tokens) and tokens[i][0] in ("word", "qid"):
+            kind, tok = tokens[i]
+            parts.append(tok[1:-1].replace('""', '"') if kind == "qid" else tok.lower())
+            if i + 1 < len(tokens) and tokens[i + 1][1] == ".":
+                i += 2
+            else:
+                i += 1
+                break
+        return ".".join(parts), i
+
+    names = set()
+    for start, (kind, tok) in enumerate(tokens):
+        if kind != "word" or tok.upper() not in ("FROM", "JOIN"):
+            continue
+        # Each item of this FROM list; subqueries inside are found by this loop.
+        i = start + 1
+        while i < len(tokens):
+            while i < len(tokens) and tokens[i][1].upper() in ("ONLY", "LATERAL"):
+                i += 1
+            if i < len(tokens) and tokens[i][1] == "(":
+                i = skip_parens(i)
+            else:
+                name, j = name_at(i)
+                if not name:
+                    break
+                if j < len(tokens) and tokens[j][1] == "(":
+                    i = skip_parens(j)
+                else:
+                    names.add(name[len("public."):] if name.startswith("public.") else name)
+                    i = j
+            if i < len(tokens) and tokens[i][1].upper() == "AS":
+                i += 1
+            if i < len(tokens) and tokens[i][0] in ("word", "qid") and tokens[i][1].upper() not in _CLAUSE_WORDS:
+                i += 1
+            if i < len(tokens) and tokens[i][1] == ",":
+                i += 1
+            else:
+                break
+    return sorted(names)
 
 
 def is_catalog(table):
@@ -291,10 +371,11 @@ class _Entry:
     caller can change it.
     """
 
-    def __init__(self, key, sql, rowcount):
+    def __init__(self, key, sql, rowcount, tables):
         self.key = key
         self.sql = sql
         self.rowcount = rowcount
+        self.tables = tables
         self.rows = []
         self.error = None
         self.recorded = _utcnow().isoformat(timespec="seconds")
@@ -325,6 +406,7 @@ class Tape:
         self.copied = set()
         self.changes = None
         self.unlogged = {}
+        self.catalog_changed = False
         # What could not be checked, which keeps a recording from being kept.
         self.problems = []
         self.edit_log = "not read"
@@ -397,8 +479,11 @@ class Tape:
         for table in current:
             if self.src is not None and current[table] != self.fingerprints.get(table):
                 status.append("%s changed" % table)
-                for rel in edited_relations(table):
-                    self.unlogged[rel] = self.now
+                if table == CATALOG:
+                    self.catalog_changed = True
+                else:
+                    for rel in edited_relations(table):
+                        self.unlogged[rel] = self.now
         self.fingerprint_status = ", ".join(status) or ("no unlogged changes" if self.src else "fingerprints read")
         if self.recording:
             self.out.executemany("INSERT OR REPLACE INTO meta VALUES (?, ?)",
@@ -457,7 +542,7 @@ class Tape:
         if catalog:
             # psycodict checks the catalog results against each other, so
             # they must all describe the database at the same time.
-            if self.forced:
+            if self.forced or self.catalog_changed:
                 return True
             recorded = self.catalog_recorded or recorded
         elif self.forced.intersection(tables):
@@ -492,7 +577,7 @@ class Tape:
             self.log("unrecordable (%s)" % entry.error, entry.sql)
             return
         self.out.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)",
-                         (entry.key, entry.recorded, " ".join(tables_read(entry.sql)), entry.sql,
+                         (entry.key, entry.recorded, " ".join(entry.tables), entry.sql,
                           _pack(entry.rowcount, entry.rows)))
         self.stats["recorded"] += 1
 
@@ -560,7 +645,10 @@ class TapeCursor:
         key = hashlib.sha256(sql.encode()).hexdigest()
         self._drop_entry()
         self._rows, self._pos, self._live = None, 0, None
-        found = "private" if is_private(sql) else tape.lookup(key)
+        tables = tables_read(sql)
+        # Results not tied to any table (pg_is_in_recovery(), settings) differ
+        # between grace and devmirror, so they are never taped.
+        found = "live" if not tables or is_private(sql) else tape.lookup(key)
         if type(found) is tuple:
             tape.stats["hit"] += 1
             self.rowcount, self._rows = found
@@ -571,11 +659,11 @@ class TapeCursor:
         if real.description is None:
             # SET, BEGIN and the like: always run, never recorded
             return self
-        if found != "private":
+        if found != "live":
             tape.stats[found] += 1
             tape.log(found, sql)
             if tape.recording:
-                self._entry = _Entry(key, sql, self.rowcount)
+                self._entry = _Entry(key, sql, self.rowcount, tables)
         if self.withhold:
             self._live = iter(real)
         else:

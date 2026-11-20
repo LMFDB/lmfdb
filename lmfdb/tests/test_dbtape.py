@@ -266,41 +266,80 @@ class DbTapeTest(unittest.TestCase):
         # Age alone makes nothing stale, recording or not.
         tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"))
         tape.now += 1000 * DAY
-        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (0, 0)}))
+        tape.fingerprints = {"kwl_knowls": "0 0", "catalog": "0 0"}
+        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (0, 0), "catalog": (0, 0)}))
         self.assertEqual(stale(tape), set())
         self.assertEqual(tape.problems, [])
         tape.close()
 
     def test_fingerprints(self):
-        # Knowls are edited without the edit log.
+        # Knowls, and tables dropped or renamed, change without the edit log.
         now = dbtape._utcnow()
         entries = [("knowl", "kwl_knowls", now - DAY), ("field", "nf_fields", now - DAY),
-                   ("catalog", "meta_tables", now - DAY)]
-        path = self.make_tape(entries, {"fingerprint kwl_knowls": "1 10"})
+                   ("catalog", "meta_tables", now - DAY), ("relations", "pg_class pg_namespace", now - DAY)]
+        path = self.make_tape(entries, {"fingerprint kwl_knowls": "1 10", "fingerprint catalog": "5 50"})
 
         def stale(tape):
             return {name for name, _, _ in entries if tape.lookup(key(name)) == "stale"}
+        same = {"kwl_knowls": (1, 10), "catalog": (5, 50)}
         tape = dbtape.Tape("replay", src=path)
-        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (1, 10)}))
+        tape.read_edit_log(FakeConnection(fingerprints=same))
         self.assertEqual(stale(tape), set())
         tape = dbtape.Tape("replay", src=path)
-        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (1, 11)}))
-        # The catalog only follows logged edits.
+        tape.read_edit_log(FakeConnection(fingerprints=dict(same, kwl_knowls=(1, 11))))
+        # Knowl edits do not touch the catalog,
         self.assertEqual(stale(tape), {"knowl"})
         self.assertEqual(tape.fingerprint_status, "kwl_knowls changed")
-        # A recording keeps the fingerprint it read,
+        # and a schema change is the catalog alone.
+        tape = dbtape.Tape("replay", src=path)
+        tape.read_edit_log(FakeConnection(fingerprints=dict(same, catalog=(4, 61))))
+        self.assertEqual(stale(tape), {"catalog", "relations"})
+        # A recording keeps the fingerprints it read,
         out = self.path("out.sqlite")
         tape = dbtape.Tape("record", src=path, out=out)
-        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (1, 11)}))
+        tape.read_edit_log(FakeConnection(fingerprints=dict(same, kwl_knowls=(1, 11))))
         tape.close()
         meta = dict(sqlite3.connect(out).execute("SELECT k, v FROM meta"))
-        self.assertEqual(meta["fingerprint kwl_knowls"], "1 11")
-        # and one that cannot read it is not kept.
+        self.assertEqual((meta["fingerprint kwl_knowls"], meta["fingerprint catalog"]), ("1 11", "5 50"))
+        # and one that cannot read them is not kept.
         tape = dbtape.Tape("record", src=path, out=self.path("out2.sqlite"))
         tape.read_edit_log(FakeConnection())
         self.assertEqual(stale(tape), set())
-        self.assertEqual(tape.problems, ["the kwl_knowls fingerprint is unreadable (InsufficientPrivilege)"])
+        self.assertEqual(tape.problems, ["the kwl_knowls fingerprint is unreadable (InsufficientPrivilege)",
+                                         "the catalog fingerprint is unreadable (InsufficientPrivilege)"])
         tape.close()
+
+    def test_tables_read(self):
+        cases = {
+            "SELECT label FROM nf_fields": ["nf_fields"],
+            'SELECT * FROM public.nf_fields': ["nf_fields"],
+            'SELECT * FROM "public"."nf_fields"': ["nf_fields"],
+            "SELECT * FROM ONLY nf_fields": ["nf_fields"],
+            "SELECT * FROM a x, b AS y, c WHERE x.id = y.id": ["a", "b", "c"],
+            "SELECT * FROM (SELECT * FROM a) s, b": ["a", "b"],
+            "SELECT * FROM a JOIN b ON a.x = b.x LEFT JOIN c USING (x)": ["a", "b", "c"],
+            "SELECT UNIQ(SORT(ARRAY_AGG(e))) FROM ec_nfcurves, UNNEST(isodeg) AS e": ["ec_nfcurves"],
+            "SELECT * FROM t WHERE label = 'x FROM y, z'": ["t"],
+            "SELECT * FROM t WHERE label = E'it\\'s FROM q'": ["t"],
+            "SELECT pg_is_in_recovery()": [],
+            # unbalanced, so never taped
+            "SELECT * FROM t WHERE (x": None,
+            "SELECT * FROM t WHERE x = 'open": None,
+        }
+        for sql, tables in cases.items():
+            self.assertEqual(dbtape.tables_read(sql), tables, sql)
+
+    def test_queries_without_tables_are_live(self):
+        # What they return (recovery state, settings) differs between grace and devmirror.
+        from lmfdb.utils.psycopg_compat import SQL
+
+        def ask():
+            return list(db._execute(SQL("SELECT pg_is_in_recovery()")))
+        live, path = self.record(ask)
+        self.assertEqual(self.recorded_stats["recorded"], 0)
+        with using(replaying(path)) as tape:
+            self.assertEqual(ask(), live)
+        self.assertEqual((tape.stats["hit"], tape.stats["miss"]), (0, 0))
 
     def test_private_queries(self):
         # Accounts and the edit log are never put on a tape, which is published.
@@ -333,13 +372,13 @@ class DbTapeTest(unittest.TestCase):
         # Recording as a role that can read passwords is refused; replaying is not.
         tape = dbtape.Tape("record", out=self.path("out.sqlite"))
         with self.assertRaises(RuntimeError):
-            tape.read_edit_log(FakeConnection(privileged=True, fingerprints={"kwl_knowls": (1, 10)}))
+            tape.read_edit_log(FakeConnection(privileged=True, fingerprints={"kwl_knowls": (1, 10), "catalog": (5, 50)}))
         tape.close(complete=False)
         tape = dbtape.Tape("record", out=self.path("out.sqlite"))
-        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (1, 10)}))
+        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (1, 10), "catalog": (5, 50)}))
         tape.close()
         tape = dbtape.Tape("replay", src=self.path("out.sqlite"))
-        tape.read_edit_log(FakeConnection(privileged=True, fingerprints={"kwl_knowls": (1, 10)}))
+        tape.read_edit_log(FakeConnection(privileged=True, fingerprints={"kwl_knowls": (1, 10), "catalog": (5, 50)}))
 
     def test_edit_log(self):
         now = dbtape._utcnow()
