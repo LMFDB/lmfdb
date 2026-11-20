@@ -24,13 +24,10 @@ a fingerprint of the table (FINGERPRINTS) is compared with the one recorded.
 DBTAPE_STALE lists further tables to treat as edited ("all" for every table),
 which is the way to refresh after editing data with raw SQL.  The results of
 catalog queries, which psycodict reads its registry of tables from, go stale
-together after any logged edit.  When recording, age stands in for checks
-that could not be made: if the edit log cannot be read, every result is
-fetched again once it is older than its limit, and if a fingerprint cannot
-be read, so are that table's results.  Each result's limit lies between half
-and one and a half times DBTAPE_MAX_AGE_DAYS (14 by default); the catalog's
-is DBTAPE_MAX_AGE_DAYS itself.  Replays never refresh by age.  See the
-"Query tape" section of Development.md.
+together after any logged edit.  Nothing goes stale with age alone, so a
+recording that cannot read the edit log or a fingerprint fails and leaves no
+tape; a replay that cannot only warns.  See the "Query tape" section of
+Development.md.
 
 This is a root conftest.py so that pytest loads it before any test module
 imports lmfdb, which connects and reads the table metadata at import time.
@@ -313,19 +310,18 @@ class Tape:
     complete, so a run that crashed or never got to its tests leaves no tape.
     """
 
-    def __init__(self, mode, src=None, out=None, stale=(), max_age=datetime.timedelta(days=14),
-                 misslog=None, seed=None):
+    def __init__(self, mode, src=None, out=None, stale=(), misslog=None, seed=None):
         self.mode = mode
         self.all_stale = "all" in stale
         self.forced = {rel for table in stale for rel in edited_relations(table)}
-        self.max_age = max_age
         self.misslog = misslog
         self.where = "collection"
         self.stats = dict.fromkeys(["hit", "miss", "stale", "recorded", "unrecordable", "unfinished"], 0)
         self.copied = set()
         self.changes = None
         self.unlogged = {}
-        self.unverified = set()
+        # What could not be checked, which keeps a recording from being kept.
+        self.problems = []
         self.edit_log = "not read"
         self.fingerprint_status = ""
         self.since = None
@@ -383,19 +379,18 @@ class Tape:
         with the ones recorded, and record the current ones.
         """
         current = {}
+        status = []
         for table, query in FINGERPRINTS.items():
             try:
                 with conn.transaction():
                     with conn.cursor() as cur:
                         cur.execute(query)
                         current[table] = "%s %s" % tuple(cur.fetchone())
-            except Exception:
-                self.unverified.add(table)
-        status = []
-        for table in FINGERPRINTS:
-            if table in self.unverified:
-                status.append("%s unreadable" % table)
-            elif self.src is not None and current[table] != self.fingerprints.get(table):
+            except Exception as err:
+                status.append("%s unreadable (%s)" % (table, type(err).__name__))
+                self.problems.append("the %s fingerprint is unreadable (%s)" % (table, type(err).__name__))
+        for table in current:
+            if self.src is not None and current[table] != self.fingerprints.get(table):
                 status.append("%s changed" % table)
                 for rel in edited_relations(table):
                     self.unlogged[rel] = self.now
@@ -423,6 +418,7 @@ class Tape:
                     rows = cur.fetchall()
         except Exception as err:
             self.edit_log = "unreadable (%s)" % type(err).__name__
+            self.problems.append("the edit log is unreadable (%s)" % type(err).__name__)
             return
         self.edit_log = "read (%s tables edited)" % len(rows)
         self.changes = {}
@@ -431,7 +427,7 @@ class Tape:
                 for rel in edited_relations(table):
                     self.changes[rel] = max(self.changes.get(rel, when), when)
 
-    def is_stale(self, key, tables, recorded):
+    def is_stale(self, tables, recorded):
         if self.all_stale:
             return True
         catalog = any(is_catalog(t) for t in tables)
@@ -440,20 +436,10 @@ class Tape:
             # they must all describe the database at the same time.
             if self.forced:
                 return True
-            recorded, spread = self.catalog_recorded or recorded, 1
-        else:
-            if self.forced.intersection(tables):
-                return True
-            # Spread expiry over 0.5 to 1.5 times max_age so a tape recorded
-            # all at once is refreshed a little at a time.
-            spread = 0.5 + int(key[:8], 16) / 2**32
-        recorded = datetime.datetime.fromisoformat(recorded)
-        if self.recording and self.now - recorded > self.max_age * spread:
-            # Age stands in for the checks that could not be made: the edit
-            # log for every result, or the fingerprint for its tables.
-            if self.changes is None or self.unverified.intersection(tables):
-                return True
-        cutoff = recorded - CLOCK_SKEW
+            recorded = self.catalog_recorded or recorded
+        elif self.forced.intersection(tables):
+            return True
+        cutoff = datetime.datetime.fromisoformat(recorded) - CLOCK_SKEW
         if catalog:
             return bool(self.changes) and max(self.changes.values()) > cutoff
         return any(changes.get(t, cutoff) > cutoff for changes in (self.changes or {}, self.unlogged) for t in tables)
@@ -469,7 +455,7 @@ class Tape:
         if row is None:
             return "miss"
         recorded, tables, blob = row
-        if self.is_stale(key, tables.split(), recorded):
+        if self.is_stale(tables.split(), recorded):
             return "stale"
         if self.recording and key not in self.copied:
             self.copied.add(key)
@@ -674,7 +660,6 @@ def pytest_configure(config):
         out = out_path(os.environ.get("DBTAPE_OUT", "dbtape-out"), config.args)
     tape = Tape(MODE, src=os.environ.get("DBTAPE_FILE", "dbtape.sqlite"), out=out,
                 stale=os.environ.get("DBTAPE_STALE", "").split(),
-                max_age=datetime.timedelta(days=float(os.environ.get("DBTAPE_MAX_AGE_DAYS", "14"))),
                 misslog=os.environ.get("DBTAPE_MISSLOG"), seed=os.environ.get("DBTAPE_SEED"))
     if tape.src is None and not tape.recording:
         sys.stderr.write("dbtape: no usable tape, so every query goes to the database\n")
@@ -704,6 +689,14 @@ def pytest_terminal_summary(terminalreporter, config):
     if summary:
         with open(summary, "a") as F:
             F.write("- %s\n" % line)
+    for problem in _tape.problems:
+        if _tape.recording:
+            problem = "dbtape: %s, so this recording is discarded" % problem
+        else:
+            problem = "dbtape: %s, so stale results may have been replayed" % problem
+        if os.environ.get("GITHUB_ACTIONS"):
+            problem = ("::error::" if _tape.recording else "::warning::") + problem
+        terminalreporter.write_line(problem)
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -711,6 +704,11 @@ def pytest_sessionfinish(session, exitstatus):
         # Failing tests still leave a usable tape; errors in collection,
         # interruptions and internal errors do not.
         _tape.finished = int(exitstatus) in (0, 1)
+        if _tape.recording and _tape.problems:
+            # Its results could never go stale, so it must not be published.
+            _tape.finished = False
+            if int(exitstatus) == 0:
+                session.exitstatus = 1
 
 
 def pytest_unconfigure(config):

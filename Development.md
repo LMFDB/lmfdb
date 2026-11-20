@@ -413,7 +413,7 @@ The devmirror test jobs in CI do not fetch most of their data from devmirror, wh
 - Every run of the Tests workflow on `main` (each push, and one a day) records what its tests fetched and publishes a new tape, unless another run published one while it was recording. Only results read to the end are recorded, so a search that a test stops reading early always runs live.
 - Results for a table go stale when the table is edited. LMFDB logs every psycodict editing operation (`reload`, `update_from_file`, `add_column`, ...) in `userdb.dbrecord`, and when the public `lmfdb` role can read that table's `tablename` and `time` columns, replays fetch tables edited since they were recorded from the database instead. So after changing data that a pull request depends on, rerunning its tests is enough.
 - Knowls and user accounts are saved without that log, so for `kwl_knowls` and `userdb.users` the tape stores a fingerprint of the table (its row count with a sum of row versions, or a hash of the columns the tests can read) and treats the table as edited when the fingerprint changes.
-- For an edit neither shows, such as one made with raw SQL, run the Tests workflow on `main` from the Actions tab with the table names in `stale_tables` (or `all`). If the edit log or a fingerprint cannot be read, recordings fall back on refreshing results more than one to three weeks old.
+- For an edit neither shows, such as one made with raw SQL, run the Tests workflow on `main` from the Actions tab with the table names in `stale_tables` (or `all`). Nothing goes stale with age alone, so a recording run that cannot read the edit log or a fingerprint fails and publishes nothing; a replay that cannot only warns.
 
 To run tests locally against the tape:
 ```

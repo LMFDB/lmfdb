@@ -216,18 +216,18 @@ class DbTapeTest(unittest.TestCase):
     def test_catalog_queries_follow_any_edit(self):
         _, path = self.record(db.refresh_tables)
         tape = dbtape.Tape("replay", src=path)
-        rows = tape.src.execute("SELECT k, t, r FROM tape").fetchall()
+        rows = tape.src.execute("SELECT t, r FROM tape").fetchall()
         self.assertTrue(rows)
-        for k, tables, recorded in rows:
+        for tables, recorded in rows:
             self.assertTrue(any(dbtape.is_catalog(t) for t in tables.split()), tables)
-            self.assertFalse(tape.is_stale(k, tables.split(), recorded))
+            self.assertFalse(tape.is_stale(tables.split(), recorded))
         # A table created later shows up only in what these queries return.
         tape.changes = {"a_new_table": dbtape._utcnow() + HOUR}
-        for k, tables, recorded in rows:
-            self.assertTrue(tape.is_stale(k, tables.split(), recorded), tables)
+        for tables, recorded in rows:
+            self.assertTrue(tape.is_stale(tables.split(), recorded), tables)
         tape = dbtape.Tape("replay", src=path, stale=["a_new_table"])
-        for k, tables, recorded in rows:
-            self.assertTrue(tape.is_stale(k, tables.split(), recorded), tables)
+        for tables, recorded in rows:
+            self.assertTrue(tape.is_stale(tables.split(), recorded), tables)
 
     def test_staleness(self):
         now = dbtape._utcnow()
@@ -260,19 +260,12 @@ class DbTapeTest(unittest.TestCase):
         self.assertEqual(stale(tape), {"untouched", "catalog", "older catalog"})
         tape = dbtape.Tape("replay", src=path, stale=["hgcwa_per_group_stats"])
         self.assertEqual(stale(tape), {"stats-named", "its stats", "catalog", "older catalog"})
-        # Without the edit log, recording refreshes results by age, and the
-        # catalog all at once; replaying does not.
-        tape = dbtape.Tape("replay", src=path, max_age=HOUR)
+        # Age alone makes nothing stale, recording or not.
+        tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"))
+        tape.now += 1000 * DAY
+        tape.read_edit_log(FakeConnection(fingerprints={"kwl_knowls": (0, 0), "userdb.users": (0, 0)}))
         self.assertEqual(stale(tape), set())
-        tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=HOUR)
-        self.assertEqual(stale(tape), {name for name, _, _ in entries})
-        tape.close()
-        tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=HOUR)
-        tape.read_edit_log(FakeConnection())
-        self.assertEqual(stale(tape), set())
-        tape.close()
-        tape = dbtape.Tape("record", src=path, out=self.path("out.sqlite"), max_age=2 * DAY)
-        self.assertTrue({"catalog", "older catalog"} <= stale(tape))
+        self.assertEqual(tape.problems, [])
         tape.close()
 
     def test_fingerprints(self):
@@ -293,13 +286,15 @@ class DbTapeTest(unittest.TestCase):
         # The catalog only follows logged edits.
         self.assertEqual(stale(tape), {"knowl"})
         self.assertEqual(tape.fingerprint_status, "kwl_knowls changed")
-        # A table that cannot be fingerprinted is refreshed by age instead.
+        # A fingerprint that cannot be read is a problem, which keeps a
+        # recording from being published.
         out = self.path("out.sqlite")
-        tape = dbtape.Tape("record", src=path, out=out, max_age=HOUR)
+        tape = dbtape.Tape("record", src=path, out=out)
         tape.read_edit_log(FakeConnection(fingerprints={"userdb.users": (2, "ab")}))
-        self.assertEqual(stale(tape), {"knowl"})
+        self.assertEqual(stale(tape), set())
+        self.assertEqual(tape.problems, ["the kwl_knowls fingerprint is unreadable (InsufficientPrivilege)"])
         tape.close()
-        # The recording keeps the fingerprints it could read.
+        # It keeps the fingerprints it could read.
         meta = dict(sqlite3.connect(out).execute("SELECT k, v FROM meta"))
         self.assertEqual({k: v for k, v in meta.items() if k.startswith("fingerprint")},
                          {"fingerprint userdb.users": "2 ab"})
@@ -326,6 +321,7 @@ class DbTapeTest(unittest.TestCase):
         tape.read_edit_log(FakeConnection(error=psycopg.errors.InsufficientPrivilege("denied")))
         self.assertEqual(tape.edit_log, "unreadable (InsufficientPrivilege)")
         self.assertIsNone(tape.changes)
+        self.assertIn("the edit log is unreadable (InsufficientPrivilege)", tape.problems)
         tape.read_edit_log(FakeConnection(rows=[("ec_curvedata", now - HOUR), ("ec_curvedata_counts", now)]))
         self.assertEqual(tape.changes, {"ec_curvedata": now - HOUR, "ec_curvedata_stats": now - HOUR,
                                         "ec_curvedata_counts": now, "ec_curvedata_counts_counts": now,
@@ -351,15 +347,25 @@ class DbTapeTest(unittest.TestCase):
         env = {k: v for k, v in os.environ.items() if not k.startswith("DBTAPE_") and k != "GITHUB_STEP_SUMMARY"}
         env.update(DBTAPE_MODE="record", DBTAPE_OUT=outdir, DBTAPE_SEED="1",
                    PYTHONPATH=os.pathsep.join(filter(None, [os.path.dirname(dbtape.__file__), env.get("PYTHONPATH")])))
-        for name, body, finished in [("test_pass.py", "def test_x():\n    pass\n", True),
-                                     ("test_fail.py", "def test_x():\n    assert False\n", True),
-                                     ("test_broken.py", "raise RuntimeError('database unreachable')\n", False)]:
+        # A test that runs into a database it cannot check staleness on
+        unchecked = ("import conftest\n"
+                     "class Unreadable:\n"
+                     "    def transaction(self):\n"
+                     "        raise RuntimeError('permission denied')\n"
+                     "def test_x():\n"
+                     "    conftest._tape.read_edit_log(Unreadable())\n")
+        for name, body, finished, status in [("test_pass.py", "def test_x():\n    pass\n", True, 0),
+                                             ("test_fail.py", "def test_x():\n    assert False\n", True, 1),
+                                             ("test_broken.py", "raise RuntimeError('database unreachable')\n", False, 2),
+                                             ("test_unchecked.py", unchecked, False, 1)]:
             with open(self.path(name), "w") as F:
                 F.write(body)
-            subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "conftest", "-p", "no:cacheprovider", name],
-                           cwd=self.dir, env=env, capture_output=True)
+            run = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "conftest", "-p", "no:cacheprovider", name],
+                                 cwd=self.dir, env=env, capture_output=True, text=True)
             made = [f for f in os.listdir(outdir) if f.startswith(name)]
             self.assertEqual([f.endswith(".sqlite") for f in made], [finished], made)
+            self.assertEqual(run.returncode, status, run.stdout)
+        self.assertIn("fingerprint is unreadable", run.stdout)
 
     def write_recordings(self, name, recordings, seed="5", meta={}):
         """
