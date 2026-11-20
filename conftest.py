@@ -61,8 +61,8 @@ FORMAT = "2"
 FINGERPRINTS = {
     "kwl_knowls": "SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls",
     # The lmfdb role may read only these columns, and not xmin.
-    "userdb.users": "SELECT count(username), md5(string_agg(username || ' ' || coalesce(full_name, ''), "
-                    "',' ORDER BY username)) FROM userdb.users",
+    "userdb.users": "SELECT count(username), md5(json_agg(json_build_array(username, full_name) "
+                    "ORDER BY username)::text) FROM userdb.users",
 }
 
 _tape = None

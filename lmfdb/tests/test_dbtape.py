@@ -296,6 +296,21 @@ class DbTapeTest(unittest.TestCase):
         self.assertEqual({k: v for k, v in meta.items() if k.startswith("fingerprint")},
                          {"fingerprint userdb.users": "2 ab"})
 
+    def test_user_fingerprint(self):
+        # Neither a null full name nor a comma in one may go unnoticed.
+        query = dbtape.FINGERPRINTS["userdb.users"]
+        self.assertIn("FROM userdb.users", query)
+        query = query.replace("FROM userdb.users", "FROM (VALUES %s) AS users(username, full_name)")
+
+        def fingerprint(rows):
+            with db.conn.transaction():
+                with db.conn.cursor() as cur:
+                    cur.execute(query % rows)
+                    return cur.fetchone()
+        for a, b in [("('a', NULL)", "('a', '')"),
+                     ("('a', 'A,b B'), ('b', 'C')", "('a', 'A'), ('b', 'B,b C')")]:
+            self.assertNotEqual(fingerprint(a), fingerprint(b))
+
     def test_edit_log(self):
         now = dbtape._utcnow()
         path = self.make_tape([("x", "ec_curvedata", now - DAY)])
