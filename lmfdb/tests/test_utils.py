@@ -7,6 +7,7 @@
 # version 2 of the License, or (at your option) any later version.
 
 import unittest
+from unittest import mock
 
 from sage.all import var, QQ
 
@@ -29,6 +30,8 @@ from lmfdb.utils import (
     web_latex_ideal_fact,
     list_to_latex_matrix,
 )
+
+from lmfdb.utils.search_boxes import TextBox, HiddenBox, SearchArray
 
 from lmfdb.utils.completeness import (
     results_complete,
@@ -114,6 +117,34 @@ class UtilsTest(unittest.TestCase):
         """
         self.assertEqual(to_dict({"not_list": 1, "is_list":[2,3,4]}),
                          {'is_list': 4, 'not_list': 1})
+
+    def test_search_box_values_escaped(self):
+        r"""
+        Checking that request values are HTML-escaped when search boxes render them
+        """
+        bad = """a"><i>b</i>'"""
+        esc = "a&#34;&gt;&lt;i&gt;b&lt;/i&gt;&#39;"
+        info = {"t": bad, "h": bad, "start": bad, "count": 50, "search_type": bad, "jump": bad}
+
+        class EscapeTestArray(SearchArray):
+            refine_array = browse_array = [[TextBox(name="t", label="T")]]
+            jump_example = "1.1"
+
+        rendered = [
+            TextBox(name="t", label="T")._input(info),
+            HiddenBox(name="h", label="")._input(info),
+            EscapeTestArray().hidden_inputs(info),
+        ]
+        # jump_box looks up the title of its knowl; avoid the database here
+        with mock.patch("lmfdb.utils.search_boxes.display_knowl", return_value="Label"):
+            rendered.append(EscapeTestArray().jump_box(info))
+        for html in rendered:
+            self.assertNotIn("<i>", html)
+            self.assertIn(esc, html)
+        self.assertIn('name="count" value="50"', rendered[2])
+        # Ordinary values are unchanged
+        for val in ["11.a2,389.a1", "x^3 + 10*x + 17, x", "[2,2]", "1-100", "C2^2"]:
+            self.assertIn('value="%s"' % val, TextBox(name="t", label="T")._input({"t": val}))
 
     def test_splitcoeff(self):
         r"""

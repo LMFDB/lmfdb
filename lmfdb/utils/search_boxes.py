@@ -1,5 +1,6 @@
 import re
 
+from markupsafe import escape
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form
@@ -300,7 +301,7 @@ class TextBox(SearchBox):
             if self.short_width is not None:
                 keys.append('style="width: %spx"' % self.short_width)
             if self.name in info:
-                keys.append('value="%s"' % info[self.name])
+                keys.append('value="%s"' % escape(info[self.name]))
         return '<input ' + " ".join(keys) + "/>"
 
 class SelectBox(SearchBox):
@@ -419,7 +420,7 @@ class HiddenBox(SearchBox):
     def _input(self, info=None):
         keys = self._attrs(info) + ['name="%s"' % self.name]
         if info is not None and info.get(self.name):
-            keys.append('value="%s"' % info.get(self.name))
+            keys.append('value="%s"' % escape(info.get(self.name)))
         return '<input type="hidden" %s>' % (" ".join(keys),)
 
 class CheckBox(SearchBox):
@@ -894,7 +895,7 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return ""
         else:
-            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for name, val in self.hidden(info))
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, escape(info.get(val))) for name, val in self.hidden(info))
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"
@@ -963,7 +964,7 @@ class SearchArray(UniqueRepresentation):
         # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
         return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
 <button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
-""" % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
+""" % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, escape(info.get("jump", "")), jump_egspan)
 
 class EmbeddedSearchArray(SearchArray):
     """
