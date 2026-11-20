@@ -5,6 +5,15 @@
 {% if not downid %}
 {% set downid = 1 %} {# set externally so that we can distinguish in js between the download spans at the top and bottom of the results #}
 {% endif %}
+{# upper_count is set in matches.html, but a variable set in an included template is not visible
+   to the including template, so the download controls below the results have to compute it here #}
+{% if upper_count is not defined %}
+{% if info.number == 'infinity' or info.number >= info.start + info.count %}
+{% set upper_count = info.start + info.count %}
+{% else %}
+{% set upper_count = info.number %}
+{% endif %}
+{% endif %}
 
 &nbsp;
 {% if info.exact_count %}
