@@ -19,8 +19,10 @@ so that test runs can be served from the tape instead.
 
 A table counts as edited when userdb.dbrecord, where LMFDB's _log_db_change
 logs every psycodict editing operation, has an entry for it later than the
-recording.  Knowls and user accounts are saved without that log, so for them
-a fingerprint of the table (FINGERPRINTS) is compared with the one recorded.
+recording.  Knowls are saved without that log, so for them a fingerprint of
+the table (FINGERPRINTS) is compared with the one recorded.  Tapes are
+published, so queries on the userdb schema are never recorded, and recording
+refuses to run as a role that can read user passwords.
 DBTAPE_STALE lists further tables to treat as edited ("all" for every table),
 which is the way to refresh after editing data with raw SQL.  The results of
 catalog queries, which psycodict reads its registry of tables from, go stale
@@ -54,15 +56,18 @@ MODE = os.environ.get("DBTAPE_MODE", "")
 CLOCK_SKEW = datetime.timedelta(hours=1)
 # Bump when the encoding changes; a tape of another format is ignored.
 FORMAT = "2"
-# Tables edited without psycodict's logging (knowls by lmfdb.knowledge,
-# accounts by lmfdb.users), each with a query whose result changes whenever
-# what the tests can read of the table does.
+# Tables edited without psycodict's logging (knowls by lmfdb.knowledge), each
+# with a query whose result changes whenever the table does.
 FINGERPRINTS = {
     "kwl_knowls": "SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls",
-    # The lmfdb role may read only these columns, and not xmin.
-    "userdb.users": "SELECT count(username), md5(json_agg(json_build_array(username, full_name) "
-                    "ORDER BY username)::text) FROM userdb.users",
 }
+# Tapes are published, so nothing from the schema holding accounts and the
+# edit log is ever recorded or replayed, whatever role a recording runs as.
+_PRIVATE_RE = re.compile(r'\buserdb"?\s*\.', re.IGNORECASE)
+
+
+def is_private(sql):
+    return bool(_PRIVATE_RE.search(sql))
 
 _tape = None
 
@@ -399,12 +404,30 @@ class Tape:
             self.out.executemany("INSERT OR REPLACE INTO meta VALUES (?, ?)",
                                  [("fingerprint " + t, f) for t, f in current.items()])
 
+    def check_role(self, conn):
+        """
+        Refuse to record as a role that can read user passwords: a tape is
+        published, and CI replays it as the public role, which sees less.
+        """
+        try:
+            with conn.transaction():
+                with conn.cursor() as cur:
+                    cur.execute("SELECT current_user, has_column_privilege('userdb.users', 'password', 'SELECT')")
+                    role, privileged = cur.fetchone()
+        except Exception:
+            return
+        if privileged:
+            raise RuntimeError("dbtape: refusing to record as %s, which can read user passwords; "
+                               "record as the public lmfdb role" % role)
+
     def read_edit_log(self, conn):
         """
         Find which tables were edited since the oldest result on the tape was
         recorded, after comparing the fingerprints.  This runs once, on
         psycodict's connection, before its first query.
         """
+        if self.recording:
+            self.check_role(conn)
         self.read_fingerprints(conn)
         if self.since is None:
             self.edit_log = "not needed"
@@ -537,7 +560,7 @@ class TapeCursor:
         key = hashlib.sha256(sql.encode()).hexdigest()
         self._drop_entry()
         self._rows, self._pos, self._live = None, 0, None
-        found = tape.lookup(key)
+        found = "private" if is_private(sql) else tape.lookup(key)
         if type(found) is tuple:
             tape.stats["hit"] += 1
             self.rowcount, self._rows = found
@@ -548,10 +571,11 @@ class TapeCursor:
         if real.description is None:
             # SET, BEGIN and the like: always run, never recorded
             return self
-        tape.stats[found] += 1
-        tape.log(found, sql)
-        if tape.recording:
-            self._entry = _Entry(key, sql, self.rowcount)
+        if found != "private":
+            tape.stats[found] += 1
+            tape.log(found, sql)
+            if tape.recording:
+                self._entry = _Entry(key, sql, self.rowcount)
         if self.withhold:
             self._live = iter(real)
         else:
@@ -740,7 +764,8 @@ def merge(out, inputs):
         bases.add(meta.get("base", ""))
         metas.append(meta)
         conn.execute("BEGIN")
-        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)", src.execute("SELECT * FROM tape"))
+        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)",
+                         (rec for rec in src.execute("SELECT * FROM tape") if not is_private(rec[3])))
         conn.execute("COMMIT")
         src.close()
     if len(seeds) != 1:
