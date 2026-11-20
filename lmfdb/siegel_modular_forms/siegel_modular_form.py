@@ -5,7 +5,7 @@ import os
 
 from flask import render_template, url_for, redirect, abort, request
 from sage.all import (
-    ZZ, next_prime, cartesian_product_iterator,
+    ZZ, next_prime,
     cached_function, prime_range, prod, gcd, nth_prime)
 from sage.databases.cremona import class_to_int, cremona_letter_code
 
@@ -83,13 +83,10 @@ def level_bound(nontriv=None):
 # The following functions are used for processing columns in search results #
 #############################################################################
 
-def ALdims_knowl(al_dims, level, weight):
-    dim_dict = {}
-    for vec, dim, cnt in al_dims:
-        dim_dict[tuple(ev for (p, ev) in vec)] = dim
-    short = "+".join(r'\(%s\)'%dim_dict.get(vec,0) for vec in cartesian_product_iterator([[1,-1] for _ in range(len(al_dims[0][0]))]))
-    # We erase plus_dim and minus_dim if they're obvious
-    AL_table = ALdim_table(al_dims, level, weight)
+def ALdims_knowl(al_dims, al_dims_G, level, weight):
+    # al_dims and al_dims_G are ordered by sign vector, as mf_newspaces.ALdims
+    short = "+".join(r'\(%s\)' % d for d in al_dims)
+    AL_table = ALdim_table(al_dims, al_dims_G, level, weight)
     return r'<a title="[ALdims]" knowl="dynamic_show" kwargs="%s">%s</a>'%(AL_table, short)
 
 def nf_link(m, d, is_real_cyc, nf_label, poly, disc):
@@ -140,11 +137,11 @@ def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
     return r'+'.join(terms)
 
 def show_ALdims_col(info):
-    return any(space.get('AL_dims') for space in info["results"])
+    return any(space.get('ALdims') for space in info["results"])
 
-def display_ALdims(level, weight, al_dims):
-    if al_dims:
-        return ALdims_knowl(al_dims, level, weight)
+def display_ALdims(level, weight, al_dims, al_dims_G):
+    if al_dims and al_dims_G:
+        return ALdims_knowl(al_dims, al_dims_G, level, weight)
     else:
         return ''
 
@@ -1403,7 +1400,7 @@ space_columns = SearchColumns([
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
     MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True),
     MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
-    MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
+    MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims", "ALdims_G"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.smf_newspaces,
              title='Newspace search results',
