@@ -10,6 +10,28 @@ class ApiTest(LmfdbTest):
         data = self.tc.get("/api", follow_redirects=True).get_data(as_text=True)
         assert "API for accessing the LMFDB Database" in data
 
+    def test_api_unknown_table_html(self):
+        assert callable(self.db.table_sizes)
+        assert not hasattr(self.db, 'not_a_table')
+        for table in ['table_sizes', 'not_a_table']:
+            for suffix in ['/', '/schema']:
+                with self.subTest(table=table, suffix=suffix):
+                    response = self.tc.get('/api/{}{}'.format(table, suffix))
+                    assert response.status_code == 302
+                    assert response.location == '/api/'
+                    data = self.tc.get(response.location).get_data(as_text=True)
+                    assert 'table {} does not exist'.format(table) in re.sub(r'<[^>]+>', '', data)
+
+    def test_api_unknown_table_formats(self):
+        for table in ['table_sizes', 'not_a_table']:
+            for suffix in ['/', '/schema']:
+                for output_format in ['json', 'yaml']:
+                    with self.subTest(table=table, suffix=suffix, format=output_format):
+                        response = self.tc.get('/api/{}{}'.format(table, suffix),
+                                               query_string={'_format': output_format})
+                        assert response.status_code == 404
+                        assert 'table {} does not exist'.format(table) in response.get_data(as_text=True)
+
     def test_api_databases(self):
         r"""
         Check that one collection from each database works

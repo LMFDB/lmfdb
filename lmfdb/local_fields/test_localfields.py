@@ -1,3 +1,8 @@
+import re
+import struct
+from base64 import b64decode
+from urllib.parse import unquote
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -145,13 +150,21 @@ class LocalFieldTest(LmfdbTest):
         assert grid['grid'][0][1][1]['query'] == base + 'gal=4T1&e=2'
 
     def test_dynamic_stats_null_bucket(self):
-        # A not-computed Galois group (3996 fields) cannot be expressed as a search, so
-        # its statistics bucket is shown without a drill-down link -- clicking it must
-        # not open an unfiltered search returning every field (LMFDB#6542 review).
+        # A not-computed value cannot be expressed as a search, so its statistics
+        # bucket is shown without a drill-down link -- clicking it must not open an
+        # unfiltered search returning every field (LMFDB#6542 review).  The counts
+        # are stubbed, since which columns have nulls, and which statistics are
+        # cached, vary between databases.
         import re
+        from unittest.mock import patch
+        from lmfdb.local_fields.main import LFStats
         empty_link = re.compile(r"href='[^']*[?&][A-Za-z_]+=(?:&amp;|')")
-        for col, param in [('galois_label', 'gal'), ('slopes', 'slopes'), ('hidden', 'hidden')]:
-            L = self.tc.get('/padicField/dynamic_stats?col1=%s&proportions=none&search_type=DynStats' % col)
+        for col, param, values in [('galois_label', 'gal', ['4T1', '4T3']),
+                                   ('slopes', 'slopes', ['[2]', '[2, 2]']),
+                                   ('hidden', 'hidden', ['2.1_1', '2.1_2'])]:
+            table = StubTable({(values[0],): 5, (values[1],): 7, (None,): 11})
+            with patch.object(LFStats, 'table', table):
+                L = self.tc.get('/padicField/dynamic_stats?col1=%s&proportions=none&search_type=DynStats' % col)
             assert L.status_code == 200
             dat = L.get_data(as_text=True)
             assert 'not computed' in dat                  # the null bucket is displayed...
@@ -288,20 +301,20 @@ class LocalFieldTest(LmfdbTest):
     def test_dynamic_stats_1d_totals(self):
         # The Total of a one-dimensional table counts the fields where the column
         # is computed, which is not something the search page can ask for, so it is
-        # only linked when that is every field matching the constraint.  Of the 3784
-        # fields with p=7 and n=21, only 1324 have a computed Galois group.
+        # only linked when that is every field matching the constraint.  The
+        # database has a Galois group for every field, so the counts are stubbed:
+        # 16 of these 27 fields have one.
+        from unittest.mock import patch
         from lmfdb import db
-        L = self.tc.get('/padicField/dynamic_stats?p=7&n=21&col1=galois_label'
-                        '&totals1=yes&proportions=none&search_type=DynStats')
+        from lmfdb.local_fields.main import LFStats
+        table = StubTable({('21T66',): 9, ('21T43',): 7, (None,): 11}, records=27)
+        with patch.object(LFStats, 'table', table):
+            L = self.tc.get('/padicField/dynamic_stats?p=7&n=21&col1=galois_label'
+                            '&totals1=yes&proportions=none&search_type=DynStats')
         assert L.status_code == 200
         counts = self._stat_counts(L.get_data(as_text=True))
-        assert counts, "no statistics available for Galois groups with p=7, n=21"
         total = [c for c in counts if c[0] == 'Total']
-        assert len(total) == 1, counts
-        _label, count, url = total[0]
-        assert count == db.lf_fields.count({'p': 7, 'n': 21, 'galois_label': {'$exists': True}})
-        assert count < db.lf_fields.count({'p': 7, 'n': 21})
-        assert url == '', url        # a link here would return the other 2460 too
+        assert total == [('Total', 16, '')], counts  # a link would return the other 11 too
         # where the column is computed for every field, the total is the constraint
         # itself, and is linked
         L = self.tc.get('/padicField/dynamic_stats?p=2&n=8&col1=galois_label'
@@ -523,6 +536,25 @@ create_record(row) =
     field = Polrev(mapget(out, "coeffs"));
     mapput(~out, "field", field);
     return(out);''' in page
+
+    def _eisenstein_diagram_dims(self, label):
+        # Extract the pixel dimensions of the Eisenstein diagram on a family page
+        page = self.tc.get(f'/padicField/family/{label}').get_data(as_text=True)
+        m = re.search(r'id="diagram_eisenstein"[^>]*>\s*<img src="data:image/png;base64,([^"]*)"', page)
+        assert m is not None
+        png = b64decode(unquote(m.group(1)))
+        assert png[:8] == b'\x89PNG\r\n\x1a\n'
+        return struct.unpack(">II", png[16:24])
+
+    def test_family_diagram_scaling(self):
+        # Families with small slopes and large e used to produce vertically
+        # compressed Eisenstein diagrams with overlapping labels.  Issue #6828.
+        for label in ['2.1.16.16a', '2.1.32.34a']:
+            w, h = self._eisenstein_diagram_dims(label)
+            assert h > 0.3 * w
+        # A typical family should keep a moderate shape
+        w, h = self._eisenstein_diagram_dims('2.1.4.6a')
+        assert 0.25 * w < h < 0.6 * w
 
     def test_families_search_download(self):
         # Absolute families: download should produce a file (not just refresh the page).  Issue #6829.
