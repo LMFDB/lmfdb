@@ -18,7 +18,6 @@ from sage.all import (
 import tempfile
 import os
 import re
-import io
 from collections import Counter
 from markupsafe import escape
 
@@ -35,7 +34,7 @@ from .Lfunction import (
 from .LfunctionComp import isogeny_class_table, genus2_isogeny_class_table
 from .Lfunctionutilities import (
     p2sage, styleTheSign, get_bread, parse_codename,
-    getConductorIsogenyFromLabel)
+    getConductorIsogenyFromLabel, z_plot_points)
 
 from lmfdb.characters.web_character import WebDirichlet
 from lmfdb.characters.TinyConrey import ConreyCharacter
@@ -1454,9 +1453,11 @@ def set_zeroslink_and_plotlink(L, args):
     # The zeros are now filled in for those in the Lfunctions database, but this is kept for the moment
     if hasattr(L,'lfunc_data') or (hasattr(L,'sageLfunction') and L.sageLfunction):
         zeroslink = request.path.replace('/L/', '/L/Zeros/')
-        plotlink = request.path.replace('/L/', '/L/Plot/')
     else:
         zeroslink = ''
+    if getattr(L, 'plot_record', None) is not None or getattr(L, 'plotpoints', None):
+        plotlink = request.path.replace('/L/', '/L/Plot/')
+    else:
         plotlink = ''
     return (zeroslink, plotlink)
 
@@ -1647,17 +1648,71 @@ def getLfunctionPlot(request, *args):
     try:
         pythonL = generateLfunctionFromUrl(*args, **to_dict(request.args))
         assert pythonL
-        if pythonL.plot is None:
-            raise ValueError("No plot information stored for this L-function")
-        with io.BytesIO() as buf:
-            pythonL.plot.save(buf, format='png')
-            return buf.getvalue()
-
     except Exception as err:
         if is_debug_mode():
             raise
         else:
             return render_lfunction_exception(err)
+
+    if getattr(pythonL, 'plot_record', None) is not None:
+        F_interp = z_plot_points(pythonL.plot_record, pythonL.plot_dual)
+    elif getattr(pythonL, 'plotpoints', None):
+        # Figure out plotrange
+        plotrange = 30
+        F = p2sage(pythonL.plotpoints)
+        #  F[0][0] is the lowest t-coordinated that we have a value for L
+        #  F[-1][0] is the highest t-coordinated that we have a value for L
+
+        # fix Z-plot sign so that Z(t) > 0 for t -> 0^+
+        for t, x in F:
+            if t > 0:
+                if x < 0:
+                    F = [(t, -x) for t, x in F]
+                break
+
+        plotrange = min(plotrange, -F[0][0], F[-1][0])
+        # aim to display at most 25 axis crossings
+        # if the L-function is nonprimitive
+        if (hasattr(pythonL, 'positive_zeros')
+            and hasattr(pythonL, 'primitive')
+            and not pythonL.primitive):
+            # we stored them ready to display
+            zeros = [float(z) for z in pythonL.positive_zeros.split(",")]
+            if len(zeros) >= 25:
+                zero_range = zeros[24]
+            else:
+                zero_range = zeros[-1]*25/len(zeros)
+            zero_range *= 1.2
+            plotrange = min(plotrange, zero_range)
+
+            for t, x in F:
+                if t > 0:
+                    if t < zeros[0]:
+                        assert x > 0
+                    else:
+                        break
+
+        interpolation = spline(F)
+        F_interp = [(i, interpolation(i)) for i in srange(-1*plotrange, plotrange, 0.05)]
+    else:
+        return None
+
+    p = line(F_interp)
+
+    styleLfunctionPlot(p, 10)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as fn:
+        p.save(filename=fn.name)
+    with open(fn.name, 'rb') as f:
+        data = f.read()
+    os.remove(fn.name)
+    return data
+
+
+def styleLfunctionPlot(p, fontsize):
+    p.fontsize(fontsize)
+    p.axes_color((0.5, 0.5, 0.5))
+    p.tick_label_color((0.5, 0.5, 0.5))
+    p.axes_width(0.2)
 
 
 def render_zerosLfunction(request, *args):

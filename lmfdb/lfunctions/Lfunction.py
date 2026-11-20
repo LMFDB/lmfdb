@@ -20,7 +20,6 @@ from sage.all import (
     Integer,
     NaN,
     NumberField,
-    PolynomialRing,
     PowerSeriesRing,
     QQ,
     RIF,
@@ -40,7 +39,6 @@ from sage.all import (
     prime_pi,
     prod,
     sqrt,
-    plot,
 )
 import sage.libs.lcalc.lcalc_Lfunction as lc
 
@@ -81,6 +79,7 @@ from .LfunctionDatabase import (
     get_lfunction_by_label,
     get_lfunction_by_url,
     get_multiples_by_Lhash_and_trace_hash,
+    get_plot_by_Lhash,
 )
 
 
@@ -130,30 +129,6 @@ def an_from_data(euler_factors,upperbound=30):
 
     return result
 
-#def make_plot(extrema, zeros, derivs, extra_control, dpi=200, thickness=1):
-def make_plot(plotdata, flip=False, dpi=200, thickness=1):
-    control = sorted([(x, 0, d) for (x, d) in plotdata["zeros"]] +
-                     [(x, y, 0) for (x, y) in plotdata["extrema"]] +
-                     plotdata["extra_control"])
-    if flip:
-        # Flip x-values; also flip y-values if needed
-        control = [(-x, y, -d) for (x, y, d) in control]
-        if plotdata["dual_yflip"]:
-            control = [(x, -y, -d) for (x, y, d) in control]
-    t = PolynomialRing(QQ, 't').gen()
-    def make_cubic(x0, y0, d0, x1, y1, d1):
-        return ((y0 + (t - x0) * (d0 - 2*y0 / (x0 - x1))) * (t - x1)**2 / (x0 - x1)**2  +
-                (y1 + (t - x1) * (d1 - 2*y1 / (x1 - x0))) * (t - x0)**2 / (x1 - x0)**2)
-    p = Graphics()
-    for ((x0, y0, d0), (x1, y1, d1)) in zip(control[:-1], control[1:]):
-        p += plot(make_cubic(x0, y0, d0, x1, y1, d1), xmin=x0, xmax=x1, dpi=dpi, thickness=thickness)
-
-    p.fontsize(10)
-    p.axes_color((0.5, 0.5, 0.5))
-    p.tick_label_color((0.5, 0.5, 0.5))
-    p.axes_width(0.2)
-
-    return p
 
 # Convert the information extracted from the database to the format
 # expected by the L-functions homepage template.
@@ -214,6 +189,9 @@ def makeLfromdata(L):
                        + string2number(data['gamma_factors'][1][i]))
     L.compute_kappa_lambda_Q_from_mu_nu()
 
+    # The Z-function plot, which also supplies the central value when leading_term is missing
+    L.plot_record, L.plot_dual = get_plot_by_Lhash(L.Lhash)
+
     # central_value and values
     L.leading_term = data.get('leading_term', None)
 
@@ -223,20 +201,29 @@ def makeLfromdata(L):
         #  convert to string in case it is in unicode string
         central_value = CC(str(L.leading_term))
     else:
-        # we use the plot_values
-        if L.selfdual:
-            central_value = CC(data['plot_values'][0])
+        # Z(0), from lfunc_plot or from plot_values in databases that still have them
+        if L.plot_record is not None:
+            z0 = L.plot_record['central_value']
+        elif data.get('plot_values'):
+            z0 = data['plot_values'][0]
         else:
-            central_value = data['plot_values'][0]/sqrt(L.sign)
+            z0 = None
+        if z0 is None:
+            central_value = None
+        elif L.selfdual:
+            central_value = CC(z0)
+        else:
+            central_value = z0/sqrt(L.sign)
             # we should avoid displaying 10 digits as usual, as this is just a hack
             central_value = display_complex(central_value.real(), central_value.imag(),6)
-    central_value = [0.5 + 0.5*L.motivic_weight, central_value]
     if 'values' not in data:
-        L.values = [ central_value ]
+        L.values = []
     else:
         # only for Dirichlet L-functions
         #  convert to string in case it is in unicode string
-        L.values = [ [float(x), CC(str(xval))] for x, xval in data['values']] + [ central_value ]
+        L.values = [ [float(x), CC(str(xval))] for x, xval in data['values']]
+    if central_value is not None:
+        L.values.append([0.5 + 0.5*L.motivic_weight, central_value])
 
     # Optional properties
     L.coefficient_field = data.get('coefficient_field', None)
@@ -355,15 +342,29 @@ def makeLfromdata(L):
     if len(L.positive_zeros) > 2 and len(L.negative_zeros) > 2:  # Add comma and empty space between negative and positive
         L.negative_zeros = L.negative_zeros + ", "
 
-    plot_data = db.lfunc_plot.lucky({"Lhash": L.Lhash})
-    if plot_data is None:
-        plot_data = db.lfunc_plot.lucky({"dual_Lhash": L.Lhash})
-        if plot_data is None:
-            L.plot = None
+    # Without an lfunc_plot row, plot from plot_values in databases that still have them
+    if L.plot_record is None and data.get('plot_values'):
+        plot_delta = float(data['plot_delta'])
+        if isinstance(data['plot_values'][0], str):
+            plot_values = [string2number(elt) for elt in data['plot_values']]
         else:
-            L.plot = make_plot(plot_data, flip=True)
-    else:
-        L.plot = make_plot(plot_data, flip=False)
+            plot_values = data['plot_values']
+        pos_plot = [[j * plot_delta, elt]
+                              for j, elt in enumerate( plot_values )]
+
+        if L.selfdual:
+            neg_plot = [ [-1*pt[0], L.sign * pt[1]]
+                         for pt in pos_plot ][1:]
+        else:
+            if isinstance(dual_L_data['plot_values'][0], str):
+                dual_plot_values = [string2number(elt) for elt in dual_L_data['plot_values']]
+            else:
+                dual_plot_values = dual_L_data['plot_values']
+            dual_plot_delta = float(dual_L_data['plot_delta'])
+            neg_plot = [[-j * dual_plot_delta, elt]
+                    for j, elt in enumerate(dual_plot_values) ][1:]
+        neg_plot.reverse()
+        L.plotpoints = neg_plot + pos_plot
 
     L.trace_hash = data.get('trace_hash', None)
     L.types = data.get('types', None)

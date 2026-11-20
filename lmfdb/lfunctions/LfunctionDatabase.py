@@ -21,6 +21,20 @@ def get_lfunction_by_Lhash(Lhash, **kwargs):
     return Ldata
 
 
+def get_plot_by_Lhash(Lhash):
+    """
+    The row of lfunc_plot holding the Z-function plot of this L-function, and whether the
+    L-function is the row's dual, drawn reflected; or (None, False) if there is none.
+    """
+    # Databases without lfunc_plot still plot from plot_values in lfunc_lfunctions
+    if Lhash is None or "lfunc_plot" not in db.tablenames:
+        return None, False
+    rec = db.lfunc_plot.lucky({"$or": [{"Lhash": Lhash}, {"dual_Lhash": Lhash}]})
+    if rec is None:
+        return None, False
+    return rec, rec["Lhash"] != Lhash
+
+
 def get_instances_by_Lhash(Lhash):
     return list(db.lfunc_instances.search({'Lhash': Lhash}, sort=[]))
 

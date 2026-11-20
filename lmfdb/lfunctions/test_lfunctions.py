@@ -2,6 +2,7 @@
 import json
 
 from .LfunctionPlot import paintSvgFileAll
+from .Lfunctionutilities import z_plot_points
 from lmfdb.tests import LmfdbTest
 
 
@@ -634,3 +635,27 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/4/851472/1.1/c1e2/0/0')
         assert 'Trivial' in L.get_data(as_text=True)
+
+
+# A made-up lfunc_plot row: Z on [-3, 4] with zeros at -2 and 1.5
+PLOT_ROW = {"zeros": [[-2.0, 1.0], [1.5, -0.8]],
+            "extrema": [[-1.0, 0.6], [2.5, -0.5]],
+            "extra_control": [[-3.0, -0.4, 0.3], [0.0, 0.4, 0.1], [4.0, 0.2, 0.9]],
+            "dual_yflip": True}
+
+
+def test_z_plot_points_interpolates_control_points():
+    points = dict(z_plot_points(PLOT_ROW, False))
+    for x, y in [(-2.0, 0.0), (-1.0, 0.6), (0.0, 0.4), (1.5, 0.0), (2.5, -0.5), (-3.0, -0.4)]:
+        assert abs(points[x] - y) < 1e-12
+    # symmetric about 0, as far as both sides have data
+    assert min(points) == -3.0 and max(points) == 3.0
+
+
+def test_z_plot_points_dual_is_reflected():
+    points = dict(z_plot_points(PLOT_ROW, False))
+    for yflip, sign in [(True, -1), (False, 1)]:
+        dual = dict(z_plot_points(dict(PLOT_ROW, dual_yflip=yflip), True))
+        for x in [-2.0, -1.0, 0.0, 1.5, 2.5]:
+            assert abs(dual[-x] - sign * points[x]) < 1e-12
+
