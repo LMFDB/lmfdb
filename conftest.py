@@ -408,27 +408,17 @@ class Tape:
         """
         Find which tables were edited since the oldest result on the tape was
         recorded, after comparing the fingerprints.  This runs once, on
-        psycodict's connection, before its first query.  devmirror's log is
-        indexed on time; a database without that index may hold an untrimmed
-        log (80 GB before November 2026), too large to scan from every test
-        process, so there the log is skipped.
+        psycodict's connection, before its first query.
         """
         self.read_fingerprints(conn)
         if self.since is None:
             self.edit_log = "not needed"
             return
-        indexed = ("SELECT 1 FROM pg_index i JOIN pg_attribute a "
-                   "ON a.attrelid = i.indrelid AND a.attnum = i.indkey[0] "
-                   "WHERE i.indrelid = 'userdb.dbrecord'::regclass AND a.attname = 'time'")
         changed = ("SELECT tablename, max(time) FROM userdb.dbrecord "
                    "WHERE time > %s GROUP BY tablename")
         try:
             with conn.transaction():
                 with conn.cursor() as cur:
-                    cur.execute(indexed)
-                    if cur.fetchone() is None:
-                        self.edit_log = "skipped (userdb.dbrecord has no index on time)"
-                        return
                     cur.execute(changed, [self.since])
                     rows = cur.fetchall()
         except Exception as err:

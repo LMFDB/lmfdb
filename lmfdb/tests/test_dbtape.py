@@ -66,8 +66,7 @@ class FakeConnection:
     ``fingerprints`` cannot be fingerprinted.
     """
 
-    def __init__(self, indexed=True, rows=(), error=None, fingerprints={}):
-        self.indexed = indexed
+    def __init__(self, rows=(), error=None, fingerprints={}):
         self.rows = list(rows)
         self.error = error
         self.fingerprints = fingerprints
@@ -89,8 +88,6 @@ class FakeConnection:
             if tables[0] not in self.fingerprints:
                 raise psycopg.errors.InsufficientPrivilege("denied")
             self.result = [self.fingerprints[tables[0]]]
-        elif "pg_index" in query:
-            self.result = [(1,)] if self.indexed else []
         else:
             self.result = self.rows
 
@@ -315,11 +312,9 @@ class DbTapeTest(unittest.TestCase):
         now = dbtape._utcnow()
         path = self.make_tape([("x", "ec_curvedata", now - DAY)])
         tape = dbtape.Tape("replay", src=path)
-        tape.read_edit_log(FakeConnection(indexed=False))
-        self.assertTrue(tape.edit_log.startswith("skipped"), tape.edit_log)
-        self.assertIsNone(tape.changes)
         tape.read_edit_log(FakeConnection(error=psycopg.errors.InsufficientPrivilege("denied")))
         self.assertEqual(tape.edit_log, "unreadable (InsufficientPrivilege)")
+        self.assertIsNone(tape.changes)
         tape.read_edit_log(FakeConnection(rows=[("ec_curvedata", now - HOUR), ("ec_curvedata_counts", now)]))
         self.assertEqual(tape.changes, {"ec_curvedata": now - HOUR, "ec_curvedata_stats": now - HOUR,
                                         "ec_curvedata_counts": now, "ec_curvedata_counts_counts": now,
