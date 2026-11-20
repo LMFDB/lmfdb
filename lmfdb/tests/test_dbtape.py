@@ -45,6 +45,17 @@ def using(tape):
         dbtape._tape = old
 
 
+def replaying(path):
+    """
+    A replay of the tape ``path`` that does not read the edit log, by which
+    an edit made in the hour before a test would make what it just recorded
+    stale.
+    """
+    tape = dbtape.Tape("replay", src=path)
+    tape.edit_log = "not read in this test"
+    return tape
+
+
 def session_state():
     """
     Whether psycodict left a transaction open, and how many cursors.  The
@@ -161,7 +172,7 @@ class DbTapeTest(unittest.TestCase):
                     list(islice(db.nf_fields.search({"degree": 2}, "label", limit=None), 3)))
         recorded, path = self.record(queries)
         self.assertEqual(self.recorded_stats["unfinished"], 1)
-        replay = dbtape.Tape("replay", src=path)
+        replay = replaying(path)
         with using(replay):
             replayed = queries()
             longer = list(islice(db.nf_fields.search({"degree": 2}, "label", limit=None), 5))
@@ -182,7 +193,7 @@ class DbTapeTest(unittest.TestCase):
             return out
         for limit in [None, 100]:
             recorded, path = self.record(lambda: search(limit))
-            with using(dbtape.Tape("replay", src=path)):
+            with using(replaying(path)):
                 self.assertEqual(search(limit), recorded)
 
     def test_server_side_cursors_are_closed(self):
@@ -196,7 +207,7 @@ class DbTapeTest(unittest.TestCase):
         idle = (TransactionStatus.IDLE, 0)
         live, path = self.record(search)
         self.assertEqual(live, (idle, idle))
-        with using(dbtape.Tape("replay", src=path)):
+        with using(replaying(path)):
             self.assertEqual(search(), (idle, idle))
         tape = dbtape.Tape("replay", src=path)
         self.assertIsInstance(dbtape.TapeCursor(tape, db, True, None), psycopg.ServerCursor)
