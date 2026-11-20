@@ -1,4 +1,17 @@
+from math import gcd, sqrt
+
 from lmfdb.tests import LmfdbTest
+from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.portraits import (
+    PORTRAIT_CACHE_SIZE,
+    PORTRAIT_MAX_MODULUS,
+    paint_portrait,
+    partial_gauss_sums,
+    portrait_complexity,
+    portrait_data,
+    portrait_is_enabled,
+    portrait_properties,
+)
 from lmfdb.characters.web_character import WebDirichlet, parity_string, bool_string
 from lmfdb.lfunctions.LfunctionDatabase import get_lfunction_by_url
 from lmfdb.utils import comma
@@ -68,6 +81,72 @@ class DirichletSearchTest(LmfdbTest):
         assert r'288.i' in W.get_data(as_text=True)
         W = self.tc.get('/Character/Dirichlet/?start=100&count=25&order=3')
         assert r'169.c' in W.get_data(as_text=True)
+
+    def test_field_columns(self):
+        # The kernel and value field columns are computed in a batched
+        # postprocessing step (see issue #6008)
+        W = self.tc.get('/Character/Dirichlet/?search_type=List')
+        data = W.get_data(as_text=True)
+        # value field knowls for Q and Q(zeta_3)
+        assert 'label=1.1.1.1' in data
+        assert 'label=2.0.3.1' in data
+        # kernel field knowl for Q(zeta_5)
+        assert 'label=4.0.125.1' in data
+        # The order 4 characters of modulus 13 cut out 4.0.2197.1, which is
+        # not the value field of any character, so this pins down the kernel
+        # field column (and is a quartic field whose pretty name needs more
+        # than the label)
+        W = self.tc.get('/Character/Dirichlet/?modulus=13&order=4&search_type=List&showcol=first')
+        data = W.get_data(as_text=True)
+        assert 'label=4.0.2197.1' in data
+        assert r'\(\Q(\sqrt{-26 -6 \sqrt{13}})\)' in data
+        # kernel fields that are not in the database
+        W = self.tc.get('/Character/Dirichlet/?modulus=5002&order=12&search_type=List&showcol=first')
+        assert 'knowl="nf.field.missing"' in W.get_data(as_text=True)
+        # value fields that are not in the database
+        W = self.tc.get('/Character/Dirichlet/?order=47&search_type=List')
+        assert r'$\Q(\zeta_{47})$' in W.get_data(as_text=True)
+        # kernel fields are not computed for orders larger than 12
+        W = self.tc.get('/Character/Dirichlet/?order=13-100&search_type=List')
+        assert 'not computed' in W.get_data(as_text=True)
+
+    def test_field_columns_no_lookups(self):
+        # Once character_postprocess has run, displaying the kernel field must
+        # not go back to the database: it is the per-field record lookups that
+        # issue #6008 is about.
+        from unittest.mock import patch
+        from lmfdb import db
+        from lmfdb.characters.main import character_postprocess, display_kernel_field
+        from lmfdb.number_fields.web_number_field import field_pretty
+
+        res = list(db.char_dirichlet.search({'modulus': 13, 'order': 4}))
+        res = character_postprocess(res, {}, {})
+        assert [rec['kernel_field_data']['label'] for rec in res] == ['4.0.2197.1']
+
+        def no_lookup(*args, **kwargs):
+            raise AssertionError("number field record lookup while displaying a kernel field")
+
+        # field_pretty caches by label, so a lookup made by an earlier test
+        # would otherwise hide one made here
+        field_pretty.clear_cache()
+        with patch.object(db.nf_fields, 'lookup', no_lookup), \
+             patch.object(db.nf_fields, 'lucky', no_lookup), \
+             patch.object(db.nf_fields_extra, 'lookup', no_lookup):
+            displayed = [display_kernel_field(rec['modulus'], rec['first'], rec['order'],
+                                              rec['kernel_poly'], rec['kernel_field_data'])
+                         for rec in res]
+        assert 'label=4.0.2197.1' in displayed[0]
+        assert r'\(\Q(\sqrt{-26 -6 \sqrt{13}})\)' in displayed[0]
+
+    def test_field_columns_download(self):
+        # The virtual columns added by character_postprocess must not leak into
+        # downloads: the kernel field column downloads as [modulus, first, order]
+        # and the value field column as the raw order
+        url = ('/Character/Dirichlet/?query=%7B%27order%27%3A+4%2C+%27modulus%27%3A+13%7D'
+               '&Submit=text&download=1&search_type=List&showcol=first')
+        data = self.tc.get(url).get_data(as_text=True)
+        assert '[Orbit label, Conrey labels, Modulus, Conductor, Order, Kernel field,' in data
+        assert '"13.d"\t[13, 5, 8, 2]\t13\t13\t4\t[13, 5, 4]\t' in data
 
 class DirichletTableTest(LmfdbTest):
 
@@ -194,6 +273,20 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'Kronecker symbol' in W.get_data(as_text=True)
         assert r'\left(\frac{-4}{\bullet}\right)' in W.get_data(as_text=True)
 
+    def test_portrait(self):
+        # The Gauss-sum portrait (issue #3996) is embedded in the properties
+        # box, computed on the fly, and explained in the Learn more box.
+        W = self.tc.get('/Character/Dirichlet/27/8')
+        page = W.get_data(as_text=True)
+        assert 'class="dirichlet-character-portrait"' in page, "portrait present"
+        assert 'alt="Gauss-sum portrait of the Dirichlet character 27.8"' in page
+        assert 'src="data:image/png;base64,' in page
+        assert 'Picture description' in page
+
+    def test_portrait_page(self):
+        W = self.tc.get('/Character/Dirichlet/Pictures')
+        assert 'Pictures for Dirichlet characters' in W.get_data(as_text=True)
+
     def test_dirichlet_calc(self):
         W = self.tc.get('/Character/calc-gauss/Dirichlet/4/3?val=3')
         assert '-2.0i' in W.get_data(as_text=True), "calc gauss"
@@ -262,3 +355,75 @@ class DirichletCharactersTest(LmfdbTest):
         assert 'is_minimal' in W and 'last' in W
         W = self.tc.get('/Character/Dirichlet/data/289.j').get_data(as_text=True)
         assert 'is_minimal' in W
+
+
+class DirichletPortraitTest(LmfdbTest):
+    """Unit tests for the Gauss-sum portraits of issue #3996.
+
+    ``add_portrait`` swallows every exception, so a regression in the math
+    below would silently turn into a missing picture rather than a failing
+    page; these tests check the data the picture is drawn from directly.
+    """
+
+    def test_complete_gauss_sums(self):
+        """The last partial sum is the complete Gauss sum computed by pari."""
+        for modulus, number in [(4, 3),     # primitive, real, odd
+                                (5, 2),     # primitive, order 4, not real
+                                (15, 4),    # imprimitive, of conductor 5
+                                (12, 11)]:  # composite modulus, 8 nonunits
+            chi = ConreyCharacter(modulus, number)
+            _, sums = partial_gauss_sums(modulus, number)
+            for a in range(modulus):
+                tau = complex(chi.gauss_sum_numerical(a))
+                assert abs(sums[a, -1] - tau) < 1e-10, \
+                    "tau_%s of %s.%s" % (a, modulus, number)
+
+    def test_primitive_radius(self):
+        """The invariant the picture is drawn to expose: for a primitive
+        character the dots with gcd(a, N) = 1 lie on the circle of radius
+        sqrt(N), and all the other dots sit at the origin."""
+        modulus, number = 27, 2
+        assert ConreyCharacter(modulus, number).conductor() == modulus
+        _, sums = partial_gauss_sums(modulus, number)
+        for a in range(modulus):
+            if gcd(a, modulus) == 1:
+                assert abs(abs(sums[a, -1]) - sqrt(modulus)) < 1e-10, \
+                    "|tau_%s| = sqrt(%s)" % (a, modulus)
+            else:
+                assert abs(sums[a, -1]) < 1e-10, "tau_%s = 0" % a
+
+    def test_modulus_one(self):
+        """The trivial character has no partial sums at all: its portrait is
+        the single complete Gauss sum tau_0 = 1."""
+        segments, _, dots, _ = portrait_data(1, 1)
+        assert segments.shape == (0, 2, 2)
+        assert dots.shape == (1, 2)
+        assert abs(dots[0][0] - 1) < 1e-10 and abs(dots[0][1]) < 1e-10
+        assert paint_portrait(1, 1).startswith('data:image/png;base64,')
+
+    def test_workload_cutoff(self):
+        """Portraits are limited by the work they take, not by the modulus:
+        the prime 293 needs 293*292 segments, while the larger 300 needs only
+        300*phi(300) = 300*80."""
+        assert portrait_complexity(293) == 85556
+        assert portrait_complexity(300) == 24000
+        assert not portrait_is_enabled(293)
+        assert portrait_is_enabled(300)
+        assert not portrait_is_enabled(PORTRAIT_MAX_MODULUS + 1)
+        # a character we decline to draw is a quiet None, not an error
+        assert paint_portrait(293, 17) is None
+        assert portrait_properties(40487, 5) is None
+
+    def test_cache(self):
+        """Completed portraits are cached, in a cache of bounded size."""
+        paint_portrait.cache_clear()
+        first = paint_portrait(3, 2)
+        assert paint_portrait.cache_info().hits == 0
+        second = paint_portrait(3, 2)
+        info = paint_portrait.cache_info()
+        assert second is first
+        assert info.hits == 1
+        assert info.maxsize == PORTRAIT_CACHE_SIZE
+        # characters with no portrait never reach the cache
+        paint_portrait(293, 17)
+        assert paint_portrait.cache_info().misses == info.misses
