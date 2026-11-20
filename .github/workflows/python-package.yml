@@ -237,6 +237,23 @@ jobs:
         fi
         python3 conftest.py merge dbtape.sqlite tapes/*/*.sqlite
         { echo '```'; python3 conftest.py describe dbtape.sqlite; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        # Runs overlap, and this one's results for queries it did not refetch
+        # come from the tape it started with.  If another run has published
+        # since, keep that tape rather than going back to older results.
+        meta() { python3 conftest.py describe "$1" | sed -n "s/^$2: //p"; }
+        url=https://github.com/LMFDB/lmfdb/releases/download/ci-dbtape/dbtape.sqlite.gz
+        code=$(curl -sSL --retry 3 -o published.sqlite.gz -w '%{http_code}' "$url") || true
+        if [ "$code" = 200 ]; then
+          gunzip -f published.sqlite.gz
+          if [ "$(meta published.sqlite format)" = "$(meta dbtape.sqlite format)" ] &&
+             [ "$(meta published.sqlite created)" != "$(meta dbtape.sqlite base)" ]; then
+            echo "::warning::Another run published a tape while this one was recording, so that one is kept"
+            exit 0
+          fi
+        elif [ "$code" != 404 ]; then
+          echo "::error::Could not fetch the published tape (HTTP $code) to check it is still the one this run started from"
+          exit 1
+        fi
         gzip -9 dbtape.sqlite
         if ! gh release view ci-dbtape > /dev/null 2>&1; then
           gh release create ci-dbtape --prerelease --latest=false --title "CI query tape" \

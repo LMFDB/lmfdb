@@ -326,6 +326,9 @@ class Tape:
                                  % (src, meta.get("format"), FORMAT))
                 self.src, meta = None, {}
         self.seed = meta.get("seed")
+        # Which published tape this recording builds on, so that publishing
+        # can refuse to replace a newer one.
+        self.base = meta.get("created", "")
         if self.seed is None or (mode == "record" and self.all_stale):
             # A full recording is free to pick new random objects.
             self.seed = seed or str(int(time.time()))
@@ -341,7 +344,8 @@ class Tape:
             self.out = sqlite3.connect(out + ".part", isolation_level=None)
             self.out.execute("PRAGMA synchronous=OFF")
             create_tables(self.out, recordings=True)
-            self.out.execute("INSERT OR IGNORE INTO meta VALUES ('format', ?), ('seed', ?)", (FORMAT, self.seed))
+            self.out.execute("INSERT OR IGNORE INTO meta VALUES ('format', ?), ('seed', ?), ('base', ?)",
+                             (FORMAT, self.seed, self.base))
 
     @property
     def recording(self):
@@ -677,6 +681,7 @@ def merge(out, inputs):
     """
     Combine the tapes written by several test processes into one, keeping
     the newest recording of each query whatever the order of ``inputs``.
+    Its base is the published tape they started from, or "mixed".
     """
     if os.path.exists(out):
         os.remove(out)
@@ -684,12 +689,14 @@ def merge(out, inputs):
     create_tables(conn)
     conn.execute("CREATE TEMP TABLE seen AS SELECT * FROM tape WHERE 0")
     seeds = set()
+    bases = set()
     for path in inputs:
         src = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
         meta = dict(src.execute("SELECT k, v FROM meta"))
         if meta.get("format") != FORMAT:
             raise ValueError("%s has tape format %s, not %s" % (path, meta.get("format"), FORMAT))
         seeds.add(meta["seed"])
+        bases.add(meta.get("base", ""))
         conn.execute("BEGIN")
         conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)", src.execute("SELECT * FROM tape"))
         conn.execute("COMMIT")
@@ -702,8 +709,9 @@ def merge(out, inputs):
         conn.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)", choose(recordings))
     conn.execute("COMMIT")
     conn.execute("DROP TABLE seen")
-    conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?), ('created', ?)",
-                 (FORMAT, seeds.pop(), datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")))
+    conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?), ('created', ?), ('base', ?)",
+                 (FORMAT, seeds.pop(), datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+                  bases.pop() if len(bases) == 1 else "mixed"))
     conn.execute("VACUUM")
     conn.close()
 

@@ -341,6 +341,25 @@ class DbTapeTest(unittest.TestCase):
             dbtape.merge(self.path("merged.sqlite"), [self.write_recordings("x.sqlite", [(a, "08:00")], seed="5"),
                                                       self.write_recordings("y.sqlite", [(a, "08:00")], seed="6")])
 
+    def test_base(self):
+        # Publishing compares a recording's base with the published tape's
+        # creation time, to keep a tape published while it was recording.
+        def meta(path):
+            return dict(sqlite3.connect(path).execute("SELECT k, v FROM meta"))
+        first = self.path("first.sqlite")
+        dbtape.Tape("record", out=first, seed="1").close()
+        self.assertEqual(meta(first)["base"], "")
+        dbtape.merge(self.path("published.sqlite"), [first])
+        published = meta(self.path("published.sqlite"))
+        self.assertEqual(published["base"], "")
+        second = self.path("second.sqlite")
+        dbtape.Tape("record", src=self.path("published.sqlite"), out=second).close()
+        self.assertEqual(meta(second)["base"], published["created"])
+        dbtape.merge(self.path("next.sqlite"), [second])
+        self.assertEqual(meta(self.path("next.sqlite"))["base"], published["created"])
+        dbtape.merge(self.path("next.sqlite"), [first, second])
+        self.assertEqual(meta(self.path("next.sqlite"))["base"], "mixed")
+
     def test_command_line(self):
         tapes = [self.write_recordings("in%s.sqlite" % i, [([("a",)], "2026-01-01T0%s:00:00" % i)]) for i in range(2)]
         out = self.path("merged.sqlite")
