@@ -558,7 +558,10 @@ def elliptic_curve_search(info, query):
             elif info['conductor_type'] == 'divides':
                 query['conductor'] = {'$in': integer_divisors(ZZ(query['conductor']))}
             else:
-                query['conductor'] = {'$mod': [0, ZZ(query['conductor'])]}
+                # The multiples of N are those of |N|, and the only multiple of 0 is 0
+                # ($mod needs a nonzero modulus)
+                N = ZZ(query['conductor'])
+                query['conductor'] = {'$mod': [0, abs(N)]} if N else 0
     parse_signed_ints(info, query, 'discriminant', qfield=('signD', 'absD'))
     parse_ints(info,query,'rank')
     parse_ints(info,query,'adelic_level')
