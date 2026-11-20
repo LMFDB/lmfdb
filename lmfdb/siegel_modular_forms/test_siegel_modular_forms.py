@@ -602,3 +602,49 @@ class SmfTest(LmfdbTest):
         for extra in ["&all_spaces=yes", ""]:
             self.check("?search_type=Spaces&degree=2&family=P&level=2&weight=%2810%2C12%29" + extra,
                        ["2.P.2.10.12.a", r"\times5\)", "not computed"])
+
+    def test_decomposition_links(self):
+        """
+        Each term of the Decomp. column leads to the forms it counts: a single
+        orbit to its page, several orbits of the same dimension and
+        multiplicity to a search returning exactly those forms
+        """
+        from collections import defaultdict
+        from lmfdb.siegel_modular_forms.siegel_modular_form import decomp_postprocess, display_decomp, url_for_label
+        label = "2.P.2.10.12.a"
+        self.need_spaces(label)
+        space = db.smf_newspaces.lookup(label, ["label", "level", "weight", "char_orbit_label", "new_cusp_dim"])
+        decomp_postprocess([space], {}, {})
+        groups = defaultdict(set)
+        for dim, mult, form in space["hecke_orbit_dims"]:
+            groups[dim, mult].add(form)
+        if not groups:
+            self.skipTest("no forms of %s on devmirror" % label)
+        with self.app.test_request_context():
+            html = display_decomp(space["level"], space["weight"], space["char_orbit_label"],
+                                  space["hecke_orbit_dims"], space["new_cusp_dim"], space["label"])
+            singles = {url_for_label(next(iter(forms))) for forms in groups.values() if len(forms) == 1}
+        links = re.findall(r"href='([^']*)'", html)
+        assert len(links) == len(groups), html
+        searches = [link for link in links if link not in singles]
+        assert len(searches) == len([forms for forms in groups.values() if len(forms) > 1])
+        for link in searches:
+            # outside the blueprint url_for('.index') is "/", so keep only the query
+            page = self.tc.get("/ModularForm/GSp/Q/?" + link.split("?", 1)[1],
+                               follow_redirects=True).get_data(as_text=True)
+            found = set(re.findall(re.escape(label) + r"\.[a-z]+\b", page))
+            assert found in groups.values(), (link, found)
+
+    def test_multiplicity_column(self):
+        """
+        An ordinary newform search shows the Mult column when a result has
+        multiplicity > 1, and a NULL multiplicity is displayed as 1
+        """
+        from lmfdb.siegel_modular_forms.siegel_modular_form import newform_columns
+        self.need_forms()
+        if not db.smf_newforms.count({"space_label": "2.P.2.10.12.a", "multiplicity": 5}):
+            self.skipTest("no forms of multiplicity 5 on devmirror")
+        self.check("?search_type=List&degree=2&family=P&space_label=2.P.2.10.12.a", ["Results (", "Mult", "multiplicity"])
+        col = [c for c in newform_columns.columns if c.name == "multiplicity"][0]
+        assert col.display({"multiplicity": None}) == col.display({"multiplicity": 1}) != col.display({"multiplicity": 5})
+        assert "1" in col.display({"multiplicity": None}) and "5" in col.display({"multiplicity": 5})
