@@ -237,15 +237,22 @@ class SmfTest(LmfdbTest):
 
     def test_space_search_aldims(self):
         """
-        The Atkin-Lehner dimensions column of the newspace search, in the
-        sign-vector order of the space page: in S_{3,0}^new(K(161)) the
+        The Atkin-Lehner dimensions of the new subspace, in the sign-vector
+        order of the space page: in S_{3,0}^new(K(161)), of dimension 17, the
         classes (w_7, w_23) = (+,+), (+,-), (-,+), (-,-) have dimensions
-        0, 12, 6, 1, of which 0, 3, 1, 0 are of general type
+        0, 11, 6, 0, of which 0, 3, 1, 0 are of general type (the old
+        Saito-Kurokawa lifts are not counted).  The space page puts each
+        dimension under its signs.
         """
         self.need_spaces("2.K.161.3.0.a")
         self.check("?search_type=Spaces&degree=2&family=K&level=161&weight=3", [
             "AL-dims.",
-            r"\(0\)+\(12\)+\(6\)+\(1\)",
+            r"\(0\)+\(11\)+\(6\)+\(0\)",
+        ])
+        self.check("2/K/161/3.0/a/", [
+            r"\(+\) \(-\) $-$ \(11\) \(3\)",
+            r"\(-\) \(+\) $-$ \(6\) \(1\)",
+            r"Minus space \(-\) \(17\) \(4\)",
         ])
 
     def test_trace_search(self):
