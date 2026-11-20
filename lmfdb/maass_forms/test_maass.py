@@ -2,6 +2,8 @@ r"""
 Tests for Maass waveforms.
 
 """
+import re
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -49,6 +51,20 @@ class MaassTest(LmfdbTest):
     def test_form_1234_long_label(self):
         L = self.tc.get("/ModularForm/GL2/Q/Maass/19.0.1.205.1")
         assert "coefficients" in L.get_data(as_text=True) and "-1.236693" in L.get_data(as_text=True) and "1.858211" in L.get_data(as_text=True)
+
+    def test_full_label(self):
+        # the full 5-component label should be visible in the properties box,
+        # whether the page is reached via the short or the long form of the
+        # label; the title keeps using the short form
+        for url_label in ["2.32", "2.0.1.32.1"]:
+            L = self.tc.get("/ModularForm/GL2/Q/Maass/" + url_label)
+            assert L.status_code == 200
+            page = L.get_data(as_text=True)
+            assert re.search(
+                r'<td class="label">\s*Label\s*</td>\s*<td>\s*2\.0\.1\.32\.1\s*</td>',
+                page,
+            )
+            assert "Maass form 2.32" in page
 
     def test_underlying_data(self):
         data = self.tc.get("/ModularForm/GL2/Q/Maass/data/42.42").get_data(as_text=True)
