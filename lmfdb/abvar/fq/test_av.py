@@ -1,3 +1,5 @@
+import re
+
 from lmfdb.tests import LmfdbTest
 
 
@@ -165,3 +167,13 @@ class AVTest(LmfdbTest):
         """
         page = self.tc.get("/Variety/Abelian/Fq/2/9/aj_bl").get_data(as_text=True)
         assert "Cyclic" in page
+
+    def test_counts_negative_lower_endpoint(self):
+        # The count table enumerates the requested dimensions, so a very
+        # negative lower endpoint must be clipped to the stored dimensions
+        def count_table(query):
+            page = self.tc.get("/Variety/Abelian/Fq/?search_type=Counts&" + query).get_data(as_text=True)
+            start = page.find('<table class="ntdata">')
+            assert start != -1, query
+            return re.sub(r"<[^>]*>", " ", page[start:page.find("</table>", start)]).split()
+        assert count_table("g=-10000000000..1&q=2-5") == count_table("g=1&q=2-5")

@@ -574,3 +574,16 @@ create_record(row) =
         r = self.tc.get('/padicField/?p=2&gal=256.2522', follow_redirects=True)
         page = r.get_data(as_text=True)
         assert "are complete" not in page
+
+    def test_counts_negative_lower_endpoint(self):
+        # Count tables enumerate the requested values of p, n and e, so a very
+        # negative lower endpoint must be clipped rather than expanded
+        import re
+
+        def count_table(query):
+            page = self.tc.get('/padicField/?search_type=Counts&' + query).get_data(as_text=True)
+            start = page.find('<table class="ntdata">')
+            assert start != -1, query
+            return re.sub(r'<[^>]*>', ' ', page[start:page.find('</table>', start)]).split()
+        assert count_table('p=-10000000000..3&n=1-4') == count_table('p=2-3&n=1-4')
+        assert count_table('p=2-3&n=1-4&e=-10000000000..2') == count_table('p=2-3&n=1-4&e=1-2')

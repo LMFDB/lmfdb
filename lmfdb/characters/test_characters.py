@@ -76,6 +76,15 @@ class DirichletSearchTest(LmfdbTest):
         W = self.tc.get('/Character/Dirichlet/?conductor=111')
         assert '111.m' in W.get_data(as_text=True)
 
+    def test_inducing_open_left_conductor(self):
+        # The inducing filter reparses the conductor with parse_range3; a failure
+        # there renders the search error page with status 200, so check labels.
+        # 4.b is in the conductor range but is not induced from 3.b.
+        for cond in ['1-10', '..10']:
+            page = self.tc.get('/Character/Dirichlet/?conductor=%s&inducing=3.b' % cond).get_data(as_text=True)
+            assert '>3.b<' in page and '>6.b<' in page, cond
+            assert '>4.b<' not in page, cond
+
     def test_nextprev(self):
         W = self.tc.get('/Character/Dirichlet/?start=200&count=25&order=3')
         assert r'288.i' in W.get_data(as_text=True)
