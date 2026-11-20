@@ -20,7 +20,7 @@ from sage.all import (
     ceil, floor, RealSet, infinity, cached_function, RLF, log, sqrt)
 
 # We deliberately use the standard library logger rather than lmfdb.logger, since this
-# module is also used outside the website (e.g. from lmfdb-lite and lmfdb_search).
+# module is also used outside the website (e.g. from lmfdb-client and lmfdb_search).
 # Records still propagate to the root logger that lmfdb.logger configures.
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def results_complete(table, query, db, search_array=None):
 
     - ``table`` -- string, the name of the LMFDB table
     - ``query`` -- dictionary, as parsed by psycodict's db._parse_dict
-    - ``db`` -- A db object for accessing the LMFDB (obtained either via lmfdb or lmfdb-lite)
+    - ``db`` -- A db object for accessing the LMFDB (obtained either via lmfdb or lmfdb-client)
     - ``search_array`` -- a search array object for overriding null counts (optional)
 
     OUTPUT:

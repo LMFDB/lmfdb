@@ -623,7 +623,7 @@ Statistics
 1. How can I easily add a statistics page?
 
    Create a statistics object inheriting from `StatsDisplay` in
-   `lmfdb/utils/display_stats.py`.  It should have attributes
+   `packages/lmfdb-utils/lmfdb_utils/display_stats.py`.  It should have attributes
 
    - `short_summary` (which can be displayed at the top of your browse page),
    - `summary` (which will be displayed at the top of the statistics page),

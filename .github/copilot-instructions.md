@@ -117,7 +117,7 @@ pyflakes start-lmfdb.py user-manager.py lmfdb/
 6. Add tests in module's `test_*.py` files
 
 **Key Development Files to Check:**
-- `lmfdb/utils/search_parsing.py` - Search functionality (~1892 lines)
+- `packages/lmfdb-utils/lmfdb_utils/search_parsing.py` - Search functionality (the LMFDB-specific parsers are in `lmfdb/utils/lmfdb_search_parsing.py`)
 - `lmfdb/classical_modular_forms/main.py` - Example complex module (~1780 lines)
 - `Development.md` - Detailed development guidelines
 - `StyleGuide.md` - HTML/CSS styling conventions

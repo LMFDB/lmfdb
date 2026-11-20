@@ -348,7 +348,7 @@ homepage.html.  Preferably, new css should be added to:
  * style.css - contains the majority of the css, for example, for the
    properties and sidebar variables.
 
-The colors are defined in `lmfdb.utils.color`, and are available in
+The colors are defined in `lmfdb_utils.color` (in `packages/lmfdb-utils`), and are available in
 Jinja as `color.header_background` for example.  Please use the colors
 defined there rather than specific colors to facilitate future changes.
 

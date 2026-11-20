@@ -1,0 +1,49 @@
+# setuptools 77 introduced the SPDX license expressions used below.  pip
+# builds in an isolated environment with a current setuptools, so the (older)
+# setuptools of a Sage installation only matters with --no-build-isolation.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lmfdb-client"
+dynamic = ["version"]
+description = "Python interface to the L-functions and modular forms database (lmfdb.org)"
+readme = "README.md"
+license = "GPL-2.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [
+    {name = "The LMFDB Collaboration"},
+]
+keywords = ["postgres", "database", "interface", "number theory", "L-function", "modular form", "elliptic curve", "genus 2 curve", "modular curve", "abelian variety", "Belyi", "number field", "p-adic", "Dirichlet character", "Artin representation", "hypergeometric motive", "Galois group", "Sato-Tate group", "finite group", "lattice"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database :: Front-Ends",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+# The pgbinary extra installs the driver psycodict is built on.  We track
+# released versions rather than a git branch, so that what an install gets
+# doesn't depend on the day it was run; the upper bound is psycodict's next
+# major version, where its versioning policy allows breaking changes.
+# pexpect is only used when an editor makes data changes.
+dependencies = [
+    "pexpect",
+    "psycodict[pgbinary]>=1.0.0rc1,<2",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.urls]
+Homepage = "https://www.lmfdb.org"
+Source = "https://github.com/LMFDB/lmfdb/tree/main/packages/lmfdb-client"
+Issues = "https://github.com/LMFDB/lmfdb/issues"
+
+[tool.setuptools]
+packages = ["lmfdb_client", "lmf"]
+
+[tool.setuptools.dynamic]
+version = {attr = "lmfdb_client.__version__"}

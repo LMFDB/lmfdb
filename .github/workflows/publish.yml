@@ -1,0 +1,117 @@
+# Build lmfdb-client or lmfdb-utils (see packages/) and publish it to PyPI.
+#
+# Triggers:
+#  - pushing a tag <package>-v<version> (e.g. lmfdb-client-v0.1.0) publishes
+#    that package to PyPI; the version must match the package's
+#    __version__ (in packages/<package>/<module>/__init__.py);
+#  - running the workflow manually (workflow_dispatch) publishes the chosen
+#    package to TestPyPI, as a dry run.
+#
+# Before this can succeed, one-time setup is needed for each package:
+#  - a "Trusted Publisher" must be configured for the lmfdb-client and
+#    lmfdb-utils projects on https://pypi.org (and https://test.pypi.org),
+#    pointing at this repository, this workflow file (publish.yml) and the
+#    environment names below (no API tokens are needed with trusted
+#    publishing);
+#  - (recommended) create "pypi" and "testpypi" environments in the
+#    repository settings, restricted to release tags/branches.
+#
+# The packaging workflow (packaging.yml) runs the full checks of the built
+# packages on every push; this one repeats a quick smoke test of what it
+# publishes.
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags: ["lmfdb-client-v*", "lmfdb-utils-v*"]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to publish to TestPyPI"
+        required: true
+        type: choice
+        options: [lmfdb-client, lmfdb-utils]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Determine the package (and check the tag against its version)
+        id: package
+        env:
+          INPUT_PACKAGE: ${{ inputs.package }}
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            package="${GITHUB_REF_NAME%-v*}"
+            tag_version="${GITHUB_REF_NAME##*-v}"
+          else
+            package="${INPUT_PACKAGE}"
+          fi
+          module="${package//-/_}"
+          version=$(python -c "import ast, sys; tree = ast.parse(open(sys.argv[1]).read()); print(next(n.value.value for n in tree.body if isinstance(n, ast.Assign) and n.targets[0].id == '__version__'))" "packages/${package}/${module}/__init__.py")
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${tag_version}" != "${version}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match the version of ${package} (${version})"
+            exit 1
+          fi
+          echo "package=${package}" >> "$GITHUB_OUTPUT"
+          echo "module=${module}" >> "$GITHUB_OUTPUT"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build twine
+          python -m build --outdir dist packages/${{ steps.package.outputs.package }}
+          twine check --strict dist/*
+
+      - name: Smoke test the wheel
+        # run from an empty directory so that the checkout cannot shadow
+        # the installed package
+        env:
+          MODULE: ${{ steps.package.outputs.module }}
+        run: |
+          python -m venv smoke
+          smoke/bin/pip install dist/*.whl
+          mkdir empty && cd empty
+          export LMFDB_HOME=$RUNNER_TEMP/lmfdb-home
+          ../smoke/bin/python -c "import importlib, importlib.metadata, os; m = importlib.import_module(os.environ['MODULE']); assert 'site-packages' in m.__file__, m.__file__; print('wheel imports cleanly, version', importlib.metadata.version(os.environ['MODULE'].replace('_', '-')))"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
