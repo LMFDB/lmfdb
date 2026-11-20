@@ -1,10 +1,13 @@
 
-import re
+from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
+import re
 
 from flask import render_template
 from markupsafe import escape
+
+from psycodict import DelayCommit
 
 from lmfdb.tests import LmfdbTest
 from lmfdb.knowledge.knowl import Knowl, knowldb, description_metadata, make_keywords
@@ -35,6 +38,8 @@ class DynamicKnowlTest(LmfdbTest):
 
     def test_number_field_knowl(self):
         L = self.tc.get('/knowledge/show/nf.field.data?label=6.0.21296.1', follow_redirects=True)
+        assert '-21296' in L.get_data(as_text=True)
+        L = self.tc.get('/knowledge/render/nf.field.data?label=6.0.21296.1&number_field_data=x&url_for=x')
         assert '-21296' in L.get_data(as_text=True)
 
     def test_local_field_knowl(self):
@@ -672,3 +677,155 @@ class DescriptionKnowlTest(LmfdbTest):
         # a table description that does not exist yet still gets the fallback
         kwl = self._set_table_description("nf_fields", "Number fields", None)
         assert kwl.title == "Table nf_fields"
+
+
+class KnowlRenderTest(LmfdbTest):
+    """
+    These tests check what the public knowl popup does with request data.
+    """
+
+    def test_request_data_is_not_template_code(self):
+        code = "{{ 'zq' ~ 'xj' }}"
+        for query in [{"content": code}, {"x": '") }}' + code}]:
+            page = self.tc.get("/knowledge/render/nf.degree", query_string=query)
+            assert "zqxj" not in page.get_data(as_text=True)
+        page = self.tc.post("/knowledge/render/nf.degree", data={"content": code, "footer": "0"})
+        assert page.status_code == 405
+
+    def test_generated_title_is_escaped(self):
+        page = self.tc.get("/knowledge/render/columns.nf_fields.x%3Csvg%20onload=alert(1)%3E")
+        text = page.get_data(as_text=True)
+        assert "<svg" not in text
+        assert "&lt;svg" in text
+
+    def test_invalid_timestamp_is_ignored(self):
+        page = self.tc.get("/knowledge/render/nf.degree?timestamp=abc")
+        assert page.status_code == 200
+        assert 'class="knowl-content"' in page.get_data(as_text=True)
+
+    def test_out_of_range_timestamp_is_ignored(self):
+        for timestamp in ["1" + "0" * 20, "1" + "0" * 400]:
+            with self.subTest(timestamp=timestamp):
+                page = self.tc.get("/knowledge/render/nf.degree", query_string={"timestamp": timestamp})
+                assert page.status_code == 200
+                text = page.get_data(as_text=True)
+                assert 'class="knowl-content"' in text
+                assert "ERROR in the template" not in text
+
+    def test_parameters_named_like_template_variables(self):
+        names = ["k", "source", "knowl_permalink", "knowl_header_title"]
+        page = self.tc.get("/knowledge/render/nf.degree", query_string={n: "1" for n in names})
+        text = page.get_data(as_text=True)
+        assert "ERROR in the template" not in text
+        assert 'href="/knowledge/show/nf.degree?' in text
+
+    def test_parameters_named_like_context_variables(self):
+        for name in ["url_for", "knowl_title", "user_is_authenticated"]:
+            with self.subTest(name=name):
+                page = self.tc.get("/knowledge/render/nf.degree", query_string={name: "x"})
+                text = page.get_data(as_text=True)
+                assert "ERROR in the template" not in text
+                assert 'class="knowl-content"' in text
+                assert 'href="/knowledge/edit/nf.degree"' not in text
+
+
+class KnowlEditorTest(LmfdbTest):
+    def setUp(self):
+        login = patch.dict(self.app.config, LOGIN_DISABLED=True)
+        login.start()
+        self.addCleanup(login.stop)
+        self.tc = self.app.test_client()
+
+    def test_preview_requires_session_token(self):
+        with self.tc.session_transaction() as session:
+            session["_csrf_token"] = "session-token"
+        for token in [None, "wrong", "\u00e9"]:
+            with self.subTest(token=token):
+                data = {"content": "Preview text", "footer": "0"}
+                if token is not None:
+                    data["csrf_token"] = token
+                with patch("lmfdb.knowledge.main.Knowl", side_effect=AssertionError("Preview read the database before checking the token")):
+                    page = self.tc.post("/knowledge/preview/nf.degree", data=data)
+                assert page.status_code == 400
+
+    def test_save_requires_session_token(self):
+        with self.tc.session_transaction() as session:
+            session["_csrf_token"] = "session-token"
+        for token in [None, "wrong"]:
+            with self.subTest(token=token):
+                data = {"id": "nf.degree", "title": "Degree", "content": "Preview text"}
+                if token is not None:
+                    data["csrf_token"] = token
+                with patch("lmfdb.knowledge.main.Knowl", side_effect=AssertionError("Save read the database before checking the token")):
+                    page = self.tc.post("/knowledge/save", data=data)
+                assert page.status_code == 400
+
+    def test_editor_token_allows_preview(self):
+        with patch.object(knowldb, "set_locked"):
+            page = self.tc.get("/knowledge/edit/nf.degree?lock=ignore")
+        assert page.status_code == 200
+        token = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', page.get_data(as_text=True)).group(1)
+        page = self.tc.post("/knowledge/preview/nf.degree",
+                            data={"csrf_token": token, "content": "Preview text", "footer": "0"})
+        assert page.status_code == 200
+        assert "Preview text" in page.get_data(as_text=True)
+
+    def test_knowl_table_version(self):
+        count, total = knowldb._version()
+        assert count > 0
+        assert total >= count
+
+    @contextmanager
+    def fake_knowl_table(self, version, fetched):
+        """
+        Serve knowldb's caches from a fake kwl_knowls whose fingerprint is
+        ``version[0]``, with a clock the caller sets, and record each fetch
+        in ``fetched``.
+        """
+        def get_titles(fields):
+            fetched.append("titles")
+            return [{"id": "nf.degree", "title": "Degree %s" % len(fetched)}]
+
+        def get_defines():
+            fetched.append("defines")
+            return [{"id": "nf.degree", "defines": ["degree %s" % len(fetched)]}]
+
+        with patch("lmfdb.knowledge.knowl.time") as clock, \
+                patch.object(knowldb, "_version", lambda: version[0]), \
+                patch.object(knowldb, "get_all_knowls", get_titles), \
+                patch.object(knowldb, "get_all_defines", get_defines), \
+                patch.multiple(knowldb, create=True, cached_titles={}, cached_defines={},
+                               cached_titles_timestamp=0, cached_defines_timestamp=0,
+                               cached_titles_version=None, cached_defines_version=None):
+            yield clock
+
+    def test_knowl_caches_follow_the_table(self):
+        version = [(1, 1)]
+        fetched = []
+        with self.fake_knowl_table(version, fetched) as clock:
+            def read(now):
+                clock.time.return_value = now
+                return knowldb.titles["nf.degree"], list(knowldb.all_defines)
+            first = read(1000)
+            assert read(1100) == first
+            version[0] = (1, 2)
+            # Changes are only looked for every caching_time seconds.
+            assert read(1105) == first
+            assert read(1200) != first
+        assert fetched == ["titles", "defines", "titles", "defines"]
+
+    def test_knowl_cache_after_rolled_back_save(self):
+        # As in yaml_import when a later record fails: the earlier save has
+        # updated the cache, but the table is back as it was.
+        fetched = []
+        with self.fake_knowl_table([(1, 1)], fetched) as clock, \
+                patch.object(knowldb, "_execute"):
+            clock.time.return_value = 1000
+            assert "test.phantom" not in knowldb.titles
+            with self.assertRaises(RuntimeError), DelayCommit(knowldb):
+                knowldb.save(Knowl("test.phantom", data={"title": "Phantom", "content": "x", "type": 0}),
+                             "tester", most_recent={})
+                raise RuntimeError("a later record fails")
+            clock.time.return_value = 1100
+            assert "test.phantom" not in knowldb.titles
+        assert fetched == ["titles", "titles"]

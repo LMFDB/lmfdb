@@ -1,6 +1,7 @@
 name: Generate Snippet Code Files
 
 on:
+  workflow_dispatch: {}
   push:
     branches: 
       - main
