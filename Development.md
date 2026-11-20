@@ -422,7 +422,7 @@ DBTAPE_MODE=replay PYTHONHASHSEED=0 ./test.sh lmfdb/elliptic_curves
 ```
 and `python3 conftest.py describe dbtape.sqlite` summarizes what it holds.
 
-A first tape, or a refresh with `stale_tables=all`, cannot be recorded through devmirror within a test job's time limit: the largest test files fetch about 50 MB each. Record it where the database is fast instead, from a checkout whose `config.ini` points there and with the psycodict version CI installs, and upload it (this needs write access to LMFDB/lmfdb):
+A first tape, or a refresh with `stale_tables=all`, cannot be recorded through devmirror within a test job's time limit: the largest test files fetch about 50 MB each. Record it against grace, devmirror's primary, instead, from a checkout whose `config.ini` points there and with the psycodict version CI installs, and upload it (this needs write access to LMFDB/lmfdb):
 ```bash
 rm -rf dbtape-out dbtape.sqlite.gz
 jq -r '.[] | select(.server == "devmirror" and .files != "lint") | .files' .github/workflows/matrix_includes.json | tr ' ' '\n' > dbtape-files.txt
@@ -432,7 +432,7 @@ test $(ls dbtape-out/*.sqlite | wc -l) -eq $(wc -l < dbtape-files.txt) &&
   gzip -9 dbtape.sqlite &&
   gh release upload ci-dbtape dbtape.sqlite.gz --clobber --repo LMFDB/lmfdb
 ```
-`DBTAPE_SEED` gives every test process the same random objects, which merging requires. Failing tests still leave a tape, but the last command uploads only if every test file ran to the end and left one. If the release does not exist yet, create it first with `gh release create ci-dbtape --repo LMFDB/lmfdb --prerelease --latest=false --title "CI query tape" --notes "See Query tape in Development.md"`. The runs on `main` continue from the uploaded tape.
+It has to be grace (or devmirror itself), not a copy restored from a dump: the `kwl_knowls` fingerprint is built from the transaction ids that wrote its rows, which only a replica shares, so a tape recorded from a copy makes every replay fetch the knowls again until the next recording on `main`. `DBTAPE_SEED` gives every test process the same random objects, which merging requires. Failing tests still leave a tape, but the last command uploads only if every test file ran to the end and left one. If the release does not exist yet, create it first with `gh release create ci-dbtape --repo LMFDB/lmfdb --prerelease --latest=false --title "CI query tape" --notes "See Query tape in Development.md"`. The runs on `main` continue from the uploaded tape.
 
 Code Snippets 
 -------------
