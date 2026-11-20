@@ -376,13 +376,25 @@ who are mainly involved in coding this particular python file.
 Testing
 -------
 
-- Any contribution to the main LMFDB branch must *pass all the tests*. From the lmfdb folder:
+- Any contribution to the main LMFDB branch must *pass all the tests*. The tests query the database set in your `config.ini` (by default `devmirror.lmfdb.xyz`), so they also need a network connection. To run the full test suite, use the `test.sh` script in the top-level folder of the repository:
   ```
   ./test.sh
   ```
   It takes a few minutes. If sage or some additional parts are missing it may fail,
   consider updating
   (see [Getting Started](https://github.com/LMFDB/lmfdb/wiki/GettingStarted))
+
+- The full test suite is rather large, so while developing it is usually easier to run only the tests for the part of the LMFDB you are working on. To do this, you can give one or more folders or files as arguments to `test.sh`:
+  ```
+  ./test.sh lmfdb/elliptic_curves                      # one section
+  ./test.sh lmfdb/elliptic_curves/test_ell_curves.py   # one file
+  ./test.sh lmfdb/number_fields lmfdb/galois_groups    # several sections
+  ./test.sh -n 3 lmfdb/elliptic_curves                 # in parallel, on 3 cores
+  ```
+  You can also run just a single test function by giving its file, class and name, separated by `::`
+  ```
+  ./test.sh lmfdb/elliptic_curves/test_ell_curves.py::EllCurveTest::test_isogeny_class
+  ```
 
 - New blueprints and features should include a `test_<name>.py` file
   which runs tests on all functions.
@@ -391,7 +403,7 @@ Testing
   ```
   ./test.sh coverage
   ```
-  which produces coverage scores saved in `lmfdb/htmlcov`.
+  (optionally followed by folders or files, as above), which produces coverage scores saved in `lmfdb/htmlcov`.
 
 Code Snippets 
 -------------
