@@ -407,9 +407,11 @@ class Tape:
     def read_edit_log(self, conn):
         """
         Find which tables were edited since the oldest result on the tape was
-        recorded.  This runs once, on psycodict's connection, before its first
-        query.  The log has no index unless one is added for this, and is far
-        too large to scan from every test process, so without one it is skipped.
+        recorded, after comparing the fingerprints.  This runs once, on
+        psycodict's connection, before its first query.  devmirror's log is
+        indexed on time; a database without that index may hold an untrimmed
+        log (80 GB before November 2026), too large to scan from every test
+        process, so there the log is skipped.
         """
         self.read_fingerprints(conn)
         if self.since is None:
