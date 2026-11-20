@@ -24,11 +24,13 @@ a fingerprint of the table (FINGERPRINTS) is compared with the one recorded.
 DBTAPE_STALE lists further tables to treat as edited ("all" for every table),
 which is the way to refresh after editing data with raw SQL.  The results of
 catalog queries, which psycodict reads its registry of tables from, go stale
-together after any logged edit.  Only when the edit log or a fingerprint
-cannot be read do recordings fall back on age, refetching the results it
-leaves unchecked once they are older than DBTAPE_MAX_AGE_DAYS (7 to 21 days
-by default, 14 for the catalog).  See the "Query tape" section of
-Development.md.
+together after any logged edit.  When recording, age stands in for checks
+that could not be made: if the edit log cannot be read, every result is
+fetched again once it is older than its limit, and if a fingerprint cannot
+be read, so are that table's results.  Each result's limit lies between half
+and one and a half times DBTAPE_MAX_AGE_DAYS (14 by default); the catalog's
+is DBTAPE_MAX_AGE_DAYS itself.  Replays never refresh by age.  See the
+"Query tape" section of Development.md.
 
 This is a root conftest.py so that pytest loads it before any test module
 imports lmfdb, which connects and reads the table metadata at import time.
@@ -455,8 +457,8 @@ class Tape:
             spread = 0.5 + int(key[:8], 16) / 2**32
         recorded = datetime.datetime.fromisoformat(recorded)
         if self.recording and self.now - recorded > self.max_age * spread:
-            # Age is the only sign left of edits that neither the edit log
-            # nor a fingerprint could be read for.
+            # Age stands in for the checks that could not be made: the edit
+            # log for every result, or the fingerprint for its tables.
             if self.changes is None or self.unverified.intersection(tables):
                 return True
         cutoff = recorded - CLOCK_SKEW
