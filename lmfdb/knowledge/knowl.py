@@ -175,10 +175,13 @@ class KnowlBackend(PostgresBase):
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._refresh_connection_capabilities()
-        # we cache knowl titles for 10s
+        # knowl titles and defines are refetched when kwl_knowls has changed,
+        # which is checked at most every 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
+        self.cached_titles_version = None
+        self.cached_defines_version = None
         self.cached_titles = {}
         self.cached_ai_titles = {}
 
@@ -216,6 +219,23 @@ class KnowlBackend(PostgresBase):
             time.sleep(1)
             return list(self._execute(query, values))
 
+    def _version(self):
+        """
+        A value that changes whenever kwl_knowls does.  Deleting, reviewing
+        and renaming a knowl keep its timestamp, so this is built from the
+        transaction id (xmin) that wrote each row, which a standby such as
+        devmirror reports the same as its primary.
+        """
+        return tuple(self._safe_execute(SQL("SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls"))[0])
+
+    def _titles_edited(self):
+        """
+        Called after editing cached_titles or cached_ai_titles directly.  An enclosing transaction
+        can still roll the edit back, leaving kwl_knowls and its version as
+        they were, so the cache must be refetched at the next check anyway.
+        """
+        self.cached_titles_version = None
+
     @property
     def titles(self):
         """
@@ -236,13 +256,17 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            titles, ai_titles = {}, {}
-            for elt in self.get_all_knowls(['id','title','type'], ai=True):
-                (ai_titles if elt['type'] in ai_types else titles)[elt['id']] = elt['title']
-            if ai_titles:
-                # Users who are not logged in see the most recent human-written version of these, if any
-                titles.update((elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'], ids=list(ai_titles), ai=False))
-            self.cached_titles, self.cached_ai_titles = titles, ai_titles
+            # Read before fetching: a change in between is then fetched next time.
+            version = self._version()
+            if version != self.cached_titles_version:
+                titles, ai_titles = {}, {}
+                for elt in self.get_all_knowls(['id','title','type'], ai=True):
+                    (ai_titles if elt['type'] in ai_types else titles)[elt['id']] = elt['title']
+                if ai_titles:
+                    # Users who are not logged in see the most recent human-written version of these, if any
+                    titles.update((elt['id'], elt['title']) for elt in self.get_all_knowls(['id','title'], ids=list(ai_titles), ai=False))
+                self.cached_titles, self.cached_ai_titles = titles, ai_titles
+                self.cached_titles_version = version
             # Count the caching time from now: if the queries took longer than
             # that, setting it only beforehand would make every lookup refresh again
             self.cached_titles_timestamp = time.time()
@@ -252,10 +276,13 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_defines_timestamp > self.caching_time:
             self.cached_defines_timestamp = now
-            self.cached_defines = defaultdict(list)
-            for elt in self.get_all_defines():
-                for term in elt['defines']:
-                    self.cached_defines[term].append(elt['id'])
+            version = self._version()
+            if version != self.cached_defines_version:
+                self.cached_defines = defaultdict(list)
+                for elt in self.get_all_defines():
+                    for term in elt['defines']:
+                        self.cached_defines[term].append(elt['id'])
+                self.cached_defines_version = version
         return self.cached_defines
 
     def can_read_write_knowls(self):
@@ -475,6 +502,7 @@ class KnowlBackend(PostgresBase):
         else:
             self.cached_titles[knowl.id] = knowl.title
             self.cached_ai_titles.pop(knowl.id, None)
+        self._titles_edited()
 
     def yaml_export(self, filename, ids=0, fields=None):
         """
@@ -689,8 +717,10 @@ class KnowlBackend(PostgresBase):
         """deletes this knowl from the db. This is effected by setting the status to -2 on all copies of the knowl"""
         updator = SQL("UPDATE kwl_knowls SET status=%s WHERE id=%s")
         self._execute(updator, [-2, knowl.id])
-        self.cached_titles.pop(knowl.id, None)
-        self.cached_ai_titles.pop(knowl.id, None)
+        if knowl.id in self.cached_titles or knowl.id in self.cached_ai_titles:
+            self.cached_titles.pop(knowl.id, None)
+            self.cached_ai_titles.pop(knowl.id, None)
+            self._titles_edited()
 
     def resurrect(self, knowl):
         """Sets the status for all deleted copies of the knowl to beta"""
@@ -963,6 +993,7 @@ class KnowlBackend(PostgresBase):
             for cache in [self.cached_titles, self.cached_ai_titles]:
                 if knowl.id in cache:
                     cache[new_name] = cache.pop(knowl.id)
+                    self._titles_edited()
             knowl.id = new_name
 
     def rename_hyphens(self, execute=False):
