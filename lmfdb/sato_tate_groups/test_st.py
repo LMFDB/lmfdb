@@ -100,7 +100,7 @@ class SatoTateGroupTest(LmfdbTest):
         L = self.tc.get('/SatoTateGroup/?trace_zero_density=19/24')
         assert '1.4.F.24.14a' in L.get_data(as_text=True)
 
-    def test_favourites(self):
+    def test_favorites(self):
         for label in [ '1.2.1.2.1a','1.2.3.1.1a', '1.4.1.12.4d', '1.4.3.6.2a', '1.4.6.1.1a', '1.4.10.1.1a' ]:
             L = self.tc.get('/SatoTateGroup/'+label, follow_redirects=True)
             assert "Moment sequences" in L.get_data(as_text=True)

@@ -1,3 +1,4 @@
+from markupsafe import escape
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form
@@ -237,7 +238,7 @@ class TextBox(SearchBox):
             if self.short_width is not None:
                 keys.append('style="width: %spx"' % self.short_width)
             if self.name in info:
-                keys.append('value="%s"' % info[self.name])
+                keys.append('value="%s"' % escape(info[self.name]))
         return '<input ' + " ".join(keys) + "/>"
 
 class SelectBox(SearchBox):
@@ -362,7 +363,7 @@ class HiddenBox(SearchBox):
         if self.advanced:
             keys.append('class="advanced"')
         if info is not None and info.get(self.name):
-            keys.append('value="%s"' % info.get(self.name))
+            keys.append('value="%s"' % escape(info.get(self.name)))
         return '<input type="hidden" %s>' % (" ".join(keys),)
 
 class CheckBox(SearchBox):
@@ -663,6 +664,7 @@ class SearchArray(UniqueRepresentation):
     """
     _ex_col_width = 170 # only used for box layout
     sort_knowl = None
+    label_knowl = None  # Link to knowl for label (used for "labels" SneakyBox)
     sorts = None # Provides an easy way to implement sort_order: a list of triples (name, display, sort -- as a list of columns or pairs (col, +-1)), or a dictionary indexed on the value of self._st()
     null_column_explanations = {} # Can override the null warnings for a column by including False as a value, or customize the error message by giving a formatting string (see search_wrapper.py)
     noun = "result"
@@ -711,7 +713,8 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return self.browse_array
         else:
-            return self.refine_array
+            # Append a "Labels" search box allowing multiple labels to be passed via URL
+            return self.refine_array + [[SneakyTextBox(name="labels", label="Labels", knowl=self.label_knowl)]]
 
     def _print_table(self, grid, info, layout_type):
         if not grid:
@@ -811,7 +814,7 @@ class SearchArray(UniqueRepresentation):
         if info is None:
             return ""
         else:
-            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, info.get(val)) for name, val in self.hidden(info))
+            return "\n".join('<input type="hidden" name="%s" value="%s"/>' % (name, escape(info.get(val))) for name, val in self.hidden(info))
 
     def main_table(self, info=None):
         layout_type = "horizontal" if info is None else "vertical"
@@ -880,7 +883,7 @@ class SearchArray(UniqueRepresentation):
         # We don't use SearchBoxes since we want the example to be below, and the button directly to the right of the input (regardless of how big the example is)
         return """<table><tr><td>%s</td><td><input type='text' name='jump' placeholder='%s' style='width:%spx;' value='%s'></td><td>
 <button type='submit'>Find</button></td><td></tr><tr><td></td><td colspan="2"><span class='formexample'>%s</span></td></tr></table>
-""" % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, info.get("jump", ""), jump_egspan)
+""" % (display_knowl(jump_knowl, jump_prompt),jump_example, jump_width, escape(info.get("jump", "")), jump_egspan)
 
 class EmbeddedSearchArray(SearchArray):
     """

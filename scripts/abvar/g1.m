@@ -10,7 +10,7 @@ For each label, and for each field of characteristic 2 or 3 and j-invariant not 
 it lists a representative for each isomorphism class in the isogeny class.
 
 For characteristics 2 or 3 and j-invariant equal to 0 or 1728, we use 
-John Cremona's sage package to pick a favourite curve of each isomorphism class.
+John Cremona's sage package to pick a favorite curve of each isomorphism class.
 See g1_char23_j_0.sage.
 */
 

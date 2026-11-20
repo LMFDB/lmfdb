@@ -39,8 +39,8 @@ def get_bread(tail=[]):
         tail = [(tail, " ")]
     return base + tail
 
-def showexp(c, wrap=True):
-    if c == 1:
+def showexp(c, wrap=True, include_one=False):
+    if c == 1 and not include_one:
         return ""
     elif wrap:
         return f"$^{{{c}}}$"
@@ -543,7 +543,7 @@ class WebModCurve(WebObj):
     def cusp_orbits_display(self):
         if not self.cusp_orbits:
             return ""
-        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False)}" for w, n in self.cusp_orbits) + "$"
+        return "$" + r"\cdot".join(f"{w}{showexp(n, wrap=False, include_one=True)}" for w, n in self.cusp_orbits) + "$"
 
     @lazy_attribute
     def cm_discriminant_list(self):

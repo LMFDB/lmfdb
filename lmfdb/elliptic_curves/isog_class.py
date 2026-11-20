@@ -133,7 +133,7 @@ class ECisog_class():
         from sage.matrix.all import Matrix
         M = classdata['isogeny_matrix']
 
-        # permute rows/cols to match labelling: the rows/cols in the
+        # permute rows/cols to match labeling: the rows/cols in the
         # ec_classdata table are with respect to LMFDB ordering.
         if self.label_type == 'Cremona':
             def perm(i): return next(c for c in self.curves if c['Cnumber'] == i+1)['lmfdb_number']-1
@@ -175,7 +175,9 @@ class ECisog_class():
         if self.cm:
             # set CM field for Properties box.
             D = integer_squarefree_part(ZZ(self.cm))
-            coeffs = [(1-D)//4,-1,1] if D % 4 == 1 else [-D,0,1]
+            # int() everything so that the query list is not a mix of Sage Integers
+            # and Python ints, which psycopg cannot adapt
+            coeffs = [int((1-D)//4),-1,1] if D % 4 == 1 else [int(-D),0,1]
             lab = db.nf_fields.lucky({'coeffs': coeffs}, projection='label')
             self.CMfield = field_pretty(lab)
         else:
@@ -208,8 +210,7 @@ class ECisog_class():
             self.downloads.append(('{} commands'.format(lang[0]), url_for(".ec_isog_code_download", conductor=self.conductor, iso=self.iso_label, label=self.lmfdb_iso, download_type=lang[1])))
         self.downloads.append(('Underlying data', url_for(".EC_data", label=self.lmfdb_iso)))
 
-        self.bread = [('Elliptic curves', url_for("ecnf.index")),
-                      (r'$\Q$', url_for(".rational_elliptic_curves")),
+        self.bread = [(r'Elliptic curves over $\Q$', url_for(".rational_elliptic_curves")),
                       ('%s' % self.conductor, url_for(".by_conductor", conductor=self.conductor)),
                       ('%s' % self.iso_label, ' ')]
 

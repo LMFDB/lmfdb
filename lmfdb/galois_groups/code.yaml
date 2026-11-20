@@ -4,33 +4,6 @@ prompt:
   oscar: 'oscar'
   gap:   'gap'
 
-logo:
-  magma: <img src = "https://i.stack.imgur.com/0468s.png" width="50px">
-  sage: <img src ="https://www.sagemath.org/pix/sage_logo_new.png" width = "50px">
-  oscar: <img src = "https://oscar-system.github.io/Oscar.jl/stable/assets/logo.png" width="50px">
-  gap: <img src = "https://gap.math.u-bordeaux.fr/logo/Logo%20Couleurs/Logo_GAP-GP_Couleurs_L150px.png" width="50px">
-
-comment:
-  sage: |
-    #
-  magma: |
-    //
-  oscar: |
-    #
-  gap: |
-    #
-
-not-implemented:
-  sage: |
-    # (not yet implemented)
-  magma: |
-    // (not yet implemented)
-  oscar: |
-    # (not yet implemented)
-  gap: |
-    # (not yet implemented)
-
-
 frontmatter:
   all: |
     {lang} code for working with transitive group {label}
@@ -42,6 +15,13 @@ gg:
   oscar: G = transitive_group({n}, {t})
   gap: G := TransitiveGroup({n}, {t});
 
+n32_dbs:
+  comment: URLs for databases of transitive groups of degree 32
+  sage: https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz
+  gap: https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz
+  magma: https://magma.maths.usyd.edu.au/magma/download/db/TrnGps32.tar.gz
+  oscar: https://www.math.colostate.edu/~hulpke/transgrp/trans32.tgz
+  
 n:
   comment: Degree
   magma: t, n := TransitiveGroupIdentification(G); n;

@@ -38,6 +38,76 @@ class NumberFieldTest(LmfdbTest):
         self.check_args('/NumberField/?jump=Qsqrt-163&search=Go', '41') # minpoly
         self.check_args('/NumberField/?jump=q(sqrt-163)&search=Go', '41') # minpoly
 
+    def test_search_multiple_fields(self):
+        # Test comma-separated list of field labels
+        self.check_args('/NumberField/?jump=2.2.5.1%2c+3.3.49.1&search=Go', '2.2.5.1')
+        self.check_args('/NumberField/?jump=2.2.5.1%2c+3.3.49.1&search=Go', '3.3.49.1')
+        # Test comma-separated list with different input formats
+        self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.5.1')
+        self.check_args('/NumberField/?jump=Qsqrt5%2c+x%5E2-3&search=Go', '2.2.12.1')
+
+    def test_search_abelian_jump(self):
+        # Abelian fields entered by a non-reduced defining polynomial are
+        # identified without running polredabs (issue #5471).
+        from sage.all import pari
+        from urllib.parse import quote
+        # the degree 47 field of conductor 283 from the issue, entered via
+        # the minimal polynomial of z + z^2 for z a root of the stored
+        # polynomial
+        label = "47.47.60558628944427886416035618894711378994697503545758179730765967261479053047453845062877188530544503628007178201769.1"
+        coeffs = self.db.nf_fields.lookup(label, "coeffs")
+        g = pari([int(c) for c in coeffs]).Polrev()
+        T = pari("x + x^2").Mod(g).charpoly()
+        self.check_args('/NumberField/?jump=' + quote(str(T)),
+                        [label, 'uses a different defining polynomial'])
+        # same for a moderate degree: Q(zeta_32), degree 16
+        T = pari("x + x^2").Mod(pari("polcyclo(32)")).charpoly()
+        self.check_args('/NumberField/?jump=' + quote(str(T)),
+                        '16.0.18446744073709551616.1')
+
+    def test_abelian_nf_label(self):
+        # the underlying fast path for issue #5471
+        from sage.all import pari
+        from lmfdb.number_fields.web_number_field import abelian_nf_label
+        # degree 8: Q(zeta_20), entered via the minimal polynomial of z + 3z^3
+        T = (pari("x") + 3 * pari("x^3")).Mod(pari("polcyclo(20)")).charpoly()
+        assert abelian_nf_label(T) == "8.0.4000000.1"
+        # non-Galois and Galois-but-non-abelian inputs are left to the
+        # polredabs path
+        assert abelian_nf_label(pari("x^8 - 2")) is None
+        assert abelian_nf_label(pari("polcompositum(x^4 - 2, x^2 + 1)[1]")) is None
+        # same field, but entered so that the order we can certify maximal is
+        # very far from maximal: the index is divisible by two primes above
+        # 10^5, which stay out of S, so nfroots is called with a conditional
+        # structure (hence gets the defining polynomial, not the nf)
+        m = 100003 * 100019
+        T = (m * pari("x")).Mod(pari("polcyclo(20)")).charpoly()
+        assert abelian_nf_label(T) == "8.0.4000000.1"
+
+    def test_known_discriminant_primes(self):
+        # a large ramified prime shows up in the discriminant as a prime
+        # power, not as a prime (issue #5471)
+        from sage.all import ZZ
+        from lmfdb.number_fields.web_number_field import _known_discriminant_primes
+        q = ZZ(100003)
+        S = _known_discriminant_primes(ZZ(2)**20 * ZZ(5)**10 * q**7)
+        assert S == [ZZ(2), ZZ(5), q]
+        # a cofactor with two large prime factors is left unfactored
+        assert _known_discriminant_primes(ZZ(2)**20 * q * ZZ(100019)) == [ZZ(2)]
+
+    def test_jump_degree_too_large(self):
+        # for degrees beyond anything in the database the jump returns
+        # quickly instead of attempting polredabs (issue #5471): here a
+        # degree 94 subfield of Q(zeta_283), for which polredabs takes
+        # more than five minutes
+        from sage.all import pari
+        from urllib.parse import quote
+        T = pari.polsubcyclo(283, 94)
+        if T.type() == 't_VEC':
+            T = T[0]
+        self.check_args('/NumberField/?jump=' + quote(str(T)),
+                        'does not define a number field in the database')
+
     def test_search_disc(self):
         self.check_args('/NumberField/?discriminant=1988-2014', '401') # factor of one of the discriminants
 
@@ -49,15 +119,38 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_naturallabel_custom(self):
         # Test various different custom nicknames for number fields
+
+        # Rational field:
+        self.check_args('/NumberField/Q', '1.1.1.1')
+        self.check_args('/NumberField/Q(sqrt4)', '1.1.1.1')
+        self.check_args('/NumberField/Q(root(2,1))', '1.1.1.1')
+        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
+        self.check_args('/NumberField/Q(cbrt2^3)', '1.1.1.1')
+        self.check_args('/NumberField/Qcbrt-1', '1.1.1.1')
+        self.check_args('/NumberField/?jump=Q((-8)^(1/3))', '1.1.1.1')
+        self.check_args('/NumberField/Q(cbrt(-2+sqrt5)+cbrt(-2-sqrt5))', '1.1.1.1')
+
+        # Quadratic fields:
         self.check_args('/NumberField/Qi', '2.0.4.1')
+        self.check_args('/NumberField/Q(1+2i)', '2.0.4.1')
+        self.check_args('/NumberField/Q(zeta8*sqrt2)', '2.0.4.1')
+        self.check_args('/NumberField/Q(sqrt(2)*i)', '2.0.8.1')
         self.check_args('/NumberField/Qphi', '2.2.5.1')
+        self.check_args('/NumberField/Qsqrt5', '2.2.5.1')
+        self.check_args('/NumberField/Q(sqrt5)', '2.2.5.1')
+        self.check_args('/NumberField/Qsqrt8', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2+sqrt3-sqrt3)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2*sqrt3)', '2.2.24.1')
+
+        # Higher degrees:
         self.check_args('/NumberField/Qcbrt2', '3.1.108.1')
+        self.check_args('/NumberField/Q(zeta3*cbrt2)', '3.1.108.1')
         self.check_args('/NumberField/Q(sqrt2+sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt(1 + sqrt2))', '4.2.1024.1')
+        self.check_args('/NumberField/Q(root(2,5))', '5.1.50000.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3,cbrt2)', '12.4.320979616137216.3')
-        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
-        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
 
     def test_arith_equiv(self):
         self.check_args('/NumberField/7.3.6431296.1', '7.3.6431296.2') # arith equiv field
@@ -74,6 +167,12 @@ class NumberFieldTest(LmfdbTest):
     def test_imaginary_quadratic_page(self):
         self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'extensive computations')
 
+    def test_imaginary_quadratic_file_from_beta(self):
+        url = '/NumberField/QuadraticImaginaryClassGroups?filenamebase=cl3mod8&k=0&Fetch=fetch'
+        resp = self.tc.get(url)
+        assert resp.status_code == 301
+        assert resp.headers['Location'] == 'https://beta.lmfdb.org' + url
+
     def test_discriminants_page(self):
         self.check_args('/NumberField/Source', 'Jones-David Roberts')
 
@@ -88,6 +187,22 @@ class NumberFieldTest(LmfdbTest):
 
     def test_statistics(self):
         self.check_args('/NumberField/stats', 'Class number')
+
+    def test_pretty_labels(self):
+        # Test "prettified" latex labels for number fields
+        self.check_args('/NumberField/1.1.1.1', r'\Q')
+        self.check_args('/NumberField/2.0.4.1', r'\Q(\sqrt{-1})')
+        self.check_args('/NumberField/4.4.1600.1', r'\Q(\sqrt{2}, \sqrt{5})')
+        self.check_args('/NumberField/6.0.16807.1', r'\Q(\zeta_{7})')
+        self.check_args('/NumberField/3.3.49.1', r'\Q(\zeta_{7})^+')
+        self.check_args('/NumberField/3.1.300.1', r'\Q(\sqrt[3]{10})')
+        self.check_args('/NumberField/4.2.2048.1', r'\Q(\sqrt[4]{2})')
+        self.check_args('/NumberField/4.0.512.1', r'\Q(\sqrt{1 + i})')
+        self.check_args('/NumberField/4.2.1024.1', r'\Q(\sqrt{1 + \sqrt{2}})')
+        self.check_args('/NumberField/4.0.2048.2', r'\Q(\sqrt{-2 + \sqrt{2}})')
+        self.check_args('/NumberField/8.8.3317760000.1', r'\Q(\sqrt{2}, \sqrt{3}, \sqrt{5})')
+        self.check_args('/NumberField/16.0.11007531417600000000.1', r'\Q(i, \sqrt{2}, \sqrt{3}, \sqrt{5})')
+        self.check_args('/NumberField/32.0.4026692887688564776141139207792885760000000000000000.1', r'\Q(i, \sqrt{2}, \sqrt{3}, \sqrt{5}, \sqrt{7})')
 
     def test_signature_search(self):
         # Square brackets
@@ -119,6 +234,21 @@ class NumberFieldTest(LmfdbTest):
     def test_underlying_data(self):
         self.check_args('NumberField/2.2.10069.1', ['Underlying data', 'data/2.2.10069.1'])
 
+    def test_diagram_search(self):
+        # The Diagram button should be offered on the search page
+        self.check_args('/NumberField/?degree=2', 'Diagram search')
+        # Default axes use the computed signed discriminant (disc = disc_sign * disc_abs),
+        # which is not a stored column; this used to 500 with KeyError: 'disc'.
+        page = self.tc.get('/NumberField/?search_type=Diagram&degree=2&count=100').get_data(as_text=True)
+        assert 'my_dataviz' in page
+        assert 'discriminant' in page
+        # 2.0.3.1 is the field of discriminant -3, so its x-coordinate is -3
+        assert '"label": "2.0.3.1"' in page and '"x": "-3"' in page
+        # The computed absolute-discriminant axis also works
+        page2 = self.tc.get('/NumberField/?hst=Diagram&x-axis=disc_abs&y-axis=rd&degree=3&count=50').get_data(as_text=True)
+        assert 'my_dataviz' in page2
+        assert 'absolute discriminant' in page2
+
     def test_errors(self):
         self.check_args('NumberField/18.0.10490638424...4432.1/download/sage', 'Invalid label')
         self.check_args('NumberField/4.3.2.1/download/sage', 'There is no number field with label 4.3.2.1')
@@ -146,3 +276,25 @@ class NumberFieldTest(LmfdbTest):
         # Also ensure we're not getting quoted strings
         assert '"[0, 1]"' not in page
         assert '"[2, 0]"' not in page
+
+    def test_gp_galois_snippet_by_degree(self):
+        # PARI's polgalois hard-errors above degree 11, and needs the optional
+        # galdata package in degrees 8 to 11, so the gp snippet depends on the degree.
+        page = self.tc.get('/NumberField/2.0.11.1/download/gp').get_data(as_text=True)
+        assert any(line.strip() == 'polgalois(K.pol)' for line in page.split('\n'))
+        assert 'galdata' not in page
+        page = self.tc.get('/NumberField/8.0.1265625.1/download/gp').get_data(as_text=True)
+        assert 'polgalois(K.pol)  \\\\ requires the optional galdata package' in page
+        page = self.tc.get('/NumberField/12.4.320979616137216.3/download/gp').get_data(as_text=True)
+        assert '\\\\ polgalois only supports degree <= 11' in page
+        # polgalois is never actually called above degree 11
+        assert not any(line.strip().startswith('polgalois(') for line in page.split('\n'))
+
+    def test_rational_field_magma_download(self):
+        # Magma's NumberField collapses a degree 1 polynomial to the rationals,
+        # so 1.1.1.1 uses RationalsAsNumberField() instead, both when defining
+        # the field and in the self-contained class number formula snippet.
+        page = self.tc.get('/NumberField/1.1.1.1/download/magma').get_data(as_text=True)
+        assert page.count('K<a> := RationalsAsNumberField();') == 2
+        assert 'NumberField(x)' not in page
+        assert 'DoLinearExtension' not in page

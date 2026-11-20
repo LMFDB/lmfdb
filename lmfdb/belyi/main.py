@@ -543,7 +543,7 @@ class Belyi_download(Downloader):
         s += "# Sage code for Belyi map with label %s\n\n" % label
         s += "\n# Group theoretic data\n\n"
         s += "d = %s\n" % rec["deg"]
-        s += "i = %s\n" % int(label.split("T")[1][0])
+        s += "i = %s\n" % int(label.split("T")[1].split("-")[0])
         s += "G = TransitiveGroup(d,i)\n"
         s += "sigmas = %s\n" % self.perm_maker(rec, lang)
         s += "embeddings = %s\n" % self.embedding_maker(rec, lang)
@@ -560,7 +560,7 @@ class Belyi_download(Downloader):
             s += "S.<x> = PolynomialRing(K)\n"
             f, h = curve_string_parser(rec)
             ainvs = hyperelliptic_polys_to_ainvs(f, h)
-            s += "X = EllipticCurve(%s)\n" % ainvs
+            s += "X = EllipticCurve(K, %s)\n" % ainvs
             s += "# Define the map\n"
             s += "K0.<x> = FunctionField(K)\n"
             crv_str = rec['curve']

@@ -526,7 +526,7 @@ def paintSvgHoloNew(condmax):
     ans = svgBegin()
     ans += "<g transform='translate(10 0)'>\n"  # give ourselves a little space
 
-    cfw = colorsForWeights(max_k)  # pick our colour palette we need colors for weights 1 (at some point) to max_k inclusive
+    cfw = colorsForWeights(max_k)  # pick our color palette we need colors for weights 1 (at some point) to max_k inclusive
 
     for p in points:
         x = str(p[0])
@@ -804,7 +804,7 @@ def paintSvgHoloGeneral(Nmin, Nmax, kmin, kmax, imagewidth, imageheight):
             # Symmetry types: +1 or -1
             symmetrytype = [1, -1]
             for signtmp in symmetrytype:
-                # urlinfo['space']['orbits'] = [ [] for label in thelabels ] # initialise
+                # urlinfo['space']['orbits'] = [ [] for label in thelabels ] # initialize
                 # an empty list for each orbit
                 urlinfo['space']['orbits'] = []
                 for label in thelabels:  # looping over Galois orbit: one label per orbit

@@ -3,7 +3,7 @@ import re
 import yaml
 import json
 from collections import defaultdict
-from psycopg2.extensions import QueryCanceledError
+from lmfdb.utils.psycopg_compat import QueryCanceledError
 from lmfdb import db
 from psycodict.encoding import Json
 from lmfdb.utils import flash_error, comma
@@ -31,6 +31,21 @@ def pretty_document(rec, sep=", ", id=True):
     # sort keys and remove _id for html display
     attrs = sorted([(key, quote_string(rec[key])) for key in rec if (id or key != 'id')])
     return "{" + sep.join("'%s': %s" % attr for attr in attrs) + "}"
+
+
+def schema_example(value, typ, max_len=100):
+    """
+    String representation of one value from a random row, truncated
+    for display in the Example column of the schema table.
+    """
+    if value is None:
+        return ""
+    if typ == "bytea" or isinstance(value, buffer):
+        return "[binary data]"
+    value = str(quote_string(value))
+    if len(value) > max_len:
+        value = value[:max_len] + "..."
+    return value
 
 
 def hidden_collection(c):
@@ -159,7 +174,7 @@ def stats():
 
 @api_page.route("/<table>/<id>")
 def api_query_id(table, id):
-    if id == 'schema':
+    if id == 'schema' and table in db.tablenames:
         out = ''
         table = getattr(db, table)
         col_type = table.col_type
@@ -211,10 +226,9 @@ def api_query(table, id=None):
         return apierror("offset %s too large, please refine your query.", [offset])
 
     # preparing the actual database query q
-    try:
-        coll = getattr(db, table)
-    except AttributeError:
+    if table not in db.tablenames:
         return apierror("table %s does not exist", [table], table=False)
+    coll = getattr(db, table)
     q = {}
 
     # if id is set, just go and get it, ignore query parameters
@@ -351,17 +365,26 @@ def api_query(table, id=None):
         title = "Database - " + location
         bc = [("Database", url_for(".index")), (table,)]
         query_unquote = unquote(data["query"])
-        description = coll.description()
-        if description:
-            title += " (%s)" % description
+        # The table description (the tables.<name> knowl) is displayed by
+        # collection.html rather than being appended to the title
+        try:
+            # projection=3 selects every search and extra column (plus id),
+            # the same full mask the datapage query below uses, so the Example
+            # column can be populated for every row shown in the schema table.
+            example = coll.random(projection=3)
+        except Exception:
+            example = None
+        if example is None:
+            examples = {}
+        else:
+            examples = {table: {col: schema_example(example.get(col), typ)
+                                for col, typ in coll.col_type.items()}}
         search_schema = [(col, coll.col_type[col])
                          for col in sorted(coll.search_cols)]
-        extra_schema = [(col, coll.col_type[col])
-                        for col in sorted(coll.extra_cols)]
         return render_template("collection.html",
                                title=title,
                                search_schema={table: search_schema},
-                               extra_schema={table: extra_schema},
+                               examples=examples,
                                single_object=single_object,
                                query_unquote=query_unquote,
                                url_args=url_args,
@@ -370,7 +393,7 @@ def api_query(table, id=None):
 
 
 # This function is used to show the data associated to a given homepage, which could possibly be from multiple tables.
-def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
+def datapage(labels, tables, title, bread, label_cols=None, sorts=None, limit=100):
     """
     INPUT:
 
@@ -380,8 +403,15 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
     - ``bread`` -- bread for the page
     - ``label_cols`` -- a list of column names of the same length; defaults to using ``label`` everywhere
     - ``sorts`` -- lists for sorting each table; defaults to None
+    - ``limit`` -- maximum number of rows displayed from each table; if more rows match, the total count is reported instead of listing them all
     """
     format = request.args.get("_format", "html")
+    try:
+        limit_arg = request.args.get("_limit")
+        if limit_arg is not None:
+            limit = max(0, min(10000, int(limit_arg)))
+    except (TypeError, ValueError):
+        pass
     if not isinstance(tables, list):
         tables = [tables]
     if not isinstance(labels, list):
@@ -402,8 +432,8 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         else:
             return abort(code, msg % tuple(flash_extras))
     data = []
+    totals = []
     search_schema = {}
-    extra_schema = {}
     for label, table, col, sort in zip(labels, tables, label_cols, sorts):
         if isinstance(col, list):  # Needed for gps_conj_classes, which effectively has a pair of columns for a label
             q = dict(zip(col, label))
@@ -411,7 +441,15 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
             q = {col: label}
         coll = db[table]
         try:
-            data.append(list(coll.search(q, projection=3, sort=sort)))
+            # Fetch limit+1 rows to cheaply detect truncation; only call count() if we actually exceeded the limit.
+            rows = list(coll.search(q, projection=3, sort=sort, limit=limit + 1))
+            if len(rows) > limit:
+                total = coll.count(q)
+                rows = rows[:limit]
+            else:
+                total = len(rows)
+            data.append(rows)
+            totals.append(total)
         except QueryCanceledError:
             return apierror("Query %s exceeded time limit.", [q], code=500, table=table)
         except KeyError as err:
@@ -420,8 +458,6 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
             return apierror(str(err), table=table)
         search_schema[table] = [(col, coll.col_type[col])
                                 for col in sorted(coll.search_cols)]
-        extra_schema[table] = [(col, coll.col_type[col])
-                               for col in sorted(coll.extra_cols)]
     data = Json.prep(data)
 
     # the collected result
@@ -431,6 +467,8 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         "label_cols": label_cols,
         "timestamp": utc_now_naive().isoformat(),
         "data": data,
+        "totals": totals,
+        "limit": limit,
     }
     if format.lower() == "json":
         return current_app.response_class(json.dumps(data, indent=2), mimetype='application/json')
@@ -444,7 +482,6 @@ def datapage(labels, tables, title, bread, label_cols=None, sorts=None):
         return render_template("apidata.html",
                                title=title,
                                search_schema=search_schema,
-                               extra_schema=extra_schema,
                                bread=bread,
                                pretty=pretty_document,
                                **data)

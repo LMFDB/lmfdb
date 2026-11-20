@@ -135,6 +135,9 @@ class ModCrvTest(LmfdbTest):
         assert "Cusp orbits" in L.get_data(as_text=True)
         assert r"$8^{6}\cdot16^{3}$" in L.get_data(as_text=True)
 
+        L = self.tc.get("/ModularCurve/Q/17.136.6.a.1", follow_redirects=True)
+        assert r"$8^{1}$" in L.get_data(as_text=True)
+
     def test_modcrv_label(self):
         L = self.tc.get("/ModularCurve/Q/48.576.21-48.bqz.1.2",follow_redirects=True)
         assert "Cummins and Pauli (CP) label" in L.get_data(as_text=True)
