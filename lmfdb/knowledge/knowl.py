@@ -146,10 +146,13 @@ class KnowlBackend(PostgresBase):
     def __init__(self):
         PostgresBase.__init__(self, 'db_knowl', db)
         self._refresh_connection_capabilities()
-        # we cache knowl titles for 10s
+        # knowl titles and defines are refetched when kwl_knowls has changed,
+        # which is checked at most every 10s
         self.caching_time = 10
         self.cached_titles_timestamp = 0
         self.cached_defines_timestamp = 0
+        self.cached_titles_version = None
+        self.cached_defines_version = None
         self.cached_titles = {}
 
     def _refresh_connection_capabilities(self):
@@ -186,12 +189,33 @@ class KnowlBackend(PostgresBase):
             time.sleep(1)
             return list(self._execute(query, values))
 
+    def _version(self):
+        """
+        A value that changes whenever kwl_knowls does.  Deleting, reviewing
+        and renaming a knowl keep its timestamp, so this is built from the
+        transaction id (xmin) that wrote each row, which a standby such as
+        devmirror reports the same as its primary.
+        """
+        return tuple(self._safe_execute(SQL("SELECT count(*), sum(xmin::text::bigint) FROM kwl_knowls"))[0])
+
+    def _titles_edited(self):
+        """
+        Called after editing cached_titles directly.  An enclosing transaction
+        can still roll the edit back, leaving kwl_knowls and its version as
+        they were, so the cache must be refetched at the next check anyway.
+        """
+        self.cached_titles_version = None
+
     @property
     def titles(self):
         now = time.time()
         if now - self.cached_titles_timestamp > self.caching_time:
             self.cached_titles_timestamp = now
-            self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
+            # Read before fetching: a change in between is then fetched next time.
+            version = self._version()
+            if version != self.cached_titles_version:
+                self.cached_titles = {elt['id']: elt['title'] for elt in self.get_all_knowls(['id','title'])}
+                self.cached_titles_version = version
         return self.cached_titles
 
     @property
@@ -199,10 +223,13 @@ class KnowlBackend(PostgresBase):
         now = time.time()
         if now - self.cached_defines_timestamp > self.caching_time:
             self.cached_defines_timestamp = now
-            self.cached_defines = defaultdict(list)
-            for elt in self.get_all_defines():
-                for term in elt['defines']:
-                    self.cached_defines[term].append(elt['id'])
+            version = self._version()
+            if version != self.cached_defines_version:
+                self.cached_defines = defaultdict(list)
+                for elt in self.get_all_defines():
+                    for term in elt['defines']:
+                        self.cached_defines[term].append(elt['id'])
+                self.cached_defines_version = version
         return self.cached_defines
 
     def can_read_write_knowls(self):
@@ -358,6 +385,7 @@ class KnowlBackend(PostgresBase):
             inserter = inserter.format(SQL(', ').join(map(Identifier, self._default_fields)), SQL(", ").join(Placeholder() * (len(self._default_fields) + 2)))
             self._execute(inserter, values)
         self.cached_titles[knowl.id] = knowl.title
+        self._titles_edited()
 
     def yaml_export(self, filename, ids=0, fields=None):
         """
@@ -552,12 +580,14 @@ class KnowlBackend(PostgresBase):
         self._execute(updator, [-2, knowl.id])
         if knowl.id in self.cached_titles:
             self.cached_titles.pop(knowl.id)
+            self._titles_edited()
 
     def resurrect(self, knowl):
         """Sets the status for all deleted copies of the knowl to beta"""
         updator = SQL("UPDATE kwl_knowls SET status=%s WHERE status=%s AND id=%s")
         self._execute(updator, [0, -2, knowl.id])
         self.cached_titles[knowl.id] = knowl.title
+        self._titles_edited()
 
     def review(self, knowl, who, set_beta=False):
         updator = SQL("UPDATE kwl_knowls SET (status, reviewer, reviewer_timestamp) = (%s, %s, %s) WHERE id = %s AND timestamp = %s")
@@ -814,6 +844,7 @@ class KnowlBackend(PostgresBase):
             self._execute(updator, values)
             if knowl.id in self.cached_titles:
                 self.cached_titles[new_name] = self.cached_titles.pop(knowl.id)
+                self._titles_edited()
             knowl.id = new_name
 
     def rename_hyphens(self, execute=False):

@@ -5,6 +5,19 @@ class HomePageTest(LmfdbTest):
     # All tests should pass
     #
     # The page itself
+    def test_escaped_inputs(self):
+        r"""
+        Check that request values shown again in the refine-search form are HTML-escaped
+        """
+        bad = "%22%3E%3Ci%3Eq%3C%2Fi%3E"  # "><i>q</i>
+        esc = "&#34;&gt;&lt;i&gt;q&lt;/i&gt;"
+        # a text box (the labels box) and a hidden input (search_type)
+        for url in ["/EllipticCurve/Q/?labels=11.a2," + bad,
+                    "/EllipticCurve/Q/?conductor=11&search_type=" + bad]:
+            page = self.tc.get(url).get_data(as_text=True)
+            assert "<i>q</i>" not in page, url
+            assert esc in page, url
+
     def test_page(self):
         r"""
         Check that the elliptic curve/Q search & browse page works.
