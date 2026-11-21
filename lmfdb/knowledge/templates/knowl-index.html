@@ -34,7 +34,7 @@ $(function() {
       <td>Filter</td>
       <td>Category:
         {% for cat, cat_cnt in (categories.items()|sort) -%}
-          <a href="#" onclick="$('#catinp').val('{{cat}}'); $('#knowl-search').submit(); return false;" {% if cat==cur_cat %}class="curcat"{% endif %}>
+          <a href="#" data-cat="{{cat}}" onclick="$('#catinp').val(this.getAttribute('data-cat')); $('#knowl-search').submit(); return false;" {% if cat==cur_cat %}class="curcat"{% endif %}>
             {{cat}}({{cat_cnt}})
           </a>
         {%- endfor %}
