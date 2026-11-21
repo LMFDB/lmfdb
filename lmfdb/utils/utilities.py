@@ -804,7 +804,8 @@ def image_callback(G):
     P = G.plot()
     _, filename = tempfile.mkstemp('.png')
     P.save(filename)
-    data = open(filename).read()
+    with open(filename, 'rb') as f:
+        data = f.read()
     os.unlink(filename)
     response = make_response(data)
     response.headers['Content-type'] = 'image/png'
