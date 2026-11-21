@@ -31,8 +31,6 @@ from lmfdb.utils import (
     list_to_latex_matrix,
 )
 
-from lmfdb.utils.search_boxes import TextBox, HiddenBox, SearchArray
-
 from lmfdb.utils.completeness import (
     results_complete,
     lookup,
@@ -49,6 +47,7 @@ from lmfdb.utils.search_boxes import (
     ColumnController,
     CountBox,
     HiddenBox,
+    SearchArray,
     SelectBox,
     SortController,
     TextBox,
