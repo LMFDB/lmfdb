@@ -257,8 +257,8 @@ function show_qexp(qstyle) {
   <thead>
     <tr>
       <th class="sticky-head dark" style="min-width: 40px;">Hecke operator</th>
-      {% for n in newform.primes %}
-      <th class="center dark" colspan="1">\( {{ newform.hecke_ev_header(n) }} \)</th>
+      {% for n in newform.range_evs %}
+      <th class="center dark" colspan="1">\( {{ newform.hecke_ev_header(newform.primes[n]) }} \)</th>
       {% endfor %}
     </tr>
   </thead>
@@ -288,6 +288,9 @@ function show_qexp(qstyle) {
   </tbody>
 </table>
 </div>
+{% if newform.family == 'P' and newform.level > 1 %}
+<p>The table omits the primes \(p \mid {{ newform.level }}\): the eigenvalues of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operators') }} at these primes are not in the database. The {{ KNOWL('lfunction.dirichlet_series', title='Dirichlet series') }} is the spin \(L\)-function of the automorphic representation, including its Euler factors at these primes.</p>
+{% endif %}
 {% if newform.hecke_scale and 'lambda_p_square_0' in newform.hecke_types %}
 <p>In weight \(k = 2\), with the normalization of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operators') }}, the eigenvalues of \(T_{p^2,0}\) and \(T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and of \(T_{p^2,2}\),{% endif %} are not integral, so the table gives those of \(p\,T_{p^2,0}\) and \(p\,T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and \(p^2\,T_{p^2,2}\){% endif %}. The eigenvalues of \(T_p\) and \(T_{p^2}\) are as stated.</p>
 {% endif %}

@@ -237,15 +237,22 @@ class SmfTest(LmfdbTest):
 
     def test_space_search_aldims(self):
         """
-        The Atkin-Lehner dimensions column of the newspace search, in the
-        sign-vector order of the space page: in S_{3,0}^new(K(161)) the
+        The Atkin-Lehner dimensions of the new subspace, in the sign-vector
+        order of the space page: in S_{3,0}^new(K(161)), of dimension 17, the
         classes (w_7, w_23) = (+,+), (+,-), (-,+), (-,-) have dimensions
-        0, 12, 6, 1, of which 0, 3, 1, 0 are of general type
+        0, 11, 6, 0, of which 0, 3, 1, 0 are of general type (the old
+        Saito-Kurokawa lifts are not counted).  The space page puts each
+        dimension under its signs.
         """
         self.need_spaces("2.K.161.3.0.a")
         self.check("?search_type=Spaces&degree=2&family=K&level=161&weight=3", [
             "AL-dims.",
-            r"\(0\)+\(12\)+\(6\)+\(1\)",
+            r"\(0\)+\(11\)+\(6\)+\(0\)",
+        ])
+        self.check("2/K/161/3.0/a/", [
+            r"\(+\) \(-\) $-$ \(11\) \(3\)",
+            r"\(-\) \(+\) $-$ \(6\) \(1\)",
+            r"Minus space \(-\) \(17\) \(4\)",
         ])
 
     def test_trace_search(self):
@@ -555,3 +562,96 @@ class SmfTest(LmfdbTest):
         self.check("2/K/992/3.0/a/t/", r"\Z[\lambda_1, \ldots, \lambda_{9}]")
         data = self.check("2/K/992/3.0/a/t/", "Coefficient ring")
         assert r"\Z[a_1" not in data
+
+    def test_multiplicity_and_conjectural_dims(self):
+        """
+        A form of multiplicity > 1 gets a Mult column, and a conjectural
+        dimension a starred knowl; NULL means multiplicity 1 and proved
+        """
+        from lmfdb.siegel_modular_forms.web_space import display_dim
+        from lmfdb.siegel_modular_forms.siegel_modular_form import show_mult_col
+        assert display_dim(24) == r'\(24\)'
+        assert display_dim(24, None) == r'\(24\)'
+        with self.app.test_request_context():
+            starred = display_dim(24, False)
+        assert starred.startswith(r'\(24\)') and r'\(^*\)' in starred
+        assert not show_mult_col({'results': [{'multiplicity': None}, {'multiplicity': 1}, {}]})
+        assert show_mult_col({'results': [{'multiplicity': 1}, {'multiplicity': 5}]})
+    def test_unknown_dims(self):
+        """
+        A NULL dimension (the Eisenstein part of some spaces of weight (2, j) on
+        Gamma[2] is not known) is '?' in the dimension grid, as a missing one, and
+        stays '?' in sums; the space page then shows only the cusp forms
+        """
+        from lmfdb.siegel_modular_forms.web_space import DimGrid
+        data = {'total_dim': None, 'new_total_dim': None, 'old_total_dim': 0,
+                'cusp_dim': 6, 'new_cusp_dim': 6, 'old_cusp_dim': 0,
+                'eis_dim': None, 'new_eis_dim': None, 'old_eis_dim': 0}
+        d = DimGrid.from_db(data)
+        assert d['M']['all'] == '?' and d['E']['new'] == '?' and d['S']['new'] == 6
+        assert not d.has_eis_dim() and d.disp_keys() == ['S']
+        assert (d + d)['M']['all'] == '?' and (d + d)['S']['all'] == 12 and (2 * d)['E']['all'] == '?'
+    def test_space_decomposition(self):
+        """
+        The Decomp. column of the space search: the stored orbits of cusp
+        forms, d x m for a form of multiplicity m, and what is not computed
+        """
+        from lmfdb.siegel_modular_forms.siegel_modular_form import display_decomp
+        with self.app.test_request_context():
+            assert display_decomp(2, [10, 12], 'a', [], 0) == ''
+            assert display_decomp(2, [10, 12], 'a', [], 27) == r'\(27\) not computed'
+            full = display_decomp(924, [3, 0], 'a', [(1, 1), (1, 1), (2, 1)], 4)
+            assert 'not computed' not in full and r'\(1\)+\(1\)' in full and r'\(2\)' in full
+            part = display_decomp(2, [10, 12], 'a', [(1, 1), (1, 5), (1, 5)], 27)
+            assert r'\(1\times5\)+\(1\times5\)' in part and r'\(16\) not computed' in part
+        # on the site: a level-2 space with lifts of multiplicity 5, partly stored (num_forms is NULL);
+        # it is shown by default, since some of its forms are stored
+        for extra in ["&all_spaces=yes", ""]:
+            self.check("?search_type=Spaces&degree=2&family=P&level=2&weight=%2810%2C12%29" + extra,
+                       ["2.P.2.10.12.a", r"\times5\)", "not computed"])
+
+    def test_decomposition_links(self):
+        """
+        Each term of the Decomp. column leads to the forms it counts: a single
+        orbit to its page, several orbits of the same dimension and
+        multiplicity to a search returning exactly those forms
+        """
+        from collections import defaultdict
+        from lmfdb.siegel_modular_forms.siegel_modular_form import decomp_postprocess, display_decomp, url_for_label
+        label = "2.P.2.10.12.a"
+        self.need_spaces(label)
+        space = db.smf_newspaces.lookup(label, ["label", "level", "weight", "char_orbit_label", "new_cusp_dim"])
+        decomp_postprocess([space], {}, {})
+        groups = defaultdict(set)
+        for dim, mult, form in space["hecke_orbit_dims"]:
+            groups[dim, mult].add(form)
+        if not groups:
+            self.skipTest("no forms of %s on devmirror" % label)
+        with self.app.test_request_context():
+            html = display_decomp(space["level"], space["weight"], space["char_orbit_label"],
+                                  space["hecke_orbit_dims"], space["new_cusp_dim"], space["label"])
+            singles = {url_for_label(next(iter(forms))) for forms in groups.values() if len(forms) == 1}
+        links = re.findall(r"href='([^']*)'", html)
+        assert len(links) == len(groups), html
+        searches = [link for link in links if link not in singles]
+        assert len(searches) == len([forms for forms in groups.values() if len(forms) > 1])
+        for link in searches:
+            # outside the blueprint url_for('.index') is "/", so keep only the query
+            page = self.tc.get("/ModularForm/GSp/Q/?" + link.split("?", 1)[1],
+                               follow_redirects=True).get_data(as_text=True)
+            found = set(re.findall(re.escape(label) + r"\.[a-z]+\b", page))
+            assert found in groups.values(), (link, found)
+
+    def test_multiplicity_column(self):
+        """
+        An ordinary newform search shows the Mult column when a result has
+        multiplicity > 1, and a NULL multiplicity is displayed as 1
+        """
+        from lmfdb.siegel_modular_forms.siegel_modular_form import newform_columns
+        self.need_forms()
+        if not db.smf_newforms.count({"space_label": "2.P.2.10.12.a", "multiplicity": 5}):
+            self.skipTest("no forms of multiplicity 5 on devmirror")
+        self.check("?search_type=List&degree=2&family=P&space_label=2.P.2.10.12.a", ["Results (", "Mult", "multiplicity"])
+        col = [c for c in newform_columns.columns if c.name == "multiplicity"][0]
+        assert col.display({"multiplicity": None}) == col.display({"multiplicity": 1}) != col.display({"multiplicity": 5})
+        assert "1" in col.display({"multiplicity": None}) and "5" in col.display({"multiplicity": 5})

@@ -51,6 +51,9 @@
 
 <p>The following table gives the dimensions of various {{ KNOWL('smf.subspaces', title='subspaces') }} of \({{space.cusp_latex()}}\).</p>
 
+{% endif %}
+
+{% if not (space.degree == 2 and (space.weight[0] == 1 or space.weight_parity * space.char_parity == -1)) %}
 
 <table class="dimgrid">
   <thead>
@@ -87,6 +90,10 @@
   </tbody>
 </table>
 
+{% endif %}
+
+{% if not space.dims_proved %}
+<p>{{ KNOWL('mf.siegel.conjectural_dimension', title='These dimensions are conjectural') }}: they come from a dimension formula that has not been proved in this weight.</p>
 {% endif %}
 
 {% if space.trivial_character and space.new_cusp_dim > 0 and space.ALdims %}

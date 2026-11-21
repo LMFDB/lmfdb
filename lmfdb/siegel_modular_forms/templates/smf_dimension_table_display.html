@@ -41,6 +41,7 @@
         {% else %}
         {{ info.pick_table(info.results[g,F,N,k],X,typ) }}
         {% endif %} {# X=='S' and typ=='new' #}
+        {% if info.conjectural and (g,F,N,k) in info.conjectural %}{{ info.conjectural_mark() | safe }}{% endif %}
         {% else %}
         {% if not has_na %}
         {% do has_na.append(1) %}
@@ -59,5 +60,10 @@
 {% if has_na %}
 <p>
   "n/a" means that not all modular forms matching the search criteria are available.
+</p>
+{% endif %}
+{% if info.conjectural %}
+<p>
+  {{ KNOWL('mf.siegel.conjectural_dimension', title='The dimensions marked') }} \(^*\) are conjectural.
 </p>
 {% endif %}
