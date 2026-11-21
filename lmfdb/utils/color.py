@@ -38,6 +38,10 @@ class StandardColors():
 
     orange_1 = '#ff9900'
 
+    # Greens
+    muted_mint = '#E8F5E9' # Material green 50
+    mint_ring = '#66BB6A' # Material green 400
+
     def __contains__(self, color):
         return color in self.__class__.__dict__
 
@@ -196,6 +200,11 @@ class ColorScheme():
         # Buttons
         'button_background': 'col_main_b',
         'select_background': 'col_main_ll',
+        # Background for search inputs actively constraining the results shown
+        'col_box_constraint': 'muted_mint',
+        # Ring for active checkboxes, which are rendered natively and so
+        # cannot be tinted; darker than the tint so that it stays visible
+        'col_box_constraint_ring': 'mint_ring',
         'button_border': 'col_main_lg',
         'button_background_hover': 'col_main_l',
         'button_border_hover': 'col_main_lg',

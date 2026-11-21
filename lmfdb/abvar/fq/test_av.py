@@ -3,6 +3,54 @@ from lmfdb.tests import LmfdbTest
 
 class AVTest(LmfdbTest):
     # All tests should pass
+    def test_geom_decomp_query(self):
+        r"""
+        Check that the geometric decomposition checkbox retargets the
+        dimension, number field and Galois group inputs at the geometric
+        columns.  The checkbox submits "yes", which used to fall through to
+        the ordinary columns, so ticking it in the form did nothing.
+        """
+        from lmfdb.abvar.fq.main import common_parse
+
+        def query_for(**info):
+            query = {}
+            common_parse(dict(info, dim1_factors="1", dim1_distinct="1",
+                              number_field="4.0.29584.2", galois_group="4T3"),
+                         query)
+            return query
+
+        geometric = ["geom_dim1_factors", "geom_dim1_distinct",
+                     "geometric_number_fields", "geometric_galois_groups"]
+        ordinary = ["dim1_factors", "dim1_distinct",
+                    "number_fields", "galois_groups"]
+
+        # The value the rendered checkbox submits, and the browser default
+        # that older hand written links use
+        for value in ["yes", "on"]:
+            query = query_for(use_geom_decomp=value)
+            for key in geometric:
+                assert key in query, "%s missing for use_geom_decomp=%s" % (key, value)
+            for key in ordinary:
+                assert key not in query, "%s present for use_geom_decomp=%s" % (key, value)
+
+        # Unchecked, the same inputs go to the ordinary columns
+        query = query_for()
+        for key in ordinary:
+            assert key in query, "%s missing with the checkbox unchecked" % key
+        for key in geometric:
+            assert key not in query, "%s present with the checkbox unchecked" % key
+
+    def test_geom_decomp_active_classes(self):
+        r"""
+        Check that the geometric decomposition checkbox is only marked as
+        constraining the results once one of the inputs it re-targets is used
+        """
+        url = "/Variety/Abelian/Fq/?q=2&g=2&use_geom_decomp=yes&search_type=List"
+        self.assertEqual(self.search_classes(url, "use_geom_decomp"), set())
+        url += "&dim1_factors=1"
+        self.assertEqual(self.search_classes(url, "use_geom_decomp"),
+                         {"search_constraint", "search_active"})
+
     def test_polynomial(self):
         r"""
         Check that the formatted polynomial displays correctly

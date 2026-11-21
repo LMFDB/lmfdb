@@ -1,7 +1,32 @@
+import re
+
 from markupsafe import escape
 from .web_display import display_knowl
 from sage.structure.unique_representation import UniqueRepresentation
 from .utilities import plural_form
+
+# Matches an attribute string like 'class="family"' from a box's ``html_attrs``
+_class_attr_re = re.compile(r'\s*class\s*=\s*(.*)\Z', re.DOTALL)
+
+def _split_class_attrs(html_attrs):
+    """
+    Split a list of raw HTML attribute strings into the class tokens they
+    contain and the attributes that remain.
+
+    Class names should be given using the ``classes`` argument rather than
+    written into ``html_attrs`` by hand, but we merge any that show up there so
+    that a tag can never end up with two ``class`` attributes (which is
+    invalid HTML, and browsers respond by discarding one of them).
+    """
+    classes = []
+    rest = []
+    for attr in html_attrs:
+        match = _class_attr_re.match(attr)
+        if match:
+            classes.extend(match.group(1).strip().strip('"\'').split())
+        else:
+            rest.append(attr)
+    return classes, rest
 
 class TdElt():
     _wrap_type = 'td'
@@ -91,6 +116,67 @@ class SearchBox(TdElt):
     Class abstracting the input boxes used for LMFDB searches.
     """
     _default_width = 160
+    # Whether filling this box constrains the displayed search results
+    # (set to False for boxes that only affect the display, like the
+    # number of results to show or the sort order).  For a box whose role
+    # depends on the rest of the search, pass a function of ``info`` as the
+    # ``is_constraint`` argument; note that a callable set here at class
+    # level would be turned into a method, so only set one on an instance.
+    is_constraint = True
+
+    def constrains(self, info):
+        """
+        Whether this box restricts which results are displayed, as opposed to
+        only affecting how they are displayed.
+        """
+        is_constraint = self.is_constraint
+        if callable(is_constraint):
+            return bool(is_constraint(info))
+        return bool(is_constraint)
+
+    def _is_filled(self, info):
+        """
+        Whether the user's search supplied a value for this box.  A checkbox
+        that was left unchecked shows up as ``False`` rather than as a missing
+        key, so falsy non-numeric values do not count as filled in.
+        """
+        value = info.get(self.name)
+        if value is None or value is False:
+            return False
+        if isinstance(value, str):
+            return bool(value.strip())
+        return True
+
+    def _attrs(self, info):
+        """
+        This box's ``html_attrs``, followed by a single ``class``
+        attribute (if there are any classes to set) merging:
+
+        - the classes requested via the ``classes`` argument,
+        - ``advanced``, for inputs only shown when advanced options are
+          toggled,
+        - ``search_constraint``, for inputs that constrain the search results
+          when filled in, and
+        - ``search_active``, when such an input is currently filled in, so
+          that it can be highlighted on search results pages.
+
+        The ``search_*`` classes describe the search that produced the
+        results currently on screen, so they are only set when rendering the
+        refine-search form (``info`` is None on browse pages).
+        """
+        attr_classes, attrs = _split_class_attrs(self.html_attrs)
+        classes = list(self.classes) + attr_classes
+        if self.advanced:
+            classes.append("advanced")
+        if info is not None and self.constrains(info):
+            classes.append("search_constraint")
+            if self._is_filled(info):
+                classes.append("search_active")
+        seen = set()
+        classes = [cls for cls in classes if not (cls in seen or seen.add(cls))]
+        if classes:
+            attrs.append('class="%s"' % " ".join(classes))
+        return attrs
 
     def __init__(
         self,
@@ -109,7 +195,14 @@ class SearchBox(TdElt):
         example_col=False,
         id=None,
         qfield=None,
+        html_attrs=[],
+        classes=[],
+        is_constraint=None,
     ):
+        self.html_attrs = list(html_attrs)
+        self.classes = list(classes)
+        if is_constraint is not None:
+            self.is_constraint = is_constraint
         self.name = name
         self.id = id
         self.label = label
@@ -183,49 +276,19 @@ class TextBox(SearchBox):
         self,
         name=None,
         label=None,
-        knowl=None,
-        example=None,
-        example_span=None,
-        example_span_colspan=1,
+        *,
         example_value=False,
-        colspan=(1, 1, 1),
-        rowspan=(1, 1),
         width=160,
-        short_width=None,
-        short_label=None,
-        advanced=False,
         example_col=None,
-        id=None,
-        qfield=None,
-        extra=[],
+        **kwds,
     ):
-        SearchBox.__init__(
-            self,
-            name,
-            label,
-            knowl=knowl,
-            example=example,
-            example_span=example_span,
-            example_span_colspan=example_span_colspan,
-            colspan=colspan,
-            rowspan=rowspan,
-            width=width,
-            short_width=short_width,
-            short_label=short_label,
-            advanced=advanced,
-            example_col=example_col,
-            id=id,
-            qfield=qfield,
-        )
-        self.extra = extra
+        super().__init__(name, label, width=width, example_col=example_col, **kwds)
         self.example_value = example_value
 
     def _input(self, info):
-        keys = self.extra + ['type="text"', 'name="%s"' % self.name]
+        keys = self._attrs(info) + ['type="text"', 'name="%s"' % self.name]
         if self.id is not None:
             keys.append('id="%s"' % self.id)
-        if self.advanced:
-            keys.append('class="advanced"')
         if self.example is not None:
             if self.example_value and info is None:
                 keys.append('value="%s"' % self.example)
@@ -259,62 +322,55 @@ class SelectBox(SearchBox):
     _options = []
     _default_width = 170
     _default_min_width = 85
+    # Values that the search accepts for this select but that are not option
+    # values (legacy URLs, browse page links, values that search code stores
+    # in info), mapped to the option they are equivalent to; map a value to
+    # "" if it does not constrain the results.  See ``_value``.
+    aliases = {}
 
     def __init__(
         self,
         name=None,
         label=None,
         options=None,
-        knowl=None,
-        example=None,
-        example_span=None,
-        example_span_colspan=1,
-        colspan=(1, 1, 1),
-        rowspan=(1, 1),
-        width=None,
+        *,
         min_width=None,
-        short_width=None,
-        short_label=None,
-        advanced=False,
-        example_col=False,
         example_value=False,
-        id=None,
-        qfield=None,
-        extra=[],
+        aliases=None,
+        **kwds,
     ):
-        SearchBox.__init__(
-            self,
-            name,
-            label,
-            knowl=knowl,
-            example=example,
-            example_span=example_span,
-            example_span_colspan=example_span_colspan,
-            colspan=colspan,
-            rowspan=rowspan,
-            width=width,
-            short_width=short_width,
-            short_label=short_label,
-            advanced=advanced,
-            example_col=example_col,
-            id=id,
-            qfield=qfield,
-        )
-        if options is None:
-            options = self._options
-        self.options = options
-        self.extra = extra
-        if min_width is None:
-            min_width = self._default_min_width
-        self.min_width = min_width
+        super().__init__(name, label, **kwds)
+        if aliases is not None:
+            self.aliases = dict(self.aliases, **aliases)
+        self.options = self._options if options is None else options
+        self.min_width = self._default_min_width if min_width is None else min_width
         self.example_value = example_value
 
+    def _value(self, info):
+        """
+        The value of this select in ``info``, with any alias replaced by the
+        option it stands for, so that for example a browse page link to
+        ``?cyc=True`` shows ``yes`` as selected.
+        """
+        value = info.get(self.name, "")
+        if isinstance(value, str):
+            return self.aliases.get(value, value)
+        return value
+
+    def _is_filled(self, info):
+        """
+        Whether the search supplied a value for this select that constrains
+        the results.  Aliases count as the option they stand for, so one
+        mapped to "" (like the ``sfe="any"`` that Bianchi modular form
+        searches store) is not filled in.  Any other non-blank value counts,
+        even if no option matches it: the search may still be filtering on it.
+        """
+        return SearchBox._is_filled(self, {self.name: self._value(info)})
+
     def _input(self, info):
-        keys = self.extra + ['name="%s"' % self.name]
+        keys = self._attrs(info) + ['name="%s"' % self.name]
         if self.id is not None:
             keys.append('id="%s"' % self.id)
-        if self.advanced:
-            keys.append('class="advanced"')
         if self.example_value and info is None:
             info = {self.name:self.example}
         if info is None:
@@ -329,7 +385,7 @@ class SelectBox(SearchBox):
                 info is None
                 and value == ""
                 or info is not None
-                and info.get(self.name, "") == value
+                and self._value(info) == value
             ):
                 selected = " selected"
             else:
@@ -358,19 +414,18 @@ class SelectBoxNoEg(NoEg, SelectBox):
     pass
 
 class HiddenBox(SearchBox):
+    # Nothing is displayed to highlight, so hidden inputs are left unmarked
+    is_constraint = False
+
     def _input(self, info=None):
-        keys = ['name="%s"' % self.name]
-        if self.advanced:
-            keys.append('class="advanced"')
+        keys = self._attrs(info) + ['name="%s"' % self.name]
         if info is not None and info.get(self.name):
             keys.append('value="%s"' % escape(info.get(self.name)))
         return '<input type="hidden" %s>' % (" ".join(keys),)
 
 class CheckBox(SearchBox):
     def _input(self, info=None):
-        keys = ['name="%s"' % self.name, 'value="yes"']
-        if self.advanced:
-            keys.append('class="advanced"')
+        keys = self._attrs(info) + ['name="%s"' % self.name, 'value="yes"']
         if info is not None and info.get(self.name, False):
             keys.append("checked")
         return '<input type="checkbox" %s>' % (" ".join(keys),)
@@ -396,11 +451,25 @@ class SkipBox(TextBox):
 
 
 class TextBoxWithSelect(TextBox):
+    """
+    A text box with a select box beside it qualifying how to interpret it.
+
+    The select is usually handed to a ``@search_parser`` function as its
+    ``mode``, and those return immediately when their text field is empty, so
+    by default the select is only treated as constraining the results once
+    the text box has been filled in.  A select that is read directly during
+    parsing does restrict the results by itself, and must say so by passing
+    ``is_constraint=True``; see ``level_type`` in classical modular forms and
+    modular curves, ``conductor_type`` in elliptic curves and mod-l Galois
+    representations, and the two CMF parities.
+    """
     def __init__(self, name, label, select_box, **kwds):
         self.select_box = select_box
         self.select_box.width = self.select_box.min_width
         self.select_box.short_width = self.select_box.min_width
         TextBox.__init__(self, name, label, **kwds)
+        if "is_constraint" not in self.select_box.__dict__:
+            self.select_box.is_constraint = self._is_filled
 
     def label_html(self, info=None):
         colspan = self.label_colspan if info is None else self.short_colspan
@@ -438,6 +507,8 @@ class YesNoBox(SelectBox):
     _options = [("", ""),
                 ("yes", "yes"),
                 ("no", "no")]
+    # parse_bool accepts True and False too
+    aliases = {"True": "yes", "False": "no"}
 
 class YesNoMaybeBox(SelectBox):
     _default_min_width = 130
@@ -472,6 +543,8 @@ class SubsetNoExcludeBox(SelectBox):
                 ('subset', 'subset')]
 
 class CountBox(TextBox):
+    is_constraint = False
+
     def __init__(self):
         TextBox.__init__(
             self,
@@ -484,6 +557,7 @@ class CountBox(TextBox):
 
 class ColumnController(SelectBox):
     wrap_mixins = {'width': '170px'}
+    is_constraint = False
 
     def __init__(self):
         super().__init__(
@@ -560,9 +634,10 @@ class ColumnController(SelectBox):
 
 class SortController(SelectBox):
     wrap_mixins = {'width': '170px'}
+    is_constraint = False
 
     def __init__(self, options, knowl):
-        extra = [
+        html_attrs = [
             '''onmousedown="this.size=this.length; this.selectedIndex = -1;"''',
             '''onmousemove="return false;"''',
             '''onmouseup="this.focus();"''',
@@ -577,7 +652,7 @@ class SortController(SelectBox):
             options=options,
             knowl=knowl,
             width=None,
-            extra=extra,
+            html_attrs=html_attrs,
         )
 
     #sort_box = SelectBox(
@@ -588,7 +663,7 @@ class SortController(SelectBox):
     #    name='sort_dir',
     #    options=[('', '&#9650;'), ('op', '&#9660;')],
     #    width=None,
-    #    extra=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
+    #    html_attrs=['style="min-width: 40px; max-width: 40px; padding: 0px;"'],
     #)
     #sort_ord = DoubleSelectBox(
     #    name='sort_combo',
@@ -775,23 +850,28 @@ class SearchArray(UniqueRepresentation):
             vheader.wrap_mixins = {"class": "table_h2"}
             array.append([vheader])
             for i in [1,2]:
+                # These select the variables and format for the statistics
+                # display rather than constraining the underlying results
                 cols = SelectBox(
                     name="col%s" % i,
                     id="col%s_select" % i,
                     label="",
                     width=150,
                     options=info["stats"]._dynamic_cols,
-                    extra=['onchange="set_buckets(this, \'buckets%s\')"' % i])
+                    html_attrs=['onchange="set_buckets(this, \'buckets%s\')"' % i],
+                    is_constraint=False)
                 buckets = TextBox(
                     name="buckets%s" % i,
                     id="buckets%s" % i,
                     label="Buckets" if i == 1 else "",
                     knowl="stats.buckets" if i == 1 else None,
-                    width=310)
+                    width=310,
+                    is_constraint=False)
                 totals = CheckBox(
                     name="totals%s" % i,
                     label="Totals" if i == 1 else "",
-                    knowl="stats.totals" if i == 1 else None)
+                    knowl="stats.totals" if i == 1 else None,
+                    is_constraint=False)
                 proportions = SelectBox(
                     name="proportions",
                     width=150,
@@ -801,7 +881,8 @@ class SearchArray(UniqueRepresentation):
                              ("none", "None")],
                     label="Proportions" if i == 1 else "",
                     rowspan=(1, 2),
-                    knowl="stats.proportions" if i == 1 else None)
+                    knowl="stats.proportions" if i == 1 else None,
+                    is_constraint=False)
                 if i == 1:
                     array.append([cols, buckets, totals, proportions])
                 else:

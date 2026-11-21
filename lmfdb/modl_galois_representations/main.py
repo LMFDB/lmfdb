@@ -227,6 +227,9 @@ class ModLGalRepSearchArray(SearchArray):
     jump_knowl = "modlgal.search_input"
 
     def __init__(self):
+        # prime/p-power/sq-free filter on conductor_num_primes and
+        # conductor_is_squarefree even when no conductor is entered, hence
+        # is_constraint=True
         conductor_quantifier = SelectBox(
             name='conductor_type',
             options=[('', ''),
@@ -236,6 +239,7 @@ class ModLGalRepSearchArray(SearchArray):
                      ('divides','divides'),
                      ('multiple','multiple of'),
                      ],
+            is_constraint=True,
             )
         conductor = TextBoxWithSelect(
             name="conductor",

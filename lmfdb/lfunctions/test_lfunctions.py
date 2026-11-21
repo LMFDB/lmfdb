@@ -615,6 +615,36 @@ class LfunctionTest(LmfdbTest):
         assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
 
     # ------------------------------------------------------
+    # Testing which inputs are marked as active constraints
+    # ------------------------------------------------------
+
+    def test_trace_active_classes(self):
+        # Only the inputs that select which L-functions are shown should be
+        # marked; the rest choose which columns of traces are displayed
+        url = '/L/rational?degree=2&search_type=Traces'
+        self.assertEqual(self.search_classes(url, 'degree'),
+                         {'search_constraint', 'search_active'})
+        for name in ['n', 'n_primality', 'view_modp', 'an_modulo']:
+            self.assertEqual(self.search_classes(url, name), set())
+
+        # The modulus does constrain the results once there is a trace
+        # constraint for it to be applied to, unlike the reductions view
+        url = ('L/rational?conductor=37&degree=2&search_type=Traces'
+               '&an_constraints=a11+%3D1&an_modulo=3&view_modp=reductions')
+        for name in ['conductor', 'an_constraints', 'an_modulo']:
+            self.assertEqual(self.search_classes(url, name),
+                             {'search_constraint', 'search_active'})
+        self.assertEqual(self.search_classes(url, 'view_modp'), set())
+
+    def test_euler_active_classes(self):
+        url = '/L/rational?degree=2&search_type=Euler&n=2-11'
+        self.assertEqual(self.search_classes(url, 'degree'),
+                         {'search_constraint', 'search_active'})
+        self.assertEqual(self.search_classes(url, 'n'), set())
+        self.assertEqual(self.search_classes(url, 'euler_constraints'),
+                         {'search_constraint'})
+
+    # ------------------------------------------------------
     # Testing units not tested above
     # ------------------------------------------------------
 

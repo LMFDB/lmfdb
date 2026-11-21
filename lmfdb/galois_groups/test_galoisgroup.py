@@ -14,6 +14,30 @@ class GalGpTest(LmfdbTest):
         assert '14T18' in L.get_data(as_text=True)
         assert '294' in L.get_data(as_text=True) # order of 21T18
 
+    def test_browse_type_links(self):
+        # Each "By type" link on the browse page has to filter, and show its
+        # constraint as selected and highlighted in the refine search form.
+        # The browse page used to link with True/False and 1/-1, which the
+        # search still accepts.  Degrees are bounded to keep the searches small.
+        from lmfdb import db
+        from lmfdb.tests import input_classes
+        index = self.tc.get('/GaloisGroup/').get_data(as_text=True)
+        for name, value, legacy, opposite in [
+                ('parity', 'odd', ['-1'], 1), ('parity', 'even', ['1'], -1),
+                ('cyc', 'yes', ['True', '1'], 0), ('cyc', 'no', ['False', '-1'], 1),
+                ('solv', 'yes', ['True', '1'], 0), ('solv', 'no', ['False', '-1'], 1),
+                ('prim', 'yes', ['True', '1'], 0), ('prim', 'no', ['False', '-1'], 1)]:
+            assert 'href="?%s=%s"' % (name, value) in index, (name, value)
+            # a group that the search must leave out
+            excluded = db.gps_transitive.lucky({name: opposite, 'n': {'$lte': 6}}, 'label')
+            for v in [value] + legacy:
+                url = '/GaloisGroup/?n=1-6&%s=%s' % (name, v)
+                page = self.tc.get(url).get_data(as_text=True)
+                assert 'value="%s" selected' % value in page, url
+                self.assertEqual(input_classes(page, name),
+                                 [{"search_constraint", "search_active"}])
+                assert '>%s<' % excluded not in page, (url, excluded)
+
     def test_aut_search(self):
         L = self.tc.get('/GaloisGroup/?n=10&auts=5')
         assert '10T6' in L.get_data(as_text=True)
