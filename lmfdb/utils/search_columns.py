@@ -228,6 +228,20 @@ class SearchCol:
             name = self.download_col
         return self._get(rec, name=name, downloading=True)
 
+    def download_subcols(self, info):
+        """
+        Most columns produce a single value when downloading, so this returns an empty list.
+
+        ``ColGroup`` overrides this: when it downloads as a nested list of its subcolumns'
+        values (see ``ColGroup.download``), it returns that list of subcolumns so that the
+        downloader can document each one individually.
+
+        INPUT:
+
+        - ``info`` -- the dictionary created from the url
+        """
+        return []
+
 
 class SpacerCol(SearchCol):
     """
@@ -500,6 +514,16 @@ class ColGroup(SearchCol):
         if self.download_col is not None:
             return self._get(rec, name=self.download_col, downloading=True)
         return [sub.download(rec) for sub in self.subcols]
+
+    def download_subcols(self, info):
+        # When a download_col is set, this group downloads as a single value (see download),
+        # so we behave like an ordinary column.  Otherwise download produces a nested list
+        # over self.subcols, so we return those subcolumns to be documented individually.
+        # We only expand a concrete list of subcolumns (matching what download iterates over);
+        # if subcols is a callable we fall back to documenting the group as a whole.
+        if self.download_col is not None or callable(self.subcols):
+            return []
+        return self.subcols
 
 
 class SearchColumns:
