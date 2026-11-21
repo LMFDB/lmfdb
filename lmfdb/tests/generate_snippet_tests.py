@@ -330,13 +330,17 @@ def create_snippet_tests(yaml_file_path=None, ignore_langs=[], test=False, only_
         contents = yaml.load(code_file.open(), Loader=yaml.FullLoader)
         if 'snippet_test' in contents:
             langs |= set(contents['prompt'].keys())
-    langs -= set(ignore_langs)
-    if only_langs is not None:
-        langs &= only_langs
+    # The yaml files spell it 'pari', but the executable and the log files are
+    # named after 'gp'.  Normalize before applying --ignore/--only, so that
+    # either spelling works on the command line.
+    def normalize(names):
+        return {'gp' if name == 'pari' else name for name in names}
 
-    if 'pari' in langs:
-        langs.remove('pari')
-        langs.add('gp')
+    langs = normalize(langs)
+    langs -= normalize(ignore_langs)
+    if only_langs is not None:
+        langs &= normalize(only_langs)
+
     if len(langs) == 0:
         print("No valid languages selected")
         return 1
