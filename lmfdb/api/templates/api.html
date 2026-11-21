@@ -16,8 +16,9 @@ and has very limited query capabilities.
 Queries are url encoded <b><code>key=value</code></b> parameters, where the value has a prefix to specify the type.
 Keys starting with "<code>_</code>" are meta-parameters further refining query.
 They can be combined by specifying several ones delimited by <code>&amp;</code> to further drill down to the desired objects.
-The result formats are JSON, YAML or HTML (default).
-Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects.
+The result formats are JSON, YAML, raw or HTML (default).
+Each list is limited by a maximum of 100 results and the <code>next</code> entry contains the query to request more objects;
+the raw format carries no metadata, so it has no <code>next</code> entry and the following page is requested by advancing <code>_offset</code> instead.
 The overall limit is at about 10000 results and beyond that it is necessary to further refine the query to the results in question.
 </div>
 <div>
@@ -39,7 +40,16 @@ The overall limit is at about 10000 results and beyond that it is necessary to f
 <h4>Meta-parameters</h4>
 <div>
 <ul>
-<li><code>_format</code> is used to specify the encoding. Possible values are html (default), json and yaml.</li>
+<li><code>_format</code> is used to specify the encoding. Possible values are html (default), json, yaml and raw.
+The raw format requires <code>_fields</code> and returns newline-delimited JSON,
+without the usual response envelope or the implicit <code>id</code>:
+with one requested field, each line is that field's JSON value,
+and with several fields, each line is a JSON array containing those field values, in the order requested.
+<code>_delim</code> is used only to parse parameters such as <code>_fields</code> and <code>_sort</code>;
+it does not delimit output records or fields, so a record stays unambiguous even when a value contains the delimiter.
+For fields whose emitted JSON notation is also valid GP syntax, notably integers and nested arrays of integers,
+the response can be read directly with PARI/GP <code>readvec</code>; other values should be parsed as JSON.
+Raw requests remain limited to 100 records and omit pagination metadata: advance <code>_offset</code> to retrieve subsequent pages.</li>
 <li>To only retrieve a selected list of entries per document,
 use <code>_fields=name1,name2</code> to reduce the amount of data sent back to only those fields named <code>name1</code> and <code>name2</code>.
 </li>
@@ -75,6 +85,11 @@ where the prefix "-" indicates to sort in descending order.
     <li>
     To see those elliptic curves, where the field <code>torsion_structure</code> is the list  [2,2], encoded as a list of integers:
     <a href='{{ url_for(".api_query", table="ec_curvedata", torsion_structure="li2;2", _delim=";")}}'>?torsion_structure=li2;2&amp;_delim=;</a>.
+    </li>
+    <li>
+    To get just the $a$-invariants of those curves, one curve per line with no ids or metadata
+    (e.g. for reading into PARI/GP with <code>readvec</code>):
+    <a href='{{ url_for(".api_query", table="ec_curvedata", torsion_structure="li2;2", _delim=";", _format="raw", _fields="ainvs")}}'>?torsion_structure=li2;2&amp;_delim=;&amp;_format=raw&amp;_fields=ainvs</a>.
     </li>
     <!--
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
