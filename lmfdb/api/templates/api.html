@@ -34,6 +34,10 @@ The overall limit is at about 10000 results and beyond that it is necessary to f
 <li><b>lf</b>: list of floats</li>
 <li><b>py</b>: this evaluates the query literally following the Python syntax. This can be used to express a matrix as a nested list of lists.
 <li><b>cs</b>, <b>ci</b>, <b>cf</b> and <b>cpy</b>: queries, if the given string, integer, float or Python literal is <i>contained</i> in a list.
+<li>For the numeric prefixes <b>i</b> and <b>f</b>, the value may also be an inclusive range <code>a..b</code>, e.g. <code>conductor=i11..100</code>;
+omitting an endpoint gives a one-sided bound, as in <code>conductor=i389..</code> or <code>regulator=f..2.5</code>.
+A value beginning with <b>i</b> or <b>f</b> and containing <code>..</code> is always read as a range; prefix it with <b>s</b> to search for it as a literal string, as in <code>si11..100</code>.</li>
+<li>The exact value <b><code>None</code></b> (with no prefix) matches entries where the key has no value stored; to search for the literal string "None", use <code>sNone</code>.</li>
 </ul>
 </div>
 <h4>Meta-parameters</h4>
@@ -75,6 +79,16 @@ where the prefix "-" indicates to sort in descending order.
     <li>
     To see those elliptic curves, where the field <code>torsion_structure</code> is the list  [2,2], encoded as a list of integers:
     <a href='{{ url_for(".api_query", table="ec_curvedata", torsion_structure="li2;2", _delim=";")}}'>?torsion_structure=li2;2&amp;_delim=;</a>.
+    </li>
+    <li>
+    To search a range, separate the two (inclusive) endpoints by "<code>..</code>".
+    For example elliptic curves with conductor between 11 and 100:
+    <a href='{{ url_for(".api_query", table="ec_curvedata", conductor="i11..100")}}'><code>?conductor=i11..100</code></a>.
+    </li>
+    <li>
+    To find entries where a field has no value stored, use the value <code>None</code>.
+    For example modular curves whose gonality over $\mathbb{Q}$ is not known:
+    <a href='{{ url_for(".api_query", table="gps_gl2zhat_fine", q_gonality="None")}}'><code>?q_gonality=None</code></a>.
     </li>
     <!--
     <li>To only retrieve the fields <code>authors</code> and <code>last_author</code> of the knowl documents,
