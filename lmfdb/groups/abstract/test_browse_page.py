@@ -98,6 +98,34 @@ class AbGpsHomeTest(LmfdbTest):
         self.check_args("/Groups/Abstract/?jump=SL(2,7)", "336.114") # by family name
         self.check_args("/Groups/Abstract/?jump=F5", "20.3") # by name
 
+    def test_lookup_multiple(self):
+        r"""
+        Check that a comma-separated list of group labels returns a search page
+        """
+        self.check_args("/Groups/Abstract/?jump=8.3%2C+16.5&search=Go", ["8.3", "16.5"])
+        # An unrecognized entry mixed in is ignored; the valid labels are still shown
+        self.check_args("/Groups/Abstract/?jump=8.3%2C+banana%2C+16.5&search=Go", ["8.3", "16.5", "ignored"])
+        # When no entry is valid, an error is shown
+        self.check_args("/Groups/Abstract/?jump=banana%2C+kiwi&search=Go", "None of the")
+        # Names are accepted in lists too (S4 -> 24.12, GL(2,3) -> 48.29, 8T3 -> 8.5)
+        self.check_args("/Groups/Abstract/?jump=8.3%2C+S4%2C+GL%282%2C3%29%2C+8T3&search=Go", ["8.3", "24.12", "48.29", "8.5"])
+        # C0 is not a group; it is ignored without losing the rest of the list
+        self.check_multi_jump(["8.3", "C0", "16.5"], ["8.3", "16.5"])
+        self.check_args("/Groups/Abstract/?jump=8.3%2CC0%2C16.5", "ignored")
+        # A single C0 (and the abelian label 0) is an invalid input, not a server error
+        self.check_args("/Groups/Abstract/?jump=C0", "is invalid")
+
+    def check_multi_jump(self, jumps, labels):
+        r"""
+        Check that a comma-separated list in the jump box redirects to a search
+        for exactly the given labels.
+        """
+        r = self.tc.get("/Groups/Abstract/?jump=" + "%2C".join(jumps))
+        assert r.status_code == 302, "%s did not redirect (%s)" % (jumps, r.status_code)
+        query = parse_qs(urlsplit(r.headers["Location"]).query)
+        found = query.get("labels", [""])[0].split(",")
+        assert set(found) == set(labels), "%s gave %s, not %s" % (jumps, found, labels)
+
     def test_family_alias_lookup(self):
         r"""
         Check that Groups/Abstract/?jump finds the members of a family that are
@@ -118,6 +146,9 @@ class AbGpsHomeTest(LmfdbTest):
         ]
         for _, jump, label in cases:
             self.check_args("/Groups/Abstract/?jump=" + jump, label)
+        # The aliases also work inside a comma-separated list
+        self.check_multi_jump([jump for _, jump, _ in cases] + ["8.3"],
+                              [label for _, _, label in cases] + ["8.3"])
         assert set(alias for alias, _, _ in cases) == set(FAMILY_ALIASES), \
             "every entry of FAMILY_ALIASES needs a jump test"
 

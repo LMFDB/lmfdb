@@ -51,6 +51,7 @@ from lmfdb.utils import (
 )
 from lmfdb.utils.search_parsing import (parse_multiset, search_parser, collapse_ors, SearchParsingError)
 from lmfdb.utils.interesting import interesting_knowls
+from lmfdb.utils.search_wrapper import multi_entry_jump_search
 from lmfdb.utils.search_columns import SearchColumns, LinkCol, MathCol, CheckCol, SpacerCol, ProcessedCol, MultiProcessedCol, ColGroup
 from lmfdb.api import datapage
 from . import abstract_page
@@ -997,7 +998,8 @@ def canonify_abelian_label(label, smith=False):
 def by_abelian_label(label):
     # For convenience, we provide redirects for abelian groups:
     # m1_e1.m2_e2... represents C_{m1}^e1 x C_{m2}^e2 x ...
-    if not AB_LABEL_RE.fullmatch(label):
+    # (a factor of 0 matches the regex but is not a finite cyclic group)
+    if not AB_LABEL_RE.fullmatch(label) or any(ZZ(piece.split("_")[0]) == 0 for piece in label.split(".")):
         flash_error(
             r"The abelian label %s is invalid; it must be of the form m1_e1.m2_e2... representing $C_{m_1}^{e_1} \times C_{m_2}^{e_2} \times \cdots$",
             label,
@@ -1269,7 +1271,41 @@ def normalize_family_jump(jump):
     return jump
 
 #### Searching
+def group_multi_label_to_label(entry):
+    """
+    Parse a single jump-box entry into an abstract group label. Accepts a group
+    label (e.g. 8.3) or a group name resolved by ``name_to_label`` (e.g. S4, C2^3,
+    8T3, GL(2,3)). Used by ``multi_entry_jump_search`` when the Find box contains
+    a comma-separated list. Raises ``ValueError`` (or ``SearchParsingError`` for an
+    ambiguous name) if the entry does not determine a group.
+    """
+    entry = entry.strip()
+    if abstract_group_label_regex.fullmatch(entry):
+        return entry
+    try:
+        label = name_to_label(entry)
+    except ArithmeticError:
+        # e.g. an impossible cyclic factor; drop this entry, keep the rest of the list
+        label = None
+    if label is None:
+        raise ValueError("%s is not a valid group label or name" % entry)
+    return label
+
+
 def group_jump(info):
+    # If the Find box holds a comma-separated list of group labels or names, return a search
+    # page of those groups. This runs before the single-entry parsing below, so it
+    # composes with the label/name/abelian/transitive lookups for a single entry.
+    multi_jump = multi_entry_jump_search(
+        info,
+        parse_entry=group_multi_label_to_label,
+        label_exists=db.gps_groups.label_exists,
+        index_endpoint=".index",
+        object_name="groups",
+    )
+    if multi_jump is not None:
+        return multi_jump
+
     jump = info["jump"]
     # by label
     if abstract_group_label_regex.fullmatch(jump):
@@ -1683,6 +1719,9 @@ def name_to_label(name):
     # product of cyclic groups, e.g. C2^3, C2xC4
     if CYCLIC_PRODUCT_RE.fullmatch(name):
         invs = [n.strip() for n in name.upper().replace("C", "").replace("X", "*").replace("^", "_").split("*")]
+        if any(ZZ(inv.split("_")[0]) == 0 for inv in invs):
+            # C0 is not a finite cyclic group (and 0 cannot be factored)
+            return None
         primary = canonify_abelian_label(".".join(invs))
         if [z for z in primary if z > 2**31 - 1]:
             return None
@@ -1698,11 +1737,18 @@ def name_to_label(name):
 
     def int_try(x):
         return int(x) if x.isdigit() else x
+    # As in group_jump, accept the alternative family spellings and the
+    # low-dimensional aliases (e.g. Sp(2,q) = SL(2,q)) that are not stored.
+    fam_name = normalize_family_jump(name)
     for family in db.gps_families.search():
-        m = re.fullmatch(family["input"], name)
+        m = re.fullmatch(family["input"], fam_name)
         if m:
             m_dict = dict([a, int_try(x)] for a, x in m.groupdict().items())
-            lab = db.gps_special_names.lucky({"family": family["family"], "parameters": m_dict}, projection="label")
+            fam, params = family["family"], m_dict
+            if (fam, params.get("n")) in FAMILY_ALIASES:
+                fam, n = FAMILY_ALIASES[fam, params.get("n")]
+                params = dict(params, n=n)
+            lab = db.gps_special_names.lucky({"family": fam, "parameters": params}, projection="label")
             if lab:
                 return lab
     return None
@@ -3195,8 +3241,9 @@ class GroupsSearchArray(SearchArray):
     ]
     jump_example = "8.3"
     jump_egspan = "e.g. 8.3, GL(2,3), 8T34, C3:C4, C2*A5, C16.D4, 6#1, or 12.4.2.b1.a1"
-    jump_prompt = "Label or name"
+    jump_prompt = "Label, name, or comma-separated list"
     jump_knowl = "group.find_input"
+    label_knowl = "group.label"
 
     def __init__(self):
         order = TextBox(
