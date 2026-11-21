@@ -7,8 +7,11 @@
 
 
 import math
+import os
 import re
+from ast import literal_eval
 
+import yaml
 from flask import url_for
 from sage.all import (
     CBF,
@@ -20,6 +23,7 @@ from sage.all import (
     Integer,
     NaN,
     NumberField,
+    PolynomialRing,
     PowerSeriesRing,
     QQ,
     RIF,
@@ -55,7 +59,7 @@ from lmfdb.utils import (
     str_to_CBF,
     web_latex,
 )
-from lmfdb.characters.TinyConrey import ConreyCharacter
+from lmfdb.characters.TinyConrey import ConreyCharacter, get_sage_genvalues
 from lmfdb.number_fields.web_number_field import WebNumberField
 from lmfdb.maass_forms.web_maassform import WebMaassForm
 from lmfdb.sato_tate_groups.main import st_link_by_name
@@ -69,6 +73,7 @@ from .Lfunctionutilities import (
     compute_local_roots_SMF2_scalar_valued,)
 from .LfunctionDatabase import (
     getEllipticCurveData,
+    getGenus2CurveData,
     getHgmData,
     getHmfData,
     get_factors_instances,
@@ -698,6 +703,118 @@ class Lfunction_from_db(Lfunction):
     def _set_knowltype(self):
         if self.knowltype is not None:
             self.info['knowltype'] = self.knowltype
+
+    def make_code_snippets(self):
+        """
+        Return the code snippets for this L-function, or None if there are no code snippets for any of its origins.
+        The L-function is constructed from one of its origins (e.g. ECQ, G2C, Dirichlet character, etc.),
+        using the snippets in code.yaml.
+        """
+        # read in code.yaml from current directory:
+        _curdir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(_curdir, "code.yaml"), encoding="utf-8") as fh:
+            code = yaml.load(fh, Loader=yaml.FullLoader)
+
+        # urls of the origins, split into their components, e.g.
+        # ['EllipticCurve', 'Q', '11', 'a'] or ['Character', 'Dirichlet', '19', '9']
+        urls = [url.strip('/').split('/') for _, url in self.origins]
+
+        def origin_url(*prefix):
+            return next((u for u in urls if tuple(u[:len(prefix)]) == prefix and len(u) >= 4), None)
+
+        # We construct the code snippets for the L-function depending on the origins of the L-function.
+        # L-functions can have multiple origins, so we prioritise origins which are easier to have code snippets for.
+        # (e.g. we prioritise elliptic curve before modular forms).
+
+        # Case 1: Origin is elliptic curve over Q
+        # url is EllipticCurve/Q/<conductor>/<isogeny class>[/<number>]
+        if origin_url('EllipticCurve', 'Q') is not None:
+            parts = origin_url('EllipticCurve', 'Q')
+            curve = getEllipticCurveData("%s.%s1" % (parts[2], parts[3]))
+            if curve is None:
+                return None
+            origin, data = 'ecq', {'ainvs': curve['ainvs']}
+
+        # Case 2: Origin is genus 2 curve over Q
+        # url is Genus2Curve/Q/<conductor>/<isogeny class>[/<discriminant>/<number>]
+        elif origin_url('Genus2Curve', 'Q') is not None:
+            parts = origin_url('Genus2Curve', 'Q')
+            curve = getGenus2CurveData("%s.%s" % (parts[2], parts[3]))
+            if curve is None:
+                return None
+            from lmfdb.genus2_curves.web_g2c import magma_cond_option
+            f, h = literal_eval(curve['eqn'])
+            cond = ZZ(curve['cond'])
+            bad_lfactors = literal_eval(curve['bad_lfactors'])
+            origin, data = 'g2c', {
+                'f': f, 'h': h,
+                'magma_cond_option': magma_cond_option({'cond': cond, 'abs_disc': ZZ(curve['abs_disc']), 'bad_lfactors': bad_lfactors}),
+                'sage_fix2': '', 'pari_fix2': ''}
+            if cond % 2 == 0:
+                # Pari's lfungenus2 does not always determine the conductor exponent and Euler factor at 2 (and then just prints a warning),
+                # so we put in the conductor and bad Euler factors from the database.
+                R = PolynomialRing(ZZ, 'x')
+                bad = "[" + ", ".join("[%s, 1/(%s)]" % (p, R(c)) if len(c) > 1 else "[%s, 1]" % p
+                                      for p, c in bad_lfactors) + "]"
+                msg = "Pari may not determine the conductor exponent at 2, so we insert the conductor and bad Euler factors:"
+                data['sage_fix2'] = "\n# %s\nLdata[4] = %s; Ldata[0][1][1] = pari('%s')" % (msg, cond, bad)
+                data['pari_fix2'] = "\n\\\\ %s\nL[5] = %s; L[1][2][2] = %s;" % (msg, cond, bad)
+
+        # Case 3: Origin is Dirichlet character
+        # url is Character/Dirichlet/<modulus>/<number>
+        elif origin_url('Character', 'Dirichlet') is not None:
+            parts = origin_url('Character', 'Dirichlet')
+            modulus, number = int(parts[2]), int(parts[3])
+            chi = ConreyCharacter(modulus, number)
+            zeta_order = chi.sage_zeta_order(chi.order)
+            # Sage's DirichletCharacter takes (parent, values_on_generators),
+            # not (modulus, number), so reuse the characters module's converter
+            genvalues = [] if modulus == 1 else get_sage_genvalues(
+                modulus, chi.order, chi.genvalues, zeta_order)
+            origin, data = 'dc', {
+                'modulus': modulus, 'number': number,
+                'sage_zeta_order': zeta_order,
+                'sage_dirichlet_gens': ','.join(str(v) for v in genvalues)}
+
+        else:
+            # no snippets implemented for this origin
+            return None
+
+        # Central point and edge of the critical strip (in the arithmetic normalization),
+        # and the smallest good prime
+        data['s0'] = (ZZ(self.motivic_weight) + 1) / 2
+        data['s1'] = (ZZ(self.motivic_weight) + 2) / 2
+        data['p'] = next(p for p in primes_first_n(25) if self.level % p)
+
+        # We override the default code snippet keys with code snippets for specific origins
+        # E.g. if L-function comes from elliptic curve, we use all code snippets ending with "_ecq"
+        code['lfunction'] = code.pop('lfunction_' + origin)
+        for key in [k for k in code if k.endswith(('_ecq', '_g2c', '_dc'))]:
+            if key.endswith('_' + origin):
+                code.setdefault(key[:-len(origin) - 1], {}).update(code.pop(key))
+            else:
+                code.pop(key)
+
+        # The Riemann zeta function (Dirichlet character 1.1) has a pole at the edge of the critical strip
+        if origin == 'dc' and data['modulus'] == 1:
+            code.pop('edge_value')
+
+        for prop in code:
+            if prop not in ['frontmatter', 'snippet_test']:
+                for lang in code[prop]:
+                    code[prop][lang] = code[prop][lang].format(**data)
+        return code
+
+    @lazy_attribute
+    def code_snippets(self):
+        try:
+            return self.make_code_snippets()
+        except Exception as err:
+            # a problem with the code snippets should not prevent the L-function page from rendering
+            if is_debug_mode():
+                raise
+            logger.warning("Could not create code snippets for L-function %s: %s" % (self.label, err))
+            return None
 
 
 #############################################################################
