@@ -19,6 +19,12 @@ class NumberFieldTest(LmfdbTest):
     def test_abelian_conductor(self):
         self.check_args('/NumberField/5.5.5719140625.2', '275') # conductor
 
+    def test_field_pretty_cubic(self):
+        from lmfdb.number_fields.web_number_field import field_pretty
+        assert field_pretty('3.1.108.1') == r'\(\Q(\sqrt[3]{2})\)'
+        # no cubic field has discriminant -4
+        assert field_pretty('3.1.4.1') == '3.1.4.1'
+
     def test_stuff_not_computed(self):
         self.check_args('/NumberField/23.23.931347256889446325436632107655346061164193665348344821578377438399536607931200329.1', 'ot computed')
 
