@@ -74,7 +74,7 @@ jobs:
         W504,
         W601,W602,W603,W604,W605,W690
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: checkout
       - name: Process autopep8 codes
         id: process_codes
@@ -84,14 +84,14 @@ jobs:
           echo "AUTOPEP8_SELECT=$PROCESSED_CODES" >> $GITHUB_ENV
           echo "Processed codes: $PROCESSED_CODES"
       - name: autopep8
-        uses: peter-evans/autopep8@v1
+        uses: peter-evans/autopep8@2209b8c47cf1eec7550c1b4fb7108c0305656723 # v2.0.0
         if: ${{ github.repository }} == 'LMFDB/lmfdb'
         with:
           # Args using processed environment variable
           args: --recursive --in-place --aggressive --select=${{ env.AUTOPEP8_SELECT }} lmfdb/
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
           commit-message: autopep8 action fixes
           title: Fixes by autopep8 action

@@ -4,7 +4,7 @@ description: 'Set up LMFDB environment for generating snippets'
 runs:
   using: 'composite'
   steps:
-  - uses: conda-incubator/setup-miniconda@v4
+  - uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
     with:
       # Runner images no longer ship Miniconda (ubuntu-26.04), so download
       # Miniforge; it installs to ~/miniconda3, which the conda cache below names.
@@ -17,7 +17,7 @@ runs:
       use-only-tar-bz2: false
 
   - name: Cache conda
-    uses: actions/cache@v3
+    uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
     id: condacache
     env:
       # Increase this value to reset cache if .environment.yml has not changed
@@ -30,13 +30,19 @@ runs:
         hashFiles('.environment.yml') }}
 
   - name: Install Julia
-    uses: julia-actions/setup-julia@v2
+    uses: julia-actions/setup-julia@da908477b5db94c10ffce8cfea9f2b3b9d5db687 # v3.0.3
     with:
       version: '1'          # latest version
 
   - name: Load Julia packages from cache
     id: julia-cache
-    uses: julia-actions/cache@v2      
+    uses: julia-actions/cache@9353db09a0f2bbbdec6f41791918c75d37391b36 # v3.5.0
+    with:
+      # v3 defaults both of these to true; keep the v2 behavior instead, so a
+      # failed job cannot publish a half-populated depot and cache deletion
+      # does not require an `actions: write` token.
+      save-always: false
+      delete-old-caches: false
 
   - name: Install Oscar
     shell: bash -l {0}
@@ -56,7 +62,7 @@ runs:
       conda list
 
   - name: Cache pip
-    uses: actions/cache@v3
+    uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
     with:
       # This path is specific to Ubuntu
       path: ~/.cache/pip
@@ -76,7 +82,7 @@ runs:
   # See https://github.com/LMFDB/lmfdb/issues/7108.
 
   - name: Cache the degree 32 transitive groups
-    uses: actions/cache@v3
+    uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
     with:
       path: ~/.cache/transgrp
       key: ${{ runner.os }}-trans32-0   # bump the trailing number to force a re-download

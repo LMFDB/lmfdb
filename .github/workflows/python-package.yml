@@ -15,6 +15,9 @@ on:
         description: 'Tables to fetch again for the query tape even if the edit log does not show a change ("all" for everything)'
         default: ''
 
+permissions:
+  contents: read
+
 jobs:
   matrix_prep:
     name: Initial setup
@@ -23,17 +26,53 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       # Required as the JSON input file needs to be read
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Conditional Build Matrix
+      # Only devmirror entries can run without the proddb password, so forks
+      # (which have no LMFDB_CI_ACCESS secret) get the devmirror half of
+      # .github/workflows/matrix_includes.json.  The secret itself is never
+      # passed here, only whether it is set.
+      - name: Build test matrix
         id: set-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@main
-        with:
-          # Filtering the default input file: '.github/workflows/matrix_includes.json'
-          # using JMESPath https://jmespath.org/examples.html
+        env:
+          HAS_LMFDB_CI_ACCESS: ${{ secrets.LMFDB_CI_ACCESS != '' }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+
+          with open(
+              ".github/workflows/matrix_includes.json",
+              encoding="utf-8",
+          ) as matrix_file:
+              entries = json.load(matrix_file)
+
+          has_access = (
+              os.environ.get("HAS_LMFDB_CI_ACCESS", "").lower() == "true"
+          )
           # Scheduled and manual runs only refresh the query tape, which the
           # proddb shards do not use.
-          filter: "[? server == 'devmirror' || ('${{ secrets.LMFDB_CI_ACCESS }}' && '${{ github.event_name }}' != 'schedule' && '${{ github.event_name }}' != 'workflow_dispatch')]"
+          refresh_only = os.environ.get("EVENT_NAME") in ("schedule", "workflow_dispatch")
+          if not has_access or refresh_only:
+              entries = [
+                  entry
+                  for entry in entries
+                  if entry.get("server") == "devmirror"
+              ]
+
+          matrix = json.dumps(
+              {"include": entries},
+              separators=(",", ":"),
+          )
+          with open(
+              os.environ["GITHUB_OUTPUT"],
+              "a",
+              encoding="utf-8",
+          ) as output_file:
+              print(f"matrix={matrix}", file=output_file)
+          PY
 
 
   test:
@@ -55,9 +94,9 @@ jobs:
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - uses: conda-incubator/setup-miniconda@v4
+    - uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb # v4.1.0
       with:
         # Runner images no longer ship Miniconda (ubuntu-26.04), so download
         # Miniforge; it installs to ~/miniconda3, which the conda cache below names.
@@ -70,7 +109,7 @@ jobs:
         use-only-tar-bz2: false
 
     - name: Cache conda
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
@@ -96,7 +135,7 @@ jobs:
         conda list
 
     - name: Cache pip
-      uses: actions/cache@v3
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
