@@ -521,9 +521,23 @@ class KnowlBackend(PostgresBase):
         selecter = SQL("SELECT id, last_author, timestamp FROM (SELECT DISTINCT ON (id) id, last_author, timestamp FROM kwl_knowls WHERE type = %s AND source = %s AND status >= 0 ORDER BY id, timestamp) knowls ORDER BY timestamp DESC")
         return self._safe_execute(selecter, [-2, ID])
 
+    def _description_selecter(self, fields, match):
+        """
+        A query for the current revision of the description knowls whose id
+        satisfies ``match`` (an SQL fragment such as ``id = %s``), which is
+        followed by the type and the minimum status in the parameter list.
+
+        ``DISTINCT ON (id)`` keeps the first row of each id, so the revisions
+        have to be sorted newest first for this to be the current one, as in
+        :meth:`get_knowl`; sorting them the other way returns the revision a
+        description had when it was first written.
+        """
+        sqlfields = SQL(", ").join(map(Identifier, fields))
+        return SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE {1} AND type = %s AND status >= %s ORDER BY id, timestamp DESC) knowls ORDER BY id").format(sqlfields, match)
+
     def get_column_descriptions(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = self._description_selecter(fields, SQL("id LIKE %s"))
         L = self._safe_execute(selecter, [f"columns.{table}.%", 2, 0])
         return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L}
 
@@ -547,10 +561,48 @@ class KnowlBackend(PostgresBase):
 
     def get_table_description(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = self._description_selecter(fields, SQL("id = %s"))
         L = self._safe_execute(selecter, [f"tables.{table}", 2, 0])
         if L:
             return Knowl(L[0][0], data=dict(zip(fields, L[0])))
+
+    def _table_descriptions_selecter(self, beta, source=SQL("kwl_knowls")):
+        """
+        The query behind :meth:`get_table_descriptions`, which takes the id
+        pattern, the knowl type and the minimum status as parameters.
+
+        It picks the revision of each knowl that :meth:`get_knowl` would show:
+        on beta the newest one, and otherwise the newest reviewed one, or the
+        newest one if the knowl has never been reviewed.  ``source`` is the
+        relation holding the revisions; it is only changed for testing.
+        """
+        if beta:
+            order = SQL("timestamp DESC")
+        else:
+            order = SQL("(status >= 1) DESC, timestamp DESC")
+        return SQL("SELECT id, content FROM (SELECT DISTINCT ON (id) id, content FROM {0} WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, {1}) knowls ORDER BY id").format(source, order)
+
+    def get_table_descriptions(self, beta=None):
+        """
+        The descriptions of all tables (the ``tables.<name>`` knowls),
+        fetched in a single query.
+
+        INPUT:
+
+        - ``beta`` -- whether to show the newest revision of each description
+          even if it has not been reviewed, as :meth:`get_knowl` does on beta
+          (default: whether this is the beta server)
+
+        OUTPUT:
+
+        A dictionary with table names as keys and description strings as values;
+        tables with no description knowl are omitted.
+        """
+        if beta is None:
+            beta = is_beta()
+        selecter = self._table_descriptions_selecter(beta)
+        L = self._safe_execute(selecter, ["tables.%", 2, 0])
+        return {rec[0].split(".", 1)[1]: rec[1] for rec in L}
 
     def set_table_description(self, table, description):
         uid = db.login()

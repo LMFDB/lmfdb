@@ -1,14 +1,269 @@
 import re
+from unittest.mock import patch
 
 from lmfdb.tests import LmfdbTest
+from lmfdb.api.api import hidden_collection
+from lmfdb.knowledge.knowl import knowldb
+from lmfdb.utils.psycopg_compat import SQL
+
+
+def table_links(page):
+    r"""
+    The (href, table name) pairs of the table links on an api index page
+    """
+    return re.findall(r'<td class="api-table-name"><a href="/api/([^"]+)/">([^<]+)</a>', page)
+
+
+class DescriptionKnowlTest(LmfdbTest):
+    r"""
+    The api index displays the ``tables.<name>`` description knowls, so the
+    lookups behind it have to return the current revision of each knowl.
+    """
+
+    def _edited(self, pattern, limit=3):
+        r"""
+        The ids of some description knowls matching ``pattern`` whose content
+        has been edited, i.e. that have more than one visible revision
+        """
+        selecter = SQL("SELECT id FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s GROUP BY id HAVING COUNT(DISTINCT content) > 1 ORDER BY id LIMIT %s")
+        return [rec[0] for rec in knowldb._safe_execute(selecter, [pattern, 2, 0, limit])]
+
+    def _current(self, kid):
+        r"""
+        The content of the newest revision of a knowl visible on this server
+        """
+        # get_edit_history sorts the revisions by increasing timestamp
+        return knowldb.get_edit_history(kid)[-1]["content"]
+
+    def test_table_descriptions_are_current(self):
+        r"""
+        Check that both the single and the bulk table description lookups
+        return the newest revision of an edited knowl (on beta, for the bulk
+        one; see test_table_descriptions_revision_policy for production)
+        """
+        edited = self._edited("tables.%")
+        assert edited, "no edited table description knowl to test against"
+        bulk = knowldb.get_table_descriptions(beta=True)
+        for kid in edited:
+            table = kid.split(".", 1)[1]
+            current = self._current(kid)
+            assert bulk[table] == current, "stale description for %s" % table
+            assert knowldb.get_table_description(table).content == current
+
+    def test_table_descriptions_revision_policy(self):
+        r"""
+        Check that the bulk table description lookup picks the revision that
+        get_knowl shows: on beta the newest one, and on production the newest
+        reviewed one, or the newest one if the knowl was never reviewed.
+
+        The query is run on fixture revisions in place of kwl_knowls, since
+        the test database cannot be written to.
+        """
+        revisions = [
+            # an older reviewed revision followed by a newer beta edit
+            ("tables.reviewed_then_edited", 2, 1, "2020-01-01", "Reviewed description"),
+            ("tables.reviewed_then_edited", 2, 0, "2021-01-01", "New unreviewed description"),
+            # never reviewed
+            ("tables.never_reviewed", 2, 0, "2020-01-01", "First draft"),
+            ("tables.never_reviewed", 2, 0, "2021-01-01", "Second draft"),
+            # reviewed twice, then edited
+            ("tables.reviewed_twice", 2, 1, "2020-01-01", "First reviewed"),
+            ("tables.reviewed_twice", 2, 1, "2021-01-01", "Second reviewed"),
+            ("tables.reviewed_twice", 2, 0, "2022-01-01", "Later edit"),
+            # neither deleted revisions nor other ids or types are used
+            ("tables.deleted_edit", 2, 0, "2020-01-01", "Kept"),
+            ("tables.deleted_edit", 2, -2, "2021-01-01", "Deleted"),
+            ("columns.nf_fields.degree", 2, 1, "2020-01-01", "A column"),
+            ("tables.wrong_type", 0, 1, "2020-01-01", "Not a description"),
+        ]
+        source = SQL("(VALUES {0}) AS kwl_knowls(id, type, status, timestamp, content)").format(
+            SQL(", ").join(SQL("(%s, %s, %s, %s::timestamp, %s)") for _ in revisions))
+        values = [x for rev in revisions for x in rev]
+
+        def descriptions(beta):
+            selecter = knowldb._table_descriptions_selecter(beta, source)
+            return {rec[0]: rec[1] for rec in knowldb._safe_execute(selecter, values + ["tables.%", 2, 0])}
+
+        assert descriptions(False) == {
+            "tables.reviewed_then_edited": "Reviewed description",
+            "tables.never_reviewed": "Second draft",
+            "tables.reviewed_twice": "Second reviewed",
+            "tables.deleted_edit": "Kept"}
+        assert descriptions(True) == {
+            "tables.reviewed_then_edited": "New unreviewed description",
+            "tables.never_reviewed": "Second draft",
+            "tables.reviewed_twice": "Later edit",
+            "tables.deleted_edit": "Kept"}
+
+    def test_table_descriptions_match_get_knowl(self):
+        r"""
+        Check on the real knowls that the bulk table description lookup agrees
+        with get_knowl, which the table pages use, on beta and on production
+        """
+        for beta in [False, True]:
+            bulk = knowldb.get_table_descriptions(beta=beta)
+            assert bulk, "no table description knowls"
+            for table in sorted(bulk)[:10]:
+                assert bulk[table] == knowldb.get_knowl("tables." + table, ["content"], beta=beta)["content"], table
+
+    def test_column_descriptions_are_current(self):
+        r"""
+        Check that the column description lookup returns the newest revision
+        of an edited knowl
+        """
+        edited = self._edited("columns.%", limit=1)
+        assert edited, "no edited column description knowl to test against"
+        kid = edited[0]
+        _, table, col = kid.split(".")
+        assert knowldb.get_column_descriptions(table)[col].content == self._current(kid)
+
 
 class ApiTest(LmfdbTest):
     def test_api_home(self):
         r"""
-        Check that the top-level api page works
+        Check that the top-level api page works: tables grouped into datasets
+        with row counts and descriptions, the collapsed usage docs, the filter
+        box, and links to the stats and access options pages
         """
         data = self.tc.get("/api", follow_redirects=True).get_data(as_text=True)
-        assert "API for accessing the LMFDB Database" in data
+        assert "entry point to the API" in data
+        assert "Query syntax and examples" in data
+        assert 'id="api-filter"' in data
+        # datasets are explained
+        assert "Higher genus curves with automorphisms" in data
+        assert 'id="hgcwa"' in data
+        # fq_fields holds finite fields, not function fields
+        assert "fq &mdash; Finite fields" in data
+        # links to the stats and access options pages
+        assert '"/api/stats"' in data
+        assert '"/api/options"' in data
+        # hidden tables are not shown by default, but can be
+        assert "test_table" not in data
+        assert '"/api/all"' in data
+
+    def test_api_home_links(self):
+        r"""
+        Check that /api/ lists exactly the tables that are not hidden, that
+        /api/all lists all of them, and that the links work
+        """
+        hidden = {name for name in self.db.tablenames if hidden_collection(name)}
+        data = self.tc.get("/api", follow_redirects=True).get_data(as_text=True)
+        links = table_links(data)
+        assert all(href == name for href, name in links)
+        assert sorted(name for _, name in links) == sorted(set(self.db.tablenames) - hidden)
+
+        data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+        links = table_links(data)
+        assert all(href == name for href, name in links)
+        assert sorted(name for _, name in links) == sorted(self.db.tablenames)
+        # the anchors in the jump strip match the dataset sections
+        sections = set(re.findall(r'<div class="api-dataset" id="([^"]+)"', data))
+        jumps = set(re.findall(r'<a href="#([^"]+)">', data)) - {"api-tables"}
+        assert jumps == sections
+
+    def test_api_home_hidden(self):
+        r"""
+        Check that tables following either test naming convention (``test_x``
+        and ``x_test``) are hidden from /api/ and shown on /api/all
+        """
+        tests = {name for name in self.db.tablenames
+                 if name.startswith("test") or name.endswith("_test")}
+        assert "test_table" in tests, "no test_-prefixed table in the database"
+        assert any(name.endswith("_test") for name in tests), "no _test-suffixed table in the database"
+        assert tests <= {name for name in self.db.tablenames if hidden_collection(name)}
+
+        shown = {name for _, name in table_links(self.tc.get("/api", follow_redirects=True).get_data(as_text=True))}
+        assert not (tests & shown)
+        shown = {name for _, name in table_links(self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True))}
+        assert tests <= shown
+
+    def test_api_home_descriptions(self):
+        r"""
+        Check that the description of a table is rendered as a knowl in its
+        row, and that its displayed text is searchable by the filter box
+        """
+        def cell(data, table):
+            r"""
+            The description cell and the data-desc attribute of a table's row
+            """
+            m = re.search(r'data-name="%s" data-desc="([^"]*)">.*?<td class="api-table-desc">(.*?)</td>' % table, data, re.S)
+            assert m, "no row for %s" % table
+            return m.group(2).strip(), m.group(1)
+
+        description = "The table that the api tests use"
+        with patch.object(knowldb, "get_table_descriptions", return_value={"test_table": description}):
+            data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+        html, desc = cell(data, "test_table")
+        assert html == "<p>%s</p>" % description
+        assert desc == description.lower()
+
+        # descriptions are knowls, so markup in them is rendered, not shown as source
+        description = 'Fields of {{ KNOWL("nf.degree", title="degree") }} $n$, see [the docs](/intro) & *more*'
+        with patch.object(knowldb, "get_table_descriptions", return_value={"test_table": description}):
+            data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+        html, desc = cell(data, "test_table")
+        assert "KNOWL" not in html and "](" not in html
+        assert 'knowl="nf.degree"' in html
+        assert '<a href="/intro">the docs</a>' in html
+        assert "<em>more</em>" in html
+        # the filter sees the displayed text, without tags or TeX delimiters
+        assert desc == "fields of degree n, see the docs &amp; more"
+
+        # the real descriptions are not all empty either
+        data = self.tc.get("/api", follow_redirects=True).get_data(as_text=True)
+        described = [d for d in re.findall(r'<td class="api-table-desc">(.*?)</td>', data, re.S) if d.strip()]
+        assert len(described) > 20, "only %s tables have a description" % len(described)
+        # and the dataset names are searchable without their TeX
+        assert 'data-dataset="lf p-adic fields"' in data
+
+    def test_api_home_renders_descriptions_together(self):
+        r"""
+        Check that the descriptions share one template context: building it
+        runs the context processors, some of which query the database (e.g.
+        the colour scheme of a signed-in user), so their number of runs must
+        not grow with the number of described tables.  Check also that each
+        description is still rendered on its own: one that is not a valid
+        template only breaks its own row, and assignments and macros do not
+        leak from one description into the next.
+        """
+        calls = []
+
+        def counter():
+            calls.append(None)
+            return {}
+
+        names = sorted(self.db.tablenames)
+        processors = self.app.template_context_processors[None]
+        processors.append(counter)
+        try:
+            counts = []
+            for n in [1, 50]:
+                descriptions = {name: "Table *number %s*" % i for i, name in enumerate(names[:n])}
+                del calls[:]
+                with patch.object(knowldb, "get_table_descriptions", return_value=descriptions):
+                    data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+                counts.append(len(calls))
+                assert data.count("<em>number ") == n
+            assert counts[0] == counts[1], "context processors ran %s times for 1 description, %s times for 50" % tuple(counts)
+
+            descriptions = {names[0]: "Fine *one*", names[1]: "Broken {{ KNOWL(", names[2]: "Fine *two*"}
+            with patch.object(knowldb, "get_table_descriptions", return_value=descriptions):
+                data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+            assert "<em>one</em>" in data and "<em>two</em>" in data
+            assert data.count("ERROR in the template") == 1
+
+            # each description is a template of its own: assignments and
+            # macros in one of them do not leak into the next ones
+            descriptions = {names[0]: '{% set label = "FIRST" %}First table: {{ label }}',
+                            names[1]: 'Second table: {{ label|default("SECOND") }}',
+                            names[2]: '{% macro tag() %}MACRO{% endmacro %}Third table: {{ tag() }}',
+                            names[3]: 'Fourth table: {{ "defined" if tag is defined else "undefined" }}'}
+            with patch.object(knowldb, "get_table_descriptions", return_value=descriptions):
+                data = self.tc.get("/api/all", follow_redirects=True).get_data(as_text=True)
+            for text in ["First table: FIRST", "Second table: SECOND", "Third table: MACRO", "Fourth table: undefined"]:
+                assert text in data, text
+        finally:
+            processors.remove(counter)
 
     def test_api_unknown_table_html(self):
         assert callable(self.db.table_sizes)
