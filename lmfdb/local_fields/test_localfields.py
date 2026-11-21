@@ -150,13 +150,21 @@ class LocalFieldTest(LmfdbTest):
         assert grid['grid'][0][1][1]['query'] == base + 'gal=4T1&e=2'
 
     def test_dynamic_stats_null_bucket(self):
-        # A not-computed Galois group (3996 fields) cannot be expressed as a search, so
-        # its statistics bucket is shown without a drill-down link -- clicking it must
-        # not open an unfiltered search returning every field (LMFDB#6542 review).
+        # A not-computed value cannot be expressed as a search, so its statistics
+        # bucket is shown without a drill-down link -- clicking it must not open an
+        # unfiltered search returning every field (LMFDB#6542 review).  The counts
+        # are stubbed, since which columns have nulls, and which statistics are
+        # cached, vary between databases.
         import re
+        from unittest.mock import patch
+        from lmfdb.local_fields.main import LFStats
         empty_link = re.compile(r"href='[^']*[?&][A-Za-z_]+=(?:&amp;|')")
-        for col, param in [('galois_label', 'gal'), ('slopes', 'slopes'), ('hidden', 'hidden')]:
-            L = self.tc.get('/padicField/dynamic_stats?col1=%s&proportions=none&search_type=DynStats' % col)
+        for col, param, values in [('galois_label', 'gal', ['4T1', '4T3']),
+                                   ('slopes', 'slopes', ['[2]', '[2, 2]']),
+                                   ('hidden', 'hidden', ['2.1_1', '2.1_2'])]:
+            table = StubTable({(values[0],): 5, (values[1],): 7, (None,): 11})
+            with patch.object(LFStats, 'table', table):
+                L = self.tc.get('/padicField/dynamic_stats?col1=%s&proportions=none&search_type=DynStats' % col)
             assert L.status_code == 200
             dat = L.get_data(as_text=True)
             assert 'not computed' in dat                  # the null bucket is displayed...
@@ -293,20 +301,20 @@ class LocalFieldTest(LmfdbTest):
     def test_dynamic_stats_1d_totals(self):
         # The Total of a one-dimensional table counts the fields where the column
         # is computed, which is not something the search page can ask for, so it is
-        # only linked when that is every field matching the constraint.  Of the 3784
-        # fields with p=7 and n=21, only 1324 have a computed Galois group.
+        # only linked when that is every field matching the constraint.  The
+        # database has a Galois group for every field, so the counts are stubbed:
+        # 16 of these 27 fields have one.
+        from unittest.mock import patch
         from lmfdb import db
-        L = self.tc.get('/padicField/dynamic_stats?p=7&n=21&col1=galois_label'
-                        '&totals1=yes&proportions=none&search_type=DynStats')
+        from lmfdb.local_fields.main import LFStats
+        table = StubTable({('21T66',): 9, ('21T43',): 7, (None,): 11}, records=27)
+        with patch.object(LFStats, 'table', table):
+            L = self.tc.get('/padicField/dynamic_stats?p=7&n=21&col1=galois_label'
+                            '&totals1=yes&proportions=none&search_type=DynStats')
         assert L.status_code == 200
         counts = self._stat_counts(L.get_data(as_text=True))
-        assert counts, "no statistics available for Galois groups with p=7, n=21"
         total = [c for c in counts if c[0] == 'Total']
-        assert len(total) == 1, counts
-        _label, count, url = total[0]
-        assert count == db.lf_fields.count({'p': 7, 'n': 21, 'galois_label': {'$exists': True}})
-        assert count < db.lf_fields.count({'p': 7, 'n': 21})
-        assert url == '', url        # a link here would return the other 2460 too
+        assert total == [('Total', 16, '')], counts  # a link would return the other 11 too
         # where the column is computed for every field, the total is the constraint
         # itself, and is linked
         L = self.tc.get('/padicField/dynamic_stats?p=2&n=8&col1=galois_label'
