@@ -262,7 +262,7 @@ The function which was called for this page is: {{calling_function}}
       &middot;
       {{ sage_version|safe }}
       &middot;
-      {{ version|safe }}
+      <a href="{{ url_for('version_page') }}#history">{{ version }}</a>
     </div>
 </div>
 </div>{# /#layout #}

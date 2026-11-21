@@ -1,0 +1,41 @@
+name: Record code version
+
+# Each push to web (deployed by the web servers' cron) gets the next code
+# number of the LMFDB version {major}.{data}-{code}; see lmfdb/zenodo/watcher.py.
+on:
+  push:
+    branches: [ web ]
+
+# Pushes are numbered one at a time.  A push superseded while queued is never
+# numbered, which is right: the servers never deployed it either.
+concurrency:
+  group: lmfdb-code-version
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The environment limits the secrets below to this branch; the role in
+    # LMFDB_VERSION_DSN may only read and insert into version_history.
+    environment: lmfdb-version
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the database driver
+        run: pip install "psycodict>=1.0.0rc1" "psycopg[binary]"
+
+      # Run lmfdb/zenodo as a package of its own: importing lmfdb needs sage
+      # and connects to the configured database.
+      - name: Record the pushed commit
+        env:
+          LMFDB_VERSION_DSN: ${{ secrets.LMFDB_VERSION_DSN }}
+        run: |
+          cp -r lmfdb/zenodo "$RUNNER_TEMP/zenodo"
+          cd "$RUNNER_TEMP"
+          python -m zenodo.watcher --commit "$GITHUB_SHA" \
+            --version-file "$GITHUB_WORKSPACE/lmfdb/version.py"

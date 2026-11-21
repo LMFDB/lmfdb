@@ -1,0 +1,154 @@
+{% extends 'homepage.html' %}
+{% block content %}
+
+<div class="narrow-body">
+  {% if current %}
+  <p>
+    The current version of the LMFDB is
+    <a href="{{ url_for('version_page', v=current) }}"><b>{{ current }}</b></a>.
+  </p>
+  {% endif %}
+  <p>
+    LMFDB version numbers have the form
+    <b>{major}.{data}-{code}</b> (for example <code>2.3-5</code>):
+  </p>
+  <ul>
+    <li><b>major</b> is incremented by the managing editors for major
+      milestones; the other two components reset when it is bumped.</li>
+    <li><b>data</b> is incremented every time a batch of database tables is
+      pushed to production.  Each push archives the changed tables on
+      <a href="https://zenodo.org/communities/lmfdb">Zenodo</a>, where every
+      table has its own record with its own version number (major.minor,
+      starting at 1.0) and a description of what changed; the data of any
+      LMFDB version can be recovered from the corresponding Zenodo
+      records.</li>
+    <li><b>code</b> counts releases of the website code.  Each release
+      corresponds to a commit in the
+      <a href="https://github.com/LMFDB/lmfdb">LMFDB git repository</a>.</li>
+  </ul>
+  <p>
+    Versions up to and including 1.2.1 predate this scheme.
+  </p>
+</div>
+
+{% if events %}
+
+<style>
+  div.version-tabs { margin: 1.5em 0 1em 0; }
+  div.version-panel h2 { margin-top: 1.5em; }
+  table.version-info td { padding: 2px 10px 2px 0; }
+</style>
+
+<form method="get" action="{{ url_for('version_page') }}">
+  <p>
+    Look up a version:
+    <input type="text" name="v" value="{{ query }}" placeholder="e.g. 2.3-5 or 2.3" size="16">
+    <button type="submit">Look up</button>
+  </p>
+</form>
+
+<div class="version-tabs">
+  <button type="button" class="ver_version ver_active"
+    onclick="openVersionTab('version')">Version information</button>
+  <button type="button" class="ver_history ver_inactive"
+    onclick="openVersionTab('history')">Version history</button>
+</div>
+
+<div id="version-tab" class="version-panel">
+  <table class="version-info">
+    <tr><td><b>Version:</b></td>
+      <td>{{ resolved.version }}{% if resolved.version == current %} (current){% endif %}</td></tr>
+    <tr><td><b>Data version created:</b></td><td>{{ format_time(resolved.time) }}</td></tr>
+    {% if resolved.git_hash %}
+    <tr><td><b>Website code:</b></td>
+      <td><a href="https://github.com/LMFDB/lmfdb/tree/{{ resolved.git_hash }}">{{ resolved.git_hash[:12] }}</a>,
+        deployed {{ format_time(resolved.git_time) }}</td></tr>
+    {% endif %}
+  </table>
+
+  <h2>Zenodo records</h2>
+  {% if resolved.tables %}
+    <table class="ntdata">
+      <thead>
+        <tr><th>table</th><th>record version</th><th>Zenodo record</th><th>changes in this record version</th></tr>
+      </thead>
+      <tbody>
+        {% for name, info in resolved.tables|dictsort %}
+          <tr>
+            <td><code>{{ name }}</code></td>
+            <td>{{ info.version }}</td>
+            <td>{% if info.doi %}<a href="https://doi.org/{{ info.doi }}">{{ info.doi }}</a>{% endif %}</td>
+            <td>{{ info.notes or '' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>There are no Zenodo records associated with this version.</p>
+  {% endif %}
+
+  <p>This information is also available as
+    <a href="{{ url_for('version_api', v=resolved.version) }}">JSON</a>.</p>
+</div>
+
+<div id="history-tab" class="version-panel">
+  <table class="ntdata">
+    <thead>
+      <tr><th>version</th><th>type</th><th>date</th><th>details</th></tr>
+    </thead>
+    <tbody>
+      {% for e in events %}
+        <tr>
+          <td><a href="{{ url_for('version_page', v=e.version) }}">{{ e.version }}</a></td>
+          <td>{{ e.kind_label }}</td>
+          <td>{{ format_time(e.time) }}</td>
+          <td style="white-space: normal;"><span>
+            {% if e.comment %}{{ e.comment }}<br>{% endif %}
+            {% if e.kind != 'data' and e.git_hash %}
+              commit <a href="https://github.com/LMFDB/lmfdb/tree/{{ e.git_hash }}">{{ e.git_hash[:12] }}</a>
+            {% elif e.kind == 'data' %}
+              {% set records = (e.tables or {})|dictsort %}
+              {{ records | length }} record{{ '' if records|length == 1 else 's' }} updated:
+              {% for name, info in records %}
+                {%- if info.doi -%}
+                  <a href="https://doi.org/{{ info.doi }}" title="{{ info.notes or '' }}">{{ name }}&nbsp;{{ info.version }}</a>
+                {%- else -%}
+                  {{ name }}&nbsp;{{ info.version }}
+                {%- endif -%}
+                {{ ", " if not loop.last else "" }}
+              {% endfor %}
+            {% endif %}
+          </span>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function openVersionTab(name) {
+  $("button.ver_active").addClass("ver_inactive").removeClass("ver_active");
+  $("button.ver_" + name).removeClass("ver_inactive").addClass("ver_active");
+  $("div.version-panel").hide();
+  $("#" + name + "-tab").show();
+  history.replaceState(null, "", location.pathname + location.search
+                       + (name == "history" ? "#history" : ""));
+}
+function openTabFromHash() {
+  openVersionTab(location.hash == "#history" ? "history" : "version");
+}
+openTabFromHash();
+$(window).on("hashchange", openTabFromHash);
+</script>
+
+{% elif BETA %}
+  <p>Beta has no version number: its data and code are ahead of the latest
+  release.  See the <a href="https://www.lmfdb.org/version">version history</a>
+  of www.lmfdb.org.</p>
+{% else %}
+  <p>The version history will appear here once the versioning system is
+  activated.</p>
+{% endif %}
+
+{% endblock %}

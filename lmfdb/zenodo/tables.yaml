@@ -1,0 +1,158 @@
+# Which production tables are archived on Zenodo, and by whom.
+#
+# STATUS: owners and inclusion from the managing editors' owner list of
+# 2026-11-16, with the remaining tables decided the same day.  Tables whose
+# owner has no Zenodo token yet are on hold until it is added to the config.
+#
+# Semantics per entry:
+#   backup:  yes | no | hold | review
+#            hold == yes once the issues in the note are fixed; until then
+#            skipped by pushes and the backfill, and reported (like review)
+#   owner:   Zenodo account that owns the table's record: a key of the
+#            [tokens] section of ~/.lmfdb_zenodo.ini (sticky once the first
+#            version is published; [zenodo] default_owner when absent here)
+#   overage: from the owner list, the size above Zenodo's free 50 GB per
+#            record, which the owner covers from their account's 150 GB
+#   note:    free text
+#
+# Owner keys: costa = Edgar Costa, cremona = John Cremona, jones = John
+# Jones, paulhus = Jen Paulhus, roe = David Roe, sutherland = Drew Sutherland.
+#
+# Tables that appear in a dump folder (or in db.tablenames) but not here are
+# reported by dry runs and by zenodo_audit as needing classification.
+#
+# The knowl database and the version registry always get records (they are
+# not search tables and are not listed here).
+
+tables:
+  artin_field_data: {backup: yes, owner: jones}
+  artin_old2new_labels: {backup: yes, owner: jones}
+  artin_reps: {backup: yes, owner: jones}
+  av_fq_endalg_data: {backup: yes, owner: roe}
+  av_fq_endalg_factors: {backup: yes, owner: roe}
+  av_fq_isog: {backup: yes, owner: roe}
+  belyi_galmap_dessins: {backup: no}
+  belyi_galmap_portraits: {backup: yes, owner: roe}
+  belyi_galmaps: {backup: yes, owner: roe}
+  belyi_galmaps_fixed: {backup: no}
+  belyi_galmaps_prim: {backup: no}
+  belyi_passports: {backup: yes, owner: roe}
+  belyi_passports_fixed: {backup: no}
+  belyi_specializations: {backup: no}
+  bmf_dims: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  bmf_forms: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  char_dirichlet: {backup: yes, owner: sutherland}
+  cluster_pictures: {backup: yes, owner: roe}
+  data_uploads: {backup: hold, owner: roe, note: "not a table in the production database"}
+  ec_classdata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_curvedata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_galrep: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_iqf_labels: {backup: no}
+  ec_iwasawa: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_localdata: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_mwbsd: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_nfcurves: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_nfportraits: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_padic: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  ec_torsion_growth: {backup: hold, owner: cremona, note: "owner has no Zenodo token yet"}
+  fq_fields: {backup: no}
+  g2c_curves: {backup: yes, owner: sutherland}
+  g2c_endomorphisms: {backup: yes, owner: sutherland}
+  g2c_galrep: {backup: yes, owner: sutherland}
+  g2c_plots: {backup: yes, owner: sutherland}
+  g2c_ratpts: {backup: yes, owner: sutherland}
+  g2c_tamagawa: {backup: yes, owner: sutherland}
+  gps_char: {backup: hold, owner: paulhus, overage: 99G, note: "issues to fix first"}
+  gps_char_test: {backup: no, note: "test table"}
+  gps_conj_classes: {backup: yes, owner: roe}
+  gps_crep: {backup: no}
+  gps_families: {backup: yes, owner: roe}
+  gps_gl2zhat: {backup: no}
+  gps_gl2zhat_coarse: {backup: no}
+  gps_gl2zhat_fine: {backup: yes, owner: sutherland}
+  gps_gl2zhat_nonsurjdet: {backup: yes, owner: sutherland}
+  gps_gmodules: {backup: yes, owner: roe}
+  gps_groups: {backup: yes, owner: roe}
+  gps_groups_cc: {backup: no}
+  gps_groups_cc_test: {backup: no, note: "test table"}
+  gps_groups_test: {backup: no, note: "test table"}
+  gps_gsp4zhat: {backup: yes, owner: sutherland}
+  gps_images: {backup: yes, owner: roe}
+  gps_qchar: {backup: hold, owner: roe, note: "issues to fix first"}
+  gps_qchar_test: {backup: no, note: "test table"}
+  gps_qrep: {backup: no}
+  gps_regular_polynomials: {backup: yes, owner: jones}
+  gps_small: {backup: no, note: "being phased out"}
+  gps_smallhash: {backup: yes, owner: roe}
+  gps_special_names: {backup: yes, owner: roe}
+  gps_st: {backup: yes, owner: sutherland}
+  gps_st0: {backup: yes, owner: sutherland}
+  gps_subgroup_data: {backup: yes, owner: roe, overage: 73G}
+  gps_subgroup_search: {backup: yes, owner: roe, overage: 7G}
+  gps_subgroups_test: {backup: no, note: "test table"}
+  gps_transitive: {backup: yes, owner: jones}
+  gps_transitive_portraits: {backup: yes, owner: jones}
+  halfmf_forms: {backup: no}
+  hecke_algebras: {backup: no}
+  hecke_ladic: {backup: no}
+  hecke_orbits: {backup: no}
+  hgcwa_complete: {backup: hold, owner: paulhus, note: "owner has no Zenodo token yet"}
+  hgcwa_passports: {backup: hold, owner: paulhus, note: "owner has no Zenodo token yet"}
+  hgcwa_unique_groups: {backup: hold, owner: paulhus, note: "owner has no Zenodo token yet"}
+  hgm_euler_survey: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  hgm_families: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  hgm_monodromy: {backup: no}
+  hgm_motives: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  hmf_fields: {backup: yes, owner: roe}
+  hmf_forms: {backup: yes, owner: roe}
+  hmf_hecke: {backup: yes, owner: sutherland, overage: 19G}
+  inv_dbs: {backup: no, note: "legacy inventory system"}
+  inv_fields_auto: {backup: no, note: "legacy inventory system"}
+  inv_fields_human: {backup: no, note: "legacy inventory system"}
+  inv_ops: {backup: no, note: "legacy inventory system"}
+  inv_rollback: {backup: no, note: "legacy inventory system"}
+  inv_tables: {backup: no, note: "legacy inventory system"}
+  lat_lattices: {backup: yes, owner: roe}
+  lf_families: {backup: yes, owner: jones}
+  lf_fields: {backup: yes, owner: jones}
+  lfunc_data: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  lfunc_instances: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  lfunc_lfunctions: {backup: hold, owner: costa, overage: 316G, note: "issues to fix first; overage exceeds one account's 150 GB"}
+  lfunc_rs_knowls: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  lfunc_search: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  maass_newforms: {backup: no}
+  maass_newforms_coefficients: {backup: no}
+  maass_portraits: {backup: no}
+  maass_rigor: {backup: yes, owner: roe}
+  maass_rigor_coefficients: {backup: yes, owner: roe}
+  maass_rigor_portraits: {backup: yes, owner: roe}
+  mf_boxes: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_gamma1: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_gamma1_portraits: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_cc: {backup: yes, owner: sutherland, overage: 25G}
+  mf_hecke_charpolys: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_lpolys: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_nf: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_hecke_traces: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newform_portraits: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newforms: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newspace_portraits: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_newspaces: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_stark: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_twists_cc: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  mf_twists_nf: {backup: hold, owner: costa, note: "owner has no Zenodo token yet"}
+  modcurve_modelmaps: {backup: yes, owner: roe}
+  modcurve_models: {backup: yes, owner: roe}
+  modcurve_pictures: {backup: yes, owner: roe}
+  modcurve_points: {backup: yes, owner: roe}
+  modcurve_teximages: {backup: yes, owner: roe}
+  modlgal_reps: {backup: yes, owner: sutherland}
+  modlmf_forms: {backup: no}
+  nf_fields: {backup: yes, owner: jones}
+  nf_fields_extra: {backup: yes, owner: jones, overage: 36G}
+  nf_fields_reflex: {backup: yes, owner: jones}
+  smf_dims: {backup: yes, owner: roe}
+  smf_ev: {backup: yes, owner: roe}
+  smf_families: {backup: yes, owner: roe}
+  smf_fc: {backup: yes, owner: roe}
+  smf_samples: {backup: yes, owner: roe}

@@ -1,7 +1,7 @@
 files = [
 "lint",
 "lmfdb/abvar/fq/test_av.py lmfdb/abvar/fq/test_browse_page.py lmfdb/number_fields/test_numberfield.py lmfdb/bianchi_modular_forms/test_bmf.py",
-"lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py",
+"lmfdb/galois_groups/test_galoisgroup.py lmfdb/siegel_modular_forms/test_siegel_modular_forms.py lmfdb/zenodo/test_zenodo_offline.py",
 "lmfdb/tests/test_dynamic_knowls.py lmfdb/tests/test_root.py lmfdb/hecke_algebras/test_hecke_algebras.py lmfdb/tests/test_homepage.py lmfdb/elliptic_curves/test_ell_curves.py lmfdb/elliptic_curves/test_browse_page.py",
 "lmfdb/sato_tate_groups/test_st.py lmfdb/hilbert_modular_forms/test_hmf.py lmfdb/tests/test_spelling.py lmfdb/tests/test_template_namespace.py lmfdb/tests/test_acknowlegments.py lmfdb/tests/test_tensor_products.py",
 "lmfdb/cluster_pictures/test_clusterpicture.py lmfdb/local_fields/test_localfields.py lmfdb/ecnf/test_ecnf.py lmfdb/ecnf/test_isog_class.py lmfdb/api/test_api.py lmfdb/characters/test_characters.py",
