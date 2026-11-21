@@ -29,6 +29,188 @@ class LfunctionTest(LmfdbTest):
         # bogus a_101 (unknown Euler factor would default to 1), the download stops at a_100.
         assert len(an) == 100
 
+    #------------------------------------------------------
+    # Euler factors of motivic weight 1 L-functions linked to
+    # isogeny classes of abelian varieties over finite fields
+    #------------------------------------------------------
+
+    def test_euler_factor_isogeny_class_links(self):
+        # Elliptic curve 11.a has a_2 = -2, so F_2(T) = 1 + 2T + 2T^2 and the
+        # reduction mod 2 is the isogeny class 1.2.c (with 5 points); similarly
+        # a_5 = 1 gives F_5(T) = 1 - T + 5T^2 and the class 1.5.ab.
+        L = self.tc.get('/L/2/11/1.1/c1/0/0', follow_redirects=True)
+        page = L.get_data(as_text=True)
+        assert 'Isogeny Class over' in page
+        assert '/Variety/Abelian/Fq/1/2/c' in page
+        assert '/Variety/Abelian/Fq/1/5/ab' in page
+        # no link at the bad prime 11
+        assert '/Variety/Abelian/Fq/1/11/' not in page
+
+        # Genus 2 curve 169.a has F_2(T) = 1 + 3T + 5T^2 + 6T^3 + 4T^4, whose
+        # reversal is the Weil polynomial of the isogeny class 2.2.d_f (the
+        # reduction of the Jacobian mod 2, with 19 points on the surface).
+        L = self.tc.get('/L/4/13e2/1.1/c1e2/0/0', follow_redirects=True)
+        page = L.get_data(as_text=True)
+        assert '/Variety/Abelian/Fq/2/2/d_f' in page
+        assert '/Variety/Abelian/Fq/2/5/a_ah' in page
+
+    def test_euler_factor_isogeny_class_out_of_range(self):
+        # A dimension 3 example: the class at 5 is in the database and linked,
+        # and every good prime gets a label whether or not it is linked.
+        L = self.tc.get('/L/6/9072e3/1.1/c1e3/0/7', follow_redirects=True)
+        page = L.get_data(as_text=True)
+        assert '/Variety/Abelian/Fq/3/5/a_a_ac' in page
+        assert '3.29.ag_bq_adi' in page
+
+        # A valid factor whose (g, q) is outside the database gets a plain
+        # label and no link.  Which (g, q) are covered grows over time, so
+        # patch the coverage test rather than assume a permanent gap.
+        from unittest.mock import patch
+        from lmfdb.lfunctions import Lfunctionutilities
+        with self.app.test_request_context():
+            with patch.object(Lfunctionutilities, 'AbvarExists', return_value=False):
+                assert Lfunctionutilities.Lfactor_to_label_and_link_if_exists([1, 2, 2], 2) == '1.2.c'
+            linked = Lfunctionutilities.Lfactor_to_label_and_link_if_exists([1, 2, 2], 2)
+        assert linked == '<a href="/Variety/Abelian/Fq/1/2/c">1.2.c</a>'
+
+    def test_Lfactor_to_gq(self):
+        from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_gq
+        # Euler factor of 11.a at 2
+        assert Lfactor_to_gq([1, 2, 2], 2) == (1, 2)
+        # correct shape but wrong prime
+        assert Lfactor_to_gq([1, 2, 2], 3) is None
+        # negative leading coefficient: not a Weil polynomial
+        assert Lfactor_to_gq([1, 0, -2], 2) is None
+        # not self-dual
+        assert Lfactor_to_gq([1, 1, 1, 3, 9], 3) == (2, 3)
+        assert Lfactor_to_gq([1, 1, 1, 4, 9], 3) is None
+        # leading coefficient not a perfect power (used to raise ValueError)
+        assert Lfactor_to_gq([1, 0, 0, 0, 8], 2) is None
+        # odd degree and constant polynomials
+        assert Lfactor_to_gq([1, 1], 2) is None
+        assert Lfactor_to_gq([1], 2) is None
+        # factored form, as for L.localfactors_factored_dict
+        assert Lfactor_to_gq([[[1, 2, 2], 1]], 2) == (1, 2)
+
+    def test_Lfactor_to_gq_weil_condition(self):
+        # Self-duality alone is not the Weil condition: the reversal must have
+        # all complex roots of absolute value sqrt(q).
+        from lmfdb.lfunctions.Lfunctionutilities import (
+            Lfactor_to_gq, Lfactor_to_label_and_link_if_exists)
+        # x^2 + 10x + 2 is self-dual with q = 2 but has real roots, violating
+        # the Hasse bound |a_2| <= 2 sqrt(2): no elliptic curve over F_2
+        assert Lfactor_to_gq([1, 10, 2], 2) is None
+        assert Lfactor_to_gq([1, 10, 2]) is None
+        # (1 + T)(1 + 2T): self-dual with q = 2, inverse roots 1 and 2
+        assert Lfactor_to_gq([1, 3, 2], 2) is None
+        # a_5 = 5 > 2 sqrt(5), while a_5 = 4 is fine
+        assert Lfactor_to_gq([1, -5, 5], 5) is None
+        assert Lfactor_to_gq([1, -4, 5], 5) == (1, 5)
+        # supersingular boundary case (x + 2)^2 over F_4: root -2 of
+        # absolute value exactly sqrt(4) must be accepted
+        assert Lfactor_to_gq([1, 4, 4]) == (1, 4)
+        # a factored payload with one non-Weil factor is rejected even
+        # though the product is still self-dual
+        assert Lfactor_to_gq([[[1, 2, 2], 1], [[1, 10, 2], 1]], 2) is None
+        assert Lfactor_to_gq([[[1, 10, 2], 1]], 2) is None
+        # over proper prime powers the Weil condition is necessary but not
+        # sufficient: no elliptic curve over F_25 has trace 0 (Honda-Tate),
+        # so 1 + 25T^2 gets no link even though (1, 25) is in the database,
+        # while the supersingular class 1.4.e is genuine and linked
+        assert Lfactor_to_gq([1, 0, 25]) == (1, 25)
+        assert Lfactor_to_label_and_link_if_exists([1, 0, 25]) == ''
+        with self.app.test_request_context():
+            assert '/Variety/Abelian/Fq/1/4/e' in Lfactor_to_label_and_link_if_exists([1, 4, 4])
+
+    def test_Lfactor_degenerate_payloads(self):
+        # Empty or malformed Euler factor data must give no label, not a 500
+        # (polynomial_unroll used to raise IndexError on an empty list).
+        from lmfdb.lfunctions.Lfunctionutilities import (
+            Lfactor_to_gq, Lfactor_to_label_and_link_if_exists)
+        assert Lfactor_to_gq([], 2) is None
+        assert Lfactor_to_gq(None, 2) is None
+        assert Lfactor_to_gq('1 + 2*T', 2) is None
+        assert Lfactor_to_gq([None, None], 2) is None
+        # malformed factored payloads: empty factor list, empty factor,
+        # missing exponent, zero exponent (empty product)
+        assert Lfactor_to_gq([[]], 2) is None
+        assert Lfactor_to_gq([[[], 1]], 2) is None
+        assert Lfactor_to_gq([[[1, 2, 2]]], 2) is None
+        assert Lfactor_to_gq([[[1, 2, 2], 0]], 2) is None
+        # the caller renders an empty table cell for all of these
+        assert Lfactor_to_label_and_link_if_exists([], 2) == ''
+        assert Lfactor_to_label_and_link_if_exists([[[1, 2, 2], 0]], 2) == ''
+        assert Lfactor_to_label_and_link_if_exists([1, 10, 2], 2) == ''
+
+    def test_Lfactor_exponent_validation(self):
+        # A malformed factor must not vanish from the product: expanding the
+        # factorization by list repetition turns a nonpositive exponent into
+        # an empty list, leaving the valid first factor as the whole product.
+        from lmfdb.lfunctions.Lfunctionutilities import Lfactor_to_gq
+        assert Lfactor_to_gq([[[1, 2, 2], 1], [[1, 10, 2], 0]], 2) is None
+        assert Lfactor_to_gq([[[1, 2, 2], 1], [[1, 10, 2], -1]], 2) is None
+        assert Lfactor_to_gq([[[1, 2, 2], 1], [[1, 2, 2], 1.5]], 2) is None
+        # bool is an int subclass and True is in ZZ, so exclude it explicitly
+        assert Lfactor_to_gq([[[1, 2, 2], True]], 2) is None
+        # exponents greater than one are the ordinary repeated-factor case
+        assert Lfactor_to_gq([[[1, 2, 2], 2]], 2) == (2, 2)
+        assert Lfactor_to_gq([[[1, 1, 2], 1], [[1, -1, 2], 1]], 2) == (2, 2)
+
+    def test_euler_factor_row_data(self):
+        # The Euler product table's row preparation, which must survive
+        # malformed local factor data without taking down the page.
+        from lmfdb.lfunctions.Lfunctionutilities import euler_factor_row_data
+        factors, gal_groups, isog_class = euler_factor_row_data([1, 2, 2], 2)
+        assert factors == r'\( 1 + p T + p T^{2} \)'
+        # the isogeny class is only computed when the column is displayed
+        assert isog_class == ''
+        with self.app.test_request_context():
+            _, _, isog_class = euler_factor_row_data([1, 2, 2], 2, isogeny_label=True)
+        assert isog_class == '<a href="/Variety/Abelian/Fq/1/2/c">1.2.c</a>'
+        # the caller indexes gal_groups[0], so it is never empty
+        _, gal_groups, _ = euler_factor_row_data([1, 2, 2], 2, display_galois=True)
+        assert gal_groups == [[2, 1]]
+        # malformed data: placeholder factor, no Galois group, no isogeny
+        # class.  Empty and unfactorable payloads used to raise IndexError
+        # and ValueError out of lfuncEPhtml, giving a 500.
+        for poly in ([], [[]], [[[1, 2, 2]]], [[[1, 2, 2], 0], 3],
+                     None, '1 + 2*T', 2):
+            assert euler_factor_row_data(poly, 3, display_galois=True,
+                                         isogeny_label=True) == ('not available', [[0, 0]], '')
+
+    def test_euler_product_table_malformed_factor(self):
+        # Malformed local factor data must still produce one structurally
+        # valid row, using the row's own prime rather than the index of the
+        # tranche of good primes being rendered, and keeping the column count.
+        import re
+        from lmfdb.lfunctions.Lfunction import Lfunction_from_db
+        from lmfdb.lfunctions.Lfunctionutilities import lfuncEPhtml
+
+        def rows_at(html, p):
+            rows = re.findall(r'<tr[^>]*>.*?</tr>', html, re.S)
+            return [r for r in rows if '<td>%s</td>' % p in r]
+
+        # 11.a has no Galois column (degree 2); the genus 2 curve 169.a has
+        # one (degree 4).  Both display the isogeny class column.
+        for label in ['2-11-1.1-c1-0-0', '4-13e2-1.1-c1e2-0-0']:
+            with self.app.test_request_context():
+                L = Lfunction_from_db(label=label)
+                for bad in ([], [[]], [[[1, 2, 2]]]):
+                    # 3 is a good prime of both, so the row is one of those
+                    # rendered inside the `for j, good_primes` loop
+                    L.localfactors_factored_dict[3] = bad
+                    html = lfuncEPhtml(L, 'arithmetic')
+                    # count closing tags: '<thead>' itself starts with '<th'
+                    ncols = re.search(r'<thead>.*?</thead>', html, re.S).group(0).count('</th>')
+                    rows = rows_at(html, 3)
+                    assert len(rows) == 1, (label, bad)
+                    assert 'not available' in rows[0]
+                    assert rows[0].count('</td>') == ncols, (label, bad)
+                    # the show more/less rows span the table too (their first
+                    # cell carries colspan="2")
+                    for toggle in re.findall(r'<tr class="(?:less|more) toggle[^"]*">.*?</tr>', html, re.S):
+                        assert toggle.count('</td>') + 1 == ncols, (label, bad)
+
     def test_LDirichlet(self):
         L = self.tc.get('/L/Character/Dirichlet/19/9/', follow_redirects=True)
         assert '0.4813597783' in L.get_data(as_text=True)
