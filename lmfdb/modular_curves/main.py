@@ -274,7 +274,13 @@ def modcurve_lmfdb_label(label):
     return lmfdb_label, label_type
 
 def modcurve_jump(info):
-    labels = (info["jump"]).split("*")
+    jump = info["jump"].strip()
+    # Since several modular curves can share the same Cummins-Pauli label,
+    # we redirect to the search results listing all of them when the match
+    # is not unique
+    if CP_LABEL_RE.fullmatch(jump) and db.gps_gl2zhat_fine.count({"CPlabel": jump}) > 1:
+        return redirect(url_for(".index_Q", CPlabel=jump))
+    labels = [label.strip() for label in jump.split("*")]
     lmfdb_labels = []
     for label in labels:
         lmfdb_label, label_type = modcurve_lmfdb_label(label)
@@ -303,7 +309,7 @@ def modcurve_jump(info):
         factors = sorted(sum(factors, []), key=key_for_numerically_sort)
         label = db.gps_gl2zhat_fine.lucky({'factorization': factors}, "label")
         if label is None:
-            flash_error("There is no modular curve in the database isomorphic to the fiber product %s", info["jump"])
+            flash_error("There is no modular curve in the database isomorphic to the fiber product %s", jump)
             return redirect(url_for(".index"))
         else:
             return redirect(url_for_modcurve_label(label))
