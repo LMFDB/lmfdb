@@ -29,6 +29,9 @@
       {% if elt.status == 1 %}
         (Reviewed)
       {% endif %}
+      {% if elt.ai_written %}
+        (AI-written)
+      {% endif %}
       {% if k.editing %}
         &middot; <a href="#" class="revert_button" ms_timestamp="{{elt.ms_timestamp}}">Revert</a>
       {% endif %}
