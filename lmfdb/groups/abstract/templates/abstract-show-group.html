@@ -403,6 +403,7 @@ Statistics about orders of elements in this group have not been computed.
     <div class="sub_divider">
       <button class='sub_subgroup sub_active' onclick="select_subgroup_mode('subgroup'); return false">all subgroups</button>
       <button class='sub_normal sub_inactive' onclick="select_subgroup_mode('normal'); return false">normal subgroups</button>
+      <button class='sub_maximal sub_inactive' onclick="select_subgroup_mode('maximal'); return false">maximal subgroups</button>
     </div>
     <div class="sub_divider">
       <button class='sub_ sub_active' onclick="select_subgroup_mode(''); return false">up to conjugacy</button>
@@ -412,7 +413,7 @@ Statistics about orders of elements in this group have not been computed.
 
 {# Just header information for the diagrams #}
 
-{% for sub_all in ["subgroup", "normal"] %}
+{% for sub_all in ["subgroup", "normal", "maximal"] %}
   {% for sub_aut in ["", "aut"] %}
     {% set sub_desc, sub_summary, sub_cnt = gp.get_diagram_info(sub_all, sub_aut, limit=100) %}
     <div class="{{sub_all}}_{{sub_aut}}diagram" style="display:none">
@@ -450,7 +451,7 @@ Statistics about orders of elements in this group have not been computed.
   {{ info.dojs|safe }}
 </script>
 
-{% for sub_all in ["subgroup", "normal"] %}
+{% for sub_all in ["subgroup", "normal", "maximal"] %}
   {% for sub_aut in ["", "aut"] %}
     {% set sub_profile, sub_desc, sub_summary = gp.get_profile(sub_all, sub_aut) %}
     <div class="{{sub_all}}_{{sub_aut}}profile" style="display: none">

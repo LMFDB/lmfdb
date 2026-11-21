@@ -1191,6 +1191,16 @@ def normal_autdiagram(label):
     title = f"Diagram of normal subgroups up to automorphism for group {label}"
     return _subgroup_diagram(label, title, only=("normal", "aut"), style="normal_autdiagram")
 
+@abstract_page.route("/maximal_diagram/<label>")
+def maximal_diagram(label):
+    title = f"Diagram of maximal subgroups up to conjugation for group {label}"
+    return _subgroup_diagram(label, title, only=("maximal", ""), style="maximal_diagram")
+
+@abstract_page.route("/maximal_autdiagram/<label>")
+def maximal_autdiagram(label):
+    title = f"Diagram of maximal subgroups up to automorphism for group {label}"
+    return _subgroup_diagram(label, title, only=("maximal", "aut"), style="maximal_autdiagram")
+
 def show_type(ab, nil, solv, smith, nilcls, dlen, clen):
     # arguments - ["abelian", "nilpotent", "solvable", "smith_abelian_invariants", "nilpotency_class", "derived_length", "composition_length"]
     if ab:
@@ -2188,7 +2198,28 @@ def conjugacy_class_search(info, query={}):
 def factor_latex(n):
     return "$%s$" % web_latex(factor(n), False)
 
-def diagram_js(gp, layers, display_opts, aut=False, normal=False):
+def maximal_diagram_x(nodes):
+    # The maximal subgroup diagram has the whole group on top and one node for each class
+    # of maximal subgroups below it, so the x-coordinates stored for the full subgroup
+    # lattice are not relevant.  Instead we fan the classes out from left to right in
+    # decreasing order of size, with the whole group centered above them.  They have to be
+    # spread out even when they sit at different heights, since otherwise a diagram with
+    # one class per row would look like a chain of inclusions.  Both height modes use the
+    # same coordinates, since the fan is the right shape whichever one is in force.
+    width = 10000
+    # The javascript falls back on the index of a node when no x-coordinate was computed,
+    # so we keep every coordinate we produce above the number of nodes.
+    offset = len(nodes) + 1
+    maximals = sorted((grp for grp in nodes if grp.quotient_order != 1),
+                      key=lambda grp: -grp.subgroup_order)
+    xcoords = {grp.short_label: offset + width * (i + 1) // (len(maximals) + 1)
+               for i, grp in enumerate(maximals)}
+    for grp in nodes:
+        if grp.quotient_order == 1:
+            xcoords[grp.short_label] = offset + width // 2
+    return {short_label: [x, x] for short_label, x in xcoords.items()}
+
+def diagram_js(gp, layers, display_opts, aut=False, normal=False, maximal=False):
     # Counts are not right for aut diagram if we know up to conj.
     if aut and not gp.outer_equivalence:
         autcounts = gp.aut_class_counts
@@ -2202,6 +2233,10 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
         iorder += 2
     if gp.outer_equivalence and ilayer > 3:
         ilayer -= 2
+    if maximal:
+        xcoords = maximal_diagram_x(layers[0])
+    else:
+        xcoords = {grp.short_label: [grp.diagramx[ilayer], grp.diagramx[iorder]] for grp in layers[0]}
     ll = [
         [
             grp.subgroup,
@@ -2210,8 +2245,8 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
             grp.count if (gp.outer_equivalence or not aut) else autcounts[grp.aut_label],
             grp.subgroup_order,
             gp.tex_images.get(grp.subgroup_tex, gp.tex_images["?"]),
-            grp.diagramx[ilayer],
-            grp.diagramx[iorder]
+            xcoords[grp.short_label][0],
+            xcoords[grp.short_label][1]
         ]
         for grp in layers[0]
     ]
@@ -2234,14 +2269,14 @@ def diagram_js(gp, layers, display_opts, aut=False, normal=False):
     return [ll, layers[1]], order_lookup
 
 def diagram_js_string(gp, only=None):
-    glist = [[], [], [], []]
-    order_lookup = [[], [], [], []]
+    glist = [[], [], [], [], [], []]
+    order_lookup = [[], [], [], [], [], []]
     display_opts = defaultdict(int)
     limit = (100 if only is None else 0)
-    for i, pair in enumerate([("subgroup", ""), ("subgroup", "aut"), ("normal", ""), ("normal", "aut")]):
+    for i, pair in enumerate([("subgroup", ""), ("subgroup", "aut"), ("normal", ""), ("normal", "aut"), ("maximal", ""), ("maximal", "aut")]):
         sub_all, sub_aut = pair
         if (only is None or only == pair) and gp.diagram_count(sub_all, sub_aut, limit=limit):
-            glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all == "normal"))
+            glist[i], order_lookup[i] = diagram_js(gp, gp.subgroup_lattice(sub_all, sub_aut), display_opts, aut=bool(sub_aut), normal=(sub_all == "normal"), maximal=(sub_all == "maximal"))
 
     if any(glist):
         return f'var [sdiagram,glist] = make_sdiagram("subdiagram", "{gp.label}", {glist}, {order_lookup}, {display_opts["layers"]});', display_opts
@@ -4084,7 +4119,8 @@ def sub_data(label):
     return Markup(shortsubinfo(".".join(label[:2]), ".".join(label[2:])))
 
 
-def group_data(label, ambient=None, aut=False, profiledata=None):
+def group_data(label, ambient=None, aut=False, profiledata=None, maximal="False"):
+    # maximal is "True" when the knowl comes from the maximal subgroup profile, in which case only maximal subgroups are listed
     gp = None
     quotient_tex = None
     if profiledata is None:
@@ -4142,10 +4178,11 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
         ans += f"Order: {order}<br />"
         ans += f"Exponent: {gp.exponent}<br />"
         if quotient_label == "None":
+            sub_kind = "maximal subgroups" if maximal == "True" else "subgroups"
             if aut == "True":
-                isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type: "
+                isomorphism_label = f"Representatives of classes of {sub_kind} up to automorphism with this isomorphism type: "
             else:
-                isomorphism_label = "Representatives of classes of subgroups up to conjugation with this isomorphism type: "
+                isomorphism_label = f"Representatives of classes of {sub_kind} up to conjugation with this isomorphism type: "
         else:
             if aut == "True":
                 isomorphism_label = "Representatives of classes of subgroups up to automorphism with this isomorphism type and quotient: "
@@ -4215,6 +4252,8 @@ def group_data(label, ambient=None, aut=False, profiledata=None):
                 return all(a == b for a, b in zip(profiledata, (H.subgroup, H.subgroup_hash, H.subgroup_tex, H.quotient, H.quotient_hash, H.quotient_tex)))
 
             subs = [H for H in ambient.subgroups.values() if sub_matches(H)]
+            if maximal == "True":
+                subs = [H for H in subs if H.maximal]
             if aut == "True" and not ambient.outer_equivalence:
                 # TODO: need to deal with non-canonical labels
                 subs = [H for H in subs if H.label.split(".")[-1] == "a1"]
