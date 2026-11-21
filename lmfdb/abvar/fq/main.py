@@ -7,7 +7,7 @@ from sage.databases.cremona import cremona_letter_code
 
 from lmfdb import db
 from lmfdb.utils import (
-    to_dict, flash_error, integer_options, display_knowl, coeff_to_poly,
+    to_dict, get_search_type, flash_error, integer_options, display_knowl, coeff_to_poly,
     SearchArray, TextBox, TextBoxWithSelect, SkipBox, CheckBox, CheckboxSpacer, YesNoBox,
     parse_ints, parse_string_start, parse_subset, parse_newton_polygon, parse_submultiset, parse_bool, parse_bool_unknown,
     search_wrap, count_wrap, YesNoMaybeBox, CountBox, SubsetBox, SelectBox
@@ -70,8 +70,8 @@ def download_curves(label):
 def abelian_varieties():
     info = to_dict(request.args, search_array=AbvarSearchArray())
     if request.args:
-        # hidden_search_type for prev/next buttons
-        info["search_type"] = search_type = info.get("search_type", info.get("hst", ""))
+        # hst (hidden search type) is used by prev/next buttons and old bookmarked URLs
+        info["search_type"] = search_type = get_search_type(info)
         if search_type == "Counts":
             return abelian_variety_count(info)
         elif search_type in ['List', '', 'Random']:

@@ -614,6 +614,18 @@ class LfunctionTest(LmfdbTest):
         assert '2-37-1.1-c1-0-1' in L.get_data(as_text=True)
         assert '2-37-1.1-c1-0-0' not in L.get_data(as_text=True)
 
+    def test_search_type_switching(self):
+        # The empty search_type submitted by the "List of L-functions" button
+        # must take precedence over the hst parameter recording the
+        # previously displayed view (see issue #5776)
+        L = self.tc.get('/L/rational?conductor=37&degree=2&search_type=&hst=Traces')
+        data = L.get_data(as_text=True)
+        assert 'Rational L-function search results' in data
+        assert '2-37-1.1-c1-0-0' in data
+        # without search_type, hst still determines the view (old bookmarks)
+        L = self.tc.get('/L/rational?conductor=37&degree=2&hst=Traces')
+        assert 'L-function trace search' in L.get_data(as_text=True)
+
     # ------------------------------------------------------
     # Testing units not tested above
     # ------------------------------------------------------
