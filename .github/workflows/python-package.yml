@@ -23,17 +23,21 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       # Required as the JSON input file needs to be read
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
       - name: Conditional Build Matrix
         id: set-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@main
-        with:
-          # Filtering the default input file: '.github/workflows/matrix_includes.json'
-          # using JMESPath https://jmespath.org/examples.html
-          # Scheduled and manual runs only refresh the query tape, which the
-          # proddb shards do not use.
-          filter: "[? server == 'devmirror' || ('${{ secrets.LMFDB_CI_ACCESS }}' && '${{ github.event_name }}' != 'schedule' && '${{ github.event_name }}' != 'workflow_dispatch')]"
+        # The proddb shards need LMFDB_CI_ACCESS, which forks do not have.
+        # Scheduled and manual runs only refresh the query tape, which the
+        # proddb shards do not use.
+        env:
+          ALL_SERVERS: ${{ secrets.LMFDB_CI_ACCESS != '' }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          matrix=$(jq -c --argjson all "$ALL_SERVERS" --arg event "$EVENT_NAME" \
+            '{include: map(select(($all and $event != "schedule" and $event != "workflow_dispatch") or .server == "devmirror"))}' \
+            .github/workflows/matrix_includes.json)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
 
   test:
@@ -55,7 +59,7 @@ jobs:
       matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
     name: ${{matrix.server}} ${{matrix.folders}}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
 
     - uses: conda-incubator/setup-miniconda@v4
       with:
@@ -66,11 +70,13 @@ jobs:
         auto-activate: false
         # environment-file: .environment.yml # now we install after cache
         channel-priority: strict
+        # Applies to the base configuration; .environment.yml lists its own channels.
+        conda-remove-defaults: "true"
         # IMPORTANT: use-only-tar-bz2: true needs to be set for caching to work properly!
         use-only-tar-bz2: false
 
     - name: Cache conda
-      uses: actions/cache@v3
+      uses: actions/cache@v6
       id: condacache
       env:
         # Increase this value to reset cache if .environment.yml has not changed
@@ -96,7 +102,7 @@ jobs:
         conda list
 
     - name: Cache pip
-      uses: actions/cache@v3
+      uses: actions/cache@v6
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
