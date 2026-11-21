@@ -119,15 +119,38 @@ class NumberFieldTest(LmfdbTest):
 
     def test_url_naturallabel_custom(self):
         # Test various different custom nicknames for number fields
+
+        # Rational field:
+        self.check_args('/NumberField/Q', '1.1.1.1')
+        self.check_args('/NumberField/Q(sqrt4)', '1.1.1.1')
+        self.check_args('/NumberField/Q(root(2,1))', '1.1.1.1')
+        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
+        self.check_args('/NumberField/Q(cbrt2^3)', '1.1.1.1')
+        self.check_args('/NumberField/Qcbrt-1', '1.1.1.1')
+        self.check_args('/NumberField/?jump=Q((-8)^(1/3))', '1.1.1.1')
+        self.check_args('/NumberField/Q(cbrt(-2+sqrt5)+cbrt(-2-sqrt5))', '1.1.1.1')
+
+        # Quadratic fields:
         self.check_args('/NumberField/Qi', '2.0.4.1')
+        self.check_args('/NumberField/Q(1+2i)', '2.0.4.1')
+        self.check_args('/NumberField/Q(zeta8*sqrt2)', '2.0.4.1')
+        self.check_args('/NumberField/Q(sqrt(2)*i)', '2.0.8.1')
         self.check_args('/NumberField/Qphi', '2.2.5.1')
+        self.check_args('/NumberField/Qsqrt5', '2.2.5.1')
+        self.check_args('/NumberField/Q(sqrt5)', '2.2.5.1')
+        self.check_args('/NumberField/Qsqrt8', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2+sqrt3-sqrt3)', '2.2.8.1')
+        self.check_args('/NumberField/Q(sqrt2*sqrt3)', '2.2.24.1')
+
+        # Higher degrees:
         self.check_args('/NumberField/Qcbrt2', '3.1.108.1')
+        self.check_args('/NumberField/Q(zeta3*cbrt2)', '3.1.108.1')
         self.check_args('/NumberField/Q(sqrt2+sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3)', '4.4.2304.1')
         self.check_args('/NumberField/Q(sqrt(1 + sqrt2))', '4.2.1024.1')
+        self.check_args('/NumberField/Q(root(2,5))', '5.1.50000.1')
         self.check_args('/NumberField/Q(sqrt2,sqrt3,cbrt2)', '12.4.320979616137216.3')
-        self.check_args('/NumberField/Q(sqrt2,-sqrt2)', '2.2.8.1')
-        self.check_args('/NumberField/Q(sqrt2-sqrt2)', '1.1.1.1')
 
     def test_arith_equiv(self):
         self.check_args('/NumberField/7.3.6431296.1', '7.3.6431296.2') # arith equiv field
@@ -143,6 +166,12 @@ class NumberFieldTest(LmfdbTest):
 
     def test_imaginary_quadratic_page(self):
         self.check_args('/NumberField/QuadraticImaginaryClassGroups', 'extensive computations')
+
+    def test_imaginary_quadratic_file_from_beta(self):
+        url = '/NumberField/QuadraticImaginaryClassGroups?filenamebase=cl3mod8&k=0&Fetch=fetch'
+        resp = self.tc.get(url)
+        assert resp.status_code == 301
+        assert resp.headers['Location'] == 'https://beta.lmfdb.org' + url
 
     def test_discriminants_page(self):
         self.check_args('/NumberField/Source', 'Jones-David Roberts')
@@ -248,17 +277,18 @@ class NumberFieldTest(LmfdbTest):
         assert '"[0, 1]"' not in page
         assert '"[2, 0]"' not in page
 
-    def test_high_degree_gp_galois_download(self):
+    def test_gp_galois_snippet_by_degree(self):
         # PARI's polgalois hard-errors above degree 11, and needs the optional
-        # galdata package in degrees 8 to 11, so the snippet must be guarded.
-        # The committed gp snippet logs only exercise degrees 1 and 2, i.e. the
-        # branch where polgalois is actually called.
+        # galdata package in degrees 8 to 11, so the gp snippet depends on the degree.
+        page = self.tc.get('/NumberField/2.0.11.1/download/gp').get_data(as_text=True)
+        assert any(line.strip() == 'polgalois(K.pol)' for line in page.split('\n'))
+        assert 'galdata' not in page
+        page = self.tc.get('/NumberField/8.0.1265625.1/download/gp').get_data(as_text=True)
+        assert 'polgalois(K.pol)  \\\\ requires the optional galdata package' in page
         page = self.tc.get('/NumberField/12.4.320979616137216.3/download/gp').get_data(as_text=True)
-        assert 'poldegree(K.pol) > 11' in page
-        assert 'polgalois only supports degree <= 11' in page
-        assert 'requires the optional galdata package' in page
-        # polgalois is never invoked from an unguarded line
-        assert not any(line.strip() == 'polgalois(K.pol)' for line in page.split('\n'))
+        assert '\\\\ polgalois only supports degree <= 11' in page
+        # polgalois is never actually called above degree 11
+        assert not any(line.strip().startswith('polgalois(') for line in page.split('\n'))
 
     def test_rational_field_magma_download(self):
         # Magma's NumberField collapses a degree 1 polynomial to the rationals,

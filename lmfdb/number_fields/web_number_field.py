@@ -1418,4 +1418,12 @@ class WebNumberField:
         for prop in ['field', 'class_number_formula']:
             self.code[prop]['magma'] = self.code[prop]['magma'].replace("NumberField(x)", "RationalsAsNumberField()")
 
+        # PARI's polgalois only handles degree <= 11, and needs the optional
+        # galdata package in degrees 8 to 11, so tailor the snippet to the degree
+        n = self.degree()
+        if 8 <= n <= 11:
+            self.code['galois_group']['pari'] += "  \\\\ requires the optional galdata package"
+        elif n > 11:
+            self.code['galois_group']['pari'] = "\\\\ polgalois only supports degree <= 11"
+
         self.code['show'] = {lang: '' for lang in self.code['prompt']}
