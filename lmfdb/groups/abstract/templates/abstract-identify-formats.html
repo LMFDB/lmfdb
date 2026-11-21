@@ -1,0 +1,10 @@
+<table class="ntdata">
+  <tr><th>Type</th><th>Description</th><th>Example</th></tr>
+  {% for name, blurb, example in info.formats %}
+    <tr>
+      <td>{{ name }}</td>
+      <td>{{ blurb }}</td>
+      <td><a href="{{ url_for('.identify_group_page', description=example) }}"><tt>{{ example }}</tt></a></td>
+    </tr>
+  {% endfor %}
+</table>
