@@ -1,7 +1,14 @@
 
 import json
+from contextlib import contextmanager
+from unittest.mock import patch
 
+from sage.all import line
+
+from .Lfunction import Lfunction_from_db
+from .LfunctionDatabase import get_lfunction_by_label, get_lfunction_by_Lhash
 from .LfunctionPlot import paintSvgFileAll
+from .Lfunctionutilities import z_plot_points, z_plot_range
 from lmfdb.tests import LmfdbTest
 
 
@@ -634,3 +641,128 @@ class LfunctionTest(LmfdbTest):
 
         L = self.tc.get('/L/4/851472/1.1/c1e2/0/0')
         assert 'Trivial' in L.get_data(as_text=True)
+
+
+# A made-up lfunc_plot row: Z on [-3, 4] with zeros at -2 and 1.5
+PLOT_ROW = {"zeros": [[-2.0, 1.0], [1.5, -0.8]],
+            "extrema": [[-1.0, 0.6], [2.5, -0.5]],
+            "extra_control": [[-3.0, -0.4, 0.3], [0.0, 0.4, 0.1], [4.0, 0.2, 0.9]],
+            "dual_yflip": True}
+
+
+def test_z_plot_points_interpolates_control_points():
+    points = dict(z_plot_points(PLOT_ROW, False))
+    for x, y in [(-2.0, 0.0), (-1.0, 0.6), (0.0, 0.4), (1.5, 0.0), (2.5, -0.5), (-3.0, -0.4)]:
+        assert abs(points[x] - y) < 1e-12
+    # symmetric about 0, as far as both sides have data
+    assert min(points) == -3.0 and max(points) == 3.0
+
+
+def test_z_plot_points_dual_is_reflected():
+    points = dict(z_plot_points(PLOT_ROW, False))
+    for yflip, sign in [(True, -1), (False, 1)]:
+        dual = dict(z_plot_points(dict(PLOT_ROW, dual_yflip=yflip), True))
+        for x in [-2.0, -1.0, 0.0, 1.5, 2.5]:
+            assert abs(dual[-x] - sign * points[x]) < 1e-12
+
+
+def plot_row(Lhash, dual_Lhash=None, central_value=None, **kwargs):
+    return dict(PLOT_ROW, Lhash=Lhash, dual_Lhash=dual_Lhash, central_value=central_value, **kwargs)
+
+
+# 2-808-808.541-c1-0-3, its dual 2-808-808.693-c1-0-87, and 2-14-1.1-c5-0-0 have no leading_term
+PAIR = ["31284130378032851245692502186", "2653937368805193109136294827993"]
+SELFDUAL = "2837640267450346313656783427287"
+Z0 = {PAIR[0]: 0.04894550023380473, PAIR[1]: 0.04894550023380473, SELFDUAL: 1.2985965382222935}
+CENTRAL_VALUES = {PAIR[0]: "[[1.0, '0.0148172 + 0.0466487i']]",
+                  PAIR[1]: "[[1.0, '0.0148172 - 0.0466487i']]",
+                  SELFDUAL: "[[3.0, 1.29859653822229]]"}
+
+
+class LfunctionPlotDataTest(LmfdbTest):
+    """
+    The plot and central value of an L-function, from lfunc_plot or from plot_values
+    """
+    @contextmanager
+    def plot_source(self, plot_rows=(), plot_values=None):
+        """
+        Within this context, ``plot_rows`` stand in for lfunc_plot, and ``plot_values``, a
+        dictionary from Lhash to values every 0.5, for the plot columns of lfunc_lfunctions.
+        """
+        plot_values = plot_values or {}
+
+        def replace_plot_columns(get):
+            def get_row(key, **kwargs):
+                row = dict(get(key, **kwargs))
+                row.pop("plot_values", None)
+                row.pop("plot_delta", None)
+                if row["Lhash"] in plot_values:
+                    row.update(plot_values=plot_values[row["Lhash"]], plot_delta=0.5)
+                return row
+            return get_row
+
+        def get_plot(Lhash):
+            for rec in plot_rows:
+                if Lhash in (rec["Lhash"], rec["dual_Lhash"]):
+                    return rec, rec["Lhash"] != Lhash
+            return None, False
+
+        with patch("lmfdb.lfunctions.Lfunction.get_lfunction_by_label", replace_plot_columns(get_lfunction_by_label)), \
+             patch("lmfdb.lfunctions.Lfunction.get_lfunction_by_Lhash", replace_plot_columns(get_lfunction_by_Lhash)), \
+             patch("lmfdb.lfunctions.Lfunction.get_plot_by_Lhash", get_plot):
+            yield
+
+    def values(self, Lhash, **source):
+        with self.plot_source(**source), self.app.test_request_context("/L/"):
+            return Lfunction_from_db(Lhash=Lhash).values
+
+    def plotted_range(self, url, **source):
+        with self.plot_source(**source), patch("lmfdb.lfunctions.main.line", wraps=line) as plotted:
+            assert b"PNG" in self.tc.get(url).get_data()
+        xs = [x for x, _ in plotted.call_args.args[0]]
+        return min(xs), max(xs)
+
+    def test_central_value(self):
+        # A row of lfunc_plot holds Z(0) of its own L-function, which serves the dual as well
+        selfdual_row = plot_row(SELFDUAL, None, Z0[SELFDUAL])
+        for source in [dict(plot_values={h: [z] for h, z in Z0.items()}),
+                       dict(plot_rows=[plot_row(*PAIR, Z0[PAIR[0]]), selfdual_row]),
+                       dict(plot_rows=[plot_row(*PAIR[::-1], Z0[PAIR[1]]), selfdual_row])]:
+            for h, central_value in CENTRAL_VALUES.items():
+                assert str(self.values(h, **source)) == central_value
+        for h in Z0:
+            assert self.values(h) == []
+
+    def test_central_value_prefers_leading_term(self):
+        # Dirichlet 5.2 and 5.3 have leading_term, and 2-37-1.1-c1-0-1 vanishes at the center
+        rows = [plot_row("dirichlet_L_5.2", "dirichlet_L_5.3", 1234.5),
+                plot_row("6342271471299419797033912280648", None, 1234.5)]
+        for h in ["dirichlet_L_5.2", "dirichlet_L_5.3", "6342271471299419797033912280648"]:
+            assert self.values(h, plot_rows=rows) == self.values(h)
+
+    def test_pages_from_lfunc_plot(self):
+        rows = [plot_row(*PAIR, Z0[PAIR[0]])]
+        for url in ["/L/2/808/808.541/c1/0/3", "/L/2/808/808.693/c1/0/87"]:
+            plot_url = url.replace("/L/", "/L/Plot/")
+            with self.plot_source(plot_rows=rows):
+                page = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
+                assert b"PNG" in self.tc.get(plot_url).get_data()
+            assert plot_url in page and "0.0148172" in page
+            with self.plot_source():
+                page = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
+                assert self.tc.get(plot_url).status_code == 404
+            assert "Plot not available." in page and "0.0148172" not in page
+
+    def test_nonprimitive_plot_range(self):
+        # The imprimitive 4-918e2-1.1-c2e2-0-0 lists 20 zeros, so its plot stops at
+        # 1.2 * 25/20 times the last of them, though both sources below extend to 30
+        with self.app.test_request_context("/L/"):
+            L = Lfunction_from_db(label="4-918e2-1.1-c2e2-0-0")
+        zeros = [float(z) for z in L.positive_zeros.split(",")]
+        r = z_plot_range(L)
+        assert len(zeros) == 20 and abs(r - 1.2 * zeros[-1] * 25 / 20) < 1e-9 and r < 30
+        wide = plot_row(L.Lhash, zeros=[], extrema=[[0.0, 1.0]],
+                        extra_control=[[-30.0, 0.5, 0.0], [30.0, 0.5, 0.0]])
+        for source in [dict(plot_values={L.Lhash: [1.0] * 61}), dict(plot_rows=[wide])]:
+            lo, hi = self.plotted_range("/L/Plot/4/918e2/1.1/c2e2/0/0/", **source)
+            assert abs(lo + r) < 1e-9 and r - 0.05 < hi < r + 1e-9
