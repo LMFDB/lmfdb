@@ -1559,7 +1559,7 @@ function switch_basis(btype) {
             if not coeff_entry:
                 continue
             coeff = coeff_entry[0]['coeff']
-            fourier_coefficient.append([qf,self._PrintRing(coeff)])
+            fourier_coefficient.append([qf, latex(self._elt(coeff))])
         return fourier_coefficient
 
 
