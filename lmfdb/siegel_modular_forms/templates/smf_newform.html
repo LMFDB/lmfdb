@@ -316,6 +316,7 @@ function show_qexp(qstyle) {
 
 {% if newform.has_fourier_coefficients %}
 <h2>Fourier coefficients</h2>
+<p>{{ newform.fourier_normalization() | safe }}</p>
 <div>
 <table class="ntdata">
   <thead>

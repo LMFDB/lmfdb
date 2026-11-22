@@ -328,6 +328,9 @@ class SmfTest(LmfdbTest):
             "fourier_data = [[[1, -20, 101], [20, 5, -2, -7, 5, 4, -3, 2, -2]]",
             "a(T') = (alpha delta - beta gamma)^k a(T), here with k = 3",
         ])
+        # an orbit whose Fourier coefficients cannot generate the coefficient ring
+        self.need_forms("2.K.69.3.0.a.b")
+        self.check("2/K/69/3.0/a/b/", [r"contains \(\mathcal{O}\) with index \(2\)", r"generate \(2\mathcal{O}'\)", r"1 - \beta"])
 
     def test_underlying_data(self):
         """

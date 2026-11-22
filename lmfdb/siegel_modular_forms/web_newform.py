@@ -455,10 +455,14 @@ class WebNewform():
                                'lambda_p_square_2' : 'p^2, 2'
                                }
             hecke_cols += self.hecke_types
-            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp'])
+            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp', 'qexp_prec', 'qexp_order_index', 'qexp_scale'])
             # !! TODO : change it to a field containing the entire fourier expansion !!
  
             if eigenvals:
+                # the normalization of the stored Fourier coefficients (smf_qexp_coeffs)
+                self.fourier_prec = eigenvals.get('qexp_prec')
+                self.fourier_order_index = eigenvals.get('qexp_order_index')
+                self.fourier_scale = eigenvals.get('qexp_scale')
                 if (not eigenvals.get('lambda_p_square_0')):
                     # We don't want to display empty rows in the table
                     self.hecke_types = ['lambda_p', 'lambda_p_square']
@@ -1544,6 +1548,19 @@ function switch_basis(btype) {
 
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
+
+    def fourier_normalization(self):
+        """A sentence on how the stored Fourier coefficients are normalized (see smf_hecke_nf.qexp_*)."""
+        P, idx, c = getattr(self, 'fourier_prec', None), getattr(self, 'fourier_order_index', None), getattr(self, 'fourier_scale', None)
+        if P is None:
+            return ""
+        ring = display_knowl('mf.siegel.coefficient_ring', title='coefficient ring')
+        box = r"The coefficients \(a(T)\) with \(T = [a, b, c]\), \(a + c/N \lt %s\), are stored. " % P
+        if idx == 1:
+            return box + r"They are normalized to generate the %s \(\mathcal{O}\): this determines the form up to a unit of \(\mathcal{O}\)." % ring
+        return box + (r"They cannot generate the %s \(\mathcal{O}\): the order \(\mathcal{O}' = \{x : x I \subseteq I\}\) of the module \(I\) they generate "
+                      r"contains \(\mathcal{O}\) with index \(%s\). They are normalized to generate \(%s\mathcal{O}'\), the least multiple of \(\mathcal{O}'\) "
+                      r"contained in \(\mathcal{O}\): this determines the form up to a unit of \(\mathcal{O}'\).") % (ring, idx, c)
 
     @lazy_attribute
     def has_fourier_coefficients(self):
