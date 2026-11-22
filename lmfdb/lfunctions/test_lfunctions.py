@@ -753,6 +753,18 @@ class LfunctionPlotDataTest(LmfdbTest):
                 assert self.tc.get(plot_url).status_code == 404
             assert "Plot not available." in page and "0.0148172" not in page
 
+    def test_row_with_central_value_only(self):
+        # As lfunc_plot stores L-functions of degree > 10: no plot, even where plot_values remain
+        row = plot_row(SELFDUAL, None, Z0[SELFDUAL], zeros=[], extrema=[], extra_control=[])
+        url = "/L/2/14/1.1/c5/0/0"
+        plot_url = url.replace("/L/", "/L/Plot/")
+        for source in [dict(plot_rows=[row]), dict(plot_rows=[row], plot_values={SELFDUAL: [Z0[SELFDUAL]] * 61})]:
+            assert str(self.values(SELFDUAL, **source)) == CENTRAL_VALUES[SELFDUAL]
+            with self.plot_source(**source):
+                page = self.tc.get(url, follow_redirects=True).get_data(as_text=True)
+                assert self.tc.get(plot_url).status_code == 404
+            assert plot_url not in page and "Plot not available." in page and "1.298596538" in page
+
     def test_nonprimitive_plot_range(self):
         # The imprimitive 4-918e2-1.1-c2e2-0-0 lists 20 zeros, so its plot stops at
         # 1.2 * 25/20 times the last of them, though both sources below extend to 30

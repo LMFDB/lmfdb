@@ -1455,7 +1455,8 @@ def set_zeroslink_and_plotlink(L, args):
         zeroslink = request.path.replace('/L/', '/L/Zeros/')
     else:
         zeroslink = ''
-    if getattr(L, 'plot_record', None) is not None or getattr(L, 'plotpoints', None):
+    plot_record = getattr(L, 'plot_record', None)
+    if (plot_record is not None and plot_record['extra_control']) or getattr(L, 'plotpoints', None):
         plotlink = request.path.replace('/L/', '/L/Plot/')
     else:
         plotlink = ''
@@ -1656,6 +1657,8 @@ def getLfunctionPlot(request, *args):
 
     plotrange = z_plot_range(pythonL)
     if getattr(pythonL, 'plot_record', None) is not None:
+        if not pythonL.plot_record['extra_control']:
+            return None
         F_interp = z_plot_points(pythonL.plot_record, pythonL.plot_dual, plotrange)
     elif getattr(pythonL, 'plotpoints', None):
         F = p2sage(pythonL.plotpoints)

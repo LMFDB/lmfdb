@@ -25,6 +25,7 @@ def get_plot_by_Lhash(Lhash):
     """
     The row of lfunc_plot holding the Z-function plot of this L-function, and whether the
     L-function is the row's dual, drawn reflected; or (None, False) if there is none.
+    Rows of degree > 10 hold only the central value, with no control points.
     """
     # Databases without lfunc_plot still plot from plot_values in lfunc_lfunctions
     if Lhash is None or "lfunc_plot" not in db.tablenames:
