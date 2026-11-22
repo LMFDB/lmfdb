@@ -314,6 +314,7 @@ function show_qexp(qstyle) {
 {% endif %}
 
 
+{% if newform.has_fourier_coefficients %}
 <h2>Fourier coefficients</h2>
 <div>
 <table class="ntdata">
@@ -353,5 +354,6 @@ function show_qexp(qstyle) {
   </tbody>
 </table>
 </div>
+{% endif %}
 
 {% endblock %}

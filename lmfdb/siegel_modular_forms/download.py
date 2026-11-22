@@ -143,62 +143,84 @@ class SMF_download(Downloader):
 
 
     def download_qexp(self, label, lang='sage'):
-        hecke_nf = self._get_hecke_nf(label)
-        if hecke_nf is None:
-            return abort(404, "No q-expansion found for %s" % label)
-
-        aps = hecke_nf['ap']
-        level, weight = map(int, label.split('.')[:2])
-        level_data = self.assign(lang, 'level', level)
-        weight_data = self.assign(lang, 'weight', weight)
-
-        c = self.comment_prefix[lang]
-        func_start = self.get('function_start',{}).get(lang,[])
-        func_end = self.get('function_end',{}).get(lang,[])
-
-        explain = '\n'
-        explain += c + ' We generate the q-expansion using the Hecke eigenvalues a_p at the primes.\n'
-        aps_data = self.assign(lang, 'aps_data', aps)
-        code = ''
-        hecke_ring_character_values = self.assign(lang, 'hecke_ring_character_values', hecke_nf['hecke_ring_character_values'])
-
-        if hecke_nf['hecke_ring_cyclotomic_generator'] > 0:
-            func_body =  self.get('qexp_function_body_sparse_cyclotomic',{}).get(lang,[])
-            explain += c + ' Each a_p is given as list of pairs\n'
-            explain += c + ' Each pair (c, e) corresponds to c*zeta^e\n'
-            basis_data = ''
-            poly_data =  self.assign(lang, 'poly_data', hecke_nf['hecke_ring_cyclotomic_generator'])
+        """
+        The stored Fourier coefficients of a newform (tables smf_qexp_reduction and
+        smf_qexp_coeffs), one for each class of indices, in the basis of its coefficient ring.
+        """
+        lang = self.languages['sage']
+        form = db.smf_newforms.lookup(label, ['level', 'weight', 'family', 'hecke_orbit_code'])
+        if form is None:
+            return abort(404, "Label not found: %s" % label)
+        coeffs = {(tuple(r['qf_legendre']), tuple(r['qf_tag'])): r['coeff'] for r in
+                  db.smf_qexp_coeffs.search({'hecke_orbit_code': form['hecke_orbit_code']}, ['qf_legendre', 'qf_tag', 'coeff'])}
+        if not coeffs:
+            return abort(404, "No Fourier coefficients stored for %s" % label)
+        hecke_nf = db.smf_hecke_nf.lookup(label, ['field_poly', 'hecke_ring_power_basis', 'hecke_ring_numerators', 'hecke_ring_denominators'])
+        level, k = form['level'], form['weight'][0]
+        data = []
+        for r in db.smf_qexp_reduction.search({'level': level, 'family': form['family']},
+                                              ['qf_legendre', 'qf_tag', 'qf_orbit_rep'], sort=['index']):
+            v = coeffs.get((tuple(r['qf_legendre']), tuple(r['qf_tag'])))
+            if v is not None:
+                data.append([r['qf_orbit_rep'], v])
+        poly = hecke_nf['field_poly']
+        d = len(poly) - 1
+        if hecke_nf['hecke_ring_power_basis'] or not hecke_nf.get('hecke_ring_numerators'):
+            basis = [[[0] * i + [1], 1] for i in range(d)]
         else:
-            explain += c + ' Each a_p is given as a linear combination\n'
-            explain += c + ' of the following basis for the coefficient ring.\n'
-            poly_data = '\n' + c + ' The following line gives the coefficients of\n'
-            poly_data += c + ' the defining polynomial for the coefficient field.\n'
-            poly_data =  self.assign(lang, 'poly_data', hecke_nf['field_poly'], level = 1)
-            if hecke_nf['hecke_ring_power_basis']:
-                basis_data = '\n' + c + ' The basis for the coefficient ring is just the power basis\n'
-                basis_data += c + ' in the root of the defining polynomial above.\n'
-                func_body = self.get('qexp_function_body_powbasis',{}).get(lang,[])
-            else:
-                basis_data = '\n' + c + ' The entries in the following list give a basis for the\n'
-                basis_data += c + ' coefficient ring in terms of a root of the defining polynomial above.\n'
-                basis_data += c + ' Each line consists of the coefficients of the numerator, and a denominator.\n'
-                basis_data += self.assign(lang,  'basis_data ', list(zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])))
-                basis_data += '\n'
-                func_body = self.get('qexp_function_body_generic',{}).get(lang,[])
+            basis = [[n, den] for n, den in zip(hecke_nf['hecke_ring_numerators'], hecke_nf['hecke_ring_denominators'])]
 
-        if lang in ['sage']:
-            explain += c + ' To create the q-expansion as a power series, type "qexp%smake_data()%s"\n' % (self.assignment_defn[lang], self.line_end[lang])
+        explain = rf"""
+Fourier coefficients of the paramodular newform {label} of degree 2, weight {form['weight']}
+and level N = {level}.  It is
+    f(Z) = sum_T a(T) exp(2 pi i tr(T Z)),
+over the positive definite half-integral matrices T = [[a, b/2], [b/2, c]] with N | c.
+Below, [a, b, c] stands for T, and also for the binary quadratic form a x^2 + b x y + c y^2.
 
+If T' is the form T(alpha x + beta y, gamma x + delta y), where alpha delta - beta gamma = +-1
+and N | beta, then a(T') = (alpha delta - beta gamma)^k a(T), here with k = {k}.
+fourier_data lists one [T, a(T)] for each class of T under these substitutions, for every
+class with a member [a, b, c] with a + c/N < {self._qexp_box(data, level)}; the coefficient of
+the other members follows from that rule.  (T and its image under a substitution of
+determinant -1 are in general listed separately.)
 
-        if lang in ['sage']:
-            code = '\n' + '\n'.join(func_start) + '\n'
-            code += '    ' + '\n    '.join(func_body) + '\n'
-            code += '\n'.join(func_end)
+The coefficient a(T) is a vector of coordinates in the basis basis_data of the coefficient
+ring, each basis element given as [numerator, denominator], with the numerator the list of
+coefficients of a polynomial in a root nu of the defining polynomial poly_data (constant
+term first).  The newform is normalized so that its Fourier coefficients generate the unit
+ideal of the coefficient ring, which determines it up to a unit of that ring.
 
-        return self._wrap(explain + code + level_data + weight_data + poly_data + basis_data + hecke_ring_character_values + aps_data,
+To get a dictionary from [a, b, c] to a(T), as an element of the coefficient field,
+type "F = make_data()".
+"""
+        code = """
+def make_data():
+    R = PolynomialRing(QQ, 'x')
+    poly = R(poly_data)
+    if poly.degree() == 1:
+        K, nu = QQ, -poly[0]
+    else:
+        K = NumberField(poly, 'nu')
+        nu = K.gen()
+    basis = [sum(QQ(c) * nu**i for i, c in enumerate(num)) / den for num, den in basis_data]
+    return {tuple(T): sum(c * b for c, b in zip(v, basis)) for T, v in fourier_data}
+
+"""
+        explain = "\n".join(" " + line if line else line for line in explain.split("\n"))
+        return self._wrap(lang.comment(explain) + code
+                          + lang.assign('level', level)
+                          + lang.assign('weight', form['weight'])
+                          + lang.assign('poly_data', poly)
+                          + lang.assign('basis_data', basis)
+                          + lang.assign('fourier_data', data),
                           label + '.qexp',
                           lang=lang,
-                          title='q-expansion of newform %s,'%(label))
+                          title='Fourier coefficients of newform %s,' % label)
+
+    @staticmethod
+    def _qexp_box(data, level):
+        """The least B such that the stored representatives all have a + c/N < B."""
+        return 1 + max(a + c // level for (a, b, c), _ in data)
 
     def download_traces(self, label, lang='text'):
         data = self._get_traces(label)

@@ -693,8 +693,8 @@ class WebNewform():
             label = self.label
 #            if self.hecke_cutters or self.has_exact_qexp:
 #                downloads.append(('Modular form to Magma', url_for('.download_newform_to_magma', label=label)))
-            if self.has_exact_qexp:
-                downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=label)))
+            if self.has_fourier_coefficients:
+                downloads.append(('Fourier coefficients to Sage', url_for('.download_qexp', label=label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=label)))
             #if self.has_complex_qexp:
             #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=label)))
@@ -1544,6 +1544,10 @@ function switch_basis(btype) {
 
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
+
+    @lazy_attribute
+    def has_fourier_coefficients(self):
+        return db.smf_qexp_coeffs.exists({'hecke_orbit_code': self.hecke_orbit_code})
 
     def q_exp_coefficients(self, num_disp=10):
         """

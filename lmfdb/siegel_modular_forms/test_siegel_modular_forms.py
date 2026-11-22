@@ -314,6 +314,21 @@ class SmfTest(LmfdbTest):
             '"ALdims"',
         ])
 
+    def test_fourier_coefficients(self):
+        """
+        Fourier coefficients of paramodular newforms of levels 31 (weight 4) and 101 (weight 3,
+        dimension 9), on the newform page and in the Sage download
+        """
+        self.need_forms("2.K.101.3.0.a.b")
+        if not db.smf_qexp_coeffs.exists({"hecke_orbit_code": db.smf_newforms.lookup("2.K.101.3.0.a.b", "hecke_orbit_code")}):
+            self.skipTest("Fourier coefficients of 2.K.101.3.0.a.b not loaded on devmirror")
+        self.check("2/K/31/4.0/a/a/", ["Fourier coefficients", "[1, -11, 31]", "Fourier coefficients to Sage"])
+        self.check("2/K/101/3.0/a/b/", r"20 + 5 \beta_{1} - 2 \beta_{2} - 7 \beta_{3}")
+        self.check("download_qexp/2.K.101.3.0.a.b", [
+            "fourier_data = [[[1, -20, 101], [20, 5, -2, -7, 5, 4, -3, 2, -2]]",
+            "a(T') = (alpha delta - beta gamma)^k a(T), here with k = 3",
+        ])
+
     def test_underlying_data(self):
         """
         Test the underlying data pages
