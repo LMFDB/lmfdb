@@ -17,14 +17,11 @@
 
   {% if info.rank==1 %}
   Its generator is {{info.gen | safe}}.
-  {%else%}
-  {% if info.missing_generator %} One generator is  {{info.gen | safe}}; the other is not yet computed.
-  {%else%}
+  {% else %}
   Its generators are:
   <table>
     {% for pt in info.gens %} <tr><td> {{pt | safe}} </tr> {% endfor %}
   </table>
-  {% endif %}
   {% endif %}
 </p>
 
