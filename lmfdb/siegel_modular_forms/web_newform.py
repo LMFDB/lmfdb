@@ -8,7 +8,7 @@ from flask import url_for
 from functools import reduce
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute, Matrix, NumberField)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -455,14 +455,15 @@ class WebNewform():
                                'lambda_p_square_2' : 'p^2, 2'
                                }
             hecke_cols += self.hecke_types
-            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp', 'qexp_prec', 'qexp_order_index', 'qexp_scale'])
+            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp', 'qexp_prec', 'qexp_order_index', 'qexp_order_numerators', 'qexp_order_denominators', 'qexp_ideal_index'])
             # !! TODO : change it to a field containing the entire fourier expansion !!
  
             if eigenvals:
                 # the normalization of the stored Fourier coefficients (smf_qexp_coeffs)
                 self.fourier_prec = eigenvals.get('qexp_prec')
                 self.fourier_order_index = eigenvals.get('qexp_order_index')
-                self.fourier_scale = eigenvals.get('qexp_scale')
+                self.fourier_order = list(zip(eigenvals.get('qexp_order_numerators') or [], eigenvals.get('qexp_order_denominators') or []))
+                self.fourier_ideal_index = eigenvals.get('qexp_ideal_index')
                 if (not eigenvals.get('lambda_p_square_0')):
                     # We don't want to display empty rows in the table
                     self.hecke_types = ['lambda_p', 'lambda_p_square']
@@ -1551,16 +1552,66 @@ function switch_basis(btype) {
 
     def fourier_normalization(self):
         """A sentence on how the stored Fourier coefficients are normalized (see smf_hecke_nf.qexp_*)."""
-        P, idx, c = getattr(self, 'fourier_prec', None), getattr(self, 'fourier_order_index', None), getattr(self, 'fourier_scale', None)
+        P = getattr(self, 'fourier_prec', None)
         if P is None:
             return ""
+        idx = getattr(self, 'fourier_order_index', None) or 1
+        jdx = getattr(self, 'fourier_ideal_index', None) or 1
         ring = display_knowl('mf.siegel.coefficient_ring', title='coefficient ring')
-        box = r"The coefficients \(a(T)\) with \(T = [a, b, c]\), \(a + c/N \lt %s\), are stored. " % P
+        s = r"The coefficients \(a(T)\) with \(T = [a, b, c]\), \(a + c/N \lt %s\), are stored. " % P
         if idx == 1:
-            return box + r"They are normalized to generate the %s \(\mathcal{O}\): this determines the form up to a unit of \(\mathcal{O}\)." % ring
-        return box + (r"They cannot generate the %s \(\mathcal{O}\): the order \(\mathcal{O}' = \{x : x I \subseteq I\}\) of the module \(I\) they generate "
-                      r"contains \(\mathcal{O}\) with index \(%s\). They are normalized to generate \(%s\mathcal{O}'\), the least multiple of \(\mathcal{O}'\) "
-                      r"contained in \(\mathcal{O}\): this determines the form up to a unit of \(\mathcal{O}'\).") % (ring, idx, c)
+            o = r"the %s \(\mathcal{O}\)" % ring
+            O = r"\mathcal{O}"
+        else:
+            s += (r"They generate a module \(I\) over the %s \(\mathcal{O}\), whose order \(\mathcal{O}' = \{x : x I \subseteq I\}\) "
+                  r"contains \(\mathcal{O}\) with index \(%s\); they are written in the basis \(1, %s\) of \(\mathcal{O}'\) below. ") % (ring, idx, self._fourier_gamma_names())
+            o = r"\(\mathcal{O}'\)"
+            O = r"\mathcal{O}'"
+        if jdx == 1:
+            return s + r"They are normalized to generate %s: this determines the form up to a unit of \(%s\)." % (o, O)
+        return s + (r"No multiple of the form has coefficients generating %s, as \(I\) is not a principal ideal of \(%s\). "
+                    r"They are normalized to generate an integral ideal \(J\) of \(%s\) of least index \([%s : J] = %s\) among the multiples \(cI\) "
+                    r"(the least in Hermite normal form if there are several; \(J\) is in the download): this determines the form up to a unit of \(%s\).") % (o, O, O, O, jdx, O)
+
+    def _fourier_gamma_names(self):
+        d = len(self.fourier_order)
+        if d == 2:
+            return r"\gamma"
+        if d <= 4:
+            return ", ".join(r"\gamma_{%s}" % i for i in range(1, d))
+        return r"\gamma_1, \ldots, \gamma_{%s}" % (d - 1)
+
+    @lazy_attribute
+    def _fourier_ring(self):
+        """(polynomial ring for printing, its generators 1, gamma_1, ...) for the basis of the
+        stored Fourier coefficients: that of the coefficient ring unless O' is larger."""
+        if (getattr(self, 'fourier_order_index', None) or 1) == 1:
+            return None
+        d = len(self.fourier_order)
+        R = PolynomialRing(QQ, ['gamma', 'dummy'] if d == 2 else ['gamma%s' % i for i in range(1, d)], order='negdeglex')
+        return R, [1] + list(R.gens()[:d - 1])
+
+    def _fourier_elt(self, coeff):
+        if self._fourier_ring is None:
+            return self._elt(coeff)
+        return sum(c * g for c, g in zip(coeff, self._fourier_ring[1]))
+
+    def fourier_order_basis(self):
+        """A table giving the basis 1, gamma_1, ... of O' in terms of the basis of the coefficient ring."""
+        if self._fourier_ring is None:
+            return ""
+        F = self.hecke_ring_numerators and len(self.hecke_ring_numerators) > 1
+        R = PolynomialRing(QQ, 'x')
+        K = NumberField(R(self.field_poly), 'nu')
+        to_K = lambda num, den: sum(QQ(c) * K.gen()**i for i, c in enumerate(num)) / den
+        B = Matrix(QQ, [list(to_K(n, d)) for n, d in zip(self.hecke_ring_numerators, self.hecke_ring_denominators)]) if F else None
+        rows = []
+        names = [g for g in self._fourier_ring[1][1:]]
+        for g, (num, den) in zip(names, self.fourier_order[1:]):
+            y = to_K(num, den)
+            c = vector(QQ, list(y)) * B.inverse() if B is not None else vector(QQ, list(y))
+            rows.append((r"\(%s\)" % latex(g), r"\(%s\)" % latex(self._elt(list(c)))))
+        return self._make_table(rows)
 
     @lazy_attribute
     def has_fourier_coefficients(self):
@@ -1580,7 +1631,7 @@ function switch_basis(btype) {
             if not coeff_entry:
                 continue
             coeff = coeff_entry[0]['coeff']
-            fourier_coefficient.append([qf, latex(self._elt(coeff))])
+            fourier_coefficient.append([qf, latex(self._fourier_elt(coeff))])
         return fourier_coefficient
 
 

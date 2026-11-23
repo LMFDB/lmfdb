@@ -328,9 +328,14 @@ class SmfTest(LmfdbTest):
             "fourier_data = [[[1, -20, 101], [20, 5, -2, -7, 5, 4, -3, 2, -2]]",
             "a(T') = (alpha delta - beta gamma)^k a(T), here with k = 3",
         ])
-        # an orbit whose Fourier coefficients cannot generate the coefficient ring
+        # an orbit whose Fourier coefficients cannot generate the coefficient ring: they are
+        # written in the basis 1, gamma of the larger order O'
         self.need_forms("2.K.69.3.0.a.b")
-        self.check("2/K/69/3.0/a/b/", [r"contains \(\mathcal{O}\) with index \(2\)", r"generate \(2\mathcal{O}'\)", r"1 - \beta"])
+        self.check("2/K/69/3.0/a/b/", [r"contains \(\mathcal{O}\) with index \(2\)", r"\frac{1}{2} + \frac{1}{2} \beta", r"1 - \gamma"])
+        # an orbit whose Fourier coefficients generate a non-principal ideal of O'
+        self.need_forms("2.K.109.3.0.a.b")
+        self.check("2/K/109/3.0/a/b/", [r"not a principal ideal", r"\([\mathcal{O}' : J] = 8\)"])
+        self.check("download_qexp/2.K.109.3.0.a.b", ["least index [O' : J] = 8", "ideal_data = "])
 
     def test_underlying_data(self):
         """
