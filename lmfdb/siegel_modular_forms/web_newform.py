@@ -676,7 +676,7 @@ class WebNewform():
         # finally L-functions
         if self.weight[0] <= 200:
             if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
-                res.append(('L-function ' + self.label, '/L' + nf_url))
+                res.append(('L-function ' + self.label, '/L' + nf_url + '/'))
 #            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
 #                res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
@@ -690,6 +690,40 @@ class WebNewform():
 
         return res
 
+
+    @lazy_attribute
+    def saito_kurokawa_factorization(self):
+        """
+        For a Saito-Kurokawa lift F of a classical newform f, return HTML
+        stating L(F, s) = L(f, s) zeta(s - k + 2) zeta(s - k + 1) (arithmetic
+        normalization), with links to f and to the L-functions; otherwise None.
+        """
+        if self.aut_rep_type != 'P' or self.degree != 2 or list(self.weight)[1:] != [0]:
+            return None
+        k = self.weight[0]
+        cmf_base = 'ModularForm/GL2/Q/holomorphic/'
+        # the classical newform has weight 2k-2: ModularForm/GL2/Q/holomorphic/N/2k-2/a/x
+        lifted = [url for url in (self.related_objects or [])
+                  if url.startswith(cmf_base) and len(url.split('/')) == 8
+                  and url.split('/')[5] == str(2*k - 2)]
+        if len(lifted) != 1:
+            return None
+        f_url = lifted[0]
+        f_label = '.'.join(f_url.split('/')[4:])
+        f_link = '<a href="/%s/">%s</a>' % (f_url, f_label)
+        Lf = r'\(L(f,s)\)'
+        if db.lfunc_instances.exists({'url': f_url}):
+            Lf = '<a href="/L/%s/">%s</a>' % (f_url, Lf)
+        zeta = r'<a href="%s">\(\zeta(s)\)</a>' % url_for('l_functions.l_function_riemann_page')
+
+        def shift(a):
+            return 's' if a == 0 else 's-%s' % a
+        formula = r'L(F,s) = L(f,s)\,\zeta(%s)\,\zeta(%s)' % (shift(k - 2), shift(k - 1))
+        return (r'<p>This form \(F\) is the %s of the classical newform \(f\) = %s, '
+                r'so its spinor \(L\)-function factors (in the arithmetic normalization) as '
+                r'\[%s,\] where %s is the \(L\)-function of \(f\) and %s is the Riemann zeta function.</p>'
+                % (display_knowl('mf.siegel.lift.saito_kurokawa', 'Saito-Kurokawa lift'), f_link,
+                   formula, Lf, zeta))
 
     @property
     def downloads(self):

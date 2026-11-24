@@ -578,3 +578,48 @@ class SmfTest(LmfdbTest):
         self.check("2/K/992/3.0/a/t/", r"\Z[\lambda_1, \ldots, \lambda_{9}]")
         data = self.check("2/K/992/3.0/a/t/", "Coefficient ring")
         assert r"\Z[a_1" not in data
+
+    def test_saito_kurokawa_lfunction(self):
+        r"""
+        A Saito-Kurokawa lift F of weight k of a classical newform f (of
+        weight 2k-2) has no L-function row of its own; its page states
+        L(F,s) = L(f,s) zeta(s-k+2) zeta(s-k+1) and links to L(f,s) and zeta.
+        2.K.13.3.0.a.a lifts 13.4.a.a, and 2.S.1.18.0.a.c lifts 1.34.a.a.
+        """
+        self.need_forms("2.K.13.3.0.a.a")
+        self.check("2/K/13/3.0/a/a/", [
+            "Saito-Kurokawa lift",
+            '<a href="/ModularForm/GL2/Q/holomorphic/13/4/a/a/">13.4.a.a</a>',
+            r"L(F,s) = L(f,s)\,\zeta(s-1)\,\zeta(s-2)",
+            '<a href="/L/Riemann/">',
+        ])
+        if db.lfunc_instances.exists({'url': 'ModularForm/GL2/Q/holomorphic/13/4/a/a'}):
+            self.check("2/K/13/3.0/a/a/", '<a href="/L/ModularForm/GL2/Q/holomorphic/13/4/a/a/">')
+        self.need_forms("2.S.1.18.0.a.c")
+        self.check("2/S/1/18.0/a/c/", [
+            '<a href="/ModularForm/GL2/Q/holomorphic/1/34/a/a/">1.34.a.a</a>',
+            r"L(F,s) = L(f,s)\,\zeta(s-16)\,\zeta(s-17)",
+        ])
+        # a form of general type gets no such factorization
+        self.need_forms("2.K.277.3.0.a.a")
+        data = self.check("2/K/277/3.0/a/a/", "General type (G)")
+        assert "spinor \\(L\\)-function factors" not in data
+
+    def test_lfunction_link(self):
+        """
+        A newform with a row in lfunc_instances links to its L-function,
+        and the L-function page names the Siegel modular form as its origin.
+        Skipped until the SMF L-functions are loaded.
+        """
+        inst = db.lfunc_instances.lucky({'type': 'SMF'}, ['url', 'label'])
+        if inst is None:
+            self.skipTest("no SMF rows in lfunc_instances")
+        url, label = inst['url'], inst['label']
+        smf_label = '.'.join(url.split('/')[3:])
+        self.check(url[len('ModularForm/GSp/Q/'):] + '/', [
+            'L-function ',
+            'href="/L/%s/"' % url,
+        ])
+        page = self.tc.get('/L/%s/' % url, follow_redirects=True).get_data(as_text=True)
+        assert label in page
+        assert 'Siegel modular form ' + smf_label in page

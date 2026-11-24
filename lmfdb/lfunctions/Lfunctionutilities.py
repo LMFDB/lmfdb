@@ -4,9 +4,9 @@ import re
 
 from flask import url_for
 from sage.all import (
-    ZZ, QQ, RR, CC, Rational, RationalField, ComplexField, PolynomialRing,
-    PowerSeriesRing, Integer, primes, CDF, I, real_part, imag_part,
-    latex, factor, exp, pi, prod, floor, is_prime, prime_range)
+    ZZ, RR, CC, Rational, RationalField, PolynomialRing,
+    Integer, CDF, I, real_part, imag_part,
+    latex, exp, pi, prod, is_prime, prime_range)
 
 from lmfdb.utils import (
     display_complex, list_to_factored_poly_otherorder, make_bigint,
@@ -781,87 +781,6 @@ def specialValueTriple(L, s, sLatex_analytic, sLatex_arithmetic):
 
 def scientific_notation_helper(lval_string):
     return re.sub(r"[Ee](-?\d+)", r"\\times10^{\1}", lval_string)
-
-
-###############################################################
-# Functions for Siegel Dirichlet series
-###############################################################
-NN = 500
-CF = ComplexField(NN)
-
-
-def compute_dirichlet_series(p_list, PREC):
-    ''' computes the Dirichlet series for a Lfunction_SMF2_scalar_valued
-    '''
-    # p_list is a list of pairs (p,y) where p is a prime and y is the list of roots of the Euler factor at x
-    LL = [0] * PREC
-    # create an empty list of the right size and now populate it with the powers of p
-    for p, y in p_list:
-        # FIXME p_prec is never used, but perhaps it should be?
-        # p_prec = log(PREC) / log(p) + 1
-        ep = euler_p_factor(y, PREC)
-        for n in range(ep.prec()):
-            if p ** n < PREC:
-                LL[p ** n] = ep.coefficients()[n]
-    for i in range(1, PREC):
-        f = factor(i)
-        if len(f) > 1:  # not a prime power
-            LL[i] = prod([LL[p ** e] for p, e in f])
-    return LL[1:]
-
-
-def euler_p_factor(root_list, PREC):
-    ''' computes the coefficients of the pth Euler factor expanded
-      as a geometric series.
-      ax^n is the Dirichlet series coefficient p^(-ns)
-    '''
-    PREC = floor(PREC)
-    # return Satake_list
-    R = PowerSeriesRing(CF, 'x', default_prec=PREC + 1)
-    # TODO: This could use the lazy power series ring.
-    x = R.gen()
-    return ~R.prod([1 - a * x for a in root_list])
-
-
-def compute_local_roots_SMF2_scalar_valued(K, ev, k, embedding):
-    ''' computes the Dirichlet series for a Lfunction_SMF2_scalar_valued
-    '''
-    L = ev.keys()
-    m = ZZ(max(L)).isqrt() + 1
-    ev2 = {}
-    for p in primes(m):
-        try:
-            ev2[p] = (ev[p], ev[p * p])
-        except KeyError:
-            break
-
-    logger.debug(str(ev2))
-    ret = []
-    for p, (cp, cp2) in ev2.items():
-        R = PolynomialRing(K, 'x')
-        x = R.gen()
-        f = (1 - cp * x + (cp**2 - cp2 - p**(2 * k - 4)) * x**2
-             - cp * p**(2 * k - 3) * x**3 + p**(4 * k - 6) * x**4)
-
-        Rnum = PolynomialRing(CF, 'y')
-        x = Rnum.gen()
-        fnum = Rnum.zero()
-        if K != QQ:
-            for i in range(int(f.degree()) + 1):
-                fnum += f[i].complex_embeddings(NN)[embedding] * (x / p**(k - 1.5)) ** i
-        else:
-            for i in range(int(f.degree()) + 1):
-                fnum += f[i] * (x / CF(p**(k - 1.5)))**i
-
-        r = fnum.roots(CF)
-        r = [1 / a[0] for a in r]
-        # a1 = r[1][0]/r[0][0]
-        # a2 = r[2][0]/r[0][0]
-        # a0 = 1/r[3][0]
-
-        ret.append((p, r))
-
-    return ret
 
 
 ###############################################################

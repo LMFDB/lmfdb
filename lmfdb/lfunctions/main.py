@@ -28,7 +28,6 @@ from .Lfunction import (
     # on the fly L-functions
     Lfunction_HMF, ArtinLfunction,
     Lfunction_Maass, 
-    # Lfunction_SMF2_scalar_valued,
     DedekindZeta,
     SymmetricPowerLfunction, HypergeometricMotiveLfunction,
 )
@@ -291,17 +290,17 @@ def common_parse(info, query):
     parse_primes(info,query,'bad_primes',name="Primes dividing conductor", mode=info.get("prime_quantifier"), radical="conductor_radical")
     parse_spectral(info,query,'spectral_label')
     parse_element_of(info,query,'origin',qfield='instance_types',parse_singleton=lambda x:x)
-    if 'instance_types' in query:
-        for s in query['instance_types']['$contains']:
-            if s in ['DIR', 'Artin', 'ECQ', 'ECNF', 'G2Q', 'CMF', 'HMF', 'BMF', 'MaassGL3', 'MaassGL4', 'MaassGSp4', 'NF']:
-                query['is_instance_' + s] = 'true'
-        del query['instance_types']
     parse_not_element_of(info,query,'origin_exclude',qfield='instance_types',parse_singleton=lambda x:x)
     if 'instance_types' in query:
-        for s in query['instance_types']['$notcontains']:
-            if s in ['DIR', 'Artin', 'ECQ', 'ECNF', 'G2Q', 'CMF', 'HMF', 'BMF', 'MaassGL3', 'MaassGL4', 'MaassGSp4', 'NF']:
-                query['is_instance_' + s] = 'false'
-        del query['instance_types']
+        # Use the boolean column is_instance_<type> when lfunc_search has one,
+        # and otherwise fall back to the array column instance_types.
+        types_query = query.pop('instance_types')
+        for op, value in [('$contains', 'true'), ('$notcontains', 'false')]:
+            for s in types_query.get(op, []):
+                if 'is_instance_' + s in db.lfunc_search.search_cols:
+                    query['is_instance_' + s] = value
+                else:
+                    query.setdefault('instance_types', {}).setdefault(op, []).append(s)
     info['analytic_conductor'] = parse_floats(info,query,'analytic_conductor')
     info['root_analytic_conductor'] = parse_floats(info,query,'root_analytic_conductor')
     info['bigint_knowl'] = bigint_knowl
@@ -578,7 +577,8 @@ class LFunctionSearchArray(SearchArray):
                         #('MaassGL2', 'GL2 Maass form'), # We seem to have no examples of this
                         ('MaassGL3', 'GL3 Maass form'),
                         ('MaassGL4', 'GL4 Maass form'),
-                        ('MaassGSp4', 'GSp4 Maass form')]
+                        ('MaassGSp4', 'GSp4 Maass form'),
+                        ('SMF', 'Siegel modular form')]
         origin = SelectBox(
             name="origin",
             knowl="lfunction.underlying_object",
@@ -1112,14 +1112,12 @@ def l_function_maass_gln_page(group, level, char, R, ap_id):
 
 
 # L-function of Siegel modular form    #########################################
-@l_function_page.route("/ModularForm/GSp/Q/Sp4Z/specimen/<weight>/<orbit>/<number>/")
-def l_function_siegel_specimen_page(weight, orbit, number):
-    return redirect(url_for('.l_function_siegel_page', weight=weight, orbit=orbit, number=number),301)
-
-# @l_function_page.route("/ModularForm/GSp/Q/Sp4Z/<weight>/<orbit>/<number>/")
-# def l_function_siegel_page(weight, orbit, number):
-#     args = {'weight': weight, 'orbit': orbit, 'number': number}
-#     return render_single_Lfunction(Lfunction_SMF2_scalar_valued, args, request)
+@l_function_page.route("/ModularForm/GSp/Q/<int:degree>/<family>/<int:level>/<weight>/<char_orbit_label>/<hecke_orbit>/")
+@label_redirect_wrapper
+def l_function_smf_page(degree, family, level, weight, char_orbit_label, hecke_orbit):
+    # if it passed the label_redirect_wrapper, then the url is not in the database
+    label = '.'.join(map(str, [degree, family, level, weight, char_orbit_label, hecke_orbit]))
+    return abort(404, "L-function for Siegel modular form %s not found" % label)
 
 
 # L-function of Number field    ################################################
@@ -1362,17 +1360,6 @@ def set_bread_and_friends(info, L, request):
         else:
             info['bread'] = [('L-functions', url_for('.index'))]
 
-    elif (L.Ltype() == 'siegelnonlift' or L.Ltype() == 'siegeleisenstein'
-          or L.Ltype() == 'siegelklingeneisenstein' or L.Ltype() == 'siegelmaasslift'):
-        weight = str(L.weight)
-        label = 'Sp4Z.' + weight + '_' + L.orbit
-        friendlink = '/'.join(friendlink.split('/')[:-3]) + '.' + weight + '_' + L.orbit
-        info['friends'] = [('Siegel modular form ' + label, friendlink)]
-        if L.degree == 4:
-            info['bread'] = get_bread([(label, request.path)])
-        else:
-            info['bread'] = [('L-functions', url_for('.index'))]
-
     elif L.Ltype() == 'dedekindzeta':
         info['friends'] = [('Number field', friendlink)]
         if L.degree <= 4:
@@ -1525,10 +1512,6 @@ def generateLfunctionFromUrl(*args, **kwds):
     elif args[0] == 'ModularForm' and (args[1] == 'GSp4' or args[1] == 'GL4' or args[1] == 'GL3') and args[2] == 'Q' and args[3] == 'Maass':
         return Lfunction_Maass(fromDB=True, group=args[1], level=args[4],
                                char=args[5], R=args[6], ap_id=args[7])
-
-    # Siegel modular form L-functions are disabled pending the SMF rewrite
-    # elif args[0] == 'ModularForm' and args[1] == 'GSp' and args[2] == 'Q' and args[3] == 'Sp4Z':
-    #     return Lfunction_SMF2_scalar_valued(weight=args[4], orbit=args[5], number=args[6])
 
     elif args[0] == 'NumberField':
         return DedekindZeta(label=str(args[1]))

@@ -250,6 +250,10 @@ function show_qexp(qstyle) {
 {% endif %}
 {% endif %}
 
+{% if newform.saito_kurokawa_factorization %}
+{{ newform.saito_kurokawa_factorization | safe }}
+{% endif %}
+
 {% if newform.has_exact_lfunc %}
 <h2>Hecke eigenvalues</h2>
 <div class="table-scroll-wrapper">
