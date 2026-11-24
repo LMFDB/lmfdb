@@ -13,6 +13,25 @@ from flask import url_for
 
 import re
 
+# Two columns not yet in the database (see the description of the PR adding them):
+# smf_newforms.multiplicity, the multiplicity of the form in its space, and
+# smf_newspaces.dims_proved, False when the dimensions of the space are only
+# conjectural.  Until they exist every form has multiplicity 1 and every
+# dimension is proved, and the pages are as before.
+HAS_MULTIPLICITY = 'multiplicity' in db.smf_newforms.search_cols
+HAS_DIMS_PROVED = 'dims_proved' in db.smf_newspaces.search_cols
+
+
+def conjectural_mark():
+    return display_knowl('mf.siegel.conjectural_dimension', title=r'\(^*\)')
+
+
+def display_dim(dim, dims_proved=True):
+    """A dimension, marked when it is conjectural (NULL counts as proved)."""
+    if dim is None:
+        return ''
+    return r'\(%s\)' % dim + ('' if dims_proved is not False else conjectural_mark())
+
 NEWLABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+$")
 OLDLABEL_RE = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
 GAMMA1_RE = re.compile(r"^([0-9]+)\.([0-9]+)$")
@@ -227,7 +246,8 @@ class DimGrid():
             for X in ['M','S','E']:
                 grid[X] = {}
                 for typ in ['all','new','old']:
-                    grid[X][typ] = self._grid[X][typ] + other._grid[X][typ]
+                    a, b = self._grid[X][typ], other._grid[X][typ]
+                    grid[X][typ] = '?' if '?' in (a, b) else a + b
             return DimGrid(grid)
         else:
             raise TypeError
@@ -238,7 +258,8 @@ class DimGrid():
             for X in ['M','S','E']:
                 grid[X] = {}
                 for typ in ['all','new','old']:
-                    grid[X][typ] = other * self._grid[X][typ]
+                    a = self._grid[X][typ]
+                    grid[X][typ] = '?' if a == '?' else other * a
             return DimGrid(grid)
         else:
             raise TypeError
@@ -275,7 +296,11 @@ class DimGrid():
                'G' : 'cusp_G'
                }
         
-        grid = { subsp : { sub : data.get(prefix[sub] + col[subsp] + '_dim', '?')
+        # '?' for a dimension that is not known (NULL), as for one that is not stored
+        def dim(c):
+            d = data.get(c)
+            return '?' if d is None else d
+        grid = { subsp : { sub : dim(prefix[sub] + col[subsp] + '_dim')
                            for sub in prefix.keys()} for subsp in col.keys()}
        
         return DimGrid(grid)
@@ -289,12 +314,14 @@ class WebNewformSpace():
 #        self.has_projective_image_types = all(typ+'_dim' in data for typ in ('dihedral','a4','s4','a5'))
         # The following can be removed once we change the behavior of lucky to include Nones
         self.num_forms = data.get('num_forms')
+        self.dims_proved = data.get('dims_proved') is not False
 #        self.trace_bound = data.get('trace_bound')
         self.has_trace_form = (data.get('traces') is not None)
 #        self.char_conrey = self.conrey_indexes[0]
 #        self.char_conrey_str = r'\chi_{%s}(%s,\cdot)' % (self.level, self.char_conrey)
         self.newforms = list(db.smf_newforms.search({'space_label':self.label}, projection=2))
-        self.newforms = sorted(self.newforms, key=lambda f : (aut_rep_type_sort_key(f['aut_rep_type']), f['dim']))
+        # in label order: the labels already follow the order of the types, then (dim, traces)
+        self.newforms = sorted(self.newforms, key=lambda f : f['hecke_orbit'])
 #        oldspaces = db.mf_subspaces.search({'label':self.label, 'sub_level':{'$ne':self.level}}, ['sub_level', 'sub_char_orbit_index', 'sub_conrey_indexes', 'sub_mult'])
 #        self.oldspaces = [(old['sub_level'], old['sub_char_orbit_index'], old['sub_conrey_indexes'][0], old['sub_mult']) for old in oldspaces]
         self.dim_grid = DimGrid.from_db(data)
@@ -319,7 +346,7 @@ class WebNewformSpace():
             ('Character orbit', '%s.%s' % (self.level, self.char_orbit_label)),
 #            ('Rep. character', '$%s$' % self.char_conrey_str),
             ('Character field',r'$\Q%s$' % ('' if self.char_degree==1 else r'(\zeta_{%s})' % self.char_order)),
-            ('Dimension', prop_int_pretty(self.cusp_dim)),
+            ('Dimension', prop_int_pretty(self.cusp_dim) + ('' if self.dims_proved else conjectural_mark())),
         ]
         if self.num_forms is not None:
             self.properties.append(('Newform subspaces', prop_int_pretty(self.num_forms)))

@@ -33,7 +33,7 @@ from lmfdb.siegel_modular_forms.web_space import (
     aut_rep_type_sort_key, family_str_to_char, family_char_to_str,
     WebNewformSpace, WebGamma1Space, DimGrid, convert_spacelabel_from_conrey,
     get_bread, get_search_bread, get_dim_bread, newform_search_link,
-    ALdim_table, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
+    ALdim_table, HAS_MULTIPLICITY, HAS_DIMS_PROVED, conjectural_mark, display_dim, NEWLABEL_RE as NEWSPACE_RE, OLDLABEL_RE as OLD_SPACE_LABEL_RE)
 from lmfdb.siegel_modular_forms.download import SMF_download
 
 INT_RE = re.compile("^[0-9]*$")
@@ -111,29 +111,59 @@ def display_Fricke(info):
     return any(mf['char_order'] == 1 for mf in info["results"])
 
 # For spaces
-def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims):
-    # input: ['level', 'weight', 'char_orbit_label', 'hecke_orbit_dims']
-    if hecke_orbit_dims is None: # shouldn't happen
-        return 'unknown'
-    dim_dict = defaultdict(int)
+def decomp_postprocess(res, info, query):
+    """
+    The Galois orbits of cusp forms stored in each space of the results, as
+    hecke_orbit_dims: a list of (dim, multiplicity, label).  smf_newspaces has
+    no such column, and the forms stored in a space need not fill it.
+    """
+    if not res:
+        return res
+    proj = ['space_label', 'dim', 'label'] + (['multiplicity'] if HAS_MULTIPLICITY else [])
+    orbits = defaultdict(list)
+    for f in db.smf_newforms.search({'space_label': {'$in': [r['label'] for r in res]}, 'is_cuspidal': True}, proj):
+        orbits[f['space_label']].append((f['dim'], f.get('multiplicity') or 1, f['label']))
+    for r in res:
+        r['hecke_orbit_dims'] = orbits.get(r['label'], [])
+    return res
+
+def display_decomp(level, weight, char_orbit_label, hecke_orbit_dims, new_cusp_dim, space_label=None):
+    # hecke_orbit_dims: the (dim, multiplicity, label) of the stored orbits of
+    # cusp forms (decomp_postprocess); the label may be missing.  A single
+    # orbit links to its page, several of the same dimension and multiplicity
+    # to a search for exactly those forms of the space.
+    if not hecke_orbit_dims and not new_cusp_dim:
+        return ''
+    groups = defaultdict(list)
+    for orbit in hecke_orbit_dims:
+        groups[tuple(orbit[:2])].append(orbit[2] if len(orbit) > 2 else None)
     terms = []
-    for dim in hecke_orbit_dims:
-        dim_dict[dim] += 1
-    for dim in sorted(dim_dict.keys()):
-        count = dim_dict[dim]
-        query = {'weight':weight,
-                 'char_label':'%s.%s'%(level,char_orbit_label),
-                 'cusp_dim':dim}
+    for dim, mult in sorted(groups):
+        labels = groups[(dim, mult)]
+        count = len(labels)
+        term = r'%s' % dim if mult == 1 else r'%s\times%s' % (dim, mult)
         if count > 3:
-            short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(dim)
+            short = r'\({0}\)+\(\cdots\)+\({0}\)'.format(term)
             title = '%s newforms' % count
         else:
-            short = '+'.join([r'\(%s\)'%dim]*count)
-            title=None
-        if count == 1:
-            query['jump'] = 'yes'
-        link = newform_search_link(short, title=title, **query)
-        terms.append(link)
+            short = '+'.join([r'\(%s\)'%term]*count)
+            title = None
+        if count == 1 and labels[0]:
+            terms.append("<a href='%s'>%s</a>" % (url_for_label(labels[0]), short))
+            continue
+        if space_label is None and labels[0]:
+            space_label = '.'.join(labels[0].split('.')[:-1])
+        if space_label is not None:
+            query = {'space_label': space_label, 'dim': dim, 'is_cuspidal': 'yes'}
+            if HAS_MULTIPLICITY:
+                query['multiplicity'] = mult
+        else:
+            query = {'weight': weight, 'char_label': '%s.%s' % (level, char_orbit_label), 'dim': dim}
+        terms.append(newform_search_link(short, title=title, **query))
+    # the forms not in the database
+    rest = (new_cusp_dim or 0) - sum(orbit[0] * orbit[1] for orbit in hecke_orbit_dims)
+    if rest > 0:
+        terms.append(r'\(%s\) not computed' % rest)
     return r'+'.join(terms)
 
 def show_ALdims_col(info):
@@ -144,6 +174,9 @@ def display_ALdims(level, weight, al_dims, al_dims_G):
         return ALdims_knowl(al_dims, al_dims_G, level, weight)
     else:
         return ''
+
+def show_mult_col(info):
+    return any((f.get('multiplicity') or 1) > 1 for f in info["results"])
 
 def set_info_funcs(info):
     info["mf_url"] = lambda mf: url_for_label(mf['label'])
@@ -908,6 +941,18 @@ def newform_parse(info, query):
     parse_noop(info, query, 'projective_image_type')
     parse_noop(info, query, 'aut_rep_type')
     parse_ints(info, query, 'artin_degree', name="Artin degree")
+    if info.get('space_label'):
+        if not NEWSPACE_RE.match(info['space_label']):
+            raise ValueError("%s is not a valid space label" % info['space_label'])
+        query['space_label'] = info['space_label']
+    parse_bool(info, query, 'is_cuspidal')
+    if HAS_MULTIPLICITY and info.get('multiplicity'):
+        mult = int(info['multiplicity'])
+        if mult == 1:
+            # a NULL multiplicity means 1
+            query['$and'] = query.get('$and', []) + [{'$or': [{'multiplicity': {'$exists': False}}, {'multiplicity': 1}]}]
+        else:
+            query['multiplicity'] = mult
     if info.get('search_type') != 'SpaceDimensions':
         if info.get('dim_type') == 'rel':
             parse_ints(info, query, 'dim', qfield='relative_dim', name="Dimension")
@@ -936,16 +981,34 @@ def newspace_parse(info, query):
     if info['search_type'] != 'SpaceDimensions':
         parse_ints(info, query, 'num_forms', name='Number of newforms')
         if 'num_forms' not in query and info.get('all_spaces') != 'yes':
-            # Don't show spaces that only include dimension data but no newforms (Nk2 > 4000, nontrivial character)
-            query['num_forms'] = {'$exists':True}
+            # Don't show spaces that only include dimension data but no newforms.  num_forms
+            # is set only where the stored forms fill the space; the spaces where only some
+            # are stored (their Decomp. ends in "not computed") are shown too.
+            shown = {'$or': [{'num_forms': {'$exists': True}},
+                             {'label': {'$in': spaces_with_some_forms()}}]}
+            if '$or' in query:
+                query['$and'] = query.get('$and', []) + [{'$or': query.pop('$or')}, shown]
+            else:
+                query.update(shown)
+
+def spaces_with_some_forms():
+    """The labels of the spaces with num_forms NULL in which some forms are stored."""
+    complete = set(db.smf_newspaces.search({'num_forms': {'$exists': True}}, 'label'))
+    return sorted(set(db.smf_newforms.search({}, 'space_label')) - complete)
 
 def _trace_col(i):
-    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp:\
- "" if ((tdisp == '') or (tdisp[i] is None)) else bigint_knowl(tdisp[i], 12), orig="trace_lambda_p", align="right", default=True)
+    p = nth_prime(i+1)
+    # In the principal family the eigenvalues at p | N are not stored (the stored values there are the level-1 formulas)
+    def disp(tdisp, level, family):
+        if tdisp == '' or tdisp is None or tdisp[i] is None or (family == 'P' and level and level % p == 0):
+            return ""
+        return bigint_knowl(tdisp[i], 12)
+    return MultiProcessedCol("traces", None, rf"$a_{{{p}}}$", ["trace_lambda_p", "level", "family"], disp,
+                             download_col="trace_lambda_p", align="right", default=True)
 #    return ProcessedCol("traces", None, rf"$a_{{{nth_prime(i+1)}}}$", lambda tdisp: bigint_knowl(tdisp[i], 12), orig="trace_display", align="right", default=True)
 
 def _AL_col(i, p):
-    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "+" if evs[i][1] == 1 else "-", orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
+    return ProcessedCol("atkin_lehner", None, str(p), lambda evs: "" if not evs or i >= len(evs) else ("+" if evs[i][1] == 1 else "-"), orig="atkin_lehner_eigenvals", align="center", mathmode=True, default=True)
 
 newform_columns = SearchColumns([
     LinkCol("label", "mf.siegel.label", "Label", url_for_label, default=True),
@@ -964,6 +1027,8 @@ newform_columns = SearchColumns([
                       short_title="primitive character"),
     MathCol("char_order", "character.dirichlet.order", "Char order", short_title="character order"),
     MathCol("dim", "mf.siegel.dimension", "Dim", default=True, align="right", short_title="dimension"),
+    *([ProcessedCol("multiplicity", "mf.siegel.multiplicity", "Mult", lambda m: m or 1, mathmode=True,
+                    contingent=show_mult_col, default=True, align="right", short_title="multiplicity")] if HAS_MULTIPLICITY else []),
     MathCol("relative_dim", "mf.siegel.relative_dimension", "Rel. Dim", align="right", short_title="relative dimension"),
 #    FloatCol("analytic_conductor", "smf.analytic_conductor", r"$A$", default=True, align="center", short_title="analytic conductor"),
     MultiProcessedCol("field", "mf.siegel.coefficient_field", "Field", ["field_poly_root_of_unity", "dim", "field_poly_is_real_cyclotomic", "nf_label", "field_poly", "field_disc_factorization"], nf_link, default=True),
@@ -1006,7 +1071,8 @@ newform_columns = SearchColumns([
                       default=True)
 ],
 #    ['analytic_conductor', 'analytic_rank', 'atkin_lehner_eigenvals', 'char_conductor', 'char_orbit_label', 'char_order', 'cm_discs', 'dim', 'relative_dim', 'field_disc_factorization', 'field_poly', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'fricke_eigenval', 'hecke_ring_index_factorization', 'inner_twist_count', 'is_cm', 'is_rm', 'is_self_dual', 'label', 'level', 'nf_label', 'prim_orbit_index', 'projective_image', 'qexp_display', 'rm_discs', 'sato_tate_group', 'trace_display', 'weight'],
-    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization', 'aut_rep_type', 'atkin_lehner_eigenvals', 'fricke_eigenval'],
+    ['degree', 'weight', 'family', 'field_disc', 'field_poly', 'label', 'qexp_display', 'char_orbit_label', 'char_order', 'char_conductor', 'dim', 'relative_dim', 'field_disc_factorization', 'nf_label', 'level', 'prim_orbit_index', 'field_poly_is_real_cyclotomic', 'field_poly_root_of_unity', 'trace_lambda_p', 'hecke_ring_index_factorization', 'aut_rep_type', 'atkin_lehner_eigenvals', 'fricke_eigenval']
+    + (['multiplicity'] if HAS_MULTIPLICITY else []),
     tr_class=["middle bottomlined", ""])
 
 @search_wrap(table=db.smf_newforms,
@@ -1252,11 +1318,16 @@ def dimension_space_postprocess(res, info, query):
     dimension_common_postprocess(info, query, ['M', 'S', 'E'], ['all', 'new', 'old'],
                                  url_generator, pick_table, switch_text)
     dim_dict = {}
+    # the entries made of spaces whose dimensions are only conjectural
+    info['conjectural'] = set()
+    info['conjectural_mark'] = conjectural_mark
     for space in res:
         g = int(space['degree'])
         F = ord(space['family'])
         N = space['level']
         k = tuple(space['weight'])
+        if space.get('dims_proved') is False:
+            info['conjectural'].add((g,F,N,k))
         dims = DimGrid.from_db(space)
        # if space.get('num_forms') is None:
         #    dim_dict[g,F,N,k] = False
@@ -1310,7 +1381,7 @@ def dimension_form_postprocess(res, info, query):
         N = form['level']
         k = tuple(form['weight'])
         if (g,F,N,k) in dim_dict:
-            dim_dict[g,F,N,k] += form['dim']
+            dim_dict[g,F,N,k] += form['dim'] * (form.get('multiplicity') or 1)
     return dim_dict
 
 @search_wrap(template="smf_dimension_search_results.html",
@@ -1318,7 +1389,7 @@ def dimension_form_postprocess(res, info, query):
              title='Dimension search results',
              err_title='Dimension search input error',
              per_page=None,
-             projection=['level', 'weight', 'dim', 'degree', 'family'],
+             projection=['level', 'weight', 'dim', 'degree', 'family'] + (['multiplicity'] if HAS_MULTIPLICITY else []),
              postprocess=dimension_form_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1369,7 +1440,7 @@ def dimension_form_search(info, query):
                          'old_eis_F_dim',
                          'old_cusp_Y_dim',
                          'old_cusp_P_dim',
-                         'old_cusp_G_dim'],
+                         'old_cusp_G_dim'] + (['dims_proved'] if HAS_DIMS_PROVED else []),
              postprocess=dimension_space_postprocess,
              bread=get_dim_bread,
              learnmore=learnmore_list)
@@ -1398,14 +1469,16 @@ space_columns = SearchColumns([
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True),
-    MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
+    (MultiProcessedCol("cusp_dim", "smf.display_dim", "Cusp Dim", ["cusp_dim", "dims_proved"], display_dim, short_title="cuspidal dimension", default=True)
+     if HAS_DIMS_PROVED else MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True)),
+    MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims", "new_cusp_dim", "label"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims", "ALdims_G"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
 @search_wrap(table=db.smf_newspaces,
              title='Newspace search results',
              err_title='Newspace search input error',
              columns=space_columns,
+             postprocess=decomp_postprocess,
              shortcuts={'jump':jump_box,
                         'download':SMF_download().download_spaces},
              url_for_label=url_for_label,

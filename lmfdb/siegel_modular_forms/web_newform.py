@@ -471,7 +471,8 @@ class WebNewform():
                 if eigenvals.get('an'):
                     self.has_exact_lfunc = True
                     self.primes = prime_range(self.maxp_square+1)
-                    self.range_evs = range(len(self.primes))
+                    # no column for the p | N without a Hecke operator
+                    self.range_evs = [i for i, p in enumerate(self.primes) if not self.no_hecke_at(p)]
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
                     m = 0
@@ -556,6 +557,8 @@ class WebNewform():
             self.properties += [('Analytic rank', prop_int_pretty(self.analytic_rank))]
 
         self.properties += [('Dimension', prop_int_pretty(self.dim))]
+        if (getattr(self, 'multiplicity', None) or 1) > 1:
+            self.properties += [('Multiplicity', prop_int_pretty(self.multiplicity))]
 
 #        if self.projective_image:
 #            self.properties += [('Projective image', '$%s$' % self.projective_image_latex)]
@@ -1458,12 +1461,17 @@ function switch_basis(btype) {
         s = s.replace('betaq', 'beta q')
         return s + r'+O(q^{%d})\)' % prec
 
+    def no_hecke_at(self, p):
+        """In the principal family the eigenvalues at p | N are not stored (the stored values at
+        p | N are the level-1 formulas, not eigenvalues of the Hecke operators of Gamma(N)): the table omits p."""
+        return self.family == 'P' and self.level > 1 and self.level % p == 0
+
     def hecke_eigenvalue(self, hecke_type, n):
         # Display the hecke eigenvalue of this hecke_type at place n. Will be inside \( \).
         m = self.hecke_ring_cyclotomic_generator
         evs = getattr(self, hecke_type)
         if evs is None:
-            return '' 
+            return ''
         ev = getattr(self, hecke_type)[n]
         if m is not None and m != 0:
             # sum of powers of zeta_m
