@@ -31,7 +31,7 @@ from lmfdb.elliptic_curves.isog_class import ECisog_class
 from lmfdb.elliptic_curves.web_ec import WebEC, match_lmfdb_label, match_cremona_label, split_lmfdb_label, split_cremona_label, weierstrass_eqn_regex, short_weierstrass_eqn_regex, class_lmfdb_label, curve_lmfdb_label, EC_ainvs, latex_sha, gl2_subgroup_data, CREMONA_BOUND, match_weierstrass_polys, match_coeff_vec
 from sage.misc.cachefunc import cached_method
 from lmfdb.ecnf.ecnf_stats import latex_tor
-from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory
+from .congruent_numbers import get_congruent_number_data, congruent_number_data_directory, congruent_number_data_files
 from lmfdb.sato_tate_groups.main import st_display_knowl
 
 q = ZZ['x'].gen()
@@ -968,7 +968,7 @@ def render_congruent_number_data():
     bread = [("Datasets", url_for("datasets")), (t, " ")]
     if 'filename' in info:
         filepath = os.path.join(congruent_number_data_directory,info['filename'])
-        if os.path.isfile(filepath) and os.access(filepath, os.R_OK):
+        if info['filename'] in congruent_number_data_files and os.path.isfile(filepath) and os.access(filepath, os.R_OK):
             return send_file(filepath, as_attachment=True)
         else:
             flash_error('File {} not found'.format(info['filename']))
