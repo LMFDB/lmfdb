@@ -523,7 +523,7 @@ class KnowlBackend(PostgresBase):
 
     def get_column_descriptions(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id LIKE %s AND type = %s AND status >= %s ORDER BY id, timestamp DESC) knowls ORDER BY id").format(SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"columns.{table}.%", 2, 0])
         return {rec[0].split(".")[-1]: Knowl(rec[0], data=dict(zip(fields, rec))) for rec in L}
 
@@ -547,7 +547,7 @@ class KnowlBackend(PostgresBase):
 
     def get_table_description(self, table):
         fields = ['id'] + self._default_fields
-        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
+        selecter = SQL("SELECT {0} FROM (SELECT DISTINCT ON (id) {0} FROM kwl_knowls WHERE id = %s AND type = %s AND status >= %s ORDER BY id, timestamp DESC) knowls ORDER BY id LIMIT 1").format(SQL(", ").join(map(Identifier, fields)))
         L = self._safe_execute(selecter, [f"tables.{table}", 2, 0])
         if L:
             return Knowl(L[0][0], data=dict(zip(fields, L[0])))
