@@ -69,6 +69,8 @@ from . import hypergm
 assert hypergm
 from . import motives
 assert motives
+from . import k3fq
+assert k3fq
 from . import riemann
 assert riemann
 from . import lattice

@@ -118,5 +118,10 @@
         "files": "lmfdb/shimura_curves/test_shimura_curves.py",
         "folders": "shimura_curves",
         "server": "devmirror"
+    },
+    {
+        "files": "lmfdb/k3fq/test_k3fq.py",
+        "folders": "k3fq",
+        "server": "devmirror"
     }
 ]
