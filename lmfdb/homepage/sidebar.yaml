@@ -180,6 +180,10 @@
       status: beta
       url_for:  "hypergm.index"
       colspan: onecolumn
+    - title: K3 type over $\F_q$
+      status: beta
+      url_for: "k3fq.index"
+      colspan: onecolumn
     - title: Hypergeometric over $\Q(\sqrt{d})$
       status: future
       colspan: onecolumn

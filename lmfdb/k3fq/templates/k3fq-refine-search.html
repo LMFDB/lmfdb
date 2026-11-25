@@ -1,0 +1,20 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+{% if info.stats %}
+<p>
+{{info.stats|safe}}
+</p>
+{% endif %}
+
+{% include 'refine_search_form.html' %}
+
+{% if info.search_type == 'DynStats' %}
+<p>Note that the motives of K3 type in the database may not be {{ KNOWL('rcs.rigor.k3.fq', title='representative') }}.</p>
+{% endif %}
+
+{% block show_results %}{% endblock %}
+{% include 'debug_info.html' %}
+
+{% endblock %}
