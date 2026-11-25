@@ -13,8 +13,9 @@ class Box():
             from lmfdb.knowledge.knowl import knowldb
             from lmfdb.knowledge.main import md
             max_entries = 3
+            # The boxes are cached for everyone, so AI-written versions are left out
             content = [line.strip() for line in
-                       knowldb.get_knowl("content.announcements", ["content"])["content"].split("\n")]
+                       knowldb.get_knowl("content.announcements", ["content"], ai=False)["content"].split("\n")]
             # Only keep lines that are part of an unordered list
             content = [line for line in content if line.startswith("* ") or line.startswith("- ") or line.startswith("+ ")]
             overflow = len(content) > max_entries
