@@ -1,4 +1,5 @@
 # Different helper functions.
+import bisect
 import math
 import re
 
@@ -23,6 +24,52 @@ AbvarFqStatslookup = AbvarFqStats._counts()
 ###############################################################
 # Functions for displaying numbers in correct format etc.
 ###############################################################
+
+def z_plot_range(L, rmax=30):
+    """
+    How far the Z-function plot of ``L`` extends on either side of 0: ``rmax``, or for a
+    nonprimitive L-function, 1.2 times the height of its 25th positive zero if that is less,
+    estimated from the zeros shown on its page when fewer than 25 are known.
+    """
+    if getattr(L, 'primitive', True) or not getattr(L, 'positive_zeros', None):
+        return rmax
+    zeros = [float(z) for z in L.positive_zeros.split(",")]
+    zero_range = zeros[24] if len(zeros) >= 25 else zeros[-1] * 25 / len(zeros)
+    return min(rmax, 1.2 * zero_range)
+
+
+def z_plot_points(rec, dual, rmax=30, step=0.02):
+    """
+    Points along the Z-function plot stored in a row of lfunc_plot.
+
+    The row stores the curve of its L-function on x > 0 and of the dual on x < 0, as
+    control points (x, Z(x), Z'(x)) joined by cubic Hermite interpolation, with Z > 0 just
+    right of 0.  For the dual (``dual=True``) the curve is reflected, and negated when
+    ``dual_yflip`` is set, so that the same holds.  The points cover [-r, r] for the
+    largest r that the data allows, up to ``rmax``, every ``step`` and at each control point.
+    """
+    control = ([(x, 0.0, d) for x, d in rec["zeros"]]
+               + [(x, y, 0.0) for x, y in rec["extrema"]]
+               + [tuple(c) for c in rec["extra_control"]])
+    if dual:
+        s = -1 if rec["dual_yflip"] else 1
+        control = [(-x, s * y, -s * d) for x, y, d in control]
+    control.sort()
+    xs = [c[0] for c in control]
+    r = min(-xs[0], xs[-1], rmax)
+    n = max(1, int(2 * r / step))
+    grid = sorted(set([-r + 2 * r * i / n for i in range(n + 1)] + [x for x in xs if -r < x < r]))
+    points = []
+    for x in grid:
+        i = min(max(bisect.bisect_right(xs, x), 1), len(xs) - 1)
+        (x0, y0, d0), (x1, y1, d1) = control[i - 1], control[i]
+        h = x1 - x0
+        t = (x - x0) / h if h else 1.0
+        y = ((2*t**3 - 3*t**2 + 1) * y0 + (t**3 - 2*t**2 + t) * h * d0
+             + (3*t**2 - 2*t**3) * y1 + (t**3 - t**2) * h * d1)
+        points.append((x, y))
+    return points
+
 
 def p2sage(z):
     """Convert z to something sensible in Sage.
