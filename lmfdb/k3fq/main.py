@@ -2,7 +2,7 @@ import re
 
 from flask import abort, render_template, url_for, request, redirect
 
-from sage.all import ZZ
+from sage.all import ZZ, euler_phi
 
 from lmfdb.utils import (
     to_dict, flash_error, display_knowl, coeff_to_poly,
@@ -21,7 +21,7 @@ from lmfdb import db
 from . import k3fq_page
 from .web_k3fq import (
     WebK3Fq, isog_table, table_exists, validate_label, poly_to_label, lpoly_to_poly,
-    realizable_display, label_wbr, LABEL_RE, ISOG_TABLE, LATTICE_TABLE, DEGREE,
+    realizable_display, label_wbr, LABEL_RE, ISOG_TABLE, LATTICE_TABLE, DEGREE, CYCLOTOMIC_ORDERS,
 )
 from .stats import K3FqStats
 from .download import K3Fq_download
@@ -202,6 +202,64 @@ def parse_initial_coefficients(inp, query, qfield, q=None):
         query[qfield] = {"$regex": "^[0-9]+ " + tail}
 
 
+CYCLOTOMIC_RE = re.compile(r"^\d+(\^\d+)?(,\d+(\^\d+)?)*$")
+MULTIPLICITY_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+# The select box next to the cyclotomic factors input
+CYCLOTOMIC_MODES = ["", "exactly", "supported"]
+
+
+def cyclotomic_multiset(orders):
+    """
+    The encoding of the multiset ``orders`` used by the cyclotomic_multiset
+    column: the k-th copy of Phi_m is m followed by the k-th capital letter.
+    """
+    seen = {}
+    out = []
+    for m in sorted(orders):
+        k = seen.get(m, 0)
+        seen[m] = k + 1
+        out.append("%s%s" % (m, MULTIPLICITY_LETTERS[k]))
+    return out
+
+
+@search_parser(clean_info=True, error_is_safe=True)
+def parse_cyclotomic(inp, query, qfield, mode=""):
+    """
+    Search on the cyclotomic factors Phi_m of P(T), given as a list of orders m
+    with repeats or exponents (such as 1,1,2,6 or 1^2,2,6), using the
+    cyclotomic_multiset column:
+
+    - mode "" (contains): the cyclotomic part is divisible by the given product;
+    - "exactly": the cyclotomic part is exactly the given product;
+    - "supported": every cyclotomic factor is among the given Phi_m (repeats
+      and exponents are ignored).
+    """
+    inp = inp.replace(" ", "").strip("[]")
+    if not CYCLOTOMIC_RE.fullmatch(inp):
+        raise SearchParsingError("It needs to be a comma-separated list of positive integers m (the orders of the cyclotomic polynomials &Phi;<sub>m</sub>), with repeats or exponents for multiplicities, such as 1,1,2,6 or 1^2,2,6")
+    orders = []
+    for part in inp.split(","):
+        m, _, e = part.partition("^")
+        m, e = int(m), int(e or 1)
+        if m not in CYCLOTOMIC_ORDERS:
+            raise SearchParsingError("&Phi;<sub>%s</sub> has degree greater than %s" % (m, DEGREE))
+        if e > DEGREE:
+            raise SearchParsingError("Multiplicities are at most %s" % DEGREE)
+        orders.extend([m] * e)
+    if mode == "supported":
+        support = sorted(set(orders))
+        query[qfield] = {"$containedin": ["%s%s" % (m, MULTIPLICITY_LETTERS[k])
+                                          for m in support for k in range(DEGREE // euler_phi(m))]}
+        return
+    if sum(euler_phi(m) for m in orders) > DEGREE:
+        raise SearchParsingError("These cyclotomic factors have total degree greater than %s" % DEGREE)
+    S = cyclotomic_multiset(orders)
+    if mode == "exactly":
+        query[qfield] = {"$contains": S, "$containedin": S}
+    else:
+        query[qfield] = {"$contains": S}
+
+
 @search_parser(clean_info=True, prep_ranges=True)
 def parse_signed_range(inp, query, qfield):
     """
@@ -299,6 +357,11 @@ def common_parse(info, query):
         flash_error("%s is not a valid input for the variety type of point counts.", count_type)
         raise SearchParsingError("Invalid variety type")
     parse_signed_range(info, query, "point_count", qfield=POINT_COUNT_COLUMNS[count_type], name="point count")
+    cyc_mode = info.get("cyclotomic_mode", "")
+    if cyc_mode not in CYCLOTOMIC_MODES:
+        flash_error("%s is not a valid input for the type of cyclotomic factor search.", cyc_mode)
+        raise SearchParsingError("Invalid cyclotomic factor search type")
+    parse_cyclotomic(info, query, "cyclotomic_factors", qfield="cyclotomic_multiset", mode=cyc_mode)
     parse_ints(info, query, "artin_tate_value", name="Artin-Tate value")
     parse_signed_range(info, query, "ns_disc_class", name="NS discriminant class")
     for col in BOOL_COLUMNS:
@@ -456,6 +519,19 @@ class K3FqSearchArray(SearchArray):
             example="5",
             example_span="5 or -10-10",
         )
+        cyclotomic_mode = SelectBox(
+            "cyclotomic_mode",
+            options=[("", "include"), ("exactly", "exactly"), ("supported", "among")],
+        )
+        cyclotomic = TextBoxWithSelect(
+            "cyclotomic_factors",
+            label="Cyclotomic factors",
+            short_label="Cyclotomic",
+            select_box=cyclotomic_mode,
+            knowl="k3.fq.cyclotomic_part",
+            example="1,1,2",
+            example_span="1,1,2 or 1^2,2: the orders m of the factors &Phi;<sub>m</sub>, with multiplicity",
+        )
         artin_tate_value = TextBox(
             "artin_tate_value",
             label="Artin&ndash;Tate value",
@@ -596,6 +672,7 @@ class K3FqSearchArray(SearchArray):
             [height, newton, initial_coefficients, point_count, ej_condition],
             [has_count_growth, is_pointless, is_primitive, realizable["realizable_k3"], has_nonnegative_counts],
             [r, angle_rank, angle_corank, newton_elevation, geometric_extension_degree],
+            [cyclotomic],
             [artin_tate_value, ns_disc_class, transcendental_irreducible, has_k3_newton_polygon, twist_count],
             [max_twist_degree, geometric_class, num_lattices, number_field, galois_group],
             [realizable["realizable_nck3"], realizable["realizable_cubic"], realizable["realizable_nccubic"], realizable["realizable_gm"], realizable["realizable_ncgm"]],
@@ -612,6 +689,7 @@ class K3FqSearchArray(SearchArray):
             [r, has_nonnegative_counts],
             [angle_rank, angle_corank],
             [newton_elevation, geometric_extension_degree],
+            [cyclotomic],
             [artin_tate_value, ns_disc_class],
             [transcendental_irreducible, has_k3_newton_polygon],
             [twist_count, max_twist_degree],

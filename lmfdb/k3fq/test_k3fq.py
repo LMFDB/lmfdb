@@ -103,6 +103,22 @@ class K3FqTest(LmfdbTest):
         self.check_args("/Motive/K3/Fq/?q=2&point_count=123&point_count_type=gm", SS_LABEL)
         self.check_args("/Motive/K3/Fq/?q=2&point_count=5&point_count_type=bogus", "is not a valid input")
 
+    def test_cyclotomic_search(self):
+        base = "/Motive/K3/Fq/?q=2&height=inf&"
+        self.check_args(base + "cyclotomic_factors=1^22&cyclotomic_mode=exactly", SS_LABEL)
+        self.check_args(base + "cyclotomic_factors=1,2,1^20&cyclotomic_mode=exactly", SS_MINUS_LABEL)
+        self.check_args(base + "cyclotomic_factors=2", SS_MINUS_LABEL)
+        self.check_args(base + "cyclotomic_factors=1^21", SS_MINUS_LABEL)
+        self.check_args(base + "cyclotomic_factors=1&cyclotomic_mode=supported", SS_LABEL)
+        self.check_args(base + "cyclotomic_factors=1,2&cyclotomic_mode=supported", SS_MINUS_LABEL)
+        self.check_args(base + "cyclotomic_factors=1,2&cyclotomic_mode=supported&sign=-1", SS_MINUS_LABEL)
+        self.not_check_args(base + "cyclotomic_factors=1&cyclotomic_mode=supported", SS_MINUS_LABEL)
+        self.not_check_args(base + "cyclotomic_factors=1^22&cyclotomic_mode=exactly", SS_MINUS_LABEL)
+        self.not_check_args(base + "cyclotomic_factors=3", SS_LABEL)
+        self.check_args(base + "cyclotomic_factors=~2&sign=1", SS_LABEL)
+        for bad in ["67", "1^23", "23,23", "x", "1&cyclotomic_mode=bogus"]:
+            self.check_args(base + "cyclotomic_factors=" + bad, "is not a valid input")
+
     def test_counts(self):
         self.check_args("/Motive/K3/Fq/?search_type=Counts&q=2-", "Picard rank")
         self.check_args("/Motive/K3/Fq/?search_type=Counts&picard_rank=10-", "Picard rank")
