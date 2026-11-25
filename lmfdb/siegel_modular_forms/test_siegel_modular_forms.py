@@ -237,15 +237,22 @@ class SmfTest(LmfdbTest):
 
     def test_space_search_aldims(self):
         """
-        The Atkin-Lehner dimensions column of the newspace search, in the
-        sign-vector order of the space page: in S_{3,0}^new(K(161)) the
+        The Atkin-Lehner dimensions of the new subspace, in the sign-vector
+        order of the space page: in S_{3,0}^new(K(161)), of dimension 17, the
         classes (w_7, w_23) = (+,+), (+,-), (-,+), (-,-) have dimensions
-        0, 12, 6, 1, of which 0, 3, 1, 0 are of general type
+        0, 11, 6, 0, of which 0, 3, 1, 0 are of general type (the old
+        Saito-Kurokawa lifts are not counted).  The space page puts each
+        dimension under its signs.
         """
         self.need_spaces("2.K.161.3.0.a")
         self.check("?search_type=Spaces&degree=2&family=K&level=161&weight=3", [
             "AL-dims.",
-            r"\(0\)+\(12\)+\(6\)+\(1\)",
+            r"\(0\)+\(11\)+\(6\)+\(0\)",
+        ])
+        self.check("2/K/161/3.0/a/", [
+            r"\(+\) \(-\) $-$ \(11\) \(3\)",
+            r"\(-\) \(+\) $-$ \(6\) \(1\)",
+            r"Minus space \(-\) \(17\) \(4\)",
         ])
 
     def test_trace_search(self):
@@ -555,3 +562,124 @@ class SmfTest(LmfdbTest):
         self.check("2/K/992/3.0/a/t/", r"\Z[\lambda_1, \ldots, \lambda_{9}]")
         data = self.check("2/K/992/3.0/a/t/", "Coefficient ring")
         assert r"\Z[a_1" not in data
+
+    # ------------------------------------------------------------------
+    # Consistency of the stored data.  These read the tables directly,
+    # with small projections, so that they stay fast on devmirror.
+    # ------------------------------------------------------------------
+
+    def test_hecke_ring_basis_starts_with_one(self):
+        """
+        The first element of every stored basis of a Hecke ring is 1:
+        the pages print the first coordinate of an eigenvalue as its
+        constant term
+        """
+        if not db.smf_hecke_nf.count():
+            self.skipTest("smf_hecke_nf not yet loaded on devmirror")
+        bad = []
+        for r in db.smf_hecke_nf.search(
+                {"hecke_ring_numerators": {"$exists": True}},
+                ["label", "field_poly", "hecke_ring_numerators", "hecke_ring_denominators"]):
+            d = len(r["field_poly"]) - 1
+            if (list(r["hecke_ring_numerators"][0]) != [1] + [0] * (d - 1)
+                    or r["hecke_ring_denominators"][0] != 1):
+                bad.append(r["label"])
+        assert not bad, "Hecke ring basis does not start with 1: %s" % bad[:10]
+
+    def test_eisenstein_traces(self):
+        """
+        The Siegel Eisenstein series of weight k (type F) has spin
+        coefficient 1 + p^{k-2} + p^{k-1} + p^{2k-3} at every prime p not
+        dividing the level, including the level-2 series; at level 2 and
+        weight 4 the page shows the coefficients of the stored traces
+        """
+        self.need_forms()
+        bad = []
+        n = 0
+        for r in db.smf_newforms.search({"aut_rep_type": "F"}, ["label", "level", "weight", "traces"]):
+            k = r["weight"][0]
+            for p in [3, 5, 7, 11, 13, 17, 19, 23, 29, 31]:
+                if r["level"] % p == 0:
+                    continue
+                n += 1
+                if r["traces"][p - 1] != 1 + p**(k - 2) + p**(k - 1) + p**(2 * k - 3):
+                    bad.append((r["label"], p))
+        assert n > 0 and not bad, "wrong Eisenstein traces: %s" % bad[:10]
+        self.need_forms("2.P.2.4.0.a.a")
+        self.check("2/P/2/4.0/a/a/", [
+            "Siegel-Eisenstein (F)",
+            # 1 + 3^2 + 3^3 + 3^5 = 280, 1 + 5^2 + 5^3 + 5^5 = 3276
+            "1 + 45 * 2^{-s} + 280 * 3^{-s}",
+            "3276 * 5^{-s}",
+        ])
+
+    def test_traces_match_eigenvalues(self):
+        """
+        At a prime p not dividing the level, the trace of the spin
+        coefficient a_p is the trace of lambda_p
+        """
+        self.need_forms()
+        bad = []
+        n = 0
+        primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]
+        for r in db.smf_newforms.search(
+                {"level": {"$lte": 40}, "trace_lambda_p": {"$exists": True}},
+                ["label", "level", "traces", "trace_lambda_p"]):
+            tr, tl = r.get("traces"), r["trace_lambda_p"]
+            if not tr:
+                continue
+            for i, p in enumerate(primes):
+                if i >= len(tl) or p > len(tr) or tl[i] is None or tr[p - 1] is None:
+                    continue
+                n += 1
+                if tr[p - 1] != tl[i]:
+                    bad.append((r["label"], p))
+        assert n > 0 and not bad, "traces differ from trace_lambda_p: %s" % bad[:10]
+
+    def test_saito_kurokawa_atkin_lehner(self):
+        """
+        A paramodular Saito-Kurokawa lift has the Atkin-Lehner signs of the
+        elliptic newform it lifts, as stored in mf_newforms
+        """
+        self.need_forms()
+        lifts = {}
+        for r in db.smf_newforms.search(
+                {"family": "K", "aut_rep_type": "P", "level": {"$lte": 100}},
+                ["label", "atkin_lehner_eigenvals", "related_objects"]):
+            cmf = [x for x in (r.get("related_objects") or []) if x.startswith("ModularForm/GL2/Q/holomorphic/")]
+            if len(cmf) == 1 and r.get("atkin_lehner_eigenvals"):
+                lifts[".".join(cmf[0].strip("/").split("/")[-4:])] = r
+        if not lifts:
+            self.skipTest("no paramodular Saito-Kurokawa lifts on devmirror")
+        sources = {f["label"]: dict(f["atkin_lehner_eigenvals"])
+                   for f in db.mf_newforms.search({"label": {"$in": list(lifts)}},
+                                                  ["label", "atkin_lehner_eigenvals"])
+                   if f.get("atkin_lehner_eigenvals")}
+        bad = []
+        for lab, r in lifts.items():
+            if lab not in sources:
+                continue
+            for p, e in r["atkin_lehner_eigenvals"]:
+                if sources[lab].get(p) != e:
+                    bad.append((r["label"], lab, p))
+        assert sources and not bad, "Atkin-Lehner signs differ from the lifted form: %s" % bad[:10]
+
+    def test_level2_paramodular_saito_kurokawa(self):
+        """
+        The Saito-Kurokawa lift 2.K.2.8.0.a.a of the newform in
+        S_{14}(Gamma_0(2)): its spin coefficient at 3 is
+        a_3(f) + 3^6 + 3^7 = -1836 + 729 + 2187 = 1080, and the coefficients
+        at the bad prime 2 are not known
+        """
+        self.need_spaces("2.K.2.8.0.a")
+        self.check("2/K/2/8.0/a/", [
+            "S_{8,0}^{\\mathrm{new}}(K(2))",
+            "Saito-Kurokawa lifts (P) 1 0 1",
+            "2.K.2.8.0.a.a",
+        ])
+        self.need_forms("2.K.2.8.0.a.a")
+        self.check("2/K/2/8.0/a/a/", [
+            "Saito-Kurokawa Lift (P)",
+            "1 + ? * 2^{-s} + 1080 * 3^{-s}",
+            "97740 * 5^{-s}",
+        ])
