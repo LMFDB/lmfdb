@@ -1,0 +1,276 @@
+{% extends "homepage.html" %}
+
+{% block content %}
+
+{% macro na(text="not computed") -%}<span style="color:gray">{{ text }}</span>{%- endmacro %}
+{% macro yn(val, missing="not computed") -%}{% if val is none %}{{ na(missing) }}{% elif val %}yes{% else %}no{% endif %}{%- endmacro %}
+
+<script type="text/javascript">
+  function show_all_counts(show) {
+    if (show) {
+      $(".shortcounts").hide();
+      $(".allcounts").show();
+    } else {
+      $(".allcounts").hide();
+      $(".shortcounts").show();
+    }
+    return false;
+  }
+</script>
+
+<h2>Invariants</h2>
+
+<p>
+<table>
+  <tr><td>{{ KNOWL('ag.base_field', title="Base field") }}:</td><td>&nbsp;&nbsp;${{ cl.field() }}$</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.sign', title="Sign") }}:</td><td>&nbsp;&nbsp;${{ cl.sign_display }}$</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.motive', title="Polynomial") }}:</td><td>&nbsp;&nbsp;$P(T) = $ {{ cl.polynomial_display | safe }}</td></tr>
+  {% if not cl.is_irreducible_display %}
+  <tr><td></td><td>&nbsp;&nbsp;$\phantom{P(T)} = {{ cl.factored_polynomial }}$</td></tr>
+  {% endif %}
+  <tr><td>{{ KNOWL('k3.fq.motive', title="L-polynomial") }}:</td><td>&nbsp;&nbsp;$L(T) = q^{-1}P(qT) = $ {{ cl.lpolynomial_display | safe }}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.real_polynomial', title="Real polynomial") }}:</td><td>&nbsp;&nbsp;{% if cl.real_poly_display %}$h(x) = $ {{ cl.real_poly_display | safe }}{% else %}{{ na() }}{% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.frobenius_angles', title="Frobenius angles") }}:</td><td>&nbsp;&nbsp;{{ cl.frob_angles() | safe }}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.angle_rank', title="Angle rank") }}:</td><td>&nbsp;&nbsp;{% if cl.angle_rank is none %}{{ na() }}{% else %}${{ cl.angle_rank }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.angle_rank', title="Angle corank") }}:</td><td>&nbsp;&nbsp;{% if cl.angle_corank is none %}{{ na() }}{% else %}${{ cl.angle_corank }}${% endif %}</td></tr>
+</table>
+</p>
+
+<h2>{{ KNOWL('k3.fq.newton_polygon', title="Newton polygon") }}</h2>
+
+<p>
+{% if cl.is_supersingular %}
+This class is {{ KNOWL('k3.fq.newton_polygon', title='supersingular') }}: all slopes are equal to $1$.
+{% elif cl.is_ordinary %}
+This class is {{ KNOWL('k3.fq.newton_polygon', title='ordinary') }}.
+{% elif cl.is_ordinary is not none and cl.is_supersingular is not none %}
+This class is neither {{ KNOWL('k3.fq.newton_polygon', title='ordinary') }} nor {{ KNOWL('k3.fq.newton_polygon', title='supersingular') }}.
+{% endif %}
+</p>
+
+<table>
+  <tr><td>{{ KNOWL('k3.fq.newton_polygon', title="Slopes") }}:</td><td>&nbsp;&nbsp;{{ cl.display_slopes() | safe }}</td></tr>
+  <tr><td>{{ KNOWL('k3.height', title="Height") }}:</td><td>&nbsp;&nbsp;{% if cl.height_display is none %}{{ na() }}{% else %}${{ cl.height_display }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.newton_polygon', title="K3 Newton polygon") }}:</td><td>&nbsp;&nbsp;{{ yn(cl.has_k3_newton_polygon) }}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.newton_elevation', title="Newton elevation") }}:</td><td>&nbsp;&nbsp;{% if cl.newton_elevation is none %}{{ na() }}{% else %}${{ cl.newton_elevation }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.newton_elevation', title="Newton coelevation") }}:</td><td>&nbsp;&nbsp;{% if cl.newton_coelevation is none %}{{ na() }}{% else %}${{ cl.newton_coelevation }}${% endif %}</td></tr>
+</table>
+
+<h2>{{ KNOWL('k3.picard_rank', title="Picard ranks") }} and the {{ KNOWL('k3.fq.artin_tate', title="Artin&ndash;Tate formula") }}</h2>
+
+<table>
+  <tr><td>{{ KNOWL('k3.picard_rank', title="Picard rank") }}:</td><td>&nbsp;&nbsp;{% if cl.picard_rank is none %}{{ na() }}{% else %}$\rho = {{ cl.picard_rank }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.geometric_picard_rank', title="Geometric Picard rank") }}:</td><td>&nbsp;&nbsp;{% if cl.geometric_picard_rank is none %}{{ na() }}{% else %}$\bar\rho = {{ cl.geometric_picard_rank }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.cyclotomic_part', title="Cyclotomic factors") }}:</td><td>&nbsp;&nbsp;{% if cl.cyclotomic_display is none %}{{ na() }}{% else %}${{ cl.cyclotomic_display }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.geometric_extension_degree', title="Geometric extension degree") }}:</td><td>&nbsp;&nbsp;{% if cl.geometric_extension_degree is none %}{{ na() }}{% else %}${{ cl.geometric_extension_degree }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.artin_tate', title="NS discriminant class") }}:</td><td>&nbsp;&nbsp;{% if cl.ns_disc_class is none %}{{ na("not defined" if cl.picard_rank == 0 else "not computed") }}{% else %}${{ cl.ns_disc_class }}${% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.ej_condition', title="Artin&ndash;Tate condition") }}:</td><td>&nbsp;&nbsp;{{ yn(cl.ej_condition) }}</td></tr>
+</table>
+
+{% set at_rows = cl.artin_tate_table() %}
+{% if at_rows %}
+<p>
+The {{ KNOWL('k3.picard_rank', title="Picard rank") }} $\rho_n$ and the {{ KNOWL('k3.fq.artin_tate', title="Artin&ndash;Tate value") }} $AT_n$ over $\F_{q^n}$, for the degrees $n$ at which the Picard rank can change:
+<table class="ntdata" style="margin-left:5%;">
+  <thead><tr><th>$n$</th><th>Field</th><th>$\rho_n$</th><th>$AT_n$</th></tr></thead>
+  <tbody>
+  {% for n, field, rho, at in at_rows %}
+    <tr><td class="center">${{ n }}$</td><td class="center">${{ field }}$</td><td class="center">${{ rho }}$</td><td>{{ at | safe }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</p>
+{% else %}
+<p>The Picard ranks over extensions and the {{ KNOWL('k3.fq.artin_tate', title="Artin&ndash;Tate values") }} are not computed for this class.</p>
+{% endif %}
+
+<h2>{{ KNOWL('k3.fq.transcendental_part', title="Transcendental part") }}</h2>
+
+{% if cl.transcendental_poly is none %}
+<p>The transcendental part of this class is {{ na() }}.</p>
+{% elif cl.transcendental_degree == 0 %}
+<p>This class is {{ KNOWL('k3.fq.newton_polygon', title='supersingular') }}: every root of $P(T)$ is a root of unity, so the transcendental part is the constant $P_T(T) = {{ cl.transcendental_poly[0] }}$.</p>
+{% else %}
+<table>
+  <tr><td>{{ KNOWL('k3.fq.transcendental_part', title="Transcendental part") }}:</td><td>&nbsp;&nbsp;$P_T(T) = $ {{ cl.transcendental_poly_display | safe }}</td></tr>
+  <tr><td>Degree:</td><td>&nbsp;&nbsp;${{ cl.transcendental_degree }}$</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.transcendental_part', title="Irreducible") }}:</td><td>&nbsp;&nbsp;{{ yn(cl.transcendental_irreducible) }}</td></tr>
+</table>
+
+{% set factor_rows = cl.transcendental_factor_table() %}
+{% if factor_rows %}
+<p>
+<table class="ntdata" style="margin-left:5%;">
+  <thead><tr><th>Factor</th><th>Multiplicity</th><th>Degree</th><th>{{ KNOWL('k3.fq.transcendental_part', title="Number field") }}</th><th>{{ KNOWL('k3.fq.transcendental_part', title="Galois group") }}</th></tr></thead>
+  <tbody>
+  {% for f, e, d, nf, gal in factor_rows %}
+    <tr><td>{{ f | safe }}</td><td class="center">${{ e }}$</td><td class="center">${{ d }}$</td><td>{{ nf | safe }}</td><td>{{ gal | safe }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</p>
+{% else %}
+<p>The factorization of the transcendental part is {{ na() }}.</p>
+{% endif %}
+{% endif %}
+
+<h2>{{ KNOWL('k3.fq.point_counts', title="Point counts") }}</h2>
+
+{% set count_rows = cl.point_count_table() %}
+{% if count_rows %}
+{% set short_n = 5 %}
+{% set total_n = cl.point_count_length() %}
+{% for kind in (['shortcounts', 'allcounts'] if total_n > short_n else ['shortcounts']) %}
+{% set ncols = short_n if kind == 'shortcounts' and total_n > short_n else total_n %}
+<div class="{{ kind }}{% if kind == 'allcounts' %} nodisplay{% endif %}" style="overflow-x:auto;">
+<table class="ntdata" style="margin-left:5%;">
+  <thead>
+    <tr><th>$n$</th>
+      {% for n in range(1, ncols + 1) %}<th class="center">${{ n }}$</th>{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+  {% for title, knowl, counts in count_rows %}
+    <tr><td>{{ KNOWL(knowl, title=title) }}</td>
+      {% for c in counts[:ncols] %}<td class="right">${{ c }}$</td>{% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if total_n > short_n %}
+<div class="toggle">
+  {% if kind == 'shortcounts' %}
+  <a href="#" onclick="return show_all_counts(true);">Show $n \le {{ total_n }}$</a>
+  {% else %}
+  <a href="#" onclick="return show_all_counts(false);">Show less</a>
+  {% endif %}
+</div>
+{% endif %}
+</div>
+{% endfor %}
+<p>Here the count for a K3 surface is $\#X(\F_{q^n})$, and the counts for the fourfolds are those of a fourfold whose {{ KNOWL('k3.fq.point_counts', title="K3-type piece") }} is in this class.</p>
+{% else %}
+<p>The point counts are {{ na() }}.</p>
+{% endif %}
+
+<table>
+  <tr><td>{{ KNOWL('k3.fq.count_conditions', title="Nonnegative counts") }}:</td><td>&nbsp;&nbsp;{{ yn(cl.has_nonnegative_counts) }}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.count_conditions', title="Count growth") }}:</td><td>&nbsp;&nbsp;{{ yn(cl.has_count_growth) }}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.point_counts', title="Pointless") }}:</td><td>&nbsp;&nbsp;{{ yn(cl.is_pointless) }}</td></tr>
+</table>
+
+<h2>{{ KNOWL('k3.fq.realizability', title="Realizability") }}</h2>
+
+<p>
+<table class="ntdata" style="margin-left:5%;">
+  <thead><tr><th>Type</th><th>Variety</th><th>Noncommutative</th></tr></thead>
+  <tbody>
+  {% for title, knowl, val, ncval in cl.realizability_table() %}
+    <tr><td>{{ title | safe }}</td><td class="center">{{ val }}</td><td class="center">{% if ncval is none %}&ndash;{% else %}{{ ncval }}{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</p>
+
+<table>
+  <tr><td>{{ KNOWL('k3.fq.kummer', title="Kummer candidates") }}:</td><td>&nbsp;&nbsp;{% set kd = cl.kummer_display() %}{% if kd is none %}{{ na() }}{% else %}{{ kd | safe }}{% endif %}</td></tr>
+  <tr><td>{{ KNOWL('k3.fq.polarization_degrees', title="Polarization degrees") }}:</td><td>&nbsp;&nbsp;{% set pd = cl.polarization_degrees_display() %}{% if pd is none %}{{ na() }}{% else %}{{ pd | safe }}{% endif %}</td></tr>
+</table>
+
+<h2>Base change</h2>
+
+<p>
+{% if cl.is_primitive is none %}
+Whether this class is {{ KNOWL('k3.fq.primitive', title="primitive") }} is {{ na() }}.
+{% elif cl.is_primitive %}
+This is a {{ KNOWL('k3.fq.primitive', title="primitive") }} class.
+{% else %}
+This class is not {{ KNOWL('k3.fq.primitive', title="primitive") }}.  It is the base change of the following classes over subfields of ${{ cl.field() }}$.
+{% set models = cl.primitive_models_display() %}
+{% if models %}
+<table class="ntdata">
+  <thead><tr><th>Subfield</th><th>Primitive model</th></tr></thead>
+  <tbody>
+  {% for field, link in models %}
+    <tr><td class="center">${{ field }}$</td><td>{{ link | safe }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endif %}
+</p>
+
+<h2 id="twist-anchor">{{ KNOWL('k3.fq.twist', title="Twists") }}</h2>
+
+<p>
+{% if cl.geometric_class is none %}
+The twists of this class are {{ na() }}.
+{% else %}
+{% if cl.geometric_class == cl.label %}
+This class is the representative of its {{ KNOWL('k3.fq.twist', title="twist class") }},
+{% else %}
+The representative of the {{ KNOWL('k3.fq.twist', title="twist class") }} of this class is {{ cl.geometric_class_link() | safe }},
+{% endif %}
+{% if cl.twist_count is none %}
+and its size is {{ na() }}.
+{% elif cl.twist_count == 1 %}
+which has no other members: this class has no twists.
+{% else %}
+which has <a href="{{ cl.twists_search_url() }}">{{ cl.twist_count }} members</a> (including this class).
+{% endif %}
+{% endif %}
+</p>
+
+{% if cl.twists is not none %}
+{% set twist_rows = cl.twist_table() %}
+{% if twist_rows %}
+<p>
+<table class="ntdata">
+  <thead><tr><th>Twist</th><th>Extension degree</th><th>Common base change</th></tr></thead>
+  <tbody>
+  {% for link, n, bc in twist_rows %}
+    <tr><td>{{ link | safe }}</td><td class="center">${{ n }}$</td><td>{{ bc | safe }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</p>
+{% endif %}
+{% elif cl.geometric_class is not none and cl.twist_count is not none and cl.twist_count > 1 %}
+<p>The list of twists is not stored for this class, since its twist class is large; use the search link above instead.</p>
+{% endif %}
+
+<h2>{{ KNOWL('k3.fq.lattices', title="Néron&ndash;Severi lattices") }}</h2>
+
+{% if cl.num_lattices is none %}
+<p>The candidate Néron&ndash;Severi lattices for this class are {{ na() }}.</p>
+{% elif not cl.lattices_available() %}
+<p>There {% if cl.num_lattices == 1 %}is $1$ candidate lattice{% else %}are ${{ cl.num_lattices }}$ candidate lattices{% endif %} for this class, but they are not available in this database.</p>
+{% elif cl.num_lattices == 0 %}
+<p>There are no candidate Néron&ndash;Severi lattices for this class.</p>
+{% else %}
+<p>
+There {% if cl.num_lattices == 1 %}is $1$ candidate pair{% else %}are ${{ cl.num_lattices }}$ candidate pairs{% endif %} $(N, \varphi)$ of a geometric Néron&ndash;Severi lattice with Frobenius action for this class{% if cl.num_lattices > cl.lattices|length %}; the first ${{ cl.lattices|length }}$ are listed below{% endif %}.
+{% if cl.min_quasi_ample_degree is not none or cl.min_ample_degree is not none %}
+The minimal degree of a big and nef class over ${{ cl.field() }}$ is {% if cl.min_quasi_ample_degree is none %}{{ na() }}{% else %}${{ cl.min_quasi_ample_degree }}${% endif %}, and the minimal degree of an ample class is {% if cl.min_ample_degree is none %}{{ na() }}{% else %}${{ cl.min_ample_degree }}${% endif %}.
+{% endif %}
+</p>
+<div style="overflow-x:auto;">
+<table class="ntdata">
+  <thead><tr>
+    <th>Label</th><th>Rank</th><th>Genus</th><th>Lattice</th><th>$\operatorname{disc} N$</th><th>$\operatorname{rk} N^\varphi$</th><th>$\operatorname{disc} N^\varphi$</th>
+    <th>$\#\mathrm{Br}$</th><th>Min. nef degree</th><th>Min. ample degree</th><th>Roots</th><th>Kummer</th><th>Conditions</th><th>K3</th>
+  </tr></thead>
+  <tbody>
+  {% for rec in cl.lattices %}
+    <tr>
+    {% for col in ["label", "rank", "genus_label", "lattice_label", "disc", "invariant_rank", "invariant_disc", "brauer_order", "min_quasi_ample_degree", "min_ample_degree", "has_roots", "contains_kummer_lattice", "conditions", "realizable_k3"] %}
+      <td>{{ cl.lattice_display(rec, col) | safe }}</td>
+    {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% endblock %}

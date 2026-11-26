@@ -1,0 +1,47 @@
+{% extends 'homepage.html' %}
+
+{% block content %}
+
+<div class="stats-summary">
+  {{ info.stats.short_summary | safe }}
+</div>
+
+<h2> Browse </h2>
+
+<table class="browse">
+  <tr>
+    <td>By {{ KNOWL('ag.base_field', 'base field cardinality') }}:</td>
+    <td colspan="3">{% for q in info.stats.qs %} <a href="?q={{q}}">{{q}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('k3.picard_rank', 'Picard rank') }}:</td>
+    <td colspan="3">{% for r in info.picard_ranks %} <a href="?picard_rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('k3.geometric_picard_rank', 'geometric Picard rank') }}:</td>
+    <td colspan="3">{% for r in info.geometric_picard_ranks %} <a href="?geometric_picard_rank={{r}}">{{r}}</a>&nbsp; {% endfor %}</td>
+  </tr><tr>
+    <td>By {{ KNOWL('k3.height', 'height') }}:</td>
+    <td>{% for h in info.heights %} <a href="?height={{h}}">{{h}}</a>&nbsp; {% endfor %} <a href="?height=inf">$\infty$</a></td>
+    <td style="padding-left:80px;">By {{ KNOWL('k3.fq.sign', 'sign') }}:</td>
+    <td><a href="?sign=1">$+1$</a>&nbsp; <a href="?sign=-1">$-1$</a></td>
+  </tr><tr>
+    <td colspan="4">By <a href="?newton=ordinary">ordinary</a>&nbsp;&nbsp;&nbsp; <a href="?newton=supersingular">supersingular</a>&nbsp;&nbsp;&nbsp; <a href="?ej_condition=yes">Artin&ndash;Tate condition</a>&nbsp;&nbsp;&nbsp; <a href="?has_count_growth=yes">count growth</a>&nbsp;&nbsp;&nbsp; <a href="?is_pointless=yes">pointless</a>&nbsp;&nbsp;&nbsp; <a href="?is_primitive=yes">primitive</a>&nbsp;&nbsp;&nbsp; <a href="?realizable_k3=yes">contains a K3 surface</a></td>
+  </tr><tr>
+    <td colspan="4">Some <a href="{{url_for('.interesting')}}">interesting classes</a> or a <a href="{{url_for('.random_class')}}">random class</a></td>
+  </tr><tr>
+    <td colspan="4">A <a href="?search_type=Counts">table</a> by Picard rank and base field.</td>
+  </tr>
+</table>
+
+<h2 id='search_h2'> {{ KNOWL('intro.search', 'Search') }} <button id="advancedtoggle" href="#">Advanced search options</button></h2>
+
+<form class='search'>
+  {{ info.search_array.html() | safe }}
+</form>
+
+<h2> Find </h2>
+<form>
+  {{ info.search_array.jump_box(info) | safe }}
+</form>
+
+<script> show_advancedQ(); </script>
+{% endblock %}
