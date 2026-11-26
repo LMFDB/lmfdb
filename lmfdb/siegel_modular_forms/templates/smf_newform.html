@@ -260,9 +260,9 @@ function show_qexp(qstyle) {
 <table class="ntdata complex-cols">
   <thead>
     <tr>
-      <th class="sticky-head dark" style="min-width: 40px;">Hecke operator</th>
+      <th class="sticky-head dark" style="min-width: 40px;">\( p \)</th>
       {% for n in newform.primes %}
-      <th class="center dark" colspan="1">\( {{ newform.hecke_ev_header(n) }} \)</th>
+      <th class="center dark{% if loop.index0 >= 10 %} evmore nodisplay{% endif %}" colspan="1">\( {{ newform.hecke_ev_header(n) }} \)</th>
       {% endfor %}
     </tr>
   </thead>
@@ -280,7 +280,7 @@ function show_qexp(qstyle) {
 	\( {{ newform.hecke_scale.get(ht, '') }} T_{ {{ hd }} } \)
       </td>
       {% for n in newform.range_evs %}
-      <td align="right">
+      <td align="right"{% if loop.index0 >= 10 %} class="evmore nodisplay"{% endif %}>
         {{ newform.hecke_eigenvalue(ht,n) | safe }}
       </td>
       {% endfor %} {# n loop #}
@@ -292,6 +292,12 @@ function show_qexp(qstyle) {
   </tbody>
 </table>
 </div>
+{% if newform.primes | length > 10 %}
+<p>
+  <a class="evless" href="#" onclick="$('.evmore').show(); $('.evless').hide(); return false;">show the {{ newform.primes | length }} primes up to {{ newform.primes[-1] }}</a>
+  <a class="evmore nodisplay" href="#" onclick="$('.evmore').hide(); $('.evless').show(); return false;">show the first 10 primes</a>
+</p>
+{% endif %}
 {% if newform.hecke_scale and 'lambda_p_square_0' in newform.hecke_types %}
 <p>In weight \(k = 2\), with the normalization of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operators') }}, the eigenvalues of \(T_{p^2,0}\) and \(T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and of \(T_{p^2,2}\),{% endif %} are not integral, so the table gives those of \(p\,T_{p^2,0}\) and \(p\,T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and \(p^2\,T_{p^2,2}\){% endif %}. The eigenvalues of \(T_p\) and \(T_{p^2}\) are as stated.</p>
 {% endif %}

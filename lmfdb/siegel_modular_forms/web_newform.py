@@ -475,7 +475,9 @@ class WebNewform():
                     setattr(self, attr, eigenvals.get(attr))
                 if eigenvals.get('an'):
                     self.has_exact_lfunc = True
-                    self.primes = prime_range(self.maxp_square+1)
+                    # every prime with a stored T(p); T(p^2) is stored for fewer primes (maxp_square)
+                    self.primes = prime_range((self.maxp or self.maxp_square) + 1)
+                    self.primes = self.primes[:len(self.lambda_p or [])] or prime_range(self.maxp_square + 1)
                     self.range_evs = range(len(self.primes))
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
@@ -1501,9 +1503,10 @@ function switch_basis(btype) {
         # Display the hecke eigenvalue of this hecke_type at place n. Will be inside \( \).
         m = self.hecke_ring_cyclotomic_generator
         evs = getattr(self, hecke_type)
-        if evs is None:
-            return '' 
-        ev = getattr(self, hecke_type)[n]
+        # T(p^2) and T(p^2, i) are stored for fewer primes than T(p), and not at every p | N
+        if evs is None or n >= len(evs) or evs[n] in (None, 'NULL'):
+            return ''
+        ev = evs[n]
         if m is not None and m != 0:
             # sum of powers of zeta_m
             # convert into a normal representation
@@ -1683,7 +1686,8 @@ function switch_basis(btype) {
         return raw_typeset_lfunc([[elt] for elt in self.texp[:prec]])
 
     def hecke_ev_header(self, n):
-        return 'a_{%s}'%n
+        # the columns of the Hecke eigenvalue table are the primes p (the rows are T(p), T(p^2), ...)
+        return '%s' % n
     
     def embed_header(self, n, format='embed'):
         if format == 'embed':
