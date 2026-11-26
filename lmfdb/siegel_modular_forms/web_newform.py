@@ -25,7 +25,7 @@ from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
-from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str, common_latex
 
 LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -1005,12 +1005,8 @@ class WebNewform():
             return r'no (minimal twist has level %s)'%(self.minimal_twist.split('.')[0]) if self.minimal_twist else r'no'
 
     def display_newspace(self):
-        s = r'\(S_{%s}^{\mathrm{new}}('
-        if self.char_order == 1:
-            s += r'\Gamma_0(%s))\)'
-        else:
-            s += r'%s, [\chi])\)'
-        return s%(self.weight, self.level)
+        # as on the space page: S_{k,j}^new(K(N)) etc. (common_latex)
+        return r'\(%s\)' % common_latex(self.family, self.level, ",".join(str(w) for w in self.weight), None, "S", 0, "new")
 
     def display_hecke_cutters(self):
         acting_on = f"acting on {self.display_newspace()}"
@@ -1304,6 +1300,107 @@ function switch_basis(btype) {
             twists.append('  </tr>')
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
+
+    # ------------------------------------------------------------------ Hecke polynomials and kernels
+    # Computed from the eigenvalues of T(p) stored in smf_hecke_nf (orbits of degree <= 20); there is
+    # no stored table of characteristic polynomials or Hecke cutters for Siegel forms.
+    @staticmethod
+    def _lambda_p_elements(h):
+        """{p: lambda_p as an element of the coefficient field} for an smf_hecke_nf row h"""
+        poly = PolynomialRing(QQ, 'x')([QQ(c) for c in h['field_poly']])
+        if poly.degree() == 1:
+            nu = -poly[0] / poly[1]
+            K = QQ
+        else:
+            K = NumberField(poly, 'nu')
+            nu = K.gen()
+        if h.get('hecke_ring_numerators'):
+            basis = [sum(QQ(c) * nu**i for i, c in enumerate(num)) / den
+                     for num, den in zip(h['hecke_ring_numerators'], h['hecke_ring_denominators'])]
+        else:
+            basis = [nu**i for i in range(poly.degree())]
+        out = {}
+        for p, v in zip(prime_range(1000), h.get('lambda_p') or []):
+            if v is None or v == 'NULL':
+                continue
+            out[p] = K(sum(QQ(c) * b for c, b in zip(v, basis)))
+        return out
+
+    @lazy_attribute
+    def _space_lambda_p(self):
+        """{hecke_orbit_code: {p: lambda_p}} for the orbits of the newspace, or None if one of them
+        has no stored eigenvalues (or the newspace is not complete)"""
+        forms = list(db.smf_newforms.search({'space_label': self.space_label}, ['hecke_orbit_code']))
+        num = db.smf_newspaces.lucky({'label': self.space_label}, 'num_forms')
+        if not forms or (num is not None and len(forms) != num):
+            return None
+        rows = list(db.smf_hecke_nf.search({'hecke_orbit_code': {'$in': [f['hecke_orbit_code'] for f in forms]}},
+                                           ['hecke_orbit_code', 'field_poly', 'hecke_ring_numerators',
+                                            'hecke_ring_denominators', 'lambda_p']))
+        if len(rows) != len(forms):
+            return None
+        return {h['hecke_orbit_code']: self._lambda_p_elements(h) for h in rows}
+
+    @lazy_attribute
+    def _own_lambda_p(self):
+        if self._space_lambda_p is not None and self.hecke_orbit_code in self._space_lambda_p:
+            return self._space_lambda_p[self.hecke_orbit_code]
+        h = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code},
+                                  ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators', 'lambda_p'])
+        return self._lambda_p_elements(h) if h else None
+
+    @staticmethod
+    def _minpoly(x):
+        R = PolynomialRing(QQ, 'T')
+        return R.gen() - x if x in QQ else x.minpoly('T')
+
+    @staticmethod
+    def _charpoly(x):
+        R = PolynomialRing(QQ, 'T')
+        return R.gen() - x if x in QQ else x.charpoly('T')
+
+    @lazy_attribute
+    def hecke_cutters(self):
+        """[(p, coefficients of the minimal polynomial of lambda_p)] for the fewest primes p not
+        dividing the level, taken in increasing order, whose kernels cut this orbit out of the
+        newspace; [] if it is the only orbit; None if it cannot be computed"""
+        lam = self._space_lambda_p
+        if lam is None:
+            return None
+        own = lam[self.hecke_orbit_code]
+        others = [code for code in lam if code != self.hecke_orbit_code]
+        cutters = []
+        for p in sorted(own):
+            if not others:
+                break
+            if self.level % p == 0:
+                continue
+            P = self._minpoly(own[p])
+            still = [code for code in others if p in lam[code] and self._minpoly(lam[code][p]) == P]
+            if len(still) < len(others):
+                cutters.append((p, [int(c) for c in P.change_ring(ZZ).list()]))
+                others = still
+        return cutters if not others else None
+
+    def display_siegel_hecke_charpolys(self, num_disp=5):
+        """A table of the characteristic polynomials F_p(T) of T(p) on the newform subspace, for the
+        primes p with a stored eigenvalue (the first num_disp shown, the others behind a link)"""
+        lam = self._own_lambda_p
+        if not lam:
+            return None
+        rows = []
+        for i, p in enumerate(sorted(lam)):
+            F = self._charpoly(lam[p]).change_ring(ZZ)
+            factors = [(g, e) for g, e in F.factor()]
+            factors.sort(key=lambda t: (t[0].degree(), t[1]))
+            cls = '' if i < num_disp else ' class="cpmore nodisplay"'
+            rows.append('<tr%s><td>\\(%s\\)</td><td>%s</td></tr>' % (cls, p, raw_typeset_poly_factor(factors, decreasing=True)))
+        out = ['<table class="ntdata">', '<thead><tr><th>\\(p\\)</th><th>\\(F_p(T)\\)</th></tr></thead>', '<tbody>']
+        out += rows + ['</tbody>', '</table>']
+        if len(rows) > num_disp:
+            out.append('<p><a class="cpless" href="#" onclick="$(\'.cpmore\').show(); $(\'.cpless\').hide(); return false;">show all %d primes</a>'
+                       '<a class="cpmore nodisplay" href="#" onclick="$(\'.cpmore\').hide(); $(\'.cpless\').show(); return false;">show fewer</a></p>' % len(rows))
+        return '\n'.join(out)
 
     @cached_method
     def display_hecke_char_polys(self, num_disp = 5):

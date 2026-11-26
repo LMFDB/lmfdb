@@ -303,6 +303,18 @@ function show_qexp(qstyle) {
 {% endif %}
 {% endif %}
 
+{% if newform.hecke_cutters is not none %}
+<h2>{{ KNOWL('mf.siegel.hecke_cutter', title='Hecke kernels') }}</h2>
+{{ newform.display_hecke_cutters() | safe }}
+{% endif %}
+
+{% set charpolys = newform.display_siegel_hecke_charpolys() %}
+{% if charpolys %}
+<h2>{{ KNOWL('mf.siegel.heckecharpolys', title='Hecke characteristic polynomials') }}</h2>
+<p>The characteristic polynomial \( F_p(T) \) of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operator') }} \( T(p) \) on the {{ KNOWL('mf.siegel.newform_subspace', title='newform subspace') }}.</p>
+{{ charpolys | safe }}
+{% endif %}
+
 {% if newform.char_orbit_index == 1 and newform.atkin_lehner_eigenvals %}
 <h2>{{KNOWL('mf.siegel.atkin-lehner', title='Atkin-Lehner signs')}}</h2>
 <table class="ntdata">
