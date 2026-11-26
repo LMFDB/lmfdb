@@ -1045,6 +1045,9 @@ def trace_postprocess(res, info, query, spaces=False):
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
     return res
 def space_trace_postprocess(res, info, query):
+    # the spaces store their dimension as cusp_dim; the trace table and the download test read dim
+    for space in res:
+        space['dim'] = space.get('cusp_dim', 0)
     return trace_postprocess(res, info, query, True)
 def process_an_constraints(info, query, qfield='traces', nshift=None):
     q = info.get('an_modulo','').strip()
@@ -1105,7 +1108,7 @@ def trace_search(info, query):
              err_title='Newspace search input error',
              shortcuts={'jump':jump_box,
                         'download':SMF_download().download_multiple_space_traces},
-             projection=['label', 'cusp_dim', 'weight'],
+             projection=['label', 'cusp_dim', 'weight', 'hecke_orbit_code'],
              postprocess=space_trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list)
