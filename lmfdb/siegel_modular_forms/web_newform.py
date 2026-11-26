@@ -1658,6 +1658,7 @@ function switch_basis(btype) {
     # TeX; coefficients and the Laurent polynomials in q_12 are compressed as on the classical pages.
     QEXP_BUDGET = 2000
     QEXP_ZTHRESH = 150
+    QEXP_MMAX = 3      # the views show phi_1, ..., phi_3 and the full expansion up to n, m <= 3
 
     @lazy_attribute
     def has_short_qexp(self):
@@ -1665,14 +1666,16 @@ function switch_basis(btype) {
 
     @lazy_attribute
     def _short_qexp(self):
+        # only the rows with m <= QEXP_MMAX are displayed: trace = n + N m <= 7 + N QEXP_MMAX
         N = self.level
+        query = {'hecke_orbit_code': self.hecke_orbit_code, 'trace': {'$lte': 7 + N * self.QEXP_MMAX}}
         return {(r['qf'][0], r['qf'][1], r['qf'][2] // N): r['coeff']
-                for r in db.smf_qexp_short.search({'hecke_orbit_code': self.hecke_orbit_code}, ['qf', 'coeff'])}
+                for r in db.smf_qexp_short.search(query, ['qf', 'coeff'])}
 
     @lazy_attribute
     def short_qexp_bound(self):
-        """the largest B such that every a(n, r, m) with n, m <= B is stored"""
-        return max((n for n, _, _ in self._short_qexp), default=0)
+        """the largest B such that every a(n, r, m) with n <= B and m <= QEXP_MMAX is stored"""
+        return max((n for n, _, m in self._short_qexp if m == 1), default=0)
 
     def _qexp_coeff_tex(self, coeff):
         """(sign, TeX of |a|, single term) for the coefficient a, compressed"""
@@ -1713,6 +1716,7 @@ function switch_basis(btype) {
         e = '' if r == 1 else '^{%d}' % r
         return r'(q_{12}%s %s q_{12}^{-%d})' % (e, op, r)
 
+    @cached_method
     def _qexp_zpoly(self, n, m):
         """the coefficient of q_1^n q_2^(N m): a Laurent polynomial in q_12, written with the pairs
         +-r (a(n, -r, m) = (-1)^k a(n, r, m)), compressed after QEXP_ZTHRESH characters"""
@@ -1739,10 +1743,10 @@ function switch_basis(btype) {
     def _qexp_pow(v, e):
         return '' if e == 0 else (v if e == 1 else '%s^{%d}' % (v, e))
 
-    def _qexp_fit(self, render):
-        """render(b) for the largest b <= short_qexp_bound within QEXP_BUDGET (at least b = 1)"""
+    def _qexp_fit(self, render, bmax):
+        """render(b) for the largest b <= bmax within QEXP_BUDGET (at least b = 1)"""
         best = None
-        for b in range(1, self.short_qexp_bound + 1):
+        for b in range(1, bmax + 1):
             s = render(b)
             if best is not None and len(s) > self.QEXP_BUDGET:
                 break
@@ -1758,10 +1762,10 @@ function switch_basis(btype) {
                 if z:
                     terms.append(('+', z + self._qexp_pow('q_1', n)))
             return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d})' % (nmax + 1)
-        return self._qexp_fit(render)
+        return self._qexp_fit(render, self.short_qexp_bound)
 
     def full_qexp_display(self):
-        """TeX of F, by levels max(n, m) <= b"""
+        """TeX of F, by levels max(n, m) <= b, b <= QEXP_MMAX"""
         N = self.level
         def render(b):
             terms = []
@@ -1771,7 +1775,7 @@ function switch_basis(btype) {
                 if z:
                     terms.append(('+', z + self._qexp_pow('q_1', n) + self._qexp_pow('q_2', N * m)))
             return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d}, q_2^{%d})' % (b + 1, N * (b + 1))
-        return self._qexp_fit(render)
+        return self._qexp_fit(render, min(self.short_qexp_bound, self.QEXP_MMAX))
 
     # ------------------------------------------------------------------ coefficient lookup
     def _class_value(self, key, sign):
