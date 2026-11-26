@@ -400,6 +400,48 @@ Long coefficients are abbreviated with \( \cdots \); all of them are in the tabl
   </tbody>
 </table>
 </div>
+
+<div id="fourier-lookup">
+<form method="get" action="#fourier-lookup">
+  <p>Coefficient \( a(T) \) at \( T = [a, b, c] \), with \( N \mid c \):
+    <input type="text" name="T" size="16" placeholder="e.g. 1,-27,183" value="{{ info.T or '' }}">
+    <button type="submit">show</button></p>
+</form>
+{% if info.T %}
+{% set res = newform.fourier_lookup(info.T) %}
+<p>
+{% if res.error %}
+  {% if res.T %}\( T = [{{ res.T[0] }}, {{ res.T[1] }}, {{ res.T[2] }}] \): {% endif %}{{ res.error }}
+{% else %}
+  \( a([{{ res.T[0] }}, {{ res.T[1] }}, {{ res.T[2] }}]) = {{ res.value }} \)
+  (discriminant \( {{ res.disc }} \); in the class of \( [{{ res.rep[0] }}, {{ res.rep[1] }}, {{ res.rep[2] }}] \))
+{% endif %}
+</p>
+{% endif %}
+<form method="get" action="#fourier-lookup">
+  <p>Coefficients at the classes with \( |b^2 - 4ac| \) in
+    <input type="text" name="disc" size="12" placeholder="e.g. 100-200" value="{{ info.disc or '' }}">
+    <button type="submit">show</button></p>
+</form>
+{% if info.disc %}
+{% set rows, err = newform.fourier_disc_range(info.disc) %}
+{% if err %}<p>{{ err }}</p>{% endif %}
+{% if rows %}
+<table class="ntdata">
+  <thead><tr><th>Discriminant</th><th>Quadratic form</th><th>Coefficient</th></tr></thead>
+  <tbody>
+  {% for d, q, val in rows %}
+    <tr>
+      <td align="center"> \( {{ d }} \) </td>
+      <td align="center"> \( [{{ q[0] }}, {{ q[1] }}, {{ q[2] }}] \) </td>
+      <td align="center"> \( {{ val }} \) </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endif %}
+</div>
 {% endif %}
 
 {% endblock %}

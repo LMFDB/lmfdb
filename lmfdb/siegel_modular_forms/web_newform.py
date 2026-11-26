@@ -1773,6 +1773,78 @@ function switch_basis(btype) {
             return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d}, q_2^{%d})' % (b + 1, N * (b + 1))
         return self._qexp_fit(render)
 
+    # ------------------------------------------------------------------ coefficient lookup
+    def _class_value(self, key, sign):
+        """a(T) for T in the class key = (qf_legendre, qf_tag) with sign s (reduce_signed), as a
+        coordinate list, and the stored representative; (None, None) if the class is not stored"""
+        from .qexp_reduction import reduce_signed
+        N, k = self.level, self.weight[0]
+        legendre, tag = [int(x) for x in key[0]], [int(x) for x in key[1]]
+        rep = db.smf_qexp_reduction.lucky({'level': N, 'family': self.family, 'qf_legendre': legendre, 'qf_tag': tag},
+                                          ['qf_orbit_rep', 'index'])
+        c = db.smf_qexp_coeffs.lucky({'hecke_orbit_code': self.hecke_orbit_code, 'qf_legendre': legendre, 'qf_tag': tag}, 'coeff')
+        if rep is None or c is None:
+            return None, None
+        r = rep['qf_orbit_rep']
+        _, _, sr = reduce_signed((r[0], r[1], r[2] // N), N)
+        sr = sr or 1
+        if sign == 0:
+            return ([0] * len(c) if k % 2 else [sr**k * x for x in c]), r
+        return [(sign * sr)**k * x for x in c], r
+
+    def fourier_lookup(self, text):
+        """The coefficient a(T) at T = [a, b, c] given as text 'a,b,c': a dict with the form,
+        its discriminant, the TeX of a(T) and its class representative, or an error message."""
+        from .qexp_reduction import reduce_signed
+        N = self.level
+        try:
+            a, b, c = [int(x) for x in text.replace('[', '').replace(']', '').replace('(', '').replace(')', '').replace(' ', '').split(',')]
+        except ValueError:
+            return {'error': "Enter the form as three integers a,b,c, for the matrix [[a, b/2], [b/2, c]]."}
+        out = {'T': [a, b, c], 'disc': b * b - 4 * a * c}
+        if c % N:
+            out['error'] = "The coefficient c must be divisible by the level %d." % N
+        elif a <= 0 or 4 * a * c - b * b <= 0:
+            out['error'] = "The form is not positive definite, so a(T) = 0 for a cusp form."
+        else:
+            qf, tag, sign = reduce_signed((a, b, c // N), N)
+            v, rep = self._class_value((qf, tag), sign)
+            if v is None:
+                out['error'] = "This coefficient is not stored: its class has no representative with a + c/N < %s." % (self.fourier_prec or 16)
+            else:
+                out['value'] = latex(self._fourier_elt(v))
+                out['rep'] = rep
+        return out
+
+    def fourier_disc_range(self, text, limit=500):
+        """[(discriminant, form, TeX of a(form))] for the stored classes with |discriminant| in the
+        range given as 'lo-hi', ordered as the table; (rows, error)."""
+        try:
+            lo, hi = [int(x) for x in text.replace(' ', '').split('-')] if '-' in text.strip('-') else [int(text)] * 2
+        except ValueError:
+            return [], "Enter a range of |discriminant|, such as 100-200."
+        reps = [r for r in db.smf_qexp_reduction.search({'level': self.level, 'family': self.family, 'is_minimal': True},
+                                                         ['qf_orbit_rep', 'qf_legendre', 'qf_tag', 'index'], sort=['index'])
+                if lo <= 4 * r['qf_orbit_rep'][0] * r['qf_orbit_rep'][2] - r['qf_orbit_rep'][1]**2 <= hi]
+        err = None
+        if len(reps) > limit:
+            err = "Only the first %d of the %d classes in this range are shown." % (limit, len(reps))
+            reps = reps[:limit]
+        if not reps:
+            return [], "No stored class has |discriminant| in this range."
+        coeffs = {}
+        for c in db.smf_qexp_coeffs.search({'hecke_orbit_code': self.hecke_orbit_code,
+                                            '$or': [{'qf_legendre': q['qf_legendre'], 'qf_tag': q['qf_tag']} for q in reps]},
+                                           ['qf_legendre', 'qf_tag', 'coeff']):
+            coeffs[(tuple(c['qf_legendre']), tuple(c['qf_tag']))] = c['coeff']
+        rows = []
+        for q in reps:
+            v = coeffs.get((tuple(q['qf_legendre']), tuple(q['qf_tag'])))
+            if v is not None:
+                a, b, c = q['qf_orbit_rep']
+                rows.append((b * b - 4 * a * c, q['qf_orbit_rep'], latex(self._fourier_elt(v))))
+        return rows, err
+
     @lazy_attribute
     def has_fourier_coefficients(self):
         return db.smf_qexp_coeffs.exists({'hecke_orbit_code': self.hecke_orbit_code})
