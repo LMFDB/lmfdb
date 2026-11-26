@@ -697,6 +697,9 @@ class SmfTest(LmfdbTest):
             if not tr:
                 continue
             for i, p in enumerate(primes):
+                # at p | N, a_p and lambda_p differ (a_p = lambda_p + eps p^a, Roberts-Schmidt)
+                if r["level"] % p == 0:
+                    continue
                 if i >= len(tl) or p > len(tr) or tl[i] is None or tr[p - 1] is None:
                     continue
                 n += 1
