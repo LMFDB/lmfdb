@@ -1402,6 +1402,83 @@ function switch_basis(btype) {
                        '<a class="cpmore nodisplay" href="#" onclick="$(\'.cpmore\').hide(); $(\'.cpless\').show(); return false;">show fewer</a></p>' % len(rows))
         return '\n'.join(out)
 
+    # ------------------------------------------------------------------ complex embeddings
+    @lazy_attribute
+    def _embeddings(self):
+        """[(label, root, {p: iota(lambda_p)})] for the complex embeddings iota of the coefficient
+        field, ordered by the vector of the iota(lambda_p) (real part, then imaginary part), from the
+        eigenvalues stored in smf_hecke_nf; None if there are none"""
+        from sage.all import ComplexField
+        h = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code},
+                                  ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators', 'lambda_p'])
+        if not h or not h.get('lambda_p'):
+            return None
+        lam = self._lambda_p_elements(h)
+        if not lam:
+            return None
+        CC = ComplexField(100)
+        poly = PolynomialRing(QQ, 'x')([QQ(c) for c in h['field_poly']])
+        if poly.degree() == 1:
+            embs = [(CC(-poly[0] / poly[1]), {p: CC(x) for p, x in lam.items()})]
+        else:
+            K = next(iter(lam.values())).parent()
+            embs = []
+            for sigma in K.embeddings(CC):
+                embs.append((sigma(K.gen()), {p: sigma(x) for p, x in lam.items()}))
+        key = lambda e: [(float(e[1][p].real()), float(e[1][p].imag())) for p in sorted(e[1])]
+        embs.sort(key=key)
+        return [('%s.1.%d' % (self.label, i + 1), root, vals) for i, (root, vals) in enumerate(embs)]
+
+    @staticmethod
+    def _display_cc(z, digits=6):
+        re, im = z.real(), z.imag()
+        def f(x):
+            s = ('%.' + str(digits) + 'f') % float(x)
+            return s if not s.startswith('-0.' + '0' * digits) else s[1:]
+        if abs(im) < 10**(-digits):
+            return f(re)
+        return '%s %s %si' % (f(re), '-' if im < 0 else '+', f(abs(im)))
+
+    def display_embeddings(self, num_cols=6):
+        """Tables of the complex embeddings iota: label, root of the defining polynomial, and the
+        images of lambda_p, as values or normalized by p^(w/2), w = 2k + j - 3 (|.| <= 4 at the good
+        primes, by Ramanujan); num_cols primes shown, the others behind a link"""
+        embs = self._embeddings
+        if not embs:
+            return None
+        k, j = self.weight
+        w = 2 * k + j - 3
+        primes = sorted(embs[0][2])
+        more = lambda i: ' class="emmore nodisplay"' if i >= num_cols else ''
+        tables = []
+        for norm in (False, True):
+            t = ['<div class="table-scroll-wrapper %s">' % ('emnorm nodisplay' if norm else 'emval'),
+                 '<table class="ntdata">', '<thead><tr>',
+                 '<th>%s</th>' % display_knowl('mf.siegel.embedding_label', title='Label')]
+            if self.dim > 1:
+                t.append('<th>%s</th>' % display_knowl('mf.siegel.root', title='Root'))
+            t += ['<th%s>\\(%s\\)</th>' % (more(i), (r'\iota(\lambda_{%s})/%s^{%s/2}' % (p, p, w)) if norm else (r'\iota(\lambda_{%s})' % p))
+                  for i, p in enumerate(primes)]
+            t += ['</tr></thead>', '<tbody>']
+            for label, root, vals in embs:
+                row = '<tr><td>%s</td>' % label
+                if self.dim > 1:
+                    row += '<td>\\(%s\\)</td>' % self._display_cc(root)
+                for i, p in enumerate(primes):
+                    z = vals[p] / (vals[p].parent()(p) ** (QQ(w) / 2)) if norm else vals[p]
+                    row += '<td align="right"%s>\\(%s\\)</td>' % (more(i), self._display_cc(z))
+                t.append(row + '</tr>')
+            t += ['</tbody>', '</table>', '</div>']
+            tables += t
+        links = ['<p>',
+                 '<span class="emval"><b>values</b> &middot; <a href="#" onclick="$(\'.emval\').hide(); $(\'.emnorm\').show(); return false;">normalized by \\(p^{%d/2}\\)</a></span>' % w,
+                 '<span class="emnorm nodisplay"><a href="#" onclick="$(\'.emnorm\').hide(); $(\'.emval\').show(); return false;">values</a> &middot; <b>normalized by \\(p^{%d/2}\\)</b></span>' % w]
+        if len(primes) > num_cols:
+            links += [' &middot; <a class="emless" href="#" onclick="$(\'.emmore\').show(); $(\'.emless\').hide(); return false;">all %d primes</a>' % len(primes),
+                      '<a class="emmore nodisplay" href="#" onclick="$(\'.emmore\').hide(); $(\'.emless\').show(); return false;">first %d primes</a>' % num_cols]
+        links.append('</p>')
+        return '\n'.join(tables + links)
+
     @cached_method
     def display_hecke_char_polys(self, num_disp = 5):
         """
