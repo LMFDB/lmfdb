@@ -1017,8 +1017,8 @@ class WebNewform():
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
-        knowl = display_knowl('smf.hecke_cutter', title=title)
-        desc = f"<p>This {display_knowl('smf.newform_subspace','newform subspace')} can be constructed as the "
+        knowl = display_knowl('mf.siegel.hecke_cutter', title=title)
+        desc = f"<p>This {display_knowl('mf.siegel.newform_subspace','newform subspace')} can be constructed as the "
         if len(polynomials) > 1:
             desc += f"intersection of the kernels of the following {knowl} {acting_on}:</p>\n<table>"
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"

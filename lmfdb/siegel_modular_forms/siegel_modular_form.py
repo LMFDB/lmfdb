@@ -954,7 +954,7 @@ newform_columns = SearchColumns([
     # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : '$(wt[0], wt[1])$' if wt[1] != 0 else wt[0],align="center"),
     ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]),align="center"),
     # MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
-    MultiProcessedCol("character", "smf.character", "Char",
+    MultiProcessedCol("character", "mf.siegel.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
                       short_title="character"),
@@ -1398,7 +1398,7 @@ space_columns = SearchColumns([
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True),
+    MathCol("cusp_dim", "mf.siegel.dimension", "Cusp Dim", short_title="cuspidal dimension", default=True),
     MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims", "ALdims_G"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
@@ -1568,7 +1568,7 @@ def dynamic_statistics():
     return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 class SMFSearchArray(SearchArray):
-    sort_knowl = 'smf.sort_order'
+    sort_knowl = 'mf.siegel.sort_order'
     _sort = [
         ('level', 'level', ['level', 'weight']),
         ('weight', 'weight', ['weight', 'level']),
