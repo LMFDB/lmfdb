@@ -1659,13 +1659,21 @@ function switch_basis(btype) {
         - ``num_disp`` - an integer, the number of q-expansion coefficients to display.
         """
         fourier_coefficient = []
-        for qf_entry in db.smf_qexp_reduction.search({'index':{'$lt':num_disp}, 'is_minimal':True, 'level':self.level, 'family':self.family}, sort=['index']):
-            qf = qf_entry['qf_orbit_rep']
-            coeff_entry = list(db.smf_qexp_coeffs.search({'qf_legendre':qf_entry['qf_legendre'], 'qf_tag':qf_entry['qf_tag'], 'hecke_orbit_code': self.hecke_orbit_code}))
-            if not coeff_entry:
+        qfs = list(db.smf_qexp_reduction.search({'index':{'$lt':num_disp}, 'is_minimal':True, 'level':self.level, 'family':self.family},
+                                                ['qf_orbit_rep', 'qf_legendre', 'qf_tag'], sort=['index']))
+        if not qfs:
+            return fourier_coefficient
+        # one query for all the coefficients (one per form was a round trip each)
+        coeffs = {}
+        for c in db.smf_qexp_coeffs.search({'hecke_orbit_code': self.hecke_orbit_code,
+                                            '$or': [{'qf_legendre': q['qf_legendre'], 'qf_tag': q['qf_tag']} for q in qfs]},
+                                           ['qf_legendre', 'qf_tag', 'coeff']):
+            coeffs.setdefault((tuple(c['qf_legendre']), tuple(c['qf_tag'])), c['coeff'])
+        for q in qfs:
+            coeff = coeffs.get((tuple(q['qf_legendre']), tuple(q['qf_tag'])))
+            if coeff is None:
                 continue
-            coeff = coeff_entry[0]['coeff']
-            fourier_coefficient.append([qf, latex(self._fourier_elt(coeff))])
+            fourier_coefficient.append([q['qf_orbit_rep'], latex(self._fourier_elt(coeff))])
         return fourier_coefficient
 
 
