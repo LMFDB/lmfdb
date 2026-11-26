@@ -878,7 +878,7 @@ def common_parse(info, query, na_check=False):
         else:
             query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
-    parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
+    parse_ints(info, query, 'Nk2', name=r"\(N(2k+j-3)^2(j+1)^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
 
@@ -1577,7 +1577,7 @@ class SMFSearchArray(SearchArray):
         ('character', 'character', ['level', 'char_orbit_index', 'weight']),
         ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
-        ('Nk2', 'N(2k+j-2)^2', ['Nk2', 'level']),
+        ('Nk2', 'N(2k+j-3)^2(j+1)^2', ['Nk2', 'level']),
         ('dim', 'dimension', ['dim', 'level', 'weight']),
         ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
         ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
@@ -1736,9 +1736,9 @@ class SMFSearchArray(SearchArray):
         Nk2 = TextBox(
             name='Nk2',
             knowl='mf.siegel.nk2',
-            label=r'\(N(2k+j-2)^2\)',
-            example='40-100',
-            example_span='40-100')
+            label=r'\(N(2k+j-3)^2(j+1)^2\)',
+            example='500-1000',
+            example_span='500-1000')
 
         coefficient_ring_index = TextBox(
             name='hecke_ring_index',
