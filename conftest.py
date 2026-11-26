@@ -14,7 +14,8 @@ so that test runs can be served from the tape instead.
   directory DBTAPE_OUT, one per pytest process; `python3 conftest.py merge`
   combines them.  Without DBTAPE_FILE this records the whole run.  Only
   results read to the end are recorded, so a search stopped early always
-  runs live.
+  runs live.  `python3 conftest.py combine` makes one tape to start from out
+  of two published ones, which is how runs on alpha use main's and their own.
 - Without DBTAPE_MODE this file does nothing.
 
 A table counts as edited when userdb.dbrecord, where LMFDB's _log_db_change
@@ -828,6 +829,25 @@ def pytest_unconfigure(config):
         _tape.close(complete=_tape.finished)
 
 
+def write_newest(conn, sources):
+    """
+    Fill a new tape with the newest recording of each query in ``sources``,
+    each of them an iterable of tape rows.
+    """
+    create_tables(conn)
+    conn.execute("CREATE TEMP TABLE seen AS SELECT * FROM tape WHERE 0")
+    for rows in sources:
+        conn.execute("BEGIN")
+        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)", (rec for rec in rows if not is_private(rec[3])))
+        conn.execute("COMMIT")
+    conn.execute("BEGIN")
+    seen = conn.cursor().execute("SELECT * FROM seen ORDER BY k")
+    for _, recordings in itertools.groupby(seen, key=lambda rec: rec[0]):
+        conn.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)", choose(recordings))
+    conn.execute("COMMIT")
+    conn.execute("DROP TABLE seen")
+
+
 def merge(out, inputs):
     """
     Combine the tapes written by several test processes into one, keeping
@@ -838,11 +858,10 @@ def merge(out, inputs):
     if os.path.exists(out):
         os.remove(out)
     conn = sqlite3.connect(out, isolation_level=None)
-    create_tables(conn)
-    conn.execute("CREATE TEMP TABLE seen AS SELECT * FROM tape WHERE 0")
     seeds = set()
     bases = set()
     metas = []
+    sources = []
     for path in inputs:
         src = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
         meta = dict(src.execute("SELECT k, v FROM meta"))
@@ -851,19 +870,10 @@ def merge(out, inputs):
         seeds.add(meta["seed"])
         bases.add(meta.get("base", ""))
         metas.append(meta)
-        conn.execute("BEGIN")
-        conn.executemany("INSERT INTO seen VALUES (?, ?, ?, ?, ?)",
-                         (rec for rec in src.execute("SELECT * FROM tape") if not is_private(rec[3])))
-        conn.execute("COMMIT")
-        src.close()
+        sources.append(src.execute("SELECT * FROM tape"))
     if len(seeds) != 1:
         raise ValueError("tapes recorded with different seeds: %s" % sorted(seeds))
-    conn.execute("BEGIN")
-    seen = conn.cursor().execute("SELECT * FROM seen ORDER BY k")
-    for _, recordings in itertools.groupby(seen, key=lambda rec: rec[0]):
-        conn.execute("INSERT INTO tape VALUES (?, ?, ?, ?, ?)", choose(recordings))
-    conn.execute("COMMIT")
-    conn.execute("DROP TABLE seen")
+    write_newest(conn, sources)
     conn.execute("INSERT INTO meta VALUES ('format', ?), ('seed', ?), ('created', ?), ('base', ?)",
                  (FORMAT, seeds.pop(), datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
                   bases.pop() if len(bases) == 1 else "mixed"))
@@ -871,6 +881,42 @@ def merge(out, inputs):
         values = {meta.get(k) for meta in metas}
         conn.execute("INSERT INTO meta VALUES (?, ?)", (k, values.pop() if len(values) == 1 else "mixed"))
     conn.execute("VACUUM")
+    conn.close()
+
+
+def combine(out, main, extra):
+    """
+    Make one tape to start from out of the published tapes ``main`` and
+    ``extra``, keeping the newest recording of each query.  A recording
+    started from it is to replace ``extra``, so it has that tape's creation
+    time, with ``main``'s seed.  Results judged by a fingerprint come from the
+    newer tape, and from the older one only if it has the same fingerprint.
+    """
+    if os.path.exists(out):
+        os.remove(out)
+    tapes = []
+    for path in (main, extra):
+        src = sqlite3.connect("file:%s?mode=ro" % path, uri=True)
+        meta = dict(src.execute("SELECT k, v FROM meta"))
+        if meta.get("format") == FORMAT:
+            tapes.append((meta, src.execute("SELECT * FROM tape")))
+    if not tapes:
+        raise ValueError("neither %s nor %s has tape format %s" % (main, extra, FORMAT))
+    seed, created = tapes[0][0]["seed"], tapes[-1][0]["created"]
+    tapes.sort(key=lambda tape: tape[0]["created"], reverse=True)
+    newer, rows = tapes[0]
+    sources = [rows]
+    for meta, rows in tapes[1:]:
+        changed = {rel for table in FINGERPRINTS for rel in edited_relations(table)
+                   if meta.get("fingerprint " + table) != newer.get("fingerprint " + table)}
+        # psycodict checks the catalog results against each other, so they
+        # must all come from one tape.
+        sources.append(rec for rec in rows if not any(is_catalog(t) or t in changed for t in rec[2].split()))
+    conn = sqlite3.connect(out, isolation_level=None)
+    write_newest(conn, sources)
+    conn.executemany("INSERT INTO meta VALUES (?, ?)", [("format", FORMAT), ("seed", seed), ("created", created)])
+    conn.executemany("INSERT INTO meta VALUES (?, ?)",
+                     [(k, v) for k, v in newer.items() if k.startswith("fingerprint ")])
     conn.close()
 
 
@@ -893,7 +939,9 @@ def describe(path):
 if __name__ == "__main__":
     if len(sys.argv) >= 4 and sys.argv[1] == "merge":
         merge(sys.argv[2], sys.argv[3:])
+    elif len(sys.argv) == 5 and sys.argv[1] == "combine":
+        combine(*sys.argv[2:])
     elif len(sys.argv) == 3 and sys.argv[1] == "describe":
         describe(sys.argv[2])
     else:
-        sys.exit("usage: python3 conftest.py merge OUT TAPE [TAPE ...] | describe TAPE")
+        sys.exit("usage: python3 conftest.py merge OUT TAPE [TAPE ...] | combine OUT MAIN EXTRA | describe TAPE")
