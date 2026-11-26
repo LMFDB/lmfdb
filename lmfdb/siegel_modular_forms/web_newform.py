@@ -20,7 +20,7 @@ from lmfdb.utils import (
     integer_squarefree_part,
     raw_typeset_poly, raw_typeset_poly_factor, raw_typeset
 )
-from lmfdb.utils.web_display import compress_polynomial
+from lmfdb.utils.web_display import compress_polynomial, compress_multipolynomial, compress_int
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
@@ -1649,6 +1649,129 @@ function switch_basis(btype) {
             c = vector(QQ, list(y)) * B.inverse() if B is not None else vector(QQ, list(y))
             rows.append((r"\(%s\)" % latex(g), r"\(%s\)" % latex(self._elt(list(c)))))
         return self._make_table(rows)
+
+    # ------------------------------------------------------------------ the short expansions
+    # smf_qexp_short holds a(T) at every T = [n, r, N m] with n, m <= B (fill_qexp_short.py).  The
+    # page shows F = sum a(n, r, m) q_1^n q_12^r q_2^(N m), q_1 = e(tau), q_12 = e(z), q_2 = e(omega),
+    # in two views: the Fourier-Jacobi coefficients phi_m (F = sum_m phi_m(tau, z) q_2^(N m)) and the
+    # full expansion.  Each is cut at the last complete level within QEXP_BUDGET characters of
+    # TeX; coefficients and the Laurent polynomials in q_12 are compressed as on the classical pages.
+    QEXP_BUDGET = 2000
+    QEXP_ZTHRESH = 150
+
+    @lazy_attribute
+    def has_short_qexp(self):
+        return self.weight[1] == 0 and db.smf_qexp_short.exists({'hecke_orbit_code': self.hecke_orbit_code})
+
+    @lazy_attribute
+    def _short_qexp(self):
+        N = self.level
+        return {(r['qf'][0], r['qf'][1], r['qf'][2] // N): r['coeff']
+                for r in db.smf_qexp_short.search({'hecke_orbit_code': self.hecke_orbit_code}, ['qf', 'coeff'])}
+
+    @lazy_attribute
+    def short_qexp_bound(self):
+        """the largest B such that every a(n, r, m) with n, m <= B is stored"""
+        return max((n for n, _, _ in self._short_qexp), default=0)
+
+    def _qexp_coeff_tex(self, coeff):
+        """(sign, TeX of |a|, single term) for the coefficient a, compressed"""
+        x = self._fourier_elt(coeff)
+        if x in QQ:
+            c = ZZ(x)
+            return ('-' if c < 0 else '+'), compress_int(abs(c))[0], True
+        p = x.change_ring(ZZ)
+        lead = p.monomial_coefficient(p.monomials()[0]) if p.number_of_terms() == 1 else None
+        if lead is not None:
+            q = p / lead
+            body = latex(q) if abs(lead) == 1 else compress_int(abs(lead))[0] + " " + latex(q)
+            return ('-' if lead < 0 else '+'), body, True
+        return '+', compress_multipolynomial(p, 30), False
+
+    def _qexp_term(self, coeff, mono):
+        sign, body, single = self._qexp_coeff_tex(coeff)
+        if not single:
+            return '+', r'\left(%s\right)%s' % (body, mono)
+        if body == '1' and mono:
+            body = ''
+        return sign, body + mono
+
+    @staticmethod
+    def _qexp_join(terms):
+        out = ''
+        for sign, body in terms:
+            if out:
+                out += ' %s %s' % (sign, body)
+            else:
+                out = ('-' if sign == '-' else '') + body
+        return out
+
+    def _qexp_pair(self, r):
+        if r == 0:
+            return ''
+        op = '-' if self.weight[0] % 2 else '+'
+        e = '' if r == 1 else '^{%d}' % r
+        return r'(q_{12}%s %s q_{12}^{-%d})' % (e, op, r)
+
+    def _qexp_zpoly(self, n, m):
+        """the coefficient of q_1^n q_2^(N m): a Laurent polynomial in q_12, written with the pairs
+        +-r (a(n, -r, m) = (-1)^k a(n, r, m)), compressed after QEXP_ZTHRESH characters"""
+        N, A = self.level, self._short_qexp
+        terms = []
+        r = 0
+        while 4 * N * n * m - r * r > 0:
+            v = A.get((n, r, m))
+            if v is not None and any(v):
+                terms.append(self._qexp_term(v, self._qexp_pair(r)))
+            r += 1
+        if not terms:
+            return None
+        if len(terms) > 2:
+            tail = ' %s %s' % terms[-1]
+            head = []
+            for t in terms[:-1]:
+                if head and len(self._qexp_join(head + [t])) + len(tail) > self.QEXP_ZTHRESH:
+                    return r'\left(%s + \cdots%s\right)' % (self._qexp_join(head), tail)
+                head.append(t)
+        return r'\left(%s\right)' % self._qexp_join(terms)
+
+    @staticmethod
+    def _qexp_pow(v, e):
+        return '' if e == 0 else (v if e == 1 else '%s^{%d}' % (v, e))
+
+    def _qexp_fit(self, render):
+        """render(b) for the largest b <= short_qexp_bound within QEXP_BUDGET (at least b = 1)"""
+        best = None
+        for b in range(1, self.short_qexp_bound + 1):
+            s = render(b)
+            if best is not None and len(s) > self.QEXP_BUDGET:
+                break
+            best = s
+        return best or ''
+
+    def fourier_jacobi_display(self, m):
+        """TeX of phi_m, the coefficient of q_2^(N m)"""
+        def render(nmax):
+            terms = []
+            for n in range(1, nmax + 1):
+                z = self._qexp_zpoly(n, m)
+                if z:
+                    terms.append(('+', z + self._qexp_pow('q_1', n)))
+            return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d})' % (nmax + 1)
+        return self._qexp_fit(render)
+
+    def full_qexp_display(self):
+        """TeX of F, by levels max(n, m) <= b"""
+        N = self.level
+        def render(b):
+            terms = []
+            for n, m in sorted([(n, m) for n in range(1, b + 1) for m in range(1, b + 1)],
+                               key=lambda t: (max(t), t[0] + t[1], t[1], t[0])):
+                z = self._qexp_zpoly(n, m)
+                if z:
+                    terms.append(('+', z + self._qexp_pow('q_1', n) + self._qexp_pow('q_2', N * m)))
+            return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d}, q_2^{%d})' % (b + 1, N * (b + 1))
+        return self._qexp_fit(render)
 
     @lazy_attribute
     def has_fourier_coefficients(self):

@@ -328,6 +328,40 @@ function show_qexp(qstyle) {
 <h2>Fourier coefficients</h2>
 <p>{{ newform.fourier_normalization() | safe }}</p>
 {{ newform.fourier_order_basis() | safe }}
+{% if newform.has_short_qexp %}
+<p>The {{ KNOWL('mf.siegel.q-expansion', title='Fourier expansion') }} is
+\( F(Z) = \sum_T a(T)\, q_1^{n} q_{12}^{r} q_2^{Nm} \), over the matrices
+\( T = \begin{pmatrix} n & r/2 \\ r/2 & Nm \end{pmatrix} \), with
+\( Z = \begin{pmatrix} \tau & z \\ z & \omega \end{pmatrix} \),
+\( q_1 = e^{2\pi i \tau} \), \( q_{12} = e^{2\pi i z} \), \( q_2 = e^{2\pi i \omega} \),
+and \( a(n, -r, m) = (-1)^k a(n, r, m) \).
+Grouping by powers of \( q_2 \) gives its Fourier&ndash;Jacobi expansion
+\( F = \sum_{m \ge 1} \phi_m(\tau, z)\, q_2^{Nm} \), where \( \phi_m \) is a
+{{ KNOWL('mf.jacobi', title='Jacobi form') }} of index \( Nm \).
+Long coefficients are abbreviated with \( \cdots \); all of them are in the table below and in the downloads.</p>
+<p>
+  <span class="qexp-fj"><b>Fourier&ndash;Jacobi expansion</b> &middot;
+    <a href="#" onclick="$('.qexp-fj').hide(); $('.qexp-full').show(); return false;">full expansion</a></span>
+  <span class="qexp-full nodisplay"><a href="#" onclick="$('.qexp-full').hide(); $('.qexp-fj').show(); return false;">Fourier&ndash;Jacobi expansion</a>
+    &middot; <b>full expansion</b></span>
+</p>
+<table class="qexp-table qexp-fj">
+  {% for m in [1, 2, 3] %}
+  <tr>
+    <td class="fdef">\( \phi_{ {{ m }} }(\tau, z) \)</td>
+    <td class="op">\(=\)</td>
+    <td class="qexp-output">\( {{ newform.fourier_jacobi_display(m) }} \)</td>
+  </tr>
+  {% endfor %}
+</table>
+<table class="qexp-table qexp-full nodisplay">
+  <tr>
+    <td class="fdef">\( F(Z) \)</td>
+    <td class="op">\(=\)</td>
+    <td class="qexp-output">\( {{ newform.full_qexp_display() }} \)</td>
+  </tr>
+</table>
+{% endif %}
 <div>
 <table class="ntdata">
   <thead>
