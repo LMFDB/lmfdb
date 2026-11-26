@@ -322,6 +322,25 @@ function show_qexp(qstyle) {
 {{ charpolys | safe }}
 {% endif %}
 
+{% set std_factors = newform.standard_euler_factors() %}
+{% if std_factors and newform.degree == 2 %}
+<h2>Standard {{ KNOWL('lfunction', title='L-function') }}</h2>
+{{ newform.standard_lfunction_description | safe }}
+<p>Its Euler factors at the primes \( p \) not dividing the level where \( a_p \) and \( a_{p^2} \) are known:</p>
+<table class="ntdata">
+  <thead><tr><th>\( p \)</th><th>\( L_p(T) \)</th></tr></thead>
+  <tbody>
+  {% for p, tex in std_factors %}
+    <tr{% if loop.index > 5 %} class="stdmore nodisplay"{% endif %}><td>\( {{ p }} \)</td><td>\( {{ tex }} \)</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if std_factors | length > 5 %}
+<p><a class="stdless" href="#" onclick="$('.stdmore').show(); $('.stdless').hide(); return false;">show all {{ std_factors | length }} primes</a>
+<a class="stdmore nodisplay" href="#" onclick="$('.stdmore').hide(); $('.stdless').show(); return false;">show fewer</a></p>
+{% endif %}
+{% endif %}
+
 {% if newform.char_orbit_index == 1 and newform.atkin_lehner_eigenvals %}
 <h2>{{KNOWL('mf.siegel.atkin-lehner', title='Atkin-Lehner signs')}}</h2>
 <table class="ntdata">

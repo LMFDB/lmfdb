@@ -727,6 +727,135 @@ class WebNewform():
                 % (display_knowl('mf.siegel.lift.saito_kurokawa', 'Saito-Kurokawa lift'), f_link,
                    formula, Lf, zeta))
 
+    # ------------------------------------------------------------------ the standard L-function
+    # Its Euler factor at a good prime p (arithmetic normalization, motivic weight 2w, w = 2k+j-3,
+    # W = p^w) is Lambda^2 of the spin factor without the factor 1 - W T of the similitude:
+    #   1 - (a_p^2 - a_{p^2} - W) T + W a_{p^2} T^2 - W^2 a_{p^2} T^3 + W^3 (a_p^2 - a_{p^2} - W) T^4 - W^5 T^5,
+    # with a_p, a_{p^2} the coefficients of the spin Dirichlet series.  (Checked: its roots have
+    # absolute value W for the forms of general type, and for the Saito-Kurokawa lifts it equals
+    # (1 - W T) Q_g(p^(k-1) T) Q_g(p^(k-2) T), Q_g the Euler factor of the lifted form g, on 1952
+    # local factors.)
+    @lazy_attribute
+    def _std_data(self):
+        """(K, basis of the coefficient ring as elements of K, {p: (a_p, a_{p^2})}) at the good primes
+        where both are known, or None"""
+        h = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code},
+                                  ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators',
+                                   'lambda_p', 'lambda_p_square', 'an'])
+        if not h or not h.get('lambda_p'):
+            return None
+        poly = PolynomialRing(QQ, 'x')([QQ(c) for c in h['field_poly']])
+        if poly.degree() == 1:
+            K, nu = QQ, -poly[0] / poly[1]
+        else:
+            K = NumberField(poly, 'nu')
+            nu = K.gen()
+        if h.get('hecke_ring_numerators'):
+            basis = [K(sum(QQ(c) * nu**i for i, c in enumerate(num)) / den)
+                     for num, den in zip(h['hecke_ring_numerators'], h['hecke_ring_denominators'])]
+        else:
+            basis = [K(nu**i) for i in range(poly.degree())]
+        el = lambda v: None if v in (None, 'NULL') else K(sum(QQ(c) * b for c, b in zip(v, basis)))
+        w = 2 * self.weight[0] + self.weight[1] - 3
+        an = h.get('an') or []
+        lsq = h.get('lambda_p_square') or []
+        out = {}
+        for i, (p, v) in enumerate(zip(prime_range(1000), h['lambda_p'])):
+            if self.level % p == 0:
+                continue
+            ap = el(v)
+            if ap is None:
+                continue
+            if p * p <= len(an) and an[p * p - 1] not in (None, 'NULL'):
+                ap2 = el(an[p * p - 1])
+            elif i < len(lsq) and lsq[i] not in (None, 'NULL'):
+                ap2 = el(lsq[i]) + p**(w - 1)       # a_{p^2} = T(p^2) + p^(w-1)
+            else:
+                continue
+            out[p] = (ap, ap2)
+        return (K, basis, out) if out else None
+
+    def _std_coeff_tex(self, x):
+        """TeX of an element x of the coefficient ring, in the basis shown on the page, compressed"""
+        K, basis, _ = self._std_data
+        if K is QQ or self.dim == 1:
+            return compress_int(ZZ(x))[0] if x >= 0 else '-' + compress_int(-ZZ(x))[0]
+        M = Matrix(QQ, [list(b) for b in basis])
+        coords = M.solve_left(vector(QQ, list(K(x))))
+        y = self._elt(list(coords))
+        if y in QQ:
+            return compress_int(abs(ZZ(y)))[0] if y >= 0 else '-' + compress_int(abs(ZZ(y)))[0]
+        return r'\left(%s\right)' % compress_multipolynomial(y.change_ring(ZZ), 30)
+
+    def standard_euler_factors(self):
+        """[(p, TeX of the Euler factor of the standard L-function at p)] at the good primes p with
+        a_p and a_{p^2} known"""
+        if self._std_data is None:
+            return []
+        w = 2 * self.weight[0] + self.weight[1] - 3
+        rows = []
+        for p, (ap, ap2) in sorted(self._std_data[2].items()):
+            W = p**w
+            c = [1, -(ap**2 - ap2 - W), W * ap2, -W**2 * ap2, W**3 * (ap**2 - ap2 - W), -W**5]
+            terms = []
+            for d, cd in enumerate(c):
+                if cd == 0:
+                    continue
+                t = self._std_coeff_tex(cd)
+                mono = '' if d == 0 else ('T' if d == 1 else 'T^{%d}' % d)
+                if t.startswith('-'):
+                    sign, t = '-', t[1:]
+                else:
+                    sign = '+'
+                if t == '1' and mono:
+                    t = ''
+                terms.append((sign, t + mono))
+            tex = ''
+            for sign, t in terms:
+                tex += (' %s %s' % (sign, t)) if tex else (('-' if sign == '-' else '') + t)
+            rows.append((p, tex))
+        return rows
+
+    @lazy_attribute
+    def standard_lfunction_description(self):
+        """HTML: the standard L-function, and for a Saito-Kurokawa or Yoshida lift its factorization"""
+        k, j = self.weight
+        w = 2 * k + j - 3
+        zeta = r'<a href="%s">\(\zeta(s)\)</a>' % url_for('l_functions.l_function_riemann_page')
+        intro = (r'<p>The standard \(L\)-function \(L(f, s, \mathrm{std})\) of degree 5 comes from the 5-dimensional '
+                 r'representation of the dual group \(\mathrm{Sp}(4)\) (\(\Lambda^2\) of the spin representation, '
+                 r'without its trivial summand). In the arithmetic normalization its motivic weight is \(%d\), and its '
+                 r'Euler factor at a prime \(p\) not dividing the level, with \(W = p^{%d}\), is'
+                 r'\[1 - (a_p^2 - a_{p^2} - W) T + W a_{p^2} T^2 - W^2 a_{p^2} T^3 + W^3 (a_p^2 - a_{p^2} - W) T^4 - W^5 T^5,\]'
+                 r'where \(a_n\) are the coefficients of the spin Dirichlet series.</p>' % (2 * w, w))
+        f_url = None
+        if self.aut_rep_type == 'P' and j == 0:
+            cmf_base = 'ModularForm/GL2/Q/holomorphic/'
+            lifted = [url for url in (self.related_objects or [])
+                      if url.startswith(cmf_base) and len(url.split('/')) == 8 and url.split('/')[5] == str(2*k - 2)]
+            if len(lifted) == 1:
+                f_url = lifted[0]
+        if f_url:
+            g_label = '.'.join(f_url.split('/')[4:])
+            Lg = r'L(g,\cdot)'
+            if db.lfunc_instances.exists({'url': f_url}):
+                Lg = r'<a href="/L/%s/">\(L(g, \cdot)\)</a>' % f_url
+            else:
+                Lg = r'\(L(g, \cdot)\)'
+            sh = lambda a: 's' if a == 0 else 's - %d' % a
+            return intro + (r'<p>As \(f\) is the Saito&ndash;Kurokawa lift of \(g\) = <a href="/%s/">%s</a>, '
+                            r'\[L(f, s, \mathrm{std}) = \zeta(%s)\, L(g, %s)\, L(g, %s),\] '
+                            r'where %s is the \(L\)-function of \(g\) and %s the Riemann zeta function.</p>'
+                            % (f_url, g_label, sh(w), sh(k - 1), sh(k - 2), Lg, zeta))
+        if self.aut_rep_type == 'Y':
+            return intro + (r'<p>For a Yoshida lift of a pair of classical newforms \((g, h)\), '
+                            r'\(L(f, s, \mathrm{std}) = \zeta(s - %d)\, L(g \otimes h, s)\), with the Rankin&ndash;Selberg '
+                            r'\(L\)-function of \(g\) and \(h\).</p>' % w)
+        if self.aut_rep_type == 'G':
+            return intro + (r'<p>The LMFDB does not have this \(L\)-function: it needs the eigenvalues of \(T(p^2)\) at every '
+                            r'prime up to several thousand, which have not been computed.</p>')
+        return intro
+
     @property
     def downloads(self):
         downloads = []
