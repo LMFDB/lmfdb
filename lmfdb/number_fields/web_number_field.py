@@ -317,6 +317,8 @@ def field_pretty(label, wnf=None):
     # Case 6: Pure cubic fields Q(\sqrt[3]{N})
     if d == '3':
         wnf = _wnf_with('disc_abs', 'disc_sign', 'coeffs')
+        if wnf.is_null():
+            return label
         # Check that discriminant is negative
         if wnf.disc() < 0:
             # Explicitly solve for a real root of defining polynomial (using Cardano's formula):
