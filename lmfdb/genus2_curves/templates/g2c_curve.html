@@ -201,7 +201,7 @@ function show_eqns(invstyle) {
 
 <p>
     {% if data.exists_nonsurj_data %}
-        The {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}}
+        The {{KNOWL('g2c.galois_rep', 'mod-$\\ell$ Galois representation')}}
         has {{KNOWL('g2c.maximal_galois_rep', title='maximal image')}} \(\GSp(4,\F_\ell)\)
         for all primes \( \ell \)
     
@@ -216,7 +216,7 @@ function show_eqns(invstyle) {
     {% else %}
         For primes $\ell \ge 5$ the Galois representation data has not been computed for this curve since it is not generic.
 
-        <p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\ell$ Galois representation')}} is listed in the table below, whenever it is not all of $\GSp(4,\F_\ell)$. </p>
+        <p>For primes $\ell \le 3$, the image of the {{KNOWL('g2c.galois_rep', 'mod-$\\ell$ Galois representation')}} is listed in the table below, whenever it is not all of $\GSp(4,\F_\ell)$. </p>
         <p>{{ data.galrep_table | safe }}</p>
     {% endif %}
 </p>

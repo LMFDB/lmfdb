@@ -89,7 +89,7 @@ cellpadding="5";
       {% if ec.ngens == 1 %} generator is {% else %} generators are {% endif %} known.
     {% endif %}
     <table>
-      <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\hat{h}(P)$")}}</th><th>Order</th></tr>
+      <tr><th>$P$</th><th>{{ KNOWL('ec.canonical_height', title="$\\hat{h}(P)$")}}</th><th>Order</th></tr>
       {% for P,h in ec.gens_and_heights %}
       <tr><td>{{P}}</td><td>${{h}}$</td><td>$\infty$</td></tr>
       {% endfor %}
@@ -445,9 +445,9 @@ $${{ ec.bsd_formula }}$$
 {% if ec.local_data.0.rootno %}
 <th>{{KNOWL('ec.local_root_number', title='Root number')}}</th>
 {% endif %}
-<th>{{KNOWL('ec.conductor_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathfrak{N}\))')}}</th>
-<th>{{KNOWL('ec.discriminant_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathfrak{D}_{\mathrm{min}}\))')}}</th>
-<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='\(\mathrm{ord}_{\mathfrak{p}}(\mathrm{den}(j))\)')}}</th>
+<th>{{KNOWL('ec.conductor_valuation', title='\\(\\mathrm{ord}_{\\mathfrak{p}}(\\mathfrak{N}\\))')}}</th>
+<th>{{KNOWL('ec.discriminant_valuation', title='\\(\\mathrm{ord}_{\\mathfrak{p}}(\\mathfrak{D}_{\\mathrm{min}}\\))')}}</th>
+<th>{{KNOWL('ec.j_invariant_denominator_valuation', title='\\(\\mathrm{ord}_{\\mathfrak{p}}(\\mathrm{den}(j))\\)')}}</th>
 </tr>
 </thead><tbody>
 {% for pr in ec.local_data %}
@@ -587,11 +587,11 @@ Its isogeny class <a href={{ ec.urls.class }}>{{ec.short_class_label}}</a>   con
 
 <p>
   {% if ec.qc=="yes" %}
-  This elliptic curve is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  This elliptic curve is a  {{KNOWL('ec.q_curve', '\\(\\Q\\)-curve')}}.
   {% elif ec.qc=="no" %}
-  This elliptic curve is not a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  This elliptic curve is not a  {{KNOWL('ec.q_curve', '\\(\\Q\\)-curve')}}.
   {% else %}
-  It has not yet been determined whether or not this elliptic curve is a  {{KNOWL('ec.q_curve', '\(\Q\)-curve')}}.
+  It has not yet been determined whether or not this elliptic curve is a  {{KNOWL('ec.q_curve', '\\(\\Q\\)-curve')}}.
   {% endif %}
 
   {% if ec.base_change %}
