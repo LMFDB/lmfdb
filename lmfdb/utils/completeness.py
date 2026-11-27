@@ -1356,7 +1356,7 @@ class NFBound(ColTest):
             # r2=3,4 come from Driver doing Hunter searches for
             # primitive fields plus older searches for non-primative
             [17**8, 79259702, 20829049, 2*10**7, 2*10**7], # n=8
-            [15**9, 10**8, 10**8, 146723910, 10**8], # n=9
+            [15**9, 2**27, 2**27, 146723910, 2**27], # n=9
             [190612177]*6, # n=10
             [5154074557]*6, # n=11
             [37250695278]*7, # n=12
