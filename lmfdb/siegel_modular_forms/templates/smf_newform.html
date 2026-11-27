@@ -250,15 +250,19 @@ function show_qexp(qstyle) {
 {% endif %}
 {% endif %}
 
+{% if newform.saito_kurokawa_factorization %}
+{{ newform.saito_kurokawa_factorization | safe }}
+{% endif %}
+
 {% if newform.has_exact_lfunc %}
 <h2>Hecke eigenvalues</h2>
 <div class="table-scroll-wrapper">
 <table class="ntdata complex-cols">
   <thead>
     <tr>
-      <th class="sticky-head dark" style="min-width: 40px;">Hecke operator</th>
+      <th class="sticky-head dark" style="min-width: 40px;">\( p \)</th>
       {% for n in newform.primes %}
-      <th class="center dark" colspan="1">\( {{ newform.hecke_ev_header(n) }} \)</th>
+      <th class="center dark{% if loop.index0 >= 10 %} evmore nodisplay{% endif %}" colspan="1">\( {{ newform.hecke_ev_header(n) }} \)</th>
       {% endfor %}
     </tr>
   </thead>
@@ -276,7 +280,7 @@ function show_qexp(qstyle) {
 	\( {{ newform.hecke_scale.get(ht, '') }} T_{ {{ hd }} } \)
       </td>
       {% for n in newform.range_evs %}
-      <td align="right">
+      <td align="right"{% if loop.index0 >= 10 %} class="evmore nodisplay"{% endif %}>
         {{ newform.hecke_eigenvalue(ht,n) | safe }}
       </td>
       {% endfor %} {# n loop #}
@@ -288,8 +292,52 @@ function show_qexp(qstyle) {
   </tbody>
 </table>
 </div>
+{% if newform.primes | length > 10 %}
+<p>
+  <a class="evless" href="#" onclick="$('.evmore').show(); $('.evless').hide(); return false;">show the {{ newform.primes | length }} primes up to {{ newform.primes[-1] }}</a>
+  <a class="evmore nodisplay" href="#" onclick="$('.evmore').hide(); $('.evless').show(); return false;">show the first 10 primes</a>
+</p>
+{% endif %}
 {% if newform.hecke_scale and 'lambda_p_square_0' in newform.hecke_types %}
 <p>In weight \(k = 2\), with the normalization of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operators') }}, the eigenvalues of \(T_{p^2,0}\) and \(T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and of \(T_{p^2,2}\),{% endif %} are not integral, so the table gives those of \(p\,T_{p^2,0}\) and \(p\,T_{p^2,1}\){% if 'lambda_p_square_2' in newform.hecke_scale %}, and \(p^2\,T_{p^2,2}\){% endif %}. The eigenvalues of \(T_p\) and \(T_{p^2}\) are as stated.</p>
+{% endif %}
+{% endif %}
+
+{% set embeddings = newform.display_embeddings() %}
+{% if embeddings %}
+<h2>{{ KNOWL('nf.embedding', title='Embeddings') }}</h2>
+<p>For each {{ KNOWL('nf.embedding', title='embedding') }} \( \iota \) of the {{ KNOWL('mf.siegel.coefficient_field', title='coefficient field') }} into \( \mathbb{C} \), the images of the eigenvalues \( \lambda_p \) of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operators') }} \( T(p) \). They can also be shown normalized by \( p^{(2k+j-3)/2} \).{% if newform.aut_rep_type == 'G' %} For a form of general type, as this one, the normalized values have absolute value at most \( 4 \) at the primes not dividing the level (the Ramanujan bound).{% else %} The lifts and the Klingen&ndash;Eisenstein series do not satisfy the Ramanujan bound \( 4 \) on the normalized values.{% endif %}</p>
+{{ embeddings | safe }}
+{% endif %}
+
+{% if newform.hecke_cutters is not none %}
+<h2>{{ KNOWL('mf.siegel.hecke_cutter', title='Hecke kernels') }}</h2>
+{{ newform.display_hecke_cutters() | safe }}
+{% endif %}
+
+{% set charpolys = newform.display_siegel_hecke_charpolys() %}
+{% if charpolys %}
+<h2>{{ KNOWL('mf.siegel.heckecharpolys', title='Hecke characteristic polynomials') }}</h2>
+<p>The characteristic polynomial \( F_p(T) \) of the {{ KNOWL('mf.siegel.hecke_operator', title='Hecke operator') }} \( T(p) \) on the {{ KNOWL('mf.siegel.newform_subspace', title='newform subspace') }}.</p>
+{{ charpolys | safe }}
+{% endif %}
+
+{% set std_factors = newform.standard_euler_factors() %}
+{% if std_factors and newform.degree == 2 %}
+<h2>Standard {{ KNOWL('lfunction', title='L-function') }}</h2>
+{{ newform.standard_lfunction_description | safe }}
+<p>Its Euler factors at the primes \( p \) not dividing the level where \( a_p \) and \( a_{p^2} \) are known:</p>
+<table class="ntdata">
+  <thead><tr><th>\( p \)</th><th>\( L_p(T) \)</th></tr></thead>
+  <tbody>
+  {% for p, tex in std_factors %}
+    <tr{% if loop.index > 5 %} class="stdmore nodisplay"{% endif %}><td>\( {{ p }} \)</td><td>\( {{ tex }} \)</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if std_factors | length > 5 %}
+<p><a class="stdless" href="#" onclick="$('.stdmore').show(); $('.stdless').hide(); return false;">show all {{ std_factors | length }} primes</a>
+<a class="stdmore nodisplay" href="#" onclick="$('.stdmore').hide(); $('.stdless').show(); return false;">show fewer</a></p>
 {% endif %}
 {% endif %}
 
@@ -314,7 +362,44 @@ function show_qexp(qstyle) {
 {% endif %}
 
 
+{% if newform.has_fourier_coefficients %}
 <h2>Fourier coefficients</h2>
+<p>{{ newform.fourier_normalization() | safe }}</p>
+{{ newform.fourier_order_basis() | safe }}
+{% if newform.has_short_qexp %}
+<p>The {{ KNOWL('mf.siegel.q-expansion', title='Fourier expansion') }} is
+\( F(Z) = \sum_T a(T)\, q_1^{n} q_{12}^{r} q_2^{Nm} \), over the matrices
+\( T = \begin{pmatrix} n & r/2 \\ r/2 & Nm \end{pmatrix} \), with
+\( Z = \begin{pmatrix} \tau & z \\ z & \omega \end{pmatrix} \),
+\( q_1 = e^{2\pi i \tau} \), \( q_{12} = e^{2\pi i z} \), \( q_2 = e^{2\pi i \omega} \),
+and \( a(n, -r, m) = (-1)^k a(n, r, m) \).
+Grouping by powers of \( q_2 \) gives its Fourier&ndash;Jacobi expansion
+\( F = \sum_{m \ge 1} \phi_m(\tau, z)\, q_2^{Nm} \), where \( \phi_m \) is a
+{{ KNOWL('mf.jacobi', title='Jacobi form') }} of index \( Nm \).
+Long coefficients are abbreviated with \( \cdots \); all of them are in the table below and in the downloads.</p>
+<p>
+  <span class="qexp-fj"><b>Fourier&ndash;Jacobi expansion</b> &middot;
+    <a href="#" onclick="$('.qexp-fj').hide(); $('.qexp-full').show(); return false;">full expansion</a></span>
+  <span class="qexp-full nodisplay"><a href="#" onclick="$('.qexp-full').hide(); $('.qexp-fj').show(); return false;">Fourier&ndash;Jacobi expansion</a>
+    &middot; <b>full expansion</b></span>
+</p>
+<table class="qexp-table qexp-fj">
+  {% for m in [1, 2, 3] %}
+  <tr>
+    <td class="fdef">\( \phi_{ {{ m }} }(\tau, z) \)</td>
+    <td class="op">\(=\)</td>
+    <td class="qexp-output">\( {{ newform.fourier_jacobi_display(m) }} \)</td>
+  </tr>
+  {% endfor %}
+</table>
+<table class="qexp-table qexp-full nodisplay">
+  <tr>
+    <td class="fdef">\( F(Z) \)</td>
+    <td class="op">\(=\)</td>
+    <td class="qexp-output">\( {{ newform.full_qexp_display() }} \)</td>
+  </tr>
+</table>
+{% endif %}
 <div>
 <table class="ntdata">
   <thead>
@@ -353,5 +438,48 @@ function show_qexp(qstyle) {
   </tbody>
 </table>
 </div>
+
+<div id="fourier-lookup">
+<form method="get" action="#fourier-lookup">
+  <p>Coefficient \( a(T) \) at \( T = [a, b, c] \), with \( N \mid c \):
+    <input type="text" name="T" size="16" placeholder="e.g. 1,-27,183" value="{{ info.T or '' }}">
+    <button type="submit">show</button></p>
+</form>
+{% if info.T %}
+{% set res = newform.fourier_lookup(info.T) %}
+<p>
+{% if res.error %}
+  {% if res.T %}\( T = [{{ res.T[0] }}, {{ res.T[1] }}, {{ res.T[2] }}] \): {% endif %}{{ res.error }}
+{% else %}
+  \( a([{{ res.T[0] }}, {{ res.T[1] }}, {{ res.T[2] }}]) = {{ res.value }} \)
+  (discriminant \( {{ res.disc }} \); in the class of \( [{{ res.rep[0] }}, {{ res.rep[1] }}, {{ res.rep[2] }}] \))
+{% endif %}
+</p>
+{% endif %}
+<form method="get" action="#fourier-lookup">
+  <p>Coefficients at the classes with \( |b^2 - 4ac| \) in
+    <input type="text" name="disc" size="12" placeholder="e.g. 100-200" value="{{ info.disc or '' }}">
+    <button type="submit">show</button></p>
+</form>
+{% if info.disc %}
+{% set rows, err = newform.fourier_disc_range(info.disc) %}
+{% if err %}<p>{{ err }}</p>{% endif %}
+{% if rows %}
+<table class="ntdata">
+  <thead><tr><th>Discriminant</th><th>Quadratic form</th><th>Coefficient</th></tr></thead>
+  <tbody>
+  {% for d, q, val in rows %}
+    <tr>
+      <td align="center"> \( {{ d }} \) </td>
+      <td align="center"> \( [{{ q[0] }}, {{ q[1] }}, {{ q[2] }}] \) </td>
+      <td align="center"> \( {{ val }} \) </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endif %}
+</div>
+{% endif %}
 
 {% endblock %}

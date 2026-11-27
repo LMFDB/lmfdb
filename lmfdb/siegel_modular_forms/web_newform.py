@@ -8,7 +8,7 @@ from flask import url_for
 from functools import reduce
 from lmfdb.characters.TinyConrey import ConreyCharacter
 from sage.all import (prime_range, latex, QQ, PolynomialRing, prime_pi, gcd,
-                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute)
+                      CDF, ZZ, CBF, cached_method, vector, lcm, RR, lazy_attribute, Matrix, NumberField)
 from sage.databases.cremona import cremona_letter_code, class_to_int
 
 from lmfdb import db
@@ -20,12 +20,12 @@ from lmfdb.utils import (
     integer_squarefree_part,
     raw_typeset_poly, raw_typeset_poly_factor, raw_typeset
 )
-from lmfdb.utils.web_display import compress_polynomial
+from lmfdb.utils.web_display import compress_polynomial, compress_multipolynomial, compress_int
 from lmfdb.number_fields.web_number_field import nf_display_knowl
 from lmfdb.number_fields.number_field import field_pretty
 from lmfdb.groups.abstract.main import abstract_group_display_knowl
 from lmfdb.sato_tate_groups.main import st_display_knowl
-from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str
+from .web_space import convert_spacelabel_from_conrey, get_bread, cyc_display, family_char_to_str, common_latex
 
 LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+$")
 EMB_LABEL_RE = re.compile(r"^[0-9]+\.[A-Z]+\.[0-9]+(\.[0-9]+)+\.[a-z]+\.[a-z]+\.[0-9]+\.[0-9]+$")
@@ -455,10 +455,15 @@ class WebNewform():
                                'lambda_p_square_2' : 'p^2, 2'
                                }
             hecke_cols += self.hecke_types
-            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp'])
+            eigenvals = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code}, ['an'] + hecke_cols + ['qexp', 'qexp_prec', 'qexp_order_index', 'qexp_order_numerators', 'qexp_order_denominators', 'qexp_ideal_index'])
             # !! TODO : change it to a field containing the entire fourier expansion !!
  
             if eigenvals:
+                # the normalization of the stored Fourier coefficients (smf_qexp_coeffs)
+                self.fourier_prec = eigenvals.get('qexp_prec')
+                self.fourier_order_index = eigenvals.get('qexp_order_index')
+                self.fourier_order = list(zip(eigenvals.get('qexp_order_numerators') or [], eigenvals.get('qexp_order_denominators') or []))
+                self.fourier_ideal_index = eigenvals.get('qexp_ideal_index')
                 if (not eigenvals.get('lambda_p_square_0')):
                     # We don't want to display empty rows in the table
                     self.hecke_types = ['lambda_p', 'lambda_p_square']
@@ -470,7 +475,9 @@ class WebNewform():
                     setattr(self, attr, eigenvals.get(attr))
                 if eigenvals.get('an'):
                     self.has_exact_lfunc = True
-                    self.primes = prime_range(self.maxp_square+1)
+                    # every prime with a stored T(p); T(p^2) is stored for fewer primes (maxp_square)
+                    self.primes = prime_range((self.maxp or self.maxp_square) + 1)
+                    self.primes = self.primes[:len(self.lambda_p or [])] or prime_range(self.maxp_square + 1)
                     self.range_evs = range(len(self.primes))
                 m = self.hecke_ring_cyclotomic_generator
                 if m is None or m == 0:
@@ -671,7 +678,7 @@ class WebNewform():
         # finally L-functions
         if self.weight[0] <= 200:
             if (self.dim==1 or not self.embedding_label) and db.lfunc_instances.exists({'url': nf_url[1:]}):
-                res.append(('L-function ' + self.label, '/L' + nf_url))
+                res.append(('L-function ' + self.label, '/L' + nf_url + '/'))
 #            if self.embedding_label is None and len(self.conrey_indexes)*self.rel_dim > 50:
 #                res = [list(map(str, elt)) for elt in res]
                 # properties_lfun(initialFriends, label, nf_url, conrey_indexes, rel_dim)
@@ -686,6 +693,169 @@ class WebNewform():
         return res
 
 
+    @lazy_attribute
+    def saito_kurokawa_factorization(self):
+        """
+        For a Saito-Kurokawa lift F of a classical newform f, return HTML
+        stating L(F, s) = L(f, s) zeta(s - k + 2) zeta(s - k + 1) (arithmetic
+        normalization), with links to f and to the L-functions; otherwise None.
+        """
+        if self.aut_rep_type != 'P' or self.degree != 2 or list(self.weight)[1:] != [0]:
+            return None
+        k = self.weight[0]
+        cmf_base = 'ModularForm/GL2/Q/holomorphic/'
+        # the classical newform has weight 2k-2: ModularForm/GL2/Q/holomorphic/N/2k-2/a/x
+        lifted = [url for url in (self.related_objects or [])
+                  if url.startswith(cmf_base) and len(url.split('/')) == 8
+                  and url.split('/')[5] == str(2*k - 2)]
+        if len(lifted) != 1:
+            return None
+        f_url = lifted[0]
+        f_label = '.'.join(f_url.split('/')[4:])
+        f_link = '<a href="/%s/">%s</a>' % (f_url, f_label)
+        Lf = r'\(L(f,s)\)'
+        if db.lfunc_instances.exists({'url': f_url}):
+            Lf = '<a href="/L/%s/">%s</a>' % (f_url, Lf)
+        zeta = r'<a href="%s">\(\zeta(s)\)</a>' % url_for('l_functions.l_function_riemann_page')
+
+        def shift(a):
+            return 's' if a == 0 else 's-%s' % a
+        formula = r'L(F,s) = L(f,s)\,\zeta(%s)\,\zeta(%s)' % (shift(k - 2), shift(k - 1))
+        return (r'<p>This form \(F\) is the %s of the classical newform \(f\) = %s, '
+                r'so its spinor \(L\)-function factors (in the arithmetic normalization) as '
+                r'\[%s,\] where %s is the \(L\)-function of \(f\) and %s is the Riemann zeta function.</p>'
+                % (display_knowl('mf.siegel.lift.saito_kurokawa', 'Saito-Kurokawa lift'), f_link,
+                   formula, Lf, zeta))
+
+    # ------------------------------------------------------------------ the standard L-function
+    # Its Euler factor at a good prime p (arithmetic normalization, motivic weight 2w, w = 2k+j-3,
+    # W = p^w) is Lambda^2 of the spin factor without the factor 1 - W T of the similitude:
+    #   1 - (a_p^2 - a_{p^2} - W) T + W a_{p^2} T^2 - W^2 a_{p^2} T^3 + W^3 (a_p^2 - a_{p^2} - W) T^4 - W^5 T^5,
+    # with a_p, a_{p^2} the coefficients of the spin Dirichlet series.  (Checked: its roots have
+    # absolute value W for the forms of general type, and for the Saito-Kurokawa lifts it equals
+    # (1 - W T) Q_g(p^(k-1) T) Q_g(p^(k-2) T), Q_g the Euler factor of the lifted form g, on 1952
+    # local factors.)
+    @lazy_attribute
+    def _std_data(self):
+        """(K, basis of the coefficient ring as elements of K, {p: (a_p, a_{p^2})}) at the good primes
+        where both are known, or None"""
+        h = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code},
+                                  ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators',
+                                   'lambda_p', 'lambda_p_square', 'an'])
+        if not h or not h.get('lambda_p'):
+            return None
+        poly = PolynomialRing(QQ, 'x')([QQ(c) for c in h['field_poly']])
+        if poly.degree() == 1:
+            K, nu = QQ, -poly[0] / poly[1]
+        else:
+            K = NumberField(poly, 'nu')
+            nu = K.gen()
+        if h.get('hecke_ring_numerators'):
+            basis = [K(sum(QQ(c) * nu**i for i, c in enumerate(num)) / den)
+                     for num, den in zip(h['hecke_ring_numerators'], h['hecke_ring_denominators'])]
+        else:
+            basis = [K(nu**i) for i in range(poly.degree())]
+        el = lambda v: None if v in (None, 'NULL') else K(sum(QQ(c) * b for c, b in zip(v, basis)))
+        w = 2 * self.weight[0] + self.weight[1] - 3
+        an = h.get('an') or []
+        lsq = h.get('lambda_p_square') or []
+        out = {}
+        for i, (p, v) in enumerate(zip(prime_range(1000), h['lambda_p'])):
+            if self.level % p == 0:
+                continue
+            ap = el(v)
+            if ap is None:
+                continue
+            if p * p <= len(an) and an[p * p - 1] not in (None, 'NULL'):
+                ap2 = el(an[p * p - 1])
+            elif i < len(lsq) and lsq[i] not in (None, 'NULL'):
+                ap2 = el(lsq[i]) + p**(w - 1)       # a_{p^2} = T(p^2) + p^(w-1)
+            else:
+                continue
+            out[p] = (ap, ap2)
+        return (K, basis, out) if out else None
+
+    def _std_coeff_tex(self, x):
+        """TeX of an element x of the coefficient ring, in the basis shown on the page, compressed"""
+        K, basis, _ = self._std_data
+        if K is QQ or self.dim == 1:
+            return compress_int(ZZ(x))[0] if x >= 0 else '-' + compress_int(-ZZ(x))[0]
+        M = Matrix(QQ, [list(b) for b in basis])
+        coords = M.solve_left(vector(QQ, list(K(x))))
+        y = self._elt(list(coords))
+        if y in QQ:
+            return compress_int(abs(ZZ(y)))[0] if y >= 0 else '-' + compress_int(abs(ZZ(y)))[0]
+        return r'\left(%s\right)' % compress_multipolynomial(y.change_ring(ZZ), 30)
+
+    def standard_euler_factors(self):
+        """[(p, TeX of the Euler factor of the standard L-function at p)] at the good primes p with
+        a_p and a_{p^2} known"""
+        if self._std_data is None:
+            return []
+        w = 2 * self.weight[0] + self.weight[1] - 3
+        rows = []
+        for p, (ap, ap2) in sorted(self._std_data[2].items()):
+            W = p**w
+            c = [1, -(ap**2 - ap2 - W), W * ap2, -W**2 * ap2, W**3 * (ap**2 - ap2 - W), -W**5]
+            terms = []
+            for d, cd in enumerate(c):
+                if cd == 0:
+                    continue
+                t = self._std_coeff_tex(cd)
+                mono = '' if d == 0 else ('T' if d == 1 else 'T^{%d}' % d)
+                if t.startswith('-'):
+                    sign, t = '-', t[1:]
+                else:
+                    sign = '+'
+                if t == '1' and mono:
+                    t = ''
+                terms.append((sign, t + mono))
+            tex = ''
+            for sign, t in terms:
+                tex += (' %s %s' % (sign, t)) if tex else (('-' if sign == '-' else '') + t)
+            rows.append((p, tex))
+        return rows
+
+    @lazy_attribute
+    def standard_lfunction_description(self):
+        """HTML: the standard L-function, and for a Saito-Kurokawa or Yoshida lift its factorization"""
+        k, j = self.weight
+        w = 2 * k + j - 3
+        zeta = r'<a href="%s">\(\zeta(s)\)</a>' % url_for('l_functions.l_function_riemann_page')
+        intro = (r'<p>The standard \(L\)-function \(L(f, s, \mathrm{std})\) of degree 5 comes from the 5-dimensional '
+                 r'representation of the dual group \(\mathrm{Sp}(4)\) (\(\Lambda^2\) of the spin representation, '
+                 r'without its trivial summand). In the arithmetic normalization its motivic weight is \(%d\), and its '
+                 r'Euler factor at a prime \(p\) not dividing the level, with \(W = p^{%d}\), is'
+                 r'\[1 - (a_p^2 - a_{p^2} - W) T + W a_{p^2} T^2 - W^2 a_{p^2} T^3 + W^3 (a_p^2 - a_{p^2} - W) T^4 - W^5 T^5,\]'
+                 r'where \(a_n\) are the coefficients of the spin Dirichlet series.</p>' % (2 * w, w))
+        f_url = None
+        if self.aut_rep_type == 'P' and j == 0:
+            cmf_base = 'ModularForm/GL2/Q/holomorphic/'
+            lifted = [url for url in (self.related_objects or [])
+                      if url.startswith(cmf_base) and len(url.split('/')) == 8 and url.split('/')[5] == str(2*k - 2)]
+            if len(lifted) == 1:
+                f_url = lifted[0]
+        if f_url:
+            g_label = '.'.join(f_url.split('/')[4:])
+            Lg = r'L(g,\cdot)'
+            if db.lfunc_instances.exists({'url': f_url}):
+                Lg = r'<a href="/L/%s/">\(L(g, \cdot)\)</a>' % f_url
+            else:
+                Lg = r'\(L(g, \cdot)\)'
+            sh = lambda a: 's' if a == 0 else 's - %d' % a
+            return intro + (r'<p>As \(f\) is the Saito&ndash;Kurokawa lift of \(g\) = <a href="/%s/">%s</a>, '
+                            r'\[L(f, s, \mathrm{std}) = \zeta(%s)\, L(g, %s)\, L(g, %s),\] '
+                            r'where %s is the \(L\)-function of \(g\) and %s the Riemann zeta function.</p>'
+                            % (f_url, g_label, sh(w), sh(k - 1), sh(k - 2), Lg, zeta))
+        if self.aut_rep_type == 'Y':
+            return intro + (r'<p>For a Yoshida lift of a pair of classical newforms \((g, h)\), '
+                            r'\(L(f, s, \mathrm{std}) = \zeta(s - %d)\, L(g \otimes h, s)\), with the Rankin&ndash;Selberg '
+                            r'\(L\)-function of \(g\) and \(h\).</p>' % w)
+        if self.aut_rep_type == 'G':
+            return intro + (r'<p>The LMFDB does not have this \(L\)-function: it needs the eigenvalues of \(T(p^2)\) at every '
+                            r'prime up to several thousand, which have not been computed.</p>')
+        return intro
+
     @property
     def downloads(self):
         downloads = []
@@ -693,8 +863,8 @@ class WebNewform():
             label = self.label
 #            if self.hecke_cutters or self.has_exact_qexp:
 #                downloads.append(('Modular form to Magma', url_for('.download_newform_to_magma', label=label)))
-            if self.has_exact_qexp:
-                downloads.append(('q-expansion to Sage', url_for('.download_qexp', label=label)))
+            if self.has_fourier_coefficients:
+                downloads.append(('Fourier coefficients to Sage', url_for('.download_qexp', label=label)))
             downloads.append(('Trace form to text', url_for('.download_traces', label=label)))
             #if self.has_complex_qexp:
             #    downloads.append(('Embeddings to text', url_for('.download_cc_data', label=label)))
@@ -964,12 +1134,8 @@ class WebNewform():
             return r'no (minimal twist has level %s)'%(self.minimal_twist.split('.')[0]) if self.minimal_twist else r'no'
 
     def display_newspace(self):
-        s = r'\(S_{%s}^{\mathrm{new}}('
-        if self.char_order == 1:
-            s += r'\Gamma_0(%s))\)'
-        else:
-            s += r'%s, [\chi])\)'
-        return s%(self.weight, self.level)
+        # as on the space page: S_{k,j}^new(K(N)) etc. (common_latex)
+        return r'\(%s\)' % common_latex(self.family, self.level, ",".join(str(w) for w in self.weight), None, "S", 0, "new")
 
     def display_hecke_cutters(self):
         acting_on = f"acting on {self.display_newspace()}"
@@ -978,8 +1144,8 @@ class WebNewform():
         title = 'linear operator'
         if len(polynomials) > 1:
             title += 's'
-        knowl = display_knowl('smf.hecke_cutter', title=title)
-        desc = f"<p>This {display_knowl('smf.newform_subspace','newform subspace')} can be constructed as the "
+        knowl = display_knowl('mf.siegel.hecke_cutter', title=title)
+        desc = f"<p>This {display_knowl('mf.siegel.newform_subspace','newform subspace')} can be constructed as the "
         if len(polynomials) > 1:
             desc += f"intersection of the kernels of the following {knowl} {acting_on}:</p>\n<table>"
             desc += "\n".join("<tr><td>%s</td></tr>" % F for F in polynomials) + "\n</table>"
@@ -1264,6 +1430,184 @@ function switch_basis(btype) {
         twists.extend(['</tbody>', '</table>'])
         return '\n'.join(twists)
 
+    # ------------------------------------------------------------------ Hecke polynomials and kernels
+    # Computed from the eigenvalues of T(p) stored in smf_hecke_nf (orbits of degree <= 20); there is
+    # no stored table of characteristic polynomials or Hecke cutters for Siegel forms.
+    @staticmethod
+    def _lambda_p_elements(h):
+        """{p: lambda_p as an element of the coefficient field} for an smf_hecke_nf row h"""
+        poly = PolynomialRing(QQ, 'x')([QQ(c) for c in h['field_poly']])
+        if poly.degree() == 1:
+            nu = -poly[0] / poly[1]
+            K = QQ
+        else:
+            K = NumberField(poly, 'nu')
+            nu = K.gen()
+        if h.get('hecke_ring_numerators'):
+            basis = [sum(QQ(c) * nu**i for i, c in enumerate(num)) / den
+                     for num, den in zip(h['hecke_ring_numerators'], h['hecke_ring_denominators'])]
+        else:
+            basis = [nu**i for i in range(poly.degree())]
+        out = {}
+        for p, v in zip(prime_range(1000), h.get('lambda_p') or []):
+            if v is None or v == 'NULL':
+                continue
+            out[p] = K(sum(QQ(c) * b for c, b in zip(v, basis)))
+        return out
+
+    @lazy_attribute
+    def _space_lambda_p(self):
+        """{hecke_orbit_code: {p: lambda_p}} for the orbits of the newspace, or None if one of them
+        has no stored eigenvalues (or the newspace is not complete)"""
+        forms = list(db.smf_newforms.search({'space_label': self.space_label}, ['hecke_orbit_code']))
+        num = db.smf_newspaces.lucky({'label': self.space_label}, 'num_forms')
+        if not forms or (num is not None and len(forms) != num):
+            return None
+        rows = list(db.smf_hecke_nf.search({'hecke_orbit_code': {'$in': [f['hecke_orbit_code'] for f in forms]}},
+                                           ['hecke_orbit_code', 'field_poly', 'hecke_ring_numerators',
+                                            'hecke_ring_denominators', 'lambda_p']))
+        if len(rows) != len(forms):
+            return None
+        return {h['hecke_orbit_code']: self._lambda_p_elements(h) for h in rows}
+
+    @lazy_attribute
+    def _own_lambda_p(self):
+        if self._space_lambda_p is not None and self.hecke_orbit_code in self._space_lambda_p:
+            return self._space_lambda_p[self.hecke_orbit_code]
+        h = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code},
+                                  ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators', 'lambda_p'])
+        return self._lambda_p_elements(h) if h else None
+
+    @staticmethod
+    def _minpoly(x):
+        R = PolynomialRing(QQ, 'T')
+        return R.gen() - x if x in QQ else x.minpoly('T')
+
+    @staticmethod
+    def _charpoly(x):
+        R = PolynomialRing(QQ, 'T')
+        return R.gen() - x if x in QQ else x.charpoly('T')
+
+    @lazy_attribute
+    def hecke_cutters(self):
+        """[(p, coefficients of the minimal polynomial of lambda_p)] for the fewest primes p not
+        dividing the level, taken in increasing order, whose kernels cut this orbit out of the
+        newspace; [] if it is the only orbit; None if it cannot be computed"""
+        lam = self._space_lambda_p
+        if lam is None:
+            return None
+        own = lam[self.hecke_orbit_code]
+        others = [code for code in lam if code != self.hecke_orbit_code]
+        cutters = []
+        for p in sorted(own):
+            if not others:
+                break
+            if self.level % p == 0:
+                continue
+            P = self._minpoly(own[p])
+            still = [code for code in others if p in lam[code] and self._minpoly(lam[code][p]) == P]
+            if len(still) < len(others):
+                cutters.append((p, [int(c) for c in P.change_ring(ZZ).list()]))
+                others = still
+        return cutters if not others else None
+
+    def display_siegel_hecke_charpolys(self, num_disp=5):
+        """A table of the characteristic polynomials F_p(T) of T(p) on the newform subspace, for the
+        primes p with a stored eigenvalue (the first num_disp shown, the others behind a link)"""
+        lam = self._own_lambda_p
+        if not lam:
+            return None
+        rows = []
+        for i, p in enumerate(sorted(lam)):
+            F = self._charpoly(lam[p]).change_ring(ZZ)
+            factors = [(g, e) for g, e in F.factor()]
+            factors.sort(key=lambda t: (t[0].degree(), t[1]))
+            cls = '' if i < num_disp else ' class="cpmore nodisplay"'
+            rows.append('<tr%s><td>\\(%s\\)</td><td>%s</td></tr>' % (cls, p, raw_typeset_poly_factor(factors, decreasing=True)))
+        out = ['<table class="ntdata">', '<thead><tr><th>\\(p\\)</th><th>\\(F_p(T)\\)</th></tr></thead>', '<tbody>']
+        out += rows + ['</tbody>', '</table>']
+        if len(rows) > num_disp:
+            out.append('<p><a class="cpless" href="#" onclick="$(\'.cpmore\').show(); $(\'.cpless\').hide(); return false;">show all %d primes</a>'
+                       '<a class="cpmore nodisplay" href="#" onclick="$(\'.cpmore\').hide(); $(\'.cpless\').show(); return false;">show fewer</a></p>' % len(rows))
+        return '\n'.join(out)
+
+    # ------------------------------------------------------------------ complex embeddings
+    @lazy_attribute
+    def _embeddings(self):
+        """[(label, root, {p: iota(lambda_p)})] for the complex embeddings iota of the coefficient
+        field, ordered by the vector of the iota(lambda_p) (real part, then imaginary part), from the
+        eigenvalues stored in smf_hecke_nf; None if there are none"""
+        from sage.all import ComplexField
+        h = db.smf_hecke_nf.lucky({'hecke_orbit_code': self.hecke_orbit_code},
+                                  ['field_poly', 'hecke_ring_numerators', 'hecke_ring_denominators', 'lambda_p'])
+        if not h or not h.get('lambda_p'):
+            return None
+        lam = self._lambda_p_elements(h)
+        if not lam:
+            return None
+        CC = ComplexField(100)
+        poly = PolynomialRing(QQ, 'x')([QQ(c) for c in h['field_poly']])
+        if poly.degree() == 1:
+            embs = [(CC(-poly[0] / poly[1]), {p: CC(x) for p, x in lam.items()})]
+        else:
+            K = next(iter(lam.values())).parent()
+            embs = []
+            for sigma in K.embeddings(CC):
+                embs.append((sigma(K.gen()), {p: sigma(x) for p, x in lam.items()}))
+        key = lambda e: [(float(e[1][p].real()), float(e[1][p].imag())) for p in sorted(e[1])]
+        embs.sort(key=key)
+        return [('%s.1.%d' % (self.label, i + 1), root, vals) for i, (root, vals) in enumerate(embs)]
+
+    @staticmethod
+    def _display_cc(z, digits=6):
+        re, im = z.real(), z.imag()
+        def f(x):
+            s = ('%.' + str(digits) + 'f') % float(x)
+            return s if not s.startswith('-0.' + '0' * digits) else s[1:]
+        if abs(im) < 10**(-digits):
+            return f(re)
+        return '%s %s %si' % (f(re), '-' if im < 0 else '+', f(abs(im)))
+
+    def display_embeddings(self, num_cols=6):
+        """Tables of the complex embeddings iota: label, root of the defining polynomial, and the
+        images of lambda_p, as values or normalized by p^(w/2), w = 2k + j - 3 (|.| <= 4 at the good
+        primes, by Ramanujan); num_cols primes shown, the others behind a link"""
+        embs = self._embeddings
+        if not embs:
+            return None
+        k, j = self.weight
+        w = 2 * k + j - 3
+        primes = sorted(embs[0][2])
+        more = lambda i: ' class="emmore nodisplay"' if i >= num_cols else ''
+        tables = []
+        for norm in (False, True):
+            t = ['<div class="table-scroll-wrapper %s">' % ('emnorm nodisplay' if norm else 'emval'),
+                 '<table class="ntdata">', '<thead><tr>',
+                 '<th>%s</th>' % display_knowl('mf.siegel.embedding_label', title='Label')]
+            if self.dim > 1:
+                t.append('<th>%s</th>' % display_knowl('mf.siegel.root', title='Root'))
+            t += ['<th%s>\\(%s\\)</th>' % (more(i), (r'\iota(\lambda_{%s})/%s^{%s/2}' % (p, p, w)) if norm else (r'\iota(\lambda_{%s})' % p))
+                  for i, p in enumerate(primes)]
+            t += ['</tr></thead>', '<tbody>']
+            for label, root, vals in embs:
+                row = '<tr><td>%s</td>' % label
+                if self.dim > 1:
+                    row += '<td>\\(%s\\)</td>' % self._display_cc(root)
+                for i, p in enumerate(primes):
+                    z = vals[p] / (vals[p].parent()(p) ** (QQ(w) / 2)) if norm else vals[p]
+                    row += '<td align="right"%s>\\(%s\\)</td>' % (more(i), self._display_cc(z))
+                t.append(row + '</tr>')
+            t += ['</tbody>', '</table>', '</div>']
+            tables += t
+        links = ['<p>',
+                 '<span class="emval"><b>values</b> &middot; <a href="#" onclick="$(\'.emval\').hide(); $(\'.emnorm\').show(); return false;">normalized by \\(p^{%d/2}\\)</a></span>' % w,
+                 '<span class="emnorm nodisplay"><a href="#" onclick="$(\'.emnorm\').hide(); $(\'.emval\').show(); return false;">values</a> &middot; <b>normalized by \\(p^{%d/2}\\)</b></span>' % w]
+        if len(primes) > num_cols:
+            links += [' &middot; <a class="emless" href="#" onclick="$(\'.emmore\').show(); $(\'.emless\').hide(); return false;">all %d primes</a>' % len(primes),
+                      '<a class="emmore nodisplay" href="#" onclick="$(\'.emmore\').hide(); $(\'.emless\').show(); return false;">first %d primes</a>' % num_cols]
+        links.append('</p>')
+        return '\n'.join(tables + links)
+
     @cached_method
     def display_hecke_char_polys(self, num_disp = 5):
         """
@@ -1462,9 +1806,10 @@ function switch_basis(btype) {
         # Display the hecke eigenvalue of this hecke_type at place n. Will be inside \( \).
         m = self.hecke_ring_cyclotomic_generator
         evs = getattr(self, hecke_type)
-        if evs is None:
-            return '' 
-        ev = getattr(self, hecke_type)[n]
+        # T(p^2) and T(p^2, i) are stored for fewer primes than T(p), and not at every p | N
+        if evs is None or n >= len(evs) or evs[n] in (None, 'NULL'):
+            return ''
+        ev = evs[n]
         if m is not None and m != 0:
             # sum of powers of zeta_m
             # convert into a normal representation
@@ -1545,6 +1890,272 @@ function switch_basis(btype) {
         else:
             return coeff_to_power_series([0,1], prec=2)._latex_()
 
+    def fourier_normalization(self):
+        """A sentence on how the stored Fourier coefficients are normalized (see smf_hecke_nf.qexp_*)."""
+        P = getattr(self, 'fourier_prec', None)
+        if P is None:
+            return ""
+        idx = getattr(self, 'fourier_order_index', None) or 1
+        jdx = getattr(self, 'fourier_ideal_index', None) or 1
+        ring = display_knowl('mf.siegel.coefficient_ring', title='coefficient ring')
+        s = r"The coefficients \(a(T)\) with \(T = [a, b, c]\), \(a + c/N \lt %s\), are stored. " % P
+        if idx == 1:
+            o = r"the %s \(\mathcal{O}\)" % ring
+            O = r"\mathcal{O}"
+        else:
+            s += (r"They generate a module \(I\) over the %s \(\mathcal{O}\), whose order \(\mathcal{O}' = \{x : x I \subseteq I\}\) "
+                  r"contains \(\mathcal{O}\) with index \(%s\); they are written in the basis \(1, %s\) of \(\mathcal{O}'\) below. ") % (ring, idx, self._fourier_gamma_names())
+            o = r"\(\mathcal{O}'\)"
+            O = r"\mathcal{O}'"
+        if jdx == 1:
+            return s + r"They are normalized to generate %s: this determines the form up to a unit of \(%s\)." % (o, O)
+        return s + (r"No multiple of the form has coefficients generating %s, as \(I\) is not a principal ideal of \(%s\). "
+                    r"They are normalized to generate an integral ideal \(J\) of \(%s\) of least index \([%s : J] = %s\) among the multiples \(cI\) "
+                    r"(the least in Hermite normal form if there are several; \(J\) is in the download): this determines the form up to a unit of \(%s\).") % (o, O, O, O, jdx, O)
+
+    def _fourier_gamma_names(self):
+        d = len(self.fourier_order)
+        if d == 2:
+            return r"\gamma"
+        if d <= 4:
+            return ", ".join(r"\gamma_{%s}" % i for i in range(1, d))
+        return r"\gamma_1, \ldots, \gamma_{%s}" % (d - 1)
+
+    @lazy_attribute
+    def _fourier_ring(self):
+        """(polynomial ring for printing, its generators 1, gamma_1, ...) for the basis of the
+        stored Fourier coefficients: that of the coefficient ring unless O' is larger."""
+        if (getattr(self, 'fourier_order_index', None) or 1) == 1:
+            return None
+        d = len(self.fourier_order)
+        R = PolynomialRing(QQ, ['gamma', 'dummy'] if d == 2 else ['gamma%s' % i for i in range(1, d)], order='negdeglex')
+        return R, [1] + list(R.gens()[:d - 1])
+
+    def _fourier_elt(self, coeff):
+        if self._fourier_ring is None:
+            return self._elt(coeff)
+        return sum(c * g for c, g in zip(coeff, self._fourier_ring[1]))
+
+    def fourier_order_basis(self):
+        """A table giving the basis 1, gamma_1, ... of O' in terms of the basis of the coefficient ring."""
+        if self._fourier_ring is None:
+            return ""
+        F = self.hecke_ring_numerators and len(self.hecke_ring_numerators) > 1
+        R = PolynomialRing(QQ, 'x')
+        K = NumberField(R(self.field_poly), 'nu')
+        to_K = lambda num, den: sum(QQ(c) * K.gen()**i for i, c in enumerate(num)) / den
+        B = Matrix(QQ, [list(to_K(n, d)) for n, d in zip(self.hecke_ring_numerators, self.hecke_ring_denominators)]) if F else None
+        rows = []
+        names = [g for g in self._fourier_ring[1][1:]]
+        for g, (num, den) in zip(names, self.fourier_order[1:]):
+            y = to_K(num, den)
+            c = vector(QQ, list(y)) * B.inverse() if B is not None else vector(QQ, list(y))
+            rows.append((r"\(%s\)" % latex(g), r"\(%s\)" % latex(self._elt(list(c)))))
+        return self._make_table(rows)
+
+    # ------------------------------------------------------------------ the short expansions
+    # smf_qexp_short holds a(T) at every T = [n, r, N m] with n, m <= B (fill_qexp_short.py).  The
+    # page shows F = sum a(n, r, m) q_1^n q_12^r q_2^(N m), q_1 = e(tau), q_12 = e(z), q_2 = e(omega),
+    # in two views: the Fourier-Jacobi coefficients phi_m (F = sum_m phi_m(tau, z) q_2^(N m)) and the
+    # full expansion.  Each is cut at the last complete level within QEXP_BUDGET characters of
+    # TeX; coefficients and the Laurent polynomials in q_12 are compressed as on the classical pages.
+    QEXP_BUDGET = 2000
+    QEXP_ZTHRESH = 150
+    QEXP_MMAX = 3      # the views show phi_1, ..., phi_3 and the full expansion up to n, m <= 3
+
+    @lazy_attribute
+    def has_short_qexp(self):
+        return self.weight[1] == 0 and db.smf_qexp_short.exists({'hecke_orbit_code': self.hecke_orbit_code})
+
+    @lazy_attribute
+    def _short_qexp(self):
+        # only the rows with m <= QEXP_MMAX are displayed: trace = n + N m <= 7 + N QEXP_MMAX
+        N = self.level
+        query = {'hecke_orbit_code': self.hecke_orbit_code, 'trace': {'$lte': 7 + N * self.QEXP_MMAX}}
+        return {(r['qf'][0], r['qf'][1], r['qf'][2] // N): r['coeff']
+                for r in db.smf_qexp_short.search(query, ['qf', 'coeff'])}
+
+    @lazy_attribute
+    def short_qexp_bound(self):
+        """the largest B such that every a(n, r, m) with n <= B and m <= QEXP_MMAX is stored"""
+        return max((n for n, _, m in self._short_qexp if m == 1), default=0)
+
+    def _qexp_coeff_tex(self, coeff):
+        """(sign, TeX of |a|, single term) for the coefficient a, compressed"""
+        x = self._fourier_elt(coeff)
+        if x in QQ:
+            c = ZZ(x)
+            return ('-' if c < 0 else '+'), compress_int(abs(c))[0], True
+        p = x.change_ring(ZZ)
+        lead = p.monomial_coefficient(p.monomials()[0]) if p.number_of_terms() == 1 else None
+        if lead is not None:
+            q = p / lead
+            body = latex(q) if abs(lead) == 1 else compress_int(abs(lead))[0] + " " + latex(q)
+            return ('-' if lead < 0 else '+'), body, True
+        return '+', compress_multipolynomial(p, 30), False
+
+    def _qexp_term(self, coeff, mono):
+        sign, body, single = self._qexp_coeff_tex(coeff)
+        if not single:
+            return '+', r'\left(%s\right)%s' % (body, mono)
+        if body == '1' and mono:
+            body = ''
+        return sign, body + mono
+
+    @staticmethod
+    def _qexp_join(terms):
+        out = ''
+        for sign, body in terms:
+            if out:
+                out += ' %s %s' % (sign, body)
+            else:
+                out = ('-' if sign == '-' else '') + body
+        return out
+
+    def _qexp_pair(self, r):
+        if r == 0:
+            return ''
+        op = '-' if self.weight[0] % 2 else '+'
+        e = '' if r == 1 else '^{%d}' % r
+        return r'(q_{12}%s %s q_{12}^{-%d})' % (e, op, r)
+
+    @cached_method
+    def _qexp_zpoly(self, n, m):
+        """the coefficient of q_1^n q_2^(N m): a Laurent polynomial in q_12, written with the pairs
+        +-r (a(n, -r, m) = (-1)^k a(n, r, m)), compressed after QEXP_ZTHRESH characters"""
+        N, A = self.level, self._short_qexp
+        terms = []
+        r = 0
+        while 4 * N * n * m - r * r > 0:
+            v = A.get((n, r, m))
+            if v is not None and any(v):
+                terms.append(self._qexp_term(v, self._qexp_pair(r)))
+            r += 1
+        if not terms:
+            return None
+        if len(terms) > 2:
+            tail = ' %s %s' % terms[-1]
+            head = []
+            for t in terms[:-1]:
+                if head and len(self._qexp_join(head + [t])) + len(tail) > self.QEXP_ZTHRESH:
+                    return r'\left(%s + \cdots%s\right)' % (self._qexp_join(head), tail)
+                head.append(t)
+        return r'\left(%s\right)' % self._qexp_join(terms)
+
+    @staticmethod
+    def _qexp_pow(v, e):
+        return '' if e == 0 else (v if e == 1 else '%s^{%d}' % (v, e))
+
+    def _qexp_fit(self, render, bmax):
+        """render(b) for the largest b <= bmax within QEXP_BUDGET (at least b = 1)"""
+        best = None
+        for b in range(1, bmax + 1):
+            s = render(b)
+            if best is not None and len(s) > self.QEXP_BUDGET:
+                break
+            best = s
+        return best or ''
+
+    def fourier_jacobi_display(self, m):
+        """TeX of phi_m, the coefficient of q_2^(N m)"""
+        def render(nmax):
+            terms = []
+            for n in range(1, nmax + 1):
+                z = self._qexp_zpoly(n, m)
+                if z:
+                    terms.append(('+', z + self._qexp_pow('q_1', n)))
+            return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d})' % (nmax + 1)
+        return self._qexp_fit(render, self.short_qexp_bound)
+
+    def full_qexp_display(self):
+        """TeX of F, by levels max(n, m) <= b, b <= QEXP_MMAX"""
+        N = self.level
+        def render(b):
+            terms = []
+            for n, m in sorted([(n, m) for n in range(1, b + 1) for m in range(1, b + 1)],
+                               key=lambda t: (max(t), t[0] + t[1], t[1], t[0])):
+                z = self._qexp_zpoly(n, m)
+                if z:
+                    terms.append(('+', z + self._qexp_pow('q_1', n) + self._qexp_pow('q_2', N * m)))
+            return (self._qexp_join(terms) or '0') + r' + O(q_1^{%d}, q_2^{%d})' % (b + 1, N * (b + 1))
+        return self._qexp_fit(render, min(self.short_qexp_bound, self.QEXP_MMAX))
+
+    # ------------------------------------------------------------------ coefficient lookup
+    def _class_value(self, key, sign):
+        """a(T) for T in the class key = (qf_legendre, qf_tag) with sign s (reduce_signed), as a
+        coordinate list, and the stored representative; (None, None) if the class is not stored"""
+        from .qexp_reduction import reduce_signed
+        N, k = self.level, self.weight[0]
+        legendre, tag = [int(x) for x in key[0]], [int(x) for x in key[1]]
+        rep = db.smf_qexp_reduction.lucky({'level': N, 'family': self.family, 'qf_legendre': legendre, 'qf_tag': tag},
+                                          ['qf_orbit_rep', 'index'])
+        c = db.smf_qexp_coeffs.lucky({'hecke_orbit_code': self.hecke_orbit_code, 'qf_legendre': legendre, 'qf_tag': tag}, 'coeff')
+        if rep is None or c is None:
+            return None, None
+        r = rep['qf_orbit_rep']
+        _, _, sr = reduce_signed((r[0], r[1], r[2] // N), N)
+        sr = sr or 1
+        if sign == 0:
+            return ([0] * len(c) if k % 2 else [sr**k * x for x in c]), r
+        return [(sign * sr)**k * x for x in c], r
+
+    def fourier_lookup(self, text):
+        """The coefficient a(T) at T = [a, b, c] given as text 'a,b,c': a dict with the form,
+        its discriminant, the TeX of a(T) and its class representative, or an error message."""
+        from .qexp_reduction import reduce_signed
+        N = self.level
+        try:
+            a, b, c = [int(x) for x in text.replace('[', '').replace(']', '').replace('(', '').replace(')', '').replace(' ', '').split(',')]
+        except ValueError:
+            return {'error': "Enter the form as three integers a,b,c, for the matrix [[a, b/2], [b/2, c]]."}
+        out = {'T': [a, b, c], 'disc': b * b - 4 * a * c}
+        if c % N:
+            out['error'] = "The coefficient c must be divisible by the level %d." % N
+        elif a <= 0 or 4 * a * c - b * b <= 0:
+            out['error'] = "The form is not positive definite, so a(T) = 0 for a cusp form."
+        else:
+            qf, tag, sign = reduce_signed((a, b, c // N), N)
+            v, rep = self._class_value((qf, tag), sign)
+            if v is None:
+                out['error'] = "This coefficient is not stored: its class has no representative with a + c/N < %s." % (self.fourier_prec or 16)
+            else:
+                out['value'] = latex(self._fourier_elt(v))
+                out['rep'] = rep
+        return out
+
+    def fourier_disc_range(self, text, limit=500):
+        """[(discriminant, form, TeX of a(form))] for the stored classes with |discriminant| in the
+        range given as 'lo-hi', ordered as the table; (rows, error)."""
+        try:
+            lo, hi = [int(x) for x in text.replace(' ', '').split('-')] if '-' in text.strip('-') else [int(text)] * 2
+        except ValueError:
+            return [], "Enter a range of |discriminant|, such as 100-200."
+        reps = [r for r in db.smf_qexp_reduction.search({'level': self.level, 'family': self.family, 'is_minimal': True},
+                                                         ['qf_orbit_rep', 'qf_legendre', 'qf_tag', 'index'], sort=['index'])
+                if lo <= 4 * r['qf_orbit_rep'][0] * r['qf_orbit_rep'][2] - r['qf_orbit_rep'][1]**2 <= hi]
+        err = None
+        if len(reps) > limit:
+            err = "Only the first %d of the %d classes in this range are shown." % (limit, len(reps))
+            reps = reps[:limit]
+        if not reps:
+            return [], "No stored class has |discriminant| in this range."
+        coeffs = {}
+        for c in db.smf_qexp_coeffs.search({'hecke_orbit_code': self.hecke_orbit_code,
+                                            '$or': [{'qf_legendre': q['qf_legendre'], 'qf_tag': q['qf_tag']} for q in reps]},
+                                           ['qf_legendre', 'qf_tag', 'coeff']):
+            coeffs[(tuple(c['qf_legendre']), tuple(c['qf_tag']))] = c['coeff']
+        rows = []
+        for q in reps:
+            v = coeffs.get((tuple(q['qf_legendre']), tuple(q['qf_tag'])))
+            if v is not None:
+                a, b, c = q['qf_orbit_rep']
+                rows.append((b * b - 4 * a * c, q['qf_orbit_rep'], latex(self._fourier_elt(v))))
+        return rows, err
+
+    @lazy_attribute
+    def has_fourier_coefficients(self):
+        return db.smf_qexp_coeffs.exists({'hecke_orbit_code': self.hecke_orbit_code})
+
     def q_exp_coefficients(self, num_disp=10):
         """
         returns a list of q-expansion coefficients indexed by entries [a,b,c]
@@ -1553,13 +2164,21 @@ function switch_basis(btype) {
         - ``num_disp`` - an integer, the number of q-expansion coefficients to display.
         """
         fourier_coefficient = []
-        for qf_entry in db.smf_qexp_reduction.search({'index':{'$lt':num_disp}, 'is_minimal':True, 'level':self.level, 'family':self.family}, sort=['index']):
-            qf = qf_entry['qf_orbit_rep']
-            coeff_entry = list(db.smf_qexp_coeffs.search({'qf_legendre':qf_entry['qf_legendre'], 'qf_tag':qf_entry['qf_tag'], 'hecke_orbit_code': self.hecke_orbit_code}))
-            if not coeff_entry:
+        qfs = list(db.smf_qexp_reduction.search({'index':{'$lt':num_disp}, 'is_minimal':True, 'level':self.level, 'family':self.family},
+                                                ['qf_orbit_rep', 'qf_legendre', 'qf_tag'], sort=['index']))
+        if not qfs:
+            return fourier_coefficient
+        # one query for all the coefficients (one per form was a round trip each)
+        coeffs = {}
+        for c in db.smf_qexp_coeffs.search({'hecke_orbit_code': self.hecke_orbit_code,
+                                            '$or': [{'qf_legendre': q['qf_legendre'], 'qf_tag': q['qf_tag']} for q in qfs]},
+                                           ['qf_legendre', 'qf_tag', 'coeff']):
+            coeffs.setdefault((tuple(c['qf_legendre']), tuple(c['qf_tag'])), c['coeff'])
+        for q in qfs:
+            coeff = coeffs.get((tuple(q['qf_legendre']), tuple(q['qf_tag'])))
+            if coeff is None:
                 continue
-            coeff = coeff_entry[0]['coeff']
-            fourier_coefficient.append([qf,self._PrintRing(coeff)])
+            fourier_coefficient.append([q['qf_orbit_rep'], latex(self._fourier_elt(coeff))])
         return fourier_coefficient
 
 
@@ -1569,7 +2188,8 @@ function switch_basis(btype) {
         return raw_typeset_lfunc([[elt] for elt in self.texp[:prec]])
 
     def hecke_ev_header(self, n):
-        return 'a_{%s}'%n
+        # the columns of the Hecke eigenvalue table are the primes p (the rows are T(p), T(p^2), ...)
+        return '%s' % n
     
     def embed_header(self, n, format='embed'):
         if format == 'embed':

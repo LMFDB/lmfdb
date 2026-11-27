@@ -117,6 +117,13 @@ def name_and_object_from_url(url, check_existence=False):
                 obj_exists = 'CM' not in label
                 if check_existence:
                     obj_exists = db.bmf_forms.label_exists(label)
+        elif url_split[1] == 'GSp' and url_split[2] == 'Q' and len(url_split) >= 9:
+            # ModularForm/GSp/Q/2/K/61/3.0/a/a, possibly followed by an embedding
+            newform_label = ".".join(url_split[3:9])
+            name = 'Siegel modular form ' + ".".join(url_split[3:])
+            obj_exists = True
+            if check_existence:
+                obj_exists = db.smf_newforms.exists({'label': newform_label})
     elif url_split[0] == "ArtinRepresentation":
         label = url_split[1]
         name = 'Artin representation ' + label

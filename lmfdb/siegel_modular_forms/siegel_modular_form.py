@@ -878,7 +878,7 @@ def common_parse(info, query, na_check=False):
         else:
             query['level_is_' + info['level_type']] = True
     parse_floats(info, query, 'analytic_conductor', name="Analytic conductor")
-    parse_ints(info, query, 'Nk2', name=r"\(Nk^2\)")
+    parse_ints(info, query, 'Nk2', name=r"\(N(2k+j-3)^2(j+1)^2\)")
     parse_ints(info, query, 'char_order', name="Character order")
     parse_primes(info, query, 'level_primes', name='Primes dividing level', mode=info.get('prime_quantifier'), radical='level_radical')
 
@@ -954,7 +954,7 @@ newform_columns = SearchColumns([
     # ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : '$(wt[0], wt[1])$' if wt[1] != 0 else wt[0],align="center"),
     ProcessedCol("weight", "mf.siegel.weight", "Weight", lambda wt : (wt[0], wt[1]),align="center"),
     # MathCol("weight", "mf.siegel.weight_k_j", "Weight"),
-    MultiProcessedCol("character", "smf.character", "Char",
+    MultiProcessedCol("character", "mf.siegel.character", "Char",
                       ["level", "char_orbit_label"],
                       lambda level, orb: display_knowl('character.dirichlet.orbit_data', title=f"{level}.{orb}", kwargs={"label":f"{level}.{orb}"}),
                       short_title="character"),
@@ -1045,6 +1045,9 @@ def trace_postprocess(res, info, query, spaces=False):
             mf['tr_an'] = trace_dict[mf['hecke_orbit_code']]
     return res
 def space_trace_postprocess(res, info, query):
+    # the spaces store their dimension as cusp_dim; the trace table and the download test read dim
+    for space in res:
+        space['dim'] = space.get('cusp_dim', 0)
     return trace_postprocess(res, info, query, True)
 def process_an_constraints(info, query, qfield='traces', nshift=None):
     q = info.get('an_modulo','').strip()
@@ -1105,7 +1108,7 @@ def trace_search(info, query):
              err_title='Newspace search input error',
              shortcuts={'jump':jump_box,
                         'download':SMF_download().download_multiple_space_traces},
-             projection=['label', 'cusp_dim', 'weight'],
+             projection=['label', 'cusp_dim', 'weight', 'hecke_orbit_code'],
              postprocess=space_trace_postprocess,
              bread=get_search_bread,
              learnmore=learnmore_list)
@@ -1398,7 +1401,7 @@ space_columns = SearchColumns([
                       lambda level,indexes: r'<a href="%s">\( \chi_{%s}(%s, \cdot) \)</a>' % (url_for("characters.render_Dirichletwebpage", modulus=level, number=indexes[0]), level, indexes[0]),
                       short_title="character", default=True),
     MathCol("char_order", "character.dirichlet.order", r"$\operatorname{ord}(\chi)$", short_title="character order", default=True),
-    MathCol("cusp_dim", "smf.display_dim", "Cusp Dim", short_title="cuspidal dimension", default=True),
+    MathCol("cusp_dim", "mf.siegel.dimension", "Cusp Dim", short_title="cuspidal dimension", default=True),
     MultiProcessedCol("decomp", "mf.siegel.dim_decomposition", "Decomp.", ["level", "weight", "char_orbit_label", "hecke_orbit_dims"], display_decomp, default=True, align="center", short_title="decomposition", td_class=" nowrap"),
     MultiProcessedCol("al_dims", "mf.siegel.atkin_lehner_dims", "AL-dims.", ["level", "weight", "ALdims", "ALdims_G"], display_ALdims, contingent=show_ALdims_col, default=True, short_title="Atkin-Lehner dimensions", align="center", td_class=" nowrap")])
 
@@ -1568,7 +1571,7 @@ def dynamic_statistics():
     return render_template("dynamic_stats.html", info=info, title=title, bread=get_bread(other='Dynamic Statistics'), learnmore=learnmore_list())
 
 class SMFSearchArray(SearchArray):
-    sort_knowl = 'smf.sort_order'
+    sort_knowl = 'mf.siegel.sort_order'
     _sort = [
         ('level', 'level', ['level', 'weight']),
         ('weight', 'weight', ['weight', 'level']),
@@ -1577,7 +1580,7 @@ class SMFSearchArray(SearchArray):
         ('character', 'character', ['level', 'char_orbit_index', 'weight']),
         ('prim', 'primitive character', ['char_conductor', 'prim_orbit_index', 'level', 'weight']),
         ('char_order', 'character order', ['char_order', 'level', 'char_orbit_index', 'weight']),
-        ('Nk2', 'N(2k+j-2)^2', ['Nk2', 'level']),
+        ('Nk2', 'N(2k+j-3)^2(j+1)^2', ['Nk2', 'level']),
         ('dim', 'dimension', ['dim', 'level', 'weight']),
         ('relative_dim', 'relative dimension', ['relative_dim', 'level', 'weight']),
         ('analytic_rank', 'analytic rank', ['analytic_rank', 'level', 'weight']),
@@ -1736,9 +1739,9 @@ class SMFSearchArray(SearchArray):
         Nk2 = TextBox(
             name='Nk2',
             knowl='mf.siegel.nk2',
-            label=r'\(N(2k+j-2)^2\)',
-            example='40-100',
-            example_span='40-100')
+            label=r'\(N(2k+j-3)^2(j+1)^2\)',
+            example='500-1000',
+            example_span='500-1000')
 
         coefficient_ring_index = TextBox(
             name='hecke_ring_index',

@@ -551,6 +551,34 @@ class LfunctionTest(LmfdbTest):
         L = self.tc.get('/L/Plot/2/56/1.1/c1/0/0/')
         assert b'PNG' in L.get_data()
 
+    def test_Lsmf(self):
+        # L-functions of Siegel paramodular newforms (instance type SMF)
+        from lmfdb import db
+        from lmfdb.utils import name_and_object_from_url
+        assert name_and_object_from_url('ModularForm/GSp/Q/2/K/61/3.0/a/a')[0] == 'Siegel modular form 2.K.61.3.0.a.a'
+        # an unknown url is a 404, not a server error
+        L = self.tc.get('/L/ModularForm/GSp/Q/2/K/61/3.0/a/zz/')
+        assert L.status_code == 404
+        # searching by origin works with or without the column is_instance_SMF
+        L = self.tc.get('/L/?origin=SMF')
+        assert L.status_code == 200
+        L = self.tc.get('/L/?degree=4&origin_exclude=SMF&conductor=61')
+        assert L.status_code == 200
+        inst = db.lfunc_instances.lucky({'type': 'SMF'}, ['url', 'label'])
+        if inst is None:
+            self.skipTest("no SMF rows in lfunc_instances")
+        url, label = inst['url'], inst['label']
+        smf_label = '.'.join(url.split('/')[3:])
+        L = self.tc.get('/L/%s/' % url, follow_redirects=True).get_data(as_text=True)
+        assert label in L
+        assert 'Siegel modular form ' + smf_label in L
+        assert 'href="/%s"' % url in L or 'href="/%s/"' % url in L
+        L = self.tc.get('/L/' + label.replace('-', '/'), follow_redirects=True).get_data(as_text=True)
+        assert 'Siegel modular form ' + smf_label in L
+        if db.lfunc_search.exists({'label': label}):
+            L = self.tc.get('/L/?origin=SMF&degree=4&conductor=%s' % label.split('-')[1])
+            assert label in L.get_data(as_text=True)
+
     def test_LcmfPlot(self):
         # ModularForm/GL2/Q/holomorphic/14/6/a/a/
         L = self.tc.get('/L/Plot/2/14/1.1/c5/0/0/')

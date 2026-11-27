@@ -321,6 +321,29 @@ class SmfTest(LmfdbTest):
             '"ALdims"',
         ])
 
+    def test_fourier_coefficients(self):
+        """
+        Fourier coefficients of paramodular newforms of levels 31 (weight 4) and 101 (weight 3,
+        dimension 9), on the newform page and in the Sage download
+        """
+        self.need_forms("2.K.101.3.0.a.b")
+        if not db.smf_qexp_coeffs.exists({"hecke_orbit_code": db.smf_newforms.lookup("2.K.101.3.0.a.b", "hecke_orbit_code")}):
+            self.skipTest("Fourier coefficients of 2.K.101.3.0.a.b not loaded on devmirror")
+        self.check("2/K/31/4.0/a/a/", ["Fourier coefficients", "[1, -11, 31]", "Fourier coefficients to Sage"])
+        self.check("2/K/101/3.0/a/b/", r"20 + 5 \beta_{1} - 2 \beta_{2} - 7 \beta_{3}")
+        self.check("download_qexp/2.K.101.3.0.a.b", [
+            "fourier_data = [[[1, -20, 101], [20, 5, -2, -7, 5, 4, -3, 2, -2]]",
+            "a(T') = (alpha delta - beta gamma)^k a(T), here with k = 3",
+        ])
+        # an orbit whose Fourier coefficients cannot generate the coefficient ring: they are
+        # written in the basis 1, gamma of the larger order O'
+        self.need_forms("2.K.69.3.0.a.b")
+        self.check("2/K/69/3.0/a/b/", [r"contains \(\mathcal{O}\) with index \(2\)", r"\frac{1}{2} + \frac{1}{2} \beta", r"1 - \gamma"])
+        # an orbit whose Fourier coefficients generate a non-principal ideal of O'
+        self.need_forms("2.K.109.3.0.a.b")
+        self.check("2/K/109/3.0/a/b/", [r"not a principal ideal", r"\([\mathcal{O}' : J] = 8\)"])
+        self.check("download_qexp/2.K.109.3.0.a.b", ["least index [O' : J] = 8", "ideal_data = "])
+
     def test_underlying_data(self):
         """
         Test the underlying data pages
@@ -563,6 +586,51 @@ class SmfTest(LmfdbTest):
         data = self.check("2/K/992/3.0/a/t/", "Coefficient ring")
         assert r"\Z[a_1" not in data
 
+    def test_saito_kurokawa_lfunction(self):
+        r"""
+        A Saito-Kurokawa lift F of weight k of a classical newform f (of
+        weight 2k-2) has no L-function row of its own; its page states
+        L(F,s) = L(f,s) zeta(s-k+2) zeta(s-k+1) and links to L(f,s) and zeta.
+        2.K.13.3.0.a.a lifts 13.4.a.a, and 2.S.1.18.0.a.c lifts 1.34.a.a.
+        """
+        self.need_forms("2.K.13.3.0.a.a")
+        self.check("2/K/13/3.0/a/a/", [
+            "Saito-Kurokawa lift",
+            '<a href="/ModularForm/GL2/Q/holomorphic/13/4/a/a/">13.4.a.a</a>',
+            r"L(F,s) = L(f,s)\,\zeta(s-1)\,\zeta(s-2)",
+            '<a href="/L/Riemann/">',
+        ])
+        if db.lfunc_instances.exists({'url': 'ModularForm/GL2/Q/holomorphic/13/4/a/a'}):
+            self.check("2/K/13/3.0/a/a/", '<a href="/L/ModularForm/GL2/Q/holomorphic/13/4/a/a/">')
+        self.need_forms("2.S.1.18.0.a.c")
+        self.check("2/S/1/18.0/a/c/", [
+            '<a href="/ModularForm/GL2/Q/holomorphic/1/34/a/a/">1.34.a.a</a>',
+            r"L(F,s) = L(f,s)\,\zeta(s-16)\,\zeta(s-17)",
+        ])
+        # a form of general type gets no such factorization
+        self.need_forms("2.K.277.3.0.a.a")
+        data = self.check("2/K/277/3.0/a/a/", "General type (G)")
+        assert "spinor \\(L\\)-function factors" not in data
+
+    def test_lfunction_link(self):
+        """
+        A newform with a row in lfunc_instances links to its L-function,
+        and the L-function page names the Siegel modular form as its origin.
+        Skipped until the SMF L-functions are loaded.
+        """
+        inst = db.lfunc_instances.lucky({'type': 'SMF'}, ['url', 'label'])
+        if inst is None:
+            self.skipTest("no SMF rows in lfunc_instances")
+        url, label = inst['url'], inst['label']
+        smf_label = '.'.join(url.split('/')[3:])
+        self.check(url[len('ModularForm/GSp/Q/'):] + '/', [
+            'L-function ',
+            'href="/L/%s/"' % url,
+        ])
+        page = self.tc.get('/L/%s/' % url, follow_redirects=True).get_data(as_text=True)
+        assert label in page
+        assert 'Siegel modular form ' + smf_label in page
+
     # ------------------------------------------------------------------
     # Consistency of the stored data.  These read the tables directly,
     # with small projections, so that they stay fast on devmirror.
@@ -629,6 +697,9 @@ class SmfTest(LmfdbTest):
             if not tr:
                 continue
             for i, p in enumerate(primes):
+                # at p | N, a_p and lambda_p differ (a_p = lambda_p + eps p^a, Roberts-Schmidt)
+                if r["level"] % p == 0:
+                    continue
                 if i >= len(tl) or p > len(tr) or tl[i] is None or tr[p - 1] is None:
                     continue
                 n += 1
