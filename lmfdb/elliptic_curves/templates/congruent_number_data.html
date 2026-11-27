@@ -107,7 +107,7 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
     <pre>000137    [[-3136/25,77112/125],[-38025/289,2151240/4913]]</pre>
     </td>
     <td>
-      For three rank 2 curves, the second generator is not known and given as [?,?]
+      &nbsp;
     </td>
   </tr>
 
@@ -235,11 +235,6 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
   this data.
 </p>
 
-<p>
-  In three cases ($n = 799657, 937121$, and $998617$), all of rank $2$, only one generator is
-  known, and hence neither the regulator nor &#1064; are known.
-</p>
-
 <h3>Large regulators</h3>
 <p>
   The largest regulators are the following, both for curves of rank 2:
@@ -259,14 +254,18 @@ Each file consists of 1,000,000 lines, indexed by the positive integer $n$ and t
 
 <p>
 The data files were created by Randall L. Rathbun on February 14, 2013
-with updates on May 18, 2014.  For the curves of rank one, the generators were computed by him using an implementation
+with updates on May 18, 2014 and November 26, 2026.
+For the curves of rank one, the generators were computed by him using an implementation
 in PARI/GP originally by Robatino of an algorithm in Robatino's 1996 thesis <i>Computation of mock Heegner points
 on modular elliptic curves</i>, following work of Monsky.
 
 Some data was provided by Allan J. MacLeod, and by Ralph Buchholz and
 Brett Wittby, using <tt>Magma</tt>; the rest computed by Rathbun using
- <tt>PARI/GP</tt> and <tt>eclib</tt> (in particular <tt>mwrank</tt>).
+ <tt>PARI/GP</tt> and <tt>eclib</tt> (in particular <tt>mwrank</tt>),
+  and in three cases ($n = 799657, 937121$, and $998617$), all of rank
+  $2$, the second generator was found using 32-descent by Louie Helm.
 </p>
+
 
 <div id='infomessage'>
 {{ info.message }}
