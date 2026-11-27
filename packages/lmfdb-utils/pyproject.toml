@@ -1,0 +1,52 @@
+# setuptools 77 introduced the SPDX license expressions used below.  pip
+# builds in an isolated environment with a current setuptools, so the (older)
+# setuptools of a Sage installation only matters with --no-build-isolation.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lmfdb-utils"
+dynamic = ["version"]
+description = "Utilities for websites like the L-functions and modular forms database (lmfdb.org): search forms, results, downloads and statistics"
+readme = "README.md"
+license = "GPL-2.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
+authors = [
+    {name = "The LMFDB Collaboration"},
+]
+keywords = ["flask", "postgres", "mathematics", "database", "website", "search"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Flask",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+# Most of the modules also require SageMath, which pip does not install:
+# install this package into Sage's Python (sage -pip install lmfdb-utils).
+# psycodict provides the query language that the search parsers produce;
+# the pgbinary extra installs the driver psycodict is built on (see
+# lmfdb-client for the version policy).
+dependencies = [
+    "flask",
+    "markupsafe",
+    "psycodict[pgbinary]>=1.0.0rc1,<2",
+    "werkzeug",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.urls]
+Homepage = "https://www.lmfdb.org"
+Source = "https://github.com/LMFDB/lmfdb/tree/main/packages/lmfdb-utils"
+Issues = "https://github.com/LMFDB/lmfdb/issues"
+
+[tool.setuptools]
+packages = ["lmfdb_utils"]
+
+[tool.setuptools.dynamic]
+version = {attr = "lmfdb_utils.__version__"}

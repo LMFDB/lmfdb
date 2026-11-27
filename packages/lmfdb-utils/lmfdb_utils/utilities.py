@@ -33,7 +33,14 @@ from sage.all import (
 from sage.misc.functional import round
 from sage.structure.element import Element
 
-from lmfdb.app import is_beta, is_debug_mode, _url_source
+from .site import current_site
+
+
+def is_debug_mode():
+    """
+    Whether the website is running in debug mode.
+    """
+    return current_app.debug
 
 
 def integer_divisors(n):
@@ -634,22 +641,19 @@ def code_snippet_knowl(D, full=True):
     INPUT:
 
     - ``D`` -- a dictionary with the following keys
-      - ``filename`` -- a filename within the lmfdb repository
+      - ``filename`` -- a filename within the website's repository
       - ``code`` -- a list of code lines (without trailing \n)
       - ``lines`` -- (optional) a list of line numbers
     - ``full`` -- if False, display only the filename rather than the full path.
+
+    The link to the file is given by the site's
+    :meth:`~lmfdb_utils.site.Site.source_url`.
     """
     filename = D['filename']
     code = D['code']
     lines = D.get('lines')
     code = '\n'.join(code).replace('<','&lt;').replace('>','&gt;').replace('"', '&quot;')
-    if is_debug_mode():
-        branch = "main"
-    elif is_beta():
-        branch = "dev"
-    else:
-        branch = "web"
-    url = "%s%s/%s" % (_url_source, branch, filename)
+    url = current_site().source_url(filename)
     link_text = "%s on Github" % (filename)
     if not full:
         filename = filename.split('/')[-1]
@@ -659,11 +663,13 @@ def code_snippet_knowl(D, full=True):
         else:
             lines = sorted(lines)
             label = '%s (lines %s-%s)' % (filename, lines[0], lines[-1])
-        url += "#L%s" % lines[0]
+        if url is not None:
+            url += "#L%s" % lines[0]
     else:
         label = filename
-    inner = "<div>\n<pre></pre>\n</div>\n<div align='right'><a href='%s' target='_blank'>%s</a></div>"
-    inner = inner % (url, link_text)
+    inner = "<div>\n<pre></pre>\n</div>\n"
+    if url is not None:
+        inner += "<div align='right'><a href='%s' target='_blank'>%s</a></div>" % (url, link_text)
     return '<a title="[code]" knowl="dynamic_show" pretext="%s" kwargs="%s">%s</a>' % (code, inner, label)
 
 

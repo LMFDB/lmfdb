@@ -57,6 +57,21 @@ Installation
    sage -pip install -r requirements.txt
    ```
 
+   This installs the dependencies and development tools, together with the
+   two packages that are built from this repository and published on PyPI:
+   `lmfdb-client` (in `packages/lmfdb-client`: the connection to the
+   database) and `lmfdb-utils` (in `packages/lmfdb-utils`: search forms,
+   results, downloads and statistics, shared with other websites).  They are
+   installed in editable mode, i.e. pointing at your checkout, so that your
+   changes to them take effect immediately.  The website itself is not
+   installed: run it from the root of the checkout.  Importing `lmfdb` does
+   not connect to the database; the connection is established the first
+   time `lmfdb.db` is used.
+
+   To use the database from Python without the website (or without Sage),
+   `pip install lmfdb-client` is enough; see
+   [its README](packages/lmfdb-client/README.md).
+
    ### Troubleshooting with packages.
 
    - If you have not run the site for a while you might get an error
@@ -129,6 +144,9 @@ Running
    sage -python start-lmfdb.py --debug
    ```
 
+   Equivalently, run `sage -python -m lmfdb --debug` from the root of the
+   checkout.
+
  * The effect of the (optional) --debug is that you will be running
    with the beta flag switched on as at dev.lmfdb.org, and also that
    if code fails your browser will show useful debugging information.
@@ -162,6 +180,38 @@ Running
    on devmirror.lmfdb.xyz) is sufficient, and this step is not necessary. If you do plan
    on using a different database instance, you can do so by changing
    config.ini in the root of the lmfdb directory.
+
+ * Locations of configuration and log files:
+
+   - The configuration file is `config.ini` at the root of the checkout.
+     The `--config-file` option, or the `LMFDB_CONFIG` environment
+     variable, gives a different location.  A missing configuration file is
+     created with the default values.
+   - The secrets file (`secrets.ini`, whose values override those in the
+     configuration file) and the secret key used for login sessions
+     (`secret_key`) are kept in the same directory as the configuration
+     file, so they move with `--config-file`.  The `--secrets-file` option
+     gives a different secrets file.
+   - Log files (`flasklog`, `slow_queries.log` and the verification logs)
+     go to the `logs/` subdirectory of the checkout.  They do not move with
+     `--config-file`; set `--logfile` and `--slowlogfile` (or the `logfile`
+     and `slowlogfile` entries in the configuration file) to another path
+     to change them.
+   - The `LMFDB_HOME` environment variable replaces the checkout root
+     above, as the directory for all of these files.
+   - lmfdb-client, used on its own, reads the file named by `LMFDB_CONFIG`,
+     then `config.ini` in the current directory if there is one, and
+     otherwise `config.ini` in `LMFDB_HOME` (by default `~/.lmfdb`); so a
+     script run from the root of the checkout uses the website's
+     configuration.
+
+   Notes for existing setups: `flasklog` and `slow_queries.log` used to be
+   created in the current directory, and are now in `logs/` (update any log
+   rotation or monitoring accordingly).  `secrets.ini` used to be read from
+   the current directory, and is now read from the directory of the
+   configuration file.  When running from the root of a checkout with the
+   default configuration, as is usual, the configuration, secrets file and
+   secret key stay where they were.
 
 
 CoCalc

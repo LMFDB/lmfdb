@@ -1,4 +1,4 @@
-from .utils.config import get_secret_key
+from .config import current_configuration, root_lmfdb_path
 import os
 from socket import gethostname
 import time
@@ -89,8 +89,10 @@ if app.debug:
         pass
 
 # secret key, necessary for sessions, and sessions are
-# in turn necessary for users to login
-app.secret_key = get_secret_key()
+# in turn necessary for users to login.  Using the process-wide
+# configuration means a --config-file option given to start-lmfdb.py
+# moves the key together with the configuration file.
+app.secret_key = current_configuration().get_secret_key()
 
 # tell jinja to remove linebreaks
 app.jinja_env.trim_blocks = True
@@ -195,8 +197,7 @@ if (os.getenv('BETA') == '1'):
 def git_infos():
     try:
         from subprocess import Popen, PIPE
-        # cwd should be the root of git repo
-        cwd = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+        cwd = root_lmfdb_path
         commands = ['''git rev-parse HEAD''',
                     '''git show --format="%ci" -s HEAD''',
                     '''git branch --contains HEAD''',
@@ -575,8 +576,7 @@ def add_colors():
         if color not in all_color_schemes:
             color = None
         if color is None:
-            from .utils.config import Configuration
-            color = Configuration().get_color()
+            color = current_configuration().get_color()
     return {"color": all_color_schemes[color].dict()}
 
 

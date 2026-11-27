@@ -1,0 +1,78 @@
+# Packaging checks for lmfdb-client and lmfdb-utils, the packages built from
+# packages/ and published on PyPI (publish.yml publishes them).  On every
+# push and pull request: build each sdist and wheel, check their metadata and
+# contents, install the wheel into a clean virtual environment -- without
+# sage -- and run the package's tests against the installed wheel.  The
+# lmfdb-client tests connect to devmirror.lmfdb.xyz; without sage only the
+# sage-free part of lmfdb-utils is tested (the LMFDB's own test suite tests
+# both packages under sage).  Needs no secrets, so it also runs on forks.
+name: Packaging
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+    branches: [ main, dev, web ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [lmfdb-client, lmfdb-utils]
+    name: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build twine
+          python -m build --outdir dist packages/${{ matrix.package }}
+          twine check --strict dist/*
+
+      - name: Check the contents of the wheel
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          python - <<'EOF'
+          import glob, os, zipfile
+          package = os.environ["PACKAGE"]
+          module = package.replace("-", "_")
+          names = set(zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist())
+          sources = {
+              "%s/%s" % (module, f)
+              for f in os.listdir(os.path.join("packages", package, module))
+              if f.endswith(".py")
+          }
+          missing = sources - names
+          assert not missing, "the wheel is missing %s" % sorted(missing)
+          assert any(n.endswith("/licenses/LICENSE") for n in names), "the wheel has no license"
+          if package == "lmfdb-client":
+              assert "lmf/__init__.py" in names
+          stray = [n for n in names if n.split("/")[0] not in (module, "lmf") and ".dist-info/" not in n]
+          assert not stray, "the wheel contains unexpected files: %s" % stray
+          print("the wheel contains the %d modules of %s" % (len(sources), module))
+          EOF
+
+      - name: Install the wheel into a clean venv
+        run: |
+          python -m venv smoke
+          smoke/bin/pip install dist/*.whl pytest
+          smoke/bin/pip check
+
+      - name: Run the tests against the installed wheel
+        # from an empty directory outside the checkout, so that the
+        # installed package is the one tested; nothing may be created there
+        run: |
+          mkdir empty && cd empty
+          export LMFDB_HOME=$RUNNER_TEMP/lmfdb-home
+          ../smoke/bin/python -c "import os, ${PACKAGE_MODULE}; assert 'site-packages' in ${PACKAGE_MODULE}.__file__, ${PACKAGE_MODULE}.__file__"
+          ../smoke/bin/python -m pytest -v -p no:cacheprovider ../packages/${{ matrix.package }}/tests
+          test -z "$(ls -A .)" || { echo 'files were created:'; ls -A; exit 1; }
+        env:
+          PACKAGE_MODULE: ${{ matrix.package == 'lmfdb-client' && 'lmfdb_client' || 'lmfdb_utils' }}

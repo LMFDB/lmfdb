@@ -556,7 +556,7 @@ def run(args, parser):
         elif args.format == "json":
             # json and tsv are produced here (and in the csv.DictWriter branch
             # below) rather than through the section download machinery, because
-            # lmfdb/utils/downloader.py has no JSON or TSV DownloadLanguage yet.
+            # lmfdb_utils/downloader.py has no JSON or TSV DownloadLanguage yet.
             # If those are added to Downloader.languages, these formats could be
             # routed through use_download like sage/magma/csv/etc.
             write(json.dumps(Json.prep(res)), F)
